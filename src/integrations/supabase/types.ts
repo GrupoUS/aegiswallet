@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bank_connections: {
+        Row: {
+          created_at: string
+          encrypted_access_token: string | null
+          encrypted_refresh_token: string | null
+          id: string
+          institution_id: string
+          institution_name: string
+          last_successful_sync_at: string | null
+          provider_connection_id: string
+          provider_name: string
+          sync_status: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          id?: string
+          institution_id: string
+          institution_name: string
+          last_successful_sync_at?: string | null
+          provider_connection_id: string
+          provider_name: string
+          sync_status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          id?: string
+          institution_id?: string
+          institution_name?: string
+          last_successful_sync_at?: string | null
+          provider_connection_id?: string
+          provider_name?: string
+          sync_status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bill_reminders: {
         Row: {
           amount: number | null
@@ -93,38 +141,54 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          bank_connection_id: string | null
           category_id: string
           created_at: string
           date: string
           description: string
           id: string
+          is_imported: boolean | null
+          source_transaction_id: string | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
+          bank_connection_id?: string | null
           category_id: string
           created_at?: string
           date: string
           description: string
           id?: string
+          is_imported?: boolean | null
+          source_transaction_id?: string | null
           type: string
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          bank_connection_id?: string | null
           category_id?: string
           created_at?: string
           date?: string
           description?: string
           id?: string
+          is_imported?: boolean | null
+          source_transaction_id?: string | null
           type?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_bank_connection_id_fkey"
+            columns: ["bank_connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_category_id_fkey"
             columns: ["category_id"]

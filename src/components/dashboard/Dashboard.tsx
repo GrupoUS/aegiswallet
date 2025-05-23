@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { LogOut, Plus, List, Bell } from "lucide-react";
+import { LogOut, Plus, List, Bell, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FinancialSummary from "./FinancialSummary";
 import TransactionsList from "@/components/transactions/TransactionsList";
@@ -12,6 +12,7 @@ import AddTransactionDialog from "@/components/transactions/AddTransactionDialog
 import BillRemindersList from "@/components/reminders/BillRemindersList";
 import AddBillReminderDialog from "@/components/reminders/AddBillReminderDialog";
 import CategoriesManagement from "@/components/categories/CategoriesManagement";
+import BankConnectionsPage from "@/components/bank-connections/BankConnectionsPage";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,6 +54,8 @@ const Dashboard = () => {
         return <BillRemindersList />;
       case "categories":
         return <CategoriesManagement />;
+      case "bank-connections":
+        return <BankConnectionsPage />;
       default:
         return <FinancialSummary />;
     }
@@ -106,6 +109,16 @@ const Dashboard = () => {
               }`}
             >
               Transações
+            </button>
+            <button
+              onClick={() => setActiveTab("bank-connections")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "bank-connections"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              Contas Bancárias
             </button>
             <button
               onClick={() => setActiveTab("reminders")}

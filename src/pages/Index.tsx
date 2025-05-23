@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { ThemeProvider } from "@/hooks/useTheme";
 import AuthPage from "@/components/auth/AuthPage";
 import Dashboard from "@/components/dashboard/Dashboard";
 
@@ -38,7 +39,11 @@ const Index = () => {
     );
   }
 
-  return user ? <Dashboard /> : <AuthPage />;
+  return (
+    <ThemeProvider>
+      {user ? <Dashboard /> : <AuthPage />}
+    </ThemeProvider>
+  );
 };
 
 export default Index;

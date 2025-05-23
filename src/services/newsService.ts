@@ -1,6 +1,4 @@
 
-import { RssFeed } from 'webfeed';
-
 export interface NewsItem {
   title: string;
   link: string;
@@ -19,14 +17,27 @@ class NewsService {
       }
       
       const xmlText = await response.text();
-      const feed = RssFeed.parse(xmlText);
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
       
-      return feed.items?.map(item => ({
-        title: item.title || 'Sem título',
-        link: item.link || '',
-        description: item.description || 'Sem descrição disponível',
-        pubDate: item.pubDate || ''
-      })) || [];
+      const items = xmlDoc.querySelectorAll('item');
+      const newsItems: NewsItem[] = [];
+      
+      items.forEach(item => {
+        const title = item.querySelector('title')?.textContent || 'Sem título';
+        const link = item.querySelector('link')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || 'Sem descrição disponível';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+        
+        newsItems.push({
+          title,
+          link,
+          description,
+          pubDate
+        });
+      });
+      
+      return newsItems;
     } catch (error) {
       console.error('Erro ao buscar notícias:', error);
       throw new Error('Não foi possível carregar as notícias');

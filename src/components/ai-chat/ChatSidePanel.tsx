@@ -1,0 +1,292 @@
+
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Send, Bot, User, Loader2, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import SuggestedQuestions from "./SuggestedQuestions";
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  model?: string;
+}
+
+interface ChatSidePanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const AI_MODELS = [
+  { id: 'openai/gpt-3.5-turbo', name: 'Sugestão Rápida (GPT-3.5)' },
+  { id: 'openai/gpt-4o-mini', name: 'Análise Detalhada (GPT-4)' },
+  { id: 'anthropic/claude-3-haiku', name: 'Criatividade (Claude)' },
+  { id: 'google/gemini-pro', name: 'Insights (Gemini Pro)' }
+];
+
+const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadChatHistory();
+    }
+  }, [isOpen]);
+
+  const loadChatHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (error) throw error;
+
+      if (data) {
+        const chatMessages: ChatMessage[] = [];
+        data.forEach((chat) => {
+          chatMessages.push({
+            id: `${chat.id}-user`,
+            role: 'user',
+            content: chat.message,
+            timestamp: new Date(chat.created_at)
+          });
+          chatMessages.push({
+            id: `${chat.id}-assistant`,
+            role: 'assistant',
+            content: chat.response,
+            timestamp: new Date(chat.created_at),
+            model: chat.openrouter_model_used
+          });
+        });
+        setMessages(chatMessages);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
+  const sendMessage = async (messageToSend?: string) => {
+    const message = messageToSend || inputMessage;
+    if (!message.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data, error } = await supabase.functions.invoke('ai-financial-chat', {
+        body: {
+          message: message,
+          model: selectedModel
+        }
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        model: data.model_used
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a mensagem. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuestionSelect = (question: string) => {
+    setInputMessage(question);
+    sendMessage(question);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed right-0 top-0 h-full w-1/3 bg-white dark:bg-gray-800 shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-gray-700">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Assistente Financeiro IA</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fechar Chat</span>
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Modelo:</span>
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AI_MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center py-4">
+              <Bot className="h-8 w-8 mx-auto mb-3 opacity-50" />
+              <div className="mb-4">
+                <h3 className="text-base font-semibold mb-2">Olá! Sou seu assistente financeiro.</h3>
+                <p className="text-sm text-muted-foreground">
+                  Analiso seus dados e ofereço insights sobre gastos e planejamento.
+                </p>
+              </div>
+              <SuggestedQuestions onQuestionSelect={handleQuestionSelect} />
+            </div>
+          )}
+
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-2 ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`flex gap-2 max-w-[85%] ${
+                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                }`}
+              >
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                  {message.role === 'user' ? (
+                    <User className="h-3 w-3 text-primary-foreground" />
+                  ) : (
+                    <Bot className="h-3 w-3 text-primary-foreground" />
+                  )}
+                </div>
+                <div
+                  className={`rounded-lg p-3 text-sm ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  {message.model && (
+                    <p className="text-xs opacity-70 mt-1">
+                      {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="flex gap-2 justify-start">
+              <div className="flex gap-2 max-w-[85%]">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                  <Bot className="h-3 w-3 text-primary-foreground" />
+                </div>
+                <div className="rounded-lg p-3 bg-muted">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Analisando...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite sua pergunta..."
+              className="flex-1 text-sm"
+              disabled={isLoading}
+            />
+            <Button 
+              onClick={() => sendMessage()} 
+              disabled={!inputMessage.trim() || isLoading}
+              size="icon"
+              className="h-10 w-10"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatSidePanel;

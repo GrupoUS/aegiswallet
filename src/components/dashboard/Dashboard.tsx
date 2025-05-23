@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -16,6 +15,7 @@ import CategoriesManagement from "@/components/categories/CategoriesManagement";
 import BankConnectionsPage from "@/components/bank-connections/BankConnectionsPage";
 import SubscriptionPage from "@/components/subscription/SubscriptionPage";
 import News from "@/pages/News";
+import ChatSidePanel from "@/components/ai-chat/ChatSidePanel";
 import AIAssistantFAB from "@/components/ai-chat/AIAssistantFAB";
 
 const Dashboard = () => {
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showAddReminder, setShowAddReminder] = useState(false);
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,6 +49,10 @@ const Dashboard = () => {
     window.location.reload();
   };
 
+  const toggleChatPanel = () => {
+    setIsChatPanelOpen(!isChatPanelOpen);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -71,135 +76,148 @@ const Dashboard = () => {
 
   return (
     <SubscriptionProvider user={user}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Header */}
-        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  AegisWallet
-                </h1>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+        {/* Main Application Area */}
+        <div 
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isChatPanelOpen ? 'w-2/3' : 'w-full'
+          }`}
+        >
+          {/* Header */}
+          <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center">
+                  <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    AegisWallet
+                  </h1>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Olá, {user?.user_metadata?.full_name || user?.email}
+                  </span>
+                  <ThemeToggle />
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Olá, {user?.user_metadata?.full_name || user?.email}
-                </span>
-                <ThemeToggle />
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </Button>
+            </div>
+          </header>
+
+          {/* Navigation */}
+          <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex space-x-8">
+                <button
+                  onClick={() => setActiveTab("dashboard")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "dashboard"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => setActiveTab("transactions")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "transactions"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Transações
+                </button>
+                <button
+                  onClick={() => setActiveTab("bank-connections")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "bank-connections"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Contas Bancárias
+                </button>
+                <button
+                  onClick={() => setActiveTab("reminders")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "reminders"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Lembretes
+                </button>
+                <button
+                  onClick={() => setActiveTab("categories")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "categories"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Categorias
+                </button>
+                <button
+                  onClick={() => setActiveTab("subscription")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1 ${
+                    activeTab === "subscription"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <Crown className="h-4 w-4" />
+                  Assinatura
+                </button>
+                <button
+                  onClick={() => setActiveTab("news")}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "news"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Notícias
+                </button>
               </div>
             </div>
-          </div>
-        </header>
+          </nav>
 
-        {/* Navigation */}
-        <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-8">
-              <button
-                onClick={() => setActiveTab("dashboard")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "dashboard"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setActiveTab("transactions")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "transactions"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Transações
-              </button>
-              <button
-                onClick={() => setActiveTab("bank-connections")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "bank-connections"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Contas Bancárias
-              </button>
-              <button
-                onClick={() => setActiveTab("reminders")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "reminders"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Lembretes
-              </button>
-              <button
-                onClick={() => setActiveTab("categories")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "categories"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Categorias
-              </button>
-              <button
-                onClick={() => setActiveTab("subscription")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1 ${
-                  activeTab === "subscription"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                <Crown className="h-4 w-4" />
-                Assinatura
-              </button>
-              <button
-                onClick={() => setActiveTab("news")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "news"
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Notícias
-              </button>
+          {/* Main Content */}
+          <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div className="px-4 py-6 sm:px-0">
+              {/* Action Buttons */}
+              <div className="mb-6 flex flex-wrap gap-3">
+                {activeTab === "transactions" && (
+                  <Button onClick={() => setShowAddTransaction(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Transação
+                  </Button>
+                )}
+                {activeTab === "reminders" && (
+                  <Button onClick={() => setShowAddReminder(true)}>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Novo Lembrete
+                  </Button>
+                )}
+              </div>
+
+              {/* Content */}
+              {renderContent()}
             </div>
-          </div>
-        </nav>
+          </main>
+        </div>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            {/* Action Buttons */}
-            <div className="mb-6 flex flex-wrap gap-3">
-              {activeTab === "transactions" && (
-                <Button onClick={() => setShowAddTransaction(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Transação
-                </Button>
-              )}
-              {activeTab === "reminders" && (
-                <Button onClick={() => setShowAddReminder(true)}>
-                  <Bell className="h-4 w-4 mr-2" />
-                  Novo Lembrete
-                </Button>
-              )}
-            </div>
-
-            {/* Content */}
-            {renderContent()}
-          </div>
-        </main>
+        {/* Chat Side Panel */}
+        <ChatSidePanel 
+          isOpen={isChatPanelOpen} 
+          onClose={() => setIsChatPanelOpen(false)} 
+        />
 
         {/* Floating Action Button for AI Chat */}
-        <AIAssistantFAB />
+        <AIAssistantFAB onToggleChat={toggleChatPanel} />
 
         {/* Dialogs */}
         <AddTransactionDialog 

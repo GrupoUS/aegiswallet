@@ -18,36 +18,6 @@ interface BelvoWebhookPayload {
   sent_at: string;
 }
 
-interface BelvoTransaction {
-  id: string;
-  account: {
-    id: string;
-  };
-  amount: number;
-  description: string;
-  value_date: string;
-  type: string;
-  currency: string;
-  category?: string;
-  subcategory?: string;
-}
-
-interface BelvoAccount {
-  id: string;
-  link: string;
-  institution: {
-    name: string;
-  };
-  name: string;
-  type: string;
-  currency: string;
-  balance: {
-    current: number;
-    available: number;
-  };
-  collected_at: string;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -71,13 +41,15 @@ serve(async (req) => {
 
     const body = await req.text();
     
-    // Verify signature (simplified - in production, use proper HMAC verification)
-    const expectedSignature = await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(webhookSecret + body)
-    );
+    // Verify HMAC signature
+    const expectedSignature = await generateHMACSignature(webhookSecret, body);
     
-    console.log('Webhook received:', body);
+    if (!verifySignature(signature, expectedSignature)) {
+      console.error('Invalid webhook signature');
+      return new Response('Invalid signature', { status: 401, headers: corsHeaders });
+    }
+    
+    console.log('Webhook received and verified:', body);
     
     const payload: BelvoWebhookPayload = JSON.parse(body);
     
@@ -113,6 +85,32 @@ serve(async (req) => {
     });
   }
 });
+
+async function generateHMACSignature(secret: string, payload: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const messageData = encoder.encode(payload);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  const hashArray = Array.from(new Uint8Array(signature));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  return hashHex;
+}
+
+function verifySignature(receivedSignature: string, expectedSignature: string): boolean {
+  // Remove any prefixes from the received signature
+  const cleanSignature = receivedSignature.replace(/^sha256=/, '');
+  return cleanSignature === expectedSignature;
+}
 
 async function handleTransactionEvents(supabase: any, payload: BelvoWebhookPayload) {
   console.log('Handling transaction event for link:', payload.link_id);
@@ -151,10 +149,30 @@ async function handleLinkStatusUpdate(supabase: any, payload: BelvoWebhookPayloa
   // Extract status from payload data
   const status = payload.data?.status || 'unknown';
   
+  // Map Belvo statuses to our internal statuses
+  let mappedStatus = status;
+  switch (status) {
+    case 'valid':
+      mappedStatus = 'valid_token';
+      break;
+    case 'invalid':
+    case 'error':
+      mappedStatus = 'login_error';
+      break;
+    case 'token_required':
+      mappedStatus = 'token_required';
+      break;
+    case 'suspended':
+      mappedStatus = 'suspended';
+      break;
+    default:
+      mappedStatus = status;
+  }
+  
   await supabase
     .from('belvo_bank_connections')
     .update({ 
-      status: status,
+      status: mappedStatus,
       last_accessed_at: new Date().toISOString()
     })
     .eq('belvo_link_id', payload.link_id);
@@ -175,7 +193,7 @@ async function handleAccountsUpdate(supabase: any, payload: BelvoWebhookPayload)
   }
 }
 
-async function fetchBelvoTransactions(linkId: string): Promise<BelvoTransaction[]> {
+async function fetchBelvoTransactions(linkId: string) {
   const belvoSecretKey = Deno.env.get('BELVO_SECRET_KEY');
   const belvoSecretPassword = Deno.env.get('BELVO_SECRET_PASSWORD');
   
@@ -193,7 +211,7 @@ async function fetchBelvoTransactions(linkId: string): Promise<BelvoTransaction[
     },
     body: JSON.stringify({
       link: linkId,
-      date_from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 90 days
+      date_from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       date_to: new Date().toISOString().split('T')[0],
     }),
   });
@@ -206,7 +224,7 @@ async function fetchBelvoTransactions(linkId: string): Promise<BelvoTransaction[
   return data.results || [];
 }
 
-async function fetchBelvoAccounts(linkId: string): Promise<BelvoAccount[]> {
+async function fetchBelvoAccounts(linkId: string) {
   const belvoSecretKey = Deno.env.get('BELVO_SECRET_KEY');
   const belvoSecretPassword = Deno.env.get('BELVO_SECRET_PASSWORD');
   
@@ -222,9 +240,7 @@ async function fetchBelvoAccounts(linkId: string): Promise<BelvoAccount[]> {
       'Authorization': `Basic ${credentials}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      link: linkId,
-    }),
+    body: JSON.stringify({ link: linkId }),
   });
   
   if (!response.ok) {
@@ -235,7 +251,7 @@ async function fetchBelvoAccounts(linkId: string): Promise<BelvoAccount[]> {
   return data.results || [];
 }
 
-async function syncTransactionsToDatabase(supabase: any, transactions: BelvoTransaction[], linkId: string) {
+async function syncTransactionsToDatabase(supabase: any, transactions: any[], linkId: string) {
   console.log(`Syncing ${transactions.length} transactions for link ${linkId}`);
   
   // Get user_id from the belvo_bank_connections table
@@ -262,9 +278,17 @@ async function syncTransactionsToDatabase(supabase: any, transactions: BelvoTran
   
   for (const transaction of transactions) {
     try {
-      // Determine transaction type based on amount
-      const type = transaction.amount >= 0 ? 'income' : 'expense';
-      const amount = Math.abs(transaction.amount);
+      // Map Belvo transaction types to AegisWallet types (Entrada = Income, Saída = Expense)
+      let type: 'income' | 'expense';
+      let amount: number;
+      
+      if (transaction.type === 'INFLOW' || transaction.amount > 0) {
+        type = 'income'; // Entrada
+        amount = Math.abs(transaction.amount);
+      } else {
+        type = 'expense'; // Saída
+        amount = Math.abs(transaction.amount);
+      }
       
       // Check if transaction already exists
       const { data: existingTransaction } = await supabase
@@ -281,7 +305,7 @@ async function syncTransactionsToDatabase(supabase: any, transactions: BelvoTran
           .insert({
             user_id: connection.user_id,
             amount: amount,
-            description: transaction.description || 'Transação importada',
+            description: transaction.description || 'Transação importada via Belvo',
             date: transaction.value_date,
             type: type,
             category_id: defaultCategoryId,
@@ -293,7 +317,7 @@ async function syncTransactionsToDatabase(supabase: any, transactions: BelvoTran
         if (error) {
           console.error('Error inserting transaction:', error);
         } else {
-          console.log('Transaction inserted:', transaction.id);
+          console.log(`Transaction inserted: ${transaction.id} - ${type} - R$ ${amount}`);
         }
       }
     } catch (error) {
@@ -302,7 +326,7 @@ async function syncTransactionsToDatabase(supabase: any, transactions: BelvoTran
   }
 }
 
-async function syncAccountsToDatabase(supabase: any, accounts: BelvoAccount[]) {
+async function syncAccountsToDatabase(supabase: any, accounts: any[]) {
   console.log(`Syncing ${accounts.length} accounts`);
   
   for (const account of accounts) {

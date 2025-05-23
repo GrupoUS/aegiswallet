@@ -190,28 +190,61 @@ class BelvoService {
     }));
   }
 
-  // Mock method for initiating Belvo Connect widget
-  async initiateBelvoConnect(): Promise<string> {
-    // In a real implementation, this would:
-    // 1. Initialize the Belvo Connect widget
-    // 2. Handle the widget callbacks
-    // 3. Return the link_id upon successful connection
+  // Generate widget access token via server-side function
+  async generateWidgetToken(): Promise<string> {
+    const { data: { session } } = await supabase.auth.getSession();
     
-    // For now, return a mock URL for the Belvo Connect widget
-    return `https://connect.belvo.com/widget?public_key=YOUR_PUBLIC_KEY&callback_url=${encodeURIComponent(window.location.origin)}/belvo-callback`;
+    if (!session) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const { data, error } = await supabase.functions.invoke('belvo-generate-widget-token', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (error) {
+      console.error('Error generating widget token:', error);
+      throw new Error('Erro ao gerar token do widget');
+    }
+
+    if (!data.success) {
+      throw new Error('Falha ao gerar token do widget');
+    }
+
+    return data.access_token;
   }
 
-  // Mock method for handling Belvo Connect success callback
-  async handleBelvoCallback(linkId: string, institution: any): Promise<BelvoConnection> {
-    // In a real implementation, this would be called by the Belvo Connect widget
-    // upon successful connection
+  // Store connection via server-side function
+  async storeConnection(linkId: string, institutionName: string, accessMode: string = 'recurrent'): Promise<any> {
+    const { data: { session } } = await supabase.auth.getSession();
     
-    return this.createBelvoConnection({
-      belvo_link_id: linkId,
-      institution_name: institution.name || 'Banco Conectado',
-      access_mode: 'recurrent',
-      status: 'valid_token'
+    if (!session) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const { data, error } = await supabase.functions.invoke('belvo-store-connection', {
+      body: {
+        link_id: linkId,
+        institution_name: institutionName,
+        access_mode: accessMode
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
+
+    if (error) {
+      console.error('Error storing connection:', error);
+      throw new Error('Erro ao armazenar conexão');
+    }
+
+    if (!data.success) {
+      throw new Error('Falha ao armazenar conexão');
+    }
+
+    return data;
   }
 }
 

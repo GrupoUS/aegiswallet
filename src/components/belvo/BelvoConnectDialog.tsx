@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, ExternalLink, Shield, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { belvoService } from "@/services/belvoService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BelvoConnectDialogProps {
   open: boolean;
@@ -33,6 +33,61 @@ const BelvoConnectDialog = ({ open, onOpenChange, onSuccess }: BelvoConnectDialo
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const generateWidgetToken = async (): Promise<string> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const { data, error } = await supabase.functions.invoke('belvo-generate-widget-token', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (error) {
+      console.error('Error generating widget token:', error);
+      throw new Error('Erro ao gerar token do widget');
+    }
+
+    if (!data.success) {
+      throw new Error('Falha ao gerar token do widget');
+    }
+
+    return data.access_token;
+  };
+
+  const storeConnection = async (linkId: string, institutionName: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const { data, error } = await supabase.functions.invoke('belvo-store-connection', {
+      body: {
+        link_id: linkId,
+        institution_name: institutionName,
+        access_mode: 'recurrent'
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (error) {
+      console.error('Error storing connection:', error);
+      throw new Error('Erro ao armazenar conexão');
+    }
+
+    if (!data.success) {
+      throw new Error('Falha ao armazenar conexão');
+    }
+
+    return data;
+  };
+
   const handleBelvoConnect = async () => {
     if (!selectedBank) {
       toast({
@@ -46,22 +101,24 @@ const BelvoConnectDialog = ({ open, onOpenChange, onSuccess }: BelvoConnectDialo
     setConnecting(true);
 
     try {
-      // In a real implementation, this would:
-      // 1. Initialize the Belvo Connect widget
-      // 2. Handle the authentication flow
-      // 3. Receive the link_id and institution data
+      // Generate widget access token
+      const accessToken = await generateWidgetToken();
       
-      // For now, we'll simulate the process
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate connection process
-
+      // Get selected bank info
       const bank = belvoSupportedBanks.find(b => b.id === selectedBank);
+      
+      // In a real implementation, this would initialize the Belvo Connect Widget
+      // For now, we'll simulate the process with the actual widget flow
+      console.log('Widget access token generated:', accessToken);
+      
+      // Simulate widget success callback
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Simulate successful connection with mock data
       const mockLinkId = `link_${Date.now()}_${selectedBank}`;
       
-      await belvoService.handleBelvoCallback(mockLinkId, {
-        name: bank?.name || 'Banco Conectado'
-      });
+      // Store the connection
+      await storeConnection(mockLinkId, bank?.name || 'Banco Conectado');
 
       toast({
         title: "Conta conectada com sucesso!",
@@ -70,9 +127,10 @@ const BelvoConnectDialog = ({ open, onOpenChange, onSuccess }: BelvoConnectDialo
 
       onSuccess();
     } catch (error: any) {
+      console.error('Belvo connection error:', error);
       toast({
         title: "Erro na conexão",
-        description: `Não foi possível conectar com o banco selecionado. Tente novamente.`,
+        description: error.message || `Não foi possível conectar com o banco selecionado. Tente novamente.`,
         variant: "destructive",
       });
     } finally {

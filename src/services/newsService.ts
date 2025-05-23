@@ -1,4 +1,3 @@
-
 import { NewsCache } from '@/utils/newsCache';
 
 export interface NewsItem {
@@ -6,6 +5,7 @@ export interface NewsItem {
   link: string;
   description: string;
   pubDate: string;
+  image?: string;
 }
 
 interface FetchOptions {
@@ -132,13 +132,60 @@ class NewsService {
         const description = item.querySelector('description')?.textContent?.trim() || 'Sem descrição disponível';
         const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
         
+        // Extract image from various RSS sources
+        let imageUrl: string | null = null;
+        
+        // Try enclosure tag first
+        const enclosure = item.querySelector('enclosure[type^="image"]');
+        if (enclosure) {
+          imageUrl = enclosure.getAttribute('url');
+        }
+        
+        // Try media:content
+        if (!imageUrl) {
+          const mediaContent = item.querySelector('content[medium="image"], content[type^="image"]');
+          if (mediaContent) {
+            imageUrl = mediaContent.getAttribute('url');
+          }
+        }
+        
+        // Try media:thumbnail
+        if (!imageUrl) {
+          const mediaThumbnail = item.querySelector('thumbnail');
+          if (mediaThumbnail) {
+            imageUrl = mediaThumbnail.getAttribute('url');
+          }
+        }
+        
+        // Try iTunes image
+        if (!imageUrl) {
+          const itunesImage = item.querySelector('image[href]');
+          if (itunesImage) {
+            imageUrl = itunesImage.getAttribute('href');
+          }
+        }
+        
+        // Try image tag
+        if (!imageUrl) {
+          const imageTag = item.querySelector('image');
+          if (imageTag) {
+            imageUrl = imageTag.textContent?.trim() || null;
+          }
+        }
+        
         if (title && link) {
-          newsItems.push({
+          const newsItem: NewsItem = {
             title,
             link,
             description,
             pubDate
-          });
+          };
+          
+          if (imageUrl) {
+            newsItem.image = imageUrl;
+          }
+          
+          newsItems.push(newsItem);
         }
       });
       

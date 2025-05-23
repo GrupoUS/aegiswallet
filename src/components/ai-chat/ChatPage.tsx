@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import SuggestedQuestions from "./SuggestedQuestions";
 
 interface ChatMessage {
   id: string;
@@ -29,6 +31,7 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -77,13 +80,14 @@ const ChatPage = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  const sendMessage = async (messageToSend?: string) => {
+    const message = messageToSend || inputMessage;
+    if (!message.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: inputMessage,
+      content: message,
       timestamp: new Date()
     };
 
@@ -99,7 +103,7 @@ const ChatPage = () => {
 
       const { data, error } = await supabase.functions.invoke('ai-financial-chat', {
         body: {
-          message: inputMessage,
+          message: message,
           model: selectedModel
         }
       });
@@ -128,6 +132,12 @@ const ChatPage = () => {
     }
   };
 
+  const handleQuestionSelect = (question: string) => {
+    setInputMessage(question);
+    // Auto-send the selected question
+    sendMessage(question);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -137,14 +147,25 @@ const ChatPage = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <Card className="h-[80vh] flex flex-col">
+      <Card className="h-[85vh] flex flex-col">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" />
-            Assistente Financeiro IA
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Modelo:</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-6 w-6 text-primary" />
+                Assistente Financeiro IA
+              </CardTitle>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-4">
+            <span className="text-sm text-muted-foreground">Modelo de IA:</span>
             <Select value={selectedModel} onValueChange={setSelectedModel}>
               <SelectTrigger className="w-64">
                 <SelectValue />
@@ -164,10 +185,15 @@ const ChatPage = () => {
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-muted/30 rounded-lg">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
+              <div className="text-center py-4">
                 <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Olá! Sou seu assistente financeiro pessoal.</p>
-                <p>Pergunte sobre seus gastos, orçamento ou peça dicas financeiras!</p>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Olá! Sou seu assistente financeiro pessoal.</h3>
+                  <p className="text-muted-foreground">
+                    Analiso seus dados financeiros e ofereço insights personalizados sobre gastos, orçamento e planejamento financeiro.
+                  </p>
+                </div>
+                <SuggestedQuestions onQuestionSelect={handleQuestionSelect} />
               </div>
             )}
 
@@ -217,7 +243,7 @@ const ChatPage = () => {
                   <div className="rounded-lg p-3 bg-background border">
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Pensando...</span>
+                      <span>Analisando seus dados...</span>
                     </div>
                   </div>
                 </div>
@@ -238,7 +264,7 @@ const ChatPage = () => {
               disabled={isLoading}
             />
             <Button 
-              onClick={sendMessage} 
+              onClick={() => sendMessage()} 
               disabled={!inputMessage.trim() || isLoading}
               size="icon"
             >

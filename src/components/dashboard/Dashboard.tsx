@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -13,6 +14,7 @@ import AddBillReminderDialog from "@/components/reminders/AddBillReminderDialog"
 import CategoriesManagement from "@/components/categories/CategoriesManagement";
 import BankConnectionsPage from "@/components/bank-connections/BankConnectionsPage";
 import News from "@/pages/News";
+import AIAssistantFAB from "@/components/ai-chat/AIAssistantFAB";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -179,6 +181,9 @@ const Dashboard = () => {
           {renderContent()}
         </div>
       </main>
+
+      {/* Floating Action Button for AI Chat */}
+      <AIAssistantFAB />
 
       {/* Dialogs */}
       <AddTransactionDialog 

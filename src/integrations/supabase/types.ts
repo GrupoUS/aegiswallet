@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_chat_history: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          openrouter_model_used: string
+          response: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          openrouter_model_used: string
+          response: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          openrouter_model_used?: string
+          response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bank_connections: {
         Row: {
           created_at: string

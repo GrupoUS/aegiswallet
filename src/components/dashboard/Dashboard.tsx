@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -13,6 +12,7 @@ import BillRemindersList from "@/components/reminders/BillRemindersList";
 import AddBillReminderDialog from "@/components/reminders/AddBillReminderDialog";
 import CategoriesManagement from "@/components/categories/CategoriesManagement";
 import BankConnectionsPage from "@/components/bank-connections/BankConnectionsPage";
+import News from "@/pages/News";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -56,6 +56,8 @@ const Dashboard = () => {
         return <CategoriesManagement />;
       case "bank-connections":
         return <BankConnectionsPage />;
+      case "news":
+        return <News />;
       default:
         return <FinancialSummary />;
     }
@@ -139,6 +141,16 @@ const Dashboard = () => {
               }`}
             >
               Categorias
+            </button>
+            <button
+              onClick={() => setActiveTab("news")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "news"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              Notícias
             </button>
           </div>
         </div>

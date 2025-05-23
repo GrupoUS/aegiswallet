@@ -57,6 +57,95 @@ export type Database = {
         }
         Relationships: []
       }
+      belvo_accounts: {
+        Row: {
+          account_id: string
+          balance_available: number | null
+          balance_current: number | null
+          belvo_account_id: string
+          belvo_link_id: string
+          collected_at: string | null
+          created_at: string
+          currency: string | null
+          institution_name: string
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string
+          balance_available?: number | null
+          balance_current?: number | null
+          belvo_account_id: string
+          belvo_link_id: string
+          collected_at?: string | null
+          created_at?: string
+          currency?: string | null
+          institution_name: string
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          balance_available?: number | null
+          balance_current?: number | null
+          belvo_account_id?: string
+          belvo_link_id?: string
+          collected_at?: string | null
+          created_at?: string
+          currency?: string | null
+          institution_name?: string
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "belvo_accounts_belvo_link_id_fkey"
+            columns: ["belvo_link_id"]
+            isOneToOne: false
+            referencedRelation: "belvo_bank_connections"
+            referencedColumns: ["belvo_link_id"]
+          },
+        ]
+      }
+      belvo_bank_connections: {
+        Row: {
+          access_mode: string | null
+          belvo_link_id: string
+          connection_id: string
+          created_at: string
+          institution_name: string
+          last_accessed_at: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_mode?: string | null
+          belvo_link_id: string
+          connection_id?: string
+          created_at?: string
+          institution_name: string
+          last_accessed_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_mode?: string | null
+          belvo_link_id?: string
+          connection_id?: string
+          created_at?: string
+          institution_name?: string
+          last_accessed_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bill_reminders: {
         Row: {
           amount: number | null
@@ -142,6 +231,7 @@ export type Database = {
         Row: {
           amount: number
           bank_connection_id: string | null
+          belvo_account_id: string | null
           category_id: string
           created_at: string
           date: string
@@ -156,6 +246,7 @@ export type Database = {
         Insert: {
           amount: number
           bank_connection_id?: string | null
+          belvo_account_id?: string | null
           category_id: string
           created_at?: string
           date: string
@@ -170,6 +261,7 @@ export type Database = {
         Update: {
           amount?: number
           bank_connection_id?: string | null
+          belvo_account_id?: string | null
           category_id?: string
           created_at?: string
           date?: string
@@ -188,6 +280,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bank_connections"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_belvo_account_id_fkey"
+            columns: ["belvo_account_id"]
+            isOneToOne: false
+            referencedRelation: "belvo_accounts"
+            referencedColumns: ["belvo_account_id"]
           },
           {
             foreignKeyName: "transactions_category_id_fkey"

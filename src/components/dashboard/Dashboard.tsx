@@ -16,6 +16,8 @@ import CategoriesManagement from "@/components/categories/CategoriesManagement";
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showAddReminder, setShowAddReminder] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,6 +37,10 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const refreshData = () => {
+    window.location.reload();
   };
 
   const renderContent = () => {
@@ -130,14 +136,35 @@ const Dashboard = () => {
         <div className="px-4 py-6 sm:px-0">
           {/* Action Buttons */}
           <div className="mb-6 flex flex-wrap gap-3">
-            {activeTab === "transactions" && <AddTransactionDialog />}
-            {activeTab === "reminders" && <AddBillReminderDialog />}
+            {activeTab === "transactions" && (
+              <Button onClick={() => setShowAddTransaction(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Transação
+              </Button>
+            )}
+            {activeTab === "reminders" && (
+              <Button onClick={() => setShowAddReminder(true)}>
+                <Bell className="h-4 w-4 mr-2" />
+                Novo Lembrete
+              </Button>
+            )}
           </div>
 
           {/* Content */}
           {renderContent()}
         </div>
       </main>
+
+      {/* Dialogs */}
+      <AddTransactionDialog 
+        open={showAddTransaction} 
+        onOpenChange={setShowAddTransaction} 
+      />
+      <AddBillReminderDialog 
+        open={showAddReminder} 
+        onOpenChange={setShowAddReminder}
+        onSuccess={refreshData}
+      />
     </div>
   );
 };

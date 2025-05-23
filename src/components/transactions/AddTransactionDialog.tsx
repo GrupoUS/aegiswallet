@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Plus } from "lucide-react";
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -33,14 +35,19 @@ interface Category {
 }
 
 interface AddTransactionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
+
+  // Use internal state if no external control is provided
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
 
   const {
     register,
@@ -60,10 +67,10 @@ const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps)
   const selectedType = watch("type");
 
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       fetchCategories();
     }
-  }, [open]);
+  }, [isOpen]);
 
   const fetchCategories = async () => {
     try {
@@ -110,7 +117,7 @@ const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps)
           description: "A transação foi adicionada com sucesso",
         });
         reset();
-        onOpenChange(false);
+        setIsOpen(false);
         window.location.reload(); // Refresh para atualizar dados
       }
     } catch (error) {
@@ -124,8 +131,8 @@ const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps)
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  const DialogComponent = (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nova Transação</DialogTitle>
@@ -214,7 +221,7 @@ const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps)
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => setIsOpen(false)}
               className="flex-1"
             >
               Cancelar
@@ -227,6 +234,23 @@ const AddTransactionDialog = ({ open, onOpenChange }: AddTransactionDialogProps)
       </DialogContent>
     </Dialog>
   );
+
+  // If used without external control, wrap with trigger
+  if (open === undefined && onOpenChange === undefined) {
+    return (
+      <Dialog open={internalOpen} onOpenChange={setInternalOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Transação
+          </Button>
+        </DialogTrigger>
+        {DialogComponent}
+      </Dialog>
+    );
+  }
+
+  return DialogComponent;
 };
 
 export default AddTransactionDialog;

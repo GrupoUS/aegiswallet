@@ -41,7 +41,7 @@ const GoogleSignInButton = () => {
     <Button
       type="button"
       variant="outline"
-      className="w-full"
+      className="w-full flex items-center justify-center"
       onClick={handleGoogleSignIn}
       disabled={loading}
     >

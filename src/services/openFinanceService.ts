@@ -139,7 +139,18 @@ class OpenFinanceService {
       throw error;
     }
 
-    return data || [];
+    // Map the database response to our Transaction interface with proper type casting
+    return (data || []).map(transaction => ({
+      id: transaction.id,
+      amount: transaction.amount,
+      description: transaction.description,
+      date: transaction.date,
+      type: transaction.type as 'income' | 'expense', // Type cast to ensure proper typing
+      category_id: transaction.category_id,
+      source_transaction_id: transaction.source_transaction_id,
+      bank_connection_id: transaction.bank_connection_id,
+      is_imported: transaction.is_imported
+    }));
   }
 
   // Mock method for initiating OAuth flow with Open Finance provider

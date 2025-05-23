@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AuthPage from "@/components/auth/AuthPage";
 import Dashboard from "@/components/dashboard/Dashboard";
 import { useToast } from "@/hooks/use-toast";
@@ -65,7 +66,9 @@ const Index = () => {
 
   return (
     <ThemeProvider>
-      {user ? <Dashboard /> : <AuthPage />}
+      <SubscriptionProvider user={user}>
+        {user ? <Dashboard /> : <AuthPage />}
+      </SubscriptionProvider>
     </ThemeProvider>
   );
 };

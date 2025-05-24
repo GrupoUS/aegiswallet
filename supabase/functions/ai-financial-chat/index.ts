@@ -83,9 +83,7 @@ serve(async (req) => {
       throw new Error("OpenRouter API key not configured");
     }
 
-    // Enhanced system prompt with action capabilities for Pro/Trial users
-    const canPerformActions = accessLevel === 'pro' || accessLevel === 'trial';
-    
+    // Enhanced system prompt with action capabilities for ALL users
     const systemPrompt = `Você é um assistente financeiro especializado em ajudar usuários brasileiros com questões relacionadas a finanças pessoais, investimentos, economia e planejamento financeiro. 
 
 Suas características:
@@ -98,7 +96,6 @@ Suas características:
 
 Contexto do usuário: Este usuário está usando o AegisWallet, um aplicativo de controle financeiro pessoal.
 
-${canPerformActions ? `
 CAPACIDADES DE AÇÃO DISPONÍVEIS:
 Você pode executar ações no sistema do usuário quando solicitado. Para isso, inclua no final da sua resposta um bloco JSON com a seguinte estrutura:
 
@@ -113,9 +110,8 @@ Exemplos de quando usar ações:
 - "Adicione meu salário de R$ 3000 que recebi hoje" → adicionar receita
 
 Quando executar uma ação, inclua o JSON da ação no final da sua resposta após explicar o que será feito.
-` : `
-USUÁRIO GRATUITO: Você pode fornecer conselhos e análises, mas não pode executar ações como criar lembretes ou registrar transações. Sugira que o usuário faça upgrade para o plano Pro para acessar essas funcionalidades.
-`}`;
+
+${accessLevel === 'free' ? 'USUÁRIO GRATUITO: Você está usando o modelo básico, mas pode executar todas as ações básicas como criar lembretes e registrar transações. Para análises mais avançadas e modelos de IA premium, considere fazer upgrade para o plano Pro.' : ''}`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -157,144 +153,142 @@ USUÁRIO GRATUITO: Você pode fornecer conselhos e análises, mas não pode exec
 
     logStep("AI response received");
 
-    // Parse and execute actions if user has access
+    // Parse and execute actions - NOW AVAILABLE FOR ALL USERS
     let actionExecuted = false;
     let actionResult = "";
 
-    if (canPerformActions) {
-      try {
-        // Look for JSON action in the response
-        const jsonMatch = aiResponse.match(/\{[^}]*"action"[^}]*\}/);
-        if (jsonMatch) {
-          const actionData = JSON.parse(jsonMatch[0]);
-          logStep("Action detected", { action: actionData });
+    try {
+      // Look for JSON action in the response
+      const jsonMatch = aiResponse.match(/\{[^}]*"action"[^}]*\}/);
+      if (jsonMatch) {
+        const actionData = JSON.parse(jsonMatch[0]);
+        logStep("Action detected", { action: actionData });
 
-          switch (actionData.action) {
-            case "create_reminder":
-              const reminderParams = actionData.params;
-              const { error: reminderError } = await supabaseClient
-                .from("bill_reminders")
-                .insert({
-                  user_id: user.id,
-                  name: reminderParams.description,
-                  due_date: reminderParams.due_date,
-                  amount: reminderParams.amount || null
-                });
+        switch (actionData.action) {
+          case "create_reminder":
+            const reminderParams = actionData.params;
+            const { error: reminderError } = await supabaseClient
+              .from("bill_reminders")
+              .insert({
+                user_id: user.id,
+                name: reminderParams.description,
+                due_date: reminderParams.due_date,
+                amount: reminderParams.amount || null
+              });
 
-              if (reminderError) {
-                logStep("Error creating reminder", { error: reminderError });
-                actionResult = "Erro ao criar lembrete. ";
-              } else {
-                actionExecuted = true;
-                actionResult = "✅ Lembrete criado com sucesso! ";
-              }
-              break;
+            if (reminderError) {
+              logStep("Error creating reminder", { error: reminderError });
+              actionResult = "Erro ao criar lembrete. ";
+            } else {
+              actionExecuted = true;
+              actionResult = "✅ Lembrete criado com sucesso! ";
+            }
+            break;
 
-            case "add_expense":
-              const expenseParams = actionData.params;
-              // Get or create category
-              let categoryId;
-              const { data: existingCategory } = await supabaseClient
+          case "add_expense":
+            const expenseParams = actionData.params;
+            // Get or create category
+            let categoryId;
+            const { data: existingCategory } = await supabaseClient
+              .from("categories")
+              .select("id")
+              .or(`name.ilike.${expenseParams.category},user_id.eq.${user.id}`)
+              .single();
+
+            if (existingCategory) {
+              categoryId = existingCategory.id;
+            } else {
+              const { data: newCategory, error: categoryError } = await supabaseClient
                 .from("categories")
+                .insert({
+                  name: expenseParams.category,
+                  user_id: user.id
+                })
                 .select("id")
-                .or(`name.ilike.${expenseParams.category},user_id.eq.${user.id}`)
                 .single();
 
-              if (existingCategory) {
-                categoryId = existingCategory.id;
-              } else {
-                const { data: newCategory, error: categoryError } = await supabaseClient
-                  .from("categories")
-                  .insert({
-                    name: expenseParams.category,
-                    user_id: user.id
-                  })
-                  .select("id")
-                  .single();
-
-                if (categoryError || !newCategory) {
-                  logStep("Error creating category", { error: categoryError });
-                  actionResult = "Erro ao criar categoria. ";
-                  break;
-                }
-                categoryId = newCategory.id;
+              if (categoryError || !newCategory) {
+                logStep("Error creating category", { error: categoryError });
+                actionResult = "Erro ao criar categoria. ";
+                break;
               }
+              categoryId = newCategory.id;
+            }
 
-              const { error: expenseError } = await supabaseClient
-                .from("transactions")
-                .insert({
-                  user_id: user.id,
-                  amount: Math.abs(expenseParams.amount) * -1, // Ensure negative for expense
-                  description: expenseParams.description,
-                  category_id: categoryId,
-                  date: expenseParams.date,
-                  type: "expense"
-                });
+            const { error: expenseError } = await supabaseClient
+              .from("transactions")
+              .insert({
+                user_id: user.id,
+                amount: Math.abs(expenseParams.amount) * -1, // Ensure negative for expense
+                description: expenseParams.description,
+                category_id: categoryId,
+                date: expenseParams.date,
+                type: "expense"
+              });
 
-              if (expenseError) {
-                logStep("Error creating expense", { error: expenseError });
-                actionResult = "Erro ao registrar despesa. ";
-              } else {
-                actionExecuted = true;
-                actionResult = "✅ Despesa registrada com sucesso! ";
-              }
-              break;
+            if (expenseError) {
+              logStep("Error creating expense", { error: expenseError });
+              actionResult = "Erro ao registrar despesa. ";
+            } else {
+              actionExecuted = true;
+              actionResult = "✅ Despesa registrada com sucesso! ";
+            }
+            break;
 
-            case "add_income":
-              const incomeParams = actionData.params;
-              // Get or create category
-              let incomeCategoryId;
-              const { data: existingIncomeCategory } = await supabaseClient
+          case "add_income":
+            const incomeParams = actionData.params;
+            // Get or create category
+            let incomeCategoryId;
+            const { data: existingIncomeCategory } = await supabaseClient
+              .from("categories")
+              .select("id")
+              .or(`name.ilike.${incomeParams.category},user_id.eq.${user.id}`)
+              .single();
+
+            if (existingIncomeCategory) {
+              incomeCategoryId = existingIncomeCategory.id;
+            } else {
+              const { data: newIncomeCategory, error: incomeCategoryError } = await supabaseClient
                 .from("categories")
+                .insert({
+                  name: incomeParams.category,
+                  user_id: user.id
+                })
                 .select("id")
-                .or(`name.ilike.${incomeParams.category},user_id.eq.${user.id}`)
                 .single();
 
-              if (existingIncomeCategory) {
-                incomeCategoryId = existingIncomeCategory.id;
-              } else {
-                const { data: newIncomeCategory, error: incomeCategoryError } = await supabaseClient
-                  .from("categories")
-                  .insert({
-                    name: incomeParams.category,
-                    user_id: user.id
-                  })
-                  .select("id")
-                  .single();
-
-                if (incomeCategoryError || !newIncomeCategory) {
-                  logStep("Error creating income category", { error: incomeCategoryError });
-                  actionResult = "Erro ao criar categoria. ";
-                  break;
-                }
-                incomeCategoryId = newIncomeCategory.id;
+              if (incomeCategoryError || !newIncomeCategory) {
+                logStep("Error creating income category", { error: incomeCategoryError });
+                actionResult = "Erro ao criar categoria. ";
+                break;
               }
+              incomeCategoryId = newIncomeCategory.id;
+            }
 
-              const { error: incomeError } = await supabaseClient
-                .from("transactions")
-                .insert({
-                  user_id: user.id,
-                  amount: Math.abs(incomeParams.amount), // Ensure positive for income
-                  description: incomeParams.description,
-                  category_id: incomeCategoryId,
-                  date: incomeParams.date,
-                  type: "income"
-                });
+            const { error: incomeError } = await supabaseClient
+              .from("transactions")
+              .insert({
+                user_id: user.id,
+                amount: Math.abs(incomeParams.amount), // Ensure positive for income
+                description: incomeParams.description,
+                category_id: incomeCategoryId,
+                date: incomeParams.date,
+                type: "income"
+              });
 
-              if (incomeError) {
-                logStep("Error creating income", { error: incomeError });
-                actionResult = "Erro ao registrar receita. ";
-              } else {
-                actionExecuted = true;
-                actionResult = "✅ Receita registrada com sucesso! ";
-              }
-              break;
-          }
+            if (incomeError) {
+              logStep("Error creating income", { error: incomeError });
+              actionResult = "Erro ao registrar receita. ";
+            } else {
+              actionExecuted = true;
+              actionResult = "✅ Receita registrada com sucesso! ";
+            }
+            break;
         }
-      } catch (actionError) {
-        logStep("Error parsing/executing action", { error: actionError });
-        actionResult = "Erro ao executar ação solicitada. ";
       }
+    } catch (actionError) {
+      logStep("Error parsing/executing action", { error: actionError });
+      actionResult = "Erro ao executar ação solicitada. ";
     }
 
     // Clean response from action JSON if present

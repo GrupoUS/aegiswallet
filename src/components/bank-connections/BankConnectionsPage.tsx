@@ -7,7 +7,7 @@ import { Plus, Trash2, RefreshCw, Building2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
-import PremiumFeatureGate from "@/components/subscription/PremiumFeatureGate";
+import BankConnectionGate from "./BankConnectionGate";
 import ConnectBankDialog from "./ConnectBankDialog";
 import SyncStatusIndicator from "./SyncStatusIndicator";
 
@@ -87,6 +87,11 @@ const BankConnectionsPage = () => {
     );
   }
 
+  // Show gate for free users
+  if (!hasAccess) {
+    return <BankConnectionGate>{null}</BankConnectionGate>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -99,28 +104,13 @@ const BankConnectionsPage = () => {
           </p>
         </div>
 
-        <PremiumFeatureGate
-          feature="Conexão Bancária"
-          description="Conecte seus bancos e automatize suas finanças com o AegisWallet Pro!"
-          fallback={null}
-        >
-          <Button onClick={() => setShowConnectDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Nova Conta
-          </Button>
-        </PremiumFeatureGate>
+        <Button onClick={() => setShowConnectDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Nova Conta
+        </Button>
       </div>
 
-      {!hasAccess && (
-        <PremiumFeatureGate
-          feature="Conexão Bancária Automática"
-          description="Conecte suas contas bancárias e sincronize suas transações automaticamente. Economize tempo e tenha controle total de suas finanças."
-        >
-          <div />
-        </PremiumFeatureGate>
-      )}
-
-      {hasAccess && connections.length === 0 && (
+      {connections.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
             <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -136,7 +126,7 @@ const BankConnectionsPage = () => {
         </Card>
       )}
 
-      {hasAccess && connections.length > 0 && (
+      {connections.length > 0 && (
         <div className="grid gap-4">
           {connections.map((connection) => (
             <Card key={connection.id}>

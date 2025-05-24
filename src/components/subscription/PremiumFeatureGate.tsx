@@ -1,5 +1,6 @@
 
 import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
 import PremiumFeatureBanner from "./PremiumFeatureBanner";
 
@@ -19,6 +20,7 @@ const PremiumFeatureGate = ({
   fallback 
 }: PremiumFeatureGateProps) => {
   const { accessLevel } = useAccessLevel();
+  const navigate = useNavigate();
 
   const hasAccess = accessLevel === 'pro' || (allowTrial && accessLevel === 'trial');
 
@@ -31,8 +33,7 @@ const PremiumFeatureGate = ({
   }
 
   const handleUpgrade = () => {
-    // Navigate to subscription page
-    window.location.hash = '#subscription';
+    navigate("/?tab=subscription");
   };
 
   return (

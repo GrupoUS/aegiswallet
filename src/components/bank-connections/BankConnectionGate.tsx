@@ -33,8 +33,8 @@ const BankConnectionGate = ({ children }: BankConnectionGateProps) => {
       </div>
 
       <PremiumFeatureBanner 
-        feature="Conexão Bancária"
-        description="Conecte suas contas bancárias e sincronize transações automaticamente com o plano Pro"
+        feature="Conexão Bancária Automática"
+        description="Conecte suas contas bancárias e sincronize transações automaticamente com o plano Pro. Economize tempo e tenha controle total de suas finanças."
         onUpgrade={handleUpgrade}
       />
     </div>

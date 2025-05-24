@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,6 +56,11 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { accessLevel } = useAccessLevel();
+
+  const canUseModel = (model: typeof AI_MODELS[0]) => {
+    if (model.tier === 'free') return true;
+    return accessLevel === 'pro' || accessLevel === 'trial';
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

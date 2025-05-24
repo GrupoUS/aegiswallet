@@ -20,59 +20,54 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
   const { toast } = useToast();
 
   const logStep = (step: string, details?: any) => {
-    console.log(`[AUDIO-RECORDER] ${step}`, details || '');
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] [AUDIO-RECORDER] ${step}`, details || '');
   };
 
   const startRecording = async () => {
     try {
-      logStep("Starting recording process");
+      logStep("Starting recording");
       
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Seu navegador não suporta gravação de áudio");
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Gravação de áudio não suportada neste navegador");
       }
 
-      // Configurações otimizadas para melhor compatibilidade
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000, // Taxa ideal para Whisper
-          channelCount: 1 // Mono para economizar espaço
+          sampleRate: 44100,
+          channelCount: 1
         } 
       });
       
-      logStep("Microphone access granted", {
-        tracks: stream.getAudioTracks().length,
-        settings: stream.getAudioTracks()[0]?.getSettings()
-      });
+      logStep("Microphone access granted");
 
-      // Formatos priorizados para melhor compatibilidade com Whisper
-      const preferredFormats = [
+      // Testar formatos suportados
+      const testFormats = [
         'audio/webm;codecs=opus',
         'audio/webm',
         'audio/mp4',
-        'audio/wav',
-        'audio/ogg;codecs=opus'
+        'audio/wav'
       ];
 
       let selectedFormat = '';
-      for (const format of preferredFormats) {
+      for (const format of testFormats) {
         if (MediaRecorder.isTypeSupported(format)) {
           selectedFormat = format;
-          logStep("Selected audio format", { format });
           break;
         }
       }
 
       if (!selectedFormat) {
-        logStep("WARNING: No optimal format found, using default");
-        selectedFormat = 'audio/webm'; // Fallback
+        selectedFormat = 'audio/webm'; // Fallback padrão
       }
+
+      logStep("Using audio format", { format: selectedFormat });
       
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedFormat,
-        bitsPerSecond: 64000 // Bitrate otimizado para fala
+        mimeType: selectedFormat
       });
       
       const chunks: BlobPart[] = [];
@@ -80,67 +75,60 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
-          logStep("Audio chunk received", { 
-            size: event.data.size,
-            totalChunks: chunks.length 
-          });
+          logStep("Audio chunk received", { size: event.data.size });
         }
       };
       
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: selectedFormat });
-        logStep("Recording stopped", { 
+        logStep("Recording completed", { 
           blobSize: blob.size,
-          blobType: blob.type,
           duration: recordingTime,
           chunks: chunks.length
         });
         setAudioBlob(blob);
         
-        // Limpar recursos
-        stream.getTracks().forEach(track => {
-          track.stop();
-          logStep("Audio track stopped", { trackId: track.id });
-        });
+        stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.onerror = (event) => {
-        logStep("MediaRecorder error", { error: event });
+        logStep("MediaRecorder error", event);
         toast({
           title: "Erro de Gravação",
-          description: "Erro durante a gravação de áudio",
+          description: "Falha durante a gravação",
           variant: "destructive"
         });
       };
       
-      mediaRecorder.start(250); // Coletar dados a cada 250ms para melhor responsividade
+      mediaRecorder.start(1000); // Coletar dados a cada segundo
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Timer com limite de 5 minutos
+      // Timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
-          const newTime = prev + 1;
-          if (newTime >= 300) { // 5 minutos
-            logStep("Auto-stopping recording at time limit");
+          if (prev >= 300) { // 5 minutos max
             stopRecording();
+            return prev;
           }
-          return newTime;
+          return prev + 1;
         });
       }, 1000);
       
-      logStep("Recording started successfully", { format: selectedFormat });
+      logStep("Recording started successfully");
       
     } catch (error) {
-      logStep("ERROR: Failed to start recording", { error });
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      logStep("Failed to start recording", { error: error.message });
+      
+      let errorMessage = "Erro ao iniciar gravação";
+      if (error.message.includes("Permission denied") || error.message.includes("NotAllowedError")) {
+        errorMessage = "Permissão de microfone negada. Verifique as configurações do navegador.";
+      }
       
       toast({
         title: "Erro",
-        description: errorMessage.includes("Permission") || errorMessage.includes("NotAllowedError")
-          ? "Permissão de microfone negada. Verifique as configurações do navegador."
-          : `Não foi possível iniciar a gravação: ${errorMessage}`,
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -167,89 +155,54 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
   };
 
   const sendRecording = async () => {
-    if (!audioBlob) {
-      logStep("ERROR: No audio blob to send");
-      return;
-    }
+    if (!audioBlob) return;
     
-    logStep("Starting transcription process", {
-      blobSize: audioBlob.size,
-      blobType: audioBlob.type
-    });
-    
+    logStep("Starting transcription", { blobSize: audioBlob.size });
     setIsProcessing(true);
     
     try {
-      // Validações antes do envio
-      const maxSizeBytes = 25 * 1024 * 1024; // 25MB
-      if (audioBlob.size > maxSizeBytes) {
-        throw new Error(`Arquivo muito grande (${Math.round(audioBlob.size / 1024 / 1024)}MB). Máximo: 25MB`);
+      // Validações
+      if (audioBlob.size > 25 * 1024 * 1024) {
+        throw new Error("Arquivo muito grande (máx: 25MB)");
       }
 
-      if (audioBlob.size < 1000) { // Mínimo de 1KB
-        throw new Error("Gravação muito pequena. Tente gravar novamente.");
+      if (audioBlob.size < 1000) {
+        throw new Error("Gravação muito pequena. Tente novamente.");
       }
 
-      // Converter para base64 com tratamento de erro
+      // Converter para base64
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          logStep("Audio converted to base64", {
-            originalSize: audioBlob!.size,
-            base64Length: result.length,
-            compressionRatio: (result.length / audioBlob!.size).toFixed(2)
-          });
-          resolve(result);
-        };
-        
-        reader.onerror = () => {
-          logStep("ERROR: FileReader failed", { error: reader.error });
-          reject(new Error("Erro ao processar arquivo de áudio"));
-        };
-        
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Erro ao processar áudio"));
         reader.readAsDataURL(audioBlob);
       });
       
-      logStep("Calling transcription function");
+      logStep("Audio converted to base64", { 
+        originalSize: audioBlob.size,
+        base64Length: base64Audio.length 
+      });
       
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: { audio: base64Audio }
       });
       
-      logStep("Transcription response received", { 
-        hasData: !!data, 
-        hasError: !!error,
-        success: data?.success
-      });
+      logStep("Transcription response", { hasData: !!data, hasError: !!error });
       
       if (error) {
-        logStep("ERROR: Supabase function error", { error });
-        throw new Error(`Erro na função de transcrição: ${error.message}`);
+        throw new Error(`Erro na transcrição: ${error.message}`);
       }
       
-      if (!data) {
-        logStep("ERROR: No data returned");
-        throw new Error("Nenhuma resposta da função de transcrição");
-      }
-      
-      if (!data.success) {
-        logStep("ERROR: Transcription failed", { 
-          error: data.error,
-          debugInfo: data.debug_info 
-        });
-        throw new Error(data.error || "Erro na transcrição de áudio");
+      if (!data?.success) {
+        throw new Error(data?.error || "Falha na transcrição");
       }
       
       if (!data.transcribed_text) {
-        logStep("ERROR: No transcribed text");
-        throw new Error("Nenhum texto foi transcrito do áudio");
+        throw new Error("Nenhum texto foi transcrito");
       }
       
       logStep("Transcription successful", { 
-        textLength: data.transcribed_text.length,
-        preview: data.transcribed_text.substring(0, 100)
+        textLength: data.transcribed_text.length 
       });
       
       onTranscriptionComplete(data.transcribed_text);
@@ -259,16 +212,14 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       toast({
         title: "Sucesso",
         description: "Áudio transcrito com sucesso!",
-        variant: "default"
       });
       
     } catch (error) {
-      logStep("ERROR: Transcription failed", { error });
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido na transcrição";
+      logStep("Transcription failed", { error: error.message });
       
       toast({
         title: "Erro na Transcrição",
-        description: errorMessage,
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -284,19 +235,16 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
 
   // Interface de revisão da gravação
   if (audioBlob) {
-    const sizeInMB = audioBlob.size / (1024 * 1024);
+    const sizeKB = Math.round(audioBlob.size / 1024);
     
     return (
       <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border">
         <div className="flex-1">
           <div className="text-sm font-medium">
-            Gravação de {formatTime(recordingTime)} pronta
+            Gravação de {formatTime(recordingTime)}
           </div>
           <div className="text-xs text-muted-foreground">
-            {sizeInMB < 1 
-              ? `${Math.round(sizeInMB * 1024)}KB`
-              : `${sizeInMB.toFixed(1)}MB`
-            } • {audioBlob.type}
+            {sizeKB}KB • {audioBlob.type}
           </div>
         </div>
         <Button
@@ -304,7 +252,6 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           variant="outline"
           onClick={discardRecording}
           disabled={isProcessing}
-          title="Descartar gravação"
         >
           <X className="h-3 w-3" />
         </Button>
@@ -312,7 +259,6 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           size="sm"
           onClick={sendRecording}
           disabled={isProcessing}
-          title="Enviar para transcrição"
         >
           {isProcessing ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -324,7 +270,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     );
   }
 
-  // Interface durante a gravação
+  // Interface durante gravação
   if (isRecording) {
     return (
       <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -333,17 +279,11 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           <span className="text-sm text-red-700 dark:text-red-300 font-medium">
             Gravando... {formatTime(recordingTime)}
           </span>
-          {recordingTime > 240 && (
-            <span className="text-xs text-red-600 dark:text-red-400">
-              (máx: 5min)
-            </span>
-          )}
         </div>
         <Button
           size="sm"
           variant="destructive"
           onClick={stopRecording}
-          title="Parar gravação"
         >
           <MicOff className="h-3 w-3" />
         </Button>
@@ -351,7 +291,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     );
   }
 
-  // Botão inicial do microfone
+  // Botão inicial
   return (
     <Button
       size="icon"
@@ -359,10 +299,8 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       onClick={startRecording}
       disabled={disabled}
       className="h-10 w-10"
-      title="Gravar mensagem de voz"
     >
       <Mic className="h-4 w-4" />
-      <span className="sr-only">Gravar áudio</span>
     </Button>
   );
 };

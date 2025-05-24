@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Loader2, ArrowLeft } from "lucide-react";
+import { Send, Bot, User, Loader2, ArrowLeft, Crown, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAccessLevel } from "@/hooks/useAccessLevel";
 import SuggestedQuestions from "./SuggestedQuestions";
 
 interface ChatMessage {
@@ -16,13 +17,34 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   model?: string;
+  actionExecuted?: boolean;
 }
 
 const AI_MODELS = [
-  { id: 'openai/gpt-3.5-turbo', name: 'Sugestão Rápida (GPT-3.5)' },
-  { id: 'openai/gpt-4o-mini', name: 'Análise Detalhada (GPT-4)' },
-  { id: 'anthropic/claude-3-haiku', name: 'Criatividade (Claude)' },
-  { id: 'google/gemini-pro', name: 'Insights (Gemini Pro)' }
+  { 
+    id: 'openai/gpt-3.5-turbo', 
+    name: 'Sugestão Rápida (GPT-3.5)', 
+    tier: 'free',
+    description: 'Modelo básico gratuito'
+  },
+  { 
+    id: 'openai/gpt-4o-mini', 
+    name: 'Análise Detalhada (GPT-4)', 
+    tier: 'premium',
+    description: 'Modelo avançado para análises profundas'
+  },
+  { 
+    id: 'anthropic/claude-3-haiku', 
+    name: 'Criatividade (Claude)', 
+    tier: 'premium',
+    description: 'Especialista em soluções criativas'
+  },
+  { 
+    id: 'google/gemini-pro', 
+    name: 'Insights (Gemini Pro)', 
+    tier: 'premium',
+    description: 'Insights avançados e análise preditiva'
+  }
 ];
 
 const ChatPage = () => {
@@ -33,6 +55,7 @@ const ChatPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { accessLevel } = useAccessLevel();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -110,15 +133,36 @@ const ChatPage = () => {
 
       if (error) throw error;
 
+      // Check for premium model restriction error
+      if (data.errorCode === 'PREMIUM_MODEL_REQUIRED') {
+        toast({
+          title: "Modelo Premium Requerido",
+          description: data.error,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
-        model: data.model_used
+        model: data.model_used,
+        actionExecuted: data.action_executed
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Show success message if action was executed
+      if (data.action_executed) {
+        toast({
+          title: "Ação Executada",
+          description: "A ação solicitada foi executada com sucesso!",
+          variant: "default"
+        });
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -134,7 +178,6 @@ const ChatPage = () => {
 
   const handleQuestionSelect = (question: string) => {
     setInputMessage(question);
-    // Auto-send the selected question
     sendMessage(question);
   };
 
@@ -143,6 +186,24 @@ const ChatPage = () => {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const canUseModel = (model: typeof AI_MODELS[0]) => {
+    if (model.tier === 'free') return true;
+    return accessLevel === 'pro' || accessLevel === 'trial';
+  };
+
+  const handleModelChange = (modelId: string) => {
+    const model = AI_MODELS.find(m => m.id === modelId);
+    if (model && !canUseModel(model)) {
+      toast({
+        title: "Modelo Premium",
+        description: "Este modelo é exclusivo para usuários Pro. Faça upgrade para acessar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setSelectedModel(modelId);
   };
 
   return (
@@ -166,19 +227,44 @@ const ChatPage = () => {
           </div>
           <div className="flex items-center gap-2 mt-4">
             <span className="text-sm text-muted-foreground">Modelo de IA:</span>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="w-64">
+            <Select value={selectedModel} onValueChange={handleModelChange}>
+              <SelectTrigger className="w-80">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {AI_MODELS.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.name}
-                  </SelectItem>
-                ))}
+                {AI_MODELS.map((model) => {
+                  const canUse = canUseModel(model);
+                  return (
+                    <SelectItem 
+                      key={model.id} 
+                      value={model.id}
+                      disabled={!canUse}
+                      className={!canUse ? "opacity-50" : ""}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <span>{model.name}</span>
+                        {model.tier === 'premium' && (
+                          canUse ? (
+                            <Crown className="h-3 w-3 text-yellow-500" />
+                          ) : (
+                            <Lock className="h-3 w-3 text-gray-400" />
+                          )
+                        )}
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {model.tier === 'free' ? '(Gratuito)' : '(Pro)'}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
+          {accessLevel === 'free' && (
+            <div className="text-xs text-muted-foreground mt-2">
+              💡 Faça upgrade para Pro e acesse modelos avançados de IA com capacidades de ação
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col gap-4">
@@ -189,9 +275,16 @@ const ChatPage = () => {
                 <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-2">Olá! Sou seu assistente financeiro pessoal.</h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground mb-4">
                     Analiso seus dados financeiros e ofereço insights personalizados sobre gastos, orçamento e planejamento financeiro.
                   </p>
+                  {(accessLevel === 'pro' || accessLevel === 'trial') && (
+                    <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border border-green-200 dark:border-green-800 mb-4">
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        ✨ <strong>Recursos Pro Ativados:</strong> Posso criar lembretes, registrar transações e usar modelos de IA avançados!
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <SuggestedQuestions onQuestionSelect={handleQuestionSelect} />
               </div>
@@ -225,9 +318,14 @@ const ChatPage = () => {
                   >
                     <p className="whitespace-pre-wrap">{message.content}</p>
                     {message.model && (
-                      <p className="text-xs opacity-70 mt-1">
-                        {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
-                      </p>
+                      <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
+                        <span>
+                          {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
+                        </span>
+                        {message.actionExecuted && (
+                          <span className="text-green-400 ml-2">✅ Ação executada</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

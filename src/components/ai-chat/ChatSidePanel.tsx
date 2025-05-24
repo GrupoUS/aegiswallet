@@ -1,12 +1,11 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Loader2, X } from "lucide-react";
+import { Send, Bot, User, Loader2, X, Crown, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAccessLevel } from "@/hooks/useAccessLevel";
 import SuggestedQuestions from "./SuggestedQuestions";
 
 interface ChatMessage {
@@ -15,6 +14,7 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   model?: string;
+  actionExecuted?: boolean;
 }
 
 interface ChatSidePanelProps {
@@ -23,10 +23,30 @@ interface ChatSidePanelProps {
 }
 
 const AI_MODELS = [
-  { id: 'openai/gpt-3.5-turbo', name: 'Sugestão Rápida (GPT-3.5)' },
-  { id: 'openai/gpt-4o-mini', name: 'Análise Detalhada (GPT-4)' },
-  { id: 'anthropic/claude-3-haiku', name: 'Criatividade (Claude)' },
-  { id: 'google/gemini-pro', name: 'Insights (Gemini Pro)' }
+  { 
+    id: 'openai/gpt-3.5-turbo', 
+    name: 'Sugestão Rápida (GPT-3.5)', 
+    tier: 'free',
+    description: 'Modelo básico gratuito'
+  },
+  { 
+    id: 'openai/gpt-4o-mini', 
+    name: 'Análise Detalhada (GPT-4)', 
+    tier: 'premium',
+    description: 'Modelo avançado para análises profundas'
+  },
+  { 
+    id: 'anthropic/claude-3-haiku', 
+    name: 'Criatividade (Claude)', 
+    tier: 'premium',
+    description: 'Especialista em soluções criativas'
+  },
+  { 
+    id: 'google/gemini-pro', 
+    name: 'Insights (Gemini Pro)', 
+    tier: 'premium',
+    description: 'Insights avançados e análise preditiva'
+  }
 ];
 
 const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
@@ -36,6 +56,7 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
   const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { accessLevel } = useAccessLevel();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -115,15 +136,36 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
 
       if (error) throw error;
 
+      // Check for premium model restriction error
+      if (data.errorCode === 'PREMIUM_MODEL_REQUIRED') {
+        toast({
+          title: "Modelo Premium Requerido",
+          description: data.error,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
-        model: data.model_used
+        model: data.model_used,
+        actionExecuted: data.action_executed
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Show success message if action was executed
+      if (data.action_executed) {
+        toast({
+          title: "Ação Executada",
+          description: "A ação solicitada foi executada com sucesso!",
+          variant: "default"
+        });
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -135,6 +177,24 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const canUseModel = (model: typeof AI_MODELS[0]) => {
+    if (model.tier === 'free') return true;
+    return accessLevel === 'pro' || accessLevel === 'trial';
+  };
+
+  const handleModelChange = (modelId: string) => {
+    const model = AI_MODELS.find(m => m.id === modelId);
+    if (model && !canUseModel(model)) {
+      toast({
+        title: "Modelo Premium",
+        description: "Este modelo é exclusivo para usuários Pro. Faça upgrade para acessar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setSelectedModel(modelId);
   };
 
   const handleQuestionSelect = (question: string) => {
@@ -171,20 +231,44 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
               <span className="sr-only">Fechar Chat</span>
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Modelo:</span>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="flex-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AI_MODELS.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Modelo:</span>
+              <Select value={selectedModel} onValueChange={handleModelChange}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AI_MODELS.map((model) => {
+                    const canUse = canUseModel(model);
+                    return (
+                      <SelectItem 
+                        key={model.id} 
+                        value={model.id}
+                        disabled={!canUse}
+                        className={!canUse ? "opacity-50" : ""}
+                      >
+                        <div className="flex items-center gap-1 text-xs">
+                          <span>{model.name}</span>
+                          {model.tier === 'premium' && (
+                            canUse ? (
+                              <Crown className="h-2 w-2 text-yellow-500" />
+                            ) : (
+                              <Lock className="h-2 w-2 text-gray-400" />
+                            )
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            {accessLevel === 'free' && (
+              <div className="text-xs text-muted-foreground">
+                💡 Pro: modelos avançados + ações
+              </div>
+            )}
           </div>
         </div>
 
@@ -195,9 +279,14 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
               <Bot className="h-8 w-8 mx-auto mb-3 opacity-50" />
               <div className="mb-4">
                 <h3 className="text-base font-semibold mb-2">Olá! Sou seu assistente financeiro.</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Analiso seus dados e ofereço insights sobre gastos e planejamento.
                 </p>
+                {(accessLevel === 'pro' || accessLevel === 'trial') && (
+                  <div className="bg-green-50 dark:bg-green-950/20 p-2 rounded text-xs text-green-800 dark:text-green-200 mb-3">
+                    ✨ <strong>Pro:</strong> Posso criar lembretes e registrar transações!
+                  </div>
+                )}
               </div>
               <SuggestedQuestions onQuestionSelect={handleQuestionSelect} />
             </div>
@@ -231,9 +320,14 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
                 >
                   <p className="whitespace-pre-wrap">{message.content}</p>
                   {message.model && (
-                    <p className="text-xs opacity-70 mt-1">
-                      {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
-                    </p>
+                    <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
+                      <span>
+                        {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
+                      </span>
+                      {message.actionExecuted && (
+                        <span className="text-green-400 ml-1">✅</span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

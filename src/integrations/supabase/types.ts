@@ -178,6 +178,7 @@ export type Database = {
           amount: number | null
           created_at: string
           due_date: string
+          email_sent_at: string | null
           id: string
           is_paid: boolean | null
           name: string
@@ -188,6 +189,7 @@ export type Database = {
           amount?: number | null
           created_at?: string
           due_date: string
+          email_sent_at?: string | null
           id?: string
           is_paid?: boolean | null
           name: string
@@ -198,6 +200,7 @@ export type Database = {
           amount?: number | null
           created_at?: string
           due_date?: string
+          email_sent_at?: string | null
           id?: string
           is_paid?: boolean | null
           name?: string

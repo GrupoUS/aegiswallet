@@ -39,7 +39,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100, // High quality sample rate
+          sampleRate: 48000, // High quality sample rate
           channelCount: 1 // Mono for speech
         } 
       });
@@ -49,9 +49,10 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         settings: stream.getAudioTracks()[0]?.getSettings()
       });
 
-      // Try to use WAV format first (best compatibility with Whisper)
+      // Prioritize WAV format for best Whisper compatibility
       const mimeTypes = [
         'audio/wav',
+        'audio/webm;codecs=pcm',
         'audio/webm;codecs=opus',
         'audio/webm',
         'audio/mp4',
@@ -204,7 +205,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       reader.readAsDataURL(audioBlob);
       const base64Audio = await base64Promise;
       
-      logStep("Calling transcribe-audio function");
+      logStep("Calling transcribe-audio function with OpenRouter");
       
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: { audio: base64Audio }
@@ -242,7 +243,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         throw new Error("Nenhum texto transcrito retornado");
       }
       
-      logStep("Transcription successful", { 
+      logStep("Transcription successful with OpenRouter", { 
         textLength: data.transcribed_text.length,
         preview: data.transcribed_text.substring(0, 100)
       });
@@ -253,7 +254,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       
       toast({
         title: "Sucesso",
-        description: "Áudio transcrito com sucesso!",
+        description: "Áudio transcrito com sucesso via OpenRouter!",
         variant: "default"
       });
       

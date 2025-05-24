@@ -48,13 +48,13 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Verify OpenAI API Key
-    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
-    logStep("API Key check", { hasKey: !!openAIApiKey });
+    // Verify OpenRouter API Key
+    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+    logStep("OpenRouter API Key check", { hasKey: !!openRouterApiKey });
     
-    if (!openAIApiKey) {
-      logStep("ERROR: OpenAI API Key not configured");
-      return createErrorResponse("Chave da API OpenAI não configurada no servidor.");
+    if (!openRouterApiKey) {
+      logStep("ERROR: OpenRouter API Key not configured");
+      return createErrorResponse("Chave da API OpenRouter não configurada no servidor.");
     }
 
     // Authentication check
@@ -130,48 +130,41 @@ serve(async (req) => {
       return createErrorResponse("Arquivo de áudio muito grande. Máximo: 25MB");
     }
 
-    // Prepare form data for OpenAI Whisper API
+    // Prepare form data for OpenRouter Whisper API
     const formData = new FormData();
     
-    // Try different audio formats for better compatibility
-    const audioFormats = [
-      { type: 'audio/wav', extension: 'wav' },
-      { type: 'audio/webm', extension: 'webm' },
-      { type: 'audio/mp3', extension: 'mp3' },
-      { type: 'audio/mpeg', extension: 'mp3' }
-    ];
-    
-    // Use WAV as default (most compatible with Whisper)
-    const audioFormat = audioFormats[0];
-    const blob = new Blob([binaryAudio], { type: audioFormat.type });
-    formData.append('file', blob, `audio.${audioFormat.extension}`);
-    formData.append('model', 'whisper-1');
+    // Use WAV format (most compatible with Whisper)
+    const blob = new Blob([binaryAudio], { type: 'audio/wav' });
+    formData.append('file', blob, 'audio.wav');
+    formData.append('model', 'openai/whisper-1');
     formData.append('language', 'pt'); // Portuguese language for better accuracy
 
-    logStep("Prepared form data for OpenAI", {
-      audioFormat: audioFormat.type,
-      filename: `audio.${audioFormat.extension}`,
-      model: 'whisper-1',
+    logStep("Prepared form data for OpenRouter", {
+      audioFormat: 'audio/wav',
+      filename: 'audio.wav',
+      model: 'openai/whisper-1',
       language: 'pt'
     });
 
-    // Call OpenAI Whisper API with timeout and retry logic
+    // Call OpenRouter Whisper API with timeout and retry logic
     let attempts = 0;
     const maxAttempts = 2;
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
       attempts++;
-      logStep(`OpenAI API attempt ${attempts}/${maxAttempts}`);
+      logStep(`OpenRouter API attempt ${attempts}/${maxAttempts}`);
       
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${openAIApiKey}`,
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "HTTP-Referer": "https://soqfclgupivjcdiiwmta.supabase.co",
+            "X-Title": "AegisWallet Audio Transcription"
           },
           body: formData,
           signal: controller.signal
@@ -179,7 +172,7 @@ serve(async (req) => {
 
         clearTimeout(timeoutId);
 
-        logStep("OpenAI API response received", {
+        logStep("OpenRouter API response received", {
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries())
@@ -187,17 +180,17 @@ serve(async (req) => {
 
         if (!response.ok) {
           const errorText = await response.text();
-          logStep("OpenAI API error response", { 
+          logStep("OpenRouter API error response", { 
             status: response.status, 
             error: errorText 
           });
           
-          // Parse OpenAI error for more specific messages
+          // Parse OpenRouter error for more specific messages
           let errorMessage = "Erro na API de transcrição";
           try {
             const errorData = JSON.parse(errorText);
             if (errorData.error?.message) {
-              errorMessage = `Erro OpenAI: ${errorData.error.message}`;
+              errorMessage = `Erro OpenRouter: ${errorData.error.message}`;
             }
           } catch (e) {
             errorMessage = `Erro HTTP ${response.status}: ${errorText}`;
@@ -223,7 +216,7 @@ serve(async (req) => {
 
           if (!transcribedText) {
             logStep("ERROR: No transcription returned");
-            return createErrorResponse("Nenhuma transcrição retornada pela API Whisper");
+            return createErrorResponse("Nenhuma transcrição retornada pela API");
           }
 
           logStep("Transcription successful", { 

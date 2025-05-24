@@ -64,10 +64,10 @@ const NewsCard = ({ newsItem, onReadMore }: NewsCardProps) => {
   return (
     <Card className="mb-4 hover:shadow-lg transition-all duration-300 overflow-hidden">
       {shouldShowImage && (
-        <div className="relative h-48 w-full overflow-hidden">
+        <div className="relative h-32 sm:h-48 w-full overflow-hidden">
           {imageLoading && (
             <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-              <ImageIcon className="h-8 w-8 text-gray-400" />
+              <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
             </div>
           )}
           <img
@@ -81,22 +81,22 @@ const NewsCard = ({ newsItem, onReadMore }: NewsCardProps) => {
         </div>
       )}
       
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 leading-tight">
+      <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
+        <CardTitle className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 leading-tight">
           Título: {newsItem.title}
         </CardTitle>
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-2">
-          <Calendar className="h-4 w-4 mr-1" />
+        <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span>Data de Publicação: {newsItem.pubDate}</span>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
         <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Resumo:
           </p>
-          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed">
             {truncateText(stripHtml(newsItem.description))}
           </p>
         </div>
@@ -105,9 +105,9 @@ const NewsCard = ({ newsItem, onReadMore }: NewsCardProps) => {
           variant="outline" 
           size="sm" 
           onClick={() => onReadMore(newsItem.link)}
-          className="w-full hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20 transition-colors"
+          className="w-full hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20 transition-colors text-xs sm:text-sm"
         >
-          <ExternalLink className="h-4 w-4 mr-2" />
+          <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
           Ler matéria completa
         </Button>
       </CardContent>

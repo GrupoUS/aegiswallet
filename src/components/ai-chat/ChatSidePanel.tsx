@@ -217,14 +217,14 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-full w-1/3 bg-white dark:bg-gray-800 shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-gray-700">
+    <div className="fixed right-0 top-0 h-full w-full sm:w-96 md:w-1/3 bg-white dark:bg-gray-800 shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-gray-700">
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Assistente Financeiro IA</h2>
+              <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-base sm:text-lg font-semibold">Assistente Financeiro IA</h2>
             </div>
             <Button
               variant="ghost"
@@ -237,10 +237,10 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
             </Button>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Modelo:</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-xs sm:text-sm text-muted-foreground">Modelo:</span>
               <Select value={selectedModel} onValueChange={handleModelChange}>
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className="flex-1 text-xs sm:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,13 +278,13 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-4">
-              <Bot className="h-8 w-8 mx-auto mb-3 opacity-50" />
+              <Bot className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-3 opacity-50" />
               <div className="mb-4">
-                <h3 className="text-base font-semibold mb-2">Olá! Sou seu assistente financeiro.</h3>
-                <p className="text-sm text-muted-foreground mb-3">
+                <h3 className="text-sm sm:text-base font-semibold mb-2">Olá! Sou seu assistente financeiro.</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3">
                   Analiso seus dados e ofereço insights sobre gastos e planejamento.
                 </p>
                 {(accessLevel === 'pro' || accessLevel === 'trial') && (
@@ -305,25 +305,25 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
               }`}
             >
               <div
-                className={`flex gap-2 max-w-[85%] ${
+                className={`flex gap-2 max-w-[90%] sm:max-w-[85%] ${
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary flex items-center justify-center">
                   {message.role === 'user' ? (
-                    <User className="h-3 w-3 text-primary-foreground" />
+                    <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" />
                   ) : (
-                    <Bot className="h-3 w-3 text-primary-foreground" />
+                    <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" />
                   )}
                 </div>
                 <div
-                  className={`rounded-lg p-3 text-sm ${
+                  className={`rounded-lg p-2 sm:p-3 text-xs sm:text-sm ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
                   {message.model && (
                     <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
                       <span>
@@ -342,11 +342,11 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
           {isLoading && (
             <div className="flex gap-2 justify-start">
               <div className="flex gap-2 max-w-[85%]">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                  <Bot className="h-3 w-3 text-primary-foreground" />
+                <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary flex items-center justify-center">
+                  <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" />
                 </div>
-                <div className="rounded-lg p-3 bg-muted">
-                  <div className="flex items-center gap-2 text-sm">
+                <div className="rounded-lg p-2 sm:p-3 bg-muted">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     <span>Analisando...</span>
                   </div>
@@ -359,14 +359,14 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Digite sua pergunta ou grave um áudio..."
-              className="flex-1 text-sm"
+              placeholder="Digite sua pergunta..."
+              className="flex-1 text-xs sm:text-sm"
               disabled={isLoading}
             />
             <AudioRecorder 
@@ -377,12 +377,12 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
               onClick={() => sendMessage()} 
               disabled={!inputMessage.trim() || isLoading}
               size="icon"
-              className="h-10 w-10"
+              className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
           </div>

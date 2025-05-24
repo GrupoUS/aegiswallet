@@ -13,11 +13,18 @@ interface SubscriptionData {
   current_period_end: string | null;
 }
 
+interface ApiErrorResponse {
+  success: false;
+  error: string;
+  errorCode: string;
+}
+
 const SubscriptionPage = () => {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const { toast } = useToast();
   const { accessLevel, daysLeft } = useAccessLevel();
 
@@ -25,40 +32,97 @@ const SubscriptionPage = () => {
     checkSubscription();
   }, []);
 
+  const getErrorMessage = (errorCode: string, defaultMessage: string): string => {
+    const errorMessages: Record<string, string> = {
+      'SUPABASE_CONFIG_MISSING': 'Erro de configuração do sistema. Contate o suporte.',
+      'SUPABASE_SERVICE_KEY_MISSING': 'Erro de configuração do sistema. Contate o suporte.',
+      'AUTH_TOKEN_MISSING': 'Sessão expirada. Faça login novamente.',
+      'AUTH_FAILED': 'Erro de autenticação. Faça login novamente.',
+      'USER_NOT_AUTHENTICATED': 'Usuário não autenticado. Faça login novamente.',
+      'STRIPE_CONFIG_MISSING': 'Serviço de pagamento não configurado. Contate o suporte.',
+      'STRIPE_INVALID_KEY': 'Configuração de pagamento inválida. Contate o suporte.',
+      'STRIPE_API_ERROR': 'Erro ao conectar com o serviço de pagamento. Tente novamente.',
+      'STRIPE_SUBSCRIPTION_ERROR': 'Erro ao verificar assinaturas. Tente novamente.',
+      'DB_UPDATE_ERROR': 'Erro ao salvar dados. Tente novamente.',
+      'INTERNAL_SERVER_ERROR': 'Erro interno do servidor. Tente novamente em alguns minutos.',
+    };
+
+    return errorMessages[errorCode] || defaultMessage;
+  };
+
   const checkSubscription = async () => {
     setLoading(true);
     setError(null);
+    setErrorCode(null);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError("Usuário não autenticado");
+        setErrorCode("USER_NOT_AUTHENTICATED");
         return;
       }
 
       console.log("Checking subscription for user:", session.user.id);
 
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
+      const { data, error: functionError } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        throw new Error(error.message || "Erro ao chamar função de verificação");
+      if (functionError) {
+        console.error("Supabase function error:", functionError);
+        
+        // Try to parse error details if available
+        let errorMessage = "Erro ao chamar função de verificação";
+        let errorCodeValue = "FUNCTION_ERROR";
+        
+        if (functionError.message) {
+          errorMessage = functionError.message;
+        }
+        
+        setError(errorMessage);
+        setErrorCode(errorCodeValue);
+        
+        toast({
+          title: "Erro",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if the response indicates an error
+      if (data && typeof data === 'object' && 'success' in data && data.success === false) {
+        const errorResponse = data as ApiErrorResponse;
+        const errorMessage = getErrorMessage(errorResponse.errorCode, errorResponse.error);
+        
+        console.error("API error response:", errorResponse);
+        setError(errorMessage);
+        setErrorCode(errorResponse.errorCode);
+        
+        toast({
+          title: "Erro",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log("Subscription data received:", data);
-      setSubscription(data);
+      setSubscription(data as SubscriptionData);
     } catch (error) {
       console.error("Erro ao verificar assinatura:", error);
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      setError(`Erro ao verificar assinatura: ${errorMessage}`);
+      const processedErrorMessage = getErrorMessage("UNKNOWN_ERROR", `Erro ao verificar assinatura: ${errorMessage}`);
+      
+      setError(processedErrorMessage);
+      setErrorCode("UNKNOWN_ERROR");
       
       toast({
         title: "Erro",
-        description: `Não foi possível verificar o status da assinatura: ${errorMessage}`,
+        description: processedErrorMessage,
         variant: "destructive",
       });
     } finally {
@@ -173,6 +237,11 @@ const SubscriptionPage = () => {
             <p className="text-red-700 dark:text-red-300 mb-4">
               {error}
             </p>
+            {errorCode && (
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4 font-mono">
+                Código do erro: {errorCode}
+              </p>
+            )}
             <Button 
               onClick={checkSubscription}
               variant="outline"

@@ -13,68 +13,115 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+const createErrorResponse = (error: string, errorCode: string, statusCode: number = 500) => {
+  logStep("ERROR", { error, errorCode });
+  return new Response(JSON.stringify({ 
+    success: false, 
+    error, 
+    errorCode 
+  }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status: statusCode,
+  });
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  let supabaseClient;
 
   try {
     logStep("Function started");
 
+    // Initialize Supabase client with service role key
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl) {
+      return createErrorResponse("Configuração do Supabase não encontrada", "SUPABASE_CONFIG_MISSING", 500);
+    }
+    
+    if (!supabaseServiceKey) {
+      return createErrorResponse("Chave de serviço do Supabase não configurada", "SUPABASE_SERVICE_KEY_MISSING", 500);
+    }
+
+    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, { 
+      auth: { persistSession: false } 
+    });
+    logStep("Supabase client initialized");
+
+    // Extract and validate authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      logStep("ERROR: No authorization header provided");
-      throw new Error("Token de autorização não fornecido");
+      return createErrorResponse("Token de autorização não fornecido", "AUTH_TOKEN_MISSING", 401);
     }
 
     const token = authHeader.replace("Bearer ", "");
+    logStep("Authorization token extracted");
+
+    // Get user from token
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError) {
-      logStep("ERROR: Authentication failed", { error: userError.message });
-      throw new Error(`Erro de autenticação: ${userError.message}`);
+      logStep("Authentication failed", { error: userError.message });
+      return createErrorResponse("Erro de autenticação", "AUTH_FAILED", 401);
     }
     
     const user = userData.user;
     if (!user?.email) {
-      logStep("ERROR: User not authenticated or email not available");
-      throw new Error("Usuário não autenticado ou email não disponível");
+      return createErrorResponse("Usuário não autenticado ou email não disponível", "USER_NOT_AUTHENTICATED", 401);
     }
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Validate Stripe configuration
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      logStep("ERROR: Stripe secret key not configured");
-      throw new Error("Chave secreta do Stripe não configurada");
+      return createErrorResponse("Chave secreta do Stripe não configurada", "STRIPE_CONFIG_MISSING", 500);
+    }
+
+    if (!stripeKey.startsWith('sk_')) {
+      return createErrorResponse("Chave do Stripe inválida - deve ser uma chave secreta", "STRIPE_INVALID_KEY", 500);
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    logStep("Stripe client initialized");
     
     // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customers;
+    try {
+      customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      logStep("Stripe customer lookup completed", { found: customers.data.length > 0 });
+    } catch (stripeError: any) {
+      logStep("Stripe API error", { error: stripeError.message });
+      return createErrorResponse("Erro ao conectar com o Stripe", "STRIPE_API_ERROR", 500);
+    }
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating inactive state");
       
-      // Update user_subscriptions table with inactive status
-      await supabaseClient.from("user_subscriptions").upsert({
-        user_id: user.id,
-        stripe_customer_id: null,
-        stripe_subscription_id: null,
-        status: "inactive",
-        current_period_start: null,
-        current_period_end: null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
+      try {
+        // Update user_subscriptions table with inactive status
+        await supabaseClient.from("user_subscriptions").upsert({
+          user_id: user.id,
+          stripe_customer_id: null,
+          stripe_subscription_id: null,
+          status: "inactive",
+          current_period_start: null,
+          current_period_end: null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+        
+        logStep("Database updated with inactive status");
+      } catch (dbError: any) {
+        logStep("Database update error", { error: dbError.message });
+        return createErrorResponse("Erro ao atualizar dados de assinatura", "DB_UPDATE_ERROR", 500);
+      }
       
       return new Response(JSON.stringify({ 
+        success: true,
         subscribed: false, 
         status: "inactive",
         current_period_end: null 
@@ -88,11 +135,18 @@ serve(async (req) => {
     logStep("Found Stripe customer", { customerId });
 
     // Get active subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
+    let subscriptions;
+    try {
+      subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "active",
+        limit: 1,
+      });
+      logStep("Stripe subscriptions lookup completed", { activeSubscriptions: subscriptions.data.length });
+    } catch (stripeError: any) {
+      logStep("Stripe subscriptions lookup error", { error: stripeError.message });
+      return createErrorResponse("Erro ao verificar assinaturas no Stripe", "STRIPE_SUBSCRIPTION_ERROR", 500);
+    }
 
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionData = {
@@ -120,15 +174,21 @@ serve(async (req) => {
     }
 
     // Update user_subscriptions table
-    await supabaseClient.from("user_subscriptions").upsert({
-      user_id: user.id,
-      ...subscriptionData,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    try {
+      await supabaseClient.from("user_subscriptions").upsert({
+        user_id: user.id,
+        ...subscriptionData,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, status: subscriptionData.status });
+      logStep("Updated database with subscription info", { subscribed: hasActiveSub, status: subscriptionData.status });
+    } catch (dbError: any) {
+      logStep("Database update error", { error: dbError.message });
+      return createErrorResponse("Erro ao salvar dados de assinatura", "DB_UPDATE_ERROR", 500);
+    }
     
     return new Response(JSON.stringify({
+      success: true,
       subscribed: hasActiveSub,
       status: subscriptionData.status,
       current_period_end: subscriptionData.current_period_end
@@ -136,18 +196,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in check-subscription", { message: errorMessage });
+    logStep("Unexpected error in check-subscription", { message: errorMessage, stack: error.stack });
     
-    // Return a more specific error message in Portuguese
-    return new Response(JSON.stringify({ 
-      error: errorMessage.includes("Stripe") ? "Erro ao verificar assinatura no Stripe" :
-             errorMessage.includes("autenticação") || errorMessage.includes("Token") ? "Erro de autenticação" :
-             "Erro interno do servidor"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return createErrorResponse("Erro interno do servidor", "INTERNAL_SERVER_ERROR", 500);
   }
 });

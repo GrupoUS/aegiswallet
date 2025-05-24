@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Send, Bot, User, Loader2, X, Crown, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
 import SuggestedQuestions from "./SuggestedQuestions";
+import AudioRecorder from "./AudioRecorder";
 
 interface ChatMessage {
   id: string;
@@ -179,11 +181,6 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
     }
   };
 
-  const canUseModel = (model: typeof AI_MODELS[0]) => {
-    if (model.tier === 'free') return true;
-    return accessLevel === 'pro' || accessLevel === 'trial';
-  };
-
   const handleModelChange = (modelId: string) => {
     const model = AI_MODELS.find(m => m.id === modelId);
     if (model && !canUseModel(model)) {
@@ -200,6 +197,10 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
   const handleQuestionSelect = (question: string) => {
     setInputMessage(question);
     sendMessage(question);
+  };
+
+  const handleTranscriptionComplete = (text: string) => {
+    setInputMessage(text);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -360,8 +361,12 @@ const ChatSidePanel = ({ isOpen, onClose }: ChatSidePanelProps) => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Digite sua pergunta..."
+              placeholder="Digite sua pergunta ou grave um áudio..."
               className="flex-1 text-sm"
+              disabled={isLoading}
+            />
+            <AudioRecorder 
+              onTranscriptionComplete={handleTranscriptionComplete}
               disabled={isLoading}
             />
             <Button 

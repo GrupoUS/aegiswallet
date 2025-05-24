@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
 import SuggestedQuestions from "./SuggestedQuestions";
+import AudioRecorder from "./AudioRecorder";
 
 interface ChatMessage {
   id: string;
@@ -181,16 +182,15 @@ const ChatPage = () => {
     sendMessage(question);
   };
 
+  const handleTranscriptionComplete = (text: string) => {
+    setInputMessage(text);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
-  };
-
-  const canUseModel = (model: typeof AI_MODELS[0]) => {
-    if (model.tier === 'free') return true;
-    return accessLevel === 'pro' || accessLevel === 'trial';
   };
 
   const handleModelChange = (modelId: string) => {
@@ -357,8 +357,12 @@ const ChatPage = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Digite sua pergunta sobre finanças..."
+              placeholder="Digite sua pergunta sobre finanças ou grave um áudio..."
               className="flex-1"
+              disabled={isLoading}
+            />
+            <AudioRecorder 
+              onTranscriptionComplete={handleTranscriptionComplete}
               disabled={isLoading}
             />
             <Button 

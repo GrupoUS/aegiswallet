@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -222,8 +223,10 @@ const Dashboard = () => {
             onClose={() => setIsChatPanelOpen(false)} 
           />
 
-          {/* Floating Action Button for AI Chat */}
-          <AIAssistantFAB onToggleChat={toggleChatPanel} />
+          {/* Floating Action Button for AI Chat - Only show when panel is closed */}
+          {!isChatPanelOpen && (
+            <AIAssistantFAB onToggleChat={toggleChatPanel} />
+          )}
 
           {/* Dialogs */}
           <AddTransactionDialog 

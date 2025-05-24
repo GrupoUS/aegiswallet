@@ -37,19 +37,20 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100,
+          sampleRate: 16000, // Whisper prefere 16kHz
           channelCount: 1
         } 
       });
       
       logStep("Microphone access granted");
 
-      // Testar formatos suportados
+      // Testar formatos suportados - priorizar WAV e WebM
       const testFormats = [
+        'audio/wav',
         'audio/webm;codecs=opus',
         'audio/webm',
         'audio/mp4',
-        'audio/wav'
+        'audio/ogg'
       ];
 
       let selectedFormat = '';
@@ -67,7 +68,8 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       logStep("Using audio format", { format: selectedFormat });
       
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedFormat
+        mimeType: selectedFormat,
+        audioBitsPerSecond: 128000 // 128kbps para qualidade adequada
       });
       
       const chunks: BlobPart[] = [];
@@ -84,7 +86,8 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         logStep("Recording completed", { 
           blobSize: blob.size,
           duration: recordingTime,
-          chunks: chunks.length
+          chunks: chunks.length,
+          mimeType: blob.type
         });
         setAudioBlob(blob);
         
@@ -100,7 +103,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         });
       };
       
-      mediaRecorder.start(1000); // Coletar dados a cada segundo
+      mediaRecorder.start(250); // Coletar dados a cada 250ms para melhor qualidade
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       setRecordingTime(0);
@@ -108,7 +111,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       // Timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
-          if (prev >= 300) { // 5 minutos max
+          if (prev >= 180) { // 3 minutos max para evitar arquivos muito grandes
             stopRecording();
             return prev;
           }
@@ -157,7 +160,10 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
   const sendRecording = async () => {
     if (!audioBlob) return;
     
-    logStep("Starting transcription", { blobSize: audioBlob.size });
+    logStep("Starting transcription", { 
+      blobSize: audioBlob.size,
+      blobType: audioBlob.type 
+    });
     setIsProcessing(true);
     
     try {
@@ -170,39 +176,58 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         throw new Error("Gravação muito pequena. Tente novamente.");
       }
 
-      // Converter para base64
+      // Converter para base64 com melhor tratamento
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Erro ao processar áudio"));
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          logStep("FileReader completed", { 
+            resultLength: result.length,
+            hasDataPrefix: result.includes('data:')
+          });
+          resolve(result);
+        };
+        reader.onerror = () => {
+          logStep("FileReader error", { error: reader.error });
+          reject(new Error("Erro ao processar áudio"));
+        };
         reader.readAsDataURL(audioBlob);
       });
       
       logStep("Audio converted to base64", { 
         originalSize: audioBlob.size,
-        base64Length: base64Audio.length 
+        base64Length: base64Audio.length,
+        mimeType: audioBlob.type
       });
       
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: { audio: base64Audio }
       });
       
-      logStep("Transcription response", { hasData: !!data, hasError: !!error });
+      logStep("Transcription response", { 
+        hasData: !!data, 
+        hasError: !!error,
+        data: data ? Object.keys(data) : null
+      });
       
       if (error) {
+        logStep("Supabase function error", { error });
         throw new Error(`Erro na transcrição: ${error.message}`);
       }
       
       if (!data?.success) {
+        logStep("Transcription failed", { error: data?.error });
         throw new Error(data?.error || "Falha na transcrição");
       }
       
       if (!data.transcribed_text) {
+        logStep("Empty transcription result");
         throw new Error("Nenhum texto foi transcrito");
       }
       
       logStep("Transcription successful", { 
-        textLength: data.transcribed_text.length 
+        textLength: data.transcribed_text.length,
+        preview: data.transcribed_text.substring(0, 50)
       });
       
       onTranscriptionComplete(data.transcribed_text);

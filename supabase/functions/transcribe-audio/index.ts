@@ -47,6 +47,12 @@ function processBase64Audio(base64String: string): Uint8Array {
       logStep("Removed data URL prefix");
     }
 
+    // Validar Base64
+    if (cleanBase64.length % 4 !== 0) {
+      cleanBase64 = cleanBase64.padEnd(cleanBase64.length + (4 - cleanBase64.length % 4), '=');
+      logStep("Padded Base64 string for correct length");
+    }
+
     // Decodificar Base64
     const binaryString = atob(cleanBase64);
     const bytes = new Uint8Array(binaryString.length);
@@ -133,13 +139,13 @@ serve(async (req) => {
     // Verificar variáveis de ambiente
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    const openrouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
 
-    if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !openrouterApiKey) {
       logStep("Missing environment variables", {
         hasSupabaseUrl: !!supabaseUrl,
         hasServiceKey: !!supabaseServiceKey,
-        hasOpenaiKey: !!openaiApiKey
+        hasOpenrouterKey: !!openrouterApiKey
       });
       return createErrorResponse("Configuração do servidor incompleta", 500);
     }
@@ -180,7 +186,7 @@ serve(async (req) => {
     validateAudioData(binaryAudio);
     const mimeType = detectAudioFormat(binaryAudio);
 
-    // Preparar FormData para OpenAI
+    // Preparar FormData para OpenAI (via OpenRouter)
     const formData = new FormData();
     const audioBlob = new Blob([binaryAudio], { type: mimeType });
     
@@ -190,24 +196,25 @@ serve(async (req) => {
                      mimeType.includes('ogg') ? 'ogg' : 'webm';
     
     formData.append('file', audioBlob, `audio.${extension}`);
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'pt');
+    formData.append('model', 'openai/whisper-1');
 
-    logStep("Calling OpenAI Whisper API", {
+    logStep("Calling OpenRouter Whisper API", {
       mimeType,
       extension,
       audioSize: binaryAudio.length
     });
 
-    // Chamar API OpenAI com timeout
+    // Chamar API OpenRouter com timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
     try {
-      const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${openaiApiKey}`,
+          "Authorization": `Bearer ${openrouterApiKey}`,
+          "HTTP-Referer": "https://soqfclgupivjcdiiwmta.supabase.co",
+          "X-Title": "AegisWallet"
         },
         body: formData,
         signal: controller.signal
@@ -217,11 +224,20 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logStep("OpenAI API error", { 
+        logStep("OpenRouter API error", { 
           status: response.status, 
           statusText: response.statusText,
           error: errorText 
         });
+        
+        // Se OpenRouter não suportar transcription, tente OpenAI direto
+        if (response.status === 404 || response.status === 501) {
+          logStep("OpenRouter doesn't support transcription, falling back to OpenAI");
+          
+          // Fallback para OpenAI direto - verificar se temos uma chave alternativa
+          // Por enquanto, retornar erro específico
+          return createErrorResponse("OpenRouter não suporta transcrição de áudio. Configure OPENAI_API_KEY para usar Whisper diretamente.", 400);
+        }
         
         if (response.status === 413) {
           return createErrorResponse("Arquivo de áudio muito grande para a API", 400);

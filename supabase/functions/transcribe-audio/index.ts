@@ -139,15 +139,24 @@ serve(async (req) => {
     // Verificar variáveis de ambiente
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const openrouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+    const directOpenaiApiKey = Deno.env.get("DIRECT_OPENAI_STT_API_KEY");
 
-    if (!supabaseUrl || !supabaseServiceKey || !openrouterApiKey) {
-      logStep("Missing environment variables", {
+    if (!supabaseUrl || !supabaseServiceKey) {
+      logStep("Missing Supabase environment variables", {
         hasSupabaseUrl: !!supabaseUrl,
-        hasServiceKey: !!supabaseServiceKey,
-        hasOpenrouterKey: !!openrouterApiKey
+        hasServiceKey: !!supabaseServiceKey
       });
       return createErrorResponse("Configuração do servidor incompleta", 500);
+    }
+
+    if (!directOpenaiApiKey) {
+      logStep("Missing OpenAI STT API key", {
+        hasDirectOpenaiApiKey: !!directOpenaiApiKey
+      });
+      return createErrorResponse(
+        "Configuração do servidor para transcrição incompleta [OpenAI STT Key].",
+        500
+      );
     }
 
     // Criar cliente Supabase
@@ -186,7 +195,7 @@ serve(async (req) => {
     validateAudioData(binaryAudio);
     const mimeType = detectAudioFormat(binaryAudio);
 
-    // Preparar FormData para OpenAI (via OpenRouter)
+    // Preparar FormData para OpenAI Whisper API
     const formData = new FormData();
     const audioBlob = new Blob([binaryAudio], { type: mimeType });
     
@@ -196,25 +205,25 @@ serve(async (req) => {
                      mimeType.includes('ogg') ? 'ogg' : 'webm';
     
     formData.append('file', audioBlob, `audio.${extension}`);
-    formData.append('model', 'openai/whisper-1');
+    formData.append('model', 'whisper-1'); // Direct OpenAI model name
 
-    logStep("Calling OpenRouter Whisper API", {
+    logStep("Calling OpenAI Whisper API", {
       mimeType,
       extension,
-      audioSize: binaryAudio.length
+      audioSize: binaryAudio.length,
+      model: 'whisper-1',
+      endpoint: 'https://api.openai.com/v1/audio/transcriptions'
     });
 
-    // Chamar API OpenRouter com timeout
+    // Chamar API OpenAI diretamente com timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
+      const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${openrouterApiKey}`,
-          "HTTP-Referer": "https://soqfclgupivjcdiiwmta.supabase.co",
-          "X-Title": "AegisWallet"
+          "Authorization": `Bearer ${directOpenaiApiKey}`,
         },
         body: formData,
         signal: controller.signal
@@ -224,26 +233,25 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logStep("OpenRouter API error", { 
+        logStep("OpenAI API error", { 
           status: response.status, 
           statusText: response.statusText,
           error: errorText 
         });
         
-        // Se OpenRouter não suportar transcription, tente OpenAI direto
-        if (response.status === 404 || response.status === 501) {
-          logStep("OpenRouter doesn't support transcription, falling back to OpenAI");
-          
-          // Fallback para OpenAI direto - verificar se temos uma chave alternativa
-          // Por enquanto, retornar erro específico
-          return createErrorResponse("OpenRouter não suporta transcrição de áudio. Configure OPENAI_API_KEY para usar Whisper diretamente.", 400);
+        if (response.status === 401) {
+          return createErrorResponse("Chave de API OpenAI inválida. Verifique a configuração DIRECT_OPENAI_STT_API_KEY.", 401);
         }
         
         if (response.status === 413) {
           return createErrorResponse("Arquivo de áudio muito grande para a API", 400);
         }
         
-        return createErrorResponse(`Erro da API: ${response.status} ${response.statusText}`, 500);
+        if (response.status === 400) {
+          return createErrorResponse("Formato de áudio não suportado ou dados inválidos", 400);
+        }
+        
+        return createErrorResponse(`Erro da API OpenAI: ${response.status} ${response.statusText}`, 500);
       }
 
       const result = await response.json();
@@ -254,7 +262,7 @@ serve(async (req) => {
         return createErrorResponse("Nenhum texto foi detectado no áudio", 400);
       }
 
-      logStep("Transcription completed", { 
+      logStep("Transcription completed successfully", { 
         textLength: transcribedText.length,
         preview: transcribedText.substring(0, 100)
       });
@@ -270,7 +278,7 @@ serve(async (req) => {
       }
       
       logStep("Fetch error", { error: fetchError.message });
-      return createErrorResponse(`Erro de conexão: ${fetchError.message}`, 500);
+      return createErrorResponse(`Erro de conexão com OpenAI: ${fetchError.message}`, 500);
     }
 
   } catch (error) {

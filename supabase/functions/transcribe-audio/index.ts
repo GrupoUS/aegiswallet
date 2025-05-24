@@ -40,20 +40,20 @@ function processBase64Audio(base64String: string): Uint8Array {
   try {
     logStep("Processing Base64 input", { length: base64String.length });
 
-    // Remove data URL prefix se presente
+    // Remove data URL prefix if present
     let cleanBase64 = base64String;
     if (base64String.includes(',')) {
       cleanBase64 = base64String.split(',')[1];
       logStep("Removed data URL prefix");
     }
 
-    // Validar Base64
+    // Validate and fix Base64 padding
     if (cleanBase64.length % 4 !== 0) {
       cleanBase64 = cleanBase64.padEnd(cleanBase64.length + (4 - cleanBase64.length % 4), '=');
       logStep("Padded Base64 string for correct length");
     }
 
-    // Decodificar Base64
+    // Decode Base64
     const binaryString = atob(cleanBase64);
     const bytes = new Uint8Array(binaryString.length);
     
@@ -76,7 +76,7 @@ function processBase64Audio(base64String: string): Uint8Array {
 function detectAudioFormat(audioData: Uint8Array): string {
   logStep("Detecting audio format", { dataSize: audioData.length });
 
-  // Verificar assinaturas de arquivo
+  // Check file signatures
   if (audioData.length >= 12) {
     // WAV: RIFF...WAVE
     if (audioData[0] === 0x52 && audioData[1] === 0x49 && 
@@ -104,7 +104,7 @@ function detectAudioFormat(audioData: Uint8Array): string {
     }
   }
 
-  // Fallback para WebM
+  // Fallback to WebM
   logStep("Using fallback format: WebM");
   return 'audio/webm';
 }
@@ -136,7 +136,7 @@ serve(async (req) => {
   logStep("Transcription request started", { method: req.method });
 
   try {
-    // Verificar variáveis de ambiente
+    // Check environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const directOpenaiApiKey = Deno.env.get("DIRECT_OPENAI_STT_API_KEY");
@@ -159,12 +159,12 @@ serve(async (req) => {
       );
     }
 
-    // Criar cliente Supabase
+    // Create Supabase client
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false }
     });
 
-    // Verificar autenticação
+    // Check authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return createErrorResponse("Token de autorização não fornecido", 401);
@@ -180,7 +180,7 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: userData.user.id });
 
-    // Parse do corpo da requisição
+    // Parse request body
     const requestBody = await req.json();
     const { audio } = requestBody;
     
@@ -190,16 +190,16 @@ serve(async (req) => {
 
     logStep("Request parsed", { audioLength: audio.length });
 
-    // Processar dados de áudio
+    // Process audio data
     const binaryAudio = processBase64Audio(audio);
     validateAudioData(binaryAudio);
     const mimeType = detectAudioFormat(binaryAudio);
 
-    // Preparar FormData para OpenAI Whisper API
+    // Prepare FormData for OpenAI Whisper API
     const formData = new FormData();
     const audioBlob = new Blob([binaryAudio], { type: mimeType });
     
-    // Determinar extensão do arquivo
+    // Determine file extension
     const extension = mimeType.includes('wav') ? 'wav' : 
                      mimeType.includes('webm') ? 'webm' : 
                      mimeType.includes('ogg') ? 'ogg' : 'webm';
@@ -215,9 +215,9 @@ serve(async (req) => {
       endpoint: 'https://api.openai.com/v1/audio/transcriptions'
     });
 
-    // Chamar API OpenAI diretamente com timeout
+    // Call OpenAI API directly with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
 
     try {
       const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {

@@ -19,28 +19,26 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  // Enhanced logging function
   const logStep = (step: string, details?: any) => {
     console.log(`[AUDIO-RECORDER] ${step}`, details || '');
   };
 
   const startRecording = async () => {
     try {
-      logStep("Starting audio recording");
+      logStep("Starting recording process");
       
-      // Check browser compatibility
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Seu navegador não suporta gravação de áudio");
       }
 
-      // Request microphone access with optimal settings for speech
+      // Configurações otimizadas para melhor compatibilidade
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 48000, // High quality sample rate
-          channelCount: 1 // Mono for speech
+          sampleRate: 16000, // Taxa ideal para Whisper
+          channelCount: 1 // Mono para economizar espaço
         } 
       });
       
@@ -49,33 +47,32 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         settings: stream.getAudioTracks()[0]?.getSettings()
       });
 
-      // Prioritize WAV format for best Whisper compatibility
-      const mimeTypes = [
-        'audio/wav',
-        'audio/webm;codecs=pcm',
+      // Formatos priorizados para melhor compatibilidade com Whisper
+      const preferredFormats = [
         'audio/webm;codecs=opus',
         'audio/webm',
         'audio/mp4',
+        'audio/wav',
         'audio/ogg;codecs=opus'
       ];
 
-      let selectedMimeType = '';
-      for (const mimeType of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          logStep("Selected audio format", { mimeType: selectedMimeType });
+      let selectedFormat = '';
+      for (const format of preferredFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          selectedFormat = format;
+          logStep("Selected audio format", { format });
           break;
         }
       }
 
-      if (!selectedMimeType) {
-        logStep("ERROR: No supported audio format found");
-        throw new Error("Formato de áudio não suportado pelo navegador");
+      if (!selectedFormat) {
+        logStep("WARNING: No optimal format found, using default");
+        selectedFormat = 'audio/webm'; // Fallback
       }
       
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedMimeType,
-        bitsPerSecond: 128000 // Good quality for speech
+        mimeType: selectedFormat,
+        bitsPerSecond: 64000 // Bitrate otimizado para fala
       });
       
       const chunks: BlobPart[] = [];
@@ -83,18 +80,24 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
-          logStep("Audio chunk received", { size: event.data.size });
+          logStep("Audio chunk received", { 
+            size: event.data.size,
+            totalChunks: chunks.length 
+          });
         }
       };
       
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: selectedMimeType });
+        const blob = new Blob(chunks, { type: selectedFormat });
         logStep("Recording stopped", { 
           blobSize: blob.size,
           blobType: blob.type,
-          duration: recordingTime
+          duration: recordingTime,
+          chunks: chunks.length
         });
         setAudioBlob(blob);
+        
+        // Limpar recursos
         stream.getTracks().forEach(track => {
           track.stop();
           logStep("Audio track stopped", { trackId: track.id });
@@ -110,25 +113,24 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         });
       };
       
-      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorder.start(250); // Coletar dados a cada 250ms para melhor responsividade
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Start timer
+      // Timer com limite de 5 minutos
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
           const newTime = prev + 1;
-          // Auto-stop at 5 minutes to prevent huge files
-          if (newTime >= 300) {
-            logStep("Auto-stopping recording at 5 minutes");
+          if (newTime >= 300) { // 5 minutos
+            logStep("Auto-stopping recording at time limit");
             stopRecording();
           }
           return newTime;
         });
       }, 1000);
       
-      logStep("Recording started successfully");
+      logStep("Recording started successfully", { format: selectedFormat });
       
     } catch (error) {
       logStep("ERROR: Failed to start recording", { error });
@@ -136,7 +138,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       
       toast({
         title: "Erro",
-        description: errorMessage.includes("Permission") 
+        description: errorMessage.includes("Permission") || errorMessage.includes("NotAllowedError")
           ? "Permissão de microfone negada. Verifique as configurações do navegador."
           : `Não foi possível iniciar a gravação: ${errorMessage}`,
         variant: "destructive"
@@ -178,40 +180,45 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     setIsProcessing(true);
     
     try {
-      // Validate audio size (max 25MB)
-      const maxSizeBytes = 25 * 1024 * 1024;
+      // Validações antes do envio
+      const maxSizeBytes = 25 * 1024 * 1024; // 25MB
       if (audioBlob.size > maxSizeBytes) {
-        throw new Error(`Arquivo de áudio muito grande (${Math.round(audioBlob.size / 1024 / 1024)}MB). Máximo: 25MB`);
+        throw new Error(`Arquivo muito grande (${Math.round(audioBlob.size / 1024 / 1024)}MB). Máximo: 25MB`);
       }
 
-      // Convert blob to base64
-      const reader = new FileReader();
-      
-      const base64Promise = new Promise<string>((resolve, reject) => {
+      if (audioBlob.size < 1000) { // Mínimo de 1KB
+        throw new Error("Gravação muito pequena. Tente gravar novamente.");
+      }
+
+      // Converter para base64 com tratamento de erro
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        
         reader.onloadend = () => {
           const result = reader.result as string;
           logStep("Audio converted to base64", {
             originalSize: audioBlob!.size,
-            base64Length: result.length
+            base64Length: result.length,
+            compressionRatio: (result.length / audioBlob!.size).toFixed(2)
           });
           resolve(result);
         };
+        
         reader.onerror = () => {
-          logStep("ERROR: FileReader error", { error: reader.error });
+          logStep("ERROR: FileReader failed", { error: reader.error });
           reject(new Error("Erro ao processar arquivo de áudio"));
         };
+        
+        reader.readAsDataURL(audioBlob);
       });
       
-      reader.readAsDataURL(audioBlob);
-      const base64Audio = await base64Promise;
-      
-      logStep("Calling transcribe-audio function with OpenRouter");
+      logStep("Calling transcription function");
       
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: { audio: base64Audio }
       });
       
-      logStep("Transcription API response", { 
+      logStep("Transcription response received", { 
         hasData: !!data, 
         hasError: !!error,
         success: data?.success
@@ -219,11 +226,11 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       
       if (error) {
         logStep("ERROR: Supabase function error", { error });
-        throw new Error(`Erro na chamada da função: ${error.message}`);
+        throw new Error(`Erro na função de transcrição: ${error.message}`);
       }
       
       if (!data) {
-        logStep("ERROR: No data returned from function");
+        logStep("ERROR: No data returned");
         throw new Error("Nenhuma resposta da função de transcrição");
       }
       
@@ -232,18 +239,15 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           error: data.error,
           debugInfo: data.debug_info 
         });
-        
-        // Display specific error message
-        const errorMsg = data.error || "Erro desconhecido na transcrição";
-        throw new Error(errorMsg);
+        throw new Error(data.error || "Erro na transcrição de áudio");
       }
       
       if (!data.transcribed_text) {
-        logStep("ERROR: No transcribed text in response");
-        throw new Error("Nenhum texto transcrito retornado");
+        logStep("ERROR: No transcribed text");
+        throw new Error("Nenhum texto foi transcrito do áudio");
       }
       
-      logStep("Transcription successful with OpenRouter", { 
+      logStep("Transcription successful", { 
         textLength: data.transcribed_text.length,
         preview: data.transcribed_text.substring(0, 100)
       });
@@ -254,13 +258,13 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       
       toast({
         title: "Sucesso",
-        description: "Áudio transcrito com sucesso via OpenRouter!",
+        description: "Áudio transcrito com sucesso!",
         variant: "default"
       });
       
     } catch (error) {
-      logStep("ERROR: Transcription process failed", { error });
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      logStep("ERROR: Transcription failed", { error });
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido na transcrição";
       
       toast({
         title: "Erro na Transcrição",
@@ -278,7 +282,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show recording review interface
+  // Interface de revisão da gravação
   if (audioBlob) {
     const sizeInMB = audioBlob.size / (1024 * 1024);
     
@@ -300,6 +304,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           variant="outline"
           onClick={discardRecording}
           disabled={isProcessing}
+          title="Descartar gravação"
         >
           <X className="h-3 w-3" />
         </Button>
@@ -307,6 +312,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           size="sm"
           onClick={sendRecording}
           disabled={isProcessing}
+          title="Enviar para transcrição"
         >
           {isProcessing ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -318,7 +324,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     );
   }
 
-  // Show recording in progress interface
+  // Interface durante a gravação
   if (isRecording) {
     return (
       <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -337,6 +343,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
           size="sm"
           variant="destructive"
           onClick={stopRecording}
+          title="Parar gravação"
         >
           <MicOff className="h-3 w-3" />
         </Button>
@@ -344,7 +351,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
     );
   }
 
-  // Show initial microphone button
+  // Botão inicial do microfone
   return (
     <Button
       size="icon"

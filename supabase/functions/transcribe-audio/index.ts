@@ -14,6 +14,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 const createErrorResponse = (error: string, debugInfo?: any) => {
+  logStep("ERROR: Creating error response", { error, debugInfo });
   return new Response(JSON.stringify({
     success: false,
     error,
@@ -25,6 +26,7 @@ const createErrorResponse = (error: string, debugInfo?: any) => {
 };
 
 const createSuccessResponse = (text: string) => {
+  logStep("SUCCESS: Creating success response", { textLength: text.length });
   return new Response(JSON.stringify({
     success: true,
     transcribed_text: text
@@ -34,72 +36,149 @@ const createSuccessResponse = (text: string) => {
   });
 };
 
-// Função para processar Base64 em chunks e evitar problemas de memória
-function processBase64InChunks(base64String: string): Uint8Array {
+// Função melhorada para processar Base64 com validação
+function processBase64Safely(base64String: string): Uint8Array {
   try {
-    // Remove o prefixo data URL se presente
-    const cleanBase64 = base64String.replace(/^data:audio\/[^;]+;base64,/, '');
-    
-    logStep("Processing Base64", {
+    logStep("Processing Base64 input", {
       originalLength: base64String.length,
-      cleanLength: cleanBase64.length,
-      hasPrefix: base64String !== cleanBase64
+      hasDataPrefix: base64String.startsWith('data:')
     });
 
-    // Decodifica o Base64
-    const binaryString = atob(cleanBase64);
-    const bytes = new Uint8Array(binaryString.length);
+    // Remove prefixo data URL se presente
+    let cleanBase64 = base64String;
+    if (base64String.startsWith('data:')) {
+      const commaIndex = base64String.indexOf(',');
+      if (commaIndex !== -1) {
+        cleanBase64 = base64String.substring(commaIndex + 1);
+        logStep("Removed data URL prefix", { 
+          originalLength: base64String.length,
+          cleanLength: cleanBase64.length 
+        });
+      }
+    }
+
+    // Validar caracteres Base64
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+    if (!base64Regex.test(cleanBase64)) {
+      throw new Error("String Base64 contém caracteres inválidos");
+    }
+
+    // Processar em chunks para evitar problemas de memória
+    const chunkSize = 8192; // Tamanho menor para maior segurança
+    const chunks: Uint8Array[] = [];
     
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    for (let i = 0; i < cleanBase64.length; i += chunkSize) {
+      const chunk = cleanBase64.slice(i, i + chunkSize);
+      
+      try {
+        const binaryChunk = atob(chunk);
+        const bytes = new Uint8Array(binaryChunk.length);
+        
+        for (let j = 0; j < binaryChunk.length; j++) {
+          bytes[j] = binaryChunk.charCodeAt(j);
+        }
+        
+        chunks.push(bytes);
+      } catch (chunkError) {
+        logStep("ERROR: Failed to process Base64 chunk", { 
+          chunkIndex: Math.floor(i / chunkSize),
+          chunkSize: chunk.length,
+          error: chunkError.message 
+        });
+        throw new Error(`Erro ao processar chunk ${Math.floor(i / chunkSize)}: ${chunkError.message}`);
+      }
+    }
+
+    // Combinar chunks
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
     }
     
-    logStep("Base64 conversion successful", {
-      binaryLength: binaryString.length,
-      bytesLength: bytes.length
+    logStep("Base64 processing completed successfully", {
+      chunksProcessed: chunks.length,
+      finalSize: result.length,
+      sizeInKB: Math.round(result.length / 1024)
     });
     
-    return bytes;
+    return result;
   } catch (error) {
     logStep("ERROR: Base64 processing failed", { error: error.message });
-    throw new Error(`Falha ao processar dados de áudio: ${error.message}`);
+    throw new Error(`Falha ao processar dados de áudio Base64: ${error.message}`);
   }
 }
 
-// Função para detectar formato de áudio
-function detectAudioFormat(audioData: Uint8Array): string {
-  // Verificar assinatura WAV
-  if (audioData.length >= 12 && 
-      audioData[0] === 0x52 && audioData[1] === 0x49 && 
-      audioData[2] === 0x46 && audioData[3] === 0x46 &&
-      audioData[8] === 0x57 && audioData[9] === 0x41 && 
-      audioData[10] === 0x56 && audioData[11] === 0x45) {
-    return 'audio/wav';
+// Função aprimorada para detectar formato de áudio
+function detectAudioFormat(audioData: Uint8Array): { mimeType: string; extension: string } {
+  logStep("Detecting audio format", { dataSize: audioData.length });
+
+  // Verificar assinaturas de arquivo mais rigorosamente
+  const signatures = [
+    {
+      check: (data: Uint8Array) => data.length >= 12 && 
+        data[0] === 0x52 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x46 &&
+        data[8] === 0x57 && data[9] === 0x41 && data[10] === 0x56 && data[11] === 0x45,
+      mimeType: 'audio/wav',
+      extension: 'wav'
+    },
+    {
+      check: (data: Uint8Array) => data.length >= 4 && 
+        data[0] === 0x1A && data[1] === 0x45 && data[2] === 0xDF && data[3] === 0xA3,
+      mimeType: 'audio/webm',
+      extension: 'webm'
+    },
+    {
+      check: (data: Uint8Array) => data.length >= 3 && 
+        ((data[0] === 0xFF && (data[1] & 0xE0) === 0xE0) || // MP3 frame header
+         (data[0] === 0x49 && data[1] === 0x44 && data[2] === 0x33)), // ID3 tag
+      mimeType: 'audio/mp3',
+      extension: 'mp3'
+    },
+    {
+      check: (data: Uint8Array) => data.length >= 4 && 
+        data[0] === 0x4F && data[1] === 0x67 && data[2] === 0x67 && data[3] === 0x53,
+      mimeType: 'audio/ogg',
+      extension: 'ogg'
+    }
+  ];
+
+  for (const signature of signatures) {
+    if (signature.check(audioData)) {
+      logStep("Audio format detected", { 
+        mimeType: signature.mimeType,
+        extension: signature.extension 
+      });
+      return { mimeType: signature.mimeType, extension: signature.extension };
+    }
   }
   
-  // Verificar assinatura WebM
-  if (audioData.length >= 4 && 
-      audioData[0] === 0x1A && audioData[1] === 0x45 && 
-      audioData[2] === 0xDF && audioData[3] === 0xA3) {
-    return 'audio/webm';
-  }
+  // Fallback para WebM se não conseguir detectar
+  logStep("Using fallback format", { format: 'audio/webm' });
+  return { mimeType: 'audio/webm', extension: 'webm' };
+}
+
+// Função para validar tamanho do arquivo
+function validateAudioSize(audioData: Uint8Array): void {
+  const maxSizeBytes = 25 * 1024 * 1024; // 25MB
+  const sizeInMB = audioData.length / (1024 * 1024);
   
-  // Verificar assinatura MP3
-  if (audioData.length >= 3 && 
-      ((audioData[0] === 0xFF && (audioData[1] & 0xE0) === 0xE0) || // MP3 frame header
-       (audioData[0] === 0x49 && audioData[1] === 0x44 && audioData[2] === 0x33))) { // ID3 tag
-    return 'audio/mp3';
+  logStep("Validating audio size", {
+    sizeBytes: audioData.length,
+    sizeMB: sizeInMB.toFixed(2),
+    maxSizeMB: 25
+  });
+
+  if (audioData.length > maxSizeBytes) {
+    throw new Error(`Arquivo de áudio muito grande (${sizeInMB.toFixed(1)}MB). Máximo permitido: 25MB`);
   }
-  
-  // Verificar assinatura OGG
-  if (audioData.length >= 4 && 
-      audioData[0] === 0x4F && audioData[1] === 0x67 && 
-      audioData[2] === 0x67 && audioData[3] === 0x53) {
-    return 'audio/ogg';
+
+  if (audioData.length < 1000) { // Mínimo de 1KB
+    throw new Error("Arquivo de áudio muito pequeno. Verifique se a gravação foi feita corretamente.");
   }
-  
-  // Default para WebM se não conseguir detectar
-  return 'audio/webm';
 }
 
 serve(async (req) => {
@@ -107,25 +186,32 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  logStep("Function started", { method: req.method });
 
   try {
-    logStep("Function started");
-
-    // Verificar chave da API OpenRouter
+    // Verificar variáveis de ambiente
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-    logStep("OpenRouter API Key check", { hasKey: !!openRouterApiKey });
-    
-    if (!openRouterApiKey) {
-      logStep("ERROR: OpenRouter API Key not configured");
-      return createErrorResponse("Chave da API OpenRouter não configurada no servidor.");
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      logStep("ERROR: Missing Supabase configuration");
+      return createErrorResponse("Configuração do Supabase não encontrada");
     }
 
-    // Verificação de autenticação
+    if (!openRouterApiKey) {
+      logStep("ERROR: Missing OpenRouter API key");
+      return createErrorResponse("Chave da API OpenRouter não configurada");
+    }
+
+    logStep("Environment variables validated successfully");
+
+    // Criar cliente Supabase
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
+
+    // Verificar autenticação
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: No authorization header");
@@ -134,96 +220,84 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
     if (userError) {
       logStep("ERROR: Authentication failed", { error: userError.message });
       return createErrorResponse(`Erro de autenticação: ${userError.message}`);
     }
     
-    const user = userData.user;
-    if (!user) {
-      logStep("ERROR: User not authenticated");
+    if (!userData.user) {
+      logStep("ERROR: User not found");
       return createErrorResponse("Usuário não autenticado");
     }
 
-    logStep("User authenticated", { userId: user.id });
+    logStep("User authenticated successfully", { userId: userData.user.id });
 
     // Parse do corpo da requisição
-    const requestBody = await req.json();
+    let requestBody: any;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      logStep("ERROR: Failed to parse request body", { error: parseError.message });
+      return createErrorResponse("Formato de requisição inválido");
+    }
+
     const { audio } = requestBody;
     
     if (!audio) {
-      logStep("ERROR: No audio data provided");
+      logStep("ERROR: No audio data in request");
       return createErrorResponse("Dados de áudio não fornecidos");
     }
 
-    logStep("Audio data received", { 
-      dataType: typeof audio,
-      hasDataPrefix: audio.startsWith('data:'),
-      approximateSize: audio.length 
+    logStep("Request parsed successfully", { 
+      hasAudio: !!audio,
+      audioType: typeof audio,
+      audioLength: audio.length
     });
 
     // Processar dados de áudio
     let binaryAudio: Uint8Array;
     try {
-      binaryAudio = processBase64InChunks(audio);
-      
-      logStep("Audio processing successful", { 
-        binarySize: binaryAudio.length,
-        sizeInKB: Math.round(binaryAudio.length / 1024)
-      });
-    } catch (error) {
-      logStep("ERROR: Audio data processing failed", { error: error.message });
-      return createErrorResponse("Formato de dados de áudio inválido", error.message);
+      binaryAudio = processBase64Safely(audio);
+      validateAudioSize(binaryAudio);
+    } catch (processingError) {
+      logStep("ERROR: Audio processing failed", { error: processingError.message });
+      return createErrorResponse(`Erro no processamento do áudio: ${processingError.message}`);
     }
 
-    // Validar tamanho do áudio (máximo 25MB para Whisper)
-    const maxSizeBytes = 25 * 1024 * 1024; // 25MB
-    if (binaryAudio.length > maxSizeBytes) {
-      logStep("ERROR: Audio file too large", { 
-        size: binaryAudio.length,
-        maxSize: maxSizeBytes 
-      });
-      return createErrorResponse("Arquivo de áudio muito grande. Máximo: 25MB");
-    }
+    // Detectar formato
+    const audioFormat = detectAudioFormat(binaryAudio);
 
-    // Detectar formato de áudio
-    const detectedFormat = detectAudioFormat(binaryAudio);
-    logStep("Audio format detected", { format: detectedFormat });
-
-    // Preparar FormData para API OpenRouter Whisper
-    const formData = new FormData();
-    
-    // Usar formato detectado
-    const blob = new Blob([binaryAudio], { type: detectedFormat });
-    formData.append('file', blob, `audio.${detectedFormat.split('/')[1]}`);
-    formData.append('model', 'openai/whisper-1');
-    formData.append('language', 'pt'); // Português para melhor precisão
-
-    logStep("Prepared form data for OpenRouter", {
-      audioFormat: detectedFormat,
-      filename: `audio.${detectedFormat.split('/')[1]}`,
-      model: 'openai/whisper-1',
-      language: 'pt'
-    });
-
-    // Chamar API OpenRouter Whisper com timeout e retry
-    let attempts = 0;
+    // Preparar dados para OpenRouter
+    let transcriptionAttempts = 0;
     const maxAttempts = 3;
     let lastError: any = null;
 
-    while (attempts < maxAttempts) {
-      attempts++;
-      logStep(`OpenRouter API attempt ${attempts}/${maxAttempts}`);
-      
+    while (transcriptionAttempts < maxAttempts) {
+      transcriptionAttempts++;
+      logStep(`Transcription attempt ${transcriptionAttempts}/${maxAttempts}`);
+
       try {
+        const formData = new FormData();
+        const blob = new Blob([binaryAudio], { type: audioFormat.mimeType });
+        formData.append('file', blob, `audio.${audioFormat.extension}`);
+        formData.append('model', 'openai/whisper-1');
+        formData.append('language', 'pt');
+
+        logStep("Calling OpenRouter Whisper API", {
+          attempt: transcriptionAttempts,
+          audioFormat: audioFormat.mimeType,
+          audioSize: binaryAudio.length
+        });
+
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${openRouterApiKey}`,
-            "HTTP-Referer": "https://soqfclgupivjcdiiwmta.supabase.co",
+            "HTTP-Referer": supabaseUrl,
             "X-Title": "AegisWallet Audio Transcription"
           },
           body: formData,
@@ -240,71 +314,83 @@ serve(async (req) => {
 
         if (!response.ok) {
           const errorText = await response.text();
-          logStep("OpenRouter API error response", { 
+          logStep("OpenRouter API error", { 
             status: response.status, 
-            error: errorText 
+            error: errorText,
+            attempt: transcriptionAttempts
           });
           
-          // Parse do erro OpenRouter para mensagens mais específicas
-          let errorMessage = "Erro na API de transcrição";
+          let errorMessage = `Erro HTTP ${response.status}`;
           try {
             const errorData = JSON.parse(errorText);
             if (errorData.error?.message) {
-              errorMessage = `Erro OpenRouter: ${errorData.error.message}`;
+              errorMessage = errorData.error.message;
             }
           } catch (e) {
-            errorMessage = `Erro HTTP ${response.status}: ${errorText}`;
+            errorMessage = errorText || errorMessage;
           }
           
-          lastError = { status: response.status, message: errorMessage, response: errorText };
+          lastError = { status: response.status, message: errorMessage };
           
-          // Não tentar novamente em erros de cliente (400-499)
+          // Não tentar novamente para erros de cliente (400-499)
           if (response.status >= 400 && response.status < 500) {
+            logStep("Client error detected, not retrying", { status: response.status });
             break;
           }
           
-          // Tentar novamente em erros de servidor (500+) ou problemas de rede
-          if (attempts < maxAttempts) {
-            logStep(`Retrying in 2 seconds (attempt ${attempts}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+          // Tentar novamente para erros de servidor
+          if (transcriptionAttempts < maxAttempts) {
+            const delay = transcriptionAttempts * 2000; // Delay exponencial
+            logStep(`Retrying in ${delay}ms`, { attempt: transcriptionAttempts });
+            await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
         } else {
-          // Sucesso - parse da resposta
+          // Sucesso
           const data = await response.json();
           const transcribedText = data.text;
 
           if (!transcribedText) {
-            logStep("ERROR: No transcription returned");
+            logStep("ERROR: No transcription text returned");
             return createErrorResponse("Nenhuma transcrição retornada pela API");
           }
 
           logStep("Transcription successful", { 
             textLength: transcribedText.length,
-            firstWords: transcribedText.substring(0, 50) + (transcribedText.length > 50 ? '...' : '')
+            preview: transcribedText.substring(0, 100) + (transcribedText.length > 100 ? '...' : ''),
+            attempts: transcriptionAttempts
           });
 
           return createSuccessResponse(transcribedText);
         }
       } catch (error) {
-        logStep(`ERROR: API call attempt ${attempts} failed`, { error: error.message });
+        logStep(`ERROR: Attempt ${transcriptionAttempts} failed`, { 
+          error: error.message,
+          errorName: error.name 
+        });
+        
         lastError = error;
         
         if (error.name === 'AbortError') {
-          return createErrorResponse("Timeout na transcrição. Tente com um áudio menor.", error.message);
+          return createErrorResponse("Timeout na transcrição. Tente com um áudio menor.");
         }
         
         // Tentar novamente em erros de rede
-        if (attempts < maxAttempts) {
-          logStep(`Retrying in 2 seconds (attempt ${attempts}/${maxAttempts})`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        if (transcriptionAttempts < maxAttempts) {
+          const delay = transcriptionAttempts * 2000;
+          logStep(`Retrying in ${delay}ms after network error`, { attempt: transcriptionAttempts });
+          await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
       }
     }
 
     // Todas as tentativas falharam
-    logStep("ERROR: All API attempts failed", { lastError });
+    logStep("ERROR: All transcription attempts failed", { 
+      totalAttempts: transcriptionAttempts,
+      lastError: lastError?.message || 'Erro desconhecido'
+    });
+    
     return createErrorResponse(
       `Falha na transcrição após ${maxAttempts} tentativas: ${lastError?.message || 'Erro desconhecido'}`,
       lastError
@@ -312,7 +398,11 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR: Unexpected error in transcribe-audio", { message: errorMessage, stack: error.stack });
+    logStep("ERROR: Unexpected error", { 
+      message: errorMessage, 
+      stack: error instanceof Error ? error.stack : undefined 
+    });
+    
     return createErrorResponse(
       "Erro interno do servidor na transcrição de áudio",
       errorMessage

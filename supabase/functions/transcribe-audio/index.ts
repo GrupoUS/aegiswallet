@@ -34,6 +34,74 @@ const createSuccessResponse = (text: string) => {
   });
 };
 
+// Função para processar Base64 em chunks e evitar problemas de memória
+function processBase64InChunks(base64String: string): Uint8Array {
+  try {
+    // Remove o prefixo data URL se presente
+    const cleanBase64 = base64String.replace(/^data:audio\/[^;]+;base64,/, '');
+    
+    logStep("Processing Base64", {
+      originalLength: base64String.length,
+      cleanLength: cleanBase64.length,
+      hasPrefix: base64String !== cleanBase64
+    });
+
+    // Decodifica o Base64
+    const binaryString = atob(cleanBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    logStep("Base64 conversion successful", {
+      binaryLength: binaryString.length,
+      bytesLength: bytes.length
+    });
+    
+    return bytes;
+  } catch (error) {
+    logStep("ERROR: Base64 processing failed", { error: error.message });
+    throw new Error(`Falha ao processar dados de áudio: ${error.message}`);
+  }
+}
+
+// Função para detectar formato de áudio
+function detectAudioFormat(audioData: Uint8Array): string {
+  // Verificar assinatura WAV
+  if (audioData.length >= 12 && 
+      audioData[0] === 0x52 && audioData[1] === 0x49 && 
+      audioData[2] === 0x46 && audioData[3] === 0x46 &&
+      audioData[8] === 0x57 && audioData[9] === 0x41 && 
+      audioData[10] === 0x56 && audioData[11] === 0x45) {
+    return 'audio/wav';
+  }
+  
+  // Verificar assinatura WebM
+  if (audioData.length >= 4 && 
+      audioData[0] === 0x1A && audioData[1] === 0x45 && 
+      audioData[2] === 0xDF && audioData[3] === 0xA3) {
+    return 'audio/webm';
+  }
+  
+  // Verificar assinatura MP3
+  if (audioData.length >= 3 && 
+      ((audioData[0] === 0xFF && (audioData[1] & 0xE0) === 0xE0) || // MP3 frame header
+       (audioData[0] === 0x49 && audioData[1] === 0x44 && audioData[2] === 0x33))) { // ID3 tag
+    return 'audio/mp3';
+  }
+  
+  // Verificar assinatura OGG
+  if (audioData.length >= 4 && 
+      audioData[0] === 0x4F && audioData[1] === 0x67 && 
+      audioData[2] === 0x67 && audioData[3] === 0x53) {
+    return 'audio/ogg';
+  }
+  
+  // Default para WebM se não conseguir detectar
+  return 'audio/webm';
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,7 +116,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Verify OpenRouter API Key
+    // Verificar chave da API OpenRouter
     const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
     logStep("OpenRouter API Key check", { hasKey: !!openRouterApiKey });
     
@@ -57,7 +125,7 @@ serve(async (req) => {
       return createErrorResponse("Chave da API OpenRouter não configurada no servidor.");
     }
 
-    // Authentication check
+    // Verificação de autenticação
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: No authorization header");
@@ -79,7 +147,7 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id });
 
-    // Parse request body
+    // Parse do corpo da requisição
     const requestBody = await req.json();
     const { audio } = requestBody;
     
@@ -94,33 +162,21 @@ serve(async (req) => {
       approximateSize: audio.length 
     });
 
-    // Process audio data
+    // Processar dados de áudio
     let binaryAudio: Uint8Array;
     try {
-      // Remove data URL prefix if present
-      const base64Audio = audio.replace(/^data:audio\/[^;]+;base64,/, '');
-      logStep("Processing audio data", { 
-        originalLength: audio.length,
-        base64Length: base64Audio.length,
-        removedPrefix: audio.length !== base64Audio.length
-      });
-
-      const binaryString = atob(base64Audio);
-      binaryAudio = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        binaryAudio[i] = binaryString.charCodeAt(i);
-      }
+      binaryAudio = processBase64InChunks(audio);
       
-      logStep("Audio conversion successful", { 
+      logStep("Audio processing successful", { 
         binarySize: binaryAudio.length,
         sizeInKB: Math.round(binaryAudio.length / 1024)
       });
     } catch (error) {
-      logStep("ERROR: Audio data processing failed", { error });
-      return createErrorResponse("Formato de dados de áudio inválido", error);
+      logStep("ERROR: Audio data processing failed", { error: error.message });
+      return createErrorResponse("Formato de dados de áudio inválido", error.message);
     }
 
-    // Validate audio size (max 25MB for Whisper)
+    // Validar tamanho do áudio (máximo 25MB para Whisper)
     const maxSizeBytes = 25 * 1024 * 1024; // 25MB
     if (binaryAudio.length > maxSizeBytes) {
       logStep("ERROR: Audio file too large", { 
@@ -130,25 +186,29 @@ serve(async (req) => {
       return createErrorResponse("Arquivo de áudio muito grande. Máximo: 25MB");
     }
 
-    // Prepare form data for OpenRouter Whisper API
+    // Detectar formato de áudio
+    const detectedFormat = detectAudioFormat(binaryAudio);
+    logStep("Audio format detected", { format: detectedFormat });
+
+    // Preparar FormData para API OpenRouter Whisper
     const formData = new FormData();
     
-    // Use WAV format (most compatible with Whisper)
-    const blob = new Blob([binaryAudio], { type: 'audio/wav' });
-    formData.append('file', blob, 'audio.wav');
+    // Usar formato detectado
+    const blob = new Blob([binaryAudio], { type: detectedFormat });
+    formData.append('file', blob, `audio.${detectedFormat.split('/')[1]}`);
     formData.append('model', 'openai/whisper-1');
-    formData.append('language', 'pt'); // Portuguese language for better accuracy
+    formData.append('language', 'pt'); // Português para melhor precisão
 
     logStep("Prepared form data for OpenRouter", {
-      audioFormat: 'audio/wav',
-      filename: 'audio.wav',
+      audioFormat: detectedFormat,
+      filename: `audio.${detectedFormat.split('/')[1]}`,
       model: 'openai/whisper-1',
       language: 'pt'
     });
 
-    // Call OpenRouter Whisper API with timeout and retry logic
+    // Chamar API OpenRouter Whisper com timeout e retry
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
@@ -157,7 +217,7 @@ serve(async (req) => {
       
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos timeout
 
         const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
           method: "POST",
@@ -175,7 +235,7 @@ serve(async (req) => {
         logStep("OpenRouter API response received", {
           status: response.status,
           statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
+          contentType: response.headers.get('content-type')
         });
 
         if (!response.ok) {
@@ -185,7 +245,7 @@ serve(async (req) => {
             error: errorText 
           });
           
-          // Parse OpenRouter error for more specific messages
+          // Parse do erro OpenRouter para mensagens mais específicas
           let errorMessage = "Erro na API de transcrição";
           try {
             const errorData = JSON.parse(errorText);
@@ -198,19 +258,19 @@ serve(async (req) => {
           
           lastError = { status: response.status, message: errorMessage, response: errorText };
           
-          // Don't retry on client errors (400-499)
+          // Não tentar novamente em erros de cliente (400-499)
           if (response.status >= 400 && response.status < 500) {
             break;
           }
           
-          // Retry on server errors (500+) or network issues
+          // Tentar novamente em erros de servidor (500+) ou problemas de rede
           if (attempts < maxAttempts) {
-            logStep(`Retrying in 1 second (attempt ${attempts}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            logStep(`Retrying in 2 seconds (attempt ${attempts}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             continue;
           }
         } else {
-          // Success - parse response
+          // Sucesso - parse da resposta
           const data = await response.json();
           const transcribedText = data.text;
 
@@ -234,16 +294,16 @@ serve(async (req) => {
           return createErrorResponse("Timeout na transcrição. Tente com um áudio menor.", error.message);
         }
         
-        // Retry on network errors
+        // Tentar novamente em erros de rede
         if (attempts < maxAttempts) {
-          logStep(`Retrying in 1 second (attempt ${attempts}/${maxAttempts})`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          logStep(`Retrying in 2 seconds (attempt ${attempts}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
       }
     }
 
-    // All attempts failed
+    // Todas as tentativas falharam
     logStep("ERROR: All API attempts failed", { lastError });
     return createErrorResponse(
       `Falha na transcrição após ${maxAttempts} tentativas: ${lastError?.message || 'Erro desconhecido'}`,
@@ -252,7 +312,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR: Unexpected error in transcribe-audio", { message: errorMessage });
+    logStep("ERROR: Unexpected error in transcribe-audio", { message: errorMessage, stack: error.stack });
     return createErrorResponse(
       "Erro interno do servidor na transcrição de áudio",
       errorMessage

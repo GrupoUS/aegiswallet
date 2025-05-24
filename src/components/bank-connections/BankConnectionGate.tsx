@@ -1,7 +1,6 @@
 
 import { useAccessLevel } from "@/hooks/useAccessLevel";
 import PremiumFeatureBanner from "@/components/subscription/PremiumFeatureBanner";
-import { useNavigate } from "react-router-dom";
 
 interface BankConnectionGateProps {
   children: React.ReactNode;
@@ -9,18 +8,13 @@ interface BankConnectionGateProps {
 
 const BankConnectionGate = ({ children }: BankConnectionGateProps) => {
   const { accessLevel } = useAccessLevel();
-  const navigate = useNavigate();
-
-  const handleUpgrade = () => {
-    navigate("/?tab=subscription");
-  };
 
   // Allow access for Pro and Trial users
   if (accessLevel === 'pro' || accessLevel === 'trial') {
     return <>{children}</>;
   }
 
-  // Show single premium banner for free users
+  // Show premium banner without button for free users
   return (
     <div className="space-y-6">
       <div>
@@ -35,7 +29,8 @@ const BankConnectionGate = ({ children }: BankConnectionGateProps) => {
       <PremiumFeatureBanner 
         feature="Conexão Bancária Automática"
         description="Conecte suas contas bancárias e sincronize transações automaticamente com o plano Pro. Economize tempo e tenha controle total de suas finanças."
-        onUpgrade={handleUpgrade}
+        onUpgrade={() => {}}
+        showButton={false}
       />
     </div>
   );

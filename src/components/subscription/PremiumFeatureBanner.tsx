@@ -7,9 +7,15 @@ interface PremiumFeatureBannerProps {
   feature: string;
   description: string;
   onUpgrade: () => void;
+  showButton?: boolean;
 }
 
-const PremiumFeatureBanner = ({ feature, description, onUpgrade }: PremiumFeatureBannerProps) => {
+const PremiumFeatureBanner = ({ 
+  feature, 
+  description, 
+  onUpgrade, 
+  showButton = true 
+}: PremiumFeatureBannerProps) => {
   return (
     <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20">
       <CardContent className="p-6">
@@ -27,13 +33,15 @@ const PremiumFeatureBanner = ({ feature, description, onUpgrade }: PremiumFeatur
               </p>
             </div>
           </div>
-          <Button 
-            onClick={onUpgrade}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Seja Pro
-          </Button>
+          {showButton && (
+            <Button 
+              onClick={onUpgrade}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Seja Pro
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

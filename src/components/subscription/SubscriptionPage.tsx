@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, CreditCard, Calendar, CheckCircle } from "lucide-react";
+import { useAccessLevel } from "@/hooks/useAccessLevel";
+import { Crown, CreditCard, Calendar, CheckCircle, Clock } from "lucide-react";
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -18,6 +19,7 @@ const SubscriptionPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
+  const { accessLevel, daysLeft } = useAccessLevel();
 
   useEffect(() => {
     checkSubscription();
@@ -62,7 +64,6 @@ const SubscriptionPage = () => {
 
       if (error) throw error;
 
-      // Open Stripe checkout in a new tab
       window.open(data.url, '_blank');
     } catch (error) {
       console.error("Erro ao criar sessão de checkout:", error);
@@ -90,7 +91,6 @@ const SubscriptionPage = () => {
 
       if (error) throw error;
 
-      // Open Stripe portal in a new tab
       window.open(data.url, '_blank');
     } catch (error) {
       console.error("Erro ao abrir portal do cliente:", error);
@@ -139,8 +139,83 @@ const SubscriptionPage = () => {
         </p>
       </div>
 
-      {!subscription?.subscribed ? (
-        // Not subscribed - Show subscription offer
+      {/* Trial Status Card */}
+      {accessLevel === 'trial' && daysLeft !== null && (
+        <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              Período de Teste Ativo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-800 dark:text-blue-200 font-semibold">
+                  {daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Aproveite todos os recursos premium gratuitamente
+                </p>
+              </div>
+              <Button onClick={handleSubscribe} disabled={actionLoading}>
+                Assinar Agora e Economizar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Current Plan Status */}
+      {subscription?.subscribed ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              Sua Assinatura
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Plano</div>
+                <div className="font-semibold">AegisWallet Pro</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Status</div>
+                <div>{getStatusBadge(subscription.status)}</div>
+              </div>
+              {subscription.current_period_end && (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Próxima Cobrança</div>
+                  <div className="font-semibold flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(subscription.current_period_end)}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={handleManageSubscription}
+                disabled={actionLoading}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <CreditCard className="h-4 w-4" />
+                {actionLoading ? "Carregando..." : "Gerenciar Assinatura"}
+              </Button>
+              <Button 
+                onClick={checkSubscription}
+                variant="outline"
+              >
+                Atualizar Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
         <Card className="border-blue-200 dark:border-blue-800">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 p-3 bg-blue-100 dark:bg-blue-900 rounded-full w-fit">
@@ -156,10 +231,11 @@ const SubscriptionPage = () => {
               <h3 className="font-semibold text-lg">Recursos Premium:</h3>
               <div className="space-y-2">
                 {[
+                  "Conexão automática com bancos",
+                  "Sincronização de transações em tempo real",
                   "Análises financeiras avançadas com IA",
                   "Modelos de IA premium (GPT-4, Claude)",
                   "Relatórios detalhados e insights personalizados",
-                  "Sincronização automática com bancos",
                   "Suporte prioritário",
                   "Sem limites de transações",
                 ].map((feature, index) => (
@@ -170,67 +246,32 @@ const SubscriptionPage = () => {
                 ))}
               </div>
             </div>
+
+            {accessLevel === 'free' && (
+              <div className="bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Seu período de teste expirou.</strong> Assine agora para continuar aproveitando todos os recursos premium.
+                </p>
+              </div>
+            )}
+
             <Button 
               onClick={handleSubscribe} 
               disabled={actionLoading}
               size="lg" 
               className="w-full"
             >
-              {actionLoading ? "Processando..." : "Assinar Agora"}
+              {actionLoading ? "Processando..." : 
+               accessLevel === 'trial' ? "Assinar e Economizar" : "Assinar Agora"}
             </Button>
+
+            {accessLevel === 'trial' && (
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                Continue aproveitando todos os recursos sem interrupção
+              </p>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        // Subscribed - Show subscription details
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
-                Sua Assinatura
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Plano</div>
-                  <div className="font-semibold">AegisWallet Pro</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Status</div>
-                  <div>{getStatusBadge(subscription.status)}</div>
-                </div>
-                {subscription.current_period_end && (
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Próxima Cobrança</div>
-                    <div className="font-semibold flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {formatDate(subscription.current_period_end)}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  onClick={handleManageSubscription}
-                  disabled={actionLoading}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {actionLoading ? "Carregando..." : "Gerenciar Assinatura"}
-                </Button>
-                <Button 
-                  onClick={checkSubscription}
-                  variant="outline"
-                >
-                  Atualizar Status
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       )}
     </div>
   );

@@ -235,6 +235,8 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          trial_ends_at: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
@@ -242,6 +244,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -249,6 +253,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -371,7 +377,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_access_level: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

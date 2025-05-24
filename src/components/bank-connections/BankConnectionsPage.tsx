@@ -1,11 +1,13 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, RefreshCw, Building2 } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Building2, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAccessLevel } from "@/hooks/useAccessLevel";
+import PremiumFeatureGate from "@/components/subscription/PremiumFeatureGate";
 import ConnectBankDialog from "./ConnectBankDialog";
 import SyncStatusIndicator from "./SyncStatusIndicator";
 
@@ -23,6 +25,7 @@ const BankConnectionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const { toast } = useToast();
+  const { accessLevel } = useAccessLevel();
 
   useEffect(() => {
     fetchConnections();
@@ -31,16 +34,17 @@ const BankConnectionsPage = () => {
   const fetchConnections = async () => {
     try {
       const { data, error } = await supabase
-        .from('bank_connections')
-        .select('id, institution_name, provider_name, sync_status, last_successful_sync_at, created_at')
-        .order('created_at', { ascending: false });
+        .from("bank_connections")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setConnections(data || []);
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Erro ao buscar conexões:", error);
       toast({
-        title: "Erro ao carregar conexões",
-        description: "Não foi possível carregar suas contas bancárias conectadas.",
+        title: "Erro",
+        description: "Não foi possível carregar as conexões bancárias",
         variant: "destructive",
       });
     } finally {
@@ -48,76 +52,36 @@ const BankConnectionsPage = () => {
     }
   };
 
-  const handleDisconnect = async (connectionId: string) => {
-    if (!confirm("Tem certeza que deseja desconectar esta conta bancária?")) {
-      return;
-    }
-
+  const handleDeleteConnection = async (connectionId: string) => {
     try {
       const { error } = await supabase
-        .from('bank_connections')
+        .from("bank_connections")
         .delete()
-        .eq('id', connectionId);
+        .eq("id", connectionId);
 
       if (error) throw error;
 
       toast({
-        title: "Conta desconectada",
-        description: "A conexão com a conta bancária foi removida com sucesso.",
+        title: "Conexão removida",
+        description: "A conexão bancária foi removida com sucesso",
       });
 
       fetchConnections();
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Erro ao remover conexão:", error);
       toast({
-        title: "Erro ao desconectar",
-        description: "Não foi possível desconectar a conta bancária.",
+        title: "Erro",
+        description: "Não foi possível remover a conexão",
         variant: "destructive",
       });
     }
   };
 
-  const handleSync = async (connectionId: string) => {
-    try {
-      // Update status to syncing
-      await supabase
-        .from('bank_connections')
-        .update({ sync_status: 'syncing' })
-        .eq('id', connectionId);
-
-      // Call edge function to sync transactions
-      const { error } = await supabase.functions.invoke('sync-bank-transactions', {
-        body: { connectionId }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sincronização iniciada",
-        description: "A sincronização das transações foi iniciada com sucesso.",
-      });
-
-      fetchConnections();
-    } catch (error: any) {
-      toast({
-        title: "Erro na sincronização",
-        description: "Não foi possível sincronizar as transações.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      case 'syncing': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  const hasAccess = accessLevel === 'pro' || accessLevel === 'trial';
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-lg">Carregando conexões...</div>
       </div>
     );
@@ -127,24 +91,42 @@ const BankConnectionsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Contas Bancárias</h1>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Contas Bancárias
+          </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            Gerencie suas conexões bancárias e sincronize transações automaticamente
+            Conecte suas contas bancárias para sincronização automática
           </p>
         </div>
-        <Button onClick={() => setShowConnectDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Nova Conta Bancária
-        </Button>
+
+        <PremiumFeatureGate
+          feature="Conexão Bancária"
+          description="Conecte seus bancos e automatize suas finanças com o AegisWallet Pro!"
+          fallback={null}
+        >
+          <Button onClick={() => setShowConnectDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Nova Conta
+          </Button>
+        </PremiumFeatureGate>
       </div>
 
-      {connections.length === 0 ? (
+      {!hasAccess && (
+        <PremiumFeatureGate
+          feature="Conexão Bancária Automática"
+          description="Conecte suas contas bancárias e sincronize suas transações automaticamente. Economize tempo e tenha controle total de suas finanças."
+        >
+          <div />
+        </PremiumFeatureGate>
+      )}
+
+      {hasAccess && connections.length === 0 && (
         <Card>
-          <CardContent className="text-center py-12">
-            <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <CardContent className="p-8 text-center">
+            <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-semibold mb-2">Nenhuma conta conectada</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Conecte suas contas bancárias para importar transações automaticamente
+              Conecte suas contas bancárias para sincronizar suas transações automaticamente
             </p>
             <Button onClick={() => setShowConnectDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -152,61 +134,43 @@ const BankConnectionsPage = () => {
             </Button>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      )}
+
+      {hasAccess && connections.length > 0 && (
+        <div className="grid gap-4">
           {connections.map((connection) => (
             <Card key={connection.id}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg">{connection.institution_name}</CardTitle>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {connection.provider_name}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {connection.provider_name}
+                      </Badge>
+                      <SyncStatusIndicator status={connection.sync_status} />
+                    </div>
                   </div>
-                  <SyncStatusIndicator status={connection.sync_status} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteConnection(connection.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Status:</p>
-                    <Badge className={getStatusColor(connection.sync_status)}>
-                      {connection.sync_status === 'success' && 'Sincronizado'}
-                      {connection.sync_status === 'error' && 'Erro'}
-                      {connection.sync_status === 'syncing' && 'Sincronizando'}
-                      {connection.sync_status === 'idle' && 'Ocioso'}
-                    </Badge>
-                  </div>
-                  
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  <p>
+                    Conectado em: {new Date(connection.created_at).toLocaleDateString("pt-BR")}
+                  </p>
                   {connection.last_successful_sync_at && (
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Última sincronização:</p>
-                      <p className="text-sm">
-                        {new Date(connection.last_successful_sync_at).toLocaleString('pt-BR')}
-                      </p>
-                    </div>
+                    <p>
+                      Última sincronização: {new Date(connection.last_successful_sync_at).toLocaleDateString("pt-BR")}
+                    </p>
                   )}
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleSync(connection.id)}
-                      disabled={connection.sync_status === 'syncing'}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-1" />
-                      Sincronizar
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleDisconnect(connection.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Desconectar
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -214,13 +178,10 @@ const BankConnectionsPage = () => {
         </div>
       )}
 
-      <ConnectBankDialog 
+      <ConnectBankDialog
         open={showConnectDialog}
         onOpenChange={setShowConnectDialog}
-        onSuccess={() => {
-          setShowConnectDialog(false);
-          fetchConnections();
-        }}
+        onSuccess={fetchConnections}
       />
     </div>
   );

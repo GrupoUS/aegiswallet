@@ -1,180 +1,158 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[AI-FINANCIAL-CHAT] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
   try {
-    const { message, model = 'openai/gpt-3.5-turbo' } = await req.json();
+    logStep("Function started");
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
+    if (!user) throw new Error("User not authenticated");
+
+    logStep("User authenticated", { userId: user.id });
+
+    const { message, model } = await req.json();
+    if (!message) throw new Error("Message is required");
+
+    // Get user access level
+    const { data: accessLevel, error: accessError } = await supabaseClient
+      .rpc('get_user_access_level', { user_uuid: user.id });
+
+    if (accessError) {
+      logStep("Error getting access level", { error: accessError });
+      throw accessError;
+    }
+
+    logStep("User access level determined", { accessLevel });
+
+    // Determine which model to use based on access level
+    let modelToUse = model;
+    const basicModel = "openai/gpt-3.5-turbo";
     
-    if (!message) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (accessLevel === 'free') {
+      // Free users can only use the basic model
+      modelToUse = basicModel;
+      logStep("Free user - using basic model", { modelToUse });
+    } else if (!model) {
+      // If no model specified, use basic for all users as fallback
+      modelToUse = basicModel;
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    logStep("Model selected", { modelToUse, requestedModel: model, accessLevel });
 
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authorization header required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('Processing chat request for user:', user.id);
-
-    // Fetch user's financial data
-    const [transactionsResult, categoriesResult, billsResult] = await Promise.all([
-      supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(20),
-      supabase
-        .from('categories')
-        .select('*')
-        .or(`user_id.eq.${user.id},is_predefined.eq.true`),
-      supabase
-        .from('bill_reminders')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('due_date', new Date().toISOString().split('T')[0])
-        .order('due_date', { ascending: true })
-        .limit(10)
-    ]);
-
-    // Build financial context
-    let financialContext = "Dados financeiros do usuário:\n";
-    
-    if (transactionsResult.data && transactionsResult.data.length > 0) {
-      const totalIncome = transactionsResult.data
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      
-      const totalExpenses = transactionsResult.data
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-      financialContext += `\nResumo das últimas 20 transações:`;
-      financialContext += `\n- Total de receitas: R$ ${totalIncome.toFixed(2)}`;
-      financialContext += `\n- Total de despesas: R$ ${totalExpenses.toFixed(2)}`;
-      financialContext += `\n- Saldo líquido: R$ ${(totalIncome - totalExpenses).toFixed(2)}`;
-    }
-
-    if (billsResult.data && billsResult.data.length > 0) {
-      financialContext += `\n\nContas próximas do vencimento:`;
-      billsResult.data.forEach(bill => {
-        financialContext += `\n- ${bill.name}: R$ ${parseFloat(bill.amount || 0).toFixed(2)} (vence em ${bill.due_date})`;
-      });
-    }
-
-    // Prepare messages for OpenRouter
-    const messages = [
-      {
-        role: "system",
-        content: "Você é um assistente financeiro pessoal e perspicaz para o aplicativo AegisWallet. Seu objetivo é ajudar os usuários a entenderem sua saúde financeira e fornecer conselhos práticos em Português do Brasil. Seja amigável, direto e útil. Sempre responda em português brasileiro."
-      },
-      {
-        role: "system",
-        content: financialContext
-      },
-      {
-        role: "user",
-        content: message
-      }
-    ];
-
-    // Call OpenRouter API
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
     if (!openRouterApiKey) {
-      return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw new Error("OpenRouter API key not configured");
     }
 
-    console.log('Calling OpenRouter with model:', model);
+    const systemPrompt = `Você é um assistente financeiro especializado em ajudar usuários brasileiros com questões relacionadas a finanças pessoais, investimentos, economia e planejamento financeiro. 
 
-    const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
+Suas características:
+- Responda sempre em português brasileiro
+- Seja didático e educativo
+- Forneça conselhos práticos e aplicáveis ao contexto brasileiro
+- Considere a realidade econômica e fiscal do Brasil
+- Seja empático e compreensivo com diferentes situações financeiras
+- Quando relevante, mencione instituições financeiras brasileiras, produtos financeiros disponíveis no país, e regulamentações da CVM, Bacen, etc.
+
+Contexto do usuário: Este usuário está usando o AegisWallet, um aplicativo de controle financeiro pessoal.`;
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openRouterApiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://aegiswallet.app',
-        'X-Title': 'AegisWallet'
+        "Authorization": `Bearer ${openRouterApiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://aegiswallet.app",
+        "X-Title": "AegisWallet Financial Assistant"
       },
       body: JSON.stringify({
-        model: model,
-        messages: messages,
+        model: modelToUse,
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
         temperature: 0.7,
         max_tokens: 1000
       })
     });
 
-    if (!openRouterResponse.ok) {
-      const errorText = await openRouterResponse.text();
-      console.error('OpenRouter API error:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to get AI response' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      logStep("OpenRouter API error", { status: response.status, error: errorText });
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
-    const aiResponse = await openRouterResponse.json();
-    const assistantMessage = aiResponse.choices[0]?.message?.content || 'Desculpe, não consegui processar sua solicitação.';
+    const data = await response.json();
+    const aiResponse = data.choices[0]?.message?.content;
 
-    // Save chat history
-    await supabase
-      .from('ai_chat_history')
+    if (!aiResponse) {
+      throw new Error("No response from AI model");
+    }
+
+    logStep("AI response received");
+
+    // Store chat history
+    const { error: historyError } = await supabaseClient
+      .from("ai_chat_history")
       .insert({
         user_id: user.id,
         message: message,
-        response: assistantMessage,
-        openrouter_model_used: model
+        response: aiResponse,
+        openrouter_model_used: modelToUse
       });
 
-    console.log('Chat completed successfully');
+    if (historyError) {
+      logStep("Error storing chat history", { error: historyError });
+    } else {
+      logStep("Chat history stored successfully");
+    }
 
-    return new Response(JSON.stringify({ 
-      response: assistantMessage,
-      model_used: model 
+    return new Response(JSON.stringify({
+      response: aiResponse,
+      model_used: modelToUse
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
     });
 
   } catch (error) {
-    console.error('Error in ai-financial-chat function:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in ai-financial-chat", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });

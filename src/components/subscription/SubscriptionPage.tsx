@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
-import { Crown, CreditCard, Calendar, CheckCircle, Clock } from "lucide-react";
+import { Crown, CreditCard, Calendar, CheckCircle, Clock, AlertCircle, RefreshCw } from "lucide-react";
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -18,6 +17,7 @@ const SubscriptionPage = () => {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { accessLevel, daysLeft } = useAccessLevel();
 
@@ -26,9 +26,17 @@ const SubscriptionPage = () => {
   }, []);
 
   const checkSubscription = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setError("Usuário não autenticado");
+        return;
+      }
+
+      console.log("Checking subscription for user:", session.user.id);
 
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
@@ -36,13 +44,21 @@ const SubscriptionPage = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(error.message || "Erro ao chamar função de verificação");
+      }
+
+      console.log("Subscription data received:", data);
       setSubscription(data);
     } catch (error) {
       console.error("Erro ao verificar assinatura:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      setError(`Erro ao verificar assinatura: ${errorMessage}`);
+      
       toast({
         title: "Erro",
-        description: "Não foi possível verificar o status da assinatura",
+        description: `Não foi possível verificar o status da assinatura: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -54,7 +70,9 @@ const SubscriptionPage = () => {
     setActionLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Usuário não autenticado");
+      if (!session) {
+        throw new Error("Usuário não autenticado");
+      }
 
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         headers: {
@@ -123,7 +141,48 @@ const SubscriptionPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg">Carregando informações da assinatura...</div>
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          <div className="text-lg">Verificando status da assinatura...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state with retry option
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Assinatura
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Gerencie sua assinatura do AegisWallet Pro
+          </p>
+        </div>
+
+        <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <h3 className="font-semibold text-red-800 dark:text-red-200">
+                Erro ao Verificar Assinatura
+              </h3>
+            </div>
+            <p className="text-red-700 dark:text-red-300 mb-4">
+              {error}
+            </p>
+            <Button 
+              onClick={checkSubscription}
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-100"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar Novamente
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -210,6 +269,7 @@ const SubscriptionPage = () => {
                 onClick={checkSubscription}
                 variant="outline"
               >
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar Status
               </Button>
             </div>

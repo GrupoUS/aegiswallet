@@ -28,21 +28,42 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      logStep("ERROR: No authorization header provided");
+      throw new Error("Token de autorização não fornecido");
+    }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    if (userError) {
+      logStep("ERROR: Authentication failed", { error: userError.message });
+      throw new Error(`Erro de autenticação: ${userError.message}`);
+    }
+    
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) {
+      logStep("ERROR: User not authenticated or email not available");
+      throw new Error("Usuário não autenticado ou email não disponível");
+    }
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2023-10-16" });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      logStep("ERROR: Stripe secret key not configured");
+      throw new Error("Chave secreta do Stripe não configurada");
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    
+    // Check for existing Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating inactive state");
+      
+      // Update user_subscriptions table with inactive status
       await supabaseClient.from("user_subscriptions").upsert({
         user_id: user.id,
         stripe_customer_id: null,
@@ -53,7 +74,11 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' });
       
-      return new Response(JSON.stringify({ subscribed: false, status: "inactive" }), {
+      return new Response(JSON.stringify({ 
+        subscribed: false, 
+        status: "inactive",
+        current_period_end: null 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -62,6 +87,7 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Get active subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -93,6 +119,7 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    // Update user_subscriptions table
     await supabaseClient.from("user_subscriptions").upsert({
       user_id: user.id,
       ...subscriptionData,
@@ -112,7 +139,13 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    
+    // Return a more specific error message in Portuguese
+    return new Response(JSON.stringify({ 
+      error: errorMessage.includes("Stripe") ? "Erro ao verificar assinatura no Stripe" :
+             errorMessage.includes("autenticação") || errorMessage.includes("Token") ? "Erro de autenticação" :
+             "Erro interno do servidor"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

@@ -83,7 +83,7 @@ serve(async (req) => {
       throw new Error("OpenRouter API key not configured");
     }
 
-    // Enhanced system prompt with action capabilities for ALL users
+    // Updated system prompt - ALL users can now perform actions
     const systemPrompt = `Você é um assistente financeiro especializado em ajudar usuários brasileiros com questões relacionadas a finanças pessoais, investimentos, economia e planejamento financeiro. 
 
 Suas características:
@@ -96,7 +96,7 @@ Suas características:
 
 Contexto do usuário: Este usuário está usando o AegisWallet, um aplicativo de controle financeiro pessoal.
 
-CAPACIDADES DE AÇÃO DISPONÍVEIS:
+CAPACIDADES DE AÇÃO DISPONÍVEIS PARA TODOS OS USUÁRIOS:
 Você pode executar ações no sistema do usuário quando solicitado. Para isso, inclua no final da sua resposta um bloco JSON com a seguinte estrutura:
 
 **AÇÕES DISPONÍVEIS:**
@@ -164,126 +164,234 @@ ${accessLevel === 'free' ? 'USUÁRIO GRATUITO: Você está usando o modelo bási
         const actionData = JSON.parse(jsonMatch[0]);
         logStep("Action detected", { action: actionData });
 
-        switch (actionData.action) {
-          case "create_reminder":
-            const reminderParams = actionData.params;
-            const { error: reminderError } = await supabaseClient
-              .from("bill_reminders")
-              .insert({
-                user_id: user.id,
-                name: reminderParams.description,
-                due_date: reminderParams.due_date,
-                amount: reminderParams.amount || null
-              });
+        // Validate action parameters
+        if (!actionData.action || !actionData.params) {
+          logStep("Invalid action format", { actionData });
+          actionResult = "Formato de ação inválido. ";
+        } else {
+          switch (actionData.action) {
+            case "create_reminder":
+              try {
+                const reminderParams = actionData.params;
+                
+                // Validate required parameters
+                if (!reminderParams.description || !reminderParams.due_date) {
+                  logStep("Missing reminder parameters", { reminderParams });
+                  actionResult = "Parâmetros insuficientes para criar lembrete. ";
+                  break;
+                }
 
-            if (reminderError) {
-              logStep("Error creating reminder", { error: reminderError });
-              actionResult = "Erro ao criar lembrete. ";
-            } else {
-              actionExecuted = true;
-              actionResult = "✅ Lembrete criado com sucesso! ";
-            }
-            break;
+                // Validate date format
+                const dueDate = new Date(reminderParams.due_date);
+                if (isNaN(dueDate.getTime())) {
+                  logStep("Invalid date format", { due_date: reminderParams.due_date });
+                  actionResult = "Data inválida para o lembrete. ";
+                  break;
+                }
 
-          case "add_expense":
-            const expenseParams = actionData.params;
-            // Get or create category
-            let categoryId;
-            const { data: existingCategory } = await supabaseClient
-              .from("categories")
-              .select("id")
-              .or(`name.ilike.${expenseParams.category},user_id.eq.${user.id}`)
-              .single();
+                logStep("Creating reminder", { 
+                  user_id: user.id,
+                  name: reminderParams.description,
+                  due_date: reminderParams.due_date,
+                  amount: reminderParams.amount || null 
+                });
 
-            if (existingCategory) {
-              categoryId = existingCategory.id;
-            } else {
-              const { data: newCategory, error: categoryError } = await supabaseClient
-                .from("categories")
-                .insert({
-                  name: expenseParams.category,
-                  user_id: user.id
-                })
-                .select("id")
-                .single();
+                const { data: reminderData, error: reminderError } = await supabaseClient
+                  .from("bill_reminders")
+                  .insert({
+                    user_id: user.id,
+                    name: reminderParams.description,
+                    due_date: reminderParams.due_date,
+                    amount: reminderParams.amount || null
+                  })
+                  .select();
 
-              if (categoryError || !newCategory) {
-                logStep("Error creating category", { error: categoryError });
-                actionResult = "Erro ao criar categoria. ";
-                break;
+                if (reminderError) {
+                  logStep("Error creating reminder", { error: reminderError });
+                  actionResult = "Erro ao criar lembrete no banco de dados. ";
+                } else {
+                  actionExecuted = true;
+                  actionResult = `✅ Lembrete "${reminderParams.description}" criado com sucesso para ${new Date(reminderParams.due_date).toLocaleDateString('pt-BR')}! `;
+                  logStep("Reminder created successfully", { reminderData });
+                }
+              } catch (reminderError) {
+                logStep("Exception creating reminder", { error: reminderError });
+                actionResult = "Erro inesperado ao criar lembrete. ";
               }
-              categoryId = newCategory.id;
-            }
+              break;
 
-            const { error: expenseError } = await supabaseClient
-              .from("transactions")
-              .insert({
-                user_id: user.id,
-                amount: Math.abs(expenseParams.amount) * -1, // Ensure negative for expense
-                description: expenseParams.description,
-                category_id: categoryId,
-                date: expenseParams.date,
-                type: "expense"
-              });
+            case "add_expense":
+              try {
+                const expenseParams = actionData.params;
+                
+                // Validate required parameters
+                if (!expenseParams.amount || !expenseParams.description || !expenseParams.category || !expenseParams.date) {
+                  logStep("Missing expense parameters", { expenseParams });
+                  actionResult = "Parâmetros insuficientes para registrar despesa. ";
+                  break;
+                }
 
-            if (expenseError) {
-              logStep("Error creating expense", { error: expenseError });
-              actionResult = "Erro ao registrar despesa. ";
-            } else {
-              actionExecuted = true;
-              actionResult = "✅ Despesa registrada com sucesso! ";
-            }
-            break;
+                // Validate date format
+                const expenseDate = new Date(expenseParams.date);
+                if (isNaN(expenseDate.getTime())) {
+                  logStep("Invalid expense date format", { date: expenseParams.date });
+                  actionResult = "Data inválida para a despesa. ";
+                  break;
+                }
 
-          case "add_income":
-            const incomeParams = actionData.params;
-            // Get or create category
-            let incomeCategoryId;
-            const { data: existingIncomeCategory } = await supabaseClient
-              .from("categories")
-              .select("id")
-              .or(`name.ilike.${incomeParams.category},user_id.eq.${user.id}`)
-              .single();
+                // Get or create category
+                let categoryId;
+                const { data: existingCategory } = await supabaseClient
+                  .from("categories")
+                  .select("id")
+                  .or(`name.ilike.${expenseParams.category},user_id.eq.${user.id}`)
+                  .single();
 
-            if (existingIncomeCategory) {
-              incomeCategoryId = existingIncomeCategory.id;
-            } else {
-              const { data: newIncomeCategory, error: incomeCategoryError } = await supabaseClient
-                .from("categories")
-                .insert({
-                  name: incomeParams.category,
-                  user_id: user.id
-                })
-                .select("id")
-                .single();
+                if (existingCategory) {
+                  categoryId = existingCategory.id;
+                  logStep("Using existing category", { categoryId, name: expenseParams.category });
+                } else {
+                  const { data: newCategory, error: categoryError } = await supabaseClient
+                    .from("categories")
+                    .insert({
+                      name: expenseParams.category,
+                      user_id: user.id
+                    })
+                    .select("id")
+                    .single();
 
-              if (incomeCategoryError || !newIncomeCategory) {
-                logStep("Error creating income category", { error: incomeCategoryError });
-                actionResult = "Erro ao criar categoria. ";
-                break;
+                  if (categoryError || !newCategory) {
+                    logStep("Error creating category", { error: categoryError });
+                    actionResult = "Erro ao criar categoria para a despesa. ";
+                    break;
+                  }
+                  categoryId = newCategory.id;
+                  logStep("Created new category", { categoryId, name: expenseParams.category });
+                }
+
+                logStep("Creating expense transaction", {
+                  user_id: user.id,
+                  amount: Math.abs(expenseParams.amount) * -1,
+                  description: expenseParams.description,
+                  category_id: categoryId,
+                  date: expenseParams.date,
+                  type: "expense"
+                });
+
+                const { data: expenseData, error: expenseError } = await supabaseClient
+                  .from("transactions")
+                  .insert({
+                    user_id: user.id,
+                    amount: Math.abs(expenseParams.amount) * -1, // Ensure negative for expense
+                    description: expenseParams.description,
+                    category_id: categoryId,
+                    date: expenseParams.date,
+                    type: "expense"
+                  })
+                  .select();
+
+                if (expenseError) {
+                  logStep("Error creating expense", { error: expenseError });
+                  actionResult = "Erro ao registrar despesa no banco de dados. ";
+                } else {
+                  actionExecuted = true;
+                  actionResult = `✅ Despesa de R$ ${Math.abs(expenseParams.amount).toFixed(2)} registrada com sucesso em "${expenseParams.category}"! `;
+                  logStep("Expense created successfully", { expenseData });
+                }
+              } catch (expenseError) {
+                logStep("Exception creating expense", { error: expenseError });
+                actionResult = "Erro inesperado ao registrar despesa. ";
               }
-              incomeCategoryId = newIncomeCategory.id;
-            }
+              break;
 
-            const { error: incomeError } = await supabaseClient
-              .from("transactions")
-              .insert({
-                user_id: user.id,
-                amount: Math.abs(incomeParams.amount), // Ensure positive for income
-                description: incomeParams.description,
-                category_id: incomeCategoryId,
-                date: incomeParams.date,
-                type: "income"
-              });
+            case "add_income":
+              try {
+                const incomeParams = actionData.params;
+                
+                // Validate required parameters
+                if (!incomeParams.amount || !incomeParams.description || !incomeParams.category || !incomeParams.date) {
+                  logStep("Missing income parameters", { incomeParams });
+                  actionResult = "Parâmetros insuficientes para registrar receita. ";
+                  break;
+                }
 
-            if (incomeError) {
-              logStep("Error creating income", { error: incomeError });
-              actionResult = "Erro ao registrar receita. ";
-            } else {
-              actionExecuted = true;
-              actionResult = "✅ Receita registrada com sucesso! ";
-            }
-            break;
+                // Validate date format
+                const incomeDate = new Date(incomeParams.date);
+                if (isNaN(incomeDate.getTime())) {
+                  logStep("Invalid income date format", { date: incomeParams.date });
+                  actionResult = "Data inválida para a receita. ";
+                  break;
+                }
+
+                // Get or create category
+                let incomeCategoryId;
+                const { data: existingIncomeCategory } = await supabaseClient
+                  .from("categories")
+                  .select("id")
+                  .or(`name.ilike.${incomeParams.category},user_id.eq.${user.id}`)
+                  .single();
+
+                if (existingIncomeCategory) {
+                  incomeCategoryId = existingIncomeCategory.id;
+                  logStep("Using existing income category", { categoryId: incomeCategoryId, name: incomeParams.category });
+                } else {
+                  const { data: newIncomeCategory, error: incomeCategoryError } = await supabaseClient
+                    .from("categories")
+                    .insert({
+                      name: incomeParams.category,
+                      user_id: user.id
+                    })
+                    .select("id")
+                    .single();
+
+                  if (incomeCategoryError || !newIncomeCategory) {
+                    logStep("Error creating income category", { error: incomeCategoryError });
+                    actionResult = "Erro ao criar categoria para a receita. ";
+                    break;
+                  }
+                  incomeCategoryId = newIncomeCategory.id;
+                  logStep("Created new income category", { categoryId: incomeCategoryId, name: incomeParams.category });
+                }
+
+                logStep("Creating income transaction", {
+                  user_id: user.id,
+                  amount: Math.abs(incomeParams.amount),
+                  description: incomeParams.description,
+                  category_id: incomeCategoryId,
+                  date: incomeParams.date,
+                  type: "income"
+                });
+
+                const { data: incomeData, error: incomeError } = await supabaseClient
+                  .from("transactions")
+                  .insert({
+                    user_id: user.id,
+                    amount: Math.abs(incomeParams.amount), // Ensure positive for income
+                    description: incomeParams.description,
+                    category_id: incomeCategoryId,
+                    date: incomeParams.date,
+                    type: "income"
+                  })
+                  .select();
+
+                if (incomeError) {
+                  logStep("Error creating income", { error: incomeError });
+                  actionResult = "Erro ao registrar receita no banco de dados. ";
+                } else {
+                  actionExecuted = true;
+                  actionResult = `✅ Receita de R$ ${Math.abs(incomeParams.amount).toFixed(2)} registrada com sucesso em "${incomeParams.category}"! `;
+                  logStep("Income created successfully", { incomeData });
+                }
+              } catch (incomeError) {
+                logStep("Exception creating income", { error: incomeError });
+                actionResult = "Erro inesperado ao registrar receita. ";
+              }
+              break;
+
+            default:
+              logStep("Unknown action", { action: actionData.action });
+              actionResult = "Ação não reconhecida. ";
+          }
         }
       }
     } catch (actionError) {

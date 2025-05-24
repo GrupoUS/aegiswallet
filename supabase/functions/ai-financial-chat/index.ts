@@ -1,10 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 const logStep = (step: string, details?: any) => {
@@ -12,428 +12,344 @@ const logStep = (step: string, details?: any) => {
   console.log(`[AI-FINANCIAL-CHAT] ${step}${detailsStr}`);
 };
 
-// Define which models are free vs premium
-const FREE_MODELS = ["openai/gpt-3.5-turbo"];
-const PREMIUM_MODELS = ["openai/gpt-4o-mini", "anthropic/claude-3-haiku", "google/gemini-pro"];
+const handler = async (req: Request): Promise<Response> => {
+  logStep("Function started");
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
-    logStep("Function started");
+    // Inicializar cliente Supabase com SERVICE ROLE KEY para bypass RLS
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      logStep("ERROR: Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ error: 'Configuração do Supabase ausente' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Cliente com SERVICE ROLE para operações administrativas (bypass RLS)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
+    logStep("Supabase admin client initialized with service role");
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
+    // Cliente normal para autenticação do usuário
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      logStep("ERROR: No authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Token de autorização necessário' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') || '', {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
+      logStep("ERROR: User authentication failed", { error: userError });
+      return new Response(
+        JSON.stringify({ error: 'Usuário não autenticado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     logStep("User authenticated", { userId: user.id });
 
-    const { message, model } = await req.json();
-    if (!message) throw new Error("Message is required");
-
-    // Get user access level
-    const { data: accessLevel, error: accessError } = await supabaseClient
-      .rpc('get_user_access_level', { user_uuid: user.id });
-
-    if (accessError) {
-      logStep("Error getting access level", { error: accessError });
-      throw accessError;
+    const { message } = await req.json();
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: 'Mensagem é obrigatória' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    logStep("User access level determined", { accessLevel });
+    logStep("Processing message", { messageLength: message.length });
 
-    // Validate model access based on user tier
-    let modelToUse = model || "openai/gpt-3.5-turbo";
-    
-    if (accessLevel === 'free') {
-      // Free users can only use free models
-      if (PREMIUM_MODELS.includes(modelToUse)) {
-        return new Response(JSON.stringify({
-          error: "Este modelo de IA é exclusivo para usuários Pro. Por favor, faça um upgrade para acessar modelos avançados.",
-          errorCode: "PREMIUM_MODEL_REQUIRED"
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 403,
-        });
-      }
-      modelToUse = "openai/gpt-3.5-turbo";
-      logStep("Free user - using basic model", { modelToUse });
-    } else if (!FREE_MODELS.includes(modelToUse) && !PREMIUM_MODELS.includes(modelToUse)) {
-      // Fallback to basic model for unknown models
-      modelToUse = "openai/gpt-3.5-turbo";
-    }
+    // Verificar se é uma solicitação para criar lembrete
+    if (message.toLowerCase().includes('lembrete') || message.toLowerCase().includes('conta')) {
+      logStep("Detected reminder creation request");
+      
+      // Exemplo de extração de dados do lembrete da mensagem
+      const reminderMatch = message.match(/lembrete.*?(?:para|de)\s+(.+?)(?:\s+no dia|\s+em|\s+para o dia|\s+vencimento)\s+(\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})/i);
+      
+      if (reminderMatch) {
+        const reminderName = reminderMatch[1].trim();
+        let dueDate = reminderMatch[2].trim();
+        
+        // Converter data para formato ISO se necessário
+        if (dueDate.includes('/')) {
+          const [day, month, year] = dueDate.split('/');
+          dueDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
 
-    logStep("Model selected", { modelToUse, requestedModel: model, accessLevel });
+        logStep("Attempting to create reminder", { name: reminderName, dueDate, userId: user.id });
 
-    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-    if (!openRouterApiKey) {
-      throw new Error("OpenRouter API key not configured");
-    }
+        try {
+          // Usar cliente admin para inserir lembrete (bypass RLS)
+          const { data: reminderData, error: reminderError } = await supabaseAdmin
+            .from('bill_reminders')
+            .insert({
+              user_id: user.id,
+              name: reminderName,
+              due_date: dueDate,
+              is_paid: false
+            })
+            .select()
+            .single();
 
-    // Updated system prompt - ALL users can now perform actions
-    const systemPrompt = `Você é um assistente financeiro especializado em ajudar usuários brasileiros com questões relacionadas a finanças pessoais, investimentos, economia e planejamento financeiro. 
-
-Suas características:
-- Responda sempre em português brasileiro
-- Seja didático e educativo
-- Forneça conselhos práticos e aplicáveis ao contexto brasileiro
-- Considere a realidade econômica e fiscal do Brasil
-- Seja empático e compreensivo com diferentes situações financeiras
-- Quando relevante, mencione instituições financeiras brasileiras, produtos financeiros disponíveis no país, e regulamentações da CVM, Bacen, etc.
-
-Contexto do usuário: Este usuário está usando o AegisWallet, um aplicativo de controle financeiro pessoal.
-
-CAPACIDADES DE AÇÃO DISPONÍVEIS PARA TODOS OS USUÁRIOS:
-Você pode executar ações no sistema do usuário quando solicitado. Para isso, inclua no final da sua resposta um bloco JSON com a seguinte estrutura:
-
-**AÇÕES DISPONÍVEIS:**
-1. Criar lembrete: {"action": "create_reminder", "params": {"description": "descrição", "due_date": "YYYY-MM-DD", "amount": valor_opcional}}
-2. Adicionar despesa: {"action": "add_expense", "params": {"amount": valor, "description": "descrição", "category": "categoria", "date": "YYYY-MM-DD"}}
-3. Adicionar receita: {"action": "add_income", "params": {"amount": valor, "description": "descrição", "category": "categoria", "date": "YYYY-MM-DD"}}
-
-Exemplos de quando usar ações:
-- "Crie um lembrete para pagar a conta de luz no dia 15" → criar lembrete
-- "Registre um gasto de R$ 50 no supermercado hoje" → adicionar despesa
-- "Adicione meu salário de R$ 3000 que recebi hoje" → adicionar receita
-
-Quando executar uma ação, inclua o JSON da ação no final da sua resposta após explicar o que será feito.
-
-${accessLevel === 'free' ? 'USUÁRIO GRATUITO: Você está usando o modelo básico, mas pode executar todas as ações básicas como criar lembretes e registrar transações. Para análises mais avançadas e modelos de IA premium, considere fazer upgrade para o plano Pro.' : ''}`;
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openRouterApiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://aegiswallet.app",
-        "X-Title": "AegisWallet Financial Assistant"
-      },
-      body: JSON.stringify({
-        model: modelToUse,
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user",
-            content: message
+          if (reminderError) {
+            logStep("ERROR: Failed to create reminder", { error: reminderError });
+            return new Response(
+              JSON.stringify({ 
+                response: `Desculpe, tive um problema ao criar o lembrete. Erro: ${reminderError.message}` 
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      logStep("OpenRouter API error", { status: response.status, error: errorText });
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content;
-
-    if (!aiResponse) {
-      throw new Error("No response from AI model");
-    }
-
-    logStep("AI response received");
-
-    // Parse and execute actions - NOW AVAILABLE FOR ALL USERS
-    let actionExecuted = false;
-    let actionResult = "";
-
-    try {
-      // Look for JSON action in the response
-      const jsonMatch = aiResponse.match(/\{[^}]*"action"[^}]*\}/);
-      if (jsonMatch) {
-        const actionData = JSON.parse(jsonMatch[0]);
-        logStep("Action detected", { action: actionData });
-
-        // Validate action parameters
-        if (!actionData.action || !actionData.params) {
-          logStep("Invalid action format", { actionData });
-          actionResult = "Formato de ação inválido. ";
-        } else {
-          switch (actionData.action) {
-            case "create_reminder":
-              try {
-                const reminderParams = actionData.params;
-                
-                // Validate required parameters
-                if (!reminderParams.description || !reminderParams.due_date) {
-                  logStep("Missing reminder parameters", { reminderParams });
-                  actionResult = "Parâmetros insuficientes para criar lembrete. ";
-                  break;
-                }
-
-                // Validate date format
-                const dueDate = new Date(reminderParams.due_date);
-                if (isNaN(dueDate.getTime())) {
-                  logStep("Invalid date format", { due_date: reminderParams.due_date });
-                  actionResult = "Data inválida para o lembrete. ";
-                  break;
-                }
-
-                logStep("Creating reminder", { 
-                  user_id: user.id,
-                  name: reminderParams.description,
-                  due_date: reminderParams.due_date,
-                  amount: reminderParams.amount || null 
-                });
-
-                const { data: reminderData, error: reminderError } = await supabaseClient
-                  .from("bill_reminders")
-                  .insert({
-                    user_id: user.id,
-                    name: reminderParams.description,
-                    due_date: reminderParams.due_date,
-                    amount: reminderParams.amount || null
-                  })
-                  .select();
-
-                if (reminderError) {
-                  logStep("Error creating reminder", { error: reminderError });
-                  actionResult = "Erro ao criar lembrete no banco de dados. ";
-                } else {
-                  actionExecuted = true;
-                  actionResult = `✅ Lembrete "${reminderParams.description}" criado com sucesso para ${new Date(reminderParams.due_date).toLocaleDateString('pt-BR')}! `;
-                  logStep("Reminder created successfully", { reminderData });
-                }
-              } catch (reminderError) {
-                logStep("Exception creating reminder", { error: reminderError });
-                actionResult = "Erro inesperado ao criar lembrete. ";
-              }
-              break;
-
-            case "add_expense":
-              try {
-                const expenseParams = actionData.params;
-                
-                // Validate required parameters
-                if (!expenseParams.amount || !expenseParams.description || !expenseParams.category || !expenseParams.date) {
-                  logStep("Missing expense parameters", { expenseParams });
-                  actionResult = "Parâmetros insuficientes para registrar despesa. ";
-                  break;
-                }
-
-                // Validate date format
-                const expenseDate = new Date(expenseParams.date);
-                if (isNaN(expenseDate.getTime())) {
-                  logStep("Invalid expense date format", { date: expenseParams.date });
-                  actionResult = "Data inválida para a despesa. ";
-                  break;
-                }
-
-                // Get or create category
-                let categoryId;
-                const { data: existingCategory } = await supabaseClient
-                  .from("categories")
-                  .select("id")
-                  .or(`name.ilike.${expenseParams.category},user_id.eq.${user.id}`)
-                  .single();
-
-                if (existingCategory) {
-                  categoryId = existingCategory.id;
-                  logStep("Using existing category", { categoryId, name: expenseParams.category });
-                } else {
-                  const { data: newCategory, error: categoryError } = await supabaseClient
-                    .from("categories")
-                    .insert({
-                      name: expenseParams.category,
-                      user_id: user.id
-                    })
-                    .select("id")
-                    .single();
-
-                  if (categoryError || !newCategory) {
-                    logStep("Error creating category", { error: categoryError });
-                    actionResult = "Erro ao criar categoria para a despesa. ";
-                    break;
-                  }
-                  categoryId = newCategory.id;
-                  logStep("Created new category", { categoryId, name: expenseParams.category });
-                }
-
-                logStep("Creating expense transaction", {
-                  user_id: user.id,
-                  amount: Math.abs(expenseParams.amount) * -1,
-                  description: expenseParams.description,
-                  category_id: categoryId,
-                  date: expenseParams.date,
-                  type: "expense"
-                });
-
-                const { data: expenseData, error: expenseError } = await supabaseClient
-                  .from("transactions")
-                  .insert({
-                    user_id: user.id,
-                    amount: Math.abs(expenseParams.amount) * -1, // Ensure negative for expense
-                    description: expenseParams.description,
-                    category_id: categoryId,
-                    date: expenseParams.date,
-                    type: "expense"
-                  })
-                  .select();
-
-                if (expenseError) {
-                  logStep("Error creating expense", { error: expenseError });
-                  actionResult = "Erro ao registrar despesa no banco de dados. ";
-                } else {
-                  actionExecuted = true;
-                  actionResult = `✅ Despesa de R$ ${Math.abs(expenseParams.amount).toFixed(2)} registrada com sucesso em "${expenseParams.category}"! `;
-                  logStep("Expense created successfully", { expenseData });
-                }
-              } catch (expenseError) {
-                logStep("Exception creating expense", { error: expenseError });
-                actionResult = "Erro inesperado ao registrar despesa. ";
-              }
-              break;
-
-            case "add_income":
-              try {
-                const incomeParams = actionData.params;
-                
-                // Validate required parameters
-                if (!incomeParams.amount || !incomeParams.description || !incomeParams.category || !incomeParams.date) {
-                  logStep("Missing income parameters", { incomeParams });
-                  actionResult = "Parâmetros insuficientes para registrar receita. ";
-                  break;
-                }
-
-                // Validate date format
-                const incomeDate = new Date(incomeParams.date);
-                if (isNaN(incomeDate.getTime())) {
-                  logStep("Invalid income date format", { date: incomeParams.date });
-                  actionResult = "Data inválida para a receita. ";
-                  break;
-                }
-
-                // Get or create category
-                let incomeCategoryId;
-                const { data: existingIncomeCategory } = await supabaseClient
-                  .from("categories")
-                  .select("id")
-                  .or(`name.ilike.${incomeParams.category},user_id.eq.${user.id}`)
-                  .single();
-
-                if (existingIncomeCategory) {
-                  incomeCategoryId = existingIncomeCategory.id;
-                  logStep("Using existing income category", { categoryId: incomeCategoryId, name: incomeParams.category });
-                } else {
-                  const { data: newIncomeCategory, error: incomeCategoryError } = await supabaseClient
-                    .from("categories")
-                    .insert({
-                      name: incomeParams.category,
-                      user_id: user.id
-                    })
-                    .select("id")
-                    .single();
-
-                  if (incomeCategoryError || !newIncomeCategory) {
-                    logStep("Error creating income category", { error: incomeCategoryError });
-                    actionResult = "Erro ao criar categoria para a receita. ";
-                    break;
-                  }
-                  incomeCategoryId = newIncomeCategory.id;
-                  logStep("Created new income category", { categoryId: incomeCategoryId, name: incomeParams.category });
-                }
-
-                logStep("Creating income transaction", {
-                  user_id: user.id,
-                  amount: Math.abs(incomeParams.amount),
-                  description: incomeParams.description,
-                  category_id: incomeCategoryId,
-                  date: incomeParams.date,
-                  type: "income"
-                });
-
-                const { data: incomeData, error: incomeError } = await supabaseClient
-                  .from("transactions")
-                  .insert({
-                    user_id: user.id,
-                    amount: Math.abs(incomeParams.amount), // Ensure positive for income
-                    description: incomeParams.description,
-                    category_id: incomeCategoryId,
-                    date: incomeParams.date,
-                    type: "income"
-                  })
-                  .select();
-
-                if (incomeError) {
-                  logStep("Error creating income", { error: incomeError });
-                  actionResult = "Erro ao registrar receita no banco de dados. ";
-                } else {
-                  actionExecuted = true;
-                  actionResult = `✅ Receita de R$ ${Math.abs(incomeParams.amount).toFixed(2)} registrada com sucesso em "${incomeParams.category}"! `;
-                  logStep("Income created successfully", { incomeData });
-                }
-              } catch (incomeError) {
-                logStep("Exception creating income", { error: incomeError });
-                actionResult = "Erro inesperado ao registrar receita. ";
-              }
-              break;
-
-            default:
-              logStep("Unknown action", { action: actionData.action });
-              actionResult = "Ação não reconhecida. ";
-          }
+          logStep("Reminder created successfully", { reminderId: reminderData.id });
+          
+          return new Response(
+            JSON.stringify({ 
+              response: `✅ Lembrete criado com sucesso! "${reminderName}" foi agendado para ${new Date(dueDate).toLocaleDateString('pt-BR')}.` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          logStep("ERROR: Exception during reminder creation", { error: error.message });
+          return new Response(
+            JSON.stringify({ 
+              response: `Desculpe, houve um erro inesperado ao criar o lembrete: ${error.message}` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
       }
-    } catch (actionError) {
-      logStep("Error parsing/executing action", { error: actionError });
-      actionResult = "Erro ao executar ação solicitada. ";
     }
 
-    // Clean response from action JSON if present
-    const cleanResponse = aiResponse.replace(/\{[^}]*"action"[^}]*\}/, '').trim();
-    const finalResponse = actionResult + cleanResponse;
+    // Verificar se é uma solicitação para criar transação
+    if (message.toLowerCase().includes('receita') || message.toLowerCase().includes('despesa') || message.toLowerCase().includes('gasto')) {
+      logStep("Detected transaction creation request");
+      
+      const isIncome = message.toLowerCase().includes('receita');
+      const transactionType = isIncome ? 'income' : 'expense';
+      
+      // Tentar extrair valor da mensagem
+      const valueMatch = message.match(/(?:R\$|valor|)\s*(\d+(?:[.,]\d{2})?)/i);
+      const descriptionMatch = message.match(/(?:receita|despesa|gasto)\s+(?:de|para|com)\s+(.+?)(?:\s+de|\s+no valor|\s+R\$|$)/i);
+      
+      if (valueMatch && descriptionMatch) {
+        const amount = parseFloat(valueMatch[1].replace(',', '.'));
+        const description = descriptionMatch[1].trim();
+        
+        logStep("Attempting to create transaction", { 
+          type: transactionType, 
+          amount, 
+          description, 
+          userId: user.id 
+        });
 
-    // Store chat history
-    const { error: historyError } = await supabaseClient
-      .from("ai_chat_history")
-      .insert({
+        try {
+          // Buscar categoria padrão ou criar uma
+          let categoryId = null;
+          const { data: categories } = await supabaseAdmin
+            .from('categories')
+            .select('id')
+            .eq('name', 'Geral')
+            .limit(1);
+
+          if (categories && categories.length > 0) {
+            categoryId = categories[0].id;
+          } else {
+            // Criar categoria padrão
+            const { data: newCategory } = await supabaseAdmin
+              .from('categories')
+              .insert({ name: 'Geral', is_predefined: true })
+              .select('id')
+              .single();
+            categoryId = newCategory?.id;
+          }
+
+          if (!categoryId) {
+            logStep("ERROR: Could not create or find category");
+            return new Response(
+              JSON.stringify({ 
+                response: 'Desculpe, não consegui criar a categoria necessária para a transação.' 
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          // Usar cliente admin para inserir transação (bypass RLS)
+          const { data: transactionData, error: transactionError } = await supabaseAdmin
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              type: transactionType,
+              amount: amount,
+              description: description,
+              date: new Date().toISOString().split('T')[0],
+              category_id: categoryId
+            })
+            .select()
+            .single();
+
+          if (transactionError) {
+            logStep("ERROR: Failed to create transaction", { error: transactionError });
+            return new Response(
+              JSON.stringify({ 
+                response: `Desculpe, tive um problema ao criar a transação. Erro: ${transactionError.message}` 
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          logStep("Transaction created successfully", { transactionId: transactionData.id });
+          
+          const typeText = isIncome ? 'receita' : 'despesa';
+          return new Response(
+            JSON.stringify({ 
+              response: `✅ ${typeText.charAt(0).toUpperCase() + typeText.slice(1)} registrada com sucesso! "${description}" no valor de R$ ${amount.toFixed(2)}.` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          logStep("ERROR: Exception during transaction creation", { error: error.message });
+          return new Response(
+            JSON.stringify({ 
+              response: `Desculpe, houve um erro inesperado ao criar a transação: ${error.message}` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
+    // Para outras mensagens, usar OpenRouter API
+    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openrouterApiKey) {
+      logStep("ERROR: OpenRouter API key not found");
+      return new Response(
+        JSON.stringify({ error: 'Chave da API OpenRouter não configurada' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Buscar dados do usuário para contexto
+    const { data: profileData } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .single();
+
+    const { data: recentTransactions } = await supabaseAdmin
+      .from('transactions')
+      .select('type, amount, description, date')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .limit(5);
+
+    const { data: upcomingReminders } = await supabaseAdmin
+      .from('bill_reminders')
+      .select('name, due_date, amount, is_paid')
+      .eq('user_id', user.id)
+      .eq('is_paid', false)
+      .gte('due_date', new Date().toISOString().split('T')[0])
+      .order('due_date', { ascending: true })
+      .limit(3);
+
+    const contextInfo = {
+      userName: profileData?.full_name || 'usuário',
+      recentTransactions: recentTransactions || [],
+      upcomingReminders: upcomingReminders || []
+    };
+
+    logStep("Context data collected", { 
+      transactionCount: contextInfo.recentTransactions.length,
+      reminderCount: contextInfo.upcomingReminders.length 
+    });
+
+    const systemPrompt = `Você é um assistente financeiro inteligente especializado em ajudar ${contextInfo.userName} com suas finanças pessoais.
+
+Contexto financeiro atual:
+- Transações recentes: ${JSON.stringify(contextInfo.recentTransactions)}
+- Lembretes pendentes: ${JSON.stringify(contextInfo.upcomingReminders)}
+
+Você pode ajudar a:
+1. Criar lembretes de contas (formato: "criar lembrete para [nome] no dia [data]")
+2. Registrar receitas e despesas (formato: "receita/despesa de [descrição] no valor de R$ [valor]")
+3. Analisar gastos e dar conselhos financeiros
+4. Responder perguntas sobre finanças pessoais
+
+Seja direto, útil e amigável. Use emojis quando apropriado. Sempre confirme quando criar lembretes ou transações.`;
+
+    // Fazer chamada para OpenRouter API
+    const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!openrouterResponse.ok) {
+      logStep("ERROR: OpenRouter API request failed", { status: openrouterResponse.status });
+      throw new Error(`OpenRouter API error: ${openrouterResponse.status}`);
+    }
+
+    const openrouterData = await openrouterResponse.json();
+    const aiResponse = openrouterData.choices[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
+
+    logStep("AI response generated", { responseLength: aiResponse.length });
+
+    // Salvar conversa no histórico usando cliente admin
+    try {
+      await supabaseAdmin.from('ai_chat_history').insert({
         user_id: user.id,
         message: message,
-        response: finalResponse,
-        openrouter_model_used: modelToUse
+        response: aiResponse,
+        openrouter_model_used: 'anthropic/claude-3.5-sonnet'
       });
-
-    if (historyError) {
-      logStep("Error storing chat history", { error: historyError });
-    } else {
-      logStep("Chat history stored successfully");
+      logStep("Chat history saved");
+    } catch (error) {
+      logStep("WARNING: Failed to save chat history", { error: error.message });
     }
 
-    return new Response(JSON.stringify({
-      response: finalResponse,
-      model_used: modelToUse,
-      action_executed: actionExecuted
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ response: aiResponse }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in ai-financial-chat", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    logStep("ERROR: Unexpected error", { error: error.message, stack: error.stack });
+    return new Response(
+      JSON.stringify({ error: 'Erro interno do servidor' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
-});
+};
+
+serve(handler);

@@ -1,12 +1,10 @@
-'use client';
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, Bot, User, Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useFinancialAI, type ChatMessage } from "@/hooks/useFinancialAI";
 import SuggestedQuestions from "./SuggestedQuestions";
 import AudioRecorder from "./AudioRecorder";
@@ -14,7 +12,7 @@ import AudioRecorder from "./AudioRecorder";
 const ChatPage = () => {
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   const {
@@ -105,7 +103,7 @@ const ChatPage = () => {
                 Você precisa estar logado para usar o assistente financeiro.
               </p>
               <Button 
-                onClick={() => router.push("/")} 
+                onClick={() => navigate("/")} 
                 className="mt-4"
               >
                 Ir para Login
@@ -126,7 +124,7 @@ const ChatPage = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => router.push("/")}
+                onClick={() => navigate("/")}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>

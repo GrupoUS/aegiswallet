@@ -1,17 +1,14 @@
-
-'use client'; // Adicionado
-
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation"; // Alterado
+import { useNavigate } from "react-router-dom";
 
 const ChatNavButton = () => {
-  const router = useRouter(); // Alterado
+  const navigate = useNavigate();
 
   return (
     <Button
       variant="ghost"
-      onClick={() => router.push("/chat")} // Alterado
+      onClick={() => navigate("/chat")}
       className="flex items-center gap-2"
     >
       <MessageSquare className="h-4 w-4" />

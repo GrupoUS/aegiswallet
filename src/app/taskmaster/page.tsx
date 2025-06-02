@@ -1,10 +1,4 @@
-import { Metadata } from 'next';
 import TaskMasterDemo from '@/components/taskmaster/TaskMasterDemo';
-
-export const metadata: Metadata = {
-  title: 'TaskMaster AI Demo - AegisWallet',
-  description: 'Demonstração da integração TaskMaster + Sequential Thinking no AegisWallet',
-};
 
 export default function TaskMasterPage() {
   return (

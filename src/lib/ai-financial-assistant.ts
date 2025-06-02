@@ -9,19 +9,80 @@ import {
   type BillReminderInsert
 } from './financial-services';
 
+// Tipos específicos para dados das ações
+interface TransactionData {
+  id?: string;
+  amount?: number;
+  description?: string;
+  category_id?: string;
+  date?: string;
+  type?: string;
+  bank_connection_id?: string;
+  belvo_account_id?: string;
+  created_at?: string;
+  is_imported?: boolean;
+  source_transaction_id?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
+interface CategoryData {
+  id?: string;
+  name?: string;
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
+interface BillReminderData {
+  id?: string;
+  name?: string;
+  amount?: number;
+  due_date?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
+interface FinancialSummary {
+  income: number;
+  expenses: number;
+  balance: number;
+  transactionCount: number;
+}
+
+interface CategoryAnalysis {
+  category: string;
+  amount: number;
+}
+
+interface FinancialContext {
+  summary: FinancialSummary;
+  transactions: TransactionData[];
+  categories?: CategoryData[];
+}
+
+interface IntentData {
+  type: string;
+  data?: Record<string, unknown>;
+}
+
+type ActionData = TransactionData | CategoryData | BillReminderData | Record<string, unknown>;
+
 // Tipos para as ações que o AI pode executar
 export interface AIAction {
   type: 'create_transaction' | 'update_transaction' | 'delete_transaction' | 
         'create_category' | 'update_category' | 'delete_category' |
         'create_bill_reminder' | 'update_bill_reminder' | 'delete_bill_reminder' |
         'analyze_spending' | 'get_insights' | 'categorize_transaction';
-  data: any;
+  data: ActionData;
 }
 
 export interface AIResponse {
   message: string;
   actions?: AIAction[];
-  data?: any;
+  data?: Record<string, unknown> | unknown[];
   suggestions?: string[];
 }
 
@@ -82,7 +143,7 @@ export class FinancialAIAssistant {
   }
 
   // Analisar a intenção da mensagem do usuário
-  private analyzeIntent(message: string): { type: string; data?: any } {
+  private analyzeIntent(message: string): IntentData {
     const lowerMessage = message.toLowerCase();
 
     // Padrões para adicionar transação
@@ -124,7 +185,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com adição de transações
-  private async handleAddTransaction(message: string, data?: any): Promise<AIResponse> {
+  private async handleAddTransaction(message: string, data?: Record<string, unknown>): Promise<AIResponse> {
     // Extrair informações da mensagem usando regex e NLP simples
     const amountMatch = message.match(/(\d+(?:,\d{2})?)/);
     const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
@@ -161,7 +222,7 @@ export class FinancialAIAssistant {
         message: `✅ Transação adicionada com sucesso!\n\n💰 Valor: R$ ${amount.toFixed(2)}\n📝 Descrição: ${description}\n🏷️ Categoria: ${suggestedCategory?.name || 'Sem categoria'}\n📅 Data: ${new Date().toLocaleDateString('pt-BR')}`,
         actions: [{
           type: 'create_transaction',
-          data: result.data
+          data: result.data as TransactionData
         }],
         suggestions: [
           'Analise meus gastos de hoje',
@@ -178,7 +239,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com análise de gastos
-  private async handleAnalyzeSpending(message: string, context: any): Promise<AIResponse> {
+  private async handleAnalyzeSpending(message: string, context: FinancialContext): Promise<AIResponse> {
     const { summary, transactions } = context;
 
     if (!summary || !transactions.length) {
@@ -242,7 +303,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com sugestões de orçamento
-  private async handleBudgetSuggestion(context: any): Promise<AIResponse> {
+  private async handleBudgetSuggestion(context: FinancialContext): Promise<AIResponse> {
     const { summary, transactions } = context;
 
     if (!summary || summary.transactionCount === 0) {
@@ -305,7 +366,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com lembretes de contas
-  private async handleBillReminder(message: string, data?: any): Promise<AIResponse> {
+  private async handleBillReminder(message: string, data?: Record<string, unknown>): Promise<AIResponse> {
     const upcomingBills = await billReminderService.getUpcoming(this.userId, 7);
 
     if (upcomingBills.data && upcomingBills.data.length > 0) {
@@ -341,7 +402,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com insights financeiros gerais
-  private async handleFinancialInsights(context: any): Promise<AIResponse> {
+  private async handleFinancialInsights(context: FinancialContext): Promise<AIResponse> {
     const { summary, transactions, categories } = context;
 
     let insightsMessage = `🔍 **Insights Financeiros Personalizados**\n\n`;
@@ -381,7 +442,7 @@ export class FinancialAIAssistant {
   }
 
   // Lidar com consultas gerais
-  private async handleGeneralQuery(message: string, context: any): Promise<AIResponse> {
+  private async handleGeneralQuery(message: string, context: FinancialContext): Promise<AIResponse> {
     const { summary, transactions } = context;
 
     // Resposta padrão com informações úteis
@@ -415,7 +476,7 @@ export class FinancialAIAssistant {
   // Métodos auxiliares
   private extractDescription(message: string): string {
     // Remover valores monetários e palavras-chave para extrair descrição
-    let description = message
+    const description = message
       .replace(/r\$?\s*\d+(?:,\d{2})?/gi, '')
       .replace(/\b(gastei|comprei|paguei|recebi|adicion\w*|registr\w*)\b/gi, '')
       .trim();
@@ -454,7 +515,7 @@ export class FinancialAIAssistant {
     return null;
   }
 
-  private generateSpendingInsights(summary: any, categoryAnalysis: any[]): string[] {
+  private generateSpendingInsights(summary: FinancialSummary, categoryAnalysis: CategoryAnalysis[]): string[] {
     const insights: string[] = [];
 
     // Insight sobre saldo
@@ -476,7 +537,7 @@ export class FinancialAIAssistant {
     return insights;
   }
 
-  private generateEconomyTips(categoryAnalysis: any[]): string[] {
+  private generateEconomyTips(categoryAnalysis: CategoryAnalysis[]): string[] {
     const tips: string[] = [];
 
     categoryAnalysis.forEach(cat => {
@@ -496,21 +557,21 @@ export class FinancialAIAssistant {
     return tips;
   }
 
-  private analyzeSpendingPatterns(transactions: any[]): string[] {
+  private analyzeSpendingPatterns(transactions: TransactionData[]): string[] {
     const patterns: string[] = [];
 
     // Analisar frequência de gastos
     const dailyExpenses = transactions
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => {
-        const date = t.date;
-        acc[date] = (acc[date] || 0) + Math.abs(t.amount);
+        const date = t.date || '';
+        acc[date] = (acc[date] || 0) + Math.abs(t.amount || 0);
         return acc;
       }, {} as Record<string, number>);
 
     const expenseValues = Object.values(dailyExpenses);
     if (expenseValues.length > 0) {
-      const avgDailyExpense = expenseValues.reduce((a: number, b: number) => a + b, 0) / expenseValues.length;
+      const avgDailyExpense = expenseValues.reduce((a, b) => a + b, 0) / expenseValues.length;
 
       if (avgDailyExpense > 100) {
         patterns.push('Você tem uma média de gastos diários alta (R$ ' + avgDailyExpense.toFixed(2) + ')');
@@ -520,7 +581,7 @@ export class FinancialAIAssistant {
     return patterns;
   }
 
-  private calculateFinancialHealth(summary: any): number {
+  private calculateFinancialHealth(summary: FinancialSummary): number {
     let score = 50; // Base score
 
     // Positive balance
@@ -537,7 +598,7 @@ export class FinancialAIAssistant {
     return Math.min(100, Math.max(0, score));
   }
 
-  private generatePersonalizedRecommendations(summary: any, transactions: any[]): string[] {
+  private generatePersonalizedRecommendations(summary: FinancialSummary, transactions: TransactionData[]): string[] {
     const recommendations: string[] = [];
 
     if (summary.balance < summary.income * 0.1) {

@@ -1,8 +1,5 @@
-
-'use client'; // Adicionado
-
 import { ReactNode } from "react";
-import { useRouter } from "next/navigation"; // Alterado
+import { useNavigate } from "react-router-dom";
 import { useAccessLevel } from "@/hooks/useAccessLevel";
 import PremiumFeatureBanner from "./PremiumFeatureBanner";
 
@@ -22,7 +19,7 @@ const PremiumFeatureGate = ({
   fallback 
 }: PremiumFeatureGateProps) => {
   const { accessLevel } = useAccessLevel();
-  const router = useRouter(); // Alterado
+  const navigate = useNavigate();
 
   const hasAccess = accessLevel === 'pro' || (allowTrial && accessLevel === 'trial');
 
@@ -35,7 +32,7 @@ const PremiumFeatureGate = ({
   }
 
   const handleUpgrade = () => {
-    router.push("/?tab=subscription"); // Alterado
+    navigate("/?tab=subscription");
   };
 
   return (

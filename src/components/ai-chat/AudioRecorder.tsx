@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Send, X, Loader2 } from "lucide-react";
@@ -19,7 +18,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const logStep = (step: string, details?: any) => {
+  const logStep = (step: string, details?: unknown) => {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] [AUDIO-RECORDER] ${step}`, details || '');
   };
@@ -94,7 +93,7 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.onerror = (event) => {
+      mediaRecorder.onerror = (event: Event) => {
         logStep("MediaRecorder error", event);
         toast({
           title: "Erro de Gravação",
@@ -122,16 +121,17 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       logStep("Recording started successfully");
       
     } catch (error) {
-      logStep("Failed to start recording", { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logStep("Failed to start recording", { error: errorMessage });
       
-      let errorMessage = "Erro ao iniciar gravação";
-      if (error.message.includes("Permission denied") || error.message.includes("NotAllowedError")) {
-        errorMessage = "Permissão de microfone negada. Verifique as configurações do navegador.";
+      let displayMessage = "Erro ao iniciar gravação";
+      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+        displayMessage = "Permissão de microfone negada. Verifique as configurações do navegador.";
       }
       
       toast({
         title: "Erro",
-        description: errorMessage,
+        description: displayMessage,
         variant: "destructive"
       });
     }
@@ -240,11 +240,12 @@ const AudioRecorder = ({ onTranscriptionComplete, disabled }: AudioRecorderProps
       });
       
     } catch (error) {
-      logStep("Transcription failed", { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logStep("Transcription failed", { error: errorMessage });
       
       toast({
         title: "Erro na Transcrição",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

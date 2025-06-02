@@ -76,7 +76,7 @@ const SubscriptionPage = () => {
         
         // Try to parse error details if available
         let errorMessage = "Erro ao chamar função de verificação";
-        let errorCodeValue = "FUNCTION_ERROR";
+        const errorCodeValue = "FUNCTION_ERROR";
         
         if (functionError.message) {
           errorMessage = functionError.message;

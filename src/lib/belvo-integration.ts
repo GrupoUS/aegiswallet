@@ -55,7 +55,7 @@ class BelvoService {
     this.credentials = Buffer.from(`${BELVO_SECRET_ID}:${BELVO_SECRET_PASSWORD}`).toString('base64');
   }
 
-  private async makeRequest(endpoint: string, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: any) {
+  private async makeRequest(endpoint: string, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: Record<string, unknown>) {
     const response = await fetch(`${this.baseURL}/api/${endpoint}`, {
       method,
       headers: {
@@ -111,6 +111,7 @@ class BelvoService {
         await supabase.from('belvo_accounts').upsert({
           belvo_account_id: account.id,
           belvo_link_id: linkId,
+          user_id: userId,
           name: account.name,
           type: account.type,
           balance_current: account.balance.current,
@@ -130,7 +131,7 @@ class BelvoService {
   // Buscar transações de uma conta
   async getTransactions(linkId: string, accountId: string, userId: string, dateFrom?: string, dateTo?: string): Promise<BelvoTransaction[]> {
     try {
-      const requestBody: any = {
+      const requestBody: Record<string, unknown> = {
         link: linkId,
         account: accountId,
         save_data: true

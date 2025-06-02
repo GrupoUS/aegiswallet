@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[AI-FINANCIAL-CHAT] ${step}${detailsStr}`);
 };
 
-// Sistema de parsing de datas relativas
+// Sistema de parsing melhorado para datas relativas
 const parseRelativeDate = (text: string): string | null => {
   const today = new Date();
   const patterns = [
@@ -27,6 +27,7 @@ const parseRelativeDate = (text: string): string | null => {
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       return Math.ceil((lastDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     }},
+    { regex: /hoje/i, days: () => 0 },
   ];
 
   for (const pattern of patterns) {
@@ -68,13 +69,16 @@ const parseRelativeDate = (text: string): string | null => {
   return null;
 };
 
-// Sistema de extração de valores monetários
+// Sistema melhorado de extração de valores monetários
 const extractMonetaryValue = (text: string): number | null => {
   const patterns = [
     /R\$\s*(\d+(?:[.,]\d{2})?)/i,
     /(\d+(?:[.,]\d{2})?)\s*reais?/i,
     /valor\s+(?:de\s+)?R?\$?\s*(\d+(?:[.,]\d{2})?)/i,
     /(\d+(?:[.,]\d{2})?)\s*(?:R\$|reais?)/i,
+    /gastei\s+(\d+(?:[.,]\d{2})?)/i,
+    /recebi\s+(\d+(?:[.,]\d{2})?)/i,
+    /paguei\s+(\d+(?:[.,]\d{2})?)/i,
   ];
 
   for (const pattern of patterns) {
@@ -87,7 +91,7 @@ const extractMonetaryValue = (text: string): number | null => {
   return null;
 };
 
-// Sistema de análise contextual avançada
+// Sistema melhorado de análise contextual
 const analyzeContext = (message: string, chatHistory: any[], userFinancialData: any) => {
   logStep("Analyzing context", { 
     messageLength: message.length, 
@@ -102,24 +106,31 @@ const analyzeContext = (message: string, chatHistory: any[], userFinancialData: 
     isEditRequest: false,
     isDeleteRequest: false,
     isAnalysisRequest: false,
+    isDeleteAllRequest: false,
     extractedData: {},
     confidence: 0,
     needsMoreInfo: [],
     suggestedActions: []
   };
 
-  // Detectar tipo de solicitação
-  const reminderKeywords = ['lembrete', 'conta', 'vencimento', 'pagar', 'aviso', 'notificação'];
-  const transactionKeywords = ['receita', 'despesa', 'gasto', 'ganho', 'pagamento', 'compra', 'venda'];
+  const lowerMessage = message.toLowerCase();
+
+  // Detectar tipo de solicitação com padrões melhorados
+  const reminderKeywords = ['lembrete', 'conta', 'vencimento', 'pagar', 'aviso', 'notificação', 'aluguel', 'luz', 'agua', 'internet'];
+  const transactionKeywords = ['receita', 'despesa', 'gasto', 'ganho', 'pagamento', 'compra', 'venda', 'gastei', 'comprei', 'recebi'];
   const editKeywords = ['alterar', 'modificar', 'editar', 'atualizar', 'mudar', 'corrigir'];
   const deleteKeywords = ['excluir', 'deletar', 'remover', 'cancelar', 'apagar'];
+  const deleteAllKeywords = ['apague todos', 'excluir todos', 'deletar todos', 'remover todos'];
   const analysisKeywords = ['analise', 'relatório', 'gastos', 'resumo', 'balanço', 'situação'];
 
-  context.isReminderRequest = reminderKeywords.some(keyword => message.toLowerCase().includes(keyword));
-  context.isTransactionRequest = transactionKeywords.some(keyword => message.toLowerCase().includes(keyword));
-  context.isEditRequest = editKeywords.some(keyword => message.toLowerCase().includes(keyword));
-  context.isDeleteRequest = deleteKeywords.some(keyword => message.toLowerCase().includes(keyword));
-  context.isAnalysisRequest = analysisKeywords.some(keyword => message.toLowerCase().includes(keyword));
+  // Verificar se é comando para apagar todos
+  context.isDeleteAllRequest = deleteAllKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  context.isReminderRequest = reminderKeywords.some(keyword => lowerMessage.includes(keyword));
+  context.isTransactionRequest = transactionKeywords.some(keyword => lowerMessage.includes(keyword));
+  context.isEditRequest = editKeywords.some(keyword => lowerMessage.includes(keyword));
+  context.isDeleteRequest = deleteKeywords.some(keyword => lowerMessage.includes(keyword));
+  context.isAnalysisRequest = analysisKeywords.some(keyword => lowerMessage.includes(keyword));
 
   // Extrair dados da mensagem atual
   const extractedDate = parseRelativeDate(message);
@@ -128,12 +139,12 @@ const analyzeContext = (message: string, chatHistory: any[], userFinancialData: 
   if (extractedDate) context.extractedData.date = extractedDate;
   if (extractedValue) context.extractedData.amount = extractedValue;
 
-  // Buscar descrição/nome
+  // Padrões melhorados para extrair nomes/descrições
   if (context.isReminderRequest) {
     const reminderPatterns = [
-      /lembrete\s+(?:para|de|da)\s+(.+?)(?:\s+(?:no\s+dia|em|para\s+o\s+dia|vencimento|daqui)|$)/i,
-      /(?:conta|pagamento)\s+(?:de|da)\s+(.+?)(?:\s+(?:no\s+dia|em|para\s+o\s+dia|vencimento|daqui)|$)/i,
-      /pagar\s+(.+?)(?:\s+(?:no\s+dia|em|para\s+o\s+dia|vencimento|daqui)|$)/i
+      /(?:lembrete|conta)\s+(?:de|da|do)\s+(.+?)(?:\s+(?:no\s+dia|em|para|vencimento|daqui|R\$|\d)|$)/i,
+      /(?:pagar|pagamento)\s+(.+?)(?:\s+(?:no\s+dia|em|para|vencimento|daqui|R\$|\d)|$)/i,
+      /criar\s+lembrete\s+(.+?)(?:\s+(?:no\s+dia|em|para|vencimento|daqui|R\$|\d)|$)/i
     ];
 
     for (const pattern of reminderPatterns) {
@@ -147,9 +158,9 @@ const analyzeContext = (message: string, chatHistory: any[], userFinancialData: 
 
   if (context.isTransactionRequest) {
     const transactionPatterns = [
-      /(?:receita|despesa|gasto)\s+(?:de|para|com)\s+(.+?)(?:\s+(?:no\s+valor|de\s+R\$|R\$)|$)/i,
-      /(?:comprei|compra|paguei|pagamento)\s+(.+?)(?:\s+(?:no\s+valor|de\s+R\$|R\$)|$)/i,
-      /(?:vendi|venda|recebi)\s+(.+?)(?:\s+(?:no\s+valor|de\s+R\$|R\$)|$)/i
+      /(?:gastei|comprei|paguei)\s+(?:R\$\s*\d+(?:[.,]\d{2})?\s+)?(?:no|na|em|com|de|para)\s+(.+?)(?:\s+(?:R\$|\d)|$)/i,
+      /(?:recebi|ganhei)\s+(?:R\$\s*\d+(?:[.,]\d{2})?\s+)?(?:de|do|da|por)\s+(.+?)(?:\s+(?:R\$|\d)|$)/i,
+      /(?:transação|despesa|receita)\s+(?:de|para|com)\s+(.+?)(?:\s+(?:R\$|\d)|$)/i
     ];
 
     for (const pattern of transactionPatterns) {
@@ -160,44 +171,23 @@ const analyzeContext = (message: string, chatHistory: any[], userFinancialData: 
       }
     }
 
-    // Determinar tipo
-    const incomeKeywords = ['receita', 'ganho', 'vendi', 'recebi', 'salário'];
-    const expenseKeywords = ['despesa', 'gasto', 'comprei', 'paguei', 'conta'];
+    // Determinar tipo de transação
+    const incomeKeywords = ['receita', 'ganho', 'recebi', 'salário', 'venda', 'vendi'];
+    const expenseKeywords = ['despesa', 'gasto', 'gastei', 'comprei', 'paguei', 'conta'];
     
-    if (incomeKeywords.some(keyword => message.toLowerCase().includes(keyword))) {
+    if (incomeKeywords.some(keyword => lowerMessage.includes(keyword))) {
       context.extractedData.type = 'income';
-    } else if (expenseKeywords.some(keyword => message.toLowerCase().includes(keyword))) {
+    } else if (expenseKeywords.some(keyword => lowerMessage.includes(keyword))) {
       context.extractedData.type = 'expense';
     }
   }
 
-  // Buscar informações em mensagens anteriores se faltarem dados
-  if (chatHistory.length > 0) {
-    const recentMessages = chatHistory.slice(-5);
-    
-    for (const historyItem of recentMessages) {
-      if (!context.extractedData.amount && !extractedValue) {
-        const historicalValue = extractMonetaryValue(historyItem.message);
-        if (historicalValue) {
-          context.extractedData.amount = historicalValue;
-          context.suggestedActions.push(`Encontrei o valor R$ ${historicalValue} em mensagem anterior`);
-        }
-      }
-
-      if (!context.extractedData.date && !extractedDate) {
-        const historicalDate = parseRelativeDate(historyItem.message);
-        if (historicalDate) {
-          context.extractedData.date = historicalDate;
-          context.suggestedActions.push(`Encontrei a data ${historicalDate} em mensagem anterior`);
-        }
-      }
-    }
-  }
-
-  // Validar dados necessários
+  // Validar dados necessários e calcular confiança
   if (context.isReminderRequest) {
     if (!context.extractedData.name) context.needsMoreInfo.push('nome da conta');
-    if (!context.extractedData.date) context.needsMoreInfo.push('data de vencimento');
+    if (!context.extractedData.date && !context.isDeleteRequest && !context.isDeleteAllRequest) {
+      context.needsMoreInfo.push('data de vencimento');
+    }
     context.confidence = context.needsMoreInfo.length === 0 ? 0.9 : 0.6;
   }
 
@@ -206,6 +196,11 @@ const analyzeContext = (message: string, chatHistory: any[], userFinancialData: 
     if (!context.extractedData.amount) context.needsMoreInfo.push('valor');
     if (!context.extractedData.type) context.needsMoreInfo.push('tipo (receita ou despesa)');
     context.confidence = context.needsMoreInfo.length === 0 ? 0.9 : 0.6;
+  }
+
+  // Para comandos de delete, ajustar confiança
+  if (context.isDeleteRequest || context.isDeleteAllRequest) {
+    context.confidence = 0.8; // Alta confiança para comandos de delete
   }
 
   logStep("Context analysis complete", {
@@ -305,9 +300,8 @@ const handler = async (req: Request): Promise<Response> => {
       .select('*')
       .eq('user_id', user.id)
       .eq('is_paid', false)
-      .gte('due_date', new Date().toISOString().split('T')[0])
       .order('due_date', { ascending: true })
-      .limit(5);
+      .limit(10);
 
     const { data: allCategories } = await supabaseAdmin
       .from('categories')
@@ -337,8 +331,9 @@ const handler = async (req: Request): Promise<Response> => {
     let actionResult = '';
 
     // EXECUÇÃO DE AÇÕES BASEADA NA ANÁLISE
-    if (context.confidence > 0.8) {
-      if (context.isReminderRequest && context.extractedData.name && context.extractedData.date) {
+    if (context.confidence > 0.7) {
+      // CRIAR LEMBRETE
+      if (context.isReminderRequest && !context.isDeleteRequest && context.extractedData.name && context.extractedData.date) {
         logStep("Executing reminder creation", context.extractedData);
         
         try {
@@ -361,9 +356,9 @@ const handler = async (req: Request): Promise<Response> => {
             logStep("Reminder created successfully", { reminderId: reminderData.id });
             actionExecuted = true;
             const formattedDate = new Date(context.extractedData.date).toLocaleDateString('pt-BR');
-            actionResult = `✅ Lembrete criado com sucesso! "${context.extractedData.name}" agendado para ${formattedDate}.`;
+            actionResult = `✅ Lembrete criado com sucesso!\n\n📋 **${context.extractedData.name}**\n📅 Vencimento: ${formattedDate}`;
             if (context.extractedData.amount) {
-              actionResult += ` Valor: R$ ${context.extractedData.amount.toFixed(2)}`;
+              actionResult += `\n💰 Valor: R$ ${context.extractedData.amount.toFixed(2)}`;
             }
           }
         } catch (error) {
@@ -372,12 +367,46 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
 
-      if (context.isTransactionRequest && context.extractedData.description && 
-          context.extractedData.amount && context.extractedData.type) {
+      // APAGAR TODOS OS LEMBRETES
+      if (context.isDeleteAllRequest && context.isReminderRequest) {
+        logStep("Executing delete all reminders");
+        
+        try {
+          const { data: remindersToDelete } = await supabaseAdmin
+            .from('bill_reminders')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (!remindersToDelete || remindersToDelete.length === 0) {
+            actionResult = `ℹ️ Você não possui lembretes para apagar.`;
+          } else {
+            const { error: deleteError } = await supabaseAdmin
+              .from('bill_reminders')
+              .delete()
+              .eq('user_id', user.id);
+
+            if (deleteError) {
+              logStep("ERROR: Failed to delete all reminders", { error: deleteError });
+              actionResult = `❌ Erro ao apagar lembretes: ${deleteError.message}`;
+            } else {
+              logStep("All reminders deleted successfully", { count: remindersToDelete.length });
+              actionExecuted = true;
+              actionResult = `✅ Todos os ${remindersToDelete.length} lembretes foram apagados com sucesso!`;
+            }
+          }
+        } catch (error) {
+          logStep("ERROR: Exception during delete all reminders", { error: error.message });
+          actionResult = `❌ Erro inesperado ao apagar lembretes: ${error.message}`;
+        }
+      }
+
+      // CRIAR TRANSAÇÃO
+      if (context.isTransactionRequest && !context.isDeleteRequest && 
+          context.extractedData.description && context.extractedData.amount && context.extractedData.type) {
         logStep("Executing transaction creation", context.extractedData);
         
         try {
-          // Buscar ou criar categoria
+          // Buscar ou criar categoria padrão
           let categoryId = userFinancialData.categories.find(c => c.name === 'Geral')?.id;
           
           if (!categoryId) {
@@ -412,7 +441,8 @@ const handler = async (req: Request): Promise<Response> => {
               logStep("Transaction created successfully", { transactionId: transactionData.id });
               actionExecuted = true;
               const typeText = context.extractedData.type === 'income' ? 'Receita' : 'Despesa';
-              actionResult = `✅ ${typeText} registrada! "${context.extractedData.description}" - R$ ${context.extractedData.amount.toFixed(2)}`;
+              const typeEmoji = context.extractedData.type === 'income' ? '💰' : '💸';
+              actionResult = `✅ ${typeText} registrada com sucesso!\n\n${typeEmoji} **${context.extractedData.description}**\n💰 Valor: R$ ${context.extractedData.amount.toFixed(2)}\n📅 Data: ${new Date(context.extractedData.date || new Date()).toLocaleDateString('pt-BR')}`;
             }
           }
         } catch (error) {
@@ -447,7 +477,7 @@ ${conversationContext}
 
 CONTEXTO FINANCEIRO ATUAL:
 - Saldo atual: R$ ${userFinancialData.totalBalance.toFixed(2)}
-- Transações recentes: ${JSON.stringify(userFinancialData.recentTransactions.slice(0, 5))}
+- Transações recentes: ${JSON.stringify(userFinancialData.recentTransactions.slice(0, 3))}
 - Lembretes pendentes: ${JSON.stringify(userFinancialData.upcomingReminders)}
 - Categorias disponíveis: ${userFinancialData.categories.map(c => c.name).join(', ')}
 
@@ -458,53 +488,58 @@ ${context.needsMoreInfo.length > 0 ?
 
 ${context.extractedData ? `DADOS EXTRAÍDOS: ${JSON.stringify(context.extractedData)}` : ''}
 
-${context.suggestedActions.length > 0 ? 
-  `AÇÕES SUGERIDAS: ${context.suggestedActions.join('; ')}` : ''}
-
 ${actionResult ? `RESULTADO DA AÇÃO: ${actionResult}` : ''}
 
-CAPACIDADES:
-✅ Criar lembretes e transações automaticamente
-✅ Processar datas relativas (daqui 1 semana, próximo mês)
-✅ Extrair valores e descrições
-✅ Analisar padrões financeiros
-✅ Conectar informações entre mensagens
+CAPACIDADES PRINCIPAIS:
+✅ **TRANSAÇÕES**: Adicionar receitas e despesas automaticamente
+✅ **LEMBRETES**: Criar e apagar lembretes de contas
+✅ **ANÁLISE**: Analisar padrões financeiros e dar insights
+✅ **INTELIGÊNCIA**: Processar linguagem natural e conectar informações
 
-Seja proativo e inteligente. Se faltarem informações, pergunte especificamente o que precisa. 
-Use emojis e seja conversacional. Sempre confirme ações executadas.`;
+COMANDOS ESPECIAIS:
+- "Apague todos os lembretes" → Remove todos os lembretes
+- "Gastei R$ 50 no supermercado" → Adiciona despesa automaticamente
+- "Recebi R$ 2000 de salário" → Adiciona receita automaticamente
+- "Criar lembrete de conta de luz R$ 150 para amanhã" → Cria lembrete
 
-      const selectedModel = model || 'anthropic/claude-3-haiku';
+Seja proativo, inteligente e conversacional. Use emojis para tornar as respostas mais amigáveis. 
+Se faltarem informações, seja específico sobre o que precisa. Sempre confirme ações executadas.`;
+
+      const selectedModel = model || 'openai/gpt-3.5-turbo';
       
       logStep("Calling OpenRouter API", { model: selectedModel });
 
-      const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: message }
-          ],
-          max_tokens: 1500,
-          temperature: 0.7,
-        }),
-      });
+      try {
+        const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: message }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7,
+          }),
+        });
 
-      if (!openrouterResponse.ok) {
-        logStep("ERROR: OpenRouter API request failed", { status: openrouterResponse.status });
-        throw new Error(`OpenRouter API error: ${openrouterResponse.status}`);
+        if (!openrouterResponse.ok) {
+          logStep("ERROR: OpenRouter API request failed", { status: openrouterResponse.status });
+          throw new Error(`OpenRouter API error: ${openrouterResponse.status}`);
+        }
+
+        const openrouterData = await openrouterResponse.json();
+        actionResult = openrouterData.choices[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
+
+        logStep("AI response generated", { responseLength: actionResult.length });
+      } catch (error) {
+        logStep("ERROR: OpenRouter API call failed", { error: error.message });
+        actionResult = 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
       }
-
-      const openrouterData = await openrouterResponse.json();
-      const aiResponse = openrouterData.choices[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
-
-      logStep("AI response generated", { responseLength: aiResponse.length });
-
-      actionResult = aiResponse;
     }
 
     // Salvar conversa no histórico

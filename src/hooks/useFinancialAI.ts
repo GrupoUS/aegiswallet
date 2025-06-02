@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -48,14 +49,14 @@ export function useFinancialAI() {
       // Adicionar mensagem de boas-vindas
       const welcomeMessage: ChatMessage = {
         id: 'welcome',
-        content: 'Olá! Sou seu assistente financeiro pessoal. Como posso te ajudar hoje?',
+        content: '🤖 Olá! Sou seu assistente financeiro inteligente. Posso ajudar você a:\n\n✅ Adicionar e gerenciar transações\n✅ Criar e apagar lembretes de contas\n✅ Analisar seus gastos\n✅ Categorizar despesas\n\nComo posso te ajudar hoje?',
         isUser: false,
         timestamp: new Date(),
         suggestions: [
-          'Analise meus gastos do mês',
-          'Adicione uma transação',
-          'Crie um orçamento para mim',
-          'Mostre minhas contas a vencer'
+          'Adicionar transação de R$ 50 em alimentação',
+          'Criar lembrete de conta de luz',
+          'Apagar todos os lembretes',
+          'Analise meus gastos do mês'
         ]
       };
       
@@ -112,13 +113,13 @@ export function useFinancialAI() {
       // Adicionar mensagem de erro
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
-        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente. 🔄',
         isUser: false,
         timestamp: new Date(),
         suggestions: [
-          'Analise meus gastos do mês',
-          'Adicione uma transação',
-          'Mostre minhas contas a vencer'
+          'Adicionar uma transação',
+          'Criar um lembrete',
+          'Ver meus gastos'
         ]
       };
 

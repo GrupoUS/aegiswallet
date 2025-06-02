@@ -1,17 +1,13 @@
-
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 
 export const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
       onClick={toggleTheme}
-      className="h-9 w-9 rounded-md border"
+      className="btn btn-ghost btn-sm h-9 w-9 rounded-md border border-base-300"
     >
       {theme === "light" ? (
         <Moon className="h-4 w-4" />
@@ -19,6 +15,6 @@ export const ThemeToggle = () => {
         <Sun className="h-4 w-4" />
       )}
       <span className="sr-only">Alternar tema</span>
-    </Button>
+    </button>
   );
 };

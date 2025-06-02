@@ -1,4 +1,6 @@
 
+'use client'; // Adicionado
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -16,7 +18,7 @@ import AddBillReminderDialog from "@/components/reminders/AddBillReminderDialog"
 import CategoriesManagement from "@/components/categories/CategoriesManagement";
 import BankConnectionsPage from "@/components/bank-connections/BankConnectionsPage";
 import SubscriptionPage from "@/components/subscription/SubscriptionPage";
-import News from "@/pages/News";
+// import News from "@/pages/News"; // Comentado - News feature not in MVP and path is invalid
 import ChatSidePanel from "@/components/ai-chat/ChatSidePanel";
 import AIAssistantFAB from "@/components/ai-chat/AIAssistantFAB";
 import TrialBanner from "@/components/subscription/TrialBanner";
@@ -64,7 +66,7 @@ const Dashboard = () => {
     { id: "reminders", label: "Lembretes" },
     { id: "categories", label: "Categorias" },
     { id: "subscription", label: "Assinatura", icon: Crown },
-    { id: "news", label: "Notícias" }
+    // { id: "news", label: "Notícias" } // Comentado - News feature not in MVP
   ];
 
   const renderContent = () => {
@@ -81,8 +83,8 @@ const Dashboard = () => {
         return <BankConnectionsPage />;
       case "subscription":
         return <SubscriptionPage />;
-      case "news":
-        return <News />;
+      // case "news": // Comentado - News feature not in MVP
+      //   return <News />;
       default:
         return <FinancialSummary />;
     }

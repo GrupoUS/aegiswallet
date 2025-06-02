@@ -1,12 +1,7 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import GoogleSignInButton from "./GoogleSignInButton";
@@ -68,47 +63,55 @@ const LoginForm = () => {
     <div className="space-y-4">
       <GoogleSignInButton />
       
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Ou continue com
-          </span>
-        </div>
+      {/* Divisor usando daisyUI */}
+      <div className="divider text-xs uppercase text-base-content/60">
+        Ou continue com
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
+        <div className="form-control">
+          <label className="label" htmlFor="email">
+            <span className="label-text">Email</span>
+          </label>
+          <input
             id="email"
             type="email"
             placeholder="seu@email.com"
+            className={`input input-bordered w-full ${errors.email ? 'input-error' : ''}`}
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+            <label className="label">
+              <span className="label-text-alt text-error">{errors.email.message}</span>
+            </label>
           )}
         </div>
 
-        <div>
-          <Label htmlFor="password">Senha</Label>
-          <Input
+        <div className="form-control">
+          <label className="label" htmlFor="password">
+            <span className="label-text">Senha</span>
+          </label>
+          <input
             id="password"
             type="password"
             placeholder="••••••••"
+            className={`input input-bordered w-full ${errors.password ? 'input-error' : ''}`}
             {...register("password")}
           />
           {errors.password && (
-            <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+            <label className="label">
+              <span className="label-text-alt text-error">{errors.password.message}</span>
+            </label>
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <button 
+          type="submit" 
+          className={`btn btn-primary w-full ${loading ? 'loading' : ''}`}
+          disabled={loading}
+        >
           {loading ? "Entrando..." : "Entrar"}
-        </Button>
+        </button>
       </form>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Tipos para a integração Belvo
@@ -106,17 +107,17 @@ class BelvoService {
         save_data: true
       });
 
-      // Salvar contas no Supabase
+      // Salvar contas no Supabase - removendo user_id que não existe na tabela
       for (const account of accounts) {
         await supabase.from('belvo_accounts').upsert({
           belvo_account_id: account.id,
           belvo_link_id: linkId,
-          user_id: userId,
           name: account.name,
           type: account.type,
           balance_current: account.balance.current,
           balance_available: account.balance.available,
           currency: account.currency,
+          institution_name: account.institution,
           collected_at: account.last_accessed_at
         });
       }
@@ -153,15 +154,15 @@ class BelvoService {
           date: transaction.value_date,
           type: transaction.amount >= 0 ? 'income' as const : 'expense' as const,
           category_id: categoryId,
-          bank_connection_id: linkId,
-          external_id: transaction.id
+          belvo_account_id: accountId,
+          source_transaction_id: transaction.id
         };
 
         // Verificar se a transação já existe
         const { data: existingTransaction } = await supabase
           .from('transactions')
           .select('id')
-          .eq('external_id', transaction.id)
+          .eq('source_transaction_id', transaction.id)
           .single();
 
         if (!existingTransaction) {

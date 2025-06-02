@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
@@ -339,6 +340,55 @@ export const analyticsService = {
       income: data.income,
       expenses: data.expenses,
       balance: data.income - data.expenses
+    }));
+  },
+
+  // Buscar transações por período (novo método para PDF)
+  async getTransactionsByPeriod(userId: string, startDate: string, endDate: string) {
+    const { data } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        categories (
+          id,
+          name
+        )
+      `)
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false });
+
+    if (!data) return [];
+
+    return data.map(transaction => ({
+      ...transaction,
+      category_name: transaction.categories?.name || 'Sem categoria'
+    }));
+  },
+
+  // Buscar transações por categoria (novo método para PDF)
+  async getTransactionsByCategory(userId: string, categoryId: string, startDate: string, endDate: string) {
+    const { data } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        categories (
+          id,
+          name
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('category_id', categoryId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false });
+
+    if (!data) return [];
+
+    return data.map(transaction => ({
+      ...transaction,
+      category_name: transaction.categories?.name || 'Sem categoria'
     }));
   }
 };

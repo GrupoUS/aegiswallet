@@ -101,7 +101,7 @@ class PDFExportService {
         description: t.description,
         category: t.category_name || 'Sem categoria',
         amount: t.amount,
-        type: t.type
+        type: t.type as 'income' | 'expense' // Explicitly cast to the union type
       })),
       trends
     };

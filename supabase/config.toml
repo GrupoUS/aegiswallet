@@ -1,0 +1,63 @@
+
+project_id = "soqfclgupivjcdiiwmta"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+email_double_confirm_changes = true
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[functions.belvo-generate-widget-token]
+verify_jwt = false
+
+[functions.belvo-store-connection]
+verify_jwt = false
+
+[functions.belvo-sync]
+verify_jwt = false
+
+[functions.belvo-webhook]
+verify_jwt = false
+
+[functions.sync-bank-transactions]
+verify_jwt = false
+
+[functions.ai-financial-chat]
+verify_jwt = true
+
+[functions.get-user-access-level]
+verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+[realtime]
+enabled = true
+port = 54323
+max_header_length = 4096
+
+[storage]
+enabled = true
+port = 54324
+file_size_limit = "50MiB"

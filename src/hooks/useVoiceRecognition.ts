@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createSTTService, type STTResult } from '@/lib/stt/speechToTextService'
 import { createAudioProcessor } from '@/lib/stt/audioProcessor'
+import { createSTTService, type STTResult } from '@/lib/stt/speechToTextService'
 
 // Voice recognition state interface
 interface VoiceState {
@@ -289,54 +289,57 @@ export function useVoiceRecognition() {
   }, [])
 
   // Transcribe audio using OpenAI Whisper API
-  const transcribeWithSTT = useCallback(async (audioBlob: Blob): Promise<STTResult | null> => {
-    const sttService = getSTTService()
-    const audioProcessor = getAudioProcessor()
+  const transcribeWithSTT = useCallback(
+    async (audioBlob: Blob): Promise<STTResult | null> => {
+      const sttService = getSTTService()
+      const audioProcessor = getAudioProcessor()
 
-    if (!sttService || !audioProcessor) {
-      setVoiceState((prev) => ({
-        ...prev,
-        error: 'STT service not available',
-        isProcessing: false,
-      }))
-      return null
-    }
-
-    try {
-      setVoiceState((prev) => ({ ...prev, isProcessing: true, error: null }))
-
-      // Validate and process audio
-      const validation = await audioProcessor.validateAudio(audioBlob)
-      if (!validation.valid) {
-        throw new Error(validation.reason || 'Invalid audio')
+      if (!sttService || !audioProcessor) {
+        setVoiceState((prev) => ({
+          ...prev,
+          error: 'STT service not available',
+          isProcessing: false,
+        }))
+        return null
       }
 
-      const processed = await audioProcessor.processAudio(audioBlob)
+      try {
+        setVoiceState((prev) => ({ ...prev, isProcessing: true, error: null }))
 
-      // Transcribe with STT service
-      const result = await sttService.transcribe(processed.blob, {
-        language: 'pt', // Brazilian Portuguese
-      })
+        // Validate and process audio
+        const validation = await audioProcessor.validateAudio(audioBlob)
+        if (!validation.valid) {
+          throw new Error(validation.reason || 'Invalid audio')
+        }
 
-      setVoiceState((prev) => ({
-        ...prev,
-        transcript: result.text,
-        confidence: result.confidence,
-        isProcessing: false,
-        processingTimeMs: result.processingTimeMs,
-      }))
+        const processed = await audioProcessor.processAudio(audioBlob)
 
-      return result
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Transcription failed'
-      setVoiceState((prev) => ({
-        ...prev,
-        error: errorMessage,
-        isProcessing: false,
-      }))
-      return null
-    }
-  }, [getSTTService, getAudioProcessor])
+        // Transcribe with STT service
+        const result = await sttService.transcribe(processed.blob, {
+          language: 'pt', // Brazilian Portuguese
+        })
+
+        setVoiceState((prev) => ({
+          ...prev,
+          transcript: result.text,
+          confidence: result.confidence,
+          isProcessing: false,
+          processingTimeMs: result.processingTimeMs,
+        }))
+
+        return result
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Transcription failed'
+        setVoiceState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          isProcessing: false,
+        }))
+        return null
+      }
+    },
+    [getSTTService, getAudioProcessor]
+  )
 
   // Start recording with MediaRecorder for STT
   const startRecordingForSTT = useCallback(async () => {

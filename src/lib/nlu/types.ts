@@ -1,11 +1,11 @@
 /**
  * NLU Type Definitions for AegisWallet
- * 
+ *
  * Story: 01.02 - NLU dos 6 Comandos Essenciais
- * 
+ *
  * Defines types for Natural Language Understanding engine
  * supporting 6 essential Brazilian Portuguese voice commands
- * 
+ *
  * @module nlu/types
  */
 
@@ -323,4 +323,3 @@ export interface ConfidenceScore {
   explanation: string
   factors: Record<string, number> // Contributing factors
 }
-

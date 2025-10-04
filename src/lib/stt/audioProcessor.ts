@@ -1,13 +1,13 @@
 /**
  * Audio Processing Utilities for Voice Recognition
- * 
+ *
  * Features:
  * - Voice Activity Detection (VAD)
  * - Noise cancellation
  * - Volume normalization
  * - Silence detection
  * - Audio compression
- * 
+ *
  * @module audioProcessor
  */
 
@@ -72,14 +72,14 @@ export class AudioProcessor {
 
   /**
    * Process audio blob for optimal STT performance
-   * 
+   *
    * @param audioBlob - Raw audio data
    * @returns Processed audio with metadata
    */
   async processAudio(audioBlob: Blob): Promise<ProcessedAudio> {
     try {
       const audioContext = await this.getAudioContext()
-      
+
       // Decode audio data
       const arrayBuffer = await audioBlob.arrayBuffer()
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
@@ -111,14 +111,14 @@ export class AudioProcessor {
 
   /**
    * Detect voice activity in audio buffer
-   * 
+   *
    * Simple energy-based VAD implementation
    */
   private detectVoiceActivity(audioBuffer: AudioBuffer): VADResult {
     const channelData = audioBuffer.getChannelData(0)
     const frameSize = Math.floor(audioBuffer.sampleRate * 0.02) // 20ms frames
     const speechSegments: Array<{ start: number; end: number }> = []
-    
+
     let voiceFrames = 0
     let totalFrames = 0
     let inSpeech = false
@@ -127,12 +127,12 @@ export class AudioProcessor {
     for (let i = 0; i < channelData.length; i += frameSize) {
       const frame = channelData.slice(i, i + frameSize)
       const energy = this.calculateEnergy(frame)
-      
+
       totalFrames++
 
       if (energy > this.config.volumeThreshold) {
         voiceFrames++
-        
+
         if (!inSpeech) {
           inSpeech = true
           speechStart = i / audioBuffer.sampleRate
@@ -174,7 +174,7 @@ export class AudioProcessor {
     rms: number
   } {
     const channelData = audioBuffer.getChannelData(0)
-    
+
     let sum = 0
     let sumSquares = 0
     let peak = 0
@@ -210,10 +210,7 @@ export class AudioProcessor {
   /**
    * Normalize audio volume to optimal range
    */
-  private normalizeVolume(
-    audioBuffer: AudioBuffer,
-    currentVolume: number
-  ): AudioBuffer {
+  private normalizeVolume(audioBuffer: AudioBuffer, currentVolume: number): AudioBuffer {
     const targetVolume = 0.5 // Target 50% of max amplitude
     const gain = targetVolume / Math.max(currentVolume, 0.01)
 
@@ -261,7 +258,7 @@ export class AudioProcessor {
 
     // Convert to WAV format (simple, widely supported)
     const wavBlob = this.audioBufferToWav(renderedBuffer)
-    
+
     return wavBlob
   }
 
@@ -393,9 +390,6 @@ export class AudioProcessor {
 /**
  * Create audio processor with default configuration
  */
-export function createAudioProcessor(
-  config?: AudioProcessingConfig
-): AudioProcessor {
+export function createAudioProcessor(config?: AudioProcessingConfig): AudioProcessor {
   return new AudioProcessor(config)
 }
-

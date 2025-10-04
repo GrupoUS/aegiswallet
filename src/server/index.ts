@@ -11,7 +11,7 @@ const app = new Hono()
 // Determine CORS origins based on environment
 const getCorsOrigins = () => {
   const isDevelopment = process.env.NODE_ENV !== 'production'
-  return isDevelopment 
+  return isDevelopment
     ? ['http://localhost:5173', 'http://localhost:3000']
     : ['https://your-domain.com', 'http://localhost:3000'] // Update with your production domain
 }
@@ -32,10 +32,10 @@ app.use(
 
 // Health check endpoint
 app.get('/health', (c) => {
-  return c.json({ 
-    status: 'ok', 
+  return c.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   })
 })
 
@@ -58,30 +58,36 @@ app.get('/api/ping', (c) => {
 // In development, Vite dev server handles static files
 if (process.env.NODE_ENV === 'production') {
   app.use('/*', serveStatic({ root: './dist' }))
-  
+
   // Fallback for SPA routing - serve index.html for non-API routes
-  app.use('/*', serveStatic({ 
-    path: './dist/index.html',
-    rewriteRequestPath: (path) => path
-  }))
+  app.use(
+    '/*',
+    serveStatic({
+      path: './dist/index.html',
+      rewriteRequestPath: (path) => path,
+    })
+  )
 } else {
   // Development mode message
   app.use('/*', (c) => {
-    return c.json({ 
+    return c.json({
       message: 'Development mode - Frontend served by Vite dev server on port 5173',
       frontend: 'http://localhost:5173',
-      api: 'http://localhost:3000'
+      api: 'http://localhost:3000',
     })
   })
 }
 
 // 404 handler
 app.notFound((c) => {
-  return c.json({ 
-    error: 'Not Found',
-    message: `Route ${c.req.method} ${c.req.path} not found`,
-    timestamp: new Date().toISOString()
-  }, 404)
+  return c.json(
+    {
+      error: 'Not Found',
+      message: `Route ${c.req.method} ${c.req.path} not found`,
+      timestamp: new Date().toISOString(),
+    },
+    404
+  )
 })
 
 export default app

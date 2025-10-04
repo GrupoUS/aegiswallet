@@ -29,9 +29,9 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
  * Import procedures functions
  */
 import { createAuthRouter } from './procedures/auth'
+import { createBankingRouter } from './procedures/banking'
 import { createTransactionRouter } from './procedures/transactions'
 import { createUserRouter } from './procedures/users'
-import { createBankingRouter } from './procedures/banking'
 import { createVoiceRouter } from './procedures/voice'
 
 /**

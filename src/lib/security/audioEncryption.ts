@@ -1,15 +1,15 @@
 /**
  * Audio Encryption Service for LGPD Compliance
- * 
+ *
  * Implements AES-256-GCM encryption for audio files and transcriptions
- * 
+ *
  * Features:
  * - AES-256-GCM encryption (industry standard)
  * - Secure key derivation from master key
  * - Initialization vector (IV) generation
  * - Authenticated encryption (prevents tampering)
  * - LGPD-compliant data protection
- * 
+ *
  * @module audioEncryption
  */
 
@@ -68,7 +68,7 @@ export class AudioEncryptionService {
 
   /**
    * Encrypt audio blob
-   * 
+   *
    * @param audioBlob - Audio data to encrypt
    * @returns Encrypted data with metadata
    */
@@ -113,7 +113,7 @@ export class AudioEncryptionService {
 
   /**
    * Decrypt audio data
-   * 
+   *
    * @param encryptedData - Encrypted data with metadata
    * @returns Decrypted audio as Blob
    */
@@ -153,7 +153,7 @@ export class AudioEncryptionService {
 
   /**
    * Encrypt text (for transcriptions)
-   * 
+   *
    * @param text - Text to encrypt
    * @returns Encrypted data with metadata
    */
@@ -164,7 +164,7 @@ export class AudioEncryptionService {
 
   /**
    * Decrypt text (for transcriptions)
-   * 
+   *
    * @param encryptedData - Encrypted data with metadata
    * @returns Decrypted text
    */
@@ -175,7 +175,7 @@ export class AudioEncryptionService {
 
   /**
    * Generate secure random encryption key
-   * 
+   *
    * @returns Base64 encoded 256-bit key
    */
   static generateKey(): string {
@@ -185,13 +185,13 @@ export class AudioEncryptionService {
 
   /**
    * Anonymize personal data in transcription
-   * 
+   *
    * Removes/masks:
    * - CPF (Brazilian tax ID)
    * - Phone numbers
    * - Email addresses
    * - Credit card numbers
-   * 
+   *
    * @param text - Text to anonymize
    * @returns Anonymized text
    */
@@ -199,16 +199,10 @@ export class AudioEncryptionService {
     let anonymized = text
 
     // Anonymize CPF (format: 123.456.789-01 or 12345678901)
-    anonymized = anonymized.replace(
-      /\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g,
-      '***.***.***-**'
-    )
+    anonymized = anonymized.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, '***.***.***-**')
 
     // Anonymize phone numbers (format: (11) 98765-4321 or 11987654321)
-    anonymized = anonymized.replace(
-      /\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g,
-      '(**) *****-****'
-    )
+    anonymized = anonymized.replace(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g, '(**) *****-****')
 
     // Anonymize email addresses
     anonymized = anonymized.replace(
@@ -256,15 +250,10 @@ export class AudioEncryptionService {
  * Create encryption service with environment configuration
  */
 export function createEncryptionService(masterKey?: string): AudioEncryptionService {
-  const key =
-    masterKey ||
-    import.meta.env.VITE_ENCRYPTION_KEY ||
-    process.env.ENCRYPTION_KEY
+  const key = masterKey || import.meta.env.VITE_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY
 
   if (!key) {
-    throw new Error(
-      'Encryption key not found. Set VITE_ENCRYPTION_KEY or ENCRYPTION_KEY.'
-    )
+    throw new Error('Encryption key not found. Set VITE_ENCRYPTION_KEY or ENCRYPTION_KEY.')
   }
 
   return new AudioEncryptionService({ masterKey: key })
@@ -280,4 +269,3 @@ export function generateEncryptionKey(): void {
   console.log('\nAdd to .env file:')
   console.log(`VITE_ENCRYPTION_KEY="${key}"`)
 }
-

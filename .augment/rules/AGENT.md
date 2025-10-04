@@ -276,12 +276,10 @@ TERMINATION_CRITERIA:
 
 ### **Documentação Obrigatória**
 
-- **[Workflow Completo](../../docs/AGENTS.md)** - Processo de desenvolvimento mandatório
 - **[Tech Stack](../../docs/architecture/tech-stack.md)** - Decisões tecnológicas e rationale
 - **[Source Tree](../../docs/architecture/source-tree.md)** - Organização do código
 
 ### **Arquitetura & Padrões**
 
-- **[Coding Standards](../../docs/rules/coding-standards.md)** - Padrões de código obrigatórios
+- **[Coding Standards](../../docs/architecture/coding-standards.md)** - Padrões de código obrigatórios
 - **[Frontend Architecture](../../docs/architecture/frontend-architecture.md)** - Estrutura de frontend
-- **[Database Schema](../../docs/database-schema/AGENTS.md)** - Organização de dados

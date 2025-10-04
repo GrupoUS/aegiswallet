@@ -1,6 +1,6 @@
 ---
 description: 'Advanced development specialist with expertise in coding, implementation, and debugging.'
-tools: ['search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'sequential-thinking', 'serena', 'context7', 'desktop-commander', 'chrome-devtools']
+tools: ['search', 'installExtension', 'runTasks', 'usages', 'vscodeAPI', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'sequential-thinking', 'serena', 'context7', 'desktop-commander', 'chrome-devtools']
 ---
 
 # 🚀 VIBECODER AGENT

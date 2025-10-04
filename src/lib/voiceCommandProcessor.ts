@@ -212,7 +212,7 @@ function handleBalanceCommand(confidence: number): ProcessedCommand {
   }
 }
 
-function handleBudgetCommand(): ProcessedCommand {
+function handleBudgetCommand(confidence: number): ProcessedCommand {
   const { total, spent } = mockFinancialData.budget
   const available = total - spent
   const spentPercentage = (spent / total) * 100
@@ -236,10 +236,11 @@ function handleBudgetCommand(): ProcessedCommand {
       spentPercentage,
       categories: mockFinancialData.budget.categories,
     },
+    confidence,
   }
 }
 
-function handleBillsCommand(): ProcessedCommand {
+function handleBillsCommand(confidence: number): ProcessedCommand {
   const pendingBills = mockFinancialData.bills.filter((bill) => bill.status === 'pending')
   const upcomingBills = pendingBills.filter((bill) => {
     const daysUntilDue = Math.ceil(
@@ -265,10 +266,11 @@ function handleBillsCommand(): ProcessedCommand {
       totalPending: pendingBills.length,
       totalAmount: pendingBills.reduce((sum, bill) => sum + bill.amount, 0),
     },
+    confidence,
   }
 }
 
-function handleIncomingCommand(): ProcessedCommand {
+function handleIncomingCommand(confidence: number): ProcessedCommand {
   const currentMonth = new Date().getMonth()
   const upcomingIncoming = mockFinancialData.incoming.filter(
     (item) => item.expectedDate.getMonth() === currentMonth
@@ -292,10 +294,11 @@ function handleIncomingCommand(): ProcessedCommand {
       ),
       totalExpected: upcomingIncoming.reduce((sum, item) => sum + item.amount, 0),
     },
+    confidence,
   }
 }
 
-function handleProjectionCommand(): ProcessedCommand {
+function handleProjectionCommand(confidence: number): ProcessedCommand {
   const currentBalance = mockFinancialData.accounts.reduce(
     (sum, account) => sum + account.balance,
     0
@@ -327,11 +330,15 @@ function handleProjectionCommand(): ProcessedCommand {
       pendingBills,
       expectedIncoming,
     },
+    confidence,
   }
 }
 
-function handleTransferCommand(parameters: any): ProcessedCommand {
-  const { recipient, amount } = parameters
+function handleTransferCommand(transcript: string, confidence: number): ProcessedCommand {
+  // Simple stub implementation - extract basic info from transcript
+  const amountMatch = transcript.match(/(\d+[,.]?\d*)/i)
+  const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null
+  const recipient = 'Destinatário (stub)'
 
   if (!recipient) {
     return {
@@ -369,6 +376,7 @@ function handleTransferCommand(parameters: any): ProcessedCommand {
       estimatedTime: 'Instantâneo',
       requiresConfirmation: true,
     },
+    confidence,
     requiresConfirmation: true,
   }
 }

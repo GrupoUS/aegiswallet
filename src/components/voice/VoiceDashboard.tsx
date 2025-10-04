@@ -21,7 +21,6 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
     confidence,
     error,
     supported,
-    recognizedCommand,
     startListening,
     stopListening,
     resetState,
@@ -38,8 +37,8 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
 
   // Process voice commands when recognized
   useEffect(() => {
-    if (recognizedCommand) {
-      const response = processVoiceCommand(recognizedCommand)
+    if (transcript && confidence > 0.5) {
+      const response = processVoiceCommand(transcript, confidence)
       setCurrentResponse(response)
 
       // Announce response for accessibility
@@ -61,7 +60,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
         resetState()
       }, 2000)
     }
-  }, [recognizedCommand, transcript, resetState, announce, speak])
+  }, [transcript, confidence, resetState, announce, speak])
 
   // Text-to-speech for responses (optional)
   const speakResponse = (text: string) => {

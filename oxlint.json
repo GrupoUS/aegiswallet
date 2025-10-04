@@ -21,12 +21,5 @@
     "es2022": true,
     "node": true
   },
-  "ignore": [
-    "node_modules/",
-    "dist/",
-    "build/",
-    "coverage/",
-    "*.config.js",
-    "*.config.ts"
-  ]
+  "ignore": ["node_modules/", "dist/", "build/", "coverage/", "*.config.js", "*.config.ts"]
 }

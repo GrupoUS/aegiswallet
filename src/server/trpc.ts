@@ -1,6 +1,6 @@
 import { initTRPC } from '@trpc/server'
-import { z } from 'zod'
 import superjson from 'superjson'
+import { z } from 'zod'
 
 import { Context } from './context'
 
@@ -8,12 +8,9 @@ export interface Meta {
   // Add any meta information here
 }
 
-const t = initTRPC
-  .context<Context>()
-  .meta<Meta>()
-  .create({
-    transformer: superjson,
-  })
+const t = initTRPC.context<Context>().meta<Meta>().create({
+  transformer: superjson,
+})
 
 export const router = t.router
 export const publicProcedure = t.procedure
@@ -33,8 +30,8 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
  * Import procedures functions
  */
 import { createAuthRouter } from './procedures/auth'
-import { createUserRouter } from './procedures/users'
 import { createTransactionRouter } from './procedures/transactions'
+import { createUserRouter } from './procedures/users'
 
 /**
  * Main router with all procedures

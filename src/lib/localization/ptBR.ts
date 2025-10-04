@@ -2,135 +2,135 @@ export interface Translation {
   // Voice Commands
   voice: {
     commands: {
-      balance: string[];
-      budget: string[];
-      bills: string[];
-      incoming: string[];
-      projection: string[];
-      transfer: string[];
-    };
+      balance: string[]
+      budget: string[]
+      bills: string[]
+      incoming: string[]
+      projection: string[]
+      transfer: string[]
+    }
     responses: {
-      greeting: string;
-      listening: string;
-      processing: string;
-      error: string;
-      success: string;
-      notSupported: string;
-    };
+      greeting: string
+      listening: string
+      processing: string
+      error: string
+      success: string
+      notSupported: string
+    }
     hints: {
-      tapToSpeak: string;
-      availableCommands: string;
+      tapToSpeak: string
+      availableCommands: string
       commands: {
-        balance: string;
-        budget: string;
-        bills: string;
-        incoming: string;
-        projection: string;
-        transfer: string;
-      };
-    };
-  };
+        balance: string
+        budget: string
+        bills: string
+        incoming: string
+        projection: string
+        transfer: string
+      }
+    }
+  }
 
   // Financial Terms
   financial: {
-    currency: string;
-    balance: string;
-    income: string;
-    expense: string;
-    transfer: string;
-    payment: string;
-    invoice: string;
-    receipt: string;
-    budget: string;
-    savings: string;
-    investment: string;
-    dueDate: string;
-    overdue: string;
-    paid: string;
-    pending: string;
-    scheduled: string;
-  };
+    currency: string
+    balance: string
+    income: string
+    expense: string
+    transfer: string
+    payment: string
+    invoice: string
+    receipt: string
+    budget: string
+    savings: string
+    investment: string
+    dueDate: string
+    overdue: string
+    paid: string
+    pending: string
+    scheduled: string
+  }
 
   // Categories
   categories: {
-    food: string;
-    transport: string;
-    shopping: string;
-    utilities: string;
-    health: string;
-    entertainment: string;
-    income: string;
-    other: string;
-  };
+    food: string
+    transport: string
+    shopping: string
+    utilities: string
+    health: string
+    entertainment: string
+    income: string
+    other: string
+  }
 
   // Actions
   actions: {
-    pay: string;
-    transfer: string;
-    deposit: string;
-    withdraw: string;
-    schedule: string;
-    cancel: string;
-    confirm: string;
-    edit: string;
-    delete: string;
-    view: string;
-    export: string;
-    import: string;
-  };
+    pay: string
+    transfer: string
+    deposit: string
+    withdraw: string
+    schedule: string
+    cancel: string
+    confirm: string
+    edit: string
+    delete: string
+    view: string
+    export: string
+    import: string
+  }
 
   // Status Messages
   status: {
-    loading: string;
-    processing: string;
-    success: string;
-    error: string;
-    warning: string;
-    info: string;
-    empty: string;
-    noData: string;
-  };
+    loading: string
+    processing: string
+    success: string
+    error: string
+    warning: string
+    info: string
+    empty: string
+    noData: string
+  }
 
   // Accessibility
   accessibility: {
-    voiceControl: string;
-    voiceActivation: string;
-    screenReader: string;
-    keyboardNavigation: string;
-    highContrast: string;
-    largeText: string;
-    reducedMotion: string;
-    voiceAnnouncements: string;
-  };
+    voiceControl: string
+    voiceActivation: string
+    screenReader: string
+    keyboardNavigation: string
+    highContrast: string
+    largeText: string
+    reducedMotion: string
+    voiceAnnouncements: string
+  }
 
   // Errors
   errors: {
-    network: string;
-    authentication: string;
-    permission: string;
-    validation: string;
-    notFound: string;
-    serverError: string;
-    voiceNotSupported: string;
-    microphoneAccess: string;
-  };
+    network: string
+    authentication: string
+    permission: string
+    validation: string
+    notFound: string
+    serverError: string
+    voiceNotSupported: string
+    microphoneAccess: string
+  }
 
   // Time Formats
   timeFormats: {
-    fullDate: string;
-    shortDate: string;
-    time: string;
-    dateTime: string;
+    fullDate: string
+    shortDate: string
+    time: string
+    dateTime: string
     relativeTime: {
-      today: string;
-      yesterday: string;
-      tomorrow: string;
-      thisWeek: string;
-      lastWeek: string;
-      thisMonth: string;
-      lastMonth: string;
-    };
-  };
+      today: string
+      yesterday: string
+      tomorrow: string
+      thisWeek: string
+      lastWeek: string
+      thisMonth: string
+      lastMonth: string
+    }
+  }
 }
 
 export const ptBR: Translation = {
@@ -141,43 +141,43 @@ export const ptBR: Translation = {
         'qual é o meu saldo',
         'quanto tenho na conta',
         'meu saldo',
-        'saldo da conta'
+        'saldo da conta',
       ],
       budget: [
         'quanto posso gastar esse mês',
         'qual meu limite de gastos',
         'quanto tenho disponível para gastar',
         'meu orçamento mensal',
-        'limite de gastos'
+        'limite de gastos',
       ],
       bills: [
         'tem algum boleto programado para pagar',
         'contas para pagar',
         'boleto para pagar',
         'quais contas vencem',
-        'pagamentos pendentes'
+        'pagamentos pendentes',
       ],
       incoming: [
         'tem algum recebimento programado para entrar',
         'receitas programadas',
         'dinheiro para entrar',
         'recebimentos futuros',
-        'entradas de dinheiro'
+        'entradas de dinheiro',
       ],
       projection: [
         'como ficará meu saldo no final do mês',
         'projeção de saldo',
         'saldo projetado',
         'quanto vou ter no fim do mês',
-        'saldo final do mês'
+        'saldo final do mês',
       ],
       transfer: [
         'faz uma transferência para',
         'transferir dinheiro para',
         'fazer transferência para',
         'enviar dinheiro para',
-        'pagar para'
-      ]
+        'pagar para',
+      ],
     },
     responses: {
       greeting: 'Olá! Como posso ajudar com suas finanças hoje?',
@@ -185,7 +185,7 @@ export const ptBR: Translation = {
       processing: 'Processando comando...',
       error: 'Não entendi. Poderia repetir?',
       success: 'Comando processado com sucesso!',
-      notSupported: 'Seu navegador não suporta reconhecimento de voz'
+      notSupported: 'Seu navegador não suporta reconhecimento de voz',
     },
     hints: {
       tapToSpeak: 'Toque para falar',
@@ -196,9 +196,9 @@ export const ptBR: Translation = {
         bills: 'Contas a pagar',
         incoming: 'Recebimentos',
         projection: 'Projeção',
-        transfer: 'Transferência'
-      }
-    }
+        transfer: 'Transferência',
+      },
+    },
   },
 
   financial: {
@@ -217,7 +217,7 @@ export const ptBR: Translation = {
     overdue: 'Vencido',
     paid: 'Pago',
     pending: 'Pendente',
-    scheduled: 'Agendado'
+    scheduled: 'Agendado',
   },
 
   categories: {
@@ -228,7 +228,7 @@ export const ptBR: Translation = {
     health: 'Saúde',
     entertainment: 'Entretenimento',
     income: 'Receitas',
-    other: 'Outros'
+    other: 'Outros',
   },
 
   actions: {
@@ -243,7 +243,7 @@ export const ptBR: Translation = {
     delete: 'Excluir',
     view: 'Visualizar',
     export: 'Exportar',
-    import: 'Importar'
+    import: 'Importar',
   },
 
   status: {
@@ -254,7 +254,7 @@ export const ptBR: Translation = {
     warning: 'Atenção',
     info: 'Informação',
     empty: 'Nenhum item encontrado',
-    noData: 'Sem dados disponíveis'
+    noData: 'Sem dados disponíveis',
   },
 
   accessibility: {
@@ -265,7 +265,7 @@ export const ptBR: Translation = {
     highContrast: 'Alto contraste',
     largeText: 'Texto grande',
     reducedMotion: 'Movimento reduzido',
-    voiceAnnouncements: 'Anúncios por voz'
+    voiceAnnouncements: 'Anúncios por voz',
   },
 
   errors: {
@@ -276,7 +276,7 @@ export const ptBR: Translation = {
     notFound: 'Página não encontrada.',
     serverError: 'Erro interno do servidor. Tente novamente mais tarde.',
     voiceNotSupported: 'Seu navegador não suporta reconhecimento de voz.',
-    microphoneAccess: 'Permissão para microfone negada. Habilite nas configurações do navegador.'
+    microphoneAccess: 'Permissão para microfone negada. Habilite nas configurações do navegador.',
   },
 
   timeFormats: {
@@ -291,10 +291,10 @@ export const ptBR: Translation = {
       thisWeek: 'Esta semana',
       lastWeek: 'Semana passada',
       thisMonth: 'Este mês',
-      lastMonth: 'Mês passado'
-    }
-  }
-};
+      lastMonth: 'Mês passado',
+    },
+  },
+}
 
 // Brazilian localization utilities
 export const brazilianLocalization = {
@@ -304,8 +304,8 @@ export const brazilianLocalization = {
   formatCurrency: (amount: number): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL'
-    }).format(amount);
+      currency: 'BRL',
+    }).format(amount)
   },
 
   /**
@@ -314,13 +314,13 @@ export const brazilianLocalization = {
   formatDate: (date: Date, format: 'full' | 'short' | 'time' = 'full'): string => {
     switch (format) {
       case 'full':
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR')
       case 'short':
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
       case 'time':
-        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       default:
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR')
     }
   },
 
@@ -328,92 +328,92 @@ export const brazilianLocalization = {
    * Format relative time in Portuguese
    */
   formatRelativeTime: (date: Date): string => {
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) return 'Hoje';
-    if (diffDays === 1) return 'Amanhã';
-    if (diffDays === -1) return 'Ontem';
-    if (diffDays > 0 && diffDays <= 7) return `Em ${diffDays} dias`;
-    if (diffDays < 0 && diffDays >= -7) return `Há ${Math.abs(diffDays)} dias`;
-    
-    return date.toLocaleDateString('pt-BR');
+    if (diffDays === 0) return 'Hoje'
+    if (diffDays === 1) return 'Amanhã'
+    if (diffDays === -1) return 'Ontem'
+    if (diffDays > 0 && diffDays <= 7) return `Em ${diffDays} dias`
+    if (diffDays < 0 && diffDays >= -7) return `Há ${Math.abs(diffDays)} dias`
+
+    return date.toLocaleDateString('pt-BR')
   },
 
   /**
    * Format phone number to Brazilian format
    */
   formatPhone: (phone: string): string => {
-    const cleaned = phone.replace(/[^\d]/g, '');
+    const cleaned = phone.replace(/[^\d]/g, '')
     if (cleaned.length === 11) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
     }
-    return phone;
+    return phone
   },
 
   /**
    * Validate CPF (Brazilian tax ID)
    */
   validateCPF: (cpf: string): boolean => {
-    const cleanedCPF = cpf.replace(/[^\d]/g, '');
-    if (cleanedCPF.length !== 11) return false;
-    
+    const cleanedCPF = cpf.replace(/[^\d]/g, '')
+    if (cleanedCPF.length !== 11) return false
+
     // Basic CPF validation
-    let sum = 0;
-    let remainder: number;
-    
+    let sum = 0
+    let remainder: number
+
     for (let i = 1; i <= 9; i++) {
-      sum += parseInt(cleanedCPF.substring(i - 1, i)) * (11 - i);
+      sum += parseInt(cleanedCPF.substring(i - 1, i)) * (11 - i)
     }
-    
-    remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(cleanedCPF.substring(9, 10))) return false;
-    
-    sum = 0;
+
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) remainder = 0
+    if (remainder !== parseInt(cleanedCPF.substring(9, 10))) return false
+
+    sum = 0
     for (let i = 1; i <= 10; i++) {
-      sum += parseInt(cleanedCPF.substring(i - 1, i)) * (12 - i);
+      sum += parseInt(cleanedCPF.substring(i - 1, i)) * (12 - i)
     }
-    
-    remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(cleanedCPF.substring(10, 11))) return false;
-    
-    return true;
+
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) remainder = 0
+    if (remainder !== parseInt(cleanedCPF.substring(10, 11))) return false
+
+    return true
   },
 
   /**
    * Validate CNPJ (Brazilian company tax ID)
    */
   validateCNPJ: (cnpj: string): boolean => {
-    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
-    if (cleanedCNPJ.length !== 14) return false;
-    
+    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '')
+    if (cleanedCNPJ.length !== 14) return false
+
     // Basic CNPJ validation
     // First digit verification
-    let sum = 0;
-    let weight = 5;
+    let sum = 0
+    let weight = 5
     for (let i = 0; i < 12; i++) {
-      sum += parseInt(cleanedCNPJ[i]) * weight;
-      weight = weight === 2 ? 9 : weight - 1;
+      sum += parseInt(cleanedCNPJ[i]) * weight
+      weight = weight === 2 ? 9 : weight - 1
     }
-    
-    let remainder = sum % 11;
-    const digit1 = remainder < 2 ? 0 : 11 - remainder;
-    
+
+    let remainder = sum % 11
+    const digit1 = remainder < 2 ? 0 : 11 - remainder
+
     // Second digit verification
-    sum = 0;
-    weight = 6;
+    sum = 0
+    weight = 6
     for (let i = 0; i < 13; i++) {
-      sum += parseInt(cleanedCNPJ[i]) * weight;
-      weight = weight === 2 ? 9 : weight - 1;
+      sum += parseInt(cleanedCNPJ[i]) * weight
+      weight = weight === 2 ? 9 : weight - 1
     }
-    
-    remainder = sum % 11;
-    const digit2 = remainder < 2 ? 0 : 11 - remainder;
-    
-    return digit1 === parseInt(cleanedCNPJ[12]) && digit2 === parseInt(cleanedCNPJ[13]);
+
+    remainder = sum % 11
+    const digit2 = remainder < 2 ? 0 : 11 - remainder
+
+    return digit1 === parseInt(cleanedCNPJ[12]) && digit2 === parseInt(cleanedCNPJ[13])
   },
 
   /**
@@ -446,6 +446,6 @@ export const brazilianLocalization = {
     { code: 'SC', name: 'Santa Catarina' },
     { code: 'SP', name: 'São Paulo' },
     { code: 'SE', name: 'Sergipe' },
-    { code: 'TO', name: 'Tocantins' }
-  ]
-};
+    { code: 'TO', name: 'Tocantins' },
+  ],
+}

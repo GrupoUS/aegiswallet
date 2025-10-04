@@ -1,6 +1,6 @@
 import { RouterProvider } from '@tanstack/react-router'
-import { router } from './router'
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider'
+import { router } from './router'
 import '@/styles/accessibility.css'
 
 function App() {
@@ -11,4 +11,4 @@ function App() {
   )
 }
 
-export default App;
+export default App

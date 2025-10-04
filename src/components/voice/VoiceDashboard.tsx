@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { processVoiceCommand, ProcessedCommand } from '@/lib/voiceCommandProcessor';
-import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
-import { VoiceIndicator } from './VoiceIndicator';
-import { VoiceResponse } from './VoiceResponse';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Volume2, Settings, History, ChevronRight } from 'lucide-react';
+import { ChevronRight, History, Settings, Volume2 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition'
+import { ProcessedCommand, processVoiceCommand } from '@/lib/voiceCommandProcessor'
+import { VoiceIndicator } from './VoiceIndicator'
+import { VoiceResponse } from './VoiceResponse'
 
 interface VoiceDashboardProps {
-  className?: string;
+  className?: string
 }
 
 export function VoiceDashboard({ className }: VoiceDashboardProps) {
-  const { speak, announce } = useAccessibility();
+  const { speak, announce } = useAccessibility()
   const {
     isListening,
     isProcessing,
@@ -24,76 +24,77 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
     recognizedCommand,
     startListening,
     stopListening,
-    resetState
-  } = useVoiceRecognition();
+    resetState,
+  } = useVoiceRecognition()
 
-  const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
-  const [commandHistory, setCommandHistory] = useState<Array<{
-    command: string;
-    response: ProcessedCommand;
-    timestamp: Date;
-  }>>([]);
+  const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null)
+  const [commandHistory, setCommandHistory] = useState<
+    Array<{
+      command: string
+      response: ProcessedCommand
+      timestamp: Date
+    }>
+  >([])
 
   // Process voice commands when recognized
   useEffect(() => {
     if (recognizedCommand) {
-      const response = processVoiceCommand(recognizedCommand);
-      setCurrentResponse(response);
-      
+      const response = processVoiceCommand(recognizedCommand)
+      setCurrentResponse(response)
+
       // Announce response for accessibility
-      announce(response.message);
-      speak(response.message);
-      
+      announce(response.message)
+      speak(response.message)
+
       // Add to history
-      setCommandHistory(prev => [{
-        command: transcript,
-        response,
-        timestamp: new Date()
-      }, ...prev.slice(0, 9)]); // Keep last 10 commands
+      setCommandHistory((prev) => [
+        {
+          command: transcript,
+          response,
+          timestamp: new Date(),
+        },
+        ...prev.slice(0, 9),
+      ]) // Keep last 10 commands
 
       // Reset state after processing
       setTimeout(() => {
-        resetState();
-      }, 2000);
+        resetState()
+      }, 2000)
     }
-  }, [recognizedCommand, transcript, resetState, announce, speak]);
+  }, [recognizedCommand, transcript, resetState, announce, speak])
 
   // Text-to-speech for responses (optional)
   const speakResponse = (text: string) => {
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'pt-BR';
-      utterance.rate = 0.9;
-      speechSynthesis.speak(utterance);
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = 'pt-BR'
+      utterance.rate = 0.9
+      speechSynthesis.speak(utterance)
     }
-  };
+  }
 
   const handleVoiceActivation = () => {
     if (!isListening) {
-      startListening();
+      startListening()
     } else {
-      stopListening();
+      stopListening()
     }
-  };
+  }
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bom dia';
-    if (hour < 18) return 'Boa tarde';
-    return 'Boa noite';
-  };
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Bom dia'
+    if (hour < 18) return 'Boa tarde'
+    return 'Boa noite'
+  }
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 ${className}`}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {getGreeting()}! 👋
-          </h1>
-          <p className="text-lg text-gray-600">
-            Como posso ajudar com suas finanças hoje?
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">{getGreeting()}! 👋</h1>
+          <p className="text-lg text-gray-600">Como posso ajudar com suas finanças hoje?</p>
         </div>
 
         {/* Main Voice Interface */}
@@ -123,10 +124,13 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <span>Confiança:</span>
                   <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className={`h-2 rounded-full transition-all duration-300 ${
-                        confidence > 0.8 ? 'bg-green-500' : 
-                        confidence > 0.6 ? 'bg-yellow-500' : 'bg-red-500'
+                        confidence > 0.8
+                          ? 'bg-green-500'
+                          : confidence > 0.6
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
                       }`}
                       style={{ width: `${confidence * 100}%` }}
                     />
@@ -146,7 +150,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
               message={currentResponse.message}
               data={currentResponse.data}
             />
-            
+
             {currentResponse.requiresConfirmation && (
               <div className="mt-4 flex gap-3 justify-center">
                 <Button onClick={() => speakResponse(currentResponse.message)}>
@@ -166,7 +170,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
             { title: 'Saldo', icon: '💰', action: () => {} },
             { title: 'Orçamento', icon: '📊', action: () => {} },
             { title: 'Contas', icon: '📄', action: () => {} },
-            { title: 'PIX', icon: '🚀', action: () => {} }
+            { title: 'PIX', icon: '🚀', action: () => {} },
           ].map((action) => (
             <Button
               key={action.title}
@@ -201,16 +205,12 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
                   <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        "{item.command}"
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {item.response.message}
-                      </p>
+                      <p className="text-sm font-medium text-gray-900">"{item.command}"</p>
+                      <p className="text-sm text-gray-600 mt-1">{item.response.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {item.timestamp.toLocaleTimeString('pt-BR', {
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </p>
                     </div>
@@ -229,5 +229,5 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

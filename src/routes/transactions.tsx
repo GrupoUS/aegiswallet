@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { FinancialAmount } from '@/components/financial-amount'
 import { useState } from 'react'
+import { FinancialAmount } from '@/components/financial-amount'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const TransactionsRoute = createFileRoute('/transactions')({
   component: Transactions,
@@ -18,9 +18,7 @@ function Transactions() {
           <h1 className="text-3xl font-bold">Transações</h1>
           <p className="text-muted-foreground">Gerencie suas transações</p>
         </div>
-        <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-          Nova Transação
-        </Button>
+        <Button onClick={() => setShowCreateForm(!showCreateForm)}>Nova Transação</Button>
       </div>
 
       {/* Formulário simples */}
@@ -62,10 +60,7 @@ function Transactions() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Data</label>
-                <input
-                  type="date"
-                  className="w-full p-2 border rounded"
-                />
+                <input type="date" className="w-full p-2 border rounded" />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
@@ -94,29 +89,29 @@ function Transactions() {
               </div>
               <FinancialAmount amount={-125.67} />
             </div>
-            
+
             <div className="flex justify-between items-center p-3 border rounded">
               <div>
                 <p className="font-medium">Salário</p>
                 <p className="text-sm text-muted-foreground">3 dias atrás • Salário</p>
               </div>
-              <FinancialAmount amount={3500.00} />
+              <FinancialAmount amount={3500.0} />
             </div>
-            
+
             <div className="flex justify-between items-center p-3 border rounded">
               <div>
                 <p className="font-medium">Transporte</p>
                 <p className="text-sm text-muted-foreground">5 dias atrás • Transporte</p>
               </div>
-              <FinancialAmount amount={-50.00} />
+              <FinancialAmount amount={-50.0} />
             </div>
-            
+
             <div className="flex justify-between items-center p-3 border rounded">
               <div>
                 <p className="font-medium">Restaurante</p>
                 <p className="text-sm text-muted-foreground">1 semana atrás • Alimentação</p>
               </div>
-              <FinancialAmount amount={-85.20} />
+              <FinancialAmount amount={-85.2} />
             </div>
           </div>
         </CardContent>

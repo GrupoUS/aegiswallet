@@ -122,7 +122,7 @@
 }
 
 .voice-indicator-active::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -4px;
   left: -4px;
@@ -202,7 +202,9 @@
   z-index: 1000;
   transform: translateY(100px);
   opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .voice-status.show {

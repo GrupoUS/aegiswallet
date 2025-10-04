@@ -5,7 +5,6 @@
  * LGPD-compliant with encryption and audit logs
  */
 
-import { supabase } from '@/integrations/supabase/client'
 import { createAuditLog } from './auditLogger'
 
 export interface VoiceConfirmationConfig {
@@ -173,7 +172,7 @@ export class VoiceConfirmationService {
   /**
    * Confirm via biometric (delegated to native APIs)
    */
-  private async confirmBiometric(userId: string): Promise<{ success: boolean }> {
+  private async confirmBiometric(_userId: string): Promise<{ success: boolean }> {
     // Check if biometric is available
     if ('credentials' in navigator) {
       try {

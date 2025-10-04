@@ -1,6 +1,6 @@
 ---
 description: 'Advanced development specialist with expertise in coding, implementation, and debugging.'
-tools: ['search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'sequential-thinking', 'context7', 'create_directory', 'edit_block', 'interact_with_process', 'kill_process', 'list_directory', 'list_processes', 'list_searches', 'move_file', 'read_file', 'read_multiple_files', 'read_process_output', 'start_process', 'start_search', 'stop_search', 'write_file', 'delete_memory', 'find_file', 'find_referencing_symbols', 'find_symbol', 'get_symbols_overview', 'list_memories', 'read_memory', 'replace_symbol_body', 'search_for_pattern', 'think_about_collected_information', 'think_about_task_adherence', 'write_memory', 'chrome-devtools', 'activePullRequest', 'openPullRequest']
+tools: ['runTasks', 'search', 'extensions', 'todos', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo']
 ---
 
 # 🚀 VIBECODER AGENT

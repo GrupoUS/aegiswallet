@@ -1,0 +1,66 @@
+{
+  "servers": {
+    "sequential-thinking": {
+      "command": "bunx",
+      "args": [
+        "@modelcontextprotocol/server-sequential-thinking@latest"
+      ],
+      "env": {
+        "DISABLE_THOUGHT_LOGGING": "false",
+        "SEQUENTIAL_THINKING_MAX_TOKENS": "16000",
+        "SEQUENTIAL_THINKING_THOUGHTS_TO_KEEP": "10",
+        "SEQUENTIAL_THINKING_TIMEOUT": "15000"
+      },
+      "type": "stdio"
+    },
+    "context7": {
+      "command": "bunx",
+      "args": [
+        "@upstash/context7-mcp@latest"
+      ],
+      "env": {
+        "UPSTASH_CONTEXT7_API_KEY": "ctx7_fzqcQNgU3AChDBMjNIVYg4zLQp4LgBjZnbA",
+        "CONTEXT7_MAX_TOKENS": "10000",
+        "CONTEXT7_TIMEOUT": "15000"
+      },
+      "type": "stdio"
+    },
+    "desktop-commander": {
+      "command": "bunx",
+      "args": [
+        "@wonderwhy-er/desktop-commander@latest"
+      ],
+      "env": {
+        "MAX_MCP_OUTPUT_TOKENS": "20000"
+      }
+    },
+    "archon": {
+      "command": "bunx",
+      "args": [
+        "mcp-remote",
+        "http://31.97.170.4:8051/mcp",
+        "--allow-http"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "/home/vibecode/neonpro"
+      ],
+      "env": {}
+    },
+      "chrome-devtools": {
+      "command": "bunx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
+    }
+}
+}

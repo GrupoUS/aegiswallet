@@ -1,4 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -11,26 +13,31 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-foreground">AegisWallet</h1>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user?.email}</span>
-              <button
+              <Button
+                variant="destructive"
                 onClick={signOut}
-                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:opacity-90 transition-opacity"
               >
                 Sair
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-card rounded-lg shadow-lg border border-border p-8">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Bem-vindo ao Dashboard! 🎉
-          </h2>
-          <p className="text-muted-foreground">
-            Você está autenticado com sucesso. Esta é sua área protegida.
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl">Bem-vindo ao Dashboard! 🎉</CardTitle>
+            <CardDescription>
+              Você está autenticado com sucesso. Esta é sua área protegida.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Comece a construir suas funcionalidades aqui.
+            </p>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

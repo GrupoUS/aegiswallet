@@ -6,7 +6,40 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh",
+    "command": "C:\\Users\\Admin\\.claude\\statusline.sh",
     "padding": 0
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Users\\Admin\\aegiswallet\\.claude\\hooks\\pre-tool.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write|mcp__desktop-commander__write_file|mcp__desktop-commander__edit_block",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Users\\Admin\\aegiswallet\\.claude\\hooks\\format-and-lint.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|mcp__desktop-commander__start_process",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Users\\Admin\\aegiswallet\\.claude\\hooks\\post-tool.sh"
+          }
+        ]
+      }
+    ]
   }
 }

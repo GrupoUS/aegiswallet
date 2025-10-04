@@ -59,6 +59,13 @@ graph TB
 | **Forms** | React Hook Form | 7.55.0 | Form handling |
 | **Validation** | Zod | 4.1.11 | Schema validation |
 
+#### Compatibility Validation Checklist
+
+- Confirm Bun, Hono, and tRPC versions match the lockfile before every deploy. If upgrades are required, run `bun install` and rerun `bun run type-check` and `bun run lint` locally.
+- Validate Supabase CLI and project schema with `bunx supabase db diff` before applying migrations; rollback if drift is detected.
+- Smoke-test React 19 and TanStack Router compatibility in the Vite dev server (`bun dev`) and run Vitest smoke suite (`bun run test:unit --runInBand`) prior to merging.
+- Record any intentional version divergence in `README-TESTING.md` so downstream teams inherit the decision context.
+
 ### Architecture Principles
 
 - **Voice-First**: Primary interaction through 6 essential voice commands
@@ -452,6 +459,13 @@ const cache = {
 };
 ```
 
+### Monitoring & Alerting Plan
+
+- Collect Core Web Vitals (`LCP`, `INP`, `CLS`) in the frontend using `web-vitals` and stream them to Supabase Edge Functions.
+- Create lightweight alerts in Vercel for build failures and response time regression (>500 ms P95) tied to the production deployment.
+- Use Supabase logs to watch PIX and boleto procedures; add a daily automated check that flags error rates above 2%.
+- Centralize incident summaries in the weekly ops sync so trends are reviewed without extra tooling.
+
 ---
 
 ## Deployment Architecture
@@ -479,6 +493,21 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
+### Deployment Pipeline & Rollback Strategy
+
+1. **CI pipeline (Vercel + Supabase):**
+   - Run `bun run lint` → `bun run type-check` → `bun run test:unit` on every pull request.
+   - Trigger preview deploys via `pnpm dlx vercel deploy --yes --archive=tgz` only after tests pass.
+   - Gate `supabase db push --linked` behind manual approval to avoid accidental schema drift.
+2. **Release checklist (main branch):**
+   - Tag release and re-run the CI suite.
+   - Promote the verified preview to production with `pnpm dlx vercel deploy --prod`.
+   - Apply migrations during a low-traffic window; capture `supabase db diff --linked` output before and after.
+3. **Rollback plan:**
+   - Maintain the previous production deployment in Vercel; rollback instantly with `pnpm dlx vercel rollback` if health checks fail.
+   - Revert database changes using the timestamped migration snapshot (`supabase migration revert <timestamp>`), and confirm via smoke tests.
+   - Post-rollback, log the incident in `docs/qa/assessments/` with root cause and remediation ownership.
+
 ### Infrastructure Considerations
 
 ```yaml
@@ -497,6 +526,9 @@ services:
     backup: daily
     point-in-time: 30 days
 ```
+
+- **IaC starter:** Track environment variables in `supabase/config.toml` and Vercel project settings. When introducing new services, add them to a simple Terraform/Bref module or document manual steps in `docs/architecture/source-tree.md` to keep onboarding lightweight.
+- **Manual fallback:** If IaC is not ready, record the exact CLI commands (`supabase projects list`, `vercel env pull`) and owners in the release ticket so the process stays reproducible.
 
 ---
 
@@ -579,6 +611,13 @@ const scalabilityFeatures = {
   monitoring: 'Built-in error tracking'
 };
 ```
+
+### Reusable Integration Patterns
+
+- Favor tRPC routers that expose typed helpers so new financial flows can import existing validation and error handling.
+- Keep Supabase SQL snippets in `supabase/migrations` and reuse them via functions—avoid duplicating triggers when adding new tables.
+- Voice command workflows should plug into `lib/voiceCommandProcessor.ts`; extend intent mapping instead of creating parallel pipelines.
+- Document any custom webhook or external API adapters under `docs/integrations/` so the same adapter can back future features without rework.
 
 ---
 

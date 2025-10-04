@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createSTTService, type STTResult } from '@/lib/stt/speechToTextService'
+import { createAudioProcessor } from '@/lib/stt/audioProcessor'
 
 // Voice recognition state interface
 interface VoiceState {
@@ -8,6 +10,7 @@ interface VoiceState {
   confidence: number
   error: string | null
   supported: boolean
+  processingTimeMs?: number
 }
 
 // Voice command interface
@@ -75,7 +78,11 @@ export function useVoiceRecognition() {
 
   const [recognizedCommand, setRecognizedCommand] = useState<VoiceCommand | null>(null)
   const recognitionRef = useRef<any>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const timeoutRef = useRef<NodeJS.Timeout>()
+  const sttServiceRef = useRef<ReturnType<typeof createSTTService> | null>(null)
+  const audioProcessorRef = useRef<ReturnType<typeof createAudioProcessor> | null>(null)
 
   // Check browser support for Web Speech API
   useEffect(() => {
@@ -255,12 +262,135 @@ export function useVoiceRecognition() {
     }
   }, [voiceState.isListening, stopListening])
 
+  // Initialize STT service (lazy initialization)
+  const getSTTService = useCallback(() => {
+    if (!sttServiceRef.current) {
+      try {
+        sttServiceRef.current = createSTTService()
+      } catch (error) {
+        console.error('Failed to initialize STT service:', error)
+        return null
+      }
+    }
+    return sttServiceRef.current
+  }, [])
+
+  // Initialize audio processor (lazy initialization)
+  const getAudioProcessor = useCallback(() => {
+    if (!audioProcessorRef.current) {
+      audioProcessorRef.current = createAudioProcessor({
+        silenceThreshold: 0.01,
+        silenceDuration: 2000,
+        minAudioDuration: 500,
+        maxAudioDuration: 30000,
+      })
+    }
+    return audioProcessorRef.current
+  }, [])
+
+  // Transcribe audio using OpenAI Whisper API
+  const transcribeWithSTT = useCallback(async (audioBlob: Blob): Promise<STTResult | null> => {
+    const sttService = getSTTService()
+    const audioProcessor = getAudioProcessor()
+
+    if (!sttService || !audioProcessor) {
+      setVoiceState((prev) => ({
+        ...prev,
+        error: 'STT service not available',
+        isProcessing: false,
+      }))
+      return null
+    }
+
+    try {
+      setVoiceState((prev) => ({ ...prev, isProcessing: true, error: null }))
+
+      // Validate and process audio
+      const validation = await audioProcessor.validateAudio(audioBlob)
+      if (!validation.valid) {
+        throw new Error(validation.reason || 'Invalid audio')
+      }
+
+      const processed = await audioProcessor.processAudio(audioBlob)
+
+      // Transcribe with STT service
+      const result = await sttService.transcribe(processed.blob, {
+        language: 'pt', // Brazilian Portuguese
+      })
+
+      setVoiceState((prev) => ({
+        ...prev,
+        transcript: result.text,
+        confidence: result.confidence,
+        isProcessing: false,
+        processingTimeMs: result.processingTimeMs,
+      }))
+
+      return result
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Transcription failed'
+      setVoiceState((prev) => ({
+        ...prev,
+        error: errorMessage,
+        isProcessing: false,
+      }))
+      return null
+    }
+  }, [getSTTService, getAudioProcessor])
+
+  // Start recording with MediaRecorder for STT
+  const startRecordingForSTT = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      // Use WebM Opus for better compression
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm'
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
+        await transcribeWithSTT(audioBlob)
+
+        // Stop all tracks
+        stream.getTracks().forEach((track) => track.stop())
+      }
+
+      mediaRecorder.start()
+      setVoiceState((prev) => ({ ...prev, isListening: true, error: null }))
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start recording'
+      setVoiceState((prev) => ({ ...prev, error: errorMessage }))
+    }
+  }, [transcribeWithSTT])
+
+  // Stop recording and process audio
+  const stopRecordingForSTT = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+      setVoiceState((prev) => ({ ...prev, isListening: false }))
+    }
+  }, [])
+
   return {
     ...voiceState,
     recognizedCommand,
     startListening,
     stopListening,
     resetState,
+    transcribeWithSTT,
+    startRecordingForSTT,
+    stopRecordingForSTT,
     availableCommands: Object.keys(VOICE_COMMANDS),
   }
 }

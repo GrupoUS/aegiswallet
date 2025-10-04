@@ -8,9 +8,9 @@
  * @vitest-environment jsdom
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { createNLUEngine, NLUEngine, processUtterance } from '@/lib/nlu/nluEngine'
-import { IntentType, NLUErrorCode } from '@/lib/nlu/types'
+import { IntentType } from '@/lib/nlu/types'
 
 describe('NLU Engine', () => {
   let nluEngine: NLUEngine

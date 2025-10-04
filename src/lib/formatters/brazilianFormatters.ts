@@ -445,6 +445,24 @@ export function isValidCNPJ(cnpj: string): boolean {
 // Exports
 // ============================================================================
 
+// Placeholder for number-to-words (MVP)
+export function numberToWords(num: number): string {
+  const words = [
+    'zero',
+    'um',
+    'dois',
+    'três',
+    'quatro',
+    'cinco',
+    'seis',
+    'sete',
+    'oito',
+    'nove',
+    'dez',
+  ]
+  return words[num] || num.toString()
+}
+
 export const brazilianFormatters = {
   currency: formatCurrency,
   compactCurrency: formatCompactCurrency,
@@ -464,6 +482,7 @@ export const brazilianFormatters = {
   duration: formatDuration,
   fileSize: formatFileSize,
   ordinal,
+  numberToWords,
 }
 
 export const brazilianValidators = {

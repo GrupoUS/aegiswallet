@@ -1,4 +1,8 @@
 // Voice command processor for Brazilian Portuguese
+// Enhanced with NLU Engine (Story 01.02)
+
+import { createNLUEngine } from './nlu/nluEngine'
+import { IntentType } from './nlu/types'
 
 // Mock data for demonstration - replace with real Supabase data
 const mockFinancialData = {
@@ -107,24 +111,9 @@ const CONFIDENCE_THRESHOLD = 0.7
 
 // Essential voice commands patterns for Brazilian Portuguese
 const COMMAND_PATTERNS = {
-  balance: [
-    /como está meu saldo/i,
-    /qual meu saldo/i,
-    /saldo atual/i,
-    /quanto tenho/i,
-  ],
-  budget: [
-    /quanto posso gastar/i,
-    /orçamento disponível/i,
-    /quanto resta/i,
-    /limite de gastos/i,
-  ],
-  bills: [
-    /boleto.*pagar/i,
-    /contas.*pagar/i,
-    /pagamentos pendentes/i,
-    /próximos vencimentos/i,
-  ],
+  balance: [/como está meu saldo/i, /qual meu saldo/i, /saldo atual/i, /quanto tenho/i],
+  budget: [/quanto posso gastar/i, /orçamento disponível/i, /quanto resta/i, /limite de gastos/i],
+  bills: [/boleto.*pagar/i, /contas.*pagar/i, /pagamentos pendentes/i, /próximos vencimentos/i],
   incoming: [
     /recebimento.*entrar/i,
     /dinheiro.*entrar/i,
@@ -137,15 +126,72 @@ const COMMAND_PATTERNS = {
     /como ficará.*saldo/i,
     /previsão financeira/i,
   ],
-  transfer: [
-    /transferência.*para/i,
-    /enviar.*dinheiro/i,
-    /pagar.*para/i,
-    /transferir.*para/i,
-  ],
+  transfer: [/transferência.*para/i, /enviar.*dinheiro/i, /pagar.*para/i, /transferir.*para/i],
 }
 
-export function processVoiceCommand(transcript: string, confidence: number = 0.8): ProcessedCommand {
+/**
+ * Process voice command using NLU Engine (Story 01.02)
+ * Enhanced version with Natural Language Understanding
+ */
+export async function processVoiceCommandWithNLU(transcript: string): Promise<ProcessedCommand> {
+  try {
+    const nluEngine = createNLUEngine()
+    const nluResult = await nluEngine.processUtterance(transcript)
+
+    // Check confidence threshold
+    if (nluResult.confidence < CONFIDENCE_THRESHOLD) {
+      return {
+        type: 'error',
+        message: 'Não entendi bem. Poderia repetir mais claramente?',
+        confidence: nluResult.confidence,
+      }
+    }
+
+    // Process command based on intent
+    switch (nluResult.intent) {
+      case IntentType.CHECK_BALANCE:
+        return handleBalanceCommand(nluResult.confidence)
+
+      case IntentType.CHECK_BUDGET:
+        return handleBudgetCommand(nluResult.confidence)
+
+      case IntentType.PAY_BILL:
+        return handleBillsCommand(nluResult.confidence)
+
+      case IntentType.CHECK_INCOME:
+        return handleIncomingCommand(nluResult.confidence)
+
+      case IntentType.FINANCIAL_PROJECTION:
+        return handleProjectionCommand(nluResult.confidence)
+
+      case IntentType.TRANSFER_MONEY:
+        return handleTransferCommand(transcript, nluResult.confidence)
+
+      default:
+        return {
+          type: 'error',
+          message: 'Comando não reconhecido. Tente: "Qual é meu saldo?" ou "Quanto posso gastar?"',
+          confidence: nluResult.confidence,
+        }
+    }
+  } catch (error) {
+    console.error('NLU processing error:', error)
+    return {
+      type: 'error',
+      message: 'Erro ao processar comando. Tente novamente.',
+      confidence: 0,
+    }
+  }
+}
+
+/**
+ * Legacy function - kept for backward compatibility
+ * Use processVoiceCommandWithNLU for new implementations
+ */
+export function processVoiceCommand(
+  transcript: string,
+  confidence: number = 0.8
+): ProcessedCommand {
   // Check confidence threshold
   if (confidence < CONFIDENCE_THRESHOLD) {
     return {
@@ -188,7 +234,7 @@ export function processVoiceCommand(transcript: string, confidence: number = 0.8
 
 function matchCommand(transcript: string): string | null {
   for (const [command, patterns] of Object.entries(COMMAND_PATTERNS)) {
-    if (patterns.some(pattern => pattern.test(transcript))) {
+    if (patterns.some((pattern) => pattern.test(transcript))) {
       return command
     }
   }

@@ -1,13 +1,13 @@
 /**
  * LGPD-Compliant Audio Storage Service
- * 
+ *
  * Features:
  * - Encrypted audio storage in Supabase
  * - Row Level Security (RLS) enforcement
  * - Automatic retention policy (12 months)
  * - Audit logging for compliance
  * - User consent management
- * 
+ *
  * @module audioStorage
  */
 
@@ -70,7 +70,7 @@ export class AudioStorageService {
 
   /**
    * Store audio with encryption and metadata
-   * 
+   *
    * @param userId - User ID
    * @param audioBlob - Audio data
    * @param transcript - Transcription text
@@ -101,9 +101,8 @@ export class AudioStorageService {
       const anonymizedTranscript = AudioEncryptionService.anonymizeText(transcript)
 
       // Encrypt transcript
-      const encryptedTranscript = await this.config.encryptionService.encryptText(
-        anonymizedTranscript
-      )
+      const encryptedTranscript =
+        await this.config.encryptionService.encryptText(anonymizedTranscript)
 
       // Generate storage path
       const audioId = crypto.randomUUID()
@@ -144,9 +143,7 @@ export class AudioStorageService {
 
       if (dbError) {
         // Cleanup uploaded file
-        await this.config.supabase.storage
-          .from(this.config.bucketName)
-          .remove([storagePath])
+        await this.config.supabase.storage.from(this.config.bucketName).remove([storagePath])
 
         throw new Error(`Database insert failed: ${dbError.message}`)
       }
@@ -175,7 +172,7 @@ export class AudioStorageService {
 
   /**
    * Retrieve and decrypt audio
-   * 
+   *
    * @param userId - User ID
    * @param audioId - Audio record ID
    * @returns Decrypted audio blob
@@ -221,7 +218,7 @@ export class AudioStorageService {
 
   /**
    * Delete audio and metadata
-   * 
+   *
    * @param userId - User ID
    * @param audioId - Audio record ID
    */
@@ -292,14 +289,12 @@ export class AudioStorageService {
    */
   async recordConsent(userId: string, consentGiven: boolean): Promise<void> {
     try {
-      const { error } = await this.config.supabase
-        .from('voice_consent')
-        .upsert({
-          user_id: userId,
-          consent_given: consentGiven,
-          consent_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+      const { error } = await this.config.supabase.from('voice_consent').upsert({
+        user_id: userId,
+        consent_given: consentGiven,
+        consent_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
 
       if (error) {
         throw new Error(`Consent recording failed: ${error.message}`)
@@ -384,4 +379,3 @@ export function createAudioStorageService(
     retentionDays: 365, // 12 months LGPD compliance
   })
 }
-

@@ -1,10 +1,10 @@
 /**
  * Tests for Speech-to-Text Service
- * 
+ *
  * Story: 01.01 - Motor de Speech-to-Text Brasil
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SpeechToTextService, STTErrorCode } from '@/lib/stt/speechToTextService'
 
 // Mock fetch globally
@@ -46,17 +46,13 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       })
 
-      await expect(sttService.transcribe(largeBlob)).rejects.toThrow(
-        'Audio file too large'
-      )
+      await expect(sttService.transcribe(largeBlob)).rejects.toThrow('Audio file too large')
     })
 
     it('should reject invalid audio types', async () => {
       const invalidBlob = new Blob(['test'], { type: 'text/plain' })
 
-      await expect(sttService.transcribe(invalidBlob)).rejects.toThrow(
-        'Invalid audio type'
-      )
+      await expect(sttService.transcribe(invalidBlob)).rejects.toThrow('Invalid audio type')
     })
 
     it('should accept valid audio types', async () => {
@@ -71,7 +67,7 @@ describe('SpeechToTextService', () => {
 
       for (const type of validTypes) {
         const blob = new Blob([new Uint8Array(1024)], { type })
-        
+
         // Mock successful API response
         ;(global.fetch as any).mockResolvedValueOnce({
           ok: true,
@@ -132,7 +128,7 @@ describe('SpeechToTextService', () => {
 
       const fetchCall = (global.fetch as any).mock.calls[0]
       const formData = fetchCall[1].body as FormData
-      
+
       // Note: FormData inspection in tests is limited
       expect(fetchCall[0]).toContain('openai.com')
     })
@@ -275,11 +271,7 @@ describe('SpeechToTextService', () => {
           text: 'Test',
           language: 'pt',
           duration: 1.0,
-          segments: [
-            { avg_logprob: -0.1 },
-            { avg_logprob: -0.2 },
-            { avg_logprob: -0.15 },
-          ],
+          segments: [{ avg_logprob: -0.1 }, { avg_logprob: -0.2 }, { avg_logprob: -0.15 }],
         }),
       })
 
@@ -328,4 +320,3 @@ describe('SpeechToTextService', () => {
     })
   })
 })
-

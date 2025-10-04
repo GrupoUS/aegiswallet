@@ -1,15 +1,15 @@
 /**
  * Speech-to-Text Service for AegisWallet
- * 
+ *
  * Implements Brazilian Portuguese STT using OpenAI Whisper API
- * 
+ *
  * Features:
  * - Brazilian Portuguese accent adaptation
  * - <500ms latency (P95)
  * - ≥95% accuracy for Portuguese
  * - LGPD-compliant audio handling
  * - Comprehensive error handling
- * 
+ *
  * @module speechToTextService
  */
 
@@ -79,15 +79,12 @@ export class SpeechToTextService {
 
   /**
    * Transcribe audio to text using OpenAI Whisper API
-   * 
+   *
    * @param audioBlob - Audio data as Blob or File
    * @param options - Optional transcription options
    * @returns STT result with transcription and metadata
    */
-  async transcribe(
-    audioBlob: Blob | File,
-    options?: Partial<STTConfig>
-  ): Promise<STTResult> {
+  async transcribe(audioBlob: Blob | File, options?: Partial<STTConfig>): Promise<STTResult> {
     const startTime = Date.now()
 
     try {
@@ -98,9 +95,7 @@ export class SpeechToTextService {
       const formData = this.prepareFormData(audioBlob, options)
 
       // Execute with retry logic
-      const response = await this.executeWithRetry(() =>
-        this.makeRequest(formData)
-      )
+      const response = await this.executeWithRetry(() => this.makeRequest(formData))
 
       // Parse response
       const result = await this.parseResponse(response, startTime)
@@ -139,10 +134,7 @@ export class SpeechToTextService {
   /**
    * Prepare FormData for API request
    */
-  private prepareFormData(
-    audioBlob: Blob | File,
-    options?: Partial<STTConfig>
-  ): FormData {
+  private prepareFormData(audioBlob: Blob | File, options?: Partial<STTConfig>): FormData {
     const formData = new FormData()
 
     // Add audio file
@@ -212,17 +204,16 @@ export class SpeechToTextService {
 
   /**
    * Calculate confidence score from API response
-   * 
+   *
    * Note: Whisper API doesn't return confidence directly,
    * so we estimate based on response characteristics
    */
   private calculateConfidence(data: any): number {
     // If we have segments with avg_logprob, use that
     if (data.segments && data.segments.length > 0) {
-      const avgLogProb = data.segments.reduce(
-        (sum: number, seg: any) => sum + (seg.avg_logprob || 0),
-        0
-      ) / data.segments.length
+      const avgLogProb =
+        data.segments.reduce((sum: number, seg: any) => sum + (seg.avg_logprob || 0), 0) /
+        data.segments.length
 
       // Convert log probability to confidence (0-1)
       // avg_logprob typically ranges from -1 to 0
@@ -386,7 +377,7 @@ export class SpeechToTextService {
     try {
       // Create a minimal test audio blob (silence)
       const testBlob = new Blob([new Uint8Array(1024)], { type: 'audio/webm' })
-      
+
       // Try to transcribe (will likely fail but confirms API is reachable)
       await this.transcribe(testBlob)
       return true
@@ -419,4 +410,3 @@ export function createSTTService(apiKey?: string): SpeechToTextService {
     timeout: 10000, // 10 seconds
   })
 }
-

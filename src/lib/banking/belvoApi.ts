@@ -36,7 +36,7 @@ const mockAccounts: BelvoAccount[] = [
     id: 'acc_001',
     name: 'Conta Corrente',
     type: 'checking',
-    balance: 5842.50,
+    balance: 5842.5,
     currency: 'BRL',
     institution: 'Banco do Brasil',
     lastUpdated: new Date().toISOString(),
@@ -45,7 +45,7 @@ const mockAccounts: BelvoAccount[] = [
     id: 'acc_002',
     name: 'Poupança',
     type: 'savings',
-    balance: 12500.00,
+    balance: 12500.0,
     currency: 'BRL',
     institution: 'Banco do Brasil',
     lastUpdated: new Date().toISOString(),
@@ -56,7 +56,7 @@ const mockTransactions: BelvoTransaction[] = [
   {
     id: 'txn_001',
     account_id: 'acc_001',
-    amount: 5000.00,
+    amount: 5000.0,
     description: 'Salário - Empresa XYZ',
     date: '2024-10-01',
     type: 'income',
@@ -65,7 +65,7 @@ const mockTransactions: BelvoTransaction[] = [
   {
     id: 'txn_002',
     account_id: 'acc_001',
-    amount: -1500.00,
+    amount: -1500.0,
     description: 'Aluguel',
     date: '2024-10-05',
     type: 'expense',
@@ -74,7 +74,7 @@ const mockTransactions: BelvoTransaction[] = [
   {
     id: 'txn_003',
     account_id: 'acc_001',
-    amount: -450.00,
+    amount: -450.0,
     description: 'Supermercado Extra',
     date: '2024-10-10',
     type: 'expense',
@@ -100,12 +100,14 @@ export class BelvoApiClient {
   private secretKey: string
   private baseUrl: string
 
-  constructor(apiKey: string, secretKey: string, environment: 'sandbox' | 'production' = 'sandbox') {
+  constructor(
+    apiKey: string,
+    secretKey: string,
+    environment: 'sandbox' | 'production' = 'sandbox'
+  ) {
     this.apiKey = apiKey
     this.secretKey = secretKey
-    this.baseUrl = environment === 'sandbox' 
-      ? 'https://sandbox.belvo.com' 
-      : 'https://api.belvo.com'
+    this.baseUrl = environment === 'sandbox' ? 'https://sandbox.belvo.com' : 'https://api.belvo.com'
   }
 
   /**
@@ -113,7 +115,7 @@ export class BelvoApiClient {
    */
   async getInstitutions(): Promise<BelvoInstitution[]> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     return mockInstitutions
   }
 
@@ -122,8 +124,8 @@ export class BelvoApiClient {
    */
   async getAccounts(userId: string): Promise<BelvoAccount[]> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
     // In real implementation, this would filter by user
     console.log(`Fetching accounts for user: ${userId}`)
     return mockAccounts
@@ -132,23 +134,27 @@ export class BelvoApiClient {
   /**
    * Get account transactions
    */
-  async getTransactions(accountId: string, startDate?: string, endDate?: string): Promise<BelvoTransaction[]> {
+  async getTransactions(
+    accountId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<BelvoTransaction[]> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
     console.log(`Fetching transactions for account: ${accountId}`, { startDate, endDate })
-    
+
     // Filter transactions by account
-    let transactions = mockTransactions.filter(t => t.account_id === accountId)
-    
+    let transactions = mockTransactions.filter((t) => t.account_id === accountId)
+
     // Apply date filters if provided
     if (startDate) {
-      transactions = transactions.filter(t => t.date >= startDate)
+      transactions = transactions.filter((t) => t.date >= startDate)
     }
     if (endDate) {
-      transactions = transactions.filter(t => t.date <= endDate)
+      transactions = transactions.filter((t) => t.date <= endDate)
     }
-    
+
     return transactions
   }
 
@@ -157,10 +163,10 @@ export class BelvoApiClient {
    */
   async syncAccount(accountId: string): Promise<{ status: string; message: string }> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     console.log(`Syncing account: ${accountId}`)
-    
+
     return {
       status: 'success',
       message: 'Account data synchronized successfully',
@@ -172,10 +178,10 @@ export class BelvoApiClient {
    */
   async createLinkToken(userId: string): Promise<{ link_token: string; expiration: string }> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
     console.log(`Creating link token for user: ${userId}`)
-    
+
     return {
       link_token: `link_token_${Date.now()}_${userId}`,
       expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
@@ -200,7 +206,7 @@ export const bankingUtils = {
     }
     return accountNumber
   },
-  
+
   formatAgency: (agency: string) => {
     // Format Brazilian agency number
     const cleaned = agency.replace(/[^\d]/g, '')
@@ -209,12 +215,12 @@ export const bankingUtils = {
     }
     return agency
   },
-  
+
   validateBankAccount: (agency: string, account: string) => {
     // Basic validation for Brazilian bank account
     const cleanedAgency = agency.replace(/[^\d]/g, '')
     const cleanedAccount = account.replace(/[^\d]/g, '')
-    
+
     return cleanedAgency.length >= 3 && cleanedAccount.length >= 4
   },
 }

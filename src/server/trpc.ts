@@ -1,6 +1,5 @@
 import { initTRPC } from '@trpc/server'
 import superjson from 'superjson'
-import { z } from 'zod'
 
 import { Context } from './context'
 
@@ -32,6 +31,8 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 import { createAuthRouter } from './procedures/auth'
 import { createTransactionRouter } from './procedures/transactions'
 import { createUserRouter } from './procedures/users'
+import { createBankingRouter } from './procedures/banking'
+import { createVoiceRouter } from './procedures/voice'
 
 /**
  * Main router with all procedures
@@ -40,6 +41,8 @@ export const appRouter = router({
   auth: createAuthRouter(t),
   users: createUserRouter(t),
   transactions: createTransactionRouter(t),
+  banking: createBankingRouter(t),
+  voice: createVoiceRouter(t),
 })
 
 export type AppRouter = typeof appRouter

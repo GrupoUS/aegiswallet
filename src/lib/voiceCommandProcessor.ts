@@ -1,4 +1,4 @@
-import { VoiceCommand } from '@/hooks/useVoiceRecognition'
+// Voice command processor for Brazilian Portuguese
 
 // Mock data for demonstration - replace with real Supabase data
 const mockFinancialData = {
@@ -99,63 +99,116 @@ export interface ProcessedCommand {
   message: string
   data?: any
   requiresConfirmation?: boolean
+  confidence?: number
 }
 
-export function processVoiceCommand(command: VoiceCommand | null): ProcessedCommand {
-  if (!command) {
+// Simple confidence threshold for command acceptance
+const CONFIDENCE_THRESHOLD = 0.7
+
+// Essential voice commands patterns for Brazilian Portuguese
+const COMMAND_PATTERNS = {
+  balance: [
+    /como está meu saldo/i,
+    /qual meu saldo/i,
+    /saldo atual/i,
+    /quanto tenho/i,
+  ],
+  budget: [
+    /quanto posso gastar/i,
+    /orçamento disponível/i,
+    /quanto resta/i,
+    /limite de gastos/i,
+  ],
+  bills: [
+    /boleto.*pagar/i,
+    /contas.*pagar/i,
+    /pagamentos pendentes/i,
+    /próximos vencimentos/i,
+  ],
+  incoming: [
+    /recebimento.*entrar/i,
+    /dinheiro.*entrar/i,
+    /próximos recebimentos/i,
+    /receitas futuras/i,
+  ],
+  projection: [
+    /saldo.*final.*mês/i,
+    /projeção.*saldo/i,
+    /como ficará.*saldo/i,
+    /previsão financeira/i,
+  ],
+  transfer: [
+    /transferência.*para/i,
+    /enviar.*dinheiro/i,
+    /pagar.*para/i,
+    /transferir.*para/i,
+  ],
+}
+
+export function processVoiceCommand(transcript: string, confidence: number = 0.8): ProcessedCommand {
+  // Check confidence threshold
+  if (confidence < CONFIDENCE_THRESHOLD) {
     return {
       type: 'error',
-      message: 'Não entendi o comando. Poderia repetir?',
+      message: 'Não entendi bem. Poderia repetir mais claramente?',
+      confidence,
     }
   }
 
-  const { command: commandType, parameters } = command
+  // Match transcript against command patterns
+  const commandType = matchCommand(transcript)
 
   switch (commandType) {
-    case 'BALANCE':
-      return handleBalanceCommand()
+    case 'balance':
+      return handleBalanceCommand(confidence)
 
-    case 'BUDGET':
-      return handleBudgetCommand()
+    case 'budget':
+      return handleBudgetCommand(confidence)
 
-    case 'BILLS':
-      return handleBillsCommand()
+    case 'bills':
+      return handleBillsCommand(confidence)
 
-    case 'INCOMING':
-      return handleIncomingCommand()
+    case 'incoming':
+      return handleIncomingCommand(confidence)
 
-    case 'PROJECTION':
-      return handleProjectionCommand()
+    case 'projection':
+      return handleProjectionCommand(confidence)
 
-    case 'TRANSFER':
-      return handleTransferCommand(parameters)
+    case 'transfer':
+      return handleTransferCommand(transcript, confidence)
 
     default:
       return {
         type: 'error',
-        message: 'Comando não reconhecido. Tente novamente.',
+        message: 'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
+        confidence,
       }
   }
 }
 
-function handleBalanceCommand(): ProcessedCommand {
+function matchCommand(transcript: string): string | null {
+  for (const [command, patterns] of Object.entries(COMMAND_PATTERNS)) {
+    if (patterns.some(pattern => pattern.test(transcript))) {
+      return command
+    }
+  }
+  return null
+}
+
+function handleBalanceCommand(confidence: number): ProcessedCommand {
   const totalBalance = mockFinancialData.accounts.reduce((sum, account) => sum + account.balance, 0)
-  const currentMonthIncome = mockFinancialData.transactions
-    .filter((t) => t.type === 'income' && new Date(t.date).getMonth() === new Date().getMonth())
-    .reduce((sum, t) => sum + t.amount, 0)
-  const currentMonthExpenses = mockFinancialData.transactions
-    .filter((t) => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth())
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
   return {
     type: 'balance',
-    message: 'Seu saldo atual é de',
+    message: `Seu saldo total é de R$ ${totalBalance.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`,
     data: {
-      currentBalance: totalBalance,
-      income: currentMonthIncome,
-      expenses: currentMonthExpenses,
+      totalBalance,
       accounts: mockFinancialData.accounts,
     },
+    confidence,
   }
 }
 

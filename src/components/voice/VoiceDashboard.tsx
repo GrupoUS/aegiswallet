@@ -73,7 +73,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
     }
   }
 
-  const handleVoiceActivation = () => {
+  const _handleVoiceActivation = () => {
     if (!isListening) {
       startListening()
     } else {

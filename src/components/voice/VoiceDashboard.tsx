@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { processVoiceCommand, ProcessedCommand } from '@/lib/voiceCommandProcessor';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
 import { VoiceIndicator } from './VoiceIndicator';
 import { VoiceResponse } from './VoiceResponse';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ interface VoiceDashboardProps {
 }
 
 export function VoiceDashboard({ className }: VoiceDashboardProps) {
+  const { speak, announce } = useAccessibility();
   const {
     isListening,
     isProcessing,
@@ -38,6 +40,10 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
       const response = processVoiceCommand(recognizedCommand);
       setCurrentResponse(response);
       
+      // Announce response for accessibility
+      announce(response.message);
+      speak(response.message);
+      
       // Add to history
       setCommandHistory(prev => [{
         command: transcript,
@@ -50,7 +56,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
         resetState();
       }, 2000);
     }
-  }, [recognizedCommand, transcript, resetState]);
+  }, [recognizedCommand, transcript, resetState, announce, speak]);
 
   // Text-to-speech for responses (optional)
   const speakResponse = (text: string) => {

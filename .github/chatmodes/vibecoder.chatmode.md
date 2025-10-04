@@ -1,6 +1,6 @@
 ---
 description: 'Advanced development specialist with expertise in coding, implementation, and debugging.'
-tools: ['runTasks', 'search', 'extensions', 'todos', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo']
+tools: ['search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos']
 ---
 
 # 🚀 VIBECODER AGENT
@@ -281,14 +281,11 @@ TERMINATION_CRITERIA:
 
 ### **Documentação Obrigatória**
 
-- **[Workflow Completo](../../docs/AGENTS.md)** - Processo de desenvolvimento mandatório
-- **[Tech Stack](../../docs/architecture/tech-stack.md)** - Decisões tecnológicas e rationale
-- **[Source Tree](../../docs/architecture/source-tree.md)** - Organização do código
+- **[Architecture](../../docs/architecture.md)** - Decisões tecnológicas e rationale
+- **[PRD](../../docs/prd.md)** 
 
 ### **Arquitetura & Padrões**
 
 - **[Coding Standards](../../docs/rules/coding-standards.md)** - Padrões de código obrigatórios
-- **[Frontend Architecture](../../docs/architecture/frontend-architecture.md)** - Estrutura de frontend
-- **[Database Schema](../../docs/database-schema/AGENTS.md)** - Organização de dados
 
 ---

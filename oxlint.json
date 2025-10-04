@@ -1,0 +1,32 @@
+{
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "pedantic": "allow",
+    "style": "allow",
+    "restriction": "allow",
+    "nursery": "allow"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-debugger": "warn",
+    "no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "prefer-const": "warn",
+    "no-var": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "ignore": [
+    "node_modules/",
+    "dist/",
+    "build/",
+    "coverage/",
+    "*.config.js",
+    "*.config.ts"
+  ]
+}

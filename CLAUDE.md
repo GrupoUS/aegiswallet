@@ -1,90 +1,10 @@
-# CLAUDE.md
+# AegisWallet Development Rules & Standards - Version: 2.0.0
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Purpose & Scope
 
-## Project Overview
+This document establishes comprehensive rules and standards for AI-assisted development of AegisWallet, an autonomous financial assistant for the Brazilian market. It transforms reactive AI interactions into proactive, context-aware collaboration while ensuring consistent, enforceable standards across all development activities.
 
-AegisWallet is a cryptocurrency wallet application with Supabase backend integration. The project is minimal with only Supabase as a dependency in package.json, suggesting this may be a setup/initialization state or a very focused application.
-
-## Architecture
-
-### Supabase Integration
-- **Client Configuration**: Located in `src/integrations/supabase/client.ts`
-- **Type Definitions**: Located in `src/integrations/supabase/types.ts` (auto-generated, should not be edited manually)
-- **Database Schema**: Currently empty schema with no tables defined (all table types are `never`)
-- **Supabase Config**: Project configuration in `supabase/config.toml`
-
-### Key Files
-- `src/integrations/supabase/client.ts` - Supabase client instance with localStorage auth
-- `src/integrations/supabase/types.ts` - TypeScript type definitions for database schema
-- `supabase/config.toml` - Supabase project configuration
-- `.env.example` - Environment variable templates for various AI APIs
-- `.env.local` - Contains Supabase URL and anon key (already configured)
-
-### Environment Configuration
-The project includes templates for multiple AI service API keys in `.env.example`:
-- Anthropic, Perplexity, OpenAI, OpenRouter, Google, Mistral, xAI, Azure OpenAI, Ollama
-
-## Development Setup
-
-### Supabase Connection
-The project is already connected to a Supabase instance:
-- URL: `https://clvdvpbnuifxedpqgrgo.supabase.co`
-- Project ID: `clvdvpbnuifxedpqgrgo`
-- Auth is configured with localStorage and session persistence
-
-### Database Schema
-Currently the database schema is empty. When adding tables:
-1. Define tables in Supabase dashboard or SQL
-2. Update types by regenerating the type definitions
-3. Import the `supabase` client from `@/integrations/supabase/client` in your components
-
-## Code Patterns
-
-### Importing Supabase Client
-```typescript
-import { supabase } from "@/integrations/supabase/client";
-```
-
-### Environment Variables
-Use `.env.local` for local development. The file already contains the necessary Supabase configuration.
-
-## Build System
-
-This appears to be a minimal setup with no build scripts defined in package.json. The presence of a `dist` directory and `tsconfig.tsbuildinfo` suggests TypeScript compilation is happening, likely through another tool or framework not visible in the current package.json.
-
-# 🚀 NEONPRO PROJECT CONSTITUTION
-
-## MANDATORY READ:
-
-- **[Tech Stack](docs/architecture/tech-stack.md)** - Complete technology decisions and rationale
-- **[Frontend Architecture](docs/architecture/frontend-architecture.md)** - Frontend structure and patterns
-
-### Key Commands
-
-The following commands are available at the root of the monorepo:
-
-**Development**
-
-- `bun dev`: Start the development servers for all apps.
-- `bun build`: Build all apps and packages.
-
-**Testing (Functional)**
-
-- `bun test`: Run unit and integration tests for packages
-- `bun test:coverage`: Generate code coverage report
-
-**Quality Assurance**
-
-- `bun lint`: Lint codebase with OXLint (50-100x faster than ESLint) ✅
-- `bun lint:fix`: Auto-fix linting issues
-- `bun format`: Format codebase with Biome
-- `bunx biome check`: Alternative code quality validation
-
-**Type Safety**
-
-- `bun type-check`: Run TypeScript type checking
-- `bunx biome check --apply`: Auto-fix code issues
+**Scope**: All AI-assisted development tasks including code implementation, architecture decisions, documentation, testing, and deployment workflows.
 
 ## Core Principles
 
@@ -127,216 +47,421 @@ CORE_STANDARDS:
 
 **Quality Standard**: ≥9.5/10 rating on all deliveries
 
-## Project Architecture
+## Core Project Identity
 
-### Technology Stack
+### Project Overview
+**AegisWallet** is a voice-first autonomous financial assistant designed for the Brazilian market, targeting 95% automation of financial management tasks. It is NOT a cryptocurrency wallet application.
 
-**Core Technologies**: Bun + Hono + React 19 + TypeScript + Supabase
-**Frontend**: TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS
-**Backend**: tRPC v11 + Hono (Edge-first) + Supabase Functions
-**Database**: Supabase (Postgres + Auth + Realtime + RLS)
+**Core Mission**: Democratize financial automation in Brazil through voice-first AI assistance, progressive trust building (50% → 95% autonomy), and seamless integration with Brazilian financial systems.
 
-**Package Manager**: Bun (3-5x faster than npm/pnpm)
-**Testing**: Vitest + Playwright + OXLint (50-100x faster linting)
+### Technology Stack Mandate
+- **Core**: Bun + Hono + React 19 + TypeScript + Supabase
+- **Frontend**: TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS
+- **Backend**: tRPC v11 + Hono (Edge-first) + Supabase Functions
+- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
+- **Package Manager**: Bun (3-5x faster than npm/pnpm)
 
-**WCAG 2.1 AA+**: Accessibility compliance mandatory
+## Implementation Guidelines
 
-## Development Standards
+### Architectural Rules
 
-### Code Quality
+**MUST**:
+- Follow KISS (Keep It Simple, Stupid) and YAGNI (You Aren't Gonna Need It) principles
+- Maintain single repository structure with current `src/` organization
+- Use tRPC v11 for all API procedures with TypeScript strict mode
+- Implement Row Level Security (RLS) on all database tables
+- Use Supabase client integration patterns from `src/integrations/supabase/client.ts`
+- Preserve existing project structure and avoid over-engineering
 
-**TypeScript Strict Mode**: Maximum type safety enforcement
+**SHOULD**:
+- Prioritize voice-first interface design in all user interactions
+- Design for Brazilian financial system integration (PIX, boletos, Open Banking)
+- Implement progressive AI autonomy levels (50% → 95% trust)
+- Use edge-first architecture with Hono for optimal performance
+- Apply LGPD compliance principles in all data handling
 
-- Strict null checks and type inference
-- No implicit any types allowed
-- Comprehensive interface definitions
+**MAY**:
+- Add AI provider factory pattern when scaling user base
+- Implement Belvo API integration in future development phases
+- Add advanced analytics and insights features
+- Create multi-language support beyond Portuguese
 
-**Code Organization**: Clean architecture principles
+**MUST NOT**:
+- Create microservices architecture (maintain monolithic approach)
+- Use ORMs or abstract database layers (direct Supabase SDK usage)
+- Implement complex authentication flows (use Supabase Auth patterns)
+- Over-engineer solutions for "just in case" scenarios
+- Modify existing database schema without proper migration planning
 
-- Feature-based folder structure
-- Separation of concerns maintained
-- Consistent naming conventions
+### Code Quality Standards
 
-**Import Standards**: Optimized module management
+**MUST**:
+- Use TypeScript strict mode with no implicit any types
+- Implement comprehensive Zod validation for all API inputs
+- Write meaningful commit messages following conventional commits
+- Maintain 90%+ test coverage for critical components
+- Use OXLint for code quality validation (50-100x faster than ESLint)
 
-- Absolute imports for internal modules
-- Proper barrel exports organization
-- Tree-shaking optimization support
+**SHOULD**:
+- Follow existing naming conventions and code patterns
+- Use absolute imports for internal modules
+- Implement proper error handling with user-friendly messages
+- Use TanStack Query for server state management
+- Apply Tailwind CSS for styling with shadcn/ui components
 
-### Testing Requirements
+### Code Examples
 
-**Test Coverage**: Minimum 90% for critical components
+```typescript
+// ✅ DO: Proper tRPC procedure with validation
+export const createTransactionRouter = (t: any) => ({
+  create: t.procedure
+    .input(z.object({
+      description: z.string().min(1),
+      amount: z.number(),
+      category: z.string(),
+      date: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.session?.user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Must be logged in',
+        })
+      }
 
-- Unit tests for business logic
-- Integration tests for API endpoints
-- E2E tests for user workflows
+      const { data, error } = await ctx.supabase
+        .from('transactions')
+        .insert({
+          user_id: ctx.user.id,
+          description: input.description,
+          amount: input.amount,
+          category: input.category,
+          date: input.date || new Date().toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-**Testing Tools**: Bun-optimized testing stack
+      if (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error.message,
+        })
+      }
 
-- Vitest for unit/integration tests (3-5x faster)
-- Playwright for E2E automation (3 essential browsers)
-- OXLint for code quality validation (50-100x faster)
+      return data
+    }),
+})
 
-**Performance Testing**: Healthcare-optimized benchmarks
-
-- Performance metrics API testing with timeout optimization
-- Memory usage validation and optimization tracking
-- Edge function performance verification
-- Healthcare compliance performance standards
-
-```yaml
-validation:
-  vibecoder_integration: "Quality Validation & Testing with constitutional enforcement gates"
-  architecture_analysis: "Always check architecture docs for best practices validation"
-  technology_excellence: "Framework best practices compliance and performance optimization"
-  qa_mandatory:
-    post_modification_checks:
-      - "Syntax errors verification with zero tolerance policy"
-      - "Duplicates/orphans detection with cleanup protocols"
-      - "Feature validation against requirements with completeness verification"
-      - "Requirements compliance with constitutional principles validation"
-      - "Security vulnerabilities assessment with compliance verification"
-      - "Test coverage ≥90% with comprehensive testing protocols"
-  verification_rule: "Never assume changes complete without explicit verification"
+// ❌ DON'T: Skip validation or error handling
+export const badExample = (t: any) => ({
+  create: t.procedure
+    .mutation(async ({ ctx, input }) => {
+      // No validation, no error handling - VIOLATION
+      await ctx.supabase
+        .from('transactions')
+        .insert(input)
+    }),
+})
 ```
 
-### Security Standards
+```typescript
+// ✅ DO: Proper Supabase client usage
+import { supabase } from "@/integrations/supabase/client";
 
-**Input Validation**: Mandatory sanitization
+const { data: transactions, error } = await supabase
+  .from('transactions')
+  .select('*')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false })
 
-- Zod schema validation for all inputs
-- SQL injection prevention via RLS
-- XSS protection with proper escaping
+if (error) {
+  throw new Error(`Transaction fetch failed: ${error.message}`)
+}
 
-**Authentication & Authorization**: Multi-layer security
-
-- JWT with refresh token rotation
-- Role-based access control (RBAC)
-- Session management with audit trails
-
-**Data Protection**: Healthcare compliance enforcement
-
-- Encryption at rest and in transit
-- Patient data access logging
-- Automated compliance violation detection
-
-**Theme Integration**:
-
-```bash
-# Install specific theme from tweakcn.com
-bunx shadcn@latest add https://tweakcn.com/themes/cmesqts4l000r04l7bgdqfpxb
+// ❌ DON'T: Direct API calls or client-side filtering
+const allTransactions = await fetch('/api/transactions')
+const userTransactions = allTransactions.filter(t => t.user_id === userId)
 ```
 
-**Documentation Research**:
+## Database & API Standards
 
-- **MUST** use Context7 MCP for component customization: `search_documentation("shadcn/ui CLI component customization monorepo")`
-- Official docs: https://ui.shadcn.com/docs/cli
+### Database Schema Rules
 
-### Documentation Research Protocol
+**MUST**:
+- Use PostgreSQL with Supabase integration
+- Implement RLS policies on all tables with tenant isolation
+- Use UUID primary keys for all tables
+- Include `created_at` and `updated_at` timestamps
+- Generate TypeScript types via Supabase CLI
 
-**MANDATORY STEPS** before executing any CLI command:
+**SHOULD**:
+- Use descriptive table and column names in snake_case
+- Implement proper foreign key relationships
+- Use appropriate constraints and indexes
+- Plan migrations carefully with rollback strategies
+
+### API Design Standards
+
+**MUST**:
+- Use tRPC v11 for all API procedures
+- Implement proper input validation with Zod schemas
+- Use consistent error handling patterns
+- Return consistent response formats
+- Implement proper authentication checks
+
+**Examples**:
+
+```typescript
+// ✅ DO: Consistent error handling
+try {
+  const result = await operation()
+  return { success: true, data: result }
+} catch (error) {
+  console.error('Operation failed:', error)
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Operation failed. Please try again.',
+  })
+}
+
+// ❌ DON'T: Inconsistent error responses
+if (error) {
+  return { error: error.message } // Inconsistent format
+}
+```
+
+## Development Workflow Standards
+
+### Mandatory Development Process
+
+**Phase 1: Analysis & Planning**
+1. **Sequential Thinking**: Always use sequential-thinking tool first
+2. **Requirements Analysis**: Understand complete requirements before implementation
+3. **Context Research**: Use Context7 MCP for official documentation research
+4. **Architecture Review**: Check existing architecture docs for patterns
+
+**Phase 2: Implementation**
+1. **Tool Selection**: Use appropriate MCP tools (serena, desktop-commander)
+2. **Code Quality**: Follow established patterns and standards
+3. **Testing**: Implement comprehensive testing during development
+4. **Validation**: Verify functionality against requirements
+
+**Phase 3: Quality Assurance**
+1. **Code Review**: Validate against quality criteria
+2. **Testing**: Ensure 90%+ coverage for critical components
+3. **Security**: Verify no vulnerabilities in implementation
+4. **Performance**: Confirm no regression in Core Web Vitals
+
+### Research Protocol
+
+**MANDATORY STEPS** before implementing unfamiliar patterns:
 
 1. **Context7 MCP Research**:
    ```typescript
-   // Example research query structure
+   // Research query structure
    search_documentation({
-     query: 'service_name CLI command_type best_practices project_context',
+     query: 'technology_name pattern_type best_practices project_context',
      sources: ['official_docs', 'github_issues', 'community_guides'],
    })
    ```
 
 2. **Compatibility Verification**:
-   - Confirm command works with Bun runtime
+   - Confirm compatibility with Bun runtime
    - Verify TypeScript 5.9+ compatibility
+   - Check integration with existing stack
 
-3. **Prerequisites Check**:
-   - Authentication status verified
-   - Required environment variables set
-   - Project configuration files present
-   - Dependencies installed and up-to-date
+3. **Implementation Planning**:
+   - Document specific approach
+   - Plan integration with existing code
+   - Identify potential conflicts or dependencies
 
-4. **Command Documentation**:
-   - Document command pattern in this file
-   - Add to project runbook if recurring
-   - Include error handling procedures
-   - Note any project-specific modifications
+## Testing & Quality Assurance
 
-### Error Handling Procedures
+### Testing Requirements
 
-**CLI Command Failure Protocol**:
+**MUST**:
+- Achieve 90%+ test coverage for critical business logic
+- Use Vitest for unit/integration tests (3-5x faster than Jest)
+- Implement E2E tests with Playwright for user workflows
+- Test RLS policies with crafted JWTs
+- Include performance testing for financial operations
 
-```yaml
-step_1_capture:
-  action: "Capture full error output including exit code"
-  tool: "Desktop Commander MCP with error logging"
-
-step_2_research:
-  action: "Research error via Context7 MCP"
-  query_pattern: "service_name CLI error_message troubleshooting"
-
-step_3_verify:
-  checks:
-    - "Authentication status valid"
-    - "Configuration files correct"
-    - "Environment variables set"
-    - "Network connectivity available"
-
-step_4_fallback:
-  options:
-    - "Try alternative CLI flag/option"
-    - "Check service status page"
-    - "Verify API rate limits"
-    - "Review recent service updates"
-
-step_5_document:
-  action: "Document error and resolution in project knowledge base"
-  location: "docs/troubleshooting/cli-errors.md"
-```
-
-### Prohibited Practices
-
-**MUST NOT**:
-
-- Use web UIs for operations that have CLI equivalents
-- Make direct API calls when CLI tools are available
-- Manually edit configuration files managed by CLIs
-- Skip Context7 MCP research for unfamiliar commands
-- Execute CLI commands outside Desktop Commander MCP
-- Proceed with <90% confidence in command correctness
-
-**MUST ALWAYS**:
-
-- Research command syntax via Context7 MCP first
-- Execute all CLI operations via Desktop Commander MCP
-- Verify command success and side effects
-- Document new command patterns in this file
-- Update audit trails for all service operations
-- Maintain authentication status across sessions
-
-## Project Restrictions
-
-### MUST Requirements
-
-- **Type Safety**: Strict TypeScript mode, no any types
-- **Test Coverage**: Minimum 90% for critical components
-- **Security**: Zero vulnerabilities in production builds
-- **Performance**: All SLOs must be met or exceeded
-
-### MUST NOT Violations
-
-- **Data Protection**: Never expose patient data without encryption
-- **Authentication**: Never bypass security controls
-- **Compliance**: Never deploy without healthcare validation
-- **Performance**: Never degrade Core Web Vitals below targets
-- **Documentation**: Never commit without proper documentation
+**SHOULD**:
+- Test error scenarios and edge cases
+- Mock external dependencies appropriately
+- Use property-based testing for complex logic
+- Implement visual regression testing for UI components
 
 ### Quality Gates
 
 All code changes must pass:
-
 1. **Automated Tests**: 100% pass rate
 2. **Type Checking**: Zero TypeScript errors
 3. **Security Scan**: Zero high-severity vulnerabilities
-4. **Performance**: No regression in Core Web Vitals
+4. **Performance**: No Core Web Vitals regression
+5. **Code Quality**: OXLint validation with zero errors
+
+## Security & Compliance
+
+### Security Standards
+
+**MUST**:
+- Implement proper input validation and sanitization
+- Use Supabase RLS for data access control
+- Encrypt sensitive data at rest and in transit
+- Implement proper audit trails for financial operations
+- Use secure authentication patterns with Supabase Auth
+
+**SHOULD**:
+- Implement rate limiting for API endpoints
+- Use secure session management
+- Validate all external API responses
+- Implement proper CORS configuration
+
+### LGPD Compliance (Brazilian Data Protection)
+
+**MUST**:
+- Obtain explicit user consent for data processing
+- Implement data minimization principles
+- Provide data export and deletion capabilities
+- Maintain audit logs for data access
+- Implement proper data retention policies
+
+## Performance Standards
+
+### Performance Requirements
+
+**MUST**:
+- Edge read TTFB ≤ 150 ms (P95)
+- Realtime UI updates ≤ 1.5 s (P95)
+- Voice command processing ≤ 2 s (P95)
+- Maintain Lighthouse performance score ≥ 90
+
+**SHOULD**:
+- Optimize bundle size for fast loading
+- Implement proper caching strategies
+- Use lazy loading for non-critical features
+- Monitor performance metrics continuously
+
+## Dependencies & Relationships
+
+### Required Dependencies
+
+- **Technology Stack**: Bun + Hono + React 19 + TypeScript + Supabase
+- **Frontend**: TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS
+- **Backend**: tRPC v11 + Hono (Edge-first) + Supabase Functions
+- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
+
+### Enhancing Dependencies
+
+- **AI Integration**: OpenAI/Gemini for voice command processing (future phase)
+- **Financial APIs**: Belvo integration for bank connectivity (future phase)
+- **Analytics**: Customer behavior analytics (future phase)
+
+### Conflicting Dependencies
+
+- **Node.js**: Avoid Node-specific patterns that don't work with Bun
+- **Complex ORMs**: Avoid Prisma/TypeORM in favor of direct Supabase SDK
+- **Microservices**: Avoid distributed architecture complexity
+
+## Validation Criteria
+
+### Rule Compliance Checklist
+
+- [ ] Project identity correctly reflects financial assistant (not crypto wallet)
+- [ ] Technology stack compliance maintained
+- [ ] KISS/YAGNI principles followed in implementation
+- [ ] TypeScript strict mode enforced
+- [ ] tRPC patterns implemented correctly
+- [ ] Supabase integration patterns followed
+- [ ] Test coverage ≥90% for critical components
+- [ ] Security standards implemented
+- [ ] Performance benchmarks met
+- [ ] LGPD compliance maintained
+
+### Quality Metrics
+
+- **Code Quality**: OXLint validation with zero errors
+- **Type Safety**: Zero TypeScript errors in strict mode
+- **Test Coverage**: 90%+ for critical business logic
+- **Performance**: Core Web Vitals ≥ 90
+- **Security**: Zero high-severity vulnerabilities
+
+## Maintenance & Updates
+
+### Version Management
+
+- **Major Version** (X.0.0): Breaking changes requiring migration
+- **Minor Version** (X.Y.0): New functionality or significant clarifications
+- **Patch Version** (X.Y.Z): Bug fixes and minor improvements
+
+### Review Schedule
+
+- **Monthly Review**: Check technology stack updates and security patches
+- **Quarterly Review**: Comprehensive rule effectiveness assessment
+- **Annual Review**: Major architecture and standards evaluation
+- **Triggered Review**: When dependencies change or issues identified
+
+## Success Metrics
+
+### Development Excellence Metrics
+
+- **Implementation Speed**: Time from requirement to deployment
+- **Code Quality**: OXLint score and test coverage
+- **Bug Rate**: Production issues per feature
+- **Performance**: Core Web Vitals and API response times
+- **Team Productivity**: Features delivered per sprint
+
+### Project Success Metrics
+
+- **User Adoption**: Active users and feature utilization
+- **Automation Rate**: Percentage of financial tasks automated
+- **User Satisfaction**: Feedback scores and retention rates
+- **Technical Excellence**: Code quality and system reliability
+- **Compliance**: LGPD and financial regulation adherence
 
 ---
+
+## Quick Reference
+
+### Essential Commands
+```bash
+# Development
+bun dev                    # Start development servers
+bun build                  # Build all apps and packages
+
+# Quality Assurance
+bun lint                   # Lint with OXLint (50-100x faster)
+bun type-check             # TypeScript strict mode validation
+bun test                   # Run unit and integration tests
+bunx biome check           # Alternative quality validation
+
+# Database
+bunx supabase db push      # Apply database migrations
+bunx supabase gen types    # Generate TypeScript types
+```
+
+### Import Patterns
+```typescript
+// Supabase Client
+import { supabase } from "@/integrations/supabase/client"
+
+// tRPC
+import { router, publicProcedure, protectedProcedure } from "@/server/trpc"
+
+// React Query
+import { useQuery, useMutation } from "@tanstack/react-query"
+```
+
+### File Structure
+```
+src/
+├── integrations/supabase/    # Supabase client configuration
+├── server/                   # Backend tRPC procedures
+├── components/              # React components
+├── pages/                   # TanStack Router pages
+└── hooks/                   # Custom React hooks
+```
+
+**Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence.

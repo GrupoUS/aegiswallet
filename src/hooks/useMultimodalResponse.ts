@@ -1,233 +1,338 @@
 /**
- * Multimodal Response Hook
- * 
+ * useMultimodalResponse Hook
+ *
  * Story: 01.03 - Respostas Multimodais
- * 
+ *
  * Orchestrates multimodal responses:
- * - Text formatting
- * - TTS playback
+ * - Text-to-speech output
  * - Visual feedback
- * - Performance tracking
- * - Error handling
- * 
+ * - Accessibility support
+ * - User feedback collection
+ *
  * @module hooks/useMultimodalResponse
  */
 
-import { useState, useCallback, useRef } from 'react'
-import { createTTSService, type TTSConfig } from '@/lib/tts/textToSpeechService'
-import { generateResponse, type MultimodalResponse } from '@/lib/templates/responseTemplates'
-import { IntentType } from '@/lib/nlu/types'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  buildMultimodalResponse,
+  type MultimodalResponse,
+} from '@/lib/multimodal/responseTemplates'
+import type { IntentType } from '@/lib/nlu/types'
+import { getTTSService, type TTSResponse } from '@/lib/tts/textToSpeechService'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface MultimodalConfig {
-  ttsEnabled?: boolean
-  ttsConfig?: Partial<TTSConfig>
-  textOnlyMode?: boolean
-  performanceTracking?: boolean
+export interface UseMultimodalResponseOptions {
+  enableVoice?: boolean // Enable TTS output
+  enableVisual?: boolean // Enable visual feedback
+  autoSpeak?: boolean // Automatically speak responses
+  collectFeedback?: boolean // Collect user feedback
+  onFeedback?: (feedback: ResponseFeedback) => void
+  onResponse?: (response: MultimodalResponse) => void
 }
 
-export interface ResponseMetrics {
-  totalTime: number
-  ttsTime?: number
-  renderTime: number
-  success: boolean
+export interface ResponseFeedback {
+  responseId: string
+  rating: 1 | 2 | 3 | 4 | 5
+  helpful: boolean
+  comment?: string
+  timestamp: Date
+}
+
+export interface MultimodalResponseState {
+  currentResponse: MultimodalResponse | null
+  isSpeaking: boolean
+  isLoading: boolean
+  error: string | null
+  feedbackPrompt: boolean
 }
 
 export interface UseMultimodalResponseReturn {
-  response: MultimodalResponse | null
-  isLoading: boolean
-  isSpeaking: boolean
-  error: string | null
-  metrics: ResponseMetrics | null
-  generateAndSpeak: (intent: IntentType, data: any) => Promise<void>
+  // State
+  state: MultimodalResponseState
+
+  // Actions
+  sendResponse: (intent: IntentType | 'error' | 'confirmation', data: any) => Promise<void>
   stopSpeaking: () => void
   pauseSpeaking: () => void
   resumeSpeaking: () => void
+  repeatResponse: () => Promise<void>
   clearResponse: () => void
+
+  // Feedback
+  submitFeedback: (rating: 1 | 2 | 3 | 4 | 5, comment?: string) => void
+
+  // Config
+  toggleVoice: () => void
+  toggleVisual: () => void
 }
 
 // ============================================================================
-// Hook
+// Hook Implementation
 // ============================================================================
 
 export function useMultimodalResponse(
-  config: MultimodalConfig = {}
+  options: UseMultimodalResponseOptions = {}
 ): UseMultimodalResponseReturn {
   const {
-    ttsEnabled = true,
-    ttsConfig = {},
-    textOnlyMode = false,
-    performanceTracking = true,
-  } = config
+    enableVoice = true,
+    enableVisual = true,
+    autoSpeak = true,
+    collectFeedback = true,
+    onFeedback,
+    onResponse,
+  } = options
 
   // State
-  const [response, setResponse] = useState<MultimodalResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [metrics, setMetrics] = useState<ResponseMetrics | null>(null)
+  const [state, setState] = useState<MultimodalResponseState>({
+    currentResponse: null,
+    isSpeaking: false,
+    isLoading: false,
+    error: null,
+    feedbackPrompt: false,
+  })
 
-  // Refs
-  const ttsServiceRef = useRef(createTTSService(ttsConfig))
-  const startTimeRef = useRef<number>(0)
+  const [voiceEnabled, setVoiceEnabled] = useState(enableVoice)
+  const [visualEnabled, setVisualEnabled] = useState(enableVisual)
+  const [currentResponseId, setCurrentResponseId] = useState<string | null>(null)
+
+  // TTS Service
+  const ttsService = getTTSService()
 
   /**
-   * Generate response and speak it
+   * Send multimodal response
    */
-  const generateAndSpeak = useCallback(
-    async (intent: IntentType, data: any) => {
-      setIsLoading(true)
-      setError(null)
-      startTimeRef.current = Date.now()
+  const sendResponse = useCallback(
+    async (intent: IntentType | 'error' | 'confirmation', data: any) => {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
       try {
-        // Generate multimodal response
-        const generatedResponse = generateResponse(intent, data)
-        setResponse(generatedResponse)
+        // Build response from template
+        const response = buildMultimodalResponse(intent, data)
 
-        const renderTime = Date.now() - startTimeRef.current
+        // Generate response ID
+        const responseId = `response_${Date.now()}`
+        setCurrentResponseId(responseId)
 
-        // Speak if TTS enabled and not in text-only mode
-        if (ttsEnabled && !textOnlyMode) {
-          setIsSpeaking(true)
-          const ttsStartTime = Date.now()
+        // Update state with response
+        setState((prev) => ({
+          ...prev,
+          currentResponse: response,
+          isLoading: false,
+        }))
 
-          try {
-            await ttsServiceRef.current.speak(generatedResponse.speech)
-            const ttsTime = Date.now() - ttsStartTime
-
-            // Track metrics
-            if (performanceTracking) {
-              const totalTime = Date.now() - startTimeRef.current
-              setMetrics({
-                totalTime,
-                ttsTime,
-                renderTime,
-                success: true,
-              })
-
-              // Log warning if exceeds 800ms target
-              if (totalTime > 800) {
-                console.warn(`Response time exceeded target: ${totalTime}ms`)
-              }
-            }
-          } catch (ttsError) {
-            console.error('TTS error:', ttsError)
-            // Continue without TTS - visual response is still available
-            setMetrics({
-              totalTime: Date.now() - startTimeRef.current,
-              renderTime,
-              success: true,
-            })
-          } finally {
-            setIsSpeaking(false)
-          }
-        } else {
-          // Text-only mode or TTS disabled
-          if (performanceTracking) {
-            setMetrics({
-              totalTime: renderTime,
-              renderTime,
-              success: true,
-            })
-          }
+        // Notify callback
+        if (onResponse) {
+          onResponse(response)
         }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido'
-        setError(errorMessage)
 
-        if (performanceTracking) {
-          setMetrics({
-            totalTime: Date.now() - startTimeRef.current,
-            renderTime: 0,
-            success: false,
-          })
+        // Auto-speak if enabled
+        if (voiceEnabled && autoSpeak) {
+          setState((prev) => ({ ...prev, isSpeaking: true }))
+
+          const ttsResult = await ttsService.speak(response.voice, response.ssmlOptions)
+
+          setState((prev) => ({ ...prev, isSpeaking: false }))
+
+          // Track performance
+          if (ttsResult.duration > 800) {
+            console.warn(`[Multimodal] TTS response time exceeded target: ${ttsResult.duration}ms`)
+          }
+
+          // Show feedback prompt after speaking
+          if (collectFeedback) {
+            setTimeout(() => {
+              setState((prev) => ({ ...prev, feedbackPrompt: true }))
+            }, 1000)
+          }
+        } else if (collectFeedback) {
+          // Show feedback prompt immediately if not speaking
+          setTimeout(() => {
+            setState((prev) => ({ ...prev, feedbackPrompt: true }))
+          }, 2000)
         }
-      } finally {
-        setIsLoading(false)
+      } catch (error) {
+        console.error('[Multimodal] Error sending response:', error)
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }))
       }
     },
-    [ttsEnabled, textOnlyMode, performanceTracking]
+    [voiceEnabled, visualEnabled, autoSpeak, collectFeedback, onResponse]
   )
 
   /**
-   * Stop current speech
+   * Stop speaking
    */
   const stopSpeaking = useCallback(() => {
-    ttsServiceRef.current.stop()
-    setIsSpeaking(false)
+    ttsService.stop()
+    setState((prev) => ({ ...prev, isSpeaking: false }))
   }, [])
 
   /**
-   * Pause current speech
+   * Pause speaking
    */
   const pauseSpeaking = useCallback(() => {
-    ttsServiceRef.current.pause()
+    ttsService.pause()
   }, [])
 
   /**
-   * Resume paused speech
+   * Resume speaking
    */
   const resumeSpeaking = useCallback(() => {
-    ttsServiceRef.current.resume()
+    ttsService.resume()
   }, [])
+
+  /**
+   * Repeat current response
+   */
+  const repeatResponse = useCallback(async () => {
+    if (!state.currentResponse) return
+
+    setState((prev) => ({ ...prev, isSpeaking: true }))
+
+    try {
+      await ttsService.speak(state.currentResponse.voice, state.currentResponse.ssmlOptions)
+    } catch (error) {
+      console.error('[Multimodal] Error repeating response:', error)
+    } finally {
+      setState((prev) => ({ ...prev, isSpeaking: false }))
+    }
+  }, [state.currentResponse])
 
   /**
    * Clear current response
    */
   const clearResponse = useCallback(() => {
-    setResponse(null)
-    setError(null)
-    setMetrics(null)
     stopSpeaking()
+    setState({
+      currentResponse: null,
+      isSpeaking: false,
+      isLoading: false,
+      error: null,
+      feedbackPrompt: false,
+    })
+    setCurrentResponseId(null)
   }, [stopSpeaking])
 
+  /**
+   * Submit user feedback
+   */
+  const submitFeedback = useCallback(
+    (rating: 1 | 2 | 3 | 4 | 5, comment?: string) => {
+      if (!currentResponseId) return
+
+      const feedback: ResponseFeedback = {
+        responseId: currentResponseId,
+        rating,
+        helpful: rating >= 4,
+        comment,
+        timestamp: new Date(),
+      }
+
+      // Store feedback (in production, send to analytics/database)
+      console.log('[Multimodal] Feedback submitted:', feedback)
+
+      if (onFeedback) {
+        onFeedback(feedback)
+      }
+
+      // Hide feedback prompt
+      setState((prev) => ({ ...prev, feedbackPrompt: false }))
+    },
+    [currentResponseId, onFeedback]
+  )
+
+  /**
+   * Toggle voice output
+   */
+  const toggleVoice = useCallback(() => {
+    setVoiceEnabled((prev) => !prev)
+  }, [])
+
+  /**
+   * Toggle visual output
+   */
+  const toggleVisual = useCallback(() => {
+    setVisualEnabled((prev) => !prev)
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      ttsService.stop()
+    }
+  }, [])
+
   return {
-    response,
-    isLoading,
-    isSpeaking,
-    error,
-    metrics,
-    generateAndSpeak,
+    state,
+    sendResponse,
     stopSpeaking,
     pauseSpeaking,
     resumeSpeaking,
+    repeatResponse,
     clearResponse,
+    submitFeedback,
+    toggleVoice,
+    toggleVisual,
   }
 }
 
 // ============================================================================
-// Utility Hooks
+// Helper Hooks
 // ============================================================================
+
+/**
+ * Hook for response metrics tracking
+ */
+export function useResponseMetrics() {
+  const [metrics, setMetrics] = useState({
+    totalResponses: 0,
+    averageRating: 0,
+    averageResponseTime: 0,
+    feedbackCount: 0,
+  })
+
+  const trackResponse = useCallback((duration: number) => {
+    setMetrics((prev) => ({
+      ...prev,
+      totalResponses: prev.totalResponses + 1,
+      averageResponseTime:
+        (prev.averageResponseTime * prev.totalResponses + duration) / (prev.totalResponses + 1),
+    }))
+  }, [])
+
+  const trackFeedback = useCallback((rating: number) => {
+    setMetrics((prev) => ({
+      ...prev,
+      feedbackCount: prev.feedbackCount + 1,
+      averageRating: (prev.averageRating * prev.feedbackCount + rating) / (prev.feedbackCount + 1),
+    }))
+  }, [])
+
+  return {
+    metrics,
+    trackResponse,
+    trackFeedback,
+  }
+}
 
 /**
  * Hook for text-only mode (accessibility)
  */
-export function useTextOnlyResponse() {
-  return useMultimodalResponse({
-    ttsEnabled: false,
-    textOnlyMode: true,
-  })
-}
+export function useTextOnlyMode() {
+  const [textOnly, setTextOnly] = useState(false)
 
-/**
- * Hook with performance tracking disabled
- */
-export function useQuickResponse() {
-  return useMultimodalResponse({
-    performanceTracking: false,
-  })
-}
+  const toggleTextOnly = useCallback(() => {
+    setTextOnly((prev) => !prev)
+  }, [])
 
-/**
- * Hook with custom TTS configuration
- */
-export function useCustomVoiceResponse(ttsConfig: Partial<TTSConfig>) {
-  return useMultimodalResponse({
-    ttsConfig,
-  })
+  return {
+    textOnly,
+    toggleTextOnly,
+  }
 }
-

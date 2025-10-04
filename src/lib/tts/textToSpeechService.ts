@@ -170,9 +170,7 @@ export class TextToSpeechService {
       }
 
       // Generate speech
-      const processedText = this.config.ssmlEnabled
-        ? this.wrapWithSSML(text, options)
-        : text
+      const processedText = this.config.ssmlEnabled ? this.wrapWithSSML(text, options) : text
 
       await this.generateSpeech(processedText)
 

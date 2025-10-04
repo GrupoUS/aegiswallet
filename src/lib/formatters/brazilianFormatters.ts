@@ -1,14 +1,15 @@
 /**
- * Brazilian Formatters
+ * Brazilian Formatters for AegisWallet
  *
  * Story: 01.03 - Respostas Multimodais
  *
- * Comprehensive formatting utilities for Brazilian standards:
- * - Currency (R$ 1.234,56)
+ * Comprehensive formatters for Brazilian:
+ * - Currency (R$)
  * - Dates (DD/MM/YYYY)
- * - Numbers (1.234,56)
- * - Percentages (12,5%)
- * - Voice-friendly text for TTS
+ * - Numbers (thousands, millions)
+ * - Phone numbers
+ * - CPF/CNPJ
+ * - CEP
  *
  * @module formatters/brazilianFormatters
  */
@@ -18,52 +19,78 @@
 // ============================================================================
 
 /**
- * Format number as Brazilian currency (R$ 1.234,56)
+ * Format number as Brazilian currency (R$)
  */
 export function formatCurrency(
-  value: number,
+  amount: number,
   options?: {
     showSymbol?: boolean
     decimals?: number
+    compact?: boolean
   }
 ): string {
-  const { showSymbol = true, decimals = 2 } = options || {}
+  const { showSymbol = true, decimals = 2, compact = false } = options || {}
+
+  if (compact && Math.abs(amount) >= 1000) {
+    return formatCompactCurrency(amount, showSymbol)
+  }
 
   const formatted = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value)
+  }).format(amount)
 
   return showSymbol ? formatted : formatted.replace('R$', '').trim()
 }
 
 /**
- * Format currency for voice output (TTS)
- * Example: 1234.56 → "mil duzentos e trinta e quatro reais e cinquenta e seis centavos"
+ * Format currency with compact notation (1K, 1M)
  */
-export function formatCurrencyForVoice(value: number): string {
-  const reais = Math.floor(Math.abs(value))
-  const centavos = Math.round((Math.abs(value) - reais) * 100)
+export function formatCompactCurrency(amount: number, showSymbol = true): string {
+  const absAmount = Math.abs(amount)
+  const sign = amount < 0 ? '-' : ''
+  const symbol = showSymbol ? 'R$ ' : ''
 
-  let text = ''
-
-  // Handle negative
-  if (value < 0) {
-    text += 'menos '
+  if (absAmount >= 1_000_000_000) {
+    return `${sign}${symbol}${(absAmount / 1_000_000_000).toFixed(1)}B`
   }
 
-  // Format reais
-  if (reais === 0) {
-    text += 'zero reais'
-  } else {
-    text += numberToWords(reais) + (reais === 1 ? ' real' : ' reais')
+  if (absAmount >= 1_000_000) {
+    return `${sign}${symbol}${(absAmount / 1_000_000).toFixed(1)}M`
   }
 
-  // Format centavos
-  if (centavos > 0) {
-    text += ' e ' + numberToWords(centavos) + (centavos === 1 ? ' centavo' : ' centavos')
+  if (absAmount >= 1_000) {
+    return `${sign}${symbol}${(absAmount / 1_000).toFixed(1)}K`
+  }
+
+  return formatCurrency(amount, { showSymbol, decimals: 0 })
+}
+
+/**
+ * Format currency for voice output (natural speech)
+ */
+export function formatCurrencyForVoice(amount: number): string {
+  const absAmount = Math.abs(amount)
+  const sign = amount < 0 ? 'menos ' : ''
+
+  if (absAmount === 0) {
+    return 'zero reais'
+  }
+
+  if (absAmount < 1) {
+    const cents = Math.round(absAmount * 100)
+    return `${sign}${cents} ${cents === 1 ? 'centavo' : 'centavos'}`
+  }
+
+  const reais = Math.floor(absAmount)
+  const cents = Math.round((absAmount - reais) * 100)
+
+  let text = `${sign}${reais} ${reais === 1 ? 'real' : 'reais'}`
+
+  if (cents > 0) {
+    text += ` e ${cents} ${cents === 1 ? 'centavo' : 'centavos'}`
   }
 
   return text
@@ -76,80 +103,108 @@ export function formatCurrencyForVoice(value: number): string {
 /**
  * Format date as DD/MM/YYYY
  */
-export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+export function formatDate(
+  date: Date | string,
+  options?: {
+    showTime?: boolean
+    showWeekday?: boolean
+    relative?: boolean
+  }
+): string {
+  const { showTime = false, showWeekday = false, relative = false } = options || {}
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+
+  if (relative) {
+    const relativeDays = getRelativeDays(dateObj)
+    if (relativeDays !== null) return relativeDays
+  }
+
+  let formatted = dateObj.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(d)
+  })
+
+  if (showWeekday) {
+    const weekday = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' })
+    formatted = `${weekday}, ${formatted}`
+  }
+
+  if (showTime) {
+    const time = dateObj.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    formatted += ` às ${time}`
+  }
+
+  return formatted
 }
 
 /**
- * Format date with time (DD/MM/YYYY HH:mm)
+ * Get relative date description (hoje, amanhã, etc)
  */
-export function formatDateTime(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
-}
-
-/**
- * Format date as relative (hoje, amanhã, ontem, etc.)
- */
-export function formatRelativeDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+export function getRelativeDays(date: Date): string | null {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const targetDate = new Date(d)
+  const targetDate = new Date(date)
   targetDate.setHours(0, 0, 0, 0)
 
-  const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  const diffTime = targetDate.getTime() - today.getTime()
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return 'hoje'
-  if (diffDays === 1) return 'amanhã'
-  if (diffDays === -1) return 'ontem'
-  if (diffDays > 1 && diffDays <= 7) return `em ${diffDays} dias`
-  if (diffDays < -1 && diffDays >= -7) return `há ${Math.abs(diffDays)} dias`
-
-  return formatDate(d)
+  switch (diffDays) {
+    case 0:
+      return 'hoje'
+    case 1:
+      return 'amanhã'
+    case -1:
+      return 'ontem'
+    case 2:
+      return 'depois de amanhã'
+    case -2:
+      return 'anteontem'
+    default:
+      return null
+  }
 }
 
 /**
  * Format date for voice output
- * Example: 2025-01-04 → "quatro de janeiro de dois mil e vinte e cinco"
  */
 export function formatDateForVoice(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+  const dateObj = typeof date === 'string' ? new Date(date) : date
 
-  const day = d.getDate()
-  const month = d.getMonth()
-  const year = d.getFullYear()
+  const relative = getRelativeDays(dateObj)
+  if (relative) return relative
 
-  const months = [
-    'janeiro',
-    'fevereiro',
-    'março',
-    'abril',
-    'maio',
-    'junho',
-    'julho',
-    'agosto',
-    'setembro',
-    'outubro',
-    'novembro',
-    'dezembro',
-  ]
+  const day = dateObj.getDate()
+  const month = dateObj.toLocaleDateString('pt-BR', { month: 'long' })
+  const year = dateObj.getFullYear()
 
-  return `${numberToWords(day)} de ${months[month]} de ${yearToWords(year)}`
+  return `dia ${day} de ${month} de ${year}`
+}
+
+/**
+ * Format time range (e.g., "das 9h às 17h")
+ */
+export function formatTimeRange(start: Date | string, end: Date | string): string {
+  const startTime = (typeof start === 'string' ? new Date(start) : start).toLocaleTimeString(
+    'pt-BR',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  )
+
+  const endTime = (typeof end === 'string' ? new Date(end) : end).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  return `das ${startTime} às ${endTime}`
 }
 
 // ============================================================================
@@ -157,162 +212,114 @@ export function formatDateForVoice(date: Date | string): string {
 // ============================================================================
 
 /**
- * Format number with Brazilian conventions (1.234,56)
+ * Format number with Brazilian thousands separator
  */
-export function formatNumber(value: number, decimals: number = 2): string {
+export function formatNumber(
+  num: number,
+  options?: {
+    decimals?: number
+    compact?: boolean
+  }
+): string {
+  const { decimals = 0, compact = false } = options || {}
+
+  if (compact && Math.abs(num) >= 1000) {
+    return formatCompactNumber(num)
+  }
+
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value)
+  }).format(num)
 }
 
 /**
- * Format large numbers with abbreviations (1,2 mi, 1,5 mil)
+ * Format number with compact notation
  */
-export function formatLargeNumber(value: number): string {
-  const absValue = Math.abs(value)
+export function formatCompactNumber(num: number): string {
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
 
-  if (absValue >= 1000000) {
-    return formatNumber(value / 1000000, 1) + ' mi'
-  }
-  if (absValue >= 1000) {
-    return formatNumber(value / 1000, 1) + ' mil'
+  if (absNum >= 1_000_000_000) {
+    return `${sign}${(absNum / 1_000_000_000).toFixed(1)}B`
   }
 
-  return formatNumber(value, 0)
-}
+  if (absNum >= 1_000_000) {
+    return `${sign}${(absNum / 1_000_000).toFixed(1)}M`
+  }
 
-// ============================================================================
-// Percentage Formatting
-// ============================================================================
+  if (absNum >= 1_000) {
+    return `${sign}${(absNum / 1_000).toFixed(1)}K`
+  }
 
-/**
- * Format percentage (12,5%)
- */
-export function formatPercentage(value: number, decimals: number = 1): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'percent',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value / 100)
+  return formatNumber(num)
 }
 
 /**
- * Format percentage for voice output
- * Example: 12.5 → "doze vírgula cinco por cento"
+ * Format percentage
  */
-export function formatPercentageForVoice(value: number): string {
-  const intPart = Math.floor(value)
-  const decPart = Math.round((value - intPart) * 10)
-
-  let text = numberToWords(intPart)
-
-  if (decPart > 0) {
-    text += ' vírgula ' + numberToWords(decPart)
-  }
-
-  text += ' por cento'
-
-  return text
+export function formatPercentage(value: number, decimals = 1): string {
+  return `${value.toFixed(decimals)}%`
 }
 
 // ============================================================================
-// Number to Words Conversion (Brazilian Portuguese)
+// Document Formatting (CPF, CNPJ, etc)
 // ============================================================================
 
-const UNITS = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
-const TEENS = [
-  'dez',
-  'onze',
-  'doze',
-  'treze',
-  'quatorze',
-  'quinze',
-  'dezesseis',
-  'dezessete',
-  'dezoito',
-  'dezenove',
-]
-const TENS = [
-  '',
-  '',
-  'vinte',
-  'trinta',
-  'quarenta',
-  'cinquenta',
-  'sessenta',
-  'setenta',
-  'oitenta',
-  'noventa',
-]
-const HUNDREDS = [
-  '',
-  'cento',
-  'duzentos',
-  'trezentos',
-  'quatrocentos',
-  'quinhentos',
-  'seiscentos',
-  'setecentos',
-  'oitocentos',
-  'novecentos',
-]
-
 /**
- * Convert number to words (Brazilian Portuguese)
+ * Format CPF (000.000.000-00)
  */
-export function numberToWords(num: number): string {
-  if (num === 0) return 'zero'
-  if (num === 100) return 'cem'
+export function formatCPF(cpf: string): string {
+  const cleaned = cpf.replace(/\D/g, '')
 
-  const parts: string[] = []
-
-  // Millions
-  if (num >= 1000000) {
-    const millions = Math.floor(num / 1000000)
-    parts.push(millions === 1 ? 'um milhão' : `${numberToWords(millions)} milhões`)
-    num %= 1000000
+  if (cleaned.length !== 11) {
+    return cpf // Return as-is if invalid
   }
 
-  // Thousands
-  if (num >= 1000) {
-    const thousands = Math.floor(num / 1000)
-    parts.push(thousands === 1 ? 'mil' : `${numberToWords(thousands)} mil`)
-    num %= 1000
-  }
-
-  // Hundreds
-  if (num >= 100) {
-    const hundreds = Math.floor(num / 100)
-    parts.push(HUNDREDS[hundreds])
-    num %= 100
-  }
-
-  // Tens and units
-  if (num >= 20) {
-    const tens = Math.floor(num / 10)
-    const units = num % 10
-    parts.push(TENS[tens] + (units > 0 ? ` e ${UNITS[units]}` : ''))
-  } else if (num >= 10) {
-    parts.push(TEENS[num - 10])
-  } else if (num > 0) {
-    parts.push(UNITS[num])
-  }
-
-  return parts.join(' e ')
+  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
 }
 
 /**
- * Convert year to words
+ * Format CNPJ (00.000.000/0000-00)
  */
-function yearToWords(year: number): string {
-  if (year >= 2000 && year < 2010) {
-    return `dois mil e ${numberToWords(year - 2000)}`
+export function formatCNPJ(cnpj: string): string {
+  const cleaned = cnpj.replace(/\D/g, '')
+
+  if (cleaned.length !== 14) {
+    return cnpj
   }
-  if (year >= 2010) {
-    return `dois mil e ${numberToWords(year - 2000)}`
+
+  return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+}
+
+/**
+ * Format CEP (00000-000)
+ */
+export function formatCEP(cep: string): string {
+  const cleaned = cep.replace(/\D/g, '')
+
+  if (cleaned.length !== 8) {
+    return cep
   }
-  return numberToWords(year)
+
+  return cleaned.replace(/(\d{5})(\d{3})/, '$1-$2')
+}
+
+/**
+ * Format phone number
+ */
+export function formatPhone(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '')
+
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+  }
+
+  if (cleaned.length === 11) {
+    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  }
+
+  return phone
 }
 
 // ============================================================================
@@ -320,16 +327,146 @@ function yearToWords(year: number): string {
 // ============================================================================
 
 /**
- * Parse Brazilian currency string to number
+ * Pluralize word based on count
  */
-export function parseCurrency(value: string): number {
-  return parseFloat(value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim())
+export function pluralize(count: number, singular: string, plural?: string): string {
+  if (count === 1) return singular
+
+  return plural || `${singular}s`
 }
 
 /**
- * Parse Brazilian date string (DD/MM/YYYY) to Date
+ * Format duration in Portuguese
  */
-export function parseDate(value: string): Date {
-  const [day, month, year] = value.split('/').map(Number)
-  return new Date(year, month - 1, day)
+export function formatDuration(milliseconds: number): string {
+  const seconds = Math.floor(milliseconds / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) {
+    return `${days} ${pluralize(days, 'dia')}`
+  }
+
+  if (hours > 0) {
+    return `${hours} ${pluralize(hours, 'hora')}`
+  }
+
+  if (minutes > 0) {
+    return `${minutes} ${pluralize(minutes, 'minuto')}`
+  }
+
+  return `${seconds} ${pluralize(seconds, 'segundo')}`
+}
+
+/**
+ * Format file size
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+}
+
+/**
+ * Ordinal numbers in Portuguese (1º, 2º, 3ª, etc)
+ */
+export function ordinal(num: number, gender: 'masculine' | 'feminine' = 'masculine'): string {
+  const suffix = gender === 'masculine' ? 'º' : 'ª'
+  return `${num}${suffix}`
+}
+
+// ============================================================================
+// Validation Helpers
+// ============================================================================
+
+/**
+ * Validate CPF format
+ */
+export function isValidCPF(cpf: string): boolean {
+  const cleaned = cpf.replace(/\D/g, '')
+
+  if (cleaned.length !== 11) return false
+  if (/^(\d)\1{10}$/.test(cleaned)) return false // All same digits
+
+  // Calculate verification digits
+  let sum = 0
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleaned.charAt(i)) * (10 - i)
+  }
+  let digit = 11 - (sum % 11)
+  if (digit >= 10) digit = 0
+
+  if (digit !== parseInt(cleaned.charAt(9))) return false
+
+  sum = 0
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleaned.charAt(i)) * (11 - i)
+  }
+  digit = 11 - (sum % 11)
+  if (digit >= 10) digit = 0
+
+  return digit === parseInt(cleaned.charAt(10))
+}
+
+/**
+ * Validate CNPJ format
+ */
+export function isValidCNPJ(cnpj: string): boolean {
+  const cleaned = cnpj.replace(/\D/g, '')
+
+  if (cleaned.length !== 14) return false
+  if (/^(\d)\1{13}$/.test(cleaned)) return false
+
+  // CNPJ validation algorithm
+  const weights = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+
+  const calculateDigit = (base: string, weights: number[]): number => {
+    let sum = 0
+    for (let i = 0; i < base.length; i++) {
+      sum += parseInt(base[i]) * weights[i]
+    }
+    const remainder = sum % 11
+    return remainder < 2 ? 0 : 11 - remainder
+  }
+
+  const base = cleaned.substring(0, 12)
+  const digit1 = calculateDigit(base, weights.slice(1))
+  const digit2 = calculateDigit(base + digit1, weights)
+
+  return cleaned === base + digit1 + digit2
+}
+
+// ============================================================================
+// Exports
+// ============================================================================
+
+export const brazilianFormatters = {
+  currency: formatCurrency,
+  compactCurrency: formatCompactCurrency,
+  currencyForVoice: formatCurrencyForVoice,
+  date: formatDate,
+  dateForVoice: formatDateForVoice,
+  relativeDays: getRelativeDays,
+  timeRange: formatTimeRange,
+  number: formatNumber,
+  compactNumber: formatCompactNumber,
+  percentage: formatPercentage,
+  cpf: formatCPF,
+  cnpj: formatCNPJ,
+  cep: formatCEP,
+  phone: formatPhone,
+  pluralize,
+  duration: formatDuration,
+  fileSize: formatFileSize,
+  ordinal,
+}
+
+export const brazilianValidators = {
+  cpf: isValidCPF,
+  cnpj: isValidCNPJ,
 }

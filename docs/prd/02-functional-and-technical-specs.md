@@ -282,3 +282,27 @@
 - **BACEN:** Aprovação para operações financeiras automatizadas
 - **PCI DSS:** Se processando cartões diretamente
 - **SOC 2:** Type II preparation para enterprise customers
+## 8. Human vs Agent Responsibilities
+
+| Workflow | Human Owner | Agent Owner | Notes |
+| --- | --- | --- | --- |
+| Provider account creation & credential rotation | Product Owner + Finance | Developer Agent | Humans approve contracts and request new keys; agents apply them to Supabase/Vercel environments. |
+| PIX / boleto execution above R$1.000 | End User | Autonomy Engine | User provides confirmation (voice + biometric); agent executes payment and logs audit trail. |
+| Transaction categorization & insights | — | Autonomy Engine | Fully automated; user can override categories via UI when confidence <75%. |
+| Incident triage & communication | Support Lead | Monitoring Agent | Support decides communication, monitoring agent raises alert and attaches logs. |
+| Data export or deletion (LGPD) | End User + Support | Developer Agent | User requests via UI; agent triggers Supabase function and records completion. |
+
+- Keep human tasks limited to approvals, legal agreements, and high-trust confirmations.
+- All code changes, configuration toggles, and automated decision logging remain agent responsibilities to guarantee repeatability.
+- When responsibilities shift, update this table and notify QA so test cases reflect the new flow.
+
+## 9. User Support & Incident Playbook
+
+1. **Detection & triage:** Monitoring alerts or user reports trigger a support ticket. Capture command ID, user impact, and affected financial provider.
+2. **User communication:** Within 30 minutes, send status via in-app banner + email using localized templates (“Estamos trabalhando...”); include manual workaround if available.
+3. **Remediation loop:** Developer agent applies fix or rollback, support confirms with the user, and QA closes the ticket only after verifying timeline and reimbursements (if applicable).
+
+Artifacts:
+- Templates stored in `docs/qa/assessments/support-templates.md` (create if missing).
+- Ticket log updated in the shared board with incident severity (P1–P3) and resolution time.
+- Post-incident review scheduled within 48 hours to capture learnings and update automation safeguards.

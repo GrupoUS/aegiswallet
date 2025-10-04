@@ -4,6 +4,20 @@
 
 This specification defines the integration patterns for Brazilian financial systems including PIX instant payments, boletos (traditional payment slips), and local financial behaviors. The design respects Brazilian cultural expectations while leveraging the autonomous AI capabilities.
 
+## Third-Party Integration Runbook
+
+| Step | Owner | Action | Notes |
+| --- | --- | --- | --- |
+| 1 | Product Owner | Confirm contractual access to Belvo (Open Banking) and OpenPix sandbox; record account IDs in the secure vault. | Use company password manager; no secrets in repo. |
+| 2 | Engineering | Request API keys via Belvo/OpenPix dashboards; store them in Supabase secrets (`supabase secrets set BELVO_SECRET=...`). | Rotate keys every 90 days and after incidents. |
+| 3 | Engineering | Configure Vercel env vars (`vercel env add BELVO_SECRET`) and sync `.env.local` via `vercel env pull`. | Keep local `.env` out of version control. |
+| 4 | QA | Validate sandbox connectivity with smoke scripts (`bun run test:integration --filter=open-banking`). | Document failures in QA checklist. |
+| 5 | Support Lead | Maintain escalation contacts for each provider (email, phone, SLA). | Update quarterly; store summary in `docs/qa/assessments/provider-contacts.md` (create if missing). |
+
+- **Credential storage:** Supabase Edge Functions access secrets via the environment; do not persist API keys in the database. Document every credential change in the release notes for traceability.
+- **Rate-limit guardrails:** Default to Belvo 120 req/min and OpenPix 60 req/min. Implement circuit-breakers in tRPC procedures when 429s occur.
+- **Offline fallback:** Queue PIX and boleto actions locally when providers are down; replay once health checks pass to avoid user-visible failures.
+
 ## Brazilian Financial Ecosystem Integration
 
 ### Core Payment Methods

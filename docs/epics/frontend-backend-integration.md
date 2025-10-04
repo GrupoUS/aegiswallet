@@ -179,6 +179,17 @@ Este épico orquestra a entrega do frontend definitivo do AegisWallet totalmente
 | Segurança PIX/Boletos | Estratégia final de biometria/OTP | Pendente alinhamento com Security |
 | Telemetria Edge | Infra para ingestão de logs de voz e web vitals | Planejado |
 
+### Mapa de Dependências Entre Épicos
+
+| Épico | Depende de | Desbloqueia | Observações |
+| --- | --- | --- | --- |
+| Integração Frontend ↔ Backend (este) | `voice-interface-foundation.md` para intents e UX de voz | `banking-integration-core.md` para fluxos PIX com dados reais | Validar intents com mocks antes de tocar produção. |
+| `frontend-implementation.md` | Migração de layouts definidos no design system (`design-system.md`) | Testes de acessibilidade e performance (D2) | Sincronizar componentes shadcn/ui compartilhados. |
+| `smart-payment-automation.md` | Procedimentos tRPC e auditoria deste épico | Automação de boletos e PIX sem intervenção humana | Liberar somente após métricas de erro <2%. |
+
+- Reavalie o mapa em cada planejamento quinzenal; tratar bloqueios como riscos categoria A.
+- Documente decisões de priorização diretamente nas histórias para manter rastreabilidade.
+
 ## 8. Roadmap & Marco de Entrega
 
 | Fase | Período (estimado) | Objetivos |
@@ -208,7 +219,15 @@ Este épico orquestra a entrega do frontend definitivo do AegisWallet totalmente
 | Dependência de AI Squad | Médio | Definir mocks estáveis e contratos mínimos desde F1 |
 
 ---
-## 11. Governança & Próximos Passos
+## 11. Histórico de Integração & Contexto
+
+- **2024 Q4:** MVP de voz criado no épico `voice-interface-foundation.md`, fornecendo intents baseados em mocks de saldo.
+- **2025 Q1:** Backend reforçou contratos tRPC no épico `banking-integration-core.md`, habilitando sincronização real com Supabase.
+- **2025 Q3:** QA checklist revisada em `docs/qa/assessments/` apontou lacunas de rollback, motivando este plano consolidado.
+
+Registre futuras mudanças relevantes aqui para evitar perda de contexto quando equipes trocarem.
+
+## 12. Governança & Próximos Passos
 
 1. Validar este épico com líderes de Frontend, Backend e AI na próxima cerimônia de planejamento.
 2. Quebrar o backlog em stories detalhadas conforme prioridades e dependências.

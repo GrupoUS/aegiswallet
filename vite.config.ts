@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: true,
-      port: 5173,
+      port: 8080,
       proxy: {
         '/trpc': {
           target: 'http://localhost:3000',

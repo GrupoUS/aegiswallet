@@ -34,7 +34,7 @@ export default function Login() {
       } else if (isSignUp) {
         setError('Verifique seu email para confirmar o cadastro!')
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao processar sua solicitação')
     } finally {
       setLoading(false)
@@ -46,7 +46,7 @@ export default function Login() {
     setLoading(true)
     try {
       await signInWithGoogle()
-    } catch (err) {
+    } catch {
       setError('Erro ao fazer login com Google')
       setLoading(false)
     }

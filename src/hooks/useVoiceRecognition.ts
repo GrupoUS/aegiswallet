@@ -182,7 +182,7 @@ export function useVoiceRecognition() {
               parameters.recipient = transferMatch[1].trim()
             }
 
-            const amountMatch = transcript.match(/(?:r\$|reais)?\s*(\d+[,\.]?\d*)/i)
+            const amountMatch = transcript.match(/(?:r\$|reais)?\s*(\d+[,.]?\d*)/i)
             if (amountMatch) {
               parameters.amount = parseFloat(amountMatch[1].replace(',', '.'))
             }

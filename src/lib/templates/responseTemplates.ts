@@ -1,8 +1,8 @@
 /**
  * Response Templates for Multimodal Responses
- * 
+ *
  * Story: 01.03 - Respostas Multimodais
- * 
+ *
  * Templates for all 6 voice command intents:
  * - CHECK_BALANCE
  * - CHECK_BUDGET
@@ -10,20 +10,20 @@
  * - CHECK_INCOME
  * - FINANCIAL_PROJECTION
  * - TRANSFER_MONEY
- * 
+ *
  * @module templates/responseTemplates
  */
 
-import { IntentType } from '../nlu/types'
 import {
   formatCurrency,
   formatCurrencyForVoice,
   formatDate,
-  formatRelativeDate,
   formatDateForVoice,
-  formatPercentage,
   formatLargeNumber,
+  formatPercentage,
+  formatRelativeDate,
 } from '../formatters/brazilianFormatters'
+import { IntentType } from '../nlu/types'
 
 // ============================================================================
 // Types
@@ -364,10 +364,7 @@ export function generateErrorResponse(error: string): MultimodalResponse {
 /**
  * Generate response based on intent type
  */
-export function generateResponse(
-  intent: IntentType,
-  data: TemplateData
-): MultimodalResponse {
+export function generateResponse(intent: IntentType, data: TemplateData): MultimodalResponse {
   switch (intent) {
     case IntentType.CHECK_BALANCE:
       return generateBalanceResponse(data)
@@ -391,4 +388,3 @@ export function generateResponse(
       return generateErrorResponse('comando não reconhecido')
   }
 }
-

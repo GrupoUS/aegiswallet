@@ -84,15 +84,15 @@ export const createAuthRouter = (t: any) => ({
       })
     })
     .mutation(async ({ ctx }: { ctx: any }) => {
-    const { error } = await ctx.supabase.auth.signOut()
+      const { error } = await ctx.supabase.auth.signOut()
 
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: error.message,
-      })
-    }
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        })
+      }
 
-    return { success: true }
-  }),
+      return { success: true }
+    }),
 })

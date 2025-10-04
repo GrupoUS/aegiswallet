@@ -1,152 +1,163 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Calendar, CreditCard, FileText, AlertCircle, CheckCircle, Copy, QrCode } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Copy,
+  CreditCard,
+  FileText,
+  QrCode,
+} from 'lucide-react'
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 interface Boleto {
-  id: string;
-  name: string;
-  amount: number;
-  dueDate: Date;
-  status: 'pending' | 'paid' | 'overdue';
-  barcode?: string;
-  type: 'utility' | 'credit_card' | 'other';
+  id: string
+  name: string
+  amount: number
+  dueDate: Date
+  status: 'pending' | 'paid' | 'overdue'
+  barcode?: string
+  type: 'utility' | 'credit_card' | 'other'
 }
 
 interface BoletoPaymentProps {
-  className?: string;
+  className?: string
 }
 
 export function BoletoPayment({ className }: BoletoPaymentProps) {
-  const [boletoCode, setBoletoCode] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'debit' | 'credit'>('pix');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-  const [showQrCode, setShowQrCode] = useState(false);
+  const [boletoCode, setBoletoCode] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'debit' | 'credit'>('pix')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>(
+    'idle'
+  )
+  const [showQrCode, setShowQrCode] = useState(false)
 
   // Mock boletos data
   const mockBoletos: Boleto[] = [
     {
       id: '1',
       name: 'Energia Elétrica',
-      amount: 180.50,
+      amount: 180.5,
       dueDate: new Date('2024-10-15'),
       status: 'pending',
       barcode: '12345678901234567890123456789012345678901234',
-      type: 'utility'
+      type: 'utility',
     },
     {
       id: '2',
       name: 'Internet',
-      amount: 99.90,
+      amount: 99.9,
       dueDate: new Date('2024-10-20'),
       status: 'pending',
       barcode: '23456789012345678901234567890123456789012345',
-      type: 'utility'
+      type: 'utility',
     },
     {
       id: '3',
       name: 'Água',
-      amount: 85.00,
+      amount: 85.0,
       dueDate: new Date('2024-09-25'),
       status: 'overdue',
       barcode: '34567890123456789012345678901234567890123456',
-      type: 'utility'
-    }
-  ];
+      type: 'utility',
+    },
+  ]
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL'
-    }).format(amount);
-  };
+      currency: 'BRL',
+    }).format(amount)
+  }
 
   const formatBoletoCode = (value: string) => {
     // Remove non-digits and format as XXXXX.XXXXX XXXXX.XXXXX XXXXX.XXXXX XXXXX.XXXXXX
-    const cleanValue = value.replace(/[^\d]/g, '');
-    if (cleanValue.length <= 5) return cleanValue;
-    if (cleanValue.length <= 10) return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5)}`;
-    if (cleanValue.length <= 15) return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10)}`;
-    if (cleanValue.length <= 20) return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15)}`;
-    return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15, 20)}.${cleanValue.slice(20, 25)}`;
-  };
+    const cleanValue = value.replace(/[^\d]/g, '')
+    if (cleanValue.length <= 5) return cleanValue
+    if (cleanValue.length <= 10) return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5)}`
+    if (cleanValue.length <= 15)
+      return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10)}`
+    if (cleanValue.length <= 20)
+      return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15)}`
+    return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15, 20)}.${cleanValue.slice(20, 25)}`
+  }
 
   const validateBoletoCode = (code: string) => {
-    const cleanCode = code.replace(/[^\d]/g, '');
-    return cleanCode.length === 47 || cleanCode.length === 48;
-  };
+    const cleanCode = code.replace(/[^\d]/g, '')
+    return cleanCode.length === 47 || cleanCode.length === 48
+  }
 
   const getBoletoStatusColor = (status: Boleto['status']) => {
     switch (status) {
       case 'paid':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-600 bg-green-100'
       case 'overdue':
-        return 'text-red-600 bg-red-100';
+        return 'text-red-600 bg-red-100'
       default:
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-yellow-600 bg-yellow-100'
     }
-  };
+  }
 
   const getBoletoStatusText = (status: Boleto['status']) => {
     switch (status) {
       case 'paid':
-        return 'Pago';
+        return 'Pago'
       case 'overdue':
-        return 'Vencido';
+        return 'Vencido'
       default:
-        return 'A pagar';
+        return 'A pagar'
     }
-  };
+  }
 
   const handleBoletoCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBoletoCode(formatBoletoCode(e.target.value));
-  };
+    setBoletoCode(formatBoletoCode(e.target.value))
+  }
 
   const handlePayment = async () => {
     if (!validateBoletoCode(boletoCode)) {
-      setPaymentStatus('error');
-      return;
+      setPaymentStatus('error')
+      return
     }
 
-    setIsProcessing(true);
-    setPaymentStatus('processing');
+    setIsProcessing(true)
+    setPaymentStatus('processing')
 
     // Simulate payment processing
     setTimeout(() => {
-      setPaymentStatus('success');
-      setIsProcessing(false);
-      
+      setPaymentStatus('success')
+      setIsProcessing(false)
+
       // Reset form after success
       setTimeout(() => {
-        setBoletoCode('');
-        setPaymentStatus('idle');
-        setShowQrCode(false);
-      }, 3000);
-    }, 2000);
-  };
+        setBoletoCode('')
+        setPaymentStatus('idle')
+        setShowQrCode(false)
+      }, 3000)
+    }, 2000)
+  }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
+    navigator.clipboard.writeText(text)
+  }
 
   if (paymentStatus === 'success') {
     return (
-      <Card className={cn("border-green-200 bg-green-50", className)}>
+      <Card className={cn('border-green-200 bg-green-50', className)}>
         <CardContent className="p-6 text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-green-800 mb-2">
-            Pagamento Realizado!
-          </h3>
+          <h3 className="text-xl font-semibold text-green-800 mb-2">Pagamento Realizado!</h3>
           <p className="text-green-600">
-            Boleto pago com sucesso via {paymentMethod === 'pix' ? 'PIX' : paymentMethod === 'debit' ? 'Débito' : 'Crédito'}
+            Boleto pago com sucesso via{' '}
+            {paymentMethod === 'pix' ? 'PIX' : paymentMethod === 'debit' ? 'Débito' : 'Crédito'}
           </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -162,7 +173,7 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
         <div className="space-y-3">
           <h4 className="font-medium text-sm text-gray-700">Boletos Próximos</h4>
           {mockBoletos
-            .filter(boleto => boleto.status !== 'paid')
+            .filter((boleto) => boleto.status !== 'paid')
             .map((boleto) => (
               <div key={boleto.id} className="border rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-start">
@@ -177,15 +188,17 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-lg">{formatCurrency(boleto.amount)}</div>
-                    <span className={cn(
-                      "text-xs px-2 py-1 rounded-full",
-                      getBoletoStatusColor(boleto.status)
-                    )}>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-1 rounded-full',
+                        getBoletoStatusColor(boleto.status)
+                      )}
+                    >
                       {getBoletoStatusText(boleto.status)}
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -213,7 +226,7 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
         {/* Manual Boleto Payment */}
         <div className="border-t pt-6">
           <h4 className="font-medium text-sm text-gray-700 mb-4">Pagar Boleto Manualmente</h4>
-          
+
           {/* Boleto Code Input */}
           <div className="space-y-2">
             <Label htmlFor="boleto-code">Código do Boleto</Label>
@@ -224,14 +237,12 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
               value={boletoCode}
               onChange={handleBoletoCodeChange}
               className={cn(
-                "font-mono text-sm",
+                'font-mono text-sm',
                 paymentStatus === 'error' && !validateBoletoCode(boletoCode) && 'border-red-500'
               )}
             />
             {paymentStatus === 'error' && !validateBoletoCode(boletoCode) && (
-              <p className="text-sm text-red-500">
-                Por favor, insira um código de boleto válido
-              </p>
+              <p className="text-sm text-red-500">Por favor, insira um código de boleto válido</p>
             )}
           </div>
 
@@ -242,7 +253,7 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
               {[
                 { value: 'pix', label: 'PIX' },
                 { value: 'debit', label: 'Débito' },
-                { value: 'credit', label: 'Crédito' }
+                { value: 'credit', label: 'Crédito' },
               ].map((method) => (
                 <Button
                   key={method.value}
@@ -262,16 +273,15 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
             <div className="flex items-center gap-2 text-sm text-blue-700">
               <AlertCircle className="w-4 h-4" />
               <span>
-                {paymentMethod === 'pix' 
+                {paymentMethod === 'pix'
                   ? 'Pagamentos via PIX são processados instantaneamente'
-                  : 'Pagamentos em débito/crédito podem levar até 3 dias úteis'
-                }
+                  : 'Pagamentos em débito/crédito podem levar até 3 dias úteis'}
               </span>
             </div>
           </div>
 
           {/* Payment Button */}
-          <Button 
+          <Button
             onClick={handlePayment}
             disabled={isProcessing || !validateBoletoCode(boletoCode)}
             className="w-full"
@@ -298,9 +308,7 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
               <div className="w-32 h-32 bg-gray-200 mx-auto mb-2 flex items-center justify-center">
                 <QrCode className="w-16 h-16 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-600">
-                QR Code para pagamento (simulação)
-              </p>
+              <p className="text-sm text-gray-600">QR Code para pagamento (simulação)</p>
             </div>
           </div>
         )}
@@ -312,5 +320,5 @@ export function BoletoPayment({ className }: BoletoPaymentProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

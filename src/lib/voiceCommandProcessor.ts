@@ -1,4 +1,4 @@
-import { VoiceCommand } from '@/hooks/useVoiceRecognition';
+import { VoiceCommand } from '@/hooks/useVoiceRecognition'
 
 // Mock data for demonstration - replace with real Supabase data
 const mockFinancialData = {
@@ -6,146 +6,146 @@ const mockFinancialData = {
     {
       id: '1',
       name: 'Conta Principal',
-      balance: 5842.50,
-      type: 'checking'
+      balance: 5842.5,
+      type: 'checking',
     },
     {
       id: '2',
       name: 'Poupança',
-      balance: 12500.00,
-      type: 'savings'
-    }
+      balance: 12500.0,
+      type: 'savings',
+    },
   ],
   transactions: [
     {
       id: '1',
       description: 'Salário',
-      amount: 5000.00,
+      amount: 5000.0,
       type: 'income',
       date: new Date('2024-10-01'),
-      category: 'salary'
+      category: 'salary',
     },
     {
       id: '2',
       description: 'Aluguel',
-      amount: -1500.00,
+      amount: -1500.0,
       type: 'expense',
       date: new Date('2024-10-05'),
-      category: 'housing'
+      category: 'housing',
     },
     {
       id: '3',
       description: 'Supermercado',
-      amount: -450.00,
+      amount: -450.0,
       type: 'expense',
       date: new Date('2024-10-10'),
-      category: 'food'
-    }
+      category: 'food',
+    },
   ],
   bills: [
     {
       id: '1',
       name: 'Energia Elétrica',
-      amount: 180.50,
+      amount: 180.5,
       dueDate: new Date('2024-10-15'),
-      status: 'pending'
+      status: 'pending',
     },
     {
       id: '2',
       name: 'Internet',
-      amount: 99.90,
+      amount: 99.9,
       dueDate: new Date('2024-10-20'),
-      status: 'pending'
+      status: 'pending',
     },
     {
       id: '3',
       name: 'Água',
-      amount: 85.00,
+      amount: 85.0,
       dueDate: new Date('2024-10-25'),
-      status: 'pending'
-    }
+      status: 'pending',
+    },
   ],
   incoming: [
     {
       id: '1',
       source: 'Salário',
-      amount: 5000.00,
+      amount: 5000.0,
       expectedDate: new Date('2024-11-01'),
-      type: 'salary'
+      type: 'salary',
     },
     {
       id: '2',
       source: 'Freelance',
-      amount: 1200.00,
+      amount: 1200.0,
       expectedDate: new Date('2024-11-05'),
-      type: 'freelance'
-    }
+      type: 'freelance',
+    },
   ],
   budget: {
-    total: 3500.00,
-    spent: 2180.50,
+    total: 3500.0,
+    spent: 2180.5,
     categories: {
-      food: { budget: 800.00, spent: 450.00 },
-      transport: { budget: 300.00, spent: 150.00 },
-      entertainment: { budget: 400.00, spent: 280.00 },
-      utilities: { budget: 500.00, spent: 380.00 },
-      other: { budget: 1500.00, spent: 920.50 }
-    }
-  }
-};
+      food: { budget: 800.0, spent: 450.0 },
+      transport: { budget: 300.0, spent: 150.0 },
+      entertainment: { budget: 400.0, spent: 280.0 },
+      utilities: { budget: 500.0, spent: 380.0 },
+      other: { budget: 1500.0, spent: 920.5 },
+    },
+  },
+}
 
 export interface ProcessedCommand {
-  type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
-  message: string;
-  data?: any;
-  requiresConfirmation?: boolean;
+  type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error'
+  message: string
+  data?: any
+  requiresConfirmation?: boolean
 }
 
 export function processVoiceCommand(command: VoiceCommand | null): ProcessedCommand {
   if (!command) {
     return {
       type: 'error',
-      message: 'Não entendi o comando. Poderia repetir?'
-    };
+      message: 'Não entendi o comando. Poderia repetir?',
+    }
   }
 
-  const { command: commandType, parameters } = command;
+  const { command: commandType, parameters } = command
 
   switch (commandType) {
     case 'BALANCE':
-      return handleBalanceCommand();
-    
+      return handleBalanceCommand()
+
     case 'BUDGET':
-      return handleBudgetCommand();
-    
+      return handleBudgetCommand()
+
     case 'BILLS':
-      return handleBillsCommand();
-    
+      return handleBillsCommand()
+
     case 'INCOMING':
-      return handleIncomingCommand();
-    
+      return handleIncomingCommand()
+
     case 'PROJECTION':
-      return handleProjectionCommand();
-    
+      return handleProjectionCommand()
+
     case 'TRANSFER':
-      return handleTransferCommand(parameters);
-    
+      return handleTransferCommand(parameters)
+
     default:
       return {
         type: 'error',
-        message: 'Comando não reconhecido. Tente novamente.'
-      };
+        message: 'Comando não reconhecido. Tente novamente.',
+      }
   }
 }
 
 function handleBalanceCommand(): ProcessedCommand {
-  const totalBalance = mockFinancialData.accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBalance = mockFinancialData.accounts.reduce((sum, account) => sum + account.balance, 0)
   const currentMonthIncome = mockFinancialData.transactions
-    .filter(t => t.type === 'income' && new Date(t.date).getMonth() === new Date().getMonth())
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t) => t.type === 'income' && new Date(t.date).getMonth() === new Date().getMonth())
+    .reduce((sum, t) => sum + t.amount, 0)
   const currentMonthExpenses = mockFinancialData.transactions
-    .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth())
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    .filter((t) => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth())
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
   return {
     type: 'balance',
@@ -154,23 +154,23 @@ function handleBalanceCommand(): ProcessedCommand {
       currentBalance: totalBalance,
       income: currentMonthIncome,
       expenses: currentMonthExpenses,
-      accounts: mockFinancialData.accounts
-    }
-  };
+      accounts: mockFinancialData.accounts,
+    },
+  }
 }
 
 function handleBudgetCommand(): ProcessedCommand {
-  const { total, spent } = mockFinancialData.budget;
-  const available = total - spent;
-  const spentPercentage = (spent / total) * 100;
+  const { total, spent } = mockFinancialData.budget
+  const available = total - spent
+  const spentPercentage = (spent / total) * 100
 
-  let message = '';
+  let message = ''
   if (spentPercentage > 90) {
-    message = 'Cuidado! Você já utilizou quase todo o seu orçamento este mês.';
+    message = 'Cuidado! Você já utilizou quase todo o seu orçamento este mês.'
   } else if (spentPercentage > 70) {
-    message = 'Você está chegando perto do limite do seu orçamento.';
+    message = 'Você está chegando perto do limite do seu orçamento.'
   } else {
-    message = 'Você ainda tem espaço no seu orçamento este mês.';
+    message = 'Você ainda tem espaço no seu orçamento este mês.'
   }
 
   return {
@@ -181,25 +181,27 @@ function handleBudgetCommand(): ProcessedCommand {
       spent,
       total,
       spentPercentage,
-      categories: mockFinancialData.budget.categories
-    }
-  };
+      categories: mockFinancialData.budget.categories,
+    },
+  }
 }
 
 function handleBillsCommand(): ProcessedCommand {
-  const pendingBills = mockFinancialData.bills.filter(bill => bill.status === 'pending');
-  const upcomingBills = pendingBills.filter(bill => {
-    const daysUntilDue = Math.ceil((bill.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilDue <= 7;
-  });
+  const pendingBills = mockFinancialData.bills.filter((bill) => bill.status === 'pending')
+  const upcomingBills = pendingBills.filter((bill) => {
+    const daysUntilDue = Math.ceil(
+      (bill.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    )
+    return daysUntilDue <= 7
+  })
 
-  let message = '';
+  let message = ''
   if (upcomingBills.length === 0) {
-    message = 'Você não tem contas próximas do vencimento.';
+    message = 'Você não tem contas próximas do vencimento.'
   } else if (upcomingBills.length === 1) {
-    message = 'Você tem 1 conta para pagar em breve.';
+    message = 'Você tem 1 conta para pagar em breve.'
   } else {
-    message = `Você tem ${upcomingBills.length} contas para pagar em breve.`;
+    message = `Você tem ${upcomingBills.length} contas para pagar em breve.`
   }
 
   return {
@@ -208,54 +210,58 @@ function handleBillsCommand(): ProcessedCommand {
     data: {
       bills: upcomingBills.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()),
       totalPending: pendingBills.length,
-      totalAmount: pendingBills.reduce((sum, bill) => sum + bill.amount, 0)
-    }
-  };
+      totalAmount: pendingBills.reduce((sum, bill) => sum + bill.amount, 0),
+    },
+  }
 }
 
 function handleIncomingCommand(): ProcessedCommand {
-  const currentMonth = new Date().getMonth();
-  const upcomingIncoming = mockFinancialData.incoming.filter(item => 
-    item.expectedDate.getMonth() === currentMonth
-  );
+  const currentMonth = new Date().getMonth()
+  const upcomingIncoming = mockFinancialData.incoming.filter(
+    (item) => item.expectedDate.getMonth() === currentMonth
+  )
 
-  let message = '';
+  let message = ''
   if (upcomingIncoming.length === 0) {
-    message = 'Você não tem recebimentos programados para este mês.';
+    message = 'Você não tem recebimentos programados para este mês.'
   } else if (upcomingIncoming.length === 1) {
-    message = 'Você tem 1 recebimento programado para este mês.';
+    message = 'Você tem 1 recebimento programado para este mês.'
   } else {
-    message = `Você tem ${upcomingIncoming.length} recebimentos programados para este mês.`;
+    message = `Você tem ${upcomingIncoming.length} recebimentos programados para este mês.`
   }
 
   return {
     type: 'incoming',
     message,
     data: {
-      incoming: upcomingIncoming.sort((a, b) => a.expectedDate.getTime() - b.expectedDate.getTime()),
-      totalExpected: upcomingIncoming.reduce((sum, item) => sum + item.amount, 0)
-    }
-  };
+      incoming: upcomingIncoming.sort(
+        (a, b) => a.expectedDate.getTime() - b.expectedDate.getTime()
+      ),
+      totalExpected: upcomingIncoming.reduce((sum, item) => sum + item.amount, 0),
+    },
+  }
 }
 
 function handleProjectionCommand(): ProcessedCommand {
-  const currentBalance = mockFinancialData.accounts.reduce((sum, account) => sum + account.balance, 0);
+  const currentBalance = mockFinancialData.accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0
+  )
   const pendingBills = mockFinancialData.bills
-    .filter(bill => bill.status === 'pending')
-    .reduce((sum, bill) => sum + bill.amount, 0);
-  const expectedIncoming = mockFinancialData.incoming
-    .reduce((sum, item) => sum + item.amount, 0);
-  
-  const projectedBalance = currentBalance - pendingBills + expectedIncoming;
-  const variation = projectedBalance - currentBalance;
+    .filter((bill) => bill.status === 'pending')
+    .reduce((sum, bill) => sum + bill.amount, 0)
+  const expectedIncoming = mockFinancialData.incoming.reduce((sum, item) => sum + item.amount, 0)
 
-  let message = '';
+  const projectedBalance = currentBalance - pendingBills + expectedIncoming
+  const variation = projectedBalance - currentBalance
+
+  let message = ''
   if (variation > 0) {
-    message = 'Seu saldo deve aumentar até o final do mês.';
+    message = 'Seu saldo deve aumentar até o final do mês.'
   } else if (variation < 0) {
-    message = 'Seu saldo deve diminuir até o final do mês.';
+    message = 'Seu saldo deve diminuir até o final do mês.'
   } else {
-    message = 'Seu saldo deve permanecer estável até o final do mês.';
+    message = 'Seu saldo deve permanecer estável até o final do mês.'
   }
 
   return {
@@ -266,35 +272,38 @@ function handleProjectionCommand(): ProcessedCommand {
       projectedBalance,
       variation,
       pendingBills,
-      expectedIncoming
-    }
-  };
+      expectedIncoming,
+    },
+  }
 }
 
 function handleTransferCommand(parameters: any): ProcessedCommand {
-  const { recipient, amount } = parameters;
+  const { recipient, amount } = parameters
 
   if (!recipient) {
     return {
       type: 'error',
-      message: 'Para quem você gostaria de transferir?'
-    };
+      message: 'Para quem você gostaria de transferir?',
+    }
   }
 
   if (!amount) {
     return {
       type: 'error',
-      message: 'Qual valor você gostaria de transferir?'
-    };
+      message: 'Qual valor você gostaria de transferir?',
+    }
   }
 
-  const currentBalance = mockFinancialData.accounts.reduce((sum, account) => sum + account.balance, 0);
-  
+  const currentBalance = mockFinancialData.accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0
+  )
+
   if (amount > currentBalance) {
     return {
       type: 'error',
-      message: 'Saldo insuficiente para esta transferência.'
-    };
+      message: 'Saldo insuficiente para esta transferência.',
+    }
   }
 
   return {
@@ -305,17 +314,17 @@ function handleTransferCommand(parameters: any): ProcessedCommand {
       amount,
       method: 'PIX',
       estimatedTime: 'Instantâneo',
-      requiresConfirmation: true
+      requiresConfirmation: true,
     },
-    requiresConfirmation: true
-  };
+    requiresConfirmation: true,
+  }
 }
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
-  }).format(amount);
+    currency: 'BRL',
+  }).format(amount)
 }
 
 // Brazilian financial utilities
@@ -323,20 +332,20 @@ export const brazilianFinancialUtils = {
   formatCurrency,
   isValidCPF: (cpf: string) => {
     // Basic CPF validation
-    const cleanedCPF = cpf.replace(/[^\d]/g, '');
-    return cleanedCPF.length === 11;
+    const cleanedCPF = cpf.replace(/[^\d]/g, '')
+    return cleanedCPF.length === 11
   },
   isValidCNPJ: (cnpj: string) => {
     // Basic CNPJ validation
-    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
-    return cleanedCNPJ.length === 14;
+    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '')
+    return cleanedCNPJ.length === 14
   },
   formatPhone: (phone: string) => {
     // Format Brazilian phone number
-    const cleaned = phone.replace(/[^\d]/g, '');
+    const cleaned = phone.replace(/[^\d]/g, '')
     if (cleaned.length === 11) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
     }
-    return phone;
-  }
-};
+    return phone
+  },
+}

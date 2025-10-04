@@ -1,9 +1,9 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth()
 
   return (
     <div className="min-h-screen bg-background">
@@ -13,10 +13,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-foreground">AegisWallet</h1>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user?.email}</span>
-              <Button
-                variant="destructive"
-                onClick={signOut}
-              >
+              <Button variant="destructive" onClick={signOut}>
                 Sair
               </Button>
             </div>
@@ -33,12 +30,10 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              Comece a construir suas funcionalidades aqui.
-            </p>
+            <p className="text-muted-foreground">Comece a construir suas funcionalidades aqui.</p>
           </CardContent>
         </Card>
       </main>
     </div>
-  );
+  )
 }

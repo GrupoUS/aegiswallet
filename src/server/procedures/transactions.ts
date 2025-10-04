@@ -127,12 +127,10 @@ export const createTransactionRouter = (t: any) => ({
     }
 
     const transactions = data || []
-    const income = transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0)
-    
+    const income = transactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+
     const expenses = transactions
-      .filter(t => t.amount < 0)
+      .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     return {

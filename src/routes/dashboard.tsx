@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const DashboardRoute = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -43,7 +43,7 @@ function Dashboard() {
             <CardDescription>Despesas do Mês</CardDescription>
           </CardHeader>
           <CardContent>
-            <FinancialAmount amount={-3120.30} size="lg" />
+            <FinancialAmount amount={-3120.3} size="lg" />
           </CardContent>
         </Card>
 
@@ -52,7 +52,7 @@ function Dashboard() {
             <CardDescription>Investimentos</CardDescription>
           </CardHeader>
           <CardContent>
-            <FinancialAmount amount={8900.00} size="lg" />
+            <FinancialAmount amount={8900.0} size="lg" />
           </CardContent>
         </Card>
       </div>
@@ -78,14 +78,14 @@ function Dashboard() {
                   <p className="font-medium">Salário</p>
                   <p className="text-sm text-muted-foreground">3 dias atrás</p>
                 </div>
-                <FinancialAmount amount={3500.00} />
+                <FinancialAmount amount={3500.0} />
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium">Restaurante</p>
                   <p className="text-sm text-muted-foreground">5 dias atrás</p>
                 </div>
-                <FinancialAmount amount={-85.20} />
+                <FinancialAmount amount={-85.2} />
               </div>
             </div>
             <Link to="/transactions">
@@ -109,7 +109,7 @@ function Dashboard() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Despesas</span>
-                <FinancialAmount amount={-3120.30} size="sm" />
+                <FinancialAmount amount={-3120.3} size="sm" />
               </div>
               <div className="border-t pt-2">
                 <div className="flex justify-between items-center">

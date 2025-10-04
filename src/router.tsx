@@ -1,8 +1,8 @@
 import { createRouter } from '@tanstack/react-router'
 import { IndexRoute } from './routes'
+import { RootRoute } from './routes/__root'
 import { DashboardRoute } from './routes/dashboard'
 import { TransactionsRoute } from './routes/transactions'
-import { RootRoute } from './routes/__root'
 
 const rootRoute = RootRoute
 const indexRoute = IndexRoute

@@ -1,58 +1,56 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signIn, signUp, signInWithGoogle, user } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/dashboard')
     }
-  }, [user, navigate]);
+  }, [user, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
-      const { error } = isSignUp
-        ? await signUp(email, password)
-        : await signIn(email, password);
+      const { error } = isSignUp ? await signUp(email, password) : await signIn(email, password)
 
       if (error) {
-        setError(error.message);
+        setError(error.message)
       } else if (isSignUp) {
-        setError('Verifique seu email para confirmar o cadastro!');
+        setError('Verifique seu email para confirmar o cadastro!')
       }
     } catch (err) {
-      setError('Erro ao processar sua solicitação');
+      setError('Erro ao processar sua solicitação')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGoogleSignIn = async () => {
-    setError('');
-    setLoading(true);
+    setError('')
+    setLoading(true)
     try {
-      await signInWithGoogle();
+      await signInWithGoogle()
     } catch (err) {
-      setError('Erro ao fazer login com Google');
-      setLoading(false);
+      setError('Erro ao fazer login com Google')
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -103,11 +101,7 @@ export default function Login() {
                 </div>
               )}
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full"
-              >
+              <Button type="submit" disabled={loading} className="w-full">
                 {loading ? 'Processando...' : isSignUp ? 'Cadastrar' : 'Entrar'}
               </Button>
             </form>
@@ -155,8 +149,8 @@ export default function Login() {
                 variant="link"
                 type="button"
                 onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError('');
+                  setIsSignUp(!isSignUp)
+                  setError('')
                 }}
                 className="text-sm"
               >
@@ -167,5 +161,5 @@ export default function Login() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

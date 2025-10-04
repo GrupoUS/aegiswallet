@@ -5,6 +5,10 @@
   "scripts": {
     "bmad:refresh": "bmad-method install -f -i codex",
     "bmad:list": "bmad-method list:agents",
-    "bmad:validate": "bmad-method validate"
+    "bmad:validate": "bmad-method validate",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview"
   }
 }

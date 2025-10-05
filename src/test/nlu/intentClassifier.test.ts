@@ -7,7 +7,7 @@
  * @vitest-environment jsdom
  */
 
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createIntentClassifier } from '@/lib/nlu/intentClassifier'
 import { IntentType } from '@/lib/nlu/types'
 

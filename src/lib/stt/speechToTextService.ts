@@ -13,7 +13,6 @@
  * @module speechToTextService
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ============================================================================
 // Types & Interfaces

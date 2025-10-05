@@ -10,7 +10,7 @@ export interface AutonomySettings {
 }
 
 export class AutonomyController {
-  async getSettings(userId: string): Promise<AutonomySettings> {
+  async getSettings(_userId: string): Promise<AutonomySettings> {
     return {
       autoPayBillsUnder: 100,
       autoTransferEnabled: false,
@@ -19,7 +19,7 @@ export class AutonomyController {
     }
   }
 
-  async updateSettings(userId: string, settings: Partial<AutonomySettings>): Promise<void> {
+  async updateSettings(_userId: string, _settings: Partial<AutonomySettings>): Promise<void> {
     // Save to database
   }
 

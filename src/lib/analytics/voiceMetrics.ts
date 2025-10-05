@@ -157,7 +157,7 @@ export class VoiceMetricsService {
   /**
    * Get accuracy by command type
    */
-  async getAccuracyByCommand(days: number = 7): Promise<Record<string, number>> {
+  async getAccuracyByCommand(_days: number = 7): Promise<Record<string, number>> {
     try {
       const { data, error } = await supabase.from('accuracy_by_command').select('*')
 

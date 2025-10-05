@@ -32,7 +32,7 @@ export class OpenBankingConnector {
     this.apiKey = apiKey
   }
 
-  async connectBank(params: {
+  async connectBank(_params: {
     userId: string
     institutionCode: string
     credentials: any
@@ -41,7 +41,7 @@ export class OpenBankingConnector {
     return { linkId: `link_${Date.now()}` }
   }
 
-  async listAccounts(linkId: string): Promise<BankAccount[]> {
+  async listAccounts(_linkId: string): Promise<BankAccount[]> {
     // Mock data for MVP
     return [
       {
@@ -56,7 +56,7 @@ export class OpenBankingConnector {
     ]
   }
 
-  async listTransactions(accountId: string, dateFrom: Date, dateTo: Date): Promise<Transaction[]> {
+  async listTransactions(_accountId: string, _dateFrom: Date, _dateTo: Date): Promise<Transaction[]> {
     // Mock data for MVP
     return [
       {

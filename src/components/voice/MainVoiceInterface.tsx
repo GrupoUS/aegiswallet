@@ -4,8 +4,6 @@
 
 import React from 'react'
 import { VoiceDashboard } from './VoiceDashboard'
-import { VoiceIndicator } from './VoiceIndicator'
-import { VoiceResponse } from './VoiceResponse'
 
 export function MainVoiceInterface() {
   return (

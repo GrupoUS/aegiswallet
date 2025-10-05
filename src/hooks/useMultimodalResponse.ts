@@ -18,7 +18,7 @@ import {
   type MultimodalResponse,
 } from '@/lib/multimodal/responseTemplates'
 import type { IntentType } from '@/lib/nlu/types'
-import { getTTSService, type TTSResponse } from '@/lib/tts/textToSpeechService'
+import { getTTSService } from '@/lib/tts/textToSpeechService'
 
 // ============================================================================
 // Types

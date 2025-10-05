@@ -12,17 +12,17 @@ export interface Payment {
 }
 
 export class PaymentOrchestrator {
-  async schedulePayment(payment: Payment): Promise<string> {
+  async schedulePayment(_payment: Payment): Promise<string> {
     // Queue payment
     return `payment_${Date.now()}`
   }
 
-  async executePayment(paymentId: string): Promise<{ success: boolean }> {
+  async executePayment(_paymentId: string): Promise<{ success: boolean }> {
     // Execute via appropriate channel
     return { success: true }
   }
 
-  async getPaymentStatus(paymentId: string): Promise<Payment['status']> {
+  async getPaymentStatus(_paymentId: string): Promise<Payment['status']> {
     return 'completed'
   }
 }

@@ -15,7 +15,6 @@
 import {
   formatCurrency,
   formatCurrencyForVoice,
-  formatDate,
   formatDateForVoice,
   formatPercentage,
   pluralize,

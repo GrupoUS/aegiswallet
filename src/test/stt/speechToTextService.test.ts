@@ -129,6 +129,7 @@ describe('SpeechToTextService', () => {
       const fetchCall = (global.fetch as any).mock.calls[0]
       const formData = fetchCall[1].body as FormData
 
+      expect(formData).toBeInstanceOf(FormData)
       // Note: FormData inspection in tests is limited
       expect(fetchCall[0]).toContain('openai.com')
     })

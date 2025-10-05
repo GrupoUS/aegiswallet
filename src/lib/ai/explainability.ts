@@ -10,7 +10,7 @@ export interface Explanation {
 }
 
 export class ExplainabilityService {
-  explainDecision(decisionId: string): Explanation {
+  explainDecision(_decisionId: string): Explanation {
     return {
       decision: 'approved',
       reasoning: [

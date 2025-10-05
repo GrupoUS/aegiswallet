@@ -4,7 +4,7 @@
  * Story: 01.04 - Segurança e Confirmação por Voz
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { BiometricAuthService } from '@/lib/security/biometricAuth'
 import { FailureScenario, VoiceConfirmationService } from '@/lib/security/voiceConfirmation'
 import { VoiceRecognitionService } from '@/lib/security/voiceRecognition'

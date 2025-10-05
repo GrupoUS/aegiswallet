@@ -10,7 +10,7 @@ export interface ConnectorHealth {
 }
 
 export class MonitoringService {
-  async checkConnectorHealth(connectorId: string): Promise<ConnectorHealth> {
+  async checkConnectorHealth(_connectorId: string): Promise<ConnectorHealth> {
     // Simulate health check
     return {
       status: 'healthy',
@@ -20,7 +20,7 @@ export class MonitoringService {
     }
   }
 
-  async getMetrics(period: '1h' | '24h' | '7d' = '24h'): Promise<{
+  async getMetrics(_period: '1h' | '24h' | '7d' = '24h'): Promise<{
     totalRequests: number
     successRate: number
     avgLatency: number

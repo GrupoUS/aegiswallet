@@ -249,7 +249,7 @@ describe('Multimodal Response Hook', () => {
         try {
           await result.current.generateAndSpeak(IntentType.UNKNOWN, {})
         } catch (error) {
-          // Expected to fail
+          expect(error).toBeInstanceOf(Error)
         }
       })
 

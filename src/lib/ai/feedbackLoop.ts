@@ -11,7 +11,7 @@ export interface FeedbackData {
 }
 
 export class FeedbackLoop {
-  async submitFeedback(feedback: FeedbackData): Promise<void> {
+  async submitFeedback(_feedback: FeedbackData): Promise<void> {
     // Store feedback for model retraining
   }
 

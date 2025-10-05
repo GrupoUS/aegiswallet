@@ -31,7 +31,7 @@ export class ComplianceMonitor {
     return { approved: alerts.length === 0, alerts }
   }
 
-  async logFailure(paymentId: string, reason: string): Promise<void> {
+  async logFailure(_paymentId: string, _reason: string): Promise<void> {
     // Log to monitoring system
   }
 }

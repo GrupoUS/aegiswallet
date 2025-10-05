@@ -106,7 +106,6 @@ class AudioCache {
   }
 
   private cleanupOldEntries(): void {
-    const now = Date.now()
     const entries = Array.from(this.cache.entries())
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
 

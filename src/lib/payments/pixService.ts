@@ -9,15 +9,15 @@ export interface PIXTransfer {
 }
 
 export class PIXService {
-  async validateKey(key: string): Promise<{ valid: boolean; name?: string }> {
+  async validateKey(_key: string): Promise<{ valid: boolean; name?: string }> {
     return { valid: true, name: 'João Silva' }
   }
 
-  async initiateTransfer(transfer: PIXTransfer): Promise<{ transactionId: string }> {
+  async initiateTransfer(_transfer: PIXTransfer): Promise<{ transactionId: string }> {
     return { transactionId: `pix_${Date.now()}` }
   }
 
-  async getTransferStatus(transactionId: string): Promise<'pending' | 'completed' | 'failed'> {
+  async getTransferStatus(_transactionId: string): Promise<'pending' | 'completed' | 'failed'> {
     return 'completed'
   }
 }

@@ -11,7 +11,7 @@ export interface BoletoData {
 }
 
 export class BoletoScanner {
-  async scanBoleto(imageData: string | File): Promise<BoletoData> {
+  async scanBoleto(_imageData: string | File): Promise<BoletoData> {
     // OCR + validation
     return {
       barcode: '12345678901234567890123456789012345678901234567',

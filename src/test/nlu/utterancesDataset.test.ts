@@ -9,7 +9,6 @@
 
 import { describe, expect, it } from 'vitest'
 import utterancesData from '@/data/utterances.json'
-import { IntentType } from '@/lib/nlu/types'
 
 describe('Utterances Dataset', () => {
   describe('Dataset Structure', () => {

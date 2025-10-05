@@ -166,6 +166,7 @@ describe('TextToSpeechService', () => {
       const result2 = await tts.speak('Hello')
       // Note: In actual implementation, this would be from cache
 
+      expect(result2.cached).toBe(false)
       expect(mockSpeak).toHaveBeenCalledTimes(2) // Both calls speak since cache isn't fully implemented
     })
 

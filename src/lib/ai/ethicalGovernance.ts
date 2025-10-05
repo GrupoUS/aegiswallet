@@ -47,7 +47,7 @@ export class EthicalGovernance {
     }
   }
 
-  async auditDecisions(period: Date): Promise<AuditRecord[]> {
+  async auditDecisions(_period: Date): Promise<AuditRecord[]> {
     return []
   }
 

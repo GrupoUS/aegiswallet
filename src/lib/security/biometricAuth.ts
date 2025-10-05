@@ -224,7 +224,7 @@ export class BiometricAuthService {
   /**
    * Validate OTP (placeholder)
    */
-  private async validateOTP(otp: string, phoneNumber: string): Promise<boolean> {
+  private async validateOTP(otp: string, _phoneNumber: string): Promise<boolean> {
     // TODO: Implement actual OTP validation
     // This is a placeholder
     return otp.length === 6

@@ -31,8 +31,6 @@ export class IntentClassifier {
    * Classify intent using hybrid approach
    */
   async classify(text: string): Promise<IntentClassificationResult> {
-    const startTime = Date.now()
-
     // Normalize text
     const normalized = this.normalizer.normalize(text)
 
@@ -50,8 +48,6 @@ export class IntentClassifier {
 
     // Ensemble voting
     const ensembleResult = this.ensembleVote(patternResult, tfidfResult)
-
-    const processingTime = Date.now() - startTime
 
     return {
       intent: ensembleResult.intent,

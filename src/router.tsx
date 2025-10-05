@@ -1,20 +1,51 @@
-import { createRouter } from '@tanstack/react-router'
-import { IndexRoute } from './routes'
-import { RootRoute } from './routes/__root'
-import { DashboardRoute } from './routes/dashboard'
-import { TransactionsRoute } from './routes/transactions'
+import { createRouter, createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
+import { TRPCProvider } from '@/components/providers/TRPCProvider'
+import { VoiceDashboard } from '@/components/voice/VoiceDashboard'
+import Dashboard from '@/pages/Dashboard'
+import Transactions from '@/pages/Transactions'
 
-const rootRoute = RootRoute
-const indexRoute = IndexRoute
-const dashboardRoute = DashboardRoute
-const transactionsRoute = TransactionsRoute
+// Root route
+const rootRoute = createRootRoute({
+  component: () => (
+    <TRPCProvider>
+      <div className="min-h-screen bg-background">
+        <Outlet />
+      </div>
+    </TRPCProvider>
+  ),
+})
 
-const router = createRouter({
-  routeTree: rootRoute.addChildren({
-    indexRoute,
-    dashboardRoute,
-    transactionsRoute,
-  }),
+// Index route
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: VoiceDashboard,
+})
+
+// Dashboard route
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard',
+  component: Dashboard,
+})
+
+// Transactions route  
+const transactionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/transactions',
+  component: Transactions,
+})
+
+// Build route tree
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  dashboardRoute,
+  transactionsRoute,
+])
+
+const router = createRouter({ 
+  routeTree,
+  defaultPreload: 'intent',
 })
 
 export { router }

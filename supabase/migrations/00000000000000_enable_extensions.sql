@@ -1,11 +1,11 @@
 -- Enable required PostgreSQL extensions
+-- This must be run first before any other migrations
 
 -- UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Cryptographic functions
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Full text search for Portuguese
-CREATE EXTENSION IF NOT EXISTS "unaccent";
-
--- Additional useful extensions
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+-- HTTP client functions
+CREATE EXTENSION IF NOT EXISTS "http";

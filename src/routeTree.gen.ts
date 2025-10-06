@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as SaldoRouteImport } from './routes/saldo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -21,11 +20,6 @@ import { Route as PixTransferirRouteImport } from './routes/pix/transferir'
 import { Route as PixReceberRouteImport } from './routes/pix/receber'
 import { Route as PixHistoricoRouteImport } from './routes/pix/historico'
 
-const TransactionsRoute = TransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SaldoRoute = SaldoRouteImport.update({
   id: '/saldo',
   path: '/saldo',
@@ -84,7 +78,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/transactions': typeof TransactionsRoute
   '/pix/historico': typeof PixHistoricoRoute
   '/pix/receber': typeof PixReceberRoute
   '/pix/transferir': typeof PixTransferirRoute
@@ -97,7 +90,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/transactions': typeof TransactionsRoute
   '/pix/historico': typeof PixHistoricoRoute
   '/pix/receber': typeof PixReceberRoute
   '/pix/transferir': typeof PixTransferirRoute
@@ -111,7 +103,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/transactions': typeof TransactionsRoute
   '/pix/historico': typeof PixHistoricoRoute
   '/pix/receber': typeof PixReceberRoute
   '/pix/transferir': typeof PixTransferirRoute
@@ -126,7 +117,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/transactions'
     | '/pix/historico'
     | '/pix/receber'
     | '/pix/transferir'
@@ -139,7 +129,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/transactions'
     | '/pix/historico'
     | '/pix/receber'
     | '/pix/transferir'
@@ -152,7 +141,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/transactions'
     | '/pix/historico'
     | '/pix/receber'
     | '/pix/transferir'

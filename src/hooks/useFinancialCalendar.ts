@@ -1,7 +1,7 @@
-import { trpc } from '@/lib/trpc'
-import { toast } from 'sonner'
 import { useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { supabase } from '@/integrations/supabase/client'
+import { trpc } from '@/lib/trpc'
 
 /**
  * Hook para gerenciar eventos financeiros
@@ -14,9 +14,14 @@ export function useFinancialEvents(filters?: {
   categoryId?: string
 }) {
   const utils = trpc.useUtils()
-  
-  const { data: events, isLoading, error, refetch } = trpc.calendar.getEvents.useQuery(filters || {})
-  
+
+  const {
+    data: events,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.calendar.getEvents.useQuery(filters || {})
+
   const { mutate: createEvent, isPending: isCreating } = trpc.calendar.create.useMutation({
     onSuccess: (data) => {
       utils.calendar.getEvents.setData(undefined, (old) => {
@@ -29,12 +34,12 @@ export function useFinancialEvents(filters?: {
       toast.error(error.message || 'Erro ao criar evento financeiro')
     },
   })
-  
+
   const { mutate: updateEvent, isPending: isUpdating } = trpc.calendar.update.useMutation({
     onSuccess: (data) => {
       utils.calendar.getEvents.setData(undefined, (old) => {
         if (!old) return old
-        return old.map(event => event.id === data.id ? data : event)
+        return old.map((event) => (event.id === data.id ? data : event))
       })
       toast.success('Evento financeiro atualizado com sucesso!')
     },
@@ -42,7 +47,7 @@ export function useFinancialEvents(filters?: {
       toast.error(error.message || 'Erro ao atualizar evento financeiro')
     },
   })
-  
+
   const { mutate: deleteEvent, isPending: isDeleting } = trpc.calendar.delete.useMutation({
     onSuccess: () => {
       utils.calendar.getEvents.invalidate()
@@ -52,7 +57,7 @@ export function useFinancialEvents(filters?: {
       toast.error(error.message || 'Erro ao remover evento financeiro')
     },
   })
-  
+
   // Real-time subscription para eventos financeiros
   useEffect(() => {
     if (!events?.length) return
@@ -79,7 +84,7 @@ export function useFinancialEvents(filters?: {
       supabase.removeChannel(channel)
     }
   }, [events?.length, utils])
-  
+
   return {
     events: events || [],
     isLoading,
@@ -98,10 +103,11 @@ export function useFinancialEvents(filters?: {
  * Hook para obter evento financeiro específico
  */
 export function useFinancialEvent(eventId: string) {
-  const { data: event, isLoading, error } = trpc.calendar.getEventById.useQuery(
-    { id: eventId },
-    { enabled: !!eventId }
-  )
+  const {
+    data: event,
+    isLoading,
+    error,
+  } = trpc.calendar.getEventById.useQuery({ id: eventId }, { enabled: !!eventId })
 
   return {
     event,
@@ -199,23 +205,25 @@ export function useOverdueEvents() {
  * Hook para lembretes de eventos
  */
 export function useEventReminders(_eventId: string) {
-  const { mutate: createReminder, isPending: isCreatingReminder } = trpc.calendar.createReminder.useMutation({
-    onSuccess: () => {
-      toast.success('Lembrete criado com sucesso!')
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao criar lembrete')
-    },
-  })
-  
-  const { mutate: markReminderSent, isPending: isMarkingSent } = trpc.calendar.markReminderSent.useMutation({
-    onSuccess: () => {
-      console.log('Reminder marked as sent')
-    },
-    onError: (error) => {
-      console.error('Error marking reminder as sent:', error)
-    },
-  })
+  const { mutate: createReminder, isPending: isCreatingReminder } =
+    trpc.calendar.createReminder.useMutation({
+      onSuccess: () => {
+        toast.success('Lembrete criado com sucesso!')
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao criar lembrete')
+      },
+    })
+
+  const { mutate: markReminderSent, isPending: isMarkingSent } =
+    trpc.calendar.markReminderSent.useMutation({
+      onSuccess: () => {
+        console.log('Reminder marked as sent')
+      },
+      onError: (error) => {
+        console.error('Error marking reminder as sent:', error)
+      },
+    })
 
   return {
     createReminder,
@@ -235,13 +243,16 @@ export function useCalendarStats() {
 
   const stats = useMemo(() => {
     const today = new Date()
-    const thisMonth = events?.filter(event => {
-      const eventDate = new Date(event.event_date)
-      return eventDate.getMonth() === today.getMonth() && 
-             eventDate.getFullYear() === today.getFullYear()
-    }) || []
+    const thisMonth =
+      events?.filter((event) => {
+        const eventDate = new Date(event.event_date)
+        return (
+          eventDate.getMonth() === today.getMonth() &&
+          eventDate.getFullYear() === today.getFullYear()
+        )
+      }) || []
 
-    const completedThisMonth = thisMonth.filter(event => event.is_completed).length
+    const completedThisMonth = thisMonth.filter((event) => event.is_completed).length
     const totalThisMonth = thisMonth.length
     const completionRate = totalThisMonth > 0 ? (completedThisMonth / totalThisMonth) * 100 : 0
 
@@ -252,8 +263,8 @@ export function useCalendarStats() {
       eventsThisMonth: totalThisMonth,
       completedThisMonth,
       completionRate,
-      urgentEvents: upcomingEvents.filter(event => event.priority === 'urgent').length,
-      highPriorityEvents: upcomingEvents.filter(event => event.priority === 'high').length,
+      urgentEvents: upcomingEvents.filter((event) => event.priority === 'urgent').length,
+      highPriorityEvents: upcomingEvents.filter((event) => event.priority === 'high').length,
     }
   }, [upcomingEvents, overdueEvents, events])
 
@@ -264,12 +275,19 @@ export function useCalendarStats() {
  * Hook para eventos do dia específico
  */
 export function useDayEvents(date: string) {
-  const { data: dayEvents, isLoading, error } = trpc.calendar.getEvents.useQuery({
-    startDate: date,
-    endDate: date,
-  }, {
-    enabled: !!date,
-  })
+  const {
+    data: dayEvents,
+    isLoading,
+    error,
+  } = trpc.calendar.getEvents.useQuery(
+    {
+      startDate: date,
+      endDate: date,
+    },
+    {
+      enabled: !!date,
+    }
+  )
 
   return {
     dayEvents: dayEvents || [],
@@ -285,12 +303,19 @@ export function useMonthEvents(year: number, month: number) {
   const startDate = new Date(year, month, 1).toISOString().split('T')[0]
   const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
 
-  const { data: monthEvents, isLoading, error } = trpc.calendar.getEvents.useQuery({
-    startDate,
-    endDate,
-  }, {
-    enabled: !!year && month >= 0 && month <= 11,
-  })
+  const {
+    data: monthEvents,
+    isLoading,
+    error,
+  } = trpc.calendar.getEvents.useQuery(
+    {
+      startDate,
+      endDate,
+    },
+    {
+      enabled: !!year && month >= 0 && month <= 11,
+    }
+  )
 
   return {
     monthEvents: monthEvents || [],
@@ -303,7 +328,11 @@ export function useMonthEvents(year: number, month: number) {
  * Hook para busca rápida de eventos
  */
 export function useEventSearch(query: string) {
-  const { data: searchResults, isLoading, error } = trpc.calendar.getEvents.useQuery(
+  const {
+    data: searchResults,
+    isLoading,
+    error,
+  } = trpc.calendar.getEvents.useQuery(
     {
       startDate: new Date(0).toISOString().split('T')[0],
       endDate: new Date().toISOString().split('T')[0],
@@ -312,10 +341,13 @@ export function useEventSearch(query: string) {
       enabled: !!query && query.length >= 2,
       select: (data) => {
         if (!query) return data
-        return data?.filter(event => 
-          event.title.toLowerCase().includes(query.toLowerCase()) ||
-          event.description?.toLowerCase().includes(query.toLowerCase())
-        ) || []
+        return (
+          data?.filter(
+            (event) =>
+              event.title.toLowerCase().includes(query.toLowerCase()) ||
+              event.description?.toLowerCase().includes(query.toLowerCase())
+          ) || []
+        )
       },
     }
   )

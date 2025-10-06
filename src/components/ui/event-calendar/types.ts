@@ -1,7 +1,19 @@
 // Event Calendar Types
-export type EventColor = 
-  | 'emerald' | 'rose' | 'orange' | 'blue' | 'violet' | 'indigo' | 'amber'
-  | 'red' | 'green' | 'yellow' | 'purple' | 'pink' | 'teal' | 'cyan'
+export type EventColor =
+  | 'emerald'
+  | 'rose'
+  | 'orange'
+  | 'blue'
+  | 'violet'
+  | 'indigo'
+  | 'amber'
+  | 'red'
+  | 'green'
+  | 'yellow'
+  | 'purple'
+  | 'pink'
+  | 'teal'
+  | 'cyan'
 
 export interface CalendarEvent {
   id: string
@@ -102,43 +114,43 @@ export const DEFAULT_CALENDAR_CATEGORIES: CalendarCategory[] = [
     name: 'Contas',
     color: 'rose',
     icon: '📄',
-    description: 'Pagamento de contas e faturas'
+    description: 'Pagamento de contas e faturas',
   },
   {
     id: 'income',
     name: 'Receitas',
     color: 'emerald',
     icon: '💰',
-    description: 'Recebimentos e salários'
+    description: 'Recebimentos e salários',
   },
   {
     id: 'investments',
     name: 'Investimentos',
     color: 'blue',
     icon: '📈',
-    description: 'Aplicações e investimentos'
+    description: 'Aplicações e investimentos',
   },
   {
     id: 'savings',
     name: 'Economias',
     color: 'violet',
     icon: '🏦',
-    description: 'Poupança e reservas'
+    description: 'Poupança e reservas',
   },
   {
     id: 'expenses',
     name: 'Despesas',
     color: 'orange',
     icon: '💳',
-    description: 'Gastos e despesas do dia a dia'
+    description: 'Gastos e despesas do dia a dia',
   },
   {
     id: 'personal',
     name: 'Pessoal',
     color: 'indigo',
     icon: '👤',
-    description: 'Compromissos e eventos pessoais'
-  }
+    description: 'Compromissos e eventos pessoais',
+  },
 ]
 
 export interface EventPosition {

@@ -3,10 +3,10 @@
  * Hook para gerenciar eventos financeiros no Supabase
  */
 
+import { endOfMonth, startOfMonth } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import type { FinancialEvent } from '@/types/financial-events'
-import { startOfMonth, endOfMonth } from 'date-fns'
 
 interface FinancialEventRow {
   id: string
@@ -98,7 +98,9 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
       setError(null)
 
       // Check if user is authenticated first
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (!session) {
         console.info('User not authenticated - using mock data')
         setEvents([])
@@ -222,10 +224,7 @@ export function useFinancialEventMutations() {
       setLoading(true)
       setError(null)
 
-      const { error: deleteError } = await supabase
-        .from('financial_events')
-        .delete()
-        .eq('id', id)
+      const { error: deleteError } = await supabase.from('financial_events').delete().eq('id', id)
 
       if (deleteError) throw deleteError
     } catch (err) {

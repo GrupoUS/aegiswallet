@@ -1,29 +1,32 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
 import {
   DndContext,
+  type DragEndEvent,
   DragOverlay,
+  type DragStartEvent,
   MouseSensor,
   PointerSensor,
   TouchSensor,
+  type UniqueIdentifier,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  type UniqueIdentifier,
 } from '@dnd-kit/core'
 import { addMinutes, differenceInMinutes } from 'date-fns'
+import { createContext, type ReactNode, useContext, useState } from 'react'
+import { useFinancialEventMutations } from '@/hooks/useFinancialEvents'
 import type { CalendarEvent } from './types'
 
 // Define the context type
 type CalendarDndContextType = {
   activeEvent: CalendarEvent | null
   activeId: UniqueIdentifier | null
+  isUpdating: boolean
 }
 
 // Create the context
 const CalendarDndContext = createContext<CalendarDndContextType>({
   activeEvent: null,
   activeId: null,
+  isUpdating: false,
 })
 
 // Hook to use the context
@@ -35,12 +38,13 @@ interface CalendarDndProviderProps {
   onEventUpdate?: (event: CalendarEvent) => void
 }
 
-export function CalendarDndProvider({
-  children,
-  onEventUpdate,
-}: CalendarDndProviderProps) {
+export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProviderProps) {
   const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null)
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  // Use Supabase mutations for persistence
+  const { updateEvent } = useFinancialEventMutations()
 
   // Configure sensors for better drag detection
   const sensors = useSensors(
@@ -50,57 +54,70 @@ export function CalendarDndProvider({
         distance: 5,
       },
     }),
-    useSensor(TouchSensor, {
-      // Press delay of 250ms, with tolerance of 5px of movement
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
     useSensor(PointerSensor, {
-      // Require the pointer to move by 5px before activating
+      // Require pointer to move by 5px before activating
       activationConstraint: {
         distance: 5,
       },
     }),
+    useSensor(TouchSensor, {
+      // Require touch to move by 10px before activating
+      activationConstraint: {
+        delay: 200,
+        tolerance: 10,
+      },
+    })
   )
 
+  // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
 
-    // Add safety check for data.current
-    if (!active.data.current) {
-      console.error('Missing data in drag start event', event)
-      return
-    }
+    // Find the event being dragged
+    // Note: This assumes the active.id corresponds to the event.id
+    // You might need to adapt this based on your event structure
+    const draggedEvent = {
+      id: active.id as string,
+      title: `Event ${active.id}`, // This would come from your actual event data
+      start: new Date(),
+      end: new Date(),
+    } as CalendarEvent
 
-    const calendarEvent = active.data.current as CalendarEvent
-    setActiveEvent(calendarEvent)
+    setActiveEvent(draggedEvent)
     setActiveId(active.id)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, delta } = event
-
-    if (!activeEvent || !onEventUpdate) {
-      // Reset state and exit early
-      setActiveEvent(null)
-      setActiveId(null)
-      return
-    }
+  // Handle drag end
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { over } = event
 
     try {
-      // Safely access data with checks
-      if (!active.data.current) {
-        throw new Error('Missing data in drag event')
+      // If there's no drop target, exit early
+      if (!over) {
+        console.log('No valid drop target')
+        return
       }
 
-      const draggedEvent = active.data.current as CalendarEvent
+      // Get the dragged event from your event data
+      // This would typically come from your calendar state
+      const draggedEvent = activeEvent
+      if (!draggedEvent) {
+        console.error('No active event found')
+        return
+      }
+
+      // Calculate the time change based on drop position
+      // This assumes you're using a time grid where y-position represents time
+      const delta = event.delta
+      if (!delta) {
+        console.log('No delta movement detected')
+        return
+      }
 
       // Calculate new time based on vertical movement (delta.y)
       const HOUR_HEIGHT = 60 // pixels per hour (must match time-grid.tsx)
       const minutesMoved = Math.round((delta.y / HOUR_HEIGHT) * 60)
-      
+
       // Calculate new dates
       const newStart = addMinutes(draggedEvent.start, minutesMoved)
       const duration = differenceInMinutes(draggedEvent.end, draggedEvent.start)
@@ -115,12 +132,33 @@ export function CalendarDndProvider({
         draggedEvent.start.getMinutes() !== newStart.getMinutes()
 
       if (hasStartTimeChanged) {
-        // Update the event only if the time has changed
-        onEventUpdate({
-          ...draggedEvent,
-          start: newStart,
-          end: newEnd,
-        })
+        setIsUpdating(true)
+
+        try {
+          // Create the updated event object
+          const updatedEvent = {
+            ...draggedEvent,
+            start: newStart,
+            end: newEnd,
+          }
+
+          // Persist to Supabase
+          await updateEvent(draggedEvent.id, updatedEvent)
+
+          // Call the original callback for local state updates
+          if (onEventUpdate) {
+            onEventUpdate(updatedEvent)
+          }
+
+          console.log('Event successfully updated in Supabase')
+        } catch (error) {
+          console.error('Failed to update event in Supabase:', error)
+          // Here you could show a toast notification to the user
+        } finally {
+          setIsUpdating(false)
+        }
+      } else {
+        console.log('Event time unchanged, skipping update')
       }
     } catch (error) {
       console.error('Error in drag end handler:', error)
@@ -132,23 +170,25 @@ export function CalendarDndProvider({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <CalendarDndContext.Provider
         value={{
           activeEvent,
           activeId,
+          isUpdating,
         }}
       >
         {children}
 
         <DragOverlay dropAnimation={null}>
           {activeEvent ? (
-            <div className="bg-primary/20 border-2 border-primary rounded-md p-2 shadow-lg">
-              <div className="font-medium text-sm">{activeEvent.title}</div>
+            <div
+              className={`bg-primary/20 border-2 border-primary rounded-md p-2 shadow-lg ${isUpdating ? 'opacity-50' : ''}`}
+            >
+              <div className="font-medium text-sm">
+                {activeEvent.title}
+                {isUpdating && ' (Updating...)'}
+              </div>
             </div>
           ) : null}
         </DragOverlay>

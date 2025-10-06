@@ -1,17 +1,7 @@
-import React from 'react'
-import { format, differenceInMinutes } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
+import { differenceInMinutes, format } from 'date-fns'
+import { Clock, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  Clock, 
-  MapPin, 
-  Users, 
-  MoreHorizontal,
-  Edit2,
-  Trash2
-} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 import type { CalendarEvent } from './types'
 
 interface EnhancedEventCardProps {
@@ -44,7 +35,7 @@ export function EnhancedEventCard({
   const eventEnd = new Date(event.end)
   const duration = differenceInMinutes(eventEnd, eventStart)
   const isAllDay = event.allDay || duration >= 24 * 60
-  
+
   const getEventColorClasses = (color: string) => {
     const colorMap: Record<string, { bg: string; text: string; border: string }> = {
       emerald: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
@@ -62,7 +53,7 @@ export function EnhancedEventCard({
       teal: { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
       cyan: { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
     }
-    
+
     return colorMap[color] || colorMap.blue
   }
 
@@ -115,16 +106,12 @@ export function EnhancedEventCard({
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h4 className={cn('font-semibold truncate', colorClasses.text)}>
-              {event.title}
-            </h4>
+            <h4 className={cn('font-semibold truncate', colorClasses.text)}>{event.title}</h4>
             {event.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {event.description}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{event.description}</p>
             )}
           </div>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -153,7 +140,9 @@ export function EnhancedEventCard({
         <div className="space-y-1">
           <div className="flex items-center text-sm text-muted-foreground">
             <Clock className="h-3 w-3 mr-1" />
-            {isAllDay ? 'Dia inteiro' : (
+            {isAllDay ? (
+              'Dia inteiro'
+            ) : (
               <>
                 {format(eventStart, 'HH:mm', { locale: ptBR })}
                 {' - '}
@@ -161,14 +150,14 @@ export function EnhancedEventCard({
               </>
             )}
           </div>
-          
+
           {event.location && (
             <div className="flex items-center text-sm text-muted-foreground">
               <MapPin className="h-3 w-3 mr-1" />
               {event.location}
             </div>
           )}
-          
+
           {event.attendees && event.attendees.length > 0 && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="h-3 w-3 mr-1" />
@@ -184,16 +173,16 @@ export function EnhancedEventCard({
               {event.category}
             </Badge>
           )}
-          
+
           {event.priority && (
-            <Badge 
-              variant={event.priority === 'high' ? 'destructive' : 'outline'} 
+            <Badge
+              variant={event.priority === 'high' ? 'destructive' : 'outline'}
               className="text-xs"
             >
               {event.priority === 'high' ? 'Alta' : event.priority === 'medium' ? 'Média' : 'Baixa'}
             </Badge>
           )}
-          
+
           {event.recurring && (
             <Badge variant="outline" className="text-xs">
               Recorrente
@@ -216,19 +205,15 @@ export function EnhancedEventCard({
       )}
       style={position}
     >
-      <h4 className={cn('font-semibold text-sm truncate', colorClasses.text)}>
-        {event.title}
-      </h4>
-      
+      <h4 className={cn('font-semibold text-sm truncate', colorClasses.text)}>{event.title}</h4>
+
       <div className="flex items-center text-xs text-muted-foreground">
         <Clock className="h-3 w-3 mr-1" />
         {isAllDay ? 'Dia inteiro' : format(eventStart, 'HH:mm', { locale: ptBR })}
       </div>
-      
+
       {event.description && (
-        <p className="text-xs text-muted-foreground line-clamp-2">
-          {event.description}
-        </p>
+        <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
       )}
     </div>
   )

@@ -1,6 +1,6 @@
+import { Download, Heart, Mic, Send, Settings, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mic, Download, Send, Trash2, Settings, Heart } from 'lucide-react'
 
 export function GradientButtonDemo() {
   return (
@@ -24,9 +24,7 @@ export function GradientButtonDemo() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
-              Botões Regulares
-            </h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">Botões Regulares</h3>
             <div className="flex flex-wrap gap-4">
               <Button>Default Button</Button>
               <Button variant="outline">Outline Button</Button>
@@ -37,9 +35,7 @@ export function GradientButtonDemo() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
-              Botões com Gradiente
-            </h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">Botões com Gradiente</h3>
             <div className="flex flex-wrap gap-4">
               <Button withGradient>Default Button</Button>
               <Button withGradient variant="outline">
@@ -63,9 +59,7 @@ export function GradientButtonDemo() {
       <Card>
         <CardHeader>
           <CardTitle>Tamanhos de Botão</CardTitle>
-          <CardDescription>
-            Todos os tamanhos funcionam com o efeito de gradiente
-          </CardDescription>
+          <CardDescription>Todos os tamanhos funcionam com o efeito de gradiente</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-4">
@@ -125,52 +119,40 @@ export function GradientButtonDemo() {
       <Card>
         <CardHeader>
           <CardTitle>Configurações Personalizadas</CardTitle>
-          <CardDescription>
-            Ajuste a duração da animação e o tamanho do gradiente
-          </CardDescription>
+          <CardDescription>Ajuste a duração da animação e o tamanho do gradiente</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Animação Rápida (0.5s)
-              </p>
+              <p className="text-sm text-muted-foreground">Animação Rápida (0.5s)</p>
               <Button withGradient gradientDuration={0.5}>
                 Fast Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Animação Normal (1s - padrão)
-              </p>
+              <p className="text-sm text-muted-foreground">Animação Normal (1s - padrão)</p>
               <Button withGradient gradientDuration={1}>
                 Normal Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Animação Lenta (2s)
-              </p>
+              <p className="text-sm text-muted-foreground">Animação Lenta (2s)</p>
               <Button withGradient gradientDuration={2}>
                 Slow Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Gradiente Pequeno (400px)
-              </p>
+              <p className="text-sm text-muted-foreground">Gradiente Pequeno (400px)</p>
               <Button withGradient gradientSize={400}>
                 Small Gradient
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Gradiente Grande (1000px)
-              </p>
+              <p className="text-sm text-muted-foreground">Gradiente Grande (1000px)</p>
               <Button withGradient gradientSize={1000}>
                 Large Gradient
               </Button>
@@ -183,9 +165,7 @@ export function GradientButtonDemo() {
       <Card>
         <CardHeader>
           <CardTitle>Estado Desabilitado</CardTitle>
-          <CardDescription>
-            Botões desabilitados não mostram o efeito de gradiente
-          </CardDescription>
+          <CardDescription>Botões desabilitados não mostram o efeito de gradiente</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
@@ -206,9 +186,7 @@ export function GradientButtonDemo() {
       <Card>
         <CardHeader>
           <CardTitle>Exemplos do Mundo Real</CardTitle>
-          <CardDescription>
-            Como usar em cenários reais da aplicação
-          </CardDescription>
+          <CardDescription>Como usar em cenários reais da aplicação</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
@@ -248,4 +226,3 @@ export function GradientButtonDemo() {
     </div>
   )
 }
-

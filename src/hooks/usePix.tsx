@@ -3,12 +3,12 @@
  * Integrates tRPC with Supabase Realtime
  */
 
-import { useCallback, useEffect, useMemo } from 'react'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import type { InfiniteData } from '@tanstack/react-query'
-import { trpc, trpcClient } from '@/lib/trpc'
-import { supabase } from '@/integrations/supabase/client'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
+import { supabase } from '@/integrations/supabase/client'
+import { trpc, trpcClient } from '@/lib/trpc'
 import type { PixTransaction, PixTransactionType } from '@/types/pix'
 
 type PixTransactionsResponse = {
@@ -29,7 +29,7 @@ type PixTransactionRealtimePayload = Partial<PixTransaction> & {
 
 export function usePixKeys() {
   const utils = trpc.useUtils()
-  
+
   const { data: keys, isLoading, error } = trpc.pix.getKeys.useQuery()
   const { mutate: createKey } = trpc.pix.createKey.useMutation({
     onSuccess: () => {
@@ -40,7 +40,7 @@ export function usePixKeys() {
       toast.error(error.message || 'Erro ao cadastrar chave PIX')
     },
   })
-  
+
   const { mutate: updateKey } = trpc.pix.updateKey.useMutation({
     onSuccess: () => {
       utils.pix.getKeys.invalidate()
@@ -50,7 +50,7 @@ export function usePixKeys() {
       toast.error(error.message || 'Erro ao atualizar chave PIX')
     },
   })
-  
+
   const { mutate: deleteKey } = trpc.pix.deleteKey.useMutation({
     onSuccess: () => {
       utils.pix.getKeys.invalidate()
@@ -98,7 +98,7 @@ export function usePixKeys() {
 
 export function usePixFavorites() {
   const { data: favorites, isLoading, error } = trpc.pix.getFavorites.useQuery()
-  
+
   return {
     favorites: favorites || [],
     isLoading,
@@ -129,26 +129,27 @@ export function usePixTransactions(filters?: {
   const baseOffset = filters?.offset ?? 0
 
   const queryKey = useMemo(
-    () => [
-      'pix',
-      'transactions',
-      typeFilter ?? null,
-      statusFilter ?? null,
-      startDateFilter ?? null,
-      endDateFilter ?? null,
-      limit,
-      baseOffset,
-    ] as const,
+    () =>
+      [
+        'pix',
+        'transactions',
+        typeFilter ?? null,
+        statusFilter ?? null,
+        startDateFilter ?? null,
+        endDateFilter ?? null,
+        limit,
+        baseOffset,
+      ] as const,
     [typeFilter, statusFilter, startDateFilter, endDateFilter, limit, baseOffset]
   )
 
-  const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery<PixTransactionsResponse, Error, InfiniteData<PixTransactionsResponse, number>, typeof queryKey, number>({
+  const { data, isLoading, error, fetchNextPage, hasNextPage } = useInfiniteQuery<
+    PixTransactionsResponse,
+    Error,
+    InfiniteData<PixTransactionsResponse, number>,
+    typeof queryKey,
+    number
+  >({
     queryKey,
     initialPageParam: baseOffset,
     queryFn: async ({ pageParam = baseOffset }) =>
@@ -174,10 +175,7 @@ export function usePixTransactions(filters?: {
     },
   })
 
-  const transactions = useMemo(
-    () => data?.pages.flatMap((page) => page.transactions) ?? [],
-    [data]
-  )
+  const transactions = useMemo(() => data?.pages.flatMap((page) => page.transactions) ?? [], [data])
 
   const invalidatePixTransactions = useCallback(() => {
     utils.pix.getTransactions.invalidate()
@@ -251,7 +249,7 @@ export function usePixTransactions(filters?: {
 
 export function usePixTransaction(id: string) {
   const { data: transaction, isLoading, error } = trpc.pix.getTransaction.useQuery({ id })
-  
+
   return {
     transaction,
     isLoading,
@@ -261,7 +259,7 @@ export function usePixTransaction(id: string) {
 
 export function usePixStats(period: '24h' | '7d' | '30d' | '1y' = '30d') {
   const { data: stats, isLoading, error } = trpc.pix.getStats.useQuery({ period })
-  
+
   return {
     stats: stats || {
       totalSent: 0,
@@ -282,9 +280,9 @@ export function usePixStats(period: '24h' | '7d' | '30d' | '1y' = '30d') {
 
 export function usePixQRCodes() {
   const utils = trpc.useUtils()
-  
+
   const { data: qrCodes, isLoading, error } = trpc.pix.getQRCodes.useQuery()
-  
+
   const { mutate: generateQRCode, isPending: isGenerating } = trpc.pix.generateQRCode.useMutation({
     onSuccess: () => {
       utils.pix.getQRCodes.invalidate()
@@ -294,7 +292,7 @@ export function usePixQRCodes() {
       toast.error(error.message || 'Erro ao gerar QR Code')
     },
   })
-  
+
   const { mutate: deactivateQRCode } = trpc.pix.deactivateQRCode.useMutation({
     onSuccess: () => {
       utils.pix.getQRCodes.invalidate()
@@ -367,7 +365,7 @@ export function usePixTransactionMonitor(transactionId?: string) {
         },
         (payload) => {
           const updated = payload.new as PixTransactionRealtimePayload
-          
+
           // Notify user of status changes
           if (updated.status === 'completed') {
             toast.success('Transação PIX concluída!')
@@ -376,7 +374,7 @@ export function usePixTransactionMonitor(transactionId?: string) {
               description: updated.errorMessage ?? updated.error_message ?? undefined,
             })
           }
-          
+
           utils.pix.getTransaction.invalidate({ id: transactionId })
           utils.pix.getTransactions.invalidate()
           queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] })

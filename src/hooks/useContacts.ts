@@ -1,7 +1,7 @@
-import { trpc } from '@/lib/trpc'
-import { toast } from 'sonner'
 import { useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { supabase } from '@/integrations/supabase/client'
+import { trpc } from '@/lib/trpc'
 
 /**
  * Hook para gerenciar contatos
@@ -13,10 +13,9 @@ export function useContacts(filters?: {
   offset?: number
 }) {
   const utils = trpc.useUtils()
-  
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } = trpc.contacts.getAll.useInfiniteQuery(
-    filters || {},
-    {
+
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+    trpc.contacts.getAll.useInfiniteQuery(filters || {}, {
       getNextPageParam: (lastPage) => {
         if (lastPage.hasMore) {
           return {
@@ -26,11 +25,10 @@ export function useContacts(filters?: {
         }
         return undefined
       },
-    }
-  )
+    })
 
   const contacts = useMemo(() => {
-    return data?.pages.flatMap(page => page.contacts) || []
+    return data?.pages.flatMap((page) => page.contacts) || []
   }, [data])
 
   const total = useMemo(() => {
@@ -43,11 +41,14 @@ export function useContacts(filters?: {
         if (!old) return { pages: [{ contacts: [data], total: 1, hasMore: false }] }
         return {
           ...old,
-          pages: [{
-            ...old.pages[0],
-            contacts: [data, ...old.pages[0].contacts],
-            total: old.pages[0].total + 1,
-          }, ...old.pages.slice(1)]
+          pages: [
+            {
+              ...old.pages[0],
+              contacts: [data, ...old.pages[0].contacts],
+              total: old.pages[0].total + 1,
+            },
+            ...old.pages.slice(1),
+          ],
         }
       })
       utils.contacts.getStats.invalidate()
@@ -64,10 +65,10 @@ export function useContacts(filters?: {
         if (!old) return old
         return {
           ...old,
-          pages: old.pages.map(page => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            contacts: page.contacts.map(c => c.id === data.id ? data : c)
-          }))
+            contacts: page.contacts.map((c) => (c.id === data.id ? data : c)),
+          })),
         }
       })
       utils.contacts.getStats.invalidate()
@@ -89,26 +90,29 @@ export function useContacts(filters?: {
     },
   })
 
-  const { mutate: toggleFavorite, isPending: isTogglingFavorite } = trpc.contacts.toggleFavorite.useMutation({
-    onSuccess: (data) => {
-      utils.contacts.getAll.setData(undefined, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            contacts: page.contacts.map(c => c.id === data.id ? data : c)
-          }))
-        }
-      })
-      utils.contacts.getFavorites.invalidate()
-      utils.contacts.getStats.invalidate()
-      toast.success(data.is_favorite ? 'Contato adicionado aos favoritos!' : 'Contato removido dos favoritos!')
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao alternar favorito')
-    },
-  })
+  const { mutate: toggleFavorite, isPending: isTogglingFavorite } =
+    trpc.contacts.toggleFavorite.useMutation({
+      onSuccess: (data) => {
+        utils.contacts.getAll.setData(undefined, (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              contacts: page.contacts.map((c) => (c.id === data.id ? data : c)),
+            })),
+          }
+        })
+        utils.contacts.getFavorites.invalidate()
+        utils.contacts.getStats.invalidate()
+        toast.success(
+          data.is_favorite ? 'Contato adicionado aos favoritos!' : 'Contato removido dos favoritos!'
+        )
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao alternar favorito')
+      },
+    })
 
   // Real-time subscription para contatos
   useEffect(() => {
@@ -160,10 +164,11 @@ export function useContacts(filters?: {
  * Hook para obter contato específico
  */
 export function useContact(contactId: string) {
-  const { data: contact, isLoading, error } = trpc.contacts.getById.useQuery(
-    { id: contactId },
-    { enabled: !!contactId }
-  )
+  const {
+    data: contact,
+    isLoading,
+    error,
+  } = trpc.contacts.getById.useQuery({ id: contactId }, { enabled: !!contactId })
 
   return {
     contact,
@@ -189,10 +194,11 @@ export function useFavoriteContacts() {
  * Hook para busca de contatos
  */
 export function useContactSearch(query: string, limit: number = 10) {
-  const { data: searchResults, isLoading, error } = trpc.contacts.search.useQuery(
-    { query, limit },
-    { enabled: !!query && query.length >= 2 }
-  )
+  const {
+    data: searchResults,
+    isLoading,
+    error,
+  } = trpc.contacts.search.useQuery({ query, limit }, { enabled: !!query && query.length >= 2 })
 
   return {
     searchResults: searchResults || [],
@@ -238,22 +244,22 @@ export function useContactsForTransfer() {
 
   // Filtrar contatos que têm informações para transferência
   const transferableContacts = useMemo(() => {
-    return contacts.filter(contact => 
-      contact.email || contact.phone || contact.cpf
-    ).map(contact => ({
-      id: contact.id,
-      name: contact.name,
-      email: contact.email,
-      phone: contact.phone,
-      cpf: contact.cpf,
-      isFavorite: contact.is_favorite,
-      // Determinar métodos de pagamento disponíveis
-      availableMethods: [
-        ...(contact.email ? ['EMAIL'] : []),
-        ...(contact.phone ? ['PHONE'] : []),
-        ...(contact.cpf ? ['CPF', 'CNPJ'] : []),
-      ],
-    }))
+    return contacts
+      .filter((contact) => contact.email || contact.phone || contact.cpf)
+      .map((contact) => ({
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        cpf: contact.cpf,
+        isFavorite: contact.is_favorite,
+        // Determinar métodos de pagamento disponíveis
+        availableMethods: [
+          ...(contact.email ? ['EMAIL'] : []),
+          ...(contact.phone ? ['PHONE'] : []),
+          ...(contact.cpf ? ['CPF', 'CNPJ'] : []),
+        ],
+      }))
   }, [contacts])
 
   return {
@@ -269,22 +275,22 @@ export function useContactsForPix() {
 
   // Filtrar contatos que têm informações para PIX
   const pixContacts = useMemo(() => {
-    return contacts.filter(contact => 
-      contact.email || contact.phone || contact.cpf
-    ).map(contact => ({
-      id: contact.id,
-      name: contact.name,
-      email: contact.email,
-      phone: contact.phone,
-      cpf: contact.cpf,
-      isFavorite: contact.is_favorite,
-      // Determinar chaves PIX disponíveis
-      pixKeys: [
-        ...(contact.email ? [{ type: 'EMAIL', value: contact.email }] : []),
-        ...(contact.phone ? [{ type: 'PHONE', value: contact.phone }] : []),
-        ...(contact.cpf ? [{ type: 'CPF', value: contact.cpf }] : []),
-      ],
-    }))
+    return contacts
+      .filter((contact) => contact.email || contact.phone || contact.cpf)
+      .map((contact) => ({
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        cpf: contact.cpf,
+        isFavorite: contact.is_favorite,
+        // Determinar chaves PIX disponíveis
+        pixKeys: [
+          ...(contact.email ? [{ type: 'EMAIL', value: contact.email }] : []),
+          ...(contact.phone ? [{ type: 'PHONE', value: contact.phone }] : []),
+          ...(contact.cpf ? [{ type: 'CPF', value: contact.cpf }] : []),
+        ],
+      }))
   }, [contacts])
 
   return {
@@ -302,8 +308,8 @@ export function useContactSuggestions(limit: number = 3) {
   // Combinar favoritos e contatos recentes, removendo duplicatas
   const suggestions = useMemo(() => {
     const allContacts = [...favoriteContacts, ...contacts]
-    const uniqueContacts = allContacts.filter((contact, index, self) => 
-      index === self.findIndex(c => c.id === contact.id)
+    const uniqueContacts = allContacts.filter(
+      (contact, index, self) => index === self.findIndex((c) => c.id === contact.id)
     )
     return uniqueContacts.slice(0, limit)
   }, [favoriteContacts, contacts, limit])

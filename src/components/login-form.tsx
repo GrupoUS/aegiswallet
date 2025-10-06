@@ -1,20 +1,18 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
-export interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
-  onSubmit?: (email: string, password: string, isSignUp: boolean) => Promise<{ error?: { message: string } }>
+export interface LoginFormProps extends React.ComponentPropsWithoutRef<'div'> {
+  onSubmit?: (
+    email: string,
+    password: string,
+    isSignUp: boolean
+  ) => Promise<{ error?: { message: string } }>
   onGoogleSignIn?: () => Promise<void>
   loading?: boolean
   error?: string
@@ -28,18 +26,18 @@ export function LoginForm({
   error: externalError,
   ...props
 }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [internalLoading, setInternalLoading] = useState(false)
-  const [internalError, setInternalError] = useState("")
+  const [internalError, setInternalError] = useState('')
 
   const loading = externalLoading ?? internalLoading
   const error = externalError ?? internalError
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setInternalError("")
+    setInternalError('')
 
     if (!onSubmit) return
 
@@ -49,10 +47,10 @@ export function LoginForm({
       if (result?.error) {
         setInternalError(result.error.message)
       } else if (isSignUp) {
-        setInternalError("Verifique seu email para confirmar o cadastro!")
+        setInternalError('Verifique seu email para confirmar o cadastro!')
       }
     } catch {
-      setInternalError("Erro ao processar sua solicitação")
+      setInternalError('Erro ao processar sua solicitação')
     } finally {
       setInternalLoading(false)
     }
@@ -61,28 +59,28 @@ export function LoginForm({
   const handleGoogleSignIn = async () => {
     if (!onGoogleSignIn) return
 
-    setInternalError("")
+    setInternalError('')
     setInternalLoading(true)
     try {
       await onGoogleSignIn()
     } catch {
-      setInternalError("Erro ao fazer login com Google")
+      setInternalError('Erro ao fazer login com Google')
     } finally {
       setInternalLoading(false)
     }
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-border/50 shadow-lg">
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
+      <Card className="border/50 shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            {isSignUp ? "Criar Conta" : "Bem-vindo de volta"}
+            {isSignUp ? 'Criar Conta' : 'Bem-vindo de volta'}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {isSignUp
-              ? "Preencha os dados para criar sua conta"
-              : "Entre com suas credenciais para acessar sua conta"}
+              ? 'Preencha os dados para criar sua conta'
+              : 'Entre com suas credenciais para acessar sua conta'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,12 +134,12 @@ export function LoginForm({
                 disabled={loading}
                 className="w-full bg-primary hover:bg-primary/90 transition-all"
               >
-                {loading ? "Processando..." : isSignUp ? "Cadastrar" : "Entrar"}
+                {loading ? 'Processando...' : isSignUp ? 'Cadastrar' : 'Entrar'}
               </Button>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border"></div>
+                  <div className="w-full border-t border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-card text-muted-foreground">Ou continue com</span>
@@ -182,13 +180,11 @@ export function LoginForm({
                 type="button"
                 onClick={() => {
                   setIsSignUp(!isSignUp)
-                  setInternalError("")
+                  setInternalError('')
                 }}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                {isSignUp
-                  ? "Já tem uma conta? Entre aqui"
-                  : "Não tem uma conta? Cadastre-se"}
+                {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem uma conta? Cadastre-se'}
               </Button>
             </div>
           </form>

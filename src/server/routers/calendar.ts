@@ -1,38 +1,37 @@
-import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
-import { supabase } from '@/integrations/supabase/client'
 import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { supabase } from '@/integrations/supabase/client'
+import { protectedProcedure, router } from '../trpc'
 
 /**
  * Calendar Router - Gerenciamento de eventos financeiros
  */
 export const calendarRouter = router({
   // Listar tipos de eventos
-  getEventTypes: protectedProcedure
-    .query(async () => {
-      try {
-        const { data, error } = await supabase
-          .from('event_types')
-          .select('*')
-          .order('name', { ascending: true })
+  getEventTypes: protectedProcedure.query(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('event_types')
+        .select('*')
+        .order('name', { ascending: true })
 
-        if (error) {
-          console.error('Error fetching event types:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar tipos de eventos',
-          })
-        }
-
-        return data || []
-      } catch (error) {
-        console.error('Event types fetch error:', error)
+      if (error) {
+        console.error('Error fetching event types:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar tipos de eventos',
         })
       }
-    }),
+
+      return data || []
+    } catch (error) {
+      console.error('Event types fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar tipos de eventos',
+      })
+    }
+  }),
 
   // Listar eventos financeiros
   getEvents: protectedProcedure
@@ -284,81 +283,79 @@ export const calendarRouter = router({
     }),
 
   // Obter eventos próximos (próximos 30 dias)
-  getUpcomingEvents: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const today = new Date()
-        const thirtyDaysFromNow = new Date()
-        thirtyDaysFromNow.setDate(today.getDate() + 30)
+  getUpcomingEvents: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const today = new Date()
+      const thirtyDaysFromNow = new Date()
+      thirtyDaysFromNow.setDate(today.getDate() + 30)
 
-        const { data, error } = await supabase
-          .from('financial_events')
-          .select(`
+      const { data, error } = await supabase
+        .from('financial_events')
+        .select(`
             *,
             event_types(id, name, color, icon),
             transaction_categories(id, name, color, icon)
           `)
-          .eq('user_id', ctx.user.id)
-          .eq('is_completed', false)
-          .gte('event_date', today.toISOString())
-          .lte('event_date', thirtyDaysFromNow.toISOString())
-          .order('event_date', { ascending: true })
-          .limit(10)
+        .eq('user_id', ctx.user.id)
+        .eq('is_completed', false)
+        .gte('event_date', today.toISOString())
+        .lte('event_date', thirtyDaysFromNow.toISOString())
+        .order('event_date', { ascending: true })
+        .limit(10)
 
-        if (error) {
-          console.error('Error fetching upcoming events:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar próximos eventos',
-          })
-        }
-
-        return data || []
-      } catch (error) {
-        console.error('Upcoming events fetch error:', error)
+      if (error) {
+        console.error('Error fetching upcoming events:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar próximos eventos',
         })
       }
-    }),
+
+      return data || []
+    } catch (error) {
+      console.error('Upcoming events fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar próximos eventos',
+      })
+    }
+  }),
 
   // Obter eventos atrasados
-  getOverdueEvents: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const today = new Date()
+  getOverdueEvents: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const today = new Date()
 
-        const { data, error } = await supabase
-          .from('financial_events')
-          .select(`
+      const { data, error } = await supabase
+        .from('financial_events')
+        .select(`
             *,
             event_types(id, name, color, icon),
             transaction_categories(id, name, color, icon)
           `)
-          .eq('user_id', ctx.user.id)
-          .eq('is_completed', false)
-          .lt('due_date', today.toISOString())
-          .not('due_date', 'is', null)
-          .order('due_date', { ascending: true })
+        .eq('user_id', ctx.user.id)
+        .eq('is_completed', false)
+        .lt('due_date', today.toISOString())
+        .not('due_date', 'is', null)
+        .order('due_date', { ascending: true })
 
-        if (error) {
-          console.error('Error fetching overdue events:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar eventos atrasados',
-          })
-        }
-
-        return data || []
-      } catch (error) {
-        console.error('Overdue events fetch error:', error)
+      if (error) {
+        console.error('Error fetching overdue events:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar eventos atrasados',
         })
       }
-    }),
+
+      return data || []
+    } catch (error) {
+      console.error('Overdue events fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar eventos atrasados',
+      })
+    }
+  }),
 
   // Criar lembrete para evento
   createReminder: protectedProcedure

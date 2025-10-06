@@ -3,18 +3,18 @@
  * Widget de calendário para o dashboard com próximos eventos
  */
 
-import { useState } from 'react'
-import { format, isFuture, compareAsc } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { compareAsc, format, isFuture } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react'
-import { useCalendar } from './calendar-context'
-import { OriginCompactCalendar } from './origin-compact-calendar'
-import { formatEventAmount } from '@/types/financial-events'
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatEventAmount } from '@/types/financial-events'
+import { useCalendar } from './calendar-context'
+import { OriginCompactCalendar } from './origin-compact-calendar'
 
 export function MiniCalendarWidget() {
   const { events } = useCalendar()
@@ -23,7 +23,11 @@ export function MiniCalendarWidget() {
 
   // Filtrar próximos eventos
   const upcomingEvents = events
-    .filter((e) => isFuture(new Date(e.start)) || format(new Date(e.start), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'))
+    .filter(
+      (e) =>
+        isFuture(new Date(e.start)) ||
+        format(new Date(e.start), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+    )
     .sort((a, b) => compareAsc(new Date(a.start), new Date(b.start)))
     .slice(0, 5)
 
@@ -100,9 +104,7 @@ export function MiniCalendarWidget() {
                         </Badge>
                       </div>
                     </div>
-                    <div className="text-sm font-semibold">
-                      {formatEventAmount(event.amount)}
-                    </div>
+                    <div className="text-sm font-semibold">{formatEventAmount(event.amount)}</div>
                   </div>
                 </button>
               ))

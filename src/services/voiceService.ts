@@ -264,4 +264,3 @@ export const VOICE_FEEDBACK = {
 } as const
 
 export default VoiceService
-

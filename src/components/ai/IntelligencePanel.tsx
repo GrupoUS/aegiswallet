@@ -2,8 +2,6 @@
  * AI Intelligence Panel - Story 04.04
  */
 
-
-
 export function IntelligencePanel() {
   return (
     <div className="bg-purple-50 rounded-lg p-6">

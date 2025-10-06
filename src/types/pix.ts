@@ -97,27 +97,27 @@ export function validatePixKey(key: string, type?: PixKeyType): boolean {
   if (type) {
     return PIX_KEY_REGEX[type].test(key.replace(/[^\w@.-]/g, ''))
   }
-  
+
   // Try all types
   const cleanKey = key.replace(/[^\w@.-]/g, '')
-  return Object.values(PIX_KEY_REGEX).some(regex => regex.test(cleanKey))
+  return Object.values(PIX_KEY_REGEX).some((regex) => regex.test(cleanKey))
 }
 
 export function detectPixKeyType(key: string): PixKeyType | null {
   const cleanKey = key.replace(/[^\w@.-]/g, '')
-  
+
   if (PIX_KEY_REGEX.email.test(cleanKey)) return 'email'
   if (PIX_KEY_REGEX.random.test(cleanKey)) return 'random'
   if (PIX_KEY_REGEX.cnpj.test(cleanKey)) return 'cnpj'
   if (PIX_KEY_REGEX.cpf.test(cleanKey)) return 'cpf'
   if (PIX_KEY_REGEX.phone.test(cleanKey)) return 'phone'
-  
+
   return null
 }
 
 export function formatPixKey(key: string, type: PixKeyType): string {
   const cleanKey = key.replace(/\D/g, '')
-  
+
   switch (type) {
     case 'cpf':
       return cleanKey.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')

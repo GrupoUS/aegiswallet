@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from '@/contexts/AuthContext'
+import { ArrowLeft, CheckCircle, Copy, QrCode } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, QrCode, Copy, CheckCircle } from 'lucide-react'
-import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
 
 export const Route = createFileRoute('/pix/receber')({
   component: PixReceivePage,
@@ -52,7 +52,7 @@ function PixReceivePage() {
   }
 
   const generateQRCode = () => {
-    toast.success("QR Code gerado com sucesso!")
+    toast.success('QR Code gerado com sucesso!')
   }
 
   if (isLoading) {
@@ -70,12 +70,7 @@ function PixReceivePage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: '/pix' })}
-          className="mb-4"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pix' })} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard PIX
         </Button>
@@ -104,9 +99,7 @@ function PixReceivePage() {
                 value={amount}
                 onChange={handleAmountChange}
               />
-              <p className="text-xs text-muted-foreground">
-                Deixe em branco para valor livre
-              </p>
+              <p className="text-xs text-muted-foreground">Deixe em branco para valor livre</p>
             </div>
 
             <div className="space-y-2">
@@ -124,9 +117,7 @@ function PixReceivePage() {
             <div className="bg-muted aspect-square rounded-lg flex items-center justify-center">
               <div className="text-center p-6">
                 <QrCode className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  O QR Code será gerado aqui
-                </p>
+                <p className="text-sm text-muted-foreground">O QR Code será gerado aqui</p>
               </div>
             </div>
 
@@ -135,9 +126,7 @@ function PixReceivePage() {
               Gerar QR Code
             </Button>
 
-            <div className="text-xs text-muted-foreground text-center">
-              Válido por 24 horas
-            </div>
+            <div className="text-xs text-muted-foreground text-center">Válido por 24 horas</div>
           </CardContent>
         </Card>
 
@@ -154,9 +143,7 @@ function PixReceivePage() {
               >
                 <div className="flex-1">
                   <div className="font-medium text-sm">{pixKey.label}</div>
-                  <div className="font-mono text-xs text-muted-foreground">
-                    {pixKey.value}
-                  </div>
+                  <div className="font-mono text-xs text-muted-foreground">{pixKey.value}</div>
                 </div>
                 <Button
                   variant="ghost"
@@ -174,7 +161,8 @@ function PixReceivePage() {
 
             <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg mt-4">
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                💡 Dica: Compartilhe qualquer uma das suas chaves PIX para receber pagamentos instantâneos
+                💡 Dica: Compartilhe qualquer uma das suas chaves PIX para receber pagamentos
+                instantâneos
               </p>
             </div>
           </CardContent>

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from '@/contexts/AuthContext'
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { useEffect } from 'react'
 import { PixTransfer } from '@/components/financial/PixTransfer'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/AuthContext'
 
 export const Route = createFileRoute('/pix/transferir')({
   component: PixTransferPage,
@@ -34,12 +34,7 @@ function PixTransferPage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-2xl">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: '/pix' })}
-          className="mb-4"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pix' })} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard PIX
         </Button>

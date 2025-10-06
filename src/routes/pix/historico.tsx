@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from '@/contexts/AuthContext'
+import { ArrowLeft, Download, Filter } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { PixTransactionsTable } from '@/components/pix/PixTransactionsTable'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DateRangePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -11,10 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DateRangePicker } from '@/components/ui/date-picker'
-import { ArrowLeft, Download, Filter } from 'lucide-react'
-import { PixTransactionsTable } from '@/components/pix/PixTransactionsTable'
-import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
 
 export const Route = createFileRoute('/pix/historico')({
   component: PixHistoryPage,
@@ -35,11 +35,11 @@ function PixHistoryPage() {
   }, [isAuthenticated, isLoading, navigate])
 
   const exportStatement = () => {
-    toast.success("Extrato exportado com sucesso!")
+    toast.success('Extrato exportado com sucesso!')
   }
 
   const applyFilters = () => {
-    toast.info("Filtros aplicados!")
+    toast.info('Filtros aplicados!')
   }
 
   const clearFilters = () => {
@@ -47,7 +47,7 @@ function PixHistoryPage() {
     setDateTo(undefined)
     setFilterType('all')
     setFilterStatus('all')
-    toast.info("Filtros limpos!")
+    toast.info('Filtros limpos!')
   }
 
   if (isLoading) {
@@ -65,12 +65,7 @@ function PixHistoryPage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: '/pix' })}
-          className="mb-4"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pix' })} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard PIX
         </Button>
@@ -142,9 +137,7 @@ function PixHistoryPage() {
           </div>
 
           <div className="flex gap-2 mt-4">
-            <Button onClick={applyFilters}>
-              Aplicar Filtros
-            </Button>
+            <Button onClick={applyFilters}>Aplicar Filtros</Button>
             <Button variant="outline" onClick={clearFilters}>
               Limpar Filtros
             </Button>

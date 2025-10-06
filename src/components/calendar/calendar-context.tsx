@@ -3,22 +3,21 @@
  * Gerencia estado global do calendário financeiro
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { addDays, setHours, setMinutes, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
-import type { FinancialEvent, EventColor } from '@/types/financial-events'
-import {
-  useFinancialEvents,
-  useFinancialEventMutations,
-  useFinancialEventsRealtime,
-} from '@/hooks/useFinancialEvents'
-
+import { addDays, addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns'
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import type {
-  CalendarView,
   CalendarCategory,
   CalendarFilter,
   CalendarSettings,
+  CalendarView,
 } from '@/components/ui/event-calendar/types'
 import { DEFAULT_CALENDAR_CATEGORIES } from '@/components/ui/event-calendar/types'
+import {
+  useFinancialEventMutations,
+  useFinancialEvents,
+  useFinancialEventsRealtime,
+} from '@/hooks/useFinancialEvents'
+import type { EventColor, FinancialEvent } from '@/types/financial-events'
 
 interface CalendarContextType {
   currentDate: Date
@@ -48,185 +47,8 @@ interface CalendarContextType {
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined)
 
 // Mock data - eventos financeiros de exemplo
-const generateMockEvents = (): FinancialEvent[] => {
-  const today = new Date()
-
-  return [
-    // Contas a pagar
-    {
-      id: '1',
-      title: 'Energia Elétrica',
-      description: 'Conta de luz mensal',
-      start: setMinutes(setHours(addDays(today, 3), 9), 0),
-      end: setMinutes(setHours(addDays(today, 3), 9), 30),
-      type: 'bill',
-      amount: -245.67,
-      color: 'orange',
-      icon: '⚡',
-      status: 'pending',
-      category: 'utilities',
-      recurring: true,
-    },
-    {
-      id: '2',
-      title: 'Internet',
-      description: 'Pacote fibra 500MB',
-      start: setMinutes(setHours(addDays(today, -5), 10), 0),
-      end: setMinutes(setHours(addDays(today, -5), 10), 30),
-      type: 'bill',
-      amount: -99.9,
-      color: 'orange',
-      icon: '🌐',
-      status: 'paid',
-      category: 'utilities',
-      recurring: true,
-    },
-    {
-      id: '3',
-      title: 'Aluguel',
-      description: 'Pagamento mensal',
-      start: setMinutes(setHours(addDays(today, -10), 8), 0),
-      end: setMinutes(setHours(addDays(today, -10), 8), 30),
-      type: 'bill',
-      amount: -1500.0,
-      color: 'orange',
-      icon: '🏠',
-      status: 'paid',
-      category: 'housing',
-      recurring: true,
-    },
-    {
-      id: '4',
-      title: 'Água',
-      description: 'Conta de água',
-      start: setMinutes(setHours(addDays(today, 8), 14), 0),
-      end: setMinutes(setHours(addDays(today, 8), 14), 30),
-      type: 'bill',
-      amount: -85.3,
-      color: 'orange',
-      icon: '💧',
-      status: 'pending',
-      category: 'utilities',
-      recurring: true,
-    },
-    {
-      id: '5',
-      title: 'Cartão de Crédito',
-      description: 'Fatura do mês',
-      start: setMinutes(setHours(addDays(today, 15), 10), 0),
-      end: setMinutes(setHours(addDays(today, 15), 10), 30),
-      type: 'bill',
-      amount: -1250.45,
-      color: 'orange',
-      icon: '💳',
-      status: 'pending',
-      category: 'credit',
-      recurring: true,
-    },
-
-    // Receitas
-    {
-      id: '6',
-      title: 'Salário',
-      description: 'Pagamento mensal',
-      start: setMinutes(setHours(addDays(today, 5), 9), 0),
-      end: setMinutes(setHours(addDays(today, 5), 9), 30),
-      type: 'income',
-      amount: 3500.0,
-      color: 'emerald',
-      icon: '💰',
-      status: 'scheduled',
-      category: 'salary',
-      recurring: true,
-    },
-    {
-      id: '7',
-      title: 'Freelance',
-      description: 'Projeto de consultoria',
-      start: setMinutes(setHours(addDays(today, -3), 14), 0),
-      end: setMinutes(setHours(addDays(today, -3), 14), 30),
-      type: 'income',
-      amount: 1200.0,
-      color: 'emerald',
-      icon: '💼',
-      status: 'paid',
-      category: 'work',
-    },
-
-    // Despesas
-    {
-      id: '8',
-      title: 'Supermercado',
-      description: 'Compras mensais',
-      start: setMinutes(setHours(today, 18), 0),
-      end: setMinutes(setHours(today, 18), 30),
-      type: 'expense',
-      amount: -345.67,
-      color: 'rose',
-      icon: '🛒',
-      status: 'paid',
-      category: 'groceries',
-    },
-    {
-      id: '9',
-      title: 'Restaurante',
-      description: 'Jantar com amigos',
-      start: setMinutes(setHours(addDays(today, -2), 20), 0),
-      end: setMinutes(setHours(addDays(today, -2), 22), 0),
-      type: 'expense',
-      amount: -125.0,
-      color: 'rose',
-      icon: '🍽️',
-      status: 'paid',
-      category: 'food',
-    },
-    {
-      id: '10',
-      title: 'Gasolina',
-      description: 'Abastecimento',
-      start: setMinutes(setHours(addDays(today, -7), 8), 30),
-      end: setMinutes(setHours(addDays(today, -7), 9), 0),
-      type: 'expense',
-      amount: -180.0,
-      color: 'rose',
-      icon: '⛽',
-      status: 'paid',
-      category: 'transport',
-    },
-
-    // Transferências
-    {
-      id: '11',
-      title: 'Transferência Poupança',
-      description: 'Investimento mensal',
-      start: setMinutes(setHours(addDays(today, 1), 10), 0),
-      end: setMinutes(setHours(addDays(today, 1), 10), 15),
-      type: 'transfer',
-      amount: -500.0,
-      color: 'violet',
-      icon: '💸',
-      status: 'scheduled',
-      category: 'savings',
-      recurring: true,
-    },
-
-    // Agendamentos futuros
-    {
-      id: '12',
-      title: 'Academia',
-      description: 'Mensalidade trimestral',
-      start: setMinutes(setHours(addDays(today, 20), 9), 0),
-      end: setMinutes(setHours(addDays(today, 20), 9), 30),
-      type: 'scheduled',
-      amount: -150.0,
-      color: 'blue',
-      icon: '💪',
-      status: 'scheduled',
-      category: 'health',
-      recurring: true,
-    },
-  ]
-}
+// Mock data removed - use only real Supabase data
+// Financial events should come exclusively from the database
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
@@ -242,9 +64,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     deleteEvent: deleteEventMutation,
   } = useFinancialEventMutations()
 
-  // State for events (either from Supabase or mock data)
+  // State for events (only from Supabase - no mock data)
   const [localEvents, setLocalEvents] = useState<FinancialEvent[]>([])
-// Enhanced states for view and filtering
+  // Enhanced states for view and filtering
   const [currentView, setCurrentView] = useState<CalendarView>('week')
   const [categories] = useState<CalendarCategory[]>(DEFAULT_CALENDAR_CATEGORIES)
   const [filters, setFilters] = useState<CalendarFilter>({})
@@ -257,19 +79,14 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     showWeekNumbers: false,
   })
 
-  // Initialize with either Supabase data or mock data
+  // Initialize with Supabase data only - no mock data fallback
   useEffect(() => {
     if (!loading) {
       if (error) {
-        // If Supabase fails, use mock data
-        console.warn('Using mock data because Supabase error:', error)
-        setLocalEvents(generateMockEvents())
-      } else if (supabaseEvents.length === 0) {
-        // If no events in Supabase, seed with mock data
-        console.info('No events found, using mock data')
-        setLocalEvents(generateMockEvents())
+        console.warn('Error loading financial events:', error)
+        setLocalEvents([])
       } else {
-        // Use Supabase data
+        // Use only Supabase data, even if empty
         setLocalEvents(supabaseEvents)
       }
     }
@@ -287,9 +104,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         const newEvent = await addEventMutation(event)
         setLocalEvents((prev) => [...prev, newEvent])
       } catch (err) {
-        // Fallback to local state if mutation fails
-        console.error('Failed to add event to Supabase, adding locally:', err)
-        setLocalEvents((prev) => [...prev, event])
+        console.error('Failed to add event to Supabase:', err)
+        throw err
       }
     },
     [addEventMutation]
@@ -303,11 +119,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
           prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
         )
       } catch (err) {
-        // Fallback to local state if mutation fails
-        console.error('Failed to update event in Supabase, updating locally:', err)
-        setLocalEvents((prev) =>
-          prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
-        )
+        console.error('Failed to update event in Supabase:', err)
+        throw err
       }
     },
     [updateEventMutation]
@@ -319,9 +132,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         await deleteEventMutation(eventId)
         setLocalEvents((prev) => prev.filter((event) => event.id !== eventId))
       } catch (err) {
-        // Fallback to local state if mutation fails
-        console.error('Failed to delete event from Supabase, deleting locally:', err)
-        setLocalEvents((prev) => prev.filter((event) => event.id !== eventId))
+        console.error('Failed to delete event from Supabase:', err)
+        throw err
       }
     },
     [deleteEventMutation]
@@ -373,7 +185,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     [visibleColors]
   )
 
-// Enhanced filtering functions
+  // Enhanced filtering functions
   const getFilteredEvents = useCallback((): FinancialEvent[] => {
     let filteredEvents = localEvents
 
@@ -396,9 +208,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     // Filter by search query
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
-      filteredEvents = filteredEvents.filter((event) =>
-        event.title.toLowerCase().includes(searchLower) ||
-        event.description?.toLowerCase().includes(searchLower)
+      filteredEvents = filteredEvents.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchLower) ||
+          event.description?.toLowerCase().includes(searchLower)
       )
     }
 
@@ -412,8 +225,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     // Filter by priority
     if (filters.priority && filters.priority.length > 0) {
       filteredEvents = filteredEvents.filter((event) => {
-        const priority = event.amount && Math.abs(event.amount) > 1000 ? 'high' : 
-                        event.amount && Math.abs(event.amount) > 500 ? 'medium' : 'low'
+        const priority =
+          event.amount && Math.abs(event.amount) > 1000
+            ? 'high'
+            : event.amount && Math.abs(event.amount) > 500
+              ? 'medium'
+              : 'low'
         return filters.priority!.includes(priority)
       })
     }
@@ -422,33 +239,40 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, [localEvents, filters])
 
   // Search function
-  const searchEvents = useCallback((query: string): FinancialEvent[] => {
-    if (!query.trim()) return localEvents
-    
-    const searchLower = query.toLowerCase()
-    return localEvents.filter((event) =>
-      event.title.toLowerCase().includes(searchLower) ||
-      event.description?.toLowerCase().includes(searchLower) ||
-      event.category?.toLowerCase().includes(searchLower)
-    )
-  }, [localEvents])
+  const searchEvents = useCallback(
+    (query: string): FinancialEvent[] => {
+      if (!query.trim()) return localEvents
+
+      const searchLower = query.toLowerCase()
+      return localEvents.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchLower) ||
+          event.description?.toLowerCase().includes(searchLower) ||
+          event.category?.toLowerCase().includes(searchLower)
+      )
+    },
+    [localEvents]
+  )
 
   // Navigation functions
   const goToToday = useCallback(() => {
     setCurrentDate(new Date())
   }, [])
 
-  const navigateDate = useCallback((direction: 'prev' | 'next') => {
-    setCurrentDate((prev) => {
-      if (currentView === 'month') {
-        return direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1)
-      } else if (currentView === 'week') {
-        return direction === 'prev' ? addDays(prev, -7) : addDays(prev, 7)
-      } else {
-        return direction === 'prev' ? addDays(prev, -1) : addDays(prev, 1)
-      }
-    })
-  }, [currentView])
+  const navigateDate = useCallback(
+    (direction: 'prev' | 'next') => {
+      setCurrentDate((prev) => {
+        if (currentView === 'month') {
+          return direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1)
+        } else if (currentView === 'week') {
+          return direction === 'prev' ? addDays(prev, -7) : addDays(prev, 7)
+        } else {
+          return direction === 'prev' ? addDays(prev, -1) : addDays(prev, 1)
+        }
+      })
+    },
+    [currentView]
+  )
 
   // Settings update function
   const updateSettings = useCallback((newSettings: Partial<CalendarSettings>) => {

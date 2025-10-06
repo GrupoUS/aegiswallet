@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { CalendarDndProvider } from './calendar-dnd-provider'
 import { CalendarHeader } from './calendar-header'
-import { WeekView } from './week-view'
-import { MonthView } from './month-view'
 import { DayView } from './day-view'
 import { EventDialog } from './event-dialog'
-import { CalendarDndProvider } from './calendar-dnd-provider'
+import { MonthView } from './month-view'
 import type { CalendarEvent, CalendarView } from './types'
+import { WeekView } from './week-view'
 
 interface EventCalendarProps {
   events: CalendarEvent[]
@@ -74,7 +74,7 @@ export function EventCalendar({
             onEventEdit={onEventEdit || handleEditEvent}
           />
         )}
-        
+
         {view === 'week' && (
           <WeekView
             weekStart={currentDate}
@@ -83,7 +83,7 @@ export function EventCalendar({
             onEventEdit={onEventEdit || handleEditEvent}
           />
         )}
-        
+
         {view === 'day' && (
           <DayView
             currentDate={currentDate}

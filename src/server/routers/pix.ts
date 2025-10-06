@@ -3,10 +3,10 @@
  * Handles all PIX-related operations: keys, transactions, QR codes
  */
 
-import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { router, protectedProcedure } from '../trpc'
-import type { PixKey, PixTransaction, PixQRCode } from '@/types/pix'
+import { z } from 'zod'
+import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix'
+import { protectedProcedure, router } from '../trpc'
 
 // =====================================================
 // Validation Schemas
@@ -14,7 +14,13 @@ import type { PixKey, PixTransaction, PixQRCode } from '@/types/pix'
 
 const pixKeyTypeSchema = z.enum(['email', 'cpf', 'cnpj', 'phone', 'random'])
 const transactionTypeSchema = z.enum(['sent', 'received', 'scheduled'])
-const transactionStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled'])
+const transactionStatusSchema = z.enum([
+  'pending',
+  'processing',
+  'completed',
+  'failed',
+  'cancelled',
+])
 
 const createPixKeySchema = z.object({
   keyType: pixKeyTypeSchema,
@@ -67,93 +73,92 @@ export const pixRouter = router({
   /**
    * Get all PIX keys for the authenticated user
    */
-  getKeys: protectedProcedure
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('pix_keys')
-        .select('*')
-        .eq('user_id', ctx.session.user.id)
-        .eq('is_active', true)
-        .order('is_favorite', { ascending: false })
-        .order('created_at', { ascending: false })
+  getKeys: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('pix_keys')
+      .select('*')
+      .eq('user_id', ctx.session.user.id)
+      .eq('is_active', true)
+      .order('is_favorite', { ascending: false })
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao buscar chaves PIX: ${error.message}`,
-        })
-      }
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao buscar chaves PIX: ${error.message}`,
+      })
+    }
 
-      return data as PixKey[]
-    }),
+    return data as PixKey[]
+  }),
 
   /**
    * Get favorite PIX keys
    */
-  getFavorites: protectedProcedure
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('pix_keys')
-        .select('*')
-        .eq('user_id', ctx.session.user.id)
-        .eq('is_active', true)
-        .eq('is_favorite', true)
-        .order('created_at', { ascending: false })
+  getFavorites: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('pix_keys')
+      .select('*')
+      .eq('user_id', ctx.session.user.id)
+      .eq('is_active', true)
+      .eq('is_favorite', true)
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao buscar favoritos: ${error.message}`,
-        })
-      }
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao buscar favoritos: ${error.message}`,
+      })
+    }
 
-      return data as PixKey[]
-    }),
+    return data as PixKey[]
+  }),
 
   /**
    * Create a new PIX key
    */
-  createKey: protectedProcedure
-    .input(createPixKeySchema)
-    .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
-        .from('pix_keys')
-        .insert({
-          user_id: ctx.session.user.id,
-          key_type: input.keyType,
-          key_value: input.keyValue,
-          label: input.label,
-          is_favorite: input.isFavorite,
-          is_active: true,
-        })
-        .select()
-        .single()
+  createKey: protectedProcedure.input(createPixKeySchema).mutation(async ({ ctx, input }) => {
+    const { data, error } = await ctx.supabase
+      .from('pix_keys')
+      .insert({
+        user_id: ctx.session.user.id,
+        key_type: input.keyType,
+        key_value: input.keyValue,
+        label: input.label,
+        is_favorite: input.isFavorite,
+        is_active: true,
+      })
+      .select()
+      .single()
 
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Esta chave PIX já está cadastrada',
-          })
-        }
+    if (error) {
+      if (error.code === '23505') {
+        // Unique violation
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao criar chave PIX: ${error.message}`,
+          code: 'CONFLICT',
+          message: 'Esta chave PIX já está cadastrada',
         })
       }
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao criar chave PIX: ${error.message}`,
+      })
+    }
 
-      return data as PixKey
-    }),
+    return data as PixKey
+  }),
 
   /**
    * Update PIX key (toggle favorite, update label)
    */
   updateKey: protectedProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-      label: z.string().optional(),
-      isFavorite: z.boolean().optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        label: z.string().optional(),
+        isFavorite: z.boolean().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const updates: any = {}
       if (input.label !== undefined) updates.label = input.label
@@ -188,9 +193,11 @@ export const pixRouter = router({
    * Delete PIX key (soft delete)
    */
   deleteKey: protectedProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('pix_keys')
@@ -224,55 +231,55 @@ export const pixRouter = router({
   /**
    * Get PIX transactions with filters
    */
-  getTransactions: protectedProcedure
-    .input(getTransactionsSchema)
-    .query(async ({ ctx, input }) => {
-      let query = ctx.supabase
-        .from('pix_transactions')
-        .select('*', { count: 'exact' })
-        .eq('user_id', ctx.session.user.id)
-        .order('created_at', { ascending: false })
-        .range(input.offset, input.offset + input.limit - 1)
+  getTransactions: protectedProcedure.input(getTransactionsSchema).query(async ({ ctx, input }) => {
+    let query = ctx.supabase
+      .from('pix_transactions')
+      .select('*', { count: 'exact' })
+      .eq('user_id', ctx.session.user.id)
+      .order('created_at', { ascending: false })
+      .range(input.offset, input.offset + input.limit - 1)
 
-      if (input.type) {
-        query = query.eq('transaction_type', input.type)
-      }
+    if (input.type) {
+      query = query.eq('transaction_type', input.type)
+    }
 
-      if (input.status) {
-        query = query.eq('status', input.status)
-      }
+    if (input.status) {
+      query = query.eq('status', input.status)
+    }
 
-      if (input.startDate) {
-        query = query.gte('created_at', input.startDate)
-      }
+    if (input.startDate) {
+      query = query.gte('created_at', input.startDate)
+    }
 
-      if (input.endDate) {
-        query = query.lte('created_at', input.endDate)
-      }
+    if (input.endDate) {
+      query = query.lte('created_at', input.endDate)
+    }
 
-      const { data, error, count } = await query
+    const { data, error, count } = await query
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao buscar transações: ${error.message}`,
-        })
-      }
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao buscar transações: ${error.message}`,
+      })
+    }
 
-      return {
-        transactions: data as PixTransaction[],
-        total: count || 0,
-        hasMore: (count || 0) > input.offset + input.limit,
-      }
-    }),
+    return {
+      transactions: data as PixTransaction[],
+      total: count || 0,
+      hasMore: (count || 0) > input.offset + input.limit,
+    }
+  }),
 
   /**
    * Get single transaction by ID
    */
   getTransaction: protectedProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('pix_transactions')
@@ -347,25 +354,23 @@ export const pixRouter = router({
   /**
    * Get PIX statistics for a period
    */
-  getStats: protectedProcedure
-    .input(getStatsSchema)
-    .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
-        .rpc('get_pix_stats', {
-          p_user_id: ctx.session.user.id,
-          p_period: input.period,
-        })
-        .single()
+  getStats: protectedProcedure.input(getStatsSchema).query(async ({ ctx, input }) => {
+    const { data, error } = await ctx.supabase
+      .rpc('get_pix_stats', {
+        p_user_id: ctx.session.user.id,
+        p_period: input.period,
+      })
+      .single()
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao buscar estatísticas: ${error.message}`,
-        })
-      }
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao buscar estatísticas: ${error.message}`,
+      })
+    }
 
-      return data
-    }),
+    return data
+  }),
 
   // =====================================================
   // PIX QR Codes
@@ -413,32 +418,33 @@ export const pixRouter = router({
   /**
    * Get user's QR codes
    */
-  getQRCodes: protectedProcedure
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('pix_qr_codes')
-        .select('*')
-        .eq('user_id', ctx.session.user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
+  getQRCodes: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('pix_qr_codes')
+      .select('*')
+      .eq('user_id', ctx.session.user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao buscar QR Codes: ${error.message}`,
-        })
-      }
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Erro ao buscar QR Codes: ${error.message}`,
+      })
+    }
 
-      return data as PixQRCode[]
-    }),
+    return data as PixQRCode[]
+  }),
 
   /**
    * Deactivate QR Code
    */
   deactivateQRCode: protectedProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('pix_qr_codes')

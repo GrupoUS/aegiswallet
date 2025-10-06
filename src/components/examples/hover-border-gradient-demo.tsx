@@ -1,6 +1,6 @@
-"use client";
-import React from "react";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+'use client'
+
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 
 /**
  * Aceternity UI Style Demo
@@ -19,7 +19,7 @@ export default function HoverBorderGradientDemo() {
         <span>Aceternity UI</span>
       </HoverBorderGradient>
     </div>
-  );
+  )
 }
 
 const AceternityLogo = () => {
@@ -40,5 +40,5 @@ const AceternityLogo = () => {
         strokeLinecap="round"
       />
     </svg>
-  );
-};
+  )
+}

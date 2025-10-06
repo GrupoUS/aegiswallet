@@ -32,6 +32,19 @@ aegiswallet/
 │   ├── qa/                            # Quality assurance assessments
 │   └── design-specs/                  # UI/UX specifications
 ├── src/                               # Source code (single repo structure)
+│   ├── routes/                        # TanStack Router v5 file-based routing
+│   │   ├── __root.tsx                 # Root route with layout
+│   │   ├── index.tsx                  # Home page (/)
+│   │   ├── dashboard.tsx              # Dashboard page (/dashboard)
+│   │   ├── login.tsx                  # Login page (/login)
+│   │   ├── transactions.tsx           # Transactions page (/transactions)
+│   │   ├── calendario.tsx             # Calendar page (/calendario)
+│   │   ├── contas.tsx                 # Accounts page (/contas)
+│   │   └── pix/                       # PIX pages
+│   │       ├── index.tsx              # PIX dashboard (/pix/)
+│   │       ├── transferir.tsx         # Send PIX (/pix/transferir)
+│   │       ├── receber.tsx            # Receive PIX (/pix/receber)
+│   │       └── historico.tsx          # PIX history (/pix/historico)
 │   ├── components/                    # React components organized by domain
 │   │   ├── voice/                     # Voice interface components
 │   │   │   ├── VoiceDashboard.tsx     # Main voice interface
@@ -41,6 +54,15 @@ aegiswallet/
 │   │   │   ├── TransactionList.tsx    # Transaction display
 │   │   │   ├── PaymentAutomation.tsx  # Smart payment features
 │   │   │   └── BoletoPayment.tsx      # Brazilian boleto handling
+│   │   ├── pix/                       # PIX-specific components
+│   │   │   ├── PixSidebar.tsx         # PIX keys sidebar
+│   │   │   ├── PixConverter.tsx       # Amount calculator
+│   │   │   ├── PixChart.tsx           # Transaction chart
+│   │   │   └── PixTransactionsTable.tsx # Transaction table
+│   │   ├── calendar/                  # Calendar components
+│   │   │   ├── CalendarView.tsx       # Calendar display
+│   │   │   ├── EventCard.tsx          # Event cards
+│   │   │   └── calendar-context.tsx   # Calendar state
 │   │   ├── accessibility/             # Accessibility components
 │   │   │   ├── ScreenReader.tsx       # Screen reader support
 │   │   │   └── KeyboardNavigation.tsx # Keyboard-only navigation
@@ -128,6 +150,27 @@ aegiswallet/
 
 ## Directory Structure Rationale
 
+### **`src/routes/`** - TanStack Router v5 File-Based Routing
+
+**File-Based Routing Convention**: Each file in `src/routes/` represents a route in the application
+- **`__root.tsx`**: Root layout with sidebar, providers, and authentication context
+- **`index.tsx`**: Home page route at `/`
+- **`{name}.tsx`**: Creates route at `/{name}` (e.g., `dashboard.tsx` → `/dashboard`)
+- **`{folder}/index.tsx`**: Creates route at `/{folder}/` (e.g., `pix/index.tsx` → `/pix/`)
+- **`{folder}/{name}.tsx`**: Nested routes (e.g., `pix/transferir.tsx` → `/pix/transferir`)
+
+**Route Files Include**:
+- `createFileRoute()` export for route definition
+- Component that renders the page
+- Optional loaders, search params, and beforeLoad hooks
+- Import and compose reusable components from `src/components/`
+
+**Benefits**:
+- Type-safe routing with automatic route tree generation
+- Automatic code splitting per route
+- Clear file-to-URL mapping
+- Co-located route logic with components
+
 ### **`src/components/`** - React Components by Domain
 
 **Voice Components (`voice/`)**: Core differentiator for AegisWallet
@@ -137,8 +180,20 @@ aegiswallet/
 
 **Financial Components (`financial/`)**: Domain-specific business logic
 - Transaction management, budget tracking, and payment automation
-- Brazilian-specific features like boleto handling and PIX integration
+- Brazilian-specific features like boleto handling
 - Smart payment automation and financial insights display
+
+**PIX Components (`pix/`)**: Brazilian instant payment system
+- PIX key management and favorites sidebar
+- Amount calculator with Brazilian real formatting
+- Transaction history chart and table
+- QR Code generation for receiving payments
+
+**Calendar Components (`calendar/`)**: Financial events management
+- Calendar view with financial events display
+- Event cards for bills, payments, and income
+- Calendar context for state management
+- Integration with financial data
 
 **Accessibility Components (`accessibility/`)**: WCAG 2.1 AA compliance
 - Screen reader support for visually impaired users
@@ -190,6 +245,31 @@ aegiswallet/
 
 ## Import Patterns and Conventions
 
+### Route File Pattern (TanStack Router v5)
+```typescript
+// src/routes/pix/index.tsx
+import { createFileRoute } from '@tanstack/react-router'
+import { PixSidebar } from '@/components/pix/PixSidebar'
+import { PixConverter } from '@/components/pix/PixConverter'
+import { PixChart } from '@/components/pix/PixChart'
+
+export const Route = createFileRoute('/pix/')({
+  component: PixDashboard,
+})
+
+function PixDashboard() {
+  return (
+    <div className="flex">
+      <PixSidebar />
+      <main className="flex-1">
+        <PixConverter />
+        <PixChart />
+      </main>
+    </div>
+  )
+}
+```
+
 ### Component Imports
 ```typescript
 // Voice components
@@ -199,6 +279,13 @@ import { VoiceProcessor } from "@/components/voice/VoiceProcessor"
 // Financial components
 import { TransactionList } from "@/components/financial/TransactionList"
 import { BoletoPayment } from "@/components/financial/BoletoPayment"
+
+// PIX components
+import { PixSidebar } from "@/components/pix/PixSidebar"
+import { PixConverter } from "@/components/pix/PixConverter"
+
+// Calendar components
+import { CalendarView } from "@/components/calendar/CalendarView"
 
 // Base UI components
 import { Button } from "@/components/ui/button"

@@ -34,15 +34,67 @@ function toCalendarEvent(event: FinancialEvent): CalendarEvent {
 }
 
 export function FinancialCalendar() {
-  const { events: financialEvents, addEvent, updateEvent } = useCalendar()
+  const { 
+    events: financialEvents, 
+    addEvent, 
+    updateEvent, 
+    categories,
+    filters
+  } = useCalendar()
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
 
-  // Converter eventos financeiros para eventos do calendário
-  const calendarEvents = useMemo(
-    () => financialEvents.map(toCalendarEvent),
-    [financialEvents]
-  )
+  // Filtrar eventos baseado nos filtros atuais
+  const filteredEvents = useMemo(() => {
+    let filtered = financialEvents
+
+    // Aplicar filtros do contexto
+    if (filters.categories && filters.categories.length > 0) {
+      filtered = filtered.filter(event => 
+        filters.categories!.includes(event.category || '')
+      )
+    }
+
+    if (filters.dateRange) {
+      const { start, end } = filters.dateRange
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.start)
+        return eventDate >= start && eventDate <= end
+      })
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchLower) ||
+        event.description?.toLowerCase().includes(searchLower)
+      )
+    }
+
+    return filtered
+  }, [financialEvents, filters])
+
+  // Enhanced converter com categorias
+  const calendarEvents = useMemo(() => {
+    return filteredEvents.map(event => {
+      const calendarEvent = toCalendarEvent(event)
+      
+      // Encontrar a categoria correspondente
+      const category = categories.find(cat => cat.id === event.category)
+      if (category) {
+        calendarEvent.category = category
+        calendarEvent.color = category.color
+      }
+      
+      // Adicionar informações adicionais
+      calendarEvent.status = event.status as any
+      calendarEvent.priority = event.amount && Math.abs(event.amount) > 1000 ? 'high' : 
+                              event.amount && Math.abs(event.amount) > 500 ? 'medium' : 'low'
+      calendarEvent.recurring = event.recurring
+      
+      return calendarEvent
+    })
+  }, [filteredEvents, categories])
 
   const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>) => {
     // Converter CalendarEvent para FinancialEvent

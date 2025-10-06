@@ -10,18 +10,17 @@ import { Calculator, Copy, Send, QrCode as QrCodeIcon, Loader2 } from "lucide-re
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { usePixTransactions, usePixQRCodes } from "@/hooks/usePix"
-import { useNavigate } from "@tanstack/react-router"
+
 import QRCode from "react-qr-code"
 
 export function PixConverter() {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("transferir")
   const [amount, setAmount] = useState("")
   const [description, setDescription] = useState("")
   const [pixKey, setPixKey] = useState("")
   
-  const { createTransaction, isPending: isCreatingTransaction } = usePixTransactions()
-  const { generateQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
+  const { createTransaction, isLoading: isCreatingTransaction } = usePixTransactions()
+  const { createQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
   
   const qrCodeData = qrCodes[0] // Get the most recent QR Code
 
@@ -62,7 +61,9 @@ export function PixConverter() {
     }
 
     createTransaction({
+      transactionType: 'sent',
       pixKey,
+      pixKeyType: 'email', // Default - could be dynamic
       amount: numericAmount,
       description: description || undefined,
     })
@@ -84,6 +85,7 @@ export function PixConverter() {
     createQRCode({
       amount: numericAmount,
       description: description || undefined,
+      pixKey: '', // Will be generated
     })
   }
 
@@ -297,9 +299,9 @@ export function PixConverter() {
                   QR Code PIX Gerado
                 </div>
                 <div className="bg-white p-4 rounded-lg inline-block">
-                  {qrCodeData.pixCopyPaste ? (
+                  {qrCodeData.qrCodeData ? (
                     <QRCode
-                      value={qrCodeData.pixCopyPaste}
+                      value={qrCodeData.qrCodeData}
                       size={200}
                       level="H"
                       fgColor="#000000"
@@ -318,8 +320,8 @@ export function PixConverter() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (qrCodeData.pixCopyPaste) {
-                      navigator.clipboard.writeText(qrCodeData.pixCopyPaste)
+                    if (qrCodeData.qrCodeData) {
+                      navigator.clipboard.writeText(qrCodeData.qrCodeData)
                       toast.success("Código PIX copiado!")
                     }
                   }}

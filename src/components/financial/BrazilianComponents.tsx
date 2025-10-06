@@ -1,16 +1,35 @@
 /**
  * Brazilian Financial Components - Story 04.03
+ * Updated to use proper Card component with animation support
  */
 
 import React from 'react'
 import { formatCurrency } from '@/lib/formatters/brazilianFormatters'
+import { Card, CardContent, CardDescription } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
-export function BalanceCard({ balance }: { balance: number }) {
+interface BalanceCardProps {
+  balance: number
+  className?: string
+}
+
+export function BalanceCard({ balance, className }: BalanceCardProps) {
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-      <p className="text-sm opacity-90">Saldo Disponível</p>
-      <h2 className="text-4xl font-bold mt-2">{formatCurrency(balance)}</h2>
-    </div>
+    <Card
+      className={cn(
+        "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0",
+        "hover:shadow-lg transition-all duration-300",
+        "hover:scale-[1.02]",
+        className
+      )}
+    >
+      <CardContent className="pt-6">
+        <CardDescription className="text-white/90 text-sm">
+          Saldo Disponível
+        </CardDescription>
+        <h2 className="text-4xl font-bold mt-2">{formatCurrency(balance)}</h2>
+      </CardContent>
+    </Card>
   )
 }
 

@@ -88,7 +88,13 @@
       "mcp__chrome-devtools__resize_page",
       "SlashCommand(/constitution)",
       "SlashCommand(/implement)",
-      "SlashCommand(/plan)"
+      "SlashCommand(/plan)",
+      "mcp__shadcn__get_project_registries",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__click"
     ],
     "deny": [
       "Edit",

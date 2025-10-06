@@ -35,6 +35,7 @@ export interface PixTransaction {
   endToEndId?: string
   scheduledDate?: string
   completedAt?: string
+  errorMessage?: string
   createdAt: string
   updatedAt: string
 }

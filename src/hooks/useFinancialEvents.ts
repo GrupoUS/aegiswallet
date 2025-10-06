@@ -11,26 +11,23 @@ import type { FinancialEvent } from '@/types/financial-events'
 interface FinancialEventRow {
   id: string
   user_id: string
-  bank_account_id: string | null
+  event_type_id: string | null
   title: string
   description: string | null
-  amount: number
-  category: string | null
-  event_type: 'income' | 'expense' | 'bill' | 'scheduled' | 'transfer'
-  status: 'pending' | 'paid' | 'scheduled' | 'cancelled'
-  start_date: string
-  end_date: string
-  all_day: boolean
-  color: 'emerald' | 'rose' | 'orange' | 'blue' | 'violet'
-  icon: string | null
+  amount: number | null
+  is_income: boolean
+  account_id: string | null
+  category_id: string | null
+  event_date: string
+  due_date: string | null
   is_recurring: boolean
   recurrence_rule: string | null
-  parent_event_id: string | null
-  location: string | null
-  notes: string | null
+  is_completed: boolean
+  completed_at: string | null
   transaction_id: string | null
-  bill_id: string | null
-  pix_transaction_id: string | null
+  priority: string
+  tags: string[] | null
+  attachments: string[] | null
   created_at: string
   updated_at: string
 }
@@ -39,22 +36,25 @@ interface FinancialEventRow {
  * Convert database row to FinancialEvent
  */
 function rowToEvent(row: FinancialEventRow): FinancialEvent {
+  const eventDate = new Date(row.event_date)
+  const dueDate = row.due_date ? new Date(row.due_date) : eventDate
+  
   return {
     id: row.id,
     title: row.title,
     description: row.description || undefined,
-    start: new Date(row.start_date),
-    end: new Date(row.end_date),
-    type: row.event_type,
-    amount: Number(row.amount),
-    color: row.color,
-    icon: row.icon || undefined,
-    status: row.status,
-    category: row.category || undefined,
-    account: row.bank_account_id || undefined,
-    location: row.location || undefined,
+    start: eventDate,
+    end: dueDate,
+    type: row.is_income ? 'income' : 'expense',
+    amount: Number(row.amount || 0),
+    color: 'emerald', // Default color - can be enhanced based on event_type_id later
+    icon: undefined, // Can be enhanced based on event_type_id later
+    status: row.is_completed ? 'completed' : 'pending',
+    category: undefined, // Can be enhanced based on category_id later
+    account: row.account_id || undefined,
+    location: undefined,
     recurring: row.is_recurring,
-    allDay: row.all_day,
+    allDay: true, // Financial events are typically all-day
   }
 }
 
@@ -67,16 +67,13 @@ function eventToRow(event: Partial<FinancialEvent>, userId: string): Partial<Fin
     title: event.title,
     description: event.description || null,
     amount: event.amount,
-    category: event.category || null,
-    event_type: event.type!,
-    status: event.status!,
-    start_date: event.start?.toISOString(),
-    end_date: event.end?.toISOString(),
-    all_day: event.allDay || false,
-    color: event.color!,
-    icon: event.icon || null,
+    is_income: event.type === 'income',
+    event_date: event.start?.toISOString().split('T')[0], // Use only the date part
+    due_date: event.end?.toISOString().split('T')[0],
     is_recurring: event.recurring || false,
-    location: event.location || null,
+    is_completed: event.status === 'completed',
+    completed_at: event.status === 'completed' ? new Date().toISOString() : null,
+    priority: 'normal', // Default priority
   }
 }
 
@@ -110,14 +107,14 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
       let query = supabase
         .from('financial_events')
         .select('*')
-        .order('start_date', { ascending: true })
+        .order('event_date', { ascending: true })
 
       // Filter by date range if provided
       if (startDate) {
-        query = query.gte('start_date', startDate.toISOString())
+        query = query.gte('event_date', startDate.toISOString().split('T')[0])
       }
       if (endDate) {
-        query = query.lte('end_date', endDate.toISOString())
+        query = query.lte('event_date', endDate.toISOString().split('T')[0])
       }
 
       const { data, error: fetchError } = await query

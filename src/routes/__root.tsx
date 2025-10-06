@@ -10,7 +10,6 @@ import {
   Calendar,
   FileText,
   Send,
-  Receipt,
   Mic,
   LogOut,
 } from 'lucide-react'
@@ -55,11 +54,6 @@ function RootComponent() {
       label: 'PIX',
       href: '/pix',
       icon: <Send className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
-    },
-    {
-      label: 'Transações',
-      href: '/transactions',
-      icon: <Receipt className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
   ]
 

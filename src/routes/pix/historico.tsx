@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -12,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Download, Filter, Calendar } from 'lucide-react'
+import { DateRangePicker } from '@/components/ui/date-picker'
+import { ArrowLeft, Download, Filter } from 'lucide-react'
 import { PixTransactionsTable } from '@/components/pix/PixTransactionsTable'
 import { toast } from 'sonner'
 
@@ -23,8 +23,8 @@ export const Route = createFileRoute('/pix/historico')({
 function PixHistoryPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined)
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined)
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
 
@@ -43,8 +43,8 @@ function PixHistoryPage() {
   }
 
   const clearFilters = () => {
-    setDateFrom('')
-    setDateTo('')
+    setDateFrom(undefined)
+    setDateTo(undefined)
     setFilterType('all')
     setFilterStatus('all')
     toast.info("Filtros limpos!")
@@ -98,30 +98,15 @@ function PixHistoryPage() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date-from">Data Início</Label>
-              <div className="relative">
-                <Input
-                  id="date-from"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date-to">Data Fim</Label>
-              <div className="relative">
-                <Input
-                  id="date-to"
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Período</Label>
+              <DateRangePicker
+                startDate={dateFrom}
+                endDate={dateTo}
+                onStartDateChange={setDateFrom}
+                onEndDateChange={setDateTo}
+                className="grid-cols-2"
+              />
             </div>
 
             <div className="space-y-2">

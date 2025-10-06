@@ -2,7 +2,7 @@
  * AI Intelligence Panel - Story 04.04
  */
 
-import React from 'react'
+
 
 export function IntelligencePanel() {
   return (

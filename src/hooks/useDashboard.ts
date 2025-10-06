@@ -1,4 +1,6 @@
 import { useProfile, useUserStatus } from './useProfile'
+import { useFinancialEvents } from './useFinancialEvents'
+import { useContacts } from './useContacts'
 import { useBankAccounts, useTotalBalance, useBankAccountsStats } from './useBankAccounts'
 import { useFinancialTransactions, useTransactionStats, useRecentTransactions } from './useFinancialTransactions'
 import { useUpcomingEvents, useOverdueEvents, useCalendarStats } from './useFinancialCalendar'

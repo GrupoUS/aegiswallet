@@ -20,6 +20,7 @@ const colorClasses = {
   indigo: 'bg-indigo-500/20 border-indigo-500 text-indigo-700 dark:text-indigo-300',
   amber: 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300',
   cyan: 'bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300',
+  green: 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-300',
 }
 
 export function EventCard({ event, position, onEdit }: EventCardProps) {

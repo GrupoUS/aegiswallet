@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react'
 import { useCalendar } from './calendar-context'
-import { CompactCalendar } from './compact-calendar'
+import { OriginCompactCalendar } from './origin-compact-calendar'
 import { formatEventAmount } from '@/types/financial-events'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -54,10 +54,12 @@ export function MiniCalendarWidget() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Mini calendário */}
-        <CompactCalendar
-          selectedDate={selectedDate}
-          onDateClick={handleDateClick}
+        {/* Mini calendário com dropdown de mês/ano */}
+        <OriginCompactCalendar
+          selected={selectedDate}
+          onSelect={(date) => date && setSelectedDate(date)}
+          defaultMonth={selectedDate}
+          showOutsideDays={false}
         />
 
         {/* Lista de próximos eventos */}

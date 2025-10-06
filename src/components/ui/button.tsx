@@ -52,7 +52,7 @@ function Button({
   variant,
   size,
   asChild = false,
-  withGradient = false,
+  withGradient = true,
   gradientDuration = 1,
   gradientSize = 600,
   disabled,

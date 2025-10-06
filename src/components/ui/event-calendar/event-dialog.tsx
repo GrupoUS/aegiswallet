@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { CalendarEvent, EventColor } from './types'
 
 const eventFormSchema = z.object({
@@ -208,7 +209,13 @@ export function EventDialog({
                 <FormItem>
                   <FormLabel>Data *</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker
+                      date={field.value ? new Date(field.value) : undefined}
+                      onDateChange={(date) => {
+                        field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                      }}
+                      placeholder="Selecione a data do evento"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

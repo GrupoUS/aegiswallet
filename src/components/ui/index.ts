@@ -19,6 +19,9 @@ export { Textarea } from "./textarea"
 export { GradientButton, gradientButtonVariants } from "./gradient-button"
 export { HoverBorderGradient } from "./hover-border-gradient"
 
+// Neumorphic Components
+export { default as NeumorphButton } from "./neumorph-button"
+
 // Layout Components
 export { BentoGrid, BentoCard, type BentoItem, type BentoGridProps } from "./bento-grid"
 

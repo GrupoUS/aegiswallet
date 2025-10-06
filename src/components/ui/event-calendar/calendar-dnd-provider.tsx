@@ -32,7 +32,7 @@ export const useCalendarDnd = () => useContext(CalendarDndContext)
 // Props for the provider
 interface CalendarDndProviderProps {
   children: ReactNode
-  onEventUpdate: (event: CalendarEvent) => void
+  onEventUpdate?: (event: CalendarEvent) => void
 }
 
 export function CalendarDndProvider({

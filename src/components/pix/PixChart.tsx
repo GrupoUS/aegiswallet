@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label"
 import { TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePixTransactions } from "@/hooks/usePix"
-import { formatISO, subDays, subMonths, subYears, isAfter } from "date-fns"
+import { subDays, subMonths, subYears, isAfter } from "date-fns"
 
 const chartConfig = {
   sent: {

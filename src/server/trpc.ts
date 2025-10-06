@@ -33,7 +33,16 @@ import { createBankingRouter } from './procedures/banking'
 import { createTransactionRouter } from './procedures/transactions'
 import { createUserRouter } from './procedures/users'
 import { createVoiceRouter } from './procedures/voice'
+
+/**
+ * Import routers
+ */
 import { pixRouter } from './routers/pix'
+import { usersRouter } from './routers/users'
+import { bankAccountsRouter } from './routers/bankAccounts'
+import { transactionsRouter } from './routers/transactions'
+import { calendarRouter } from './routers/calendar'
+import { contactsRouter } from './routers/contacts'
 
 /**
  * Main router with all procedures
@@ -44,6 +53,12 @@ export const appRouter = router({
   transactions: createTransactionRouter(t),
   banking: createBankingRouter(t),
   voice: createVoiceRouter(t),
+  // Enhanced routers with full database integration
+  profiles: usersRouter,
+  bankAccounts: bankAccountsRouter,
+  financialTransactions: transactionsRouter,
+  calendar: calendarRouter,
+  contacts: contactsRouter,
   pix: pixRouter,
 })
 

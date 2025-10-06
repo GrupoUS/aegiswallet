@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { startOfWeek, addDays } from 'date-fns'
 import { CalendarHeader } from './calendar-header'
 import { WeekView } from './week-view'
+import { MonthView } from './month-view'
+import { DayView } from './day-view'
 import { EventDialog } from './event-dialog'
 import { CalendarDndProvider } from './calendar-dnd-provider'
 import type { CalendarEvent, CalendarView } from './types'
@@ -11,11 +12,8 @@ interface EventCalendarProps {
   initialView?: CalendarView
   onEventAdd?: (event: Partial<CalendarEvent>) => void
   onEventUpdate?: (event: CalendarEvent) => void
-  onEventDelete?: (eventId: string) => void
   onEventEdit?: (event: CalendarEvent) => void
 }
-
-
 
 export function EventCalendar({
   events,
@@ -25,7 +23,7 @@ export function EventCalendar({
   onEventEdit,
 }: EventCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [view] = useState<CalendarView>(initialView)
+  const [view, setView] = useState<CalendarView>(initialView)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [dialogInitialDate, setDialogInitialDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
@@ -58,18 +56,37 @@ export function EventCalendar({
   }
 
   return (
-    <CalendarDndProvider onEventUpdate={onEventUpdate}>
+    <CalendarDndProvider onEventUpdate={onEventUpdate || (() => {})}>
       <div className="flex flex-col h-full bg-background">
         <CalendarHeader
           currentDate={currentDate}
           onDateChange={setCurrentDate}
           view={view}
+          onViewChange={setView}
           onNewEvent={handleNewEvent}
         />
 
+        {view === 'month' && (
+          <MonthView
+            currentDate={currentDate}
+            events={events}
+            onEventUpdate={onEventUpdate}
+            onEventEdit={onEventEdit || handleEditEvent}
+          />
+        )}
+        
         {view === 'week' && (
           <WeekView
             weekStart={currentDate}
+            events={events}
+            onEventUpdate={onEventUpdate}
+            onEventEdit={onEventEdit || handleEditEvent}
+          />
+        )}
+        
+        {view === 'day' && (
+          <DayView
+            currentDate={currentDate}
             events={events}
             onEventUpdate={onEventUpdate}
             onEventEdit={onEventEdit || handleEditEvent}

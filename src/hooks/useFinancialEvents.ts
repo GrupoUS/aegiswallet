@@ -97,6 +97,14 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
       setLoading(true)
       setError(null)
 
+      // Check if user is authenticated first
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.info('User not authenticated - using mock data')
+        setEvents([])
+        return
+      }
+
       let query = supabase
         .from('financial_events')
         .select('*')
@@ -112,13 +120,18 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
 
       const { data, error: fetchError } = await query
 
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        console.warn('Supabase query failed, falling back to mock data:', fetchError)
+        setEvents([])
+        return
+      }
 
       const mappedEvents = (data || []).map(rowToEvent)
       setEvents(mappedEvents)
     } catch (err) {
       setError(err as Error)
       console.error('Error fetching financial events:', err)
+      setEvents([])
     } finally {
       setLoading(false)
     }

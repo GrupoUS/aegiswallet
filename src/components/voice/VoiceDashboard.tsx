@@ -88,12 +88,12 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 ${className}`}>
+    <div className={`h-full w-full bg-background p-4 ${className}`}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">{getGreeting()}! 👋</h1>
-          <p className="text-lg text-gray-600">Como posso ajudar com suas finanças hoje?</p>
+          <h1 className="text-3xl font-bold text-foreground">{getGreeting()}! 👋</h1>
+          <p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
         </div>
 
         {/* Main Voice Interface */}

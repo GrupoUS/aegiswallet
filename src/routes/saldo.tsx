@@ -96,7 +96,7 @@ function Saldo() {
       </div>
 
       {/* Total Balance Card */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 cursor-pointer">
         <CardHeader>
           <CardDescription>Saldo Total</CardDescription>
           <CardTitle className="text-4xl">
@@ -118,7 +118,7 @@ function Saldo() {
           {accounts.map((account) => {
             const Icon = account.icon
             return (
-              <Card key={account.id} className="hover:shadow-lg transition-shadow">
+              <Card key={account.id} className="hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 cursor-pointer">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>{account.name}</CardDescription>
@@ -135,7 +135,7 @@ function Saldo() {
       </div>
 
       {/* Balance History Chart Placeholder */}
-      <Card>
+      <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
         <CardHeader>
           <CardTitle>Histórico de Saldo</CardTitle>
           <CardDescription>Últimos 30 dias</CardDescription>
@@ -152,7 +152,7 @@ function Saldo() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card>
+      <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
         <CardHeader>
           <CardTitle>Transações Recentes</CardTitle>
           <CardDescription>Últimas movimentações</CardDescription>
@@ -162,7 +162,7 @@ function Saldo() {
             {recentTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors"
+                className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   {transaction.type === 'income' ? (
@@ -223,7 +223,7 @@ function Saldo() {
 
         {/* Create Transaction Form */}
         {showCreateForm && (
-          <Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-primary/20">
             <CardHeader>
               <CardTitle>Nova Transação</CardTitle>
               <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
@@ -274,7 +274,7 @@ function Saldo() {
         )}
 
         {/* All Transactions List */}
-        <Card>
+        <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
           <CardHeader>
             <CardTitle>Histórico Completo de Transações</CardTitle>
             <CardDescription>Todas as suas movimentações financeiras</CardDescription>
@@ -282,7 +282,7 @@ function Saldo() {
           <CardContent>
             <div className="space-y-4">
               {/* Mock data - will be replaced with real data */}
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <TrendingDown className="w-5 h-5 text-red-500" />
                   <div>
@@ -293,7 +293,7 @@ function Saldo() {
                 <FinancialAmount amount={-125.67} />
               </div>
 
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <TrendingUp className="w-5 h-5 text-green-500" />
                   <div>
@@ -304,7 +304,7 @@ function Saldo() {
                 <FinancialAmount amount={3500.0} />
               </div>
 
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <TrendingDown className="w-5 h-5 text-red-500" />
                   <div>
@@ -315,7 +315,7 @@ function Saldo() {
                 <FinancialAmount amount={-50.0} />
               </div>
 
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <TrendingDown className="w-5 h-5 text-red-500" />
                   <div>
@@ -326,7 +326,7 @@ function Saldo() {
                 <FinancialAmount amount={-85.2} />
               </div>
 
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <TrendingUp className="w-5 h-5 text-green-500" />
                   <div>

@@ -3,7 +3,7 @@
  * Updated to use proper Card component with animation support
  */
 
-import React from 'react'
+
 import { formatCurrency } from '@/lib/formatters/brazilianFormatters'
 import { Card, CardContent, CardDescription } from '@/components/ui/card'
 import { cn } from '@/lib/utils'

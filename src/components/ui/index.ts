@@ -65,6 +65,7 @@ export { Toaster } from "./sonner"
 // Data Display Components
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from "./table"
 export { Calendar } from "./calendar"
+export { DatePicker, DateRangePicker } from "./date-picker"
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from "./chart"
 
 // Theme Components

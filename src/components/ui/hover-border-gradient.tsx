@@ -192,7 +192,7 @@ const HoverBorderGradient = React.forwardRef<
           className="absolute inset-0 rounded-md opacity-0 transition-opacity duration-300"
           style={{
             background: hovered
-              ? `radial-gradient(${size}px circle at ${mousePosition.x}px ${mousePosition.y}px, oklch(0.5854 0.2041 277.1173 / 0.15), transparent 40%)`
+              ? `radial-gradient(${size}px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(172, 148, 105, 0.45), rgba(17, 32, 49, 0.15) 60%, transparent 80%)`
               : "transparent",
             opacity: hovered ? 1 : 0,
           }}
@@ -208,8 +208,8 @@ const HoverBorderGradient = React.forwardRef<
         {/* Static gradient border (visible when not hovered) */}
         <div
           className={cn(
-            "absolute inset-0 rounded-md bg-gradient-to-br from-[oklch(0.5854_0.2041_277.1173)] to-[oklch(0.9376_0.0260_321.9388)] opacity-50",
-            "dark:from-[oklch(0.4955_0.0951_170.4045)] dark:to-[oklch(0.5854_0.2041_277.1173)]"
+            "absolute inset-0 rounded-md bg-gradient-to-br from-[#AC9469]/70 via-[#D2AA60]/60 to-[#112031]/70 opacity-60",
+            "dark:from-[#D2AA60]/70 dark:via-[#AC9469]/60 dark:to-[#112031]/80"
           )}
         />
 

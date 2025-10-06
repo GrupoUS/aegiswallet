@@ -124,6 +124,7 @@ function Contas() {
           variant={isListening ? 'default' : 'outline'}
           size="lg"
           className="gap-2"
+          withGradient
         >
           <Mic className={isListening ? 'animate-pulse' : ''} />
           {isListening ? 'Ouvindo...' : 'Quais contas pagar?'}
@@ -253,7 +254,7 @@ function Contas() {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <Button size="lg" className="flex-1">
+        <Button size="lg" className="flex-1" withGradient>
           <FileText className="w-5 h-5 mr-2" />
           Adicionar Nova Conta
         </Button>

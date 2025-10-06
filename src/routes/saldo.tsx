@@ -87,6 +87,7 @@ function Saldo() {
           variant={isListening ? 'default' : 'outline'}
           size="lg"
           className="gap-2"
+          withGradient
         >
           <Mic className={isListening ? 'animate-pulse' : ''} />
           {isListening ? 'Ouvindo...' : 'Qual é meu saldo?'}

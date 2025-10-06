@@ -19,6 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { TrendingUp, TrendingDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // Mock data - replace with real data from tRPC/Supabase
 const mockDailyData = [
@@ -63,7 +64,11 @@ export function PixChart() {
   const isPositive = balance >= 0
 
   return (
-    <Card className="gap-4">
+    <Card className={cn(
+      "gap-4",
+      "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
+      "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]"
+    )}>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
@@ -92,11 +97,18 @@ export function PixChart() {
                   />
                   <Label
                     htmlFor={`period-${period.value}`}
-                    className={`inline-flex h-6 min-w-8 cursor-pointer items-center justify-center px-2 whitespace-nowrap transition-colors select-none text-xs uppercase rounded-full ${
+                    className={cn(
+                      "inline-flex h-6 min-w-8 cursor-pointer items-center justify-center px-2",
+                      "whitespace-nowrap transition-all duration-200 select-none text-xs uppercase rounded-full",
                       selectedPeriod === period.value
-                        ? 'bg-background dark:bg-card/64 text-foreground shadow-xs'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                        ? cn(
+                            "bg-background dark:bg-card/64 text-foreground",
+                            "shadow-[0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_2px_rgba(255,255,255,0.05)]",
+                            "relative before:absolute before:inset-0 before:-z-10",
+                            "before:bg-green-500/20 before:blur-[6px] before:rounded-full"
+                          )
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
                   >
                     {period.label}
                   </Label>
@@ -161,14 +173,26 @@ export function PixChart() {
         
         {/* Stats Summary */}
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg">
-            <div className="text-xs text-muted-foreground">Enviado</div>
+          <div className={cn(
+            "relative p-3 rounded-lg",
+            "bg-gradient-to-br from-red-50 to-orange-50",
+            "dark:from-red-950/20 dark:to-orange-950/20",
+            "border border-red-200/50 dark:border-red-800/50",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+          )}>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Enviado</div>
             <div className="text-lg font-bold text-red-600 dark:text-red-400">
               R$ {totalSent.toFixed(2).replace('.', ',')}
             </div>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg">
-            <div className="text-xs text-muted-foreground">Recebido</div>
+          <div className={cn(
+            "relative p-3 rounded-lg",
+            "bg-gradient-to-br from-green-50 to-teal-50",
+            "dark:from-green-950/20 dark:to-teal-950/20",
+            "border border-green-200/50 dark:border-green-800/50",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+          )}>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Recebido</div>
             <div className="text-lg font-bold text-green-600 dark:text-green-400">
               R$ {totalReceived.toFixed(2).replace('.', ',')}
             </div>

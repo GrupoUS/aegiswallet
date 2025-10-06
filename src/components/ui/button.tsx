@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
@@ -36,25 +37,53 @@ const buttonVariants = cva(
   }
 )
 
+export interface ButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+  withGradient?: boolean
+  gradientDuration?: number
+  gradientSize?: number
+}
+
 function Button({
   className,
   variant,
   size,
   asChild = false,
+  withGradient = false,
+  gradientDuration = 1,
+  gradientSize = 600,
+  disabled,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+}: ButtonProps) {
   const Comp = asChild ? Slot : "button"
 
-  return (
+  const buttonContent = (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled}
       {...props}
     />
   )
+
+  // Don't apply gradient to disabled buttons or link variant
+  if (withGradient && !disabled && variant !== "link") {
+    return (
+      <HoverBorderGradient
+        as="div"
+        containerClassName="inline-flex"
+        className="!p-0 !bg-transparent"
+        duration={gradientDuration}
+        size={gradientSize}
+      >
+        {buttonContent}
+      </HoverBorderGradient>
+    )
+  }
+
+  return buttonContent
 }
 
 export { Button, buttonVariants }

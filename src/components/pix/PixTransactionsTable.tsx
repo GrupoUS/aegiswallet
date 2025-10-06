@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Search, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { maskPixKey } from "@/types/pix"
 import type { PixTransaction } from "@/types/pix"
+import { cn } from "@/lib/utils"
 
 // Mock data - replace with real data from tRPC/Supabase
 const mockTransactions: PixTransaction[] = [
@@ -81,25 +82,39 @@ function getStatusIcon(status: PixTransaction['status']) {
 }
 
 function getStatusBadge(status: PixTransaction['status']) {
-  const variants = {
-    completed: 'default',
-    processing: 'secondary',
-    failed: 'destructive',
-    pending: 'outline',
-    cancelled: 'outline',
+  const config = {
+    completed: {
+      variant: 'default' as const,
+      label: 'Concluída',
+      className: 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400 border-green-200 dark:border-green-800'
+    },
+    processing: {
+      variant: 'secondary' as const,
+      label: 'Processando',
+      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
+    },
+    failed: {
+      variant: 'destructive' as const,
+      label: 'Falhou',
+      className: 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-200 dark:border-red-800'
+    },
+    pending: {
+      variant: 'outline' as const,
+      label: 'Pendente',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+    },
+    cancelled: {
+      variant: 'outline' as const,
+      label: 'Cancelada',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+    },
   }
   
-  const labels = {
-    completed: 'Concluída',
-    processing: 'Processando',
-    failed: 'Falhou',
-    pending: 'Pendente',
-    cancelled: 'Cancelada',
-  }
+  const { variant, label, className } = config[status]
   
   return (
-    <Badge variant={variants[status] as any}>
-      {labels[status]}
+    <Badge variant={variant} className={cn("font-medium", className)}>
+      {label}
     </Badge>
   )
 }
@@ -124,7 +139,10 @@ export function PixTransactionsTable() {
   }
 
   return (
-    <Card>
+    <Card className={cn(
+      "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
+      "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]"
+    )}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Transações Recentes</CardTitle>
@@ -162,19 +180,33 @@ export function PixTransactionsTable() {
                 </TableRow>
               ) : (
                 filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
+                  <TableRow 
+                    key={transaction.id}
+                    className={cn(
+                      "transition-all duration-200",
+                      "hover:bg-muted/50",
+                      "hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_2px_4px_rgba(255,255,255,0.02)]",
+                      "cursor-pointer"
+                    )}
+                  >
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {transaction.type === 'sent' ? (
-                          <>
-                            <ArrowUpRight className="w-4 h-4 text-red-500" />
-                            <span className="text-sm">Enviado</span>
-                          </>
+                          <div className={cn(
+                            "flex items-center gap-2 px-2 py-1 rounded-md",
+                            "bg-red-100 dark:bg-red-950/30"
+                          )}>
+                            <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
+                            <span className="text-sm font-medium text-red-700 dark:text-red-400">Enviado</span>
+                          </div>
                         ) : (
-                          <>
-                            <ArrowDownLeft className="w-4 h-4 text-green-500" />
-                            <span className="text-sm">Recebido</span>
-                          </>
+                          <div className={cn(
+                            "flex items-center gap-2 px-2 py-1 rounded-md",
+                            "bg-green-100 dark:bg-green-950/30"
+                          )}>
+                            <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-medium text-green-700 dark:text-green-400">Recebido</span>
+                          </div>
                         )}
                       </div>
                     </TableCell>

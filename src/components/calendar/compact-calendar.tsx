@@ -6,9 +6,9 @@
 import { format, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
-import { useCalendar } from './calendar-context'
 import { cn } from '@/lib/utils'
 import type { FinancialEvent } from '@/types/financial-events'
+import { useCalendar } from './calendar-context'
 
 interface CompactCalendarProps {
   selectedDate?: Date

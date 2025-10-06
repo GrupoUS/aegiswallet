@@ -1,7 +1,19 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  Search,
+  XCircle,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -9,15 +21,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react"
-import { maskPixKey } from "@/types/pix"
-import type { PixTransaction } from "@/types/pix"
-import { cn } from "@/lib/utils"
-import { usePixTransactions } from "@/hooks/usePix"
+} from '@/components/ui/table'
+import { usePixTransactions } from '@/hooks/usePix'
+import { cn } from '@/lib/utils'
+import type { PixTransaction } from '@/types/pix'
+import { maskPixKey } from '@/types/pix'
 
 function getStatusIcon(status: PixTransaction['status']) {
   switch (status) {
@@ -37,59 +45,67 @@ function getStatusBadge(status: PixTransaction['status']) {
     completed: {
       variant: 'default' as const,
       label: 'Concluída',
-      className: 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400 border-green-200 dark:border-green-800'
+      className:
+        'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400 border-green-200 dark:border-green-800',
     },
     processing: {
       variant: 'secondary' as const,
       label: 'Processando',
-      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
+      className:
+        'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
     },
     failed: {
       variant: 'destructive' as const,
       label: 'Falhou',
-      className: 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-200 dark:border-red-800'
+      className:
+        'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-200 dark:border-red-800',
     },
     pending: {
       variant: 'outline' as const,
       label: 'Pendente',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+      className:
+        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
     },
     cancelled: {
       variant: 'outline' as const,
       label: 'Cancelada',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+      className:
+        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
     },
   }
-  
+
   const { variant, label, className } = config[status]
-  
+
   return (
-    <Badge variant={variant} className={cn("font-medium", className)}>
+    <Badge variant={variant} className={cn('font-medium', className)}>
       {label}
     </Badge>
   )
 }
 
 export function PixTransactionsTable() {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const { transactions, isLoading } = usePixTransactions()
 
   const filteredTransactions = useMemo(() => {
     if (!transactions) return []
     if (!searchTerm.trim()) return transactions
-    
-    return transactions.filter(tx => 
-      tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.recipientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.pixKey.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return transactions.filter(
+      (tx) =>
+        tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tx.recipientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tx.pixKey.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [transactions, searchTerm])
 
   return (
-    <Card className={cn(
-      "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
-      "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]"
-    )}>
+    <Card
+      className={cn(
+        'shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]',
+        'dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]'
+      )}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Transações Recentes</CardTitle>
@@ -128,37 +144,47 @@ export function PixTransactionsTable() {
               ) : filteredTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    {searchTerm ? "Nenhuma transação encontrada" : "Você ainda não tem transações PIX"}
+                    {searchTerm
+                      ? 'Nenhuma transação encontrada'
+                      : 'Você ainda não tem transações PIX'}
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredTransactions.map((transaction) => (
-                  <TableRow 
+                  <TableRow
                     key={transaction.id}
                     className={cn(
-                      "transition-all duration-200",
-                      "hover:bg-muted/50",
-                      "hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_2px_4px_rgba(255,255,255,0.02)]",
-                      "cursor-pointer"
+                      'transition-all duration-200',
+                      'hover:bg-muted/50',
+                      'hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_2px_4px_rgba(255,255,255,0.02)]',
+                      'cursor-pointer'
                     )}
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {transaction.type === 'sent' ? (
-                          <div className={cn(
-                            "flex items-center gap-2 px-2 py-1 rounded-md",
-                            "bg-red-100 dark:bg-red-950/30"
-                          )}>
+                          <div
+                            className={cn(
+                              'flex items-center gap-2 px-2 py-1 rounded-md',
+                              'bg-red-100 dark:bg-red-950/30'
+                            )}
+                          >
                             <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
-                            <span className="text-sm font-medium text-red-700 dark:text-red-400">Enviado</span>
+                            <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                              Enviado
+                            </span>
                           </div>
                         ) : (
-                          <div className={cn(
-                            "flex items-center gap-2 px-2 py-1 rounded-md",
-                            "bg-green-100 dark:bg-green-950/30"
-                          )}>
+                          <div
+                            className={cn(
+                              'flex items-center gap-2 px-2 py-1 rounded-md',
+                              'bg-green-100 dark:bg-green-950/30'
+                            )}
+                          >
                             <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
-                            <span className="text-sm font-medium text-green-700 dark:text-green-400">Recebido</span>
+                            <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                              Recebido
+                            </span>
                           </div>
                         )}
                       </div>
@@ -169,12 +195,12 @@ export function PixTransactionsTable() {
                     <TableCell className="font-mono text-sm">
                       {maskPixKey(transaction.pixKey, transaction.pixKeyType)}
                     </TableCell>
-                    <TableCell>
-                      {transaction.description || '-'}
-                    </TableCell>
-                    <TableCell className={`text-right font-bold ${
-                      transaction.type === 'sent' ? 'text-red-600' : 'text-green-600'
-                    }`}>
+                    <TableCell>{transaction.description || '-'}</TableCell>
+                    <TableCell
+                      className={`text-right font-bold ${
+                        transaction.type === 'sent' ? 'text-red-600' : 'text-green-600'
+                      }`}
+                    >
                       {transaction.type === 'sent' ? '-' : '+'}
                       R$ {transaction.amount.toFixed(2).replace('.', ',')}
                     </TableCell>
@@ -198,12 +224,10 @@ export function PixTransactionsTable() {
             </TableBody>
           </Table>
         </div>
-        
+
         {/* Load more button */}
         <div className="flex justify-center mt-4">
-          <Button variant="outline">
-            Carregar mais transações
-          </Button>
+          <Button variant="outline">Carregar mais transações</Button>
         </div>
       </CardContent>
     </Card>

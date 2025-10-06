@@ -1,20 +1,20 @@
-import { Outlet, Link } from '@tanstack/react-router'
-import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
 import {
+  IconAccessible,
   IconArrowLeft,
   IconBrandTabler,
+  IconHome,
+  IconReceipt,
   IconSettings,
   IconUserBolt,
-  IconReceipt,
-  IconHome,
-  IconAccessible,
 } from '@tabler/icons-react'
+import { Link, Outlet } from '@tanstack/react-router'
 import { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/AuthContext'
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
-import { Button } from '@/components/ui/button'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { Button } from '@/components/ui/button'
+import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
+import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
 
 export function AppLayout() {
   const [open, setOpen] = useState(false)
@@ -25,9 +25,7 @@ export function AppLayout() {
     {
       label: 'Dashboard',
       href: '/dashboard',
-      icon: (
-        <IconHome className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      icon: <IconHome className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
       label: 'Transactions',
@@ -53,10 +51,12 @@ export function AppLayout() {
   ]
 
   return (
-    <div className={cn(
-      'flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
-      'h-screen'
-    )}>
+    <div
+      className={cn(
+        'flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+        'h-screen'
+      )}
+    >
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
@@ -69,17 +69,15 @@ export function AppLayout() {
           </div>
           <div>
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2 mb-2"
-              asChild
-            >
+            <Button variant="ghost" className="w-full justify-start gap-2 mb-2" asChild>
               <div className="flex items-center gap-2">
                 <AnimatedThemeToggler className="h-5 w-5" />
-                {open && <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>}
+                {open && (
+                  <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>
+                )}
               </div>
             </Button>
-            
+
             {/* Accessibility Button */}
             <Button
               variant="ghost"
@@ -87,7 +85,11 @@ export function AppLayout() {
               onClick={() => setShowSettings(!showSettings)}
             >
               <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-              {open && <span className="text-sm text-neutral-700 dark:text-neutral-200">Accessibility</span>}
+              {open && (
+                <span className="text-sm text-neutral-700 dark:text-neutral-200">
+                  Accessibility
+                </span>
+              )}
             </Button>
 
             <SidebarLink
@@ -105,11 +107,7 @@ export function AppLayout() {
                 ),
               }}
             />
-            <Button
-              onClick={signOut}
-              variant="ghost"
-              className="w-full justify-start gap-2 mt-2"
-            >
+            <Button onClick={signOut} variant="ghost" className="w-full justify-start gap-2 mt-2">
               <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
               {open && <span>Logout</span>}
             </Button>
@@ -132,9 +130,7 @@ export const Logo = () => {
       className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
     >
       <IconBrandTabler className="h-5 w-5 flex-shrink-0 text-black dark:text-white" />
-      <span className="font-medium text-black dark:text-white whitespace-pre">
-        AegisWallet
-      </span>
+      <span className="font-medium text-black dark:text-white whitespace-pre">AegisWallet</span>
     </Link>
   )
 }

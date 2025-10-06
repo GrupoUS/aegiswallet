@@ -1,20 +1,20 @@
-export { EventCalendar } from './event-calendar'
 export { CalendarHeader } from './calendar-header'
-export { WeekView } from './week-view'
-export { MonthView } from './month-view'
 export { DayView } from './day-view'
-export { TimeGrid } from './time-grid'
-export { EventCard } from './event-card'
 export { EnhancedEventCard } from './enhanced-event-card'
+export { EventCalendar } from './event-calendar'
+export { EventCard } from './event-card'
 export { EventDialog } from './event-dialog'
-export type { 
-  CalendarEvent, 
-  CalendarView, 
-  EventColor, 
-  EventPosition, 
-  WeekDay, 
-  TimeSlot,
+export { MonthView } from './month-view'
+export { TimeGrid } from './time-grid'
+export type {
   CalendarCategory,
+  CalendarEvent,
   CalendarFilter,
-  CalendarSettings
+  CalendarSettings,
+  CalendarView,
+  EventColor,
+  EventPosition,
+  TimeSlot,
+  WeekDay,
 } from './types'
+export { WeekView } from './week-view'

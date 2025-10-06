@@ -1,7 +1,7 @@
 /**
  * Token Manager - Secure Token Storage
  * Story: 02.01 - Conectores Open Banking
- * 
+ *
  * AES-256-GCM encryption for OAuth tokens
  * PBKDF2 key derivation
  * Automatic token rotation
@@ -27,7 +27,8 @@ export class TokenManager {
   private masterKey: string
 
   constructor() {
-    this.masterKey = import.meta.env.VITE_ENCRYPTION_MASTER_KEY || 'default-key-change-in-production'
+    this.masterKey =
+      import.meta.env.VITE_ENCRYPTION_MASTER_KEY || 'default-key-change-in-production'
   }
 
   /**
@@ -97,29 +98,23 @@ export class TokenManager {
   /**
    * Store encrypted tokens
    */
-  async storeTokens(
-    connectionId: string,
-    userId: string,
-    tokens: TokenData
-  ): Promise<void> {
+  async storeTokens(connectionId: string, userId: string, tokens: TokenData): Promise<void> {
     const encryptedAccess = await this.encryptToken(tokens.accessToken, userId)
     const encryptedRefresh = tokens.refreshToken
       ? await this.encryptToken(tokens.refreshToken, userId)
       : null
 
-    const { error } = await supabase
-      .from('bank_tokens')
-      .upsert({
-        connection_id: connectionId,
-        user_id: userId,
-        encrypted_access_token: encryptedAccess.encrypted,
-        encrypted_refresh_token: encryptedRefresh?.encrypted,
-        encryption_iv: encryptedAccess.iv,
-        encryption_algorithm: encryptedAccess.algorithm,
-        expires_at: tokens.expiresAt.toISOString(),
-        refresh_expires_at: tokens.refreshExpiresAt?.toISOString(),
-        scopes: tokens.scopes,
-      })
+    const { error } = await supabase.from('bank_tokens').upsert({
+      connection_id: connectionId,
+      user_id: userId,
+      encrypted_access_token: encryptedAccess.encrypted,
+      encrypted_refresh_token: encryptedRefresh?.encrypted,
+      encryption_iv: encryptedAccess.iv,
+      encryption_algorithm: encryptedAccess.algorithm,
+      expires_at: tokens.expiresAt.toISOString(),
+      refresh_expires_at: tokens.refreshExpiresAt?.toISOString(),
+      scopes: tokens.scopes,
+    })
 
     if (error) {
       throw new Error(`Failed to store tokens: ${error.message}`)
@@ -174,10 +169,7 @@ export class TokenManager {
    * Delete tokens
    */
   async deleteTokens(connectionId: string): Promise<void> {
-    const { error } = await supabase
-      .from('bank_tokens')
-      .delete()
-      .eq('connection_id', connectionId)
+    const { error } = await supabase.from('bank_tokens').delete().eq('connection_id', connectionId)
 
     if (error) {
       throw new Error(`Failed to delete tokens: ${error.message}`)

@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { LineChart, Mic, PiggyBank, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mic, TrendingUp, TrendingDown, Wallet, PiggyBank, LineChart } from 'lucide-react'
 
 export const Route = createFileRoute('/saldo')({
   component: Saldo,
@@ -118,7 +118,10 @@ function Saldo() {
           {accounts.map((account) => {
             const Icon = account.icon
             return (
-              <Card key={account.id} className="hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 cursor-pointer">
+              <Card
+                key={account.id}
+                className="hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 cursor-pointer"
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>{account.name}</CardDescription>
@@ -210,7 +213,7 @@ function Saldo() {
       </div>
 
       {/* Transactions Management Section */}
-      <div className="space-y-6 pt-8 border-t-2 border-border/50">
+      <div className="space-y-6 pt-8 border-t-2 border/50">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-semibold">Gerenciar Transações</h2>
@@ -343,4 +346,3 @@ function Saldo() {
     </div>
   )
 }
-

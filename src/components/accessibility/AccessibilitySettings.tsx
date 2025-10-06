@@ -2,7 +2,6 @@
  * Accessibility Settings - Story 04.05
  */
 
-
 import { Switch } from '@/components/ui/switch'
 
 export function AccessibilitySettings() {

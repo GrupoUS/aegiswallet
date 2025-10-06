@@ -1,7 +1,7 @@
-import { trpc } from '@/lib/trpc'
-import { toast } from 'sonner'
 import { useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { supabase } from '@/integrations/supabase/client'
+import { trpc } from '@/lib/trpc'
 
 /**
  * Hook para gerenciar transações financeiras
@@ -18,10 +18,9 @@ export function useFinancialTransactions(filters?: {
   offset?: number
 }) {
   const utils = trpc.useUtils()
-  
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } = trpc.financialTransactions.getAll.useInfiniteQuery(
-    filters || {},
-    {
+
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+    trpc.financialTransactions.getAll.useInfiniteQuery(filters || {}, {
       getNextPageParam: (lastPage) => {
         if (lastPage.hasMore) {
           return {
@@ -31,68 +30,73 @@ export function useFinancialTransactions(filters?: {
         }
         return undefined
       },
-    }
-  )
+    })
 
   const transactions = useMemo(() => {
-    return data?.pages.flatMap(page => page.transactions) || []
+    return data?.pages.flatMap((page) => page.transactions) || []
   }, [data])
 
   const total = useMemo(() => {
     return data?.pages[0]?.total || 0
   }, [data])
 
-  const { mutate: createTransaction, isPending: isCreating } = trpc.financialTransactions.create.useMutation({
-    onSuccess: (data) => {
-      utils.financialTransactions.getAll.setData(undefined, (old) => {
-        if (!old) return { pages: [{ transactions: [data], total: 1, hasMore: false }] }
-        return {
-          ...old,
-          pages: [{
-            ...old.pages[0],
-            transactions: [data, ...old.pages[0].transactions],
-            total: old.pages[0].total + 1,
-          }, ...old.pages.slice(1)]
-        }
-      })
-      utils.financialTransactions.getStats.invalidate()
-      toast.success('Transação criada com sucesso!')
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao criar transação')
-    },
-  })
+  const { mutate: createTransaction, isPending: isCreating } =
+    trpc.financialTransactions.create.useMutation({
+      onSuccess: (data) => {
+        utils.financialTransactions.getAll.setData(undefined, (old) => {
+          if (!old) return { pages: [{ transactions: [data], total: 1, hasMore: false }] }
+          return {
+            ...old,
+            pages: [
+              {
+                ...old.pages[0],
+                transactions: [data, ...old.pages[0].transactions],
+                total: old.pages[0].total + 1,
+              },
+              ...old.pages.slice(1),
+            ],
+          }
+        })
+        utils.financialTransactions.getStats.invalidate()
+        toast.success('Transação criada com sucesso!')
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao criar transação')
+      },
+    })
 
-  const { mutate: updateTransaction, isPending: isUpdating } = trpc.financialTransactions.update.useMutation({
-    onSuccess: (data) => {
-      utils.financialTransactions.getAll.setData(undefined, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            transactions: page.transactions.map(t => t.id === data.id ? data : t)
-          }))
-        }
-      })
-      utils.financialTransactions.getStats.invalidate()
-      toast.success('Transação atualizada com sucesso!')
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar transação')
-    },
-  })
+  const { mutate: updateTransaction, isPending: isUpdating } =
+    trpc.financialTransactions.update.useMutation({
+      onSuccess: (data) => {
+        utils.financialTransactions.getAll.setData(undefined, (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              transactions: page.transactions.map((t) => (t.id === data.id ? data : t)),
+            })),
+          }
+        })
+        utils.financialTransactions.getStats.invalidate()
+        toast.success('Transação atualizada com sucesso!')
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao atualizar transação')
+      },
+    })
 
-  const { mutate: deleteTransaction, isPending: isDeleting } = trpc.financialTransactions.delete.useMutation({
-    onSuccess: () => {
-      utils.financialTransactions.getAll.invalidate()
-      utils.financialTransactions.getStats.invalidate()
-      toast.success('Transação removida com sucesso!')
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao remover transação')
-    },
-  })
+  const { mutate: deleteTransaction, isPending: isDeleting } =
+    trpc.financialTransactions.delete.useMutation({
+      onSuccess: () => {
+        utils.financialTransactions.getAll.invalidate()
+        utils.financialTransactions.getStats.invalidate()
+        toast.success('Transação removida com sucesso!')
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao remover transação')
+      },
+    })
 
   // Real-time subscription para transações
   useEffect(() => {
@@ -142,7 +146,11 @@ export function useFinancialTransactions(filters?: {
  * Hook para obter transação específica
  */
 export function useFinancialTransaction(transactionId: string) {
-  const { data: transaction, isLoading, error } = trpc.financialTransactions.getById.useQuery(
+  const {
+    data: transaction,
+    isLoading,
+    error,
+  } = trpc.financialTransactions.getById.useQuery(
     { id: transactionId },
     { enabled: !!transactionId }
   )
@@ -158,10 +166,11 @@ export function useFinancialTransaction(transactionId: string) {
  * Hook para estatísticas de transações
  */
 export function useTransactionStats(period: string = '30d') {
-  const { data: stats, isLoading, error } = trpc.financialTransactions.getStats.useQuery(
-    { period },
-    { enabled: !!period }
-  )
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = trpc.financialTransactions.getStats.useQuery({ period }, { enabled: !!period })
 
   return {
     stats,
@@ -174,10 +183,11 @@ export function useTransactionStats(period: string = '30d') {
  * Hook para transações por categoria
  */
 export function useTransactionsByCategory(period: string = '30d') {
-  const { data: categoryStats, isLoading, error } = trpc.financialTransactions.getByCategory.useQuery(
-    { period },
-    { enabled: !!period }
-  )
+  const {
+    data: categoryStats,
+    isLoading,
+    error,
+  } = trpc.financialTransactions.getByCategory.useQuery({ period }, { enabled: !!period })
 
   return {
     categoryStats: categoryStats || [],
@@ -196,16 +206,14 @@ export function useFinancialSummary() {
 
   const summary = useMemo(() => {
     const totalIncome = transactions
-      .filter(t => t.amount > 0)
+      .filter((t) => t.amount > 0)
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const totalExpenses = transactions
-      .filter(t => t.amount < 0)
+      .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
 
-    const topCategories = categoryStats
-      .sort((a, b) => b.totalAmount - a.totalAmount)
-      .slice(0, 5)
+    const topCategories = categoryStats.sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5)
 
     return {
       totalIncome,
@@ -224,7 +232,11 @@ export function useFinancialSummary() {
  * Hook para busca otimizada de transações
  */
 export function useTransactionSearch(query: string, limit: number = 10) {
-  const { data: results, isLoading, error } = trpc.financialTransactions.getAll.useQuery(
+  const {
+    data: results,
+    isLoading,
+    error,
+  } = trpc.financialTransactions.getAll.useQuery(
     {
       search: query,
       limit,

@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
-import { supabase } from '@/integrations/supabase/client'
 import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { supabase } from '@/integrations/supabase/client'
+import { protectedProcedure, router } from '../trpc'
 
 /**
  * Transactions Router - Gerenciamento de transações financeiras
@@ -53,7 +53,9 @@ export const transactionsRouter = router({
           query = query.lte('transaction_date', input.endDate)
         }
         if (input.search) {
-          query = query.or(`description.ilike.%${input.search}%,merchant_name.ilike.%${input.search}%`)
+          query = query.or(
+            `description.ilike.%${input.search}%,merchant_name.ilike.%${input.search}%`
+          )
         }
 
         const { data, error, count } = await query
@@ -281,7 +283,7 @@ export const transactionsRouter = router({
         // Calcular data de início
         const now = new Date()
         const startDate = new Date()
-        
+
         switch (input.period) {
           case '7d':
             startDate.setDate(now.getDate() - 7)
@@ -322,24 +324,27 @@ export const transactionsRouter = router({
         }
 
         const transactions = data || []
-        
+
         // Calcular estatísticas
         const income = transactions
-          .filter(t => t.amount > 0)
+          .filter((t) => t.amount > 0)
           .reduce((sum, t) => sum + Number(t.amount), 0)
-        
+
         const expenses = transactions
-          .filter(t => t.amount < 0)
+          .filter((t) => t.amount < 0)
           .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
-        
+
         const totalTransactions = transactions.length
-        const averageTransaction = totalTransactions > 0 
-          ? transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) / totalTransactions
-          : 0
-        
-        const largestTransaction = transactions.length > 0
-          ? Math.max(...transactions.map(t => Math.abs(Number(t.amount))))
-          : 0
+        const averageTransaction =
+          totalTransactions > 0
+            ? transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) /
+              totalTransactions
+            : 0
+
+        const largestTransaction =
+          transactions.length > 0
+            ? Math.max(...transactions.map((t) => Math.abs(Number(t.amount))))
+            : 0
 
         return {
           income,
@@ -371,7 +376,7 @@ export const transactionsRouter = router({
         // Calcular data de início
         const now = new Date()
         const startDate = new Date()
-        
+
         switch (input.period) {
           case '7d':
             startDate.setDate(now.getDate() - 7)
@@ -407,35 +412,38 @@ export const transactionsRouter = router({
         }
 
         // Agrupar por categoria
-        const categoryStats = (data || []).reduce((acc, transaction) => {
-          const category = transaction.transaction_categories
-          if (!category) return acc
+        const categoryStats = (data || []).reduce(
+          (acc, transaction) => {
+            const category = transaction.transaction_categories
+            if (!category) return acc
 
-          if (!acc[category.id]) {
-            acc[category.id] = {
-              id: category.id,
-              name: category.name,
-              color: category.color,
-              icon: category.icon,
-              totalAmount: 0,
-              transactionCount: 0,
-              income: 0,
-              expenses: 0,
+            if (!acc[category.id]) {
+              acc[category.id] = {
+                id: category.id,
+                name: category.name,
+                color: category.color,
+                icon: category.icon,
+                totalAmount: 0,
+                transactionCount: 0,
+                income: 0,
+                expenses: 0,
+              }
             }
-          }
 
-          const amount = Number(transaction.amount)
-          acc[category.id].totalAmount += amount
-          acc[category.id].transactionCount += 1
+            const amount = Number(transaction.amount)
+            acc[category.id].totalAmount += amount
+            acc[category.id].transactionCount += 1
 
-          if (amount > 0) {
-            acc[category.id].income += amount
-          } else {
-            acc[category.id].expenses += Math.abs(amount)
-          }
+            if (amount > 0) {
+              acc[category.id].income += amount
+            } else {
+              acc[category.id].expenses += Math.abs(amount)
+            }
 
-          return acc
-        }, {} as Record<string, any>)
+            return acc
+          },
+          {} as Record<string, any>
+        )
 
         return Object.values(categoryStats)
       } catch (error) {

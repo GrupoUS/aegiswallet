@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Calendar, CheckCircle, Clock, FileText, Mic } from 'lucide-react'
 import { useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Mic, Calendar, CheckCircle, Clock, FileText } from 'lucide-react'
 
 export const Route = createFileRoute('/contas')({
   component: Contas,
@@ -173,10 +173,7 @@ function Contas() {
 
       {/* Filter Buttons */}
       <div className="flex gap-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          onClick={() => setFilter('all')}
-        >
+        <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
           Todas ({bills.length})
         </Button>
         <Button
@@ -217,7 +214,9 @@ function Contas() {
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          <span>Vencimento: {new Date(bill.dueDate).toLocaleDateString('pt-BR')}</span>
+                          <span>
+                            Vencimento: {new Date(bill.dueDate).toLocaleDateString('pt-BR')}
+                          </span>
                         </div>
                         {bill.status === 'pending' && (
                           <div className="flex items-center gap-1">
@@ -238,12 +237,8 @@ function Contas() {
                       <FinancialAmount amount={-bill.amount} size="lg" />
                       <Badge className={`${status.color} mt-2`}>{status.text}</Badge>
                     </div>
-                    {bill.status === 'pending' && (
-                      <Button size="sm">Pagar</Button>
-                    )}
-                    {bill.status === 'paid' && (
-                      <CheckCircle className="w-6 h-6 text-green-500" />
-                    )}
+                    {bill.status === 'pending' && <Button size="sm">Pagar</Button>}
+                    {bill.status === 'paid' && <CheckCircle className="w-6 h-6 text-green-500" />}
                   </div>
                 </div>
               </CardContent>
@@ -265,4 +260,3 @@ function Contas() {
     </div>
   )
 }
-

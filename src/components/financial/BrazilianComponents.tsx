@@ -3,9 +3,8 @@
  * Updated to use proper Card component with animation support
  */
 
-
-import { formatCurrency } from '@/lib/formatters/brazilianFormatters'
 import { Card, CardContent, CardDescription } from '@/components/ui/card'
+import { formatCurrency } from '@/lib/formatters/brazilianFormatters'
 import { cn } from '@/lib/utils'
 
 interface BalanceCardProps {
@@ -17,16 +16,14 @@ export function BalanceCard({ balance, className }: BalanceCardProps) {
   return (
     <Card
       className={cn(
-        "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0",
-        "hover:shadow-lg transition-all duration-300",
-        "hover:scale-[1.02]",
+        'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0',
+        'hover:shadow-lg transition-all duration-300',
+        'hover:scale-[1.02]',
         className
       )}
     >
       <CardContent className="pt-6">
-        <CardDescription className="text-white/90 text-sm">
-          Saldo Disponível
-        </CardDescription>
+        <CardDescription className="text-white/90 text-sm">Saldo Disponível</CardDescription>
         <h2 className="text-4xl font-bold mt-2">{formatCurrency(balance)}</h2>
       </CardContent>
     </Card>

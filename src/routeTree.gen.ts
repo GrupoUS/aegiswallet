@@ -9,16 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SaldoRouteImport } from './routes/saldo'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ContasRouteImport } from './routes/contas'
 import { Route as CalendarioRouteImport } from './routes/calendario'
+import { Route as ContasRouteImport } from './routes/contas'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PixIndexRouteImport } from './routes/pix/index'
-import { Route as PixTransferirRouteImport } from './routes/pix/transferir'
-import { Route as PixReceberRouteImport } from './routes/pix/receber'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PixHistoricoRouteImport } from './routes/pix/historico'
+import { Route as PixIndexRouteImport } from './routes/pix/index'
+import { Route as PixReceberRouteImport } from './routes/pix/receber'
+import { Route as PixTransferirRouteImport } from './routes/pix/transferir'
+import { Route as SaldoRouteImport } from './routes/saldo'
 
 const SaldoRoute = SaldoRouteImport.update({
   id: '/saldo',

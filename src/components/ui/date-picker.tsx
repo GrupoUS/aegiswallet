@@ -3,14 +3,14 @@
  * Popover-based date picker using the Origin UI Compact Calendar
  */
 
-import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar as CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState } from 'react'
+import { OriginCompactCalendar } from '@/components/calendar/origin-compact-calendar'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { OriginCompactCalendar } from '@/components/calendar/origin-compact-calendar'
+import { cn } from '@/lib/utils'
 
 interface DatePickerProps {
   /**
@@ -145,4 +145,3 @@ export function DateRangePicker({
     </div>
   )
 }
-

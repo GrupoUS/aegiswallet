@@ -1,15 +1,54 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { MiniCalendarWidget } from '@/components/calendar/mini-calendar-widget'
 import { FinancialAmount } from '@/components/financial-amount'
+import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
-import { MiniCalendarWidget } from '@/components/calendar/mini-calendar-widget'
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
 })
 
 function Dashboard() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      // Check for hash in URL first
+      let hashToProcess = window.location.hash
+
+      // If no hash in URL, check sessionStorage
+      if (!hashToProcess) {
+        hashToProcess = sessionStorage.getItem('oauth_hash') || ''
+      }
+
+      if (hashToProcess) {
+        const hashParams = new URLSearchParams(hashToProcess.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const error = hashParams.get('error')
+
+        if (error) {
+          console.error('OAuth error:', error)
+          sessionStorage.removeItem('oauth_hash')
+          navigate({ to: '/login', search: { error: 'Authentication failed' } })
+          return
+        }
+
+        if (accessToken) {
+          // Clear the hash from URL and sessionStorage
+          window.history.replaceState(null, '', '/dashboard')
+          sessionStorage.removeItem('oauth_hash')
+
+          setTimeout(() => {
+            // The onAuthStateChange listener in AuthContext will handle the session update
+          }, 1000)
+        }
+      }
+    }
+
+    handleOAuthCallback()
+  }, [navigate])
   // Bento Grid items for enhanced dashboard sections
   const bentoItems: BentoItem[] = [
     {

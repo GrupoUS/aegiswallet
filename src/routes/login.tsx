@@ -1,18 +1,19 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/contexts/AuthContext'
-import { useEffect } from 'react'
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
     redirect: (search.redirect as string) || '/dashboard',
+    error: (search.error as string) || undefined,
   }),
   component: LoginComponent,
 })
 
 function LoginComponent() {
   const { signIn, signUp, signInWithGoogle, isAuthenticated } = useAuth()
-  const { redirect: redirectPath } = Route.useSearch()
+  const { redirect: redirectPath, error: searchError } = Route.useSearch()
   const navigate = useNavigate()
 
   // Redirect if already authenticated
@@ -32,7 +33,7 @@ function LoginComponent() {
 
     // Convert AuthError to expected format
     return {
-      error: result.error ? { message: result.error.message } : undefined
+      error: result.error ? { message: result.error.message } : undefined,
     }
   }
 
@@ -49,16 +50,19 @@ function LoginComponent() {
           <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
             AegisWallet
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Seu assistente financeiro inteligente
-          </p>
+          <p className="text-muted-foreground text-lg">Seu assistente financeiro inteligente</p>
         </div>
 
+        {/* Error Message */}
+        {searchError && (
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-lg">
+            <p className="text-sm font-medium">Erro de autenticação</p>
+            <p className="text-sm">{searchError}</p>
+          </div>
+        )}
+
         {/* Login Form */}
-        <LoginForm
-          onSubmit={handleSubmit}
-          onGoogleSignIn={handleGoogleSignIn}
-        />
+        <LoginForm onSubmit={handleSubmit} onGoogleSignIn={handleGoogleSignIn} />
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground">

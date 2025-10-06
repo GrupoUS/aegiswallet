@@ -1,10 +1,18 @@
-import { useProfile, useUserStatus } from './useProfile'
+import { useBankAccounts, useBankAccountsStats, useTotalBalance } from './useBankAccounts'
+import {
+  useContacts,
+  useContactsForTransfer,
+  useContactsStats,
+  useFavoriteContacts,
+} from './useContacts'
+import { useCalendarStats, useOverdueEvents, useUpcomingEvents } from './useFinancialCalendar'
 import { useFinancialEvents } from './useFinancialEvents'
-import { useContacts } from './useContacts'
-import { useBankAccounts, useTotalBalance, useBankAccountsStats } from './useBankAccounts'
-import { useFinancialTransactions, useTransactionStats, useRecentTransactions } from './useFinancialTransactions'
-import { useUpcomingEvents, useOverdueEvents, useCalendarStats } from './useFinancialCalendar'
-import { useFavoriteContacts, useContactsStats, useContactsForTransfer } from './useContacts'
+import {
+  useFinancialTransactions,
+  useRecentTransactions,
+  useTransactionStats,
+} from './useFinancialTransactions'
+import { useProfile, useUserStatus } from './useProfile'
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
@@ -13,17 +21,17 @@ export function useDashboard() {
   // Dados do usuário
   const { profile, isLoading: profileLoading } = useProfile()
   const { status: userStatus, isActive } = useUserStatus()
-  
+
   // Dados financeiros
   const { accounts, isLoading: accountsLoading } = useBankAccounts()
   const { balances, isLoading: balancesLoading } = useTotalBalance()
   const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 })
   const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('30d')
-  
+
   // Dados do calendário
   const { upcomingEvents, isLoading: upcomingLoading } = useUpcomingEvents()
   const { overdueEvents, isLoading: overdueLoading } = useOverdueEvents()
-  
+
   // Dados dos contatos
   const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts()
   const { stats: contactStats, isLoading: contactStatsLoading } = useContactsStats()
@@ -37,7 +45,7 @@ export function useDashboard() {
       isActive,
       status: userStatus,
     },
-    
+
     // Resumo financeiro
     financial: {
       totalBalance: balances.BRL || 0,
@@ -47,7 +55,7 @@ export function useDashboard() {
       stats: transactionStats,
       accounts,
     },
-    
+
     // Eventos e lembretes
     events: {
       upcoming: upcomingEvents.length,
@@ -55,7 +63,7 @@ export function useDashboard() {
       upcomingEvents: upcomingEvents.slice(0, 3),
       overdueEvents: overdueEvents.slice(0, 3),
     },
-    
+
     // Contatos
     contacts: {
       total: contactStats?.totalContacts || 0,
@@ -63,18 +71,25 @@ export function useDashboard() {
       favoriteContacts: favoriteContacts.slice(0, 5),
       transferableContacts: transferContacts.slice(0, 5),
     },
-    
+
     // Estatísticas combinadas
     stats: {
       bankStats: useBankAccountsStats(),
       calendarStats: useCalendarStats(),
       contactStats,
-    }
+    },
   }
 
-  const isLoading = profileLoading || accountsLoading || balancesLoading || 
-                    transactionsLoading || statsLoading || upcomingLoading || 
-                    overdueLoading || contactsLoading || contactStatsLoading
+  const isLoading =
+    profileLoading ||
+    accountsLoading ||
+    balancesLoading ||
+    transactionsLoading ||
+    statsLoading ||
+    upcomingLoading ||
+    overdueLoading ||
+    contactsLoading ||
+    contactStatsLoading
 
   return {
     dashboardData,
@@ -82,7 +97,7 @@ export function useDashboard() {
     refresh: () => {
       // Função para refresh de todos os dados
       // Isso pode ser usado em botões de refresh ou quando a página ganha foco
-    }
+    },
   }
 }
 
@@ -93,13 +108,13 @@ export function useDashboardWidgets() {
   // Widget 1: Resumo Financeiro
   const { balances } = useTotalBalance()
   const { stats } = useTransactionStats('30d')
-  
+
   // Widget 2: Próximos Eventos
   const { upcomingEvents } = useUpcomingEvents()
-  
+
   // Widget 3: Contatos Favoritos
   const { favoriteContacts } = useFavoriteContacts()
-  
+
   // Widget 4: Transações Recentes
   const { transactions } = useRecentTransactions(5)
 
@@ -111,17 +126,17 @@ export function useDashboardWidgets() {
       netBalance: stats?.netBalance || 0,
       period: '30d',
     },
-    
+
     upcomingEvents: {
       count: upcomingEvents.length,
       events: upcomingEvents.slice(0, 3),
     },
-    
+
     favoriteContacts: {
       count: favoriteContacts.length,
       contacts: favoriteContacts.slice(0, 4),
     },
-    
+
     recentTransactions: {
       count: transactions.length,
       transactions: transactions.slice(0, 4),
@@ -136,10 +151,10 @@ export function useDashboardWidgets() {
  */
 export function useRealTimeDashboard() {
   const { dashboardData, isLoading } = useDashboard()
-  
+
   // Aqui você pode adicionar subscriptions em tempo real para atualizações automáticas
   // Por exemplo, novas transações, eventos, etc.
-  
+
   return {
     dashboardData,
     isLoading,
@@ -152,7 +167,7 @@ export function useRealTimeDashboard() {
  */
 export function useDashboardMetrics() {
   const { isLoading } = useDashboard()
-  
+
   const metrics = {
     loadingTime: 0, // Seria calculado com performance.now()
     dataPoints: {
@@ -175,7 +190,7 @@ export function useDashboardMetrics() {
  */
 export function useDashboardSettings() {
   const { profile } = useProfile()
-  
+
   const settings = {
     theme: profile?.user_preferences?.theme || 'system',
     notifications: {
@@ -210,17 +225,17 @@ export function useDashboardActions() {
       // Implementar lógica para transação rápida
       return createTransaction(data)
     },
-    
+
     quickEvent: (data: any) => {
       // Implementar lógica para evento rápido
       return createEvent(data)
     },
-    
+
     quickContact: (data: any) => {
       // Implementar lógica para contato rápido
       return createContact(data)
     },
-    
+
     quickAccount: (data: any) => {
       // Implementar lógica para conta rápida
       return createAccount(data)

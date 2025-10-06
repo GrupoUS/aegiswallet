@@ -1,8 +1,17 @@
+import {
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns'
 import { useMemo } from 'react'
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns'
 import { cn } from '@/lib/utils'
-import type { CalendarEvent } from './types'
 import { EnhancedEventCard } from './enhanced-event-card'
+import type { CalendarEvent } from './types'
 
 interface MonthViewProps {
   currentDate: Date
@@ -12,23 +21,18 @@ interface MonthViewProps {
   onEventUpdate?: (event: CalendarEvent) => void
 }
 
-export function MonthView({
-  currentDate,
-  events,
-  onEventEdit,
-  onEventClick,
-}: MonthViewProps) {
+export function MonthView({ currentDate, events, onEventEdit, onEventClick }: MonthViewProps) {
   const monthDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate)
     const monthEnd = endOfMonth(currentDate)
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
     const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
-    
+
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd })
   }, [currentDate])
 
   const getEventsForDay = (day: Date) => {
-    return events.filter(event => isSameDay(new Date(event.start), day))
+    return events.filter((event) => isSameDay(new Date(event.start), day))
   }
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -36,11 +40,11 @@ export function MonthView({
   return (
     <div className="flex-1 bg-background">
       {/* Week days header */}
-      <div className="grid grid-cols-7 border-b border-border">
+      <div className="grid grid-cols-7 border-b border">
         {weekDays.map((day, index) => (
           <div
             key={index}
-            className="p-2 text-center text-sm font-medium text-muted-foreground border-r border-border last:border-r-0"
+            className="p-2 text-center text-sm font-medium text-muted-foreground border-r border last:border-r-0"
           >
             {day}
           </div>
@@ -58,7 +62,7 @@ export function MonthView({
             <div
               key={dayIndex}
               className={cn(
-                'min-h-[100px] border-r border-b border-border p-1 overflow-hidden',
+                'min-h-[100px] border-r border-b border p-1 overflow-hidden',
                 !isCurrentMonth && 'bg-muted/30',
                 isToday && 'bg-primary/5',
                 dayIndex % 7 === 6 && 'border-r-0',
@@ -66,11 +70,13 @@ export function MonthView({
               )}
             >
               {/* Day number */}
-              <div className={cn(
-                'text-sm font-medium mb-1 px-1',
-                !isCurrentMonth && 'text-muted-foreground',
-                isToday && 'text-primary font-bold'
-              )}>
+              <div
+                className={cn(
+                  'text-sm font-medium mb-1 px-1',
+                  !isCurrentMonth && 'text-muted-foreground',
+                  isToday && 'text-primary font-bold'
+                )}
+              >
                 {format(day, 'd')}
               </div>
 

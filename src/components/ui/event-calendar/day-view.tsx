@@ -1,23 +1,16 @@
-import React, { useMemo } from 'react'
-import { format, startOfDay, endOfDay, addHours, isSameDay } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import type { CalendarEvent } from './types'
+import { addHours, endOfDay, format, isSameDay, startOfDay } from 'date-fns'
+import { useMemo } from 'react'
 import { EnhancedEventCard } from './enhanced-event-card'
+import type { CalendarEvent } from './types'
 
 interface DayViewProps {
   currentDate: Date
   events: CalendarEvent[]
   onEventEdit?: (event: CalendarEvent) => void
   onEventClick?: (event: CalendarEvent) => void
-  onEventUpdate?: (event: CalendarEvent) => void
 }
 
-export function DayView({
-  currentDate,
-  events,
-  onEventEdit,
-  onEventClick,
-}: DayViewProps) {
+export function DayView({ currentDate, events, onEventEdit, onEventClick }: DayViewProps) {
   const hours = useMemo(() => {
     return Array.from({ length: 24 }, (_, i) => i)
   }, [])
@@ -25,24 +18,25 @@ export function DayView({
   const dayEvents = useMemo(() => {
     const dayStart = startOfDay(currentDate)
     const dayEnd = endOfDay(currentDate)
-    
-    return events.filter(event => {
+
+    return events.filter((event) => {
       const eventStart = new Date(event.start)
       const eventEnd = new Date(event.end)
       return (
-        (isSameDay(eventStart, currentDate) || isSameDay(eventEnd, currentDate)) ||
+        isSameDay(eventStart, currentDate) ||
+        isSameDay(eventEnd, currentDate) ||
         (eventStart <= dayEnd && eventEnd >= dayStart)
       )
     })
   }, [currentDate, events])
 
   const getEventsForHour = (hour: number) => {
-    return dayEvents.filter(event => {
+    return dayEvents.filter((event) => {
       const eventStart = new Date(event.start)
       const eventEnd = new Date(event.end)
       const hourStart = addHours(startOfDay(currentDate), hour)
       const hourEnd = addHours(hourStart, 1)
-      
+
       return (
         (eventStart >= hourStart && eventStart < hourEnd) ||
         (eventEnd > hourStart && eventEnd <= hourEnd) ||
@@ -54,7 +48,7 @@ export function DayView({
   return (
     <div className="flex-1 bg-background">
       {/* Header with current date */}
-      <div className="border-b border-border p-4 bg-background">
+      <div className="border-b border p-4 bg-background">
         <div className="text-lg font-semibold">
           {format(currentDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
         </div>
@@ -69,14 +63,11 @@ export function DayView({
           {hours.map((hour) => {
             const hourEvents = getEventsForHour(hour)
             const hourStart = addHours(startOfDay(currentDate), hour)
-            
+
             return (
-              <div
-                key={hour}
-                className="flex border-b border-border min-h-[60px]"
-              >
+              <div key={hour} className="flex border-b border min-h-[60px]">
                 {/* Hour label */}
-                <div className="w-20 p-2 text-sm text-muted-foreground border-r border-border bg-muted/30">
+                <div className="w-20 p-2 text-sm text-muted-foreground border-r border bg-muted/30">
                   {format(hourStart, 'HH:mm')}
                 </div>
 
@@ -87,12 +78,9 @@ export function DayView({
                       <div className="w-full h-px bg-border/50" />
                     </div>
                   )}
-                  
+
                   {hourEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="mb-1"
-                    >
+                    <div key={event.id} className="mb-1">
                       <EnhancedEventCard
                         event={event}
                         variant="detailed"

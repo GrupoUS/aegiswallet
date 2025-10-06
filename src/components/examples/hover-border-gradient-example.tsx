@@ -6,9 +6,7 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 export function HoverBorderGradientExample() {
   return (
     <div className="flex flex-col items-center justify-center gap-12 p-8">
-      <h2 className="text-3xl font-bold text-foreground">
-        Hover Border Gradient Examples
-      </h2>
+      <h2 className="text-3xl font-bold text-foreground">Hover Border Gradient Examples</h2>
 
       {/* Rotating Variant Section */}
       <section className="w-full max-w-4xl space-y-6">
@@ -99,9 +97,7 @@ export function HoverBorderGradientExample() {
             duration={2}
           >
             <div className="space-y-4">
-              <h4 className="text-xl font-bold text-foreground">
-                Large Gradient Effect
-              </h4>
+              <h4 className="text-xl font-bold text-foreground">Large Gradient Effect</h4>
               <p className="text-muted-foreground">
                 This example uses a larger gradient size (800px) for a more dramatic effect.
               </p>
@@ -120,7 +116,7 @@ export function HoverBorderGradientExample() {
         <h3 className="text-2xl font-semibold text-foreground border-b pb-2">
           Side-by-Side Comparison
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col items-center gap-4">
             <p className="text-sm font-medium text-muted-foreground">Rotating Variant</p>

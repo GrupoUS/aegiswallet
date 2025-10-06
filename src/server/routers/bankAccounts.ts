@@ -1,40 +1,39 @@
-import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
-import { supabase } from '@/integrations/supabase/client'
 import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { supabase } from '@/integrations/supabase/client'
+import { protectedProcedure, router } from '../trpc'
 
 /**
  * Bank Accounts Router - Gerenciamento de contas bancárias
  */
 export const bankAccountsRouter = router({
   // Listar todas as contas do usuário
-  getAll: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const { data, error } = await supabase
-          .from('bank_accounts')
-          .select('*')
-          .eq('user_id', ctx.user.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('Error fetching bank accounts:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar contas bancárias',
-          })
-        }
-
-        return data || []
-      } catch (error) {
-        console.error('Bank accounts fetch error:', error)
+      if (error) {
+        console.error('Error fetching bank accounts:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contas bancárias',
         })
       }
-    }),
+
+      return data || []
+    } catch (error) {
+      console.error('Bank accounts fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar contas bancárias',
+      })
+    }
+  }),
 
   // Obter conta específica
   getById: protectedProcedure
@@ -214,41 +213,43 @@ export const bankAccountsRouter = router({
     }),
 
   // Obter saldo total
-  getTotalBalance: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const { data, error } = await supabase
-          .from('bank_accounts')
-          .select('balance, currency')
-          .eq('user_id', ctx.user.id)
-          .eq('is_active', true)
+  getTotalBalance: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('balance, currency')
+        .eq('user_id', ctx.user.id)
+        .eq('is_active', true)
 
-        if (error) {
-          console.error('Error fetching total balance:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar saldo total',
-          })
-        }
+      if (error) {
+        console.error('Error fetching total balance:', error)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Erro ao buscar saldo total',
+        })
+      }
 
-        const balances = data?.reduce((acc, account) => {
+      const balances = data?.reduce(
+        (acc, account) => {
           const currency = account.currency || 'BRL'
           if (!acc[currency]) {
             acc[currency] = 0
           }
           acc[currency] += Number(account.balance) || 0
           return acc
-        }, {} as Record<string, number>)
+        },
+        {} as Record<string, number>
+      )
 
-        return balances
-      } catch (error) {
-        console.error('Total balance fetch error:', error)
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Erro ao buscar saldo total',
-        })
-      }
-    }),
+      return balances
+    } catch (error) {
+      console.error('Total balance fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar saldo total',
+      })
+    }
+  }),
 
   // Atualizar saldo (para integração externa)
   updateBalance: protectedProcedure

@@ -1,27 +1,26 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Calculator, Copy, Send, QrCode as QrCodeIcon, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import { usePixTransactions, usePixQRCodes } from "@/hooks/usePix"
-
-import QRCode from "react-qr-code"
+import { Calculator, Copy, Loader2, QrCode as QrCodeIcon, Send } from 'lucide-react'
+import { useState } from 'react'
+import QRCode from 'react-qr-code'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { usePixQRCodes, usePixTransactions } from '@/hooks/usePix'
+import { cn } from '@/lib/utils'
 
 export function PixConverter() {
-  const [activeTab, setActiveTab] = useState("transferir")
-  const [amount, setAmount] = useState("")
-  const [description, setDescription] = useState("")
-  const [pixKey, setPixKey] = useState("")
-  
+  const [activeTab, setActiveTab] = useState('transferir')
+  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
+  const [pixKey, setPixKey] = useState('')
+
   const { createTransaction, isLoading: isCreatingTransaction } = usePixTransactions()
   const { createQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
-  
+
   const qrCodeData = qrCodes[0] // Get the most recent QR Code
 
   const formatCurrency = (value: string) => {
@@ -39,7 +38,7 @@ export function PixConverter() {
   const copyAmount = () => {
     const numericAmount = amount.replace(/[^\d,]/g, '').replace(',', '.')
     navigator.clipboard.writeText(numericAmount)
-    toast.success("Valor copiado!")
+    toast.success('Valor copiado!')
   }
 
   const getNumericAmount = () => {
@@ -49,14 +48,14 @@ export function PixConverter() {
 
   const handleSendPix = () => {
     const numericAmount = getNumericAmount()
-    
+
     if (!pixKey || !pixKey.trim()) {
-      toast.error("Informe a chave PIX do destinatário")
+      toast.error('Informe a chave PIX do destinatário')
       return
     }
-    
+
     if (numericAmount <= 0) {
-      toast.error("Informe um valor válido")
+      toast.error('Informe um valor válido')
       return
     }
 
@@ -67,18 +66,18 @@ export function PixConverter() {
       amount: numericAmount,
       description: description || undefined,
     })
-    
+
     // Reset form
-    setAmount("")
-    setDescription("")
-    setPixKey("")
+    setAmount('')
+    setDescription('')
+    setPixKey('')
   }
 
   const handleGenerateQRCode = () => {
     const numericAmount = getNumericAmount()
-    
+
     if (numericAmount <= 0) {
-      toast.error("Informe um valor válido")
+      toast.error('Informe um valor válido')
       return
     }
 
@@ -90,11 +89,13 @@ export function PixConverter() {
   }
 
   return (
-    <Card className={cn(
-      "lg:w-90 shrink-0",
-      "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
-      "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]"
-    )}>
+    <Card
+      className={cn(
+        'lg:w-90 shrink-0',
+        'shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]',
+        'dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]'
+      )}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -114,128 +115,130 @@ export function PixConverter() {
               Receber
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="transferir" className="space-y-4 mt-4">
             {/* Transferir content */}
-        {/* PIX Key Input */}
-        <div className="space-y-2">
-          <Label htmlFor="converter-pix-key">Chave PIX do Destinatário</Label>
-          <Input
-            id="converter-pix-key"
-            type="text"
-            placeholder="Email, CPF, telefone ou chave aleatória"
-            value={pixKey}
-            onChange={(e) => setPixKey(e.target.value)}
-          />
-        </div>
-        
-        {/* Amount Input */}
-        <div className="space-y-2">
-          <Label htmlFor="converter-amount">Valor</Label>
-          <div className="relative">
-            <Input
-              id="converter-amount"
-              type="text"
-              placeholder="R$ 0,00"
-              value={amount}
-              onChange={handleAmountChange}
-              className="text-2xl font-bold pr-12"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2"
-              onClick={copyAmount}
-              disabled={!amount}
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="converter-description">Descrição (opcional)</Label>
-          <Input
-            id="converter-description"
-            type="text"
-            placeholder="Para que é este valor?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        {/* Quick amount buttons */}
-        <div className="grid grid-cols-3 gap-2">
-          {[50, 100, 200].map((value) => (
-            <Button
-              key={value}
-              variant="outline"
-              size="sm"
-              onClick={() => setAmount(formatCurrency(String(value * 100)))}
-              className={cn(
-                "relative overflow-hidden",
-                "before:absolute before:inset-0 before:bg-gradient-to-r before:from-green-500/0 before:via-green-500/10 before:to-green-500/0",
-                "before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500"
-              )}
-            >
-              R$ {value}
-            </Button>
-          ))}
-        </div>
-
-        {/* Summary */}
-        {amount && (
-          <div className={cn(
-            "relative p-4 rounded-lg space-y-2",
-            "bg-gradient-to-br from-green-50 to-teal-50",
-            "dark:from-green-950/20 dark:to-teal-950/20",
-            "border border-green-200/50 dark:border-green-800/50",
-            "[mask-image:radial-gradient(100%_100%_at_50%_50%,white,transparent_90%)]"
-          )}>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Valor</span>
-              <span className="font-semibold">{amount}</span>
+            {/* PIX Key Input */}
+            <div className="space-y-2">
+              <Label htmlFor="converter-pix-key">Chave PIX do Destinatário</Label>
+              <Input
+                id="converter-pix-key"
+                type="text"
+                placeholder="Email, CPF, telefone ou chave aleatória"
+                value={pixKey}
+                onChange={(e) => setPixKey(e.target.value)}
+              />
             </div>
-            {description && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Descrição</span>
-                <span className="text-right">{description}</span>
+
+            {/* Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="converter-amount">Valor</Label>
+              <div className="relative">
+                <Input
+                  id="converter-amount"
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className="text-2xl font-bold pr-12"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={copyAmount}
+                  disabled={!amount}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="converter-description">Descrição (opcional)</Label>
+              <Input
+                id="converter-description"
+                type="text"
+                placeholder="Para que é este valor?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            {/* Quick amount buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              {[50, 100, 200].map((value) => (
+                <Button
+                  key={value}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAmount(formatCurrency(String(value * 100)))}
+                  className={cn(
+                    'relative overflow-hidden',
+                    'before:absolute before:inset-0 before:bg-gradient-to-r before:from-green-500/0 before:via-green-500/10 before:to-green-500/0',
+                    'before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500'
+                  )}
+                >
+                  R$ {value}
+                </Button>
+              ))}
+            </div>
+
+            {/* Summary */}
+            {amount && (
+              <div
+                className={cn(
+                  'relative p-4 rounded-lg space-y-2',
+                  'bg-gradient-to-br from-green-50 to-teal-50',
+                  'dark:from-green-950/20 dark:to-teal-950/20',
+                  'border border-green-200/50 dark:border-green-800/50',
+                  '[mask-image:radial-gradient(100%_100%_at_50%_50%,white,transparent_90%)]'
+                )}
+              >
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Valor</span>
+                  <span className="font-semibold">{amount}</span>
+                </div>
+                {description && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Descrição</span>
+                    <span className="text-right">{description}</span>
+                  </div>
+                )}
+                <div className="border-t border-green-200/50 dark:border-green-800/50 pt-2 flex justify-between font-bold">
+                  <span>Total</span>
+                  <span className="text-green-600 dark:text-green-400">{amount}</span>
+                </div>
               </div>
             )}
-            <div className="border-t border-green-200/50 dark:border-green-800/50 pt-2 flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-green-600 dark:text-green-400">{amount}</span>
+
+            {/* Send Button */}
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleSendPix}
+              disabled={isCreatingTransaction || !amount || !pixKey}
+            >
+              {isCreatingTransaction ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Enviar PIX
+                </>
+              )}
+            </Button>
+
+            {/* Info */}
+            <div className="text-xs text-muted-foreground text-center">
+              Transferências PIX são instantâneas e disponíveis 24/7
             </div>
-          </div>
-        )}
-
-        {/* Send Button */}
-        <Button 
-          className="w-full" 
-          size="lg"
-          onClick={handleSendPix}
-          disabled={isCreatingTransaction || !amount || !pixKey}
-        >
-          {isCreatingTransaction ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4 mr-2" />
-              Enviar PIX
-            </>
-          )}
-        </Button>
-
-        {/* Info */}
-        <div className="text-xs text-muted-foreground text-center">
-          Transferências PIX são instantâneas e disponíveis 24/7
-        </div>
           </TabsContent>
-          
+
           <TabsContent value="receber" className="space-y-4 mt-4">
             {/* Receber content */}
             {/* Amount Input */}
@@ -266,8 +269,8 @@ export function PixConverter() {
             </div>
 
             {/* Generate QR Code Button */}
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               size="lg"
               variant="outline"
               onClick={handleGenerateQRCode}
@@ -288,16 +291,16 @@ export function PixConverter() {
 
             {/* QR Code Display */}
             {qrCodeData && (
-              <div className={cn(
-                "relative p-6 rounded-lg space-y-4",
-                "bg-gradient-to-br from-green-50 to-teal-50",
-                "dark:from-green-950/20 dark:to-teal-950/20",
-                "border border-green-200/50 dark:border-green-800/50",
-                "text-center"
-              )}>
-                <div className="text-sm font-medium text-muted-foreground">
-                  QR Code PIX Gerado
-                </div>
+              <div
+                className={cn(
+                  'relative p-6 rounded-lg space-y-4',
+                  'bg-gradient-to-br from-green-50 to-teal-50',
+                  'dark:from-green-950/20 dark:to-teal-950/20',
+                  'border border-green-200/50 dark:border-green-800/50',
+                  'text-center'
+                )}
+              >
+                <div className="text-sm font-medium text-muted-foreground">QR Code PIX Gerado</div>
                 <div className="bg-white p-4 rounded-lg inline-block">
                   {qrCodeData.qrCodeData ? (
                     <QRCode
@@ -322,7 +325,7 @@ export function PixConverter() {
                   onClick={() => {
                     if (qrCodeData.qrCodeData) {
                       navigator.clipboard.writeText(qrCodeData.qrCodeData)
-                      toast.success("Código PIX copiado!")
+                      toast.success('Código PIX copiado!')
                     }
                   }}
                 >

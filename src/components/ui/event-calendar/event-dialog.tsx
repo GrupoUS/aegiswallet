@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { addHours, format, setHours, setMinutes } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { format, addHours, setHours, setMinutes } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -27,11 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { DatePicker } from '@/components/ui/date-picker'
+import { Textarea } from '@/components/ui/textarea'
 import type { CalendarEvent, EventColor } from './types'
 
 const eventFormSchema = z.object({
@@ -290,15 +290,10 @@ export function EventDialog({
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Dia inteiro</FormLabel>
-                    <FormDescription>
-                      Evento sem horário específico
-                    </FormDescription>
+                    <FormDescription>Evento sem horário específico</FormDescription>
                   </div>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -312,9 +307,7 @@ export function EventDialog({
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Evento recorrente</FormLabel>
-                    <FormDescription>
-                      Repetir este evento periodicamente
-                    </FormDescription>
+                    <FormDescription>Repetir este evento periodicamente</FormDescription>
                   </div>
                   <FormControl>
                     <Switch
@@ -351,9 +344,7 @@ export function EventDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Define quando e como o evento será repetido
-                    </FormDescription>
+                    <FormDescription>Define quando e como o evento será repetido</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -371,9 +362,7 @@ export function EventDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit">
-                {isEditing ? 'Atualizar' : 'Criar'} Evento
-              </Button>
+              <Button type="submit">{isEditing ? 'Atualizar' : 'Criar'} Evento</Button>
             </DialogFooter>
           </form>
         </Form>

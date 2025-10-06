@@ -33,16 +33,15 @@ import { createBankingRouter } from './procedures/banking'
 import { createTransactionRouter } from './procedures/transactions'
 import { createUserRouter } from './procedures/users'
 import { createVoiceRouter } from './procedures/voice'
-
+import { bankAccountsRouter } from './routers/bankAccounts'
+import { calendarRouter } from './routers/calendar'
+import { contactsRouter } from './routers/contacts'
 /**
  * Import routers
  */
 import { pixRouter } from './routers/pix'
-import { usersRouter } from './routers/users'
-import { bankAccountsRouter } from './routers/bankAccounts'
 import { transactionsRouter } from './routers/transactions'
-import { calendarRouter } from './routers/calendar'
-import { contactsRouter } from './routers/contacts'
+import { usersRouter } from './routers/users'
 
 /**
  * Main router with all procedures

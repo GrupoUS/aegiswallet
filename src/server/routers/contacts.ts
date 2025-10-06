@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
-import { supabase } from '@/integrations/supabase/client'
 import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { supabase } from '@/integrations/supabase/client'
+import { protectedProcedure, router } from '../trpc'
 
 /**
  * Contacts Router - Gerenciamento de contatos
@@ -19,13 +19,12 @@ export const contactsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        let query = supabase
-          .from('contacts')
-          .select('*')
-          .eq('user_id', ctx.user.id)
+        let query = supabase.from('contacts').select('*').eq('user_id', ctx.user.id)
 
         if (input.search) {
-          query = query.or(`name.ilike.%${input.search}%,email.ilike.%${input.search}%,phone.ilike.%${input.search}%`)
+          query = query.or(
+            `name.ilike.%${input.search}%,email.ilike.%${input.search}%,phone.ilike.%${input.search}%`
+          )
         }
         if (input.isFavorite !== undefined) {
           query = query.eq('is_favorite', input.isFavorite)
@@ -240,7 +239,9 @@ export const contactsRouter = router({
           .from('contacts')
           .select('id, name, email, phone, is_favorite')
           .eq('user_id', ctx.user.id)
-          .or(`name.ilike.%${input.query}%,email.ilike.%${input.query}%,phone.ilike.%${input.query}%`)
+          .or(
+            `name.ilike.%${input.query}%,email.ilike.%${input.query}%,phone.ilike.%${input.query}%`
+          )
           .order('is_favorite', { ascending: false })
           .order('name', { ascending: true })
           .limit(input.limit)
@@ -264,33 +265,32 @@ export const contactsRouter = router({
     }),
 
   // Obter contatos favoritos
-  getFavorites: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('user_id', ctx.user.id)
-          .eq('is_favorite', true)
-          .order('name', { ascending: true })
+  getFavorites: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .eq('is_favorite', true)
+        .order('name', { ascending: true })
 
-        if (error) {
-          console.error('Error fetching favorite contacts:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar contatos favoritos',
-          })
-        }
-
-        return data || []
-      } catch (error) {
-        console.error('Favorite contacts fetch error:', error)
+      if (error) {
+        console.error('Error fetching favorite contacts:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contatos favoritos',
         })
       }
-    }),
+
+      return data || []
+    } catch (error) {
+      console.error('Favorite contacts fetch error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar contatos favoritos',
+      })
+    }
+  }),
 
   // Alternar status de favorito
   toggleFavorite: protectedProcedure
@@ -343,42 +343,41 @@ export const contactsRouter = router({
     }),
 
   // Obter estatísticas dos contatos
-  getStats: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('is_favorite, email, phone')
-          .eq('user_id', ctx.user.id)
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('is_favorite, email, phone')
+        .eq('user_id', ctx.user.id)
 
-        if (error) {
-          console.error('Error fetching contact stats:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao buscar estatísticas de contatos',
-          })
-        }
-
-        const contacts = data || []
-        
-        const totalContacts = contacts.length
-        const favoriteContacts = contacts.filter(c => c.is_favorite).length
-        const contactsWithEmail = contacts.filter(c => c.email).length
-        const contactsWithPhone = contacts.filter(c => c.phone).length
-
-        return {
-          totalContacts,
-          favoriteContacts,
-          contactsWithEmail,
-          contactsWithPhone,
-          favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
-        }
-      } catch (error) {
-        console.error('Contact stats error:', error)
+      if (error) {
+        console.error('Error fetching contact stats:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar estatísticas de contatos',
         })
       }
-    }),
+
+      const contacts = data || []
+
+      const totalContacts = contacts.length
+      const favoriteContacts = contacts.filter((c) => c.is_favorite).length
+      const contactsWithEmail = contacts.filter((c) => c.email).length
+      const contactsWithPhone = contacts.filter((c) => c.phone).length
+
+      return {
+        totalContacts,
+        favoriteContacts,
+        contactsWithEmail,
+        contactsWithPhone,
+        favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
+      }
+    } catch (error) {
+      console.error('Contact stats error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao buscar estatísticas de contatos',
+      })
+    }
+  }),
 })

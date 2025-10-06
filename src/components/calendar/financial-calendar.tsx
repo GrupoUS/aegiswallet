@@ -3,14 +3,11 @@
  * Calendário semanal com eventos financeiros
  */
 
-import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { useCalendar } from './calendar-context'
-import { formatEventAmount, type FinancialEvent } from '@/types/financial-events'
-import { Button } from '@/components/ui/button'
+import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -18,7 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { EventCalendar, type CalendarEvent } from '@/components/ui/event-calendar'
+import { type CalendarEvent, EventCalendar } from '@/components/ui/event-calendar'
+import { cn } from '@/lib/utils'
+import { type FinancialEvent, formatEventAmount } from '@/types/financial-events'
+import { useCalendar } from './calendar-context'
 
 // Converter FinancialEvent para CalendarEvent
 function toCalendarEvent(event: FinancialEvent): CalendarEvent {
@@ -34,13 +34,7 @@ function toCalendarEvent(event: FinancialEvent): CalendarEvent {
 }
 
 export function FinancialCalendar() {
-  const { 
-    events: financialEvents, 
-    addEvent, 
-    updateEvent, 
-    categories,
-    filters
-  } = useCalendar()
+  const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar()
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
 
@@ -50,14 +44,12 @@ export function FinancialCalendar() {
 
     // Aplicar filtros do contexto
     if (filters.categories && filters.categories.length > 0) {
-      filtered = filtered.filter(event => 
-        filters.categories!.includes(event.category || '')
-      )
+      filtered = filtered.filter((event) => filters.categories!.includes(event.category || ''))
     }
 
     if (filters.dateRange) {
       const { start, end } = filters.dateRange
-      filtered = filtered.filter(event => {
+      filtered = filtered.filter((event) => {
         const eventDate = new Date(event.start)
         return eventDate >= start && eventDate <= end
       })
@@ -65,9 +57,10 @@ export function FinancialCalendar() {
 
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchLower) ||
-        event.description?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchLower) ||
+          event.description?.toLowerCase().includes(searchLower)
       )
     }
 
@@ -76,22 +69,26 @@ export function FinancialCalendar() {
 
   // Enhanced converter com categorias
   const calendarEvents = useMemo(() => {
-    return filteredEvents.map(event => {
+    return filteredEvents.map((event) => {
       const calendarEvent = toCalendarEvent(event)
-      
+
       // Encontrar a categoria correspondente
-      const category = categories.find(cat => cat.id === event.category)
+      const category = categories.find((cat) => cat.id === event.category)
       if (category) {
         calendarEvent.category = category
         calendarEvent.color = category.color
       }
-      
+
       // Adicionar informações adicionais
       calendarEvent.status = event.status as any
-      calendarEvent.priority = event.amount && Math.abs(event.amount) > 1000 ? 'high' : 
-                              event.amount && Math.abs(event.amount) > 500 ? 'medium' : 'low'
+      calendarEvent.priority =
+        event.amount && Math.abs(event.amount) > 1000
+          ? 'high'
+          : event.amount && Math.abs(event.amount) > 500
+            ? 'medium'
+            : 'low'
       calendarEvent.recurring = event.recurring
-      
+
       return calendarEvent
     })
   }, [filteredEvents, categories])

@@ -56,7 +56,11 @@ export class OpenBankingConnector {
     ]
   }
 
-  async listTransactions(_accountId: string, _dateFrom: Date, _dateTo: Date): Promise<Transaction[]> {
+  async listTransactions(
+    _accountId: string,
+    _dateFrom: Date,
+    _dateTo: Date
+  ): Promise<Transaction[]> {
     // Mock data for MVP
     return [
       {

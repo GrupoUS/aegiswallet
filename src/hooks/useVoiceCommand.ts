@@ -1,7 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { getVoiceService, VOICE_FEEDBACK, type VoiceRecognitionResult } from '@/services/voiceService'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import {
+  getVoiceService,
+  VOICE_FEEDBACK,
+  type VoiceRecognitionResult,
+} from '@/services/voiceService'
 
 export interface UseVoiceCommandOptions {
   autoNavigate?: boolean
@@ -25,12 +29,7 @@ export interface UseVoiceCommandReturn {
  * Provides voice recognition and text-to-speech capabilities
  */
 export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
-  const {
-    autoNavigate = true,
-    onCommandDetected,
-    onError,
-    enableFeedback = true,
-  } = options
+  const { autoNavigate = true, onCommandDetected, onError, enableFeedback = true } = options
 
   const navigate = useNavigate()
   const [isListening, setIsListening] = useState(false)
@@ -38,7 +37,8 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const [lastCommand, setLastCommand] = useState<string | null>(null)
 
   const voiceService = getVoiceService()
-  const isSupported = typeof window !== 'undefined' && 
+  const isSupported =
+    typeof window !== 'undefined' &&
     ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
 
   /**
@@ -66,7 +66,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         // Auto-navigate if enabled
         if (autoNavigate) {
           const destination = getDestinationName(result.intent)
-          
+
           if (enableFeedback) {
             toast.success(VOICE_FEEDBACK.NAVIGATING(destination), {
               duration: 2000,
@@ -232,4 +232,3 @@ export function useVoiceFeedback() {
 }
 
 export default useVoiceCommand
-

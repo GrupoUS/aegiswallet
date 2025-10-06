@@ -1,21 +1,13 @@
-import { createRootRoute, Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { TRPCProvider } from '@/components/providers/TRPCProvider'
-import { CalendarProvider } from '@/components/calendar/calendar-context'
-import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar'
-import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { useState } from 'react'
-import {
-  Home,
-  Wallet,
-  Calendar,
-  FileText,
-  Send,
-  Mic,
-  LogOut,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/AuthContext'
+import { createRootRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useState } from 'react'
+import { CalendarProvider } from '@/components/calendar/calendar-context'
+import { TRPCProvider } from '@/components/providers/TRPCProvider'
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar'
+import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -76,7 +68,7 @@ function RootComponent() {
       <CalendarProvider>
         <div
           className={cn(
-            'flex flex-col md:flex-row bg-background w-full flex-1 mx-auto border border-border overflow-hidden',
+            'flex flex-col md:flex-row bg-background w-full flex-1 mx-auto border border overflow-hidden',
             'h-screen'
           )}
         >

@@ -1,73 +1,136 @@
 /**
  * UI Components Index
- * 
+ *
  * Central export file for all UI components in AegisWallet.
  * This allows for cleaner imports throughout the application.
- * 
+ *
  * @example
  * import { Button, GradientButton, Card } from "@/components/ui"
  */
 
-// Core Components
-export { Button, buttonVariants } from "./button"
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./card"
-export { Input } from "./input"
-export { Label } from "./label"
-export { Textarea } from "./textarea"
-
-// Gradient Components (New)
-export { GradientButton, gradientButtonVariants } from "./gradient-button"
-export { HoverBorderGradient } from "./hover-border-gradient"
-
-// Neumorphic Components
-export { default as NeumorphButton } from "./neumorph-button"
-
-// Layout Components
-export { BentoGrid, BentoCard, type BentoItem, type BentoGridProps } from "./bento-grid"
-
 // Authentication Components
-export { LoginForm, type LoginFormProps } from "../login-form"
-
+export { LoginForm, type LoginFormProps } from '../login-form'
+// Feedback Components
+export { Alert, AlertDescription, AlertTitle } from './alert'
+export { AnimatedThemeToggler } from './animated-theme-toggler'
+export { Badge, badgeVariants } from './badge'
+// Layout Components
+export { BentoCard, BentoGrid, type BentoGridProps, type BentoItem } from './bento-grid'
+// Core Components
+export { Button, buttonVariants } from './button'
+export { Calendar } from './calendar'
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card'
+export {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+  ChartTooltip,
+  ChartTooltipContent,
+} from './chart'
 // Form Components
-export { Checkbox } from "./checkbox"
-export { RadioGroup, RadioGroupItem } from "./radio-group"
-export { Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator, SelectScrollUpButton, SelectScrollDownButton } from "./select"
-export { Switch } from "./switch"
+export { Checkbox } from './checkbox'
+export { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible'
+export { DatePicker, DateRangePicker } from './date-picker'
+// Dialog & Overlay Components
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog'
+// Navigation Components
+export {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from './dropdown-menu'
 export {
   Form,
-  FormItem,
-  FormLabel,
   FormControl,
   FormDescription,
-  FormMessage,
   FormField,
-} from "./form"
-
-// Dialog & Overlay Components
-export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./dialog"
-export { Sheet, SheetPortal, SheetOverlay, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription } from "./sheet"
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./popover"
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./collapsible"
-export { ScrollArea, ScrollBar } from "./scroll-area"
-
-// Navigation Components
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuGroup, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuRadioGroup } from "./dropdown-menu"
-export { Sidebar, SidebarBody, SidebarProvider, SidebarLink, DesktopSidebar, MobileSidebar, useSidebar } from "./sidebar"
-
-// Feedback Components
-export { Alert, AlertTitle, AlertDescription } from "./alert"
-export { Badge, badgeVariants } from "./badge"
-export { Skeleton } from "./skeleton"
-export { Separator } from "./separator"
-export { Toaster } from "./sonner"
-
-// Data Display Components
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from "./table"
-export { Calendar } from "./calendar"
-export { DatePicker, DateRangePicker } from "./date-picker"
-export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from "./chart"
-
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from './form'
+// Gradient Components (New)
+export { GradientButton, gradientButtonVariants } from './gradient-button'
+export { HoverBorderGradient } from './hover-border-gradient'
+export { Input } from './input'
+export { Label } from './label'
 // Theme Components
-export { ModeToggle } from "./mode-toggle"
-export { AnimatedThemeToggler } from "./animated-theme-toggler"
+export { ModeToggle } from './mode-toggle'
+// Neumorphic Components
+export { default as NeumorphButton } from './neumorph-button'
+export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from './popover'
+export { RadioGroup, RadioGroupItem } from './radio-group'
+export { ScrollArea, ScrollBar } from './scroll-area'
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from './select'
+export { Separator } from './separator'
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger,
+} from './sheet'
+export {
+  DesktopSidebar,
+  MobileSidebar,
+  Sidebar,
+  SidebarBody,
+  SidebarLink,
+  SidebarProvider,
+  useSidebar,
+} from './sidebar'
+export { Skeleton } from './skeleton'
+export { Toaster } from './sonner'
+export { Switch } from './switch'
+// Data Display Components
+export {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './table'
+export { Textarea } from './textarea'
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'

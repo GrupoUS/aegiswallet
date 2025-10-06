@@ -367,7 +367,6 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
           </Card>
         </div>
       )}
-
     </AccessibilityContext.Provider>
   )
 }

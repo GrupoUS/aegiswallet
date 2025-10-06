@@ -45,6 +45,8 @@ export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, Dialog
 export { Sheet, SheetPortal, SheetOverlay, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription } from "./sheet"
 export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./popover"
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./collapsible"
+export { ScrollArea, ScrollBar } from "./scroll-area"
 
 // Navigation Components
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuGroup, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuRadioGroup } from "./dropdown-menu"

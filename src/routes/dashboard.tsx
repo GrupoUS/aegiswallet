@@ -3,6 +3,7 @@ import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
+import { MiniCalendarWidget } from '@/components/calendar/mini-calendar-widget'
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -102,8 +103,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Quick Actions - 3 Columns Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Coluna 1: Transações Recentes */}
         <Card>
           <CardHeader>
             <CardTitle>Transações Recentes</CardTitle>
@@ -141,6 +143,10 @@ function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Coluna 2: Mini Calendário */}
+        <MiniCalendarWidget />
+
+        {/* Coluna 3: Resumo Mensal */}
         <Card>
           <CardHeader>
             <CardTitle>Resumo Mensal</CardTitle>

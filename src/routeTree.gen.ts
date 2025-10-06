@@ -14,7 +14,12 @@ import { Route as SaldoRouteImport } from './routes/saldo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContasRouteImport } from './routes/contas'
+import { Route as CalendarioRouteImport } from './routes/calendario'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PixIndexRouteImport } from './routes/pix/index'
+import { Route as PixTransferirRouteImport } from './routes/pix/transferir'
+import { Route as PixReceberRouteImport } from './routes/pix/receber'
+import { Route as PixHistoricoRouteImport } from './routes/pix/historico'
 
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
@@ -41,65 +46,131 @@ const ContasRoute = ContasRouteImport.update({
   path: '/contas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarioRoute = CalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PixIndexRoute = PixIndexRouteImport.update({
+  id: '/pix/',
+  path: '/pix/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PixTransferirRoute = PixTransferirRouteImport.update({
+  id: '/pix/transferir',
+  path: '/pix/transferir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PixReceberRoute = PixReceberRouteImport.update({
+  id: '/pix/receber',
+  path: '/pix/receber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PixHistoricoRoute = PixHistoricoRouteImport.update({
+  id: '/pix/historico',
+  path: '/pix/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
   '/transactions': typeof TransactionsRoute
+  '/pix/historico': typeof PixHistoricoRoute
+  '/pix/receber': typeof PixReceberRoute
+  '/pix/transferir': typeof PixTransferirRoute
+  '/pix': typeof PixIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
   '/transactions': typeof TransactionsRoute
+  '/pix/historico': typeof PixHistoricoRoute
+  '/pix/receber': typeof PixReceberRoute
+  '/pix/transferir': typeof PixTransferirRoute
+  '/pix': typeof PixIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
   '/transactions': typeof TransactionsRoute
+  '/pix/historico': typeof PixHistoricoRoute
+  '/pix/receber': typeof PixReceberRoute
+  '/pix/transferir': typeof PixTransferirRoute
+  '/pix/': typeof PixIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/calendario'
     | '/contas'
     | '/dashboard'
     | '/login'
     | '/saldo'
     | '/transactions'
+    | '/pix/historico'
+    | '/pix/receber'
+    | '/pix/transferir'
+    | '/pix'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contas' | '/dashboard' | '/login' | '/saldo' | '/transactions'
+  to:
+    | '/'
+    | '/calendario'
+    | '/contas'
+    | '/dashboard'
+    | '/login'
+    | '/saldo'
+    | '/transactions'
+    | '/pix/historico'
+    | '/pix/receber'
+    | '/pix/transferir'
+    | '/pix'
   id:
     | '__root__'
     | '/'
+    | '/calendario'
     | '/contas'
     | '/dashboard'
     | '/login'
     | '/saldo'
     | '/transactions'
+    | '/pix/historico'
+    | '/pix/receber'
+    | '/pix/transferir'
+    | '/pix/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarioRoute: typeof CalendarioRoute
   ContasRoute: typeof ContasRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SaldoRoute: typeof SaldoRoute
   TransactionsRoute: typeof TransactionsRoute
+  PixHistoricoRoute: typeof PixHistoricoRoute
+  PixReceberRoute: typeof PixReceberRoute
+  PixTransferirRoute: typeof PixTransferirRoute
+  PixIndexRoute: typeof PixIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -139,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendario': {
+      id: '/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof CalendarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -146,16 +224,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pix/': {
+      id: '/pix/'
+      path: '/pix'
+      fullPath: '/pix'
+      preLoaderRoute: typeof PixIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pix/transferir': {
+      id: '/pix/transferir'
+      path: '/pix/transferir'
+      fullPath: '/pix/transferir'
+      preLoaderRoute: typeof PixTransferirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pix/receber': {
+      id: '/pix/receber'
+      path: '/pix/receber'
+      fullPath: '/pix/receber'
+      preLoaderRoute: typeof PixReceberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pix/historico': {
+      id: '/pix/historico'
+      path: '/pix/historico'
+      fullPath: '/pix/historico'
+      preLoaderRoute: typeof PixHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarioRoute: CalendarioRoute,
   ContasRoute: ContasRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SaldoRoute: SaldoRoute,
   TransactionsRoute: TransactionsRoute,
+  PixHistoricoRoute: PixHistoricoRoute,
+  PixReceberRoute: PixReceberRoute,
+  PixTransferirRoute: PixTransferirRoute,
+  PixIndexRoute: PixIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

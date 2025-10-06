@@ -19,6 +19,8 @@ interface AccessibilityContextType {
   updateSettings: (settings: Partial<AccessibilitySettings>) => void
   speak: (text: string) => void
   announce: (text: string) => void
+  showSettings: boolean
+  setShowSettings: (show: boolean) => void
 }
 
 const defaultSettings: AccessibilitySettings = {
@@ -203,6 +205,8 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
         updateSettings,
         speak,
         announce,
+        showSettings,
+        setShowSettings,
       }}
     >
       {children}
@@ -364,17 +368,6 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
         </div>
       )}
 
-      {/* Accessibility Toggle Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="fixed bottom-4 left-4 z-40"
-        onClick={() => setShowSettings(!showSettings)}
-        aria-label="Configurações de acessibilidade"
-      >
-        <Settings className="w-4 h-4 mr-2" />
-        Acessibilidade
-      </Button>
     </AccessibilityContext.Provider>
   )
 }

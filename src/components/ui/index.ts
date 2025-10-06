@@ -22,6 +22,9 @@ export { HoverBorderGradient } from "./hover-border-gradient"
 // Layout Components
 export { BentoGrid, BentoCard, type BentoItem, type BentoGridProps } from "./bento-grid"
 
+// Authentication Components
+export { LoginForm, type LoginFormProps } from "../login-form"
+
 // Form Components
 export { Checkbox } from "./checkbox"
 export { RadioGroup, RadioGroupItem } from "./radio-group"
@@ -45,7 +48,7 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tool
 
 // Navigation Components
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuGroup, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuRadioGroup } from "./dropdown-menu"
-export { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInput, SidebarInset, SidebarMenu, SidebarMenuAction, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSkeleton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarSeparator, SidebarTrigger, useSidebar } from "./sidebar"
+export { Sidebar, SidebarBody, SidebarProvider, SidebarLink, DesktopSidebar, MobileSidebar, useSidebar } from "./sidebar"
 
 // Feedback Components
 export { Alert, AlertTitle, AlertDescription } from "./alert"

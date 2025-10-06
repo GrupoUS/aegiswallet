@@ -2,8 +2,81 @@ import { Link } from '@tanstack/react-router'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
 
 export default function Dashboard() {
+  // Bento Grid items for enhanced dashboard sections
+  const bentoItems: BentoItem[] = [
+    {
+      id: 'automation-stats',
+      title: 'Automação Financeira',
+      description: 'Nível de automação das suas tarefas financeiras',
+      feature: 'chart',
+      statistic: {
+        label: 'Automação',
+        value: '87%',
+        start: 0,
+        end: 87,
+        suffix: '%',
+      },
+      className: 'col-span-1',
+    },
+    {
+      id: 'transactions-counter',
+      title: 'Transações Processadas',
+      description: 'Total de transações automatizadas este mês',
+      feature: 'counter',
+      statistic: {
+        value: '247',
+        label: 'Transações',
+        start: 0,
+        end: 247,
+        suffix: '',
+      },
+      className: 'col-span-1',
+    },
+    {
+      id: 'financial-metrics',
+      title: 'Métricas Financeiras',
+      description: 'Indicadores de desempenho do mês',
+      feature: 'metrics',
+      metrics: [
+        {
+          label: 'Taxa de Economia',
+          value: 42,
+          suffix: '%',
+          color: 'primary',
+        },
+        {
+          label: 'Tempo Economizado',
+          value: 18,
+          suffix: 'h',
+          color: 'accent',
+        },
+        {
+          label: 'Redução de Custos',
+          value: 15,
+          suffix: '%',
+          color: 'secondary',
+        },
+      ],
+      className: 'col-span-1',
+    },
+    {
+      id: 'voice-features',
+      title: 'Assistente de Voz',
+      description: 'Recursos disponíveis para comandos de voz',
+      feature: 'spotlight',
+      spotlightItems: [
+        'Pagamentos por voz',
+        'Consulta de saldo',
+        'Análise de gastos',
+        'Alertas inteligentes',
+      ],
+      className: 'col-span-1',
+    },
+  ]
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
@@ -53,7 +126,17 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Seções */}
+      {/* Seções com Bento Grid */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Insights Inteligentes</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {bentoItems.map((item) => (
+            <BentoCard key={item.id} item={item} />
+          ))}
+        </div>
+      </div>
+
+      {/* Seções Tradicionais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>

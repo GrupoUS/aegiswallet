@@ -461,5 +461,3 @@ export default function BentoGrid({ items, className }: BentoGridProps) {
         </section>
     );
 }
-
-export { BentoGrid, BentoCard };

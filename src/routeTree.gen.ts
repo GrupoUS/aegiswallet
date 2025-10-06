@@ -9,27 +9,154 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as SaldoRouteImport } from './routes/saldo'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContasRouteImport } from './routes/contas'
+import { Route as IndexRouteImport } from './routes/index'
 
-export interface FileRoutesByFullPath {}
-export interface FileRoutesByTo {}
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaldoRoute = SaldoRouteImport.update({
+  id: '/saldo',
+  path: '/saldo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContasRoute = ContasRouteImport.update({
+  id: '/contas',
+  path: '/contas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/contas': typeof ContasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
+  '/transactions': typeof TransactionsRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/contas': typeof ContasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
+  '/transactions': typeof TransactionsRoute
+}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/contas': typeof ContasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
+  '/transactions': typeof TransactionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: never
+  fullPaths:
+    | '/'
+    | '/contas'
+    | '/dashboard'
+    | '/login'
+    | '/saldo'
+    | '/transactions'
   fileRoutesByTo: FileRoutesByTo
-  to: never
-  id: '__root__'
+  to: '/' | '/contas' | '/dashboard' | '/login' | '/saldo' | '/transactions'
+  id:
+    | '__root__'
+    | '/'
+    | '/contas'
+    | '/dashboard'
+    | '/login'
+    | '/saldo'
+    | '/transactions'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  ContasRoute: typeof ContasRoute
+  DashboardRoute: typeof DashboardRoute
+  LoginRoute: typeof LoginRoute
+  SaldoRoute: typeof SaldoRoute
+  TransactionsRoute: typeof TransactionsRoute
 }
 
-const rootRouteChildren: RootRouteChildren = {}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saldo': {
+      id: '/saldo'
+      path: '/saldo'
+      fullPath: '/saldo'
+      preLoaderRoute: typeof SaldoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contas': {
+      id: '/contas'
+      path: '/contas'
+      fullPath: '/contas'
+      preLoaderRoute: typeof ContasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  ContasRoute: ContasRoute,
+  DashboardRoute: DashboardRoute,
+  LoginRoute: LoginRoute,
+  SaldoRoute: SaldoRoute,
+  TransactionsRoute: TransactionsRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()

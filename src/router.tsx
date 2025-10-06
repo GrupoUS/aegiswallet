@@ -1,6 +1,7 @@
 import { createRouter, createRootRouteWithContext, createRoute, redirect, Outlet } from '@tanstack/react-router'
 import { TRPCProvider } from '@/components/providers/TRPCProvider'
 import { VoiceDashboard } from '@/components/voice/VoiceDashboard'
+import { AppLayout } from '@/components/layout/AppLayout'
 import Dashboard from '@/pages/Dashboard'
 import Transactions from '@/pages/Transactions'
 import Login from '@/pages/Login'
@@ -59,7 +60,7 @@ const authenticatedRoute = createRoute({
       })
     }
   },
-  component: () => <Outlet />,
+  component: AppLayout,
 })
 
 // Dashboard route (protected)

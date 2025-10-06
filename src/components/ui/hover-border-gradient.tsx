@@ -1,35 +1,63 @@
-"use client"
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
-import * as React from "react"
-import { motion } from "motion/react"
-import { cn } from "@/lib/utils"
+type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
 
 export interface HoverBorderGradientProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends React.HTMLAttributes<HTMLElement> {
   /**
    * The content to be wrapped with the hover border gradient effect
    */
-  children: React.ReactNode
+  children: React.ReactNode;
   /**
    * Additional CSS classes for the container
    */
-  containerClassName?: string
+  containerClassName?: string;
+  /**
+   * The HTML element type to render
+   */
+  as?: React.ElementType;
   /**
    * Duration of the gradient animation in seconds
    */
-  duration?: number
+  duration?: number;
   /**
-   * Size of the gradient circle in pixels
+   * Whether the gradient rotates clockwise (true) or counter-clockwise (false)
+   * Only applies to 'rotating' variant
    */
-  size?: number
+  clockwise?: boolean;
   /**
-   * Whether the component is in a loading state
+   * Variant of the hover effect
+   * - 'rotating': Aceternity UI style with rotating directional gradient
+   * - 'mouse-follow': Mouse-following radial gradient (default)
    */
-  as?: React.ElementType
+  variant?: "rotating" | "mouse-follow";
+  /**
+   * Size of the gradient circle in pixels (only for 'mouse-follow' variant)
+   */
+  size?: number;
 }
 
+/**
+ * HoverBorderGradient Component
+ * 
+ * A versatile component that adds animated gradient border effects on hover.
+ * Supports two variants:
+ * 
+ * 1. **Rotating Variant** (Aceternity UI style):
+ *    - Gradient rotates around the border in a directional pattern
+ *    - Configurable rotation direction (clockwise/counter-clockwise)
+ *    - Smooth transition to highlight effect on hover
+ * 
+ * 2. **Mouse-Follow Variant** (default):
+ *    - Gradient follows mouse position
+ *    - Creates a radial glow effect at cursor location
+ *    - Configurable gradient size
+ */
 const HoverBorderGradient = React.forwardRef<
-  HTMLDivElement,
+  HTMLElement,
   HoverBorderGradientProps
 >(
   (
@@ -37,29 +65,118 @@ const HoverBorderGradient = React.forwardRef<
       children,
       containerClassName,
       className,
+      as: Tag = "button",
       duration = 1,
+      clockwise = true,
+      variant = "mouse-follow",
       size = 600,
-      as: Component = "div",
       ...props
     },
     ref
   ) => {
-    const [hovered, setHovered] = React.useState(false)
-    const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 })
+    // State for rotating variant
+    const [hovered, setHovered] = useState<boolean>(false);
+    const [direction, setDirection] = useState<Direction>("TOP");
 
-    const handleMouseMove = React.useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect()
-        setMousePosition({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        })
+    // State for mouse-follow variant
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+    // Rotating variant logic
+    const rotateDirection = useCallback(
+      (currentDirection: Direction): Direction => {
+        const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
+        const currentIndex = directions.indexOf(currentDirection);
+        const nextIndex = clockwise
+          ? (currentIndex - 1 + directions.length) % directions.length
+          : (currentIndex + 1) % directions.length;
+        return directions[nextIndex];
       },
-      []
-    )
+      [clockwise]
+    );
 
+    const movingMap: Record<Direction, string> = {
+      TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+      LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+      BOTTOM:
+        "radial-gradient(20.7% 50% at 50% 100%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+      RIGHT:
+        "radial-gradient(16.2% 41.199999999999996% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+    };
+
+    const highlight =
+      "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
+
+    // Mouse-follow variant logic
+    const handleMouseMove = useCallback(
+      (e: React.MouseEvent<HTMLElement>) => {
+        if (variant === "mouse-follow") {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setMousePosition({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        }
+      },
+      [variant]
+    );
+
+    // Rotation effect for rotating variant
+    useEffect(() => {
+      if (variant === "rotating" && !hovered) {
+        const interval = setInterval(() => {
+          setDirection((prevState) => rotateDirection(prevState));
+        }, duration * 1000);
+        return () => clearInterval(interval);
+      }
+    }, [hovered, variant, duration, rotateDirection]);
+
+    // Render rotating variant
+    if (variant === "rotating") {
+      return (
+        <Tag
+          ref={ref}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          className={cn(
+            "relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition duration-500 dark:bg-white/20 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit",
+            containerClassName
+          )}
+          {...props}
+        >
+          <div
+            className={cn(
+              "w-auto text-white z-10 bg-black px-4 py-2 rounded-[inherit]",
+              className
+            )}
+          >
+            {children}
+          </div>
+          <motion.div
+            className={cn(
+              "flex-none inset-0 overflow-hidden absolute z-0 rounded-[inherit]"
+            )}
+            style={{
+              filter: "blur(2px)",
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+            }}
+            initial={{ background: movingMap[direction] }}
+            animate={{
+              background: hovered
+                ? [movingMap[direction], highlight]
+                : movingMap[direction],
+            }}
+            transition={{ ease: "linear", duration: duration ?? 1 }}
+          />
+          <div className="bg-black absolute z-1 flex-none inset-[2px] rounded-[100px]" />
+        </Tag>
+      );
+    }
+
+    // Render mouse-follow variant (default)
     return (
-      <Component
+      <Tag
         ref={ref}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -105,11 +222,11 @@ const HoverBorderGradient = React.forwardRef<
         >
           {children}
         </div>
-      </Component>
-    )
+      </Tag>
+    );
   }
-)
+);
 
-HoverBorderGradient.displayName = "HoverBorderGradient"
+HoverBorderGradient.displayName = "HoverBorderGradient";
 
-export { HoverBorderGradient }
+export { HoverBorderGradient };

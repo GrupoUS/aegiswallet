@@ -1,6 +1,6 @@
 ---
 title: "AegisWallet Technology Stack"
-last_updated: 2025-10-04
+last_updated: 2025-10-06
 form: reference
 tags: [tech-stack, bun, react, typescript, supabase, trpc, hono]
 related:
@@ -25,30 +25,94 @@ This document defines the **DEFINITIVE** technology selection for the entire Aeg
 
 ## Technology Stack Matrix
 
-| Category | Technology | Version | Purpose | Rationale |
-|----------|------------|---------|---------|-----------|
-| **Runtime** | Bun | Latest | Package management and runtime | 3-5x faster than npm/pnpm, native TypeScript support |
-| **Frontend Language** | TypeScript | 5.9+ | Type-safe frontend development | Prevents runtime errors in financial interfaces |
-| **Frontend Framework** | React | 19.0+ | Voice-first mobile interface | Latest features for voice processing and mobile optimization |
-| **UI Component Library** | shadcn/ui | Latest | Professional financial UI components | WCAG 2.1 AA compliant, accessible, professional design |
-| **State Management** | TanStack Query | v5.0+ | Server state management | Real-time financial data synchronization |
-| **Backend Language** | TypeScript | 5.9+ | Type-safe backend development | End-to-end type safety from database to UI |
-| **Backend Framework** | Hono | Latest | Edge-first API framework | Sub-150ms response times for voice interactions |
-| **API Style** | tRPC | v11.0+ | Type-safe API procedures | End-to-end type safety, automatic client generation |
-| **Database** | Supabase | Latest | PostgreSQL + Auth + Realtime + RLS | Complete backend infrastructure, LGPD compliant |
-| **Cache** | Supabase Realtime | Latest | Real-time data synchronization | Live financial updates for autonomous assistant |
-| **File Storage** | Supabase Storage | Latest | Secure file uploads | Receipts, documents, voice recordings |
-| **Authentication** | Supabase Auth | Latest | User authentication | Secure, social login support, JWT-based |
-| **Frontend Testing** | Vitest | Latest | Unit and integration testing | 3-5x faster than Jest, excellent TypeScript support |
-| **Backend Testing** | Vitest | Latest | API and business logic testing | Consistent testing stack across fullstack |
-| **E2E Testing** | Playwright | Latest | Voice workflow testing | Cross-platform voice interaction validation |
-| **Build Tool** | Vite | Latest | Fast development and building | Optimized for TypeScript, HMR for voice development |
-| **Bundler** | Vite | Latest | Application bundling | Tree-shaking, code splitting for mobile performance |
-| **IaC Tool** | Supabase CLI | Latest | Database migrations | Declarative database management, type generation |
-| **CI/CD** | Vercel CI | Latest | Automated deployment | Preview deployments for voice features |
-| **Monitoring** | Vercel Analytics | Latest | Performance monitoring | Core Web Vitals tracking for voice UX |
-| **Logging** | Supabase Logs | Latest | Application logging | Centralized logging for financial audit trails |
-| **CSS Framework** | Tailwind CSS | Latest | Utility-first styling | Rapid UI development, consistent design system |
+### Core Runtime & Languages
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **Bun** | Latest | Package management and runtime | 3-5x faster than npm/pnpm, native TypeScript support |
+| **TypeScript** | 5.9.3 | Type-safe development (frontend & backend) | Prevents runtime errors in financial interfaces, end-to-end type safety |
+| **Node.js** | Compatible | Runtime compatibility | Bun provides Node.js compatibility for ecosystem libraries |
+
+### Frontend Framework & Libraries
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **React** | 19.2.0 | Voice-first mobile interface | Latest features for voice processing and mobile optimization |
+| **React DOM** | 19.2.0 | React rendering | Required for React 19 web applications |
+| **TanStack Router** | 1.132.41 | Type-safe routing | File-based routing with full TypeScript support |
+| **TanStack Query** | 5.90.2 | Server state management | Real-time financial data synchronization, caching, optimistic updates |
+| **TanStack Query Devtools** | 5.90.2 | Development debugging | Query inspection and debugging tools |
+
+### Routing & State Management
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **TanStack Router** | 1.132.41 | Client-side routing | Type-safe, file-based routing with code splitting |
+| **Zustand** | 5.0.8 | Client state management | Lightweight, simple state management for UI state |
+| **TanStack Query** | 5.90.2 | Server state management | Handles server data fetching, caching, and synchronization |
+
+### UI Components & Styling
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **shadcn/ui** | 3.4.0 | UI component library | WCAG 2.1 AA compliant, accessible, professional design |
+| **Radix UI** | Various | Headless UI primitives | Accessible, unstyled components (Avatar, Dialog, Dropdown, etc.) |
+| **Tailwind CSS** | 3.4.17 | Utility-first styling | Rapid UI development, consistent design system |
+| **tailwindcss-animate** | 1.0.7 | Animation utilities | Pre-built animation classes for Tailwind |
+| **tailwind-merge** | 3.3.1 | Class merging utility | Intelligent Tailwind class merging without conflicts |
+| **class-variance-authority** | 0.7.1 | Variant management | Type-safe component variants and styling |
+| **clsx** | 2.1.1 | Conditional classes | Utility for constructing className strings |
+| **next-themes** | 0.4.6 | Theme management | Dark/light mode with system preference support |
+
+### Backend & API
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **Hono** | 4.9.10 | Edge-first API framework | Sub-150ms response times, lightweight, modern |
+| **@hono/node-server** | 1.19.5 | Node.js adapter | Runs Hono on Node.js/Bun runtime |
+| **tRPC Server** | 11.6.0 | Type-safe API procedures | End-to-end type safety, automatic client generation |
+| **tRPC Client** | 11.6.0 | Type-safe API client | Automatic TypeScript types from server procedures |
+| **tRPC React Query** | 11.6.0 | React integration | Seamless integration with TanStack Query |
+| **SuperJSON** | 2.2.2 | Data serialization | Handles Date, Map, Set, and other complex types in tRPC |
+
+### Database & Infrastructure
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **Supabase** | 2.48.3 (CLI) | Backend infrastructure | PostgreSQL + Auth + Realtime + Storage + RLS |
+| **@supabase/supabase-js** | 2.58.0 | Supabase client | JavaScript client for Supabase services |
+| **PostgreSQL** | Latest (via Supabase) | Relational database | ACID compliance, complex queries, financial data integrity |
+| **Supabase Auth** | Included | User authentication | Secure, social login support, JWT-based |
+| **Supabase Realtime** | Included | Real-time data sync | Live financial updates for autonomous assistant |
+| **Supabase Storage** | Included | File storage | Receipts, documents, voice recordings |
+| **Row Level Security (RLS)** | Included | Data access control | Tenant isolation, LGPD compliance |
+
+### Forms & Validation
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **React Hook Form** | 7.64.0 | Form state management | Performant, flexible form handling with minimal re-renders |
+| **@hookform/resolvers** | 5.2.2 | Validation resolvers | Integration with Zod and other validation libraries |
+| **Zod** | 4.1.11 | Schema validation | Runtime validation for all external inputs, type inference |
+
+### Animation & Interactions
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **Motion (Framer Motion)** | 11.18.2 | Animation library | Smooth, performant animations for UI interactions |
+| **@dnd-kit/core** | 6.3.1 | Drag and drop | Accessible drag-and-drop functionality |
+| **@dnd-kit/modifiers** | 9.0.0 | DnD modifiers | Snap-to-grid, constraints, and other DnD behaviors |
+| **@dnd-kit/utilities** | 3.2.2 | DnD utilities | Helper functions for drag-and-drop operations |
+| **React Aria Components** | 1.13.0 | Accessible interactions | Adobe's accessible component primitives |
+
+### Icons & Assets
+
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
+| **Lucide React** | 0.544.0 | Primary icon library | Beautiful, consistent icons with React components |
+| **@tabler/icons-react** | 3.35.0 | Additional icons | Extended icon set for financial interfaces |
+| **@remixicon/react** | 4.6.0 | Remix icons | Additional icon options for UI variety |
+| **React QR Code** | 2.0.18 | QR code generation | PIX payment QR codes and authentication |
 
 ## Key Architectural Decisions
 

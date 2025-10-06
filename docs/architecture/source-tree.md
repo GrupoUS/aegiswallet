@@ -1,6 +1,6 @@
 ---
 title: "AegisWallet Project Structure"
-last_updated: 2025-10-04
+last_updated: 2025-10-06
 form: reference
 tags: [project-structure, single-repo, file-organization]
 related:
@@ -33,13 +33,14 @@ aegiswallet/
 │   └── design-specs/                  # UI/UX specifications
 ├── src/                               # Source code (single repo structure)
 │   ├── routes/                        # TanStack Router v5 file-based routing
-│   │   ├── __root.tsx                 # Root route with layout
+│   │   ├── __root.tsx                 # Root route with layout, sidebar, providers
 │   │   ├── index.tsx                  # Home page (/)
-│   │   ├── dashboard.tsx              # Dashboard page (/dashboard)
+│   │   ├── dashboard.tsx              # Dashboard page with 3-column layout
 │   │   ├── login.tsx                  # Login page (/login)
 │   │   ├── transactions.tsx           # Transactions page (/transactions)
-│   │   ├── calendario.tsx             # Calendar page (/calendario)
-│   │   ├── contas.tsx                 # Accounts page (/contas)
+│   │   ├── saldo.tsx                  # Balance page (/saldo)
+│   │   ├── calendario.tsx             # Weekly calendar page (/calendario)
+│   │   ├── contas.tsx                 # Accounts management page (/contas)
 │   │   └── pix/                       # PIX pages
 │   │       ├── index.tsx              # PIX dashboard (/pix/)
 │   │       ├── transferir.tsx         # Send PIX (/pix/transferir)
@@ -48,61 +49,96 @@ aegiswallet/
 │   ├── components/                    # React components organized by domain
 │   │   ├── voice/                     # Voice interface components
 │   │   │   ├── VoiceDashboard.tsx     # Main voice interface
-│   │   │   ├── VoiceProcessor.tsx     # Voice command processing
+│   │   │   ├── MainVoiceInterface.tsx # Voice command interface
+│   │   │   ├── VoiceIndicator.tsx     # Voice activity indicator
 │   │   │   └── VoiceResponse.tsx      # Voice response handling
 │   │   ├── financial/                 # Financial management components
-│   │   │   ├── TransactionList.tsx    # Transaction display
-│   │   │   ├── PaymentAutomation.tsx  # Smart payment features
-│   │   │   └── BoletoPayment.tsx      # Brazilian boleto handling
+│   │   │   ├── BrazilianComponents.tsx # Brazilian-specific financial UI
+│   │   │   └── financial-amount.tsx   # Amount formatting component
 │   │   ├── pix/                       # PIX-specific components
 │   │   │   ├── PixSidebar.tsx         # PIX keys sidebar
 │   │   │   ├── PixConverter.tsx       # Amount calculator
 │   │   │   ├── PixChart.tsx           # Transaction chart
 │   │   │   └── PixTransactionsTable.tsx # Transaction table
-│   │   ├── calendar/                  # Calendar components
-│   │   │   ├── CalendarView.tsx       # Calendar display
-│   │   │   ├── EventCard.tsx          # Event cards
-│   │   │   └── calendar-context.tsx   # Calendar state
+│   │   ├── calendar/                  # Financial calendar components
+│   │   │   ├── financial-calendar.tsx # Main weekly calendar view
+│   │   │   ├── calendar-context.tsx   # Calendar state with Supabase
+│   │   │   ├── compact-calendar.tsx   # Mini calendar component
+│   │   │   └── mini-calendar-widget.tsx # Dashboard calendar widget
 │   │   ├── accessibility/             # Accessibility components
-│   │   │   ├── ScreenReader.tsx       # Screen reader support
-│   │   │   └── KeyboardNavigation.tsx # Keyboard-only navigation
+│   │   │   ├── AccessibilityProvider.tsx # A11y context
+│   │   │   └── AccessibilitySettings.tsx # Settings UI
+│   │   ├── ai/                        # AI/Intelligence components
+│   │   │   └── IntelligencePanel.tsx  # AI insights panel
+│   │   ├── emergency/                 # Emergency mode
+│   │   │   └── EmergencyDashboard.tsx # Emergency dashboard
+│   │   ├── layout/                    # Layout components
+│   │   │   └── AppLayout.tsx          # Application layout wrapper
+│   │   ├── providers/                 # React context providers
+│   │   │   └── TRPCProvider.tsx       # tRPC client provider
+│   │   ├── examples/                  # Component examples
+│   │   │   └── hover-border-gradient-example.tsx
 │   │   └── ui/                        # Base UI components (shadcn/ui)
-│   │       ├── Button.tsx
-│   │       ├── Card.tsx
-│   │       └── Input.tsx
+│   │       ├── event-calendar/        # Event calendar UI components
+│   │       │   ├── event-calendar.tsx # Main calendar component
+│   │       │   ├── week-view.tsx      # Weekly view grid
+│   │       │   ├── time-grid.tsx      # Hour grid (8AM-7PM)
+│   │       │   ├── event-card.tsx     # Draggable event cards
+│   │       │   ├── event-dialog.tsx   # Create/edit event dialog
+│   │       │   ├── calendar-header.tsx # Calendar navigation header
+│   │       │   ├── types.ts           # Calendar type definitions
+│   │       │   └── index.tsx          # Exports
+│   │       ├── button.tsx             # Button component
+│   │       ├── card.tsx               # Card component
+│   │       ├── calendar.tsx           # Base calendar component
+│   │       ├── chart.tsx              # Chart component
+│   │       ├── dialog.tsx             # Dialog component
+│   │       ├── form.tsx               # Form components
+│   │       ├── input.tsx              # Input component
+│   │       ├── select.tsx             # Select component
+│   │       ├── sidebar.tsx            # Sidebar component
+│   │       ├── switch.tsx             # Switch component
+│   │       ├── table.tsx              # Table component
+│   │       ├── textarea.tsx           # Textarea component
+│   │       ├── bento-grid.tsx         # Bento grid layout
+│   │       ├── gradient-button.tsx    # Gradient button
+│   │       ├── hover-border-gradient.tsx # Hover effects
+│   │       ├── animated-theme-toggler.tsx # Theme switcher
+│   │       └── [35+ other shadcn/ui components]
 │   ├── integrations/                  # External service integrations
 │   │   └── supabase/                  # Supabase client configuration
 │   │       ├── client.ts              # Supabase browser client
 │   │       ├── auth.ts                # Authentication helpers
 │   │       └── realtime.ts            # Realtime subscriptions
 │   ├── lib/                           # Core libraries and utilities
-│   │   ├── ai/                        # AI service integrations
-│   │   │   ├── voice-commands.ts      # Voice command processing
-│   │   │   └── financial-insights.ts  # AI-powered insights
-│   │   ├── localization/              # Brazilian localization
-│   │   │   ├── pt-br.ts               # Portuguese translations
-│   │   │   ├── currency.ts            # Brazilian real formatting
-│   │   │   └── date-formats.ts        # Brazilian date formats
-│   │   └── validation/                # Zod schema definitions
-│   │       ├── auth.ts                # Authentication schemas
-│   │       ├── transactions.ts        # Transaction validation
-│   │       └── voice-commands.ts      # Voice command schemas
+│   │   ├── analytics/                 # Analytics and feedback
+│   │   │   └── feedbackCollector.ts   # User feedback collection
+│   │   ├── formatters/                # Data formatters
+│   │   │   └── brazilianFormatters.ts # Brazilian formats (currency, date)
+│   │   ├── security/                  # Security utilities
+│   │   │   └── VoiceConfirmationService.ts # Voice confirmation
+│   │   ├── speech/                    # Speech services
+│   │   │   ├── SpeechSynthesisService.ts # Text-to-speech
+│   │   │   └── SpeechRecognitionService.ts # Speech-to-text
+│   │   ├── utils.ts                   # General utilities
+│   │   └── validation/                # Zod schema definitions (if exists)
 │   ├── server/                        # Backend API (Hono + tRPC)
-│   │   ├── trpc/                      # tRPC router definitions
-│   │   │   ├── auth.ts                # Authentication procedures
-│   │   │   ├── transactions.ts        # Financial transaction procedures
-│   │   │   ├── voice.ts               # Voice command procedures
-│   │   │   └── banking.ts             # Open Banking integration
-│   │   ├── middleware/                # API middleware
-│   │   │   ├── auth.ts                # Authentication middleware
-│   │   │   ├── validation.ts          # Request validation
-│   │   │   └── rate-limit.ts          # Rate limiting
-│   │   └── index.ts                   # API entry point
+│   │   ├── routers/                   # tRPC router definitions
+│   │   │   ├── _app.ts                # Main tRPC router
+│   │   │   ├── index.ts               # Router exports
+│   │   │   ├── pix.ts                 # PIX transaction procedures
+│   │   │   ├── transactions.ts        # Transaction procedures
+│   │   │   └── [additional routers]   # Other domain routers
+│   │   └── [server config files]      # Server setup files
 │   ├── hooks/                         # Custom React hooks
-│   │   ├── useAuth.ts                 # Authentication state
-│   │   ├── useVoiceCommands.ts        # Voice command processing
-│   │   ├── useTransactions.ts         # Transaction management
-│   │   └── useRealtimeSync.ts         # Real-time data synchronization
+│   │   ├── use-mobile.ts              # Mobile device detection
+│   │   ├── use-transactions.tsx       # Transaction management
+│   │   ├── useFinancialEvents.ts      # Financial calendar events
+│   │   ├── useMultimodalResponse.ts   # Multimodal voice responses
+│   │   ├── usePix.tsx                 # PIX operations
+│   │   ├── useSecureConfirmation.ts   # Security confirmations
+│   │   ├── useVoiceCommand.ts         # Voice command processing
+│   │   └── useVoiceRecognition.ts     # Voice recognition engine
 │   ├── styles/                        # Global styles and themes
 │   │   ├── globals.css                # Global CSS variables
 │   │   ├── components.css             # Component-specific styles
@@ -110,11 +146,27 @@ aegiswallet/
 │   │       ├── light.ts               # Light theme
 │   │       └── dark.ts                # Dark theme
 │   ├── types/                         # TypeScript type definitions
-│   │   ├── auth.ts                    # Authentication types
-│   │   ├── transactions.ts            # Transaction types
-│   │   ├── voice.ts                   # Voice command types
-│   │   └── api.ts                     # API response types
-│   └── App.tsx                        # Main application component
+│   │   ├── database.types.ts          # Supabase generated types
+│   │   ├── financial-events.ts        # Financial calendar event types
+│   │   ├── pix.ts                     # PIX transaction types
+│   │   └── [domain-specific types]    # Other type definitions
+│   ├── contexts/                      # React contexts
+│   │   └── AuthContext.tsx            # Authentication context
+│   ├── data/                          # Static data
+│   │   └── accounts.json              # Account data
+│   ├── services/                      # Business logic services
+│   │   └── voiceCommandProcessor.ts   # Voice command processing
+│   ├── styles/                        # Global styles
+│   │   └── globals.css                # Global CSS
+│   ├── test/                          # Test files
+│   │   ├── setup.ts                   # Test setup
+│   │   ├── utils/                     # Test utilities
+│   │   ├── security/                  # Security tests
+│   │   └── voice/                     # Voice feature tests
+│   ├── App.tsx                        # Main application component
+│   ├── main.tsx                       # Application entry point
+│   ├── index.css                      # Main stylesheet
+│   └── routeTree.gen.ts               # Generated route tree (TanStack Router)
 ├── public/                            # Static assets
 │   ├── icons/                         # App icons and favicons
 │   ├── images/                        # Static images

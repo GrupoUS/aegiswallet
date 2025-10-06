@@ -6,11 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Calculator, Copy, Send, QrCode, Loader2 } from "lucide-react"
+import { Calculator, Copy, Send, QrCode as QrCodeIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useCreatePixTransaction, useCreatePixQRCode } from "@/hooks/usePix"
 import { useNavigate } from "@tanstack/react-router"
+import QRCode from "react-qr-code"
 
 export function PixConverter() {
   const navigate = useNavigate()
@@ -105,7 +106,7 @@ export function PixConverter() {
               Transferir
             </TabsTrigger>
             <TabsTrigger value="receber" className="gap-2">
-              <QrCode className="w-4 h-4" />
+              <QrCodeIcon className="w-4 h-4" />
               Receber
             </TabsTrigger>
           </TabsList>
@@ -275,7 +276,7 @@ export function PixConverter() {
                 </>
               ) : (
                 <>
-                  <QrCode className="w-4 h-4 mr-2" />
+                  <QrCodeIcon className="w-4 h-4 mr-2" />
                   Gerar QR Code
                 </>
               )}
@@ -294,8 +295,19 @@ export function PixConverter() {
                   QR Code PIX Gerado
                 </div>
                 <div className="bg-white p-4 rounded-lg inline-block">
-                  {/* QR Code placeholder - integrate with actual QR library */}
-                  <QrCode className="w-32 h-32 text-gray-800" />
+                  {qrCodeData.pixCopyPaste ? (
+                    <QRCode
+                      value={qrCodeData.pixCopyPaste}
+                      size={200}
+                      level="H"
+                      fgColor="#000000"
+                      bgColor="#FFFFFF"
+                    />
+                  ) : (
+                    <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded">
+                      <QrCodeIcon className="w-16 h-16 text-gray-400" />
+                    </div>
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Escaneie este código para realizar o pagamento

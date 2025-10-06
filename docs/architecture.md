@@ -9,7 +9,17 @@ Revolutionary voice-first financial assistant for the Brazilian market, achievin
 **Technology Stack**: Bun + Hono + tRPC + Supabase + React 19  
 **Architecture Pattern**: Simplified monolith with real-time subscriptions  
 **Target Market**: Brazilian financial system with PIX, boletos, and voice interface  
-**Automation Level**: 95% financial operations with progressive trust building
+**Automation Level**: 95% financial operations with progressive trust building  
+**Last Architecture Update**: January 6, 2025 - See `docs/architecture/ARCHITECTURE_UPDATE_2025-10-06.md`
+
+### Current Implementation Status
+- ✅ Financial Calendar System (Weekly view with drag-and-drop)
+- ✅ PIX Integration Complete (Transfer, Receive, History)
+- ✅ Voice Interface Foundation (Recognition, Commands, Confirmation)
+- ✅ Real-time Sync (Supabase subscriptions)
+- ✅ 40+ UI Components (shadcn/ui)
+- 🔄 Open Banking Integration (Planned)
+- 🔄 AI Autonomy Engine (In Progress)
 
 ---
 
@@ -78,47 +88,71 @@ graph TB
 
 ## Component Architecture
 
-### Directory Structure
+### Directory Structure (Current Implementation)
+
+**Note**: See `docs/architecture/source-tree.md` for complete structure.
 
 ```
 src/
-├── components/                   # React components
-│   ├── ui/                      # shadcn/ui base components
-│   ├── Balance.tsx               # Main balance display
-│   ├── TransactionList.tsx       # Transaction listing
-│   ├── VoiceButton.tsx           # Voice activation button
-│   └── ProtectedRoute.tsx        # Authentication wrapper
-├── features/                      # Feature modules
-│   ├── auth/                     # Authentication
-│   │   ├── SignIn.tsx
-│   │   └── SignUp.tsx
-│   ├── voice/                    # Voice processing
-│   │   ├── VoiceProcessor.tsx
-│   │   └── CommandHistory.tsx
-│   ├── banking/                  # Bank integration
-│   │   ├── AccountLink.tsx
-│   │   └── TransactionSync.tsx
-│   └── payments/                 # Payment processing
-│       ├── PIXPayment.tsx
-│       └── BillPayment.tsx
+├── components/                   # React components by domain
+│   ├── ui/                      # shadcn/ui base components (40+)
+│   │   └── event-calendar/      # Calendar UI components (NEW)
+│   ├── calendar/                # Financial calendar components (NEW)
+│   ├── pix/                     # PIX-specific components (NEW)
+│   ├── voice/                   # Voice interface components
+│   ├── financial/               # Financial display components
+│   ├── accessibility/           # A11y components
+│   ├── providers/               # Context providers
+│   └── layout/                  # Layout wrappers
+├── routes/                        # TanStack Router v5 (File-based)
+│   ├── __root.tsx                 # Root layout with sidebar
+│   ├── dashboard.tsx              # Dashboard (3-column with mini calendar)
+│   ├── calendario.tsx             # Weekly calendar page (NEW)
+│   ├── saldo.tsx                  # Balance overview
+│   ├── contas.tsx                 # Accounts management
+│   └── pix/                       # PIX routes (NEW)
+│       ├── index.tsx              # PIX dashboard
+│       ├── transferir.tsx         # Send PIX
+│       ├── receber.tsx            # Receive PIX (QR Code)
+│       └── historico.tsx          # PIX history
 ├── hooks/                         # Custom React hooks
-│   ├── useAuth.ts                # Authentication state
-│   ├── useVoice.ts               # Voice command processing
-│   ├── useTransactions.ts        # Transaction data
-│   └── useBanking.ts             # Bank account management
+│   ├── use-mobile.ts              # Mobile detection
+│   ├── useFinancialEvents.ts      # Calendar events (NEW)
+│   ├── usePix.tsx                 # PIX operations (NEW)
+│   ├── useVoiceCommand.ts         # Voice processing
+│   ├── useVoiceRecognition.ts     # Speech recognition
+│   ├── useMultimodalResponse.ts   # Voice responses
+│   ├── useSecureConfirmation.ts   # Security checks
+│   └── use-transactions.tsx       # Transaction data
 ├── lib/                           # Core utilities
-│   ├── trpc.ts                   # tRPC setup
-│   ├── supabase.ts               # Supabase client
-│   ├── utils.ts                  # Utility functions
-│   └── validations.ts            # Zod schemas
-└── server/                        # Backend server
-    ├── trpc/                     # tRPC procedures
-    │   ├── auth.ts
-    │   ├── transactions.ts
-    │   ├── voice.ts
-    │   ├── banking.ts
-    │   └── pix.ts
-    └── index.ts                  # Server setup
+│   ├── speech/                    # Speech services (NEW)
+│   │   ├── SpeechRecognitionService.ts
+│   │   └── SpeechSynthesisService.ts
+│   ├── security/                  # Security utilities (NEW)
+│   │   └── VoiceConfirmationService.ts
+│   ├── formatters/                # Data formatters (NEW)
+│   │   └── brazilianFormatters.ts
+│   ├── analytics/                 # Analytics (NEW)
+│   │   └── feedbackCollector.ts
+│   └── utils.ts                   # General utilities
+├── server/                        # Backend API
+│   └── routers/                   # tRPC routers
+│       ├── _app.ts                # Main router
+│       ├── pix.ts                 # PIX procedures (NEW)
+│       └── transactions.ts        # Transaction procedures
+├── types/                         # Type definitions
+│   ├── database.types.ts          # Supabase generated
+│   ├── financial-events.ts        # Calendar types (NEW)
+│   └── pix.ts                     # PIX types (NEW)
+├── contexts/                      # React contexts
+│   └── AuthContext.tsx
+├── services/                      # Business logic
+│   └── voiceCommandProcessor.ts
+└── integrations/                  # External APIs
+    └── supabase/                  # Supabase client
+        ├── client.ts
+        ├── auth.ts
+        └── realtime.ts
 ```
 
 ### Core Components

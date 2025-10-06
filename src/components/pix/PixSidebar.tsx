@@ -50,36 +50,37 @@ export function PixSidebar({ open, setOpen }: { open: boolean; setOpen: React.Di
               </div>
             ) : (
               favoriteKeys.map((pixKey) => {
-              const Icon = getPixKeyIcon(pixKey.type)
-              return (
-                <Link
-                  key={pixKey.id}
-                  to="/pix/transferir"
-                  search={{ pixKey: pixKey.value }}
-                  className={cn(
-                    "group relative flex items-center gap-4 p-3 rounded-lg transition-all duration-200",
-                    "text-sidebar-foreground",
-                    "hover:bg-sidebar-accent",
-                    "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
-                    "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]",
-                    // Active state with glow effect
-                    "active:before:absolute active:before:inset-0 active:before:-z-10",
-                    "active:before:bg-green-500/48 active:before:blur-[10px] active:before:rounded-lg",
-                    "active:bg-green-500/10 active:border-green-500/30"
-                  )}
-                >
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    "bg-gradient-to-br from-green-500/10 to-teal-500/10",
-                    "group-hover:from-green-500/20 group-hover:to-teal-500/20",
-                    "transition-all duration-200"
-                  )}>
-                    <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  {open && (
-                    <span className="text-sm font-medium truncate">{pixKey.label || pixKey.value}</span>
-                  )}
-                </Link>
+                const Icon = getPixKeyIcon(pixKey.type)
+                return (
+                  <Link
+                    key={pixKey.id}
+                    to="/pix/transferir"
+                    search={{ pixKey: pixKey.value }}
+                    className={cn(
+                      "group relative flex items-center gap-4 p-3 rounded-lg transition-all duration-200",
+                      "text-sidebar-foreground",
+                      "hover:bg-sidebar-accent",
+                      "shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]",
+                      "dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]",
+                      // Active state with glow effect
+                      "active:before:absolute active:before:inset-0 active:before:-z-10",
+                      "active:before:bg-green-500/48 active:before:blur-[10px] active:before:rounded-lg",
+                      "active:bg-green-500/10 active:border-green-500/30"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      "bg-gradient-to-br from-green-500/10 to-teal-500/10",
+                      "group-hover:from-green-500/20 group-hover:to-teal-500/20",
+                      "transition-all duration-200"
+                    )}>
+                      <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    {open && (
+                      <span className="text-sm font-medium truncate">{pixKey.label || pixKey.value}</span>
+                    )}
+                  </Link>
+                )
               })
             )}
             

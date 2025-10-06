@@ -154,7 +154,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SaldoRoute: typeof SaldoRoute
-  TransactionsRoute: typeof TransactionsRoute
   PixHistoricoRoute: typeof PixHistoricoRoute
   PixReceberRoute: typeof PixReceberRoute
   PixTransferirRoute: typeof PixTransferirRoute
@@ -163,13 +162,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/transactions': {
-      id: '/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof TransactionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/saldo': {
       id: '/saldo'
       path: '/saldo'
@@ -250,7 +242,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SaldoRoute: SaldoRoute,
-  TransactionsRoute: TransactionsRoute,
   PixHistoricoRoute: PixHistoricoRoute,
   PixReceberRoute: PixReceberRoute,
   PixTransferirRoute: PixTransferirRoute,

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Calculator, Copy, Send, QrCode as QrCodeIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { useCreatePixTransaction, useCreatePixQRCode } from "@/hooks/usePix"
+import { usePixTransactions, usePixQRCodes } from "@/hooks/usePix"
 import { useNavigate } from "@tanstack/react-router"
 import QRCode from "react-qr-code"
 
@@ -20,8 +20,10 @@ export function PixConverter() {
   const [description, setDescription] = useState("")
   const [pixKey, setPixKey] = useState("")
   
-  const { mutate: createTransaction, isPending: isCreatingTransaction } = useCreatePixTransaction()
-  const { mutate: createQRCode, isPending: isCreatingQRCode, data: qrCodeData } = useCreatePixQRCode()
+  const { createTransaction, isPending: isCreatingTransaction } = usePixTransactions()
+  const { generateQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
+  
+  const qrCodeData = qrCodes[0] // Get the most recent QR Code
 
   const formatCurrency = (value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '')

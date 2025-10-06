@@ -2,9 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Mic, Calendar, AlertCircle, CheckCircle, Clock, FileText } from 'lucide-react'
+import { Mic, Calendar, CheckCircle, Clock, FileText } from 'lucide-react'
 
 export const Route = createFileRoute('/contas')({
   component: Contas,

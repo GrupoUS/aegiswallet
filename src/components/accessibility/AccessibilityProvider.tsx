@@ -1,4 +1,4 @@
-import { Eye, Keyboard, Settings, Volume2 } from 'lucide-react'
+import { Eye, Keyboard, Volume2 } from 'lucide-react'
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

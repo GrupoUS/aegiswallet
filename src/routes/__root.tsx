@@ -1,13 +1,13 @@
 import { createRootRoute, Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { TRPCProvider } from '@/components/providers/TRPCProvider'
+import { CalendarProvider } from '@/components/calendar/calendar-context'
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { AccessibilitySettings } from '@/components/accessibility/AccessibilitySettings'
 import { useState } from 'react'
 import {
   Home,
   Wallet,
-  PieChart,
+  Calendar,
   FileText,
   Send,
   Receipt,
@@ -34,32 +34,32 @@ function RootComponent() {
     {
       label: 'Dashboard',
       href: '/dashboard',
-      icon: <Home className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      icon: <Home className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
     {
       label: 'Saldo',
       href: '/saldo',
-      icon: <Wallet className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      icon: <Wallet className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: 'Orçamento',
-      href: '/orcamento',
-      icon: <PieChart className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      label: 'Calendário',
+      href: '/calendario',
+      icon: <Calendar className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
     {
       label: 'Contas',
       href: '/contas',
-      icon: <FileText className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      icon: <FileText className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
     {
       label: 'PIX',
       href: '/pix',
-      icon: <Send className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      icon: <Send className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
     {
       label: 'Transações',
       href: '/transactions',
-      icon: <Receipt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      icon: <Receipt className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
     },
   ]
 
@@ -67,9 +67,11 @@ function RootComponent() {
   if (!showSidebar) {
     return (
       <TRPCProvider>
-        <div className="min-h-screen bg-background">
-          <Outlet />
-        </div>
+        <CalendarProvider>
+          <div className="min-h-screen bg-background">
+            <Outlet />
+          </div>
+        </CalendarProvider>
       </TRPCProvider>
     )
   }
@@ -77,50 +79,45 @@ function RootComponent() {
   // Render with sidebar for authenticated pages
   return (
     <TRPCProvider>
-      <div
-        className={cn(
-          'flex flex-col md:flex-row bg-background w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
-          'h-screen'
-        )}
-      >
-        <Sidebar open={open} setOpen={setOpen}>
-          <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-              {open ? <Logo /> : <LogoIcon />}
-              <div className="mt-8 flex flex-col gap-2">
-                {links.map((link, idx) => (
-                  <SidebarLink key={idx} link={link} />
-                ))}
+      <CalendarProvider>
+        <div
+          className={cn(
+            'flex flex-col md:flex-row bg-background w-full flex-1 mx-auto border border-border overflow-hidden',
+            'h-screen'
+          )}
+        >
+          <Sidebar open={open} setOpen={setOpen}>
+            <SidebarBody className="justify-between gap-10">
+              <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                {open ? <Logo /> : <LogoIcon />}
+                <div className="mt-8 flex flex-col gap-2">
+                  {links.map((link, idx) => (
+                    <SidebarLink key={idx} link={link} />
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              {/* Theme and Accessibility Controls */}
-              <div className="flex items-center gap-2 px-2 py-1">
-                <AnimatedThemeToggler />
-                {open && (
-                  <div className="w-32">
-                    <AccessibilitySettings />
-                  </div>
-                )}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center py-2">
+                  <AnimatedThemeToggler />
+                </div>
+                <SidebarLink
+                  link={{
+                    label: 'Assistente de Voz',
+                    href: '/',
+                    icon: <Mic className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+                  }}
+                />
+                <LogoutButton />
               </div>
-              
-              <SidebarLink
-                link={{
-                  label: 'Assistente de Voz',
-                  href: '/',
-                  icon: <Mic className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                }}
-              />
-              <LogoutButton />
+            </SidebarBody>
+          </Sidebar>
+          <div className="flex flex-1 overflow-auto">
+            <div className="flex-1 w-full">
+              <Outlet />
             </div>
-          </SidebarBody>
-        </Sidebar>
-        <div className="flex flex-1 overflow-auto">
-          <div className="flex-1 w-full">
-            <Outlet />
           </div>
         </div>
-      </div>
+      </CalendarProvider>
     </TRPCProvider>
   )
 }
@@ -129,7 +126,7 @@ const Logo = () => {
   return (
     <Link
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm text-foreground py-1 relative z-20"
     >
       <div className="h-5 w-6 bg-gradient-to-r from-primary to-accent rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
       <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-pre">
@@ -143,7 +140,7 @@ const LogoIcon = () => {
   return (
     <Link
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm text-foreground py-1 relative z-20"
     >
       <div className="h-5 w-6 bg-gradient-to-r from-primary to-accent rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
     </Link>
@@ -165,16 +162,16 @@ const LogoutButton = () => {
       onClick={handleLogout}
       className={cn(
         'flex items-center justify-start gap-2 group/sidebar py-2 w-full text-left',
-        'hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-md px-2 transition-colors'
+        'hover:bg-sidebar-accent rounded-md px-2 transition-colors'
       )}
     >
-      <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      <LogOut className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />
       <motion.span
         animate={{
           display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="text-sidebar-foreground text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         Sair
       </motion.span>

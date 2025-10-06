@@ -33,6 +33,7 @@ import { createBankingRouter } from './procedures/banking'
 import { createTransactionRouter } from './procedures/transactions'
 import { createUserRouter } from './procedures/users'
 import { createVoiceRouter } from './procedures/voice'
+import { pixRouter } from './routers/pix'
 
 /**
  * Main router with all procedures
@@ -43,6 +44,7 @@ export const appRouter = router({
   transactions: createTransactionRouter(t),
   banking: createBankingRouter(t),
   voice: createVoiceRouter(t),
+  pix: pixRouter,
 })
 
 export type AppRouter = typeof appRouter

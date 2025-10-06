@@ -1,0 +1,202 @@
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useAuth } from '@/contexts/AuthContext'
+import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ArrowLeft, Download, Filter, Calendar } from 'lucide-react'
+import { PixTransactionsTable } from '@/components/pix/PixTransactionsTable'
+import { toast } from 'sonner'
+
+export const Route = createFileRoute('/pix/historico')({
+  component: PixHistoryPage,
+})
+
+function PixHistoryPage() {
+  const { isAuthenticated, isLoading } = useAuth()
+  const navigate = useNavigate()
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [filterType, setFilterType] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: '/login', search: { redirect: '/pix/historico' } })
+    }
+  }, [isAuthenticated, isLoading, navigate])
+
+  const exportStatement = () => {
+    toast.success("Extrato exportado com sucesso!")
+  }
+
+  const applyFilters = () => {
+    toast.info("Filtros aplicados!")
+  }
+
+  const clearFilters = () => {
+    setDateFrom('')
+    setDateTo('')
+    setFilterType('all')
+    setFilterStatus('all')
+    toast.info("Filtros limpos!")
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate({ to: '/pix' })}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar ao Dashboard PIX
+        </Button>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Histórico de Transações PIX</h1>
+            <p className="text-muted-foreground mt-2">
+              Consulte e exporte seu extrato completo de transações PIX
+            </p>
+          </div>
+          <Button onClick={exportStatement}>
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Extrato
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date-from">Data Início</Label>
+              <div className="relative">
+                <Input
+                  id="date-from"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date-to">Data Fim</Label>
+              <div className="relative">
+                <Input
+                  id="date-to"
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="filter-type">Tipo</Label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger id="filter-type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="sent">Enviadas</SelectItem>
+                  <SelectItem value="received">Recebidas</SelectItem>
+                  <SelectItem value="scheduled">Agendadas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="filter-status">Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger id="filter-status">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="completed">Concluídas</SelectItem>
+                  <SelectItem value="processing">Processando</SelectItem>
+                  <SelectItem value="failed">Falhadas</SelectItem>
+                  <SelectItem value="cancelled">Canceladas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <Button onClick={applyFilters}>
+              Aplicar Filtros
+            </Button>
+            <Button variant="outline" onClick={clearFilters}>
+              Limpar Filtros
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transactions Summary */}
+      <div className="grid md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground">Total Transações</div>
+            <div className="text-2xl font-bold mt-1">142</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground">Total Enviado</div>
+            <div className="text-2xl font-bold text-red-600 mt-1">R$ 8.450,00</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground">Total Recebido</div>
+            <div className="text-2xl font-bold text-green-600 mt-1">R$ 12.680,50</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground">Saldo Período</div>
+            <div className="text-2xl font-bold text-green-600 mt-1">R$ 4.230,50</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Transactions Table */}
+      <PixTransactionsTable />
+    </div>
+  )
+}

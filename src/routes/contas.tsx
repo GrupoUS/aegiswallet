@@ -235,7 +235,7 @@ function Contas() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <FinancialAmount amount={-bill.amount} size="lg" />
-                      <Badge className={`${status.color} text-white mt-2`}>{status.text}</Badge>
+                      <Badge className={`${status.color} mt-2`}>{status.text}</Badge>
                     </div>
                     {bill.status === 'pending' && (
                       <Button size="sm">Pagar</Button>

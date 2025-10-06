@@ -1,6 +1,6 @@
 ---
 description: "Activates the Apex UI/UX Designer agent for NeonPro clínica estética interfaces."
-tools: ['runTasks', 'search', 'extensions', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'todos', 'sequential-thinking', 'tavily', 'context7', 'create_directory', 'edit_block', 'interact_with_process', 'kill_process', 'list_directory', 'list_processes', 'list_searches', 'move_file', 'read_file', 'read_multiple_files', 'read_process_output', 'start_process', 'start_search', 'stop_search', 'write_file', 'find_documents', 'find_projects', 'find_tasks', 'manage_document', 'manage_project', 'manage_task', 'rag_get_available_sources', 'rag_search_code_examples', 'rag_search_knowledge_base', 'delete_memory', 'find_file', 'find_referencing_symbols', 'find_symbol', 'get_symbols_overview', 'list_memories', 'read_memory', 'search_for_pattern', 'think_about_collected_information', 'think_about_task_adherence', 'write_memory', 'replace_symbol_body']
+tools: ['search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'sequential-thinking', 'context7', 'desktop-commander', 'serena', 'chrome-devtools', 'shadcn']
 ---
 
 # 🎨 APEX UI/UX DESIGNER AGENT
@@ -19,10 +19,8 @@ tools: ['runTasks', 'search', 'extensions', 'usages', 'think', 'problems', 'chan
 **Core References**:
 
 - Architecture: [`docs/architecture/frontend-architecture.md`](../../docs/architecture/frontend-architecture.md)
-- Implementation: [`docs/architecture/front-end-spec.md`](../../docs/architecture/front-end-spec.md)
-- Component Guide: [`docs/components/usage-guide.md`](../../docs/components/usage-guide.md)
 - Tech Stack: [`docs/architecture/tech-stack.md`](../../docs/architecture/tech-stack.md)
-- Standards: [`docs/rules/coding-standards.md`](../../docs/rules/coding-standards.md)
+- Standards: [`docs/rules/coding-standards.md`](../../docs/architecture/coding-standards.md)
 
 ## 🧠 CONSTITUTIONAL DESIGN PRINCIPLES
 

@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
 import { Button } from '@/components/ui/button'
-import { ModeToggle } from '@/components/ui/mode-toggle'
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 
 export function AppLayout() {
   const [open, setOpen] = useState(false)
@@ -69,10 +69,16 @@ export function AppLayout() {
           </div>
           <div>
             {/* Theme Toggle */}
-            <div className="flex items-center gap-2 mb-2 px-2">
-              <ModeToggle />
-              {open && <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>}
-            </div>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 mb-2"
+              asChild
+            >
+              <div className="flex items-center gap-2">
+                <AnimatedThemeToggler className="h-5 w-5" />
+                {open && <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>}
+              </div>
+            </Button>
             
             {/* Accessibility Button */}
             <Button
@@ -81,7 +87,7 @@ export function AppLayout() {
               onClick={() => setShowSettings(!showSettings)}
             >
               <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-              {open && <span>Accessibility</span>}
+              {open && <span className="text-sm text-neutral-700 dark:text-neutral-200">Accessibility</span>}
             </Button>
 
             <SidebarLink

@@ -1,6 +1,8 @@
-import { createRootRoute, Outlet, Link } from '@tanstack/react-router'
+import { createRootRoute, Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { TRPCProvider } from '@/components/providers/TRPCProvider'
-import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar'
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { AccessibilitySettings } from '@/components/accessibility/AccessibilitySettings'
 import { useState } from 'react'
 import {
   Home,
@@ -13,6 +15,8 @@ import {
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { motion } from 'motion/react'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -20,6 +24,11 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  // Pages that should not show the sidebar
+  const noSidebarPages = ['/login']
+  const showSidebar = !noSidebarPages.includes(location.pathname)
 
   const links = [
     {
@@ -54,6 +63,18 @@ function RootComponent() {
     },
   ]
 
+  // Render without sidebar for login page
+  if (!showSidebar) {
+    return (
+      <TRPCProvider>
+        <div className="min-h-screen bg-background">
+          <Outlet />
+        </div>
+      </TRPCProvider>
+    )
+  }
+
+  // Render with sidebar for authenticated pages
   return (
     <TRPCProvider>
       <div
@@ -72,7 +93,17 @@ function RootComponent() {
                 ))}
               </div>
             </div>
-            <div>
+            <div className="space-y-2">
+              {/* Theme and Accessibility Controls */}
+              <div className="flex items-center gap-2 px-2 py-1">
+                <AnimatedThemeToggler />
+                {open && (
+                  <div className="w-32">
+                    <AccessibilitySettings />
+                  </div>
+                )}
+              </div>
+              
               <SidebarLink
                 link={{
                   label: 'Assistente de Voz',
@@ -80,13 +111,7 @@ function RootComponent() {
                   icon: <Mic className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
                 }}
               />
-              <SidebarLink
-                link={{
-                  label: 'Sair',
-                  href: '/login',
-                  icon: <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                }}
-              />
+              <LogoutButton />
             </div>
           </SidebarBody>
         </Sidebar>
@@ -122,5 +147,37 @@ const LogoIcon = () => {
     >
       <div className="h-5 w-6 bg-gradient-to-r from-primary to-accent rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
     </Link>
+  )
+}
+
+const LogoutButton = () => {
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
+  const { open, animate } = useSidebar()
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate({ to: '/login', search: { redirect: '/dashboard' } })
+  }
+
+  return (
+    <button
+      onClick={handleLogout}
+      className={cn(
+        'flex items-center justify-start gap-2 group/sidebar py-2 w-full text-left',
+        'hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-md px-2 transition-colors'
+      )}
+    >
+      <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      <motion.span
+        animate={{
+          display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
+          opacity: animate ? (open ? 1 : 0) : 1,
+        }}
+        className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+      >
+        Sair
+      </motion.span>
+    </button>
   )
 }

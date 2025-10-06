@@ -66,6 +66,111 @@ const NUMBER_WORDS: Record<string, number> = {
 }
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+const NORMALIZE_DIACRITICS_REGEX = /[\u0300-\u036f]/g
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(NORMALIZE_DIACRITICS_REGEX, '')
+}
+
+const NUMBER_WORD_NORMALIZED_MAP = new Map<string, number>()
+
+Object.entries(NUMBER_WORDS).forEach(([word, value]) => {
+  NUMBER_WORD_NORMALIZED_MAP.set(normalizeText(word), value)
+})
+
+const NUMBER_WORD_NORMALIZED_KEYS = Array.from(NUMBER_WORD_NORMALIZED_MAP.keys()).sort((a, b) => b.length - a.length)
+
+const NUMBER_WORD_AMOUNT_PATTERN = new RegExp(
+  String.raw`\b(${NUMBER_WORD_NORMALIZED_KEYS.join('|')})(?:\s+e\s+(${NUMBER_WORD_NORMALIZED_KEYS.join('|')}))*\b(?:\s+(reais?|real))?`,
+  'gi'
+)
+
+const PLAIN_NUMBER_PATTERN = new RegExp(String.raw`(?<!dia\s)\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?\b`, 'gi')
+
+const WEEKDAY_MAP: Record<string, number> = {
+  domingo: 0,
+  segunda: 1,
+  terca: 2,
+  quarta: 3,
+  quinta: 4,
+  sexta: 5,
+  sabado: 6,
+}
+
+function parseNumberWordPhrase(phrase: string): number {
+  const cleaned = normalizeText(phrase).replace(/\b(reais?|real)\b/gi, '').trim()
+  if (!cleaned) {
+    return NaN
+  }
+
+  const tokens = cleaned.split(/\s+e\s+|\s+/).filter((token) => token.length > 0)
+  const values = tokens.map((token) => NUMBER_WORD_NORMALIZED_MAP.get(token))
+
+  if (values.some((value) => typeof value !== 'number')) {
+    return NaN
+  }
+
+  return (values as number[]).reduce((sum, value) => sum + value, 0)
+}
+
+function parseMonetaryValue(raw: string): number {
+  const cleaned = raw.replace(/R\$\s*/gi, '').replace(/(reais?|real)/gi, '').replace(/\s+/g, '')
+  let normalized = cleaned
+
+  if (normalized.includes(',')) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.')
+  } else {
+    normalized = normalized.replace(/\./g, '')
+  }
+
+  const value = Number(normalized)
+  return Number.isFinite(value) ? value : NaN
+}
+
+function daysFromToday(offset: number): Date {
+  const date = new Date()
+  date.setDate(date.getDate() + offset)
+  return date
+}
+
+function getUpcomingWeekday(weekday: string, allowToday = true): Date {
+  const normalized = normalizeText(weekday.replace('-feira', ''))
+  const dayIndex = WEEKDAY_MAP[normalized]
+  const today = new Date()
+
+  if (dayIndex === undefined) {
+    return today
+  }
+
+  const currentDay = today.getDay()
+  let delta = (dayIndex - currentDay + 7) % 7
+  if (delta === 0 && !allowToday) {
+    delta = 7
+  }
+
+  const targetDate = new Date(today)
+  targetDate.setDate(today.getDate() + delta)
+  return targetDate
+}
+
+function setDayOfMonth(day: number): Date {
+  const date = new Date()
+  date.setDate(day)
+  return date
+}
+
+function setMonthOffset(offset: number): Date {
+  const date = new Date()
+  date.setMonth(date.getMonth() + offset)
+  return date
+}
+// ============================================================================
 // Entity Patterns
 // ============================================================================
 
@@ -73,30 +178,24 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   // Money amounts
   {
     type: EntityType.AMOUNT,
-    pattern: /R\$\s*(\d+(?:[.,]\d{2})?)/gi,
-    normalizer: (match) => {
-      const num = match.replace(/R\$\s*/i, '').replace(',', '.')
-      return parseFloat(num)
-    },
+    pattern: /R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/gi,
+    normalizer: (match) => parseMonetaryValue(match),
   },
   {
     type: EntityType.AMOUNT,
-    pattern: /(\d+(?:[.,]\d{2})?)\s*(reais?|real)/gi,
-    normalizer: (match) => {
-      const num = match.replace(/\s*(reais?|real)/gi, '').replace(',', '.')
-      return parseFloat(num)
-    },
+    pattern: /(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)\s*(reais?|real)/gi,
+    normalizer: (match) => parseMonetaryValue(match),
   },
   {
     type: EntityType.AMOUNT,
-    pattern:
-      /(cem|cento|duzentos|trezentos|quatrocentos|quinhentos|seiscentos|setecentos|oitocentos|novecentos|mil)\s*(reais?|real)?/gi,
-    normalizer: (match) => {
-      const word = match.replace(/\s*(reais?|real)?/gi, '').toLowerCase()
-      return NUMBER_WORDS[word] || 0
-    },
+    pattern: NUMBER_WORD_AMOUNT_PATTERN,
+    normalizer: (match) => parseNumberWordPhrase(match),
   },
-
+  {
+    type: EntityType.AMOUNT,
+    pattern: PLAIN_NUMBER_PATTERN,
+    normalizer: (match) => parseMonetaryValue(match),
+  },
   // Dates
   {
     type: EntityType.DATE,
@@ -105,31 +204,40 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.DATE,
-    pattern: /\b(amanha|amanhã)\b/gi,
-    normalizer: () => {
-      const date = new Date()
-      date.setDate(date.getDate() + 1)
-      return date
-    },
+    pattern: /\b(ontem)\b/gi,
+    normalizer: () => daysFromToday(-1),
+  },
+  {
+    type: EntityType.DATE,
+    pattern: /\b(anteontem)\b/gi,
+    normalizer: () => daysFromToday(-2),
+  },
+  {
+    type: EntityType.DATE,
+    pattern: /\b(amanha|amanh[\u00e3\u00c3])\b/gi,
+    normalizer: () => daysFromToday(1),
   },
   {
     type: EntityType.DATE,
     pattern:
-      /\b(proxima|próxima)\s+(segunda|terca|terça|quarta|quinta|sexta|sabado|sábado|domingo)/gi,
-    normalizer: (match) => {
-      const days = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']
-      const dayName = match.split(/\s+/)[1].toLowerCase().replace('ç', 'c').replace('á', 'a')
-      const targetDay = days.indexOf(dayName)
-
-      const date = new Date()
-      const currentDay = date.getDay()
-      const daysUntil = (targetDay - currentDay + 7) % 7 || 7
-      date.setDate(date.getDate() + daysUntil)
-
-      return date
-    },
+      /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
+    normalizer: (_match, weekday) => getUpcomingWeekday(weekday, false),
   },
-
+  {
+    type: EntityType.DATE,
+    pattern: /\b(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado)(?:-feira)?\b/gi,
+    normalizer: (match) => getUpcomingWeekday(match, true),
+  },
+  {
+    type: EntityType.DATE,
+    pattern: /\bdia\s+(\d{1,2})\b/gi,
+    normalizer: (_match, day) => setDayOfMonth(Number(day)),
+  },
+  {
+    type: EntityType.DATE,
+    pattern: /\b(m[\u00ea\u00e9e]s\s+passado)\b/gi,
+    normalizer: () => setMonthOffset(-1),
+  },
   // Bill types / Categories
   {
     type: EntityType.BILL_TYPE,
@@ -250,6 +358,12 @@ export class EntityExtractor {
       try {
         const value = match[0]
         const normalizedValue = pattern.normalizer(value)
+        if (normalizedValue === undefined || normalizedValue === null) {
+          continue
+        }
+        if (typeof normalizedValue === 'number' && Number.isNaN(normalizedValue)) {
+          continue
+        }
 
         // Validate if validator exists
         if (pattern.validator && !pattern.validator(normalizedValue)) {
@@ -365,3 +479,12 @@ export function extractBillType(text: string): string | null {
   const entity = extractor.getFirstEntity(text, EntityType.BILL_TYPE)
   return entity ? (entity.normalizedValue as string) : null
 }
+
+
+
+
+
+
+
+
+

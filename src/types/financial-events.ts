@@ -16,6 +16,8 @@ export type EventColor =
   | 'orange' // Laranja - Contas
   | 'blue' // Azul - Agendamentos
   | 'violet' // Roxo - Transferências
+  | 'cyan' // Azul claro - Novo
+  | 'green' // Verde escuro - Novo
 
 export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled'
 

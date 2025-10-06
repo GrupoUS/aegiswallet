@@ -1,9 +1,77 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LineChart, Mic, PiggyBank, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Lazy loading components
+const TransactionForm = lazy(() => import('./components/TransactionForm'))
+const TransactionsList = lazy(() => import('./components/TransactionsList'))
+
+// Loading placeholder components
+function TransactionFormLoader() {
+  return (
+    <Card className="hover:shadow-lg transition-all duration-300 border-primary/20">
+      <CardHeader>
+        <CardTitle><Skeleton className="h-6 w-32" /></CardTitle>
+        <CardDescription><Skeleton className="h-4 w-1/2" /></CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-col-1 md:grid-cols-2 gap-4">
+          <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Skeleton className="h-10 w-20" />
+          <Skeleton className="h-10 w-20" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TransactionsListLoader() {
+  return (
+    <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
+      <CardHeader>
+        <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+        <CardDescription><Skeleton className="h-4 w-1/3" /></CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex justify-between items-center p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-5 h-5" />
+                <div>
+                  <Skeleton className="h-4 w-32 mb-1" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export const Route = createFileRoute('/saldo')({
   component: Saldo,
@@ -226,122 +294,56 @@ function Saldo() {
 
         {/* Create Transaction Form */}
         {showCreateForm && (
-          <Card className="hover:shadow-lg transition-all duration-300 border-primary/20">
-            <CardHeader>
-              <CardTitle>Nova Transação</CardTitle>
-              <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Descrição</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-md bg-background"
-                    placeholder="Ex: Supermercado"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Valor</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="w-full p-2 border rounded-md bg-background"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Categoria</label>
-                  <select className="w-full p-2 border rounded-md bg-background">
-                    <option value="">Selecione...</option>
-                    <option value="food">Alimentação</option>
-                    <option value="transport">Transporte</option>
-                    <option value="bills">Contas</option>
-                    <option value="salary">Salário</option>
-                    <option value="other">Outros</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Data</label>
-                  <input type="date" className="w-full p-2 border rounded-md bg-background" />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button withGradient>Salvar</Button>
-                <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <Suspense fallback={<TransactionFormLoader />}>
+            <TransactionForm onCancel={() => setShowCreateForm(false)} />
+          </Suspense>
         )}
 
         {/* All Transactions List */}
-        <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
-          <CardHeader>
-            <CardTitle>Histórico Completo de Transações</CardTitle>
-            <CardDescription>Todas as suas movimentações financeiras</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Mock data - will be replaced with real data */}
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <TrendingDown className="w-5 h-5 text-red-500" />
-                  <div>
-                    <p className="font-medium">Supermercado</p>
-                    <p className="text-sm text-muted-foreground">Hoje • Alimentação</p>
-                  </div>
-                </div>
-                <FinancialAmount amount={-125.67} />
-              </div>
-
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                  <div>
-                    <p className="font-medium">Salário</p>
-                    <p className="text-sm text-muted-foreground">3 dias atrás • Salário</p>
-                  </div>
-                </div>
-                <FinancialAmount amount={3500.0} />
-              </div>
-
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <TrendingDown className="w-5 h-5 text-red-500" />
-                  <div>
-                    <p className="font-medium">Transporte</p>
-                    <p className="text-sm text-muted-foreground">5 dias atrás • Transporte</p>
-                  </div>
-                </div>
-                <FinancialAmount amount={-50.0} />
-              </div>
-
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <TrendingDown className="w-5 h-5 text-red-500" />
-                  <div>
-                    <p className="font-medium">Restaurante</p>
-                    <p className="text-sm text-muted-foreground">1 semana atrás • Alimentação</p>
-                  </div>
-                </div>
-                <FinancialAmount amount={-85.2} />
-              </div>
-
-              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 hover:shadow-md hover:scale-[1.01] transition-all duration-200 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                  <div>
-                    <p className="font-medium">Freelance</p>
-                    <p className="text-sm text-muted-foreground">2 semanas atrás • Salário</p>
-                  </div>
-                </div>
-                <FinancialAmount amount={1200.0} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Suspense fallback={<TransactionsListLoader />}>
+          <TransactionsList transactions={[
+            {
+              id: 1,
+              description: 'Supermercado',
+              amount: -125.67,
+              date: 'Hoje',
+              type: 'expense',
+              category: 'Alimentação'
+            },
+            {
+              id: 2,
+              description: 'Salário',
+              amount: 3500.0,
+              date: '3 dias atrás',
+              type: 'income',
+              category: 'Salário'
+            },
+            {
+              id: 3,
+              description: 'Transporte',
+              amount: -50.0,
+              date: '5 dias atrás',
+              type: 'expense',
+              category: 'Transporte'
+            },
+            {
+              id: 4,
+              description: 'Restaurante',
+              amount: -85.2,
+              date: '1 semana atrás',
+              type: 'expense',
+              category: 'Alimentação'
+            },
+            {
+              id: 5,
+              description: 'Freelance',
+              amount: 1200.0,
+              date: '2 semanas atrás',
+              type: 'income',
+              category: 'Salário'
+            }
+          ]} />
+        </Suspense>
       </div>
     </div>
   )

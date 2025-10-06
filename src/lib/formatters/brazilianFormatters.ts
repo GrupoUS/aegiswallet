@@ -42,7 +42,9 @@ export function formatCurrency(
     maximumFractionDigits: decimals,
   }).format(amount)
 
-  return showSymbol ? formatted : formatted.replace('R$', '').trim()
+  const normalized = formatted.replace(/\u00A0/g, ' ')
+
+  return showSymbol ? normalized : normalized.replace('R$', '').trim()
 }
 
 /**
@@ -171,6 +173,16 @@ export function getRelativeDays(date: Date): string | null {
   }
 }
 
+export function formatRelativeDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const relative = getRelativeDays(dateObj)
+  if (relative) {
+    return relative
+  }
+
+  return formatDate(dateObj)
+}
+
 /**
  * Format date for voice output
  */
@@ -259,8 +271,11 @@ export function formatCompactNumber(num: number): string {
  * Format percentage
  */
 export function formatPercentage(value: number, decimals = 1): string {
-  return `${value.toFixed(decimals)}%`
+  const effectiveDecimals = Number.isInteger(value) ? 0 : decimals
+  const formatted = value.toFixed(effectiveDecimals)
+  return `${formatted}%`
 }
+
 
 // ============================================================================
 // Document Formatting (CPF, CNPJ, etc)
@@ -470,6 +485,7 @@ export const brazilianFormatters = {
   date: formatDate,
   dateForVoice: formatDateForVoice,
   relativeDays: getRelativeDays,
+  relativeDate: formatRelativeDate,
   timeRange: formatTimeRange,
   number: formatNumber,
   compactNumber: formatCompactNumber,

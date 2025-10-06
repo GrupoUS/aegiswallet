@@ -1,4 +1,4 @@
-import { createRootRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { createRootRoute, Link, Outlet, useLocation, useNavigate, type ErrorComponentProps } from '@tanstack/react-router'
 import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
@@ -9,8 +9,24 @@ import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/s
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
+function ErrorBoundary({ error }: ErrorComponentProps) {
+  return (
+    <div className="p-4 text-red-500 bg-red-50 min-h-screen flex flex-col items-center justify-center">
+      <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-red-700 mb-4">Oops, something went wrong!</h2>
+        <p className="text-red-600 mb-4">We encountered an unexpected error. Please try again later.</p>
+        <pre className="bg-red-50 p-4 rounded-md text-sm text-red-800 overflow-auto">
+          <code>{error.message}</code>
+          {error.stack && <div className="mt-4 text-xs">{error.stack}</div>}
+        </pre>
+      </div>
+    </div>
+  )
+}
+
 export const Route = createRootRoute({
   component: RootComponent,
+  errorComponent: ErrorBoundary,
 })
 
 function RootComponent() {

@@ -1,10 +1,46 @@
+import { lazy, Suspense } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { MiniCalendarWidget } from '@/components/calendar/mini-calendar-widget'
 import { FinancialAmount } from '@/components/financial-amount'
-import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
+import { type BentoItem } from '@/components/ui/bento-grid'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Lazy loaded components
+const LazyMiniCalendarWidget = lazy(() => import('@/components/calendar/mini-calendar-widget').then(mod => ({ default: mod.MiniCalendarWidget })))
+const LazyBentoCard = lazy(() => import('@/components/ui/bento-grid').then(mod => ({ default: mod.BentoCard })))
+
+// Loading components
+const CalendarLoader = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-32" />
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-full" />
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+)
+
+const BentoLoader = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <Card key={i}>
+        <CardHeader>
+          <Skeleton className="h-6 w-24" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+)
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -31,7 +67,13 @@ function Dashboard() {
         if (error) {
           console.error('OAuth error:', error)
           sessionStorage.removeItem('oauth_hash')
-          navigate({ to: '/login', search: { error: 'Authentication failed' } })
+          navigate({ 
+            to: '/login', 
+            search: { 
+              redirect: '/dashboard',
+              error: 'Authentication failed' 
+            } 
+          })
           return
         }
 
@@ -49,6 +91,7 @@ function Dashboard() {
 
     handleOAuthCallback()
   }, [navigate])
+
   // Bento Grid items for enhanced dashboard sections
   const bentoItems: BentoItem[] = [
     {
@@ -135,11 +178,13 @@ function Dashboard() {
       {/* Bento Grid - Insights Inteligentes */}
       <div>
         <h2 className="text-2xl font-semibold mb-4">Insights Inteligentes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bentoItems.map((item) => (
-            <BentoCard key={item.id} item={item} />
-          ))}
-        </div>
+        <Suspense fallback={<BentoLoader />}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {bentoItems.map((item) => (
+              <LazyBentoCard key={item.id} item={item} />
+            ))}
+          </div>
+        </Suspense>
       </div>
 
       {/* Quick Actions - 3 Columns Layout */}
@@ -174,7 +219,7 @@ function Dashboard() {
                 <FinancialAmount amount={-85.2} />
               </div>
             </div>
-            <Link to="/transactions">
+            <Link to="/saldo">
               <Button variant="outline" className="w-full mt-4">
                 Ver Todas as Transações
               </Button>
@@ -183,7 +228,9 @@ function Dashboard() {
         </Card>
 
         {/* Coluna 2: Mini Calendário */}
-        <MiniCalendarWidget />
+        <Suspense fallback={<CalendarLoader />}>
+          <LazyMiniCalendarWidget />
+        </Suspense>
 
         {/* Coluna 3: Resumo Mensal */}
         <Card>

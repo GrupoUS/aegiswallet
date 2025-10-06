@@ -1,9 +1,38 @@
+import { lazy, Suspense } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
-import { PixTransfer } from '@/components/financial/PixTransfer'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
+
+// Lazy loaded components
+const LazyPixTransfer = lazy(() => import('@/components/financial/PixTransfer').then(mod => ({ default: mod.PixTransfer })))
+
+// Loading component for PixTransfer
+const PixTransferLoader = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-48" />
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <Skeleton className="h-10 w-full" />
+    </CardContent>
+  </Card>
+)
 
 export const Route = createFileRoute('/pix/transferir')({
   component: PixTransferPage,
@@ -15,7 +44,7 @@ function PixTransferPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: '/login', search: { redirect: '/pix/transferir' } })
+      navigate({ to: '/login', search: { redirect: '/pix/transferir', error: undefined } })
     }
   }, [isAuthenticated, isLoading, navigate])
 
@@ -44,7 +73,9 @@ function PixTransferPage() {
         </p>
       </div>
 
-      <PixTransfer />
+      <Suspense fallback={<PixTransferLoader />}>
+        <LazyPixTransfer />
+      </Suspense>
     </div>
   )
 }

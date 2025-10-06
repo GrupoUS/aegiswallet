@@ -1,10 +1,52 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Calendar, CheckCircle, Clock, FileText, Mic } from 'lucide-react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Lazy loading do componente BillsList
+const BillsList = lazy(() => import('./components/BillsList').then(module => ({
+  default: module.BillsList
+})))
+
+// Componente de loading para a lista de contas
+function BillsListLoader() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i} className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <div className="flex items-center gap-4 mt-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <Skeleton className="h-8 w-24 mb-2" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <Skeleton className="h-10 w-16" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
 
 export const Route = createFileRoute('/contas')({
   component: Contas,
@@ -83,10 +125,6 @@ function Contas() {
     },
   ]
 
-  const filteredBills = bills.filter((bill) => {
-    if (filter === 'all') return true
-    return bill.status === filter
-  })
 
   const pendingBills = bills.filter((b) => b.status === 'pending')
   const paidBills = bills.filter((b) => b.status === 'paid')
@@ -191,61 +229,9 @@ function Contas() {
       </div>
 
       {/* Bills List */}
-      <div className="space-y-4">
-        {filteredBills.map((bill) => {
-          const status = getBillStatus(bill.dueDate, bill.status)
-          const daysUntilDue = getDaysUntilDue(bill.dueDate)
-
-          return (
-            <Card key={bill.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="text-3xl">{bill.icon}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{bill.name}</h3>
-                        {bill.recurring && (
-                          <Badge variant="outline" className="text-xs">
-                            Recorrente
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Vencimento: {new Date(bill.dueDate).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                        {bill.status === 'pending' && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {daysUntilDue > 0
-                                ? `${daysUntilDue} dias restantes`
-                                : `${Math.abs(daysUntilDue)} dias atrasado`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <FinancialAmount amount={-bill.amount} size="lg" />
-                      <Badge className={`${status.color} mt-2`}>{status.text}</Badge>
-                    </div>
-                    {bill.status === 'pending' && <Button size="sm">Pagar</Button>}
-                    {bill.status === 'paid' && <CheckCircle className="w-6 h-6 text-green-500" />}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <Suspense fallback={<BillsListLoader />}>
+        <BillsList bills={bills} filter={filter} />
+      </Suspense>
 
       {/* Actions */}
       <div className="flex gap-4">

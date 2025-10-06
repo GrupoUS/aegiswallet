@@ -1,10 +1,11 @@
+import { lazy, Suspense } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Download, Filter } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { PixTransactionsTable } from '@/components/pix/PixTransactionsTable'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { DateRangePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,6 +16,32 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
+
+// Lazy loaded components
+const LazyPixTransactionsTable = lazy(() => import('@/components/pix/PixTransactionsTable').then(mod => ({ default: mod.PixTransactionsTable })))
+
+// Loading component for transactions table
+const TransactionsTableLoader = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-48" />
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+)
 
 export const Route = createFileRoute('/pix/historico')({
   component: PixHistoryPage,
@@ -30,7 +57,7 @@ function PixHistoryPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: '/login', search: { redirect: '/pix/historico' } })
+      navigate({ to: '/login', search: { redirect: '/pix/historico', error: undefined } })
     }
   }, [isAuthenticated, isLoading, navigate])
 
@@ -174,7 +201,9 @@ function PixHistoryPage() {
       </div>
 
       {/* Transactions Table */}
-      <PixTransactionsTable />
+      <Suspense fallback={<TransactionsTableLoader />}>
+        <LazyPixTransactionsTable />
+      </Suspense>
     </div>
   )
 }

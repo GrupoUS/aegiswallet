@@ -1,13 +1,25 @@
-import { RouterProvider } from '@tanstack/react-router'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'
-import { router } from './router'
-import '@/styles/accessibility.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { routeTree } from './routeTree.gen'
+// import '@/styles/accessibility.css' // Temporarily disabled due to PostCSS error
+
+// Create router instance
+const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+})
+
+// Register router for type safety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 function InnerApp() {
-  const auth = useAuth()
-  return <RouterProvider router={router} context={{ auth }} />
+  return <RouterProvider router={router} />
 }
 
 function App() {

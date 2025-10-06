@@ -4,7 +4,7 @@ import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const TransactionsRoute = createFileRoute('/transactions')({
+export const Route = createFileRoute('/transactions')({
   component: Transactions,
 })
 
@@ -119,5 +119,3 @@ function Transactions() {
     </div>
   )
 }
-
-export { TransactionsRoute }

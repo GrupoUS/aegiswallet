@@ -2,62 +2,107 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BentoCard, type BentoItem } from '@/components/ui/bento-grid'
 
-const DashboardRoute = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
 })
 
 function Dashboard() {
+  // Bento Grid items for enhanced dashboard sections
+  const bentoItems: BentoItem[] = [
+    {
+      id: 'automation-stats',
+      title: 'Automação Financeira',
+      description: 'Nível de automação das suas tarefas financeiras',
+      feature: 'chart',
+      statistic: {
+        label: 'Automação',
+        value: '87%',
+        start: 0,
+        end: 87,
+        suffix: '%',
+      },
+      className: 'col-span-1',
+    },
+    {
+      id: 'transactions-counter',
+      title: 'Transações Processadas',
+      description: 'Total de transações automatizadas este mês',
+      feature: 'counter',
+      statistic: {
+        value: '247',
+        label: 'Transações',
+        start: 0,
+        end: 247,
+        suffix: '',
+      },
+      className: 'col-span-1',
+    },
+    {
+      id: 'financial-metrics',
+      title: 'Métricas Financeiras',
+      description: 'Indicadores de desempenho do mês',
+      feature: 'metrics',
+      metrics: [
+        {
+          label: 'Taxa de Economia',
+          value: 42,
+          suffix: '%',
+          color: 'primary',
+        },
+        {
+          label: 'Tempo Economizado',
+          value: 18,
+          suffix: 'h',
+          color: 'accent',
+        },
+        {
+          label: 'Redução de Custos',
+          value: 15,
+          suffix: '%',
+          color: 'secondary',
+        },
+      ],
+      className: 'col-span-1',
+    },
+    {
+      id: 'voice-features',
+      title: 'Assistente de Voz',
+      description: 'Recursos disponíveis para comandos de voz',
+      feature: 'spotlight',
+      spotlightItems: [
+        'Pagamentos por voz',
+        'Consulta de saldo',
+        'Análise de gastos',
+        'Alertas inteligentes',
+      ],
+      className: 'col-span-1',
+    },
+  ]
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral das suas finanças</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">Insights inteligentes sobre suas finanças</p>
         </div>
-        <Button>Nova Transação</Button>
       </div>
 
-      {/* Cards Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Saldo Total</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialAmount amount={12450.67} size="lg" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Receitas do Mês</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialAmount amount={5230.45} size="lg" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Despesas do Mês</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialAmount amount={-3120.3} size="lg" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Investimentos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialAmount amount={8900.0} size="lg" />
-          </CardContent>
-        </Card>
+      {/* Bento Grid - Insights Inteligentes */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Insights Inteligentes</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {bentoItems.map((item) => (
+            <BentoCard key={item.id} item={item} />
+          ))}
+        </div>
       </div>
 
-      {/* Seções */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -124,5 +169,3 @@ function Dashboard() {
     </div>
   )
 }
-
-export { DashboardRoute }

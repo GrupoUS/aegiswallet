@@ -1,25 +1,27 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
 
-export default function Login() {
+export const Route = createFileRoute('/login')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: (search.redirect as string) || '/dashboard',
+  }),
+  component: LoginComponent,
+})
+
+function LoginComponent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn, signUp, signInWithGoogle, user } = useAuth()
+  const { signIn, signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard')
-    }
-  }, [user, navigate])
+  const { redirect } = Route.useSearch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,6 +35,9 @@ export default function Login() {
         setError(error.message)
       } else if (isSignUp) {
         setError('Verifique seu email para confirmar o cadastro!')
+      } else {
+        // Navigate to redirect URL after successful login
+        navigate({ to: redirect })
       }
     } catch {
       setError('Erro ao processar sua solicitação')
@@ -163,3 +168,5 @@ export default function Login() {
     </div>
   )
 }
+
+export default LoginComponent

@@ -1,12 +1,12 @@
 import { AuthError, Session, User } from '@supabase/supabase-js'
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null
   session: Session | null
-  loading: boolean
+  isLoading: boolean
+  isAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signInWithGoogle: () => Promise<void>
@@ -18,33 +18,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setIsAuthenticated(!!session?.user)
+      setIsLoading(false)
+    })
+
     // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
-      setLoading(false)
-
-      // Handle redirect after successful login
-      if (event === 'SIGNED_IN' && session) {
-        navigate('/dashboard')
-      }
-    })
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      setIsAuthenticated(!!session?.user)
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [navigate])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -81,12 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    navigate('/')
+  }
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, signIn, signUp, signInWithGoogle, signOut }}
+      value={{ user, session, isLoading, isAuthenticated, signIn, signUp, signInWithGoogle, signOut }}
     >
       {children}
     </AuthContext.Provider>

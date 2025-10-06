@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   CartesianGrid,
   Line,
@@ -18,19 +18,10 @@ import {
 } from "@/components/ui/chart"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-// Mock data - replace with real data from tRPC/Supabase
-const mockDailyData = [
-  { date: "2025-01-01", sent: 150.00, received: 280.50, total: 430.50 },
-  { date: "2025-01-02", sent: 220.00, received: 190.00, total: 410.00 },
-  { date: "2025-01-03", sent: 180.00, received: 350.00, total: 530.00 },
-  { date: "2025-01-04", sent: 300.00, received: 240.00, total: 540.00 },
-  { date: "2025-01-05", sent: 250.00, received: 420.00, total: 670.00 },
-  { date: "2025-01-06", sent: 190.00, received: 310.00, total: 500.00 },
-  { date: "2025-01-07", sent: 280.00, received: 380.00, total: 660.00 },
-]
+import { usePixTransactions } from "@/hooks/usePix"
+import { formatISO, subDays, subMonths, subYears, isAfter } from "date-fns"
 
 const chartConfig = {
   sent: {
@@ -57,9 +48,66 @@ const TIME_PERIODS = [
 export function PixChart() {
   const [selectedPeriod, setSelectedPeriod] = useState("7d")
   
+  // Fetch transactions
+  const { transactions, isLoading } = usePixTransactions()
+  
+  // Filter transactions by period
+  const filteredTransactions = useMemo(() => {
+    if (!transactions) return []
+    
+    const now = new Date()
+    let startDate: Date
+    
+    switch (selectedPeriod) {
+      case '24h':
+        startDate = subDays(now, 1)
+        break
+      case '7d':
+        startDate = subDays(now, 7)
+        break
+      case '30d':
+        startDate = subMonths(now, 1)
+        break
+      case '1y':
+        startDate = subYears(now, 1)
+        break
+      default:
+        startDate = subDays(now, 7)
+    }
+    
+    return transactions.filter(tx => {
+      const txDate = new Date(tx.createdAt)
+      return isAfter(txDate, startDate) && tx.status === 'completed'
+    })
+  }, [transactions, selectedPeriod])
+  
+  // Group transactions by date
+  const chartData = useMemo(() => {
+    const grouped = filteredTransactions.reduce((acc, tx) => {
+      const date = new Date(tx.createdAt).toISOString().split('T')[0]
+      if (!acc[date]) {
+        acc[date] = { date, sent: 0, received: 0 }
+      }
+      
+      if (tx.type === 'sent') {
+        acc[date].sent += tx.amount
+      } else if (tx.type === 'received') {
+        acc[date].received += tx.amount
+      }
+      
+      return acc
+    }, {} as Record<string, { date: string; sent: number; received: number }>)
+    
+    return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
+  }, [filteredTransactions])
+  
   // Calculate stats
-  const totalSent = mockDailyData.reduce((sum, d) => sum + d.sent, 0)
-  const totalReceived = mockDailyData.reduce((sum, d) => sum + d.received, 0)
+  const totalSent = filteredTransactions
+    .filter(tx => tx.type === 'sent')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+  const totalReceived = filteredTransactions
+    .filter(tx => tx.type === 'received')
+    .reduce((sum, tx) => sum + tx.amount, 0)
   const balance = totalReceived - totalSent
   const isPositive = balance >= 0
 
@@ -119,10 +167,21 @@ export function PixChart() {
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-[300px]">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+            <p>Nenhuma transação neste período</p>
+            <p className="text-xs mt-2">Faça uma transação PIX para ver o gráfico</p>
+          </div>
+        ) : (
+          <>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={mockDailyData}
+              data={chartData}
               margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -198,6 +257,8 @@ export function PixChart() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

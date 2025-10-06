@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -13,60 +13,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { Search, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react"
 import { maskPixKey } from "@/types/pix"
 import type { PixTransaction } from "@/types/pix"
 import { cn } from "@/lib/utils"
-
-// Mock data - replace with real data from tRPC/Supabase
-const mockTransactions: PixTransaction[] = [
-  {
-    id: "1",
-    userId: "user-1",
-    type: "sent",
-    status: "completed",
-    amount: 150.00,
-    description: "Almoço",
-    pixKey: "maria@email.com",
-    pixKeyType: "email",
-    recipientName: "Maria Silva",
-    transactionId: "TXN001",
-    endToEndId: "E12345678202501061000000001",
-    completedAt: "2025-01-06T10:30:00Z",
-    createdAt: "2025-01-06T10:30:00Z",
-    updatedAt: "2025-01-06T10:30:00Z",
-  },
-  {
-    id: "2",
-    userId: "user-1",
-    type: "received",
-    status: "completed",
-    amount: 280.50,
-    description: "Venda de produto",
-    pixKey: "+5511999999999",
-    pixKeyType: "phone",
-    recipientName: "João Santos",
-    transactionId: "TXN002",
-    endToEndId: "E12345678202501061100000002",
-    completedAt: "2025-01-06T11:15:00Z",
-    createdAt: "2025-01-06T11:15:00Z",
-    updatedAt: "2025-01-06T11:15:00Z",
-  },
-  {
-    id: "3",
-    userId: "user-1",
-    type: "sent",
-    status: "processing",
-    amount: 500.00,
-    description: "Pagamento de conta",
-    pixKey: "12345678000100",
-    pixKeyType: "cnpj",
-    recipientName: "Empresa ABC LTDA",
-    transactionId: "TXN003",
-    createdAt: "2025-01-06T14:00:00Z",
-    updatedAt: "2025-01-06T14:00:00Z",
-  },
-]
+import { usePixTransactions } from "@/hooks/usePix"
 
 function getStatusIcon(status: PixTransaction['status']) {
   switch (status) {
@@ -121,22 +72,18 @@ function getStatusBadge(status: PixTransaction['status']) {
 
 export function PixTransactionsTable() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [filteredTransactions, setFilteredTransactions] = useState(mockTransactions)
+  const { transactions, isLoading } = usePixTransactions()
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value)
-    if (!value.trim()) {
-      setFilteredTransactions(mockTransactions)
-      return
-    }
+  const filteredTransactions = useMemo(() => {
+    if (!transactions) return []
+    if (!searchTerm.trim()) return transactions
     
-    const filtered = mockTransactions.filter(tx => 
-      tx.description?.toLowerCase().includes(value.toLowerCase()) ||
-      tx.recipientName?.toLowerCase().includes(value.toLowerCase()) ||
-      tx.pixKey.toLowerCase().includes(value.toLowerCase())
+    return transactions.filter(tx => 
+      tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.recipientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.pixKey.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    setFilteredTransactions(filtered)
-  }
+  }, [transactions, searchTerm])
 
   return (
     <Card className={cn(
@@ -151,7 +98,7 @@ export function PixTransactionsTable() {
             <Input
               placeholder="Buscar transações..."
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -172,10 +119,16 @@ export function PixTransactionsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransactions.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+                  </TableCell>
+                </TableRow>
+              ) : filteredTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Nenhuma transação encontrada
+                    {searchTerm ? "Nenhuma transação encontrada" : "Você ainda não tem transações PIX"}
                   </TableCell>
                 </TableRow>
               ) : (

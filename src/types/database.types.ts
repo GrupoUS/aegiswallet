@@ -1,323 +1,64 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      users: {
-        Row: {
-          id: string
-          email: string
-          autonomy_level: number
-          voice_command_enabled: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          autonomy_level?: number
-          voice_command_enabled?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          autonomy_level?: number
-          voice_command_enabled?: boolean
-          updated_at?: string
-        }
-      }
-      bank_accounts: {
-        Row: {
-          id: string
-          user_id: string
-          belvo_account_id: string
-          institution_id: string
-          institution_name: string
-          account_mask: string
-          balance: number
-          is_active: boolean
-          last_sync: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          belvo_account_id: string
-          institution_id: string
-          institution_name: string
-          account_mask: string
-          balance?: number
-          is_active?: boolean
-          last_sync?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          belvo_account_id?: string
-          institution_id?: string
-          institution_name?: string
-          account_mask?: string
-          balance?: number
-          is_active?: boolean
-          last_sync?: string | null
-          updated_at?: string
-        }
-      }
-      transactions: {
-        Row: {
-          id: string
-          user_id: string
-          bank_account_id: string | null
-          amount: number
-          description: string
-          category: string | null
-          transaction_date: string
-          is_categorized: boolean
-          confidence_score: number | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          bank_account_id?: string | null
-          amount: number
-          description: string
-          category?: string | null
-          transaction_date: string
-          is_categorized?: boolean
-          confidence_score?: number | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          bank_account_id?: string | null
-          amount?: number
-          description?: string
-          category?: string | null
-          transaction_date?: string
-          is_categorized?: boolean
-          confidence_score?: number | null
-          updated_at?: string
-        }
-      }
-      voice_commands: {
-        Row: {
-          id: string
-          user_id: string
-          command: string
-          intent: string
-          confidence: number | null
-          response: string | null
-          processing_time_ms: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          command: string
-          intent: string
-          confidence?: number | null
-          response?: string | null
-          processing_time_ms?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          command?: string
-          intent?: string
-          confidence?: number | null
-          response?: string | null
-          processing_time_ms?: number | null
-        }
-      }
-      pix_transactions: {
-        Row: {
-          id: string
-          user_id: string
-          bank_account_id: string | null
-          key: string
-          key_type: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM'
-          amount: number
-          description: string | null
-          recipient_name: string | null
-          status: 'pending' | 'completed' | 'failed' | 'cancelled'
-          transaction_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          bank_account_id?: string | null
-          key: string
-          key_type: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM'
-          amount: number
-          description?: string | null
-          recipient_name?: string | null
-          status?: 'pending' | 'completed' | 'failed' | 'cancelled'
-          transaction_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          bank_account_id?: string | null
-          key?: string
-          key_type?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM'
-          amount?: number
-          description?: string | null
-          recipient_name?: string | null
-          status?: 'pending' | 'completed' | 'failed' | 'cancelled'
-          transaction_id?: string | null
-          updated_at?: string
-        }
-      }
-      bills: {
-        Row: {
-          id: string
-          user_id: string
-          bank_account_id: string | null
-          barcode: string
-          amount: number
-          description: string
-          due_date: string
-          status: 'pending' | 'paid' | 'overdue' | 'cancelled'
-          payment_date: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          bank_account_id?: string | null
-          barcode: string
-          amount: number
-          description: string
-          due_date: string
-          status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
-          payment_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          bank_account_id?: string | null
-          barcode?: string
-          amount?: number
-          description?: string
-          due_date?: string
-          status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
-          payment_date?: string | null
-          updated_at?: string
-        }
-      }
-      categories: {
-        Row: {
-          id: string
-          name: string
-          color: string
-          icon: string
-          is_system: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          color?: string
-          icon?: string
-          is_system?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          color?: string
-          icon?: string
-          is_system?: boolean
-        }
-      }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          operation_type: string
-          table_name: string
-          record_id: string | null
-          details: Json | null
-          ip_address: string | null
-          user_agent: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          operation_type: string
-          table_name: string
-          record_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          operation_type?: string
-          table_name?: string
-          record_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-        }
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      user_owns_bank_account: {
-        Args: {
-          bank_account_uuid: string
-        }
-        Returns: boolean
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
       }
-      user_owns_transaction: {
-        Args: {
-          transaction_uuid: string
-        }
-        Returns: boolean
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
       }
-      get_user_autonomy_level: {
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      log_sensitive_operation: {
-        Args: {
-          operation_type: string
-          table_name: string
-          record_id: string
-          details?: Json | null
-        }
-        Returns: void
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
-      cleanup_old_voice_commands: {
-        Args: Record<PropertyKey, never>
-        Returns: void
+      unaccent: {
+        Args: { "": string }
+        Returns: string
       }
-      cleanup_old_audit_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: void
+      unaccent_init: {
+        Args: { "": unknown }
+        Returns: unknown
       }
     }
     Enums: {
@@ -329,97 +70,125 @@ export interface Database {
   }
 }
 
-export interface AuthError {
-  message: string
-  status: number
-}
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export interface AuthResponse {
-  data: any | null
-  error: AuthError | null
-}
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export interface AuthTokenResponse {
-  access_token: string
-  refresh_token: string
-  expires_in: number
-  token_type: string
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
-
-export interface AuthUser {
-  id: string
-  app_metadata: {
-    provider?: string
-    [key: string]: any
-  }
-  user_metadata: {
-    [key: string]: any
-  }
-  aud: string
-  confirmation_sent_at?: string
-  recovery_sent_at?: string
-  email_change_sent_at?: string
-  new_email?: string
-  invited_at?: string
-  action_link?: string
-  email?: string
-  phone?: string
-  confirmed_at?: string
-  email_confirmed_at?: string
-  phone_confirmed_at?: string
-  last_sign_in_at?: string
-  app_metadata: {
-    provider?: string
-    [key: string]: any
-  }
-  user_metadata: {
-    [key: string]: any
-  }
-  identities: Array<{
-    identity_id: string
-    provider: string
-    last_sign_in_at: string
-    created_at: string
-    identity_data: {
-      [key: string]: any
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
     }
-  }>
-  factors?: Array<{
-    factor_id: string
-    friendly_name?: string
-    factor_type: string
-    status: string
-    created_at: string
-    updated_at: string
-  }>
-}
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-export interface AuthSession {
-  provider_token?: string
-  provider_refresh_token?: string
-  access_token: string
-  refresh_token?: string
-  expires_in?: number
-  expires_at?: number
-  token_type: string
-  user: AuthUser
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export interface SupabaseClientOptions {
-  auth?: {
-    autoRefreshToken?: boolean
-    persistSession?: boolean
-    detectSessionInUrl?: boolean
-    flowType?: 'implicit' | 'pkce'
-    debug?: boolean
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
   }
-  global?: {
-    headers?: Record<string, string>
-  }
-  db?: {
-    schema?: string
-  }
-  realtime?: {
-    params?: Record<string, string>
-  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

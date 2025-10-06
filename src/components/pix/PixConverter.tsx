@@ -6,14 +6,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Calculator, Copy, Send, QrCode } from "lucide-react"
+import { Calculator, Copy, Send, QrCode, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useCreatePixTransaction, useCreatePixQRCode } from "@/hooks/usePix"
+import { useNavigate } from "@tanstack/react-router"
 
 export function PixConverter() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("transferir")
   const [amount, setAmount] = useState("")
   const [description, setDescription] = useState("")
+  const [pixKey, setPixKey] = useState("")
+  
+  const { mutate: createTransaction, isPending: isCreatingTransaction } = useCreatePixTransaction()
+  const { mutate: createQRCode, isPending: isCreatingQRCode, data: qrCodeData } = useCreatePixQRCode()
 
   const formatCurrency = (value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '')
@@ -31,6 +38,50 @@ export function PixConverter() {
     const numericAmount = amount.replace(/[^\d,]/g, '').replace(',', '.')
     navigator.clipboard.writeText(numericAmount)
     toast.success("Valor copiado!")
+  }
+
+  const getNumericAmount = () => {
+    const cleanValue = amount.replace(/[^\d,]/g, '').replace(',', '.')
+    return Number(cleanValue)
+  }
+
+  const handleSendPix = () => {
+    const numericAmount = getNumericAmount()
+    
+    if (!pixKey || !pixKey.trim()) {
+      toast.error("Informe a chave PIX do destinatário")
+      return
+    }
+    
+    if (numericAmount <= 0) {
+      toast.error("Informe um valor válido")
+      return
+    }
+
+    createTransaction({
+      pixKey,
+      amount: numericAmount,
+      description: description || undefined,
+    })
+    
+    // Reset form
+    setAmount("")
+    setDescription("")
+    setPixKey("")
+  }
+
+  const handleGenerateQRCode = () => {
+    const numericAmount = getNumericAmount()
+    
+    if (numericAmount <= 0) {
+      toast.error("Informe um valor válido")
+      return
+    }
+
+    createQRCode({
+      amount: numericAmount,
+      description: description || undefined,
+    })
   }
 
   return (
@@ -61,6 +112,18 @@ export function PixConverter() {
           
           <TabsContent value="transferir" className="space-y-4 mt-4">
             {/* Transferir content */}
+        {/* PIX Key Input */}
+        <div className="space-y-2">
+          <Label htmlFor="converter-pix-key">Chave PIX do Destinatário</Label>
+          <Input
+            id="converter-pix-key"
+            type="text"
+            placeholder="Email, CPF, telefone ou chave aleatória"
+            value={pixKey}
+            onChange={(e) => setPixKey(e.target.value)}
+          />
+        </div>
+        
         {/* Amount Input */}
         <div className="space-y-2">
           <Label htmlFor="converter-amount">Valor</Label>
@@ -142,6 +205,26 @@ export function PixConverter() {
           </div>
         )}
 
+        {/* Send Button */}
+        <Button 
+          className="w-full" 
+          size="lg"
+          onClick={handleSendPix}
+          disabled={isCreatingTransaction || !amount || !pixKey}
+        >
+          {isCreatingTransaction ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              Enviar PIX
+            </>
+          )}
+        </Button>
+
         {/* Info */}
         <div className="text-xs text-muted-foreground text-center">
           Transferências PIX são instantâneas e disponíveis 24/7
@@ -150,10 +233,92 @@ export function PixConverter() {
           
           <TabsContent value="receber" className="space-y-4 mt-4">
             {/* Receber content */}
-            <div className="text-center py-8 text-muted-foreground">
-              <QrCode className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>Gerar QR Code para receber PIX</p>
-              <p className="text-xs mt-2">Disponível em breve</p>
+            {/* Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="receive-amount">Valor a Receber</Label>
+              <div className="relative">
+                <Input
+                  id="receive-amount"
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className="text-2xl font-bold"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="receive-description">Descrição (opcional)</Label>
+              <Input
+                id="receive-description"
+                type="text"
+                placeholder="Para que é este pagamento?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            {/* Generate QR Code Button */}
+            <Button 
+              className="w-full" 
+              size="lg"
+              variant="outline"
+              onClick={handleGenerateQRCode}
+              disabled={isCreatingQRCode || !amount}
+            >
+              {isCreatingQRCode ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Gerar QR Code
+                </>
+              )}
+            </Button>
+
+            {/* QR Code Display */}
+            {qrCodeData && (
+              <div className={cn(
+                "relative p-6 rounded-lg space-y-4",
+                "bg-gradient-to-br from-green-50 to-teal-50",
+                "dark:from-green-950/20 dark:to-teal-950/20",
+                "border border-green-200/50 dark:border-green-800/50",
+                "text-center"
+              )}>
+                <div className="text-sm font-medium text-muted-foreground">
+                  QR Code PIX Gerado
+                </div>
+                <div className="bg-white p-4 rounded-lg inline-block">
+                  {/* QR Code placeholder - integrate with actual QR library */}
+                  <QrCode className="w-32 h-32 text-gray-800" />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Escaneie este código para realizar o pagamento
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (qrCodeData.pixCopyPaste) {
+                      navigator.clipboard.writeText(qrCodeData.pixCopyPaste)
+                      toast.success("Código PIX copiado!")
+                    }
+                  }}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar código PIX
+                </Button>
+              </div>
+            )}
+
+            {/* Info */}
+            <div className="text-xs text-muted-foreground text-center">
+              O QR Code expira em 15 minutos
             </div>
           </TabsContent>
         </Tabs>

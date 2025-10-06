@@ -3,43 +3,10 @@
 import * as React from "react"
 import { Link } from "@tanstack/react-router"
 import { Sidebar, SidebarBody } from "@/components/ui/sidebar"
-import { CreditCard, User, Phone, Mail, Hash, Star } from "lucide-react"
+import { CreditCard, User, Phone, Mail, Hash, Star, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PixKey } from "@/types/pix"
-
-// Mock data - replace with real data from tRPC/Supabase
-const mockPixKeys: PixKey[] = [
-  {
-    id: "1",
-    type: "email",
-    value: "usuario@exemplo.com",
-    label: "Email Principal",
-    isFavorite: true,
-    userId: "user-1",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    type: "phone",
-    value: "+5511999999999",
-    label: "Celular",
-    isFavorite: true,
-    userId: "user-1",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    type: "cpf",
-    value: "12345678900",
-    label: "CPF",
-    isFavorite: false,
-    userId: "user-1",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-]
+import { usePixFavorites } from "@/hooks/usePix"
 
 function getPixKeyIcon(type: PixKey['type']) {
   switch (type) {
@@ -58,7 +25,7 @@ function getPixKeyIcon(type: PixKey['type']) {
 }
 
 export function PixSidebar({ open, setOpen }: { open: boolean; setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
-  const favoriteKeys = mockPixKeys.filter(key => key.isFavorite)
+  const { favorites: favoriteKeys, isLoading } = usePixFavorites()
 
   return (
     <Sidebar open={open} setOpen={setOpen}>
@@ -73,7 +40,16 @@ export function PixSidebar({ open, setOpen }: { open: boolean; setOpen: React.Di
           
           {/* Favorite keys */}
           <div className="flex flex-col gap-4">
-            {favoriteKeys.map((pixKey) => {
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : favoriteKeys.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                {open && "Nenhuma chave favorita"}
+              </div>
+            ) : (
+              favoriteKeys.map((pixKey) => {
               const Icon = getPixKeyIcon(pixKey.type)
               return (
                 <Link
@@ -104,8 +80,8 @@ export function PixSidebar({ open, setOpen }: { open: boolean; setOpen: React.Di
                     <span className="text-sm font-medium truncate">{pixKey.label || pixKey.value}</span>
                   )}
                 </Link>
-              )
-            })}
+              })
+            )}
             
             {/* Add favorite button */}
             <button

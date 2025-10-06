@@ -11,6 +11,7 @@ export const Route = createFileRoute('/saldo')({
 
 function Saldo() {
   const [isListening, setIsListening] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   const handleVoiceCommand = () => {
     setIsListening(!isListening)
@@ -206,6 +207,138 @@ function Saldo() {
             <p className="text-xs text-muted-foreground">Retirar dinheiro</p>
           </div>
         </Button>
+      </div>
+
+      {/* Transactions Management Section */}
+      <div className="space-y-6 pt-8 border-t-2 border-border/50">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-semibold">Gerenciar Transações</h2>
+            <p className="text-muted-foreground">Adicione e visualize todas as suas transações</p>
+          </div>
+          <Button onClick={() => setShowCreateForm(!showCreateForm)} withGradient>
+            {showCreateForm ? 'Cancelar' : 'Nova Transação'}
+          </Button>
+        </div>
+
+        {/* Create Transaction Form */}
+        {showCreateForm && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Nova Transação</CardTitle>
+              <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Descrição</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded-md bg-background"
+                    placeholder="Ex: Supermercado"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Valor</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full p-2 border rounded-md bg-background"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Categoria</label>
+                  <select className="w-full p-2 border rounded-md bg-background">
+                    <option value="">Selecione...</option>
+                    <option value="food">Alimentação</option>
+                    <option value="transport">Transporte</option>
+                    <option value="bills">Contas</option>
+                    <option value="salary">Salário</option>
+                    <option value="other">Outros</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Data</label>
+                  <input type="date" className="w-full p-2 border rounded-md bg-background" />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button withGradient>Salvar</Button>
+                <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Transactions List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico Completo de Transações</CardTitle>
+            <CardDescription>Todas as suas movimentações financeiras</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Mock data - will be replaced with real data */}
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-3">
+                  <TrendingDown className="w-5 h-5 text-red-500" />
+                  <div>
+                    <p className="font-medium">Supermercado</p>
+                    <p className="text-sm text-muted-foreground">Hoje • Alimentação</p>
+                  </div>
+                </div>
+                <FinancialAmount amount={-125.67} />
+              </div>
+
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="font-medium">Salário</p>
+                    <p className="text-sm text-muted-foreground">3 dias atrás • Salário</p>
+                  </div>
+                </div>
+                <FinancialAmount amount={3500.0} />
+              </div>
+
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-3">
+                  <TrendingDown className="w-5 h-5 text-red-500" />
+                  <div>
+                    <p className="font-medium">Transporte</p>
+                    <p className="text-sm text-muted-foreground">5 dias atrás • Transporte</p>
+                  </div>
+                </div>
+                <FinancialAmount amount={-50.0} />
+              </div>
+
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-3">
+                  <TrendingDown className="w-5 h-5 text-red-500" />
+                  <div>
+                    <p className="font-medium">Restaurante</p>
+                    <p className="text-sm text-muted-foreground">1 semana atrás • Alimentação</p>
+                  </div>
+                </div>
+                <FinancialAmount amount={-85.2} />
+              </div>
+
+              <div className="flex justify-between items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="font-medium">Freelance</p>
+                    <p className="text-sm text-muted-foreground">2 semanas atrás • Salário</p>
+                  </div>
+                </div>
+                <FinancialAmount amount={1200.0} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

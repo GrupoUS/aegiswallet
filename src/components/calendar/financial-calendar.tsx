@@ -34,7 +34,7 @@ function toCalendarEvent(event: FinancialEvent): CalendarEvent {
 }
 
 export function FinancialCalendar() {
-  const { events: financialEvents } = useCalendar()
+  const { events: financialEvents, addEvent, updateEvent } = useCalendar()
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
 
@@ -44,8 +44,42 @@ export function FinancialCalendar() {
     [financialEvents]
   )
 
+  const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>) => {
+    // Converter CalendarEvent para FinancialEvent
+    const financialEvent: Partial<FinancialEvent> = {
+      title: calendarEvent.title!,
+      description: calendarEvent.description,
+      start: calendarEvent.start!,
+      end: calendarEvent.end!,
+      color: calendarEvent.color!,
+      allDay: calendarEvent.allDay,
+      type: 'scheduled', // Default type
+      amount: 0, // Default amount
+      status: 'scheduled',
+      icon: '📅',
+    }
+
+    await addEvent(financialEvent as FinancialEvent)
+  }
+
+  const handleEventUpdate = async (calendarEvent: CalendarEvent) => {
+    // Encontrar o evento financeiro original e atualizar
+    const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id)
+    if (financialEvent) {
+      await updateEvent({
+        ...financialEvent,
+        title: calendarEvent.title,
+        description: calendarEvent.description,
+        start: calendarEvent.start,
+        end: calendarEvent.end,
+        color: calendarEvent.color,
+        allDay: calendarEvent.allDay,
+      })
+    }
+  }
+
   const handleEventEdit = (calendarEvent: CalendarEvent) => {
-    // Encontrar o evento financeiro original
+    // Encontrar o evento financeiro original para mostrar detalhes completos
     const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id)
     if (financialEvent) {
       setSelectedEvent(financialEvent)
@@ -53,16 +87,12 @@ export function FinancialCalendar() {
     }
   }
 
-  const handleEventUpdate = (calendarEvent: CalendarEvent) => {
-    // TODO: Implementar atualização de horário via drag-and-drop
-    console.log('Event updated:', calendarEvent)
-  }
-
   return (
     <>
       <EventCalendar
         events={calendarEvents}
         initialView="week"
+        onEventAdd={handleEventAdd}
         onEventUpdate={handleEventUpdate}
         onEventEdit={handleEventEdit}
       />

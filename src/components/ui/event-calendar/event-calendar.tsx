@@ -88,7 +88,6 @@ export function EventCalendar({
           <DayView
             currentDate={currentDate}
             events={events}
-            onEventUpdate={onEventUpdate}
             onEventEdit={onEventEdit || handleEditEvent}
           />
         )}

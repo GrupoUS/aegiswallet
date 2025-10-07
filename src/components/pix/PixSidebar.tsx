@@ -3,7 +3,7 @@
 import { Link } from '@tanstack/react-router'
 import { CreditCard, Hash, Loader2, Mail, Phone, Star, User } from 'lucide-react'
 import * as React from 'react'
-import { Sidebar, SidebarBody } from '@/components/ui/sidebar'
+import { Sidebar, SidebarBody, SidebarProvider } from '@/components/ui/sidebar'
 import { usePixFavorites } from '@/hooks/usePix'
 import { cn } from '@/lib/utils'
 import type { PixKey } from '@/types/pix'
@@ -145,7 +145,8 @@ export const PixSidebar = React.memo(function PixSidebar({
   }, [favoriteKeys, isLoading, open])
 
   return (
-    <Sidebar open={open} setOpen={setOpen}>
+    <SidebarProvider open={open} onOpenChange={setOpen}>
+      <Sidebar>
       <SidebarBody className="justify-between gap-4">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {/* Logo/Header */}
@@ -160,6 +161,7 @@ export const PixSidebar = React.memo(function PixSidebar({
           </div>
         </div>
       </SidebarBody>
-    </Sidebar>
+      </Sidebar>
+    </SidebarProvider>
   )
 })

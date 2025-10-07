@@ -132,7 +132,6 @@ function Contas() {
   const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0)
   const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0)
 
-
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}

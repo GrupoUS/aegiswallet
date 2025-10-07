@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { routeTree } from './routeTree.gen'
 
-// import '@/styles/accessibility.css' // Temporarily disabled due to PostCSS error
+import '@/styles/accessibility.css'
 
 // Handle OAuth hash fragments before router initialization
 const handleOAuthHash = () => {

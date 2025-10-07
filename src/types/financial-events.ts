@@ -11,13 +11,20 @@ export type FinancialEventType =
   | 'transfer' // Transferência
 
 export type EventColor =
-  | 'emerald' // Verde - Entradas
-  | 'rose' // Vermelho - Saídas
-  | 'orange' // Laranja - Contas
-  | 'blue' // Azul - Agendamentos
-  | 'violet' // Roxo - Transferências
-  | 'cyan' // Azul claro - Novo
-  | 'green' // Verde escuro - Novo
+  | 'emerald'
+  | 'rose'
+  | 'orange'
+  | 'blue'
+  | 'violet'
+  | 'indigo'
+  | 'amber'
+  | 'red'
+  | 'green'
+  | 'yellow'
+  | 'purple'
+  | 'pink'
+  | 'teal'
+  | 'cyan'
 
 export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled'
 

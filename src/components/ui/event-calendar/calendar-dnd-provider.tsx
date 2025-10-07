@@ -142,8 +142,15 @@ export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProv
             end: newEnd,
           }
 
+          // Convert CalendarEvent to FinancialEvent format for database
+          const financialEventUpdate = {
+            start: newStart,
+            end: newEnd,
+            color: updatedEvent.color as any, // Type assertion for compatibility
+          }
+
           // Persist to Supabase
-          await updateEvent(draggedEvent.id, updatedEvent)
+          await updateEvent(draggedEvent.id, financialEventUpdate)
 
           // Call the original callback for local state updates
           if (onEventUpdate) {

@@ -1,7 +1,7 @@
 import { initTRPC } from '@trpc/server'
 import superjson from 'superjson'
-import { router, publicProcedure, protectedProcedure, type Meta } from './trpc-helpers'
 import { Context } from './context'
+import { type Meta, router } from './trpc-helpers'
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,

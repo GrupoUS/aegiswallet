@@ -1,9 +1,8 @@
 import { Slot } from '@radix-ui/react-slot'
+import { Link, useLocation } from '@tanstack/react-router'
 import { cva, VariantProps } from 'class-variance-authority'
 import { PanelLeft } from 'lucide-react'
 import * as React from 'react'
-import { Link } from '@tanstack/react-router'
-import { useLocation } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -734,9 +733,7 @@ const SidebarLink = React.forwardRef<
       )}
       {...props}
     >
-      {link.icon && (
-        <span className="h-5 w-5 flex-shrink-0">{link.icon}</span>
-      )}
+      {link.icon && <span className="h-5 w-5 flex-shrink-0">{link.icon}</span>}
       <span className="truncate">{link.label}</span>
     </Link>
   )

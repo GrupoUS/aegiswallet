@@ -38,7 +38,7 @@ interface FinancialEventRow {
 function rowToEvent(row: FinancialEventRow): FinancialEvent {
   const eventDate = new Date(row.event_date)
   const dueDate = row.due_date ? new Date(row.due_date) : eventDate
-  
+
   return {
     id: row.id,
     title: row.title,

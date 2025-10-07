@@ -276,7 +276,6 @@ export function formatPercentage(value: number, decimals = 1): string {
   return `${formatted}%`
 }
 
-
 // ============================================================================
 // Document Formatting (CPF, CNPJ, etc)
 // ============================================================================

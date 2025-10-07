@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LineChart, Mic, PiggyBank, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
-import { Suspense, lazy, useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,8 +15,12 @@ function TransactionFormLoader() {
   return (
     <Card className="hover:shadow-lg transition-all duration-300 border-primary/20">
       <CardHeader>
-        <CardTitle><Skeleton className="h-6 w-32" /></CardTitle>
-        <CardDescription><Skeleton className="h-4 w-1/2" /></CardDescription>
+        <CardTitle>
+          <Skeleton className="h-6 w-32" />
+        </CardTitle>
+        <CardDescription>
+          <Skeleton className="h-4 w-1/2" />
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-col-1 md:grid-cols-2 gap-4">
@@ -50,8 +54,12 @@ function TransactionsListLoader() {
   return (
     <Card className="hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
       <CardHeader>
-        <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-        <CardDescription><Skeleton className="h-4 w-1/3" /></CardDescription>
+        <CardTitle>
+          <Skeleton className="h-6 w-1/2" />
+        </CardTitle>
+        <CardDescription>
+          <Skeleton className="h-4 w-1/3" />
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -301,48 +309,50 @@ function Saldo() {
 
         {/* All Transactions List */}
         <Suspense fallback={<TransactionsListLoader />}>
-          <TransactionsList transactions={[
-            {
-              id: 1,
-              description: 'Supermercado',
-              amount: -125.67,
-              date: 'Hoje',
-              type: 'expense',
-              category: 'Alimentação'
-            },
-            {
-              id: 2,
-              description: 'Salário',
-              amount: 3500.0,
-              date: '3 dias atrás',
-              type: 'income',
-              category: 'Salário'
-            },
-            {
-              id: 3,
-              description: 'Transporte',
-              amount: -50.0,
-              date: '5 dias atrás',
-              type: 'expense',
-              category: 'Transporte'
-            },
-            {
-              id: 4,
-              description: 'Restaurante',
-              amount: -85.2,
-              date: '1 semana atrás',
-              type: 'expense',
-              category: 'Alimentação'
-            },
-            {
-              id: 5,
-              description: 'Freelance',
-              amount: 1200.0,
-              date: '2 semanas atrás',
-              type: 'income',
-              category: 'Salário'
-            }
-          ]} />
+          <TransactionsList
+            transactions={[
+              {
+                id: 1,
+                description: 'Supermercado',
+                amount: -125.67,
+                date: 'Hoje',
+                type: 'expense',
+                category: 'Alimentação',
+              },
+              {
+                id: 2,
+                description: 'Salário',
+                amount: 3500.0,
+                date: '3 dias atrás',
+                type: 'income',
+                category: 'Salário',
+              },
+              {
+                id: 3,
+                description: 'Transporte',
+                amount: -50.0,
+                date: '5 dias atrás',
+                type: 'expense',
+                category: 'Transporte',
+              },
+              {
+                id: 4,
+                description: 'Restaurante',
+                amount: -85.2,
+                date: '1 semana atrás',
+                type: 'expense',
+                category: 'Alimentação',
+              },
+              {
+                id: 5,
+                description: 'Freelance',
+                amount: 1200.0,
+                date: '2 semanas atrás',
+                type: 'income',
+                category: 'Salário',
+              },
+            ]}
+          />
         </Suspense>
       </div>
     </div>

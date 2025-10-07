@@ -1,11 +1,9 @@
-import { lazy, Suspense } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Download, Filter } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { DateRangePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,10 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Lazy loaded components
-const LazyPixTransactionsTable = lazy(() => import('@/components/pix/PixTransactionsTable').then(mod => ({ default: mod.PixTransactionsTable })))
+const LazyPixTransactionsTable = lazy(() =>
+  import('@/components/pix/PixTransactionsTable').then((mod) => ({
+    default: mod.PixTransactionsTable,
+  }))
+)
 
 // Loading component for transactions table
 const TransactionsTableLoader = () => (

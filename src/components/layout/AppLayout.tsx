@@ -8,7 +8,7 @@ import {
   IconUserBolt,
 } from '@tabler/icons-react'
 import { Link, Outlet } from '@tanstack/react-router'
-import { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 import { Button } from '@/components/ui/button'
@@ -16,39 +16,61 @@ import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
-export function AppLayout() {
+export const AppLayout = React.memo(function AppLayout() {
   const [open, setOpen] = useState(false)
   const { user, signOut } = useAuth()
   const { showSettings, setShowSettings } = useAccessibility()
 
-  const links = [
-    {
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: <IconHome className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-    },
-    {
-      label: 'Transactions',
-      href: '/transactions',
-      icon: (
-        <IconReceipt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: 'Profile',
-      href: '/profile',
-      icon: (
-        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: 'Settings',
-      href: '/settings',
-      icon: (
-        <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-  ]
+  // Memoizar links de navegação para evitar recriação a cada render
+  const links = useMemo(
+    () => [
+      {
+        label: 'Dashboard',
+        href: '/dashboard',
+        icon: <IconHome className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: 'Transactions',
+        href: '/transactions',
+        icon: (
+          <IconReceipt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        ),
+      },
+      {
+        label: 'Profile',
+        href: '/profile',
+        icon: (
+          <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        ),
+      },
+      {
+        label: 'Settings',
+        href: '/settings',
+        icon: (
+          <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        ),
+      },
+    ],
+    []
+  )
+
+  // Memoizar URL do avatar para evitar recriação
+  const avatarUrl = useMemo(() => {
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
+  }, [user?.email])
+
+  // Otimizar manipuladores com useCallback
+  const handleToggleSidebar = useCallback((newOpen: boolean | ((prev: boolean) => boolean)) => {
+    setOpen(newOpen)
+  }, [])
+
+  const handleToggleAccessibility = useCallback(() => {
+    setShowSettings(!showSettings)
+  }, [showSettings, setShowSettings])
+
+  const handleSignOut = useCallback(() => {
+    signOut()
+  }, [signOut])
 
   return (
     <div
@@ -57,7 +79,7 @@ export function AppLayout() {
         'h-screen'
       )}
     >
-      <Sidebar open={open} setOpen={setOpen}>
+      <Sidebar open={open} setOpen={handleToggleSidebar}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {open ? <Logo /> : <LogoIcon />}
@@ -82,7 +104,7 @@ export function AppLayout() {
             <Button
               variant="ghost"
               className="w-full justify-start gap-2 mb-4"
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={handleToggleAccessibility}
             >
               <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
               {open && (
@@ -98,7 +120,7 @@ export function AppLayout() {
                 href: '#',
                 icon: (
                   <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
+                    src={avatarUrl}
                     className="h-7 w-7 flex-shrink-0 rounded-full"
                     width={50}
                     height={50}
@@ -107,7 +129,11 @@ export function AppLayout() {
                 ),
               }}
             />
-            <Button onClick={signOut} variant="ghost" className="w-full justify-start gap-2 mt-2">
+            <Button
+              onClick={handleSignOut}
+              variant="ghost"
+              className="w-full justify-start gap-2 mt-2"
+            >
               <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
               {open && <span>Logout</span>}
             </Button>
@@ -121,9 +147,9 @@ export function AppLayout() {
       </main>
     </div>
   )
-}
+})
 
-export const Logo = () => {
+export const Logo = React.memo(function Logo() {
   return (
     <Link
       to="/dashboard"
@@ -133,9 +159,9 @@ export const Logo = () => {
       <span className="font-medium text-black dark:text-white whitespace-pre">AegisWallet</span>
     </Link>
   )
-}
+})
 
-export const LogoIcon = () => {
+export const LogoIcon = React.memo(function LogoIcon() {
   return (
     <Link
       to="/dashboard"
@@ -144,4 +170,4 @@ export const LogoIcon = () => {
       <IconBrandTabler className="h-5 w-5 flex-shrink-0 text-black dark:text-white" />
     </Link>
   )
-}
+})

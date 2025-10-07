@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Calendar, CheckCircle, Clock, FileText, Mic } from 'lucide-react'
+import { FileText, Mic } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { Badge } from '@/components/ui/badge'
@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Lazy loading do componente BillsList
-const BillsList = lazy(() => import('./components/BillsList').then(module => ({
-  default: module.BillsList
-})))
+const BillsList = lazy(() =>
+  import('./components/BillsList').then((module) => ({
+    default: module.BillsList,
+  }))
+)
 
 // Componente de loading para a lista de contas
 function BillsListLoader() {
@@ -125,7 +127,6 @@ function Contas() {
     },
   ]
 
-
   const pendingBills = bills.filter((b) => b.status === 'pending')
   const paidBills = bills.filter((b) => b.status === 'paid')
   const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0)
@@ -139,7 +140,7 @@ function Contas() {
     return diffDays
   }
 
-  const getBillStatus = (dueDate: string, status: string) => {
+  const _getBillStatus = (dueDate: string, status: string) => {
     if (status === 'paid') return { color: 'bg-green-500', text: 'Pago' }
     const days = getDaysUntilDue(dueDate)
     if (days < 0) return { color: 'bg-red-500', text: 'Atrasado' }

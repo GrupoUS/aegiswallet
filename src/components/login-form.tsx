@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ export function LoginForm({
   onSubmit,
   onGoogleSignIn,
   loading: externalLoading,
-  error: externalError
+  error: externalError,
 }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -83,10 +83,10 @@ export function LoginForm({
               : 'Entre com suas credenciais para acessar sua conta'}
           </CardDescription>
         </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit}>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
-          <div className="grid gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -123,13 +123,13 @@ export function LoginForm({
                 />
               </div>
 
-          {error && (
+              {error && (
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm animate-in fade-in-50 slide-in-from-top-1">
                   {error}
                 </div>
               )}
 
-          <Button
+              <Button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-primary hover:bg-primary/90 transition-all"

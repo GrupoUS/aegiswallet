@@ -1,14 +1,15 @@
-import { lazy, Suspense } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Lazy loaded components
-const LazyPixTransfer = lazy(() => import('@/components/financial/PixTransfer').then(mod => ({ default: mod.PixTransfer })))
+const LazyPixTransfer = lazy(() =>
+  import('@/components/financial/PixTransfer').then((mod) => ({ default: mod.PixTransfer }))
+)
 
 // Loading component for PixTransfer
 const PixTransferLoader = () => (

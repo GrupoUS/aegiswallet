@@ -2,7 +2,7 @@
 
 import { isAfter, subDays, subMonths, subYears } from 'date-fns'
 import { Loader2, TrendingDown, TrendingUp } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -38,8 +38,13 @@ const TIME_PERIODS = [
   { value: '1y', label: '1a' },
 ]
 
-export function PixChart() {
+export const PixChart = React.memo(function PixChart() {
   const [selectedPeriod, setSelectedPeriod] = useState('7d')
+
+  // Otimizar manipulador de período com useCallback
+  const handlePeriodChange = useCallback((value: string) => {
+    setSelectedPeriod(value)
+  }, [])
 
   // Fetch transactions
   const { transactions, isLoading } = usePixTransactions()
@@ -97,15 +102,27 @@ export function PixChart() {
     return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
   }, [filteredTransactions])
 
-  // Calculate stats
-  const totalSent = filteredTransactions
-    .filter((tx) => tx.type === 'sent')
-    .reduce((sum, tx) => sum + tx.amount, 0)
-  const totalReceived = filteredTransactions
-    .filter((tx) => tx.type === 'received')
-    .reduce((sum, tx) => sum + tx.amount, 0)
-  const balance = totalReceived - totalSent
-  const isPositive = balance >= 0
+  // Otimizar cálculo de estatísticas com useMemo
+  const stats = useMemo(() => {
+    const totalSent = filteredTransactions
+      .filter((tx) => tx.type === 'sent')
+      .reduce((sum, tx) => sum + tx.amount, 0)
+    const totalReceived = filteredTransactions
+      .filter((tx) => tx.type === 'received')
+      .reduce((sum, tx) => sum + tx.amount, 0)
+    const balance = totalReceived - totalSent
+    const isPositive = balance >= 0
+
+    return {
+      totalSent,
+      totalReceived,
+      balance,
+      isPositive,
+      formattedBalance: balance.toFixed(2).replace('.', ','),
+      formattedTotalSent: totalSent.toFixed(2).replace('.', ','),
+      formattedTotalReceived: totalReceived.toFixed(2).replace('.', ','),
+    }
+  }, [filteredTransactions])
 
   return (
     <Card
@@ -121,24 +138,24 @@ export function PixChart() {
             <CardTitle>Transações PIX</CardTitle>
             <div className="font-bold text-3xl mb-1">
               <span className="text-xl text-muted-foreground">R$</span>
-              {balance.toFixed(2).replace('.', ',')}
+              {stats.formattedBalance}
             </div>
             <div
-              className={`text-sm font-medium flex items-center gap-1 ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}
+              className={`text-sm font-medium flex items-center gap-1 ${stats.isPositive ? 'text-emerald-500' : 'text-red-500'}`}
             >
-              {isPositive ? (
+              {stats.isPositive ? (
                 <TrendingUp className="w-4 h-4" />
               ) : (
                 <TrendingDown className="w-4 h-4" />
               )}
-              {isPositive ? '+' : ''}
-              {balance.toFixed(2).replace('.', ',')} no período
+              {stats.isPositive ? '+' : ''}
+              {stats.formattedBalance} no período
             </div>
           </div>
           <div className="bg-muted dark:bg-background/50 inline-flex h-8 rounded-full p-1 shrink-0">
             <RadioGroup
               value={selectedPeriod}
-              onValueChange={setSelectedPeriod}
+              onValueChange={handlePeriodChange}
               className="flex gap-1"
             >
               {TIME_PERIODS.map((period) => (
@@ -245,7 +262,7 @@ export function PixChart() {
               >
                 <div className="text-xs text-muted-foreground uppercase tracking-wide">Enviado</div>
                 <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                  R$ {totalSent.toFixed(2).replace('.', ',')}
+                  R$ {stats.formattedTotalSent}
                 </div>
               </div>
               <div
@@ -261,7 +278,7 @@ export function PixChart() {
                   Recebido
                 </div>
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  R$ {totalReceived.toFixed(2).replace('.', ',')}
+                  R$ {stats.formattedTotalReceived}
                 </div>
               </div>
             </div>
@@ -270,4 +287,4 @@ export function PixChart() {
       </CardContent>
     </Card>
   )
-}
+})

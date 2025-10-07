@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -55,7 +55,9 @@ function PixKeysListLoader() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle><Skeleton className="h-6 w-32" /></CardTitle>
+        <CardTitle>
+          <Skeleton className="h-6 w-32" />
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {[1, 2, 3].map((i) => (

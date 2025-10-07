@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import type { CalendarEvent } from './types'
+import type { CalendarEvent, EventColor } from './types'
+import { EVENT_COLOR_STYLES } from './types'
 
 interface EnhancedEventCardProps {
   event: CalendarEvent
@@ -37,28 +38,13 @@ export function EnhancedEventCard({
   const duration = differenceInMinutes(eventEnd, eventStart)
   const isAllDay = event.allDay || duration >= 24 * 60
 
-  const getEventColorClasses = (color: string) => {
-    const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-      emerald: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
-      rose: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
-      orange: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
-      blue: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
-      violet: { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-200' },
-      indigo: { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
-      amber: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
-      red: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
-      green: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
-      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
-      purple: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
-      pink: { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
-      teal: { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
-      cyan: { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
-    }
-
-    return colorMap[color] || colorMap.blue
+  const eventColor = (event.color ?? 'blue') as EventColor
+  const colorTokens = EVENT_COLOR_STYLES[eventColor] ?? EVENT_COLOR_STYLES.blue
+  const colorClasses = {
+    bg: colorTokens.subtleBg,
+    text: colorTokens.text,
+    border: colorTokens.border,
   }
-
-  const colorClasses = getEventColorClasses(event.color)
 
   const handleClick = () => {
     onClick?.(event)

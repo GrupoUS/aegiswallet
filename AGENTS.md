@@ -164,6 +164,17 @@ PATTERN_SYSTEM_CONFIGURATION:
 
 **Avoid Never Used**: Make sure every file, route, hook, component is being use correctly, avoid errors like "Variable is declared but never used", "Import is never used", "Function is declared but never used". Make sure to remove unused code immediately and create components, hooks, routes only when they are needed. If you create something new, make sure it is being used correctly creating the necessary references.
 
+**ULTRATHINK**: ALWAYS Use the tool `think` to think deeply about the user's request and organize your thoughts. Use each 5 steps to outline next steps and strategies. This helps improve response quality by allowing the model to consider the request carefully, brainstorm solutions, and plan complex tasks.
+**⚠️ IMPORTANT:** Execute entire workflow without interruption. If you unsure about any step, consult the documentation in `/docs` and do a research using `context7` for official docs and best practices. Dont keep asking the user to clarify or provide more info, use your tools to research and fill in the gaps.
+**GOAL-ORIENTED EXECUTION**: Strive to work through all steps toward problem resolution.
+
+- **RIGHT TOOL FOR JOB**: Understand full context before implementation. Choose appropriate technology and mcp tools. Plan carefully, implement systematically.
+- **MANDATORY** use of `serena mcp` to search codebase and semantic code analysis, _DO NOT USE NATIVE SEARCH CODEBASE tool_
+- **MANDATORY** use of `desktop-commander mcp` for file and terminal operations and system management
+- **MANDATORY** invoke `sequential-thinking` first and then the `think` native tool before any other action; under ULTRATHINK, always use `think` to produce a 5‑step breakdown of next steps/strategies to clarify order and purpose.
+- Maintain task descriptions with atomic subtasks and add implementation notes
+- DO NOT MAKE ASSUMPTIONS - check project documentation for questions
+
 ### A.P.T.E Methodology
 
 **Analyze** → Comprehensive requirements analysis

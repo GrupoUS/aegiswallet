@@ -81,72 +81,72 @@ export const AppLayout = React.memo(function AppLayout() {
         )}
       >
         <Sidebar>
-        <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
-              ))}
-            </div>
-          </div>
-          <div>
-            {/* Theme Toggle */}
-            <Button variant="ghost" className="w-full justify-start gap-2 mb-2" asChild>
-              <div className="flex items-center gap-2">
-                <AnimatedThemeToggler className="h-5 w-5" />
-                {open && (
-                  <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>
-                )}
+          <SidebarBody className="justify-between gap-10">
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+              {open ? <Logo /> : <LogoIcon />}
+              <div className="mt-8 flex flex-col gap-2">
+                {links.map((link, idx) => (
+                  <SidebarLink key={idx} link={link} />
+                ))}
               </div>
-            </Button>
+            </div>
+            <div>
+              {/* Theme Toggle */}
+              <Button variant="ghost" className="w-full justify-start gap-2 mb-2" asChild>
+                <div className="flex items-center gap-2">
+                  <AnimatedThemeToggler className="h-5 w-5" />
+                  {open && (
+                    <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>
+                  )}
+                </div>
+              </Button>
 
-            {/* Accessibility Button */}
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2 mb-4"
-              onClick={handleToggleAccessibility}
-            >
-              <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-              {open && (
-                <span className="text-sm text-neutral-700 dark:text-neutral-200">
-                  Accessibility
-                </span>
-              )}
-            </Button>
+              {/* Accessibility Button */}
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 mb-4"
+                onClick={handleToggleAccessibility}
+              >
+                <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+                {open && (
+                  <span className="text-sm text-neutral-700 dark:text-neutral-200">
+                    Accessibility
+                  </span>
+                )}
+              </Button>
 
-            <SidebarLink
-              link={{
-                label: user?.email || 'User',
-                href: '#',
-                icon: (
-                  <img
-                    src={avatarUrl}
-                    className="h-7 w-7 flex-shrink-0 rounded-full"
-                    width={50}
-                    height={50}
-                    alt="Avatar"
-                  />
-                ),
-              }}
-            />
-            <Button
-              onClick={handleSignOut}
-              variant="ghost"
-              className="w-full justify-start gap-2 mt-2"
-            >
-              <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-              {open && <span>Logout</span>}
-            </Button>
+              <SidebarLink
+                link={{
+                  label: user?.email || 'User',
+                  href: '#',
+                  icon: (
+                    <img
+                      src={avatarUrl}
+                      className="h-7 w-7 flex-shrink-0 rounded-full"
+                      width={50}
+                      height={50}
+                      alt="Avatar"
+                    />
+                  ),
+                }}
+              />
+              <Button
+                onClick={handleSignOut}
+                variant="ghost"
+                className="w-full justify-start gap-2 mt-2"
+              >
+                <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+                {open && <span>Logout</span>}
+              </Button>
+            </div>
+          </SidebarBody>
+        </Sidebar>
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 md:p-10 bg-white dark:bg-neutral-900 h-full">
+            <Outlet />
           </div>
-        </SidebarBody>
-      </Sidebar>
-      <main className="flex-1 overflow-auto">
-        <div className="p-4 md:p-10 bg-white dark:bg-neutral-900 h-full">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
     </SidebarProvider>
   )
 })

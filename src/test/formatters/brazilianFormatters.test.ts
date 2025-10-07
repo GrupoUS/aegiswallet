@@ -46,17 +46,17 @@ describe('Brazilian Formatters', () => {
     })
 
     it('should format currency for voice', () => {
-      expect(formatCurrencyForVoice(100)).toBe('100 reais')
-      expect(formatCurrencyForVoice(1)).toBe('1 real')
+      expect(formatCurrencyForVoice(100)).toBe('cem reais')
+      expect(formatCurrencyForVoice(1)).toBe('um real')
       expect(formatCurrencyForVoice(0.5)).toBe('50 centavos')
       expect(formatCurrencyForVoice(0.01)).toBe('1 centavo')
-      expect(formatCurrencyForVoice(100.5)).toBe('100 reais e 50 centavos')
+      expect(formatCurrencyForVoice(100.5)).toBe('cem reais e 50 centavos')
     })
 
     it('should handle negative amounts', () => {
       expect(formatCurrency(-100)).toContain('100')
       expect(formatCompactCurrency(-1500)).toBe('-R$ 1.5K')
-      expect(formatCurrencyForVoice(-50)).toBe('menos 50 reais')
+      expect(formatCurrencyForVoice(-50)).toBe('menos cinquenta reais')
     })
   })
 
@@ -108,7 +108,7 @@ describe('Brazilian Formatters', () => {
     })
 
     it('should format percentages', () => {
-      expect(formatPercentage(85.5)).toBe('85.5%')
+      expect(formatPercentage(85.5)).toBe('85,5%')
       expect(formatPercentage(100, 0)).toBe('100%')
     })
   })

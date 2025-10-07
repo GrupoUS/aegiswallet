@@ -90,10 +90,7 @@ const NUMBER_WORD_AMOUNT_PATTERN = new RegExp(
   'gi'
 )
 
-const PLAIN_NUMBER_PATTERN = new RegExp(
-  String.raw`(?<!dia\s)\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?\b`,
-  'gi'
-)
+const PLAIN_NUMBER_PATTERN = new RegExp(String.raw`\b\d{1,4}(?:\.\d{3})*(?:,\d{2})?\b`, 'gi')
 
 const WEEKDAY_MAP: Record<string, number> = {
   domingo: 0,
@@ -124,9 +121,11 @@ function parseNumberWordPhrase(phrase: string): number {
 }
 
 function parseMonetaryValue(raw: string): number {
-  if (/^\s*dia\s/i.test(raw)) {
+  // Check if this is a date reference (e.g., "dia 15")
+  if (/^\s*dia\s+\d+/i.test(raw)) {
     return NaN
   }
+
   const cleaned = raw
     .replace(/R\$\s*/gi, '')
     .replace(/(reais?|real)/gi, '')
@@ -224,7 +223,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.DATE,
-    pattern: /\b(amanha|amanh[\u00e3\u00c3])\b/gi,
+    pattern: /\b(amanha|amanh[ãÃ])\b/gi,
     normalizer: () => daysFromToday(1),
   },
   {
@@ -259,7 +258,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.BILL_TYPE,
-    pattern: /\b(agua|água)\b/gi,
+    pattern: /\b(agua|[áÁ]gua)\b/gi,
     normalizer: () => 'agua',
   },
   {
@@ -359,10 +358,10 @@ export class EntityExtractor {
    */
   private extractWithPattern(text: string, pattern: EntityPattern): ExtractedEntity[] {
     const entities: ExtractedEntity[] = []
-    const regex = new RegExp(pattern.pattern)
+    const regex = pattern.pattern instanceof RegExp ? pattern.pattern : new RegExp(pattern.pattern)
     let match: RegExpExecArray | null
 
-    // Reset regex lastIndex
+    // Reset regex lastIndex for global regexes
     regex.lastIndex = 0
 
     while ((match = regex.exec(text)) !== null) {

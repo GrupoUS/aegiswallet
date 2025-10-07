@@ -45,7 +45,7 @@ export default function PixKeysList({ pixKeys }: PixKeysListProps) {
               onClick={() => copyPixKey(pixKey.value, pixKey.label)}
             >
               {copiedKey === pixKey.value ? (
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-success" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -53,8 +53,8 @@ export default function PixKeysList({ pixKeys }: PixKeysListProps) {
           </div>
         ))}
 
-        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg mt-4">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="bg-info/10 dark:bg-info/20 p-4 rounded-lg mt-4">
+          <p className="text-sm text-info">
             💡 Dica: Compartilhe qualquer uma das suas chaves PIX para receber pagamentos
             instantâneos
           </p>

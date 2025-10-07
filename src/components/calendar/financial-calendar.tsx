@@ -178,9 +178,9 @@ export function FinancialCalendar() {
                 <Badge
                   className={cn(
                     'mt-1',
-                    selectedEvent.status === 'paid' && 'bg-green-500',
-                    selectedEvent.status === 'pending' && 'bg-yellow-500',
-                    selectedEvent.status === 'scheduled' && 'bg-blue-500'
+                    selectedEvent.status === 'paid' && 'bg-success',
+                    selectedEvent.status === 'pending' && 'bg-warning',
+                    selectedEvent.status === 'scheduled' && 'bg-info'
                   )}
                 >
                   {selectedEvent.status === 'paid' && 'Pago'}

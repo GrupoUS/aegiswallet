@@ -162,7 +162,7 @@ describe('Voice Confirmation Service', () => {
     })
 
     it('should detect all providers failed', () => {
-      const error = new Error('All voice recognition providers failed')
+      const error = new Error('all providers failed')
       const scenario = service['determineFailureScenario'](error)
       expect(scenario).toBe(FailureScenario.ALL_PROVIDERS_FAILED)
     })

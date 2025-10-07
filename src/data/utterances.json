@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "lastUpdated": "2025-01-04",
-  "totalUtterances": 318,
+  "totalUtterances": 324,
   "description": "Brazilian Portuguese utterances for 6 essential voice commands",
   "regionalCoverage": ["SP", "RJ", "Nordeste", "Sul", "Centro-Oeste"],
   "intents": {
@@ -296,7 +296,7 @@
       ]
     },
     "transfer_money": {
-      "count": 53,
+      "count": 59,
       "utterances": [
         { "text": "transferir para João", "region": "formal", "confidence": 0.96 },
         { "text": "fazer PIX de 100 reais", "region": "formal", "confidence": 0.97 },
@@ -350,7 +350,12 @@
         { "text": "processar PIX", "region": "formal", "confidence": 0.9 },
         { "text": "enviar valor", "region": "formal", "confidence": 0.91 },
         { "text": "transferir valor", "region": "formal", "confidence": 0.93 },
-        { "text": "mandar valor", "region": "RJ", "confidence": 0.9 }
+        { "text": "mandar valor", "region": "RJ", "confidence": 0.9 },
+        { "text": "fazer PIX", "region": "formal", "confidence": 0.95 },
+        { "text": "transferir", "region": "formal", "confidence": 0.92 },
+        { "text": "enviar dinheiro", "region": "formal", "confidence": 0.94 },
+        { "text": "mandar grana", "region": "SP", "confidence": 0.91 },
+        { "text": "transfere valor", "region": "SP", "confidence": 0.93 }
       ]
     }
   }

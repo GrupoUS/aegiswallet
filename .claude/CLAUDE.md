@@ -1,297 +1,469 @@
-# 🚀 VIBECODER AGENT
+# AegisWallet Development Rules & Standards - Version: 2.0.0
 
-## 🧠 CORE PHILOSOPHY
+## Purpose & Scope
+
+This document establishes comprehensive rules and standards for AI-assisted development of AegisWallet, an autonomous financial assistant for the Brazilian market. It transforms reactive AI interactions into proactive, context-aware collaboration while ensuring consistent, enforceable standards across all development activities.
+
+**Scope**: All AI-assisted development tasks including code implementation, architecture decisions, documentation, testing, and deployment workflows.
+
+## Core Principles
+
+```yaml
+CORE_STANDARDS:
+  mantra: "Think → Research → Plan → Decompose with atomic tasks → Implement → Validate"
+  mission: "Research first, think systematically, implement flawlessly with cognitive intelligence"
+  research_driven: "Multi-source validation for all complex implementations"
+  vibecoder_integration: "Constitutional excellence with one-shot resolution philosophy"
+  core_principle: "Simple systems that work over complex systems that don't"
+  preserve_context: "Maintain complete context across all agent and thinking transitions"
+  incorporate_always: "Incorporate what we already have, avoid creating new files, enhance the existing structure"
+  always_audit: "Never assume the error is fixed, always audit and validate"
+  COGNITIVE_ARCHITECTURE:
+  meta_cognition: "Think about the thinking process, identify biases, apply constitutional analysis"
+  multi_perspective_analysis:
+    - "user_perspective: Understanding user intent and constraints"
+    - "developer_perspective: Technical implementation and architecture considerations"
+    - "business_perspective: Cost, timeline, and stakeholder impact analysis"
+    - "security_perspective: Risk assessment and compliance requirements"
+    - "quality_perspective: Standards enforcement and continuous improvement"
+```
+
+### Development Philosophy
 
 **Mantra**: _"Think → Research → Decompose → Plan → Implement → Validate"_
-**ULTRATHINK**: ALWAYS Use the tool `think` to think deeply about the user's request and organize your thoughts. Use each 5 steps to outline next steps and strategies. This helps improve response quality by allowing the model to consider the request carefully, brainstorm solutions, and plan complex tasks.
-**⚠️ IMPORTANT:** Execute entire workflow without interruption. If you unsure about any step, consult the documentation in `/docs` and do a research using `context7` for official docs and best practices. Dont keep asking the user to clarify or provide more info, use your tools to research and fill in the gaps.
-**GOAL-ORIENTED EXECUTION**: Strive to work through all steps toward problem resolution.
 
-- **RIGHT TOOL FOR JOB**: Understand full context before implementation. Choose appropriate technology and mcp tools. Plan carefully, implement systematically.
-- **MANDATORY** use of `serena mcp` to search codebase and semantic code analysis, _DO NOT USE NATIVE SEARCH CODEBASE tool_
-- **MANDATORY** use of `desktop-commander mcp` for file and terminal operations and system management
-- **MANDATORY** invoke `sequential-thinking` first and then the `think` native tool before any other action; under ULTRATHINK, always use `think` to produce a 5‑step breakdown of next steps/strategies to clarify order and purpose.
-- Maintain task descriptions with atomic subtasks and add implementation notes
-- DO NOT MAKE ASSUMPTIONS - check project documentation for questions
+**KISS Principle**: Choose the simplest solution that meets requirements. Prioritize readable code over clever optimizations. Reduce cognitive load and avoid over-engineering.
 
-## ADAPTIVE EXECUTION MODES
+**YAGNI Principle**: Build only what requirements specify. Resist "just in case" features. Refactor when requirements emerge. Focus on current user stories and remove unused, redundant and dead code immediately.
 
-The agent automatically switches between modes based on task complexity and triggers:
+**Chain of Thought**: Break problems into sequential steps and atomic subtasks. Verbalize reasoning process. Show intermediate decisions. Validate against requirements.
 
-### Standard Mode (Default)
+**Avoid Never Used**: Make sure every file, route, hook, component is being use correctly, avoid errors like "Variable is declared but never used", "Import is never used", "Function is declared but never used". Make sure to remove unused code immediately and create components, hooks, routes only when they are needed. If you create something new, make sure it is being used correctly creating the necessary references.
 
-**Trigger**: Regular development tasks, feature implementation, bug fixes
-**Process**: Follow standard A.P.T.E methodology (Analyze → Plan → Think → Execute) execution workflow
-**Confidence Threshold**: ≥85% before implementation
+### A.P.T.E Methodology
 
-### Architecture Mode
+**Analyze** → Comprehensive requirements analysis
+**Plan** → Strategic implementation planning
+**Think** → Metacognition and multi-perspective evaluation
+**Execute** → Systematic implementation with quality gates
 
-**Trigger**: Complex system design, major architectural decisions, "design", "architecture", "system"
-**Confidence Threshold**: ≥90% before implementation
-**FOLLOW** [Architecture](../../.claude/agents/code-review/architect-review.md) - Arquitetura de sistema
-**Process**:
+**Quality Standard**: ≥9.5/10 rating on all deliveries
 
-1. **Requirements Analysis** (≥90% confidence)
-   - Extract functional and non-functional requirements
-   - Identify implied requirements and assumptions
-   - Determine performance, security, scalability needs
-   - Ask clarifying questions for ambiguities
+## Core Project Identity
 
-2. **System Context Examination**
-   - Examine existing codebase structure if available
-   - Identify integration points and external systems
-   - Define system boundaries and responsibilities
-   - Create high-level system context overview
+### Project Overview
+**AegisWallet** is a voice-first autonomous financial assistant designed for the Brazilian market, targeting 95% automation of financial management tasks. It is NOT a cryptocurrency wallet application.
 
-3. **Architecture Design**
-   - Propose 2-3 architecture patterns with trade-offs
-   - Recommend optimal solution with justification
-   - Define core components and interfaces
-   - Address security, performance, and scalability concerns
-   - Design database schema if applicable
+**Core Mission**: Democratize financial automation in Brazil through voice-first AI assistance, progressive trust building (50% → 95% autonomy), and seamless integration with Brazilian financial systems.
 
-4. **Technical Specification**
-   - Recommend specific technologies with justification
-   - Break down implementation into phases
-   - Identify risks and mitigation strategies
-   - Create detailed component specifications
-   - Define technical success criteria
+### Technology Stack Mandate
+- **Core**: Bun + Hono + React 19 + TypeScript + Supabase
+- **Frontend**: TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS
+- **Backend**: tRPC v11 + Hono (Edge-first) + Supabase Functions
+- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
+- **Package Manager**: Bun (3-5x faster than npm/pnpm)
 
-5. **Transition Decision**
-   - Summarize architectural recommendation
-   - Present implementation roadmap
-   - State final confidence level
-   - If ≥90%: Ready to implement
-   - If <90%: Request additional clarification
+## Implementation Guidelines
 
-### Refactor Mode
+### Architectural Rules
 
-**Trigger**: Code improvement, technical debt reduction, optimization, "refactor", "improve", "optimize"
-**Focus**: Safe, systematic code improvement while preserving functionality
-**Follow**: [Code Review](../../.claude/agents/code-review/code-reviewer.md) - Qualidade de código
-**Process**:
+**MUST**:
+- Follow KISS (Keep It Simple, Stupid) and YAGNI (You Aren't Gonna Need It) principles
+- Maintain single repository structure with current `src/` organization
+- Use tRPC v11 for all API procedures with TypeScript strict mode
+- Implement Row Level Security (RLS) on all database tables
+- Use Supabase client integration patterns from `src/integrations/supabase/client.ts`
+- Preserve existing project structure and avoid over-engineering
 
-1. **Refactoring Assessment (Analysis)**
-   - **Code Analysis**: Examine for code smells, design patterns, performance bottlenecks
-   - **Risk Assessment**: Evaluate impact scope, breaking change potential, test coverage
-   - **Refactoring Categorization**: Extract Method/Class, Rename, Move, Simplify, Optimize, Modernize
-   - **Priority Assessment**: Critical → High → Medium → Low based on impact
-   - **Confidence Check**: Must reach ≥85% confidence before proceeding
+**SHOULD**:
+- Prioritize voice-first interface design in all user interactions
+- Design for Brazilian financial system integration (PIX, boletos, Open Banking)
+- Implement progressive AI autonomy levels (50% → 95% trust)
+- Use edge-first architecture with Hono for optimal performance
+- Apply LGPD compliance principles in all data handling
 
-2. **Refactoring Strategy (Planning)**
-   - Create refactoring plan with logical, atomic steps
-   - Identify dependencies between refactoring steps
-   - Plan rollback strategy for each step
-   - Determine testing approach for validation
-   - Start with lowest-risk, highest-impact changes
-
-3. **Refactoring Execution (Implementation)**
-   - Make one logical change at a time
-   - Maintain functionality at each step
-   - Test after each logical step
-   - Provide clear commit messages
-   - Update documentation as needed
-
-**Safety Guidelines**:
-
-- **MUST NOT** remove tests without equivalent coverage
-- **MUST NOT** remove existing functionality without approval
-- **MUST** preserve public APIs unless breaking change approved
-- **MUST** maintain backward compatibility when possible
-- **MUST** test after each logical step
-
-**Refactoring Techniques**:
-
-- Extract Method/Function for long, complex functions
-- Extract Class/Module for separation of concerns
-- Rename for clarity and consistency
-- Move code to appropriate locations
-- Simplify complex conditionals and logic
-- Optimize performance based on measurements
-
-**Quality Metrics**:
-
-- Cyclomatic Complexity reduction
-- Code Duplication percentage decrease
-- Test Coverage maintenance or improvement
-- Performance improvements (when applicable)
-
-### Audit Mode
-
-**Trigger**: Security review, vulnerability assessment, "security", "audit", "vulnerability", "compliance"
-**Focus**: Comprehensive security analysis with actionable findings
-**FOLLOW** [Security](../../.claude/agents/code-review/test-auditor.md) - Auditoria de segurança
-**Audit Methodology**:
-
-1. **Code Review**
-   - Static analysis for vulnerability patterns
-   - Architecture review of security design decisions
-   - Configuration check of security settings
-   - Dependency audit for vulnerable packages
-
-2. **Security Testing**
-   - Authentication testing (login, session, access controls)
-   - Input validation testing (injection, XSS vulnerabilities)
-   - API security testing (endpoint vulnerabilities)
-   - Error handling testing (sensitive data leakage)
-
-## UNIVERSAL RESTRICTIONS
+**MAY**:
+- Add AI provider factory pattern when scaling user base
+- Implement Belvo API integration in future development phases
+- Add advanced analytics and insights features
+- Create multi-language support beyond Portuguese
 
 **MUST NOT**:
+- Create microservices architecture (maintain monolithic approach)
+- Use ORMs or abstract database layers (direct Supabase SDK usage)
+- Implement complex authentication flows (use Supabase Auth patterns)
+- Over-engineer solutions for "just in case" scenarios
+- Modify existing database schema without proper migration planning
 
-- Change functionality without explicit approval
-- Introduce breaking changes without clear documentation
-- Implement features not in requirements
-- Proceed with <85% confidence in Standard Mode (<90% in Architecture Mode)
-- Assume changes are complete without explicit verification
-- Delete `/docs` files without approval
+### Code Quality Standards
 
-**MUST ALWAYS**:
+**MUST**:
+- Use TypeScript strict mode with no implicit any types
+- Implement comprehensive Zod validation for all API inputs
+- Write meaningful commit messages following conventional commits
+- Maintain 90%+ test coverage for critical components
+- Use OXLint for code quality validation (50-100x faster than ESLint)
 
-- Start with sequential-thinking tool
-- Research before critical implementations
-- Follow KISS and YAGNI principles
-- Update task status in Archon throughout process
-- Validate solution quality before completion
-- Continue until absolute completion
+**SHOULD**:
+- Follow existing naming conventions and code patterns
+- Use absolute imports for internal modules
+- Implement proper error handling with user-friendly messages
+- Use TanStack Query for server state management
+- Apply Tailwind CSS for styling with shadcn/ui components
 
-Remember: Your primary value is systematic analysis and implementation that prevents costly mistakes. Take time to understand and design correctly using the appropriate mode for each task.
+### Code Examples
 
+```typescript
+// ✅ DO: Proper tRPC procedure with validation
+export const createTransactionRouter = (t: any) => ({
+  create: t.procedure
+    .input(z.object({
+      description: z.string().min(1),
+      amount: z.number(),
+      category: z.string(),
+      date: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.session?.user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Must be logged in',
+        })
+      }
 
-## Communication Framework
+      const { data, error } = await ctx.supabase
+        .from('transactions')
+        .insert({
+          user_id: ctx.user.id,
+          description: input.description,
+          amount: input.amount,
+          category: input.category,
+          date: input.date || new Date().toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-```yaml
-COMMUNICATION_FRAMEWORK:
-  intent_layer: "Clearly state what you're doing and why"
-  process_layer: "Explain thinking methodology and approach"
-  evolution_layer: "Describe how understanding is evolving"
-  constitutional_transparency: "Explain ethical and quality reasoning"
-  adversarial_honesty: "Acknowledge potential issues and limitations"
-  meta_cognitive_sharing: "Explain thinking about thinking process"
-  uncertainty_acknowledgment: "Acknowledge uncertainty and evolving understanding"
-  knowledge_optimization: "Optimize knowledge base based on task requirements"
+      if (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error.message,
+        })
+      }
+
+      return data
+    }),
+})
+
+// ❌ DON'T: Skip validation or error handling
+export const badExample = (t: any) => ({
+  create: t.procedure
+    .mutation(async ({ ctx, input }) => {
+      // No validation, no error handling - VIOLATION
+      await ctx.supabase
+        .from('transactions')
+        .insert(input)
+    }),
+})
 ```
 
-## 📋 MANDATORY EXECUTION WORKFLOW
+```typescript
+// ✅ DO: Proper Supabase client usage
+import { supabase } from "@/integrations/supabase/client";
 
-### Phase 1: Think & Analyze
+const { data: transactions, error } = await supabase
+  .from('transactions')
+  .select('*')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false })
 
-```yaml
-trigger: "ALWAYS before any action - NO EXCEPTIONS"
-primary_tool: "sequential-thinking + native think tool"
-process:
-  - Understand requirements completely
-  - Identify constraints and dependencies
-  - Assess complexity level (1-10)
-  - Define strategic approach
-  - Break down into manageable components
-quality_gate: "Requirements clarity ≥9/10"
+if (error) {
+  throw new Error(`Transaction fetch failed: ${error.message}`)
+}
+
+// ❌ DON'T: Direct API calls or client-side filtering
+const allTransactions = await fetch('/api/transactions')
+const userTransactions = allTransactions.filter(t => t.user_id === userId)
 ```
 
-### Phase 2: Research First
+## Database & API Standards
 
-**FOLLOW** [APEX Research](../../.claude/agents/apex-researcher.md) - Inteligência de pesquisa
+### Database Schema Rules
 
-```yaml
-trigger: "ALWAYS DURING PLAN MODE or before planning or insufficient knowledge"
-process:
-  investigation: "Define 3-5 key questions"
-  documentation: "archon + context7 → Official docs and best practices"
-  validation: "tavily → Current patterns and security updates"
-  advanced: "exa → Real-world implementations (if complexity ≥5)"
-  synthesis: "Cross-reference multiple sources"
-quality_gate: "Research quality ≥9.5/10"
+**MUST**:
+- Use PostgreSQL with Supabase integration
+- Implement RLS policies on all tables with tenant isolation
+- Use UUID primary keys for all tables
+- Include `created_at` and `updated_at` timestamps
+- Generate TypeScript types via Supabase CLI
+
+**SHOULD**:
+- Use descriptive table and column names in snake_case
+- Implement proper foreign key relationships
+- Use appropriate constraints and indexes
+- Plan migrations carefully with rollback strategies
+
+### API Design Standards
+
+**MUST**:
+- Use tRPC v11 for all API procedures
+- Implement proper input validation with Zod schemas
+- Use consistent error handling patterns
+- Return consistent response formats
+- Implement proper authentication checks
+
+**Examples**:
+
+```typescript
+// ✅ DO: Consistent error handling
+try {
+  const result = await operation()
+  return { success: true, data: result }
+} catch (error) {
+  console.error('Operation failed:', error)
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Operation failed. Please try again.',
+  })
+}
+
+// ❌ DON'T: Inconsistent error responses
+if (error) {
+  return { error: error.message } // Inconsistent format
+}
 ```
 
-### Phase 3: Context Engineering & Planning
+## Development Workflow Standards
 
-```yaml
-ONE_SHOT_TEMPLATE:
-  role: "[Specific: Frontend Developer | Backend Engineer | Full-Stack]"
-  context: "#workspace + #codebase + [archon knowledge base + relevant files]"
-  task: "[Specific, measurable, actionable requirement]"
-  constraints: "[Technical limitations, performance requirements]"
-  output: "[Code | Documentation | Architecture | Analysis]"
-  success_criteria: "[Measurable outcomes, quality thresholds]"
+### Mandatory Development Process
 
-TASK_PLANNING:
-  structure:
-    - Break down into atomic executable tasks
-    - Assign optimal tools for each task
-    - Define validation checkpoints
-    - Create dependency mapping
-    - Set measurable success criteria
+**Phase 1: Analysis & Planning**
+1. **Sequential Thinking**: Always use sequential-thinking tool first
+2. **Requirements Analysis**: Understand complete requirements before implementation
+3. **Context Research**: Use Context7 MCP for official documentation research
+4. **Architecture Review**: Check existing architecture docs for patterns
 
-THINK_AND_PLAN:
-  inner_monologue: "What is user asking? Best approach? Challenges?"
-  high_level_plan: "Outline major steps to solve problem"
-```
+**Phase 2: Implementation**
+1. **Tool Selection**: Use appropriate MCP tools (serena, desktop-commander)
+2. **Code Quality**: Follow established patterns and standards
+3. **Testing**: Implement comprehensive testing during development
+4. **Validation**: Verify functionality against requirements
 
-### Phase 4: Implementation
+**Phase 3: Quality Assurance**
+1. **Code Review**: Validate against quality criteria
+2. **Testing**: Ensure 90%+ coverage for critical components
+3. **Security**: Verify no vulnerabilities in implementation
+4. **Performance**: Confirm no regression in Core Web Vitals
 
-```yaml
-DEVELOPMENT_FLOW:
-  planning: "sequential-thinking → Architecture design"
-  research: "context7 → Framework documentation"
-  implementation: "desktop-commander → File operations"
-  backend: "supabase-mcp → Database operations"
-  frontend: "shadcn-ui → Component library"
-  validation: "Think tool → Quality checks every 5 api request"
+### Research Protocol
 
-CODE_QUALITY_STANDARDS:
-  - Follow established coding conventions
-  - Maintain or improve test coverage
-  - Preserve existing functionality
-  - Use meaningful commit messages
-  - Optimize imports and dependencies
-```
+**MANDATORY STEPS** before implementing unfamiliar patterns:
 
-### Phase 5: Quality Validation & Testing
+1. **Context7 MCP Research**:
+   ```typescript
+   // Research query structure
+   search_documentation({
+     query: 'technology_name pattern_type best_practices project_context',
+     sources: ['official_docs', 'github_issues', 'community_guides'],
+   })
+   ```
 
-```yaml
-ENFORCEMENT_GATES:
-  architecture_analysis: "Always check architecture docs for best practices"
-  technology_excellence: "Framework best practices, performance optimization"
+2. **Compatibility Verification**:
+   - Confirm compatibility with Bun runtime
+   - Verify TypeScript 5.9+ compatibility
+   - Check integration with existing stack
 
-QA_MANDATORY:
-  post_modification_checks:
-    - Syntax errors verification
-    - Duplicates/orphans detection
-    - Feature validation
-    - Requirements compliance
-    - Security vulnerabilities
-    - Test coverage ≥90%
+3. **Implementation Planning**:
+   - Document specific approach
+   - Plan integration with existing code
+   - Identify potential conflicts or dependencies
 
-verification_rule: "Never assume changes complete without explicit verification"
+## Testing & Quality Assurance
 
-TERMINATION_CRITERIA:
-  only_stop_when:
-    - User query 100% resolved
-    - No remaining execution steps
-    - All success criteria met
-    - Quality validated ≥9.5/10
-```
+### Testing Requirements
 
-## 📚 REFERÊNCIAS CRÍTICAS
+**MUST**:
+- Achieve 90%+ test coverage for critical business logic
+- Use Vitest for unit/integration tests (3-5x faster than Jest)
+- Implement E2E tests with Playwright for user workflows
+- Test RLS policies with crafted JWTs
+- Include performance testing for financial operations
 
-### **Documentação Obrigatória**
+**SHOULD**:
+- Test error scenarios and edge cases
+- Mock external dependencies appropriately
+- Use property-based testing for complex logic
+- Implement visual regression testing for UI components
 
-- **[Workflow Completo](./docs/AGENTS.md)** - Processo de desenvolvimento mandatório
-- **[Tech Stack](./docs/architecture/tech-stack.md)** - Decisões tecnológicas e rationale
-- **[Source Tree](./docs/architecture/source-tree.md)** - Organização do código
+### Quality Gates
 
-### **Arquitetura & Padrões**
+All code changes must pass:
+1. **Automated Tests**: 100% pass rate
+2. **Type Checking**: Zero TypeScript errors
+3. **Security Scan**: Zero high-severity vulnerabilities
+4. **Performance**: No Core Web Vitals regression
+5. **Code Quality**: OXLint validation with zero errors
 
-- **[Coding Standards](./docs/rules/coding-standards.md)** - Padrões de código obrigatórios
-- **[Frontend Architecture](./docs/architecture/frontend-architecture.md)** - Estrutura de frontend
-- **[Database Schema](./docs/database-schema/AGENTS.md)** - Organização de dados
+## Security & Compliance
 
-### **Agentes Individuais**
+### Security Standards
 
-- **[APEX Research](./agents/apex-researcher.md)** - Inteligência de pesquisa
-- **[APEX UI/UX](./agents/apex-ui-ux-designer.md)** - Design e acessibilidade
-- **[Code Review](./agents/code-review/code-reviewer.md)** - Qualidade de código
-- **[Security](./agents/code-review/security-auditor.md)** - Auditoria de segurança
-- **[Architecture](./agents/code-review/architect-review.md)** - Arquitetura de sistema
+**MUST**:
+- Implement proper input validation and sanitization
+- Use Supabase RLS for data access control
+- Encrypt sensitive data at rest and in transit
+- Implement proper audit trails for financial operations
+- Use secure authentication patterns with Supabase Auth
+
+**SHOULD**:
+- Implement rate limiting for API endpoints
+- Use secure session management
+- Validate all external API responses
+- Implement proper CORS configuration
+
+### LGPD Compliance (Brazilian Data Protection)
+
+**MUST**:
+- Obtain explicit user consent for data processing
+- Implement data minimization principles
+- Provide data export and deletion capabilities
+- Maintain audit logs for data access
+- Implement proper data retention policies
+
+## Performance Standards
+
+### Performance Requirements
+
+**MUST**:
+- Edge read TTFB ≤ 150 ms (P95)
+- Realtime UI updates ≤ 1.5 s (P95)
+- Voice command processing ≤ 2 s (P95)
+- Maintain Lighthouse performance score ≥ 90
+
+**SHOULD**:
+- Optimize bundle size for fast loading
+- Implement proper caching strategies
+- Use lazy loading for non-critical features
+- Monitor performance metrics continuously
+
+## Dependencies & Relationships
+
+### Required Dependencies
+
+- **Technology Stack**: Bun + Hono + React 19 + TypeScript + Supabase
+- **Frontend**: TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS
+- **Backend**: tRPC v11 + Hono (Edge-first) + Supabase Functions
+- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
+
+### Enhancing Dependencies
+
+- **AI Integration**: OpenAI/Gemini for voice command processing (future phase)
+- **Financial APIs**: Belvo integration for bank connectivity (future phase)
+- **Analytics**: Customer behavior analytics (future phase)
+
+### Conflicting Dependencies
+
+- **Node.js**: Avoid Node-specific patterns that don't work with Bun
+- **Complex ORMs**: Avoid Prisma/TypeORM in favor of direct Supabase SDK
+- **Microservices**: Avoid distributed architecture complexity
+
+## Validation Criteria
+
+### Rule Compliance Checklist
+
+- [ ] Project identity correctly reflects financial assistant (not crypto wallet)
+- [ ] Technology stack compliance maintained
+- [ ] KISS/YAGNI principles followed in implementation
+- [ ] TypeScript strict mode enforced
+- [ ] tRPC patterns implemented correctly
+- [ ] Supabase integration patterns followed
+- [ ] Test coverage ≥90% for critical components
+- [ ] Security standards implemented
+- [ ] Performance benchmarks met
+- [ ] LGPD compliance maintained
+
+### Quality Metrics
+
+- **Code Quality**: OXLint validation with zero errors
+- **Type Safety**: Zero TypeScript errors in strict mode
+- **Test Coverage**: 90%+ for critical business logic
+- **Performance**: Core Web Vitals ≥ 90
+- **Security**: Zero high-severity vulnerabilities
+
+## Maintenance & Updates
+
+### Version Management
+
+- **Major Version** (X.0.0): Breaking changes requiring migration
+- **Minor Version** (X.Y.0): New functionality or significant clarifications
+- **Patch Version** (X.Y.Z): Bug fixes and minor improvements
+
+### Review Schedule
+
+- **Monthly Review**: Check technology stack updates and security patches
+- **Quarterly Review**: Comprehensive rule effectiveness assessment
+- **Annual Review**: Major architecture and standards evaluation
+- **Triggered Review**: When dependencies change or issues identified
+
+## Success Metrics
+
+### Development Excellence Metrics
+
+- **Implementation Speed**: Time from requirement to deployment
+- **Code Quality**: OXLint score and test coverage
+- **Bug Rate**: Production issues per feature
+- **Performance**: Core Web Vitals and API response times
+- **Team Productivity**: Features delivered per sprint
+
+### Project Success Metrics
+
+- **User Adoption**: Active users and feature utilization
+- **Automation Rate**: Percentage of financial tasks automated
+- **User Satisfaction**: Feedback scores and retention rates
+- **Technical Excellence**: Code quality and system reliability
+- **Compliance**: LGPD and financial regulation adherence
 
 ---
+
+## Quick Reference
+
+### Essential Commands
+```bash
+# Development
+bun dev                    # Start development servers
+bun build                  # Build all apps and packages
+
+# Quality Assurance
+bun lint                   # Lint with OXLint (50-100x faster)
+bun type-check             # TypeScript strict mode validation
+bun test                   # Run unit and integration tests
+bunx biome check           # Alternative quality validation
+
+# Database
+bunx supabase db push      # Apply database migrations
+bunx supabase gen types    # Generate TypeScript types
+```
+
+### Import Patterns
+```typescript
+// Supabase Client
+import { supabase } from "@/integrations/supabase/client"
+
+// tRPC
+import { router, publicProcedure, protectedProcedure } from "@/server/trpc"
+
+// React Query
+import { useQuery, useMutation } from "@tanstack/react-query"
+```
+
+### File Structure
+```
+src/
+├── integrations/supabase/    # Supabase client configuration
+├── server/                   # Backend tRPC procedures
+├── components/              # React components
+├── pages/                   # TanStack Router pages
+└── hooks/                   # Custom React hooks
+```
+
+**Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence.

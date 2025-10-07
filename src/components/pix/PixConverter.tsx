@@ -131,7 +131,7 @@ export const PixConverter = React.memo(function PixConverter() {
     >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <Calculator className="w-5 h-5 text-pix-primary" />
           PIX
         </CardTitle>
       </CardHeader>
@@ -209,7 +209,7 @@ export const PixConverter = React.memo(function PixConverter() {
                   onClick={() => handleQuickAmount(value)}
                   className={cn(
                     'relative overflow-hidden',
-                    'before:absolute before:inset-0 before:bg-gradient-to-r before:from-green-500/0 before:via-green-500/10 before:to-green-500/0',
+                    'before:absolute before:inset-0 before:bg-gradient-to-r before:from-pix-primary/0 before:via-pix-primary/10 before:to-pix-primary/0',
                     'before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500'
                   )}
                 >
@@ -223,9 +223,9 @@ export const PixConverter = React.memo(function PixConverter() {
               <div
                 className={cn(
                   'relative p-4 rounded-lg space-y-2',
-                  'bg-gradient-to-br from-green-50 to-teal-50',
-                  'dark:from-green-950/20 dark:to-teal-950/20',
-                  'border border-green-200/50 dark:border-green-800/50',
+                  'bg-pix-primary/10',
+                  'dark:bg-pix-primary/5',
+                  'border border-pix-primary/20',
                   '[mask-image:radial-gradient(100%_100%_at_50%_50%,white,transparent_90%)]'
                 )}
               >
@@ -239,9 +239,9 @@ export const PixConverter = React.memo(function PixConverter() {
                     <span className="text-right">{description}</span>
                   </div>
                 )}
-                <div className="border-t border-green-200/50 dark:border-green-800/50 pt-2 flex justify-between font-bold">
+                <div className="border-t border-pix-primary/20 pt-2 flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-green-600 dark:text-green-400">{amount}</span>
+                  <span className="text-pix-primary">{amount}</span>
                 </div>
               </div>
             )}
@@ -327,9 +327,9 @@ export const PixConverter = React.memo(function PixConverter() {
               <div
                 className={cn(
                   'relative p-6 rounded-lg space-y-4',
-                  'bg-gradient-to-br from-green-50 to-teal-50',
-                  'dark:from-green-950/20 dark:to-teal-950/20',
-                  'border border-green-200/50 dark:border-green-800/50',
+                  'bg-pix-primary/10',
+                  'dark:bg-pix-primary/5',
+                  'border border-pix-primary/20',
                   'text-center'
                 )}
               >

@@ -34,9 +34,9 @@ const mockSpeechSynthesis = (globalThis as any).speechSynthesis || {
 
 // Ensure window has speechSynthesis for the TTS service
 if (typeof window !== 'undefined') {
-  (window as any).speechSynthesis = mockSpeechSynthesis
+  ;(window as any).speechSynthesis = mockSpeechSynthesis
 } else {
-  (globalThis as any).window = { speechSynthesis: mockSpeechSynthesis }
+  ;(globalThis as any).window = { speechSynthesis: mockSpeechSynthesis }
 }
 
 describe('TextToSpeechService', () => {
@@ -82,7 +82,12 @@ describe('TextToSpeechService', () => {
 
       // Mock utterance end event
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => utterance.onend?.(), 10)
+        // Store the utterance so we can trigger its events
+        setTimeout(() => {
+          if (utterance.onend) {
+            utterance.onend()
+          }
+        }, 10)
       })
 
       await tts.speak('Olá, mundo!')
@@ -94,7 +99,12 @@ describe('TextToSpeechService', () => {
       const tts = new TextToSpeechService()
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => utterance.onerror?.({ error: 'audio-busy' }), 10)
+        // Simulate error by calling onerror directly
+        setTimeout(() => {
+          if (utterance.onerror) {
+            utterance.onerror({ error: 'audio-busy' })
+          }
+        }, 10)
       })
 
       const result = await tts.speak('Test')
@@ -107,7 +117,11 @@ describe('TextToSpeechService', () => {
       const tts = new TextToSpeechService()
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => utterance.onend?.(), 100)
+        setTimeout(() => {
+          if (utterance.onend) {
+            utterance.onend()
+          }
+        }, 100)
       })
 
       const result = await tts.speak('Test')

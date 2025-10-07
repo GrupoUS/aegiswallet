@@ -29,7 +29,7 @@ export const transactionsRouter = router({
           .select(`
             *,
             bank_accounts(id, institution_name, account_mask),
-            transaction_categories(id, name, color, icon)
+            transaction_categories(id, name, color)
           `)
           .eq('user_id', ctx.user.id)
 
@@ -94,7 +94,7 @@ export const transactionsRouter = router({
           .select(`
             *,
             bank_accounts(id, institution_name, account_mask),
-            transaction_categories(id, name, color, icon)
+            transaction_categories(id, name, color)
           `)
           .eq('id', input.id)
           .eq('user_id', ctx.user.id)
@@ -156,7 +156,7 @@ export const transactionsRouter = router({
           .select(`
             *,
             bank_accounts(id, institution_name, account_mask),
-            transaction_categories(id, name, color, icon)
+            transaction_categories(id, name, color)
           `)
           .single()
 
@@ -210,7 +210,7 @@ export const transactionsRouter = router({
           .select(`
             *,
             bank_accounts(id, institution_name, account_mask),
-            transaction_categories(id, name, color, icon)
+            transaction_categories(id, name, color)
           `)
           .single()
 
@@ -396,7 +396,7 @@ export const transactionsRouter = router({
           .from('transactions')
           .select(`
             amount,
-            transaction_categories!inner(id, name, color, icon)
+            transaction_categories!inner(id, name, color)
           `)
           .eq('user_id', ctx.user.id)
           .eq('status', 'posted')
@@ -422,7 +422,6 @@ export const transactionsRouter = router({
                 id: category.id,
                 name: category.name,
                 color: category.color,
-                icon: category.icon,
                 totalAmount: 0,
                 transactionCount: 0,
                 income: 0,

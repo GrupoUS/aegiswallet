@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addHours, format, setHours, setMinutes } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { type SubmitHandler, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -33,20 +33,42 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import type { CalendarEvent, EventColor } from './types'
+import { EVENT_COLOR_STYLES } from './types'
 
-const eventFormSchema = z.object({
+const baseEventFormSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
   date: z.string(),
   startTime: z.string(),
   endTime: z.string(),
-  color: z.enum(['emerald', 'rose', 'orange', 'blue', 'violet', 'indigo', 'amber', 'red', 'green', 'yellow', 'purple', 'pink', 'teal', 'cyan']),
-  allDay: z.boolean().default(false),
-  recurring: z.boolean().default(false),
+  color: z.enum([
+    'emerald',
+    'rose',
+    'orange',
+    'blue',
+    'violet',
+    'indigo',
+    'amber',
+    'red',
+    'green',
+    'yellow',
+    'purple',
+    'pink',
+    'teal',
+    'cyan',
+  ]),
+  allDay: z.boolean().optional(),
+  recurring: z.boolean().optional(),
   recurrenceRule: z.string().optional(),
 })
 
-type EventFormValues = z.infer<typeof eventFormSchema>
+const eventFormSchema = baseEventFormSchema.transform((values) => ({
+  ...values,
+  allDay: values.allDay ?? false,
+  recurring: values.recurring ?? false,
+}))
+
+type EventFormInput = z.input<typeof eventFormSchema>
 
 interface EventDialogProps {
   open: boolean
@@ -57,22 +79,28 @@ interface EventDialogProps {
   initialStartTime?: Date
 }
 
-const colorOptions: { value: EventColor; label: string; class: string }[] = [
-  { value: 'emerald', label: 'Verde (Receita)', class: 'bg-emerald-500' },
-  { value: 'rose', label: 'Vermelho (Despesa)', class: 'bg-rose-500' },
-  { value: 'orange', label: 'Laranja (Conta)', class: 'bg-orange-500' },
-  { value: 'blue', label: 'Azul (Agendamento)', class: 'bg-blue-500' },
-  { value: 'violet', label: 'Roxo (Transferência)', class: 'bg-violet-500' },
-  { value: 'indigo', label: 'Índigo', class: 'bg-indigo-500' },
-  { value: 'amber', label: 'Âmbar', class: 'bg-amber-500' },
-  { value: 'red', label: 'Vermelho', class: 'bg-red-500' },
-  { value: 'green', label: 'Verde', class: 'bg-green-500' },
-  { value: 'yellow', label: 'Amarelo', class: 'bg-yellow-500' },
-  { value: 'purple', label: 'Roxo', class: 'bg-purple-500' },
-  { value: 'pink', label: 'Rosa', class: 'bg-pink-500' },
-  { value: 'teal', label: 'Ciano', class: 'bg-teal-500' },
-  { value: 'cyan', label: 'Azul claro', class: 'bg-cyan-500' },
+const colorOptionDefinitions: Array<{ value: EventColor; label: string }> = [
+  { value: 'emerald', label: 'Verde (Receita)' },
+  { value: 'rose', label: 'Vermelho (Despesa)' },
+  { value: 'orange', label: 'Laranja (Conta)' },
+  { value: 'blue', label: 'Azul (Agendamento)' },
+  { value: 'violet', label: 'Roxo (Transferência)' },
+  { value: 'indigo', label: 'Índigo' },
+  { value: 'amber', label: 'Âmbar' },
+  { value: 'red', label: 'Vermelho' },
+  { value: 'green', label: 'Verde' },
+  { value: 'yellow', label: 'Amarelo' },
+  { value: 'purple', label: 'Roxo' },
+  { value: 'pink', label: 'Rosa' },
+  { value: 'teal', label: 'Ciano' },
+  { value: 'cyan', label: 'Azul claro' },
 ]
+
+const colorOptions: Array<{ value: EventColor; label: string; class: string }> =
+  colorOptionDefinitions.map((option) => ({
+    ...option,
+    class: (EVENT_COLOR_STYLES[option.value] ?? EVENT_COLOR_STYLES.blue).dot,
+  }))
 
 const recurrenceOptions = [
   { value: 'FREQ=DAILY', label: 'Diariamente' },
@@ -93,7 +121,7 @@ export function EventDialog({
   const [isRecurring, setIsRecurring] = useState(false)
   const isEditing = !!event
 
-  const form = useForm<EventFormValues>({
+  const form = useForm<EventFormInput>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       title: '',
@@ -105,7 +133,7 @@ export function EventDialog({
       allDay: false,
       recurring: false,
       recurrenceRule: '',
-    },
+    } satisfies EventFormInput,
   })
 
   // Update form when event changes
@@ -137,22 +165,23 @@ export function EventDialog({
     }
   }, [event, initialDate, initialStartTime, form])
 
-  const onSubmit = (values: EventFormValues) => {
-    const [startHour, startMinute] = values.startTime.split(':').map(Number)
-    const [endHour, endMinute] = values.endTime.split(':').map(Number)
-    const baseDate = new Date(values.date)
+  const onSubmit: SubmitHandler<EventFormInput> = (values) => {
+    const parsed = eventFormSchema.parse(values)
+    const [startHour, startMinute] = parsed.startTime.split(':').map(Number)
+    const [endHour, endMinute] = parsed.endTime.split(':').map(Number)
+    const baseDate = new Date(parsed.date)
 
     const start = setMinutes(setHours(baseDate, startHour), startMinute)
     const end = setMinutes(setHours(baseDate, endHour), endMinute)
 
     const eventData: Partial<CalendarEvent> = {
       id: event?.id,
-      title: values.title,
-      description: values.description,
+      title: parsed.title,
+      description: parsed.description,
       start,
       end,
-      color: values.color,
-      allDay: values.allDay,
+      color: parsed.color,
+      allDay: parsed.allDay,
     }
 
     onSave(eventData)

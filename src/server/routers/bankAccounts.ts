@@ -85,7 +85,7 @@ export const bankAccountsRouter = router({
         if (input.is_primary) {
           await supabase
             .from('bank_accounts')
-            .update({ is_primary: false })
+            .update({ is_primary: false } as any)
             .eq('user_id', ctx.user.id)
             .eq('is_primary', true)
         }
@@ -93,11 +93,16 @@ export const bankAccountsRouter = router({
         const { data, error } = await supabase
           .from('bank_accounts')
           .insert({
-            ...input,
+            institution_name: input.institution_name,
+            account_mask: input.account_mask,
+            balance: input.balance,
+            currency: input.currency,
+            is_active: true,
+            is_primary: input.is_primary,
             user_id: ctx.user.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          })
+          } as any)
           .select()
           .single()
 
@@ -137,7 +142,7 @@ export const bankAccountsRouter = router({
         if (updateData.is_primary) {
           await supabase
             .from('bank_accounts')
-            .update({ is_primary: false })
+            .update({ is_primary: false } as any)
             .eq('user_id', ctx.user.id)
             .eq('is_primary', true)
             .neq('id', id)
@@ -148,7 +153,7 @@ export const bankAccountsRouter = router({
           .update({
             ...updateData,
             updated_at: new Date().toISOString(),
-          })
+          } as any)
           .eq('id', id)
           .eq('user_id', ctx.user.id)
           .select()
@@ -284,13 +289,13 @@ export const bankAccountsRouter = router({
         }
 
         // Registrar histórico do saldo
-        await supabase.from('account_balance_history').insert({
+        await supabase.from('account_balance_history' as any).insert({
           account_id: input.id,
           balance: input.balance,
           available_balance: input.available_balance ?? input.balance,
           recorded_at: new Date().toISOString(),
           source: 'sync',
-        })
+        } as any)
 
         return data
       } catch (error) {
@@ -316,7 +321,7 @@ export const bankAccountsRouter = router({
         startDate.setDate(startDate.getDate() - input.days)
 
         const { data, error } = await supabase
-          .from('account_balance_history')
+          .from('account_balance_history' as any)
           .select('*')
           .eq('account_id', input.accountId)
           .gte('recorded_at', startDate.toISOString())

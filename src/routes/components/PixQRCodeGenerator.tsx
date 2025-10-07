@@ -38,7 +38,7 @@ export default function PixQRCodeGenerator({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <QrCode className="w-5 h-5 text-green-500" />
+          <QrCode className="w-5 h-5 text-success" />
           Gerar QR Code
         </CardTitle>
       </CardHeader>

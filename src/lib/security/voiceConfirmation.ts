@@ -7,6 +7,14 @@
 
 import { createAuditLog } from './auditLogger'
 
+export enum FailureScenario {
+  LOW_CONFIDENCE = 'low_confidence',
+  AUDIO_QUALITY = 'audio_quality',
+  ALL_PROVIDERS_FAILED = 'all_providers_failed',
+  NETWORK_ERROR = 'network_error',
+  TIMEOUT = 'timeout',
+}
+
 export interface VoiceConfirmationConfig {
   requiresBiometric: boolean
   minAmount: number // R$ threshold for confirmation
@@ -259,6 +267,81 @@ export class VoiceConfirmationService {
       method: 'voice',
       confidence: 0,
     })
+  }
+
+  /**
+   * Generate confirmation phrase for specific action
+   */
+  generateConfirmationPhrase(action: string): string {
+    const phrases = {
+      transfer: ['Eu autorizo esta transferência', 'Confirmo a transferência', 'Sim, eu autorizo'],
+      payment: ['Eu autorizo este pagamento', 'Confirmo o pagamento', 'Sim, pago a conta'],
+      bill: ['Eu autorizo pagar esta conta', 'Confirmo o pagamento', 'Sim, eu pago'],
+    }
+
+    const actionPhrases = phrases[action as keyof typeof phrases] || phrases.transfer
+    return actionPhrases[Math.floor(Math.random() * actionPhrases.length)]
+  }
+
+  /**
+   * Determine fallback strategy based on failure scenario
+   */
+  getFallbackStrategy(scenario: FailureScenario): {
+    action: 'retry' | 'pin_fallback' | 'cancel'
+    maxRetries: number
+    message: string
+  } {
+    const strategies = {
+      [FailureScenario.LOW_CONFIDENCE]: {
+        action: 'retry' as const,
+        maxRetries: 1,
+        message: 'Por favor, fale mais claramente e tente novamente',
+      },
+      [FailureScenario.AUDIO_QUALITY]: {
+        action: 'retry' as const,
+        maxRetries: 1,
+        message: 'Verifique o microfone e tente novamente',
+      },
+      [FailureScenario.ALL_PROVIDERS_FAILED]: {
+        action: 'pin_fallback' as const,
+        maxRetries: 0,
+        message: 'Use seu PIN para confirmar',
+      },
+      [FailureScenario.NETWORK_ERROR]: {
+        action: 'retry' as const,
+        maxRetries: 2,
+        message: 'Verifique sua conexão e tente novamente',
+      },
+      [FailureScenario.TIMEOUT]: {
+        action: 'cancel' as const,
+        maxRetries: 0,
+        message: 'Tempo esgotado. Tente novamente',
+      },
+    }
+
+    return strategies[scenario]
+  }
+
+  /**
+   * Determine failure scenario from error
+   */
+  private determineFailureScenario(error: Error): FailureScenario {
+    const message = error.message.toLowerCase()
+
+    if (message.includes('network') || message.includes('connection')) {
+      return FailureScenario.NETWORK_ERROR
+    }
+    if (message.includes('all providers') || message.includes('all recognition')) {
+      return FailureScenario.ALL_PROVIDERS_FAILED
+    }
+    if (message.includes('audio quality') || message.includes('too low')) {
+      return FailureScenario.AUDIO_QUALITY
+    }
+    if (message.includes('timeout')) {
+      return FailureScenario.TIMEOUT
+    }
+
+    return FailureScenario.LOW_CONFIDENCE
   }
 }
 

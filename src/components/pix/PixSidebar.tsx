@@ -48,19 +48,19 @@ const PixKeyItem = React.memo(function PixKeyItem({
         'dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]',
         // Active state with glow effect
         'active:before:absolute active:before:inset-0 active:before:-z-10',
-        'active:before:bg-green-500/48 active:before:blur-[10px] active:before:rounded-lg',
-        'active:bg-green-500/10 active:border-green-500/30'
+        'active:before:bg-pix-primary/48 active:before:blur-[10px] active:before:rounded-lg',
+        'active:bg-pix-primary/10 active:border-pix-primary/30'
       )}
     >
       <div
         className={cn(
           'w-10 h-10 rounded-lg flex items-center justify-center',
-          'bg-gradient-to-br from-green-500/10 to-teal-500/10',
-          'group-hover:from-green-500/20 group-hover:to-teal-500/20',
+          'bg-gradient-to-br from-pix-primary/10 to-pix-accent/10',
+          'group-hover:from-pix-primary/20 group-hover:to-pix-accent/20',
           'transition-all duration-200'
         )}
       >
-        <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <Icon className="w-5 h-5 text-pix-primary" />
       </div>
       {isOpen && (
         <span className="text-sm font-medium truncate">{pixKey.label || pixKey.value}</span>
@@ -78,18 +78,18 @@ const AddFavoriteButton = React.memo(function AddFavoriteButton({ isOpen }: { is
         'text-sidebar-foreground',
         'hover:bg-sidebar-accent',
         'border border-dashed border-sidebar-border',
-        'hover:border-green-500/30 hover:bg-green-500/5'
+        'hover:border-pix-primary/30 hover:bg-pix-primary/5'
       )}
     >
       <div
         className={cn(
           'w-10 h-10 rounded-lg flex items-center justify-center',
           'bg-sidebar-accent',
-          'group-hover:bg-green-500/10',
+          'group-hover:bg-pix-primary/10',
           'transition-all duration-200'
         )}
       >
-        <Star className="w-5 h-5 text-muted-foreground group-hover:text-green-600 dark:group-hover:text-green-400" />
+        <Star className="w-5 h-5 text-muted-foreground group-hover:text-pix-primary" />
       </div>
       {isOpen && <span className="text-sm font-medium">Adicionar Favorito</span>}
     </button>
@@ -100,7 +100,7 @@ const AddFavoriteButton = React.memo(function AddFavoriteButton({ isOpen }: { is
 const Logo = React.memo(function Logo() {
   return (
     <Link className="inline-flex mb-8" to="/pix" aria-label="PIX Dashboard">
-      <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
+      <div className="w-10 h-10 bg-gradient-to-r from-pix-primary to-pix-accent rounded-lg flex items-center justify-center">
         <span className="text-white font-bold text-sm">PIX</span>
       </div>
     </Link>
@@ -147,20 +147,20 @@ export const PixSidebar = React.memo(function PixSidebar({
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <Sidebar>
-      <SidebarBody className="justify-between gap-4">
-        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-          {/* Logo/Header */}
-          <Logo />
+        <SidebarBody className="justify-between gap-4">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            {/* Logo/Header */}
+            <Logo />
 
-          {/* Favorite keys */}
-          <div className="flex flex-col gap-4">
-            {favoriteKeysList}
+            {/* Favorite keys */}
+            <div className="flex flex-col gap-4">
+              {favoriteKeysList}
 
-            {/* Add favorite button */}
-            <AddFavoriteButton isOpen={open} />
+              {/* Add favorite button */}
+              <AddFavoriteButton isOpen={open} />
+            </div>
           </div>
-        </div>
-      </SidebarBody>
+        </SidebarBody>
       </Sidebar>
     </SidebarProvider>
   )

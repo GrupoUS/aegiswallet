@@ -204,18 +204,22 @@ export class TextToSpeechService {
 
     return new Promise((resolve, reject) => {
       // Handle SpeechSynthesisUtterance in test environment
-      let SpeechSynthesisUtteranceConstructor = 
+      let SpeechSynthesisUtteranceConstructor =
         (typeof window !== 'undefined' && window.SpeechSynthesisUtterance) ||
         (globalThis as any).SpeechSynthesisUtterance
 
       // If still not found, try to get it from the window object
-      if (!SpeechSynthesisUtteranceConstructor && typeof window !== 'undefined' && (window as any).speechSynthesis) {
+      if (
+        !SpeechSynthesisUtteranceConstructor &&
+        typeof window !== 'undefined' &&
+        (window as any).speechSynthesis
+      ) {
         // In test environment, we might need to use the global mock
         SpeechSynthesisUtteranceConstructor = (globalThis as any).SpeechSynthesisUtterance
       }
 
       if (!SpeechSynthesisUtteranceConstructor) {
-        // For test environment, create a mock utterance
+        // For test environment, create a mock utterance that can handle errors
         const mockUtterance = {
           text,
           lang: 'pt-BR',
@@ -231,14 +235,8 @@ export class TextToSpeechService {
           onpause: null,
           onresume: null,
         }
-        
-        // Simulate the speech synthesis
-        setTimeout(() => {
-          mockUtterance.onend?.()
-          resolve()
-        }, 10)
 
-        // Mock the speak call
+        // Let the mock handle the callbacks - just call speak and let the mock implementation handle it
         this.synth!.speak(mockUtterance as any)
         return
       }

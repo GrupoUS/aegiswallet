@@ -58,6 +58,28 @@
     --shadow-2xl: 2px 2px 10px 4px hsl(240 4% 60% / 0.45);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
+
+    /* Semantic state colors */
+    --success: oklch(0.65 0.18 145);
+    --success-foreground: oklch(0.98 0 0);
+    --warning: oklch(0.75 0.15 85);
+    --warning-foreground: oklch(0.15 0 0);
+    --info: oklch(0.6 0.18 240);
+    --info-foreground: oklch(0.98 0 0);
+
+    /* Financial state colors */
+    --financial-positive: oklch(0.65 0.18 145);
+    --financial-positive-foreground: oklch(0.98 0 0);
+    --financial-negative: oklch(0.65 0.18 25);
+    --financial-negative-foreground: oklch(0.98 0 0);
+    --financial-neutral: oklch(0.6 0.05 250);
+    --financial-neutral-foreground: oklch(0.98 0 0);
+
+    /* PIX brand colors */
+    --pix-primary: oklch(0.6 0.15 180);
+    --pix-primary-foreground: oklch(0.98 0 0);
+    --pix-accent: oklch(0.55 0.18 165);
+    --pix-accent-foreground: oklch(0.98 0 0);
   }
 
   .dark {
@@ -111,6 +133,28 @@
     --shadow-lg: 2px 2px 10px 4px hsl(0 0% 0% / 0.18), 2px 4px 6px 3px hsl(0 0% 0% / 0.18);
     --shadow-xl: 2px 2px 10px 4px hsl(0 0% 0% / 0.18), 2px 8px 10px 3px hsl(0 0% 0% / 0.18);
     --shadow-2xl: 2px 2px 10px 4px hsl(0 0% 0% / 0.45);
+
+    /* Dark mode semantic colors */
+    --success: oklch(0.7 0.2 145);
+    --success-foreground: oklch(0.15 0 0);
+    --warning: oklch(0.8 0.18 85);
+    --warning-foreground: oklch(0.15 0 0);
+    --info: oklch(0.65 0.2 240);
+    --info-foreground: oklch(0.15 0 0);
+
+    /* Dark mode financial colors */
+    --financial-positive: oklch(0.7 0.2 145);
+    --financial-positive-foreground: oklch(0.15 0 0);
+    --financial-negative: oklch(0.7 0.2 25);
+    --financial-negative-foreground: oklch(0.15 0 0);
+    --financial-neutral: oklch(0.65 0.08 250);
+    --financial-neutral-foreground: oklch(0.15 0 0);
+
+    /* Dark mode PIX colors */
+    --pix-primary: oklch(0.65 0.18 180);
+    --pix-primary-foreground: oklch(0.15 0 0);
+    --pix-accent: oklch(0.6 0.2 165);
+    --pix-accent-foreground: oklch(0.15 0 0);
   }
 
   :root[data-theme="inline"] {

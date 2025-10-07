@@ -1,4 +1,5 @@
 import { addHours, endOfDay, format, isSameDay, startOfDay } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { useMemo } from 'react'
 import { EnhancedEventCard } from './enhanced-event-card'
 import type { CalendarEvent } from './types'

@@ -40,7 +40,7 @@ const eventFormSchema = z.object({
   date: z.string(),
   startTime: z.string(),
   endTime: z.string(),
-  color: z.enum(['emerald', 'rose', 'orange', 'blue', 'violet', 'indigo', 'amber']),
+  color: z.enum(['emerald', 'rose', 'orange', 'blue', 'violet', 'indigo', 'amber', 'red', 'green', 'yellow', 'purple', 'pink', 'teal', 'cyan']),
   allDay: z.boolean().default(false),
   recurring: z.boolean().default(false),
   recurrenceRule: z.string().optional(),
@@ -65,6 +65,13 @@ const colorOptions: { value: EventColor; label: string; class: string }[] = [
   { value: 'violet', label: 'Roxo (Transferência)', class: 'bg-violet-500' },
   { value: 'indigo', label: 'Índigo', class: 'bg-indigo-500' },
   { value: 'amber', label: 'Âmbar', class: 'bg-amber-500' },
+  { value: 'red', label: 'Vermelho', class: 'bg-red-500' },
+  { value: 'green', label: 'Verde', class: 'bg-green-500' },
+  { value: 'yellow', label: 'Amarelo', class: 'bg-yellow-500' },
+  { value: 'purple', label: 'Roxo', class: 'bg-purple-500' },
+  { value: 'pink', label: 'Rosa', class: 'bg-pink-500' },
+  { value: 'teal', label: 'Ciano', class: 'bg-teal-500' },
+  { value: 'cyan', label: 'Azul claro', class: 'bg-cyan-500' },
 ]
 
 const recurrenceOptions = [

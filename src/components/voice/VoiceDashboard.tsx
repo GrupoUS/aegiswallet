@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router'
 import { ChevronRight, History, Settings, Volume2 } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
@@ -15,6 +16,7 @@ interface VoiceDashboardProps {
 export const VoiceDashboard = React.memo(function VoiceDashboard({
   className,
 }: VoiceDashboardProps) {
+  const navigate = useNavigate()
   const { speak, announce } = useAccessibility()
   const {
     isListening,
@@ -89,12 +91,44 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   // Otimizar ações rápidas com useMemo
   const quickActions = useMemo(
     () => [
-      { title: 'Saldo', icon: '💰', action: () => {} },
-      { title: 'Orçamento', icon: '📊', action: () => {} },
-      { title: 'Contas', icon: '📄', action: () => {} },
-      { title: 'PIX', icon: '🚀', action: () => {} },
+      {
+        title: 'Saldo',
+        icon: '💰',
+        action: () => {
+          navigate({ to: '/saldo' })
+          announce('Navegando para página de saldo')
+        },
+        description: 'Ver seu saldo e transações',
+      },
+      {
+        title: 'Orçamento',
+        icon: '📊',
+        action: () => {
+          navigate({ to: '/dashboard' })
+          announce('Navegando para dashboard com orçamentos')
+        },
+        description: 'Analisar seu orçamento mensal',
+      },
+      {
+        title: 'Contas',
+        icon: '📄',
+        action: () => {
+          navigate({ to: '/contas' })
+          announce('Navegando para página de contas')
+        },
+        description: 'Gerenciar suas contas e pagamentos',
+      },
+      {
+        title: 'PIX',
+        icon: '🚀',
+        action: () => {
+          navigate({ to: '/pix' })
+          announce('Navegando para página de PIX')
+        },
+        description: 'Fazer transferências PIX',
+      },
     ],
-    []
+    [navigate, announce]
   )
 
   // Otimizar histórico de comandos com useMemo
@@ -184,10 +218,14 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             <Button
               key={action.title}
               variant="outline"
-              className="h-20 flex flex-col gap-1"
+              className="h-20 flex flex-col gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               onClick={action.action}
+              aria-label={`${action.title}: ${action.description}`}
+              title={action.description}
             >
-              <span className="text-2xl">{action.icon}</span>
+              <span className="text-2xl" aria-hidden="true">
+                {action.icon}
+              </span>
               <span className="text-sm">{action.title}</span>
             </Button>
           ))}
@@ -232,10 +270,33 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
         {/* Settings Button */}
         <div className="fixed bottom-4 right-4">
-          <Button size="lg" className="w-14 h-14 rounded-full shadow-lg">
+          <Button
+            size="lg"
+            className="w-14 h-14 rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Configurações de acessibilidade"
+            onClick={() => {
+              announce('Abrindo configurações de acessibilidade')
+              // Implementar navegação para configurações quando disponível
+            }}
+            title="Configurações de acessibilidade"
+          >
             <Settings className="w-6 h-6" />
           </Button>
         </div>
+
+        {/* Skip to main content for keyboard navigation */}
+        <button
+          className="skip-link"
+          onClick={() => {
+            const mainContent = document.querySelector('main')
+            if (mainContent) {
+              mainContent.focus()
+              announce('Pulado para conteúdo principal')
+            }
+          }}
+        >
+          Pular para conteúdo principal
+        </button>
       </div>
     </div>
   )

@@ -506,8 +506,8 @@ function MiniCalendarDayButton({
 }
 
 // Set display names for debugging
-Calendar.displayName = "Calendar"
-CompactCalendar.displayName = "CompactCalendar"
-MiniCalendarWidget.displayName = "MiniCalendarWidget"
+Calendar.displayName = 'Calendar'
+CompactCalendar.displayName = 'CompactCalendar'
+MiniCalendarWidget.displayName = 'MiniCalendarWidget'
 
 export { Calendar, CalendarDayButton, CompactCalendarDayButton, MiniCalendarDayButton }

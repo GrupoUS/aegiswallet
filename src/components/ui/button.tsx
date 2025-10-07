@@ -3,8 +3,8 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
-import * as React from 'react'
 import { motion } from 'motion/react'
+import * as React from 'react'
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { cn } from '@/lib/utils'
 
@@ -89,21 +89,45 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, withGradient = false, gradientDuration = 2, gradientSize = 600, loading = false, withMotion = false, children, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      withGradient = false,
+      gradientDuration = 2,
+      gradientSize = 600,
+      loading = false,
+      withMotion = false,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : 'button'
-    
+
     // Helper variables for variant detection
     const isGradient = variant === 'gradient' || variant === 'trust' || variant === 'success'
     const isNeumorph = variant === 'neumorph'
-    
+
     // Apply motion effects for neumorph buttons
     if (isNeumorph && withMotion && !asChild) {
       const {
-        onDrag: _onDrag, onDragEnd: _onDragEnd, onDragStart: _onDragStart, onDragEnter: _onDragEnter,
-        onDragExit: _onDragExit, onDragLeave: _onDragLeave, onDragOver: _onDragOver, onDrop: _onDrop,
-        onAnimationStart: _onAnimationStart, onAnimationEnd: _onAnimationEnd, onAnimationIteration: _onAnimationIteration,
+        onDrag: _onDrag,
+        onDragEnd: _onDragEnd,
+        onDragStart: _onDragStart,
+        onDragEnter: _onDragEnter,
+        onDragExit: _onDragExit,
+        onDragLeave: _onDragLeave,
+        onDragOver: _onDragOver,
+        onDrop: _onDrop,
+        onAnimationStart: _onAnimationStart,
+        onAnimationEnd: _onAnimationEnd,
+        onAnimationIteration: _onAnimationIteration,
         ...restProps
-      } = props;
+      } = props
       return (
         <motion.button
           ref={ref}

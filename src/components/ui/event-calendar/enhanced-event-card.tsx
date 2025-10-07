@@ -1,4 +1,5 @@
 import { differenceInMinutes, format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Clock, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -170,7 +171,7 @@ export function EnhancedEventCard({
         <div className="flex items-center gap-1 flex-wrap">
           {event.category && (
             <Badge variant="secondary" className="text-xs">
-              {event.category}
+              {event.category.name}
             </Badge>
           )}
 

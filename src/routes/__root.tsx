@@ -12,7 +12,14 @@ import { motion } from 'motion/react'
 import { CalendarProvider } from '@/components/calendar/calendar-context'
 import { TRPCProvider } from '@/components/providers/TRPCProvider'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { Sidebar, SidebarBody, SidebarLink, SidebarContent, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
+import {
+  Sidebar,
+  SidebarBody,
+  SidebarContent,
+  SidebarLink,
+  SidebarProvider,
+  useSidebar,
+} from '@/components/ui/sidebar'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
@@ -114,9 +121,9 @@ function RootComponent() {
                 </div>
               </SidebarBody>
             </Sidebar>
-            <SidebarInset>
+            <div className="flex-1">
               <Outlet />
-            </SidebarInset>
+            </div>
           </div>
         </SidebarProvider>
       </CalendarProvider>
@@ -126,7 +133,7 @@ function RootComponent() {
 
 const SidebarContentWrapper = ({ links }: { links: any[] }) => {
   const { open } = useSidebar()
-  
+
   return (
     <>
       {open ? <Logo /> : <LogoIcon />}
@@ -167,11 +174,11 @@ const LogoIcon = () => {
 const LogoutButton = () => {
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  const { open, animate } = useSidebar()
+  const { open } = useSidebar()
 
   const handleLogout = async () => {
     await signOut()
-    navigate({ to: '/login', search: { redirect: '/dashboard' } })
+    navigate({ to: '/login', search: { redirect: '/dashboard', error: undefined } })
   }
 
   return (
@@ -185,8 +192,8 @@ const LogoutButton = () => {
       <LogOut className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />
       <motion.span
         animate={{
-          display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
-          opacity: animate ? (open ? 1 : 0) : 1,
+          display: open ? 'inline-block' : 'none',
+          opacity: open ? 1 : 0,
         }}
         className="text-sidebar-foreground text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >

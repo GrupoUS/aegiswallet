@@ -74,14 +74,6 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     }
   }, [])
 
-  const _handleVoiceActivation = useCallback(() => {
-    if (!isListening) {
-      startListening()
-    } else {
-      stopListening()
-    }
-  }, [isListening, startListening, stopListening])
-
   const handleCloseResponse = useCallback(() => {
     setCurrentResponse(null)
   }, [])

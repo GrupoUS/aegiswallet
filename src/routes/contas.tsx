@@ -132,21 +132,6 @@ function Contas() {
   const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0)
   const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0)
 
-  const getDaysUntilDue = (dueDate: string) => {
-    const today = new Date()
-    const due = new Date(dueDate)
-    const diffTime = due.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-
-  const _getBillStatus = (dueDate: string, status: string) => {
-    if (status === 'paid') return { color: 'bg-green-500', text: 'Pago' }
-    const days = getDaysUntilDue(dueDate)
-    if (days < 0) return { color: 'bg-red-500', text: 'Atrasado' }
-    if (days <= 3) return { color: 'bg-yellow-500', text: 'Vence em breve' }
-    return { color: 'bg-blue-500', text: 'Pendente' }
-  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">

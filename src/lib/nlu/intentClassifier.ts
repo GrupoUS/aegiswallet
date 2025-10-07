@@ -36,7 +36,7 @@ export class IntentClassifier {
 
     // Try pattern matching first (fast path)
     const patternResult = this.classifyByPattern(text)
-    
+
     // Try TF-IDF similarity
     const tfidfResult = this.classifyByTFIDF(normalized.tokens)
 

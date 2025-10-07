@@ -223,7 +223,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.DATE,
-    pattern: /\b(amanha|amanh[ãÃ])\b/gi,
+    pattern: /amanha|amanh[ãÃ]/gi,
     normalizer: () => daysFromToday(1),
   },
   {
@@ -258,7 +258,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.BILL_TYPE,
-    pattern: /\b(agua|[áÁ]gua)\b/gi,
+    pattern: /agua|[áÁ]gua/gi,
     normalizer: () => 'agua',
   },
   {

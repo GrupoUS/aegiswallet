@@ -36,15 +36,19 @@ export class IntentClassifier {
 
     // Try pattern matching first (fast path)
     const patternResult = this.classifyByPattern(text)
-    if (patternResult.confidence >= 0.9) {
-      return {
-        ...patternResult,
-        method: 'pattern',
-      }
-    }
-
+    
     // Try TF-IDF similarity
     const tfidfResult = this.classifyByTFIDF(normalized.tokens)
+
+    // If pattern confidence is high enough, return pattern method with alternatives
+    if (patternResult.confidence >= 0.7) {
+      return {
+        intent: patternResult.intent,
+        confidence: patternResult.confidence,
+        method: 'pattern',
+        alternatives: this.getAlternatives(patternResult, tfidfResult),
+      }
+    }
 
     // Ensemble voting
     const ensembleResult = this.ensembleVote(patternResult, tfidfResult)

@@ -577,8 +577,8 @@ const SidebarMenuAction = React.forwardRef<
   }
 >(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
   // Mark className as intentionally unused
-  void className;
-  
+  void className
+
   const Comp = asChild ? Slot : 'button'
 
   return (

@@ -115,8 +115,8 @@ export const VoiceIndicator = React.forwardRef<
   }
 >(({ className, isActive = false, isMuted = false, volume = 0, ...props }, ref) => {
   // Mark volume as intentionally unused
-  void volume;
-  
+  void volume
+
   return (
     <div
       ref={ref}
@@ -157,8 +157,8 @@ export const VoiceDashboard = React.forwardRef<
   }
 >(({ className, commands = [], isListening = false, onClearHistory, ...props }, ref) => {
   // Mark isListening as intentionally unused
-  void isListening;
-  
+  void isListening
+
   return (
     <div ref={ref} className={cn('space-y-4', className)} {...props}>
       <Card>

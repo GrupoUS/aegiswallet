@@ -17,7 +17,6 @@ export type Database = {
           id: string
           institution_name: string
           is_active: boolean | null
-          is_primary: boolean | null
           updated_at: string | null
           user_id: string | null
         }
@@ -52,33 +51,6 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
-      }
-      account_balance_history: {
-        Row: {
-          id: string
-          account_id: string
-          balance: number
-          available_balance: number | null
-          recorded_at: string | null
-          source: string | null
-        }
-        Insert: {
-          id?: string
-          account_id: string
-          balance: number
-          available_balance?: number | null
-          recorded_at?: string | null
-          source?: string | null
-        }
-        Update: {
-          id?: string
-          account_id?: string
-          balance?: number
-          available_balance?: number | null
-          recorded_at?: string | null
-          source?: string | null
-        }
-        Relationships: []
       }
       contacts: {
         Row: {

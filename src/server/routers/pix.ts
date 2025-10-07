@@ -5,7 +5,7 @@
 
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix'
+import type { PixKey, PixQRCode, PixTransaction } from '../../types/pix'
 import { protectedProcedure, router } from '../trpc-helpers'
 
 // =====================================================
@@ -77,7 +77,7 @@ export const pixRouter = router({
     const { data, error } = await ctx.supabase
       .from('pix_keys')
       .select('*')
-      .eq('user_id', ctx.session.user.id)
+      .eq('user_id', ctx.user.id)
       .eq('is_active', true)
       .order('is_favorite', { ascending: false })
       .order('created_at', { ascending: false })
@@ -99,7 +99,7 @@ export const pixRouter = router({
     const { data, error } = await ctx.supabase
       .from('pix_keys')
       .select('*')
-      .eq('user_id', ctx.session.user.id)
+      .eq('user_id', ctx.user.id)
       .eq('is_active', true)
       .eq('is_favorite', true)
       .order('created_at', { ascending: false })
@@ -121,7 +121,7 @@ export const pixRouter = router({
     const { data, error } = await ctx.supabase
       .from('pix_keys')
       .insert({
-        user_id: ctx.session.user.id,
+        user_id: ctx.user.id,
         key_type: input.keyType,
         key_value: input.keyValue,
         label: input.label,
@@ -168,7 +168,7 @@ export const pixRouter = router({
         .from('pix_keys')
         .update(updates)
         .eq('id', input.id)
-        .eq('user_id', ctx.session.user.id)
+        .eq('user_id', ctx.user.id)
         .select()
         .single()
 
@@ -203,7 +203,7 @@ export const pixRouter = router({
         .from('pix_keys')
         .update({ is_active: false })
         .eq('id', input.id)
-        .eq('user_id', ctx.session.user.id)
+        .eq('user_id', ctx.user.id)
         .select()
         .single()
 
@@ -235,7 +235,7 @@ export const pixRouter = router({
     let query = ctx.supabase
       .from('pix_transactions')
       .select('*', { count: 'exact' })
-      .eq('user_id', ctx.session.user.id)
+      .eq('user_id', ctx.user.id)
       .order('created_at', { ascending: false })
       .range(input.offset, input.offset + input.limit - 1)
 
@@ -285,7 +285,7 @@ export const pixRouter = router({
         .from('pix_transactions')
         .select('*')
         .eq('id', input.id)
-        .eq('user_id', ctx.session.user.id)
+        .eq('user_id', ctx.user.id)
         .single()
 
       if (error) {
@@ -315,7 +315,7 @@ export const pixRouter = router({
       const { data, error } = await ctx.supabase
         .from('pix_transactions')
         .insert({
-          user_id: ctx.session.user.id,
+          user_id: ctx.user.id,
           transaction_type: input.transactionType,
           status: input.transactionType === 'scheduled' ? 'pending' : 'processing',
           amount: input.amount,
@@ -357,7 +357,7 @@ export const pixRouter = router({
   getStats: protectedProcedure.input(getStatsSchema).query(async ({ ctx, input }) => {
     const { data, error } = await ctx.supabase
       .rpc('get_pix_stats', {
-        p_user_id: ctx.session.user.id,
+        p_user_id: ctx.user.id,
         p_period: input.period,
       })
       .single()
@@ -393,7 +393,7 @@ export const pixRouter = router({
       const { data, error } = await ctx.supabase
         .from('pix_qr_codes')
         .insert({
-          user_id: ctx.session.user.id,
+          user_id: ctx.user.id,
           pix_key: input.pixKey,
           amount: input.amount,
           description: input.description,
@@ -422,7 +422,7 @@ export const pixRouter = router({
     const { data, error } = await ctx.supabase
       .from('pix_qr_codes')
       .select('*')
-      .eq('user_id', ctx.session.user.id)
+      .eq('user_id', ctx.user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
@@ -450,7 +450,7 @@ export const pixRouter = router({
         .from('pix_qr_codes')
         .update({ is_active: false })
         .eq('id', input.id)
-        .eq('user_id', ctx.session.user.id)
+        .eq('user_id', ctx.user.id)
         .select()
         .single()
 

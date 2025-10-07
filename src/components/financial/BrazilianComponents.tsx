@@ -25,7 +25,7 @@ export const BalanceCard = React.memo(function BalanceCard({
   return (
     <Card
       className={cn(
-        'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0',
+        'bg-gradient-to-r from-info to-info/90 text-white border-0',
         'hover:shadow-lg transition-all duration-300',
         'hover:scale-[1.02]',
         className
@@ -66,7 +66,7 @@ const TransactionItem = React.memo(function TransactionItem({ transaction }: { t
 
   // Memoize amount color class
   const amountColorClass = React.useMemo(() => {
-    return transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
+    return transaction.amount < 0 ? 'text-financial-negative' : 'text-financial-positive'
   }, [transaction.amount])
 
   return (
@@ -94,7 +94,7 @@ export const PIXTransferForm = React.memo(function PIXTransferForm({
     <form className={cn('space-y-4', className)} onSubmit={handleSubmit}>
       <input type="text" placeholder="Chave PIX" className="w-full p-3 border rounded" />
       <input type="number" placeholder="Valor (R$)" className="w-full p-3 border rounded" />
-      <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded">
+      <button type="submit" className="w-full bg-info text-white p-3 rounded">
         Transferir
       </button>
     </form>

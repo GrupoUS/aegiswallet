@@ -102,11 +102,11 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
   const getBoletoStatusColor = useCallback((status: Boleto['status']) => {
     switch (status) {
       case 'paid':
-        return 'text-green-600 bg-green-100'
+        return 'text-success bg-success/10'
       case 'overdue':
-        return 'text-red-600 bg-red-100'
+        return 'text-destructive bg-destructive/10'
       default:
-        return 'text-yellow-600 bg-yellow-100'
+        return 'text-warning bg-warning/10'
     }
   }, [])
 
@@ -200,11 +200,11 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
     if (paymentStatus !== 'success') return null
 
     return (
-      <Card className={cn('border-green-200 bg-green-50', className)}>
+      <Card className={cn('border-success/20 bg-success/10', className)}>
         <CardContent className="p-6 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-green-800 mb-2">Pagamento Realizado!</h3>
-          <p className="text-green-600">Boleto pago com sucesso via {paymentMethodText}</p>
+          <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-success mb-2">Pagamento Realizado!</h3>
+          <p className="text-success">Boleto pago com sucesso via {paymentMethodText}</p>
         </CardContent>
       </Card>
     )
@@ -254,11 +254,13 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
               onChange={handleBoletoCodeChange}
               className={cn(
                 'font-mono text-sm',
-                paymentStatus === 'error' && !validateBoletoCode(boletoCode) && 'border-red-500'
+                paymentStatus === 'error' && !validateBoletoCode(boletoCode) && 'border-destructive'
               )}
             />
             {paymentStatus === 'error' && !validateBoletoCode(boletoCode) && (
-              <p className="text-sm text-red-500">Por favor, insira um código de boleto válido</p>
+              <p className="text-sm text-destructive">
+                Por favor, insira um código de boleto válido
+              </p>
             )}
           </div>
 
@@ -281,8 +283,8 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
           </div>
 
           {/* Payment Info */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 text-sm text-blue-700">
+          <div className="bg-info/10 p-4 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-info">
               <AlertCircle className="w-4 h-4" />
               <span>{paymentInfoText}</span>
             </div>

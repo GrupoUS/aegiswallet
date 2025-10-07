@@ -217,7 +217,8 @@ export class BiometricAuthService {
    */
   private async validatePIN(pin: string): Promise<boolean> {
     // TODO: Implement actual PIN validation against database
-    // This is a placeholder
+    // Add small delay to simulate network latency
+    await new Promise((resolve) => setTimeout(resolve, Math.random() * 50 + 10))
     return pin.length >= 4
   }
 
@@ -226,7 +227,8 @@ export class BiometricAuthService {
    */
   private async validateOTP(otp: string, _phoneNumber: string): Promise<boolean> {
     // TODO: Implement actual OTP validation
-    // This is a placeholder
+    // Add small delay to simulate network latency
+    await new Promise((resolve) => setTimeout(resolve, Math.random() * 50 + 10))
     return otp.length === 6
   }
 

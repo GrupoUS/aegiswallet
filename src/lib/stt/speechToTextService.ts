@@ -190,13 +190,15 @@ export class SpeechToTextService {
   private async parseResponse(response: Response, startTime: number): Promise<STTResult> {
     const data = await response.json()
 
+    const processingTimeMs = Math.max(1, Date.now() - startTime)
+
     return {
       text: data.text || '',
       language: data.language || this.config.language,
       duration: data.duration || 0,
       confidence: this.calculateConfidence(data),
       timestamp: new Date(),
-      processingTimeMs: Date.now() - startTime,
+      processingTimeMs,
     }
   }
 
@@ -249,18 +251,21 @@ export class SpeechToTextService {
    */
   private isRetryable(error: unknown): boolean {
     if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase()
+      const errorName = error.name
+
       // Network errors are retryable
-      if (error.name === 'AbortError' || error.message.includes('network')) {
+      if (errorName === 'AbortError' || errorMessage.includes('network')) {
         return true
       }
 
       // Rate limit errors are retryable
-      if (error.message.includes('rate limit') || error.message.includes('429')) {
+      if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
         return true
       }
 
       // Server errors (5xx) are retryable
-      if (error.message.includes('500') || error.message.includes('503')) {
+      if (errorMessage.includes('500') || errorMessage.includes('503')) {
         return true
       }
     }
@@ -283,7 +288,8 @@ export class SpeechToTextService {
       // Ignore JSON parse errors
     }
 
-    return new Error(errorMessage)
+    // Include status code in error message for proper categorization
+    return new Error(`${errorMessage} (${response.status})`)
   }
 
   /**
@@ -291,8 +297,11 @@ export class SpeechToTextService {
    */
   private handleError(error: unknown): STTError {
     if (error instanceof Error) {
-      // Timeout errors
-      if (error.name === 'AbortError') {
+      const errorMessage = error.message.toLowerCase()
+      const errorName = error.name
+
+      // Timeout errors (check first - highest priority)
+      if (errorName === 'AbortError') {
         return {
           code: STTErrorCode.TIMEOUT,
           message: 'Request timed out. Please try again.',
@@ -301,8 +310,13 @@ export class SpeechToTextService {
         }
       }
 
-      // Network errors
-      if (error.message.includes('network') || error.message.includes('fetch')) {
+      // Network errors (check message and name)
+      if (
+        errorMessage.includes('network') || 
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('network error') ||
+        errorName === 'TypeError'
+      ) {
         return {
           code: STTErrorCode.NETWORK_ERROR,
           message: 'Network error. Please check your connection.',
@@ -311,8 +325,12 @@ export class SpeechToTextService {
         }
       }
 
-      // Rate limit errors
-      if (error.message.includes('rate limit') || error.message.includes('429')) {
+      // Rate limit errors (check status codes and message)
+      if (
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('429') ||
+        errorMessage.includes('too many requests')
+      ) {
         return {
           code: STTErrorCode.RATE_LIMIT,
           message: 'Rate limit exceeded. Please wait a moment.',
@@ -321,8 +339,14 @@ export class SpeechToTextService {
         }
       }
 
-      // Authentication errors
-      if (error.message.includes('401') || error.message.includes('authentication')) {
+      // Authentication errors (check status codes and message)
+      if (
+        errorMessage.includes('401') ||
+        errorMessage.includes('403') ||
+        errorMessage.includes('authentication') ||
+        errorMessage.includes('unauthorized') ||
+        errorMessage.includes('invalid api key')
+      ) {
         return {
           code: STTErrorCode.AUTHENTICATION_ERROR,
           message: 'Authentication failed. Please check API key.',
@@ -341,8 +365,14 @@ export class SpeechToTextService {
         }
       }
 
-      // API errors
-      if (error.message.includes('API Error')) {
+      // API errors (check for status codes)
+      if (
+        errorMessage.includes('api error') ||
+        errorMessage.includes('400') ||
+        errorMessage.includes('bad request') ||
+        errorMessage.includes('500') ||
+        errorMessage.includes('internal server error')
+      ) {
         return {
           code: STTErrorCode.API_ERROR,
           message: error.message,
@@ -379,10 +409,17 @@ export class SpeechToTextService {
       // Try to transcribe (will likely fail but confirms API is reachable)
       await this.transcribe(testBlob)
       return true
-    } catch (error) {
+    } catch (error: any) {
       // If we get an authentication or API error, the service is reachable
-      const sttError = this.handleError(error)
-      return sttError.code !== STTErrorCode.NETWORK_ERROR
+      // Network errors are the only ones that indicate the service is unreachable
+      const errorMessage = error?.message || ''
+      const isNetworkError =
+        errorMessage.includes('Network error') ||
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('TypeError') ||
+        error?.name === 'TypeError'
+
+      return !isNetworkError
     }
   }
 }

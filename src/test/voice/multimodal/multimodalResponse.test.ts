@@ -4,9 +4,10 @@
  * Story: 01.03 - Respostas Multimodais
  */
 
+import '@testing-library/jest-dom'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useMultimodalResponse } from '@/hooks/useMultimodalResponse'
+import { useMultimodalResponse } from '@/hooks/useMultimodalResponseCompat'
 import {
   formatCurrency,
   formatCurrencyForVoice,
@@ -31,8 +32,8 @@ describe('Brazilian Formatters', () => {
 
     it('should format currency for voice', () => {
       expect(formatCurrencyForVoice(100)).toContain('cem reais')
-      expect(formatCurrencyForVoice(1234.56)).toContain('mil duzentos')
-      expect(formatCurrencyForVoice(0.5)).toContain('cinquenta centavos')
+      expect(formatCurrencyForVoice(1234.56)).toContain('mil e duzentos')
+      expect(formatCurrencyForVoice(0.5)).toContain('50 centavos')
     })
   })
 

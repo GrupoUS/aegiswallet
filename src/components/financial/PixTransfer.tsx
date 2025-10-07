@@ -123,12 +123,12 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
     if (transferStatus !== 'success') return null
 
     return (
-      <Card className={cn('border-green-200 bg-green-50', className)}>
+      <Card className={cn('border-success/20 bg-success/10', className)}>
         <CardContent className="p-6 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-green-800 mb-2">Transferência Realizada!</h3>
-          <p className="text-green-600 mb-2">{formatCurrency(amount)}</p>
-          <p className="text-sm text-green-600">Transferência PIX processada instantaneamente</p>
+          <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-success mb-2">Transferência Realizada!</h3>
+          <p className="text-success mb-2">{formatCurrency(amount)}</p>
+          <p className="text-sm text-success">Transferência PIX processada instantaneamente</p>
         </CardContent>
       </Card>
     )
@@ -142,7 +142,7 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-pix-primary to-pix-accent rounded-lg flex items-center justify-center">
             <span className="text-white font-bold">PIX</span>
           </div>
           Transferência PIX
@@ -178,11 +178,11 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
             onChange={(e) => setPixKey(e.target.value)}
             disabled={transferType === 'qr'}
             className={cn(
-              transferStatus === 'error' && !validatePixKey(pixKey) && 'border-red-500'
+              transferStatus === 'error' && !validatePixKey(pixKey) && 'border-destructive'
             )}
           />
           {transferStatus === 'error' && !validatePixKey(pixKey) && (
-            <p className="text-sm text-red-500">Por favor, insira uma chave PIX válida</p>
+            <p className="text-sm text-destructive">Por favor, insira uma chave PIX válida</p>
           )}
         </div>
 
@@ -195,10 +195,10 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
             placeholder="R$ 0,00"
             value={amount}
             onChange={handleAmountChange}
-            className={cn(transferStatus === 'error' && !amount && 'border-red-500')}
+            className={cn(transferStatus === 'error' && !amount && 'border-destructive')}
           />
           {transferStatus === 'error' && !amount && (
-            <p className="text-sm text-red-500">Por favor, insira um valor</p>
+            <p className="text-sm text-destructive">Por favor, insira um valor</p>
           )}
         </div>
 
@@ -215,12 +215,12 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
         </div>
 
         {/* Transfer Info */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-blue-700">
+        <div className="bg-info/10 p-4 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-info">
             <Clock className="w-4 h-4" />
             <span>Transferências PIX são processadas instantaneamente</span>
           </div>
-          <div className="text-xs text-blue-600 mt-1">Disponível 24/7, todos os dias</div>
+          <div className="text-xs text-info mt-1">Disponível 24/7, todos os dias</div>
         </div>
 
         {/* Transfer Button */}

@@ -31,7 +31,12 @@ export function FinancialAmount({
     xl: 'text-xl',
   }
 
-  const colorClass = amount > 0 ? 'text-green-600' : amount < 0 ? 'text-red-600' : 'text-gray-900'
+  const colorClass =
+    amount > 0
+      ? 'text-financial-positive'
+      : amount < 0
+        ? 'text-financial-negative'
+        : 'text-gray-900'
 
   return (
     <span className={cn('font-mono font-semibold', sizeClasses[size], colorClass, className)}>

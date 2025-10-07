@@ -175,10 +175,10 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
                         confidence > 0.8
-                          ? 'bg-green-500'
+                          ? 'bg-success'
                           : confidence > 0.6
-                            ? 'bg-yellow-500'
-                            : 'bg-red-500'
+                            ? 'bg-warning'
+                            : 'bg-destructive'
                       }`}
                       style={{ width: `${confidence * 100}%` }}
                     />
@@ -250,7 +250,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
               <div className="space-y-3">
                 {recentCommands.map((item, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                    <div className="w-2 h-2 bg-info rounded-full mt-2 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">"{item.command}"</p>
                       <p className="text-sm text-gray-600 mt-1">{item.response.message}</p>

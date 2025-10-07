@@ -152,10 +152,12 @@ export const calendarRouter = router({
         const { data, error } = await supabase
           .from('financial_events')
           .insert({
-            ...input,
+            event_type_id: input.typeId,
+            title: input.title,
+            description: input.description,
+            amount: input.amount,
             user_id: ctx.user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            event_date: input.eventDate,
           })
           .select(`
             *,
@@ -205,19 +207,21 @@ export const calendarRouter = router({
       try {
         const { id, ...updateData } = input
 
-        // Se marcando como concluído, adicionar data de conclusão
-        if (updateData.isCompleted) {
-          updateData.completed_at = new Date().toISOString()
-        } else if (updateData.isCompleted === false) {
-          updateData.completed_at = null
+        // Map the input to database column names (only use columns that exist)
+        const dbUpdateData: any = {}
+        if (updateData.typeId !== undefined) dbUpdateData.event_type_id = updateData.typeId
+        if (updateData.title !== undefined) dbUpdateData.title = updateData.title
+        if (updateData.description !== undefined) dbUpdateData.description = updateData.description
+        if (updateData.amount !== undefined) dbUpdateData.amount = updateData.amount
+        if (updateData.eventDate !== undefined) dbUpdateData.event_date = updateData.eventDate
+        if (updateData.isCompleted !== undefined) {
+          dbUpdateData.is_completed = updateData.isCompleted
+          // Note: completed_at column doesn't exist yet, so we can't set it
         }
 
         const { data, error } = await supabase
           .from('financial_events')
-          .update({
-            ...updateData,
-            updated_at: new Date().toISOString(),
-          })
+          .update(dbUpdateData)
           .eq('id', id)
           .eq('user_id', ctx.user.id)
           .select(`
@@ -298,8 +302,8 @@ export const calendarRouter = router({
           `)
         .eq('user_id', ctx.user.id)
         .eq('is_completed', false)
-        .gte('event_date', today.toISOString())
-        .lte('event_date', thirtyDaysFromNow.toISOString())
+        .gte('event_date', today.toISOString().split('T')[0])
+        .lte('event_date', thirtyDaysFromNow.toISOString().split('T')[0])
         .order('event_date', { ascending: true })
         .limit(10)
 
@@ -335,7 +339,7 @@ export const calendarRouter = router({
           `)
         .eq('user_id', ctx.user.id)
         .eq('is_completed', false)
-        .lt('due_date', today.toISOString())
+        .lt('due_date', today.toISOString().split('T')[0])
         .not('due_date', 'is', null)
         .order('due_date', { ascending: true })
 
@@ -357,7 +361,7 @@ export const calendarRouter = router({
     }
   }),
 
-  // Criar lembrete para evento
+  // Criar lembrete para evento (placeholder implementation)
   createReminder: protectedProcedure
     .input(
       z.object({
@@ -384,24 +388,17 @@ export const calendarRouter = router({
           })
         }
 
-        const { data, error } = await supabase
-          .from('event_reminders')
-          .insert({
-            ...input,
-            created_at: new Date().toISOString(),
-          })
-          .select()
-          .single()
-
-        if (error) {
-          console.error('Error creating event reminder:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao criar lembrete',
-          })
+        // For now, just return a placeholder response
+        // TODO: Implement actual reminder functionality when event_reminders table is available
+        return {
+          id: crypto.randomUUID(),
+          event_id: input.eventId,
+          remind_at: input.remindAt,
+          reminder_type: input.reminderType,
+          message: input.message,
+          is_sent: false,
+          created_at: new Date().toISOString(),
         }
-
-        return data
       } catch (error) {
         console.error('Event reminder creation error:', error)
         throw new TRPCError({
@@ -411,30 +408,18 @@ export const calendarRouter = router({
       }
     }),
 
-  // Marcar lembrete como enviado
+  // Marcar lembrete como enviado (placeholder implementation)
   markReminderSent: protectedProcedure
     .input(z.object({ reminderId: z.string().uuid() }))
     .mutation(async ({ input }) => {
       try {
-        const { data, error } = await supabase
-          .from('event_reminders')
-          .update({
-            is_sent: true,
-            sent_at: new Date().toISOString(),
-          })
-          .eq('id', input.reminderId)
-          .select()
-          .single()
-
-        if (error) {
-          console.error('Error marking reminder as sent:', error)
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao marcar lembrete como enviado',
-          })
+        // For now, just return a placeholder response
+        // TODO: Implement actual reminder functionality when event_reminders table is available
+        return {
+          id: input.reminderId,
+          is_sent: true,
+          sent_at: new Date().toISOString(),
         }
-
-        return data
       } catch (error) {
         console.error('Reminder sent mark error:', error)
         throw new TRPCError({

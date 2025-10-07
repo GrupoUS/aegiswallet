@@ -28,10 +28,10 @@ const COMMAND_HINTS = [
 const UnsupportedState = React.memo(function UnsupportedState() {
   return (
     <div className="flex flex-col items-center justify-center p-6">
-      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-        <MicOff className="w-8 h-8 text-red-500" />
+      <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+        <MicOff className="w-8 h-8 text-destructive" />
       </div>
-      <p className="text-sm text-red-600 text-center">
+      <p className="text-sm text-destructive text-center">
         Seu navegador não suporta reconhecimento de voz
       </p>
       <p className="text-xs text-gray-500 text-center mt-2">
@@ -61,8 +61,8 @@ const CommandHints = React.memo(function CommandHints() {
 const VisualFeedback = React.memo(function VisualFeedback() {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div className="w-24 h-24 rounded-full border-4 border-amber-400 animate-ping opacity-20" />
-      <div className="w-20 h-20 rounded-full border-4 border-amber-400 animate-ping opacity-20 animation-delay-200" />
+      <div className="w-24 h-24 rounded-full border-4 border-warning animate-ping opacity-20" />
+      <div className="w-20 h-20 rounded-full border-4 border-warning animate-ping opacity-20 animation-delay-200" />
     </div>
   )
 })
@@ -92,9 +92,9 @@ export const VoiceIndicator = React.memo(function VoiceIndicator({
 }: VoiceIndicatorProps) {
   // Memoize the state color to prevent recalculation
   const stateColor = React.useMemo(() => {
-    if (error) return 'bg-red-500'
-    if (isProcessing) return 'bg-blue-500'
-    if (isActive) return 'bg-amber-500'
+    if (error) return 'bg-destructive'
+    if (isProcessing) return 'bg-info'
+    if (isActive) return 'bg-warning'
     return 'bg-gray-400'
   }, [error, isProcessing, isActive])
 
@@ -134,7 +134,7 @@ export const VoiceIndicator = React.memo(function VoiceIndicator({
 
   // Memoize the status text className
   const statusTextClassName = React.useMemo(() => {
-    return cn('text-sm font-medium transition-colors', error ? 'text-red-600' : 'text-gray-700')
+    return cn('text-sm font-medium transition-colors', error ? 'text-destructive' : 'text-gray-700')
   }, [error])
 
   if (!isSupported) {

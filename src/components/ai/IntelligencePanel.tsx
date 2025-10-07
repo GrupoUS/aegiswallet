@@ -4,7 +4,7 @@
 
 export function IntelligencePanel() {
   return (
-    <div className="bg-purple-50 rounded-lg p-6">
+    <div className="bg-accent/10 rounded-lg p-6">
       <h3 className="text-lg font-semibold mb-4">Insights Inteligentes</h3>
       <div className="space-y-3">
         <div className="p-3 bg-white rounded shadow-sm">

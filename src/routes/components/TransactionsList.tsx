@@ -31,9 +31,9 @@ function TransactionsList({ transactions }: TransactionsListProps) {
             >
               <div className="flex items-center gap-3">
                 {transaction.type === 'income' ? (
-                  <TrendingUp className="w-5 h-5 text-green-500" />
+                  <TrendingUp className="w-5 h-5 text-financial-positive" />
                 ) : (
-                  <TrendingDown className="w-5 h-5 text-red-500" />
+                  <TrendingDown className="w-5 h-5 text-financial-negative" />
                 )}
                 <div>
                   <p className="font-medium">{transaction.description}</p>

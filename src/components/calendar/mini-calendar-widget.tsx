@@ -104,9 +104,9 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
                           variant="outline"
                           className={cn(
                             'text-[10px] h-4 px-1',
-                            event.status === 'paid' && 'border-green-500 text-green-500',
-                            event.status === 'pending' && 'border-yellow-500 text-yellow-500',
-                            event.status === 'scheduled' && 'border-blue-500 text-blue-500'
+                            event.status === 'paid' && 'border-success text-success',
+                            event.status === 'pending' && 'border-warning text-warning',
+                            event.status === 'scheduled' && 'border-info text-info'
                           )}
                         >
                           {event.status === 'paid' && 'Pago'}

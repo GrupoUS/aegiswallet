@@ -25,13 +25,13 @@ import { cn } from '@/lib/utils'
 
 function ErrorBoundary({ error }: ErrorComponentProps) {
   return (
-    <div className="p-4 text-red-500 bg-red-50 min-h-screen flex flex-col items-center justify-center">
+    <div className="p-4 text-destructive bg-destructive/10 min-h-screen flex flex-col items-center justify-center">
       <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-red-700 mb-4">Oops, something went wrong!</h2>
-        <p className="text-red-600 mb-4">
+        <h2 className="text-2xl font-bold text-destructive mb-4">Oops, something went wrong!</h2>
+        <p className="text-destructive mb-4">
           We encountered an unexpected error. Please try again later.
         </p>
-        <pre className="bg-red-50 p-4 rounded-md text-sm text-red-800 overflow-auto">
+        <pre className="bg-destructive/10 p-4 rounded-md text-sm text-destructive overflow-auto">
           <code>{error.message}</code>
           {error.stack && <div className="mt-4 text-xs">{error.stack}</div>}
         </pre>

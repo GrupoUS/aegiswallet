@@ -89,13 +89,13 @@ export function formatCurrencyForVoice(amount: number): string {
   const reais = Math.floor(absAmount)
   const cents = Math.round((absAmount - reais) * 100)
 
-  let text = `${sign}${reais} ${reais === 1 ? 'real' : 'reais'}`
-
   if (cents > 0) {
-    text += ` e ${cents} ${cents === 1 ? 'centavo' : 'centavos'}`
+    // For amounts with cents, show both reais and cents
+    return `${sign}${numberToWords(reais)} reais e ${cents} centavos`
   }
 
-  return text
+  // For whole numbers, just convert to words
+  return `${sign}${numberToWords(reais)} ${reais === 1 ? 'real' : 'reais'}`
 }
 
 // ============================================================================
@@ -273,7 +273,16 @@ export function formatCompactNumber(num: number): string {
 export function formatPercentage(value: number, decimals = 1): string {
   const effectiveDecimals = Number.isInteger(value) ? 0 : decimals
   const formatted = value.toFixed(effectiveDecimals)
-  return `${formatted}%`
+
+  // Replace dot with comma for Brazilian format
+  const withComma = formatted.replace('.', ',')
+
+  // For integer values, show at least one decimal place if requested decimals > 0
+  if (effectiveDecimals === 0 && decimals > 0) {
+    return `${withComma},${'0'.repeat(decimals)}%`
+  }
+
+  return `${withComma}%`
 }
 
 // ============================================================================
@@ -459,22 +468,83 @@ export function isValidCNPJ(cnpj: string): boolean {
 // Exports
 // ============================================================================
 
-// Placeholder for number-to-words (MVP)
+// Number-to-words converter for Brazilian Portuguese
 export function numberToWords(num: number): string {
-  const words = [
-    'zero',
-    'um',
-    'dois',
-    'três',
-    'quatro',
-    'cinco',
-    'seis',
-    'sete',
-    'oito',
-    'nove',
+  if (num === 0) return 'zero'
+  if (num === 100) return 'cem'
+  if (num === 1000) return 'mil'
+
+  const units = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
+
+  const teens = [
     'dez',
+    'onze',
+    'doze',
+    'treze',
+    'quatorze',
+    'quinze',
+    'dezesseis',
+    'dezessete',
+    'dezoito',
+    'dezenove',
   ]
-  return words[num] || num.toString()
+
+  const tens = [
+    '',
+    '',
+    'vinte',
+    'trinta',
+    'quarenta',
+    'cinquenta',
+    'sessenta',
+    'setenta',
+    'oitenta',
+    'noventa',
+  ]
+
+  const hundreds = [
+    '',
+    'cem',
+    'duzentos',
+    'trezentos',
+    'quatrocentos',
+    'quinhentos',
+    'seiscentos',
+    'setecentos',
+    'oitocentos',
+    'novecentos',
+  ]
+
+  if (num < 10) return units[num]
+  if (num < 20) return teens[num - 10]
+  if (num < 100) {
+    const ten = Math.floor(num / 10)
+    const unit = num % 10
+    return unit > 0 ? `${tens[ten]} e ${units[unit]}` : tens[ten]
+  }
+
+  if (num < 1000) {
+    const hundred = Math.floor(num / 100)
+    const remainder = num % 100
+    if (remainder === 0) return hundreds[hundred]
+
+    // Special case for 100
+    if (hundred === 1) return `cem e ${numberToWords(remainder)}`
+
+    return `${hundreds[hundred]} e ${numberToWords(remainder)}`
+  }
+
+  if (num < 2000) {
+    const thousand = Math.floor(num / 1000)
+    const remainder = num % 1000
+    if (remainder === 0) return thousand === 1 ? 'mil' : `${numberToWords(thousand)} mil`
+
+    if (thousand === 1) return `mil e ${numberToWords(remainder)}`
+    return `${numberToWords(thousand)} mil e ${numberToWords(remainder)}`
+  }
+
+  // For larger numbers, return as string for now (can be extended later)
+  return num.toString()
 }
 
 export const brazilianFormatters = {

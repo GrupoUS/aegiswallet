@@ -30,11 +30,11 @@ import { maskPixKey } from '@/types/pix'
 const getStatusIcon = React.memo(function getStatusIcon(status: PixTransaction['status']) {
   switch (status) {
     case 'completed':
-      return <CheckCircle2 className="w-4 h-4 text-green-500" />
+      return <CheckCircle2 className="w-4 h-4 text-success" />
     case 'processing':
-      return <Clock className="w-4 h-4 text-yellow-500" />
+      return <Clock className="w-4 h-4 text-warning" />
     case 'failed':
-      return <XCircle className="w-4 h-4 text-red-500" />
+      return <XCircle className="w-4 h-4 text-destructive" />
     default:
       return <Clock className="w-4 h-4 text-gray-500" />
   }
@@ -45,20 +45,17 @@ const getStatusBadge = React.memo(function getStatusBadge(status: PixTransaction
     completed: {
       variant: 'default' as const,
       label: 'Concluída',
-      className:
-        'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400 border-green-200 dark:border-green-800',
+      className: 'bg-success/10 text-success border-success/20',
     },
     processing: {
       variant: 'secondary' as const,
       label: 'Processando',
-      className:
-        'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+      className: 'bg-warning/10 text-warning border-warning/20',
     },
     failed: {
       variant: 'destructive' as const,
       label: 'Falhou',
-      className:
-        'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-200 dark:border-red-800',
+      className: 'bg-destructive/10 text-destructive border-destructive/20',
     },
     pending: {
       variant: 'outline' as const,
@@ -216,23 +213,21 @@ const TransactionRow = React.memo(function TransactionRow({
             <div
               className={cn(
                 'flex items-center gap-2 px-2 py-1 rounded-md',
-                'bg-red-100 dark:bg-red-950/30'
+                'bg-financial-negative/10'
               )}
             >
-              <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
-              <span className="text-sm font-medium text-red-700 dark:text-red-400">Enviado</span>
+              <ArrowUpRight className="w-4 h-4 text-financial-negative" />
+              <span className="text-sm font-medium text-financial-negative">Enviado</span>
             </div>
           ) : (
             <div
               className={cn(
                 'flex items-center gap-2 px-2 py-1 rounded-md',
-                'bg-green-100 dark:bg-green-950/30'
+                'bg-financial-positive/10'
               )}
             >
-              <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                Recebido
-              </span>
+              <ArrowDownLeft className="w-4 h-4 text-financial-positive" />
+              <span className="text-sm font-medium text-financial-positive">Recebido</span>
             </div>
           )}
         </div>
@@ -244,7 +239,7 @@ const TransactionRow = React.memo(function TransactionRow({
       <TableCell>{transaction.description || '-'}</TableCell>
       <TableCell
         className={`text-right font-bold ${
-          transaction.type === 'sent' ? 'text-red-600' : 'text-green-600'
+          transaction.type === 'sent' ? 'text-financial-negative' : 'text-financial-positive'
         }`}
       >
         {formattedAmount}

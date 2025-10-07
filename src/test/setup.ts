@@ -82,6 +82,84 @@ beforeAll(() => {
     window.speechSynthesis = mockSpeechSynthesis
     window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance
   }
+
+  // Enhanced document mock for React Testing Library
+  if (typeof document === 'undefined') {
+    const mockDocument = {
+      body: {
+        appendChild: vi.fn(),
+        removeChild: vi.fn(),
+        innerHTML: '',
+        textContent: '',
+        style: {},
+        classList: {
+          add: vi.fn(),
+          remove: vi.fn(),
+          contains: vi.fn(),
+        },
+        getElementsByTagName: vi.fn(() => []),
+        getElementsByClassName: vi.fn(() => []),
+      },
+      createElement: vi.fn((tagName: string) => ({
+        tagName: tagName.toUpperCase(),
+        innerHTML: '',
+        textContent: '',
+        style: {},
+        classList: {
+          add: vi.fn(),
+          remove: vi.fn(),
+          contains: vi.fn(),
+        },
+        setAttribute: vi.fn(),
+        getAttribute: vi.fn(),
+        appendChild: vi.fn(),
+        removeChild: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        getElementsByTagName: vi.fn(() => []),
+        getElementsByClassName: vi.fn(() => []),
+      })),
+      getElementById: vi.fn(),
+      querySelector: vi.fn(),
+      querySelectorAll: vi.fn(() => []),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      createTextNode: vi.fn((text: string) => ({
+        textContent: text,
+        nodeValue: text,
+      })),
+      documentElement: {
+        scrollTop: 0,
+        scrollLeft: 0,
+        style: {},
+      },
+      head: {
+        appendChild: vi.fn(),
+        removeChild: vi.fn(),
+        innerHTML: '',
+      },
+    }
+    ;(globalThis as any).document = mockDocument
+    ;(globalThis as any).window = {
+      ...((globalThis as any).window || {}),
+      document: mockDocument,
+    }
+  }
+
+  // Ensure document is available globally for React Testing Library
+  if (typeof globalThis !== 'undefined' && !globalThis.document) {
+    globalThis.document = (globalThis as any).window?.document || {}
+  }
+
+  // Also set document on global for older testing libraries
+  if (typeof global !== 'undefined' && !global.document) {
+    global.document = (globalThis as any).document
+  }
+
+  // Ensure window is available
+  if (typeof window === 'undefined' && typeof globalThis !== 'undefined') {
+    ;(globalThis as any).window = (globalThis as any).window || {}
+  }
 })
 
 // Limpar mocks após cada teste

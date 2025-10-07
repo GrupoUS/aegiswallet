@@ -33,20 +33,24 @@ const BalanceData = React.memo(function BalanceData({ data }: { data: any }) {
     <div className="mt-3 space-y-2">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Saldo atual:</span>
-        <span className="text-lg font-bold text-green-600">
+        <span className="text-lg font-bold text-financial-positive">
           {formatCurrency(data.currentBalance)}
         </span>
       </div>
       {data.income && (
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Receitas:</span>
-          <span className="text-sm font-medium text-green-600">+{formatCurrency(data.income)}</span>
+          <span className="text-sm font-medium text-financial-positive">
+            +{formatCurrency(data.income)}
+          </span>
         </div>
       )}
       {data.expenses && (
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Despesas:</span>
-          <span className="text-sm font-medium text-red-600">-{formatCurrency(data.expenses)}</span>
+          <span className="text-sm font-medium text-financial-negative">
+            -{formatCurrency(data.expenses)}
+          </span>
         </div>
       )}
     </div>
@@ -56,16 +60,18 @@ const BalanceData = React.memo(function BalanceData({ data }: { data: any }) {
 // Memoize the BudgetData component
 const BudgetData = React.memo(function BudgetData({ data }: { data: any }) {
   const progressBarColor = React.useMemo(() => {
-    if (data.spentPercentage > 90) return 'bg-red-500'
-    if (data.spentPercentage > 70) return 'bg-orange-500'
-    return 'bg-green-500'
+    if (data.spentPercentage > 90) return 'bg-destructive'
+    if (data.spentPercentage > 70) return 'bg-warning'
+    return 'bg-success'
   }, [data.spentPercentage])
 
   return (
     <div className="mt-3 space-y-2">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Disponível:</span>
-        <span className="text-lg font-bold text-green-600">{formatCurrency(data.available)}</span>
+        <span className="text-lg font-bold text-financial-positive">
+          {formatCurrency(data.available)}
+        </span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
@@ -92,7 +98,9 @@ const BillsData = React.memo(function BillsData({ data }: { data: any }) {
               Vence: {new Date(bill.dueDate).toLocaleDateString('pt-BR')}
             </p>
           </div>
-          <span className="text-sm font-bold text-red-600">{formatCurrency(bill.amount)}</span>
+          <span className="text-sm font-bold text-financial-negative">
+            {formatCurrency(bill.amount)}
+          </span>
         </div>
       ))}
       {data.bills?.length > 3 && (
@@ -114,7 +122,9 @@ const IncomingData = React.memo(function IncomingData({ data }: { data: any }) {
               Previsto: {new Date(item.expectedDate).toLocaleDateString('pt-BR')}
             </p>
           </div>
-          <span className="text-sm font-bold text-green-600">+{formatCurrency(item.amount)}</span>
+          <span className="text-sm font-bold text-financial-positive">
+            +{formatCurrency(item.amount)}
+          </span>
         </div>
       ))}
       {data.incoming?.length > 3 && (
@@ -129,11 +139,11 @@ const IncomingData = React.memo(function IncomingData({ data }: { data: any }) {
 // Memoize the ProjectionData component
 const ProjectionData = React.memo(function ProjectionData({ data }: { data: any }) {
   const projectedBalanceColor = React.useMemo(() => {
-    return data.projectedBalance >= 0 ? 'text-green-600' : 'text-red-600'
+    return data.projectedBalance >= 0 ? 'text-financial-positive' : 'text-financial-negative'
   }, [data.projectedBalance])
 
   const variationColor = React.useMemo(() => {
-    return data.variation >= 0 ? 'text-green-600' : 'text-red-600'
+    return data.variation >= 0 ? 'text-financial-positive' : 'text-financial-negative'
   }, [data.variation])
 
   return (
@@ -167,7 +177,7 @@ const TransferData = React.memo(function TransferData({ data }: { data: any }) {
       </div>
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Valor:</span>
-        <span className="text-sm font-bold text-blue-600">{formatCurrency(data.amount)}</span>
+        <span className="text-sm font-bold text-info">{formatCurrency(data.amount)}</span>
       </div>
       {data.method && (
         <div className="flex justify-between items-center">
@@ -194,23 +204,23 @@ export const VoiceResponse = React.memo(function VoiceResponse({
   const icon = React.useMemo(() => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-6 h-6 text-green-500" />
+        return <CheckCircle className="w-6 h-6 text-success" />
       case 'error':
-        return <AlertCircle className="w-6 h-6 text-red-500" />
+        return <AlertCircle className="w-6 h-6 text-destructive" />
       case 'balance':
-        return <TrendingUp className="w-6 h-6 text-blue-500" />
+        return <TrendingUp className="w-6 h-6 text-info" />
       case 'budget':
-        return <Info className="w-6 h-6 text-orange-500" />
+        return <Info className="w-6 h-6 text-warning" />
       case 'bills':
-        return <CreditCard className="w-6 h-6 text-red-500" />
+        return <CreditCard className="w-6 h-6 text-destructive" />
       case 'incoming':
-        return <ArrowUpRight className="w-6 h-6 text-green-500" />
+        return <ArrowUpRight className="w-6 h-6 text-success" />
       case 'projection':
-        return <TrendingUp className="w-6 h-6 text-purple-500" />
+        return <TrendingUp className="w-6 h-6 text-accent" />
       case 'transfer':
-        return <ArrowUpRight className="w-6 h-6 text-blue-500" />
+        return <ArrowUpRight className="w-6 h-6 text-info" />
       default:
-        return <Info className="w-6 h-6 text-blue-500" />
+        return <Info className="w-6 h-6 text-info" />
     }
   }, [type])
 
@@ -218,21 +228,21 @@ export const VoiceResponse = React.memo(function VoiceResponse({
   const cardColor = React.useMemo(() => {
     switch (type) {
       case 'success':
-        return 'border-green-200 bg-green-50'
+        return 'border-success/20 bg-success/10'
       case 'error':
-        return 'border-red-200 bg-red-50'
+        return 'border-destructive/20 bg-destructive/10'
       case 'balance':
-        return 'border-blue-200 bg-blue-50'
+        return 'border-info/20 bg-info/10'
       case 'budget':
-        return 'border-orange-200 bg-orange-50'
+        return 'border-warning/20 bg-warning/10'
       case 'bills':
-        return 'border-red-200 bg-red-50'
+        return 'border-destructive/20 bg-destructive/10'
       case 'incoming':
-        return 'border-green-200 bg-green-50'
+        return 'border-success/20 bg-success/10'
       case 'projection':
-        return 'border-purple-200 bg-purple-50'
+        return 'border-accent bg-accent/10'
       case 'transfer':
-        return 'border-blue-200 bg-blue-50'
+        return 'border-info/20 bg-info/10'
       default:
         return 'border-gray-200 bg-gray-50'
     }

@@ -141,7 +141,7 @@ export const PixChart = React.memo(function PixChart() {
               {stats.formattedBalance}
             </div>
             <div
-              className={`text-sm font-medium flex items-center gap-1 ${stats.isPositive ? 'text-emerald-500' : 'text-red-500'}`}
+              className={`text-sm font-medium flex items-center gap-1 ${stats.isPositive ? 'text-financial-positive' : 'text-financial-negative'}`}
             >
               {stats.isPositive ? (
                 <TrendingUp className="w-4 h-4" />
@@ -175,7 +175,7 @@ export const PixChart = React.memo(function PixChart() {
                             'bg-background dark:bg-card/64 text-foreground',
                             'shadow-[0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_2px_rgba(255,255,255,0.05)]',
                             'relative before:absolute before:inset-0 before:-z-10',
-                            'before:bg-green-500/20 before:blur-[6px] before:rounded-full'
+                            'before:bg-pix-primary/20 before:blur-[6px] before:rounded-full'
                           )
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     )}
@@ -254,30 +254,30 @@ export const PixChart = React.memo(function PixChart() {
               <div
                 className={cn(
                   'relative p-3 rounded-lg',
-                  'bg-gradient-to-br from-red-50 to-orange-50',
-                  'dark:from-red-950/20 dark:to-orange-950/20',
-                  'border border-red-200/50 dark:border-red-800/50',
+                  'bg-financial-negative/10',
+                  'dark:bg-financial-negative/5',
+                  'border border-financial-negative/20',
                   'shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
                 )}
               >
                 <div className="text-xs text-muted-foreground uppercase tracking-wide">Enviado</div>
-                <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                <div className="text-lg font-bold text-financial-negative">
                   R$ {stats.formattedTotalSent}
                 </div>
               </div>
               <div
                 className={cn(
                   'relative p-3 rounded-lg',
-                  'bg-gradient-to-br from-green-50 to-teal-50',
-                  'dark:from-green-950/20 dark:to-teal-950/20',
-                  'border border-green-200/50 dark:border-green-800/50',
+                  'bg-financial-positive/10',
+                  'dark:bg-financial-positive/5',
+                  'border border-financial-positive/20',
                   'shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
                 )}
               >
                 <div className="text-xs text-muted-foreground uppercase tracking-wide">
                   Recebido
                 </div>
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                <div className="text-lg font-bold text-financial-positive">
                   R$ {stats.formattedTotalReceived}
                 </div>
               </div>

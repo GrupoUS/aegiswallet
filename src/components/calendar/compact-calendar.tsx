@@ -6,6 +6,7 @@
 import { format, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
+import { EVENT_COLOR_STYLES } from '@/components/ui/event-calendar/types'
 import { cn } from '@/lib/utils'
 import type { FinancialEvent } from '@/types/financial-events'
 import { useCalendar } from './calendar-context'
@@ -66,11 +67,7 @@ export function CompactCalendar({ selectedDate, onDateClick, className }: Compac
                         key={event.id}
                         className={cn(
                           'w-1 h-1 rounded-full',
-                          event.color === 'emerald' && 'bg-emerald-500',
-                          event.color === 'rose' && 'bg-rose-500',
-                          event.color === 'orange' && 'bg-orange-500',
-                          event.color === 'blue' && 'bg-blue-500',
-                          event.color === 'violet' && 'bg-violet-500'
+                          (EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue).dot
                         )}
                       />
                     ))}

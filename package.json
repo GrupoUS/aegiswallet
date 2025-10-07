@@ -20,8 +20,8 @@
     "start": "bun run src/server/server.ts",
     "start:prod": "NODE_ENV=production bun run src/server/server.ts",
     "lint:oxlint": "bunx oxlint",
-    "lint:biome": "bunx biome check --write",
-    "lint": "bunx oxlint && bunx biome check --write",
+    "lint:biome": "bunx biome check --write --files-ignore-unknown=true --files-max-size=10485760 src scripts",
+    "lint": "bunx oxlint && bunx biome check --write --files-ignore-unknown=true --files-max-size=10485760 src scripts",
     "lint:fix": "bun run lint:biome",
     "test:unit": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -29,7 +29,9 @@
     "test:watch": "vitest",
     "test": "bun run test:unit",
     "quality": "bun run lint && bun run test:coverage",
-    "quality:ci": "bun run lint:oxlint && bun run test:coverage"
+    "quality:ci": "bun run lint:oxlint && bun run test:coverage",
+    "validate:colors": "bun scripts/validate-colors.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -99,6 +101,7 @@
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "10.4.21",
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.0",
     "oxlint": "^1.19.0",
     "postcss": "8.5.6",

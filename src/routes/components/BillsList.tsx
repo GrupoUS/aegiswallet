@@ -35,11 +35,11 @@ export function BillsList({ bills, filter }: BillsListProps) {
   }
 
   const getBillStatus = (dueDate: string, status: string) => {
-    if (status === 'paid') return { color: 'bg-green-500', text: 'Pago' }
+    if (status === 'paid') return { color: 'bg-success', text: 'Pago' }
     const days = getDaysUntilDue(dueDate)
-    if (days < 0) return { color: 'bg-red-500', text: 'Atrasado' }
-    if (days <= 3) return { color: 'bg-yellow-500', text: 'Vence em breve' }
-    return { color: 'bg-blue-500', text: 'Pendente' }
+    if (days < 0) return { color: 'bg-destructive', text: 'Atrasado' }
+    if (days <= 3) return { color: 'bg-warning', text: 'Vence em breve' }
+    return { color: 'bg-info', text: 'Pendente' }
   }
 
   return (
@@ -90,7 +90,7 @@ export function BillsList({ bills, filter }: BillsListProps) {
                     <Badge className={`${status.color} mt-2`}>{status.text}</Badge>
                   </div>
                   {bill.status === 'pending' && <Button size="sm">Pagar</Button>}
-                  {bill.status === 'paid' && <CheckCircle className="w-6 h-6 text-green-500" />}
+                  {bill.status === 'paid' && <CheckCircle className="w-6 h-6 text-success" />}
                 </div>
               </div>
             </CardContent>

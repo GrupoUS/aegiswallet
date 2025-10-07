@@ -19,6 +19,24 @@ const getCorsOrigins = () => {
 // Middleware
 app.use('*', logger())
 
+// Cache middleware for static assets
+app.use('/assets/*', async (c, next) => {
+  // Set aggressive caching for static assets in production
+  if (process.env.NODE_ENV === 'production') {
+    c.header('Cache-Control', 'public, max-age=31536000, immutable')
+  }
+  await next()
+})
+
+// Cache middleware for HTML files
+app.use('/*.html', async (c, next) => {
+  // Prevent caching of HTML files to ensure fresh content
+  c.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+  c.header('Pragma', 'no-cache')
+  c.header('Expires', '0')
+  await next()
+})
+
 // CORS configuration
 app.use(
   '*',
@@ -69,7 +87,7 @@ if (process.env.NODE_ENV === 'production') {
   )
 } else {
   // Development mode message
-  app.use('/*', (c) => {
+  app.get('/*', (c) => {
     return c.json({
       message: 'Development mode - Frontend served by Vite dev server on port 5173',
       frontend: 'http://localhost:5173',

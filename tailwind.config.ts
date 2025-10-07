@@ -57,6 +57,35 @@ export default {
           border: 'oklch(var(--sidebar-border))',
           ring: 'oklch(var(--sidebar-ring))',
         },
+        // Semantic state colors
+        success: {
+          DEFAULT: 'oklch(var(--success))',
+          foreground: 'oklch(var(--success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'oklch(var(--warning))',
+          foreground: 'oklch(var(--warning-foreground))',
+        },
+        info: {
+          DEFAULT: 'oklch(var(--info))',
+          foreground: 'oklch(var(--info-foreground))',
+        },
+        // Financial state colors
+        financial: {
+          positive: 'oklch(var(--financial-positive))',
+          'positive-foreground': 'oklch(var(--financial-positive-foreground))',
+          negative: 'oklch(var(--financial-negative))',
+          'negative-foreground': 'oklch(var(--financial-negative-foreground))',
+          neutral: 'oklch(var(--financial-neutral))',
+          'neutral-foreground': 'oklch(var(--financial-neutral-foreground))',
+        },
+        // PIX brand colors
+        pix: {
+          primary: 'oklch(var(--pix-primary))',
+          'primary-foreground': 'oklch(var(--pix-primary-foreground))',
+          accent: 'oklch(var(--pix-accent))',
+          'accent-foreground': 'oklch(var(--pix-accent-foreground))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

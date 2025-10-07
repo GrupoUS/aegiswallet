@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { CalendarEvent, EventPosition } from './types'
+import { EVENT_COLOR_STYLES } from './types'
 
 interface EventCardProps {
   event: CalendarEvent
@@ -11,28 +12,12 @@ interface EventCardProps {
   onDelete?: (eventId: string) => void
 }
 
-const colorClasses: Record<string, string> = {
-  emerald: 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300',
-  rose: 'bg-rose-500/20 border-rose-500 text-rose-700 dark:text-rose-300',
-  orange: 'bg-orange-500/20 border-orange-500 text-orange-700 dark:text-orange-300',
-  blue: 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300',
-  violet: 'bg-violet-500/20 border-violet-500 text-violet-700 dark:text-violet-300',
-  indigo: 'bg-indigo-500/20 border-indigo-500 text-indigo-700 dark:text-indigo-300',
-  amber: 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300',
-  red: 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-300',
-  green: 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-300',
-  yellow: 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-300',
-  purple: 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-300',
-  pink: 'bg-pink-500/20 border-pink-500 text-pink-700 dark:text-pink-300',
-  teal: 'bg-teal-500/20 border-teal-500 text-teal-700 dark:text-teal-300',
-  cyan: 'bg-cyan-500/20 border-cyan-500 text-cyan-700 dark:text-cyan-300',
-}
-
 export function EventCard({ event, position, onEdit }: EventCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: event,
   })
+  const colorTokens = EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue
 
   const style = {
     position: 'absolute' as const,
@@ -55,7 +40,10 @@ export function EventCard({ event, position, onEdit }: EventCardProps) {
       className={cn(
         'rounded-md border-l-4 p-2 text-sm cursor-move pointer-events-auto',
         'hover:shadow-md transition-shadow overflow-hidden',
-        colorClasses[event.color]
+        colorTokens.subtleBg,
+        colorTokens.border,
+        colorTokens.text,
+        colorTokens.dot.replace('bg-', 'border-l-')
       )}
     >
       <div className="font-medium truncate">{event.title}</div>

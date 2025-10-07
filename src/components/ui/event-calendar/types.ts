@@ -15,6 +15,86 @@ export type EventColor =
   | 'teal'
   | 'cyan'
 
+export interface EventColorStyles {
+  dot: string
+  subtleBg: string
+  border: string
+  text: string
+}
+
+const successStyles: EventColorStyles = {
+  dot: 'bg-success',
+  subtleBg: 'bg-success/15',
+  border: 'border-success',
+  text: 'text-success',
+}
+
+const destructiveStyles: EventColorStyles = {
+  dot: 'bg-destructive',
+  subtleBg: 'bg-destructive/15',
+  border: 'border-destructive',
+  text: 'text-destructive',
+}
+
+const warningStyles: EventColorStyles = {
+  dot: 'bg-warning',
+  subtleBg: 'bg-warning/15',
+  border: 'border-warning',
+  text: 'text-warning',
+}
+
+const infoStyles: EventColorStyles = {
+  dot: 'bg-info',
+  subtleBg: 'bg-info/15',
+  border: 'border-info',
+  text: 'text-info',
+}
+
+const accentStyles: EventColorStyles = {
+  dot: 'bg-accent',
+  subtleBg: 'bg-accent/15',
+  border: 'border-accent',
+  text: 'text-accent',
+}
+
+const primaryStyles: EventColorStyles = {
+  dot: 'bg-primary',
+  subtleBg: 'bg-primary/15',
+  border: 'border-primary',
+  text: 'text-primary',
+}
+
+const pixPrimaryStyles: EventColorStyles = {
+  dot: 'bg-pix-primary',
+  subtleBg: 'bg-pix-primary/15',
+  border: 'border-pix-primary',
+  text: 'text-pix-primary',
+}
+
+const pixAccentStyles: EventColorStyles = {
+  dot: 'bg-pix-accent',
+  subtleBg: 'bg-pix-accent/15',
+  border: 'border-pix-accent',
+  text: 'text-pix-accent',
+}
+
+export const EVENT_COLOR_STYLES: Record<EventColor, EventColorStyles> = {
+  emerald: successStyles,
+  rose: destructiveStyles,
+  orange: warningStyles,
+  blue: infoStyles,
+  violet: accentStyles,
+  indigo: primaryStyles,
+  amber: warningStyles,
+  red: destructiveStyles,
+  green: successStyles,
+  yellow: warningStyles,
+  purple: accentStyles,
+  pink: accentStyles,
+  teal: pixPrimaryStyles,
+  cyan: pixAccentStyles,
+}
+
 export interface CalendarEvent {
   id: string
   title: string
@@ -42,7 +122,6 @@ export interface CalendarCategory {
 }
 
 export interface CalendarFilter {
-  categories?: string[]
   dateRange?: {
     start: Date
     end: Date
@@ -64,109 +143,65 @@ export interface CalendarSettings {
 
 export interface EventPosition {
   top: number
-  left: number
-  width: number
+  left: string
+  width: string
   height: number
 }
 
 export interface TimeSlot {
-  date: Date
   hour: number
-  minute: number
-  events: CalendarEvent[]
+  label: string
 }
 
 export interface WeekDay {
   date: Date
-  events: CalendarEvent[]
-  timeSlots: TimeSlot[]
+  isToday: boolean
+  isWeekend: boolean
 }
 
 export type CalendarView = 'week' | 'day' | 'month'
 
-// Enhanced types for better calendar functionality
-export interface EventPosition {
-  top: number
-  left: string | number
-  height: number
-  width: string | number
-}
-
-export interface WeekDayExtended {
-  date: Date
-  isToday: boolean
-  isWeekend: boolean
-  events: CalendarEvent[]
-  timeSlots: TimeSlot[]
-}
-
-export interface TimeSlotExtended {
-  hour: number
-  label: string
-  date: Date
-  events: CalendarEvent[]
-}
-
-// Default calendar categories for AegisWallet
 export const DEFAULT_CALENDAR_CATEGORIES: CalendarCategory[] = [
   {
     id: 'bills',
     name: 'Contas',
     color: 'rose',
-    icon: '📄',
+    icon: '??',
     description: 'Pagamento de contas e faturas',
   },
   {
     id: 'income',
     name: 'Receitas',
     color: 'emerald',
-    icon: '💰',
-    description: 'Recebimentos e salários',
+    icon: '??',
+    description: 'Recebimentos e salarios',
   },
   {
     id: 'investments',
     name: 'Investimentos',
     color: 'blue',
-    icon: '📈',
-    description: 'Aplicações e investimentos',
+    icon: '??',
+    description: 'Aplicacoes e investimentos',
   },
   {
     id: 'savings',
     name: 'Economias',
     color: 'violet',
-    icon: '🏦',
-    description: 'Poupança e reservas',
+    icon: '??',
+    description: 'Poupanca e reservas',
   },
   {
     id: 'expenses',
     name: 'Despesas',
     color: 'orange',
-    icon: '💳',
+    icon: '??',
     description: 'Gastos e despesas do dia a dia',
   },
   {
     id: 'personal',
     name: 'Pessoal',
     color: 'indigo',
-    icon: '👤',
+    icon: '??',
     description: 'Compromissos e eventos pessoais',
   },
 ]
-
-export interface EventPosition {
-  top: number
-  left: string
-  height: number
-  width: string
-}
-
-export interface WeekDay {
-  date: Date
-  isToday: boolean
-  isWeekend: boolean
-}
-
-export interface TimeSlot {
-  hour: number
-  label: string
-}

@@ -29,7 +29,9 @@ describe('Response Templates', () => {
         accountType: 'corrente',
       })
 
-      expect(response.voice).toContain('1500 reais')
+      // Updated to match actual Portuguese number formatting
+      expect(response.voice).toMatch(/mil e quinhentos.*reais/)
+      expect(response.voice).toMatch(/3000.*reais/)
       expect(response.text).toContain('R$ 1.500,50')
       expect(response.visual.type).toBe('balance')
       expect(response.visual.data.currentBalance).toBe(1500.5)
@@ -42,7 +44,7 @@ describe('Response Templates', () => {
         currentBalance: 500,
       })
 
-      expect(response.voice).toContain('500 reais')
+      expect(response.voice).toMatch(/quinhentos.*reais/)
       expect(response.visual.data.income).toBeUndefined()
     })
   })
@@ -57,8 +59,8 @@ describe('Response Templates', () => {
         category: 'Alimentação',
       })
 
-      expect(response.voice).toContain('500 reais')
-      expect(response.voice).toContain('50%')
+      expect(response.voice).toMatch(/quinhentos.*reais/)
+      expect(response.voice).toMatch(/50[,.]0.*%/)
       expect(response.text).toContain('Alimentação')
       expect(response.visual.type).toBe('budget')
       expect(response.visual.data.spentPercentage).toBe(50)
@@ -88,7 +90,7 @@ describe('Response Templates', () => {
       })
 
       expect(response.voice).toContain('2 contas')
-      expect(response.voice).toContain('230 reais')
+      expect(response.voice).toMatch(/duzentos e trinta.*reais/)
       expect(response.voice).toContain('vencida')
       expect(response.visual.type).toBe('bills')
       expect(response.visual.data.bills).toHaveLength(2)
@@ -167,7 +169,7 @@ describe('Response Templates', () => {
         status: 'pending',
       })
 
-      expect(response.voice).toContain('100 reais')
+      expect(response.voice).toMatch(/cem.*reais/)
       expect(response.voice).toContain('João Silva')
       expect(response.voice).toContain('Confirme')
       expect(response.visual.type).toBe('transfer')

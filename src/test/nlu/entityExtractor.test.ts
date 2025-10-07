@@ -58,6 +58,11 @@ describe('Entity Extractor', () => {
         const entities = extractor.extract(text)
         const dateEntity = entities.find((e) => e.type === EntityType.DATE)
 
+        // Debug logging for failing test
+        if (text.includes('amanhã') && !dateEntity) {
+          console.log('Debug - entities extracted for "transferir amanhã":', entities)
+        }
+
         expect(dateEntity).toBeDefined()
         expect(dateEntity?.value).toBeDefined()
       })
@@ -102,6 +107,11 @@ describe('Entity Extractor', () => {
         const categoryEntity = entities.find(
           (e) => e.type === EntityType.CATEGORY || e.type === EntityType.BILL_TYPE
         )
+
+        // Debug logging for failing test
+        if (text.includes('água') && !categoryEntity) {
+          console.log('Debug - entities extracted for "boleto da água":', entities)
+        }
 
         expect(categoryEntity).toBeDefined()
         expect(categoryEntity?.value.toLowerCase()).toContain(expected)

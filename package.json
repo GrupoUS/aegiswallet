@@ -31,6 +31,7 @@
     "quality": "bun run lint && bun run test:coverage",
     "quality:ci": "bun run lint:oxlint && bun run test:coverage",
     "validate:colors": "bun scripts/validate-colors.ts",
+    "export:tokens": "bun scripts/export-design-tokens.ts",
     "prepare": "husky"
   },
   "dependencies": {

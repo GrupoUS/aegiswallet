@@ -173,7 +173,7 @@ export class SpeechToTextService {
 
       clearTimeout(timeoutId)
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw await this.createAPIError(response)
       }
 
@@ -276,20 +276,26 @@ export class SpeechToTextService {
   /**
    * Create structured API error
    */
-  private async createAPIError(response: Response): Promise<Error> {
-    let errorMessage = `API Error: ${response.status} ${response.statusText}`
+  private async createAPIError(response?: Response): Promise<Error> {
+    let errorMessage = 'Unknown API Error'
 
-    try {
-      const errorData = await response.json()
-      if (errorData.error?.message) {
-        errorMessage = errorData.error.message
+    if (response) {
+      errorMessage = `API Error: ${response.status} ${response.statusText}`
+
+      try {
+        const errorData = await response.json()
+        if (errorData.error?.message) {
+          errorMessage = errorData.error.message
+        }
+      } catch {
+        // Ignore JSON parse errors
       }
-    } catch {
-      // Ignore JSON parse errors
+
+      // Include status code in error message for proper categorization
+      errorMessage = `${errorMessage} (${response.status})`
     }
 
-    // Include status code in error message for proper categorization
-    return new Error(`${errorMessage} (${response.status})`)
+    return new Error(errorMessage)
   }
 
   /**
@@ -312,7 +318,7 @@ export class SpeechToTextService {
 
       // Network errors (check message and name)
       if (
-        errorMessage.includes('network') || 
+        errorMessage.includes('network') ||
         errorMessage.includes('fetch') ||
         errorMessage.includes('network error') ||
         errorName === 'TypeError'

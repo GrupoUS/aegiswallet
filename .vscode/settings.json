@@ -1,8 +1,37 @@
 {
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
     "quickfix.biome": "explicit",
     "source.organizeImports.biome": "explicit"
-  }
+  },
+  "css.lint.unknownProperties": "ignore",
+  "tailwindCSS.experimental.classRegex": [
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  "tailwindCSS.validate": true,
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.colorDecorators": true,
+  "tailwindCSS.suggestions": true,
+  "files.associations": {
+    "*.css": "css"
+  },
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

@@ -8,11 +8,11 @@ import {
 } from '@tanstack/react-router'
 import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useState } from 'react'
+
 import { CalendarProvider } from '@/components/calendar/calendar-context'
 import { TRPCProvider } from '@/components/providers/TRPCProvider'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar'
+import { Sidebar, SidebarBody, SidebarLink, SidebarContent, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
@@ -39,7 +39,6 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-  const [open, setOpen] = useState(false)
   const location = useLocation()
 
   // Pages that should not show the sidebar
@@ -91,45 +90,52 @@ function RootComponent() {
   return (
     <TRPCProvider>
       <CalendarProvider>
-        <div
-          className={cn(
-            'flex flex-col md:flex-row bg-background w-full flex-1 mx-auto border border overflow-hidden',
-            'h-screen'
-          )}
-        >
-          <Sidebar open={open} setOpen={setOpen}>
-            <SidebarBody className="justify-between gap-10">
-              <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-                {open ? <Logo /> : <LogoIcon />}
-                <div className="mt-8 flex flex-col gap-2">
-                  {links.map((link, idx) => (
-                    <SidebarLink key={idx} link={link} />
-                  ))}
+        <SidebarProvider>
+          <div className="flex h-screen w-full">
+            <Sidebar>
+              <SidebarBody className="justify-between gap-10">
+                <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                  <SidebarContent>
+                    <SidebarContentWrapper links={links} />
+                  </SidebarContent>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-center py-2">
-                  <AnimatedThemeToggler />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center py-2">
+                    <AnimatedThemeToggler />
+                  </div>
+                  <SidebarLink
+                    link={{
+                      label: 'Assistente de Voz',
+                      href: '/',
+                      icon: <Mic className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+                    }}
+                  />
+                  <LogoutButton />
                 </div>
-                <SidebarLink
-                  link={{
-                    label: 'Assistente de Voz',
-                    href: '/',
-                    icon: <Mic className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
-                  }}
-                />
-                <LogoutButton />
-              </div>
-            </SidebarBody>
-          </Sidebar>
-          <div className="flex flex-1 overflow-auto">
-            <div className="flex-1 w-full">
+              </SidebarBody>
+            </Sidebar>
+            <SidebarInset>
               <Outlet />
-            </div>
+            </SidebarInset>
           </div>
-        </div>
+        </SidebarProvider>
       </CalendarProvider>
     </TRPCProvider>
+  )
+}
+
+const SidebarContentWrapper = ({ links }: { links: any[] }) => {
+  const { open } = useSidebar()
+  
+  return (
+    <>
+      {open ? <Logo /> : <LogoIcon />}
+      <div className="mt-8 flex flex-col gap-2">
+        {links.map((link, idx) => (
+          <SidebarLink key={idx} link={link} />
+        ))}
+      </div>
+    </>
   )
 }
 

@@ -110,8 +110,6 @@ export {
   SheetTrigger,
 } from './sheet'
 export {
-  DesktopSidebar,
-  MobileSidebar,
   Sidebar,
   SidebarBody,
   SidebarLink,

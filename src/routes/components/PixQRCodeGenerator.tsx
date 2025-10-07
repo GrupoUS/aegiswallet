@@ -1,5 +1,4 @@
 import { QrCode } from 'lucide-react'
-import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,7 +16,7 @@ export default function PixQRCodeGenerator({
   amount,
   description,
   onAmountChange,
-  onDescriptionChange
+  onDescriptionChange,
 }: PixQRCodeGeneratorProps) {
   const formatCurrency = (value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '')

@@ -72,10 +72,7 @@ const NUMBER_WORDS: Record<string, number> = {
 const NORMALIZE_DIACRITICS_REGEX = /[\u0300-\u036f]/g
 
 function normalizeText(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(NORMALIZE_DIACRITICS_REGEX, '')
+  return value.toLowerCase().normalize('NFD').replace(NORMALIZE_DIACRITICS_REGEX, '')
 }
 
 const NUMBER_WORD_NORMALIZED_MAP = new Map<string, number>()
@@ -84,14 +81,19 @@ Object.entries(NUMBER_WORDS).forEach(([word, value]) => {
   NUMBER_WORD_NORMALIZED_MAP.set(normalizeText(word), value)
 })
 
-const NUMBER_WORD_NORMALIZED_KEYS = Array.from(NUMBER_WORD_NORMALIZED_MAP.keys()).sort((a, b) => b.length - a.length)
+const NUMBER_WORD_NORMALIZED_KEYS = Array.from(NUMBER_WORD_NORMALIZED_MAP.keys()).sort(
+  (a, b) => b.length - a.length
+)
 
 const NUMBER_WORD_AMOUNT_PATTERN = new RegExp(
   String.raw`\b(${NUMBER_WORD_NORMALIZED_KEYS.join('|')})(?:\s+e\s+(${NUMBER_WORD_NORMALIZED_KEYS.join('|')}))*\b(?:\s+(reais?|real))?`,
   'gi'
 )
 
-const PLAIN_NUMBER_PATTERN = new RegExp(String.raw`(?<!dia\s)\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?\b`, 'gi')
+const PLAIN_NUMBER_PATTERN = new RegExp(
+  String.raw`(?<!dia\s)\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?\b`,
+  'gi'
+)
 
 const WEEKDAY_MAP: Record<string, number> = {
   domingo: 0,
@@ -104,7 +106,9 @@ const WEEKDAY_MAP: Record<string, number> = {
 }
 
 function parseNumberWordPhrase(phrase: string): number {
-  const cleaned = normalizeText(phrase).replace(/\b(reais?|real)\b/gi, '').trim()
+  const cleaned = normalizeText(phrase)
+    .replace(/\b(reais?|real)\b/gi, '')
+    .trim()
   if (!cleaned) {
     return NaN
   }
@@ -120,7 +124,13 @@ function parseNumberWordPhrase(phrase: string): number {
 }
 
 function parseMonetaryValue(raw: string): number {
-  const cleaned = raw.replace(/R\$\s*/gi, '').replace(/(reais?|real)/gi, '').replace(/\s+/g, '')
+  if (/^\s*dia\s/i.test(raw)) {
+    return NaN
+  }
+  const cleaned = raw
+    .replace(/R\$\s*/gi, '')
+    .replace(/(reais?|real)/gi, '')
+    .replace(/\s+/g, '')
   let normalized = cleaned
 
   if (normalized.includes(',')) {
@@ -221,7 +231,10 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     type: EntityType.DATE,
     pattern:
       /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
-    normalizer: (_match, weekday) => getUpcomingWeekday(weekday, false),
+    normalizer: (match) => {
+      const weekday = match.replace(/^(?:proxima|pr[\u00f3o]xima)\s+/i, '').replace(/-feira$/i, '')
+      return getUpcomingWeekday(weekday, false)
+    },
   },
   {
     type: EntityType.DATE,
@@ -269,7 +282,6 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     pattern: /\b(aluguel|aluguer)\b/gi,
     normalizer: () => 'aluguel',
   },
-
   // Categories
   {
     type: EntityType.CATEGORY,
@@ -278,20 +290,19 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     type: EntityType.CATEGORY,
-    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combustível)\b/gi,
+    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combust[\u00edi]vel)\b/gi,
     normalizer: () => 'transporte',
   },
   {
     type: EntityType.CATEGORY,
-    pattern: /\b(saude|saúde|medico|médico|farmacia|farmácia)\b/gi,
+    pattern: /\b(saude|sa[\u00fade]|medico|m[\u00e9e]dico|farmacia|farm[\u00e1a]cia)\b/gi,
     normalizer: () => 'saude',
   },
   {
     type: EntityType.CATEGORY,
-    pattern: /\b(lazer|entretenimento|diversao|diversão)\b/gi,
+    pattern: /\b(lazer|entretenimento|diversao|divers[\u00e3a]o)\b/gi,
     normalizer: () => 'lazer',
   },
-
   // Periods
   {
     type: EntityType.PERIOD,
@@ -479,12 +490,3 @@ export function extractBillType(text: string): string | null {
   const entity = extractor.getFirstEntity(text, EntityType.BILL_TYPE)
   return entity ? (entity.normalizedValue as string) : null
 }
-
-
-
-
-
-
-
-
-

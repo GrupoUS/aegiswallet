@@ -1,7 +1,7 @@
 'use client'
 
 import { Calculator, Copy, Loader2, QrCode as QrCodeIcon, Send } from 'lucide-react'
-import { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -12,41 +12,57 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePixQRCodes, usePixTransactions } from '@/hooks/usePix'
 import { cn } from '@/lib/utils'
 
-export function PixConverter() {
+export const PixConverter = React.memo(function PixConverter() {
   const [activeTab, setActiveTab] = useState('transferir')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [pixKey, setPixKey] = useState('')
 
   const { createTransaction, isLoading: isCreatingTransaction } = usePixTransactions()
-  const { createQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
+  const { generateQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
 
   const qrCodeData = qrCodes[0] // Get the most recent QR Code
 
-  const formatCurrency = (value: string) => {
+  // Otimizar funções com useCallback
+  const formatCurrency = useCallback((value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '')
     if (!cleanValue) return ''
     const formatted = (Number(cleanValue) / 100).toFixed(2)
     return `R$ ${formatted.replace('.', ',')}`
-  }
+  }, [])
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d]/g, '')
-    setAmount(formatCurrency(value))
-  }
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/[^\d]/g, '')
+      setAmount(formatCurrency(value))
+    },
+    [formatCurrency]
+  )
 
-  const copyAmount = () => {
+  const copyAmount = useCallback(() => {
     const numericAmount = amount.replace(/[^\d,]/g, '').replace(',', '.')
     navigator.clipboard.writeText(numericAmount)
     toast.success('Valor copiado!')
-  }
+  }, [amount])
 
-  const getNumericAmount = () => {
+  const getNumericAmount = useCallback(() => {
     const cleanValue = amount.replace(/[^\d,]/g, '').replace(',', '.')
     return Number(cleanValue)
-  }
+  }, [amount])
 
-  const handleSendPix = () => {
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value)
+  }, [])
+
+  const handlePixKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPixKey(e.target.value)
+  }, [])
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(e.target.value)
+  }, [])
+
+  const handleSendPix = useCallback(() => {
     const numericAmount = getNumericAmount()
 
     if (!pixKey || !pixKey.trim()) {
@@ -71,9 +87,9 @@ export function PixConverter() {
     setAmount('')
     setDescription('')
     setPixKey('')
-  }
+  }, [getNumericAmount, pixKey, description, createTransaction])
 
-  const handleGenerateQRCode = () => {
+  const handleGenerateQRCode = useCallback(() => {
     const numericAmount = getNumericAmount()
 
     if (numericAmount <= 0) {
@@ -81,12 +97,29 @@ export function PixConverter() {
       return
     }
 
-    createQRCode({
+    generateQRCode({
       amount: numericAmount,
       description: description || undefined,
       pixKey: '', // Will be generated
     })
-  }
+  }, [getNumericAmount, description, generateQRCode])
+
+  const handleQuickAmount = useCallback(
+    (value: number) => {
+      setAmount(formatCurrency(String(value * 100)))
+    },
+    [formatCurrency]
+  )
+
+  const handleCopyQRCode = useCallback(() => {
+    if (qrCodeData?.qrCodeData) {
+      navigator.clipboard.writeText(qrCodeData.qrCodeData)
+      toast.success('Código PIX copiado!')
+    }
+  }, [qrCodeData])
+
+  // Otimizar valores com useMemo
+  const quickAmounts = useMemo(() => [50, 100, 200], [])
 
   return (
     <Card
@@ -104,7 +137,7 @@ export function PixConverter() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="transferir" className="gap-2">
               <Send className="w-4 h-4" />
@@ -126,7 +159,7 @@ export function PixConverter() {
                 type="text"
                 placeholder="Email, CPF, telefone ou chave aleatória"
                 value={pixKey}
-                onChange={(e) => setPixKey(e.target.value)}
+                onChange={handlePixKeyChange}
               />
             </div>
 
@@ -162,18 +195,18 @@ export function PixConverter() {
                 type="text"
                 placeholder="Para que é este valor?"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
               />
             </div>
 
             {/* Quick amount buttons */}
             <div className="grid grid-cols-3 gap-2">
-              {[50, 100, 200].map((value) => (
+              {quickAmounts.map((value) => (
                 <Button
                   key={value}
                   variant="outline"
                   size="sm"
-                  onClick={() => setAmount(formatCurrency(String(value * 100)))}
+                  onClick={() => handleQuickAmount(value)}
                   className={cn(
                     'relative overflow-hidden',
                     'before:absolute before:inset-0 before:bg-gradient-to-r before:from-green-500/0 before:via-green-500/10 before:to-green-500/0',
@@ -264,7 +297,7 @@ export function PixConverter() {
                 type="text"
                 placeholder="Para que é este pagamento?"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
               />
             </div>
 
@@ -319,16 +352,7 @@ export function PixConverter() {
                 <div className="text-xs text-muted-foreground">
                   Escaneie este código para realizar o pagamento
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (qrCodeData.qrCodeData) {
-                      navigator.clipboard.writeText(qrCodeData.qrCodeData)
-                      toast.success('Código PIX copiado!')
-                    }
-                  }}
-                >
+                <Button variant="ghost" size="sm" onClick={handleCopyQRCode}>
                   <Copy className="w-4 h-4 mr-2" />
                   Copiar código PIX
                 </Button>
@@ -344,4 +368,4 @@ export function PixConverter() {
       </CardContent>
     </Card>
   )
-}
+})

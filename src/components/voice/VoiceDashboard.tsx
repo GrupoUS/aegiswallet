@@ -1,5 +1,5 @@
 import { ChevronRight, History, Settings, Volume2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +12,9 @@ interface VoiceDashboardProps {
   className?: string
 }
 
-export function VoiceDashboard({ className }: VoiceDashboardProps) {
+export const VoiceDashboard = React.memo(function VoiceDashboard({
+  className,
+}: VoiceDashboardProps) {
   const { speak, announce } = useAccessibility()
   const {
     isListening,
@@ -62,37 +64,58 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
     }
   }, [transcript, confidence, resetState, announce, speak])
 
-  // Text-to-speech for responses (optional)
-  const speakResponse = (text: string) => {
+  // Otimizar funções com useCallback
+  const speakResponse = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'pt-BR'
       utterance.rate = 0.9
       speechSynthesis.speak(utterance)
     }
-  }
+  }, [])
 
-  const _handleVoiceActivation = () => {
+  const _handleVoiceActivation = useCallback(() => {
     if (!isListening) {
       startListening()
     } else {
       stopListening()
     }
-  }
+  }, [isListening, startListening, stopListening])
 
-  const getGreeting = () => {
+  const handleCloseResponse = useCallback(() => {
+    setCurrentResponse(null)
+  }, [])
+
+  // Otimizar saudação com useMemo
+  const greeting = useMemo(() => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Bom dia'
     if (hour < 18) return 'Boa tarde'
     return 'Boa noite'
-  }
+  }, [])
+
+  // Otimizar ações rápidas com useMemo
+  const quickActions = useMemo(
+    () => [
+      { title: 'Saldo', icon: '💰', action: () => {} },
+      { title: 'Orçamento', icon: '📊', action: () => {} },
+      { title: 'Contas', icon: '📄', action: () => {} },
+      { title: 'PIX', icon: '🚀', action: () => {} },
+    ],
+    []
+  )
+
+  // Otimizar histórico de comandos com useMemo
+  const recentCommands = useMemo(() => {
+    return commandHistory.slice(0, 3)
+  }, [commandHistory])
 
   return (
     <div className={`h-full w-full bg-background p-4 ${className}`}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">{getGreeting()}! 👋</h1>
+          <h1 className="text-3xl font-bold text-foreground">{greeting}! 👋</h1>
           <p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
         </div>
 
@@ -155,7 +178,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
                 <Button onClick={() => speakResponse(currentResponse.message)}>
                   🔊 Ouvir resposta
                 </Button>
-                <Button variant="outline" onClick={() => setCurrentResponse(null)}>
+                <Button variant="outline" onClick={handleCloseResponse}>
                   Fechar
                 </Button>
               </div>
@@ -165,12 +188,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { title: 'Saldo', icon: '💰', action: () => {} },
-            { title: 'Orçamento', icon: '📊', action: () => {} },
-            { title: 'Contas', icon: '📄', action: () => {} },
-            { title: 'PIX', icon: '🚀', action: () => {} },
-          ].map((action) => (
+          {quickActions.map((action) => (
             <Button
               key={action.title}
               variant="outline"
@@ -200,7 +218,7 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-3">
-                {commandHistory.slice(0, 3).map((item, index) => (
+                {recentCommands.map((item, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -229,4 +247,4 @@ export function VoiceDashboard({ className }: VoiceDashboardProps) {
       </div>
     </div>
   )
-}
+})

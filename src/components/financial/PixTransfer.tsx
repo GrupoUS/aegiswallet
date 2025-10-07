@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, CreditCard, QrCode, Smartphone, User } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ interface PixTransferProps {
   className?: string
 }
 
-export function PixTransfer({ className }: PixTransferProps) {
+export const PixTransfer = React.memo(function PixTransfer({ className }: PixTransferProps) {
   const [transferType, setTransferType] = useState<'key' | 'qr' | 'phone'>('key')
   const [pixKey, setPixKey] = useState('')
   const [amount, setAmount] = useState('')
@@ -20,18 +20,24 @@ export function PixTransfer({ className }: PixTransferProps) {
     'idle'
   )
 
-  const formatCurrency = (value: string) => {
+  // Memoize the formatCurrency function
+  const formatCurrency = useCallback((value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '')
     const formatted = (Number(cleanValue) / 100).toFixed(2)
     return `R$ ${formatted}`
-  }
+  }, [])
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d]/g, '')
-    setAmount(formatCurrency(value))
-  }
+  // Memoize the handleAmountChange function
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/[^\d]/g, '')
+      setAmount(formatCurrency(value))
+    },
+    [formatCurrency]
+  )
 
-  const validatePixKey = (key: string) => {
+  // Memoize the validatePixKey function
+  const validatePixKey = useCallback((key: string) => {
     // Basic validation for different PIX key types
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     const cpfRegex = /^\d{11}$/
@@ -47,9 +53,10 @@ export function PixTransfer({ className }: PixTransferProps) {
       phoneRegex.test(key.replace(/[^\d]/g, '')) ||
       randomKeyRegex.test(key)
     )
-  }
+  }, [])
 
-  const handleTransfer = async () => {
+  // Memoize the handleTransfer function
+  const handleTransfer = useCallback(async () => {
     if (!validatePixKey(pixKey) || !amount) {
       setTransferStatus('error')
       return
@@ -71,9 +78,10 @@ export function PixTransfer({ className }: PixTransferProps) {
         setTransferStatus('idle')
       }, 3000)
     }, 2000)
-  }
+  }, [pixKey, amount, validatePixKey])
 
-  const getTransferTypeIcon = () => {
+  // Memoize the getTransferTypeIcon function
+  const getTransferTypeIcon = useCallback(() => {
     switch (transferType) {
       case 'key':
         return <CreditCard className="w-5 h-5" />
@@ -84,9 +92,10 @@ export function PixTransfer({ className }: PixTransferProps) {
       default:
         return <User className="w-5 h-5" />
     }
-  }
+  }, [transferType])
 
-  const getTransferTypePlaceholder = () => {
+  // Memoize the getTransferTypePlaceholder function
+  const getTransferTypePlaceholder = useCallback(() => {
     switch (transferType) {
       case 'key':
         return 'Email, CPF, CNPJ ou chave aleatória'
@@ -97,9 +106,22 @@ export function PixTransfer({ className }: PixTransferProps) {
       default:
         return 'Digite a chave PIX'
     }
-  }
+  }, [transferType])
 
-  if (transferStatus === 'success') {
+  // Memoize transfer type options
+  const transferTypeOptions = useMemo(
+    () => [
+      { value: 'key', label: 'Chave PIX' },
+      { value: 'qr', label: 'QR Code' },
+      { value: 'phone', label: 'Telefone' },
+    ],
+    []
+  )
+
+  // Memoize success state component
+  const SuccessState = useMemo(() => {
+    if (transferStatus !== 'success') return null
+
     return (
       <Card className={cn('border-green-200 bg-green-50', className)}>
         <CardContent className="p-6 text-center">
@@ -110,6 +132,10 @@ export function PixTransfer({ className }: PixTransferProps) {
         </CardContent>
       </Card>
     )
+  }, [transferStatus, className, amount, formatCurrency])
+
+  if (transferStatus === 'success') {
+    return SuccessState
   }
 
   return (
@@ -125,11 +151,7 @@ export function PixTransfer({ className }: PixTransferProps) {
       <CardContent className="space-y-6">
         {/* Transfer Type Selection */}
         <div className="flex gap-2">
-          {[
-            { value: 'key', label: 'Chave PIX' },
-            { value: 'qr', label: 'QR Code' },
-            { value: 'phone', label: 'Telefone' },
-          ].map((type) => (
+          {transferTypeOptions.map((type) => (
             <Button
               key={type.value}
               variant={transferType === type.value ? 'default' : 'outline'}
@@ -229,4 +251,4 @@ export function PixTransfer({ className }: PixTransferProps) {
       </CardContent>
     </Card>
   )
-}
+})

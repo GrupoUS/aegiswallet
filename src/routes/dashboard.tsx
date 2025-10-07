@@ -1,6 +1,5 @@
-import { lazy, Suspense } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { FinancialAmount } from '@/components/financial-amount'
 import { type BentoItem } from '@/components/ui/bento-grid'
 import { Button } from '@/components/ui/button'
@@ -8,8 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Lazy loaded components
-const LazyMiniCalendarWidget = lazy(() => import('@/components/calendar/mini-calendar-widget').then(mod => ({ default: mod.MiniCalendarWidget })))
-const LazyBentoCard = lazy(() => import('@/components/ui/bento-grid').then(mod => ({ default: mod.BentoCard })))
+const LazyMiniCalendarWidget = lazy(() =>
+  import('@/components/calendar/mini-calendar-widget').then((mod) => ({
+    default: mod.MiniCalendarWidget,
+  }))
+)
+const LazyBentoCard = lazy(() =>
+  import('@/components/ui/bento-grid').then((mod) => ({ default: mod.BentoCard }))
+)
 
 // Loading components
 const CalendarLoader = () => (
@@ -67,12 +72,12 @@ function Dashboard() {
         if (error) {
           console.error('OAuth error:', error)
           sessionStorage.removeItem('oauth_hash')
-          navigate({ 
-            to: '/login', 
-            search: { 
+          navigate({
+            to: '/login',
+            search: {
               redirect: '/dashboard',
-              error: 'Authentication failed' 
-            } 
+              error: 'Authentication failed',
+            },
           })
           return
         }

@@ -4,7 +4,7 @@
  */
 
 import { format, isSameDay } from 'date-fns'
-import { ptBR} from 'date-fns/locale'
+import { ptBR } from 'date-fns/locale'
 import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
 import type { FinancialEvent } from '@/types/financial-events'
@@ -36,7 +36,7 @@ export function CompactCalendar({ selectedDate, onDateClick, className }: Compac
   return (
     <div className={className}>
       <div className="text-sm font-semibold text-center mb-2">
-        {format(currentDate, 'MMMM yyyy', { locale: ptBR})}
+        {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
       </div>
       <Calendar
         mode="single"

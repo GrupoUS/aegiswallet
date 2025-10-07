@@ -9,7 +9,7 @@ import {
   Search,
   XCircle,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils'
 import type { PixTransaction } from '@/types/pix'
 import { maskPixKey } from '@/types/pix'
 
-function getStatusIcon(status: PixTransaction['status']) {
+const getStatusIcon = React.memo(function getStatusIcon(status: PixTransaction['status']) {
   switch (status) {
     case 'completed':
       return <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -38,9 +38,9 @@ function getStatusIcon(status: PixTransaction['status']) {
     default:
       return <Clock className="w-4 h-4 text-gray-500" />
   }
-}
+})
 
-function getStatusBadge(status: PixTransaction['status']) {
+const getStatusBadge = React.memo(function getStatusBadge(status: PixTransaction['status']) {
   const config = {
     completed: {
       variant: 'default' as const,
@@ -81,9 +81,9 @@ function getStatusBadge(status: PixTransaction['status']) {
       {label}
     </Badge>
   )
-}
+})
 
-export function PixTransactionsTable() {
+export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
   const [searchTerm, setSearchTerm] = useState('')
   const { transactions, isLoading } = usePixTransactions()
 
@@ -91,13 +91,24 @@ export function PixTransactionsTable() {
     if (!transactions) return []
     if (!searchTerm.trim()) return transactions
 
+    const lowerSearchTerm = searchTerm.toLowerCase()
     return transactions.filter(
       (tx) =>
-        tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tx.recipientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tx.pixKey.toLowerCase().includes(searchTerm.toLowerCase())
+        tx.description?.toLowerCase().includes(lowerSearchTerm) ||
+        tx.recipientName?.toLowerCase().includes(lowerSearchTerm) ||
+        tx.pixKey.toLowerCase().includes(lowerSearchTerm)
     )
   }, [transactions, searchTerm])
+
+  // Otimizar manipuladores com useCallback
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }, [])
+
+  const handleLoadMore = useCallback(() => {
+    // Implementar lógica para carregar mais transações
+    console.log('Carregar mais transações')
+  }, [])
 
   return (
     <Card
@@ -114,7 +125,7 @@ export function PixTransactionsTable() {
             <Input
               placeholder="Buscar transações..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10"
             />
           </div>
@@ -151,74 +162,7 @@ export function PixTransactionsTable() {
                 </TableRow>
               ) : (
                 filteredTransactions.map((transaction) => (
-                  <TableRow
-                    key={transaction.id}
-                    className={cn(
-                      'transition-all duration-200',
-                      'hover:bg-muted/50',
-                      'hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_2px_4px_rgba(255,255,255,0.02)]',
-                      'cursor-pointer'
-                    )}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {transaction.type === 'sent' ? (
-                          <div
-                            className={cn(
-                              'flex items-center gap-2 px-2 py-1 rounded-md',
-                              'bg-red-100 dark:bg-red-950/30'
-                            )}
-                          >
-                            <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
-                            <span className="text-sm font-medium text-red-700 dark:text-red-400">
-                              Enviado
-                            </span>
-                          </div>
-                        ) : (
-                          <div
-                            className={cn(
-                              'flex items-center gap-2 px-2 py-1 rounded-md',
-                              'bg-green-100 dark:bg-green-950/30'
-                            )}
-                          >
-                            <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
-                            <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                              Recebido
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {transaction.recipientName || 'N/A'}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {maskPixKey(transaction.pixKey, transaction.pixKeyType)}
-                    </TableCell>
-                    <TableCell>{transaction.description || '-'}</TableCell>
-                    <TableCell
-                      className={`text-right font-bold ${
-                        transaction.type === 'sent' ? 'text-red-600' : 'text-green-600'
-                      }`}
-                    >
-                      {transaction.type === 'sent' ? '-' : '+'}
-                      R$ {transaction.amount.toFixed(2).replace('.', ',')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(transaction.status)}
-                        {getStatusBadge(transaction.status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      {new Date(transaction.createdAt).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </TableCell>
-                  </TableRow>
+                  <TransactionRow key={transaction.id} transaction={transaction} />
                 ))
               )}
             </TableBody>
@@ -227,9 +171,91 @@ export function PixTransactionsTable() {
 
         {/* Load more button */}
         <div className="flex justify-center mt-4">
-          <Button variant="outline">Carregar mais transações</Button>
+          <Button variant="outline" onClick={handleLoadMore}>
+            Carregar mais transações
+          </Button>
         </div>
       </CardContent>
     </Card>
   )
-}
+})
+
+// Componente separado para a linha da transação com React.memo
+const TransactionRow = React.memo(function TransactionRow({
+  transaction,
+}: {
+  transaction: PixTransaction
+}) {
+  // Memoizar a data formatada
+  const formattedDate = useMemo(() => {
+    return new Date(transaction.createdAt).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }, [transaction.createdAt])
+
+  // Memoizar o valor formatado
+  const formattedAmount = useMemo(() => {
+    return `${transaction.type === 'sent' ? '-' : '+'}R$ ${transaction.amount.toFixed(2).replace('.', ',')}`
+  }, [transaction.type, transaction.amount])
+
+  return (
+    <TableRow
+      className={cn(
+        'transition-all duration-200',
+        'hover:bg-muted/50',
+        'hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_2px_4px_rgba(255,255,255,0.02)]',
+        'cursor-pointer'
+      )}
+    >
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {transaction.type === 'sent' ? (
+            <div
+              className={cn(
+                'flex items-center gap-2 px-2 py-1 rounded-md',
+                'bg-red-100 dark:bg-red-950/30'
+              )}
+            >
+              <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-medium text-red-700 dark:text-red-400">Enviado</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                'flex items-center gap-2 px-2 py-1 rounded-md',
+                'bg-green-100 dark:bg-green-950/30'
+              )}
+            >
+              <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                Recebido
+              </span>
+            </div>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="font-medium">{transaction.recipientName || 'N/A'}</TableCell>
+      <TableCell className="font-mono text-sm">
+        {maskPixKey(transaction.pixKey, transaction.pixKeyType)}
+      </TableCell>
+      <TableCell>{transaction.description || '-'}</TableCell>
+      <TableCell
+        className={`text-right font-bold ${
+          transaction.type === 'sent' ? 'text-red-600' : 'text-green-600'
+        }`}
+      >
+        {formattedAmount}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {getStatusIcon(transaction.status)}
+          {getStatusBadge(transaction.status)}
+        </div>
+      </TableCell>
+      <TableCell className="text-right text-sm text-muted-foreground">{formattedDate}</TableCell>
+    </TableRow>
+  )
+})

@@ -38,6 +38,8 @@ CORE_STANDARDS:
 
 **Chain of Thought**: Break problems into sequential steps and atomic subtasks. Verbalize reasoning process. Show intermediate decisions. Validate against requirements.
 
+**Avoid Never Used**: Make sure every file, route, hook, component is being use correctly, avoid errors like "Variable is declared but never used", "Import is never used", "Function is declared but never used". Make sure to remove unused code immediately and create components, hooks, routes only when they are needed. If you create something new, make sure it is being used correctly creating the necessary references.
+
 ### A.P.T.E Methodology
 
 **Analyze** → Comprehensive requirements analysis

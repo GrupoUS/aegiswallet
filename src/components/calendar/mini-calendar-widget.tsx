@@ -7,7 +7,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { compareAsc, format, isFuture } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,28 +16,39 @@ import { formatEventAmount } from '@/types/financial-events'
 import { useCalendar } from './calendar-context'
 import { OriginCompactCalendar } from './origin-compact-calendar'
 
-export function MiniCalendarWidget() {
+export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
   const { events } = useCalendar()
   const navigate = useNavigate()
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 
-  // Filtrar próximos eventos
-  const upcomingEvents = events
-    .filter(
-      (e) =>
-        isFuture(new Date(e.start)) ||
-        format(new Date(e.start), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-    )
-    .sort((a, b) => compareAsc(new Date(a.start), new Date(b.start)))
-    .slice(0, 5)
+  // Filtrar próximos eventos com useMemo
+  const upcomingEvents = useMemo(() => {
+    return events
+      .filter(
+        (e) =>
+          isFuture(new Date(e.start)) ||
+          format(new Date(e.start), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+      )
+      .sort((a, b) => compareAsc(new Date(a.start), new Date(b.start)))
+      .slice(0, 5)
+  }, [events])
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date)
-    navigate({
-      to: '/calendario',
-      search: { date: format(date, 'yyyy-MM-dd') },
-    })
-  }
+  // Otimizar handleDateClick com useCallback
+  const handleDateClick = useCallback(
+    (date: Date) => {
+      setSelectedDate(date)
+      navigate({
+        to: '/calendario',
+        search: { date: format(date, 'yyyy-MM-dd') },
+      })
+    },
+    [navigate]
+  )
+
+  // Otimizar navegação com useCallback
+  const handleNavigateToCalendar = useCallback(() => {
+    navigate({ to: '/calendario' })
+  }, [navigate])
 
   return (
     <Card className="h-full">
@@ -51,7 +62,7 @@ export function MiniCalendarWidget() {
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
-            onClick={() => navigate({ to: '/calendario' })}
+            onClick={handleNavigateToCalendar}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -121,4 +132,4 @@ export function MiniCalendarWidget() {
       </CardContent>
     </Card>
   )
-}
+})

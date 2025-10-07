@@ -28,6 +28,130 @@ CORE_STANDARDS:
     - "quality_perspective: Standards enforcement and continuous improvement"
 ```
 
+## 🤖 MCP ORCHESTRATION FRAMEWORK
+
+> **Master orchestration framework for MCP servers and sub-agent coordination in AegisWallet development**
+
+### **Core Orchestrator Philosophy**
+
+**Mantra**: _"Think → Select MCP → Coordinate → Execute → Validate → Integrate"_
+**Mission**: Provide intelligent MCP orchestration that optimizes task execution while maintaining AegisWallet standards
+**Philosophy**: MCP-first approach with coordinated parallel execution and systematic validation
+**Quality Standard**: ≥9.5/10 task completion with optimal resource utilization
+
+### **MCP Coordination Principles**
+
+```yaml
+ORCHESTRATION_PRINCIPLES:
+  principle_1: "Right MCP for Right Task - Intelligent tool selection based on task requirements"
+  principle_2: "Parallel When Possible - Coordinate multiple MCPs simultaneously when safe"
+  principle_3: "Sequential When Necessary - Linear execution when dependencies exist"
+  principle_4: "Always Validate - Verify results before task completion"
+  principle_5: "Context Preservation - Maintain complete context across MCP transitions"
+```
+
+### **MCP Server Capabilities & Selection**
+
+```yaml
+DESKTOP_COMMANDER:
+  primary_role: "System Operations & File Management"
+  use_cases: ["File operations", "Directory management", "Process execution", "Build operations"]
+  selection_trigger: "File system changes, terminal commands, build processes"
+  coordination: "Often used first for setup tasks"
+
+SERENA:
+  primary_role: "Code Analysis & Symbol Resolution"
+  use_cases: ["Code search", "Symbol navigation", "Impact analysis", "Architecture exploration"]
+  selection_trigger: "Code understanding, refactoring, dependency analysis"
+  coordination: "Provides code context for other MCPs"
+
+CONTEXT7:
+  primary_role: "Documentation Research & Best Practices"
+  use_cases: ["Framework documentation", "Best practices", "Technology research"]
+  selection_trigger: "Unfamiliar patterns, technology decisions, implementation guidance"
+  coordination: "Used in planning phase for complex implementations"
+
+CHROME_DEVTOOLS:
+  primary_role: "UI Testing & Performance Validation"
+  use_cases: ["E2E testing", "Performance metrics", "UI validation"]
+  selection_trigger: "Frontend testing, performance validation, UI component testing"
+  coordination: "Used after implementation for validation"
+
+SHADCN:
+  primary_role: "Component Library Management"
+  use_cases: ["Component discovery", "UI patterns", "Design system integration"]
+  selection_trigger: "UI component work, design system tasks"
+  coordination: "Works with chrome-devtools for component testing"
+
+SEQUENTIAL_THINKING:
+  primary_role: "Cognitive Task Analysis & Planning"
+  use_cases: ["Complex task decomposition", "Multi-step planning", "Architecture decisions"]
+  selection_trigger: "Always start complex tasks with this MCP"
+  coordination: "Provides structured approach for other MCPs"
+```
+
+### **Task Execution Workflow**
+
+```yaml
+PHASE_1_ANALYSIS:
+  mandatory_start: "sequential-thinking"
+  purpose: "Decompose task into manageable components"
+  output: "Structured task plan with MCP selection strategy"
+  quality_gate: "Requirements clarity ≥9/10"
+
+PHASE_2_MCP_SELECTION:
+  criteria: ["Task complexity", "Resource efficiency", "Parallel potential", "Dependencies"]
+  matrix:
+    file_operations: "desktop-commander"
+    code_analysis: "serena"
+    documentation_research: "context7"
+    ui_testing: "chrome-devtools"
+    component_work: "shadcn"
+
+PHASE_3_COORDINATED_EXECUTION:
+  parallel_execution:
+    trigger: "Independent operations without shared resources"
+    examples: ["serena + context7 research", "independent file operations"]
+    efficiency: "40-60% time reduction"
+  
+  sequential_execution:
+    trigger: "Dependent operations or shared resources"
+    examples: ["desktop-commander → serena", "implementation → testing"]
+    safety: "Eliminates race conditions"
+
+PHASE_4_VALIDATION:
+  checkpoints: ["Immediate validation", "Integration validation", "Final validation"]
+  criteria: ["Functional correctness", "Resource efficiency", "Standard compliance"]
+```
+
+### **Common Coordination Patterns**
+
+```yaml
+PATTERN_RESEARCH_IMPLEMENTATION:
+  sequence: 
+    1. "sequential-thinking - Analyze requirements"
+    2. "context7 - Research best practices"
+    3. "serena - Analyze existing code"
+    4. "desktop-commander - Implement changes"
+    5. "chrome-devtools - Validate implementation"
+
+PATTERN_COMPONENT_DEVELOPMENT:
+  sequence:
+    1. "sequential-thinking - Plan component approach"
+    2. "shadcn - Research existing components"
+    3. "serena - Analyze integration points"
+    4. "desktop-commander - Create component files"
+    5. "chrome-devtools - Test component functionality"
+
+PATTERN_SYSTEM_CONFIGURATION:
+  sequence:
+    1. "sequential-thinking - Plan configuration changes"
+    2. "context7 - Research configuration best practices"
+    3. "desktop-commander - Modify configuration files"
+    4. "serena - Validate configuration integration"
+    5. "desktop-commander - Test configuration changes"
+```
+
 ### Development Philosophy
 
 **Mantra**: _"Think → Research → Decompose → Plan → Implement → Validate"_
@@ -111,81 +235,6 @@ CORE_STANDARDS:
 - Use TanStack Query for server state management
 - Apply Tailwind CSS for styling with shadcn/ui components
 
-### Code Examples
-
-```typescript
-// ✅ DO: Proper tRPC procedure with validation
-export const createTransactionRouter = (t: any) => ({
-  create: t.procedure
-    .input(z.object({
-      description: z.string().min(1),
-      amount: z.number(),
-      category: z.string(),
-      date: z.string().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.session?.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Must be logged in',
-        })
-      }
-
-      const { data, error } = await ctx.supabase
-        .from('transactions')
-        .insert({
-          user_id: ctx.user.id,
-          description: input.description,
-          amount: input.amount,
-          category: input.category,
-          date: input.date || new Date().toISOString().split('T')[0],
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single()
-
-      if (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: error.message,
-        })
-      }
-
-      return data
-    }),
-})
-
-// ❌ DON'T: Skip validation or error handling
-export const badExample = (t: any) => ({
-  create: t.procedure
-    .mutation(async ({ ctx, input }) => {
-      // No validation, no error handling - VIOLATION
-      await ctx.supabase
-        .from('transactions')
-        .insert(input)
-    }),
-})
-```
-
-```typescript
-// ✅ DO: Proper Supabase client usage
-import { supabase } from "@/integrations/supabase/client";
-
-const { data: transactions, error } = await supabase
-  .from('transactions')
-  .select('*')
-  .eq('user_id', userId)
-  .order('created_at', { ascending: false })
-
-if (error) {
-  throw new Error(`Transaction fetch failed: ${error.message}`)
-}
-
-// ❌ DON'T: Direct API calls or client-side filtering
-const allTransactions = await fetch('/api/transactions')
-const userTransactions = allTransactions.filter(t => t.user_id === userId)
-```
-
 ## Database & API Standards
 
 ### Database Schema Rules
@@ -211,27 +260,6 @@ const userTransactions = allTransactions.filter(t => t.user_id === userId)
 - Use consistent error handling patterns
 - Return consistent response formats
 - Implement proper authentication checks
-
-**Examples**:
-
-```typescript
-// ✅ DO: Consistent error handling
-try {
-  const result = await operation()
-  return { success: true, data: result }
-} catch (error) {
-  console.error('Operation failed:', error)
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: 'Operation failed. Please try again.',
-  })
-}
-
-// ❌ DON'T: Inconsistent error responses
-if (error) {
-  return { error: error.message } // Inconsistent format
-}
-```
 
 ## Development Workflow Standards
 
@@ -430,18 +458,48 @@ All code changes must pass:
 ### Essential Commands
 ```bash
 # Development
-bun dev                    # Start development servers
-bun build                  # Build all apps and packages
+bun dev                    # Start development server (client only)
+bun dev:full              # Start both client and server concurrently
+bun dev:client            # Start Vite development server
+bun dev:server            # Start Hono server only
+
+# Building
+bun build                 # Build both client and server
+bun build:client          # Build client with Vite
+bun build:server          # Build server (runtime compilation)
+bun build:dev             # Build in development mode
+bun preview               # Build and start server
+
+# Production
+bun start                 # Start production server
+bun start:prod            # Start server in production mode
 
 # Quality Assurance
-bun lint                   # Lint with OXLint (50-100x faster)
-bun type-check             # TypeScript strict mode validation
-bun test                   # Run unit and integration tests
-bunx biome check           # Alternative quality validation
+bun lint                  # Run OXLint + Biome check and fix
+bun lint:oxlint           # Run OXLint only
+bun lint:biome            # Run Biome check and fix
+bun lint:fix              # Fix linting issues (alias for biome)
+bun quality               # Run lint + test coverage
+bun quality:ci            # Run OXLint + test coverage (CI mode)
+
+# Testing
+bun test                  # Run unit tests
+bun test:unit             # Run unit tests
+bun test:integration      # Run integration tests
+bun test:coverage         # Run tests with coverage report
+bun test:watch            # Run tests in watch mode
 
 # Database
-bunx supabase db push      # Apply database migrations
-bunx supabase gen types    # Generate TypeScript types
+bun types:generate        # Generate TypeScript types from Supabase
+bunx supabase db push     # Apply database migrations
+
+# Routing
+bun routes:generate       # Generate TanStack Router types
+
+# BMAD Methods (AI)
+bun bmad:refresh          # Refresh BMAD method installation
+bun bmad:list             # List available BMAD agents
+bun bmad:validate         # Validate BMAD configuration
 ```
 
 ### Import Patterns
@@ -449,21 +507,98 @@ bunx supabase gen types    # Generate TypeScript types
 // Supabase Client
 import { supabase } from "@/integrations/supabase/client"
 
-// tRPC
+// tRPC Server
 import { router, publicProcedure, protectedProcedure } from "@/server/trpc"
+import { createTRPCRouter } from "@/server/trpc"
 
-// React Query
-import { useQuery, useMutation } from "@tanstack/react-query"
+// React Query (TanStack Query)
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
+// TanStack Router
+import { createRoute, Link, redirect } from "@tanstack/react-router"
+
+// Database Types
+import type { Database } from "@/types/database.types"
+
+// Supabase Helpers
+import { createClient } from "@/integrations/supabase/client"
 ```
 
 ### File Structure
 ```
 src/
-├── integrations/supabase/    # Supabase client configuration
-├── server/                   # Backend tRPC procedures
-├── components/              # React components
-├── pages/                   # TanStack Router pages
-└── hooks/                   # Custom React hooks
+├── components/               # React UI components
+│   ├── ui/                  # shadcn/ui components
+│   └── [feature-components]/
+├── contexts/                 # React contexts and providers
+├── data/                     # Static data and constants
+├── hooks/                    # Custom React hooks
+├── integrations/
+│   └── supabase/            # Supabase client configuration
+├── lib/                      # Utility libraries and helpers
+├── routes/                   # TanStack Router pages
+│   └── __root.tsx          # Root layout
+├── server/                   # Backend Hono + tRPC server
+│   ├── context.ts          # tRPC context
+│   ├── index.ts             # Server entry point
+│   ├── middleware/         # Server middleware
+│   ├── procedures/         # tRPC procedures
+│   ├── routers/            # tRPC routers
+│   ├── server.ts           # Hono server setup
+│   └── trpc.ts             # tRPC router configuration
+├── services/                # Business logic services
+├── styles/                  # Global styles and CSS
+├── test/                    # Test utilities and fixtures
+├── types/                   # TypeScript type definitions
+├── utils/                   # Utility functions
+├── App.tsx                  # Main React application
+├── main.tsx                 # Application entry point
+└── routeTree.gen.ts        # Generated router types
 ```
+
+### Project-Specific Patterns
+
+```typescript
+// tRPC Procedure Pattern
+export const exampleRouter = createTRPCRouter({
+  getExample: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      // Implementation
+    }),
+  
+  createExample: protectedProcedure
+    .input(z.object({ data: z.any() }))
+    .mutation(async ({ input, ctx }) => {
+      // Implementation with authentication
+    }),
+});
+
+// React Query Pattern
+export function useExampleData(id: string) {
+  return useQuery({
+    queryKey: ["example", id],
+    queryFn: () => fetchExample(id),
+  });
+}
+
+// Router Pattern (TanStack)
+export const ExampleRoute = createRoute({
+  component: ExampleComponent,
+  path: "/example/$id",
+  loader: ({ params }) => loadExampleData(params.id),
+});
+```
+
+### Technology Stack Reference
+
+- **Runtime**: Bun (package manager & runtime)
+- **Frontend**: React 19 + Vite + TanStack Router v5
+- **Backend**: Hono + tRPC v11 (Edge-first)
+- **Database**: Supabase (PostgreSQL + Auth + Realtime + RLS)
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Testing**: Vitest (unit & integration) + Playwright (E2E)
+- **Linting**: OXLint (50-100x faster) + Biome
+- **Type Safety**: TypeScript strict mode + Zod validation
 
 **Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence.

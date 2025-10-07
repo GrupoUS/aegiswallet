@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc-helpers'
 
 /**
  * Contacts Router - Gerenciamento de contatos

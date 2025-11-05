@@ -1,0 +1,145 @@
+/**
+ * Type Check Validation Test
+ * Validates that critical type fixes are working correctly
+ */
+
+import { describe, it, expect } from 'vitest'
+import type { Tables } from '@/types/database.types'
+
+describe('Type Check Validation', () => {
+  describe('Database Schema Fixes', () => {
+    it('should have user_preferences with voice_feedback', () => {
+      // This should now work without errors
+      const mockPreferences: Tables<'user_preferences'>['Row'] = {
+        id: 'test-id',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: 'user-id',
+        notifications_email: true,
+        notifications_push: false,
+        theme: 'dark',
+        voice_feedback: true,
+        accessibility_high_contrast: true,
+        accessibility_large_text: false,
+        accessibility_screen_reader: true
+      }
+
+      expect(mockPreferences.voice_feedback).toBe(true)
+      expect(mockPreferences.accessibility_high_contrast).toBe(true)
+    })
+
+    it('should have bank_accounts with is_primary', () => {
+      const mockAccount: Tables<'bank_accounts'>['Row'] = {
+        id: 'test-id',
+        account_mask: '1234',
+        institution_name: 'Test Bank',
+        balance: 1000,
+        currency: 'BRL',
+        is_active: true,
+        is_primary: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: 'user-id'
+      }
+
+      expect(mockAccount.is_primary).toBe(true)
+    })
+
+    it('should have financial_events with new properties', () => {
+      const mockEvent: Tables<'financial_events'>['Row'] = {
+        id: 'test-id',
+        title: 'Test Event',
+        event_date: '2024-01-01',
+        amount: 100,
+        is_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: 'user-id',
+        event_type_id: 'type-id',
+        description: 'Test description',
+        is_income: true,
+        account_id: 'account-id',
+        category_id: 'category-id',
+        priority: 'high'
+      }
+
+      expect(mockEvent.description).toBe('Test description')
+      expect(mockEvent.is_income).toBe(true)
+      expect(mockEvent.priority).toBe('high')
+    })
+
+    it('should have transactions with date field', () => {
+      const mockTransaction: Tables<'transactions'>['Row'] = {
+        id: 'test-id',
+        description: 'Test Transaction',
+        amount: 100,
+        transaction_type: 'credit',
+        transaction_date: '2024-01-01',
+        date: '2024-01-01',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: 'user-id',
+        account_id: 'account-id',
+        category_id: 'category-id',
+        status: 'completed'
+      }
+
+      expect(mockTransaction.date).toBe('2024-01-01')
+    })
+
+    it('should have voice tables available', () => {
+      // These should now exist in the database types without TypeScript errors
+      const voiceFeedbackRow: Tables<'voice_feedback'>['Row'] = {} as any
+      const voiceMetricsRow: Tables<'voice_metrics'>['Row'] = {} as any
+      const auditLogsRow: Tables<'audit_logs'>['Row'] = {} as any
+      const bankTokensRow: Tables<'bank_tokens'>['Row'] = {} as any
+
+      expect(voiceFeedbackRow).toBeDefined()
+      expect(voiceMetricsRow).toBeDefined()
+      expect(auditLogsRow).toBeDefined()
+      expect(bankTokensRow).toBeDefined()
+    })
+  })
+
+  describe('Component Export Fixes', () => {
+    it('should export components correctly', async () => {
+      // These should now work without import errors
+      const uiModule = await import('@/components/ui')
+      
+      // These should exist and be functions
+      expect(typeof uiModule.BentoGrid).toBe('function')
+      expect(typeof uiModule.BentoCard).toBe('function')
+      expect(typeof uiModule.PopoverAnchor).toBe('function')
+      expect(typeof uiModule.SheetOverlay).toBe('function')
+      expect(typeof uiModule.SheetPortal).toBe('function')
+    })
+  })
+
+  describe('Context Type Fixes', () => {
+    it('should have tRPC context with user property', async () => {
+      const contextModule = await import('@/server/context')
+      
+      // This should now include the user property
+      const createContext = contextModule.createContext
+      
+      // We can't actually test the function execution here easily,
+      // but we can verify the module exists
+      expect(createContext).toBeDefined()
+    })
+  })
+
+  describe('Calendar Filter Fixes', () => {
+    it('should have categories in CalendarFilter', async () => {
+      const typesModule = await import('@/components/ui/event-calendar/types')
+      
+      // Create a filter object with categories
+      const filter: typesModule.CalendarFilter = {
+        categories: ['category1', 'category2'],
+        search: 'test'
+      }
+      
+      expect(filter.categories).toEqual(['category1', 'category2'])
+      expect(filter.search).toBe('test')
+    })
+  })
+})

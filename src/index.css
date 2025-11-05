@@ -1,7 +1,5 @@
-/* Tailwind CSS entrypoint - processed by PostCSS */
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+/* Tailwind CSS v4 entrypoint - processed by PostCSS */
+@import "tailwindcss";
 
 @layer base {
   :root {

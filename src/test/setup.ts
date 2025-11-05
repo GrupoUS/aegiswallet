@@ -141,7 +141,7 @@ beforeAll(() => {
     }
     ;(globalThis as any).document = mockDocument
     ;(globalThis as any).window = {
-      ...((globalThis as any).window || {}),
+      ...(globalThis as any).window,
       document: mockDocument,
     }
   }

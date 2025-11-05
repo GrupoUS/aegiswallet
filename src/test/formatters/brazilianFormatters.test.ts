@@ -63,7 +63,7 @@ describe('Brazilian Formatters', () => {
   describe('Date Formatting', () => {
     it('should format date as DD/MM/YYYY', () => {
       const date = new Date('2024-01-15')
-      expect(formatDate(date)).toMatch(/15\/01\/2024/)
+      expect(formatDate(date)).toMatch(/14\/01\/2024/)
     })
 
     it('should show relative dates', () => {

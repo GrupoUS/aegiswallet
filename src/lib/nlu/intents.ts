@@ -22,7 +22,8 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     patterns: [
       /\b(qual|quanto|ver|mostrar|consultar|checar)\s+(é|eh|e|o|meu)?\s*(saldo|dinheiro|grana|bufunfa)\b/i,
       /\b(saldo|dinheiro|grana)\s+(disponivel|atual|hoje|agora)\b/i,
-      /\b(tenho|tem|sobrou|restou)\s+quanto\b/i,
+      /\b(tenho|tem|restou)\s+quanto\b/i,
+      /\b(sobrou)\s+quanto(\s+de)?\s*(dinheiro|grana)?\b/i,
       /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\b/i,
       /\bme\s+(mostra|fala|diz)\s+(o|meu)?\s*saldo\b/i,
       /\b(t[áÁ]|est[áÁ])\s+quanto\s+(na\s+)?conta\b/i,
@@ -53,8 +54,10 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\b(gastar|usar)\s+quanto\b/i,
       /\b(sobrou|restou|tem)\s+quanto\s+(pra|para)\s+gastar\b/i,
       /\b(quanto|qual)\s+(falta|resta)\s+(do|no)?\s*(orcamento|or[çc]amento)\b/i,
+      /\b(quanto|qual)\s+(sobrou|restou)\s+(do|no)?\s*(orcamento|or[çc]amento)\b/i,
+      /\b(t[áÁ]|est[áÁ])\s+quanto\s+(no|na)?\s*(orcamento|or[çc]amento)\b/i,
     ],
-    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto'],
+    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto', 'sobrou'],
     requiredSlots: [],
     optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
     examples: [

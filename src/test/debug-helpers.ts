@@ -101,16 +101,18 @@ export class PerformanceHelper {
     name: string,
     fn: () => Promise<T>
   ): Promise<{ result: T; duration: number }> {
-    return new Promise(async (resolve, reject) => {
-      const start = performance.now()
-      try {
-        const result = await fn()
-        const duration = performance.now() - start
-        resolve({ result, duration })
-      } catch (error) {
-        const duration = performance.now() - start
-        reject({ error, duration })
-      }
+    return new Promise((resolve, reject) => {
+      ;(async () => {
+        const start = performance.now()
+        try {
+          const result = await fn()
+          const duration = performance.now() - start
+          resolve({ result, duration })
+        } catch (error) {
+          const duration = performance.now() - start
+          reject({ error, duration })
+        }
+      })()
     })
   }
 
@@ -159,7 +161,7 @@ export class VoiceTestHelper {
     confidence: number = 0.95
   ): Promise<void> {
     return new Promise((resolve) => {
-      mockRecognition.onresult = (event: any) => {
+      mockRecognition.onresult = (_event: any) => {
         resolve()
       }
 

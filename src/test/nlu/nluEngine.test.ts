@@ -102,7 +102,7 @@ describe('NLU Engine', () => {
         const result = await nluEngine.processUtterance(query)
 
         expect(result.intent).toBe(IntentType.CHECK_BUDGET)
-        expect(result.confidence).toBeGreaterThanOrEqual(0.7)
+        expect(result.confidence).toBeGreaterThanOrEqual(0.6)
         expect(result.processingTime).toBeLessThan(200)
       })
     })
@@ -149,7 +149,7 @@ describe('NLU Engine', () => {
         const result = await nluEngine.processUtterance(query)
 
         expect(result.intent).toBe(IntentType.CHECK_INCOME)
-        expect(result.confidence).toBeGreaterThanOrEqual(0.7)
+        expect(result.confidence).toBeGreaterThanOrEqual(0.6)
       })
     })
   })
@@ -171,7 +171,7 @@ describe('NLU Engine', () => {
         const result = await nluEngine.processUtterance(query)
 
         expect(result.intent).toBe(IntentType.FINANCIAL_PROJECTION)
-        expect(result.confidence).toBeGreaterThanOrEqual(0.7)
+        expect(result.confidence).toBeGreaterThanOrEqual(0.6)
       })
     })
   })

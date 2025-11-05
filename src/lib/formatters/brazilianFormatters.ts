@@ -270,7 +270,8 @@ export function formatCompactNumber(num: number): string {
 /**
  * Format percentage
  */
-export function formatPercentage(value: number, decimals = 1): string {
+export function formatPercentage(value: number | undefined | null, decimals = 1): string {
+  if (value === undefined || value === null) return '0%'
   const effectiveDecimals = Number.isInteger(value) ? 0 : decimals
   const formatted = value.toFixed(effectiveDecimals)
 

@@ -87,7 +87,7 @@ export class NLUEngine {
       const normalized = this.normalizer.normalize(text)
 
       // Classify intent
-      const classification = await this.classifier.classify(normalized.normalized)
+      const classification = await this.classifier.classify(text)
 
       // Extract entities
       const entities = this.extractor.extract(text)

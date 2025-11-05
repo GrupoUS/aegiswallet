@@ -19,7 +19,7 @@ import {
   formatPercentage,
   pluralize,
 } from '@/lib/formatters/brazilianFormatters'
-import type { IntentType } from '@/lib/nlu/types'
+import { IntentType } from '@/lib/nlu/types'
 
 // ============================================================================
 // Types
@@ -63,6 +63,18 @@ export function buildBalanceResponse(data: {
   accountType?: string
 }): MultimodalResponse {
   const { currentBalance, income, expenses, accountType } = data
+
+  if (typeof currentBalance !== 'number' || isNaN(currentBalance)) {
+    return {
+      text: 'Saldo indisponível',
+      voice: 'Saldo indisponível',
+      visual: {
+        type: 'balance',
+        data: { balance: 0, income: 0, expenses: 0 },
+      },
+      requiresConfirmation: false,
+    }
+  }
 
   // Voice output (natural speech)
   const voiceParts = [
@@ -124,14 +136,18 @@ export function buildBudgetResponse(data: {
   const { available, total, spent, spentPercentage, category } = data
 
   // Voice output
+  const safeSpentPercentage =
+    typeof spentPercentage === 'number' && !isNaN(spentPercentage) ? spentPercentage : 0
   const categoryText = category ? `do orçamento de ${category}` : 'do seu orçamento'
   const voice = [
     `Você ainda pode gastar ${formatCurrencyForVoice(available)} ${categoryText}`,
-    `Você já utilizou ${formatPercentage(spentPercentage)} do limite`,
+    `Você já utilizou ${formatPercentage(safeSpentPercentage)} do limite`,
   ].join('. ')
 
   // Text output
-  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(available)} disponíveis`
+  const percentageText =
+    category && safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : ''
+  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(available)} disponíveis${percentageText}`
 
   // Visual data
   const visual = {
@@ -174,8 +190,21 @@ export function buildBillsResponse(data: {
 }): MultimodalResponse {
   const { bills, totalAmount } = data
 
-  const billCount = bills.length
-  const pastDue = bills.filter((b) => b.isPastDue).length
+  const safeBills = bills || []
+  const billCount = safeBills.length
+  const pastDue = safeBills.filter((b) => b.isPastDue).length
+
+  if (!Number.isFinite(totalAmount)) {
+    return {
+      text: 'Valores das contas indisponíveis',
+      voice: 'Valores das contas indisponíveis',
+      visual: {
+        type: 'bills',
+        data: { bills: [], totalAmount: 0, pastDueCount: 0 },
+      },
+      requiresConfirmation: false,
+    }
+  }
 
   // Voice output
   const voiceParts = [
@@ -491,5 +520,30 @@ export function buildMultimodalResponse(
     })
   }
 
-  return builder(data)
+  // Map common prop names to expected names
+  const mappedData =
+    intent === IntentType.CHECK_BALANCE && data.balance !== undefined
+      ? { ...data, currentBalance: data.balance }
+      : intent === IntentType.PAY_BILL && data.billName && data.amount
+        ? {
+            ...data,
+            bills: [
+              {
+                name: data.billName,
+                amount: data.amount,
+                dueDate: data.dueDate,
+                isPastDue: false,
+              },
+            ],
+            totalAmount: data.amount,
+          }
+        : intent === IntentType.CHECK_BUDGET && data.available !== undefined
+          ? {
+              ...data,
+              spentPercentage:
+                data.total && data.spent !== undefined ? (data.spent / data.total) * 100 : 0,
+            }
+          : data
+
+  return builder(mappedData)
 }

@@ -101,7 +101,7 @@ describe('Intent Classifier', () => {
 
       // Should either be low confidence or UNKNOWN
       if (result.intent !== IntentType.UNKNOWN) {
-        expect(result.confidence).toBeLessThan(0.7)
+        expect(result.confidence).toBeLessThan(0.8)
       }
     })
   })

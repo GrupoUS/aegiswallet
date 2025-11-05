@@ -17,6 +17,7 @@ export type Database = {
           id: string
           institution_name: string
           is_active: boolean | null
+          is_primary: boolean | null
           updated_at: string | null
           user_id: string | null
         }
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           institution_name: string
           is_active?: boolean | null
+          is_primary?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -39,6 +41,7 @@ export type Database = {
           id?: string
           institution_name?: string
           is_active?: boolean | null
+          is_primary?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -125,6 +128,11 @@ export type Database = {
           title: string
           updated_at: string | null
           user_id: string | null
+          description: string | null
+          is_income: boolean | null
+          account_id: string | null
+          category_id: string | null
+          priority: string | null
         }
         Insert: {
           amount?: number | null
@@ -360,6 +368,7 @@ export type Database = {
           transaction_type: string
           updated_at: string | null
           user_id: string | null
+          date: string
         }
         Insert: {
           account_id?: string | null
@@ -420,6 +429,10 @@ export type Database = {
           theme: string | null
           updated_at: string | null
           user_id: string | null
+          voice_feedback: boolean | null
+          accessibility_high_contrast: boolean | null
+          accessibility_large_text: boolean | null
+          accessibility_screen_reader: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -429,6 +442,10 @@ export type Database = {
           theme?: string | null
           updated_at?: string | null
           user_id?: string | null
+          voice_feedback?: boolean | null
+          accessibility_high_contrast?: boolean | null
+          accessibility_large_text?: boolean | null
+          accessibility_screen_reader?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -438,6 +455,10 @@ export type Database = {
           theme?: string | null
           updated_at?: string | null
           user_id?: string | null
+          voice_feedback?: boolean | null
+          accessibility_high_contrast?: boolean | null
+          accessibility_large_text?: boolean | null
+          accessibility_screen_reader?: boolean | null
         }
         Relationships: [
           {
@@ -500,6 +521,198 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_feedback: {
+        Row: {
+          command: string
+          confidence_score: number | null
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          processing_time_ms: number | null
+          rating: number | null
+          response: string
+          user_id: string
+        }
+        Insert: {
+          command: string
+          confidence_score?: number | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          processing_time_ms?: number | null
+          rating?: number | null
+          response: string
+          user_id: string
+        }
+        Update: {
+          command?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          processing_time_ms?: number | null
+          rating?: number | null
+          response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voice_metrics: {
+        Row: {
+          command: string
+          confidence_score: number | null
+          created_at: string | null
+          error_type: string | null
+          id: string
+          processing_time_ms: number
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          command: string
+          confidence_score?: number | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          processing_time_ms: number
+          success: boolean
+          user_id: string
+        }
+        Update: {
+          command?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          processing_time_ms?: number
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      bank_tokens: {
+        Row: {
+          created_at: string | null
+          encrypted_access_token: string
+          encrypted_refresh_token: string | null
+          encryption_algorithm: string | null
+          encryption_iv: string
+          expires_at: string | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          refresh_expires_at: string | null
+          scopes: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+          Insert: {
+            created_at?: string | null
+            encrypted_access_token: string
+            encrypted_refresh_token?: string | null
+            encryption_algorithm?: string | null
+            encryption_iv: string
+            expires_at?: string | null
+            id?: string
+            institution_id: string
+            is_active?: boolean | null
+            refresh_expires_at?: string | null
+            scopes?: string[] | null
+            updated_at?: string | null
+            user_id: string
+          }
+          Update: {
+            created_at?: string | null
+            encrypted_access_token?: string
+            encrypted_refresh_token?: string | null
+            encryption_algorithm?: string | null
+            encryption_iv?: string
+            expires_at?: string | null
+            id?: string
+            institution_id?: string
+            is_active?: boolean | null
+            refresh_expires_at?: string | null
+            scopes?: string[] | null
+            updated_at?: string | null
+            user_id?: string
+          }
+          Relationships: []
+        }
+        user_bank_links: {
+          Row: {
+            created_at: string | null
+            id: string
+            institution_id: string
+            institution_name: string
+            last_sync_at: string | null
+            link_id: string
+            status: string | null
+            updated_at: string | null
+            user_id: string
+          }
+          Insert: {
+            created_at?: string | null
+            id?: string
+            institution_id: string
+            institution_name: string
+            last_sync_at?: string | null
+            link_id: string
+            status?: string | null
+            updated_at?: string | null
+            user_id: string
+          }
+          Update: {
+            created_at?: string | null
+            id?: string
+            institution_id?: string
+            institution_name?: string
+            last_sync_at?: string | null
+            link_id?: string
+            status?: string | null
+            updated_at?: string | null
+            user_id?: string
+          }
+          Relationships: []
+        }
     }
     Views: {
       [_ in never]: never

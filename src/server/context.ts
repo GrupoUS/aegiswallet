@@ -1,4 +1,4 @@
-import { createClient, User } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 import { inferAsyncReturnType } from '@trpc/server'
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://clvdvpbnuifxedpqgrgo.supabase.co'
@@ -19,10 +19,9 @@ export const createContext = async () => {
 
   return {
     session,
+    user: session?.user || null,
     supabase,
   }
 }
 
-export type Context = inferAsyncReturnType<typeof createContext> & {
-  user?: User
-}
+export type Context = inferAsyncReturnType<typeof createContext>

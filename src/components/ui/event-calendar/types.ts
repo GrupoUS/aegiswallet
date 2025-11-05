@@ -130,6 +130,7 @@ export interface CalendarFilter {
   status?: string[]
   priority?: string[]
   calendars?: string[]
+  categories?: string[]
 }
 
 export interface CalendarSettings {

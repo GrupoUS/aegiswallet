@@ -19,42 +19,27 @@ export function useFinancialTransactions(filters?: {
 }) {
   const utils = trpc.useUtils()
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
-    trpc.financialTransactions.getAll.useInfiniteQuery(filters || {}, {
-      getNextPageParam: (lastPage) => {
-        if (lastPage.hasMore) {
-          return {
-            ...filters,
-            offset: (filters?.offset || 0) + (filters?.limit || 20),
-          }
-        }
-        return undefined
-      },
-    })
+  const { data, isLoading, error, refetch } = trpc.financialTransactions.getAll.useQuery(
+    filters || {}
+  )
 
   const transactions = useMemo(() => {
-    return data?.pages.flatMap((page) => page.transactions) || []
+    return data?.transactions || []
   }, [data])
 
   const total = useMemo(() => {
-    return data?.pages[0]?.total || 0
+    return data?.total || 0
   }, [data])
 
   const { mutate: createTransaction, isPending: isCreating } =
     trpc.financialTransactions.create.useMutation({
       onSuccess: (data) => {
-        utils.financialTransactions.getAll.setData(undefined, (old) => {
-          if (!old) return { pages: [{ transactions: [data], total: 1, hasMore: false }] }
+        utils.financialTransactions.getAll.setData(filters || {}, (old) => {
+          if (!old) return { transactions: [data], total: 1, hasMore: false }
           return {
             ...old,
-            pages: [
-              {
-                ...old.pages[0],
-                transactions: [data, ...old.pages[0].transactions],
-                total: old.pages[0].total + 1,
-              },
-              ...old.pages.slice(1),
-            ],
+            transactions: [data, ...old.transactions],
+            total: old.total + 1,
           }
         })
         utils.financialTransactions.getStats.invalidate()
@@ -68,14 +53,11 @@ export function useFinancialTransactions(filters?: {
   const { mutate: updateTransaction, isPending: isUpdating } =
     trpc.financialTransactions.update.useMutation({
       onSuccess: (data) => {
-        utils.financialTransactions.getAll.setData(undefined, (old) => {
+        utils.financialTransactions.getAll.setData(filters || {}, (old) => {
           if (!old) return old
           return {
             ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              transactions: page.transactions.map((t) => (t.id === data.id ? data : t)),
-            })),
+            transactions: old.transactions.map((t) => (t.id === data.id ? data : t)),
           }
         })
         utils.financialTransactions.getStats.invalidate()
@@ -130,8 +112,6 @@ export function useFinancialTransactions(filters?: {
     total,
     isLoading,
     error,
-    hasNextPage,
-    fetchNextPage,
     refetch,
     createTransaction,
     updateTransaction,

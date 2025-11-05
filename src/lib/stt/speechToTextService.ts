@@ -107,14 +107,23 @@ export class SpeechToTextService {
   /**
    * Validate audio file before processing
    */
+  /**
+   * Validate audio file before processing - Optimized for voice commands
+   */
   private validateAudio(audioBlob: Blob | File): void {
-    // Check file size (25 MB limit)
-    const MAX_SIZE = 25 * 1024 * 1024
+    // Reduced file size limit for voice commands (5MB instead of 25MB)
+    const MAX_SIZE = 5 * 1024 * 1024
     if (audioBlob.size > MAX_SIZE) {
       throw new Error(`Audio file too large: ${audioBlob.size} bytes (max: ${MAX_SIZE})`)
     }
 
-    // Check file type
+    // Check minimum duration - voice commands should be at least 0.3 seconds
+    const MIN_SIZE = 12000 // Approximate minimum for 0.3s at 16kHz
+    if (audioBlob.size < MIN_SIZE) {
+      throw new Error(`Audio too short: ${audioBlob.size} bytes (min: ${MIN_SIZE})`)
+    }
+
+    // Check file type - simplified validation
     const validTypes = [
       'audio/webm',
       'audio/mp3',
@@ -124,7 +133,7 @@ export class SpeechToTextService {
       'audio/m4a',
     ]
 
-    if (!validTypes.includes(audioBlob.type)) {
+    if (!validTypes.some((type) => audioBlob.type.includes(type))) {
       throw new Error(`Invalid audio type: ${audioBlob.type}`)
     }
   }
@@ -157,6 +166,9 @@ export class SpeechToTextService {
   /**
    * Make HTTP request to OpenAI API
    */
+  /**
+   * Make HTTP request to OpenAI API - Optimized with better timeout handling
+   */
   private async makeRequest(formData: FormData): Promise<Response> {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout)
@@ -166,6 +178,7 @@ export class SpeechToTextService {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.config.apiKey}`,
+          Accept: 'application/json',
         },
         body: formData,
         signal: controller.signal,
@@ -180,6 +193,12 @@ export class SpeechToTextService {
       return response
     } catch (error) {
       clearTimeout(timeoutId)
+
+      // Enhanced error handling for timeout
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout - Please try again')
+      }
+
       throw error
     }
   }
@@ -448,6 +467,6 @@ export function createSTTService(apiKey?: string): SpeechToTextService {
     apiKey: key,
     language: 'pt', // Brazilian Portuguese
     temperature: 0.0, // Deterministic results
-    timeout: 10000, // 10 seconds
+    timeout: 8000, // Reduced from 10 seconds to 8 seconds for voice commands
   })
 }

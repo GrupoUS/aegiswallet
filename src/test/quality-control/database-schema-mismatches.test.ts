@@ -3,13 +3,8 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-import { describe, it, expect } from 'vitest'
-import type { 
-  Database, 
-  Tables, 
-  TablesInsert, 
-  TablesUpdate 
-} from '@/types/database.types'
+import { describe, expect, it } from 'vitest'
+import type { Database, Tables } from '@/types/database.types'
 
 describe('Database Schema Type Safety', () => {
   describe('User Preferences Schema', () => {
@@ -25,9 +20,9 @@ describe('Database Schema Type Safety', () => {
         notifications_push: false,
         theme: 'dark',
         // @ts-expect-error - This should fail because voice_feedback is missing
-        voice_feedback: true
+        voice_feedback: true,
       }
-      
+
       expect(mockPreferences.voice_feedback).toBeDefined()
     })
 
@@ -44,9 +39,9 @@ describe('Database Schema Type Safety', () => {
         // @ts-expect-error - These should fail because accessibility properties are missing
         accessibility_high_contrast: true,
         accessibility_large_text: false,
-        accessibility_screen_reader: true
+        accessibility_screen_reader: true,
       }
-      
+
       expect(mockPreferences.accessibility_high_contrast).toBeDefined()
       expect(mockPreferences.accessibility_large_text).toBeDefined()
       expect(mockPreferences.accessibility_screen_reader).toBeDefined()
@@ -67,9 +62,9 @@ describe('Database Schema Type Safety', () => {
         updated_at: new Date().toISOString(),
         user_id: 'user-id',
         // @ts-expect-error - This should fail because is_primary is missing
-        is_primary: true
+        is_primary: true,
       }
-      
+
       expect(mockAccount.is_primary).toBeDefined()
     })
   })
@@ -92,9 +87,9 @@ describe('Database Schema Type Safety', () => {
         is_income: true,
         account_id: 'account-id',
         category_id: 'category-id',
-        priority: 'high'
+        priority: 'high',
       }
-      
+
       expect(mockEvent.description).toBeDefined()
       expect(mockEvent.is_income).toBeDefined()
       expect(mockEvent.account_id).toBeDefined()
@@ -119,9 +114,9 @@ describe('Database Schema Type Safety', () => {
         category_id: 'category-id',
         status: 'completed',
         // @ts-expect-error - This should fail because date field doesn't exist
-        date: '2024-01-01'
+        date: '2024-01-01',
       }
-      
+
       expect(mockTransaction.date).toBeDefined()
     })
   })
@@ -130,46 +125,46 @@ describe('Database Schema Type Safety', () => {
     it('should have voice_feedback table', () => {
       // This test exposes that voice_feedback table doesn't exist in database types
       type DatabaseTables = Database['public']['Tables']
-      
+
       // @ts-expect-error - This should fail because voice_feedback table is missing
       const voiceFeedbackTable: DatabaseTables['voice_feedback'] = {} as any
-      
+
       expect(voiceFeedbackTable).toBeDefined()
     })
 
     it('should have voice_metrics table', () => {
       type DatabaseTables = Database['public']['Tables']
-      
+
       // @ts-expect-error - This should fail because voice_metrics table is missing
       const voiceMetricsTable: DatabaseTables['voice_metrics'] = {} as any
-      
+
       expect(voiceMetricsTable).toBeDefined()
     })
 
     it('should have audit_logs table', () => {
       type DatabaseTables = Database['public']['Tables']
-      
+
       // @ts-expect-error - This should fail because audit_logs table is missing
       const auditLogsTable: DatabaseTables['audit_logs'] = {} as any
-      
+
       expect(auditLogsTable).toBeDefined()
     })
 
     it('should have bank_tokens table', () => {
       type DatabaseTables = Database['public']['Tables']
-      
+
       // @ts-expect-error - This should fail because bank_tokens table is missing
       const bankTokensTable: DatabaseTables['bank_tokens'] = {} as any
-      
+
       expect(bankTokensTable).toBeDefined()
     })
 
     it('should have user_bank_links table', () => {
       type DatabaseTables = Database['public']['Tables']
-      
+
       // @ts-expect-error - This should fail because user_bank_links table is missing
       const userBankLinksTable: DatabaseTables['user_bank_links'] = {} as any
-      
+
       expect(userBankLinksTable).toBeDefined()
     })
   })
@@ -189,7 +184,7 @@ describe('Database Schema Type Safety', () => {
       const filter: CalendarFilter = {
         startDate: '2024-01-01',
         endDate: '2024-01-31',
-        categories: ['category1', 'category2']
+        categories: ['category1', 'category2'],
       }
 
       expect(filter.categories).toBeDefined()

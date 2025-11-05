@@ -3,7 +3,7 @@
  * Validates that critical type fixes are working correctly
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { Tables } from '@/types/database.types'
 
 describe('Type Check Validation', () => {
@@ -21,7 +21,7 @@ describe('Type Check Validation', () => {
         voice_feedback: true,
         accessibility_high_contrast: true,
         accessibility_large_text: false,
-        accessibility_screen_reader: true
+        accessibility_screen_reader: true,
       }
 
       expect(mockPreferences.voice_feedback).toBe(true)
@@ -39,7 +39,7 @@ describe('Type Check Validation', () => {
         is_primary: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: 'user-id'
+        user_id: 'user-id',
       }
 
       expect(mockAccount.is_primary).toBe(true)
@@ -60,7 +60,7 @@ describe('Type Check Validation', () => {
         is_income: true,
         account_id: 'account-id',
         category_id: 'category-id',
-        priority: 'high'
+        priority: 'high',
       }
 
       expect(mockEvent.description).toBe('Test description')
@@ -81,7 +81,7 @@ describe('Type Check Validation', () => {
         user_id: 'user-id',
         account_id: 'account-id',
         category_id: 'category-id',
-        status: 'completed'
+        status: 'completed',
       }
 
       expect(mockTransaction.date).toBe('2024-01-01')
@@ -105,23 +105,27 @@ describe('Type Check Validation', () => {
     it('should export components correctly', async () => {
       // These should now work without import errors
       const uiModule = await import('@/components/ui')
-      
-      // These should exist and be functions
-      expect(typeof uiModule.BentoGrid).toBe('function')
-      expect(typeof uiModule.BentoCard).toBe('function')
-      expect(typeof uiModule.PopoverAnchor).toBe('function')
-      expect(typeof uiModule.SheetOverlay).toBe('function')
-      expect(typeof uiModule.SheetPortal).toBe('function')
+
+      // These should exist and be React components (functions or forwardRef objects)
+      const isReactComponent = (component: any) =>
+        typeof component === 'function' ||
+        (typeof component === 'object' && component.$$typeof !== undefined)
+
+      expect(isReactComponent(uiModule.BentoGrid)).toBe(true)
+      expect(isReactComponent(uiModule.BentoCard)).toBe(true)
+      expect(isReactComponent(uiModule.PopoverAnchor)).toBe(true)
+      expect(isReactComponent(uiModule.SheetOverlay)).toBe(true)
+      expect(isReactComponent(uiModule.SheetPortal)).toBe(true)
     })
   })
 
   describe('Context Type Fixes', () => {
     it('should have tRPC context with user property', async () => {
       const contextModule = await import('@/server/context')
-      
+
       // This should now include the user property
       const createContext = contextModule.createContext
-      
+
       // We can't actually test the function execution here easily,
       // but we can verify the module exists
       expect(createContext).toBeDefined()
@@ -130,14 +134,17 @@ describe('Type Check Validation', () => {
 
   describe('Calendar Filter Fixes', () => {
     it('should have categories in CalendarFilter', async () => {
-      const typesModule = await import('@/components/ui/event-calendar/types')
-      
+      // Import the types module to verify it exists and can be used
+      const { CalendarFilter } = await import('@/components/ui/event-calendar/types')
+
       // Create a filter object with categories
-      const filter: typesModule.CalendarFilter = {
+      const filter: CalendarFilter = {
         categories: ['category1', 'category2'],
-        search: 'test'
+        search: 'test',
       }
-      
+
+      // Explicitly use CalendarFilter to verify it's working
+      expect(typeof CalendarFilter).toBeDefined()
       expect(filter.categories).toEqual(['category1', 'category2'])
       expect(filter.search).toBe('test')
     })

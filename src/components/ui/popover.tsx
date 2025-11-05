@@ -7,7 +7,11 @@ const Popover = PopoverPrimitive.Root
 
 const PopoverTrigger = PopoverPrimitive.Trigger
 
-const PopoverAnchor = PopoverPrimitive.Anchor
+const PopoverAnchor = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Anchor>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Anchor>
+>(({ ...props }, ref) => <PopoverPrimitive.Anchor ref={ref} {...props} />)
+PopoverAnchor.displayName = PopoverPrimitive.Anchor.displayName
 
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,

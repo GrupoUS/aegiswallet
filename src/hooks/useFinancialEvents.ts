@@ -125,7 +125,7 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
         return
       }
 
-      const mappedEvents = (data || []).map(rowToEvent)
+      const mappedEvents = (data || []).map((row: any) => rowToEvent(row as FinancialEventRow))
       setEvents(mappedEvents)
     } catch (err) {
       setError(err as Error)
@@ -169,7 +169,7 @@ export function useFinancialEventMutations() {
 
       const { data, error: insertError } = await supabase
         .from('financial_events')
-        .insert([eventData])
+        .insert(eventData)
         .select()
         .single()
 

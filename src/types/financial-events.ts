@@ -26,7 +26,7 @@ export type EventColor =
   | 'teal'
   | 'cyan'
 
-export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled'
+export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'
 
 export interface FinancialEvent {
   id: string

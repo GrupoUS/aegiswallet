@@ -66,22 +66,11 @@ export class VoiceMetricsService {
     try {
       const { error } = await supabase.from('voice_metrics').insert({
         user_id: metric.userId,
-        session_id: metric.sessionId,
-        command_type: metric.commandType,
-        intent_type: metric.intentType,
-        transcript: metric.transcript,
+        command: metric.transcript, // Use transcript as command since that's what the schema expects
         confidence_score: metric.confidenceScore,
         processing_time_ms: metric.processingTimeMs,
-        stt_time_ms: metric.sttTimeMs,
-        nlu_time_ms: metric.nluTimeMs,
-        response_time_ms: metric.responseTimeMs,
         success: metric.success,
         error_type: metric.errorType,
-        error_message: metric.errorMessage,
-        user_region: metric.userRegion,
-        device_type: metric.deviceType,
-        browser: metric.browser,
-        metadata: metric.metadata,
       })
 
       if (error) {
@@ -124,7 +113,7 @@ export class VoiceMetricsService {
 
       const confidences = data
         .filter((m) => m.confidence_score !== null)
-        .map((m) => m.confidence_score)
+        .map((m) => m.confidence_score as number)
 
       const avgConfidence =
         confidences.length > 0
@@ -159,15 +148,28 @@ export class VoiceMetricsService {
    */
   async getAccuracyByCommand(_days: number = 7): Promise<Record<string, number>> {
     try {
-      const { data, error } = await supabase.from('accuracy_by_command').select('*')
+      // Since we don't have the complex view tables, calculate from voice_metrics
+      const { data, error } = await supabase.from('voice_metrics').select('command, success')
 
       if (error) {
         throw error
       }
 
-      const result: Record<string, number> = {}
+      // Group by command and calculate accuracy
+      const commandStats: Record<string, { success: number; total: number }> = {}
       data.forEach((row) => {
-        result[row.command_type] = row.accuracy_percent
+        if (!commandStats[row.command]) {
+          commandStats[row.command] = { success: 0, total: 0 }
+        }
+        commandStats[row.command].total++
+        if (row.success) {
+          commandStats[row.command].success++
+        }
+      })
+
+      const result: Record<string, number> = {}
+      Object.entries(commandStats).forEach(([command, stats]) => {
+        result[command] = stats.total > 0 ? (stats.success / stats.total) * 100 : 0
       })
 
       return result
@@ -188,18 +190,32 @@ export class VoiceMetricsService {
     max: number
   }> {
     try {
-      const { data, error } = await supabase.from('latency_percentiles').select('*').single()
+      // Calculate percentiles from voice_metrics table
+      const { data, error } = await supabase
+        .from('voice_metrics')
+        .select('processing_time_ms')
+        .eq('success', true)
 
       if (error) {
         throw error
       }
 
+      const latencies = data.map((row) => row.processing_time_ms).sort((a, b) => a - b)
+
+      if (latencies.length === 0) {
+        return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 }
+      }
+
+      const p50Index = Math.floor(latencies.length * 0.5)
+      const p95Index = Math.floor(latencies.length * 0.95)
+      const p99Index = Math.floor(latencies.length * 0.99)
+
       return {
-        p50: data.p50_latency_ms || 0,
-        p95: data.p95_latency_ms || 0,
-        p99: data.p99_latency_ms || 0,
-        avg: data.avg_latency_ms || 0,
-        max: data.max_latency_ms || 0,
+        p50: latencies[p50Index] || 0,
+        p95: latencies[p95Index] || 0,
+        p99: latencies[p99Index] || 0,
+        avg: latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
+        max: Math.max(...latencies),
       }
     } catch (error) {
       console.error('Error getting latency percentiles:', error)
@@ -212,15 +228,29 @@ export class VoiceMetricsService {
    */
   async getErrorRateByType(): Promise<Record<string, number>> {
     try {
-      const { data, error } = await supabase.from('error_rate_by_type').select('*')
+      // Calculate error rates from voice_metrics table
+      const { data, error } = await supabase.from('voice_metrics').select('error_type, success')
 
       if (error) {
         throw error
       }
 
-      const result: Record<string, number> = {}
+      // Group by error_type and calculate error rates
+      const errorStats: Record<string, { errors: number; total: number }> = {}
       data.forEach((row) => {
-        result[row.error_type] = row.error_rate_percent
+        const errorType = row.error_type || 'unknown'
+        if (!errorStats[errorType]) {
+          errorStats[errorType] = { errors: 0, total: 0 }
+        }
+        errorStats[errorType].total++
+        if (!row.success) {
+          errorStats[errorType].errors++
+        }
+      })
+
+      const result: Record<string, number> = {}
+      Object.entries(errorStats).forEach(([errorType, stats]) => {
+        result[errorType] = stats.total > 0 ? (stats.errors / stats.total) * 100 : 0
       })
 
       return result

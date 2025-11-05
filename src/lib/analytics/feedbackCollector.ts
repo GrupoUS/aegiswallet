@@ -19,10 +19,10 @@ export class FeedbackCollectorService {
     try {
       const { error } = await supabase.from('voice_feedback').insert({
         user_id: feedback.userId,
-        metric_id: feedback.metricId,
+        command: 'feedback', // Generic command for feedback entries
         rating: feedback.rating,
         feedback_text: feedback.feedbackText,
-        feedback_type: feedback.feedbackType,
+        response: feedback.feedbackType, // Use response field for feedback type
       })
 
       if (error) {
@@ -44,8 +44,8 @@ export class FeedbackCollectorService {
         return 0
       }
 
-      const promoters = data.filter((f) => f.rating >= 4).length
-      const detractors = data.filter((f) => f.rating <= 2).length
+      const promoters = data.filter((f) => f.rating !== null && f.rating >= 4).length
+      const detractors = data.filter((f) => f.rating !== null && f.rating <= 2).length
       const total = data.length
 
       return ((promoters - detractors) / total) * 100

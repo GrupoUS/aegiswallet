@@ -3,7 +3,7 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 describe('LGPD Compliance Issues', () => {
   describe('Data Collection and Consent', () => {
@@ -14,7 +14,7 @@ describe('LGPD Compliance Issues', () => {
         analytics: false,
         // @ts-expect-error - This should fail because voice consent is missing
         voice_data_consent: true,
-        biometric_consent: true
+        biometric_consent: true,
       }
 
       expect(mockUserConsent.voice_data_consent).toBeDefined()
@@ -29,7 +29,7 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - These should fail because voice data retention is missing
         voice_data_retention: '90_days',
         biometric_data_retention: '30_days',
-        audit_log_retention: '5_years'
+        audit_log_retention: '5_years',
       }
 
       expect(mockDataRetention.voice_data_retention).toBeDefined()
@@ -46,8 +46,8 @@ describe('LGPD Compliance Issues', () => {
         voice_fields: {
           required: ['voice_sample'],
           optional: ['voice_pattern'],
-          retention_period: '90_days'
-        }
+          retention_period: '90_days',
+        },
       }
 
       expect(mockDataCollection.voice_fields).toBeDefined()
@@ -64,7 +64,7 @@ describe('LGPD Compliance Issues', () => {
         data_types: ['transactions', 'contacts'],
         // @ts-expect-error - This should fail because voice data export is missing
         include_voice_data: true,
-        include_biometric_data: false
+        include_biometric_data: false,
       }
 
       expect(mockDataExport.include_voice_data).toBeDefined()
@@ -79,7 +79,7 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice data deletion is missing
         delete_voice_data: true,
         delete_voice_models: true,
-        delete_audit_trail: false
+        delete_audit_trail: false,
       }
 
       expect(mockDeletionRequest.delete_voice_data).toBeDefined()
@@ -94,7 +94,7 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice consent withdrawal is missing
         withdraw_voice_consent: true,
         withdraw_biometric_consent: true,
-        effective_date: '2024-01-01'
+        effective_date: '2024-01-01',
       }
 
       expect(mockConsentWithdrawal.withdraw_voice_consent).toBeDefined()
@@ -115,10 +115,10 @@ describe('LGPD Compliance Issues', () => {
           duration_ms: 1500,
           confidence_score: 0.95,
           language: 'pt-BR',
-          model_version: 'v2.1'
+          model_version: 'v2.1',
         },
         legal_basis: 'user_consent',
-        purpose: 'transaction_processing'
+        purpose: 'transaction_processing',
       }
 
       expect(mockAuditLog.voice_metadata).toBeDefined()
@@ -134,7 +134,7 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice data sharing is missing
         voice_data_shared: false,
         sharing_purpose: 'payment_processing',
-        legal_basis: 'contractual_necessity'
+        legal_basis: 'contractual_necessity',
       }
 
       expect(mockDataSharing.voice_data_shared).toBeDefined()
@@ -151,10 +151,10 @@ describe('LGPD Compliance Issues', () => {
           // @ts-expect-error - This should fail because voice encryption is missing
           voice_samples: true,
           voice_patterns: true,
-          biometric_templates: true
+          biometric_templates: true,
         },
         encryption_algorithm: 'AES-256-GCM',
-        key_rotation_period: '90_days'
+        key_rotation_period: '90_days',
       }
 
       expect(mockEncryptionConfig.field_encryption.voice_samples).toBeDefined()
@@ -169,7 +169,7 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice transmission security is missing
         voice_encryption: 'end_to_end',
         biometric_encryption: 'end_to_end',
-        certificate_validation: true
+        certificate_validation: true,
       }
 
       expect(mockTransmissionConfig.voice_encryption).toBeDefined()
@@ -187,7 +187,7 @@ describe('LGPD Compliance Issues', () => {
         legal_basis: 'adequacy_decision',
         // @ts-expect-error - This should fail because voice data transfer is missing
         voice_data_transferred: false,
-        transfer_date: '2024-01-01'
+        transfer_date: '2024-01-01',
       }
 
       expect(mockDataTransfer.voice_data_transferred).toBeDefined()
@@ -200,7 +200,7 @@ describe('LGPD Compliance Issues', () => {
         safeguards: ['standard_contractual_clauses'],
         // @ts-expect-error - This should fail because voice data safeguards are missing
         voice_data_safeguards: ['explicit_consent', 'encryption'],
-        biometric_safeguards: ['explicit_consent', 'local_processing']
+        biometric_safeguards: ['explicit_consent', 'local_processing'],
       }
 
       expect(mockSafeguards.voice_data_safeguards).toBeDefined()
@@ -219,9 +219,9 @@ describe('LGPD Compliance Issues', () => {
         voice_specific_risks: {
           biometric_identification: 'medium',
           voice_pattern_analysis: 'high',
-          accent_processing: 'low'
+          accent_processing: 'low',
         },
-        review_date: '2024-01-01'
+        review_date: '2024-01-01',
       }
 
       expect(mockDPIA.voice_specific_risks).toBeDefined()

@@ -68,20 +68,16 @@ export class IntentClassifier {
     intent: IntentType
     confidence: number
   } {
-    let bestIntent = IntentType.UNKNOWN
-    let bestScore = 0
+    const candidates: Array<{ intent: IntentType; score: number; patternCount: number }> = []
 
     for (const intent of getValidIntents()) {
       const definition = INTENT_DEFINITIONS[intent]
+      let patternMatches = 0
 
       // Check patterns
       for (const pattern of definition.patterns) {
         if (pattern.test(text)) {
-          const score = 0.95 // High confidence for pattern match
-          if (score > bestScore) {
-            bestScore = score
-            bestIntent = intent
-          }
+          patternMatches++
         }
       }
 
@@ -89,18 +85,40 @@ export class IntentClassifier {
       const keywordMatches = definition.keywords.filter((keyword) =>
         text.toLowerCase().includes(keyword)
       )
-      if (keywordMatches.length > 0) {
-        const score = 0.6 + keywordMatches.length * 0.1
-        if (score > bestScore) {
-          bestScore = Math.min(score, 0.85)
-          bestIntent = intent
+
+      if (patternMatches > 0) {
+        // Higher confidence for more specific patterns (more matches)
+        const score = Math.min(0.95, 0.85 + patternMatches * 0.05)
+        candidates.push({ intent, score, patternCount: patternMatches })
+      } else if (keywordMatches.length > 0) {
+        // Penalize very generic queries that only match keywords without context
+        const textWords = text.toLowerCase().split(/\s+/).length
+        const isVeryGeneric = textWords <= 6 && keywordMatches.length <= 1
+
+        let score = 0.6 + keywordMatches.length * 0.1
+        if (isVeryGeneric) {
+          score = Math.min(0.4, score) // Cap at low confidence for generic queries
+        } else {
+          score = Math.min(0.75, score)
         }
+
+        candidates.push({ intent, score, patternCount: 0 })
       }
     }
 
+    // Sort by score first, then by pattern specificity
+    candidates.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score
+      }
+      // If scores are equal, prefer intents with more pattern matches
+      return b.patternCount - a.patternCount
+    })
+
+    const best = candidates[0]
     return {
-      intent: bestIntent,
-      confidence: bestScore,
+      intent: best?.intent || IntentType.UNKNOWN,
+      confidence: best?.score || 0,
     }
   }
 

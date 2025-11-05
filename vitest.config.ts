@@ -8,6 +8,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Enhanced JSDOM environment configuration
+    environmentOptions: {
+      jsdom: {
+        pretendToBeVisual: true,
+        resources: 'usable',
+        runScripts: 'dangerously',
+      },
+    },
     // Ensure setup runs before any tests
     sequence: {
       concurrent: false,

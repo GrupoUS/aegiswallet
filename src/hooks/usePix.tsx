@@ -399,19 +399,45 @@ export function usePixTransactionMonitor(transactionId?: string) {
 /**
  * Hook for PIX auto-refresh (polling)
  */
+/**
+ * Hook for PIX auto-refresh (polling) - Optimized to prevent memory leaks
+ */
 export function usePixAutoRefresh(interval: number = 30000) {
   const utils = trpc.useUtils()
   const queryClient = useQueryClient()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      // Refresh all PIX data periodically
-      utils.pix.getTransactions.invalidate()
-      utils.pix.getStats.invalidate()
-      utils.pix.getQRCodes.invalidate()
-      queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] })
-    }, interval)
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
 
-    return () => clearInterval(intervalId)
-  }, [interval, queryClient, utils])
+    // Only set up interval if interval is positive
+    if (interval > 0) {
+      intervalRef.current = setInterval(() => {
+        // Refresh all PIX data periodically
+        utils.pix.getTransactions.invalidate()
+        utils.pix.getStats.invalidate()
+        queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] })
+      }, interval)
+    }
+
+    // Enhanced cleanup function
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [interval]) // Only depend on interval, not utils or queryClient
+
+  // Provide manual refresh capability
+  const refresh = useCallback(() => {
+    utils.pix.getTransactions.invalidate()
+    utils.pix.getStats.invalidate()
+    queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] })
+  }, [utils, queryClient])
+
+  return { refresh }
 }

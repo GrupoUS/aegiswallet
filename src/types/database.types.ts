@@ -645,74 +645,74 @@ export type Database = {
           updated_at: string | null
           user_id: string
         }
-          Insert: {
-            created_at?: string | null
-            encrypted_access_token: string
-            encrypted_refresh_token?: string | null
-            encryption_algorithm?: string | null
-            encryption_iv: string
-            expires_at?: string | null
-            id?: string
-            institution_id: string
-            is_active?: boolean | null
-            refresh_expires_at?: string | null
-            scopes?: string[] | null
-            updated_at?: string | null
-            user_id: string
-          }
-          Update: {
-            created_at?: string | null
-            encrypted_access_token?: string
-            encrypted_refresh_token?: string | null
-            encryption_algorithm?: string | null
-            encryption_iv?: string
-            expires_at?: string | null
-            id?: string
-            institution_id?: string
-            is_active?: boolean | null
-            refresh_expires_at?: string | null
-            scopes?: string[] | null
-            updated_at?: string | null
-            user_id?: string
-          }
-          Relationships: []
+        Insert: {
+          created_at?: string | null
+          encrypted_access_token: string
+          encrypted_refresh_token?: string | null
+          encryption_algorithm?: string | null
+          encryption_iv: string
+          expires_at?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          refresh_expires_at?: string | null
+          scopes?: string[] | null
+          updated_at?: string | null
+          user_id: string
         }
-        user_bank_links: {
-          Row: {
-            created_at: string | null
-            id: string
-            institution_id: string
-            institution_name: string
-            last_sync_at: string | null
-            link_id: string
-            status: string | null
-            updated_at: string | null
-            user_id: string
-          }
-          Insert: {
-            created_at?: string | null
-            id?: string
-            institution_id: string
-            institution_name: string
-            last_sync_at?: string | null
-            link_id: string
-            status?: string | null
-            updated_at?: string | null
-            user_id: string
-          }
-          Update: {
-            created_at?: string | null
-            id?: string
-            institution_id?: string
-            institution_name?: string
-            last_sync_at?: string | null
-            link_id?: string
-            status?: string | null
-            updated_at?: string | null
-            user_id?: string
-          }
-          Relationships: []
+        Update: {
+          created_at?: string | null
+          encrypted_access_token?: string
+          encrypted_refresh_token?: string | null
+          encryption_algorithm?: string | null
+          encryption_iv?: string
+          expires_at?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          refresh_expires_at?: string | null
+          scopes?: string[] | null
+          updated_at?: string | null
+          user_id?: string
         }
+        Relationships: []
+      }
+      user_bank_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          institution_id: string
+          institution_name: string
+          last_sync_at: string | null
+          link_id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          institution_id: string
+          institution_name: string
+          last_sync_at?: string | null
+          link_id: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          institution_id?: string
+          institution_name?: string
+          last_sync_at?: string | null
+          link_id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

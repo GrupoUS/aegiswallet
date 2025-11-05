@@ -398,7 +398,7 @@ export interface BentoGridProps {
   className?: string
 }
 
-export default function BentoGrid({ items, className }: BentoGridProps) {
+export function BentoGrid({ items, className }: BentoGridProps) {
   return (
     <section className={cn('relative py-12 overflow-hidden', className)}>
       <motion.div
@@ -415,3 +415,5 @@ export default function BentoGrid({ items, className }: BentoGridProps) {
     </section>
   )
 }
+
+export default BentoGrid

@@ -15,7 +15,8 @@ export { Alert, AlertDescription, AlertTitle } from './alert'
 export { AnimatedThemeToggler } from './animated-theme-toggler'
 export { Badge, badgeVariants } from './badge'
 // Layout Components
-export { BentoCard, BentoGrid, type BentoGridProps, type BentoItem } from './bento-grid'
+export { BentoCard, type BentoGridProps, type BentoItem, default as BentoGrid } from './bento-grid'
+export type { ButtonProps } from './button'
 // Core Components
 export { Button, buttonVariants } from './button'
 export { Calendar } from './calendar'
@@ -132,3 +133,12 @@ export {
 } from './table'
 export { Textarea } from './textarea'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
+// Voice Components
+export {
+  VoiceDashboard,
+  VoiceDashboardLoader,
+  VoiceIndicator,
+  VoiceInterface,
+  VoiceInterfaceLoader,
+  VoiceResponse,
+} from './voice'

@@ -14,41 +14,24 @@ export function useContacts(filters?: {
 }) {
   const utils = trpc.useUtils()
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
-    trpc.contacts.getAll.useInfiniteQuery(filters || {}, {
-      getNextPageParam: (lastPage) => {
-        if (lastPage.hasMore) {
-          return {
-            ...filters,
-            offset: (filters?.offset || 0) + (filters?.limit || 50),
-          }
-        }
-        return undefined
-      },
-    })
+  const { data, isLoading, error, refetch } = trpc.contacts.getAll.useQuery(filters || {})
 
   const contacts = useMemo(() => {
-    return data?.pages.flatMap((page) => page.contacts) || []
+    return data?.contacts || []
   }, [data])
 
   const total = useMemo(() => {
-    return data?.pages[0]?.total || 0
+    return data?.total || 0
   }, [data])
 
   const { mutate: createContact, isPending: isCreating } = trpc.contacts.create.useMutation({
     onSuccess: (data) => {
-      utils.contacts.getAll.setData(undefined, (old) => {
-        if (!old) return { pages: [{ contacts: [data], total: 1, hasMore: false }] }
+      utils.contacts.getAll.setData(filters || {}, (old) => {
+        if (!old) return { contacts: [data], total: 1, hasMore: false }
         return {
           ...old,
-          pages: [
-            {
-              ...old.pages[0],
-              contacts: [data, ...old.pages[0].contacts],
-              total: old.pages[0].total + 1,
-            },
-            ...old.pages.slice(1),
-          ],
+          contacts: [data, ...old.contacts],
+          total: old.total + 1,
         }
       })
       utils.contacts.getStats.invalidate()
@@ -61,14 +44,11 @@ export function useContacts(filters?: {
 
   const { mutate: updateContact, isPending: isUpdating } = trpc.contacts.update.useMutation({
     onSuccess: (data) => {
-      utils.contacts.getAll.setData(undefined, (old) => {
+      utils.contacts.getAll.setData(filters || {}, (old) => {
         if (!old) return old
         return {
           ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            contacts: page.contacts.map((c) => (c.id === data.id ? data : c)),
-          })),
+          contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
         }
       })
       utils.contacts.getStats.invalidate()
@@ -93,14 +73,11 @@ export function useContacts(filters?: {
   const { mutate: toggleFavorite, isPending: isTogglingFavorite } =
     trpc.contacts.toggleFavorite.useMutation({
       onSuccess: (data) => {
-        utils.contacts.getAll.setData(undefined, (old) => {
+        utils.contacts.getAll.setData(filters || {}, (old) => {
           if (!old) return old
           return {
             ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              contacts: page.contacts.map((c) => (c.id === data.id ? data : c)),
-            })),
+            contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
           }
         })
         utils.contacts.getFavorites.invalidate()
@@ -146,8 +123,6 @@ export function useContacts(filters?: {
     total,
     isLoading,
     error,
-    hasNextPage,
-    fetchNextPage,
     refetch,
     createContact,
     updateContact,
@@ -245,19 +220,17 @@ export function useContactsForTransfer() {
   // Filtrar contatos que têm informações para transferência
   const transferableContacts = useMemo(() => {
     return contacts
-      .filter((contact) => contact.email || contact.phone || contact.cpf)
+      .filter((contact) => contact.email || contact.phone)
       .map((contact) => ({
         id: contact.id,
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
-        cpf: contact.cpf,
         isFavorite: contact.is_favorite,
         // Determinar métodos de pagamento disponíveis
         availableMethods: [
           ...(contact.email ? ['EMAIL'] : []),
           ...(contact.phone ? ['PHONE'] : []),
-          ...(contact.cpf ? ['CPF', 'CNPJ'] : []),
         ],
       }))
   }, [contacts])
@@ -276,19 +249,17 @@ export function useContactsForPix() {
   // Filtrar contatos que têm informações para PIX
   const pixContacts = useMemo(() => {
     return contacts
-      .filter((contact) => contact.email || contact.phone || contact.cpf)
+      .filter((contact) => contact.email || contact.phone)
       .map((contact) => ({
         id: contact.id,
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
-        cpf: contact.cpf,
         isFavorite: contact.is_favorite,
         // Determinar chaves PIX disponíveis
         pixKeys: [
           ...(contact.email ? [{ type: 'EMAIL', value: contact.email }] : []),
           ...(contact.phone ? [{ type: 'PHONE', value: contact.phone }] : []),
-          ...(contact.cpf ? [{ type: 'CPF', value: contact.cpf }] : []),
         ],
       }))
   }, [contacts])

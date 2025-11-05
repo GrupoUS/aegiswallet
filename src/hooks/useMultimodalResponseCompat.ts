@@ -7,12 +7,9 @@
  * @deprecated Use useMultimodalResponse directly for new code
  */
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { IntentType } from '@/lib/nlu/types'
-import {
-  useMultimodalResponse as useNewMultimodalResponse,
-  useResponseMetrics,
-} from './useMultimodalResponse'
+import { useMultimodalResponse as useNewMultimodalResponse } from './useMultimodalResponse'
 
 export interface UseMultimodalResponseCompatOptions {
   ttsEnabled?: boolean // Disable TTS for testing
@@ -20,6 +17,7 @@ export interface UseMultimodalResponseCompatOptions {
   enableVisual?: boolean
   autoSpeak?: boolean
   collectFeedback?: boolean
+  textOnlyMode?: boolean // Legacy text-only mode
   onFeedback?: (feedback: any) => void
   onResponse?: (response: any) => void
 }
@@ -52,9 +50,10 @@ export function useMultimodalResponse(
 ): UseMultimodalResponseCompatReturn {
   // Convert legacy options to new interface
   const newOptions = {
-    enableVoice: options.ttsEnabled !== false && options.enableVoice !== false,
-    enableVisual: options.enableVisual !== false,
-    autoSpeak: options.ttsEnabled !== false,
+    enableVoice:
+      options.ttsEnabled !== false && options.enableVoice !== false && !options.textOnlyMode,
+    enableVisual: options.enableVisual !== false && !options.textOnlyMode,
+    autoSpeak: options.ttsEnabled !== false && !options.textOnlyMode,
     collectFeedback: options.collectFeedback !== false,
     onFeedback: options.onFeedback,
     onResponse: options.onResponse,
@@ -62,14 +61,37 @@ export function useMultimodalResponse(
 
   // Use the new hook
   const newHook = useNewMultimodalResponse(newOptions)
-  const metricsHook = useResponseMetrics()
+
+  // Legacy metrics tracking
+  const [metrics, setMetrics] = useState<{
+    totalTime: number
+    success: boolean
+    responseCount: number
+  } | null>(null)
 
   // Legacy compatibility layer
   const generateAndSpeak = useCallback(
     async (intent: IntentType | 'error' | 'confirmation', data: any) => {
-      await newHook.sendResponse(intent, data)
+      const startTime = Date.now()
+      try {
+        await newHook.sendResponse(intent, data)
+        const endTime = Date.now()
+        setMetrics({
+          totalTime: endTime - startTime,
+          success: true,
+          responseCount: (metrics?.responseCount || 0) + 1,
+        })
+      } catch (error) {
+        const endTime = Date.now()
+        setMetrics({
+          totalTime: endTime - startTime,
+          success: false,
+          responseCount: (metrics?.responseCount || 0) + 1,
+        })
+        throw error
+      }
     },
-    [newHook.sendResponse]
+    [newHook.sendResponse, metrics?.responseCount]
   )
 
   const response = useMemo(() => newHook.state.currentResponse, [newHook.state.currentResponse])
@@ -80,7 +102,7 @@ export function useMultimodalResponse(
     // Legacy interface
     generateAndSpeak,
     response,
-    metrics: metricsHook.metrics,
+    metrics,
     isLoading,
     error,
 

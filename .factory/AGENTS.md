@@ -24,7 +24,7 @@ This orchestrator follows the A.P.T.E methodology (Analyze → Plan → Think �
 ```yaml
 ORCHESTRATION_PRINCIPLES:
   principle_1: "Right MCP for Right Task - Intelligent tool selection based on task requirements"
-  principle_2: "Parallel When Possible - Coordinate multiple MCPs simultaneously when safe"
+  principle_2: "Parallel When Possible - Coordinate multiple MCPs, agents and Droids simultaneously when possible"
   principle_3: "Sequential When Necessary - Linear execution when dependencies exist"
   principle_4: "Always Validate - Verify results before task completion"
   principle_5: "Context Preservation - Maintain complete context across MCP transitions"

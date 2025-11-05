@@ -3,8 +3,12 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+// Setup DOM environment BEFORE importing React Testing Library
+import '../../test/setupDOM'
+
+import { render } from '@testing-library/react'
+import React from 'react'
+import { describe, expect, it } from 'vitest'
 import { VoiceResponse } from '@/components/voice/VoiceResponse'
 
 describe('Voice Component Type Safety', () => {
@@ -16,15 +20,15 @@ describe('Voice Component Type Safety', () => {
         income: 2000,
         expenses: 500,
         // @ts-expect-error - These properties should be typed
-        invalidProperty: 'should not exist'
+        invalidProperty: 'should not exist',
       }
 
       render(
-        <VoiceResponse
-          type="balance"
-          message="Test balance response"
-          data={mockData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'balance',
+          message: 'Test balance response',
+          data: mockData,
+        })
       )
 
       expect(screen.getByText('Test balance response')).toBeInTheDocument()
@@ -37,16 +41,16 @@ describe('Voice Component Type Safety', () => {
         income: null, // Wrong type
         expenses: undefined, // Wrong type
         nestedObject: {
-          deepProperty: 'should be typed'
-        }
+          deepProperty: 'should be typed',
+        },
       }
 
       render(
-        <VoiceResponse
-          type="balance"
-          message="Test with invalid data"
-          data={invalidData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'balance',
+          message: 'Test with invalid data',
+          data: invalidData,
+        })
       )
 
       // This should fail with proper type checking
@@ -60,15 +64,15 @@ describe('Voice Component Type Safety', () => {
         spent: 'should be number', // Wrong type
         total: 'should be number', // Wrong type
         spentPercentage: 'should be number', // Wrong type
-        invalidBudgetProp: 'should not exist'
+        invalidBudgetProp: 'should not exist',
       }
 
       render(
-        <VoiceResponse
-          type="budget"
-          message="Budget information"
-          data={budgetData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'budget',
+          message: 'Budget information',
+          data: budgetData,
+        })
       )
 
       expect(screen.getByText('Budget information')).toBeInTheDocument()
@@ -80,15 +84,15 @@ describe('Voice Component Type Safety', () => {
         recipient: 123, // Should be string
         amount: 'should be number', // Wrong type
         method: ['should', 'be', 'string'], // Wrong type
-        estimatedTime: { invalid: 'object' } // Wrong type
+        estimatedTime: { invalid: 'object' }, // Wrong type
       }
 
       render(
-        <VoiceResponse
-          type="transfer"
-          message="Transfer information"
-          data={transferData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'transfer',
+          message: 'Transfer information',
+          data: transferData,
+        })
       )
 
       expect(screen.getByText('Transfer information')).toBeInTheDocument()
@@ -102,18 +106,18 @@ describe('Voice Component Type Safety', () => {
             name: 123, // Should be string
             amount: 'should be number', // Wrong type
             dueDate: 'invalid date format', // Should be Date
-            invalidBillProp: true
+            invalidBillProp: true,
           },
-          'should be object not string' // Wrong type in array
-        ]
+          'should be object not string', // Wrong type in array
+        ],
       }
 
       render(
-        <VoiceResponse
-          type="bills"
-          message="Bills information"
-          data={billsData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'bills',
+          message: 'Bills information',
+          data: billsData,
+        })
       )
 
       expect(screen.getByText('Bills information')).toBeInTheDocument()
@@ -127,17 +131,17 @@ describe('Voice Component Type Safety', () => {
             source: 123, // Should be string
             amount: 'should be number', // Wrong type
             expectedDate: 'invalid date', // Should be Date
-            invalidIncomingProp: {}
-          }
-        ]
+            invalidIncomingProp: {},
+          },
+        ],
       }
 
       render(
-        <VoiceResponse
-          type="incoming"
-          message="Incoming information"
-          data={incomingData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'incoming',
+          message: 'Incoming information',
+          data: incomingData,
+        })
       )
 
       expect(screen.getByText('Incoming information')).toBeInTheDocument()
@@ -152,15 +156,15 @@ describe('Voice Component Type Safety', () => {
         income: 'should be number', // Wrong type
         expenses: 'should be number', // Wrong type
         variation: 'should be number', // Wrong type
-        invalidProjectionProp: []
+        invalidProjectionProp: [],
       }
 
       render(
-        <VoiceResponse
-          type="projection"
-          message="Projection information"
-          data={projectionData}
-        />
+        React.createElement(VoiceResponse, {
+          type: 'projection',
+          message: 'Projection information',
+          data: projectionData,
+        })
       )
 
       expect(screen.getByText('Projection information')).toBeInTheDocument()
@@ -171,16 +175,17 @@ describe('Voice Component Type Safety', () => {
     it('should have proper SpeechRecognition types', () => {
       // This test exposes missing SpeechRecognition types
       // @ts-expect-error - SpeechRecognition is not properly typed
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition()
-        
+
         // @ts-expect-error - These properties are not typed
         recognition.continuous = true
         recognition.interimResults = true
         recognition.lang = 'pt-BR'
-        
+
         expect(recognition).toBeDefined()
       }
     })
@@ -192,11 +197,11 @@ describe('Voice Component Type Safety', () => {
           {
             isFinal: true,
             // @ts-expect-error - result items are not typed
-            item: 'should be array'
-          }
+            item: 'should be array',
+          },
         ],
         // @ts-expect-error - event properties are not typed
-        invalidEventProp: 'should not exist'
+        invalidEventProp: 'should not exist',
       }
 
       expect(mockEvent.results).toBeDefined()
@@ -208,7 +213,7 @@ describe('Voice Component Type Safety', () => {
         error: 'network',
         message: 'Network error occurred',
         // @ts-expect-error - error properties are not typed
-        invalidErrorProp: 123
+        invalidErrorProp: 123,
       }
 
       expect(mockErrorEvent.error).toBe('network')
@@ -219,25 +224,26 @@ describe('Voice Component Type Safety', () => {
     it('should have properly typed voice service methods', () => {
       // This test exposes voice service type issues
       const mockVoiceService = {
-        startListening: (options?: any) => {
+        startListening: (_options?: any) => {
           // @ts-expect-error - options parameter is not typed
           const invalidOptions = {
             continuous: 'should be boolean',
             language: 123, // Should be string
-            invalidOption: {}
+            invalidOption: {},
           }
-          
+
           return Promise.resolve(invalidOptions)
         },
-        
+
         stopListening: () => {
           return Promise.resolve('should return void')
         },
-        
+
         // @ts-expect-error - Method signature is wrong
-        processCommand: (command: number) => { // Should be string
+        processCommand: (_command: number) => {
+          // Should be string
           return Promise.resolve({})
-        }
+        },
       }
 
       expect(mockVoiceService.startListening).toBeDefined()

@@ -24,12 +24,13 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\b(saldo|dinheiro|grana)\s+(disponivel|atual|hoje|agora)\b/i,
       /\b(tenho|tem|restou)\s+quanto\b/i,
       /\b(sobrou)\s+quanto(\s+de)?\s*(dinheiro|grana)?\b/i,
-      /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\b/i,
       /\bme\s+(mostra|fala|diz)\s+(o|meu)?\s*saldo\b/i,
       /\b(t[áÁ]|est[áÁ])\s+quanto\s+(na\s+)?conta\b/i,
       /\bquanto\s+(t[áÁ]|est[áÁ])\s+na\s+conta\b/i,
+      // More specific pattern - avoid overlap with other intents
+      /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo)\b/i,
     ],
-    keywords: ['saldo', 'dinheiro', 'grana', 'quanto', 'tenho', 'sobrou', 'disponivel'],
+    keywords: ['saldo', 'dinheiro', 'grana', 'tenho', 'sobrou', 'disponivel'],
     requiredSlots: [],
     optionalSlots: [EntityType.ACCOUNT, EntityType.DATE],
     examples: [
@@ -49,15 +50,16 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Orçamento',
     description: 'Check budget and spending limits',
     patterns: [
+      // High confidence patterns for budget queries
       /\b(quanto|qual)\s+(posso|consigo|dá|da|pode)\s+(gastar|usar|pegar)\b/i,
-      /\b(orcamento|or[çc]amento|limite|teto)\s+(disponivel|restante|do\s+mes|mensal)\b/i,
+      /\b(orcamento|limite|teto)\s+(disponivel|restante|do\s+mes|mensal)\b/i,
       /\b(gastar|usar)\s+quanto\b/i,
       /\b(sobrou|restou|tem)\s+quanto\s+(pra|para)\s+gastar\b/i,
-      /\b(quanto|qual)\s+(falta|resta)\s+(do|no)?\s*(orcamento|or[çc]amento)\b/i,
-      /\b(quanto|qual)\s+(sobrou|restou)\s+(do|no)?\s*(orcamento|or[çc]amento)\b/i,
-      /\b(t[áÁ]|est[áÁ])\s+quanto\s+(no|na)?\s*(orcamento|or[çc]amento)\b/i,
+      /\b(quanto|qual)\s+(falta|resta)\s+(do|no)?\s*(orcamento|or[cç]amento)\b/i,
+      /\b(quanto|qual)\s+(sobrou|restou)\s+(do|no)?\s*(orcamento|or[cç]amento)\b/i,
+      /\b(t[áÁ]|est[áÁ])\s+quanto\s+(no|na)?\s*(orcamento|or[cç]amento)\b/i,
     ],
-    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto', 'sobrou'],
+    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto'],
     requiredSlots: [],
     optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
     examples: [
@@ -113,11 +115,12 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Recebimentos',
     description: 'Check incoming payments and income',
     patterns: [
+      // High confidence patterns for income queries
       /\b(quando|qual)\s+(vou|vai)\s+(receber|cair|entrar)\b/i,
       /\b(recebimento|entrada|credito|sal[áa]rio)\s+(do\s+mes|mensal|proximo|pendente)\b/i,
       /\b(vai|vou)\s+(ter|receber|entrar)\s+quanto\b/i,
       /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber)\b/i,
-      /\b(sal[áa]rio|pagamento)\s+(cai|entra)\s+quando\b/i,
+      /\b(sal[áa]rio)\s+(cai|entra)\s+quando\b/i,
     ],
     keywords: [
       'receber',
@@ -148,6 +151,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Projeção Financeira',
     description: 'Financial projections and forecasts',
     patterns: [
+      // High confidence patterns for projection queries
       /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+mes|mensal|anual)\b/i,
       /\b(como|qual)\s+(vai|fica|esta|est[áÁ])\s+(meu|o)?\s*(mes|ano|semana)\b/i,
       /\b(vou|vai)\s+(sobrar|faltar|ter)\s+quanto\b/i,
@@ -234,9 +238,17 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
 
 /**
  * Get all intent types except UNKNOWN
+ * Order: More specific intents first for better classification
  */
 export function getValidIntents(): IntentType[] {
-  return Object.values(IntentType).filter((intent) => intent !== IntentType.UNKNOWN)
+  return [
+    IntentType.CHECK_INCOME, // Prioritize income-related queries
+    IntentType.PAY_BILL, // Payment-specific patterns
+    IntentType.TRANSFER_MONEY, // Transfer-specific patterns
+    IntentType.CHECK_BUDGET, // Budget-specific patterns
+    IntentType.FINANCIAL_PROJECTION, // Projection-specific patterns
+    IntentType.CHECK_BALANCE, // General balance queries
+  ]
 }
 
 /**
@@ -289,6 +301,10 @@ export function requiresConfirmation(intent: IntentType): boolean {
 export function getIntentDisplayName(intent: IntentType): string {
   return INTENT_DEFINITIONS[intent].name
 }
+
+/**
+ * Get intent description
+ */
 
 /**
  * Get intent description

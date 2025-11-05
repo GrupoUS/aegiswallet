@@ -20,11 +20,11 @@ export function useFinancialEvents(filters?: {
     isLoading,
     error,
     refetch,
-  } = trpc.calendar.getEvents.useQuery(filters || {})
+  } = trpc.calendar.getEvents.useQuery(filters as any)
 
   const { mutate: createEvent, isPending: isCreating } = trpc.calendar.create.useMutation({
     onSuccess: (data) => {
-      utils.calendar.getEvents.setData(undefined, (old) => {
+      utils.calendar.getEvents.setData(filters as any, (old) => {
         if (!old) return [data]
         return [...old, data]
       })
@@ -37,7 +37,7 @@ export function useFinancialEvents(filters?: {
 
   const { mutate: updateEvent, isPending: isUpdating } = trpc.calendar.update.useMutation({
     onSuccess: (data) => {
-      utils.calendar.getEvents.setData(undefined, (old) => {
+      utils.calendar.getEvents.setData(filters as any, (old) => {
         if (!old) return old
         return old.map((event) => (event.id === data.id ? data : event))
       })
@@ -83,7 +83,7 @@ export function useFinancialEvents(filters?: {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [events?.length, utils])
+  }, [events?.length, utils.calendar])
 
   return {
     events: events || [],
@@ -133,6 +133,7 @@ export function useEventTypes() {
  * Hook para eventos próximos (próximos 30 dias)
  */
 export function useUpcomingEvents() {
+  const utils = trpc.useUtils()
   const { data: upcomingEvents, isLoading, error } = trpc.calendar.getUpcomingEvents.useQuery()
 
   // Real-time subscription para eventos próximos
@@ -156,7 +157,7 @@ export function useUpcomingEvents() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [utils.calendar])
 
   return {
     upcomingEvents: upcomingEvents || [],
@@ -169,6 +170,7 @@ export function useUpcomingEvents() {
  * Hook para eventos atrasados
  */
 export function useOverdueEvents() {
+  const utils = trpc.useUtils()
   const { data: overdueEvents, isLoading, error } = trpc.calendar.getOverdueEvents.useQuery()
 
   // Real-time subscription para eventos atrasados
@@ -192,7 +194,7 @@ export function useOverdueEvents() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [utils.calendar])
 
   return {
     overdueEvents: overdueEvents || [],

@@ -1,41 +1,45 @@
-import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts'
+import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts';
 import {
   useContacts,
   useContactsForTransfer,
   useContactsStats,
   useFavoriteContacts,
-} from '@/hooks/useContacts'
-import { useCalendarStats, useOverdueEvents, useUpcomingEvents } from '@/hooks/useFinancialCalendar'
-import { useFinancialEvents, useFinancialEventMutations } from '@/hooks/useFinancialEvents'
+} from '@/hooks/useContacts';
+import {
+  useCalendarStats,
+  useOverdueEvents,
+  useUpcomingEvents,
+} from '@/hooks/useFinancialCalendar';
+import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
 import {
   useFinancialTransactions,
   useRecentTransactions,
   useTransactionStats,
-} from '@/hooks/useFinancialTransactions'
-import { useProfile, useUserStatus } from '@/hooks/useProfile'
+} from '@/hooks/useFinancialTransactions';
+import { useProfile, useUserStatus } from '@/hooks/useProfile';
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
  */
 export function useDashboard() {
   // Dados do usuário
-  const { profile, isLoading: profileLoading } = useProfile()
-  const { status: userStatus, isActive } = useUserStatus()
+  const { profile, isLoading: profileLoading } = useProfile();
+  const { status: userStatus, isActive } = useUserStatus();
 
   // Dados financeiros
-  const { accounts, isLoading: accountsLoading } = useBankAccounts()
-  const { balances, isLoading: balancesLoading } = useTotalBalance()
-  const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 })
-  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('30d')
+  const { accounts, isLoading: accountsLoading } = useBankAccounts();
+  const { balances, isLoading: balancesLoading } = useTotalBalance();
+  const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 });
+  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('30d');
 
   // Dados do calendário
-  const { upcomingEvents, isLoading: upcomingLoading } = useUpcomingEvents()
-  const { overdueEvents, isLoading: overdueLoading } = useOverdueEvents()
+  const { upcomingEvents, isLoading: upcomingLoading } = useUpcomingEvents();
+  const { overdueEvents, isLoading: overdueLoading } = useOverdueEvents();
 
   // Dados dos contatos
-  const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts()
-  const { stats: contactStats, isLoading: contactStatsLoading } = useContactsStats()
-  const { contacts: transferContacts } = useContactsForTransfer()
+  const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts();
+  const { stats: contactStats, isLoading: contactStatsLoading } = useContactsStats();
+  const { contacts: transferContacts } = useContactsForTransfer();
 
   // Calcular totais e estatísticas
   const dashboardData = {
@@ -78,7 +82,7 @@ export function useDashboard() {
       calendarStats: useCalendarStats(),
       contactStats,
     },
-  }
+  };
 
   const isLoading =
     profileLoading ||
@@ -89,7 +93,7 @@ export function useDashboard() {
     upcomingLoading ||
     overdueLoading ||
     contactsLoading ||
-    contactStatsLoading
+    contactStatsLoading;
 
   return {
     dashboardData,
@@ -98,7 +102,7 @@ export function useDashboard() {
       // Função para refresh de todos os dados
       // Isso pode ser usado em botões de refresh ou quando a página ganha foco
     },
-  }
+  };
 }
 
 /**
@@ -106,17 +110,17 @@ export function useDashboard() {
  */
 export function useDashboardWidgets() {
   // Widget 1: Resumo Financeiro
-  const { balances } = useTotalBalance()
-  const { stats } = useTransactionStats('30d')
+  const { balances } = useTotalBalance();
+  const { stats } = useTransactionStats('30d');
 
   // Widget 2: Próximos Eventos
-  const { upcomingEvents } = useUpcomingEvents()
+  const { upcomingEvents } = useUpcomingEvents();
 
   // Widget 3: Contatos Favoritos
-  const { favoriteContacts } = useFavoriteContacts()
+  const { favoriteContacts } = useFavoriteContacts();
 
   // Widget 4: Transações Recentes
-  const { transactions } = useRecentTransactions(5)
+  const { transactions } = useRecentTransactions(5);
 
   const widgets = {
     financialSummary: {
@@ -141,16 +145,16 @@ export function useDashboardWidgets() {
       count: transactions.length,
       transactions: transactions.slice(0, 4),
     },
-  }
+  };
 
-  return widgets
+  return widgets;
 }
 
 /**
  * Hook para dados em tempo real do Dashboard
  */
 export function useRealTimeDashboard() {
-  const { dashboardData, isLoading } = useDashboard()
+  const { dashboardData, isLoading } = useDashboard();
 
   // Aqui você pode adicionar subscriptions em tempo real para atualizações automáticas
   // Por exemplo, novas transações, eventos, etc.
@@ -159,14 +163,14 @@ export function useRealTimeDashboard() {
     dashboardData,
     isLoading,
     isRealTime: true, // Indica que os dados são atualizados em tempo real
-  }
+  };
 }
 
 /**
  * Hook para métricas de desempenho do Dashboard
  */
 export function useDashboardMetrics() {
-  const { isLoading } = useDashboard()
+  const { isLoading } = useDashboard();
 
   const metrics = {
     loadingTime: 0, // Seria calculado com performance.now()
@@ -177,19 +181,19 @@ export function useDashboardMetrics() {
       accounts: 0,
     },
     lastUpdated: new Date().toISOString(),
-  }
+  };
 
   return {
     metrics,
     isLoading,
-  }
+  };
 }
 
 /**
  * Hook para configurações do Dashboard
  */
 export function useDashboardSettings() {
-  const { profile } = useProfile()
+  const { profile } = useProfile();
 
   const settings = {
     theme: profile?.user_preferences?.theme || 'system',
@@ -206,41 +210,41 @@ export function useDashboardSettings() {
       largeText: profile?.user_preferences?.accessibility_large_text ?? false,
       screenReader: profile?.user_preferences?.accessibility_screen_reader ?? false,
     },
-  }
+  };
 
-  return settings
+  return settings;
 }
 
 /**
  * Hook para ações rápidas do Dashboard
  */
 export function useDashboardActions() {
-  const { createTransaction } = useFinancialTransactions()
-  const { addEvent } = useFinancialEventMutations()
-  const { createContact } = useContacts()
-  const { createAccount } = useBankAccounts()
+  const { createTransaction } = useFinancialTransactions();
+  const { addEvent } = useFinancialEventMutations();
+  const { createContact } = useContacts();
+  const { createAccount } = useBankAccounts();
 
   const actions = {
     quickTransaction: (data: any) => {
       // Implementar lógica para transação rápida
-      return createTransaction(data)
+      return createTransaction(data);
     },
 
     quickEvent: (data: any) => {
       // Implementar lógica para evento rápido
-      return addEvent(data)
+      return addEvent(data);
     },
 
     quickContact: (data: any) => {
       // Implementar lógica para contato rápido
-      return createContact(data)
+      return createContact(data);
     },
 
     quickAccount: (data: any) => {
       // Implementar lógica para conta rápida
-      return createAccount(data)
+      return createAccount(data);
     },
-  }
+  };
 
-  return actions
+  return actions;
 }

@@ -1,12 +1,12 @@
-import { addDays, isToday, isWeekend, startOfWeek } from 'date-fns'
-import { TimeGrid } from './time-grid'
-import type { CalendarEvent, TimeSlot, WeekDay } from './types'
+import { addDays, isToday, isWeekend, startOfWeek } from 'date-fns';
+import { TimeGrid } from './time-grid';
+import type { CalendarEvent, TimeSlot, WeekDay } from './types';
 
 interface WeekViewProps {
-  weekStart: Date
-  events: CalendarEvent[]
-  onEventUpdate?: (event: CalendarEvent) => void
-  onEventEdit?: (event: CalendarEvent) => void
+  weekStart: Date;
+  events: CalendarEvent[];
+  onEventUpdate?: (event: CalendarEvent) => void;
+  onEventEdit?: (event: CalendarEvent) => void;
 }
 
 const HOURS: TimeSlot[] = [
@@ -22,22 +22,22 @@ const HOURS: TimeSlot[] = [
   { hour: 17, label: '5 PM' },
   { hour: 18, label: '6 PM' },
   { hour: 19, label: '7 PM' },
-]
+];
 
 function getWeekDays(date: Date): WeekDay[] {
-  const start = startOfWeek(date, { weekStartsOn: 0 }) // Sunday
+  const start = startOfWeek(date, { weekStartsOn: 0 }); // Sunday
   return Array.from({ length: 7 }, (_, i) => {
-    const day = addDays(start, i)
+    const day = addDays(start, i);
     return {
       date: day,
       isToday: isToday(day),
       isWeekend: isWeekend(day),
-    }
-  })
+    };
+  });
 }
 
 export function WeekView({ weekStart, events, onEventUpdate, onEventEdit }: WeekViewProps) {
-  const weekDays = getWeekDays(weekStart)
+  const weekDays = getWeekDays(weekStart);
 
   return (
     <TimeGrid
@@ -47,5 +47,5 @@ export function WeekView({ weekStart, events, onEventUpdate, onEventEdit }: Week
       onEventUpdate={onEventUpdate}
       onEventEdit={onEventEdit}
     />
-  )
+  );
 }

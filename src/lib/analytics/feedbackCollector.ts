@@ -4,14 +4,14 @@
  * Story: 01.05 - Observabilidade e Treinamento Contínuo
  */
 
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
 
 export interface VoiceFeedback {
-  userId: string
-  metricId?: string
-  rating: number // 1-5
-  feedbackText?: string
-  feedbackType: 'accuracy' | 'speed' | 'understanding' | 'general'
+  userId: string;
+  metricId?: string;
+  rating: number; // 1-5
+  feedbackText?: string;
+  feedbackType: 'accuracy' | 'speed' | 'understanding' | 'general';
 }
 
 export class FeedbackCollectorService {
@@ -23,14 +23,11 @@ export class FeedbackCollectorService {
         rating: feedback.rating,
         feedback_text: feedback.feedbackText,
         response: feedback.feedbackType, // Use response field for feedback type
-      })
+      });
 
       if (error) {
-        console.error('Failed to collect feedback:', error)
       }
-    } catch (error) {
-      console.error('Error collecting feedback:', error)
-    }
+    } catch (_error) {}
   }
 
   async calculateNPS(days: number = 30): Promise<number> {
@@ -38,29 +35,28 @@ export class FeedbackCollectorService {
       const { data, error } = await supabase
         .from('voice_feedback')
         .select('rating')
-        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
 
       if (error || !data || data.length === 0) {
-        return 0
+        return 0;
       }
 
-      const promoters = data.filter((f) => f.rating !== null && f.rating >= 4).length
-      const detractors = data.filter((f) => f.rating !== null && f.rating <= 2).length
-      const total = data.length
+      const promoters = data.filter((f) => f.rating !== null && f.rating >= 4).length;
+      const detractors = data.filter((f) => f.rating !== null && f.rating <= 2).length;
+      const total = data.length;
 
-      return ((promoters - detractors) / total) * 100
-    } catch (error) {
-      console.error('Error calculating NPS:', error)
-      return 0
+      return ((promoters - detractors) / total) * 100;
+    } catch (_error) {
+      return 0;
     }
   }
 }
 
 export function createFeedbackCollectorService(): FeedbackCollectorService {
-  return new FeedbackCollectorService()
+  return new FeedbackCollectorService();
 }
 
 export async function collectVoiceFeedback(feedback: VoiceFeedback): Promise<void> {
-  const service = createFeedbackCollectorService()
-  return service.collectFeedback(feedback)
+  const service = createFeedbackCollectorService();
+  return service.collectFeedback(feedback);
 }

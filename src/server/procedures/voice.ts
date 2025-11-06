@@ -1,6 +1,6 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import type { Context } from '@/server/context'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import type { Context } from '@/server/context';
 
 export const createVoiceRouter = (t: any) => ({
   /**
@@ -18,7 +18,7 @@ export const createVoiceRouter = (t: any) => ({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Must be logged in',
-        })
+        });
       }
 
       // Simple stub implementation for voice command processing
@@ -26,6 +26,6 @@ export const createVoiceRouter = (t: any) => ({
         success: true,
         response: `Comando processado: ${input.command}`,
         confidence: input.confidence || 0.8,
-      }
+      };
     }),
-})
+});

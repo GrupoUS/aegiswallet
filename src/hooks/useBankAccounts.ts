@@ -1,70 +1,70 @@
-import { useEffect } from 'react'
-import { toast } from 'sonner'
-import { supabase } from '@/integrations/supabase/client'
-import { trpc } from '@/lib/trpc'
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { trpc } from '@/lib/trpc';
 
 /**
  * Hook para gerenciar contas bancárias
  */
 export function useBankAccounts() {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
-  const { data: accounts, isLoading, error, refetch } = trpc.bankAccounts.getAll.useQuery()
+  const { data: accounts, isLoading, error, refetch } = trpc.bankAccounts.getAll.useQuery();
 
   const { mutate: createAccount, isPending: isCreating } = trpc.bankAccounts.create.useMutation({
     onSuccess: (data) => {
       utils.bankAccounts.getAll.setData(undefined, (old) => {
-        if (!old) return [data]
-        return [data, ...old]
-      })
-      toast.success('Conta bancária criada com sucesso!')
+        if (!old) return [data];
+        return [data, ...old];
+      });
+      toast.success('Conta bancária criada com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao criar conta bancária')
+      toast.error(error.message || 'Erro ao criar conta bancária');
     },
-  })
+  });
 
   const { mutate: updateAccount, isPending: isUpdating } = trpc.bankAccounts.update.useMutation({
     onSuccess: (data) => {
       utils.bankAccounts.getAll.setData(undefined, (old) => {
-        if (!old) return old
-        return old.map((account) => (account.id === data.id ? data : account))
-      })
-      toast.success('Conta bancária atualizada com sucesso!')
+        if (!old) return old;
+        return old.map((account) => (account.id === data.id ? data : account));
+      });
+      toast.success('Conta bancária atualizada com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar conta bancária')
+      toast.error(error.message || 'Erro ao atualizar conta bancária');
     },
-  })
+  });
 
   const { mutate: deleteAccount, isPending: isDeleting } = trpc.bankAccounts.delete.useMutation({
     onSuccess: () => {
-      utils.bankAccounts.getAll.invalidate()
-      toast.success('Conta bancária removida com sucesso!')
+      utils.bankAccounts.getAll.invalidate();
+      toast.success('Conta bancária removida com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao remover conta bancária')
+      toast.error(error.message || 'Erro ao remover conta bancária');
     },
-  })
+  });
 
   const { mutate: updateBalance, isPending: isUpdatingBalance } =
     trpc.bankAccounts.updateBalance.useMutation({
       onSuccess: (data) => {
         utils.bankAccounts.getAll.setData(undefined, (old) => {
-          if (!old) return old
-          return old.map((account) => (account.id === data.id ? data : account))
-        })
-        utils.bankAccounts.getTotalBalance.invalidate()
-        toast.success('Saldo atualizado com sucesso!')
+          if (!old) return old;
+          return old.map((account) => (account.id === data.id ? data : account));
+        });
+        utils.bankAccounts.getTotalBalance.invalidate();
+        toast.success('Saldo atualizado com sucesso!');
       },
       onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar saldo')
+        toast.error(error.message || 'Erro ao atualizar saldo');
       },
-    })
+    });
 
   // Real-time subscription para contas bancárias
   useEffect(() => {
-    if (!accounts) return
+    if (!accounts) return;
 
     const channel = supabase
       .channel('bank_accounts_changes')
@@ -75,18 +75,17 @@ export function useBankAccounts() {
           schema: 'public',
           table: 'bank_accounts',
         },
-        (payload) => {
-          console.log('Bank account change detected:', payload)
-          utils.bankAccounts.getAll.invalidate()
-          utils.bankAccounts.getTotalBalance.invalidate()
+        (_payload) => {
+          utils.bankAccounts.getAll.invalidate();
+          utils.bankAccounts.getTotalBalance.invalidate();
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [accounts, utils])
+      supabase.removeChannel(channel);
+    };
+  }, [accounts, utils]);
 
   return {
     accounts: accounts || [],
@@ -101,21 +100,21 @@ export function useBankAccounts() {
     isUpdating,
     isDeleting,
     isUpdatingBalance,
-  }
+  };
 }
 
 /**
  * Hook para obter saldo total
  */
 export function useTotalBalance() {
-  const { data: balances, isLoading, error } = trpc.bankAccounts.getTotalBalance.useQuery()
+  const { data: balances, isLoading, error } = trpc.bankAccounts.getTotalBalance.useQuery();
 
   return {
     balances: balances || {},
     isLoading,
     error,
     totalBRL: balances?.BRL || 0,
-  }
+  };
 }
 
 /**
@@ -126,13 +125,13 @@ export function useBankAccount(accountId: string) {
     data: account,
     isLoading,
     error,
-  } = trpc.bankAccounts.getById.useQuery({ id: accountId }, { enabled: !!accountId })
+  } = trpc.bankAccounts.getById.useQuery({ id: accountId }, { enabled: !!accountId });
 
   return {
     account,
     isLoading,
     error,
-  }
+  };
 }
 
 /**
@@ -143,20 +142,20 @@ export function useBalanceHistory(accountId: string, days: number = 30) {
     data: history,
     isLoading,
     error,
-  } = trpc.bankAccounts.getBalanceHistory.useQuery({ accountId, days }, { enabled: !!accountId })
+  } = trpc.bankAccounts.getBalanceHistory.useQuery({ accountId, days }, { enabled: !!accountId });
 
   return {
     history: history || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para estatísticas das contas
  */
 export function useBankAccountsStats() {
-  const { accounts } = useBankAccounts()
+  const { accounts } = useBankAccounts();
 
   const stats = {
     totalAccounts: accounts.length,
@@ -165,13 +164,13 @@ export function useBankAccountsStats() {
     primaryAccounts: accounts.filter((account) => account.is_primary).length,
     accountsByCurrency: accounts.reduce(
       (acc, account) => {
-        const currency = account.currency || 'BRL'
-        acc[currency] = (acc[currency] || 0) + 1
-        return acc
+        const currency = account.currency || 'BRL';
+        acc[currency] = (acc[currency] || 0) + 1;
+        return acc;
       },
       {} as Record<string, number>
     ),
-  }
+  };
 
-  return stats
+  return stats;
 }

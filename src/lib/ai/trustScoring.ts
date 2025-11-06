@@ -3,13 +3,13 @@
  */
 
 export interface TrustScore {
-  overall: number // 0-100
+  overall: number; // 0-100
   factors: {
-    accountAge: number
-    transactionHistory: number
-    paymentBehavior: number
-    verificationLevel: number
-  }
+    accountAge: number;
+    transactionHistory: number;
+    paymentBehavior: number;
+    verificationLevel: number;
+  };
 }
 
 export class TrustScoringEngine {
@@ -22,14 +22,14 @@ export class TrustScoringEngine {
         paymentBehavior: 20,
         verificationLevel: 10,
       },
-    }
+    };
   }
 
   canAutoApprove(score: TrustScore, amount: number): boolean {
-    return score.overall >= 70 && amount < 1000
+    return score.overall >= 70 && amount < 1000;
   }
 }
 
 export function getTrustEngine(): TrustScoringEngine {
-  return new TrustScoringEngine()
+  return new TrustScoringEngine();
 }

@@ -7,42 +7,42 @@
  * Automatic token rotation
  */
 
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
 
 export interface EncryptedToken {
-  encrypted: string
-  iv: string
-  algorithm: string
+  encrypted: string;
+  iv: string;
+  algorithm: string;
 }
 
 export interface TokenData {
-  accessToken: string
-  refreshToken?: string
-  expiresAt: Date
-  refreshExpiresAt?: Date
-  scopes: string[]
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: Date;
+  refreshExpiresAt?: Date;
+  scopes: string[];
 }
 
 export class TokenManager {
-  private masterKey: string
+  private masterKey: string;
 
   constructor() {
     this.masterKey =
-      import.meta.env.VITE_ENCRYPTION_MASTER_KEY || 'default-key-change-in-production'
+      import.meta.env.VITE_ENCRYPTION_MASTER_KEY || 'default-key-change-in-production';
   }
 
   /**
    * Derive encryption key from master key + user ID
    */
   private async deriveKey(userId: string): Promise<CryptoKey> {
-    const encoder = new TextEncoder()
+    const encoder = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
       encoder.encode(this.masterKey + userId),
       'PBKDF2',
       false,
       ['deriveKey']
-    )
+    );
 
     return crypto.subtle.deriveKey(
       {
@@ -55,54 +55,54 @@ export class TokenManager {
       { name: 'AES-GCM', length: 256 },
       false,
       ['encrypt', 'decrypt']
-    )
+    );
   }
 
   /**
    * Encrypt token with AES-256-GCM
    */
   async encryptToken(token: string, userId: string): Promise<EncryptedToken> {
-    const key = await this.deriveKey(userId)
-    const iv = crypto.getRandomValues(new Uint8Array(12))
-    const encoder = new TextEncoder()
+    const key = await this.deriveKey(userId);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoder = new TextEncoder();
 
     const encrypted = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
       key,
       encoder.encode(token)
-    )
+    );
 
     return {
       encrypted: Buffer.from(encrypted).toString('base64'),
       iv: Buffer.from(iv).toString('base64'),
       algorithm: 'AES-256-GCM',
-    }
+    };
   }
 
   /**
    * Decrypt token
    */
   async decryptToken(encrypted: EncryptedToken, userId: string): Promise<string> {
-    const key = await this.deriveKey(userId)
-    const decoder = new TextDecoder()
+    const key = await this.deriveKey(userId);
+    const decoder = new TextDecoder();
 
     const decrypted = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: Buffer.from(encrypted.iv, 'base64') },
       key,
       Buffer.from(encrypted.encrypted, 'base64')
-    )
+    );
 
-    return decoder.decode(decrypted)
+    return decoder.decode(decrypted);
   }
 
   /**
    * Store encrypted tokens
    */
   async storeTokens(connectionId: string, userId: string, tokens: TokenData): Promise<void> {
-    const encryptedAccess = await this.encryptToken(tokens.accessToken, userId)
+    const encryptedAccess = await this.encryptToken(tokens.accessToken, userId);
     const encryptedRefresh = tokens.refreshToken
       ? await this.encryptToken(tokens.refreshToken, userId)
-      : null
+      : null;
 
     const { error } = await supabase.from('bank_tokens').upsert({
       institution_id: connectionId,
@@ -114,10 +114,10 @@ export class TokenManager {
       expires_at: tokens.expiresAt.toISOString(),
       refresh_expires_at: tokens.refreshExpiresAt?.toISOString(),
       scopes: tokens.scopes,
-    })
+    });
 
     if (error) {
-      throw new Error(`Failed to store tokens: ${error.message}`)
+      throw new Error(`Failed to store tokens: ${error.message}`);
     }
   }
 
@@ -129,10 +129,10 @@ export class TokenManager {
       .from('bank_tokens')
       .select('*')
       .eq('connection_id', connectionId)
-      .single()
+      .single();
 
     if (error || !data) {
-      return null
+      return null;
     }
 
     const accessToken = await this.decryptToken(
@@ -142,9 +142,9 @@ export class TokenManager {
         algorithm: data.encryption_algorithm || 'aes-256-gcm',
       },
       userId
-    )
+    );
 
-    let refreshToken: string | undefined
+    let refreshToken: string | undefined;
     if (data.encrypted_refresh_token) {
       refreshToken = await this.decryptToken(
         {
@@ -153,7 +153,7 @@ export class TokenManager {
           algorithm: data.encryption_algorithm || 'aes-256-gcm',
         },
         userId
-      )
+      );
     }
 
     return {
@@ -162,17 +162,17 @@ export class TokenManager {
       expiresAt: data.expires_at ? new Date(data.expires_at) : new Date(),
       refreshExpiresAt: data.refresh_expires_at ? new Date(data.refresh_expires_at) : undefined,
       scopes: data.scopes || [],
-    }
+    };
   }
 
   /**
    * Delete tokens
    */
   async deleteTokens(connectionId: string): Promise<void> {
-    const { error } = await supabase.from('bank_tokens').delete().eq('connection_id', connectionId)
+    const { error } = await supabase.from('bank_tokens').delete().eq('connection_id', connectionId);
 
     if (error) {
-      throw new Error(`Failed to delete tokens: ${error.message}`)
+      throw new Error(`Failed to delete tokens: ${error.message}`);
     }
   }
 
@@ -180,18 +180,18 @@ export class TokenManager {
    * Check if token is expired
    */
   isTokenExpired(expiresAt: Date): boolean {
-    return new Date() >= expiresAt
+    return new Date() >= expiresAt;
   }
 
   /**
    * Check if token needs refresh (1 hour before expiration)
    */
   needsRefresh(expiresAt: Date): boolean {
-    const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000)
-    return oneHourFromNow >= expiresAt
+    const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+    return oneHourFromNow >= expiresAt;
   }
 }
 
 export function createTokenManager(): TokenManager {
-  return new TokenManager()
+  return new TokenManager();
 }

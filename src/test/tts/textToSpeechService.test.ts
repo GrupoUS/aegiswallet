@@ -6,8 +6,8 @@
  * @module test/tts/textToSpeechService
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getTTSService, TextToSpeechService } from '@/lib/tts/textToSpeechService'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getTTSService, TextToSpeechService } from '@/lib/tts/textToSpeechService';
 
 // Use the mocks from test setup
 const mockSpeechSynthesis = (globalThis as any).speechSynthesis || {
@@ -30,183 +30,183 @@ const mockSpeechSynthesis = (globalThis as any).speechSynthesis || {
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
   dispatchEvent: vi.fn(),
-}
+};
 
 // Ensure window has speechSynthesis for the TTS service
 if (typeof window !== 'undefined') {
-  ;(window as any).speechSynthesis = mockSpeechSynthesis
+  (window as any).speechSynthesis = mockSpeechSynthesis;
 } else {
-  ;(globalThis as any).window = { speechSynthesis: mockSpeechSynthesis }
+  (globalThis as any).window = { speechSynthesis: mockSpeechSynthesis };
 }
 
 describe('TextToSpeechService', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   describe('Constructor & Configuration', () => {
     it('should create TTS service with default config', () => {
-      const tts = new TextToSpeechService()
-      const config = tts.getConfig()
+      const tts = new TextToSpeechService();
+      const config = tts.getConfig();
 
-      expect(config.rate).toBe(0.9)
-      expect(config.volume).toBe(0.8)
-      expect(config.ssmlEnabled).toBe(true)
-      expect(config.cachingEnabled).toBe(true)
-    })
+      expect(config.rate).toBe(0.9);
+      expect(config.volume).toBe(0.8);
+      expect(config.ssmlEnabled).toBe(true);
+      expect(config.cachingEnabled).toBe(true);
+    });
 
     it('should create TTS service with custom config', () => {
       const tts = new TextToSpeechService({
         rate: 1.2,
         volume: 1.0,
         ssmlEnabled: false,
-      })
+      });
 
-      const config = tts.getConfig()
-      expect(config.rate).toBe(1.2)
-      expect(config.volume).toBe(1.0)
-      expect(config.ssmlEnabled).toBe(false)
-    })
+      const config = tts.getConfig();
+      expect(config.rate).toBe(1.2);
+      expect(config.volume).toBe(1.0);
+      expect(config.ssmlEnabled).toBe(false);
+    });
 
     it('should update configuration', () => {
-      const tts = new TextToSpeechService()
-      tts.updateConfig({ rate: 1.5 })
+      const tts = new TextToSpeechService();
+      tts.updateConfig({ rate: 1.5 });
 
-      expect(tts.getConfig().rate).toBe(1.5)
-    })
-  })
+      expect(tts.getConfig().rate).toBe(1.5);
+    });
+  });
 
   describe('Speech Generation', () => {
     it('should call speechSynthesis.speak', async () => {
-      const tts = new TextToSpeechService()
+      const tts = new TextToSpeechService();
 
       // Mock utterance end event
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
         // Store the utterance so we can trigger its events
         setTimeout(() => {
           if (utterance.onend) {
-            utterance.onend()
+            utterance.onend();
           }
-        }, 10)
-      })
+        }, 10);
+      });
 
-      await tts.speak('Olá, mundo!')
+      await tts.speak('Olá, mundo!');
 
-      expect(mockSpeechSynthesis.speak).toHaveBeenCalled()
-    })
+      expect(mockSpeechSynthesis.speak).toHaveBeenCalled();
+    });
 
     it('should handle speech errors', async () => {
-      const tts = new TextToSpeechService()
+      const tts = new TextToSpeechService();
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
         // Simulate error by calling onerror directly
         setTimeout(() => {
           if (utterance.onerror) {
-            utterance.onerror({ error: 'audio-busy' })
+            utterance.onerror({ error: 'audio-busy' });
           }
-        }, 10)
-      })
+        }, 10);
+      });
 
-      const result = await tts.speak('Test')
+      const result = await tts.speak('Test');
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBeDefined()
-    })
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
 
     it('should track processing time', async () => {
-      const tts = new TextToSpeechService()
+      const tts = new TextToSpeechService();
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
         setTimeout(() => {
           if (utterance.onend) {
-            utterance.onend()
+            utterance.onend();
           }
-        }, 100)
-      })
+        }, 100);
+      });
 
-      const result = await tts.speak('Test')
+      const result = await tts.speak('Test');
 
-      expect(result.duration).toBeGreaterThan(0)
-    })
-  })
+      expect(result.duration).toBeGreaterThan(0);
+    });
+  });
 
   describe('Voice Control', () => {
     it('should stop speaking', () => {
-      const tts = new TextToSpeechService()
-      tts.stop()
+      const tts = new TextToSpeechService();
+      tts.stop();
 
-      expect(mockSpeechSynthesis.cancel).toHaveBeenCalled()
-    })
+      expect(mockSpeechSynthesis.cancel).toHaveBeenCalled();
+    });
 
     it('should pause speaking', () => {
-      const tts = new TextToSpeechService()
-      tts.pause()
+      const tts = new TextToSpeechService();
+      tts.pause();
 
-      expect(mockSpeechSynthesis.pause).toHaveBeenCalled()
-    })
+      expect(mockSpeechSynthesis.pause).toHaveBeenCalled();
+    });
 
     it('should resume speaking', () => {
-      const tts = new TextToSpeechService()
-      tts.resume()
+      const tts = new TextToSpeechService();
+      tts.resume();
 
-      expect(mockSpeechSynthesis.resume).toHaveBeenCalled()
-    })
-  })
+      expect(mockSpeechSynthesis.resume).toHaveBeenCalled();
+    });
+  });
 
   describe('Voice Selection', () => {
     it('should get available voices', () => {
-      const tts = new TextToSpeechService()
-      const voices = tts.getAvailableVoices()
+      const tts = new TextToSpeechService();
+      const voices = tts.getAvailableVoices();
 
-      expect(voices).toHaveLength(1)
-      expect(voices[0].lang).toBe('pt-BR')
-    })
-  })
+      expect(voices).toHaveLength(1);
+      expect(voices[0].lang).toBe('pt-BR');
+    });
+  });
 
   describe('Caching', () => {
     it('should cache responses', async () => {
-      const tts = new TextToSpeechService({ cachingEnabled: true })
+      const tts = new TextToSpeechService({ cachingEnabled: true });
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => utterance.onend?.(), 10)
-      })
+        setTimeout(() => utterance.onend?.(), 10);
+      });
 
       // First call
-      const result1 = await tts.speak('Hello')
-      expect(result1.cached).toBe(false)
+      const result1 = await tts.speak('Hello');
+      expect(result1.cached).toBe(false);
 
       // Second call should be cached
-      const result2 = await tts.speak('Hello')
+      const result2 = await tts.speak('Hello');
       // Note: In actual implementation, this would be from cache
 
-      expect(result2.cached).toBe(false)
-      expect(mockSpeechSynthesis.speak).toHaveBeenCalledTimes(2) // Both calls speak since cache isn't fully implemented
-    })
+      expect(result2.cached).toBe(false);
+      expect(mockSpeechSynthesis.speak).toHaveBeenCalledTimes(2); // Both calls speak since cache isn't fully implemented
+    });
 
     it('should clear cache', () => {
-      const tts = new TextToSpeechService()
-      tts.clearCache()
+      const tts = new TextToSpeechService();
+      tts.clearCache();
 
-      const stats = tts.getCacheStats()
-      expect(stats.size).toBe(0)
-    })
-  })
+      const stats = tts.getCacheStats();
+      expect(stats.size).toBe(0);
+    });
+  });
 
   describe('Health Check', () => {
     it('should pass health check when voices available', async () => {
-      const tts = new TextToSpeechService()
-      const healthy = await tts.healthCheck()
+      const tts = new TextToSpeechService();
+      const healthy = await tts.healthCheck();
 
-      expect(healthy).toBe(true)
-    })
+      expect(healthy).toBe(true);
+    });
 
     it('should fail health check when no voices', async () => {
-      mockSpeechSynthesis.getVoices.mockReturnValue([])
+      mockSpeechSynthesis.getVoices.mockReturnValue([]);
 
-      const tts = new TextToSpeechService()
-      const healthy = await tts.healthCheck()
+      const tts = new TextToSpeechService();
+      const healthy = await tts.healthCheck();
 
-      expect(healthy).toBe(false)
+      expect(healthy).toBe(false);
 
       // Restore
       mockSpeechSynthesis.getVoices.mockReturnValue([
@@ -217,33 +217,33 @@ describe('TextToSpeechService', () => {
           localService: false,
           voiceURI: 'Google português do Brasil',
         },
-      ])
-    })
-  })
+      ]);
+    });
+  });
 
   describe('Singleton Pattern', () => {
     it('should return same instance', () => {
-      const tts1 = getTTSService()
-      const tts2 = getTTSService()
+      const tts1 = getTTSService();
+      const tts2 = getTTSService();
 
-      expect(tts1).toBe(tts2)
-    })
-  })
+      expect(tts1).toBe(tts2);
+    });
+  });
 
   describe('SSML Support', () => {
     it('should wrap text with SSML options', async () => {
-      const tts = new TextToSpeechService({ ssmlEnabled: true })
+      const tts = new TextToSpeechService({ ssmlEnabled: true });
 
       mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => utterance.onend?.(), 10)
-      })
+        setTimeout(() => utterance.onend?.(), 10);
+      });
 
       await tts.speak('Important message', {
         emphasis: 'strong',
         pauseDuration: 500,
-      })
+      });
 
-      expect(mockSpeechSynthesis.speak).toHaveBeenCalled()
-    })
-  })
-})
+      expect(mockSpeechSynthesis.speak).toHaveBeenCalled();
+    });
+  });
+});

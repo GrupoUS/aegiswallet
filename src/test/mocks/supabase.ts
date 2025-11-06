@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 // Mock do cliente Supabase
 export const createMockSupabaseClient = () => ({
@@ -42,7 +42,7 @@ export const createMockSupabaseClient = () => ({
       subscription: { unsubscribe: vi.fn() },
     }),
   },
-})
+});
 
 // Mock dados de teste
 export const mockUsers = [
@@ -51,7 +51,7 @@ export const mockUsers = [
     email: 'test@example.com',
     created_at: '2024-01-01T00:00:00Z',
   },
-]
+];
 
 export const mockTransactions = [
   {
@@ -63,11 +63,11 @@ export const mockTransactions = [
     transaction_date: '2024-01-01T00:00:00Z',
     created_at: '2024-01-01T00:00:00Z',
   },
-]
+];
 
 // Mock de funções de banco de dados
 export const mockSupabaseFunctions = {
   createUser: vi.fn().mockResolvedValue({ data: mockUsers[0], error: null }),
   createTransaction: vi.fn().mockResolvedValue({ data: mockTransactions[0], error: null }),
   getTransactions: vi.fn().mockResolvedValue({ data: mockTransactions, error: null }),
-}
+};

@@ -3,10 +3,10 @@
  */
 
 export interface AutonomySettings {
-  autoPayBillsUnder: number // R$
-  autoTransferEnabled: boolean
-  requireConfirmationAbove: number
-  dailyLimit: number
+  autoPayBillsUnder: number; // R$
+  autoTransferEnabled: boolean;
+  requireConfirmationAbove: number;
+  dailyLimit: number;
 }
 
 export class AutonomyController {
@@ -16,7 +16,7 @@ export class AutonomyController {
       autoTransferEnabled: false,
       requireConfirmationAbove: 100,
       dailyLimit: 1000,
-    }
+    };
   }
 
   async updateSettings(_userId: string, _settings: Partial<AutonomySettings>): Promise<void> {
@@ -24,10 +24,10 @@ export class AutonomyController {
   }
 
   canAutoExecute(amount: number, settings: AutonomySettings): boolean {
-    return amount < settings.autoPayBillsUnder && amount < settings.dailyLimit
+    return amount < settings.autoPayBillsUnder && amount < settings.dailyLimit;
   }
 }
 
 export function getAutonomyController(): AutonomyController {
-  return new AutonomyController()
+  return new AutonomyController();
 }

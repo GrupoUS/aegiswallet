@@ -16,27 +16,27 @@
 // ============================================================================
 
 export interface AudioProcessingConfig {
-  sampleRate?: number
-  silenceThreshold?: number
-  silenceDuration?: number
-  minAudioDuration?: number
-  maxAudioDuration?: number
-  volumeThreshold?: number
+  sampleRate?: number;
+  silenceThreshold?: number;
+  silenceDuration?: number;
+  minAudioDuration?: number;
+  maxAudioDuration?: number;
+  volumeThreshold?: number;
 }
 
 export interface ProcessedAudio {
-  blob: Blob
-  duration: number
-  sampleRate: number
-  hasVoice: boolean
-  averageVolume: number
-  peakVolume: number
+  blob: Blob;
+  duration: number;
+  sampleRate: number;
+  hasVoice: boolean;
+  averageVolume: number;
+  peakVolume: number;
 }
 
 export interface VADResult {
-  hasVoice: boolean
-  confidence: number
-  speechSegments: Array<{ start: number; end: number }>
+  hasVoice: boolean;
+  confidence: number;
+  speechSegments: Array<{ start: number; end: number }>;
 }
 
 // ============================================================================
@@ -44,8 +44,8 @@ export interface VADResult {
 // ============================================================================
 
 export class AudioProcessor {
-  private config: Required<AudioProcessingConfig>
-  private audioContext: AudioContext | null = null
+  private config: Required<AudioProcessingConfig>;
+  private audioContext: AudioContext | null = null;
 
   constructor(config: AudioProcessingConfig = {}) {
     this.config = {
@@ -55,7 +55,7 @@ export class AudioProcessor {
       minAudioDuration: config.minAudioDuration || 500, // 0.5 seconds
       maxAudioDuration: config.maxAudioDuration || 30000, // 30 seconds
       volumeThreshold: config.volumeThreshold || 0.02, // 2% of max amplitude
-    }
+    };
   }
 
   /**
@@ -65,9 +65,9 @@ export class AudioProcessor {
     if (!this.audioContext) {
       this.audioContext = new AudioContext({
         sampleRate: this.config.sampleRate,
-      })
+      });
     }
-    return this.audioContext
+    return this.audioContext;
   }
 
   /**
@@ -78,23 +78,23 @@ export class AudioProcessor {
    */
   async processAudio(audioBlob: Blob): Promise<ProcessedAudio> {
     try {
-      const audioContext = await this.getAudioContext()
+      const audioContext = await this.getAudioContext();
 
       // Decode audio data
-      const arrayBuffer = await audioBlob.arrayBuffer()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
       // Analyze audio
-      const analysis = this.analyzeAudio(audioBuffer)
+      const analysis = this.analyzeAudio(audioBuffer);
 
       // Check for voice activity
-      const vadResult = this.detectVoiceActivity(audioBuffer)
+      const vadResult = this.detectVoiceActivity(audioBuffer);
 
       // Normalize volume if needed
-      const normalizedBuffer = this.normalizeVolume(audioBuffer, analysis.averageVolume)
+      const normalizedBuffer = this.normalizeVolume(audioBuffer, analysis.averageVolume);
 
       // Convert back to blob
-      const processedBlob = await this.audioBufferToBlob(normalizedBuffer)
+      const processedBlob = await this.audioBufferToBlob(normalizedBuffer);
 
       return {
         blob: processedBlob,
@@ -103,9 +103,9 @@ export class AudioProcessor {
         hasVoice: vadResult.hasVoice,
         averageVolume: analysis.averageVolume,
         peakVolume: analysis.peakVolume,
-      }
+      };
     } catch (error) {
-      throw new Error(`Audio processing failed: ${error}`)
+      throw new Error(`Audio processing failed: ${error}`);
     }
   }
 
@@ -115,35 +115,35 @@ export class AudioProcessor {
    * Simple energy-based VAD implementation
    */
   private detectVoiceActivity(audioBuffer: AudioBuffer): VADResult {
-    const channelData = audioBuffer.getChannelData(0)
-    const frameSize = Math.floor(audioBuffer.sampleRate * 0.02) // 20ms frames
-    const speechSegments: Array<{ start: number; end: number }> = []
+    const channelData = audioBuffer.getChannelData(0);
+    const frameSize = Math.floor(audioBuffer.sampleRate * 0.02); // 20ms frames
+    const speechSegments: Array<{ start: number; end: number }> = [];
 
-    let voiceFrames = 0
-    let totalFrames = 0
-    let inSpeech = false
-    let speechStart = 0
+    let voiceFrames = 0;
+    let totalFrames = 0;
+    let inSpeech = false;
+    let speechStart = 0;
 
     for (let i = 0; i < channelData.length; i += frameSize) {
-      const frame = channelData.slice(i, i + frameSize)
-      const energy = this.calculateEnergy(frame)
+      const frame = channelData.slice(i, i + frameSize);
+      const energy = this.calculateEnergy(frame);
 
-      totalFrames++
+      totalFrames++;
 
       if (energy > this.config.volumeThreshold) {
-        voiceFrames++
+        voiceFrames++;
 
         if (!inSpeech) {
-          inSpeech = true
-          speechStart = i / audioBuffer.sampleRate
+          inSpeech = true;
+          speechStart = i / audioBuffer.sampleRate;
         }
       } else if (inSpeech) {
         // End of speech segment
         speechSegments.push({
           start: speechStart,
           end: i / audioBuffer.sampleRate,
-        })
-        inSpeech = false
+        });
+        inSpeech = false;
       }
     }
 
@@ -152,88 +152,88 @@ export class AudioProcessor {
       speechSegments.push({
         start: speechStart,
         end: audioBuffer.duration,
-      })
+      });
     }
 
-    const confidence = totalFrames > 0 ? voiceFrames / totalFrames : 0
-    const hasVoice = confidence > 0.1 // At least 10% voice activity
+    const confidence = totalFrames > 0 ? voiceFrames / totalFrames : 0;
+    const hasVoice = confidence > 0.1; // At least 10% voice activity
 
     return {
       hasVoice,
       confidence,
       speechSegments,
-    }
+    };
   }
 
   /**
    * Analyze audio characteristics
    */
   private analyzeAudio(audioBuffer: AudioBuffer): {
-    averageVolume: number
-    peakVolume: number
-    rms: number
+    averageVolume: number;
+    peakVolume: number;
+    rms: number;
   } {
-    const channelData = audioBuffer.getChannelData(0)
+    const channelData = audioBuffer.getChannelData(0);
 
-    let sum = 0
-    let sumSquares = 0
-    let peak = 0
+    let sum = 0;
+    let sumSquares = 0;
+    let peak = 0;
 
     for (let i = 0; i < channelData.length; i++) {
-      const sample = Math.abs(channelData[i])
-      sum += sample
-      sumSquares += sample * sample
-      peak = Math.max(peak, sample)
+      const sample = Math.abs(channelData[i]);
+      sum += sample;
+      sumSquares += sample * sample;
+      peak = Math.max(peak, sample);
     }
 
-    const averageVolume = sum / channelData.length
-    const rms = Math.sqrt(sumSquares / channelData.length)
+    const averageVolume = sum / channelData.length;
+    const rms = Math.sqrt(sumSquares / channelData.length);
 
     return {
       averageVolume,
       peakVolume: peak,
       rms,
-    }
+    };
   }
 
   /**
    * Calculate energy of audio frame
    */
   private calculateEnergy(frame: Float32Array): number {
-    let sum = 0
+    let sum = 0;
     for (let i = 0; i < frame.length; i++) {
-      sum += frame[i] * frame[i]
+      sum += frame[i] * frame[i];
     }
-    return Math.sqrt(sum / frame.length)
+    return Math.sqrt(sum / frame.length);
   }
 
   /**
    * Normalize audio volume to optimal range
    */
   private normalizeVolume(audioBuffer: AudioBuffer, currentVolume: number): AudioBuffer {
-    const targetVolume = 0.5 // Target 50% of max amplitude
-    const gain = targetVolume / Math.max(currentVolume, 0.01)
+    const targetVolume = 0.5; // Target 50% of max amplitude
+    const gain = targetVolume / Math.max(currentVolume, 0.01);
 
     // Don't amplify too much (max 3x)
-    const limitedGain = Math.min(gain, 3.0)
+    const limitedGain = Math.min(gain, 3.0);
 
     // Create new buffer with normalized audio
     const normalizedBuffer = new AudioBuffer({
       length: audioBuffer.length,
       numberOfChannels: audioBuffer.numberOfChannels,
       sampleRate: audioBuffer.sampleRate,
-    })
+    });
 
     for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-      const inputData = audioBuffer.getChannelData(channel)
-      const outputData = normalizedBuffer.getChannelData(channel)
+      const inputData = audioBuffer.getChannelData(channel);
+      const outputData = normalizedBuffer.getChannelData(channel);
 
       for (let i = 0; i < inputData.length; i++) {
-        outputData[i] = Math.max(-1, Math.min(1, inputData[i] * limitedGain))
+        outputData[i] = Math.max(-1, Math.min(1, inputData[i] * limitedGain));
       }
     }
 
-    return normalizedBuffer
+    return normalizedBuffer;
   }
 
   /**
@@ -245,71 +245,71 @@ export class AudioProcessor {
       audioBuffer.numberOfChannels,
       audioBuffer.length,
       audioBuffer.sampleRate
-    )
+    );
 
     // Create buffer source
-    const source = offlineContext.createBufferSource()
-    source.buffer = audioBuffer
-    source.connect(offlineContext.destination)
-    source.start()
+    const source = offlineContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineContext.destination);
+    source.start();
 
     // Render audio
-    const renderedBuffer = await offlineContext.startRendering()
+    const renderedBuffer = await offlineContext.startRendering();
 
     // Convert to WAV format (simple, widely supported)
-    const wavBlob = this.audioBufferToWav(renderedBuffer)
+    const wavBlob = this.audioBufferToWav(renderedBuffer);
 
-    return wavBlob
+    return wavBlob;
   }
 
   /**
    * Convert AudioBuffer to WAV Blob
    */
   private audioBufferToWav(audioBuffer: AudioBuffer): Blob {
-    const numberOfChannels = audioBuffer.numberOfChannels
-    const sampleRate = audioBuffer.sampleRate
-    const format = 1 // PCM
-    const bitDepth = 16
+    const numberOfChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
 
-    const bytesPerSample = bitDepth / 8
-    const blockAlign = numberOfChannels * bytesPerSample
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numberOfChannels * bytesPerSample;
 
-    const data = new Float32Array(audioBuffer.length * numberOfChannels)
+    const data = new Float32Array(audioBuffer.length * numberOfChannels);
     for (let channel = 0; channel < numberOfChannels; channel++) {
-      const channelData = audioBuffer.getChannelData(channel)
+      const channelData = audioBuffer.getChannelData(channel);
       for (let i = 0; i < audioBuffer.length; i++) {
-        data[i * numberOfChannels + channel] = channelData[i]
+        data[i * numberOfChannels + channel] = channelData[i];
       }
     }
 
-    const dataLength = data.length * bytesPerSample
-    const buffer = new ArrayBuffer(44 + dataLength)
-    const view = new DataView(buffer)
+    const dataLength = data.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataLength);
+    const view = new DataView(buffer);
 
     // WAV header
-    this.writeString(view, 0, 'RIFF')
-    view.setUint32(4, 36 + dataLength, true)
-    this.writeString(view, 8, 'WAVE')
-    this.writeString(view, 12, 'fmt ')
-    view.setUint32(16, 16, true) // fmt chunk size
-    view.setUint16(20, format, true)
-    view.setUint16(22, numberOfChannels, true)
-    view.setUint32(24, sampleRate, true)
-    view.setUint32(28, sampleRate * blockAlign, true)
-    view.setUint16(32, blockAlign, true)
-    view.setUint16(34, bitDepth, true)
-    this.writeString(view, 36, 'data')
-    view.setUint32(40, dataLength, true)
+    this.writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    this.writeString(view, 8, 'WAVE');
+    this.writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // fmt chunk size
+    view.setUint16(20, format, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    this.writeString(view, 36, 'data');
+    view.setUint32(40, dataLength, true);
 
     // Write audio data
-    let offset = 44
+    let offset = 44;
     for (let i = 0; i < data.length; i++) {
-      const sample = Math.max(-1, Math.min(1, data[i]))
-      view.setInt16(offset, sample * 0x7fff, true)
-      offset += 2
+      const sample = Math.max(-1, Math.min(1, data[i]));
+      view.setInt16(offset, sample * 0x7fff, true);
+      offset += 2;
     }
 
-    return new Blob([buffer], { type: 'audio/wav' })
+    return new Blob([buffer], { type: 'audio/wav' });
   }
 
   /**
@@ -317,7 +317,7 @@ export class AudioProcessor {
    */
   private writeString(view: DataView, offset: number, string: string): void {
     for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i))
+      view.setUint8(offset + i, string.charCodeAt(i));
     }
   }
 
@@ -325,18 +325,18 @@ export class AudioProcessor {
    * Check if audio contains sufficient voice activity
    */
   async validateAudio(audioBlob: Blob): Promise<{
-    valid: boolean
-    reason?: string
+    valid: boolean;
+    reason?: string;
   }> {
     try {
-      const processed = await this.processAudio(audioBlob)
+      const processed = await this.processAudio(audioBlob);
 
       // Check minimum duration
       if (processed.duration < this.config.minAudioDuration) {
         return {
           valid: false,
           reason: `Audio too short: ${processed.duration}ms (min: ${this.config.minAudioDuration}ms)`,
-        }
+        };
       }
 
       // Check maximum duration
@@ -344,7 +344,7 @@ export class AudioProcessor {
         return {
           valid: false,
           reason: `Audio too long: ${processed.duration}ms (max: ${this.config.maxAudioDuration}ms)`,
-        }
+        };
       }
 
       // Check for voice activity
@@ -352,7 +352,7 @@ export class AudioProcessor {
         return {
           valid: false,
           reason: 'No voice activity detected',
-        }
+        };
       }
 
       // Check volume
@@ -360,15 +360,15 @@ export class AudioProcessor {
         return {
           valid: false,
           reason: 'Audio volume too low',
-        }
+        };
       }
 
-      return { valid: true }
+      return { valid: true };
     } catch (error) {
       return {
         valid: false,
         reason: `Validation error: ${error}`,
-      }
+      };
     }
   }
 
@@ -377,8 +377,8 @@ export class AudioProcessor {
    */
   dispose(): void {
     if (this.audioContext) {
-      this.audioContext.close()
-      this.audioContext = null
+      this.audioContext.close();
+      this.audioContext = null;
     }
   }
 }
@@ -391,5 +391,5 @@ export class AudioProcessor {
  * Create audio processor with default configuration
  */
 export function createAudioProcessor(config?: AudioProcessingConfig): AudioProcessor {
-  return new AudioProcessor(config)
+  return new AudioProcessor(config);
 }

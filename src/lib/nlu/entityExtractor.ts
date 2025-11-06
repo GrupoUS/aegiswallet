@@ -12,7 +12,7 @@
  * @module nlu/entityExtractor
  */
 
-import { type EntityPattern, EntityType, type ExtractedEntity } from '@/lib/nlu/types'
+import { type EntityPattern, EntityType, type ExtractedEntity } from '@/lib/nlu/types';
 
 // ============================================================================
 // Number Words Mapping (Brazilian Portuguese)
@@ -63,34 +63,34 @@ const NUMBER_WORDS: Record<string, number> = {
   mil: 1000,
   milhão: 1000000,
   milhao: 1000000,
-}
+};
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-const NORMALIZE_DIACRITICS_REGEX = /[\u0300-\u036f]/g
+const NORMALIZE_DIACRITICS_REGEX = /[\u0300-\u036f]/g;
 
 function normalizeText(value: string): string {
-  return value.toLowerCase().normalize('NFD').replace(NORMALIZE_DIACRITICS_REGEX, '')
+  return value.toLowerCase().normalize('NFD').replace(NORMALIZE_DIACRITICS_REGEX, '');
 }
 
-const NUMBER_WORD_NORMALIZED_MAP = new Map<string, number>()
+const NUMBER_WORD_NORMALIZED_MAP = new Map<string, number>();
 
 Object.entries(NUMBER_WORDS).forEach(([word, value]) => {
-  NUMBER_WORD_NORMALIZED_MAP.set(normalizeText(word), value)
-})
+  NUMBER_WORD_NORMALIZED_MAP.set(normalizeText(word), value);
+});
 
 const NUMBER_WORD_NORMALIZED_KEYS = Array.from(NUMBER_WORD_NORMALIZED_MAP.keys()).sort(
   (a, b) => b.length - a.length
-)
+);
 
 const NUMBER_WORD_AMOUNT_PATTERN = new RegExp(
   String.raw`\b(${NUMBER_WORD_NORMALIZED_KEYS.join('|')})(?:\s+e\s+(${NUMBER_WORD_NORMALIZED_KEYS.join('|')}))*\b(?:\s+(reais?|real))?`,
   'gi'
-)
+);
 
-const PLAIN_NUMBER_PATTERN = new RegExp(String.raw`\b\d{1,4}(?:\.\d{3})*(?:,\d{2})?\b`, 'gi')
+const PLAIN_NUMBER_PATTERN = /\b\d{1,4}(?:\.\d{3})*(?:,\d{2})?\b/gi;
 
 const WEEKDAY_MAP: Record<string, number> = {
   domingo: 0,
@@ -100,84 +100,84 @@ const WEEKDAY_MAP: Record<string, number> = {
   quinta: 4,
   sexta: 5,
   sabado: 6,
-}
+};
 
 function parseNumberWordPhrase(phrase: string): number {
   const cleaned = normalizeText(phrase)
     .replace(/\b(reais?|real)\b/gi, '')
-    .trim()
+    .trim();
   if (!cleaned) {
-    return NaN
+    return NaN;
   }
 
-  const tokens = cleaned.split(/\s+e\s+|\s+/).filter((token) => token.length > 0)
-  const values = tokens.map((token) => NUMBER_WORD_NORMALIZED_MAP.get(token))
+  const tokens = cleaned.split(/\s+e\s+|\s+/).filter((token) => token.length > 0);
+  const values = tokens.map((token) => NUMBER_WORD_NORMALIZED_MAP.get(token));
 
   if (values.some((value) => typeof value !== 'number')) {
-    return NaN
+    return NaN;
   }
 
-  return (values as number[]).reduce((sum, value) => sum + value, 0)
+  return (values as number[]).reduce((sum, value) => sum + value, 0);
 }
 
 function parseMonetaryValue(raw: string): number {
   // Check if this is a date reference (e.g., "dia 15")
   if (/^\s*dia\s+\d+/i.test(raw)) {
-    return NaN
+    return NaN;
   }
 
   const cleaned = raw
     .replace(/R\$\s*/gi, '')
     .replace(/(reais?|real)/gi, '')
-    .replace(/\s+/g, '')
-  let normalized = cleaned
+    .replace(/\s+/g, '');
+  let normalized = cleaned;
 
   if (normalized.includes(',')) {
-    normalized = normalized.replace(/\./g, '').replace(',', '.')
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
   } else {
-    normalized = normalized.replace(/\./g, '')
+    normalized = normalized.replace(/\./g, '');
   }
 
-  const value = Number(normalized)
-  return Number.isFinite(value) ? value : NaN
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : NaN;
 }
 
 function daysFromToday(offset: number): Date {
-  const date = new Date()
-  date.setDate(date.getDate() + offset)
-  return date
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return date;
 }
 
 function getUpcomingWeekday(weekday: string, allowToday = true): Date {
-  const normalized = normalizeText(weekday.replace('-feira', ''))
-  const dayIndex = WEEKDAY_MAP[normalized]
-  const today = new Date()
+  const normalized = normalizeText(weekday.replace('-feira', ''));
+  const dayIndex = WEEKDAY_MAP[normalized];
+  const today = new Date();
 
   if (dayIndex === undefined) {
-    return today
+    return today;
   }
 
-  const currentDay = today.getDay()
-  let delta = (dayIndex - currentDay + 7) % 7
+  const currentDay = today.getDay();
+  let delta = (dayIndex - currentDay + 7) % 7;
   if (delta === 0 && !allowToday) {
-    delta = 7
+    delta = 7;
   }
 
-  const targetDate = new Date(today)
-  targetDate.setDate(today.getDate() + delta)
-  return targetDate
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + delta);
+  return targetDate;
 }
 
 function setDayOfMonth(day: number): Date {
-  const date = new Date()
-  date.setDate(day)
-  return date
+  const date = new Date();
+  date.setDate(day);
+  return date;
 }
 
 function setMonthOffset(offset: number): Date {
-  const date = new Date()
-  date.setMonth(date.getMonth() + offset)
-  return date
+  const date = new Date();
+  date.setMonth(date.getMonth() + offset);
+  return date;
 }
 // ============================================================================
 // Entity Patterns
@@ -231,8 +231,8 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     pattern:
       /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
     normalizer: (match) => {
-      const weekday = match.replace(/^(?:proxima|pr[\u00f3o]xima)\s+/i, '').replace(/-feira$/i, '')
-      return getUpcomingWeekday(weekday, false)
+      const weekday = match.replace(/^(?:proxima|pr[\u00f3o]xima)\s+/i, '').replace(/-feira$/i, '');
+      return getUpcomingWeekday(weekday, false);
     },
   },
   {
@@ -331,7 +331,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
       /\b([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+(?:\s+[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+)*)\b/g,
     normalizer: (match) => match.trim(),
   },
-]
+];
 
 // ============================================================================
 // Entity Extractor Class
@@ -342,42 +342,42 @@ export class EntityExtractor {
    * Extract all entities from text
    */
   extract(text: string): ExtractedEntity[] {
-    const entities: ExtractedEntity[] = []
+    const entities: ExtractedEntity[] = [];
 
     for (const pattern of ENTITY_PATTERNS) {
-      const matches = this.extractWithPattern(text, pattern)
-      entities.push(...matches)
+      const matches = this.extractWithPattern(text, pattern);
+      entities.push(...matches);
     }
 
     // Remove duplicates and overlapping entities
-    return this.deduplicateEntities(entities)
+    return this.deduplicateEntities(entities);
   }
 
   /**
    * Extract entities using a specific pattern
    */
   private extractWithPattern(text: string, pattern: EntityPattern): ExtractedEntity[] {
-    const entities: ExtractedEntity[] = []
-    const regex = pattern.pattern instanceof RegExp ? pattern.pattern : new RegExp(pattern.pattern)
-    let match: RegExpExecArray | null
+    const entities: ExtractedEntity[] = [];
+    const regex = pattern.pattern instanceof RegExp ? pattern.pattern : new RegExp(pattern.pattern);
+    let match: RegExpExecArray | null;
 
     // Reset regex lastIndex for global regexes
-    regex.lastIndex = 0
+    regex.lastIndex = 0;
 
     while ((match = regex.exec(text)) !== null) {
       try {
-        const value = match[0]
-        const normalizedValue = pattern.normalizer(value)
+        const value = match[0];
+        const normalizedValue = pattern.normalizer(value);
         if (normalizedValue === undefined || normalizedValue === null) {
-          continue
+          continue;
         }
         if (typeof normalizedValue === 'number' && Number.isNaN(normalizedValue)) {
-          continue
+          continue;
         }
 
         // Validate if validator exists
         if (pattern.validator && !pattern.validator(normalizedValue)) {
-          continue
+          continue;
         }
 
         entities.push({
@@ -387,14 +387,11 @@ export class EntityExtractor {
           confidence: 0.9, // High confidence for pattern-based extraction
           startIndex: match.index,
           endIndex: match.index + value.length,
-        })
-      } catch (error) {
-        // Skip invalid extractions
-        console.warn('Entity extraction error:', error)
-      }
+        });
+      } catch (_error) {}
     }
 
-    return entities
+    return entities;
   }
 
   /**
@@ -402,8 +399,8 @@ export class EntityExtractor {
    */
   private deduplicateEntities(entities: ExtractedEntity[]): ExtractedEntity[] {
     // Sort by start index
-    const sorted = entities.sort((a, b) => a.startIndex - b.startIndex)
-    const deduplicated: ExtractedEntity[] = []
+    const sorted = entities.sort((a, b) => a.startIndex - b.startIndex);
+    const deduplicated: ExtractedEntity[] = [];
 
     for (const entity of sorted) {
       // Check if overlaps with any existing entity
@@ -411,36 +408,36 @@ export class EntityExtractor {
         (existing) =>
           (entity.startIndex >= existing.startIndex && entity.startIndex < existing.endIndex) ||
           (entity.endIndex > existing.startIndex && entity.endIndex <= existing.endIndex)
-      )
+      );
 
       if (!overlaps) {
-        deduplicated.push(entity)
+        deduplicated.push(entity);
       }
     }
 
-    return deduplicated
+    return deduplicated;
   }
 
   /**
    * Extract entities of specific type
    */
   extractByType(text: string, type: EntityType): ExtractedEntity[] {
-    return this.extract(text).filter((entity) => entity.type === type)
+    return this.extract(text).filter((entity) => entity.type === type);
   }
 
   /**
    * Check if text contains entity of specific type
    */
   hasEntityType(text: string, type: EntityType): boolean {
-    return this.extractByType(text, type).length > 0
+    return this.extractByType(text, type).length > 0;
   }
 
   /**
    * Get first entity of specific type
    */
   getFirstEntity(text: string, type: EntityType): ExtractedEntity | null {
-    const entities = this.extractByType(text, type)
-    return entities.length > 0 ? entities[0] : null
+    const entities = this.extractByType(text, type);
+    return entities.length > 0 ? entities[0] : null;
   }
 }
 
@@ -452,40 +449,40 @@ export class EntityExtractor {
  * Create entity extractor instance
  */
 export function createEntityExtractor(): EntityExtractor {
-  return new EntityExtractor()
+  return new EntityExtractor();
 }
 
 /**
  * Quick extract function
  */
 export function extractEntities(text: string): ExtractedEntity[] {
-  const extractor = createEntityExtractor()
-  return extractor.extract(text)
+  const extractor = createEntityExtractor();
+  return extractor.extract(text);
 }
 
 /**
  * Extract money amount from text
  */
 export function extractAmount(text: string): number | null {
-  const extractor = createEntityExtractor()
-  const entity = extractor.getFirstEntity(text, EntityType.AMOUNT)
-  return entity ? (entity.normalizedValue as number) : null
+  const extractor = createEntityExtractor();
+  const entity = extractor.getFirstEntity(text, EntityType.AMOUNT);
+  return entity ? (entity.normalizedValue as number) : null;
 }
 
 /**
  * Extract date from text
  */
 export function extractDate(text: string): Date | null {
-  const extractor = createEntityExtractor()
-  const entity = extractor.getFirstEntity(text, EntityType.DATE)
-  return entity ? (entity.normalizedValue as Date) : null
+  const extractor = createEntityExtractor();
+  const entity = extractor.getFirstEntity(text, EntityType.DATE);
+  return entity ? (entity.normalizedValue as Date) : null;
 }
 
 /**
  * Extract bill type from text
  */
 export function extractBillType(text: string): string | null {
-  const extractor = createEntityExtractor()
-  const entity = extractor.getFirstEntity(text, EntityType.BILL_TYPE)
-  return entity ? (entity.normalizedValue as string) : null
+  const extractor = createEntityExtractor();
+  const entity = extractor.getFirstEntity(text, EntityType.BILL_TYPE);
+  return entity ? (entity.normalizedValue as string) : null;
 }

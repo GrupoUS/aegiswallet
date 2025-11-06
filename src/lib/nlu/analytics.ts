@@ -7,35 +7,33 @@
  * @module nlu/analytics
  */
 
-import { logger } from '@/lib/logging/logger'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging/logger';
 import {
   type ClassificationLog,
-  type NLUMetrics,
-  type NLUResult,
-  type NLUConfig,
-  IntentType,
+  type EntityType,
   type ExtractedEntity,
-  EntityType
-} from './types'
+  IntentType,
+  type NLUResult,
+} from './types';
 
 // ============================================================================
 // Analytics Configuration
 // ============================================================================
 
 export interface AnalyticsConfig {
-  enabled: boolean
-  batchSize: number
-  batchInterval: number // milliseconds
-  persistenceEnabled: boolean
-  learningEnabled: boolean
-  regionalAnalysisEnabled: boolean
-  realTimeMetricsEnabled: boolean
+  enabled: boolean;
+  batchSize: number;
+  batchInterval: number; // milliseconds
+  persistenceEnabled: boolean;
+  learningEnabled: boolean;
+  regionalAnalysisEnabled: boolean;
+  realTimeMetricsEnabled: boolean;
   performanceThresholds: {
-    maxProcessingTime: number
-    minConfidenceThreshold: number
-    maxErrorRate: number
-  }
+    maxProcessingTime: number;
+    minConfidenceThreshold: number;
+    maxErrorRate: number;
+  };
 }
 
 const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
@@ -49,59 +47,65 @@ const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   performanceThresholds: {
     maxProcessingTime: 200,
     minConfidenceThreshold: 0.7,
-    maxErrorRate: 0.1
-  }
-}
+    maxErrorRate: 0.1,
+  },
+};
 
 // ============================================================================
 // Hit/Miss Tracking System
 // ============================================================================
 
 export interface HitMissMetrics {
-  totalCommands: number
-  successfulClassifications: number
-  failedClassifications: number
-  hitRate: number
-  missRate: number
-  averageConfidence: number
-  confidenceDistribution: Record<string, number>
-  intentAccuracy: Record<IntentType, {
-    total: number
-    correct: number
-    accuracy: number
-  }>
-  entityAccuracy: Record<EntityType, {
-    total: number
-    correct: number
-    accuracy: number
-  }>
-  regionalAccuracy: Record<string, number>
-  temporalAccuracy: Record<string, number> // By time of day
+  totalCommands: number;
+  successfulClassifications: number;
+  failedClassifications: number;
+  hitRate: number;
+  missRate: number;
+  averageConfidence: number;
+  confidenceDistribution: Record<string, number>;
+  intentAccuracy: Record<
+    IntentType,
+    {
+      total: number;
+      correct: number;
+      accuracy: number;
+    }
+  >;
+  entityAccuracy: Record<
+    EntityType,
+    {
+      total: number;
+      correct: number;
+      accuracy: number;
+    }
+  >;
+  regionalAccuracy: Record<string, number>;
+  temporalAccuracy: Record<string, number>; // By time of day
   linguisticAccuracy: {
-    slang: number
-    formal: number
-    colloquial: number
-    mixed: number
-  }
+    slang: number;
+    formal: number;
+    colloquial: number;
+    mixed: number;
+  };
   learningProgress: {
-    weeklyImprovement: number
-    monthlyImprovement: number
-    patternEvolution: number
-    adaptationRate: number
-  }
+    weeklyImprovement: number;
+    monthlyImprovement: number;
+    patternEvolution: number;
+    adaptationRate: number;
+  };
   errorAnalysis: {
-    patternMisses: number
-    entityExtractionFailures: number
-    intentConfusion: number
-    lowConfidenceIssues: number
-    regionalMisunderstandings: number
-  }
+    patternMisses: number;
+    entityExtractionFailures: number;
+    intentConfusion: number;
+    lowConfidenceIssues: number;
+    regionalMisunderstandings: number;
+  };
   performanceMetrics: {
-    averageProcessingTime: number
-    processingTimeDistribution: Record<string, number>
-    cacheHitRate: number
-    systemHealth: 'excellent' | 'good' | 'fair' | 'poor'
-  }
+    averageProcessingTime: number;
+    processingTimeDistribution: Record<string, number>;
+    cacheHitRate: number;
+    systemHealth: 'excellent' | 'good' | 'fair' | 'poor';
+  };
 }
 
 // ============================================================================
@@ -110,46 +114,49 @@ export interface HitMissMetrics {
 
 export interface LearningAnalytics {
   patternEvolution: Array<{
-    pattern: string
-    frequency: number
-    accuracy: number
-    confidence: number
-    lastSeen: Date
-    trend: 'improving' | 'stable' | 'declining'
-    regionalVariations: Record<string, number>
-  }>
+    pattern: string;
+    frequency: number;
+    accuracy: number;
+    confidence: number;
+    lastSeen: Date;
+    trend: 'improving' | 'stable' | 'declining';
+    regionalVariations: Record<string, number>;
+  }>;
   userAdaptations: Array<{
-    userId: string
-    adaptationType: 'correction' | 'preference' | 'regional'
-    originalPattern: string
-    adaptedPattern: string
-    confidence: number
-    timestamp: Date
-  }>
-  regionalLearning: Record<string, {
-    totalCommands: number
-    accuracyRate: number
-    commonPatterns: Array<{
-      pattern: string
-      frequency: number
-      accuracy: number
-    }>
-    linguisticMarkers: Array<{
-      marker: string
-      frequency: number
-      accuracy: number
-    }>
-  }>
+    userId: string;
+    adaptationType: 'correction' | 'preference' | 'regional';
+    originalPattern: string;
+    adaptedPattern: string;
+    confidence: number;
+    timestamp: Date;
+  }>;
+  regionalLearning: Record<
+    string,
+    {
+      totalCommands: number;
+      accuracyRate: number;
+      commonPatterns: Array<{
+        pattern: string;
+        frequency: number;
+        accuracy: number;
+      }>;
+      linguisticMarkers: Array<{
+        marker: string;
+        frequency: number;
+        accuracy: number;
+      }>;
+    }
+  >;
   confidenceLearning: Array<{
-    intent: IntentType
-    averageConfidence: number
-    confidenceTrend: 'improving' | 'stable' | 'declining'
+    intent: IntentType;
+    averageConfidence: number;
+    confidenceTrend: 'improving' | 'stable' | 'declining';
     factors: Array<{
-      factor: string
-      impact: number
-      trend: 'positive' | 'negative' | 'neutral'
-    }>
-  }>
+      factor: string;
+      impact: number;
+      trend: 'positive' | 'negative' | 'neutral';
+    }>;
+  }>;
 }
 
 // ============================================================================
@@ -157,17 +164,17 @@ export interface LearningAnalytics {
 // ============================================================================
 
 export class NLUAnalytics {
-  private config: AnalyticsConfig
-  private classificationLogs: ClassificationLog[] = []
-  private hitMissMetrics: HitMissMetrics
-  private learningAnalytics: LearningAnalytics
-  private batchTimer?: NodeJS.Timeout
-  private isInitialized = false
+  private config: AnalyticsConfig;
+  private classificationLogs: ClassificationLog[] = [];
+  private hitMissMetrics: HitMissMetrics;
+  private learningAnalytics: LearningAnalytics;
+  private batchTimer?: NodeJS.Timeout;
+  private isInitialized = false;
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
-    this.config = { ...DEFAULT_ANALYTICS_CONFIG, ...config }
-    this.hitMissMetrics = this.initializeHitMissMetrics()
-    this.learningAnalytics = this.initializeLearningAnalytics()
+    this.config = { ...DEFAULT_ANALYTICS_CONFIG, ...config };
+    this.hitMissMetrics = this.initializeHitMissMetrics();
+    this.learningAnalytics = this.initializeLearningAnalytics();
   }
 
   private initializeHitMissMetrics(): HitMissMetrics {
@@ -181,7 +188,7 @@ export class NLUAnalytics {
       confidenceDistribution: {
         'high (>0.8)': 0,
         'medium (0.6-0.8)': 0,
-        'low (<0.6)': 0
+        'low (<0.6)': 0,
       },
       intentAccuracy: {} as Record<IntentType, any>,
       entityAccuracy: {} as Record<EntityType, any>,
@@ -191,32 +198,32 @@ export class NLUAnalytics {
         slang: 0,
         formal: 0,
         colloquial: 0,
-        mixed: 0
+        mixed: 0,
       },
       learningProgress: {
         weeklyImprovement: 0,
         monthlyImprovement: 0,
         patternEvolution: 0,
-        adaptationRate: 0
+        adaptationRate: 0,
       },
       errorAnalysis: {
         patternMisses: 0,
         entityExtractionFailures: 0,
         intentConfusion: 0,
         lowConfidenceIssues: 0,
-        regionalMisunderstandings: 0
+        regionalMisunderstandings: 0,
       },
       performanceMetrics: {
         averageProcessingTime: 0,
         processingTimeDistribution: {
           'fast (<100ms)': 0,
           'normal (100-200ms)': 0,
-          'slow (>200ms)': 0
+          'slow (>200ms)': 0,
         },
         cacheHitRate: 0,
-        systemHealth: 'excellent'
-      }
-    }
+        systemHealth: 'excellent',
+      },
+    };
   }
 
   private initializeLearningAnalytics(): LearningAnalytics {
@@ -224,8 +231,8 @@ export class NLUAnalytics {
       patternEvolution: [],
       userAdaptations: [],
       regionalLearning: {},
-      confidenceLearning: []
-    }
+      confidenceLearning: [],
+    };
   }
 
   // ============================================================================
@@ -236,28 +243,28 @@ export class NLUAnalytics {
    * Initialize analytics system and start batch processing
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) return
+    if (this.isInitialized) return;
 
     try {
       // Load existing analytics data from Supabase
       if (this.config.persistenceEnabled) {
-        await this.loadHistoricalData()
+        await this.loadHistoricalData();
       }
 
       // Start batch processing timer
       if (this.config.batchInterval > 0) {
-        this.startBatchProcessing()
+        this.startBatchProcessing();
       }
 
-      this.isInitialized = true
+      this.isInitialized = true;
       logger.info('NLU Analytics initialized', {
         enabled: this.config.enabled,
         learningEnabled: this.config.learningEnabled,
-        batchSize: this.config.batchSize
-      })
+        batchSize: this.config.batchSize,
+      });
     } catch (error) {
-      logger.error('Failed to initialize NLU Analytics', { error })
-      throw error
+      logger.error('Failed to initialize NLU Analytics', { error });
+      throw error;
     }
   }
 
@@ -270,7 +277,7 @@ export class NLUAnalytics {
     sessionId: string,
     feedback?: 'correct' | 'incorrect' | 'ambiguous'
   ): void {
-    if (!this.config.enabled) return
+    if (!this.config.enabled) return;
 
     try {
       const log: ClassificationLog = {
@@ -291,16 +298,16 @@ export class NLUAnalytics {
         contextualClues: {
           timeOfDay: new Date().getHours().toString(),
           dayOfWeek: new Date().getDay().toString(),
-          conversationTurn: 0 // Will be updated by context processor
-        }
-      }
+          conversationTurn: 0, // Will be updated by context processor
+        },
+      };
 
       // Add to batch
-      this.classificationLogs.push(log)
+      this.classificationLogs.push(log);
 
       // Update real-time metrics
-      this.updateHitMissMetrics(log)
-      this.updateLearningAnalytics(log)
+      this.updateHitMissMetrics(log);
+      this.updateLearningAnalytics(log);
 
       // Log to system logger
       logger.voiceCommand(result.originalText, result.confidence, {
@@ -308,16 +315,15 @@ export class NLUAnalytics {
         processingTime: result.processingTime,
         entities: result.entities.length,
         requiresConfirmation: result.requiresConfirmation,
-        requiresDisambiguation: result.requiresDisambiguation
-      })
+        requiresDisambiguation: result.requiresDisambiguation,
+      });
 
       // Check if batch should be processed
       if (this.classificationLogs.length >= this.config.batchSize) {
-        this.processBatch()
+        this.processBatch();
       }
-
     } catch (error) {
-      logger.error('Failed to track classification', { error, result })
+      logger.error('Failed to track classification', { error, result });
     }
   }
 
@@ -330,29 +336,28 @@ export class NLUAnalytics {
     confidence: number,
     entities?: ExtractedEntity[]
   ): void {
-    if (!this.config.learningEnabled) return
+    if (!this.config.learningEnabled) return;
 
     try {
-      const logIndex = this.classificationLogs.findIndex(log => log.id === logId)
-      if (logIndex === -1) return
+      const logIndex = this.classificationLogs.findIndex((log) => log.id === logId);
+      if (logIndex === -1) return;
 
-      const log = this.classificationLogs[logIndex]
-      log.correctIntent = correctIntent
-      log.feedback = confidence > 0.8 ? 'correct' : 'incorrect'
+      const log = this.classificationLogs[logIndex];
+      log.correctIntent = correctIntent;
+      log.feedback = confidence > 0.8 ? 'correct' : 'incorrect';
 
       // Analyze learning patterns
-      this.analyzeLearningPattern(log, correctIntent, entities)
+      this.analyzeLearningPattern(log, correctIntent, entities);
 
       logger.info('User feedback tracked', {
         logId,
         originalIntent: log.predictedIntent,
         correctIntent,
         confidence,
-        improvement: log.predictedIntent !== correctIntent
-      })
-
+        improvement: log.predictedIntent !== correctIntent,
+      });
     } catch (error) {
-      logger.error('Failed to track user feedback', { error, logId })
+      logger.error('Failed to track user feedback', { error, logId });
     }
   }
 
@@ -360,68 +365,77 @@ export class NLUAnalytics {
    * Get comprehensive hit/miss metrics
    */
   getHitMissMetrics(): HitMissMetrics {
-    return { ...this.hitMissMetrics }
+    return { ...this.hitMissMetrics };
   }
 
   /**
    * Get learning analytics data
    */
   getLearningAnalytics(): LearningAnalytics {
-    return { ...this.learningAnalytics }
+    return { ...this.learningAnalytics };
   }
 
   /**
    * Get system health status
    */
   getSystemHealth(): {
-    status: 'healthy' | 'warning' | 'critical'
-    score: number
-    issues: string[]
-    recommendations: string[]
+    status: 'healthy' | 'warning' | 'critical';
+    score: number;
+    issues: string[];
+    recommendations: string[];
   } {
-    const issues: string[] = []
-    const recommendations: string[] = []
-    let score = 100
+    const issues: string[] = [];
+    const recommendations: string[] = [];
+    let score = 100;
 
     // Check hit rate
     if (this.hitMissMetrics.hitRate < 90) {
-      issues.push(`Low hit rate: ${this.hitMissMetrics.hitRate.toFixed(1)}%`)
-      recommendations.push('Review intent patterns and training data')
-      score -= 20
+      issues.push(`Low hit rate: ${this.hitMissMetrics.hitRate.toFixed(1)}%`);
+      recommendations.push('Review intent patterns and training data');
+      score -= 20;
     }
 
     // Check processing time
-    if (this.hitMissMetrics.performanceMetrics.averageProcessingTime > this.config.performanceThresholds.maxProcessingTime) {
-      issues.push(`Slow processing: ${this.hitMissMetrics.performanceMetrics.averageProcessingTime.toFixed(0)}ms`)
-      recommendations.push('Optimize NLU processing pipeline')
-      score -= 15
+    if (
+      this.hitMissMetrics.performanceMetrics.averageProcessingTime >
+      this.config.performanceThresholds.maxProcessingTime
+    ) {
+      issues.push(
+        `Slow processing: ${this.hitMissMetrics.performanceMetrics.averageProcessingTime.toFixed(0)}ms`
+      );
+      recommendations.push('Optimize NLU processing pipeline');
+      score -= 15;
     }
 
     // Check confidence levels
-    if (this.hitMissMetrics.averageConfidence < this.config.performanceThresholds.minConfidenceThreshold) {
-      issues.push(`Low confidence: ${this.hitMissMetrics.averageConfidence.toFixed(2)}`)
-      recommendations.push('Improve training data quality')
-      score -= 15
+    if (
+      this.hitMissMetrics.averageConfidence <
+      this.config.performanceThresholds.minConfidenceThreshold
+    ) {
+      issues.push(`Low confidence: ${this.hitMissMetrics.averageConfidence.toFixed(2)}`);
+      recommendations.push('Improve training data quality');
+      score -= 15;
     }
 
     // Check error rate
-    const errorRate = this.hitMissMetrics.failedClassifications / Math.max(this.hitMissMetrics.totalCommands, 1)
+    const errorRate =
+      this.hitMissMetrics.failedClassifications / Math.max(this.hitMissMetrics.totalCommands, 1);
     if (errorRate > this.config.performanceThresholds.maxErrorRate) {
-      issues.push(`High error rate: ${(errorRate * 100).toFixed(1)}%`)
-      recommendations.push('Implement error recovery patterns')
-      score -= 25
+      issues.push(`High error rate: ${(errorRate * 100).toFixed(1)}%`);
+      recommendations.push('Implement error recovery patterns');
+      score -= 25;
     }
 
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy'
-    if (score < 70) status = 'critical'
-    else if (score < 85) status = 'warning'
+    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
+    if (score < 70) status = 'critical';
+    else if (score < 85) status = 'warning';
 
     return {
       status,
       score: Math.max(0, score),
       issues,
-      recommendations
-    }
+      recommendations,
+    };
   }
 
   // ============================================================================
@@ -429,151 +443,170 @@ export class NLUAnalytics {
   // ============================================================================
 
   private generateLogId(): string {
-    return `nlu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `nlu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private detectRegionalVariation(text: string): string {
-    const lowerText = text.toLowerCase()
-    
+    const lowerText = text.toLowerCase();
+
     // São Paulo variations
-    if (lowerText.includes('meu bem') || lowerText.includes('valeu') || lowerText.includes('demais')) {
-      return 'SP'
+    if (
+      lowerText.includes('meu bem') ||
+      lowerText.includes('valeu') ||
+      lowerText.includes('demais')
+    ) {
+      return 'SP';
     }
-    
+
     // Rio de Janeiro variations
-    if (lowerText.includes('maneiro') || lowerText.includes('caraca') || lowerText.includes('legal')) {
-      return 'RJ'
+    if (
+      lowerText.includes('maneiro') ||
+      lowerText.includes('caraca') ||
+      lowerText.includes('legal')
+    ) {
+      return 'RJ';
     }
-    
+
     // Northeast variations
     if (lowerText.includes('oxente') || lowerText.includes('arre') || lowerText.includes('bão')) {
-      return 'Nordeste'
+      return 'Nordeste';
     }
-    
+
     // Southern variations
     if (lowerText.includes('bah') || lowerText.includes('tchê') || lowerText.includes('guri')) {
-      return 'Sul'
+      return 'Sul';
     }
-    
-    return 'Unknown'
+
+    return 'Unknown';
   }
 
   private detectLinguisticStyle(text: string): 'slang' | 'formal' | 'colloquial' | 'mixed' {
-    const lowerText = text.toLowerCase()
-    
-    const slangTerms = ['maneiro', 'caraca', 'demais', 'legal', 'bão', 'bah', 'tchê']
-    const formalTerms = ['gostaria', 'poderia', 'por favor', 'agradeceria']
-    const colloquialTerms = ['meu', 'minha', 'quero', 'vou', 'pegar']
-    
-    const hasSlang = slangTerms.some(term => lowerText.includes(term))
-    const hasFormal = formalTerms.some(term => lowerText.includes(term))
-    const hasColloquial = colloquialTerms.some(term => lowerText.includes(term))
-    
-    if (hasFormal && !hasSlang) return 'formal'
-    if (hasSlang && !hasFormal) return 'slang'
-    if (hasColloquial && !hasFormal && !hasSlang) return 'colloquial'
-    if (hasSlang && hasFormal) return 'mixed'
-    
-    return 'colloquial' // Default
+    const lowerText = text.toLowerCase();
+
+    const slangTerms = ['maneiro', 'caraca', 'demais', 'legal', 'bão', 'bah', 'tchê'];
+    const formalTerms = ['gostaria', 'poderia', 'por favor', 'agradeceria'];
+    const colloquialTerms = ['meu', 'minha', 'quero', 'vou', 'pegar'];
+
+    const hasSlang = slangTerms.some((term) => lowerText.includes(term));
+    const hasFormal = formalTerms.some((term) => lowerText.includes(term));
+    const hasColloquial = colloquialTerms.some((term) => lowerText.includes(term));
+
+    if (hasFormal && !hasSlang) return 'formal';
+    if (hasSlang && !hasFormal) return 'slang';
+    if (hasColloquial && !hasFormal && !hasSlang) return 'colloquial';
+    if (hasSlang && hasFormal) return 'mixed';
+
+    return 'colloquial'; // Default
   }
 
   private updateHitMissMetrics(log: ClassificationLog): void {
-    const metrics = this.hitMissMetrics
-    
+    const metrics = this.hitMissMetrics;
+
     // Update totals
-    metrics.totalCommands++
-    
+    metrics.totalCommands++;
+
     // Update success/failure
-    const isSuccessful = log.confidence >= 0.7 && log.intent !== IntentType.UNKNOWN
+    const isSuccessful = log.confidence >= 0.7 && log.intent !== IntentType.UNKNOWN;
     if (isSuccessful) {
-      metrics.successfulClassifications++
+      metrics.successfulClassifications++;
     } else {
-      metrics.failedClassifications++
+      metrics.failedClassifications++;
     }
-    
+
     // Update rates
-    metrics.hitRate = (metrics.successfulClassifications / metrics.totalCommands) * 100
-    metrics.missRate = (metrics.failedClassifications / metrics.totalCommands) * 100
-    
+    metrics.hitRate = (metrics.successfulClassifications / metrics.totalCommands) * 100;
+    metrics.missRate = (metrics.failedClassifications / metrics.totalCommands) * 100;
+
     // Update confidence distribution
     if (log.confidence > 0.8) {
-      metrics.confidenceDistribution['high (>0.8)']++
+      metrics.confidenceDistribution['high (>0.8)']++;
     } else if (log.confidence >= 0.6) {
-      metrics.confidenceDistribution['medium (0.6-0.8)']++
+      metrics.confidenceDistribution['medium (0.6-0.8)']++;
     } else {
-      metrics.confidenceDistribution['low (<0.6)']++
+      metrics.confidenceDistribution['low (<0.6)']++;
     }
-    
+
     // Update average confidence
-    const totalConfidence = Object.values(metrics.confidenceDistribution).reduce((sum, count) => sum + count * 
-      (count > 0 ? (metrics.confidenceDistribution['high (>0.8)'] * 0.9 + 
-                    metrics.confidenceDistribution['medium (0.6-0.8)'] * 0.7 + 
-                    metrics.confidenceDistribution['low (<0.6)'] * 0.4) / metrics.totalCommands : 0), 0)
-    metrics.averageConfidence = totalConfidence / metrics.totalCommands
-    
+    const totalConfidence = Object.values(metrics.confidenceDistribution).reduce(
+      (sum, count) =>
+        sum +
+        count *
+          (count > 0
+            ? (metrics.confidenceDistribution['high (>0.8)'] * 0.9 +
+                metrics.confidenceDistribution['medium (0.6-0.8)'] * 0.7 +
+                metrics.confidenceDistribution['low (<0.6)'] * 0.4) /
+              metrics.totalCommands
+            : 0),
+      0
+    );
+    metrics.averageConfidence = totalConfidence / metrics.totalCommands;
+
     // Update processing time metrics
-    this.updateProcessingTimeMetrics(log.processingTime)
-    
+    this.updateProcessingTimeMetrics(log.processingTime);
+
     // Update regional accuracy
     if (log.regionalVariation && log.regionalVariation !== 'Unknown') {
       if (!metrics.regionalAccuracy[log.regionalVariation]) {
-        metrics.regionalAccuracy[log.regionalVariation] = 0
+        metrics.regionalAccuracy[log.regionalVariation] = 0;
       }
-      const regionTotal = metrics.regionalAccuracy[log.regionalVariation] + 1
-      metrics.regionalAccuracy[log.regionalVariation] = regionTotal
+      const regionTotal = metrics.regionalAccuracy[log.regionalVariation] + 1;
+      metrics.regionalAccuracy[log.regionalVariation] = regionTotal;
     }
-    
+
     // Update linguistic accuracy
     if (log.linguisticStyle) {
-      metrics.linguisticAccuracy[log.linguisticStyle]++
+      metrics.linguisticAccuracy[log.linguisticStyle]++;
     }
   }
 
   private updateProcessingTimeMetrics(processingTime: number): void {
-    const metrics = this.hitMissMetrics.performanceMetrics
-    
+    const metrics = this.hitMissMetrics.performanceMetrics;
+
     // Update average
-    const totalProcessed = this.hitMissMetrics.totalCommands
-    metrics.averageProcessingTime = ((metrics.averageProcessingTime * (totalProcessed - 1)) + processingTime) / totalProcessed
-    
+    const totalProcessed = this.hitMissMetrics.totalCommands;
+    metrics.averageProcessingTime =
+      (metrics.averageProcessingTime * (totalProcessed - 1) + processingTime) / totalProcessed;
+
     // Update distribution
     if (processingTime < 100) {
-      metrics.processingTimeDistribution['fast (<100ms)']++
+      metrics.processingTimeDistribution['fast (<100ms)']++;
     } else if (processingTime <= 200) {
-      metrics.processingTimeDistribution['normal (100-200ms)']++
+      metrics.processingTimeDistribution['normal (100-200ms)']++;
     } else {
-      metrics.processingTimeDistribution['slow (>200ms)']++
+      metrics.processingTimeDistribution['slow (>200ms)']++;
     }
-    
+
     // Update system health
     if (metrics.averageProcessingTime < 150 && this.hitMissMetrics.hitRate > 90) {
-      metrics.systemHealth = 'excellent'
+      metrics.systemHealth = 'excellent';
     } else if (metrics.averageProcessingTime < 250 && this.hitMissMetrics.hitRate > 80) {
-      metrics.systemHealth = 'good'
+      metrics.systemHealth = 'good';
     } else if (metrics.averageProcessingTime < 400 && this.hitMissMetrics.hitRate > 70) {
-      metrics.systemHealth = 'fair'
+      metrics.systemHealth = 'fair';
     } else {
-      metrics.systemHealth = 'poor'
+      metrics.systemHealth = 'poor';
     }
   }
 
   private updateLearningAnalytics(log: ClassificationLog): void {
     // Update pattern evolution
-    this.updatePatternEvolution(log)
-    
+    this.updatePatternEvolution(log);
+
     // Update regional learning
     if (log.regionalVariation && log.regionalVariation !== 'Unknown') {
-      this.updateRegionalLearning(log)
+      this.updateRegionalLearning(log);
     }
-    
+
     // Update confidence learning
-    this.updateConfidenceLearning(log)
+    this.updateConfidenceLearning(log);
   }
 
   private updatePatternEvolution(log: ClassificationLog): void {
-    const patternKey = log.normalizedText.substring(0, 50) // First 50 chars as pattern key
-    
-    let patternEvolution = this.learningAnalytics.patternEvolution.find(p => p.pattern === patternKey)
+    const patternKey = log.normalizedText.substring(0, 50); // First 50 chars as pattern key
+
+    let patternEvolution = this.learningAnalytics.patternEvolution.find(
+      (p) => p.pattern === patternKey
+    );
     if (!patternEvolution) {
       patternEvolution = {
         pattern: patternKey,
@@ -582,87 +615,100 @@ export class NLUAnalytics {
         confidence: 0,
         lastSeen: new Date(),
         trend: 'stable',
-        regionalVariations: {}
-      }
-      this.learningAnalytics.patternEvolution.push(patternEvolution)
+        regionalVariations: {},
+      };
+      this.learningAnalytics.patternEvolution.push(patternEvolution);
     }
-    
-    patternEvolution.frequency++
-    patternEvolution.confidence = (patternEvolution.confidence + log.confidence) / 2
-    patternEvolution.lastSeen = new Date()
-    
+
+    patternEvolution.frequency++;
+    patternEvolution.confidence = (patternEvolution.confidence + log.confidence) / 2;
+    patternEvolution.lastSeen = new Date();
+
     // Update regional variations
     if (log.regionalVariation && log.regionalVariation !== 'Unknown') {
       if (!patternEvolution.regionalVariations[log.regionalVariation]) {
-        patternEvolution.regionalVariations[log.regionalVariation] = 0
+        patternEvolution.regionalVariations[log.regionalVariation] = 0;
       }
-      patternEvolution.regionalVariations[log.regionalVariation]++
+      patternEvolution.regionalVariations[log.regionalVariation]++;
     }
-    
+
     // Update trend
     if (patternEvolution.frequency > 1) {
-      const recentAccuracy = patternEvolution.accuracy
-      const newAccuracy = log.feedback === 'correct' ? 1 : 0
-      patternEvolution.accuracy = (recentAccuracy + newAccuracy) / 2
-      
+      const recentAccuracy = patternEvolution.accuracy;
+      const newAccuracy = log.feedback === 'correct' ? 1 : 0;
+      patternEvolution.accuracy = (recentAccuracy + newAccuracy) / 2;
+
       if (newAccuracy > recentAccuracy) {
-        patternEvolution.trend = 'improving'
+        patternEvolution.trend = 'improving';
       } else if (newAccuracy < recentAccuracy) {
-        patternEvolution.trend = 'declining'
+        patternEvolution.trend = 'declining';
       }
     }
   }
 
   private updateRegionalLearning(log: ClassificationLog): void {
-    const region = log.regionalVariation!
-    
+    const region = log.regionalVariation!;
+
     if (!this.learningAnalytics.regionalLearning[region]) {
       this.learningAnalytics.regionalLearning[region] = {
         totalCommands: 0,
         accuracyRate: 0,
         commonPatterns: [],
-        linguisticMarkers: []
-      }
+        linguisticMarkers: [],
+      };
     }
-    
-    const regionLearning = this.learningAnalytics.regionalLearning[region]
-    regionLearning.totalCommands++
-    
+
+    const regionLearning = this.learningAnalytics.regionalLearning[region];
+    regionLearning.totalCommands++;
+
     // Update accuracy rate
-    const isCorrect = log.feedback === 'correct' || log.confidence > 0.8
-    regionLearning.accuracyRate = ((regionLearning.accuracyRate * (regionLearning.totalCommands - 1)) + (isCorrect ? 1 : 0)) / regionLearning.totalCommands
+    const isCorrect = log.feedback === 'correct' || log.confidence > 0.8;
+    regionLearning.accuracyRate =
+      (regionLearning.accuracyRate * (regionLearning.totalCommands - 1) + (isCorrect ? 1 : 0)) /
+      regionLearning.totalCommands;
   }
 
   private updateConfidenceLearning(log: ClassificationLog): void {
-    let confidenceLearning = this.learningAnalytics.confidenceLearning.find(c => c.intent === log.predictedIntent)
+    let confidenceLearning = this.learningAnalytics.confidenceLearning.find(
+      (c) => c.intent === log.predictedIntent
+    );
     if (!confidenceLearning) {
       confidenceLearning = {
         intent: log.predictedIntent,
         averageConfidence: log.confidence,
         confidenceTrend: 'stable',
-        factors: []
-      }
-      this.learningAnalytics.confidenceLearning.push(confidenceLearning)
+        factors: [],
+      };
+      this.learningAnalytics.confidenceLearning.push(confidenceLearning);
     }
-    
+
     // Update average confidence
-    const intentLogs = this.classificationLogs.filter(l => l.predictedIntent === log.predictedIntent)
-    confidenceLearning.averageConfidence = intentLogs.reduce((sum, l) => sum + l.confidence, 0) / intentLogs.length
-    
+    const intentLogs = this.classificationLogs.filter(
+      (l) => l.predictedIntent === log.predictedIntent
+    );
+    confidenceLearning.averageConfidence =
+      intentLogs.reduce((sum, l) => sum + l.confidence, 0) / intentLogs.length;
+
     // Update trend
     if (intentLogs.length > 1) {
-      const recentAvg = intentLogs.slice(-5).reduce((sum, l) => sum + l.confidence, 0) / Math.min(5, intentLogs.length)
-      const overallAvg = confidenceLearning.averageConfidence
-      
+      const recentAvg =
+        intentLogs.slice(-5).reduce((sum, l) => sum + l.confidence, 0) /
+        Math.min(5, intentLogs.length);
+      const overallAvg = confidenceLearning.averageConfidence;
+
       if (recentAvg > overallAvg + 0.05) {
-        confidenceLearning.confidenceTrend = 'improving'
+        confidenceLearning.confidenceTrend = 'improving';
       } else if (recentAvg < overallAvg - 0.05) {
-        confidenceLearning.confidenceTrend = 'declining'
+        confidenceLearning.confidenceTrend = 'declining';
       }
     }
   }
 
-  private analyzeLearningPattern(log: ClassificationLog, correctIntent: IntentType, entities?: ExtractedEntity[]): void {
+  private analyzeLearningPattern(
+    log: ClassificationLog,
+    correctIntent: IntentType,
+    _entities?: ExtractedEntity[]
+  ): void {
     // Record user adaptation
     this.learningAnalytics.userAdaptations.push({
       userId: log.userId,
@@ -670,20 +716,20 @@ export class NLUAnalytics {
       originalPattern: log.originalText,
       adaptedPattern: log.originalText, // Will be updated with corrected pattern
       confidence: log.confidence,
-      timestamp: new Date()
-    })
-    
+      timestamp: new Date(),
+    });
+
     // Analyze error patterns
     if (log.predictedIntent !== correctIntent) {
-      this.hitMissMetrics.errorAnalysis.intentConfusion++
-      
+      this.hitMissMetrics.errorAnalysis.intentConfusion++;
+
       // Create learning signal for pattern improvement
       logger.warn('Intent confusion detected', {
         originalText: log.originalText,
         predictedIntent: log.predictedIntent,
         correctIntent,
-        confidence: log.confidence
-      })
+        confidence: log.confidence,
+      });
     }
   }
 
@@ -694,64 +740,63 @@ export class NLUAnalytics {
         .from('nlu_classification_logs')
         .select('*')
         .order('timestamp', { ascending: false })
-        .limit(100)
-      
+        .limit(100);
+
       if (error) {
-        logger.warn('Failed to load historical NLU data', { error })
-        return
+        logger.warn('Failed to load historical NLU data', { error });
+        return;
       }
-      
+
       if (recentLogs) {
         // Process historical data to initialize metrics
-        recentLogs.forEach(log => {
-          this.updateHitMissMetrics(log)
-          this.updateLearningAnalytics(log)
-        })
-        
-        logger.info('Historical NLU data loaded', { count: recentLogs.length })
+        recentLogs.forEach((log) => {
+          this.updateHitMissMetrics(log);
+          this.updateLearningAnalytics(log);
+        });
+
+        logger.info('Historical NLU data loaded', { count: recentLogs.length });
       }
     } catch (error) {
-      logger.error('Error loading historical NLU data', { error })
+      logger.error('Error loading historical NLU data', { error });
     }
   }
 
   private startBatchProcessing(): void {
     if (this.batchTimer) {
-      clearInterval(this.batchTimer)
+      clearInterval(this.batchTimer);
     }
-    
+
     this.batchTimer = setInterval(() => {
-      this.processBatch()
-    }, this.config.batchInterval)
+      this.processBatch();
+    }, this.config.batchInterval);
   }
 
   private async processBatch(): Promise<void> {
-    if (this.classificationLogs.length === 0) return
-    
-    const batch = [...this.classificationLogs]
-    this.classificationLogs = []
-    
+    if (this.classificationLogs.length === 0) return;
+
+    const batch = [...this.classificationLogs];
+    this.classificationLogs = [];
+
     try {
       if (this.config.persistenceEnabled) {
-        await this.persistBatch(batch)
+        await this.persistBatch(batch);
       }
-      
+
       logger.info('NLU batch processed', {
         batchSize: batch.length,
-        metrics: this.getHitMissMetrics()
-      })
+        metrics: this.getHitMissMetrics(),
+      });
     } catch (error) {
-      logger.error('Failed to process NLU batch', { error })
+      logger.error('Failed to process NLU batch', { error });
       // Re-add failed logs to queue for retry
-      this.classificationLogs.unshift(...batch)
+      this.classificationLogs.unshift(...batch);
     }
   }
 
   private async persistBatch(batch: ClassificationLog[]): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('nlu_classification_logs')
-        .insert(batch.map(log => ({
+      const { error } = await supabase.from('nlu_classification_logs').insert(
+        batch.map((log) => ({
           id: log.id,
           user_id: log.userId,
           session_id: log.sessionId,
@@ -768,15 +813,16 @@ export class NLUAnalytics {
           linguistic_style: log.linguisticStyle,
           contextual_clues: log.contextualClues,
           error_analysis: log.errorAnalysis,
-          learning_signals: log.learningSignals
-        })))
-      
+          learning_signals: log.learningSignals,
+        }))
+      );
+
       if (error) {
-        throw error
+        throw error;
       }
     } catch (error) {
-      logger.error('Failed to persist NLU batch', { error })
-      throw error
+      logger.error('Failed to persist NLU batch', { error });
+      throw error;
     }
   }
 
@@ -789,16 +835,16 @@ export class NLUAnalytics {
    */
   async cleanup(): Promise<void> {
     if (this.batchTimer) {
-      clearInterval(this.batchTimer)
-      this.batchTimer = undefined
+      clearInterval(this.batchTimer);
+      this.batchTimer = undefined;
     }
-    
+
     // Process remaining batch
     if (this.classificationLogs.length > 0) {
-      await this.processBatch()
+      await this.processBatch();
     }
-    
-    logger.info('NLU Analytics cleaned up')
+
+    logger.info('NLU Analytics cleaned up');
   }
 }
 
@@ -810,12 +856,12 @@ export class NLUAnalytics {
  * Create NLU analytics instance with default configuration
  */
 export function createNLUAnalytics(config?: Partial<AnalyticsConfig>): NLUAnalytics {
-  return new NLUAnalytics(config)
+  return new NLUAnalytics(config);
 }
 
 // ============================================================================
 // Exports
 // ============================================================================
 
-export { DEFAULT_ANALYTICS_CONFIG }
-export type { AnalyticsConfig, HitMissMetrics, LearningAnalytics }
+export { DEFAULT_ANALYTICS_CONFIG };
+export type { AnalyticsConfig, HitMissMetrics, LearningAnalytics };

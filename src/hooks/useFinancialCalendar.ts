@@ -1,60 +1,60 @@
-import { useEffect, useMemo } from 'react'
-import { toast } from 'sonner'
-import { supabase } from '@/integrations/supabase/client'
-import { trpc } from '@/lib/trpc'
+import { useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { trpc } from '@/lib/trpc';
 
 /**
  * Hook para gerenciar eventos financeiros
  */
 export function useFinancialEvents(filters?: {
-  startDate?: string
-  endDate?: string
-  typeId?: string
-  isCompleted?: boolean
-  categoryId?: string
+  startDate?: string;
+  endDate?: string;
+  typeId?: string;
+  isCompleted?: boolean;
+  categoryId?: string;
 }) {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   const {
     data: events,
     isLoading,
     error,
     refetch,
-  } = trpc.calendar.getEvents.useQuery(filters as any)
+  } = trpc.calendar.getEvents.useQuery(filters as any);
 
   const { mutate: createEvent, isPending: isCreating } = trpc.calendar.create.useMutation({
     onSuccess: () => {
-      utils.calendar.getEvents.invalidate()
-      toast.success('Evento financeiro criado com sucesso!')
+      utils.calendar.getEvents.invalidate();
+      toast.success('Evento financeiro criado com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao criar evento financeiro')
+      toast.error(error.message || 'Erro ao criar evento financeiro');
     },
-  })
+  });
 
   const { mutate: updateEvent, isPending: isUpdating } = trpc.calendar.update.useMutation({
     onSuccess: () => {
-      utils.calendar.getEvents.invalidate()
-      toast.success('Evento financeiro atualizado com sucesso!')
+      utils.calendar.getEvents.invalidate();
+      toast.success('Evento financeiro atualizado com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar evento financeiro')
+      toast.error(error.message || 'Erro ao atualizar evento financeiro');
     },
-  })
+  });
 
   const { mutate: deleteEvent, isPending: isDeleting } = trpc.calendar.delete.useMutation({
     onSuccess: () => {
-      utils.calendar.getEvents.invalidate()
-      toast.success('Evento financeiro removido com sucesso!')
+      utils.calendar.getEvents.invalidate();
+      toast.success('Evento financeiro removido com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao remover evento financeiro')
+      toast.error(error.message || 'Erro ao remover evento financeiro');
     },
-  })
+  });
 
   // Real-time subscription para eventos financeiros
   useEffect(() => {
-    if (!events?.length) return
+    if (!events?.length) return;
 
     const channel = supabase
       .channel('financial_events_changes')
@@ -65,19 +65,18 @@ export function useFinancialEvents(filters?: {
           schema: 'public',
           table: 'financial_events',
         },
-        (payload) => {
-          console.log('Financial event change detected:', payload)
-          utils.calendar.getEvents.invalidate()
-          utils.calendar.getUpcomingEvents.invalidate()
-          utils.calendar.getOverdueEvents.invalidate()
+        (_payload) => {
+          utils.calendar.getEvents.invalidate();
+          utils.calendar.getUpcomingEvents.invalidate();
+          utils.calendar.getOverdueEvents.invalidate();
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [events?.length, utils.calendar])
+      supabase.removeChannel(channel);
+    };
+  }, [events?.length, utils.calendar]);
 
   return {
     events: events || [],
@@ -90,7 +89,7 @@ export function useFinancialEvents(filters?: {
     isCreating,
     isUpdating,
     isDeleting,
-  }
+  };
 }
 
 /**
@@ -101,34 +100,34 @@ export function useFinancialEvent(eventId: string) {
     data: event,
     isLoading,
     error,
-  } = trpc.calendar.getEventById.useQuery({ id: eventId }, { enabled: !!eventId })
+  } = trpc.calendar.getEventById.useQuery({ id: eventId }, { enabled: !!eventId });
 
   return {
     event,
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para obter tipos de eventos
  */
 export function useEventTypes() {
-  const { data: eventTypes, isLoading, error } = trpc.calendar.getEventTypes.useQuery()
+  const { data: eventTypes, isLoading, error } = trpc.calendar.getEventTypes.useQuery();
 
   return {
     eventTypes: eventTypes || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para eventos próximos (próximos 30 dias)
  */
 export function useUpcomingEvents() {
-  const utils = trpc.useUtils()
-  const { data: upcomingEvents, isLoading, error } = trpc.calendar.getUpcomingEvents.useQuery()
+  const utils = trpc.useUtils();
+  const { data: upcomingEvents, isLoading, error } = trpc.calendar.getUpcomingEvents.useQuery();
 
   // Real-time subscription para eventos próximos
   useEffect(() => {
@@ -140,32 +139,32 @@ export function useUpcomingEvents() {
           event: '*',
           schema: 'public',
           table: 'financial_events',
-          filter: 'event_date=gte.' + new Date().toISOString(),
+          filter: `event_date=gte.${new Date().toISOString()}`,
         },
         () => {
-          utils.calendar.getUpcomingEvents.invalidate()
+          utils.calendar.getUpcomingEvents.invalidate();
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [utils.calendar])
+      supabase.removeChannel(channel);
+    };
+  }, [utils.calendar]);
 
   return {
     upcomingEvents: upcomingEvents || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para eventos atrasados
  */
 export function useOverdueEvents() {
-  const utils = trpc.useUtils()
-  const { data: overdueEvents, isLoading, error } = trpc.calendar.getOverdueEvents.useQuery()
+  const utils = trpc.useUtils();
+  const { data: overdueEvents, isLoading, error } = trpc.calendar.getOverdueEvents.useQuery();
 
   // Real-time subscription para eventos atrasados
   useEffect(() => {
@@ -177,24 +176,24 @@ export function useOverdueEvents() {
           event: '*',
           schema: 'public',
           table: 'financial_events',
-          filter: 'due_date=lt.' + new Date().toISOString(),
+          filter: `due_date=lt.${new Date().toISOString()}`,
         },
         () => {
-          utils.calendar.getOverdueEvents.invalidate()
+          utils.calendar.getOverdueEvents.invalidate();
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [utils.calendar])
+      supabase.removeChannel(channel);
+    };
+  }, [utils.calendar]);
 
   return {
     overdueEvents: overdueEvents || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
@@ -204,53 +203,49 @@ export function useEventReminders(_eventId: string) {
   const { mutate: createReminder, isPending: isCreatingReminder } =
     trpc.calendar.createReminder.useMutation({
       onSuccess: () => {
-        toast.success('Lembrete criado com sucesso!')
+        toast.success('Lembrete criado com sucesso!');
       },
       onError: (error) => {
-        toast.error(error.message || 'Erro ao criar lembrete')
+        toast.error(error.message || 'Erro ao criar lembrete');
       },
-    })
+    });
 
   const { mutate: markReminderSent, isPending: isMarkingSent } =
     trpc.calendar.markReminderSent.useMutation({
-      onSuccess: () => {
-        console.log('Reminder marked as sent')
-      },
-      onError: (error) => {
-        console.error('Error marking reminder as sent:', error)
-      },
-    })
+      onSuccess: () => {},
+      onError: (_error) => {},
+    });
 
   return {
     createReminder,
     markReminderSent,
     isCreatingReminder,
     isMarkingSent,
-  }
+  };
 }
 
 /**
  * Hook para estatísticas do calendário
  */
 export function useCalendarStats() {
-  const { upcomingEvents } = useUpcomingEvents()
-  const { overdueEvents } = useOverdueEvents()
-  const { events } = useFinancialEvents()
+  const { upcomingEvents } = useUpcomingEvents();
+  const { overdueEvents } = useOverdueEvents();
+  const { events } = useFinancialEvents();
 
   const stats = useMemo(() => {
-    const today = new Date()
+    const today = new Date();
     const thisMonth =
       events?.filter((event) => {
-        const eventDate = new Date(event.event_date)
+        const eventDate = new Date(event.event_date);
         return (
           eventDate.getMonth() === today.getMonth() &&
           eventDate.getFullYear() === today.getFullYear()
-        )
-      }) || []
+        );
+      }) || [];
 
-    const completedThisMonth = thisMonth.filter((event) => event.is_completed).length
-    const totalThisMonth = thisMonth.length
-    const completionRate = totalThisMonth > 0 ? (completedThisMonth / totalThisMonth) * 100 : 0
+    const completedThisMonth = thisMonth.filter((event) => event.is_completed).length;
+    const totalThisMonth = thisMonth.length;
+    const completionRate = totalThisMonth > 0 ? (completedThisMonth / totalThisMonth) * 100 : 0;
 
     return {
       upcomingEvents: upcomingEvents.length,
@@ -261,10 +256,10 @@ export function useCalendarStats() {
       completionRate,
       urgentEvents: upcomingEvents.filter((event) => event.priority === 'urgent').length,
       highPriorityEvents: upcomingEvents.filter((event) => event.priority === 'high').length,
-    }
-  }, [upcomingEvents, overdueEvents, events])
+    };
+  }, [upcomingEvents, overdueEvents, events]);
 
-  return stats
+  return stats;
 }
 
 /**
@@ -283,21 +278,21 @@ export function useDayEvents(date: string) {
     {
       enabled: !!date,
     }
-  )
+  );
 
   return {
     dayEvents: dayEvents || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para eventos do mês específico
  */
 export function useMonthEvents(year: number, month: number) {
-  const startDate = new Date(year, month, 1).toISOString().split('T')[0]
-  const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
+  const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+  const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
   const {
     data: monthEvents,
@@ -311,13 +306,13 @@ export function useMonthEvents(year: number, month: number) {
     {
       enabled: !!year && month >= 0 && month <= 11,
     }
-  )
+  );
 
   return {
     monthEvents: monthEvents || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
@@ -336,21 +331,21 @@ export function useEventSearch(query: string) {
     {
       enabled: !!query && query.length >= 2,
       select: (data) => {
-        if (!query) return data
+        if (!query) return data;
         return (
           data?.filter(
             (event) =>
               event.title.toLowerCase().includes(query.toLowerCase()) ||
               event.description?.toLowerCase().includes(query.toLowerCase())
           ) || []
-        )
+        );
       },
     }
-  )
+  );
 
   return {
     searchResults: searchResults || [],
     isLoading,
     error,
-  }
+  };
 }

@@ -1,27 +1,27 @@
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Download, Filter } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DateRangePicker } from '@/components/ui/date-picker'
-import { Label } from '@/components/ui/label'
+import { useNavigate } from '@tanstack/react-router';
+import { ArrowLeft, Download, Filter } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DateRangePicker } from '@/components/ui/date-picker';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useAuth } from '@/contexts/AuthContext'
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy loaded components
 const LazyPixTransactionsTable = lazy(() =>
   import('@/components/pix/PixTransactionsTable').then((mod) => ({
     default: mod.PixTransactionsTable,
   }))
-)
+);
 
 // Loading component for transactions table
 const TransactionsTableLoader = () => (
@@ -34,7 +34,7 @@ const TransactionsTableLoader = () => (
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center space-x-4">
             <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2 flex-1">
+            <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
@@ -44,66 +44,69 @@ const TransactionsTableLoader = () => (
       </div>
     </CardContent>
   </Card>
-)
+);
 
 export function PixHistoryPage() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const navigate = useNavigate()
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined)
-  const [dateTo, setDateTo] = useState<Date | undefined>(undefined)
-  const [filterType, setFilterType] = useState('all')
-  const [filterStatus, setFilterStatus] = useState('all')
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: '/login', search: { redirect: '/pix/historico', error: undefined } })
+      navigate({
+        to: '/login',
+        search: { redirect: '/pix/historico', error: undefined },
+      });
     }
-  }, [isAuthenticated, isLoading, navigate])
+  }, [isAuthenticated, isLoading, navigate]);
 
   const exportStatement = () => {
-    toast.success('Extrato exportado com sucesso!')
-  }
+    toast.success('Extrato exportado com sucesso!');
+  };
 
   const applyFilters = () => {
-    toast.info('Filtros aplicados!')
-  }
+    toast.info('Filtros aplicados!');
+  };
 
   const clearFilters = () => {
-    setDateFrom(undefined)
-    setDateTo(undefined)
-    setFilterType('all')
-    setFilterStatus('all')
-    toast.info('Filtros limpos!')
-  }
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setFilterType('all');
+    setFilterStatus('all');
+    toast.info('Filtros limpos!');
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-financial-positive"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2"></div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
+    <div className="container mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6">
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pix' })} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar ao Dashboard PIX
         </Button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Histórico de Transações PIX</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="font-bold text-3xl">Histórico de Transações PIX</h1>
+            <p className="mt-2 text-muted-foreground">
               Consulte e exporte seu extrato completo de transações PIX
             </p>
           </div>
           <Button onClick={exportStatement}>
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             Exportar Extrato
           </Button>
         </div>
@@ -113,12 +116,12 @@ export function PixHistoryPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
+            <Filter className="h-5 w-5" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2 md:col-span-2">
               <Label>Período</Label>
               <DateRangePicker
@@ -162,7 +165,7 @@ export function PixHistoryPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="mt-4 flex gap-2">
             <Button onClick={applyFilters}>Aplicar Filtros</Button>
             <Button variant="outline" onClick={clearFilters}>
               Limpar Filtros
@@ -172,29 +175,29 @@ export function PixHistoryPage() {
       </Card>
 
       {/* Transactions Summary */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Transações</div>
-            <div className="text-2xl font-bold mt-1">142</div>
+            <div className="text-muted-foreground text-sm">Total Transações</div>
+            <div className="mt-1 font-bold text-2xl">142</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Enviado</div>
-            <div className="text-2xl font-bold text-financial-negative mt-1">R$ 8.450,00</div>
+            <div className="text-muted-foreground text-sm">Total Enviado</div>
+            <div className="mt-1 font-bold text-2xl text-financial-negative">R$ 8.450,00</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Recebido</div>
-            <div className="text-2xl font-bold text-financial-positive mt-1">R$ 12.680,50</div>
+            <div className="text-muted-foreground text-sm">Total Recebido</div>
+            <div className="mt-1 font-bold text-2xl text-financial-positive">R$ 12.680,50</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Saldo Período</div>
-            <div className="text-2xl font-bold text-financial-positive mt-1">R$ 4.230,50</div>
+            <div className="text-muted-foreground text-sm">Saldo Período</div>
+            <div className="mt-1 font-bold text-2xl text-financial-positive">R$ 4.230,50</div>
           </CardContent>
         </Card>
       </div>
@@ -204,5 +207,5 @@ export function PixHistoryPage() {
         <LazyPixTransactionsTable />
       </Suspense>
     </div>
-  )
+  );
 }

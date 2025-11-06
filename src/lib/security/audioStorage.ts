@@ -11,45 +11,45 @@
  * @module audioStorage
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { AudioEncryptionService, type EncryptedData } from '@/lib/security/audioEncryption'
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { AudioEncryptionService, type EncryptedData } from '@/lib/security/audioEncryption';
 
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
 
 export interface AudioStorageConfig {
-  supabase: SupabaseClient
-  encryptionService: AudioEncryptionService
-  bucketName?: string
-  retentionDays?: number
+  supabase: SupabaseClient;
+  encryptionService: AudioEncryptionService;
+  bucketName?: string;
+  retentionDays?: number;
 }
 
 export interface StoredAudio {
-  id: string
-  userId: string
-  storagePath: string
-  transcript: string
-  confidence: number
-  language: string
-  processingTimeMs: number
-  createdAt: Date
-  expiresAt: Date
+  id: string;
+  userId: string;
+  storagePath: string;
+  transcript: string;
+  confidence: number;
+  language: string;
+  processingTimeMs: number;
+  createdAt: Date;
+  expiresAt: Date;
 }
 
 export interface UserConsent {
-  userId: string
-  consentGiven: boolean
-  consentDate: Date
+  userId: string;
+  consentGiven: boolean;
+  consentDate: Date;
 }
 
 export interface AuditLog {
-  id: string
-  userId: string
-  action: 'upload' | 'download' | 'delete' | 'access'
-  audioId: string
-  timestamp: Date
-  metadata?: Record<string, any>
+  id: string;
+  userId: string;
+  action: 'upload' | 'download' | 'delete' | 'access';
+  audioId: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
 }
 
 // ============================================================================
@@ -57,7 +57,7 @@ export interface AuditLog {
 // ============================================================================
 
 export class AudioStorageService {
-  private config: Required<AudioStorageConfig>
+  private config: Required<AudioStorageConfig>;
 
   constructor(config: AudioStorageConfig) {
     this.config = {
@@ -65,7 +65,7 @@ export class AudioStorageService {
       encryptionService: config.encryptionService,
       bucketName: config.bucketName || 'voice-recordings',
       retentionDays: config.retentionDays || 365, // 12 months
-    }
+    };
   }
 
   /**
@@ -82,31 +82,31 @@ export class AudioStorageService {
     audioBlob: Blob,
     transcript: string,
     metadata: {
-      confidence: number
-      language: string
-      processingTimeMs: number
+      confidence: number;
+      language: string;
+      processingTimeMs: number;
     }
   ): Promise<StoredAudio> {
     try {
       // Check user consent
-      const hasConsent = await this.checkConsent(userId)
+      const hasConsent = await this.checkConsent(userId);
       if (!hasConsent) {
-        throw new Error('User consent required for audio storage')
+        throw new Error('User consent required for audio storage');
       }
 
       // Encrypt audio
-      const encryptedAudio = await this.config.encryptionService.encryptAudio(audioBlob)
+      const encryptedAudio = await this.config.encryptionService.encryptAudio(audioBlob);
 
       // Anonymize transcript
-      const anonymizedTranscript = AudioEncryptionService.anonymizeText(transcript)
+      const anonymizedTranscript = AudioEncryptionService.anonymizeText(transcript);
 
       // Encrypt transcript
       const encryptedTranscript =
-        await this.config.encryptionService.encryptText(anonymizedTranscript)
+        await this.config.encryptionService.encryptText(anonymizedTranscript);
 
       // Generate storage path
-      const audioId = crypto.randomUUID()
-      const storagePath = `${userId}/${audioId}.enc`
+      const audioId = crypto.randomUUID();
+      const storagePath = `${userId}/${audioId}.enc`;
 
       // Upload encrypted audio to Supabase Storage
       const { error: uploadError } = await this.config.supabase.storage
@@ -114,15 +114,15 @@ export class AudioStorageService {
         .upload(storagePath, JSON.stringify(encryptedAudio), {
           contentType: 'application/json',
           upsert: false,
-        })
+        });
 
       if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`)
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
       // Calculate expiration date
-      const expiresAt = new Date()
-      expiresAt.setDate(expiresAt.getDate() + this.config.retentionDays)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + this.config.retentionDays);
 
       // Store metadata in database
       const { data, error: dbError } = await this.config.supabase
@@ -139,20 +139,20 @@ export class AudioStorageService {
           created_at: new Date().toISOString(),
         })
         .select()
-        .single()
+        .single();
 
       if (dbError) {
         // Cleanup uploaded file
-        await this.config.supabase.storage.from(this.config.bucketName).remove([storagePath])
+        await this.config.supabase.storage.from(this.config.bucketName).remove([storagePath]);
 
-        throw new Error(`Database insert failed: ${dbError.message}`)
+        throw new Error(`Database insert failed: ${dbError.message}`);
       }
 
       // Log audit trail
       await this.logAudit(userId, 'upload', audioId, {
         storagePath,
         confidence: metadata.confidence,
-      })
+      });
 
       return {
         id: audioId,
@@ -164,9 +164,9 @@ export class AudioStorageService {
         processingTimeMs: metadata.processingTimeMs,
         createdAt: new Date(data.created_at),
         expiresAt,
-      }
+      };
     } catch (error) {
-      throw new Error(`Audio storage failed: ${error}`)
+      throw new Error(`Audio storage failed: ${error}`);
     }
   }
 
@@ -185,34 +185,34 @@ export class AudioStorageService {
         .select('*')
         .eq('id', audioId)
         .eq('user_id', userId)
-        .single()
+        .single();
 
       if (dbError || !data) {
-        throw new Error('Audio not found or access denied')
+        throw new Error('Audio not found or access denied');
       }
 
       // Download encrypted audio
       const { data: fileData, error: downloadError } = await this.config.supabase.storage
         .from(this.config.bucketName)
-        .download(data.audio_storage_path)
+        .download(data.audio_storage_path);
 
       if (downloadError || !fileData) {
-        throw new Error(`Download failed: ${downloadError?.message}`)
+        throw new Error(`Download failed: ${downloadError?.message}`);
       }
 
       // Parse encrypted data
-      const encryptedText = await fileData.text()
-      const encryptedData: EncryptedData = JSON.parse(encryptedText)
+      const encryptedText = await fileData.text();
+      const encryptedData: EncryptedData = JSON.parse(encryptedText);
 
       // Decrypt audio
-      const audioBlob = await this.config.encryptionService.decryptAudio(encryptedData)
+      const audioBlob = await this.config.encryptionService.decryptAudio(encryptedData);
 
       // Log audit trail
-      await this.logAudit(userId, 'download', audioId)
+      await this.logAudit(userId, 'download', audioId);
 
-      return audioBlob
+      return audioBlob;
     } catch (error) {
-      throw new Error(`Audio retrieval failed: ${error}`)
+      throw new Error(`Audio retrieval failed: ${error}`);
     }
   }
 
@@ -230,19 +230,18 @@ export class AudioStorageService {
         .select('audio_storage_path')
         .eq('id', audioId)
         .eq('user_id', userId)
-        .single()
+        .single();
 
       if (dbError || !data) {
-        throw new Error('Audio not found or access denied')
+        throw new Error('Audio not found or access denied');
       }
 
       // Delete from storage
       const { error: storageError } = await this.config.supabase.storage
         .from(this.config.bucketName)
-        .remove([data.audio_storage_path])
+        .remove([data.audio_storage_path]);
 
       if (storageError) {
-        console.error('Storage deletion failed:', storageError)
       }
 
       // Delete from database
@@ -250,16 +249,16 @@ export class AudioStorageService {
         .from('voice_transcriptions')
         .delete()
         .eq('id', audioId)
-        .eq('user_id', userId)
+        .eq('user_id', userId);
 
       if (deleteError) {
-        throw new Error(`Database deletion failed: ${deleteError.message}`)
+        throw new Error(`Database deletion failed: ${deleteError.message}`);
       }
 
       // Log audit trail
-      await this.logAudit(userId, 'delete', audioId)
+      await this.logAudit(userId, 'delete', audioId);
     } catch (error) {
-      throw new Error(`Audio deletion failed: ${error}`)
+      throw new Error(`Audio deletion failed: ${error}`);
     }
   }
 
@@ -272,15 +271,15 @@ export class AudioStorageService {
         .from('voice_consent')
         .select('consent_given')
         .eq('user_id', userId)
-        .single()
+        .single();
 
       if (error || !data) {
-        return false
+        return false;
       }
 
-      return data.consent_given === true
+      return data.consent_given === true;
     } catch {
-      return false
+      return false;
     }
   }
 
@@ -294,13 +293,13 @@ export class AudioStorageService {
         consent_given: consentGiven,
         consent_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
+      });
 
       if (error) {
-        throw new Error(`Consent recording failed: ${error.message}`)
+        throw new Error(`Consent recording failed: ${error.message}`);
       }
     } catch (error) {
-      throw new Error(`Consent recording failed: ${error}`)
+      throw new Error(`Consent recording failed: ${error}`);
     }
   }
 
@@ -320,11 +319,8 @@ export class AudioStorageService {
         audio_id: audioId,
         metadata: metadata || {},
         timestamp: new Date().toISOString(),
-      })
-    } catch (error) {
-      // Don't fail the operation if audit logging fails
-      console.error('Audit logging failed:', error)
-    }
+      });
+    } catch (_error) {}
   }
 
   /**
@@ -336,27 +332,25 @@ export class AudioStorageService {
       const { data: expiredRecords, error: queryError } = await this.config.supabase
         .from('voice_transcriptions')
         .select('id, user_id, audio_storage_path')
-        .lt('expires_at', new Date().toISOString())
+        .lt('expires_at', new Date().toISOString());
 
       if (queryError || !expiredRecords) {
-        throw new Error(`Query failed: ${queryError?.message}`)
+        throw new Error(`Query failed: ${queryError?.message}`);
       }
 
-      let deletedCount = 0
+      let deletedCount = 0;
 
       // Delete each expired record
       for (const record of expiredRecords) {
         try {
-          await this.deleteAudio(record.user_id, record.id)
-          deletedCount++
-        } catch (error) {
-          console.error(`Failed to delete expired audio ${record.id}:`, error)
-        }
+          await this.deleteAudio(record.user_id, record.id);
+          deletedCount++;
+        } catch (_error) {}
       }
 
-      return deletedCount
+      return deletedCount;
     } catch (error) {
-      throw new Error(`Cleanup failed: ${error}`)
+      throw new Error(`Cleanup failed: ${error}`);
     }
   }
 }
@@ -377,5 +371,5 @@ export function createAudioStorageService(
     encryptionService,
     bucketName: 'voice-recordings',
     retentionDays: 365, // 12 months LGPD compliance
-  })
+  });
 }

@@ -18,35 +18,35 @@ import {
   formatDateForVoice,
   formatPercentage,
   pluralize,
-} from '@/lib/formatters/brazilianFormatters'
-import { IntentType } from '@/lib/nlu/types'
+} from '@/lib/formatters/brazilianFormatters';
+import { IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface MultimodalResponse {
-  voice: string // Natural speech text
-  text: string // Formatted text for display
+  voice: string; // Natural speech text
+  text: string; // Formatted text for display
   visual: {
-    type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'info'
-    data: any
-  }
+    type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'info';
+    data: any;
+  };
   accessibility: {
-    ariaLabel: string
-    screenReaderText: string
-    role?: string
-  }
+    ariaLabel: string;
+    screenReaderText: string;
+    role?: string;
+  };
   ssmlOptions?: {
-    emphasis?: 'strong' | 'moderate' | 'reduced'
-    pauseDuration?: number
-  }
+    emphasis?: 'strong' | 'moderate' | 'reduced';
+    pauseDuration?: number;
+  };
 }
 
 export interface ResponseData {
-  intent: IntentType
-  entities: any[]
-  contextData: any
+  intent: IntentType;
+  entities: any[];
+  contextData: any;
 }
 
 // ============================================================================
@@ -57,14 +57,14 @@ export interface ResponseData {
  * Build response for CHECK_BALANCE
  */
 export function buildBalanceResponse(data: {
-  currentBalance: number
-  income?: number
-  expenses?: number
-  accountType?: string
+  currentBalance: number;
+  income?: number;
+  expenses?: number;
+  accountType?: string;
 }): MultimodalResponse {
-  const { currentBalance, income, expenses, accountType } = data
+  const { currentBalance, income, expenses, accountType } = data;
 
-  if (typeof currentBalance !== 'number' || isNaN(currentBalance)) {
+  if (typeof currentBalance !== 'number' || Number.isNaN(currentBalance)) {
     return {
       text: 'Saldo indisponível',
       voice: 'Saldo indisponível',
@@ -72,26 +72,25 @@ export function buildBalanceResponse(data: {
         type: 'balance',
         data: { balance: 0, income: 0, expenses: 0 },
       },
-      requiresConfirmation: false,
-    }
+    };
   }
 
   // Voice output (natural speech)
   const voiceParts = [
     `Seu saldo ${accountType ? `da conta ${accountType}` : 'atual'} é de`,
     formatCurrencyForVoice(currentBalance),
-  ]
+  ];
 
   if (income && expenses) {
     voiceParts.push(
       `Você recebeu ${formatCurrencyForVoice(income)} e gastou ${formatCurrencyForVoice(expenses)} este mês`
-    )
+    );
   }
 
-  const voice = voiceParts.join('. ')
+  const voice = voiceParts.join('. ');
 
   // Text output
-  const text = `Saldo ${accountType ? `(${accountType})` : ''}: ${formatCurrency(currentBalance)}`
+  const text = `Saldo ${accountType ? `(${accountType})` : ''}: ${formatCurrency(currentBalance)}`;
 
   // Visual data
   const visual = {
@@ -102,14 +101,14 @@ export function buildBalanceResponse(data: {
       expenses,
       accountType,
     },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Saldo atual: ${formatCurrency(currentBalance)}`,
     screenReaderText: voice,
     role: 'status',
-  }
+  };
 
   return {
     voice,
@@ -120,34 +119,34 @@ export function buildBalanceResponse(data: {
       emphasis: 'strong',
       pauseDuration: 300,
     },
-  }
+  };
 }
 
 /**
  * Build response for CHECK_BUDGET
  */
 export function buildBudgetResponse(data: {
-  available: number
-  total: number
-  spent: number
-  spentPercentage: number
-  category?: string
+  available: number;
+  total: number;
+  spent: number;
+  spentPercentage: number;
+  category?: string;
 }): MultimodalResponse {
-  const { available, total, spent, spentPercentage, category } = data
+  const { available, total, spent, spentPercentage, category } = data;
 
   // Voice output
   const safeSpentPercentage =
-    typeof spentPercentage === 'number' && !isNaN(spentPercentage) ? spentPercentage : 0
-  const categoryText = category ? `do orçamento de ${category}` : 'do seu orçamento'
+    typeof spentPercentage === 'number' && !Number.isNaN(spentPercentage) ? spentPercentage : 0;
+  const categoryText = category ? `do orçamento de ${category}` : 'do seu orçamento';
   const voice = [
     `Você ainda pode gastar ${formatCurrencyForVoice(available)} ${categoryText}`,
     `Você já utilizou ${formatPercentage(safeSpentPercentage)} do limite`,
-  ].join('. ')
+  ].join('. ');
 
   // Text output
   const percentageText =
-    category && safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : ''
-  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(available)} disponíveis${percentageText}`
+    category && safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : '';
+  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(available)} disponíveis${percentageText}`;
 
   // Visual data
   const visual = {
@@ -159,21 +158,21 @@ export function buildBudgetResponse(data: {
       spentPercentage,
       category,
     },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Orçamento disponível: ${formatCurrency(available)}`,
     screenReaderText: voice,
     role: 'status',
-  }
+  };
 
   return {
     voice,
     text,
     visual,
     accessibility,
-  }
+  };
 }
 
 /**
@@ -181,18 +180,18 @@ export function buildBudgetResponse(data: {
  */
 export function buildBillsResponse(data: {
   bills: Array<{
-    name: string
-    amount: number
-    dueDate: string
-    isPastDue?: boolean
-  }>
-  totalAmount: number
+    name: string;
+    amount: number;
+    dueDate: string;
+    isPastDue?: boolean;
+  }>;
+  totalAmount: number;
 }): MultimodalResponse {
-  const { bills, totalAmount } = data
+  const { bills, totalAmount } = data;
 
-  const safeBills = bills || []
-  const billCount = safeBills.length
-  const pastDue = safeBills.filter((b) => b.isPastDue).length
+  const safeBills = bills || [];
+  const billCount = safeBills.length;
+  const pastDue = safeBills.filter((b) => b.isPastDue).length;
 
   if (!Number.isFinite(totalAmount)) {
     return {
@@ -202,39 +201,38 @@ export function buildBillsResponse(data: {
         type: 'bills',
         data: { bills: [], totalAmount: 0, pastDueCount: 0 },
       },
-      requiresConfirmation: false,
-    }
+    };
   }
 
   // Voice output
   const voiceParts = [
     `Você tem ${billCount} ${pluralize(billCount, 'conta')} para pagar`,
     `totalizando ${formatCurrencyForVoice(totalAmount)}`,
-  ]
+  ];
 
   if (pastDue > 0) {
     voiceParts.push(
       `Atenção: ${pastDue} ${pluralize(pastDue, 'conta está vencida', 'contas estão vencidas')}`
-    )
+    );
   }
 
-  const voice = voiceParts.join('. ')
+  const voice = voiceParts.join('. ');
 
   // Text output
-  const text = `${billCount} ${pluralize(billCount, 'conta')} • Total: ${formatCurrency(totalAmount)}`
+  const text = `${billCount} ${pluralize(billCount, 'conta')} • Total: ${formatCurrency(totalAmount)}`;
 
   // Visual data
   const visual = {
     type: 'bills' as const,
     data: { bills, totalAmount, pastDue },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `${billCount} contas a pagar, total ${formatCurrency(totalAmount)}`,
     screenReaderText: voice,
     role: 'alert',
-  }
+  };
 
   return {
     voice,
@@ -242,7 +240,7 @@ export function buildBillsResponse(data: {
     visual,
     accessibility,
     ssmlOptions: pastDue > 0 ? { emphasis: 'strong' } : undefined,
-  }
+  };
 }
 
 /**
@@ -250,154 +248,156 @@ export function buildBillsResponse(data: {
  */
 export function buildIncomeResponse(data: {
   incoming: Array<{
-    source: string
-    amount: number
-    expectedDate: string
-    confirmed?: boolean
-  }>
-  totalExpected: number
+    source: string;
+    amount: number;
+    expectedDate: string;
+    confirmed?: boolean;
+  }>;
+  totalExpected: number;
   nextIncome?: {
-    source: string
-    amount: number
-    date: string
-  }
+    source: string;
+    amount: number;
+    date: string;
+  };
 }): MultimodalResponse {
-  const { incoming, totalExpected, nextIncome } = data
+  const { incoming, totalExpected, nextIncome } = data;
 
   // Voice output
-  const voiceParts = [`Você tem ${formatCurrencyForVoice(totalExpected)} em recebimentos previstos`]
+  const voiceParts = [
+    `Você tem ${formatCurrencyForVoice(totalExpected)} em recebimentos previstos`,
+  ];
 
   if (nextIncome) {
     voiceParts.push(
       `O próximo é ${nextIncome.source}, ${formatCurrencyForVoice(nextIncome.amount)}, previsto para ${formatDateForVoice(nextIncome.date)}`
-    )
+    );
   }
 
-  const voice = voiceParts.join('. ')
+  const voice = voiceParts.join('. ');
 
   // Text output
-  const text = `Recebimentos previstos: ${formatCurrency(totalExpected)}`
+  const text = `Recebimentos previstos: ${formatCurrency(totalExpected)}`;
 
   // Visual data
   const visual = {
     type: 'incoming' as const,
     data: { incoming, totalExpected, nextIncome },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Recebimentos previstos: ${formatCurrency(totalExpected)}`,
     screenReaderText: voice,
     role: 'status',
-  }
+  };
 
   return {
     voice,
     text,
     visual,
     accessibility,
-  }
+  };
 }
 
 /**
  * Build response for FINANCIAL_PROJECTION
  */
 export function buildProjectionResponse(data: {
-  projectedBalance: number
-  currentBalance: number
-  expectedIncome: number
-  expectedExpenses: number
-  variation: number
-  period: string
+  projectedBalance: number;
+  currentBalance: number;
+  expectedIncome: number;
+  expectedExpenses: number;
+  variation: number;
+  period: string;
 }): MultimodalResponse {
-  const { projectedBalance, variation, period } = data
+  const { projectedBalance, variation, period } = data;
 
   // Voice output
-  const trendText = variation >= 0 ? 'positiva' : 'negativa'
+  const trendText = variation >= 0 ? 'positiva' : 'negativa';
   const voice = [
     `Sua projeção financeira para ${period} indica um saldo de ${formatCurrencyForVoice(projectedBalance)}`,
     `Com uma variação ${trendText} de ${formatCurrencyForVoice(Math.abs(variation))}`,
-  ].join('. ')
+  ].join('. ');
 
   // Text output
-  const text = `Projeção (${period}): ${formatCurrency(projectedBalance)}`
+  const text = `Projeção (${period}): ${formatCurrency(projectedBalance)}`;
 
   // Visual data
   const visual = {
     type: 'projection' as const,
     data,
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Projeção financeira: ${formatCurrency(projectedBalance)}`,
     screenReaderText: voice,
     role: 'status',
-  }
+  };
 
   return {
     voice,
     text,
     visual,
     accessibility,
-  }
+  };
 }
 
 /**
  * Build response for TRANSFER_MONEY
  */
 export function buildTransferResponse(data: {
-  recipient: string
-  amount: number
-  method: string
-  estimatedTime?: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  recipient: string;
+  amount: number;
+  method: string;
+  estimatedTime?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
 }): MultimodalResponse {
-  const { recipient, amount, method, estimatedTime, status } = data
+  const { recipient, amount, method, estimatedTime, status } = data;
 
   // Voice output
-  const voiceParts = []
+  const voiceParts = [];
 
   switch (status) {
     case 'pending':
       voiceParts.push(
         `Transferência de ${formatCurrencyForVoice(amount)} para ${recipient} via ${method}`
-      )
+      );
       if (estimatedTime) {
-        voiceParts.push(`Tempo estimado: ${estimatedTime}`)
+        voiceParts.push(`Tempo estimado: ${estimatedTime}`);
       }
-      voiceParts.push('Confirme para prosseguir')
-      break
+      voiceParts.push('Confirme para prosseguir');
+      break;
     case 'processing':
-      voiceParts.push(`Processando transferência de ${formatCurrencyForVoice(amount)}`)
-      break
+      voiceParts.push(`Processando transferência de ${formatCurrencyForVoice(amount)}`);
+      break;
     case 'completed':
       voiceParts.push(
         `Transferência de ${formatCurrencyForVoice(amount)} para ${recipient} realizada com sucesso`
-      )
-      break
+      );
+      break;
     case 'failed':
-      voiceParts.push(`Não foi possível completar a transferência. Tente novamente`)
-      break
+      voiceParts.push(`Não foi possível completar a transferência. Tente novamente`);
+      break;
   }
 
-  const voice = voiceParts.join('. ')
+  const voice = voiceParts.join('. ');
 
   // Text output
-  const text = `Transferência: ${formatCurrency(amount)} → ${recipient}`
+  const text = `Transferência: ${formatCurrency(amount)} → ${recipient}`;
 
   // Visual data
   const visual = {
     type: 'transfer' as const,
     data,
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Transferência de ${formatCurrency(amount)} para ${recipient}`,
     screenReaderText: voice,
     role: status === 'pending' ? 'alertdialog' : 'status',
-  }
+  };
 
   return {
     voice,
@@ -405,37 +405,37 @@ export function buildTransferResponse(data: {
     visual,
     accessibility,
     ssmlOptions: status === 'pending' ? { emphasis: 'moderate', pauseDuration: 500 } : undefined,
-  }
+  };
 }
 
 /**
  * Build error response
  */
 export function buildErrorResponse(error: {
-  message: string
-  code?: string
-  details?: string
+  message: string;
+  code?: string;
+  details?: string;
 }): MultimodalResponse {
-  const { message, details } = error
+  const { message, details } = error;
 
   // Voice output
-  const voice = details ? `${message}. ${details}` : message
+  const voice = details ? `${message}. ${details}` : message;
 
   // Text output
-  const text = message
+  const text = message;
 
   // Visual data
   const visual = {
     type: 'info' as const,
     data: { error: true, message, details },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Erro: ${message}`,
     screenReaderText: voice,
     role: 'alert',
-  }
+  };
 
   return {
     voice,
@@ -445,37 +445,37 @@ export function buildErrorResponse(error: {
     ssmlOptions: {
       emphasis: 'moderate',
     },
-  }
+  };
 }
 
 /**
  * Build confirmation request response
  */
 export function buildConfirmationResponse(data: {
-  action: string
-  details: string
-  requiresConfirmation: boolean
+  action: string;
+  details: string;
+  requiresConfirmation: boolean;
 }): MultimodalResponse {
-  const { action, details } = data
+  const { action, details } = data;
 
   // Voice output
-  const voice = `Você deseja ${action}? ${details}. Confirme para prosseguir`
+  const voice = `Você deseja ${action}? ${details}. Confirme para prosseguir`;
 
   // Text output
-  const text = `Confirmação necessária: ${action}`
+  const text = `Confirmação necessária: ${action}`;
 
   // Visual data
   const visual = {
     type: 'info' as const,
     data: { ...data, type: 'confirmation' },
-  }
+  };
 
   // Accessibility
   const accessibility = {
     ariaLabel: `Confirmação necessária: ${action}`,
     screenReaderText: voice,
     role: 'alertdialog',
-  }
+  };
 
   return {
     voice,
@@ -486,7 +486,7 @@ export function buildConfirmationResponse(data: {
       emphasis: 'moderate',
       pauseDuration: 500,
     },
-  }
+  };
 }
 
 // ============================================================================
@@ -500,9 +500,10 @@ export const responseBuilders = {
   check_income: buildIncomeResponse,
   financial_projection: buildProjectionResponse,
   transfer_money: buildTransferResponse,
+  unknown: buildErrorResponse,
   error: buildErrorResponse,
   confirmation: buildConfirmationResponse,
-}
+};
 
 /**
  * Build multimodal response based on intent
@@ -511,13 +512,14 @@ export function buildMultimodalResponse(
   intent: IntentType | 'error' | 'confirmation',
   data: any
 ): MultimodalResponse {
-  const builder = responseBuilders[intent]
+  const intentKey = intent === IntentType.UNKNOWN ? 'unknown' : intent;
+  const builder = responseBuilders[intentKey];
 
   if (!builder) {
     return buildErrorResponse({
       message: 'Comando não reconhecido',
       details: 'Tente novamente com um comando conhecido',
-    })
+    });
   }
 
   // Map common prop names to expected names
@@ -543,7 +545,7 @@ export function buildMultimodalResponse(
               spentPercentage:
                 data.total && data.spent !== undefined ? (data.spent / data.total) * 100 : 0,
             }
-          : data
+          : data;
 
-  return builder(mappedData)
+  return builder(mappedData);
 }

@@ -1,34 +1,34 @@
-import { FileText, Mic } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
-import { FinancialAmount } from '@/components/financial-amount'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { FileText, Mic } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { FinancialAmount } from '@/components/financial-amount';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy loading do componente BillsList
 const BillsList = lazy(() =>
   import('./components/BillsList').then((module) => ({
     default: module.BillsList,
   }))
-)
+);
 
 // Componente de loading para a lista de contas
 function BillsListLoader() {
   return (
     <div className="space-y-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="hover:shadow-lg transition-shadow">
+        <Card key={i} className="transition-shadow hover:shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 flex-1">
-                <Skeleton className="w-12 h-12 rounded-full" />
+              <div className="flex flex-1 items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-6 w-48" />
                     <Skeleton className="h-4 w-20" />
                   </div>
-                  <div className="flex items-center gap-4 mt-1">
+                  <div className="mt-1 flex items-center gap-4">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-4 w-24" />
                   </div>
@@ -36,7 +36,7 @@ function BillsListLoader() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <Skeleton className="h-8 w-24 mb-2" />
+                  <Skeleton className="mb-2 h-8 w-24" />
                   <Skeleton className="h-5 w-16" />
                 </div>
                 <Skeleton className="h-10 w-16" />
@@ -46,17 +46,16 @@ function BillsListLoader() {
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
 export function Contas() {
-  const [isListening, setIsListening] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all')
+  const [isListening, setIsListening] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
 
   const handleVoiceCommand = () => {
-    setIsListening(!isListening)
-    console.log('Voice command: Quais contas tenho que pagar?')
-  }
+    setIsListening(!isListening);
+  };
 
   // Mock bills data
   const bills = [
@@ -120,19 +119,19 @@ export function Contas() {
       recurring: true,
       icon: '💪',
     },
-  ]
+  ];
 
-  const pendingBills = bills.filter((b) => b.status === 'pending')
-  const paidBills = bills.filter((b) => b.status === 'paid')
-  const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0)
-  const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0)
+  const pendingBills = bills.filter((b) => b.status === 'pending');
+  const paidBills = bills.filter((b) => b.status === 'paid');
+  const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
+  const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0);
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto space-y-6 p-4">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
             Contas
           </h1>
           <p className="text-muted-foreground">Gerencie suas contas e pagamentos</p>
@@ -150,7 +149,7 @@ export function Contas() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="border-2 border-warning/20">
           <CardHeader className="pb-2">
             <CardDescription>Contas Pendentes</CardDescription>
@@ -158,7 +157,7 @@ export function Contas() {
           <CardContent>
             <div className="flex items-center justify-between">
               <FinancialAmount amount={-totalPending} size="lg" />
-              <Badge variant="outline" className="text-warning border-warning">
+              <Badge variant="outline" className="border-warning text-warning">
                 {pendingBills.length} contas
               </Badge>
             </div>
@@ -172,7 +171,7 @@ export function Contas() {
           <CardContent>
             <div className="flex items-center justify-between">
               <FinancialAmount amount={-totalPaid} size="lg" />
-              <Badge variant="outline" className="text-success border-success">
+              <Badge variant="outline" className="border-success text-success">
                 {paidBills.length} contas
               </Badge>
             </div>
@@ -216,7 +215,7 @@ export function Contas() {
       {/* Actions */}
       <div className="flex gap-4">
         <Button size="lg" className="flex-1" withGradient>
-          <FileText className="w-5 h-5 mr-2" />
+          <FileText className="mr-2 h-5 w-5" />
           Adicionar Nova Conta
         </Button>
         <Button variant="outline" size="lg" className="flex-1">
@@ -224,5 +223,5 @@ export function Contas() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

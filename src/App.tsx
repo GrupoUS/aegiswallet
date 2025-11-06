@@ -1,30 +1,29 @@
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { LoggerProvider } from "@/contexts/LoggerContext";
-import { routeTree } from "@/routeTree.gen";
+import { createRouter, RouterProvider } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { LoggerProvider } from '@/contexts/LoggerContext';
+import { routeTree } from '@/routeTree.gen';
 
-import "@/styles/accessibility.css";
+import '@/styles/accessibility.css';
 
 // Handle OAuth hash fragments before router initialization
 const handleOAuthHash = () => {
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const hasOAuthParams =
-      hashParams.has("access_token") || hashParams.has("error");
+    const hasOAuthParams = hashParams.has('access_token') || hashParams.has('error');
 
     if (hasOAuthParams) {
       // For OAuth redirects, we need to make sure we're on the dashboard path
-      if (!window.location.pathname.includes("/dashboard")) {
+      if (!window.location.pathname.includes('/dashboard')) {
         // Store the hash in sessionStorage and redirect to dashboard
-        sessionStorage.setItem("oauth_hash", window.location.hash);
-        window.location.replace("/dashboard");
+        sessionStorage.setItem('oauth_hash', window.location.hash);
+        window.location.replace('/dashboard');
         return true; // Indicate that redirect is happening
       } else {
         // Store the hash for processing by the dashboard component
-        sessionStorage.setItem("oauth_hash", window.location.hash);
+        sessionStorage.setItem('oauth_hash', window.location.hash);
       }
     }
   }
@@ -34,11 +33,11 @@ const handleOAuthHash = () => {
 // Create router instance
 const router = createRouter({
   routeTree,
-  defaultPreload: "intent",
+  defaultPreload: 'intent',
 });
 
 // Register router for type safety
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }

@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { Moon, Sun } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
-import { useTheme } from '@/components/providers/ThemeProvider'
-import { cn } from '@/lib/utils'
+import { Moon, Sun } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { useTheme } from '@/components/providers/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<'button'> {
-  duration?: number
+  duration?: number;
 }
 
 export const AnimatedThemeToggler = ({
@@ -15,64 +15,64 @@ export const AnimatedThemeToggler = ({
   duration = 400,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const { theme, setTheme } = useTheme()
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const { theme, setTheme } = useTheme();
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Compute effective dark mode state (considering system preference)
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     const updateDarkState = () => {
       if (theme === 'system') {
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        setIsDark(systemPrefersDark)
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setIsDark(systemPrefersDark);
       } else {
-        setIsDark(theme === 'dark')
+        setIsDark(theme === 'dark');
       }
-    }
+    };
 
-    updateDarkState()
+    updateDarkState();
 
     // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (theme === 'system') {
-        updateDarkState()
+        updateDarkState();
       }
-    }
+    };
 
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [theme])
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
 
   const toggleTheme = useCallback(async () => {
-    if (!buttonRef.current) return
+    if (!buttonRef.current) return;
 
     // Determine new theme (toggle between light and dark only)
-    const newTheme = isDark ? 'light' : 'dark'
+    const newTheme = isDark ? 'light' : 'dark';
 
     // Check if browser supports View Transition API
     if (!document.startViewTransition) {
       // Fallback: simple theme change without animation
-      setTheme(newTheme)
-      return
+      setTheme(newTheme);
+      return;
     }
 
     // Animate with View Transition API
     await document.startViewTransition(() => {
       flushSync(() => {
-        setTheme(newTheme)
-      })
-    }).ready
+        setTheme(newTheme);
+      });
+    }).ready;
 
     // Calculate circle animation origin from button center
-    const { top, left, width, height } = buttonRef.current.getBoundingClientRect()
-    const x = left + width / 2
-    const y = top + height / 2
+    const { top, left, width, height } = buttonRef.current.getBoundingClientRect();
+    const x = left + width / 2;
+    const y = top + height / 2;
     const maxRadius = Math.hypot(
       Math.max(left, window.innerWidth - left),
       Math.max(top, window.innerHeight - top)
-    )
+    );
 
     // Animate circular expand from button
     document.documentElement.animate(
@@ -84,17 +84,17 @@ export const AnimatedThemeToggler = ({
         easing: 'ease-in-out',
         pseudoElement: '::view-transition-new(root)',
       }
-    )
-  }, [isDark, duration, setTheme])
+    );
+  }, [isDark, duration, setTheme]);
 
   return (
     <button
       ref={buttonRef}
       onClick={toggleTheme}
       className={cn(
-        'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
+        'inline-flex items-center justify-center rounded-md font-medium text-sm transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        'disabled:opacity-50 disabled:pointer-events-none',
+        'disabled:pointer-events-none disabled:opacity-50',
         'hover:bg-accent hover:text-accent-foreground',
         'h-10 w-10',
         className
@@ -108,5 +108,5 @@ export const AnimatedThemeToggler = ({
         <Moon className="h-[1.2rem] w-[1.2rem] transition-all" />
       )}
     </button>
-  )
-}
+  );
+};

@@ -28,7 +28,12 @@
           }
         },
         "linter": {
-          "enabled": false
+          "enabled": true,
+          "rules": {
+            "no-unused-vars": "error",
+            "no-console": "warn"
+          },
+          "ignorePatterns": ["node_modules"]
         }
       }
     }

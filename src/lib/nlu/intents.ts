@@ -8,7 +8,7 @@
  * @module nlu/intents
  */
 
-import { EntityType, type IntentDefinition, IntentType } from '@/lib/nlu/types'
+import { EntityType, type IntentDefinition, IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Intent Definitions
@@ -230,7 +230,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     examples: [],
     confidence_threshold: 0.0,
   },
-}
+};
 
 // ============================================================================
 // Intent Utilities
@@ -248,43 +248,46 @@ export function getValidIntents(): IntentType[] {
     IntentType.CHECK_BUDGET, // Budget-specific patterns
     IntentType.FINANCIAL_PROJECTION, // Projection-specific patterns
     IntentType.CHECK_BALANCE, // General balance queries
-  ]
+  ];
 }
 
 /**
  * Get intent definition by type
  */
 export function getIntentDefinition(intent: IntentType): IntentDefinition {
-  return INTENT_DEFINITIONS[intent]
+  return INTENT_DEFINITIONS[intent];
 }
 
 /**
  * Get all intent patterns
  */
-export function getAllPatterns(): Array<{ intent: IntentType; pattern: RegExp }> {
-  const patterns: Array<{ intent: IntentType; pattern: RegExp }> = []
+export function getAllPatterns(): Array<{
+  intent: IntentType;
+  pattern: RegExp;
+}> {
+  const patterns: Array<{ intent: IntentType; pattern: RegExp }> = [];
 
   for (const intent of getValidIntents()) {
-    const definition = INTENT_DEFINITIONS[intent]
+    const definition = INTENT_DEFINITIONS[intent];
     for (const pattern of definition.patterns) {
-      patterns.push({ intent, pattern })
+      patterns.push({ intent, pattern });
     }
   }
 
-  return patterns
+  return patterns;
 }
 
 /**
  * Get all intent keywords
  */
 export function getAllKeywords(): Record<IntentType, string[]> {
-  const keywords: Record<IntentType, string[]> = {} as any
+  const keywords: Record<IntentType, string[]> = {} as any;
 
   for (const intent of getValidIntents()) {
-    keywords[intent] = INTENT_DEFINITIONS[intent].keywords
+    keywords[intent] = INTENT_DEFINITIONS[intent].keywords;
   }
 
-  return keywords
+  return keywords;
 }
 
 /**
@@ -292,14 +295,14 @@ export function getAllKeywords(): Record<IntentType, string[]> {
  */
 export function requiresConfirmation(intent: IntentType): boolean {
   // Intents that modify financial state require confirmation
-  return [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY].includes(intent)
+  return [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY].includes(intent);
 }
 
 /**
  * Get intent display name in Portuguese
  */
 export function getIntentDisplayName(intent: IntentType): string {
-  return INTENT_DEFINITIONS[intent].name
+  return INTENT_DEFINITIONS[intent].name;
 }
 
 /**
@@ -310,5 +313,5 @@ export function getIntentDisplayName(intent: IntentType): string {
  * Get intent description
  */
 export function getIntentDescription(intent: IntentType): string {
-  return INTENT_DEFINITIONS[intent].description
+  return INTENT_DEFINITIONS[intent].description;
 }

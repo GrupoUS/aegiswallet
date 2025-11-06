@@ -1,39 +1,39 @@
-import pino from 'pino'
-import crypto from 'crypto'
+import crypto from 'node:crypto';
+import pino from 'pino';
 
 // LGPD-compliant data sanitizer for Brazilian financial regulations
 interface SensitiveData {
-  cpf?: string
-  email?: string
-  phone?: string
-  bankAccount?: string
-  agency?: string
-  amount?: number
-  fullName?: string
+  cpf?: string;
+  email?: string;
+  phone?: string;
+  bankAccount?: string;
+  agency?: string;
+  amount?: number;
+  fullName?: string;
 }
 
 interface LogContext {
-  requestId?: string
-  userId?: string
-  operation?: string
-  resource?: string
-  ip?: string
-  userAgent?: string
-  duration?: number
-  [key: string]: any
+  requestId?: string;
+  userId?: string;
+  operation?: string;
+  resource?: string;
+  ip?: string;
+  userAgent?: string;
+  duration?: number;
+  [key: string]: any;
 }
 
 interface AuditLogData {
-  userId: string
-  operation: string
-  resource: string
-  resourceId?: string
-  details: Record<string, any>
-  timestamp: string
-  ip?: string
-  userAgent?: string
-  success: boolean
-  error?: string
+  userId: string;
+  operation: string;
+  resource: string;
+  resourceId?: string;
+  details: Record<string, any>;
+  timestamp: string;
+  ip?: string;
+  userAgent?: string;
+  success: boolean;
+  error?: string;
 }
 
 /**
@@ -41,8 +41,8 @@ interface AuditLogData {
  * Implements structured logging with data sanitization and audit trails
  */
 class Logger {
-  private logger: pino.Logger
-  private auditLogs: AuditLogData[] = []
+  private logger: pino.Logger;
+  private auditLogs: AuditLogData[] = [];
 
   constructor() {
     // Configure Pino for production use
@@ -52,7 +52,7 @@ class Logger {
         level: (label) => ({ level: label }),
         log: (object) => {
           // Remove sensitive data from all logs
-          return this.sanitizeLogData(object)
+          return this.sanitizeLogData(object);
         },
       },
       timestamp: pino.stdTimeFunctions.isoTime,
@@ -67,57 +67,7 @@ class Logger {
           },
         },
       }),
-    })
-  }
-
-  /**
-   * Sanitize sensitive data according to LGPD requirements
-   */
-  private sanitizeSensitiveData(data: SensitiveData): SensitiveData {
-    const sanitized: SensitiveData = { ...data }
-
-    if (sanitized.cpf) {
-      // Show only first 3 digits and last 2 digits of CPF
-      sanitized.cpf = `${sanitized.cpf.substring(0, 3)}***${sanitized.cpf.substring(sanitized.cpf.length - 2)}`
-    }
-
-    if (sanitized.email) {
-      // Show only first 2 characters and domain
-      const [local, domain] = sanitized.email.split('@')
-      sanitized.email = `${local.substring(0, 2)}***@${domain}`
-    }
-
-    if (sanitized.phone) {
-      // Show only area code and last 2 digits
-      sanitized.phone = `${sanitized.phone.substring(0, 2)}****${sanitized.phone.substring(sanitized.phone.length - 2)}`
-    }
-
-    if (sanitized.bankAccount) {
-      // Show only last 4 digits
-      sanitized.bankAccount = `****${sanitized.bankAccount.substring(sanitized.bankAccount.length - 4)}`
-    }
-
-    if (sanitized.agency) {
-      // Show only last digit
-      sanitized.agency = `***${sanitized.agency.substring(sanitized.agency.length - 1)}`
-    }
-
-    if (sanitized.amount && typeof sanitized.amount === 'number') {
-      // Round amounts and avoid exact values in logs
-      sanitized.amount = Math.round(sanitized.amount)
-    }
-
-    if (sanitized.fullName) {
-      // Show only first name and initial of last name
-      const names = sanitized.fullName.split(' ')
-      if (names.length > 1) {
-        sanitized.fullName = `${names[0]} ${names[names.length - 1].charAt(0)}.`
-      } else {
-        sanitized.fullName = `${names[0].substring(0, 3)}...`
-      }
-    }
-
-    return sanitized
+    });
   }
 
   /**
@@ -125,40 +75,40 @@ class Logger {
    */
   private sanitizeLogData(obj: any): any {
     if (typeof obj !== 'object' || obj === null) {
-      return obj
+      return obj;
     }
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => this.sanitizeLogData(item))
+      return obj.map((item) => this.sanitizeLogData(item));
     }
 
-    const sanitized: any = {}
+    const sanitized: any = {};
     for (const [key, value] of Object.entries(obj)) {
       // Check if this is sensitive data
       if (key.toLowerCase().includes('cpf') && typeof value === 'string') {
-        sanitized[key] = `${value.substring(0, 3)}***${value.substring(value.length - 2)}`
+        sanitized[key] = `${value.substring(0, 3)}***${value.substring(value.length - 2)}`;
       } else if (key.toLowerCase().includes('email') && typeof value === 'string') {
-        const [local, domain] = value.split('@')
-        sanitized[key] = `${local.substring(0, 2)}***@${domain}`
+        const [local, domain] = value.split('@');
+        sanitized[key] = `${local.substring(0, 2)}***@${domain}`;
       } else if (key.toLowerCase().includes('phone') && typeof value === 'string') {
-        sanitized[key] = `${value.substring(0, 2)}****${value.substring(value.length - 2)}`
+        sanitized[key] = `${value.substring(0, 2)}****${value.substring(value.length - 2)}`;
       } else if (key.toLowerCase().includes('password') || key.toLowerCase().includes('token')) {
-        sanitized[key] = '***'
+        sanitized[key] = '***';
       } else if (typeof value === 'object') {
-        sanitized[key] = this.sanitizeLogData(value)
+        sanitized[key] = this.sanitizeLogData(value);
       } else {
-        sanitized[key] = value
+        sanitized[key] = value;
       }
     }
 
-    return sanitized
+    return sanitized;
   }
 
   /**
    * Generate unique request ID for tracing
    */
   generateRequestId(): string {
-    return crypto.randomUUID()
+    return crypto.randomUUID();
   }
 
   /**
@@ -175,19 +125,19 @@ class Logger {
       service: 'aegiswallet-server',
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
-    }
+    };
 
     this.logger[level]({
       ...enhancedContext,
       message,
-    })
+    });
   }
 
   /**
    * Info level logging
    */
   info(message: string, context: LogContext = {}) {
-    this.logWithContext('info', message, context)
+    this.logWithContext('info', message, context);
   }
 
   /**
@@ -204,16 +154,16 @@ class Logger {
           details: error.details || error.info,
         },
       }),
-    }
+    };
 
-    this.logWithContext('error', message, errorContext)
+    this.logWithContext('error', message, errorContext);
   }
 
   /**
    * Warning level logging
    */
   warn(message: string, context: LogContext = {}) {
-    this.logWithContext('warn', message, context)
+    this.logWithContext('warn', message, context);
   }
 
   /**
@@ -221,7 +171,7 @@ class Logger {
    */
   debug(message: string, context: LogContext = {}) {
     if (process.env.NODE_ENV === 'development') {
-      this.logWithContext('debug', message, context)
+      this.logWithContext('debug', message, context);
     }
   }
 
@@ -233,10 +183,10 @@ class Logger {
       ...data,
       timestamp: new Date().toISOString(),
       details: this.sanitizeLogData(data.details),
-    }
+    };
 
     // Store audit log for potential export/review
-    this.auditLogs.push(auditLog)
+    this.auditLogs.push(auditLog);
 
     // Log audit event
     this.info(`AUDIT: ${data.operation}`, {
@@ -249,48 +199,48 @@ class Logger {
       ip: data.ip,
       userAgent: data.userAgent,
       category: 'audit',
-    })
+    });
 
-    return auditLog
+    return auditLog;
   }
 
   /**
    * Get audit logs for compliance reporting
    */
   getAuditLogs(userId?: string, startDate?: Date, endDate?: Date): AuditLogData[] {
-    let filteredLogs = this.auditLogs
+    let filteredLogs = this.auditLogs;
 
     if (userId) {
-      filteredLogs = filteredLogs.filter((log) => log.userId === userId)
+      filteredLogs = filteredLogs.filter((log) => log.userId === userId);
     }
 
     if (startDate) {
-      filteredLogs = filteredLogs.filter((log) => new Date(log.timestamp) >= startDate)
+      filteredLogs = filteredLogs.filter((log) => new Date(log.timestamp) >= startDate);
     }
 
     if (endDate) {
-      filteredLogs = filteredLogs.filter((log) => new Date(log.timestamp) <= endDate)
+      filteredLogs = filteredLogs.filter((log) => new Date(log.timestamp) <= endDate);
     }
 
-    return filteredLogs
+    return filteredLogs;
   }
 
   /**
    * Create child logger with additional context
    */
   child(context: LogContext): Logger {
-    const childLogger = Object.create(Logger.prototype)
-    childLogger.logger = this.logger.child(context)
-    childLogger.auditLogs = this.auditLogs
-    return childLogger
+    const childLogger = Object.create(Logger.prototype);
+    childLogger.logger = this.logger.child(context);
+    childLogger.auditLogs = this.auditLogs;
+    return childLogger;
   }
 }
 
 // Create and export singleton instance
-export const logger = new Logger()
+export const logger = new Logger();
 
 // Export types for use in other modules
-export type { LogContext, AuditLogData, SensitiveData }
+export type { LogContext, AuditLogData, SensitiveData };
 
 // Export convenience functions for common patterns
 export const logOperation = (
@@ -307,8 +257,8 @@ export const logOperation = (
     resourceId,
     details: details || {},
     success: true,
-  })
-}
+  });
+};
 
 export const logError = (
   operation: string,
@@ -321,7 +271,7 @@ export const logError = (
     userId,
     operation,
     category: 'operation-failure',
-  })
+  });
 
   return logger.createAuditLog({
     userId,
@@ -330,7 +280,7 @@ export const logError = (
     success: false,
     error: error.message,
     details: { ...context, errorMessage: error.message },
-  })
-}
+  });
+};
 
-export default logger
+export default logger;

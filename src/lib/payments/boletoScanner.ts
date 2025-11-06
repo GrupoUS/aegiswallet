@@ -3,11 +3,11 @@
  */
 
 export interface BoletoData {
-  barcode: string
-  amount: number
-  dueDate: Date
-  recipient: string
-  valid: boolean
+  barcode: string;
+  amount: number;
+  dueDate: Date;
+  recipient: string;
+  valid: boolean;
 }
 
 export class BoletoScanner {
@@ -19,14 +19,14 @@ export class BoletoScanner {
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       recipient: 'Empresa XYZ',
       valid: true,
-    }
+    };
   }
 
   validateBarcode(barcode: string): boolean {
-    return barcode.length === 47 || barcode.length === 48
+    return barcode.length === 47 || barcode.length === 48;
   }
 }
 
 export function getBoletoScanner(): BoletoScanner {
-  return new BoletoScanner()
+  return new BoletoScanner();
 }

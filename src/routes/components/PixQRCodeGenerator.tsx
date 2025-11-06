@@ -1,15 +1,15 @@
-import { QrCode } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { QrCode } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface PixQRCodeGeneratorProps {
-  amount: string
-  description: string
-  onAmountChange: (value: string) => void
-  onDescriptionChange: (value: string) => void
+  amount: string;
+  description: string;
+  onAmountChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
 }
 
 export default function PixQRCodeGenerator({
@@ -19,26 +19,26 @@ export default function PixQRCodeGenerator({
   onDescriptionChange,
 }: PixQRCodeGeneratorProps) {
   const formatCurrency = (value: string) => {
-    const cleanValue = value.replace(/[^\d]/g, '')
-    if (!cleanValue) return ''
-    const formatted = (Number(cleanValue) / 100).toFixed(2)
-    return `R$ ${formatted.replace('.', ',')}`
-  }
+    const cleanValue = value.replace(/[^\d]/g, '');
+    if (!cleanValue) return '';
+    const formatted = (Number(cleanValue) / 100).toFixed(2);
+    return `R$ ${formatted.replace('.', ',')}`;
+  };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d]/g, '')
-    onAmountChange(formatCurrency(value))
-  }
+    const value = e.target.value.replace(/[^\d]/g, '');
+    onAmountChange(formatCurrency(value));
+  };
 
   const generateQRCode = () => {
-    toast.success('QR Code gerado com sucesso!')
-  }
+    toast.success('QR Code gerado com sucesso!');
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <QrCode className="w-5 h-5 text-success" />
+          <QrCode className="h-5 w-5 text-success" />
           Gerar QR Code
         </CardTitle>
       </CardHeader>
@@ -52,7 +52,7 @@ export default function PixQRCodeGenerator({
             value={amount}
             onChange={handleAmountChange}
           />
-          <p className="text-xs text-muted-foreground">Deixe em branco para valor livre</p>
+          <p className="text-muted-foreground text-xs">Deixe em branco para valor livre</p>
         </div>
 
         <div className="space-y-2">
@@ -67,20 +67,20 @@ export default function PixQRCodeGenerator({
         </div>
 
         {/* QR Code placeholder */}
-        <div className="bg-muted aspect-square rounded-lg flex items-center justify-center">
-          <div className="text-center p-6">
-            <QrCode className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">O QR Code será gerado aqui</p>
+        <div className="flex aspect-square items-center justify-center rounded-lg bg-muted">
+          <div className="p-6 text-center">
+            <QrCode className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
+            <p className="text-muted-foreground text-sm">O QR Code será gerado aqui</p>
           </div>
         </div>
 
         <Button onClick={generateQRCode} className="w-full" size="lg">
-          <QrCode className="w-4 h-4 mr-2" />
+          <QrCode className="mr-2 h-4 w-4" />
           Gerar QR Code
         </Button>
 
-        <div className="text-xs text-muted-foreground text-center">Válido por 24 horas</div>
+        <div className="text-center text-muted-foreground text-xs">Válido por 24 horas</div>
       </CardContent>
     </Card>
-  )
+  );
 }

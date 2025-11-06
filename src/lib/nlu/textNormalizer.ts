@@ -13,7 +13,7 @@
  * @module nlu/textNormalizer
  */
 
-import type { NormalizedText } from '@/lib/nlu/types'
+import type { NormalizedText } from '@/lib/nlu/types';
 
 // ============================================================================
 // Brazilian Portuguese Stopwords
@@ -92,7 +92,7 @@ const STOPWORDS = new Set([
   'ter',
   'haver',
   'fazer',
-])
+]);
 
 // ============================================================================
 // Brazilian Portuguese Contractions
@@ -129,7 +129,7 @@ const CONTRACTIONS: Record<string, string> = {
   gastá: 'gastar',
   recebê: 'receber',
   transferi: 'transferir',
-}
+};
 
 // ============================================================================
 // Accent Mapping
@@ -162,70 +162,70 @@ const ACCENT_MAP: Record<string, string> = {
   Ú: 'U',
   Ü: 'U',
   Ç: 'C',
-}
+};
 
 // ============================================================================
 // Text Normalizer Class
 // ============================================================================
 
 export class TextNormalizer {
-  private keepAccents: boolean
-  private keepStopwords: boolean
-  private expandContractions: boolean
+  private keepAccents: boolean;
+  private keepStopwords: boolean;
+  private expandContractions: boolean;
 
   constructor(
     options: {
-      keepAccents?: boolean
-      keepStopwords?: boolean
-      expandContractions?: boolean
+      keepAccents?: boolean;
+      keepStopwords?: boolean;
+      expandContractions?: boolean;
     } = {}
   ) {
-    this.keepAccents = options.keepAccents ?? false
-    this.keepStopwords = options.keepStopwords ?? false
-    this.expandContractions = options.expandContractions ?? true
+    this.keepAccents = options.keepAccents ?? false;
+    this.keepStopwords = options.keepStopwords ?? false;
+    this.expandContractions = options.expandContractions ?? true;
   }
 
   /**
    * Normalize text with full preprocessing pipeline
    */
   normalize(text: string): NormalizedText {
-    const original = text
-    let normalized = text
+    const original = text;
+    let normalized = text;
 
     // 1. Lowercase
-    normalized = normalized.toLowerCase()
+    normalized = normalized.toLowerCase();
 
     // 2. Expand contractions
-    const expandedContractions: Record<string, string> = {}
+    const expandedContractions: Record<string, string> = {};
     if (this.expandContractions) {
-      normalized = this.expandContractionsInText(normalized, expandedContractions)
+      normalized = this.expandContractionsInText(normalized, expandedContractions);
     }
 
     // 3. Remove accents
     if (!this.keepAccents) {
-      normalized = this.removeAccents(normalized)
+      normalized = this.removeAccents(normalized);
     }
 
     // 4. Clean punctuation (keep only alphanumeric and spaces)
-    normalized = normalized.replace(/[^\w\s]/g, ' ')
+    normalized = normalized.replace(/[^\w\s]/g, ' ');
 
     // 5. Normalize whitespace
-    normalized = normalized.replace(/\s+/g, ' ').trim()
+    normalized = normalized.replace(/\s+/g, ' ').trim();
 
     // 6. Tokenize
-    const tokens = normalized.split(' ').filter((t) => t.length > 0)
+    const tokens = normalized.split(' ').filter((t) => t.length > 0);
 
     // 7. Remove stopwords
-    const removedStopwords: string[] = []
+    const removedStopwords: string[] = [];
     const finalTokens = this.keepStopwords
       ? tokens
       : tokens.filter((token) => {
           if (STOPWORDS.has(token)) {
-            removedStopwords.push(token)
-            return false
+            removedStopwords.push(token);
+            return false;
           }
-          return true
-        })
+          return true;
+        });
 
     return {
       original,
@@ -233,7 +233,7 @@ export class TextNormalizer {
       tokens: finalTokens,
       removedStopwords,
       expandedContractions,
-    }
+    };
   }
 
   /**
@@ -243,27 +243,27 @@ export class TextNormalizer {
     return text
       .split('')
       .map((char) => ACCENT_MAP[char] || char)
-      .join('')
+      .join('');
   }
 
   /**
    * Expand contractions in text
    */
   private expandContractionsInText(text: string, tracking: Record<string, string>): string {
-    let result = text
+    let result = text;
 
     // Sort by length (longest first) to avoid partial replacements
-    const sortedContractions = Object.entries(CONTRACTIONS).sort(([a], [b]) => b.length - a.length)
+    const sortedContractions = Object.entries(CONTRACTIONS).sort(([a], [b]) => b.length - a.length);
 
     for (const [contraction, expansion] of sortedContractions) {
-      const regex = new RegExp(`\\b${contraction}\\b`, 'gi')
+      const regex = new RegExp(`\\b${contraction}\\b`, 'gi');
       if (regex.test(result)) {
-        tracking[contraction] = expansion
-        result = result.replace(regex, expansion)
+        tracking[contraction] = expansion;
+        result = result.replace(regex, expansion);
       }
     }
 
-    return result
+    return result;
   }
 
   /**
@@ -274,21 +274,21 @@ export class TextNormalizer {
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter((t) => t.length > 0)
+      .filter((t) => t.length > 0);
   }
 
   /**
    * Check if word is a stopword
    */
   isStopword(word: string): boolean {
-    return STOPWORDS.has(word.toLowerCase())
+    return STOPWORDS.has(word.toLowerCase());
   }
 
   /**
    * Remove stopwords from token array
    */
   removeStopwords(tokens: string[]): string[] {
-    return tokens.filter((token) => !STOPWORDS.has(token.toLowerCase()))
+    return tokens.filter((token) => !STOPWORDS.has(token.toLowerCase()));
   }
 
   /**
@@ -298,7 +298,7 @@ export class TextNormalizer {
     return this.removeAccents(text.toLowerCase())
       .replace(/[^\w\s]/g, '')
       .replace(/\s+/g, ' ')
-      .trim()
+      .trim();
   }
 }
 
@@ -314,49 +314,49 @@ export function createTextNormalizer(): TextNormalizer {
     keepAccents: false,
     keepStopwords: false,
     expandContractions: true,
-  })
+  });
 }
 
 /**
  * Quick normalize function
  */
 export function normalizeText(text: string): string {
-  const normalizer = createTextNormalizer()
-  return normalizer.normalize(text).normalized
+  const normalizer = createTextNormalizer();
+  return normalizer.normalize(text).normalized;
 }
 
 /**
  * Calculate text similarity (simple Jaccard similarity)
  */
 export function calculateSimilarity(text1: string, text2: string): number {
-  const normalizer = createTextNormalizer()
-  const tokens1 = new Set(normalizer.normalize(text1).tokens)
-  const tokens2 = new Set(normalizer.normalize(text2).tokens)
+  const normalizer = createTextNormalizer();
+  const tokens1 = new Set(normalizer.normalize(text1).tokens);
+  const tokens2 = new Set(normalizer.normalize(text2).tokens);
 
-  const intersection = new Set([...tokens1].filter((x) => tokens2.has(x)))
-  const union = new Set([...tokens1, ...tokens2])
+  const intersection = new Set([...tokens1].filter((x) => tokens2.has(x)));
+  const union = new Set([...tokens1, ...tokens2]);
 
-  return union.size === 0 ? 0 : intersection.size / union.size
+  return union.size === 0 ? 0 : intersection.size / union.size;
 }
 
 /**
  * Extract keywords from text (non-stopwords)
  */
 export function extractKeywords(text: string): string[] {
-  const normalizer = createTextNormalizer()
-  const normalized = normalizer.normalize(text)
-  return normalized.tokens
+  const normalizer = createTextNormalizer();
+  const normalized = normalizer.normalize(text);
+  return normalized.tokens;
 }
 
 /**
  * Check if text contains any of the keywords
  */
 export function containsKeywords(text: string, keywords: string[]): boolean {
-  const normalizer = createTextNormalizer()
-  const normalized = normalizer.normalizeForComparison(text)
+  const normalizer = createTextNormalizer();
+  const normalized = normalizer.normalizeForComparison(text);
 
   return keywords.some((keyword) => {
-    const normalizedKeyword = normalizer.normalizeForComparison(keyword)
-    return normalized.includes(normalizedKeyword)
-  })
+    const normalizedKeyword = normalizer.normalizeForComparison(keyword);
+    return normalized.includes(normalizedKeyword);
+  });
 }

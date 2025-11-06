@@ -2,32 +2,32 @@
 // This is a mock implementation for development purposes
 
 export interface BelvoAccount {
-  id: string
-  name: string
-  type: 'checking' | 'savings' | 'credit'
-  balance: number
-  currency: 'BRL'
-  institution: string
-  lastUpdated: string
+  id: string;
+  name: string;
+  type: 'checking' | 'savings' | 'credit';
+  balance: number;
+  currency: 'BRL';
+  institution: string;
+  lastUpdated: string;
 }
 
 export interface BelvoTransaction {
-  id: string
-  account_id: string
-  amount: number
-  description: string
-  date: string
-  type: 'income' | 'expense'
-  category: string
-  reference?: string
+  id: string;
+  account_id: string;
+  amount: number;
+  description: string;
+  date: string;
+  type: 'income' | 'expense';
+  category: string;
+  reference?: string;
 }
 
 export interface BelvoInstitution {
-  id: string
-  name: string
-  type: 'bank' | 'credit_union'
-  country: 'BR'
-  logo?: string
+  id: string;
+  name: string;
+  type: 'bank' | 'credit_union';
+  country: 'BR';
+  logo?: string;
 }
 
 // Mock data for development
@@ -50,7 +50,7 @@ const mockAccounts: BelvoAccount[] = [
     institution: 'Banco do Brasil',
     lastUpdated: new Date().toISOString(),
   },
-]
+];
 
 const mockTransactions: BelvoTransaction[] = [
   {
@@ -80,7 +80,7 @@ const mockTransactions: BelvoTransaction[] = [
     type: 'expense',
     category: 'food',
   },
-]
+];
 
 const mockInstitutions: BelvoInstitution[] = [
   { id: 'bb', name: 'Banco do Brasil', type: 'bank', country: 'BR' },
@@ -88,7 +88,7 @@ const mockInstitutions: BelvoInstitution[] = [
   { id: 'bradesco', name: 'Bradesco', type: 'bank', country: 'BR' },
   { id: 'santander', name: 'Santander Brasil', type: 'bank', country: 'BR' },
   { id: 'caixa', name: 'Caixa Econômica Federal', type: 'bank', country: 'BR' },
-]
+];
 
 /**
  * Belvo API Client - Stub Implementation
@@ -96,18 +96,15 @@ const mockInstitutions: BelvoInstitution[] = [
  * In production, this would make actual API calls to Belvo
  */
 export class BelvoApiClient {
-  private apiKey: string
-  private secretKey: string
-  private baseUrl: string
-
   constructor(
     apiKey: string,
     secretKey: string,
     environment: 'sandbox' | 'production' = 'sandbox'
   ) {
-    this.apiKey = apiKey
-    this.secretKey = secretKey
-    this.baseUrl = environment === 'sandbox' ? 'https://sandbox.belvo.com' : 'https://api.belvo.com'
+    this.apiKey = apiKey;
+    this.secretKey = secretKey;
+    this.baseUrl =
+      environment === 'sandbox' ? 'https://sandbox.belvo.com' : 'https://api.belvo.com';
   }
 
   /**
@@ -115,20 +112,17 @@ export class BelvoApiClient {
    */
   async getInstitutions(): Promise<BelvoInstitution[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return mockInstitutions
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockInstitutions;
   }
 
   /**
    * Get user accounts
    */
-  async getAccounts(userId: string): Promise<BelvoAccount[]> {
+  async getAccounts(_userId: string): Promise<BelvoAccount[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // In real implementation, this would filter by user
-    console.log(`Fetching accounts for user: ${userId}`)
-    return mockAccounts
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return mockAccounts;
   }
 
   /**
@@ -140,37 +134,33 @@ export class BelvoApiClient {
     endDate?: string
   ): Promise<BelvoTransaction[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    console.log(`Fetching transactions for account: ${accountId}`, { startDate, endDate })
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Filter transactions by account
-    let transactions = mockTransactions.filter((t) => t.account_id === accountId)
+    let transactions = mockTransactions.filter((t) => t.account_id === accountId);
 
     // Apply date filters if provided
     if (startDate) {
-      transactions = transactions.filter((t) => t.date >= startDate)
+      transactions = transactions.filter((t) => t.date >= startDate);
     }
     if (endDate) {
-      transactions = transactions.filter((t) => t.date <= endDate)
+      transactions = transactions.filter((t) => t.date <= endDate);
     }
 
-    return transactions
+    return transactions;
   }
 
   /**
    * Sync account data (refresh from bank)
    */
-  async syncAccount(accountId: string): Promise<{ status: string; message: string }> {
+  async syncAccount(_accountId: string): Promise<{ status: string; message: string }> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    console.log(`Syncing account: ${accountId}`)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     return {
       status: 'success',
       message: 'Account data synchronized successfully',
-    }
+    };
   }
 
   /**
@@ -178,14 +168,12 @@ export class BelvoApiClient {
    */
   async createLinkToken(userId: string): Promise<{ link_token: string; expiration: string }> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    console.log(`Creating link token for user: ${userId}`)
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     return {
       link_token: `link_token_${Date.now()}_${userId}`,
       expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
-    }
+    };
   }
 }
 
@@ -194,33 +182,33 @@ export const belvoClient = new BelvoApiClient(
   process.env.BELVO_API_KEY || 'mock_api_key',
   process.env.BELVO_SECRET_KEY || 'mock_secret_key',
   'sandbox'
-)
+);
 
 // Utility functions
 export const bankingUtils = {
   formatAccountNumber: (accountNumber: string) => {
     // Format Brazilian account number
-    const cleaned = accountNumber.replace(/[^\d]/g, '')
+    const cleaned = accountNumber.replace(/[^\d]/g, '');
     if (cleaned.length >= 6) {
-      return `${cleaned.slice(0, -1)}-${cleaned.slice(-1)}`
+      return `${cleaned.slice(0, -1)}-${cleaned.slice(-1)}`;
     }
-    return accountNumber
+    return accountNumber;
   },
 
   formatAgency: (agency: string) => {
     // Format Brazilian agency number
-    const cleaned = agency.replace(/[^\d]/g, '')
+    const cleaned = agency.replace(/[^\d]/g, '');
     if (cleaned.length === 4) {
-      return cleaned
+      return cleaned;
     }
-    return agency
+    return agency;
   },
 
   validateBankAccount: (agency: string, account: string) => {
     // Basic validation for Brazilian bank account
-    const cleanedAgency = agency.replace(/[^\d]/g, '')
-    const cleanedAccount = account.replace(/[^\d]/g, '')
+    const cleanedAgency = agency.replace(/[^\d]/g, '');
+    const cleanedAccount = account.replace(/[^\d]/g, '');
 
-    return cleanedAgency.length >= 3 && cleanedAccount.length >= 4
+    return cleanedAgency.length >= 3 && cleanedAccount.length >= 4;
   },
-}
+};

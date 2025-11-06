@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface FinancialAmountProps {
-  amount: number
-  currency?: string
-  showSign?: boolean
-  className?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  amount: number;
+  currency?: string;
+  showSign?: boolean;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export function FinancialAmount({
@@ -20,28 +20,28 @@ export function FinancialAmount({
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Math.abs(amount))
+  }).format(Math.abs(amount));
 
-  const sign = showSign && amount > 0 ? '+' : amount < 0 ? '-' : ''
+  const sign = showSign && amount > 0 ? '+' : amount < 0 ? '-' : '';
 
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-lg',
     xl: 'text-xl',
-  }
+  };
 
   const colorClass =
     amount > 0
       ? 'text-financial-positive'
       : amount < 0
         ? 'text-financial-negative'
-        : 'text-gray-900'
+        : 'text-gray-900';
 
   return (
     <span className={cn('font-mono font-semibold', sizeClasses[size], colorClass, className)}>
       {sign}
       {formatted}
     </span>
-  )
+  );
 }

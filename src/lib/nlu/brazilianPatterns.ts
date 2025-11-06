@@ -7,18 +7,23 @@
  * @module nlu/brazilianPatterns
  */
 
-import { IntentType, EntityType, type EntityPattern, type TrainingUtterance } from '@/lib/nlu/types'
+import {
+  type EntityPattern,
+  EntityType,
+  IntentType,
+  type TrainingUtterance,
+} from '@/lib/nlu/types';
 
 // ============================================================================
 // Brazilian Regional Variations
 // ============================================================================
 
 export interface RegionalVariation {
-  region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown'
-  patterns: Record<string, string[]> // Regional alternatives to standard patterns
-  slang: string[]
-  culturalContext: string[]
-  financialTerminology: Record<string, string>
+  region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
+  patterns: Record<string, string[]>; // Regional alternatives to standard patterns
+  slang: string[];
+  culturalContext: string[];
+  financialTerminology: Record<string, string>;
 }
 
 export const BRAZILIAN_REGIONS: RegionalVariation[] = [
@@ -95,7 +100,7 @@ export const BRAZILIAN_REGIONS: RegionalVariation[] = [
       account: 'conta',
     },
   },
-]
+];
 
 // ============================================================================
 // Brazilian Financial Entity Patterns
@@ -107,8 +112,8 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
     type: EntityType.AMOUNT,
     pattern: /R?\$\s*(\d+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s*(reais|r\$|real|reis)/gi,
     normalizer: (match: string) => {
-      const cleanMatch = match.replace(/[^\d.,]/g, '').replace(',', '.')
-      return parseFloat(cleanMatch)
+      const cleanMatch = match.replace(/[^\d.,]/g, '').replace(',', '.');
+      return parseFloat(cleanMatch);
     },
     validator: (value: number) => value > 0 && value <= 1000000,
   },
@@ -132,8 +137,8 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
         cartão: 'cartao',
         financiamento: 'financiamento',
         aluguel: 'aluguel',
-      }
-      return billTypes[match.toLowerCase()] || match.toLowerCase()
+      };
+      return billTypes[match.toLowerCase()] || match.toLowerCase();
     },
   },
 
@@ -143,32 +148,36 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
     pattern:
       /(hoje|amanhã|ontem|semana que vem|próxima semana|mês que vem|próximo mês|dia \d{1,2}|\d{1,2}\/\d{1,2}|\d{1,2}\/\d{1,2}\/\d{2,4})/gi,
     normalizer: (match: string) => {
-      const today = new Date()
-      const lowerMatch = match.toLowerCase()
+      const today = new Date();
+      const lowerMatch = match.toLowerCase();
 
       switch (lowerMatch) {
         case 'hoje':
-          return today.toISOString().split('T')[0]
-        case 'amanhã':
-          const tomorrow = new Date(today)
-          tomorrow.setDate(tomorrow.getDate() + 1)
-          return tomorrow.toISOString().split('T')[0]
-        case 'ontem':
-          const yesterday = new Date(today)
-          yesterday.setDate(yesterday.getDate() - 1)
-          return yesterday.toISOString().split('T')[0]
+          return today.toISOString().split('T')[0];
+        case 'amanhã': {
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return tomorrow.toISOString().split('T')[0];
+        }
+        case 'ontem': {
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          return yesterday.toISOString().split('T')[0];
+        }
         case 'semana que vem':
-        case 'próxima semana':
-          const nextWeek = new Date(today)
-          nextWeek.setDate(nextWeek.getDate() + 7)
-          return nextWeek.toISOString().split('T')[0]
+        case 'próxima semana': {
+          const nextWeek = new Date(today);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          return nextWeek.toISOString().split('T')[0];
+        }
         case 'mês que vem':
-        case 'próximo mês':
-          const nextMonth = new Date(today)
-          nextMonth.setMonth(nextMonth.getMonth() + 1)
-          return nextMonth.toISOString().split('T')[0]
+        case 'próximo mês': {
+          const nextMonth = new Date(today);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          return nextMonth.toISOString().split('T')[0];
+        }
         default:
-          return match
+          return match;
       }
     },
   },
@@ -185,8 +194,8 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
         salário: 'salario',
         digital: 'digital',
         conjunta: 'conjunta',
-      }
-      return accountTypes[match.toLowerCase()] || 'corrente'
+      };
+      return accountTypes[match.toLowerCase()] || 'corrente';
     },
   },
 
@@ -196,29 +205,29 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
     pattern:
       /((\d{3}\.?\d{3}\.?\d{3}-?\d{2})|(\d{11})|([\w.-]+@[\w.-]+\.[a-zA-Z]{2,})|(para\s+[A-Z][a-z]+\s+[A-Z][a-z]+))/gi,
     normalizer: (match: string) => {
-      const cleanMatch = match.replace(/para\s+/i, '').trim()
+      const cleanMatch = match.replace(/para\s+/i, '').trim();
 
       // CPF pattern
       if (/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/.test(cleanMatch)) {
-        return { type: 'cpf', value: cleanMatch.replace(/[^\d]/g, '') }
+        return { type: 'cpf', value: cleanMatch.replace(/[^\d]/g, '') };
       }
 
       // Phone pattern
       if (/^\d{11}$/.test(cleanMatch)) {
-        return { type: 'phone', value: cleanMatch }
+        return { type: 'phone', value: cleanMatch };
       }
 
       // Email pattern
       if (/@/.test(cleanMatch)) {
-        return { type: 'email', value: cleanMatch }
+        return { type: 'email', value: cleanMatch };
       }
 
       // Name pattern (simplified)
       if (/^[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(cleanMatch)) {
-        return { type: 'name', value: cleanMatch }
+        return { type: 'name', value: cleanMatch };
       }
 
-      return { type: 'unknown', value: cleanMatch }
+      return { type: 'unknown', value: cleanMatch };
     },
   },
 
@@ -242,8 +251,8 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
         contas: 'contas',
         cartão: 'cartao',
         empréstimos: 'emprestimos',
-      }
-      return categories[match.toLowerCase()] || match.toLowerCase()
+      };
+      return categories[match.toLowerCase()] || match.toLowerCase();
     },
   },
 
@@ -264,11 +273,11 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
         'últimos 30 dias': 'last_30_days',
         'próximos 7 dias': 'next_7_days',
         'próximos 30 dias': 'next_30_days',
-      }
-      return periods[match.toLowerCase()] || match.toLowerCase()
+      };
+      return periods[match.toLowerCase()] || match.toLowerCase();
     },
   },
-]
+];
 
 // ============================================================================
 // Brazilian Intent Patterns
@@ -393,7 +402,7 @@ export const BRAZILIAN_INTENT_PATTERNS = {
     /cálculo (de )?gastos/i,
     /orçamento futuro/i,
   ],
-}
+};
 
 // ============================================================================
 // Brazilian Training Dataset
@@ -422,7 +431,11 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
   },
 
   // Check Balance - RJ variations
-  { text: 'quanto tá na conta', intent: IntentType.CHECK_BALANCE, region: 'RJ' },
+  {
+    text: 'quanto tá na conta',
+    intent: IntentType.CHECK_BALANCE,
+    region: 'RJ',
+  },
   {
     text: 'meu saldo tá bom',
     intent: IntentType.CHECK_BALANCE,
@@ -460,21 +473,46 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
   {
     text: 'pagar a conta de luz',
     intent: IntentType.PAY_BILL,
-    entities: [{ type: EntityType.BILL_TYPE, value: 'luz', startIndex: 14, endIndex: 17 }],
+    entities: [
+      {
+        type: EntityType.BILL_TYPE,
+        value: 'luz',
+        startIndex: 14,
+        endIndex: 17,
+      },
+    ],
   },
   {
     text: 'quitar o boleto de energia',
     intent: IntentType.PAY_BILL,
-    entities: [{ type: EntityType.BILL_TYPE, value: 'energia', startIndex: 16, endIndex: 23 }],
+    entities: [
+      {
+        type: EntityType.BILL_TYPE,
+        value: 'energia',
+        startIndex: 16,
+        endIndex: 23,
+      },
+    ],
   },
   {
     text: 'pagar a boleta de água',
     intent: IntentType.PAY_BILL,
     region: 'SP',
     metadata: { slang: true },
-    entities: [{ type: EntityType.BILL_TYPE, value: 'água', startIndex: 15, endIndex: 18 }],
+    entities: [
+      {
+        type: EntityType.BILL_TYPE,
+        value: 'água',
+        startIndex: 15,
+        endIndex: 18,
+      },
+    ],
   },
-  { text: 'acertar as contas do mês', intent: IntentType.PAY_BILL, metadata: { slang: true } },
+  {
+    text: 'acertar as contas do mês',
+    intent: IntentType.PAY_BILL,
+    metadata: { slang: true },
+  },
 
   // Transfer Money - Regional variations
   {
@@ -482,13 +520,25 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
     intent: IntentType.TRANSFER_MONEY,
     entities: [
       { type: EntityType.AMOUNT, value: 100, startIndex: 10, endIndex: 13 },
-      { type: EntityType.RECIPIENT, value: 'João', startIndex: 20, endIndex: 24 },
+      {
+        type: EntityType.RECIPIENT,
+        value: 'João',
+        startIndex: 20,
+        endIndex: 24,
+      },
     ],
   },
   {
     text: 'fazer PIX para Maria',
     intent: IntentType.TRANSFER_MONEY,
-    entities: [{ type: EntityType.RECIPIENT, value: 'Maria', startIndex: 13, endIndex: 18 }],
+    entities: [
+      {
+        type: EntityType.RECIPIENT,
+        value: 'Maria',
+        startIndex: 13,
+        endIndex: 18,
+      },
+    ],
   },
   {
     text: 'passar 50 reais para meu irmão',
@@ -496,17 +546,33 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
     metadata: { slang: true },
     entities: [
       { type: EntityType.AMOUNT, value: 50, startIndex: 6, endIndex: 13 },
-      { type: EntityType.RECIPIENT, value: 'irmão', startIndex: 24, endIndex: 29 },
+      {
+        type: EntityType.RECIPIENT,
+        value: 'irmão',
+        startIndex: 24,
+        endIndex: 29,
+      },
     ],
   },
   {
     text: 'depositar na conta do Paulo',
     intent: IntentType.TRANSFER_MONEY,
-    entities: [{ type: EntityType.RECIPIENT, value: 'Paulo', startIndex: 20, endIndex: 25 }],
+    entities: [
+      {
+        type: EntityType.RECIPIENT,
+        value: 'Paulo',
+        startIndex: 20,
+        endIndex: 25,
+      },
+    ],
   },
 
   // Check Budget - Brazilian variations
-  { text: 'como tá meu orçamento', intent: IntentType.CHECK_BUDGET, metadata: { slang: true } },
+  {
+    text: 'como tá meu orçamento',
+    intent: IntentType.CHECK_BUDGET,
+    metadata: { slang: true },
+  },
   { text: 'quanto gastei este mês', intent: IntentType.CHECK_BUDGET },
   { text: 'ver meus gastos', intent: IntentType.CHECK_BUDGET },
   { text: 'analisar minhas despesas', intent: IntentType.CHECK_BUDGET },
@@ -514,38 +580,48 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
   // Check Income - Brazilian variations
   { text: 'quanto recebi este mês', intent: IntentType.CHECK_INCOME },
   { text: 'minhas entradas de dinheiro', intent: IntentType.CHECK_INCOME },
-  { text: 'quanto entrou na conta', intent: IntentType.CHECK_INCOME, metadata: { slang: true } },
+  {
+    text: 'quanto entrou na conta',
+    intent: IntentType.CHECK_INCOME,
+    metadata: { slang: true },
+  },
   { text: 'renda mensal', intent: IntentType.CHECK_INCOME },
 
   // Financial Projection - Brazilian variations
-  { text: 'previsão de gastos para próximo mês', intent: IntentType.FINANCIAL_PROJECTION },
+  {
+    text: 'previsão de gastos para próximo mês',
+    intent: IntentType.FINANCIAL_PROJECTION,
+  },
   {
     text: 'quanto vou gastar este mês',
     intent: IntentType.FINANCIAL_PROJECTION,
     metadata: { slang: true },
   },
   { text: 'planejar o orçamento', intent: IntentType.FINANCIAL_PROJECTION },
-  { text: 'análise financeira mensal', intent: IntentType.FINANCIAL_PROJECTION },
-]
+  {
+    text: 'análise financeira mensal',
+    intent: IntentType.FINANCIAL_PROJECTION,
+  },
+];
 
 // ============================================================================
 // Brazilian Context Analysis
 // ============================================================================
 
 export interface BrazilianContext {
-  region: string
-  linguisticStyle: 'formal' | 'colloquial' | 'slang' | 'mixed'
-  culturalMarkers: string[]
+  region: string;
+  linguisticStyle: 'formal' | 'colloquial' | 'slang' | 'mixed';
+  culturalMarkers: string[];
   financialContext: {
-    commonBills: string[]
-    paymentMethods: string[]
-    financialHabits: string[]
-  }
+    commonBills: string[];
+    paymentMethods: string[];
+    financialHabits: string[];
+  };
   temporalContext: {
-    timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night'
-    dayOfWeek: 'weekday' | 'weekend'
-    seasonality: 'beginning' | 'middle' | 'end' // of month
-  }
+    timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+    dayOfWeek: 'weekday' | 'weekend';
+    seasonality: 'beginning' | 'middle' | 'end'; // of month
+  };
 }
 
 export class BrazilianContextAnalyzer {
@@ -553,7 +629,7 @@ export class BrazilianContextAnalyzer {
    * Analyze text to extract Brazilian context
    */
   analyzeContext(text: string): BrazilianContext {
-    const lowerText = text.toLowerCase()
+    const lowerText = text.toLowerCase();
 
     return {
       region: this.detectRegion(lowerText),
@@ -561,118 +637,118 @@ export class BrazilianContextAnalyzer {
       culturalMarkers: this.detectCulturalMarkers(lowerText),
       financialContext: this.analyzeFinancialContext(lowerText),
       temporalContext: this.analyzeTemporalContext(),
-    }
+    };
   }
 
   private detectRegion(text: string): string {
     for (const region of BRAZILIAN_REGIONS) {
-      const hasSlang = region.slang.some((slang) => text.includes(slang))
+      const hasSlang = region.slang.some((slang) => text.includes(slang));
       const hasPattern = Object.values(region.patterns).some((patterns) =>
         patterns.some((pattern) => text.includes(pattern))
-      )
+      );
 
       if (hasSlang || hasPattern) {
-        return region.region
+        return region.region;
       }
     }
 
-    return 'Unknown'
+    return 'Unknown';
   }
 
   private detectLinguisticStyle(text: string): 'formal' | 'colloquial' | 'slang' | 'mixed' {
-    const formalIndicators = ['gostaria', 'poderia', 'agradeceria', 'por favor']
-    const slangIndicators = ['oxente', 'caraca', 'meu bem', 'bah', 'tchê', 'maneiro']
-    const colloquialIndicators = ['meu', 'minha', 'quero', 'vou', 'pegar', 'tá']
+    const formalIndicators = ['gostaria', 'poderia', 'agradeceria', 'por favor'];
+    const slangIndicators = ['oxente', 'caraca', 'meu bem', 'bah', 'tchê', 'maneiro'];
+    const colloquialIndicators = ['meu', 'minha', 'quero', 'vou', 'pegar', 'tá'];
 
-    const hasFormal = formalIndicators.some((indicator) => text.includes(indicator))
-    const hasSlang = slangIndicators.some((indicator) => text.includes(indicator))
-    const hasColloquial = colloquialIndicators.some((indicator) => text.includes(indicator))
+    const hasFormal = formalIndicators.some((indicator) => text.includes(indicator));
+    const hasSlang = slangIndicators.some((indicator) => text.includes(indicator));
+    const hasColloquial = colloquialIndicators.some((indicator) => text.includes(indicator));
 
-    if (hasFormal && !hasSlang) return 'formal'
-    if (hasSlang && !hasFormal) return 'slang'
-    if (hasColloquial && !hasFormal && !hasSlang) return 'colloquial'
-    if (hasSlang && hasFormal) return 'mixed'
+    if (hasFormal && !hasSlang) return 'formal';
+    if (hasSlang && !hasFormal) return 'slang';
+    if (hasColloquial && !hasFormal && !hasSlang) return 'colloquial';
+    if (hasSlang && hasFormal) return 'mixed';
 
-    return 'colloquial'
+    return 'colloquial';
   }
 
   private detectCulturalMarkers(text: string): string[] {
-    const markers = []
+    const markers = [];
 
     // Time-related cultural markers
-    if (text.includes('semana')) markers.push('time_planning')
-    if (text.includes('mês') || text.includes('mes')) markers.push('monthly_planning')
+    if (text.includes('semana')) markers.push('time_planning');
+    if (text.includes('mês') || text.includes('mes')) markers.push('monthly_planning');
 
     // Social context markers
-    if (text.includes('família') || text.includes('filhos')) markers.push('family_context')
-    if (text.includes('trabalho') || text.includes('emprego')) markers.push('work_context')
+    if (text.includes('família') || text.includes('filhos')) markers.push('family_context');
+    if (text.includes('trabalho') || text.includes('emprego')) markers.push('work_context');
 
     // Regional markers
-    if (text.includes('praiá') || text.includes('praia')) markers.push('coastal_life')
-    if (text.includes('trânsito') || text.includes('engarrafamento')) markers.push('urban_life')
+    if (text.includes('praiá') || text.includes('praia')) markers.push('coastal_life');
+    if (text.includes('trânsito') || text.includes('engarrafamento')) markers.push('urban_life');
 
-    return markers
+    return markers;
   }
 
   private analyzeFinancialContext(text: string): BrazilianContext['financialContext'] {
-    const commonBills = []
-    const paymentMethods = []
-    const financialHabits = []
+    const commonBills = [];
+    const paymentMethods = [];
+    const financialHabits = [];
 
     // Detect common bills
-    if (text.includes('luz') || text.includes('energia')) commonBills.push('energia')
-    if (text.includes('água')) commonBills.push('agua')
-    if (text.includes('telefone') || text.includes('celular')) commonBills.push('telefone')
-    if (text.includes('internet')) commonBills.push('internet')
+    if (text.includes('luz') || text.includes('energia')) commonBills.push('energia');
+    if (text.includes('água')) commonBills.push('agua');
+    if (text.includes('telefone') || text.includes('celular')) commonBills.push('telefone');
+    if (text.includes('internet')) commonBills.push('internet');
 
     // Detect payment methods
-    if (text.includes('PIX') || text.includes('pix')) paymentMethods.push('pix')
-    if (text.includes('boleto') || text.includes('boleta')) paymentMethods.push('boleto')
+    if (text.includes('PIX') || text.includes('pix')) paymentMethods.push('pix');
+    if (text.includes('boleto') || text.includes('boleta')) paymentMethods.push('boleto');
     if (text.includes('transfer') || text.includes('depositar'))
-      paymentMethods.push('transferencia')
+      paymentMethods.push('transferencia');
 
     // Detect financial habits
     if (text.includes('todo mês') || text.includes('mensalmente'))
-      financialHabits.push('regular_planning')
+      financialHabits.push('regular_planning');
     if (text.includes('economizar') || text.includes('guardar'))
-      financialHabits.push('saving_habit')
+      financialHabits.push('saving_habit');
     if (text.includes('gastar') || text.includes('despesa'))
-      financialHabits.push('expense_tracking')
+      financialHabits.push('expense_tracking');
 
     return {
       commonBills,
       paymentMethods,
       financialHabits,
-    }
+    };
   }
 
   private analyzeTemporalContext(): BrazilianContext['temporalContext'] {
-    const now = new Date()
-    const hour = now.getHours()
-    const dayOfWeek = now.getDay()
-    const dayOfMonth = now.getDate()
+    const now = new Date();
+    const hour = now.getHours();
+    const dayOfWeek = now.getDay();
+    const dayOfMonth = now.getDate();
 
     // Time of day
-    let timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night'
-    if (hour >= 6 && hour < 12) timeOfDay = 'morning'
-    else if (hour >= 12 && hour < 18) timeOfDay = 'afternoon'
-    else if (hour >= 18 && hour < 22) timeOfDay = 'evening'
-    else timeOfDay = 'night'
+    let timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+    if (hour >= 6 && hour < 12) timeOfDay = 'morning';
+    else if (hour >= 12 && hour < 18) timeOfDay = 'afternoon';
+    else if (hour >= 18 && hour < 22) timeOfDay = 'evening';
+    else timeOfDay = 'night';
 
     // Day of week
-    const dayType = dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday'
+    const dayType = dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday';
 
     // Month seasonality
-    let seasonality: 'beginning' | 'middle' | 'end'
-    if (dayOfMonth <= 10) seasonality = 'beginning'
-    else if (dayOfMonth <= 20) seasonality = 'middle'
-    else seasonality = 'end'
+    let seasonality: 'beginning' | 'middle' | 'end';
+    if (dayOfMonth <= 10) seasonality = 'beginning';
+    else if (dayOfMonth <= 20) seasonality = 'middle';
+    else seasonality = 'end';
 
     return {
       timeOfDay,
       dayOfWeek: dayType,
       seasonality,
-    }
+    };
   }
 }
 
@@ -685,5 +761,5 @@ export {
   BRAZILIAN_ENTITY_PATTERNS,
   BRAZILIAN_INTENT_PATTERNS,
   BRAZILIAN_TRAINING_DATA,
-}
-export type { RegionalVariation, BrazilianContext }
+};
+export type { RegionalVariation, BrazilianContext };

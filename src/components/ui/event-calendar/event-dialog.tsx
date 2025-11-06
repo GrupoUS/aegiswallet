@@ -1,10 +1,10 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { addHours, format, setHours, setMinutes } from 'date-fns'
-import { useEffect, useState } from 'react'
-import { type SubmitHandler, useForm } from 'react-hook-form'
-import * as z from 'zod'
-import { Button } from '@/components/ui/button'
-import { DatePicker } from '@/components/ui/date-picker'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { addHours, format, setHours, setMinutes } from 'date-fns';
+import { useEffect, useState } from 'react';
+import { type SubmitHandler, useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -21,19 +21,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import type { CalendarEvent, EventColor } from './types'
-import { EVENT_COLOR_STYLES } from './types'
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import type { CalendarEvent, EventColor } from './types';
+import { EVENT_COLOR_STYLES } from './types';
 
 const baseEventFormSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -60,23 +60,23 @@ const baseEventFormSchema = z.object({
   allDay: z.boolean().optional(),
   recurring: z.boolean().optional(),
   recurrenceRule: z.string().optional(),
-})
+});
 
 const eventFormSchema = baseEventFormSchema.transform((values) => ({
   ...values,
   allDay: values.allDay ?? false,
   recurring: values.recurring ?? false,
-}))
+}));
 
-type EventFormInput = z.input<typeof eventFormSchema>
+type EventFormInput = z.input<typeof eventFormSchema>;
 
 interface EventDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (event: Partial<CalendarEvent>) => void
-  event?: CalendarEvent | null
-  initialDate?: Date
-  initialStartTime?: Date
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (event: Partial<CalendarEvent>) => void;
+  event?: CalendarEvent | null;
+  initialDate?: Date;
+  initialStartTime?: Date;
 }
 
 const colorOptionDefinitions: Array<{ value: EventColor; label: string }> = [
@@ -94,13 +94,13 @@ const colorOptionDefinitions: Array<{ value: EventColor; label: string }> = [
   { value: 'pink', label: 'Rosa' },
   { value: 'teal', label: 'Ciano' },
   { value: 'cyan', label: 'Azul claro' },
-]
+];
 
 const colorOptions: Array<{ value: EventColor; label: string; class: string }> =
   colorOptionDefinitions.map((option) => ({
     ...option,
     class: (EVENT_COLOR_STYLES[option.value] ?? EVENT_COLOR_STYLES.blue).dot,
-  }))
+  }));
 
 const recurrenceOptions = [
   { value: 'FREQ=DAILY', label: 'Diariamente' },
@@ -108,7 +108,7 @@ const recurrenceOptions = [
   { value: 'FREQ=WEEKLY;BYDAY=MO,WE,FR', label: 'Seg, Qua, Sex' },
   { value: 'FREQ=MONTHLY', label: 'Mensalmente' },
   { value: 'FREQ=YEARLY', label: 'Anualmente' },
-]
+];
 
 export function EventDialog({
   open,
@@ -118,8 +118,8 @@ export function EventDialog({
   initialDate,
   initialStartTime,
 }: EventDialogProps) {
-  const [isRecurring, setIsRecurring] = useState(false)
-  const isEditing = !!event
+  const [isRecurring, setIsRecurring] = useState(false);
+  const isEditing = !!event;
 
   const form = useForm<EventFormInput>({
     resolver: zodResolver(eventFormSchema),
@@ -134,7 +134,7 @@ export function EventDialog({
       recurring: false,
       recurrenceRule: '',
     } satisfies EventFormInput,
-  })
+  });
 
   // Update form when event changes
   useEffect(() => {
@@ -149,7 +149,7 @@ export function EventDialog({
         allDay: event.allDay || false,
         recurring: false,
         recurrenceRule: '',
-      })
+      });
     } else if (initialDate || initialStartTime) {
       form.reset({
         title: '',
@@ -161,18 +161,18 @@ export function EventDialog({
         allDay: false,
         recurring: false,
         recurrenceRule: '',
-      })
+      });
     }
-  }, [event, initialDate, initialStartTime, form])
+  }, [event, initialDate, initialStartTime, form]);
 
   const onSubmit: SubmitHandler<EventFormInput> = (values) => {
-    const parsed = eventFormSchema.parse(values)
-    const [startHour, startMinute] = parsed.startTime.split(':').map(Number)
-    const [endHour, endMinute] = parsed.endTime.split(':').map(Number)
-    const baseDate = new Date(parsed.date)
+    const parsed = eventFormSchema.parse(values);
+    const [startHour, startMinute] = parsed.startTime.split(':').map(Number);
+    const [endHour, endMinute] = parsed.endTime.split(':').map(Number);
+    const baseDate = new Date(parsed.date);
 
-    const start = setMinutes(setHours(baseDate, startHour), startMinute)
-    const end = setMinutes(setHours(baseDate, endHour), endMinute)
+    const start = setMinutes(setHours(baseDate, startHour), startMinute);
+    const end = setMinutes(setHours(baseDate, endHour), endMinute);
 
     const eventData: Partial<CalendarEvent> = {
       id: event?.id,
@@ -182,16 +182,16 @@ export function EventDialog({
       end,
       color: parsed.color,
       allDay: parsed.allDay,
-    }
+    };
 
-    onSave(eventData)
-    onOpenChange(false)
-    form.reset()
-  }
+    onSave(eventData);
+    onOpenChange(false);
+    form.reset();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
           <DialogDescription>
@@ -248,7 +248,7 @@ export function EventDialog({
                     <DatePicker
                       date={field.value ? new Date(field.value) : undefined}
                       onDateChange={(date) => {
-                        field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                        field.onChange(date ? format(date, 'yyyy-MM-dd') : '');
                       }}
                       placeholder="Selecione a data do evento"
                     />
@@ -306,7 +306,7 @@ export function EventDialog({
                       {colorOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${option.class}`} />
+                            <div className={`h-3 w-3 rounded-full ${option.class}`} />
                             {option.label}
                           </div>
                         </SelectItem>
@@ -349,8 +349,8 @@ export function EventDialog({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(checked) => {
-                        field.onChange(checked)
-                        setIsRecurring(checked)
+                        field.onChange(checked);
+                        setIsRecurring(checked);
                       }}
                     />
                   </FormControl>
@@ -392,8 +392,8 @@ export function EventDialog({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  onOpenChange(false)
-                  form.reset()
+                  onOpenChange(false);
+                  form.reset();
                 }}
               >
                 Cancelar
@@ -404,5 +404,5 @@ export function EventDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

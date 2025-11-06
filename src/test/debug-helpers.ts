@@ -5,16 +5,15 @@
  * Based on latest Vitest debugging best practices (2024-2025)
  */
 
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 export class TestDebugger {
   static async debugAsync<T>(
-    name: string,
+    _name: string,
     asyncFn: () => Promise<T>,
     timeout: number = 5000
   ): Promise<T> {
-    console.log(`🔍 [DEBUG] Starting ${name}`)
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     try {
       const result = await Promise.race([
@@ -22,38 +21,33 @@ export class TestDebugger {
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout ${timeout}ms`)), timeout)
         ),
-      ])
+      ]);
 
-      const duration = Date.now() - startTime
-      console.log(`✅ [DEBUG] ${name} completed in ${duration}ms`)
-      return result
+      const _duration = Date.now() - startTime;
+      return result;
     } catch (error) {
-      const duration = Date.now() - startTime
-      console.error(`❌ [DEBUG] ${name} failed after ${duration}ms:`, error)
-      throw error
+      const _duration = Date.now() - startTime;
+      throw error;
     }
   }
 
-  static logMockCalls(mockName: string, mock: any) {
-    console.log(`📞 [MOCK] ${mockName} calls:`, mock.mock.calls)
-    console.log(`📞 [MOCK] ${mockName} results:`, mock.mock.results)
-  }
+  static logMockCalls(_mockName: string, _mock: any) {}
 
   static spyOnConsole() {
-    const originalError = console.error
-    const originalLog = console.log
+    const originalError = console.error;
+    const originalLog = console.log;
 
-    console.error = vi.fn()
-    console.log = vi.fn()
+    console.error = vi.fn();
+    console.log = vi.fn();
 
     return {
       restore: () => {
-        console.error = originalError
-        console.log = originalLog
+        console.error = originalError;
+        console.log = originalLog;
       },
       getErrors: () => (console.error as any).mock.calls,
       getLogs: () => (console.log as any).mock.calls,
-    }
+    };
   }
 
   static createVoiceRecognitionMock(transcript: string, confidence: number) {
@@ -80,15 +74,15 @@ export class TestDebugger {
                 isFinal: true,
               },
             ],
-          })
+          });
         }
       },
-    }
+    };
   }
 
   static triggerUtteranceEvents(utterance: any, eventType: string, data?: any) {
     if (utterance[`on${eventType}`]) {
-      utterance[`on${eventType}`](data)
+      utterance[`on${eventType}`](data);
     }
   }
 }
@@ -98,29 +92,29 @@ export class TestDebugger {
  */
 export class PerformanceHelper {
   static measureAsync<T>(
-    name: string,
+    _name: string,
     fn: () => Promise<T>
   ): Promise<{ result: T; duration: number }> {
     return new Promise((resolve, reject) => {
-      ;(async () => {
-        const start = performance.now()
+      (async () => {
+        const start = performance.now();
         try {
-          const result = await fn()
-          const duration = performance.now() - start
-          resolve({ result, duration })
+          const result = await fn();
+          const duration = performance.now() - start;
+          resolve({ result, duration });
         } catch (error) {
-          const duration = performance.now() - start
-          reject({ error, duration })
+          const duration = performance.now() - start;
+          reject({ error, duration });
         }
-      })()
-    })
+      })();
+    });
   }
 
   static expectPerformance<T>(fn: () => Promise<T>, maxDuration: number): Promise<T> {
-    return this.measureAsync('performance', fn).then(({ result, duration }) => {
-      expect(duration).toBeLessThan(maxDuration)
-      return result
-    })
+    return PerformanceHelper.measureAsync('performance', fn).then(({ result, duration }) => {
+      expect(duration).toBeLessThan(maxDuration);
+      return result;
+    });
   }
 }
 
@@ -143,16 +137,16 @@ export class VoiceTestHelper {
       onboundary: null,
       onpause: null,
       onresume: null,
-    }
+    };
   }
 
   static setupSpeechRecognition() {
-    const mockRecognition = TestDebugger.createVoiceRecognitionMock('', 0)
+    const mockRecognition = TestDebugger.createVoiceRecognitionMock('', 0);
     vi.stubGlobal(
       'webkitSpeechRecognition',
       vi.fn(() => mockRecognition)
-    )
-    return mockRecognition
+    );
+    return mockRecognition;
   }
 
   static async waitForSpeechRecognition(
@@ -162,8 +156,8 @@ export class VoiceTestHelper {
   ): Promise<void> {
     return new Promise((resolve) => {
       mockRecognition.onresult = (_event: any) => {
-        resolve()
-      }
+        resolve();
+      };
 
       // Simulate the recognition result
       setTimeout(() => {
@@ -179,12 +173,12 @@ export class VoiceTestHelper {
                   isFinal: true,
                 },
               ],
-            })
+            });
           }
-        }
-        mockRecognition.simulateResult()
-      }, 50)
-    })
+        };
+        mockRecognition.simulateResult();
+      }, 50);
+    });
   }
 }
 
@@ -193,18 +187,18 @@ export class VoiceTestHelper {
  */
 export class PortugueseNumberHelper {
   static getExpectedPatterns(number: number): RegExp[] {
-    const numWords = this.numberToPortugueseWords(number)
+    const numWords = PortugueseNumberHelper.numberToPortugueseWords(number);
 
     return [
       new RegExp(numWords.replace(/\s+/g, '.*'), 'i'), // Flexible matching
       new RegExp(`${number}.*reais`, 'i'), // Number + reais
       new RegExp(numWords.split(' ').slice(0, 2).join('.*'), 'i'), // First two words
-    ]
+    ];
   }
 
   static numberToPortugueseWords(num: number): string {
     // Basic Portuguese number conversion (can be enhanced)
-    const units = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
+    const units = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
     const teens = [
       'dez',
       'onze',
@@ -216,7 +210,7 @@ export class PortugueseNumberHelper {
       'dezessete',
       'dezoito',
       'dezenove',
-    ]
+    ];
     const tens = [
       '',
       '',
@@ -228,7 +222,7 @@ export class PortugueseNumberHelper {
       'setenta',
       'oitenta',
       'noventa',
-    ]
+    ];
     const hundreds = [
       'cem',
       'duzentos',
@@ -239,40 +233,42 @@ export class PortugueseNumberHelper {
       'setecentos',
       'oitocentos',
       'novecentos',
-    ]
+    ];
 
-    if (num < 10) return units[num]
-    if (num < 20) return teens[num - 10]
+    if (num < 10) return units[num];
+    if (num < 20) return teens[num - 10];
     if (num < 100) {
-      const ten = Math.floor(num / 10)
-      const unit = num % 10
-      return unit > 0 ? `${tens[ten]} e ${units[unit]}` : tens[ten]
+      const ten = Math.floor(num / 10);
+      const unit = num % 10;
+      return unit > 0 ? `${tens[ten]} e ${units[unit]}` : tens[ten];
     }
     if (num < 1000) {
-      const hundred = Math.floor(num / 100)
-      const rest = num % 100
-      if (rest === 0) return hundreds[hundred - 1]
-      return `${hundreds[hundred - 1]} e ${this.numberToPortugueseWords(rest)}`
+      const hundred = Math.floor(num / 100);
+      const rest = num % 100;
+      if (rest === 0) return hundreds[hundred - 1];
+      return `${hundreds[hundred - 1]} e ${PortugueseNumberHelper.numberToPortugueseWords(rest)}`;
     }
-    if (num === 1000) return 'mil'
+    if (num === 1000) return 'mil';
     if (num < 2000) {
-      const rest = num % 1000
-      return rest > 0 ? `mil e ${this.numberToPortugueseWords(rest)}` : 'mil'
+      const rest = num % 1000;
+      return rest > 0 ? `mil e ${PortugueseNumberHelper.numberToPortugueseWords(rest)}` : 'mil';
     }
     if (num < 10000) {
-      const thousand = Math.floor(num / 1000)
-      const rest = num % 1000
-      const thousandWord = thousand === 1 ? 'mil' : `${units[thousand]} mil`
-      return rest > 0 ? `${thousandWord} e ${this.numberToPortugueseWords(rest)}` : thousandWord
+      const thousand = Math.floor(num / 1000);
+      const rest = num % 1000;
+      const thousandWord = thousand === 1 ? 'mil' : `${units[thousand]} mil`;
+      return rest > 0
+        ? `${thousandWord} e ${PortugueseNumberHelper.numberToPortugueseWords(rest)}`
+        : thousandWord;
     }
 
     // For larger numbers, return the numeric representation
-    return num.toString()
+    return num.toString();
   }
 
   static matchPortugueseNumber(text: string, expectedNumber: number): boolean {
-    const patterns = this.getExpectedPatterns(expectedNumber)
-    return patterns.some((pattern) => pattern.test(text))
+    const patterns = PortugueseNumberHelper.getExpectedPatterns(expectedNumber);
+    return patterns.some((pattern) => pattern.test(text));
   }
 }
 
@@ -281,19 +277,19 @@ export class PortugueseNumberHelper {
  */
 export class MockSetupHelper {
   static setupFetchWithResponses(responses: Array<{ status: number; data: any }>) {
-    let callCount = 0
+    let callCount = 0;
 
     global.fetch = vi.fn().mockImplementation(() => {
-      const response = responses[Math.min(callCount, responses.length - 1)]
-      callCount++
+      const response = responses[Math.min(callCount, responses.length - 1)];
+      callCount++;
 
       return Promise.resolve({
         ok: response.status >= 200 && response.status < 300,
         status: response.status,
         json: async () => response.data,
         text: async () => JSON.stringify(response.data),
-      })
-    })
+      });
+    });
   }
 
   static setupBiometricMock(shouldSucceed: boolean = true) {
@@ -304,7 +300,7 @@ export class MockSetupHelper {
           create: vi.fn().mockResolvedValue(shouldSucceed ? { id: 'test-credential' } : null),
         },
         writable: true,
-      })
+      });
     }
   }
 }

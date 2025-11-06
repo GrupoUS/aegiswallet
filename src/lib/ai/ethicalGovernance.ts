@@ -3,18 +3,18 @@
  */
 
 export interface EthicalRule {
-  id: string
-  name: string
-  description: string
-  enabled: boolean
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
 }
 
 export interface AuditRecord {
-  id: string
-  decision: string
-  ethicalCheck: boolean
-  violations: string[]
-  timestamp: Date
+  id: string;
+  decision: string;
+  ethicalCheck: boolean;
+  violations: string[];
+  timestamp: Date;
 }
 
 export class EthicalGovernance {
@@ -31,31 +31,31 @@ export class EthicalGovernance {
       description: 'Decisões não podem ser baseadas em características protegidas',
       enabled: true,
     },
-  ]
+  ];
 
   validateDecision(decision: any): { passed: boolean; violations: string[] } {
-    const violations: string[] = []
+    const violations: string[] = [];
 
     // Check explainability
     if (!decision.reasoning) {
-      violations.push('Missing reasoning')
+      violations.push('Missing reasoning');
     }
 
     return {
       passed: violations.length === 0,
       violations,
-    }
+    };
   }
 
   async auditDecisions(_period: Date): Promise<AuditRecord[]> {
-    return []
+    return [];
   }
 
   getRules(): EthicalRule[] {
-    return this.rules
+    return this.rules;
   }
 }
 
 export function getEthicalGovernance(): EthicalGovernance {
-  return new EthicalGovernance()
+  return new EthicalGovernance();
 }

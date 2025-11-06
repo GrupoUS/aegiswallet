@@ -1,13 +1,13 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import type { Context } from '@/server/context'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import type { Context } from '@/server/context';
 
 export const createAuthRouter = (t: any) => ({
   /**
    * Get current user session
    */
   getSession: t.procedure.query(async ({ ctx }: { ctx: Context }) => {
-    return ctx.session?.user ?? null
+    return ctx.session?.user ?? null;
   }),
 
   /**
@@ -24,16 +24,16 @@ export const createAuthRouter = (t: any) => ({
       const { data, error } = await ctx.supabase.auth.signInWithPassword({
         email: input.email,
         password: input.password,
-      })
+      });
 
       if (error) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: error.message,
-        })
+        });
       }
 
-      return data
+      return data;
     }),
 
   /**
@@ -56,16 +56,16 @@ export const createAuthRouter = (t: any) => ({
             display_name: input.name,
           },
         },
-      })
+      });
 
       if (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: error.message,
-        })
+        });
       }
 
-      return data
+      return data;
     }),
 
   /**
@@ -74,25 +74,25 @@ export const createAuthRouter = (t: any) => ({
   signOut: t.procedure
     .use(({ ctx, next }: { ctx: Context; next: any }) => {
       if (!ctx.session?.user) {
-        throw new Error('Not authenticated')
+        throw new Error('Not authenticated');
       }
       return next({
         ctx: {
           ...ctx,
           user: ctx.session.user,
         },
-      })
+      });
     })
     .mutation(async ({ ctx }: { ctx: any }) => {
-      const { error } = await ctx.supabase.auth.signOut()
+      const { error } = await ctx.supabase.auth.signOut();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error.message,
-        })
+        });
       }
 
-      return { success: true }
+      return { success: true };
     }),
-})
+});

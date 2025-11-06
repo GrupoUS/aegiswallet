@@ -3,31 +3,31 @@
  * Handles all PIX-related operations: keys, transactions, QR codes
  */
 
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix'
-import { protectedProcedure, router } from '@/server/trpc-helpers'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import { protectedProcedure, router } from '@/server/trpc-helpers';
+import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix';
 
 // =====================================================
 // Validation Schemas
 // =====================================================
 
-const pixKeyTypeSchema = z.enum(['email', 'cpf', 'cnpj', 'phone', 'random'])
-const transactionTypeSchema = z.enum(['sent', 'received', 'scheduled'])
+const pixKeyTypeSchema = z.enum(['email', 'cpf', 'cnpj', 'phone', 'random']);
+const transactionTypeSchema = z.enum(['sent', 'received', 'scheduled']);
 const transactionStatusSchema = z.enum([
   'pending',
   'processing',
   'completed',
   'failed',
   'cancelled',
-])
+]);
 
 const createPixKeySchema = z.object({
   keyType: pixKeyTypeSchema,
   keyValue: z.string().min(1, 'Chave PIX é obrigatória'),
   label: z.string().optional(),
   isFavorite: z.boolean().default(false),
-})
+});
 
 const createPixTransactionSchema = z.object({
   transactionType: transactionTypeSchema,
@@ -38,7 +38,7 @@ const createPixTransactionSchema = z.object({
   recipientName: z.string().optional(),
   recipientDocument: z.string().optional(),
   scheduledDate: z.string().datetime().optional(),
-})
+});
 
 const generateQRCodeSchema = z.object({
   pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
@@ -46,7 +46,7 @@ const generateQRCodeSchema = z.object({
   description: z.string().optional(),
   expiresInMinutes: z.number().positive().optional(),
   maxUses: z.number().positive().optional(),
-})
+});
 
 const getTransactionsSchema = z.object({
   type: transactionTypeSchema.optional(),
@@ -55,11 +55,11 @@ const getTransactionsSchema = z.object({
   endDate: z.string().datetime().optional(),
   limit: z.number().int().positive().max(100).default(50),
   offset: z.number().int().nonnegative().default(0),
-})
+});
 
 const getStatsSchema = z.object({
   period: z.enum(['24h', '7d', '30d', '1y']).default('30d'),
-})
+});
 
 // =====================================================
 // PIX Router
@@ -80,16 +80,16 @@ export const pixRouter = router({
       .eq('user_id', ctx.user.id)
       .eq('is_active', true)
       .order('is_favorite', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao buscar chaves PIX: ${error.message}`,
-      })
+      });
     }
 
-    return data as PixKey[]
+    return data as PixKey[];
   }),
 
   /**
@@ -102,16 +102,16 @@ export const pixRouter = router({
       .eq('user_id', ctx.user.id)
       .eq('is_active', true)
       .eq('is_favorite', true)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao buscar favoritos: ${error.message}`,
-      })
+      });
     }
 
-    return data as PixKey[]
+    return data as PixKey[];
   }),
 
   /**
@@ -129,7 +129,7 @@ export const pixRouter = router({
         is_active: true,
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
       if (error.code === '23505') {
@@ -137,15 +137,15 @@ export const pixRouter = router({
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'Esta chave PIX já está cadastrada',
-        })
+        });
       }
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao criar chave PIX: ${error.message}`,
-      })
+      });
     }
 
-    return data as PixKey
+    return data as PixKey;
   }),
 
   /**
@@ -160,9 +160,9 @@ export const pixRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const updates: any = {}
-      if (input.label !== undefined) updates.label = input.label
-      if (input.isFavorite !== undefined) updates.is_favorite = input.isFavorite
+      const updates: any = {};
+      if (input.label !== undefined) updates.label = input.label;
+      if (input.isFavorite !== undefined) updates.is_favorite = input.isFavorite;
 
       const { data, error } = await ctx.supabase
         .from('pix_keys')
@@ -170,23 +170,23 @@ export const pixRouter = router({
         .eq('id', input.id)
         .eq('user_id', ctx.user.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Erro ao atualizar chave PIX: ${error.message}`,
-        })
+        });
       }
 
       if (!data) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Chave PIX não encontrada',
-        })
+        });
       }
 
-      return data as PixKey
+      return data as PixKey;
     }),
 
   /**
@@ -205,23 +205,23 @@ export const pixRouter = router({
         .eq('id', input.id)
         .eq('user_id', ctx.user.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Erro ao deletar chave PIX: ${error.message}`,
-        })
+        });
       }
 
       if (!data) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Chave PIX não encontrada',
-        })
+        });
       }
 
-      return { success: true, id: input.id }
+      return { success: true, id: input.id };
     }),
 
   // =====================================================
@@ -237,38 +237,38 @@ export const pixRouter = router({
       .select('*', { count: 'exact' })
       .eq('user_id', ctx.user.id)
       .order('created_at', { ascending: false })
-      .range(input.offset, input.offset + input.limit - 1)
+      .range(input.offset, input.offset + input.limit - 1);
 
     if (input.type) {
-      query = query.eq('transaction_type', input.type)
+      query = query.eq('transaction_type', input.type);
     }
 
     if (input.status) {
-      query = query.eq('status', input.status)
+      query = query.eq('status', input.status);
     }
 
     if (input.startDate) {
-      query = query.gte('created_at', input.startDate)
+      query = query.gte('created_at', input.startDate);
     }
 
     if (input.endDate) {
-      query = query.lte('created_at', input.endDate)
+      query = query.lte('created_at', input.endDate);
     }
 
-    const { data, error, count } = await query
+    const { data, error, count } = await query;
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao buscar transações: ${error.message}`,
-      })
+      });
     }
 
     return {
       transactions: data as PixTransaction[],
       total: count || 0,
       hasMore: (count || 0) > input.offset + input.limit,
-    }
+    };
   }),
 
   /**
@@ -286,16 +286,16 @@ export const pixRouter = router({
         .select('*')
         .eq('id', input.id)
         .eq('user_id', ctx.user.id)
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Transação não encontrada',
-        })
+        });
       }
 
-      return data as PixTransaction
+      return data as PixTransaction;
     }),
 
   /**
@@ -309,7 +309,7 @@ export const pixRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Data de agendamento é obrigatória para transações agendadas',
-        })
+        });
       }
 
       const { data, error } = await ctx.supabase
@@ -331,13 +331,13 @@ export const pixRouter = router({
           completed_at: input.transactionType !== 'scheduled' ? new Date().toISOString() : null,
         })
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Erro ao criar transação: ${error.message}`,
-        })
+        });
       }
 
       // Simulate instant processing for non-scheduled transactions
@@ -345,10 +345,10 @@ export const pixRouter = router({
         await ctx.supabase
           .from('pix_transactions')
           .update({ status: 'completed' })
-          .eq('id', data.id)
+          .eq('id', data.id);
       }
 
-      return data as PixTransaction
+      return data as PixTransaction;
     }),
 
   /**
@@ -360,16 +360,16 @@ export const pixRouter = router({
         p_user_id: ctx.user.id,
         p_period: input.period,
       })
-      .single()
+      .single();
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao buscar estatísticas: ${error.message}`,
-      })
+      });
     }
 
-    return data
+    return data;
   }),
 
   // =====================================================
@@ -385,10 +385,10 @@ export const pixRouter = router({
       // Calculate expiration
       const expiresAt = input.expiresInMinutes
         ? new Date(Date.now() + input.expiresInMinutes * 60 * 1000).toISOString()
-        : null
+        : null;
 
       // In a real implementation, you'd generate actual BR Code here
-      const qrCodeData = `00020126580014br.gov.bcb.pix0136${input.pixKey}520400005303986${input.amount ? `540${input.amount.toFixed(2)}` : ''}5802BR5913${input.description || 'AegisWallet'}6009SAO PAULO62070503***6304XXXX`
+      const qrCodeData = `00020126580014br.gov.bcb.pix0136${input.pixKey}520400005303986${input.amount ? `540${input.amount.toFixed(2)}` : ''}5802BR5913${input.description || 'AegisWallet'}6009SAO PAULO62070503***6304XXXX`;
 
       const { data, error } = await ctx.supabase
         .from('pix_qr_codes')
@@ -403,16 +403,16 @@ export const pixRouter = router({
           max_uses: input.maxUses,
         })
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Erro ao gerar QR Code: ${error.message}`,
-        })
+        });
       }
 
-      return data as PixQRCode
+      return data as PixQRCode;
     }),
 
   /**
@@ -424,16 +424,16 @@ export const pixRouter = router({
       .select('*')
       .eq('user_id', ctx.user.id)
       .eq('is_active', true)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `Erro ao buscar QR Codes: ${error.message}`,
-      })
+      });
     }
 
-    return data as PixQRCode[]
+    return data as PixQRCode[];
   }),
 
   /**
@@ -452,24 +452,24 @@ export const pixRouter = router({
         .eq('id', input.id)
         .eq('user_id', ctx.user.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Erro ao desativar QR Code: ${error.message}`,
-        })
+        });
       }
 
       if (!data) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'QR Code não encontrado',
-        })
+        });
       }
 
-      return { success: true, id: input.id }
+      return { success: true, id: input.id };
     }),
-})
+});
 
-export type PixRouter = typeof pixRouter
+export type PixRouter = typeof pixRouter;

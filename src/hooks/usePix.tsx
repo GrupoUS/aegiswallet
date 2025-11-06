@@ -3,13 +3,13 @@
  * Integrates tRPC with Supabase Realtime
  */
 
-import type { InfiniteData } from "@tanstack/react-query";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { trpc, trpcClient } from "@/lib/trpc";
-import type { PixTransaction, PixTransactionType } from "@/types/pix";
+import type { InfiniteData } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { trpc, trpcClient } from '@/lib/trpc';
+import type { PixTransaction, PixTransactionType } from '@/types/pix';
 
 type PixTransactionsResponse = {
   transactions: PixTransaction[];
@@ -34,30 +34,30 @@ export function usePixKeys() {
   const { mutate: createKey } = trpc.pix.createKey.useMutation({
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
-      toast.success("Chave PIX cadastrada com sucesso!");
+      toast.success('Chave PIX cadastrada com sucesso!');
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao cadastrar chave PIX");
+      toast.error(error.message || 'Erro ao cadastrar chave PIX');
     },
   });
 
   const { mutate: updateKey } = trpc.pix.updateKey.useMutation({
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
-      toast.success("Chave PIX atualizada!");
+      toast.success('Chave PIX atualizada!');
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao atualizar chave PIX");
+      toast.error(error.message || 'Erro ao atualizar chave PIX');
     },
   });
 
   const { mutate: deleteKey } = trpc.pix.deleteKey.useMutation({
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
-      toast.success("Chave PIX removida!");
+      toast.success('Chave PIX removida!');
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao remover chave PIX");
+      toast.error(error.message || 'Erro ao remover chave PIX');
     },
   });
 
@@ -66,18 +66,17 @@ export function usePixKeys() {
     if (!keys) return;
 
     const channel = supabase
-      .channel("pix_keys_changes")
+      .channel('pix_keys_changes')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "*",
-          schema: "public",
-          table: "pix_keys",
+          event: '*',
+          schema: 'public',
+          table: 'pix_keys',
         },
-        (payload) => {
-          console.log("PIX key change detected:", payload);
+        (_payload) => {
           utils.pix.getKeys.invalidate();
-        },
+        }
       )
       .subscribe();
 
@@ -97,11 +96,7 @@ export function usePixKeys() {
 }
 
 export function usePixFavorites() {
-  const {
-    data: favorites,
-    isLoading,
-    error,
-  } = trpc.pix.getFavorites.useQuery();
+  const { data: favorites, isLoading, error } = trpc.pix.getFavorites.useQuery();
 
   return {
     favorites: favorites || [],
@@ -115,8 +110,8 @@ export function usePixFavorites() {
 // =====================================================
 
 export function usePixTransactions(filters?: {
-  type?: "sent" | "received" | "scheduled";
-  status?: "pending" | "processing" | "completed" | "failed" | "cancelled";
+  type?: 'sent' | 'received' | 'scheduled';
+  status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
   startDate?: string;
   endDate?: string;
   limit?: number;
@@ -135,8 +130,8 @@ export function usePixTransactions(filters?: {
   const queryKey = useMemo(
     () =>
       [
-        "pix",
-        "transactions",
+        'pix',
+        'transactions',
         typeFilter ?? null,
         statusFilter ?? null,
         startDateFilter ?? null,
@@ -144,57 +139,49 @@ export function usePixTransactions(filters?: {
         limit,
         baseOffset,
       ] as const,
-    [
-      typeFilter,
-      statusFilter,
-      startDateFilter,
-      endDateFilter,
-      limit,
-      baseOffset,
-    ],
+    [typeFilter, statusFilter, startDateFilter, endDateFilter, limit, baseOffset]
   );
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery<
-      PixTransactionsResponse,
-      Error,
-      InfiniteData<PixTransactionsResponse, number>,
-      typeof queryKey,
-      number
-    >({
-      queryKey,
-      initialPageParam: baseOffset,
-      queryFn: async ({ pageParam = baseOffset }) =>
-        trpcClient.pix.getTransactions.query({
-          type: typeFilter,
-          status: statusFilter,
-          startDate: startDateFilter,
-          endDate: endDateFilter,
-          limit,
-          offset: pageParam,
-        }),
-      getNextPageParam: (lastPage, allPages) => {
-        if (!lastPage.hasMore) {
-          return undefined;
-        }
+  const { data, isLoading, error, fetchNextPage, hasNextPage } = useInfiniteQuery<
+    PixTransactionsResponse,
+    Error,
+    InfiniteData<PixTransactionsResponse, number>,
+    typeof queryKey,
+    number
+  >({
+    queryKey,
+    initialPageParam: baseOffset,
+    queryFn: async ({ pageParam = baseOffset }) =>
+      trpcClient.pix.getTransactions.query({
+        type: typeFilter,
+        status: statusFilter,
+        startDate: startDateFilter,
+        endDate: endDateFilter,
+        limit,
+        offset: pageParam,
+      }),
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) {
+        return undefined;
+      }
 
-        const loadedCount = allPages.reduce<number>(
-          (totalCount, page) => totalCount + page.transactions.length,
-          0,
-        );
+      const loadedCount = allPages.reduce<number>(
+        (totalCount, page) => totalCount + page.transactions.length,
+        0
+      );
 
-        return baseOffset + loadedCount;
-      },
-    });
+      return baseOffset + loadedCount;
+    },
+  });
 
   const transactions = useMemo(
     () => data?.pages.flatMap((page) => page.transactions) ?? [],
-    [data],
+    [data]
   );
 
   const invalidatePixTransactions = useCallback(() => {
     utils.pix.getTransactions.invalidate();
-    queryClient.invalidateQueries({ queryKey: ["pix", "transactions"] });
+    queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] });
   }, [queryClient, utils]);
 
   const { mutate: createTransaction } = trpc.pix.createTransaction.useMutation({
@@ -202,63 +189,52 @@ export function usePixTransactions(filters?: {
       invalidatePixTransactions();
       utils.pix.getStats.invalidate();
 
-      if (transaction.type === "scheduled") {
-        toast.success("Transferência PIX agendada com sucesso!");
+      if (transaction.type === 'scheduled') {
+        toast.success('Transferência PIX agendada com sucesso!');
       } else {
-        toast.success("Transferência PIX realizada com sucesso!");
+        toast.success('Transferência PIX realizada com sucesso!');
       }
     },
     onError: (mutationError) => {
-      toast.error(
-        mutationError.message || "Erro ao realizar transferência PIX",
-      );
+      toast.error(mutationError.message || 'Erro ao realizar transferência PIX');
     },
   });
 
   // Realtime subscription for transactions
   useEffect(() => {
     const channel = supabase
-      .channel("pix_transactions_changes")
+      .channel('pix_transactions_changes')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "*",
-          schema: "public",
-          table: "pix_transactions",
+          event: '*',
+          schema: 'public',
+          table: 'pix_transactions',
         },
         (payload) => {
-          console.log("PIX transaction change detected:", payload);
-
           const transaction = payload.new as PixTransactionRealtimePayload;
-          const transactionType =
-            transaction.type ?? transaction.transaction_type;
+          const transactionType = transaction.type ?? transaction.transaction_type;
 
           // Show notification for new received transactions
-          if (
-            payload.eventType === "INSERT" &&
-            transactionType === "received"
-          ) {
-            toast.success(
-              `PIX recebido: R$ ${(transaction.amount ?? 0).toFixed(2)}`,
-              {
-                description:
-                  transaction.description ||
-                  `De: ${transaction.recipientName ?? transaction.recipient_name ?? "Desconhecido"}`,
-              },
-            );
+          if (payload.eventType === 'INSERT' && transactionType === 'received') {
+            toast.success(`PIX recebido: R$ ${(transaction.amount ?? 0).toFixed(2)}`, {
+              description:
+                transaction.description ||
+                `De: ${transaction.recipientName ?? transaction.recipient_name ?? 'Desconhecido'}`,
+            });
           }
 
           // Invalidate queries to refetch data
           invalidatePixTransactions();
           utils.pix.getStats.invalidate();
-        },
+        }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [invalidatePixTransactions]);
+  }, [invalidatePixTransactions, utils.pix.getStats.invalidate]);
 
   return {
     transactions,
@@ -272,11 +248,7 @@ export function usePixTransactions(filters?: {
 }
 
 export function usePixTransaction(id: string) {
-  const {
-    data: transaction,
-    isLoading,
-    error,
-  } = trpc.pix.getTransaction.useQuery({ id });
+  const { data: transaction, isLoading, error } = trpc.pix.getTransaction.useQuery({ id });
 
   return {
     transaction,
@@ -285,12 +257,8 @@ export function usePixTransaction(id: string) {
   };
 }
 
-export function usePixStats(period: "24h" | "7d" | "30d" | "1y" = "30d") {
-  const {
-    data: stats,
-    isLoading,
-    error,
-  } = trpc.pix.getStats.useQuery({ period });
+export function usePixStats(period: '24h' | '7d' | '30d' | '1y' = '30d') {
+  const { data: stats, isLoading, error } = trpc.pix.getStats.useQuery({ period });
 
   return {
     stats: stats || {
@@ -315,24 +283,23 @@ export function usePixQRCodes() {
 
   const { data: qrCodes, isLoading, error } = trpc.pix.getQRCodes.useQuery();
 
-  const { mutate: generateQRCode, isPending: isGenerating } =
-    trpc.pix.generateQRCode.useMutation({
-      onSuccess: () => {
-        utils.pix.getQRCodes.invalidate();
-        toast.success("QR Code gerado com sucesso!");
-      },
-      onError: (error) => {
-        toast.error(error.message || "Erro ao gerar QR Code");
-      },
-    });
+  const { mutate: generateQRCode, isPending: isGenerating } = trpc.pix.generateQRCode.useMutation({
+    onSuccess: () => {
+      utils.pix.getQRCodes.invalidate();
+      toast.success('QR Code gerado com sucesso!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao gerar QR Code');
+    },
+  });
 
   const { mutate: deactivateQRCode } = trpc.pix.deactivateQRCode.useMutation({
     onSuccess: () => {
       utils.pix.getQRCodes.invalidate();
-      toast.success("QR Code desativado!");
+      toast.success('QR Code desativado!');
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao desativar QR Code");
+      toast.error(error.message || 'Erro ao desativar QR Code');
     },
   });
 
@@ -341,18 +308,17 @@ export function usePixQRCodes() {
     if (!qrCodes) return;
 
     const channel = supabase
-      .channel("pix_qr_codes_changes")
+      .channel('pix_qr_codes_changes')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "*",
-          schema: "public",
-          table: "pix_qr_codes",
+          event: '*',
+          schema: 'public',
+          table: 'pix_qr_codes',
         },
-        (payload) => {
-          console.log("PIX QR code change detected:", payload);
+        (_payload) => {
           utils.pix.getQRCodes.invalidate();
-        },
+        }
       )
       .subscribe();
 
@@ -379,7 +345,7 @@ export function usePixQRCodes() {
  * Hook to monitor PIX transaction status
  */
 export function usePixTransactionMonitor(transactionId?: string) {
-  const { transaction, isLoading } = usePixTransaction(transactionId || "");
+  const { transaction, isLoading } = usePixTransaction(transactionId || '');
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
 
@@ -389,30 +355,29 @@ export function usePixTransactionMonitor(transactionId?: string) {
     const channel = supabase
       .channel(`pix_transaction_${transactionId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "UPDATE",
-          schema: "public",
-          table: "pix_transactions",
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pix_transactions',
           filter: `id=eq.${transactionId}`,
         },
         (payload) => {
           const updated = payload.new as PixTransactionRealtimePayload;
 
           // Notify user of status changes
-          if (updated.status === "completed") {
-            toast.success("Transação PIX concluída!");
-          } else if (updated.status === "failed") {
-            toast.error("Transação PIX falhou", {
-              description:
-                updated.errorMessage ?? updated.error_message ?? undefined,
+          if (updated.status === 'completed') {
+            toast.success('Transação PIX concluída!');
+          } else if (updated.status === 'failed') {
+            toast.error('Transação PIX falhou', {
+              description: updated.errorMessage ?? updated.error_message ?? undefined,
             });
           }
 
           utils.pix.getTransaction.invalidate({ id: transactionId });
           utils.pix.getTransactions.invalidate();
-          queryClient.invalidateQueries({ queryKey: ["pix", "transactions"] });
-        },
+          queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] });
+        }
       )
       .subscribe();
 
@@ -424,10 +389,9 @@ export function usePixTransactionMonitor(transactionId?: string) {
   return {
     transaction,
     isLoading,
-    isCompleted: transaction?.status === "completed",
-    isFailed: transaction?.status === "failed",
-    isPending:
-      transaction?.status === "pending" || transaction?.status === "processing",
+    isCompleted: transaction?.status === 'completed',
+    isFailed: transaction?.status === 'failed',
+    isPending: transaction?.status === 'pending' || transaction?.status === 'processing',
   };
 }
 
@@ -454,7 +418,7 @@ export function usePixAutoRefresh(interval: number = 30000) {
         // Refresh all PIX data periodically
         utils.pix.getTransactions.invalidate();
         utils.pix.getStats.invalidate();
-        queryClient.invalidateQueries({ queryKey: ["pix", "transactions"] });
+        queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] });
       }, interval);
     }
 
@@ -465,13 +429,18 @@ export function usePixAutoRefresh(interval: number = 30000) {
         intervalRef.current = null;
       }
     };
-  }, [interval]); // Only depend on interval, not utils or queryClient
+  }, [
+    interval,
+    queryClient.invalidateQueries,
+    utils.pix.getStats.invalidate, // Refresh all PIX data periodically
+    utils.pix.getTransactions.invalidate,
+  ]); // Only depend on interval, not utils or queryClient
 
   // Provide manual refresh capability
   const refresh = useCallback(() => {
     utils.pix.getTransactions.invalidate();
     utils.pix.getStats.invalidate();
-    queryClient.invalidateQueries({ queryKey: ["pix", "transactions"] });
+    queryClient.invalidateQueries({ queryKey: ['pix', 'transactions'] });
   }, [utils, queryClient]);
 
   return { refresh };

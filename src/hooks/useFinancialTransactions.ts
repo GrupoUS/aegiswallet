@@ -1,75 +1,75 @@
-import { useEffect, useMemo } from 'react'
-import { toast } from 'sonner'
-import { supabase } from '@/integrations/supabase/client'
-import { trpc } from '@/lib/trpc'
+import { useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { trpc } from '@/lib/trpc';
 
 /**
  * Hook para gerenciar transações financeiras
  */
 export function useFinancialTransactions(filters?: {
-  categoryId?: string
-  accountId?: string
-  type?: string
-  status?: string
-  startDate?: string
-  endDate?: string
-  search?: string
-  limit?: number
-  offset?: number
+  categoryId?: string;
+  accountId?: string;
+  type?: 'debit' | 'credit' | 'transfer' | 'pix' | 'boleto';
+  status?: 'pending' | 'posted' | 'failed' | 'cancelled';
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
 }) {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   const { data, isLoading, error, refetch } = trpc.financialTransactions.getAll.useQuery(
     filters || {}
-  )
+  );
 
   const transactions = useMemo(() => {
-    return data?.transactions || []
-  }, [data])
+    return data?.transactions || [];
+  }, [data]);
 
   const total = useMemo(() => {
-    return data?.total || 0
-  }, [data])
+    return data?.total || 0;
+  }, [data]);
 
   const { mutate: createTransaction, isPending: isCreating } =
     trpc.financialTransactions.create.useMutation({
       onSuccess: () => {
-        utils.financialTransactions.getAll.invalidate()
-        utils.financialTransactions.getStats.invalidate()
-        toast.success('Transação criada com sucesso!')
+        utils.financialTransactions.getAll.invalidate();
+        utils.financialTransactions.getStats.invalidate();
+        toast.success('Transação criada com sucesso!');
       },
       onError: (error) => {
-        toast.error(error.message || 'Erro ao criar transação')
+        toast.error(error.message || 'Erro ao criar transação');
       },
-    })
+    });
 
   const { mutate: updateTransaction, isPending: isUpdating } =
     trpc.financialTransactions.update.useMutation({
       onSuccess: () => {
-        utils.financialTransactions.getAll.invalidate()
-        utils.financialTransactions.getStats.invalidate()
-        toast.success('Transação atualizada com sucesso!')
+        utils.financialTransactions.getAll.invalidate();
+        utils.financialTransactions.getStats.invalidate();
+        toast.success('Transação atualizada com sucesso!');
       },
       onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar transação')
+        toast.error(error.message || 'Erro ao atualizar transação');
       },
-    })
+    });
 
   const { mutate: deleteTransaction, isPending: isDeleting } =
     trpc.financialTransactions.delete.useMutation({
       onSuccess: () => {
-        utils.financialTransactions.getAll.invalidate()
-        utils.financialTransactions.getStats.invalidate()
-        toast.success('Transação removida com sucesso!')
+        utils.financialTransactions.getAll.invalidate();
+        utils.financialTransactions.getStats.invalidate();
+        toast.success('Transação removida com sucesso!');
       },
       onError: (error) => {
-        toast.error(error.message || 'Erro ao remover transação')
+        toast.error(error.message || 'Erro ao remover transação');
       },
-    })
+    });
 
   // Real-time subscription para transações
   useEffect(() => {
-    if (!transactions.length) return
+    if (!transactions.length) return;
 
     const channel = supabase
       .channel('transactions_changes')
@@ -80,19 +80,18 @@ export function useFinancialTransactions(filters?: {
           schema: 'public',
           table: 'transactions',
         },
-        (payload) => {
-          console.log('Transaction change detected:', payload)
-          utils.financialTransactions.getAll.invalidate()
-          utils.financialTransactions.getStats.invalidate()
-          utils.financialTransactions.getByCategory.invalidate()
+        (_payload) => {
+          utils.financialTransactions.getAll.invalidate();
+          utils.financialTransactions.getStats.invalidate();
+          utils.financialTransactions.getByCategory.invalidate();
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [transactions.length, utils])
+      supabase.removeChannel(channel);
+    };
+  }, [transactions.length, utils]);
 
   return {
     transactions,
@@ -106,7 +105,7 @@ export function useFinancialTransactions(filters?: {
     isCreating,
     isUpdating,
     isDeleting,
-  }
+  };
 }
 
 /**
@@ -120,30 +119,30 @@ export function useFinancialTransaction(transactionId: string) {
   } = trpc.financialTransactions.getById.useQuery(
     { id: transactionId },
     { enabled: !!transactionId }
-  )
+  );
 
   return {
     transaction,
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para estatísticas de transações
  */
-export function useTransactionStats(period: string = '30d') {
+export function useTransactionStats(period: '7d' | '30d' | '1y' | '90d' = '30d') {
   const {
     data: stats,
     isLoading,
     error,
-  } = trpc.financialTransactions.getStats.useQuery({ period }, { enabled: !!period })
+  } = trpc.financialTransactions.getStats.useQuery({ period }, { enabled: !!period });
 
   return {
     stats,
     isLoading,
     error,
-  }
+  };
 }
 
 /**
@@ -154,33 +153,33 @@ export function useTransactionsByCategory(period: '7d' | '30d' | '1y' | '90d' = 
     data: categoryStats,
     isLoading,
     error,
-  } = trpc.financialTransactions.getByCategory.useQuery({ period }, { enabled: !!period })
+  } = trpc.financialTransactions.getByCategory.useQuery({ period }, { enabled: !!period });
 
   return {
     categoryStats: categoryStats || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
  * Hook para resumo financeiro
  */
 export function useFinancialSummary() {
-  const { transactions } = useFinancialTransactions()
-  const { stats } = useTransactionStats('30d')
-  const { categoryStats } = useTransactionsByCategory('30d')
+  const { transactions } = useFinancialTransactions();
+  const { stats } = useTransactionStats('30d');
+  const { categoryStats } = useTransactionsByCategory('30d');
 
   const summary = useMemo(() => {
     const totalIncome = transactions
       .filter((t) => t.amount > 0)
-      .reduce((sum, t) => sum + Number(t.amount), 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const totalExpenses = transactions
       .filter((t) => t.amount < 0)
-      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
-    const topCategories = categoryStats.sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5)
+    const topCategories = categoryStats.sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5);
 
     return {
       totalIncome,
@@ -189,10 +188,10 @@ export function useFinancialSummary() {
       totalTransactions: transactions.length,
       topCategories,
       stats,
-    }
-  }, [transactions, stats, categoryStats])
+    };
+  }, [transactions, stats, categoryStats]);
 
-  return summary
+  return summary;
 }
 
 /**
@@ -211,13 +210,13 @@ export function useTransactionSearch(query: string, limit: number = 10) {
     {
       enabled: !!query && query.length >= 2,
     }
-  )
+  );
 
   return {
     results: results?.transactions || [],
     isLoading,
     error,
-  }
+  };
 }
 
 /**
@@ -232,11 +231,11 @@ export function useRecentTransactions(limit: number = 5) {
     {
       staleTime: 1000 * 60, // 1 minuto
     }
-  )
+  );
 
   return {
     transactions: data?.transactions || [],
     isLoading,
     error,
-  }
+  };
 }

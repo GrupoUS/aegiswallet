@@ -6,20 +6,20 @@ import {
   IconReceipt,
   IconSettings,
   IconUserBolt,
-} from '@tabler/icons-react'
-import { Link, Outlet } from '@tanstack/react-router'
-import React, { useCallback, useMemo, useState } from 'react'
-import { useAccessibility } from '@/components/accessibility/AccessibilityProvider'
-import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
-import { Button } from '@/components/ui/button'
-import { Sidebar, SidebarBody, SidebarLink, SidebarProvider } from '@/components/ui/sidebar'
-import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+} from '@tabler/icons-react';
+import { Link, Outlet } from '@tanstack/react-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
+import { Button } from '@/components/ui/button';
+import { Sidebar, SidebarBody, SidebarLink, SidebarProvider } from '@/components/ui/sidebar';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 export const AppLayout = React.memo(function AppLayout() {
-  const [open, setOpen] = useState(false)
-  const { user, signOut } = useAuth()
-  const { showSettings, setShowSettings } = useAccessibility()
+  const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { showSettings, setShowSettings } = useAccessibility();
 
   // Memoizar links de navegação para evitar recriação a cada render
   const links = useMemo(
@@ -27,76 +27,76 @@ export const AppLayout = React.memo(function AppLayout() {
       {
         label: 'Dashboard',
         href: '/dashboard',
-        icon: <IconHome className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+        icon: <IconHome className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
       },
       {
         label: 'Transactions',
         href: '/transactions',
         icon: (
-          <IconReceipt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+          <IconReceipt className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
       },
       {
         label: 'Profile',
         href: '/profile',
         icon: (
-          <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+          <IconUserBolt className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
       },
       {
         label: 'Settings',
         href: '/settings',
         icon: (
-          <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+          <IconSettings className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
       },
     ],
     []
-  )
+  );
 
   // Memoizar URL do avatar para evitar recriação
   const avatarUrl = useMemo(() => {
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
-  }, [user?.email])
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`;
+  }, [user?.email]);
 
   // Otimizar manipuladores com useCallback
   const handleToggleSidebar = useCallback((newOpen: boolean | ((prev: boolean) => boolean)) => {
-    setOpen(newOpen)
-  }, [])
+    setOpen(newOpen);
+  }, []);
 
   const handleToggleAccessibility = useCallback(() => {
-    setShowSettings(!showSettings)
-  }, [showSettings, setShowSettings])
+    setShowSettings(!showSettings);
+  }, [showSettings, setShowSettings]);
 
   const handleSignOut = useCallback(() => {
-    signOut()
-  }, [signOut])
+    signOut();
+  }, [signOut]);
 
   return (
     <SidebarProvider open={open} onOpenChange={handleToggleSidebar}>
       <div
         className={cn(
-          'flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+          'mx-auto flex w-full flex-1 flex-col overflow-hidden border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800',
           'h-screen'
         )}
       >
         <Sidebar>
           <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
               {open ? <Logo /> : <LogoIcon />}
               <div className="mt-8 flex flex-col gap-2">
-                {links.map((link, idx) => (
-                  <SidebarLink key={idx} link={link} />
+                {links.map((link) => (
+                  <SidebarLink key={link.href} link={link} />
                 ))}
               </div>
             </div>
             <div>
               {/* Theme Toggle */}
-              <Button variant="ghost" className="w-full justify-start gap-2 mb-2" asChild>
+              <Button variant="ghost" className="mb-2 w-full justify-start gap-2" asChild>
                 <div className="flex items-center gap-2">
                   <AnimatedThemeToggler className="h-5 w-5" />
                   {open && (
-                    <span className="text-sm text-neutral-700 dark:text-neutral-200">Theme</span>
+                    <span className="text-neutral-700 text-sm dark:text-neutral-200">Theme</span>
                   )}
                 </div>
               </Button>
@@ -104,12 +104,12 @@ export const AppLayout = React.memo(function AppLayout() {
               {/* Accessibility Button */}
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-2 mb-4"
+                className="mb-4 w-full justify-start gap-2"
                 onClick={handleToggleAccessibility}
               >
-                <IconAccessible className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+                <IconAccessible className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
                 {open && (
-                  <span className="text-sm text-neutral-700 dark:text-neutral-200">
+                  <span className="text-neutral-700 text-sm dark:text-neutral-200">
                     Accessibility
                   </span>
                 )}
@@ -133,43 +133,43 @@ export const AppLayout = React.memo(function AppLayout() {
               <Button
                 onClick={handleSignOut}
                 variant="ghost"
-                className="w-full justify-start gap-2 mt-2"
+                className="mt-2 w-full justify-start gap-2"
               >
-                <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+                <IconArrowLeft className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
                 {open && <span>Logout</span>}
               </Button>
             </div>
           </SidebarBody>
         </Sidebar>
         <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-10 bg-white dark:bg-neutral-900 h-full">
+          <div className="h-full bg-white p-4 md:p-10 dark:bg-neutral-900">
             <Outlet />
           </div>
         </main>
       </div>
     </SidebarProvider>
-  )
-})
+  );
+});
 
 export const Logo = React.memo(function Logo() {
   return (
     <Link
       to="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-black text-sm"
     >
       <IconBrandTabler className="h-5 w-5 flex-shrink-0 text-black dark:text-white" />
-      <span className="font-medium text-black dark:text-white whitespace-pre">AegisWallet</span>
+      <span className="whitespace-pre font-medium text-black dark:text-white">AegisWallet</span>
     </Link>
-  )
-})
+  );
+});
 
 export const LogoIcon = React.memo(function LogoIcon() {
   return (
     <Link
       to="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-black text-sm"
     >
       <IconBrandTabler className="h-5 w-5 flex-shrink-0 text-black dark:text-white" />
     </Link>
-  )
-})
+  );
+});

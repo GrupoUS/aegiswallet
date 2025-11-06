@@ -5,71 +5,71 @@
  * VAPID authentication with LGPD compliance
  */
 
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PushConfig {
-  vapidPublicKey: string
-  vapidPrivateKey: string
-  vapidSubject: string
-  gcmApiKey?: string
-  ttl: number
-  urgency: 'very-low' | 'low' | 'normal' | 'high'
+  vapidPublicKey: string;
+  vapidPrivateKey: string;
+  vapidSubject: string;
+  gcmApiKey?: string;
+  ttl: number;
+  urgency: 'very-low' | 'low' | 'normal' | 'high';
 }
 
 export interface PushSubscription {
-  endpoint: string
+  endpoint: string;
   keys: {
-    p256dh: string
-    auth: string
-  }
+    p256dh: string;
+    auth: string;
+  };
 }
 
 export interface PushMessage {
-  title: string
-  body: string
-  icon?: string
-  badge?: string
-  image?: string
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  image?: string;
   actions?: Array<{
-    action: string
-    title: string
-    icon?: string
-  }>
-  data?: Record<string, any>
-  requireInteraction?: boolean
-  silent?: boolean
-  tag?: string
-  url?: string
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
+  data?: Record<string, any>;
+  requireInteraction?: boolean;
+  silent?: boolean;
+  tag?: string;
+  url?: string;
 }
 
 export interface PushResult {
-  success: boolean
-  messageId?: string
-  error?: string
-  processingTime: number
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  processingTime: number;
 }
 
 export interface AuthPushRequest {
-  id: string
-  userId: string
-  pushToken: string
-  expiresAt: Date
-  status: 'pending' | 'approved' | 'denied' | 'expired'
-  createdAt: Date
-  respondedAt?: Date
-  metadata?: Record<string, any>
+  id: string;
+  userId: string;
+  pushToken: string;
+  expiresAt: Date;
+  status: 'pending' | 'approved' | 'denied' | 'expired';
+  createdAt: Date;
+  respondedAt?: Date;
+  metadata?: Record<string, any>;
 }
 
 /**
  * Web Push Provider Service
  */
 export class PushProvider {
-  private config: PushConfig
-  private subscriptions: Map<string, PushSubscription> = new Map()
+  private config: PushConfig;
+  private subscriptions: Map<string, PushSubscription> = new Map();
 
   constructor(config: PushConfig) {
-    this.config = config
-    this.initializeServiceWorker()
+    this.config = config;
+    this.initializeServiceWorker();
   }
 
   /**
@@ -77,32 +77,26 @@ export class PushProvider {
    */
   private async initializeServiceWorker(): Promise<void> {
     if (!('serviceWorker' in navigator)) {
-      console.warn('[PushProvider] Service Worker not supported')
-      return
+      return;
     }
 
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js')
-      console.log('[PushProvider] Service Worker registered:', registration.scope)
-    } catch (error) {
-      console.error('[PushProvider] Service Worker registration failed:', error)
-    }
+      const _registration = await navigator.serviceWorker.register('/sw.js');
+    } catch (_error) {}
   }
 
   /**
    * Convert base64 URL to Uint8Array
    */
   private base64UrlToUint8Array(base64UrlData: string): Uint8Array {
-    const padding = '='.repeat((4 - base64UrlData.length % 4) % 4)
-    const base64 = (base64UrlData + padding)
-      .replace(/\-/g, '+')
-      .replace(/\_/g, '/')
-    const rawData = atob(base64)
-    const buffer = new Uint8Array(rawData.length)
+    const padding = '='.repeat((4 - (base64UrlData.length % 4)) % 4);
+    const base64 = (base64UrlData + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const buffer = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
-      buffer[i] = rawData.charCodeAt(i)
+      buffer[i] = rawData.charCodeAt(i);
     }
-    return buffer
+    return buffer;
   }
 
   /**
@@ -110,33 +104,27 @@ export class PushProvider {
    */
   async subscribe(userId: string): Promise<PushSubscription | null> {
     if (!('serviceWorker' in navigator)) {
-      throw new Error('Service Worker not supported')
+      throw new Error('Service Worker not supported');
     }
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: this.base64UrlToUint8Array(this.config.vapidPublicKey),
+    });
 
-    try {
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.base64UrlToUint8Array(this.config.vapidPublicKey),
-      })
+    // Store subscription in database
+    await supabase.from('push_subscriptions').upsert({
+      user_id: userId,
+      endpoint: subscription.endpoint,
+      p256dh_key: subscription.keys.p256dh,
+      auth_key: subscription.keys.auth,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
-      // Store subscription in database
-      await supabase.from('push_subscriptions').upsert({
-        user_id: userId,
-        endpoint: subscription.endpoint,
-        p256dh_key: subscription.keys.p256dh,
-        auth_key: subscription.keys.auth,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-
-      this.subscriptions.set(userId, subscription)
-      return subscription
-    } catch (error) {
-      console.error('[PushProvider] Subscription failed:', error)
-      throw error
-    }
+    this.subscriptions.set(userId, subscription);
+    return subscription;
   }
 
   /**
@@ -144,22 +132,18 @@ export class PushProvider {
    */
   async unsubscribe(userId: string): Promise<boolean> {
     try {
-      const subscription = this.subscriptions.get(userId)
+      const subscription = this.subscriptions.get(userId);
       if (subscription) {
-        await subscription.unsubscribe()
-        this.subscriptions.delete(userId)
+        await subscription.unsubscribe();
+        this.subscriptions.delete(userId);
       }
 
       // Deactivate in database
-      await supabase
-        .from('push_subscriptions')
-        .update({ is_active: false })
-        .eq('user_id', userId)
+      await supabase.from('push_subscriptions').update({ is_active: false }).eq('user_id', userId);
 
-      return true
-    } catch (error) {
-      console.error('[PushProvider] Unsubscribe failed:', error)
-      return false
+      return true;
+    } catch (_error) {
+      return false;
     }
   }
 
@@ -169,7 +153,7 @@ export class PushProvider {
   async getUserSubscription(userId: string): Promise<PushSubscription | null> {
     // Check in-memory cache first
     if (this.subscriptions.has(userId)) {
-      return this.subscriptions.get(userId)!
+      return this.subscriptions.get(userId)!;
     }
 
     // Fetch from database
@@ -178,7 +162,7 @@ export class PushProvider {
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .single()
+      .single();
 
     if (data) {
       const subscription: PushSubscription = {
@@ -187,31 +171,28 @@ export class PushProvider {
           p256dh: data.p256dh_key,
           auth: data.auth_key,
         },
-      }
-      this.subscriptions.set(userId, subscription)
-      return subscription
+      };
+      this.subscriptions.set(userId, subscription);
+      return subscription;
     }
 
-    return null
+    return null;
   }
 
   /**
    * Send push notification
    */
-  async sendPushNotification(
-    userId: string,
-    message: PushMessage
-  ): Promise<PushResult> {
-    const startTime = Date.now()
+  async sendPushNotification(userId: string, message: PushMessage): Promise<PushResult> {
+    const startTime = Date.now();
 
     try {
-      const subscription = await this.getUserSubscription(userId)
+      const subscription = await this.getUserSubscription(userId);
       if (!subscription) {
         return {
           success: false,
           error: 'No active push subscription found',
           processingTime: Date.now() - startTime,
-        }
+        };
       }
 
       // Prepare payload
@@ -230,7 +211,7 @@ export class PushProvider {
         requireInteraction: message.requireInteraction || false,
         silent: message.silent || false,
         tag: message.tag,
-      })
+      });
 
       // Send via backend API
       const response = await fetch('/api/push/send', {
@@ -251,34 +232,34 @@ export class PushProvider {
             urgency: this.config.urgency,
           },
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Push notification failed')
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Push notification failed');
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       // Log push notification
-      await this.logPushNotification(userId, message, data.messageId, 'sent')
+      await this.logPushNotification(userId, message, data.messageId, 'sent');
 
       return {
         success: true,
         messageId: data.messageId,
         processingTime: Date.now() - startTime,
-      }
+      };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       // Log failed push notification
-      await this.logPushNotification(userId, message, undefined, 'failed', errorMessage)
+      await this.logPushNotification(userId, message, undefined, 'failed', errorMessage);
 
       return {
         success: false,
         error: errorMessage,
         processingTime: Date.now() - startTime,
-      }
+      };
     }
   }
 
@@ -303,18 +284,16 @@ export class PushProvider {
         data: message.data,
         tag: message.tag,
         created_at: new Date().toISOString(),
-      })
-    } catch (logError) {
-      console.error('[PushProvider] Failed to log push notification:', logError)
-    }
+      });
+    } catch (_logError) {}
   }
 
   /**
    * Create authentication push request
    */
   async createAuthPushRequest(userId: string): Promise<AuthPushRequest> {
-    const pushToken = this.generateSecureToken(16)
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+    const pushToken = this.generateSecureToken(16);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     const request: AuthPushRequest = {
       id: this.generateSecureToken(8),
@@ -323,7 +302,7 @@ export class PushProvider {
       expiresAt,
       status: 'pending',
       createdAt: new Date(),
-    }
+    };
 
     // Store in database
     await supabase.from('push_auth_requests').insert({
@@ -333,20 +312,17 @@ export class PushProvider {
       expires_at: expiresAt.toISOString(),
       status: 'pending',
       created_at: request.createdAt.toISOString(),
-    })
+    });
 
-    return request
+    return request;
   }
 
   /**
    * Send authentication push notification
    */
-  async sendAuthPush(
-    userId: string,
-    phoneNumber: string
-  ): Promise<PushResult> {
+  async sendAuthPush(userId: string, phoneNumber: string): Promise<PushResult> {
     try {
-      const authRequest = await this.createAuthPushRequest(userId)
+      const authRequest = await this.createAuthPushRequest(userId);
 
       const message: PushMessage = {
         title: 'AegisWallet - Aprovação de Login',
@@ -372,26 +348,22 @@ export class PushProvider {
             icon: '/icons/close.png',
           },
         ],
-      }
+      };
 
-      return this.sendPushNotification(userId, message)
+      return this.sendPushNotification(userId, message);
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         processingTime: 0,
-      }
+      };
     }
   }
 
   /**
    * Handle push notification response
    */
-  async handlePushResponse(
-    requestId: string,
-    approved: boolean,
-    userId: string
-  ): Promise<void> {
+  async handlePushResponse(requestId: string, approved: boolean, userId: string): Promise<void> {
     try {
       // Update request status
       await supabase
@@ -400,55 +372,57 @@ export class PushProvider {
           status: approved ? 'approved' : 'denied',
           responded_at: new Date().toISOString(),
         })
-        .eq('id', requestId)
+        .eq('id', requestId);
 
       // Log response
-      await this.logPushNotification(userId, {
-        title: 'Auth Response',
-        body: `Authentication ${approved ? 'approved' : 'denied'}`,
-        data: { requestId, approved },
-      }, undefined, 'delivered')
-
-    } catch (error) {
-      console.error('[PushProvider] Failed to handle push response:', error)
-    }
+      await this.logPushNotification(
+        userId,
+        {
+          title: 'Auth Response',
+          body: `Authentication ${approved ? 'approved' : 'denied'}`,
+          data: { requestId, approved },
+        },
+        undefined,
+        'delivered'
+      );
+    } catch (_error) {}
   }
 
   /**
    * Generate secure random token
    */
   private generateSecureToken(length: number): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    const randomValues = new Uint8Array(length)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    const randomValues = new Uint8Array(length);
 
     if (typeof window !== 'undefined' && window.crypto) {
-      window.crypto.getRandomValues(randomValues)
+      window.crypto.getRandomValues(randomValues);
     } else {
       for (let i = 0; i < length; i++) {
-        randomValues[i] = Math.floor(Math.random() * 256)
+        randomValues[i] = Math.floor(Math.random() * 256);
       }
     }
 
     for (let i = 0; i < length; i++) {
-      result += chars[randomValues[i] % chars.length]
+      result += chars[randomValues[i] % chars.length];
     }
 
-    return result
+    return result;
   }
 
   /**
    * Update configuration
    */
   updateConfig(config: Partial<PushConfig>): void {
-    this.config = { ...this.config, ...config }
+    this.config = { ...this.config, ...config };
   }
 
   /**
    * Get current configuration
    */
   getConfig(): PushConfig {
-    return { ...this.config }
+    return { ...this.config };
   }
 
   /**
@@ -460,10 +434,8 @@ export class PushProvider {
         .from('push_auth_requests')
         .update({ status: 'expired' })
         .lt('expires_at', new Date().toISOString())
-        .eq('status', 'pending')
-    } catch (error) {
-      console.error('[PushProvider] Failed to cleanup expired requests:', error)
-    }
+        .eq('status', 'pending');
+    } catch (_error) {}
   }
 }
 
@@ -471,7 +443,7 @@ export class PushProvider {
  * Create push provider instance
  */
 export function createPushProvider(config: PushConfig): PushProvider {
-  return new PushProvider(config)
+  return new PushProvider(config);
 }
 
 /**
@@ -482,6 +454,6 @@ export async function sendAuthPushNotification(
   phoneNumber: string,
   config: PushConfig
 ): Promise<PushResult> {
-  const provider = createPushProvider(config)
-  return provider.sendAuthPush(userId, phoneNumber)
+  const provider = createPushProvider(config);
+  return provider.sendAuthPush(userId, phoneNumber);
 }

@@ -12,46 +12,46 @@
  * @module analytics/voiceMetrics
  */
 
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface VoiceMetric {
-  userId: string
-  sessionId: string
-  commandType: string
-  intentType?: string
-  transcript: string
-  confidenceScore: number
-  processingTimeMs: number
-  sttTimeMs?: number
-  nluTimeMs?: number
-  responseTimeMs?: number
-  success: boolean
-  errorType?: string
-  errorMessage?: string
-  userRegion?: string
-  deviceType?: string
-  browser?: string
-  metadata?: Record<string, any>
+  userId: string;
+  sessionId: string;
+  commandType: string;
+  intentType?: string;
+  transcript: string;
+  confidenceScore: number;
+  processingTimeMs: number;
+  sttTimeMs?: number;
+  nluTimeMs?: number;
+  responseTimeMs?: number;
+  success: boolean;
+  errorType?: string;
+  errorMessage?: string;
+  userRegion?: string;
+  deviceType?: string;
+  browser?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface MetricsSummary {
-  totalCommands: number
-  successfulCommands: number
-  failedCommands: number
-  accuracyPercent: number
-  avgLatencyMs: number
-  p95LatencyMs: number
-  avgConfidence: number
+  totalCommands: number;
+  successfulCommands: number;
+  failedCommands: number;
+  accuracyPercent: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  avgConfidence: number;
 }
 
 export interface AlertThreshold {
-  metric: 'accuracy' | 'latency' | 'error_rate'
-  threshold: number
-  durationMinutes: number
+  metric: 'accuracy' | 'latency' | 'error_rate';
+  threshold: number;
+  durationMinutes: number;
 }
 
 // ============================================================================
@@ -71,14 +71,11 @@ export class VoiceMetricsService {
         processing_time_ms: metric.processingTimeMs,
         success: metric.success,
         error_type: metric.errorType,
-      })
+      });
 
       if (error) {
-        console.error('Failed to track voice metric:', error)
       }
-    } catch (error) {
-      console.error('Error tracking voice metric:', error)
-    }
+    } catch (_error) {}
   }
 
   /**
@@ -89,36 +86,36 @@ export class VoiceMetricsService {
       const { data, error } = await supabase
         .from('voice_metrics')
         .select('*')
-        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      const totalCommands = data.length
-      const successfulCommands = data.filter((m) => m.success).length
-      const failedCommands = totalCommands - successfulCommands
-      const accuracyPercent = totalCommands > 0 ? (successfulCommands / totalCommands) * 100 : 0
+      const totalCommands = data.length;
+      const successfulCommands = data.filter((m) => m.success).length;
+      const failedCommands = totalCommands - successfulCommands;
+      const accuracyPercent = totalCommands > 0 ? (successfulCommands / totalCommands) * 100 : 0;
 
       const latencies = data
         .filter((m) => m.success && m.processing_time_ms)
         .map((m) => m.processing_time_ms)
-        .sort((a, b) => a - b)
+        .sort((a, b) => a - b);
 
       const avgLatencyMs =
-        latencies.length > 0 ? latencies.reduce((sum, val) => sum + val, 0) / latencies.length : 0
+        latencies.length > 0 ? latencies.reduce((sum, val) => sum + val, 0) / latencies.length : 0;
 
-      const p95Index = Math.floor(latencies.length * 0.95)
-      const p95LatencyMs = latencies.length > 0 ? latencies[p95Index] : 0
+      const p95Index = Math.floor(latencies.length * 0.95);
+      const p95LatencyMs = latencies.length > 0 ? latencies[p95Index] : 0;
 
       const confidences = data
         .filter((m) => m.confidence_score !== null)
-        .map((m) => m.confidence_score as number)
+        .map((m) => m.confidence_score as number);
 
       const avgConfidence =
         confidences.length > 0
           ? confidences.reduce((sum, val) => sum + val, 0) / confidences.length
-          : 0
+          : 0;
 
       return {
         totalCommands,
@@ -128,9 +125,8 @@ export class VoiceMetricsService {
         avgLatencyMs,
         p95LatencyMs,
         avgConfidence,
-      }
-    } catch (error) {
-      console.error('Error getting metrics summary:', error)
+      };
+    } catch (_error) {
       return {
         totalCommands: 0,
         successfulCommands: 0,
@@ -139,7 +135,7 @@ export class VoiceMetricsService {
         avgLatencyMs: 0,
         p95LatencyMs: 0,
         avgConfidence: 0,
-      }
+      };
     }
   }
 
@@ -149,33 +145,32 @@ export class VoiceMetricsService {
   async getAccuracyByCommand(_days: number = 7): Promise<Record<string, number>> {
     try {
       // Since we don't have the complex view tables, calculate from voice_metrics
-      const { data, error } = await supabase.from('voice_metrics').select('command, success')
+      const { data, error } = await supabase.from('voice_metrics').select('command, success');
 
       if (error) {
-        throw error
+        throw error;
       }
 
       // Group by command and calculate accuracy
-      const commandStats: Record<string, { success: number; total: number }> = {}
+      const commandStats: Record<string, { success: number; total: number }> = {};
       data.forEach((row) => {
         if (!commandStats[row.command]) {
-          commandStats[row.command] = { success: 0, total: 0 }
+          commandStats[row.command] = { success: 0, total: 0 };
         }
-        commandStats[row.command].total++
+        commandStats[row.command].total++;
         if (row.success) {
-          commandStats[row.command].success++
+          commandStats[row.command].success++;
         }
-      })
+      });
 
-      const result: Record<string, number> = {}
+      const result: Record<string, number> = {};
       Object.entries(commandStats).forEach(([command, stats]) => {
-        result[command] = stats.total > 0 ? (stats.success / stats.total) * 100 : 0
-      })
+        result[command] = stats.total > 0 ? (stats.success / stats.total) * 100 : 0;
+      });
 
-      return result
-    } catch (error) {
-      console.error('Error getting accuracy by command:', error)
-      return {}
+      return result;
+    } catch (_error) {
+      return {};
     }
   }
 
@@ -183,32 +178,32 @@ export class VoiceMetricsService {
    * Get latency percentiles
    */
   async getLatencyPercentiles(): Promise<{
-    p50: number
-    p95: number
-    p99: number
-    avg: number
-    max: number
+    p50: number;
+    p95: number;
+    p99: number;
+    avg: number;
+    max: number;
   }> {
     try {
       // Calculate percentiles from voice_metrics table
       const { data, error } = await supabase
         .from('voice_metrics')
         .select('processing_time_ms')
-        .eq('success', true)
+        .eq('success', true);
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      const latencies = data.map((row) => row.processing_time_ms).sort((a, b) => a - b)
+      const latencies = data.map((row) => row.processing_time_ms).sort((a, b) => a - b);
 
       if (latencies.length === 0) {
-        return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 }
+        return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 };
       }
 
-      const p50Index = Math.floor(latencies.length * 0.5)
-      const p95Index = Math.floor(latencies.length * 0.95)
-      const p99Index = Math.floor(latencies.length * 0.99)
+      const p50Index = Math.floor(latencies.length * 0.5);
+      const p95Index = Math.floor(latencies.length * 0.95);
+      const p99Index = Math.floor(latencies.length * 0.99);
 
       return {
         p50: latencies[p50Index] || 0,
@@ -216,10 +211,9 @@ export class VoiceMetricsService {
         p99: latencies[p99Index] || 0,
         avg: latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
         max: Math.max(...latencies),
-      }
-    } catch (error) {
-      console.error('Error getting latency percentiles:', error)
-      return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 }
+      };
+    } catch (_error) {
+      return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 };
     }
   }
 
@@ -229,34 +223,33 @@ export class VoiceMetricsService {
   async getErrorRateByType(): Promise<Record<string, number>> {
     try {
       // Calculate error rates from voice_metrics table
-      const { data, error } = await supabase.from('voice_metrics').select('error_type, success')
+      const { data, error } = await supabase.from('voice_metrics').select('error_type, success');
 
       if (error) {
-        throw error
+        throw error;
       }
 
       // Group by error_type and calculate error rates
-      const errorStats: Record<string, { errors: number; total: number }> = {}
+      const errorStats: Record<string, { errors: number; total: number }> = {};
       data.forEach((row) => {
-        const errorType = row.error_type || 'unknown'
+        const errorType = row.error_type || 'unknown';
         if (!errorStats[errorType]) {
-          errorStats[errorType] = { errors: 0, total: 0 }
+          errorStats[errorType] = { errors: 0, total: 0 };
         }
-        errorStats[errorType].total++
+        errorStats[errorType].total++;
         if (!row.success) {
-          errorStats[errorType].errors++
+          errorStats[errorType].errors++;
         }
-      })
+      });
 
-      const result: Record<string, number> = {}
+      const result: Record<string, number> = {};
       Object.entries(errorStats).forEach(([errorType, stats]) => {
-        result[errorType] = stats.total > 0 ? (stats.errors / stats.total) * 100 : 0
-      })
+        result[errorType] = stats.total > 0 ? (stats.errors / stats.total) * 100 : 0;
+      });
 
-      return result
-    } catch (error) {
-      console.error('Error getting error rate by type:', error)
-      return {}
+      return result;
+    } catch (_error) {
+      return {};
     }
   }
 
@@ -265,19 +258,18 @@ export class VoiceMetricsService {
    */
   async getRegionalPerformance(): Promise<
     Array<{
-      region: string
-      totalCommands: number
-      accuracyPercent: number
-      avgLatencyMs: number
+      region: string;
+      totalCommands: number;
+      accuracyPercent: number;
+      avgLatencyMs: number;
     }>
   > {
     try {
       // Note: regional_performance table doesn't exist yet
       // Returning empty array for now until the table is created
-      return []
-    } catch (error) {
-      console.error('Error getting regional performance:', error)
-      return []
+      return [];
+    } catch (_error) {
+      return [];
     }
   }
 
@@ -286,42 +278,42 @@ export class VoiceMetricsService {
    */
   async checkThresholds(thresholds: AlertThreshold[]): Promise<
     Array<{
-      metric: string
-      currentValue: number
-      threshold: number
-      violated: boolean
+      metric: string;
+      currentValue: number;
+      threshold: number;
+      violated: boolean;
     }>
   > {
     const results: Array<{
-      metric: string
-      currentValue: number
-      threshold: number
-      violated: boolean
-    }> = []
+      metric: string;
+      currentValue: number;
+      threshold: number;
+      violated: boolean;
+    }> = [];
 
     for (const threshold of thresholds) {
-      let currentValue = 0
-      let violated = false
+      let currentValue = 0;
+      let violated = false;
 
       switch (threshold.metric) {
         case 'accuracy': {
-          const summary = await this.getMetricsSummary(threshold.durationMinutes / (24 * 60))
-          currentValue = summary.accuracyPercent
-          violated = currentValue < threshold.threshold
-          break
+          const summary = await this.getMetricsSummary(threshold.durationMinutes / (24 * 60));
+          currentValue = summary.accuracyPercent;
+          violated = currentValue < threshold.threshold;
+          break;
         }
         case 'latency': {
-          const latency = await this.getLatencyPercentiles()
-          currentValue = latency.p95
-          violated = currentValue > threshold.threshold
-          break
+          const latency = await this.getLatencyPercentiles();
+          currentValue = latency.p95;
+          violated = currentValue > threshold.threshold;
+          break;
         }
         case 'error_rate': {
-          const summary = await this.getMetricsSummary(threshold.durationMinutes / (24 * 60))
+          const summary = await this.getMetricsSummary(threshold.durationMinutes / (24 * 60));
           currentValue =
-            summary.totalCommands > 0 ? (summary.failedCommands / summary.totalCommands) * 100 : 0
-          violated = currentValue > threshold.threshold
-          break
+            summary.totalCommands > 0 ? (summary.failedCommands / summary.totalCommands) * 100 : 0;
+          violated = currentValue > threshold.threshold;
+          break;
         }
       }
 
@@ -330,10 +322,10 @@ export class VoiceMetricsService {
         currentValue,
         threshold: threshold.threshold,
         violated,
-      })
+      });
     }
 
-    return results
+    return results;
   }
 }
 
@@ -345,21 +337,21 @@ export class VoiceMetricsService {
  * Create voice metrics service
  */
 export function createVoiceMetricsService(): VoiceMetricsService {
-  return new VoiceMetricsService()
+  return new VoiceMetricsService();
 }
 
 /**
  * Quick track function
  */
 export async function trackVoiceMetric(metric: VoiceMetric): Promise<void> {
-  const service = createVoiceMetricsService()
-  return service.trackMetric(metric)
+  const service = createVoiceMetricsService();
+  return service.trackMetric(metric);
 }
 
 /**
  * Get current metrics summary
  */
 export async function getCurrentMetrics(days: number = 7): Promise<MetricsSummary> {
-  const service = createVoiceMetricsService()
-  return service.getMetricsSummary(days)
+  const service = createVoiceMetricsService();
+  return service.getMetricsSummary(days);
 }

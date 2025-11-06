@@ -1,32 +1,32 @@
 export interface Transaction {
-  id: string
-  description: string
-  amount: number
-  date: Date
-  type: 'income' | 'expense' | 'transfer'
-  category?: string
-  subcategory?: string
-  merchant?: string
-  location?: string
-  paymentMethod?: string
-  confidence?: number
+  id: string;
+  description: string;
+  amount: number;
+  date: Date;
+  type: 'income' | 'expense' | 'transfer';
+  category?: string;
+  subcategory?: string;
+  merchant?: string;
+  location?: string;
+  paymentMethod?: string;
+  confidence?: number;
 }
 
 export interface Category {
-  id: string
-  name: string
-  icon: string
-  color: string
-  subcategories?: Subcategory[]
-  keywords: string[]
-  patterns: RegExp[]
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  subcategories?: Subcategory[];
+  keywords: string[];
+  patterns: RegExp[];
 }
 
 export interface Subcategory {
-  id: string
-  name: string
-  keywords: string[]
-  patterns: RegExp[]
+  id: string;
+  name: string;
+  keywords: string[];
+  patterns: RegExp[];
 }
 
 // Brazilian financial categories with local patterns
@@ -240,88 +240,94 @@ const BRAZILIAN_CATEGORIES: Category[] = [
       },
     ],
   },
-]
+];
 
 export class TransactionCategorizer {
-  private categories: Category[]
+  private categories: Category[];
 
   constructor() {
-    this.categories = BRAZILIAN_CATEGORIES
+    this.categories = BRAZILIAN_CATEGORIES;
   }
 
   /**
    * Categorize a transaction using pattern matching and keyword analysis
    */
-  categorizeTransaction(
-    transaction: Transaction
-  ): Transaction & { category: string; subcategory?: string; confidence: number } {
-    const description = transaction.description.toLowerCase()
-    let bestMatch: { category: Category; subcategory?: Subcategory; confidence: number } = {
+  categorizeTransaction(transaction: Transaction): Transaction & {
+    category: string;
+    subcategory?: string;
+    confidence: number;
+  } {
+    const description = transaction.description.toLowerCase();
+    let bestMatch: {
+      category: Category;
+      subcategory?: Subcategory;
+      confidence: number;
+    } = {
       category: this.categories[0],
       confidence: 0,
-    }
+    };
 
     // Check income vs expense first
     if (transaction.type === 'income') {
-      const incomeCategory = this.categories.find((cat) => cat.id === 'income')
+      const incomeCategory = this.categories.find((cat) => cat.id === 'income');
       if (incomeCategory) {
-        bestMatch = { category: incomeCategory, confidence: 0.9 }
+        bestMatch = { category: incomeCategory, confidence: 0.9 };
       }
     }
 
     // Pattern matching
     for (const category of this.categories) {
-      let categoryScore = 0
+      let categoryScore = 0;
 
       // Check category keywords
       for (const keyword of category.keywords) {
         if (description.includes(keyword)) {
-          categoryScore += 0.8
+          categoryScore += 0.8;
         }
       }
 
       // Check category patterns
       for (const pattern of category.patterns) {
         if (pattern.test(description)) {
-          categoryScore += 0.9
+          categoryScore += 0.9;
         }
       }
 
       // Check subcategories
-      let bestSubcategory: Subcategory | undefined
-      let subcategoryScore = 0
+      let bestSubcategory: Subcategory | undefined;
+      let subcategoryScore = 0;
 
       if (category.subcategories) {
         for (const subcategory of category.subcategories) {
-          let score = 0
+          let score = 0;
 
           for (const keyword of subcategory.keywords) {
             if (description.includes(keyword)) {
-              score += 0.9
+              score += 0.9;
             }
           }
 
           for (const pattern of subcategory.patterns) {
             if (pattern.test(description)) {
-              score += 0.95
+              score += 0.95;
             }
           }
 
           if (score > subcategoryScore) {
-            subcategoryScore = score
-            bestSubcategory = subcategory
+            subcategoryScore = score;
+            bestSubcategory = subcategory;
           }
         }
       }
 
-      const totalScore = Math.max(categoryScore, subcategoryScore)
+      const totalScore = Math.max(categoryScore, subcategoryScore);
 
       if (totalScore > bestMatch.confidence) {
         bestMatch = {
           category,
           subcategory: bestSubcategory,
           confidence: totalScore,
-        }
+        };
       }
     }
 
@@ -330,7 +336,7 @@ export class TransactionCategorizer {
       category: bestMatch.category.id,
       subcategory: bestMatch.subcategory?.id,
       confidence: bestMatch.confidence,
-    }
+    };
   }
 
   /**
@@ -339,40 +345,31 @@ export class TransactionCategorizer {
   categorizeTransactions(
     transactions: Transaction[]
   ): Array<Transaction & { category: string; subcategory?: string; confidence: number }> {
-    return transactions.map((transaction) => this.categorizeTransaction(transaction))
+    return transactions.map((transaction) => this.categorizeTransaction(transaction));
   }
 
   /**
    * Get all available categories
    */
   getCategories(): Category[] {
-    return this.categories
+    return this.categories;
   }
 
   /**
    * Get category by ID
    */
   getCategory(id: string): Category | undefined {
-    return this.categories.find((cat) => cat.id === id)
+    return this.categories.find((cat) => cat.id === id);
   }
 
   /**
    * Learn from user corrections to improve future categorization
    */
   learnFromCorrection(
-    transaction: Transaction,
-    correctCategory: string,
-    correctSubcategory?: string
-  ): void {
-    // This would typically update a machine learning model
-    // For now, we'll just log the correction for future improvements
-    console.log('Learning from correction:', {
-      description: transaction.description,
-      originalCategory: transaction.category,
-      correctCategory,
-      correctSubcategory,
-    })
-  }
+    _transaction: Transaction,
+    _correctCategory: string,
+    _correctSubcategory?: string
+  ): void {}
 
   /**
    * Get spending insights by category
@@ -384,60 +381,60 @@ export class TransactionCategorizer {
       .filter((t) => t.type === 'expense')
       .reduce(
         (acc, transaction) => {
-          const categoryId = transaction.category
+          const categoryId = transaction.category;
           if (!acc[categoryId]) {
             acc[categoryId] = {
               total: 0,
               count: 0,
               transactions: [],
-            }
+            };
           }
-          acc[categoryId].total += Math.abs(transaction.amount)
-          acc[categoryId].count += 1
-          acc[categoryId].transactions.push(transaction)
-          return acc
+          acc[categoryId].total += Math.abs(transaction.amount);
+          acc[categoryId].count += 1;
+          acc[categoryId].transactions.push(transaction);
+          return acc;
         },
         {} as Record<string, { total: number; count: number; transactions: Transaction[] }>
-      )
+      );
 
     // Add category details
     return Object.entries(insights).map(([categoryId, data]) => ({
       category: this.getCategory(categoryId),
       ...data,
       average: data.total / data.count,
-    }))
+    }));
   }
 
   /**
    * Predict future spending based on historical patterns
    */
   predictSpending(transactions: Array<Transaction & { category: string }>, daysAhead: number = 30) {
-    const now = new Date()
-    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const now = new Date();
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const recentTransactions = transactions.filter(
       (t) => t.date >= oneMonthAgo && t.type === 'expense'
-    )
+    );
 
     const predictions = this.getCategories()
       .filter((cat) => cat.id !== 'income')
       .map((category) => {
-        const categoryTransactions = recentTransactions.filter((t) => t.category === category.id)
-        const totalSpent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0)
-        const dailyAverage = totalSpent / 30
+        const categoryTransactions = recentTransactions.filter((t) => t.category === category.id);
+        const totalSpent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const dailyAverage = totalSpent / 30;
 
         return {
           category: category.id,
           predictedSpending: dailyAverage * daysAhead,
           confidence:
             categoryTransactions.length > 0 ? Math.min(categoryTransactions.length / 10, 1) : 0.1,
-        }
+        };
       })
-      .filter((pred) => pred.confidence > 0.2)
+      .filter((pred) => pred.confidence > 0.2);
 
-    return predictions
+    return predictions;
   }
 }
 
 // Export singleton instance
-export const transactionCategorizer = new TransactionCategorizer()
+export const transactionCategorizer = new TransactionCategorizer();

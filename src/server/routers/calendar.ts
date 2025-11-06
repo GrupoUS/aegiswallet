@@ -1,39 +1,38 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '@/server/trpc-helpers'
-import { logger, logError, logOperation } from '@/server/lib/logger'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { TRPCError } from '@trpc/server';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 import {
-  createFinancialNotificationService,
   type BrazilianFinancialEvent,
-  type FinancialNotificationService,
-} from '@/lib/notifications/financial-notification-service'
+  createFinancialNotificationService,
+} from '@/lib/notifications/financial-notification-service';
+import { logError, logOperation } from '@/server/lib/logger';
+import { protectedProcedure, router } from '@/server/trpc-helpers';
 
 /**
  * Gera mensagem de lembrete padrão para eventos financeiros
  */
 function generateReminderMessage(event: any): string {
-  const eventDate = event.event_date ? new Date(event.event_date) : null
+  const eventDate = event.event_date ? new Date(event.event_date) : null;
   const formattedDate = eventDate
     ? format(eventDate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
-    : ''
+    : '';
 
   if (event.amount) {
     const formattedAmount = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(Math.abs(event.amount))
+    }).format(Math.abs(event.amount));
 
     if (event.amount < 0) {
-      return `💰 Lembrete: Pagamento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`
+      return `💰 Lembrete: Pagamento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
     } else {
-      return `💳 Lembrete: Recebimento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`
+      return `💳 Lembrete: Recebimento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
     }
   }
 
-  return `📅 Lembrete: "${event.title}" em ${formattedDate}`
+  return `📅 Lembrete: "${event.title}" em ${formattedDate}`;
 }
 
 /**
@@ -46,29 +45,29 @@ export const calendarRouter = router({
       const { data, error } = await supabase
         .from('event_types')
         .select('*')
-        .order('name', { ascending: true })
+        .order('name', { ascending: true });
 
       if (error) {
         logError('fetch_event_types', 'system', error, {
           resource: 'event_types',
           operation: 'getEventTypes',
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar tipos de eventos',
-        })
+        });
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
       logError('fetch_event_types_unexpected', 'system', error as Error, {
         resource: 'event_types',
         operation: 'getEventTypes',
-      })
+      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar tipos de eventos',
-      })
+      });
     }
   }),
 
@@ -96,19 +95,19 @@ export const calendarRouter = router({
           .eq('user_id', ctx.user.id)
           .gte('event_date', input.startDate)
           .lte('event_date', input.endDate)
-          .order('event_date', { ascending: true })
+          .order('event_date', { ascending: true });
 
         if (input.typeId) {
-          query = query.eq('event_type_id', input.typeId)
+          query = query.eq('event_type_id', input.typeId);
         }
         if (input.isCompleted !== undefined) {
-          query = query.eq('is_completed', input.isCompleted)
+          query = query.eq('is_completed', input.isCompleted);
         }
         if (input.categoryId) {
-          query = query.eq('category_id', input.categoryId)
+          query = query.eq('category_id', input.categoryId);
         }
 
-        const { data, error } = await query
+        const { data, error } = await query;
 
         if (error) {
           logError('fetch_financial_events', ctx.user.id, error, {
@@ -119,11 +118,11 @@ export const calendarRouter = router({
             typeId: input.typeId,
             isCompleted: input.isCompleted,
             categoryId: input.categoryId,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar eventos financeiros',
-          })
+          });
         }
 
         logOperation('fetch_financial_events_success', ctx.user.id, 'financial_events', undefined, {
@@ -133,9 +132,9 @@ export const calendarRouter = router({
           isCompleted: input.isCompleted,
           categoryId: input.categoryId,
           resultsCount: data?.length || 0,
-        })
+        });
 
-        return data || []
+        return data || [];
       } catch (error) {
         logError('fetch_financial_events_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
@@ -145,11 +144,11 @@ export const calendarRouter = router({
           typeId: input.typeId,
           isCompleted: input.isCompleted,
           categoryId: input.categoryId,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar eventos financeiros',
-        })
+        });
       }
     }),
 
@@ -168,7 +167,7 @@ export const calendarRouter = router({
           `)
           .eq('id', input.id)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
@@ -180,31 +179,31 @@ export const calendarRouter = router({
               {
                 reason: 'event_not_found',
               }
-            )
+            );
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Evento financeiro não encontrado',
-            })
+            });
           }
           logError('fetch_financial_event_by_id', ctx.user.id, error, {
             resource: 'financial_events',
             operation: 'getEventById',
             eventId: input.id,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar evento financeiro',
-          })
+          });
         }
 
-        return data
+        return data;
       } catch (error) {
         logError('fetch_financial_event_by_id_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
           operation: 'getEventById',
           eventId: input.id,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -245,7 +244,7 @@ export const calendarRouter = router({
             event_types(id, name, color, icon),
             transaction_categories(id, name, color, icon)
           `)
-          .single()
+          .single();
 
         if (error) {
           logError('create_financial_event', ctx.user.id, error, {
@@ -255,11 +254,11 @@ export const calendarRouter = router({
             typeId: input.typeId,
             eventDate: input.eventDate,
             amount: input.amount,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar evento financeiro',
-          })
+          });
         }
 
         logOperation('create_financial_event_success', ctx.user.id, 'financial_events', data?.id, {
@@ -268,9 +267,9 @@ export const calendarRouter = router({
           eventDate: input.eventDate,
           amount: input.amount,
           hasDescription: !!input.description,
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('create_financial_event_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
@@ -279,11 +278,11 @@ export const calendarRouter = router({
           typeId: input.typeId,
           eventDate: input.eventDate,
           amount: input.amount,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar evento financeiro',
-        })
+        });
       }
     }),
 
@@ -308,17 +307,17 @@ export const calendarRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { id, ...updateData } = input
+        const { id, ...updateData } = input;
 
         // Map the input to database column names (only use columns that exist)
-        const dbUpdateData: any = {}
-        if (updateData.typeId !== undefined) dbUpdateData.event_type_id = updateData.typeId
-        if (updateData.title !== undefined) dbUpdateData.title = updateData.title
-        if (updateData.description !== undefined) dbUpdateData.description = updateData.description
-        if (updateData.amount !== undefined) dbUpdateData.amount = updateData.amount
-        if (updateData.eventDate !== undefined) dbUpdateData.event_date = updateData.eventDate
+        const dbUpdateData: any = {};
+        if (updateData.typeId !== undefined) dbUpdateData.event_type_id = updateData.typeId;
+        if (updateData.title !== undefined) dbUpdateData.title = updateData.title;
+        if (updateData.description !== undefined) dbUpdateData.description = updateData.description;
+        if (updateData.amount !== undefined) dbUpdateData.amount = updateData.amount;
+        if (updateData.eventDate !== undefined) dbUpdateData.event_date = updateData.eventDate;
         if (updateData.isCompleted !== undefined) {
-          dbUpdateData.is_completed = updateData.isCompleted
+          dbUpdateData.is_completed = updateData.isCompleted;
           // Note: completed_at column doesn't exist yet, so we can't set it
         }
 
@@ -332,7 +331,7 @@ export const calendarRouter = router({
             event_types(id, name, color, icon),
             transaction_categories(id, name, color, icon)
           `)
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
@@ -344,37 +343,37 @@ export const calendarRouter = router({
               {
                 reason: 'event_not_found',
               }
-            )
+            );
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Evento financeiro não encontrado',
-            })
+            });
           }
           logError('update_financial_event', ctx.user.id, error, {
             resource: 'financial_events',
             operation: 'update',
             eventId: input.id,
             updateFields: Object.keys(updateData),
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar evento financeiro',
-          })
+          });
         }
 
         logOperation('update_financial_event_success', ctx.user.id, 'financial_events', input.id, {
           updateFields: Object.keys(updateData),
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('update_financial_event_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
           operation: 'update',
           eventId: input.id,
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -389,7 +388,7 @@ export const calendarRouter = router({
           .eq('id', input.id)
           .eq('user_id', ctx.user.id)
           .select()
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
@@ -401,44 +400,44 @@ export const calendarRouter = router({
               {
                 reason: 'event_not_found',
               }
-            )
+            );
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Evento financeiro não encontrado',
-            })
+            });
           }
           logError('delete_financial_event', ctx.user.id, error, {
             resource: 'financial_events',
             operation: 'delete',
             eventId: input.id,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao deletar evento financeiro',
-          })
+          });
         }
 
         logOperation('delete_financial_event_success', ctx.user.id, 'financial_events', input.id, {
           deletedEventId: input.id,
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('delete_financial_event_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
           operation: 'delete',
           eventId: input.id,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
   // Obter eventos próximos (próximos 30 dias)
   getUpcomingEvents: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const today = new Date()
-      const thirtyDaysFromNow = new Date()
-      thirtyDaysFromNow.setDate(today.getDate() + 30)
+      const today = new Date();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(today.getDate() + 30);
 
       const { data, error } = await supabase
         .from('financial_events')
@@ -452,41 +451,41 @@ export const calendarRouter = router({
         .gte('event_date', today.toISOString().split('T')[0])
         .lte('event_date', thirtyDaysFromNow.toISOString().split('T')[0])
         .order('event_date', { ascending: true })
-        .limit(10)
+        .limit(10);
 
       if (error) {
         logError('fetch_upcoming_events', ctx.user.id, error, {
           resource: 'financial_events',
           operation: 'getUpcomingEvents',
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar próximos eventos',
-        })
+        });
       }
 
       logOperation('fetch_upcoming_events_success', ctx.user.id, 'financial_events', undefined, {
         resultsCount: data?.length || 0,
         daysRange: 30,
-      })
+      });
 
-      return data || []
+      return data || [];
     } catch (error) {
       logError('fetch_upcoming_events_unexpected', ctx.user.id, error as Error, {
         resource: 'financial_events',
         operation: 'getUpcomingEvents',
-      })
+      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar próximos eventos',
-      })
+      });
     }
   }),
 
   // Obter eventos atrasados
   getOverdueEvents: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const today = new Date()
+      const today = new Date();
 
       const { data, error } = await supabase
         .from('financial_events')
@@ -499,33 +498,33 @@ export const calendarRouter = router({
         .eq('is_completed', false)
         .lt('due_date', today.toISOString().split('T')[0])
         .not('due_date', 'is', null)
-        .order('due_date', { ascending: true })
+        .order('due_date', { ascending: true });
 
       if (error) {
         logError('fetch_overdue_events', ctx.user.id, error, {
           resource: 'financial_events',
           operation: 'getOverdueEvents',
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar eventos atrasados',
-        })
+        });
       }
 
       logOperation('fetch_overdue_events_success', ctx.user.id, 'financial_events', undefined, {
         resultsCount: data?.length || 0,
-      })
+      });
 
-      return data || []
+      return data || [];
     } catch (error) {
       logError('fetch_overdue_events_unexpected', ctx.user.id, error as Error, {
         resource: 'financial_events',
         operation: 'getOverdueEvents',
-      })
+      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar eventos atrasados',
-      })
+      });
     }
   }),
 
@@ -547,17 +546,17 @@ export const calendarRouter = router({
           .select('id, title, event_date, amount')
           .eq('id', input.eventId)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (eventError || !event) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Evento financeiro não encontrado',
-          })
+          });
         }
 
         // Criar mensagem padrão se não fornecida
-        const defaultMessage = input.message || generateReminderMessage(event)
+        const defaultMessage = input.message || generateReminderMessage(event);
 
         // Inserir lembrete no banco de dados
         const { data, error } = await supabase
@@ -569,7 +568,7 @@ export const calendarRouter = router({
             message: defaultMessage,
           })
           .select()
-          .single()
+          .single();
 
         if (error) {
           logError('create_event_reminder', ctx.user.id, error, {
@@ -578,11 +577,11 @@ export const calendarRouter = router({
             eventId: input.eventId,
             reminderType: input.reminderType,
             remindAt: input.remindAt,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar lembrete',
-          })
+          });
         }
 
         logOperation('create_event_reminder_success', ctx.user.id, 'event_reminders', data?.id, {
@@ -590,9 +589,9 @@ export const calendarRouter = router({
           reminderType: input.reminderType,
           remindAt: input.remindAt,
           hasCustomMessage: !!input.message,
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('create_event_reminder_unexpected', ctx.user.id, error as Error, {
           resource: 'event_reminders',
@@ -600,8 +599,8 @@ export const calendarRouter = router({
           eventId: input.eventId,
           reminderType: input.reminderType,
           remindAt: input.remindAt,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -618,13 +617,13 @@ export const calendarRouter = router({
             financial_events(user_id)
           `)
           .eq('id', input.reminderId)
-          .single()
+          .single();
 
         if (reminderError || !reminder) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Lembrete não encontrado',
-          })
+          });
         }
 
         // Verificar se o evento pertence ao usuário
@@ -632,7 +631,7 @@ export const calendarRouter = router({
           throw new TRPCError({
             code: 'FORBIDDEN',
             message: 'Acesso negado ao lembrete',
-          })
+          });
         }
 
         // Atualizar lembrete como enviado
@@ -644,18 +643,18 @@ export const calendarRouter = router({
           })
           .eq('id', input.reminderId)
           .select()
-          .single()
+          .single();
 
         if (error) {
           logError('mark_reminder_sent', ctx.user.id, error, {
             resource: 'event_reminders',
             operation: 'markReminderSent',
             reminderId: input.reminderId,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao marcar lembrete como enviado',
-          })
+          });
         }
 
         logOperation(
@@ -667,16 +666,16 @@ export const calendarRouter = router({
             reminderId: input.reminderId,
             sentAt: data.sent_at,
           }
-        )
+        );
 
-        return data
+        return data;
       } catch (error) {
         logError('mark_reminder_sent_unexpected', ctx.user.id, error as Error, {
           resource: 'event_reminders',
           operation: 'markReminderSent',
           reminderId: input.reminderId,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -700,13 +699,13 @@ export const calendarRouter = router({
           `)
           .eq('id', input.eventId)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (eventError || !event) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Evento financeiro não encontrado',
-          })
+          });
         }
 
         // Criar serviço de notificação financeira
@@ -716,7 +715,7 @@ export const calendarRouter = router({
           vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
-        })
+        });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
@@ -730,10 +729,10 @@ export const calendarRouter = router({
           categoryName: event.transaction_categories?.name,
           priority: event.priority || 'normal',
           isCompleted: event.is_completed || false,
-        }
+        };
 
         // Criar lembretes automáticos
-        await notificationService.createAutomatedReminders(brazilianEvent, ctx.user.id)
+        await notificationService.createAutomatedReminders(brazilianEvent, ctx.user.id);
 
         logOperation(
           'create_automated_reminders_success',
@@ -745,19 +744,22 @@ export const calendarRouter = router({
             eventTitle: event.title,
             hasCustomSchedule: !!input.customSchedule,
           }
-        )
+        );
 
-        return { success: true, message: 'Lembretes automáticos criados com sucesso' }
+        return {
+          success: true,
+          message: 'Lembretes automáticos criados com sucesso',
+        };
       } catch (error) {
         logError('create_automated_reminders', ctx.user.id, error as Error, {
           resource: 'event_reminders',
           operation: 'createAutomatedReminders',
           eventId: input.eventId,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar lembretes automáticos',
-        })
+        });
       }
     }),
 
@@ -781,13 +783,13 @@ export const calendarRouter = router({
           `)
           .eq('id', input.eventId)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (eventError || !event) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Evento financeiro não encontrado',
-          })
+          });
         }
 
         // Criar serviço de notificação financeira
@@ -797,7 +799,7 @@ export const calendarRouter = router({
           vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
-        })
+        });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
@@ -811,14 +813,14 @@ export const calendarRouter = router({
           categoryName: event.transaction_categories?.name,
           priority: event.priority || 'normal',
           isCompleted: event.is_completed || false,
-        }
+        };
 
         // Enviar notificação imediata
         await notificationService.sendFinancialNotification(
           brazilianEvent,
           ctx.user.id,
           input.customMessage
-        )
+        );
 
         logOperation(
           'send_financial_notification_success',
@@ -830,19 +832,19 @@ export const calendarRouter = router({
             eventTitle: event.title,
             hasCustomMessage: !!input.customMessage,
           }
-        )
+        );
 
-        return { success: true, message: 'Notificação enviada com sucesso' }
+        return { success: true, message: 'Notificação enviada com sucesso' };
       } catch (error) {
         logError('send_financial_notification', ctx.user.id, error as Error, {
           resource: 'notifications',
           operation: 'sendFinancialNotification',
           eventId: input.eventId,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao enviar notificação financeira',
-        })
+        });
       }
     }),
 
@@ -866,13 +868,13 @@ export const calendarRouter = router({
           `)
           .eq('id', input.eventId)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (eventError || !event) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Evento financeiro não encontrado',
-          })
+          });
         }
 
         // Criar serviço de notificação financeira
@@ -882,7 +884,7 @@ export const calendarRouter = router({
           vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
-        })
+        });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
@@ -896,33 +898,36 @@ export const calendarRouter = router({
           categoryName: event.transaction_categories?.name,
           priority: event.priority || 'normal',
           isCompleted: event.is_completed || false,
-        }
+        };
 
         // Criar lembrete por voz
         await notificationService.createVoiceReminder(
           brazilianEvent,
           ctx.user.id,
           input.reminderTime
-        )
+        );
 
         logOperation('create_voice_reminder_success', ctx.user.id, 'event_reminders', undefined, {
           eventId: input.eventId,
           eventTitle: event.title,
           reminderTime: input.reminderTime,
-        })
+        });
 
-        return { success: true, message: 'Lembrete por voz criado com sucesso' }
+        return {
+          success: true,
+          message: 'Lembrete por voz criado com sucesso',
+        };
       } catch (error) {
         logError('create_voice_reminder', ctx.user.id, error as Error, {
           resource: 'event_reminders',
           operation: 'createVoiceReminder',
           eventId: input.eventId,
           reminderTime: input.reminderTime,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar lembrete por voz',
-        })
+        });
       }
     }),
 
@@ -936,25 +941,28 @@ export const calendarRouter = router({
         vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
         ttl: 3600,
         urgency: 'normal',
-      })
+      });
 
       // Processar lembretes pendentes
-      await notificationService.processPendingReminders()
+      await notificationService.processPendingReminders();
 
       logOperation('process_pending_reminders_success', ctx.user.id, 'event_reminders', undefined, {
         operation: 'background_job',
-      })
+      });
 
-      return { success: true, message: 'Lembretes pendentes processados com sucesso' }
+      return {
+        success: true,
+        message: 'Lembretes pendentes processados com sucesso',
+      };
     } catch (error) {
       logError('process_pending_reminders', ctx.user.id, error as Error, {
         resource: 'event_reminders',
         operation: 'processPendingReminders',
-      })
+      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao processar lembretes pendentes',
-      })
+      });
     }
   }),
 
@@ -983,25 +991,25 @@ export const calendarRouter = router({
           .eq('user_id', ctx.user.id)
           .or(`title.ilike.%${input.query}%,description.ilike.%${input.query}%`)
           .order('event_date', { ascending: false })
-          .limit(input.limit)
+          .limit(input.limit);
 
         // Aplicar filtros de data se fornecidos
         if (input.startDate) {
-          query = query.gte('event_date', input.startDate)
+          query = query.gte('event_date', input.startDate);
         }
         if (input.endDate) {
-          query = query.lte('event_date', input.endDate)
+          query = query.lte('event_date', input.endDate);
         }
 
         // Aplicar filtros adicionais
         if (input.typeId) {
-          query = query.eq('event_type_id', input.typeId)
+          query = query.eq('event_type_id', input.typeId);
         }
         if (input.categoryId) {
-          query = query.eq('category_id', input.categoryId)
+          query = query.eq('category_id', input.categoryId);
         }
 
-        const { data, error } = await query
+        const { data, error } = await query;
 
         if (error) {
           logError('search_financial_events', ctx.user.id, error, {
@@ -1013,11 +1021,11 @@ export const calendarRouter = router({
             typeId: input.typeId,
             categoryId: input.categoryId,
             limit: input.limit,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar eventos financeiros',
-          })
+          });
         }
 
         logOperation(
@@ -1032,9 +1040,9 @@ export const calendarRouter = router({
             hasTypeFilter: !!input.typeId,
             hasCategoryFilter: !!input.categoryId,
           }
-        )
+        );
 
-        return data || []
+        return data || [];
       } catch (error) {
         logError('search_financial_events_unexpected', ctx.user.id, error as Error, {
           resource: 'financial_events',
@@ -1045,11 +1053,11 @@ export const calendarRouter = router({
           typeId: input.typeId,
           categoryId: input.categoryId,
           limit: input.limit,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar eventos financeiros',
-        })
+        });
       }
     }),
 
@@ -1076,22 +1084,22 @@ export const calendarRouter = router({
           .eq('user_id', ctx.user.id)
           .or(`description.ilike.%${input.query}%`)
           .order('transaction_date', { ascending: false })
-          .limit(input.limit)
+          .limit(input.limit);
 
         // Aplicar filtros de data se fornecidos
         if (input.startDate) {
-          query = query.gte('transaction_date', input.startDate)
+          query = query.gte('transaction_date', input.startDate);
         }
         if (input.endDate) {
-          query = query.lte('transaction_date', input.endDate)
+          query = query.lte('transaction_date', input.endDate);
         }
 
         // Aplicar filtro de categoria se fornecido
         if (input.categoryId) {
-          query = query.eq('category_id', input.categoryId)
+          query = query.eq('category_id', input.categoryId);
         }
 
-        const { data, error } = await query
+        const { data, error } = await query;
 
         if (error) {
           logError('search_transactions', ctx.user.id, error, {
@@ -1102,11 +1110,11 @@ export const calendarRouter = router({
             endDate: input.endDate,
             categoryId: input.categoryId,
             limit: input.limit,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transações',
-          })
+          });
         }
 
         logOperation('search_transactions_success', ctx.user.id, 'transactions', undefined, {
@@ -1114,9 +1122,9 @@ export const calendarRouter = router({
           resultsCount: data?.length || 0,
           hasDateFilter: !!(input.startDate || input.endDate),
           hasCategoryFilter: !!input.categoryId,
-        })
+        });
 
-        return data || []
+        return data || [];
       } catch (error) {
         logError('search_transactions_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
@@ -1126,11 +1134,11 @@ export const calendarRouter = router({
           endDate: input.endDate,
           categoryId: input.categoryId,
           limit: input.limit,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar transações',
-        })
+        });
       }
     }),
-})
+});

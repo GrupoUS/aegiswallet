@@ -11,20 +11,20 @@
  * @module nlu/intentClassifier
  */
 
-import { getValidIntents, INTENT_DEFINITIONS } from '@/lib/nlu/intents'
-import { createTextNormalizer } from '@/lib/nlu/textNormalizer'
-import { type IntentClassificationResult, IntentType } from '@/lib/nlu/types'
+import { getValidIntents, INTENT_DEFINITIONS } from '@/lib/nlu/intents';
+import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
+import { type IntentClassificationResult, IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Intent Classifier Class
 // ============================================================================
 
 export class IntentClassifier {
-  private normalizer = createTextNormalizer()
-  private tfidfVectors: Map<IntentType, Map<string, number>> = new Map()
+  private normalizer = createTextNormalizer();
+  private tfidfVectors: Map<IntentType, Map<string, number>> = new Map();
 
   constructor() {
-    this.initializeTFIDF()
+    this.initializeTFIDF();
   }
 
   /**
@@ -32,13 +32,13 @@ export class IntentClassifier {
    */
   async classify(text: string): Promise<IntentClassificationResult> {
     // Normalize text
-    const normalized = this.normalizer.normalize(text)
+    const normalized = this.normalizer.normalize(text);
 
     // Try pattern matching first (fast path)
-    const patternResult = this.classifyByPattern(text)
+    const patternResult = this.classifyByPattern(text);
 
     // Try TF-IDF similarity
-    const tfidfResult = this.classifyByTFIDF(normalized.tokens)
+    const tfidfResult = this.classifyByTFIDF(normalized.tokens);
 
     // If pattern confidence is high enough, return pattern method with alternatives
     if (patternResult.confidence >= 0.7) {
@@ -47,108 +47,112 @@ export class IntentClassifier {
         confidence: patternResult.confidence,
         method: 'pattern',
         alternatives: this.getAlternatives(patternResult, tfidfResult),
-      }
+      };
     }
 
     // Ensemble voting
-    const ensembleResult = this.ensembleVote(patternResult, tfidfResult)
+    const ensembleResult = this.ensembleVote(patternResult, tfidfResult);
 
     return {
       intent: ensembleResult.intent,
       confidence: ensembleResult.confidence,
       method: 'ensemble',
       alternatives: this.getAlternatives(patternResult, tfidfResult),
-    }
+    };
   }
 
   /**
    * Classify using regex patterns
    */
   private classifyByPattern(text: string): {
-    intent: IntentType
-    confidence: number
+    intent: IntentType;
+    confidence: number;
   } {
-    const candidates: Array<{ intent: IntentType; score: number; patternCount: number }> = []
+    const candidates: Array<{
+      intent: IntentType;
+      score: number;
+      patternCount: number;
+    }> = [];
 
     for (const intent of getValidIntents()) {
-      const definition = INTENT_DEFINITIONS[intent]
-      let patternMatches = 0
+      const definition = INTENT_DEFINITIONS[intent];
+      let patternMatches = 0;
 
       // Check patterns
       for (const pattern of definition.patterns) {
         if (pattern.test(text)) {
-          patternMatches++
+          patternMatches++;
         }
       }
 
       // Check keywords (lower confidence)
       const keywordMatches = definition.keywords.filter((keyword) =>
         text.toLowerCase().includes(keyword)
-      )
+      );
 
       if (patternMatches > 0) {
         // Higher confidence for more specific patterns (more matches)
-        const score = Math.min(0.95, 0.85 + patternMatches * 0.05)
-        candidates.push({ intent, score, patternCount: patternMatches })
+        const score = Math.min(0.95, 0.85 + patternMatches * 0.05);
+        candidates.push({ intent, score, patternCount: patternMatches });
       } else if (keywordMatches.length > 0) {
         // Penalize very generic queries that only match keywords without context
-        const textWords = text.toLowerCase().split(/\s+/).length
-        const isVeryGeneric = textWords <= 6 && keywordMatches.length <= 1
+        const textWords = text.toLowerCase().split(/\s+/).length;
+        const isVeryGeneric = textWords <= 6 && keywordMatches.length <= 1;
 
-        let score = 0.6 + keywordMatches.length * 0.1
+        let score = 0.6 + keywordMatches.length * 0.1;
         if (isVeryGeneric) {
-          score = Math.min(0.4, score) // Cap at low confidence for generic queries
+          score = Math.min(0.4, score); // Cap at low confidence for generic queries
         } else {
-          score = Math.min(0.75, score)
+          score = Math.min(0.75, score);
         }
 
-        candidates.push({ intent, score, patternCount: 0 })
+        candidates.push({ intent, score, patternCount: 0 });
       }
     }
 
     // Sort by score first, then by pattern specificity
     candidates.sort((a, b) => {
       if (b.score !== a.score) {
-        return b.score - a.score
+        return b.score - a.score;
       }
       // If scores are equal, prefer intents with more pattern matches
-      return b.patternCount - a.patternCount
-    })
+      return b.patternCount - a.patternCount;
+    });
 
-    const best = candidates[0]
+    const best = candidates[0];
     return {
       intent: best?.intent || IntentType.UNKNOWN,
       confidence: best?.score || 0,
-    }
+    };
   }
 
   /**
    * Classify using TF-IDF similarity
    */
   private classifyByTFIDF(tokens: string[]): {
-    intent: IntentType
-    confidence: number
+    intent: IntentType;
+    confidence: number;
   } {
-    let bestIntent = IntentType.UNKNOWN
-    let bestScore = 0
+    let bestIntent = IntentType.UNKNOWN;
+    let bestScore = 0;
 
-    const inputVector = this.computeTFIDF(tokens)
+    const inputVector = this.computeTFIDF(tokens);
 
     for (const intent of getValidIntents()) {
-      const intentVector = this.tfidfVectors.get(intent)
-      if (!intentVector) continue
+      const intentVector = this.tfidfVectors.get(intent);
+      if (!intentVector) continue;
 
-      const similarity = this.cosineSimilarity(inputVector, intentVector)
+      const similarity = this.cosineSimilarity(inputVector, intentVector);
       if (similarity > bestScore) {
-        bestScore = similarity
-        bestIntent = intent
+        bestScore = similarity;
+        bestIntent = intent;
       }
     }
 
     return {
       intent: bestIntent,
       confidence: bestScore,
-    }
+    };
   }
 
   /**
@@ -163,35 +167,35 @@ export class IntentClassifier {
       return {
         intent: patternResult.intent,
         confidence: Math.max(patternResult.confidence, tfidfResult.confidence),
-      }
+      };
     }
 
     // If pattern has high confidence, trust it
     if (patternResult.confidence >= 0.85) {
-      return patternResult
+      return patternResult;
     }
 
     // If TF-IDF has high confidence, trust it
     if (tfidfResult.confidence >= 0.85) {
-      return tfidfResult
+      return tfidfResult;
     }
 
     // Weighted average (pattern gets more weight)
-    const patternWeight = 0.6
-    const tfidfWeight = 0.4
+    const patternWeight = 0.6;
+    const tfidfWeight = 0.4;
 
     if (patternResult.confidence * patternWeight > tfidfResult.confidence * tfidfWeight) {
       return {
         intent: patternResult.intent,
         confidence:
           patternResult.confidence * patternWeight + tfidfResult.confidence * tfidfWeight * 0.5,
-      }
+      };
     } else {
       return {
         intent: tfidfResult.intent,
         confidence:
           tfidfResult.confidence * tfidfWeight + patternResult.confidence * patternWeight * 0.5,
-      }
+      };
     }
   }
 
@@ -202,21 +206,21 @@ export class IntentClassifier {
     patternResult: { intent: IntentType; confidence: number },
     tfidfResult: { intent: IntentType; confidence: number }
   ): Array<{ intent: IntentType; confidence: number }> {
-    const alternatives = new Map<IntentType, number>()
+    const alternatives = new Map<IntentType, number>();
 
     if (patternResult.intent !== IntentType.UNKNOWN) {
-      alternatives.set(patternResult.intent, patternResult.confidence)
+      alternatives.set(patternResult.intent, patternResult.confidence);
     }
 
     if (tfidfResult.intent !== IntentType.UNKNOWN) {
-      const existing = alternatives.get(tfidfResult.intent) || 0
-      alternatives.set(tfidfResult.intent, Math.max(existing, tfidfResult.confidence))
+      const existing = alternatives.get(tfidfResult.intent) || 0;
+      alternatives.set(tfidfResult.intent, Math.max(existing, tfidfResult.confidence));
     }
 
     return Array.from(alternatives.entries())
       .map(([intent, confidence]) => ({ intent, confidence }))
       .sort((a, b) => b.confidence - a.confidence)
-      .slice(0, 3)
+      .slice(0, 3);
   }
 
   /**
@@ -224,18 +228,18 @@ export class IntentClassifier {
    */
   private initializeTFIDF(): void {
     for (const intent of getValidIntents()) {
-      const definition = INTENT_DEFINITIONS[intent]
-      const allTokens: string[] = []
+      const definition = INTENT_DEFINITIONS[intent];
+      const allTokens: string[] = [];
 
       // Collect tokens from examples and keywords
       for (const example of definition.examples) {
-        const normalized = this.normalizer.normalize(example)
-        allTokens.push(...normalized.tokens)
+        const normalized = this.normalizer.normalize(example);
+        allTokens.push(...normalized.tokens);
       }
-      allTokens.push(...definition.keywords)
+      allTokens.push(...definition.keywords);
 
-      const vector = this.computeTFIDF(allTokens)
-      this.tfidfVectors.set(intent, vector)
+      const vector = this.computeTFIDF(allTokens);
+      this.tfidfVectors.set(intent, vector);
     }
   }
 
@@ -243,52 +247,52 @@ export class IntentClassifier {
    * Compute TF-IDF vector for tokens
    */
   private computeTFIDF(tokens: string[]): Map<string, number> {
-    const vector = new Map<string, number>()
-    const tokenCounts = new Map<string, number>()
+    const vector = new Map<string, number>();
+    const tokenCounts = new Map<string, number>();
 
     // Count term frequencies
     for (const token of tokens) {
-      tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1)
+      tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1);
     }
 
     // Compute TF-IDF (simplified - just TF for now)
-    const totalTokens = tokens.length
+    const totalTokens = tokens.length;
     for (const [token, count] of tokenCounts.entries()) {
-      const tf = count / totalTokens
-      vector.set(token, tf)
+      const tf = count / totalTokens;
+      vector.set(token, tf);
     }
 
-    return vector
+    return vector;
   }
 
   /**
    * Calculate cosine similarity between two vectors
    */
   private cosineSimilarity(vec1: Map<string, number>, vec2: Map<string, number>): number {
-    let dotProduct = 0
-    let mag1 = 0
-    let mag2 = 0
+    let dotProduct = 0;
+    let mag1 = 0;
+    let mag2 = 0;
 
     // Calculate dot product and magnitudes
-    const allKeys = new Set([...vec1.keys(), ...vec2.keys()])
+    const allKeys = new Set([...vec1.keys(), ...vec2.keys()]);
 
     for (const key of allKeys) {
-      const val1 = vec1.get(key) || 0
-      const val2 = vec2.get(key) || 0
+      const val1 = vec1.get(key) || 0;
+      const val2 = vec2.get(key) || 0;
 
-      dotProduct += val1 * val2
-      mag1 += val1 * val1
-      mag2 += val2 * val2
+      dotProduct += val1 * val2;
+      mag1 += val1 * val1;
+      mag2 += val2 * val2;
     }
 
-    mag1 = Math.sqrt(mag1)
-    mag2 = Math.sqrt(mag2)
+    mag1 = Math.sqrt(mag1);
+    mag2 = Math.sqrt(mag2);
 
     if (mag1 === 0 || mag2 === 0) {
-      return 0
+      return 0;
     }
 
-    return dotProduct / (mag1 * mag2)
+    return dotProduct / (mag1 * mag2);
   }
 
   /**
@@ -298,7 +302,7 @@ export class IntentClassifier {
     text: string,
     threshold: number = 0.7
   ): Promise<IntentClassificationResult> {
-    const result = await this.classify(text)
+    const result = await this.classify(text);
 
     if (result.confidence < threshold) {
       return {
@@ -306,10 +310,10 @@ export class IntentClassifier {
         confidence: result.confidence,
         method: result.method,
         alternatives: result.alternatives,
-      }
+      };
     }
 
-    return result
+    return result;
   }
 }
 
@@ -321,14 +325,14 @@ export class IntentClassifier {
  * Create intent classifier instance
  */
 export function createIntentClassifier(): IntentClassifier {
-  return new IntentClassifier()
+  return new IntentClassifier();
 }
 
 /**
  * Quick classify function
  */
 export async function classifyIntent(text: string): Promise<IntentType> {
-  const classifier = createIntentClassifier()
-  const result = await classifier.classify(text)
-  return result.intent
+  const classifier = createIntentClassifier();
+  const result = await classifier.classify(text);
+  return result.intent;
 }

@@ -3,11 +3,11 @@
  */
 
 export interface FeedbackData {
-  decisionId: string
-  userAccepted: boolean
-  outcome: 'success' | 'failure'
-  userRating?: number
-  comments?: string
+  decisionId: string;
+  userAccepted: boolean;
+  outcome: 'success' | 'failure';
+  userRating?: number;
+  comments?: string;
 }
 
 export class FeedbackLoop {
@@ -16,15 +16,15 @@ export class FeedbackLoop {
   }
 
   async getModelPerformance(): Promise<{
-    accuracy: number
-    acceptanceRate: number
-    userSatisfaction: number
+    accuracy: number;
+    acceptanceRate: number;
+    userSatisfaction: number;
   }> {
     return {
       accuracy: 0.92,
       acceptanceRate: 0.85,
       userSatisfaction: 4.2,
-    }
+    };
   }
 
   async triggerRetraining(): Promise<void> {
@@ -33,5 +33,5 @@ export class FeedbackLoop {
 }
 
 export function getFeedbackLoop(): FeedbackLoop {
-  return new FeedbackLoop()
+  return new FeedbackLoop();
 }

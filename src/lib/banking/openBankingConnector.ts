@@ -4,41 +4,38 @@
  */
 
 export interface BankAccount {
-  id: string
-  institution: string
-  type: 'checking' | 'savings' | 'investment'
-  balance: number
-  currency: string
-  accountNumber: string
-  branch: string
+  id: string;
+  institution: string;
+  type: 'checking' | 'savings' | 'investment';
+  balance: number;
+  currency: string;
+  accountNumber: string;
+  branch: string;
 }
 
 export interface Transaction {
-  id: string
-  accountId: string
-  date: Date
-  amount: number
-  description: string
-  type: 'debit' | 'credit'
-  category?: string
-  merchant?: string
+  id: string;
+  accountId: string;
+  date: Date;
+  amount: number;
+  description: string;
+  type: 'debit' | 'credit';
+  category?: string;
+  merchant?: string;
 }
 
 export class OpenBankingConnector {
-  private belvoUrl = 'https://api.belvo.com'
-  private apiKey: string
-
   constructor(apiKey: string) {
-    this.apiKey = apiKey
+    this.apiKey = apiKey;
   }
 
   async connectBank(_params: {
-    userId: string
-    institutionCode: string
-    credentials: any
+    userId: string;
+    institutionCode: string;
+    credentials: any;
   }): Promise<{ linkId: string }> {
     // Implementation would call Belvo API
-    return { linkId: `link_${Date.now()}` }
+    return { linkId: `link_${Date.now()}` };
   }
 
   async listAccounts(_linkId: string): Promise<BankAccount[]> {
@@ -53,7 +50,7 @@ export class OpenBankingConnector {
         accountNumber: '12345-6',
         branch: '0001',
       },
-    ]
+    ];
   }
 
   async listTransactions(
@@ -72,21 +69,21 @@ export class OpenBankingConnector {
         type: 'debit',
         category: 'food',
       },
-    ]
+    ];
   }
 
   async getBalance(accountId: string): Promise<number> {
-    const accounts = await this.listAccounts('link_default')
-    const account = accounts.find((a) => a.id === accountId)
-    return account?.balance || 0
+    const accounts = await this.listAccounts('link_default');
+    const account = accounts.find((a) => a.id === accountId);
+    return account?.balance || 0;
   }
 }
 
-let connectorInstance: OpenBankingConnector | null = null
+let connectorInstance: OpenBankingConnector | null = null;
 
 export function getOpenBankingConnector(): OpenBankingConnector {
   if (!connectorInstance) {
-    connectorInstance = new OpenBankingConnector(process.env.BELVO_API_KEY || '')
+    connectorInstance = new OpenBankingConnector(process.env.BELVO_API_KEY || '');
   }
-  return connectorInstance
+  return connectorInstance;
 }

@@ -1,6 +1,6 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import type { Context } from '@/server/context'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import type { Context } from '@/server/context';
 
 export const createTransactionRouter = (t: any) => ({
   /**
@@ -8,23 +8,23 @@ export const createTransactionRouter = (t: any) => ({
    */
   getAll: t.procedure.query(async ({ ctx }: { ctx: Context }) => {
     if (!ctx.session?.user) {
-      return []
+      return [];
     }
 
     const { data, error } = await ctx.supabase
       .from('transactions')
       .select('*')
       .eq('user_id', ctx.user.id)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: error.message,
-      })
+      });
     }
 
-    return data || []
+    return data || [];
   }),
 
   /**
@@ -44,7 +44,7 @@ export const createTransactionRouter = (t: any) => ({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Must be logged in',
-        })
+        });
       }
 
       const { data, error } = await ctx.supabase
@@ -58,16 +58,16 @@ export const createTransactionRouter = (t: any) => ({
           created_at: new Date().toISOString(),
         })
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: error.message,
-        })
+        });
       }
 
-      return data
+      return data;
     }),
 
   /**
@@ -84,23 +84,23 @@ export const createTransactionRouter = (t: any) => ({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Must be logged in',
-        })
+        });
       }
 
       const { error } = await ctx.supabase
         .from('transactions')
         .delete()
         .eq('id', input.id)
-        .eq('user_id', ctx.user.id)
+        .eq('user_id', ctx.user.id);
 
       if (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: error.message,
-        })
+        });
       }
 
-      return { success: true }
+      return { success: true };
     }),
 
   /**
@@ -108,36 +108,36 @@ export const createTransactionRouter = (t: any) => ({
    */
   getSummary: t.procedure.query(async ({ ctx }: { ctx: Context }) => {
     if (!ctx.session?.user) {
-      return null
+      return null;
     }
 
-    const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
     const { data, error } = await ctx.supabase
       .from('transactions')
       .select('amount')
       .eq('user_id', ctx.user.id)
-      .like('date', `${currentMonth}%`)
+      .like('date', `${currentMonth}%`);
 
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: error.message,
-      })
+      });
     }
 
-    const transactions = data || []
-    const income = transactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+    const transactions = data || [];
+    const income = transactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
 
     const expenses = transactions
       .filter((t) => t.amount < 0)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
     return {
       income,
       expenses,
       balance: income - expenses,
       transactionCount: transactions.length,
-    }
+    };
   }),
-})
+});

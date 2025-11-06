@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export interface LoginFormProps {
   onSubmit?: (
     email: string,
     password: string,
     isSignUp: boolean
-  ) => Promise<{ error?: { message: string } }>
-  onGoogleSignIn?: () => Promise<void>
-  loading?: boolean
-  error?: string
-  className?: string
+  ) => Promise<{ error?: { message: string } }>;
+  onGoogleSignIn?: () => Promise<void>;
+  loading?: boolean;
+  error?: string;
+  className?: string;
 }
 
 export function LoginForm({
@@ -26,55 +26,55 @@ export function LoginForm({
   loading: externalLoading,
   error: externalError,
 }: LoginFormProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [internalLoading, setInternalLoading] = useState(false)
-  const [internalError, setInternalError] = useState('')
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(false);
+  const [internalError, setInternalError] = useState('');
 
-  const loading = externalLoading ?? internalLoading
-  const error = externalError ?? internalError
+  const loading = externalLoading ?? internalLoading;
+  const error = externalError ?? internalError;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setInternalError('')
+    e.preventDefault();
+    setInternalError('');
 
-    if (!onSubmit) return
+    if (!onSubmit) return;
 
-    setInternalLoading(true)
+    setInternalLoading(true);
     try {
-      const result = await onSubmit(email, password, isSignUp)
+      const result = await onSubmit(email, password, isSignUp);
       if (result?.error) {
-        setInternalError(result.error.message)
+        setInternalError(result.error.message);
       } else if (isSignUp) {
-        setInternalError('Verifique seu email para confirmar o cadastro!')
+        setInternalError('Verifique seu email para confirmar o cadastro!');
       }
     } catch {
-      setInternalError('Erro ao processar sua solicitação')
+      setInternalError('Erro ao processar sua solicitação');
     } finally {
-      setInternalLoading(false)
+      setInternalLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    if (!onGoogleSignIn) return
+    if (!onGoogleSignIn) return;
 
-    setInternalError('')
-    setInternalLoading(true)
+    setInternalError('');
+    setInternalLoading(true);
     try {
-      await onGoogleSignIn()
+      await onGoogleSignIn();
     } catch {
-      setInternalError('Erro ao fazer login com Google')
+      setInternalError('Erro ao fazer login com Google');
     } finally {
-      setInternalLoading(false)
+      setInternalLoading(false);
     }
-  }
+  };
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <Card className="border/50 shadow-lg">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold tracking-tight">
+          <CardTitle className="font-bold text-2xl tracking-tight">
             {isSignUp ? 'Criar Conta' : 'Bem-vindo de volta'}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -105,7 +105,7 @@ export function LoginForm({
                   {!isSignUp && (
                     <button
                       type="button"
-                      className="ml-auto inline-block text-sm text-primary underline-offset-4 hover:underline transition-colors"
+                      className="ml-auto inline-block text-primary text-sm underline-offset-4 transition-colors hover:underline"
                     >
                       Esqueceu a senha?
                     </button>
@@ -124,7 +124,7 @@ export function LoginForm({
               </div>
 
               {error && (
-                <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm animate-in fade-in-50 slide-in-from-top-1">
+                <div className="fade-in-50 slide-in-from-top-1 animate-in rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm">
                   {error}
                 </div>
               )}
@@ -132,17 +132,17 @@ export function LoginForm({
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary hover:bg-primary/90 transition-all"
+                className="w-full bg-primary transition-all hover:bg-primary/90"
               >
                 {loading ? 'Processando...' : isSignUp ? 'Cadastrar' : 'Entrar'}
               </Button>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border"></div>
+                  <div className="w-full border border-t"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-card text-muted-foreground">Ou continue com</span>
+                  <span className="bg-card px-2 text-muted-foreground">Ou continue com</span>
                 </div>
               </div>
 
@@ -153,7 +153,8 @@ export function LoginForm({
                 disabled={loading}
                 className="w-full transition-all hover:bg-accent"
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" aria-label="Google">
+                  <title>Google</title>
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -179,10 +180,10 @@ export function LoginForm({
                 variant="link"
                 type="button"
                 onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setInternalError('')
+                  setIsSignUp(!isSignUp);
+                  setInternalError('');
                 }}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground text-sm transition-colors hover:text-primary"
               >
                 {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem uma conta? Cadastre-se'}
               </Button>
@@ -191,5 +192,5 @@ export function LoginForm({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-import { Download, Heart, Mic, Send, Settings, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Download, Heart, Mic, Send, Settings, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function GradientButtonDemo() {
   return (
-    <div className="container mx-auto p-8 space-y-8">
+    <div className="container mx-auto space-y-8 p-8">
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-4xl text-transparent">
           Gradient Button Showcase
         </h1>
         <p className="text-muted-foreground">
@@ -24,7 +24,7 @@ export function GradientButtonDemo() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">Botões Regulares</h3>
+            <h3 className="font-semibold text-muted-foreground text-sm">Botões Regulares</h3>
             <div className="flex flex-wrap gap-4">
               <Button>Default Button</Button>
               <Button variant="outline">Outline Button</Button>
@@ -35,7 +35,7 @@ export function GradientButtonDemo() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">Botões com Gradiente</h3>
+            <h3 className="font-semibold text-muted-foreground text-sm">Botões com Gradiente</h3>
             <div className="flex flex-wrap gap-4">
               <Button withGradient>Default Button</Button>
               <Button withGradient variant="outline">
@@ -124,35 +124,35 @@ export function GradientButtonDemo() {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Animação Rápida (0.5s)</p>
+              <p className="text-muted-foreground text-sm">Animação Rápida (0.5s)</p>
               <Button withGradient gradientDuration={0.5}>
                 Fast Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Animação Normal (1s - padrão)</p>
+              <p className="text-muted-foreground text-sm">Animação Normal (1s - padrão)</p>
               <Button withGradient gradientDuration={1}>
                 Normal Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Animação Lenta (2s)</p>
+              <p className="text-muted-foreground text-sm">Animação Lenta (2s)</p>
               <Button withGradient gradientDuration={2}>
                 Slow Animation
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Gradiente Pequeno (400px)</p>
+              <p className="text-muted-foreground text-sm">Gradiente Pequeno (400px)</p>
               <Button withGradient gradientSize={400}>
                 Small Gradient
               </Button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Gradiente Grande (1000px)</p>
+              <p className="text-muted-foreground text-sm">Gradiente Grande (1000px)</p>
               <Button withGradient gradientSize={1000}>
                 Large Gradient
               </Button>
@@ -190,7 +190,7 @@ export function GradientButtonDemo() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Ações Primárias</h3>
+            <h3 className="font-semibold text-sm">Ações Primárias</h3>
             <div className="flex gap-4">
               <Button withGradient size="lg" className="flex-1">
                 <Mic />
@@ -200,7 +200,7 @@ export function GradientButtonDemo() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Formulário de Ação</h3>
+            <h3 className="font-semibold text-sm">Formulário de Ação</h3>
             <div className="flex gap-2">
               <Button withGradient>Salvar</Button>
               <Button variant="outline">Cancelar</Button>
@@ -208,7 +208,7 @@ export function GradientButtonDemo() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Navegação</h3>
+            <h3 className="font-semibold text-sm">Navegação</h3>
             <div className="flex flex-wrap gap-2">
               <Button withGradient variant="outline" size="sm">
                 Todas
@@ -224,5 +224,5 @@ export function GradientButtonDemo() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

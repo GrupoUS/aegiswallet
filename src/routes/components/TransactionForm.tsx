@@ -1,39 +1,39 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface TransactionFormProps {
-  onCancel: () => void
+  onCancel: () => void;
 }
 
 function TransactionForm({ onCancel }: TransactionFormProps) {
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 border-primary/20">
+    <Card className="border-primary/20 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
         <CardTitle>Nova Transação</CardTitle>
         <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium mb-2">Descrição</label>
+            <label className="mb-2 block font-medium text-sm">Descrição</label>
             <input
               type="text"
-              className="w-full p-2 border rounded-md bg-background"
+              className="w-full rounded-md border bg-background p-2"
               placeholder="Ex: Supermercado"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Valor</label>
+            <label className="mb-2 block font-medium text-sm">Valor</label>
             <input
               type="number"
               step="0.01"
-              className="w-full p-2 border rounded-md bg-background"
+              className="w-full rounded-md border bg-background p-2"
               placeholder="0.00"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Categoria</label>
-            <select className="w-full p-2 border rounded-md bg-background">
+            <label className="mb-2 block font-medium text-sm">Categoria</label>
+            <select className="w-full rounded-md border bg-background p-2">
               <option value="">Selecione...</option>
               <option value="food">Alimentação</option>
               <option value="transport">Transporte</option>
@@ -43,11 +43,11 @@ function TransactionForm({ onCancel }: TransactionFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Data</label>
-            <input type="date" className="w-full p-2 border rounded-md bg-background" />
+            <label className="mb-2 block font-medium text-sm">Data</label>
+            <input type="date" className="w-full rounded-md border bg-background p-2" />
           </div>
         </div>
-        <div className="flex gap-2 mt-4">
+        <div className="mt-4 flex gap-2">
           <Button withGradient>Salvar</Button>
           <Button variant="outline" onClick={onCancel}>
             Cancelar
@@ -55,7 +55,7 @@ function TransactionForm({ onCancel }: TransactionFormProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export default TransactionForm
+export default TransactionForm;

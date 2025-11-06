@@ -3,44 +3,44 @@
  * Popover-based date picker using the Origin UI Compact Calendar
  */
 
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { Calendar as CalendarIcon } from 'lucide-react'
-import { useState } from 'react'
-import { OriginCompactCalendar } from '@/components/calendar/origin-compact-calendar'
-import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { useState } from 'react';
+import { OriginCompactCalendar } from '@/components/calendar/origin-compact-calendar';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface DatePickerProps {
   /**
    * Currently selected date
    */
-  date?: Date
+  date?: Date;
   /**
    * Callback when date is selected
    */
-  onDateChange?: (date: Date | undefined) => void
+  onDateChange?: (date: Date | undefined) => void;
   /**
    * Placeholder text when no date is selected
    */
-  placeholder?: string
+  placeholder?: string;
   /**
    * Additional CSS classes for the trigger button
    */
-  className?: string
+  className?: string;
   /**
    * Disable the date picker
    */
-  disabled?: boolean
+  disabled?: boolean;
   /**
    * Start month for the year dropdown (default: January 1980)
    */
-  startMonth?: Date
+  startMonth?: Date;
   /**
    * Format string for displaying the date (default: 'PPP')
    */
-  dateFormat?: string
+  dateFormat?: string;
 }
 
 export function DatePicker({
@@ -52,14 +52,14 @@ export function DatePicker({
   startMonth = new Date(1980, 0),
   dateFormat = 'PPP',
 }: DatePickerProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   const handleSelect = (selectedDate: Date | undefined) => {
     if (onDateChange) {
-      onDateChange(selectedDate)
+      onDateChange(selectedDate);
     }
-    setOpen(false)
-  }
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,7 +86,7 @@ export function DatePicker({
         />
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 /**
@@ -97,27 +97,27 @@ interface DateRangePickerProps {
   /**
    * Start date
    */
-  startDate?: Date
+  startDate?: Date;
   /**
    * End date
    */
-  endDate?: Date
+  endDate?: Date;
   /**
    * Callback when start date changes
    */
-  onStartDateChange?: (date: Date | undefined) => void
+  onStartDateChange?: (date: Date | undefined) => void;
   /**
    * Callback when end date changes
    */
-  onEndDateChange?: (date: Date | undefined) => void
+  onEndDateChange?: (date: Date | undefined) => void;
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
   /**
    * Disable the date pickers
    */
-  disabled?: boolean
+  disabled?: boolean;
 }
 
 export function DateRangePicker({
@@ -143,5 +143,5 @@ export function DateRangePicker({
         disabled={disabled}
       />
     </div>
-  )
+  );
 }

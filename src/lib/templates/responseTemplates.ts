@@ -20,29 +20,29 @@ import {
   formatDate,
   formatPercentage,
   formatRelativeDate,
-} from '@/lib/formatters/brazilianFormatters'
-import { IntentType } from '@/lib/nlu/types'
+} from '@/lib/formatters/brazilianFormatters';
+import { IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface MultimodalResponse {
-  text: string
-  speech: string
+  text: string;
+  speech: string;
   visual: {
-    type: 'balance' | 'budget' | 'bills' | 'income' | 'projection' | 'transfer' | 'error'
-    data: any
-  }
+    type: 'balance' | 'budget' | 'bills' | 'income' | 'projection' | 'transfer' | 'error';
+    data: any;
+  };
   accessibility: {
-    ariaLabel: string
-    screenReaderText: string
-  }
-  requiresConfirmation?: boolean
+    ariaLabel: string;
+    screenReaderText: string;
+  };
+  requiresConfirmation?: boolean;
 }
 
 export interface TemplateData {
-  [key: string]: any
+  [key: string]: any;
 }
 
 // ============================================================================
@@ -53,13 +53,13 @@ export interface TemplateData {
  * Generate response for CHECK_BALANCE intent
  */
 export function generateBalanceResponse(data: {
-  balance: number
-  accountName?: string
+  balance: number;
+  accountName?: string;
 }): MultimodalResponse {
-  const { balance, accountName = 'Conta Principal' } = data
+  const { balance, accountName = 'Conta Principal' } = data;
 
-  const text = `Seu saldo em ${accountName} é de ${formatCurrency(balance)}`
-  const speech = `Seu saldo em ${accountName} é de ${formatCurrencyForVoice(balance)}`
+  const text = `Seu saldo em ${accountName} é de ${formatCurrency(balance)}`;
+  const speech = `Seu saldo em ${accountName} é de ${formatCurrencyForVoice(balance)}`;
 
   return {
     text,
@@ -76,23 +76,23 @@ export function generateBalanceResponse(data: {
       ariaLabel: `Saldo: ${formatCurrency(balance)}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
  * Generate response for CHECK_BUDGET intent
  */
 export function generateBudgetResponse(data: {
-  available: number
-  total: number
-  spent: number
-  period?: string
+  available: number;
+  total: number;
+  spent: number;
+  period?: string;
 }): MultimodalResponse {
-  const { available, total, spent, period = 'mês' } = data
-  const percentage = (spent / total) * 100
+  const { available, total, spent, period = 'mês' } = data;
+  const percentage = (spent / total) * 100;
 
-  const text = `Você pode gastar ${formatCurrency(available)} este ${period}. Já gastou ${formatPercentage(percentage)} do orçamento.`
-  const speech = `Você pode gastar ${formatCurrencyForVoice(available)} este ${period}. Já gastou ${formatPercentage(percentage)} do orçamento.`
+  const text = `Você pode gastar ${formatCurrency(available)} este ${period}. Já gastou ${formatPercentage(percentage)} do orçamento.`;
+  const speech = `Você pode gastar ${formatCurrencyForVoice(available)} este ${period}. Já gastou ${formatPercentage(percentage)} do orçamento.`;
 
   return {
     text,
@@ -115,25 +115,25 @@ export function generateBudgetResponse(data: {
       ariaLabel: `Orçamento disponível: ${formatCurrency(available)}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
  * Generate response for PAY_BILL intent
  */
 export function generatePayBillResponse(data: {
-  billName: string
-  amount: number
-  dueDate: Date
-  confirmed?: boolean
+  billName: string;
+  amount: number;
+  dueDate: Date;
+  confirmed?: boolean;
 }): MultimodalResponse {
-  const { billName, amount, dueDate, confirmed = false } = data
+  const { billName, amount, dueDate, confirmed = false } = data;
 
-  const relativeDue = formatRelativeDate(dueDate)
+  const relativeDue = formatRelativeDate(dueDate);
 
   if (!confirmed) {
-    const text = `Confirmar pagamento de ${billName} no valor de ${formatCurrency(amount)} com vencimento ${relativeDue}?`
-    const speech = `Confirmar pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} com vencimento ${relativeDue}?`
+    const text = `Confirmar pagamento de ${billName} no valor de ${formatCurrency(amount)} com vencimento ${relativeDue}?`;
+    const speech = `Confirmar pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} com vencimento ${relativeDue}?`;
 
     return {
       text,
@@ -154,11 +154,11 @@ export function generatePayBillResponse(data: {
         screenReaderText: speech,
       },
       requiresConfirmation: true,
-    }
+    };
   }
 
-  const text = `Pagamento de ${billName} no valor de ${formatCurrency(amount)} confirmado!`
-  const speech = `Pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} confirmado!`
+  const text = `Pagamento de ${billName} no valor de ${formatCurrency(amount)} confirmado!`;
+  const speech = `Pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} confirmado!`;
 
   return {
     text,
@@ -178,7 +178,7 @@ export function generatePayBillResponse(data: {
       ariaLabel: `Pagamento confirmado: ${billName}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
@@ -186,21 +186,21 @@ export function generatePayBillResponse(data: {
  */
 export function generateIncomeResponse(data: {
   nextIncome: {
-    description: string
-    amount: number
-    date: Date
-  }
-  totalMonth?: number
+    description: string;
+    amount: number;
+    date: Date;
+  };
+  totalMonth?: number;
 }): MultimodalResponse {
-  const { nextIncome, totalMonth } = data
-  const relativeDate = formatRelativeDate(nextIncome.date)
+  const { nextIncome, totalMonth } = data;
+  const relativeDate = formatRelativeDate(nextIncome.date);
 
-  let text = `Próximo recebimento: ${nextIncome.description} de ${formatCurrency(nextIncome.amount)} ${relativeDate}`
-  let speech = `Próximo recebimento: ${nextIncome.description} de ${formatCurrencyForVoice(nextIncome.amount)} ${relativeDate}`
+  let text = `Próximo recebimento: ${nextIncome.description} de ${formatCurrency(nextIncome.amount)} ${relativeDate}`;
+  let speech = `Próximo recebimento: ${nextIncome.description} de ${formatCurrencyForVoice(nextIncome.amount)} ${relativeDate}`;
 
   if (totalMonth) {
-    text += `. Total previsto no mês: ${formatCurrency(totalMonth)}`
-    speech += `. Total previsto no mês: ${formatCurrencyForVoice(totalMonth)}`
+    text += `. Total previsto no mês: ${formatCurrency(totalMonth)}`;
+    speech += `. Total previsto no mês: ${formatCurrencyForVoice(totalMonth)}`;
   }
 
   return {
@@ -223,34 +223,34 @@ export function generateIncomeResponse(data: {
       ariaLabel: `Próximo recebimento: ${formatCurrency(nextIncome.amount)} ${relativeDate}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
  * Generate response for FINANCIAL_PROJECTION intent
  */
 export function generateProjectionResponse(data: {
-  projectedBalance: number
-  currentBalance: number
-  period: string
-  income: number
-  expenses: number
+  projectedBalance: number;
+  currentBalance: number;
+  period: string;
+  income: number;
+  expenses: number;
 }): MultimodalResponse {
-  const { projectedBalance, currentBalance, period, income, expenses } = data
-  const difference = projectedBalance - currentBalance
-  const isPositive = difference >= 0
+  const { projectedBalance, currentBalance, period, income, expenses } = data;
+  const difference = projectedBalance - currentBalance;
+  const isPositive = difference >= 0;
 
   const text = `Projeção para o ${period}: saldo final de ${formatCurrency(projectedBalance)}. ${
     isPositive
       ? `Você terá ${formatCurrency(difference)} a mais.`
       : `Você terá ${formatCurrency(Math.abs(difference))} a menos.`
-  }`
+  }`;
 
   const speech = `Projeção para o ${period}: saldo final de ${formatCurrencyForVoice(projectedBalance)}. ${
     isPositive
       ? `Você terá ${formatCurrencyForVoice(difference)} a mais.`
       : `Você terá ${formatCurrencyForVoice(Math.abs(difference))} a menos.`
-  }`
+  }`;
 
   return {
     text,
@@ -276,22 +276,22 @@ export function generateProjectionResponse(data: {
       ariaLabel: `Projeção: ${formatCurrency(projectedBalance)}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
  * Generate response for TRANSFER_MONEY intent
  */
 export function generateTransferResponse(data: {
-  recipient: string
-  amount: number
-  confirmed?: boolean
+  recipient: string;
+  amount: number;
+  confirmed?: boolean;
 }): MultimodalResponse {
-  const { recipient, amount, confirmed = false } = data
+  const { recipient, amount, confirmed = false } = data;
 
   if (!confirmed) {
-    const text = `Confirmar transferência de ${formatCurrency(amount)} para ${recipient}?`
-    const speech = `Confirmar transferência de ${formatCurrencyForVoice(amount)} para ${recipient}?`
+    const text = `Confirmar transferência de ${formatCurrency(amount)} para ${recipient}?`;
+    const speech = `Confirmar transferência de ${formatCurrencyForVoice(amount)} para ${recipient}?`;
 
     return {
       text,
@@ -309,11 +309,11 @@ export function generateTransferResponse(data: {
         screenReaderText: speech,
       },
       requiresConfirmation: true,
-    }
+    };
   }
 
-  const text = `Transferência de ${formatCurrency(amount)} para ${recipient} confirmada!`
-  const speech = `Transferência de ${formatCurrencyForVoice(amount)} para ${recipient} confirmada!`
+  const text = `Transferência de ${formatCurrency(amount)} para ${recipient} confirmada!`;
+  const speech = `Transferência de ${formatCurrencyForVoice(amount)} para ${recipient} confirmada!`;
 
   return {
     text,
@@ -331,15 +331,15 @@ export function generateTransferResponse(data: {
       ariaLabel: `Transferência confirmada: ${formatCurrency(amount)}`,
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 /**
  * Generate error response
  */
 export function generateErrorResponse(error: string): MultimodalResponse {
-  const text = `Desculpe, ${error}. Tente novamente.`
-  const speech = text
+  const text = `Desculpe, ${error}. Tente novamente.`;
+  const speech = text;
 
   return {
     text,
@@ -352,7 +352,7 @@ export function generateErrorResponse(error: string): MultimodalResponse {
       ariaLabel: 'Erro',
       screenReaderText: speech,
     },
-  }
+  };
 }
 
 // ============================================================================
@@ -365,24 +365,24 @@ export function generateErrorResponse(error: string): MultimodalResponse {
 export function generateResponse(intent: IntentType, data: TemplateData): MultimodalResponse {
   switch (intent) {
     case IntentType.CHECK_BALANCE:
-      return generateBalanceResponse(data)
+      return generateBalanceResponse(data);
 
     case IntentType.CHECK_BUDGET:
-      return generateBudgetResponse(data)
+      return generateBudgetResponse(data);
 
     case IntentType.PAY_BILL:
-      return generatePayBillResponse(data)
+      return generatePayBillResponse(data);
 
     case IntentType.CHECK_INCOME:
-      return generateIncomeResponse(data)
+      return generateIncomeResponse(data);
 
     case IntentType.FINANCIAL_PROJECTION:
-      return generateProjectionResponse(data)
+      return generateProjectionResponse(data);
 
     case IntentType.TRANSFER_MONEY:
-      return generateTransferResponse(data)
+      return generateTransferResponse(data);
 
     default:
-      return generateErrorResponse('comando não reconhecido')
+      return generateErrorResponse('comando não reconhecido');
   }
 }

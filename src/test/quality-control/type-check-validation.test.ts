@@ -3,8 +3,8 @@
  * Validates that critical type fixes are working correctly
  */
 
-import { describe, expect, it } from 'vitest'
-import type { Tables } from '@/types/database.types'
+import { describe, expect, it } from 'vitest';
+import type { Tables } from '@/types/database.types';
 
 describe('Type Check Validation', () => {
   describe('Database Schema Fixes', () => {
@@ -22,11 +22,11 @@ describe('Type Check Validation', () => {
         accessibility_high_contrast: true,
         accessibility_large_text: false,
         accessibility_screen_reader: true,
-      }
+      };
 
-      expect(mockPreferences.voice_feedback).toBe(true)
-      expect(mockPreferences.accessibility_high_contrast).toBe(true)
-    })
+      expect(mockPreferences.voice_feedback).toBe(true);
+      expect(mockPreferences.accessibility_high_contrast).toBe(true);
+    });
 
     it('should have bank_accounts with is_primary', () => {
       const mockAccount: Tables<'bank_accounts'>['Row'] = {
@@ -40,10 +40,10 @@ describe('Type Check Validation', () => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: 'user-id',
-      }
+      };
 
-      expect(mockAccount.is_primary).toBe(true)
-    })
+      expect(mockAccount.is_primary).toBe(true);
+    });
 
     it('should have financial_events with new properties', () => {
       const mockEvent: Tables<'financial_events'>['Row'] = {
@@ -61,12 +61,12 @@ describe('Type Check Validation', () => {
         account_id: 'account-id',
         category_id: 'category-id',
         priority: 'high',
-      }
+      };
 
-      expect(mockEvent.description).toBe('Test description')
-      expect(mockEvent.is_income).toBe(true)
-      expect(mockEvent.priority).toBe('high')
-    })
+      expect(mockEvent.description).toBe('Test description');
+      expect(mockEvent.is_income).toBe(true);
+      expect(mockEvent.priority).toBe('high');
+    });
 
     it('should have transactions with date field', () => {
       const mockTransaction: Tables<'transactions'>['Row'] = {
@@ -82,71 +82,71 @@ describe('Type Check Validation', () => {
         account_id: 'account-id',
         category_id: 'category-id',
         status: 'completed',
-      }
+      };
 
-      expect(mockTransaction.date).toBe('2024-01-01')
-    })
+      expect(mockTransaction.date).toBe('2024-01-01');
+    });
 
     it('should have voice tables available', () => {
       // These should now exist in the database types without TypeScript errors
-      const voiceFeedbackRow: Tables<'voice_feedback'>['Row'] = {} as any
-      const voiceMetricsRow: Tables<'voice_metrics'>['Row'] = {} as any
-      const auditLogsRow: Tables<'audit_logs'>['Row'] = {} as any
-      const bankTokensRow: Tables<'bank_tokens'>['Row'] = {} as any
+      const voiceFeedbackRow: Tables<'voice_feedback'>['Row'] = {} as any;
+      const voiceMetricsRow: Tables<'voice_metrics'>['Row'] = {} as any;
+      const auditLogsRow: Tables<'audit_logs'>['Row'] = {} as any;
+      const bankTokensRow: Tables<'bank_tokens'>['Row'] = {} as any;
 
-      expect(voiceFeedbackRow).toBeDefined()
-      expect(voiceMetricsRow).toBeDefined()
-      expect(auditLogsRow).toBeDefined()
-      expect(bankTokensRow).toBeDefined()
-    })
-  })
+      expect(voiceFeedbackRow).toBeDefined();
+      expect(voiceMetricsRow).toBeDefined();
+      expect(auditLogsRow).toBeDefined();
+      expect(bankTokensRow).toBeDefined();
+    });
+  });
 
   describe('Component Export Fixes', () => {
     it('should export components correctly', async () => {
       // These should now work without import errors
-      const uiModule = await import('@/components/ui')
+      const uiModule = await import('@/components/ui');
 
       // These should exist and be React components (functions or forwardRef objects)
       const isReactComponent = (component: any) =>
         typeof component === 'function' ||
-        (typeof component === 'object' && component.$$typeof !== undefined)
+        (typeof component === 'object' && component.$$typeof !== undefined);
 
-      expect(isReactComponent(uiModule.BentoGrid)).toBe(true)
-      expect(isReactComponent(uiModule.BentoCard)).toBe(true)
-      expect(isReactComponent(uiModule.PopoverAnchor)).toBe(true)
-      expect(isReactComponent(uiModule.SheetOverlay)).toBe(true)
-      expect(isReactComponent(uiModule.SheetPortal)).toBe(true)
-    })
-  })
+      expect(isReactComponent(uiModule.BentoGrid)).toBe(true);
+      expect(isReactComponent(uiModule.BentoCard)).toBe(true);
+      expect(isReactComponent(uiModule.PopoverAnchor)).toBe(true);
+      expect(isReactComponent(uiModule.SheetOverlay)).toBe(true);
+      expect(isReactComponent(uiModule.SheetPortal)).toBe(true);
+    });
+  });
 
   describe('Context Type Fixes', () => {
     it('should have tRPC context with user property', async () => {
-      const contextModule = await import('@/server/context')
+      const contextModule = await import('@/server/context');
 
       // This should now include the user property
-      const createContext = contextModule.createContext
+      const createContext = contextModule.createContext;
 
       // We can't actually test the function execution here easily,
       // but we can verify the module exists
-      expect(createContext).toBeDefined()
-    })
-  })
+      expect(createContext).toBeDefined();
+    });
+  });
 
   describe('Calendar Filter Fixes', () => {
     it('should have categories in CalendarFilter', async () => {
       // Import the types module to verify it exists and can be used
-      const { CalendarFilter } = await import('@/components/ui/event-calendar/types')
+      const { CalendarFilter } = await import('@/components/ui/event-calendar/types');
 
       // Create a filter object with categories
       const filter: CalendarFilter = {
         categories: ['category1', 'category2'],
         search: 'test',
-      }
+      };
 
       // Explicitly use CalendarFilter to verify it's working
-      expect(typeof CalendarFilter).toBeDefined()
-      expect(filter.categories).toEqual(['category1', 'category2'])
-      expect(filter.search).toBe('test')
-    })
-  })
-})
+      expect(typeof CalendarFilter).toBeDefined();
+      expect(filter.categories).toEqual(['category1', 'category2']);
+      expect(filter.search).toBe('test');
+    });
+  });
+});

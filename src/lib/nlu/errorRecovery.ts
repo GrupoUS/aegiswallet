@@ -7,43 +7,43 @@
  * @module nlu/errorRecovery
  */
 
-import { logger } from '@/lib/logging/logger'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging/logger';
+import { type BrazilianContext, BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
 import {
-  type NLUResult,
+  EntityType,
   type ExtractedEntity,
   IntentType,
-  EntityType,
   NLUError,
   NLUErrorCode,
-} from '@/lib/nlu/types'
-import { type BrazilianContext, BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns'
+  type NLUResult,
+} from '@/lib/nlu/types';
 
 // ============================================================================
 // Error Recovery Configuration
 // ============================================================================
 
 export interface ErrorRecoveryConfig {
-  enabled: boolean
-  maxRecoveryAttempts: number
-  learningEnabled: boolean
-  regionalAdaptationEnabled: boolean
-  contextualRecoveryEnabled: boolean
-  autoCorrectionEnabled: boolean
-  userFeedbackEnabled: boolean
-  persistenceEnabled: boolean
+  enabled: boolean;
+  maxRecoveryAttempts: number;
+  learningEnabled: boolean;
+  regionalAdaptationEnabled: boolean;
+  contextualRecoveryEnabled: boolean;
+  autoCorrectionEnabled: boolean;
+  userFeedbackEnabled: boolean;
+  persistenceEnabled: boolean;
   confidenceThresholds: {
-    low: number
-    medium: number
-    high: number
-  }
+    low: number;
+    medium: number;
+    high: number;
+  };
   recoveryStrategies: {
-    patternMatching: boolean
-    entityExtraction: boolean
-    contextualInference: boolean
-    userHistory: boolean
-    regionalVariation: boolean
-  }
+    patternMatching: boolean;
+    entityExtraction: boolean;
+    contextualInference: boolean;
+    userHistory: boolean;
+    regionalVariation: boolean;
+  };
 }
 
 const DEFAULT_ERROR_RECOVERY_CONFIG: ErrorRecoveryConfig = {
@@ -67,7 +67,7 @@ const DEFAULT_ERROR_RECOVERY_CONFIG: ErrorRecoveryConfig = {
     userHistory: true,
     regionalVariation: true,
   },
-}
+};
 
 // ============================================================================
 // Error Classification and Analysis
@@ -80,66 +80,66 @@ export interface ErrorClassification {
     | 'intent_confusion'
     | 'low_confidence'
     | 'regional_misunderstanding'
-    | 'processing_error'
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  confidence: number
-  rootCause: string
-  suggestedFixes: string[]
-  learningOpportunities: string[]
-  contextualFactors: string[]
-  regionalFactors?: string[]
+    | 'processing_error';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number;
+  rootCause: string;
+  suggestedFixes: string[];
+  learningOpportunities: string[];
+  contextualFactors: string[];
+  regionalFactors?: string[];
 }
 
 export interface RecoveryStrategy {
-  id: string
-  name: string
-  description: string
-  applicableErrors: string[]
-  priority: number
-  successRate: number
-  averageConfidenceImprovement: number
-  implementation: (error: ErrorClassification, context: RecoveryContext) => Promise<RecoveryResult>
+  id: string;
+  name: string;
+  description: string;
+  applicableErrors: string[];
+  priority: number;
+  successRate: number;
+  averageConfidenceImprovement: number;
+  implementation: (error: ErrorClassification, context: RecoveryContext) => Promise<RecoveryResult>;
 }
 
 export interface RecoveryResult {
-  success: boolean
-  correctedIntent?: IntentType
-  correctedEntities?: ExtractedEntity[]
-  confidenceImprovement: number
-  appliedStrategy: string
-  reasoning: string
-  requiresUserConfirmation: boolean
-  suggestedUserResponse?: string
-  alternativeOptions?: RecoveryResult[]
+  success: boolean;
+  correctedIntent?: IntentType;
+  correctedEntities?: ExtractedEntity[];
+  confidenceImprovement: number;
+  appliedStrategy: string;
+  reasoning: string;
+  requiresUserConfirmation: boolean;
+  suggestedUserResponse?: string;
+  alternativeOptions?: RecoveryResult[];
 }
 
 export interface RecoveryContext {
-  originalText: string
-  originalResult: NLUResult | null
-  userId: string
-  sessionId: string
+  originalText: string;
+  originalResult: NLUResult | null;
+  userId: string;
+  sessionId: string;
   conversationHistory: Array<{
-    text: string
-    result: NLUResult
-    timestamp: Date
-  }>
-  userPreferences: any
-  financialContext: any
-  brazilianContext: BrazilianContext
-  recoveryAttempts: number
-  previousErrors: ErrorClassification[]
+    text: string;
+    result: NLUResult;
+    timestamp: Date;
+  }>;
+  userPreferences: any;
+  financialContext: any;
+  brazilianContext: BrazilianContext;
+  recoveryAttempts: number;
+  previousErrors: ErrorClassification[];
 }
 
 export interface LearningData {
-  errorPattern: string
-  correctionApplied: string
-  success: boolean
-  confidenceImprovement: number
-  userFeedback?: 'positive' | 'negative' | 'neutral'
-  regionalVariation: string
-  linguisticStyle: string
-  timestamp: Date
-  userId: string
+  errorPattern: string;
+  correctionApplied: string;
+  success: boolean;
+  confidenceImprovement: number;
+  userFeedback?: 'positive' | 'negative' | 'neutral';
+  regionalVariation: string;
+  linguisticStyle: string;
+  timestamp: Date;
+  userId: string;
 }
 
 // ============================================================================
@@ -147,15 +147,15 @@ export interface LearningData {
 // ============================================================================
 
 export class ErrorRecoverySystem {
-  private config: ErrorRecoveryConfig
-  private brazilianAnalyzer = new BrazilianContextAnalyzer()
-  private recoveryStrategies: Map<string, RecoveryStrategy> = new Map()
-  private learningData: LearningData[] = []
-  private errorPatterns = new Map<string, ErrorClassification[]>()
+  private config: ErrorRecoveryConfig;
+  private brazilianAnalyzer = new BrazilianContextAnalyzer();
+  private recoveryStrategies: Map<string, RecoveryStrategy> = new Map();
+  private learningData: LearningData[] = [];
+  private errorPatterns = new Map<string, ErrorClassification[]>();
 
   constructor(config: Partial<ErrorRecoveryConfig> = {}) {
-    this.config = { ...DEFAULT_ERROR_RECOVERY_CONFIG, ...config }
-    this.initializeRecoveryStrategies()
+    this.config = { ...DEFAULT_ERROR_RECOVERY_CONFIG, ...config };
+    this.initializeRecoveryStrategies();
   }
 
   // ============================================================================
@@ -177,7 +177,7 @@ export class ErrorRecoverySystem {
         originalText,
         originalResult,
         context
-      )
+      );
 
       // Log error classification
       logger.warn('NLU error classified', {
@@ -186,14 +186,14 @@ export class ErrorRecoverySystem {
         confidence: classification.confidence,
         rootCause: classification.rootCause,
         originalText: originalText.substring(0, 50),
-      })
+      });
 
       // Store error pattern for learning
-      this.storeErrorPattern(originalText, classification)
+      this.storeErrorPattern(originalText, classification);
 
-      return classification
+      return classification;
     } catch (classifyError) {
-      logger.error('Failed to classify NLU error', { error: classifyError })
+      logger.error('Failed to classify NLU error', { error: classifyError });
 
       // Return generic classification
       return {
@@ -204,7 +204,7 @@ export class ErrorRecoverySystem {
         suggestedFixes: ['Try rephrasing the command'],
         learningOpportunities: ['Improve error classification'],
         contextualFactors: [],
-      }
+      };
     }
   }
 
@@ -222,7 +222,7 @@ export class ErrorRecoverySystem {
         appliedStrategy: 'none',
         reasoning: 'Error recovery is disabled',
         requiresUserConfirmation: false,
-      }
+      };
     }
 
     if (context.recoveryAttempts >= this.config.maxRecoveryAttempts) {
@@ -233,24 +233,24 @@ export class ErrorRecoverySystem {
         reasoning: 'Maximum recovery attempts exceeded',
         requiresUserConfirmation: true,
         suggestedUserResponse: 'Por favor, tente reformular seu comando de forma diferente',
-      }
+      };
     }
 
     try {
       // Get applicable recovery strategies
-      const applicableStrategies = this.getApplicableStrategies(errorClassification)
+      const applicableStrategies = this.getApplicableStrategies(errorClassification);
 
       // Sort by priority and success rate
       applicableStrategies.sort((a, b) => {
-        const priorityScore = b.priority * 0.6 + b.successRate * 0.4
-        const aPriorityScore = a.priority * 0.6 + a.successRate * 0.4
-        return bPriorityScore - aPriorityScore
-      })
+        const _priorityScore = b.priority * 0.6 + b.successRate * 0.4;
+        const aPriorityScore = a.priority * 0.6 + a.successRate * 0.4;
+        return bPriorityScore - aPriorityScore;
+      });
 
       // Try strategies in order
       for (const strategy of applicableStrategies) {
         try {
-          const result = await strategy.implementation(errorClassification, context)
+          const result = await strategy.implementation(errorClassification, context);
 
           if (result.success) {
             // Log successful recovery
@@ -258,26 +258,26 @@ export class ErrorRecoverySystem {
               strategy: strategy.name,
               confidenceImprovement: result.confidenceImprovement,
               originalText: context.originalText.substring(0, 50),
-            })
+            });
 
             // Update strategy success rate
-            this.updateStrategySuccessRate(strategy.id, true)
+            this.updateStrategySuccessRate(strategy.id, true);
 
             // Store learning data
             if (this.config.learningEnabled) {
-              this.storeLearningData(context, errorClassification, strategy, result)
+              this.storeLearningData(context, errorClassification, strategy, result);
             }
 
-            return result
+            return result;
           }
 
           // Update strategy failure rate
-          this.updateStrategySuccessRate(strategy.id, false)
+          this.updateStrategySuccessRate(strategy.id, false);
         } catch (strategyError) {
           logger.warn('Recovery strategy failed', {
             strategy: strategy.name,
             error: strategyError,
-          })
+          });
         }
       }
 
@@ -289,9 +289,9 @@ export class ErrorRecoverySystem {
         reasoning: 'All recovery strategies failed',
         requiresUserConfirmation: true,
         suggestedUserResponse: this.generateFallbackSuggestion(errorClassification, context),
-      }
+      };
     } catch (recoveryError) {
-      logger.error('Error recovery process failed', { error: recoveryError })
+      logger.error('Error recovery process failed', { error: recoveryError });
 
       return {
         success: false,
@@ -300,7 +300,7 @@ export class ErrorRecoverySystem {
         reasoning: 'Recovery process encountered an error',
         requiresUserConfirmation: true,
         suggestedUserResponse: 'Por favor, tente novamente mais tarde',
-      }
+      };
     }
   }
 
@@ -311,10 +311,10 @@ export class ErrorRecoverySystem {
     errorClassification: ErrorClassification,
     context: RecoveryContext
   ): Promise<{
-    primaryQuestion: string
-    followUpQuestions: string[]
-    contextualHints: string[]
-    suggestedCommands: string[]
+    primaryQuestion: string;
+    followUpQuestions: string[];
+    contextualHints: string[];
+    suggestedCommands: string[];
   }> {
     try {
       const questions = {
@@ -322,77 +322,77 @@ export class ErrorRecoverySystem {
         followUpQuestions: [] as string[],
         contextualHints: [] as string[],
         suggestedCommands: [] as string[],
-      }
+      };
 
       // Generate questions based on error type
       switch (errorClassification.type) {
         case 'intent_confusion':
-          questions.primaryQuestion = 'O que você gostaria de fazer exatamente?'
+          questions.primaryQuestion = 'O que você gostaria de fazer exatamente?';
           questions.followUpQuestions = [
             'Você quer verificar saldo, pagar contas ou fazer transferências?',
             'É uma consulta ou uma transação financeira?',
-          ]
+          ];
           questions.suggestedCommands = [
             'Qual é meu saldo',
             'Pagar conta de luz',
             'Transferir dinheiro para o João',
-          ]
-          break
+          ];
+          break;
 
         case 'entity_extraction':
-          questions.primaryQuestion = 'Pode me dar mais detalhes sobre a transação?'
-          questions.followUpQuestions = ['Qual é o valor?', 'Para quem ou para que é a transação?']
+          questions.primaryQuestion = 'Pode me dar mais detalhes sobre a transação?';
+          questions.followUpQuestions = ['Qual é o valor?', 'Para quem ou para que é a transação?'];
           questions.suggestedCommands = [
             'Transferir R$ 100 para o João',
             'Pagar R$ 150 de conta de luz',
             'Verificar saldo da conta corrente',
-          ]
-          break
+          ];
+          break;
 
         case 'low_confidence':
-          questions.primaryQuestion = 'Pode confirmar o que você quis dizer?'
+          questions.primaryQuestion = 'Pode confirmar o que você quis dizer?';
           questions.followUpQuestions = [
             'É isso mesmo que você quer fazer?',
             'Você pode reformular de outra forma?',
-          ]
-          questions.contextualHints = this.generateContextualHints(errorClassification, context)
-          break
+          ];
+          questions.contextualHints = this.generateContextualHints(errorClassification, context);
+          break;
 
         case 'regional_misunderstanding':
-          questions.primaryQuestion = 'Não reconheci alguns termos. Pode explicar de outra forma?'
+          questions.primaryQuestion = 'Não reconheci alguns termos. Pode explicar de outra forma?';
           questions.followUpQuestions = [
             'Você está se referindo a alguma conta específica?',
             'É um pagamento ou uma consulta?',
-          ]
+          ];
           questions.contextualHints = [
             'Tente usar termos mais comuns como "saldo", "pagar", "transferir"',
-          ]
-          break
+          ];
+          break;
 
         default:
-          questions.primaryQuestion = 'Pode repetir seu comando de forma diferente?'
+          questions.primaryQuestion = 'Pode repetir seu comando de forma diferente?';
           questions.followUpQuestions = [
             'O que você gostaria de fazer com suas finanças?',
             'É uma consulta ou uma ação?',
-          ]
-          questions.suggestedCommands = ['Qual é meu saldo', 'Pagar contas', 'Fazer transferência']
+          ];
+          questions.suggestedCommands = ['Qual é meu saldo', 'Pagar contas', 'Fazer transferência'];
       }
 
       // Add Brazilian regional context
       if (this.config.recoveryStrategies.regionalVariation) {
-        this.addRegionalContextToQuestions(questions, context.brazilianContext)
+        this.addRegionalContextToQuestions(questions, context.brazilianContext);
       }
 
-      return questions
+      return questions;
     } catch (error) {
-      logger.error('Failed to generate clarification questions', { error })
+      logger.error('Failed to generate clarification questions', { error });
 
       return {
         primaryQuestion: 'Pode repetir seu comando?',
         followUpQuestions: ['O que você gostaria de fazer?'],
         contextualHints: [],
         suggestedCommands: ['Qual é meu saldo', 'Pagar contas'],
-      }
+      };
     }
   }
 
@@ -407,7 +407,7 @@ export class ErrorRecoverySystem {
     feedback: 'positive' | 'negative' | 'neutral',
     userId: string
   ): Promise<void> {
-    if (!this.config.learningEnabled) return
+    if (!this.config.learningEnabled) return;
 
     try {
       const learningData: LearningData = {
@@ -420,21 +420,21 @@ export class ErrorRecoverySystem {
         linguisticStyle: this.brazilianAnalyzer.analyzeContext(originalText).linguisticStyle,
         timestamp: new Date(),
         userId,
-      }
+      };
 
       // Store learning data
-      this.learningData.push(learningData)
+      this.learningData.push(learningData);
 
       // Update patterns based on feedback
       if (feedback === 'positive') {
-        await this.updatePatternsFromPositiveFeedback(learningData)
+        await this.updatePatternsFromPositiveFeedback(learningData);
       } else if (feedback === 'negative') {
-        await this.updatePatternsFromNegativeFeedback(learningData)
+        await this.updatePatternsFromNegativeFeedback(learningData);
       }
 
       // Persist learning data
       if (this.config.persistenceEnabled) {
-        await this.persistLearningData(learningData)
+        await this.persistLearningData(learningData);
       }
 
       logger.info('User feedback processed for learning', {
@@ -442,9 +442,9 @@ export class ErrorRecoverySystem {
         correctedText: correctedText.substring(0, 50),
         feedback,
         confidenceImprovement: learningData.confidenceImprovement,
-      })
+      });
     } catch (error) {
-      logger.error('Failed to process user feedback', { error })
+      logger.error('Failed to process user feedback', { error });
     }
   }
 
@@ -458,102 +458,102 @@ export class ErrorRecoverySystem {
     originalResult: NLUResult | null,
     context: Partial<RecoveryContext>
   ): Promise<ErrorClassification> {
-    const lowerText = originalText.toLowerCase()
+    const _lowerText = originalText.toLowerCase();
 
     // Analyze error characteristics
-    let errorType: ErrorClassification['type'] = 'processing_error'
-    let severity: ErrorClassification['severity'] = 'medium'
-    let confidence = 0.5
-    let rootCause = 'Unknown error'
-    let suggestedFixes: string[] = []
-    let learningOpportunities: string[] = []
-    let contextualFactors: string[] = []
+    let errorType: ErrorClassification['type'] = 'processing_error';
+    let severity: ErrorClassification['severity'] = 'medium';
+    const confidence = 0.5;
+    let rootCause = 'Unknown error';
+    let suggestedFixes: string[] = [];
+    let learningOpportunities: string[] = [];
+    const contextualFactors: string[] = [];
 
     // Classify based on error type
     if (error instanceof NLUError) {
       switch (error.code) {
         case NLUErrorCode.CLASSIFICATION_FAILED:
-          errorType = 'intent_confusion'
-          severity = 'high'
-          rootCause = 'Intent classification algorithm failed'
-          suggestedFixes = ['Try pattern matching fallback', 'Use contextual inference']
-          learningOpportunities = ['Improve training data', 'Add more patterns']
-          break
+          errorType = 'intent_confusion';
+          severity = 'high';
+          rootCause = 'Intent classification algorithm failed';
+          suggestedFixes = ['Try pattern matching fallback', 'Use contextual inference'];
+          learningOpportunities = ['Improve training data', 'Add more patterns'];
+          break;
 
         case NLUErrorCode.ENTITY_EXTRACTION_FAILED:
-          errorType = 'entity_extraction'
-          severity = 'medium'
-          rootCause = 'Entity extraction algorithm failed'
-          suggestedFixes = ['Try entity pattern matching', 'Use contextual hints']
-          learningOpportunities = ['Improve entity patterns', 'Add Brazilian variations']
-          break
+          errorType = 'entity_extraction';
+          severity = 'medium';
+          rootCause = 'Entity extraction algorithm failed';
+          suggestedFixes = ['Try entity pattern matching', 'Use contextual hints'];
+          learningOpportunities = ['Improve entity patterns', 'Add Brazilian variations'];
+          break;
 
         case NLUErrorCode.PROCESSING_TIMEOUT:
-          errorType = 'processing_error'
-          severity = 'critical'
-          rootCause = 'Processing timeout exceeded'
-          suggestedFixes = ['Optimize processing pipeline', 'Reduce input complexity']
-          learningOpportunities = ['Improve performance optimization']
-          break
+          errorType = 'processing_error';
+          severity = 'critical';
+          rootCause = 'Processing timeout exceeded';
+          suggestedFixes = ['Optimize processing pipeline', 'Reduce input complexity'];
+          learningOpportunities = ['Improve performance optimization'];
+          break;
 
         case NLUErrorCode.INVALID_INPUT:
-          errorType = 'pattern_miss'
-          severity = 'low'
-          rootCause = 'Input validation failed'
-          suggestedFixes = ['Guide user to proper format', 'Provide examples']
-          learningOpportunities = ['Improve input validation', 'Better user guidance']
-          break
+          errorType = 'pattern_miss';
+          severity = 'low';
+          rootCause = 'Input validation failed';
+          suggestedFixes = ['Guide user to proper format', 'Provide examples'];
+          learningOpportunities = ['Improve input validation', 'Better user guidance'];
+          break;
 
         default:
-          errorType = 'processing_error'
-          severity = 'medium'
-          rootCause = 'Unknown NLU error'
-          suggestedFixes = ['Retry with different approach', 'Log for investigation']
-          learningOpportunities = ['Improve error handling']
+          errorType = 'processing_error';
+          severity = 'medium';
+          rootCause = 'Unknown NLU error';
+          suggestedFixes = ['Retry with different approach', 'Log for investigation'];
+          learningOpportunities = ['Improve error handling'];
       }
     }
 
     // Analyze based on original result
     if (originalResult) {
       if (originalResult.confidence < this.config.confidenceThresholds.low) {
-        errorType = 'low_confidence'
-        severity = 'medium'
-        rootCause = 'Low confidence in classification'
-        suggestedFixes = ['Request clarification', 'Use contextual inference']
-        learningOpportunities = ['Improve confidence scoring', 'Add training examples']
+        errorType = 'low_confidence';
+        severity = 'medium';
+        rootCause = 'Low confidence in classification';
+        suggestedFixes = ['Request clarification', 'Use contextual inference'];
+        learningOpportunities = ['Improve confidence scoring', 'Add training examples'];
       }
 
       if (originalResult.intent === IntentType.UNKNOWN) {
-        errorType = 'pattern_miss'
-        severity = 'high'
-        rootCause = 'No matching intent patterns found'
-        suggestedFixes = ['Try fuzzy matching', 'Use regional variations']
-        learningOpportunities = ['Add more intent patterns', 'Include regional variations']
+        errorType = 'pattern_miss';
+        severity = 'high';
+        rootCause = 'No matching intent patterns found';
+        suggestedFixes = ['Try fuzzy matching', 'Use regional variations'];
+        learningOpportunities = ['Add more intent patterns', 'Include regional variations'];
       }
     }
 
     // Check for regional misunderstandings
-    const brazilianContext = this.brazilianAnalyzer.analyzeContext(originalText)
+    const brazilianContext = this.brazilianAnalyzer.analyzeContext(originalText);
     if (
       brazilianContext.region !== 'Unknown' &&
       (errorType === 'pattern_miss' || errorType === 'intent_confusion')
     ) {
-      errorType = 'regional_misunderstanding'
-      severity = 'medium'
-      rootCause = `Regional variation not recognized: ${brazilianContext.region}`
-      suggestedFixes = ['Apply regional pattern matching', 'Use local slang dictionary']
-      learningOpportunities = ['Add regional patterns', 'Improve slang recognition']
-      contextualFactors.push(`Regional variation: ${brazilianContext.region}`)
-      contextualFactors.push(`Linguistic style: ${brazilianContext.linguisticStyle}`)
+      errorType = 'regional_misunderstanding';
+      severity = 'medium';
+      rootCause = `Regional variation not recognized: ${brazilianContext.region}`;
+      suggestedFixes = ['Apply regional pattern matching', 'Use local slang dictionary'];
+      learningOpportunities = ['Add regional patterns', 'Improve slang recognition'];
+      contextualFactors.push(`Regional variation: ${brazilianContext.region}`);
+      contextualFactors.push(`Linguistic style: ${brazilianContext.linguisticStyle}`);
     }
 
     // Add contextual factors
     if (context.conversationHistory && context.conversationHistory.length > 0) {
-      contextualFactors.push('Conversation context available')
+      contextualFactors.push('Conversation context available');
     }
 
     if (context.userPreferences) {
-      contextualFactors.push('User preferences available')
+      contextualFactors.push('User preferences available');
     }
 
     return {
@@ -566,7 +566,7 @@ export class ErrorRecoverySystem {
       contextualFactors,
       regionalFactors:
         brazilianContext.region !== 'Unknown' ? [brazilianContext.region] : undefined,
-    }
+    };
   }
 
   private initializeRecoveryStrategies(): void {
@@ -580,9 +580,9 @@ export class ErrorRecoverySystem {
       successRate: 0.75,
       averageConfidenceImprovement: 0.25,
       implementation: async (error, context) => {
-        return this.performPatternMatchingRecovery(error, context)
+        return this.performPatternMatchingRecovery(error, context);
       },
-    })
+    });
 
     // Entity extraction recovery
     this.recoveryStrategies.set('entity_extraction', {
@@ -594,9 +594,9 @@ export class ErrorRecoverySystem {
       successRate: 0.65,
       averageConfidenceImprovement: 0.2,
       implementation: async (error, context) => {
-        return this.performEntityExtractionRecovery(error, context)
+        return this.performEntityExtractionRecovery(error, context);
       },
-    })
+    });
 
     // Contextual inference recovery
     this.recoveryStrategies.set('contextual_inference', {
@@ -608,9 +608,9 @@ export class ErrorRecoverySystem {
       successRate: 0.7,
       averageConfidenceImprovement: 0.3,
       implementation: async (error, context) => {
-        return this.performContextualInferenceRecovery(error, context)
+        return this.performContextualInferenceRecovery(error, context);
       },
-    })
+    });
 
     // User history recovery
     this.recoveryStrategies.set('user_history', {
@@ -622,9 +622,9 @@ export class ErrorRecoverySystem {
       successRate: 0.6,
       averageConfidenceImprovement: 0.22,
       implementation: async (error, context) => {
-        return this.performUserHistoryRecovery(error, context)
+        return this.performUserHistoryRecovery(error, context);
       },
-    })
+    });
 
     // Regional variation recovery
     this.recoveryStrategies.set('regional_variation', {
@@ -636,9 +636,9 @@ export class ErrorRecoverySystem {
       successRate: 0.8,
       averageConfidenceImprovement: 0.35,
       implementation: async (error, context) => {
-        return this.performRegionalVariationRecovery(error, context)
+        return this.performRegionalVariationRecovery(error, context);
       },
-    })
+    });
   }
 
   private getApplicableStrategies(errorClassification: ErrorClassification): RecoveryStrategy[] {
@@ -646,23 +646,23 @@ export class ErrorRecoverySystem {
       (strategy) =>
         strategy.applicableErrors.includes(errorClassification.type) &&
         this.isStrategyEnabled(strategy.id)
-    )
+    );
   }
 
   private isStrategyEnabled(strategyId: string): boolean {
     switch (strategyId) {
       case 'pattern_matching':
-        return this.config.recoveryStrategies.patternMatching
+        return this.config.recoveryStrategies.patternMatching;
       case 'entity_extraction':
-        return this.config.recoveryStrategies.entityExtraction
+        return this.config.recoveryStrategies.entityExtraction;
       case 'contextual_inference':
-        return this.config.recoveryStrategies.contextualInference
+        return this.config.recoveryStrategies.contextualInference;
       case 'user_history':
-        return this.config.recoveryStrategies.userHistory
+        return this.config.recoveryStrategies.userHistory;
       case 'regional_variation':
-        return this.config.recoveryStrategies.regionalVariation
+        return this.config.recoveryStrategies.regionalVariation;
       default:
-        return true
+        return true;
     }
   }
 
@@ -674,7 +674,7 @@ export class ErrorRecoverySystem {
     error: ErrorClassification,
     context: RecoveryContext
   ): Promise<RecoveryResult> {
-    const text = context.originalText.toLowerCase()
+    const text = context.originalText.toLowerCase();
 
     // Enhanced Brazilian pattern matching
     const intentPatterns = {
@@ -694,7 +694,7 @@ export class ErrorRecoverySystem {
         // Brazilian variations
         /mandar.*grana|passar.*dinheiro|fazer.*pix|depositar.*para/i,
       ],
-    }
+    };
 
     for (const [intent, patterns] of Object.entries(intentPatterns)) {
       for (const pattern of patterns) {
@@ -707,7 +707,7 @@ export class ErrorRecoverySystem {
             reasoning: `Pattern matched: ${pattern.source}`,
             requiresUserConfirmation: error.severity === 'high',
             suggestedUserResponse: `Você quis dizer ${this.getIntentDescription(intent as IntentType)}?`,
-          }
+          };
         }
       }
     }
@@ -718,15 +718,15 @@ export class ErrorRecoverySystem {
       appliedStrategy: 'pattern_matching',
       reasoning: 'No enhanced patterns matched',
       requiresUserConfirmation: false,
-    }
+    };
   }
 
   private async performEntityExtractionRecovery(
-    error: ErrorClassification,
+    _error: ErrorClassification,
     context: RecoveryContext
   ): Promise<RecoveryResult> {
-    const text = context.originalText
-    const extractedEntities: ExtractedEntity[] = []
+    const text = context.originalText;
+    const extractedEntities: ExtractedEntity[] = [];
 
     // Enhanced Brazilian entity extraction
     const entityPatterns = [
@@ -769,13 +769,13 @@ export class ErrorRecoverySystem {
           metadata: { extracted_by: 'error_recovery' },
         }),
       },
-    ]
+    ];
 
     // Extract entities using enhanced patterns
     for (const entityPattern of entityPatterns) {
-      let match
+      let match;
       while ((match = entityPattern.pattern.exec(text)) !== null) {
-        extractedEntities.push(entityPattern.extract(match))
+        extractedEntities.push(entityPattern.extract(match));
       }
     }
 
@@ -788,7 +788,7 @@ export class ErrorRecoverySystem {
         reasoning: `Extracted ${extractedEntities.length} entities using enhanced patterns`,
         requiresUserConfirmation: true,
         suggestedUserResponse: 'Encontrei algumas informações. Posso prosseguir?',
-      }
+      };
     }
 
     return {
@@ -797,16 +797,16 @@ export class ErrorRecoverySystem {
       appliedStrategy: 'entity_extraction',
       reasoning: 'No entities could be extracted',
       requiresUserConfirmation: false,
-    }
+    };
   }
 
   private async performContextualInferenceRecovery(
-    error: ErrorClassification,
+    _error: ErrorClassification,
     context: RecoveryContext
   ): Promise<RecoveryResult> {
     // Use conversation history and financial context for inference
-    const recentIntents = context.conversationHistory.slice(-3).map((h) => h.result.intent)
-    const text = context.originalText.toLowerCase()
+    const recentIntents = context.conversationHistory.slice(-3).map((h) => h.result.intent);
+    const text = context.originalText.toLowerCase();
 
     // Infer intent from context
     if (
@@ -821,7 +821,7 @@ export class ErrorRecoverySystem {
         reasoning: 'Inferred balance check after transfer based on conversation flow',
         requiresUserConfirmation: true,
         suggestedUserResponse: 'Você quer verificar seu saldo após a transferência?',
-      }
+      };
     }
 
     // Use financial context
@@ -838,7 +838,7 @@ export class ErrorRecoverySystem {
         reasoning: `Inferred bill payment - ${context.financialContext.billPatterns.upcomingBills.length} bills pending`,
         requiresUserConfirmation: true,
         suggestedUserResponse: 'Você quer pagar suas contas pendentes?',
-      }
+      };
     }
 
     return {
@@ -847,29 +847,29 @@ export class ErrorRecoverySystem {
       appliedStrategy: 'contextual_inference',
       reasoning: 'No contextual inference could be made',
       requiresUserConfirmation: false,
-    }
+    };
   }
 
   private async performUserHistoryRecovery(
-    error: ErrorClassification,
+    _error: ErrorClassification,
     context: RecoveryContext
   ): Promise<RecoveryResult> {
     // Analyze user's historical patterns
-    const userHistory = context.conversationHistory
-    const text = context.originalText.toLowerCase()
+    const userHistory = context.conversationHistory;
+    const _text = context.originalText.toLowerCase();
 
     // Find most frequent intent
     const intentFrequency = userHistory.reduce(
       (acc, turn) => {
-        acc[turn.result.intent] = (acc[turn.result.intent] || 0) + 1
-        return acc
+        acc[turn.result.intent] = (acc[turn.result.intent] || 0) + 1;
+        return acc;
       },
       {} as Record<string, number>
-    )
+    );
 
     const mostFrequentIntent = Object.entries(intentFrequency).sort(
       ([, a], [, b]) => b - a
-    )[0]?.[0] as IntentType
+    )[0]?.[0] as IntentType;
 
     if (mostFrequentIntent && intentFrequency[mostFrequentIntent] >= 3) {
       return {
@@ -880,7 +880,7 @@ export class ErrorRecoverySystem {
         reasoning: `Inferred based on user's most frequent intent: ${mostFrequentIntent}`,
         requiresUserConfirmation: true,
         suggestedUserResponse: `Baseado no seu histórico, você quis ${this.getIntentDescription(mostFrequentIntent)}?`,
-      }
+      };
     }
 
     return {
@@ -889,15 +889,15 @@ export class ErrorRecoverySystem {
       appliedStrategy: 'user_history',
       reasoning: 'Insufficient user history for inference',
       requiresUserConfirmation: false,
-    }
+    };
   }
 
   private async performRegionalVariationRecovery(
     error: ErrorClassification,
     context: RecoveryContext
   ): Promise<RecoveryResult> {
-    const brazilianContext = context.brazilianContext
-    const text = context.originalText.toLowerCase()
+    const brazilianContext = context.brazilianContext;
+    const text = context.originalText.toLowerCase();
 
     // Regional pattern mappings
     const regionalMappings = {
@@ -921,10 +921,10 @@ export class ErrorRecoverySystem {
         tchê: 'amigo',
         guri: 'pessoa',
       },
-    }
+    };
 
     const regionMappings =
-      regionalMappings[brazilianContext.region as keyof typeof regionalMappings]
+      regionalMappings[brazilianContext.region as keyof typeof regionalMappings];
     if (!regionMappings) {
       return {
         success: false,
@@ -932,17 +932,17 @@ export class ErrorRecoverySystem {
         appliedStrategy: 'regional_variation',
         reasoning: `No regional mappings for ${brazilianContext.region}`,
         requiresUserConfirmation: false,
-      }
+      };
     }
 
     // Apply regional mappings
-    let normalizedText = text
-    let appliedMappings = 0
+    let normalizedText = text;
+    let appliedMappings = 0;
 
     for (const [regional, standard] of Object.entries(regionMappings)) {
       if (normalizedText.includes(regional)) {
-        normalizedText = normalizedText.replace(new RegExp(regional, 'g'), standard)
-        appliedMappings++
+        normalizedText = normalizedText.replace(new RegExp(regional, 'g'), standard);
+        appliedMappings++;
       }
     }
 
@@ -951,7 +951,7 @@ export class ErrorRecoverySystem {
       const patternResult = await this.performPatternMatchingRecovery(error, {
         ...context,
         originalText: normalizedText,
-      })
+      });
 
       if (patternResult.success) {
         return {
@@ -959,7 +959,7 @@ export class ErrorRecoverySystem {
           appliedStrategy: 'regional_variation',
           reasoning: `Applied ${appliedMappings} regional mappings for ${brazilianContext.region}`,
           confidenceImprovement: patternResult.confidenceImprovement + 0.1,
-        }
+        };
       }
     }
 
@@ -969,7 +969,7 @@ export class ErrorRecoverySystem {
       appliedStrategy: 'regional_variation',
       reasoning: 'Regional variations did not help resolve the error',
       requiresUserConfirmation: false,
-    }
+    };
   }
 
   // ============================================================================
@@ -984,94 +984,94 @@ export class ErrorRecoverySystem {
       [IntentType.CHECK_BUDGET]: 'analisar seu orçamento',
       [IntentType.CHECK_INCOME]: 'consultar seus rendimentos',
       [IntentType.FINANCIAL_PROJECTION]: 'ver uma projeção financeira',
-    }
+    };
 
-    return descriptions[intent] || 'realizar uma operação financeira'
+    return descriptions[intent] || 'realizar uma operação financeira';
   }
 
   private generateFallbackSuggestion(
     errorClassification: ErrorClassification,
-    context: RecoveryContext
+    _context: RecoveryContext
   ): string {
     switch (errorClassification.type) {
       case 'intent_confusion':
-        return 'Tente ser mais específico sobre o que você quer fazer'
+        return 'Tente ser mais específico sobre o que você quer fazer';
       case 'entity_extraction':
-        return 'Inclua valores ou nomes completos na sua solicitação'
+        return 'Inclua valores ou nomes completos na sua solicitação';
       case 'low_confidence':
-        return 'Fale de forma mais clara e pausada'
+        return 'Fale de forma mais clara e pausada';
       case 'regional_misunderstanding':
-        return 'Tente usar termos mais comuns em português brasileiro'
+        return 'Tente usar termos mais comuns em português brasileiro';
       default:
-        return 'Tente reformular seu comando de forma simples'
+        return 'Tente reformular seu comando de forma simples';
     }
   }
 
   private generateContextualHints(
-    errorClassification: ErrorClassification,
+    _errorClassification: ErrorClassification,
     context: RecoveryContext
   ): string[] {
-    const hints = []
+    const hints = [];
 
     if (context.financialContext?.accountSummary?.availableBalance > 0) {
-      hints.push('Você pode consultar seu saldo disponível')
+      hints.push('Você pode consultar seu saldo disponível');
     }
 
     if (context.financialContext?.billPatterns?.upcomingBills?.length > 0) {
-      hints.push('Você tem contas para pagar este mês')
+      hints.push('Você tem contas para pagar este mês');
     }
 
     if (context.conversationHistory.length > 0) {
       const lastIntent =
-        context.conversationHistory[context.conversationHistory.length - 1].result.intent
-      hints.push(`Sua última ação foi: ${this.getIntentDescription(lastIntent)}`)
+        context.conversationHistory[context.conversationHistory.length - 1].result.intent;
+      hints.push(`Sua última ação foi: ${this.getIntentDescription(lastIntent)}`);
     }
 
-    return hints
+    return hints;
   }
 
   private addRegionalContextToQuestions(questions: any, brazilianContext: BrazilianContext): void {
     if (brazilianContext.region === 'SP') {
-      questions.contextualHints.push('Tente usar termos como "saldo", "pagar", "transferir"')
+      questions.contextualHints.push('Tente usar termos como "saldo", "pagar", "transferir"');
     } else if (brazilianContext.region === 'RJ') {
-      questions.contextualHints.push('Tente ser claro sobre PIX, contas ou transferências')
+      questions.contextualHints.push('Tente ser claro sobre PIX, contas ou transferências');
     } else if (brazilianContext.region === 'Nordeste') {
-      questions.contextualHints.push('Oxente, tente explicar o que você quer de forma simples')
+      questions.contextualHints.push('Oxente, tente explicar o que você quer de forma simples');
     }
   }
 
   private storeErrorPattern(text: string, classification: ErrorClassification): void {
-    const pattern = text.toLowerCase().substring(0, 100)
+    const pattern = text.toLowerCase().substring(0, 100);
 
     if (!this.errorPatterns.has(pattern)) {
-      this.errorPatterns.set(pattern, [])
+      this.errorPatterns.set(pattern, []);
     }
 
-    this.errorPatterns.get(pattern)!.push(classification)
+    this.errorPatterns.get(pattern)?.push(classification);
 
     // Keep only recent patterns
     if (this.errorPatterns.size > 1000) {
-      const entries = Array.from(this.errorPatterns.entries())
-      entries.sort((a, b) => b[1].length - a[1].length)
-      this.errorPatterns = new Map(entries.slice(0, 800))
+      const entries = Array.from(this.errorPatterns.entries());
+      entries.sort((a, b) => b[1].length - a[1].length);
+      this.errorPatterns = new Map(entries.slice(0, 800));
     }
   }
 
   private updateStrategySuccessRate(strategyId: string, success: boolean): void {
-    const strategy = this.recoveryStrategies.get(strategyId)
-    if (!strategy) return
+    const strategy = this.recoveryStrategies.get(strategyId);
+    if (!strategy) return;
 
     // Simple moving average update
-    const learningRate = 0.1
-    const targetValue = success ? 1 : 0
+    const learningRate = 0.1;
+    const targetValue = success ? 1 : 0;
     strategy.successRate =
-      strategy.successRate + learningRate * (targetValue - strategy.successRate)
+      strategy.successRate + learningRate * (targetValue - strategy.successRate);
   }
 
   private storeLearningData(
     context: RecoveryContext,
-    errorClassification: ErrorClassification,
-    strategy: RecoveryStrategy,
+    _errorClassification: ErrorClassification,
+    _strategy: RecoveryStrategy,
     result: RecoveryResult
   ): void {
     const learningData: LearningData = {
@@ -1083,13 +1083,13 @@ export class ErrorRecoverySystem {
       linguisticStyle: context.brazilianContext.linguisticStyle,
       timestamp: new Date(),
       userId: context.userId,
-    }
+    };
 
-    this.learningData.push(learningData)
+    this.learningData.push(learningData);
 
     // Keep only recent learning data
     if (this.learningData.length > 5000) {
-      this.learningData = this.learningData.slice(-4000)
+      this.learningData = this.learningData.slice(-4000);
     }
   }
 
@@ -1098,7 +1098,7 @@ export class ErrorRecoverySystem {
     logger.debug('Updating patterns from positive feedback', {
       pattern: learningData.errorPattern.substring(0, 50),
       correction: learningData.correctionApplied.substring(0, 50),
-    })
+    });
   }
 
   private async updatePatternsFromNegativeFeedback(learningData: LearningData): Promise<void> {
@@ -1106,7 +1106,7 @@ export class ErrorRecoverySystem {
     logger.debug('Updating patterns from negative feedback', {
       pattern: learningData.errorPattern.substring(0, 50),
       correction: learningData.correctionApplied.substring(0, 50),
-    })
+    });
   }
 
   private async persistLearningData(learningData: LearningData): Promise<void> {
@@ -1121,13 +1121,13 @@ export class ErrorRecoverySystem {
         linguistic_style: learningData.linguisticStyle,
         timestamp: learningData.timestamp.toISOString(),
         user_id: learningData.userId,
-      })
+      });
 
       if (error) {
-        throw error
+        throw error;
       }
     } catch (error) {
-      logger.error('Failed to persist learning data', { error })
+      logger.error('Failed to persist learning data', { error });
     }
   }
 
@@ -1139,50 +1139,50 @@ export class ErrorRecoverySystem {
    * Get error recovery statistics
    */
   getRecoveryStatistics(): {
-    totalErrors: number
-    successfulRecoveries: number
-    recoveryRate: number
+    totalErrors: number;
+    successfulRecoveries: number;
+    recoveryRate: number;
     strategyPerformance: Record<
       string,
       {
-        usage: number
-        successRate: number
-        averageConfidenceImprovement: number
+        usage: number;
+        successRate: number;
+        averageConfidenceImprovement: number;
       }
-    >
-    regionalAccuracy: Record<string, number>
+    >;
+    regionalAccuracy: Record<string, number>;
   } {
-    const totalErrors = this.errorPatterns.size
-    let successfulRecoveries = 0
+    const totalErrors = this.errorPatterns.size;
+    let successfulRecoveries = 0;
 
-    const strategyPerformance: Record<string, any> = {}
+    const strategyPerformance: Record<string, any> = {};
     for (const [id, strategy] of this.recoveryStrategies) {
       strategyPerformance[id] = {
         usage: 0, // TODO: Track usage
         successRate: strategy.successRate,
         averageConfidenceImprovement: strategy.averageConfidenceImprovement,
-      }
+      };
     }
 
     const regionalAccuracy = this.learningData.reduce(
       (acc, data) => {
         if (!acc[data.regionalVariation]) {
-          acc[data.regionalVariation] = { success: 0, total: 0 }
+          acc[data.regionalVariation] = { success: 0, total: 0 };
         }
-        acc[data.regionalVariation].total++
+        acc[data.regionalVariation].total++;
         if (data.success) {
-          acc[data.regionalVariation].success++
-          successfulRecoveries++
+          acc[data.regionalVariation].success++;
+          successfulRecoveries++;
         }
-        return acc
+        return acc;
       },
       {} as Record<string, { success: number; total: number }>
-    )
+    );
 
     // Convert to accuracy percentages
-    const regionalAccuracyPercentages: Record<string, number> = {}
+    const regionalAccuracyPercentages: Record<string, number> = {};
     for (const [region, data] of Object.entries(regionalAccuracy)) {
-      regionalAccuracyPercentages[region] = data.total > 0 ? (data.success / data.total) * 100 : 0
+      regionalAccuracyPercentages[region] = data.total > 0 ? (data.success / data.total) * 100 : 0;
     }
 
     return {
@@ -1191,23 +1191,23 @@ export class ErrorRecoverySystem {
       recoveryRate: totalErrors > 0 ? (successfulRecoveries / totalErrors) * 100 : 0,
       strategyPerformance,
       regionalAccuracy: regionalAccuracyPercentages,
-    }
+    };
   }
 
   /**
    * Reset learning data and statistics
    */
   resetLearning(): void {
-    this.learningData = []
-    this.errorPatterns.clear()
+    this.learningData = [];
+    this.errorPatterns.clear();
 
     // Reset strategy performance
     for (const strategy of this.recoveryStrategies.values()) {
-      strategy.successRate = 0.5
-      strategy.averageConfidenceImprovement = 0.2
+      strategy.successRate = 0.5;
+      strategy.averageConfidenceImprovement = 0.2;
     }
 
-    logger.info('Error recovery learning data reset')
+    logger.info('Error recovery learning data reset');
   }
 }
 
@@ -1218,14 +1218,14 @@ export class ErrorRecoverySystem {
 export function createErrorRecoverySystem(
   config?: Partial<ErrorRecoveryConfig>
 ): ErrorRecoverySystem {
-  return new ErrorRecoverySystem(config)
+  return new ErrorRecoverySystem(config);
 }
 
 // ============================================================================
 // Exports
 // ============================================================================
 
-export { DEFAULT_ERROR_RECOVERY_CONFIG }
+export { DEFAULT_ERROR_RECOVERY_CONFIG };
 export type {
   ErrorRecoveryConfig,
   ErrorClassification,
@@ -1233,4 +1233,4 @@ export type {
   RecoveryResult,
   RecoveryContext,
   LearningData,
-}
+};

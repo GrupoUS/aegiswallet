@@ -46,8 +46,10 @@ class Logger {
   }
 
   private getDefaultConfig(): LoggerConfig {
-    const isDevelopment = import.meta.env.DEV
-    const isTest = import.meta.env.MODE === 'test'
+    // Environment detection using process.env (Node.js/Bun compatible)
+    const nodeEnv = typeof process !== 'undefined' ? process.env?.NODE_ENV : undefined
+    const isDevelopment = nodeEnv === 'development'
+    const isTest = nodeEnv === 'test'
 
     return {
       level: isDevelopment ? LogLevel.DEBUG : LogLevel.ERROR,
@@ -55,7 +57,8 @@ class Logger {
       enableRemote: !isDevelopment,
       sanitizeData: !isDevelopment,
       maxEntries: isDevelopment ? 1000 : 100,
-      remoteEndpoint: import.meta.env.VITE_LOGGING_ENDPOINT,
+      remoteEndpoint:
+        typeof process !== 'undefined' ? process.env?.VITE_LOGGING_ENDPOINT || '' : '',
     }
   }
 
@@ -262,6 +265,9 @@ class Logger {
 
 // Singleton instance
 export const logger = new Logger()
+
+// Export Logger class for testing
+export { Logger }
 
 // Export types and create logger instance
 export default logger

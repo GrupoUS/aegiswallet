@@ -3,7 +3,112 @@
  * Integrates Web Speech API with AI services for voice commands
  */
 
-import { logger } from '@/lib/logging/logger'
+import { logger } from '../lib/logging/logger'
+
+// TypeScript interfaces for Web Speech API (not available globally)
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  maxAlternatives: number
+  onstart: ((event: Event) => void) | null
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onend: ((event: Event) => void) | null
+  onaudiostart: ((event: Event) => void) | null
+  onsoundstart: ((event: Event) => void) | null
+  onspeechstart: ((event: Event) => void) | null
+  onspeechend: ((event: Event) => void) | null
+  onsoundend: ((event: Event) => void) | null
+  onaudioend: ((event: Event) => void) | null
+  onnomatch: ((event: SpeechRecognitionEvent) => void) | null
+  start(): void
+  stop(): void
+  abort(): void
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+  resultIndex: number
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean
+  length: number
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+  message: string
+}
+
+interface SpeechSynthesis extends EventTarget {
+  pending: boolean
+  speaking: boolean
+  paused: boolean
+  onvoiceschanged: ((event: Event) => void) | null
+  speak(utterance: SpeechSynthesisUtterance): void
+  cancel(): void
+  pause(): void
+  resume(): void
+  getVoices(): SpeechSynthesisVoice[]
+}
+
+interface SpeechSynthesisUtterance extends EventTarget {
+  text: string
+  lang: string
+  voice: SpeechSynthesisVoice | null
+  volume: number
+  rate: number
+  pitch: number
+  onstart: ((event: Event) => void) | null
+  onend: ((event: Event) => void) | null
+  onerror: ((event: SpeechSynthesisErrorEvent) => void) | null
+  onpause: ((event: Event) => void) | null
+  onresume: ((event: Event) => void) | null
+  onmark: ((event: SpeechSynthesisEvent) => void) | null
+  onboundary: ((event: SpeechSynthesisEvent) => void) | null
+}
+
+interface SpeechSynthesisEvent extends Event {
+  name: string
+  charIndex: number
+  elapsedTime: number
+}
+
+interface SpeechSynthesisErrorEvent extends SpeechSynthesisEvent {
+  error: string
+}
+
+interface SpeechSynthesisVoice {
+  name: string
+  lang: string
+  localService: boolean
+  default: boolean
+  voiceURI: string
+}
+
+// Extend Window interface
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition
+    webkitSpeechRecognition: new () => SpeechRecognition
+    SpeechSynthesisUtterance: new (text: string) => SpeechSynthesisUtterance
+  }
+}
 
 // Voice command patterns in Portuguese
 export const VOICE_COMMANDS = {
@@ -192,7 +297,7 @@ class VoiceService {
   /**
    * Speak text using Text-to-Speech
    */
-  speak(text: string, options?: SpeechSynthesisUtterance): Promise<void> {
+  speak(text: string, options?: Partial<SpeechSynthesisUtterance>): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.synthesis) {
         reject(new Error('Speech Synthesis not available'))
@@ -204,14 +309,17 @@ class VoiceService {
 
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = this.config.language || 'pt-BR'
-      utterance.rate = options?.rate || 1.0
-      utterance.pitch = options?.pitch || 1.0
-      utterance.volume = options?.volume || 1.0
+      utterance.rate = options?.rate ?? 1.0
+      utterance.pitch = options?.pitch ?? 1.0
+      utterance.volume = options?.volume ?? 1.0
 
       utterance.onend = () => resolve()
-      utterance.onerror = (event) => reject(new Error(`Speech synthesis error: ${event.error}`))
+      utterance.onerror = (event: any) => {
+        const speechError = event as SpeechSynthesisErrorEvent
+        reject(new Error(`Speech synthesis error: ${speechError.error}`))
+      }
 
-      this.synthesis.speak(utterance)
+      this.synthesis.speak(utterance as any)
     })
   }
 

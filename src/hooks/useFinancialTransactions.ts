@@ -52,7 +52,8 @@ export function useFinancialTransactions(filters?: {
       },
       onError: (error) => {
         toast.error(error.message || 'Erro ao atualizar transação')
-
+      },
+    })
 
   const { mutate: deleteTransaction, isPending: isDeleting } =
     trpc.financialTransactions.delete.useMutation({
@@ -148,7 +149,7 @@ export function useTransactionStats(period: string = '30d') {
 /**
  * Hook para transações por categoria
  */
-export function useTransactionsByCategory(period: "7d" | "30d" | "1y" | "90d" = '30d') {
+export function useTransactionsByCategory(period: '7d' | '30d' | '1y' | '90d' = '30d') {
   const {
     data: categoryStats,
     isLoading,

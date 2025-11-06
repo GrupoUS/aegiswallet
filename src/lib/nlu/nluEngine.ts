@@ -17,11 +17,17 @@
  * @module nlu/nluEngine
  */
 
-import { createEntityExtractor } from '@/lib/nlu/entityExtractor'
-import { createIntentClassifier } from '@/lib/nlu/intentClassifier'
-import { INTENT_DEFINITIONS } from '@/lib/nlu/intents'
-import { createTextNormalizer } from '@/lib/nlu/textNormalizer'
-import { IntentType, type NLUConfig, NLUError, NLUErrorCode, type NLUResult } from '@/lib/nlu/types'
+import { createEntityExtractor } from '@/lib/nlu/entityExtractor';
+import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
+import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';
+import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
+import {
+  IntentType,
+  type NLUConfig,
+  NLUError,
+  NLUErrorCode,
+  type NLUResult,
+} from '@/lib/nlu/types';
 
 // ============================================================================
 // Default Configuration
@@ -41,15 +47,15 @@ const DEFAULT_CONFIG: NLUConfig = {
   tfidfEnabled: true,
   ensembleVotingEnabled: true,
   disambiguationEnabled: true,
-}
+};
 
 // ============================================================================
 // Cache Entry
 // ============================================================================
 
 interface CacheEntry {
-  result: NLUResult
-  timestamp: number
+  result: NLUResult;
+  timestamp: number;
 }
 
 // ============================================================================
@@ -57,29 +63,19 @@ interface CacheEntry {
 // ============================================================================
 
 export class NLUEngine {
-  private config: NLUConfig
-  private normalizer = createTextNormalizer()
-  private classifier = createIntentClassifier()
-  private extractor = createEntityExtractor()
-  private cache = new Map<string, CacheEntry>()
+  private config: NLUConfig;
+  private normalizer = createTextNormalizer();
+  private classifier = createIntentClassifier();
+  private extractor = createEntityExtractor();
+  private cache = new Map<string, CacheEntry>();
   private cacheStats = {
     hits: 0,
     misses: 0,
     totalRequests: 0,
-  }
-
-  // TODO: Enhanced tracking system - Hit/Miss analytics integration point
-  private hitMissTracking = {
-    // Track voice command success/failure rates
-    // Learning analytics for NLU accuracy improvement
-    // Brazilian Portuguese command pattern recognition
-    // Context-aware command processing
-    // Error recovery mechanisms
-    // Performance metrics tracking
-  }
+  };
 
   constructor(config: Partial<NLUConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.config = { ...DEFAULT_CONFIG, ...config };
 
     // TODO: Initialize enhanced tracking system
     // this.initializeHitMissTracking()
@@ -96,13 +92,13 @@ export class NLUEngine {
    * - Error recovery mechanisms
    * - Performance metrics
    */
-  async processUtterance(text: string, userId?: string, sessionId?: string): Promise<NLUResult> {
-    const startTime = Date.now()
+  async processUtterance(text: string, _userId?: string, _sessionId?: string): Promise<NLUResult> {
+    const startTime = Date.now();
 
     try {
       // Validate input
       if (!text || text.trim().length === 0) {
-        throw new NLUError('Empty input text', NLUErrorCode.INVALID_INPUT)
+        throw new NLUError('Empty input text', NLUErrorCode.INVALID_INPUT);
       }
 
       // TODO: Track initial request for hit/miss analytics
@@ -110,36 +106,34 @@ export class NLUEngine {
 
       // Check cache
       if (this.config.cacheEnabled) {
-        this.cacheStats.totalRequests++
-        const cached = this.getFromCache(text)
+        this.cacheStats.totalRequests++;
+        const cached = this.getFromCache(text);
         if (cached) {
-          this.cacheStats.hits++
+          this.cacheStats.hits++;
 
           // TODO: Track cache hit for analytics
           // this.hitMissTracking.trackCacheHit(text, cached)
 
-          return cached
+          return cached;
         }
-        this.cacheStats.misses++
+        this.cacheStats.misses++;
 
         // TODO: Track cache miss for analytics
         // this.hitMissTracking.trackCacheMiss(text)
       }
 
       // Normalize text
-      const normalized = this.normalizer.normalize(text)
+      const normalized = this.normalizer.normalize(text);
 
       // Classify intent
-      const classification = await this.classifier.classify(text)
+      const classification = await this.classifier.classify(text);
 
       // Extract entities
-      const entities = this.extractor.extract(text)
+      const entities = this.extractor.extract(text);
 
       // Check processing time
-      const processingTime = Date.now() - startTime
+      const processingTime = Date.now() - startTime;
       if (processingTime > this.config.maxProcessingTime) {
-        console.warn(`NLU processing exceeded target: ${processingTime}ms`)
-
         // TODO: Track performance issue
         // this.hitMissTracking.trackPerformanceIssue(processingTime, text)
       }
@@ -148,16 +142,16 @@ export class NLUEngine {
       const requiresConfirmation = this.needsConfirmation(
         classification.intent,
         classification.confidence
-      )
+      );
 
       // Determine if disambiguation needed
       const requiresDisambiguation = this.needsDisambiguation(
         classification.confidence,
         classification.alternatives
-      )
+      );
 
       // Check for missing required slots
-      const missingSlots = this.getMissingSlots(classification.intent, entities)
+      const missingSlots = this.getMissingSlots(classification.intent, entities);
 
       // Build result
       const result: NLUResult = {
@@ -178,26 +172,26 @@ export class NLUEngine {
           brazilianContext: this.detectBrazilianContext(text),
           learningSignals: this.extractLearningSignals(text, classification),
         },
-      }
+      };
 
       // TODO: Track successful classification for learning analytics
       // this.hitMissTracking.trackSuccessfulClassification(result, userId, sessionId)
 
       // Cache result
       if (this.config.cacheEnabled) {
-        this.addToCache(text, result)
+        this.addToCache(text, result);
       }
 
-      return result
+      return result;
     } catch (error) {
       // TODO: Track error for learning and improvement
       // this.hitMissTracking.trackClassificationError(error, text, userId, sessionId)
 
       if (error instanceof NLUError) {
-        throw error
+        throw error;
       }
 
-      throw new NLUError('NLU processing failed', NLUErrorCode.UNKNOWN_ERROR, error)
+      throw new NLUError('NLU processing failed', NLUErrorCode.UNKNOWN_ERROR, error);
     }
   }
 
@@ -206,9 +200,9 @@ export class NLUEngine {
    */
   private needsConfirmation(intent: IntentType, confidence: number): boolean {
     // High-risk intents always need confirmation
-    const highRiskIntents = [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY]
+    const highRiskIntents = [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY];
     if (highRiskIntents.includes(intent)) {
-      return true
+      return true;
     }
 
     // Medium confidence needs confirmation
@@ -216,10 +210,10 @@ export class NLUEngine {
       confidence >= this.config.mediumConfidenceThreshold &&
       confidence < this.config.highConfidenceThreshold
     ) {
-      return true
+      return true;
     }
 
-    return false
+    return false;
   }
 
   /**
@@ -230,54 +224,54 @@ export class NLUEngine {
     alternatives: Array<{ intent: IntentType; confidence: number }> | undefined
   ): boolean {
     if (!this.config.disambiguationEnabled) {
-      return false
+      return false;
     }
 
     // Low confidence needs disambiguation
     if (confidence < this.config.mediumConfidenceThreshold) {
-      return true
+      return true;
     }
 
     // Multiple high-confidence alternatives need disambiguation
     if (!alternatives || alternatives.length === 0) {
-      return false
+      return false;
     }
 
     const highConfidenceAlternatives = alternatives.filter(
       (alt) => alt.confidence >= this.config.mediumConfidenceThreshold
-    )
+    );
 
-    return highConfidenceAlternatives.length > 1
+    return highConfidenceAlternatives.length > 1;
   }
 
   /**
    * Get missing required slots for intent
    */
   private getMissingSlots(intent: IntentType, entities: any[]): any[] {
-    const definition = INTENT_DEFINITIONS[intent]
-    if (!definition) return []
+    const definition = INTENT_DEFINITIONS[intent];
+    if (!definition) return [];
 
-    const extractedTypes = new Set(entities.map((e) => e.type))
-    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot))
+    const extractedTypes = new Set(entities.map((e) => e.type));
+    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot));
 
-    return missingSlots
+    return missingSlots;
   }
 
   /**
    * Get result from cache
    */
   private getFromCache(text: string): NLUResult | null {
-    const entry = this.cache.get(text.toLowerCase())
-    if (!entry) return null
+    const entry = this.cache.get(text.toLowerCase());
+    if (!entry) return null;
 
     // Check if expired
-    const age = Date.now() - entry.timestamp
+    const age = Date.now() - entry.timestamp;
     if (age > this.config.cacheTTL) {
-      this.cache.delete(text.toLowerCase())
-      return null
+      this.cache.delete(text.toLowerCase());
+      return null;
     }
 
-    return entry.result
+    return entry.result;
   }
 
   /**
@@ -287,11 +281,11 @@ export class NLUEngine {
     this.cache.set(text.toLowerCase(), {
       result,
       timestamp: Date.now(),
-    })
+    });
 
     // Cleanup old entries if cache is too large
     if (this.cache.size > 1000) {
-      this.cleanupCache()
+      this.cleanupCache();
     }
   }
 
@@ -299,10 +293,10 @@ export class NLUEngine {
    * Cleanup expired cache entries
    */
   private cleanupCache(): void {
-    const now = Date.now()
+    const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.config.cacheTTL) {
-        this.cache.delete(key)
+        this.cache.delete(key);
       }
     }
   }
@@ -311,12 +305,12 @@ export class NLUEngine {
    * Clear cache and reset statistics
    */
   clearCache(): void {
-    this.cache.clear()
+    this.cache.clear();
     this.cacheStats = {
       hits: 0,
       misses: 0,
       totalRequests: 0,
-    }
+    };
   }
 
   /**
@@ -327,28 +321,28 @@ export class NLUEngine {
       hits: 0,
       misses: 0,
       totalRequests: 0,
-    }
+    };
   }
 
   /**
    * Get comprehensive cache statistics
    */
   getCacheStats(): {
-    size: number
-    hitRate: number
-    hits: number
-    misses: number
-    totalRequests: number
-    hitRateChange: number // Trend compared to last 100 requests
+    size: number;
+    hitRate: number;
+    hits: number;
+    misses: number;
+    totalRequests: number;
+    hitRateChange: number; // Trend compared to last 100 requests
   } {
     const hitRate =
       this.cacheStats.totalRequests > 0
         ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
-        : 0
+        : 0;
 
     // Calculate hit rate trend (simple moving average of last 100 requests)
-    const recentHitRate = this.calculateRecentHitRate()
-    const hitRateChange = this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0
+    const recentHitRate = this.calculateRecentHitRate();
+    const hitRateChange = this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0;
 
     return {
       size: this.cache.size,
@@ -357,7 +351,7 @@ export class NLUEngine {
       misses: this.cacheStats.misses,
       totalRequests: this.cacheStats.totalRequests,
       hitRateChange: Math.round(hitRateChange * 100) / 100,
-    }
+    };
   }
 
   /**
@@ -367,7 +361,7 @@ export class NLUEngine {
     // Simplified - in production, maintain a sliding window of recent requests
     return this.cacheStats.totalRequests > 0
       ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
-      : 0
+      : 0;
   }
 
   /**
@@ -375,10 +369,10 @@ export class NLUEngine {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const testResult = await this.processUtterance('qual é meu saldo?')
-      return testResult.intent === IntentType.CHECK_BALANCE
+      const testResult = await this.processUtterance('qual é meu saldo?');
+      return testResult.intent === IntentType.CHECK_BALANCE;
     } catch {
-      return false
+      return false;
     }
   }
 
@@ -386,85 +380,73 @@ export class NLUEngine {
    * Get configuration
    */
   getConfig(): NLUConfig {
-    return { ...this.config }
+    return { ...this.config };
   }
 
   /**
    * Update configuration
    */
   updateConfig(config: Partial<NLUConfig>): void {
-    this.config = { ...this.config, ...config }
-  }
-
-  // ============================================================================
-  // TODO: Enhanced Hit/Miss Tracking System Methods
-  // ============================================================================
-
-  /**
-   * TODO: Initialize comprehensive hit/miss tracking system
-   */
-  private initializeHitMissTracking(): void {
-    // Initialize analytics, learning, error recovery, and performance tracking
-    // This is where the enhanced NLU systems would be integrated
+    this.config = { ...this.config, ...config };
   }
 
   /**
    * TODO: Detect Brazilian Portuguese context for learning
    */
   private detectBrazilianContext(text: string): {
-    region: string
-    linguisticStyle: string
-    culturalMarkers: string[]
+    region: string;
+    linguisticStyle: string;
+    culturalMarkers: string[];
   } {
     // Simplified Brazilian context detection
-    const lowerText = text.toLowerCase()
+    const lowerText = text.toLowerCase();
 
-    let region = 'Unknown'
-    if (lowerText.includes('meu bem') || lowerText.includes('valeu')) region = 'SP'
-    else if (lowerText.includes('maneiro') || lowerText.includes('caraca')) region = 'RJ'
-    else if (lowerText.includes('oxente') || lowerText.includes('arre')) region = 'Nordeste'
-    else if (lowerText.includes('bah') || lowerText.includes('tchê')) region = 'Sul'
+    let region = 'Unknown';
+    if (lowerText.includes('meu bem') || lowerText.includes('valeu')) region = 'SP';
+    else if (lowerText.includes('maneiro') || lowerText.includes('caraca')) region = 'RJ';
+    else if (lowerText.includes('oxente') || lowerText.includes('arre')) region = 'Nordeste';
+    else if (lowerText.includes('bah') || lowerText.includes('tchê')) region = 'Sul';
 
-    let linguisticStyle = 'colloquial'
-    if (lowerText.includes('gostaria') || lowerText.includes('poderia')) linguisticStyle = 'formal'
+    let linguisticStyle = 'colloquial';
+    if (lowerText.includes('gostaria') || lowerText.includes('poderia')) linguisticStyle = 'formal';
 
     return {
       region,
       linguisticStyle,
       culturalMarkers: [],
-    }
+    };
   }
 
   /**
    * TODO: Extract learning signals from classification
    */
   private extractLearningSignals(
-    text: string,
+    _text: string,
     classification: any
   ): {
-    patternNovelty: number
-    confidenceTrend: string
-    adaptationNeeded: boolean
+    patternNovelty: number;
+    confidenceTrend: string;
+    adaptationNeeded: boolean;
   } {
     // Simplified learning signal extraction
     return {
       patternNovelty: Math.random(), // Would be calculated based on pattern frequency
       confidenceTrend: classification.confidence > 0.8 ? 'high' : 'needs_improvement',
       adaptationNeeded: classification.confidence < 0.7,
-    }
+    };
   }
 
   /**
    * TODO: Get comprehensive hit/miss analytics
    */
   getHitMissAnalytics(): {
-    totalCommands: number
-    successRate: number
-    averageConfidence: number
-    regionalAccuracy: Record<string, number>
-    learningProgress: number
-    errorAnalysis: any
-    performanceMetrics: any
+    totalCommands: number;
+    successRate: number;
+    averageConfidence: number;
+    regionalAccuracy: Record<string, number>;
+    learningProgress: number;
+    errorAnalysis: any;
+    performanceMetrics: any;
   } {
     // TODO: Return comprehensive analytics from tracking system
     return {
@@ -484,32 +466,29 @@ export class NLUEngine {
             ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
             : 0,
       },
-    }
+    };
   }
 
   /**
    * TODO: Process user feedback for learning
    */
   async processUserFeedback(
-    classificationId: string,
-    feedback: 'correct' | 'incorrect' | 'ambiguous',
-    correctedIntent?: IntentType
-  ): Promise<void> {
-    // TODO: Implement feedback processing for learning system
-    console.log('User feedback received:', { classificationId, feedback, correctedIntent })
-  }
+    _classificationId: string,
+    _feedback: 'correct' | 'incorrect' | 'ambiguous',
+    _correctedIntent?: IntentType
+  ): Promise<void> {}
 
   /**
    * TODO: Get error recovery suggestions
    */
   async getErrorRecoverySuggestions(
-    errorText: string,
-    userId?: string,
-    sessionId?: string
+    _errorText: string,
+    _userId?: string,
+    _sessionId?: string
   ): Promise<{
-    suggestions: string[]
-    clarifyingQuestions: string[]
-    contextualHints: string[]
+    suggestions: string[];
+    clarifyingQuestions: string[];
+    contextualHints: string[];
   }> {
     // TODO: Implement error recovery using the enhanced error recovery system
     return {
@@ -525,18 +504,18 @@ export class NLUEngine {
         'Você pode dizer "qual é meu saldo" para verificar saldo',
         'Você pode dizer "pagar conta de luz" para pagar contas',
       ],
-    }
+    };
   }
 
   /**
    * TODO: Get learning analytics for continuous improvement
    */
   getLearningAnalytics(): {
-    patternEvolution: any[]
-    userAdaptations: any[]
-    regionalLearning: any
-    confidenceTrends: any
-    recommendations: string[]
+    patternEvolution: any[];
+    userAdaptations: any[];
+    regionalLearning: any;
+    confidenceTrends: any;
+    recommendations: string[];
   } {
     // TODO: Return comprehensive learning analytics
     return {
@@ -549,23 +528,23 @@ export class NLUEngine {
         'Integrate with Brazilian Portuguese pattern recognition',
         'Implement user feedback collection for learning',
       ],
-    }
+    };
   }
 
   /**
    * TODO: Health check for enhanced NLU systems
    */
   async performEnhancedHealthCheck(): Promise<{
-    basic: boolean
-    analytics: boolean
-    learning: boolean
-    errorRecovery: boolean
-    performance: boolean
-    overall: boolean
-    issues: string[]
+    basic: boolean;
+    analytics: boolean;
+    learning: boolean;
+    errorRecovery: boolean;
+    performance: boolean;
+    overall: boolean;
+    issues: string[];
   }> {
     // TODO: Perform comprehensive health check of all enhanced systems
-    const basic = await this.healthCheck()
+    const basic = await this.healthCheck();
 
     return {
       basic,
@@ -575,7 +554,7 @@ export class NLUEngine {
       performance: false, // TODO: Check performance tracking health
       overall: basic, // Would be true if all systems are healthy
       issues: basic ? [] : ['Enhanced NLU systems not initialized'],
-    }
+    };
   }
 }
 
@@ -587,20 +566,20 @@ export class NLUEngine {
  * Create NLU engine with default configuration
  */
 export function createNLUEngine(config?: Partial<NLUConfig>): NLUEngine {
-  return new NLUEngine(config)
+  return new NLUEngine(config);
 }
 
 /**
  * Quick process function
  */
 export async function processUtterance(text: string): Promise<NLUResult> {
-  const engine = createNLUEngine()
-  return engine.processUtterance(text)
+  const engine = createNLUEngine();
+  return engine.processUtterance(text);
 }
 
 // ============================================================================
 // Exports
 // ============================================================================
 
-export { DEFAULT_CONFIG }
-export type { NLUConfig }
+export { DEFAULT_CONFIG };
+export type { NLUConfig };

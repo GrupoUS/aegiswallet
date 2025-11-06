@@ -3,14 +3,14 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-import { describe, expect, it } from 'vitest'
-import type { Database, Tables } from '@/types/database.types'
+import { describe, expect, it } from 'vitest';
+import type { Database, Tables } from '@/types/database.types';
 
 describe('Database Schema Type Safety', () => {
   describe('User Preferences Schema', () => {
     it('should have voice_feedback property', () => {
       // This test exposes missing properties in user_preferences table
-      type UserPreferencesRow = Tables<'user_preferences'>['Row']
+      type UserPreferencesRow = Tables<'user_preferences'>['Row'];
       const mockPreferences: UserPreferencesRow = {
         id: 'test-id',
         created_at: new Date().toISOString(),
@@ -21,13 +21,13 @@ describe('Database Schema Type Safety', () => {
         theme: 'dark',
         // @ts-expect-error - This should fail because voice_feedback is missing
         voice_feedback: true,
-      }
+      };
 
-      expect(mockPreferences.voice_feedback).toBeDefined()
-    })
+      expect(mockPreferences.voice_feedback).toBeDefined();
+    });
 
     it('should have accessibility properties', () => {
-      type UserPreferencesRow = Tables<'user_preferences'>['Row']
+      type UserPreferencesRow = Tables<'user_preferences'>['Row'];
       const mockPreferences: UserPreferencesRow = {
         id: 'test-id',
         created_at: new Date().toISOString(),
@@ -40,17 +40,17 @@ describe('Database Schema Type Safety', () => {
         accessibility_high_contrast: true,
         accessibility_large_text: false,
         accessibility_screen_reader: true,
-      }
+      };
 
-      expect(mockPreferences.accessibility_high_contrast).toBeDefined()
-      expect(mockPreferences.accessibility_large_text).toBeDefined()
-      expect(mockPreferences.accessibility_screen_reader).toBeDefined()
-    })
-  })
+      expect(mockPreferences.accessibility_high_contrast).toBeDefined();
+      expect(mockPreferences.accessibility_large_text).toBeDefined();
+      expect(mockPreferences.accessibility_screen_reader).toBeDefined();
+    });
+  });
 
   describe('Bank Accounts Schema', () => {
     it('should have is_primary property', () => {
-      type BankAccountRow = Tables<'bank_accounts'>['Row']
+      type BankAccountRow = Tables<'bank_accounts'>['Row'];
       const mockAccount: BankAccountRow = {
         id: 'test-id',
         account_mask: '1234',
@@ -63,15 +63,15 @@ describe('Database Schema Type Safety', () => {
         user_id: 'user-id',
         // @ts-expect-error - This should fail because is_primary is missing
         is_primary: true,
-      }
+      };
 
-      expect(mockAccount.is_primary).toBeDefined()
-    })
-  })
+      expect(mockAccount.is_primary).toBeDefined();
+    });
+  });
 
   describe('Financial Events Schema', () => {
     it('should have missing properties for financial events', () => {
-      type FinancialEventRow = Tables<'financial_events'>['Row']
+      type FinancialEventRow = Tables<'financial_events'>['Row'];
       const mockEvent: FinancialEventRow = {
         id: 'test-id',
         title: 'Test Event',
@@ -88,19 +88,19 @@ describe('Database Schema Type Safety', () => {
         account_id: 'account-id',
         category_id: 'category-id',
         priority: 'high',
-      }
+      };
 
-      expect(mockEvent.description).toBeDefined()
-      expect(mockEvent.is_income).toBeDefined()
-      expect(mockEvent.account_id).toBeDefined()
-      expect(mockEvent.category_id).toBeDefined()
-      expect(mockEvent.priority).toBeDefined()
-    })
-  })
+      expect(mockEvent.description).toBeDefined();
+      expect(mockEvent.is_income).toBeDefined();
+      expect(mockEvent.account_id).toBeDefined();
+      expect(mockEvent.category_id).toBeDefined();
+      expect(mockEvent.priority).toBeDefined();
+    });
+  });
 
   describe('Transactions Schema', () => {
     it('should have correct date field naming', () => {
-      type TransactionRow = Tables<'transactions'>['Row']
+      type TransactionRow = Tables<'transactions'>['Row'];
       const mockTransaction: TransactionRow = {
         id: 'test-id',
         description: 'Test Transaction',
@@ -115,80 +115,80 @@ describe('Database Schema Type Safety', () => {
         status: 'completed',
         // @ts-expect-error - This should fail because date field doesn't exist
         date: '2024-01-01',
-      }
+      };
 
-      expect(mockTransaction.date).toBeDefined()
-    })
-  })
+      expect(mockTransaction.date).toBeDefined();
+    });
+  });
 
   describe('Missing Tables for Voice and Analytics', () => {
     it('should have voice_feedback table', () => {
       // This test exposes that voice_feedback table doesn't exist in database types
-      type DatabaseTables = Database['public']['Tables']
+      type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because voice_feedback table is missing
-      const voiceFeedbackTable: DatabaseTables['voice_feedback'] = {} as any
+      const voiceFeedbackTable: DatabaseTables['voice_feedback'] = {} as any;
 
-      expect(voiceFeedbackTable).toBeDefined()
-    })
+      expect(voiceFeedbackTable).toBeDefined();
+    });
 
     it('should have voice_metrics table', () => {
-      type DatabaseTables = Database['public']['Tables']
+      type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because voice_metrics table is missing
-      const voiceMetricsTable: DatabaseTables['voice_metrics'] = {} as any
+      const voiceMetricsTable: DatabaseTables['voice_metrics'] = {} as any;
 
-      expect(voiceMetricsTable).toBeDefined()
-    })
+      expect(voiceMetricsTable).toBeDefined();
+    });
 
     it('should have audit_logs table', () => {
-      type DatabaseTables = Database['public']['Tables']
+      type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because audit_logs table is missing
-      const auditLogsTable: DatabaseTables['audit_logs'] = {} as any
+      const auditLogsTable: DatabaseTables['audit_logs'] = {} as any;
 
-      expect(auditLogsTable).toBeDefined()
-    })
+      expect(auditLogsTable).toBeDefined();
+    });
 
     it('should have bank_tokens table', () => {
-      type DatabaseTables = Database['public']['Tables']
+      type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because bank_tokens table is missing
-      const bankTokensTable: DatabaseTables['bank_tokens'] = {} as any
+      const bankTokensTable: DatabaseTables['bank_tokens'] = {} as any;
 
-      expect(bankTokensTable).toBeDefined()
-    })
+      expect(bankTokensTable).toBeDefined();
+    });
 
     it('should have user_bank_links table', () => {
-      type DatabaseTables = Database['public']['Tables']
+      type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because user_bank_links table is missing
-      const userBankLinksTable: DatabaseTables['user_bank_links'] = {} as any
+      const userBankLinksTable: DatabaseTables['user_bank_links'] = {} as any;
 
-      expect(userBankLinksTable).toBeDefined()
-    })
-  })
+      expect(userBankLinksTable).toBeDefined();
+    });
+  });
 
   describe('Calendar Filter Schema', () => {
     it('should have categories property in CalendarFilter', () => {
       // This test exposes missing categories property in CalendarFilter type
       interface CalendarFilter {
-        startDate?: string
-        endDate?: string
-        typeId?: string
-        isCompleted?: boolean
+        startDate?: string;
+        endDate?: string;
+        typeId?: string;
+        isCompleted?: boolean;
         // @ts-expect-error - This should fail because categories is missing
-        categories?: string[]
+        categories?: string[];
       }
 
       const filter: CalendarFilter = {
         startDate: '2024-01-01',
         endDate: '2024-01-31',
         categories: ['category1', 'category2'],
-      }
+      };
 
-      expect(filter.categories).toBeDefined()
-      expect(filter.categories?.length).toBeGreaterThan(0)
-    })
-  })
-})
+      expect(filter.categories).toBeDefined();
+      expect(filter.categories?.length).toBeGreaterThan(0);
+    });
+  });
+});

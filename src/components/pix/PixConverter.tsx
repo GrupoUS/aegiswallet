@@ -1,78 +1,78 @@
-'use client'
+'use client';
 
-import { Calculator, Copy, Loader2, QrCode as QrCodeIcon, Send } from 'lucide-react'
-import React, { useCallback, useMemo, useState } from 'react'
-import QRCode from 'react-qr-code'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { usePixQRCodes, usePixTransactions } from '@/hooks/usePix'
-import { cn } from '@/lib/utils'
+import { Calculator, Copy, Loader2, QrCode as QrCodeIcon, Send } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import QRCode from 'react-qr-code';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePixQRCodes, usePixTransactions } from '@/hooks/usePix';
+import { cn } from '@/lib/utils';
 
 export const PixConverter = React.memo(function PixConverter() {
-  const [activeTab, setActiveTab] = useState('transferir')
-  const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
-  const [pixKey, setPixKey] = useState('')
+  const [activeTab, setActiveTab] = useState('transferir');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [pixKey, setPixKey] = useState('');
 
-  const { createTransaction, isLoading: isCreatingTransaction } = usePixTransactions()
-  const { generateQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes()
+  const { createTransaction, isLoading: isCreatingTransaction } = usePixTransactions();
+  const { generateQRCode, isGenerating: isCreatingQRCode, qrCodes } = usePixQRCodes();
 
-  const qrCodeData = qrCodes[0] // Get the most recent QR Code
+  const qrCodeData = qrCodes[0]; // Get the most recent QR Code
 
   // Otimizar funções com useCallback
   const formatCurrency = useCallback((value: string) => {
-    const cleanValue = value.replace(/[^\d]/g, '')
-    if (!cleanValue) return ''
-    const formatted = (Number(cleanValue) / 100).toFixed(2)
-    return `R$ ${formatted.replace('.', ',')}`
-  }, [])
+    const cleanValue = value.replace(/[^\d]/g, '');
+    if (!cleanValue) return '';
+    const formatted = (Number(cleanValue) / 100).toFixed(2);
+    return `R$ ${formatted.replace('.', ',')}`;
+  }, []);
 
   const handleAmountChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/[^\d]/g, '')
-      setAmount(formatCurrency(value))
+      const value = e.target.value.replace(/[^\d]/g, '');
+      setAmount(formatCurrency(value));
     },
     [formatCurrency]
-  )
+  );
 
   const copyAmount = useCallback(() => {
-    const numericAmount = amount.replace(/[^\d,]/g, '').replace(',', '.')
-    navigator.clipboard.writeText(numericAmount)
-    toast.success('Valor copiado!')
-  }, [amount])
+    const numericAmount = amount.replace(/[^\d,]/g, '').replace(',', '.');
+    navigator.clipboard.writeText(numericAmount);
+    toast.success('Valor copiado!');
+  }, [amount]);
 
   const getNumericAmount = useCallback(() => {
-    const cleanValue = amount.replace(/[^\d,]/g, '').replace(',', '.')
-    return Number(cleanValue)
-  }, [amount])
+    const cleanValue = amount.replace(/[^\d,]/g, '').replace(',', '.');
+    return Number(cleanValue);
+  }, [amount]);
 
   const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value)
-  }, [])
+    setActiveTab(value);
+  }, []);
 
   const handlePixKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPixKey(e.target.value)
-  }, [])
+    setPixKey(e.target.value);
+  }, []);
 
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDescription(e.target.value)
-  }, [])
+    setDescription(e.target.value);
+  }, []);
 
   const handleSendPix = useCallback(() => {
-    const numericAmount = getNumericAmount()
+    const numericAmount = getNumericAmount();
 
     if (!pixKey || !pixKey.trim()) {
-      toast.error('Informe a chave PIX do destinatário')
-      return
+      toast.error('Informe a chave PIX do destinatário');
+      return;
     }
 
     if (numericAmount <= 0) {
-      toast.error('Informe um valor válido')
-      return
+      toast.error('Informe um valor válido');
+      return;
     }
 
     createTransaction({
@@ -81,57 +81,57 @@ export const PixConverter = React.memo(function PixConverter() {
       pixKeyType: 'email', // Default - could be dynamic
       amount: numericAmount,
       description: description || undefined,
-    })
+    });
 
     // Reset form
-    setAmount('')
-    setDescription('')
-    setPixKey('')
-  }, [getNumericAmount, pixKey, description, createTransaction])
+    setAmount('');
+    setDescription('');
+    setPixKey('');
+  }, [getNumericAmount, pixKey, description, createTransaction]);
 
   const handleGenerateQRCode = useCallback(() => {
-    const numericAmount = getNumericAmount()
+    const numericAmount = getNumericAmount();
 
     if (numericAmount <= 0) {
-      toast.error('Informe um valor válido')
-      return
+      toast.error('Informe um valor válido');
+      return;
     }
 
     generateQRCode({
       amount: numericAmount,
       description: description || undefined,
       pixKey: '', // Will be generated
-    })
-  }, [getNumericAmount, description, generateQRCode])
+    });
+  }, [getNumericAmount, description, generateQRCode]);
 
   const handleQuickAmount = useCallback(
     (value: number) => {
-      setAmount(formatCurrency(String(value * 100)))
+      setAmount(formatCurrency(String(value * 100)));
     },
     [formatCurrency]
-  )
+  );
 
   const handleCopyQRCode = useCallback(() => {
     if (qrCodeData?.qrCodeData) {
-      navigator.clipboard.writeText(qrCodeData.qrCodeData)
-      toast.success('Código PIX copiado!')
+      navigator.clipboard.writeText(qrCodeData.qrCodeData);
+      toast.success('Código PIX copiado!');
     }
-  }, [qrCodeData])
+  }, [qrCodeData]);
 
   // Otimizar valores com useMemo
-  const quickAmounts = useMemo(() => [50, 100, 200], [])
+  const quickAmounts = useMemo(() => [50, 100, 200], []);
 
   return (
     <Card
       className={cn(
-        'lg:w-90 shrink-0',
+        'shrink-0 lg:w-90',
         'shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]',
         'dark:shadow-[0_1px_1px_rgba(255,255,255,0.02),_0_2px_2px_rgba(255,255,255,0.02)]'
       )}
     >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-pix-primary" />
+          <Calculator className="h-5 w-5 text-pix-primary" />
           PIX
         </CardTitle>
       </CardHeader>
@@ -140,16 +140,16 @@ export const PixConverter = React.memo(function PixConverter() {
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="transferir" className="gap-2">
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4" />
               Transferir
             </TabsTrigger>
             <TabsTrigger value="receber" className="gap-2">
-              <QrCodeIcon className="w-4 h-4" />
+              <QrCodeIcon className="h-4 w-4" />
               Receber
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="transferir" className="space-y-4 mt-4">
+          <TabsContent value="transferir" className="mt-4 space-y-4">
             {/* Transferir content */}
             {/* PIX Key Input */}
             <div className="space-y-2">
@@ -173,16 +173,16 @@ export const PixConverter = React.memo(function PixConverter() {
                   placeholder="R$ 0,00"
                   value={amount}
                   onChange={handleAmountChange}
-                  className="text-2xl font-bold pr-12"
+                  className="pr-12 font-bold text-2xl"
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  className="-translate-y-1/2 absolute top-1/2 right-2"
                   onClick={copyAmount}
                   disabled={!amount}
                 >
-                  <Copy className="w-4 h-4" />
+                  <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -210,7 +210,7 @@ export const PixConverter = React.memo(function PixConverter() {
                   className={cn(
                     'relative overflow-hidden',
                     'before:absolute before:inset-0 before:bg-gradient-to-r before:from-pix-primary/0 before:via-pix-primary/10 before:to-pix-primary/0',
-                    'before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500'
+                    'before:translate-x-[-100%] before:transition-transform before:duration-500 hover:before:translate-x-[100%]'
                   )}
                 >
                   R$ {value}
@@ -222,7 +222,7 @@ export const PixConverter = React.memo(function PixConverter() {
             {amount && (
               <div
                 className={cn(
-                  'relative p-4 rounded-lg space-y-2',
+                  'relative space-y-2 rounded-lg p-4',
                   'bg-pix-primary/10',
                   'dark:bg-pix-primary/5',
                   'border border-pix-primary/20',
@@ -239,7 +239,7 @@ export const PixConverter = React.memo(function PixConverter() {
                     <span className="text-right">{description}</span>
                   </div>
                 )}
-                <div className="border-t border-pix-primary/20 pt-2 flex justify-between font-bold">
+                <div className="flex justify-between border-pix-primary/20 border-t pt-2 font-bold">
                   <span>Total</span>
                   <span className="text-pix-primary">{amount}</span>
                 </div>
@@ -255,24 +255,24 @@ export const PixConverter = React.memo(function PixConverter() {
             >
               {isCreatingTransaction ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Enviando...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="mr-2 h-4 w-4" />
                   Enviar PIX
                 </>
               )}
             </Button>
 
             {/* Info */}
-            <div className="text-xs text-muted-foreground text-center">
+            <div className="text-center text-muted-foreground text-xs">
               Transferências PIX são instantâneas e disponíveis 24/7
             </div>
           </TabsContent>
 
-          <TabsContent value="receber" className="space-y-4 mt-4">
+          <TabsContent value="receber" className="mt-4 space-y-4">
             {/* Receber content */}
             {/* Amount Input */}
             <div className="space-y-2">
@@ -284,7 +284,7 @@ export const PixConverter = React.memo(function PixConverter() {
                   placeholder="R$ 0,00"
                   value={amount}
                   onChange={handleAmountChange}
-                  className="text-2xl font-bold"
+                  className="font-bold text-2xl"
                 />
               </div>
             </div>
@@ -311,12 +311,12 @@ export const PixConverter = React.memo(function PixConverter() {
             >
               {isCreatingQRCode ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Gerando...
                 </>
               ) : (
                 <>
-                  <QrCodeIcon className="w-4 h-4 mr-2" />
+                  <QrCodeIcon className="mr-2 h-4 w-4" />
                   Gerar QR Code
                 </>
               )}
@@ -326,15 +326,15 @@ export const PixConverter = React.memo(function PixConverter() {
             {qrCodeData && (
               <div
                 className={cn(
-                  'relative p-6 rounded-lg space-y-4',
+                  'relative space-y-4 rounded-lg p-6',
                   'bg-pix-primary/10',
                   'dark:bg-pix-primary/5',
                   'border border-pix-primary/20',
                   'text-center'
                 )}
               >
-                <div className="text-sm font-medium text-muted-foreground">QR Code PIX Gerado</div>
-                <div className="bg-white p-4 rounded-lg inline-block">
+                <div className="font-medium text-muted-foreground text-sm">QR Code PIX Gerado</div>
+                <div className="inline-block rounded-lg bg-white p-4">
                   {qrCodeData.qrCodeData ? (
                     <QRCode
                       value={qrCodeData.qrCodeData}
@@ -344,28 +344,28 @@ export const PixConverter = React.memo(function PixConverter() {
                       bgColor="#FFFFFF"
                     />
                   ) : (
-                    <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded">
-                      <QrCodeIcon className="w-16 h-16 text-gray-400" />
+                    <div className="flex h-[200px] w-[200px] items-center justify-center rounded bg-gray-100">
+                      <QrCodeIcon className="h-16 w-16 text-gray-400" />
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   Escaneie este código para realizar o pagamento
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleCopyQRCode}>
-                  <Copy className="w-4 h-4 mr-2" />
+                  <Copy className="mr-2 h-4 w-4" />
                   Copiar código PIX
                 </Button>
               </div>
             )}
 
             {/* Info */}
-            <div className="text-xs text-muted-foreground text-center">
+            <div className="text-center text-muted-foreground text-xs">
               O QR Code expira em 15 minutos
             </div>
           </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
-  )
-})
+  );
+});

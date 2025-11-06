@@ -1,4 +1,4 @@
-import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 
 /**
  * Comprehensive examples showcasing both variants of HoverBorderGradient
@@ -6,11 +6,11 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 export function HoverBorderGradientExample() {
   return (
     <div className="flex flex-col items-center justify-center gap-12 p-8">
-      <h2 className="text-3xl font-bold text-foreground">Hover Border Gradient Examples</h2>
+      <h2 className="font-bold text-3xl text-foreground">Hover Border Gradient Examples</h2>
 
       {/* Rotating Variant Section */}
       <section className="w-full max-w-4xl space-y-6">
-        <h3 className="text-2xl font-semibold text-foreground border-b pb-2">
+        <h3 className="border-b pb-2 font-semibold text-2xl text-foreground">
           Rotating Variant (Aceternity UI Style)
         </h3>
         <p className="text-muted-foreground">
@@ -23,7 +23,7 @@ export function HoverBorderGradientExample() {
             variant="rotating"
             as="button"
             containerClassName="rounded-full"
-            className="px-6 py-3 text-sm font-medium"
+            className="px-6 py-3 font-medium text-sm"
             clockwise={true}
           >
             <span>Clockwise Rotation</span>
@@ -34,7 +34,7 @@ export function HoverBorderGradientExample() {
             variant="rotating"
             as="button"
             containerClassName="rounded-full"
-            className="px-6 py-3 text-sm font-medium"
+            className="px-6 py-3 font-medium text-sm"
             clockwise={false}
           >
             <span>Counter-clockwise</span>
@@ -45,7 +45,7 @@ export function HoverBorderGradientExample() {
             variant="rotating"
             as="button"
             containerClassName="rounded-full"
-            className="px-8 py-4 text-base font-semibold"
+            className="px-8 py-4 font-semibold text-base"
             duration={2}
           >
             <span>Slow Rotation (2s)</span>
@@ -55,7 +55,7 @@ export function HoverBorderGradientExample() {
 
       {/* Mouse-Follow Variant Section */}
       <section className="w-full max-w-4xl space-y-6">
-        <h3 className="text-2xl font-semibold text-foreground border-b pb-2">
+        <h3 className="border-b pb-2 font-semibold text-2xl text-foreground">
           Mouse-Follow Variant (Default)
         </h3>
         <p className="text-muted-foreground">
@@ -68,7 +68,7 @@ export function HoverBorderGradientExample() {
             variant="mouse-follow"
             as="button"
             containerClassName="rounded-full"
-            className="px-6 py-3 text-sm font-medium"
+            className="px-6 py-3 font-medium text-sm"
           >
             <span>Mouse-Follow Button</span>
           </HoverBorderGradient>
@@ -77,12 +77,12 @@ export function HoverBorderGradientExample() {
           <HoverBorderGradient
             variant="mouse-follow"
             containerClassName="rounded-lg"
-            className="p-6 w-64"
+            className="w-64 p-6"
             duration={1.5}
           >
             <div className="space-y-2">
-              <h4 className="text-lg font-semibold text-foreground">Interactive Card</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-semibold text-foreground text-lg">Interactive Card</h4>
+              <p className="text-muted-foreground text-sm">
                 Move your mouse over this card to see the gradient follow your cursor.
               </p>
             </div>
@@ -92,12 +92,12 @@ export function HoverBorderGradientExample() {
           <HoverBorderGradient
             variant="mouse-follow"
             containerClassName="rounded-xl"
-            className="p-8 w-96"
+            className="w-96 p-8"
             size={800}
             duration={2}
           >
             <div className="space-y-4">
-              <h4 className="text-xl font-bold text-foreground">Large Gradient Effect</h4>
+              <h4 className="font-bold text-foreground text-xl">Large Gradient Effect</h4>
               <p className="text-muted-foreground">
                 This example uses a larger gradient size (800px) for a more dramatic effect.
               </p>
@@ -113,13 +113,13 @@ export function HoverBorderGradientExample() {
 
       {/* Comparison Section */}
       <section className="w-full max-w-4xl space-y-6">
-        <h3 className="text-2xl font-semibold text-foreground border-b pb-2">
+        <h3 className="border-b pb-2 font-semibold text-2xl text-foreground">
           Side-by-Side Comparison
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className="flex flex-col items-center gap-4">
-            <p className="text-sm font-medium text-muted-foreground">Rotating Variant</p>
+            <p className="font-medium text-muted-foreground text-sm">Rotating Variant</p>
             <HoverBorderGradient
               variant="rotating"
               as="button"
@@ -128,7 +128,7 @@ export function HoverBorderGradientExample() {
             >
               <span>Hover Me</span>
             </HoverBorderGradient>
-            <ul className="text-xs text-muted-foreground space-y-1">
+            <ul className="space-y-1 text-muted-foreground text-xs">
               <li>✓ Automatic rotation animation</li>
               <li>✓ Directional gradient pattern</li>
               <li>✓ Highlight effect on hover</li>
@@ -137,7 +137,7 @@ export function HoverBorderGradientExample() {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <p className="text-sm font-medium text-muted-foreground">Mouse-Follow Variant</p>
+            <p className="font-medium text-muted-foreground text-sm">Mouse-Follow Variant</p>
             <HoverBorderGradient
               variant="mouse-follow"
               as="button"
@@ -146,7 +146,7 @@ export function HoverBorderGradientExample() {
             >
               <span>Hover Me</span>
             </HoverBorderGradient>
-            <ul className="text-xs text-muted-foreground space-y-1">
+            <ul className="space-y-1 text-muted-foreground text-xs">
               <li>✓ Interactive cursor tracking</li>
               <li>✓ Radial glow effect</li>
               <li>✓ Smooth mouse following</li>
@@ -156,5 +156,5 @@ export function HoverBorderGradientExample() {
         </div>
       </section>
     </div>
-  )
+  );
 }

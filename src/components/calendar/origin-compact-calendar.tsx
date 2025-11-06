@@ -4,43 +4,43 @@
  * Based on Origin UI comp-497 - https://originui.com/r/comp-497.json
  */
 
-import { useState } from 'react'
-import type { DropdownNavProps, DropdownProps } from 'react-day-picker'
-import { Calendar } from '@/components/ui/calendar'
+import { useState } from 'react';
+import type { DropdownNavProps, DropdownProps } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface OriginCompactCalendarProps {
   /**
    * Currently selected date
    */
-  selected?: Date
+  selected?: Date;
   /**
    * Callback when date is selected
    */
-  onSelect?: (date: Date | undefined) => void
+  onSelect?: (date: Date | undefined) => void;
   /**
    * Additional CSS classes
    */
-  className?: string
+  className?: string;
   /**
    * Start month for the year dropdown (default: January 1980)
    */
-  startMonth?: Date
+  startMonth?: Date;
   /**
    * Default month to display (default: current month)
    */
-  defaultMonth?: Date
+  defaultMonth?: Date;
   /**
    * Show outside days (default: true)
    */
-  showOutsideDays?: boolean
+  showOutsideDays?: boolean;
 }
 
 export function OriginCompactCalendar({
@@ -51,7 +51,7 @@ export function OriginCompactCalendar({
   defaultMonth = new Date(),
   showOutsideDays = true,
 }: OriginCompactCalendarProps) {
-  const [date, setDate] = useState<Date | undefined>(selected || new Date())
+  const [date, setDate] = useState<Date | undefined>(selected || new Date());
 
   const handleCalendarChange = (
     _value: string | number,
@@ -61,16 +61,16 @@ export function OriginCompactCalendar({
       target: {
         value: String(_value),
       },
-    } as React.ChangeEvent<HTMLSelectElement>
-    _e(_event)
-  }
+    } as React.ChangeEvent<HTMLSelectElement>;
+    _e(_event);
+  };
 
   const handleSelect = (newDate: Date | undefined) => {
-    setDate(newDate)
+    setDate(newDate);
     if (onSelect) {
-      onSelect(newDate)
+      onSelect(newDate);
     }
-  }
+  };
 
   return (
     <div className={cn('w-full', className)}>
@@ -89,7 +89,7 @@ export function OriginCompactCalendar({
         showOutsideDays={showOutsideDays}
         components={{
           DropdownNav: (props: DropdownNavProps) => {
-            return <div className="flex w-full items-center gap-2">{props.children}</div>
+            return <div className="flex w-full items-center gap-2">{props.children}</div>;
           },
           Dropdown: (props: DropdownProps) => {
             return (
@@ -97,7 +97,7 @@ export function OriginCompactCalendar({
                 value={String(props.value)}
                 onValueChange={(value) => {
                   if (props.onChange) {
-                    handleCalendarChange(value, props.onChange)
+                    handleCalendarChange(value, props.onChange);
                   }
                 }}
               >
@@ -116,10 +116,10 @@ export function OriginCompactCalendar({
                   ))}
                 </SelectContent>
               </Select>
-            )
+            );
           },
         }}
       />
     </div>
-  )
+  );
 }

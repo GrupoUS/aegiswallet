@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   ArrowDownLeft,
@@ -8,12 +8,12 @@ import {
   Loader2,
   Search,
   XCircle,
-} from 'lucide-react'
-import React, { useCallback, useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+} from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -21,24 +21,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { usePixTransactions } from '@/hooks/usePix'
-import { cn } from '@/lib/utils'
-import type { PixTransaction } from '@/types/pix'
-import { maskPixKey } from '@/types/pix'
+} from '@/components/ui/table';
+import { usePixTransactions } from '@/hooks/usePix';
+import { cn } from '@/lib/utils';
+import type { PixTransaction } from '@/types/pix';
+import { maskPixKey } from '@/types/pix';
 
 const getStatusIcon = React.memo(function getStatusIcon(status: PixTransaction['status']) {
   switch (status) {
     case 'completed':
-      return <CheckCircle2 className="w-4 h-4 text-success" />
+      return <CheckCircle2 className="h-4 w-4 text-success" />;
     case 'processing':
-      return <Clock className="w-4 h-4 text-warning" />
+      return <Clock className="h-4 w-4 text-warning" />;
     case 'failed':
-      return <XCircle className="w-4 h-4 text-destructive" />
+      return <XCircle className="h-4 w-4 text-destructive" />;
     default:
-      return <Clock className="w-4 h-4 text-gray-500" />
+      return <Clock className="h-4 w-4 text-gray-500" />;
   }
-})
+});
 
 const getStatusBadge = React.memo(function getStatusBadge(status: PixTransaction['status']) {
   const config = {
@@ -69,43 +69,40 @@ const getStatusBadge = React.memo(function getStatusBadge(status: PixTransaction
       className:
         'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
     },
-  }
+  };
 
-  const { variant, label, className } = config[status]
+  const { variant, label, className } = config[status];
 
   return (
     <Badge variant={variant} className={cn('font-medium', className)}>
       {label}
     </Badge>
-  )
-})
+  );
+});
 
 export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const { transactions, isLoading } = usePixTransactions()
+  const [searchTerm, setSearchTerm] = useState('');
+  const { transactions, isLoading } = usePixTransactions();
 
   const filteredTransactions = useMemo(() => {
-    if (!transactions) return []
-    if (!searchTerm.trim()) return transactions
+    if (!transactions) return [];
+    if (!searchTerm.trim()) return transactions;
 
-    const lowerSearchTerm = searchTerm.toLowerCase()
+    const lowerSearchTerm = searchTerm.toLowerCase();
     return transactions.filter(
       (tx) =>
         tx.description?.toLowerCase().includes(lowerSearchTerm) ||
         tx.recipientName?.toLowerCase().includes(lowerSearchTerm) ||
         tx.pixKey.toLowerCase().includes(lowerSearchTerm)
-    )
-  }, [transactions, searchTerm])
+    );
+  }, [transactions, searchTerm]);
 
   // Otimizar manipuladores com useCallback
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-  }, [])
+    setSearchTerm(e.target.value);
+  }, []);
 
-  const handleLoadMore = useCallback(() => {
-    // Implementar lógica para carregar mais transações
-    console.log('Carregar mais transações')
-  }, [])
+  const handleLoadMore = useCallback(() => {}, []);
 
   return (
     <Card
@@ -118,7 +115,7 @@ export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
         <div className="flex items-center justify-between">
           <CardTitle>Transações Recentes</CardTitle>
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar transações..."
               value={searchTerm}
@@ -145,13 +142,13 @@ export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+                  <TableCell colSpan={7} className="py-12 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ) : filteredTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     {searchTerm
                       ? 'Nenhuma transação encontrada'
                       : 'Você ainda não tem transações PIX'}
@@ -167,21 +164,21 @@ export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
         </div>
 
         {/* Load more button */}
-        <div className="flex justify-center mt-4">
+        <div className="mt-4 flex justify-center">
           <Button variant="outline" onClick={handleLoadMore}>
             Carregar mais transações
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
-})
+  );
+});
 
 // Componente separado para a linha da transação com React.memo
 const TransactionRow = React.memo(function TransactionRow({
   transaction,
 }: {
-  transaction: PixTransaction
+  transaction: PixTransaction;
 }) {
   // Memoizar a data formatada
   const formattedDate = useMemo(() => {
@@ -190,13 +187,13 @@ const TransactionRow = React.memo(function TransactionRow({
       month: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }, [transaction.createdAt])
+    });
+  }, [transaction.createdAt]);
 
   // Memoizar o valor formatado
   const formattedAmount = useMemo(() => {
-    return `${transaction.type === 'sent' ? '-' : '+'}R$ ${transaction.amount.toFixed(2).replace('.', ',')}`
-  }, [transaction.type, transaction.amount])
+    return `${transaction.type === 'sent' ? '-' : '+'}R$ ${transaction.amount.toFixed(2).replace('.', ',')}`;
+  }, [transaction.type, transaction.amount]);
 
   return (
     <TableRow
@@ -212,22 +209,22 @@ const TransactionRow = React.memo(function TransactionRow({
           {transaction.type === 'sent' ? (
             <div
               className={cn(
-                'flex items-center gap-2 px-2 py-1 rounded-md',
+                'flex items-center gap-2 rounded-md px-2 py-1',
                 'bg-financial-negative/10'
               )}
             >
-              <ArrowUpRight className="w-4 h-4 text-financial-negative" />
-              <span className="text-sm font-medium text-financial-negative">Enviado</span>
+              <ArrowUpRight className="h-4 w-4 text-financial-negative" />
+              <span className="font-medium text-financial-negative text-sm">Enviado</span>
             </div>
           ) : (
             <div
               className={cn(
-                'flex items-center gap-2 px-2 py-1 rounded-md',
+                'flex items-center gap-2 rounded-md px-2 py-1',
                 'bg-financial-positive/10'
               )}
             >
-              <ArrowDownLeft className="w-4 h-4 text-financial-positive" />
-              <span className="text-sm font-medium text-financial-positive">Recebido</span>
+              <ArrowDownLeft className="h-4 w-4 text-financial-positive" />
+              <span className="font-medium text-financial-positive text-sm">Recebido</span>
             </div>
           )}
         </div>
@@ -250,7 +247,7 @@ const TransactionRow = React.memo(function TransactionRow({
           {getStatusBadge(transaction.status)}
         </div>
       </TableCell>
-      <TableCell className="text-right text-sm text-muted-foreground">{formattedDate}</TableCell>
+      <TableCell className="text-right text-muted-foreground text-sm">{formattedDate}</TableCell>
     </TableRow>
-  )
-})
+  );
+});

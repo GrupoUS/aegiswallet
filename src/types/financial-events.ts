@@ -8,7 +8,7 @@ export type FinancialEventType =
   | 'expense' // Saída/Despesa
   | 'bill' // Conta a pagar
   | 'scheduled' // Pagamento agendado
-  | 'transfer' // Transferência
+  | 'transfer'; // Transferência
 
 export type EventColor =
   | 'emerald'
@@ -24,26 +24,26 @@ export type EventColor =
   | 'purple'
   | 'pink'
   | 'teal'
-  | 'cyan'
+  | 'cyan';
 
-export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'
+export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed';
 
 export interface FinancialEvent {
-  id: string
-  title: string
-  description?: string
-  start: Date
-  end: Date
-  type: FinancialEventType
-  amount: number
-  color: EventColor
-  icon?: string
-  status: EventStatus
-  category?: string
-  account?: string
-  location?: string
-  recurring?: boolean
-  allDay?: boolean
+  id: string;
+  title: string;
+  description?: string;
+  start: Date;
+  end: Date;
+  type: FinancialEventType;
+  amount: number;
+  color: EventColor;
+  icon?: string;
+  status: EventStatus;
+  category?: string;
+  account?: string;
+  location?: string;
+  recurring?: boolean;
+  allDay?: boolean;
 }
 
 /**
@@ -56,8 +56,8 @@ export function getColorForEventType(type: FinancialEventType): EventColor {
     bill: 'orange',
     scheduled: 'blue',
     transfer: 'violet',
-  }
-  return colorMap[type]
+  };
+  return colorMap[type];
 }
 
 /**
@@ -70,8 +70,8 @@ export function getIconForEventType(type: FinancialEventType): string {
     bill: '📄',
     scheduled: '📅',
     transfer: '↔️',
-  }
-  return iconMap[type]
+  };
+  return iconMap[type];
 }
 
 /**
@@ -81,5 +81,5 @@ export function formatEventAmount(amount: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(Math.abs(amount))
+  }).format(Math.abs(amount));
 }

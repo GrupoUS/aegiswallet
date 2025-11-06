@@ -1,8 +1,8 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '@/server/trpc-helpers'
-import { logger, logError, logOperation } from '@/server/lib/logger'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { logError, logOperation } from '@/server/lib/logger';
+import { protectedProcedure, router } from '@/server/trpc-helpers';
 
 /**
  * Transactions Router - Gerenciamento de transações financeiras
@@ -32,36 +32,36 @@ export const transactionsRouter = router({
             bank_accounts(id, institution_name, account_mask),
             transaction_categories(id, name, color)
           `)
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', ctx.user.id);
 
         // Aplicar filtros
         if (input.categoryId) {
-          query = query.eq('category_id', input.categoryId)
+          query = query.eq('category_id', input.categoryId);
         }
         if (input.accountId) {
-          query = query.eq('account_id', input.accountId)
+          query = query.eq('account_id', input.accountId);
         }
         if (input.type) {
-          query = query.eq('transaction_type', input.type)
+          query = query.eq('transaction_type', input.type);
         }
         if (input.status) {
-          query = query.eq('status', input.status)
+          query = query.eq('status', input.status);
         }
         if (input.startDate) {
-          query = query.gte('transaction_date', input.startDate)
+          query = query.gte('transaction_date', input.startDate);
         }
         if (input.endDate) {
-          query = query.lte('transaction_date', input.endDate)
+          query = query.lte('transaction_date', input.endDate);
         }
         if (input.search) {
           query = query.or(
             `description.ilike.%${input.search}%,merchant_name.ilike.%${input.search}%`
-          )
+          );
         }
 
         const { data, error, count } = await query
           .order('transaction_date', { ascending: false })
-          .range(input.offset, input.offset + input.limit - 1)
+          .range(input.offset, input.offset + input.limit - 1);
 
         if (error) {
           logError('fetch_transactions', ctx.user.id, error, {
@@ -76,11 +76,11 @@ export const transactionsRouter = router({
             startDate: input.startDate,
             endDate: input.endDate,
             search: input.search,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transações',
-          })
+          });
         }
 
         logOperation('fetch_transactions_success', ctx.user.id, 'transactions', undefined, {
@@ -94,13 +94,13 @@ export const transactionsRouter = router({
             status: input.status,
             search: input.search,
           },
-        })
+        });
 
         return {
           transactions: data || [],
           total: count || 0,
           hasMore: (count || 0) > input.offset + input.limit,
-        }
+        };
       } catch (error) {
         logError('fetch_transactions_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
@@ -114,11 +114,11 @@ export const transactionsRouter = router({
           startDate: input.startDate,
           endDate: input.endDate,
           search: input.search,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar transações',
-        })
+        });
       }
     }),
 
@@ -136,37 +136,37 @@ export const transactionsRouter = router({
           `)
           .eq('id', input.id)
           .eq('user_id', ctx.user.id)
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
             logOperation('fetch_transaction_not_found', ctx.user.id, 'transactions', input.id, {
               reason: 'transaction_not_found',
-            })
+            });
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
-            })
+            });
           }
           logError('fetch_transaction_by_id', ctx.user.id, error, {
             resource: 'transactions',
             operation: 'getById',
             transactionId: input.id,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transação',
-          })
+          });
         }
 
-        return data
+        return data;
       } catch (error) {
         logError('fetch_transaction_by_id_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
           operation: 'getById',
           transactionId: input.id,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -207,7 +207,7 @@ export const transactionsRouter = router({
             bank_accounts(id, institution_name, account_mask),
             transaction_categories(id, name, color)
           `)
-          .single()
+          .single();
 
         if (error) {
           logError('create_transaction', ctx.user.id, error, {
@@ -217,11 +217,11 @@ export const transactionsRouter = router({
             type: input.transaction_type,
             description: input.description,
             merchantName: input.merchant_name,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar transação',
-          })
+          });
         }
 
         logOperation('create_transaction_success', ctx.user.id, 'transactions', data?.id, {
@@ -231,9 +231,9 @@ export const transactionsRouter = router({
           merchantName: input.merchant_name,
           status: input.status,
           isManualEntry: input.is_manual_entry,
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('create_transaction_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
@@ -242,11 +242,11 @@ export const transactionsRouter = router({
           type: input.transaction_type,
           description: input.description,
           merchantName: input.merchant_name,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar transação',
-        })
+        });
       }
     }),
 
@@ -269,7 +269,7 @@ export const transactionsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { id, ...updateData } = input
+        const { id, ...updateData } = input;
 
         const { data, error } = await supabase
           .from('transactions')
@@ -284,43 +284,43 @@ export const transactionsRouter = router({
             bank_accounts(id, institution_name, account_mask),
             transaction_categories(id, name, color)
           `)
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
             logOperation('update_transaction_not_found', ctx.user.id, 'transactions', input.id, {
               reason: 'transaction_not_found',
-            })
+            });
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
-            })
+            });
           }
           logError('update_transaction', ctx.user.id, error, {
             resource: 'transactions',
             operation: 'update',
             transactionId: input.id,
             updateFields: Object.keys(input).filter((k) => k !== 'id'),
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar transação',
-          })
+          });
         }
 
         logOperation('update_transaction_success', ctx.user.id, 'transactions', input.id, {
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('update_transaction_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
           operation: 'update',
           transactionId: input.id,
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -335,41 +335,41 @@ export const transactionsRouter = router({
           .eq('id', input.id)
           .eq('user_id', ctx.user.id)
           .select()
-          .single()
+          .single();
 
         if (error) {
           if (error.code === 'PGRST116') {
             logOperation('delete_transaction_not_found', ctx.user.id, 'transactions', input.id, {
               reason: 'transaction_not_found',
-            })
+            });
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
-            })
+            });
           }
           logError('delete_transaction', ctx.user.id, error, {
             resource: 'transactions',
             operation: 'delete',
             transactionId: input.id,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao deletar transação',
-          })
+          });
         }
 
         logOperation('delete_transaction_success', ctx.user.id, 'transactions', input.id, {
           deletedTransactionId: input.id,
-        })
+        });
 
-        return data
+        return data;
       } catch (error) {
         logError('delete_transaction_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
           operation: 'delete',
           transactionId: input.id,
-        })
-        throw error
+        });
+        throw error;
       }
     }),
 
@@ -385,22 +385,22 @@ export const transactionsRouter = router({
     .query(async ({ ctx, input }) => {
       try {
         // Calcular data de início
-        const now = new Date()
-        const startDate = new Date()
+        const now = new Date();
+        const startDate = new Date();
 
         switch (input.period) {
           case '7d':
-            startDate.setDate(now.getDate() - 7)
-            break
+            startDate.setDate(now.getDate() - 7);
+            break;
           case '30d':
-            startDate.setDate(now.getDate() - 30)
-            break
+            startDate.setDate(now.getDate() - 30);
+            break;
           case '90d':
-            startDate.setDate(now.getDate() - 90)
-            break
+            startDate.setDate(now.getDate() - 90);
+            break;
           case '1y':
-            startDate.setFullYear(now.getFullYear() - 1)
-            break
+            startDate.setFullYear(now.getFullYear() - 1);
+            break;
         }
 
         let query = supabase
@@ -408,16 +408,16 @@ export const transactionsRouter = router({
           .select('amount, transaction_type, transaction_date')
           .eq('user_id', ctx.user.id)
           .eq('status', 'posted')
-          .gte('transaction_date', startDate.toISOString())
+          .gte('transaction_date', startDate.toISOString());
 
         if (input.categoryId) {
-          query = query.eq('category_id', input.categoryId)
+          query = query.eq('category_id', input.categoryId);
         }
         if (input.accountId) {
-          query = query.eq('account_id', input.accountId)
+          query = query.eq('account_id', input.accountId);
         }
 
-        const { data, error } = await query
+        const { data, error } = await query;
 
         if (error) {
           logError('fetch_transaction_stats', ctx.user.id, error, {
@@ -426,35 +426,35 @@ export const transactionsRouter = router({
             period: input.period,
             categoryId: input.categoryId,
             accountId: input.accountId,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar estatísticas de transações',
-          })
+          });
         }
 
-        const transactions = data || []
+        const transactions = data || [];
 
         // Calcular estatísticas
         const income = transactions
           .filter((t) => t.amount > 0)
-          .reduce((sum, t) => sum + Number(t.amount), 0)
+          .reduce((sum, t) => sum + Number(t.amount), 0);
 
         const expenses = transactions
           .filter((t) => t.amount < 0)
-          .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+          .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
-        const totalTransactions = transactions.length
+        const totalTransactions = transactions.length;
         const averageTransaction =
           totalTransactions > 0
             ? transactions.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) /
               totalTransactions
-            : 0
+            : 0;
 
         const largestTransaction =
           transactions.length > 0
             ? Math.max(...transactions.map((t) => Math.abs(Number(t.amount))))
-            : 0
+            : 0;
 
         return {
           income,
@@ -464,7 +464,7 @@ export const transactionsRouter = router({
           averageTransaction,
           largestTransaction,
           period: input.period,
-        }
+        };
       } catch (error) {
         logError('fetch_transaction_stats_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
@@ -472,11 +472,11 @@ export const transactionsRouter = router({
           period: input.period,
           categoryId: input.categoryId,
           accountId: input.accountId,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar estatísticas de transações',
-        })
+        });
       }
     }),
 
@@ -490,22 +490,22 @@ export const transactionsRouter = router({
     .query(async ({ ctx, input }) => {
       try {
         // Calcular data de início
-        const now = new Date()
-        const startDate = new Date()
+        const now = new Date();
+        const startDate = new Date();
 
         switch (input.period) {
           case '7d':
-            startDate.setDate(now.getDate() - 7)
-            break
+            startDate.setDate(now.getDate() - 7);
+            break;
           case '30d':
-            startDate.setDate(now.getDate() - 30)
-            break
+            startDate.setDate(now.getDate() - 30);
+            break;
           case '90d':
-            startDate.setDate(now.getDate() - 90)
-            break
+            startDate.setDate(now.getDate() - 90);
+            break;
           case '1y':
-            startDate.setFullYear(now.getFullYear() - 1)
-            break
+            startDate.setFullYear(now.getFullYear() - 1);
+            break;
         }
 
         const { data, error } = await supabase
@@ -517,25 +517,25 @@ export const transactionsRouter = router({
           .eq('user_id', ctx.user.id)
           .eq('status', 'posted')
           .gte('transaction_date', startDate.toISOString())
-          .not('category_id', 'is', null)
+          .not('category_id', 'is', null);
 
         if (error) {
           logError('fetch_transactions_by_category', ctx.user.id, error, {
             resource: 'transactions',
             operation: 'getByCategory',
             period: input.period,
-          })
+          });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transações por categoria',
-          })
+          });
         }
 
         // Agrupar por categoria
         const categoryStats = (data || []).reduce(
           (acc, transaction) => {
-            const category = transaction.transaction_categories
-            if (!category) return acc
+            const category = transaction.transaction_categories;
+            if (!category) return acc;
 
             if (!acc[category.id]) {
               acc[category.id] = {
@@ -546,35 +546,35 @@ export const transactionsRouter = router({
                 transactionCount: 0,
                 income: 0,
                 expenses: 0,
-              }
+              };
             }
 
-            const amount = Number(transaction.amount)
-            acc[category.id].totalAmount += amount
-            acc[category.id].transactionCount += 1
+            const amount = Number(transaction.amount);
+            acc[category.id].totalAmount += amount;
+            acc[category.id].transactionCount += 1;
 
             if (amount > 0) {
-              acc[category.id].income += amount
+              acc[category.id].income += amount;
             } else {
-              acc[category.id].expenses += Math.abs(amount)
+              acc[category.id].expenses += Math.abs(amount);
             }
 
-            return acc
+            return acc;
           },
           {} as Record<string, any>
-        )
+        );
 
-        return Object.values(categoryStats)
+        return Object.values(categoryStats);
       } catch (error) {
         logError('fetch_transactions_by_category_unexpected', ctx.user.id, error as Error, {
           resource: 'transactions',
           operation: 'getByCategory',
           period: input.period,
-        })
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar transações por categoria',
-        })
+        });
       }
     }),
-})
+});

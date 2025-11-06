@@ -3,10 +3,10 @@
  */
 
 export interface ConnectorHealth {
-  status: 'healthy' | 'degraded' | 'down'
-  latency: number
-  errorRate: number
-  lastSync: Date
+  status: 'healthy' | 'degraded' | 'down';
+  latency: number;
+  errorRate: number;
+  lastSync: Date;
 }
 
 export class MonitoringService {
@@ -17,22 +17,22 @@ export class MonitoringService {
       latency: 150,
       errorRate: 0.01,
       lastSync: new Date(),
-    }
+    };
   }
 
   async getMetrics(_period: '1h' | '24h' | '7d' = '24h'): Promise<{
-    totalRequests: number
-    successRate: number
-    avgLatency: number
+    totalRequests: number;
+    successRate: number;
+    avgLatency: number;
   }> {
     return {
       totalRequests: 1000,
       successRate: 0.99,
       avgLatency: 200,
-    }
+    };
   }
 }
 
 export function getMonitoringService(): MonitoringService {
-  return new MonitoringService()
+  return new MonitoringService();
 }

@@ -5,57 +5,57 @@
  * Integrates with calendar events and provides contextual notifications
  */
 
-import { format, parseISO, differenceInDays, addDays } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/integrations/supabase/client'
-import { createPushProvider, type PushMessage, type PushConfig } from '@/lib/security/pushProvider'
-import { logger, logOperation, logError } from '@/server/lib/logger'
+import { addDays, differenceInDays, format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { createPushProvider, type PushConfig, type PushMessage } from '@/lib/security/pushProvider';
+import { logError, logOperation } from '@/server/lib/logger';
 
 // Brazilian financial event types
 export interface BrazilianFinancialEvent {
-  id: string
-  title: string
-  description?: string
-  amount?: number
-  eventDate: string
-  dueDate?: string
-  eventTypeId: string
-  categoryName?: string
-  priority: 'low' | 'normal' | 'high' | 'urgent'
-  isCompleted: boolean
+  id: string;
+  title: string;
+  description?: string;
+  amount?: number;
+  eventDate: string;
+  dueDate?: string;
+  eventTypeId: string;
+  categoryName?: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  isCompleted: boolean;
 }
 
 export interface FinancialReminderConfig {
   // Standard reminder periods (in days before event)
-  billPaymentReminders: number[] // [7, 3, 1] days before
-  pixTransferReminders: number[] // [2, 1] days before
-  creditCardReminders: number[] // [5, 3, 1] days before
-  investmentReminders: number[] // [3, 1] days before
-  taxPaymentReminders: number[] // [30, 15, 7, 3, 1] days before
-  salaryReminders: number[] // [2, 1] days before
+  billPaymentReminders: number[]; // [7, 3, 1] days before
+  pixTransferReminders: number[]; // [2, 1] days before
+  creditCardReminders: number[]; // [5, 3, 1] days before
+  investmentReminders: number[]; // [3, 1] days before
+  taxPaymentReminders: number[]; // [30, 15, 7, 3, 1] days before
+  salaryReminders: number[]; // [2, 1] days before
 }
 
 export interface NotificationTemplate {
-  title: string
-  body: string
+  title: string;
+  body: string;
   actions?: Array<{
-    action: string
-    title: string
-    icon?: string
-  }>
-  data?: Record<string, any>
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
+  data?: Record<string, any>;
 }
 
 /**
  * Brazilian Financial Notification Service
  */
 export class FinancialNotificationService {
-  private pushProvider: any
-  private config: FinancialReminderConfig
+  private pushProvider: any;
+  private config: FinancialReminderConfig;
 
   constructor(pushConfig: PushConfig) {
-    this.pushProvider = createPushProvider(pushConfig)
-    this.config = this.getDefaultConfig()
+    this.pushProvider = createPushProvider(pushConfig);
+    this.config = this.getDefaultConfig();
   }
 
   /**
@@ -69,7 +69,7 @@ export class FinancialNotificationService {
       investmentReminders: [3, 1], // Investment maturities
       taxPaymentReminders: [30, 15, 7, 3, 1], // Tax payments
       salaryReminders: [2, 1], // Salary receipts
-    }
+    };
   }
 
   /**
@@ -79,17 +79,17 @@ export class FinancialNotificationService {
     event: BrazilianFinancialEvent,
     daysUntil: number
   ): NotificationTemplate {
-    const eventDate = parseISO(event.eventDate)
-    const formattedDate = format(eventDate, "dd 'de' MMMM", { locale: ptBR })
+    const eventDate = parseISO(event.eventDate);
+    const formattedDate = format(eventDate, "dd 'de' MMMM", { locale: ptBR });
     const formattedAmount = event.amount
       ? new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL',
         }).format(Math.abs(event.amount))
-      : ''
+      : '';
 
-    const isPayment = event.amount && event.amount < 0
-    const isReceivable = event.amount && event.amount > 0
+    const isPayment = event.amount && event.amount < 0;
+    const isReceivable = event.amount && event.amount > 0;
 
     // Different message templates based on event type and timing
     if (daysUntil <= 0) {
@@ -100,7 +100,11 @@ export class FinancialNotificationService {
           body: `Pagamento de ${formattedAmount} venceu hoje. Realize o pagamento imediatamente para evitar juros.`,
           actions: [
             { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
-            { action: 'remind', title: 'Lembrar Depois', icon: '/icons/clock.png' },
+            {
+              action: 'remind',
+              title: 'Lembrar Depois',
+              icon: '/icons/clock.png',
+            },
           ],
           data: {
             type: 'payment_overdue',
@@ -108,7 +112,7 @@ export class FinancialNotificationService {
             amount: event.amount,
             urgency: 'urgent',
           },
-        }
+        };
       } else if (isReceivable) {
         return {
           title: `💰 Recebimento Hoje: ${event.title}`,
@@ -119,7 +123,7 @@ export class FinancialNotificationService {
             eventId: event.id,
             amount: event.amount,
           },
-        }
+        };
       }
     } else if (daysUntil === 1) {
       // Due tomorrow
@@ -129,7 +133,11 @@ export class FinancialNotificationService {
           body: `Pagamento de ${formattedAmount} vence amanhã (${formattedDate}).`,
           actions: [
             { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
-            { action: 'schedule', title: 'Agendar', icon: '/icons/calendar.png' },
+            {
+              action: 'schedule',
+              title: 'Agendar',
+              icon: '/icons/calendar.png',
+            },
           ],
           data: {
             type: 'payment_tomorrow',
@@ -137,7 +145,7 @@ export class FinancialNotificationService {
             amount: event.amount,
             urgency: 'high',
           },
-        }
+        };
       } else if (isReceivable) {
         return {
           title: `💳 Recebimento Amanhã: ${event.title}`,
@@ -147,7 +155,7 @@ export class FinancialNotificationService {
             eventId: event.id,
             amount: event.amount,
           },
-        }
+        };
       }
     } else if (daysUntil <= 7) {
       // Due this week
@@ -157,7 +165,11 @@ export class FinancialNotificationService {
           body: `Pagamento de ${formattedAmount} vence em ${daysUntil} dias (${formattedDate}).`,
           actions: [
             { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
-            { action: 'schedule', title: 'Agendar', icon: '/icons/calendar.png' },
+            {
+              action: 'schedule',
+              title: 'Agendar',
+              icon: '/icons/calendar.png',
+            },
           ],
           data: {
             type: 'payment_this_week',
@@ -166,7 +178,7 @@ export class FinancialNotificationService {
             daysUntil,
             urgency: 'normal',
           },
-        }
+        };
       } else if (isReceivable) {
         return {
           title: `📈 Recebimento Esta Semana: ${event.title}`,
@@ -177,7 +189,7 @@ export class FinancialNotificationService {
             amount: event.amount,
             daysUntil,
           },
-        }
+        };
       }
     } else {
       // Future event
@@ -194,7 +206,7 @@ export class FinancialNotificationService {
           amount: event.amount,
           daysUntil,
         },
-      }
+      };
     }
 
     // Default fallback
@@ -206,7 +218,7 @@ export class FinancialNotificationService {
         eventId: event.id,
         amount: event.amount,
       },
-    }
+    };
   }
 
   /**
@@ -247,9 +259,9 @@ export class FinancialNotificationService {
 
       // Default fallback
       default: [7, 3, 1],
-    }
+    };
 
-    return eventTypeReminders[eventTypeId] || eventTypeReminders['default']
+    return eventTypeReminders[eventTypeId] || eventTypeReminders.default;
   }
 
   /**
@@ -257,17 +269,17 @@ export class FinancialNotificationService {
    */
   async createAutomatedReminders(event: BrazilianFinancialEvent, userId: string): Promise<void> {
     try {
-      const reminderSchedule = this.getReminderSchedule(event.eventTypeId)
-      const eventDate = parseISO(event.eventDate)
+      const reminderSchedule = this.getReminderSchedule(event.eventTypeId);
+      const eventDate = parseISO(event.eventDate);
 
       for (const daysBefore of reminderSchedule) {
-        const reminderDate = addDays(eventDate, -daysBefore)
-        const remindAt = reminderDate.toISOString()
+        const reminderDate = addDays(eventDate, -daysBefore);
+        const remindAt = reminderDate.toISOString();
 
         // Only create future reminders
         if (new Date(remindAt) > new Date()) {
-          const daysUntil = differenceInDays(eventDate, new Date(remindAt))
-          const notification = this.generateNotificationMessage(event, daysUntil)
+          const daysUntil = differenceInDays(eventDate, new Date(remindAt));
+          const notification = this.generateNotificationMessage(event, daysUntil);
 
           // Create reminder in database
           await supabase.from('event_reminders').insert({
@@ -276,22 +288,22 @@ export class FinancialNotificationService {
             reminder_type: 'notification',
             message: notification.body,
             created_at: new Date().toISOString(),
-          })
+          });
 
           logOperation('create_automated_reminder', userId, 'event_reminders', undefined, {
             eventId: event.id,
             daysBefore,
             remindAt,
             reminderType: 'notification',
-          })
+          });
         }
       }
     } catch (error) {
       logError('create_automated_reminders', userId, error as Error, {
         eventId: event.id,
         eventTitle: event.title,
-      })
-      throw error
+      });
+      throw error;
     }
   }
 
@@ -304,10 +316,10 @@ export class FinancialNotificationService {
     customMessage?: string
   ): Promise<void> {
     try {
-      const daysUntil = differenceInDays(parseISO(event.eventDate), new Date())
+      const daysUntil = differenceInDays(parseISO(event.eventDate), new Date());
       const notification = customMessage
         ? { title: '📅 Lembrete Financeiro', body: customMessage }
-        : this.generateNotificationMessage(event, daysUntil)
+        : this.generateNotificationMessage(event, daysUntil);
 
       const pushMessage: PushMessage = {
         title: notification.title,
@@ -323,9 +335,9 @@ export class FinancialNotificationService {
           userId,
           timestamp: new Date().toISOString(),
         },
-      }
+      };
 
-      const result = await this.pushProvider.sendPushNotification(userId, pushMessage)
+      const result = await this.pushProvider.sendPushNotification(userId, pushMessage);
 
       if (result.success) {
         logOperation('send_financial_notification_success', userId, 'notifications', undefined, {
@@ -333,7 +345,7 @@ export class FinancialNotificationService {
           eventTitle: event.title,
           daysUntil,
           messageId: result.messageId,
-        })
+        });
       } else {
         logError(
           'send_financial_notification_failed',
@@ -343,14 +355,14 @@ export class FinancialNotificationService {
             eventId: event.id,
             eventTitle: event.title,
           }
-        )
+        );
       }
     } catch (error) {
       logError('send_financial_notification_error', userId, error as Error, {
         eventId: event.id,
         eventTitle: event.title,
-      })
-      throw error
+      });
+      throw error;
     }
   }
 
@@ -359,7 +371,7 @@ export class FinancialNotificationService {
    */
   async processPendingReminders(): Promise<void> {
     try {
-      const now = new Date().toISOString()
+      const now = new Date().toISOString();
 
       // Get pending reminders that need to be sent
       const { data: reminders, error } = await supabase
@@ -382,21 +394,21 @@ export class FinancialNotificationService {
         `)
         .eq('is_sent', false)
         .lte('remind_at', now)
-        .order('remind_at', { ascending: true })
+        .order('remind_at', { ascending: true });
 
       if (error) {
         logError('fetch_pending_reminders', 'system', error, {
           operation: 'processPendingReminders',
-        })
-        return
+        });
+        return;
       }
 
       for (const reminder of reminders || []) {
-        const event = reminder.financial_events
-        if (!event) continue
+        const event = reminder.financial_events;
+        if (!event) continue;
 
         try {
-          await this.sendFinancialNotification(event, event.user_id, reminder.message)
+          await this.sendFinancialNotification(event, event.user_id, reminder.message);
 
           // Mark reminder as sent
           await supabase
@@ -405,7 +417,7 @@ export class FinancialNotificationService {
               is_sent: true,
               sent_at: new Date().toISOString(),
             })
-            .eq('id', reminder.id)
+            .eq('id', reminder.id);
         } catch (notificationError) {
           logError(
             'process_reminder_notification_failed',
@@ -415,17 +427,17 @@ export class FinancialNotificationService {
               reminderId: reminder.id,
               eventId: event.id,
             }
-          )
+          );
         }
       }
 
       logOperation('process_pending_reminders_complete', 'system', 'event_reminders', undefined, {
         processedCount: reminders?.length || 0,
-      })
+      });
     } catch (error) {
       logError('process_pending_reminders_error', 'system', error as Error, {
         operation: 'processPendingReminders',
-      })
+      });
     }
   }
 
@@ -438,25 +450,27 @@ export class FinancialNotificationService {
     reminderTime: string
   ): Promise<void> {
     try {
-      const eventDate = parseISO(event.eventDate)
-      const formattedDate = format(eventDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+      const eventDate = parseISO(event.eventDate);
+      const formattedDate = format(eventDate, "dd 'de' MMMM 'de' yyyy", {
+        locale: ptBR,
+      });
       const formattedAmount = event.amount
         ? new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
           }).format(Math.abs(event.amount))
-        : ''
+        : '';
 
-      const isPayment = event.amount && event.amount < 0
-      const isReceivable = event.amount && event.amount > 0
+      const isPayment = event.amount && event.amount < 0;
+      const isReceivable = event.amount && event.amount > 0;
 
-      let voiceMessage = ''
+      let voiceMessage = '';
       if (isPayment) {
-        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você tem um pagamento de ${formattedAmount} para ${event.title} agendado para ${formattedDate}. Não se esqueça de realizar o pagamento para evitar juros e multas.`
+        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você tem um pagamento de ${formattedAmount} para ${event.title} agendado para ${formattedDate}. Não se esqueça de realizar o pagamento para evitar juros e multas.`;
       } else if (isReceivable) {
-        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você receberá ${formattedAmount} de ${event.title} em ${formattedDate}. Fique atento ao seu saldo bancário.`
+        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você receberá ${formattedAmount} de ${event.title} em ${formattedDate}. Fique atento ao seu saldo bancário.`;
       } else {
-        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você tem o evento ${event.title} agendado para ${formattedDate}.`
+        voiceMessage = `Olá! Este é um lembrete da AegisWallet. Você tem o evento ${event.title} agendado para ${formattedDate}.`;
       }
 
       // Create voice reminder in database
@@ -466,19 +480,19 @@ export class FinancialNotificationService {
         reminder_type: 'voice',
         message: voiceMessage,
         created_at: new Date().toISOString(),
-      })
+      });
 
       logOperation('create_voice_reminder', userId, 'event_reminders', undefined, {
         eventId: event.id,
         reminderTime,
         messageType: 'voice',
-      })
+      });
     } catch (error) {
       logError('create_voice_reminder', userId, error as Error, {
         eventId: event.id,
         reminderTime,
-      })
-      throw error
+      });
+      throw error;
     }
   }
 
@@ -486,14 +500,14 @@ export class FinancialNotificationService {
    * Update reminder configuration
    */
   updateConfig(newConfig: Partial<FinancialReminderConfig>): void {
-    this.config = { ...this.config, ...newConfig }
+    this.config = { ...this.config, ...newConfig };
   }
 
   /**
    * Get current configuration
    */
   getConfig(): FinancialReminderConfig {
-    return { ...this.config }
+    return { ...this.config };
   }
 }
 
@@ -503,7 +517,7 @@ export class FinancialNotificationService {
 export function createFinancialNotificationService(
   pushConfig: PushConfig
 ): FinancialNotificationService {
-  return new FinancialNotificationService(pushConfig)
+  return new FinancialNotificationService(pushConfig);
 }
 
 /**
@@ -514,7 +528,7 @@ export async function sendBillPaymentReminder(
   userId: string,
   service: FinancialNotificationService
 ): Promise<void> {
-  await service.sendFinancialNotification(event, userId)
+  await service.sendFinancialNotification(event, userId);
 }
 
 export async function sendPixTransferReminder(
@@ -522,7 +536,7 @@ export async function sendPixTransferReminder(
   userId: string,
   service: FinancialNotificationService
 ): Promise<void> {
-  await service.sendFinancialNotification(event, userId)
+  await service.sendFinancialNotification(event, userId);
 }
 
 export async function sendCreditCardReminder(
@@ -530,5 +544,5 @@ export async function sendCreditCardReminder(
   userId: string,
   service: FinancialNotificationService
 ): Promise<void> {
-  await service.sendFinancialNotification(event, userId)
+  await service.sendFinancialNotification(event, userId);
 }

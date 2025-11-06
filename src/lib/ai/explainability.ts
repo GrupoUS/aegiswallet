@@ -3,10 +3,10 @@
  */
 
 export interface Explanation {
-  decision: string
-  reasoning: string[]
-  confidence: number
-  factors: Array<{ name: string; impact: number }>
+  decision: string;
+  reasoning: string[];
+  confidence: number;
+  factors: Array<{ name: string; impact: number }>;
 }
 
 export class ExplainabilityService {
@@ -24,10 +24,10 @@ export class ExplainabilityService {
         { name: 'Valor', impact: 25 },
         { name: 'Padrão', impact: 32 },
       ],
-    }
+    };
   }
 }
 
 export function getExplainabilityService(): ExplainabilityService {
-  return new ExplainabilityService()
+  return new ExplainabilityService();
 }

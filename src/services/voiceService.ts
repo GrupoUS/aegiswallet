@@ -3,110 +3,110 @@
  * Integrates Web Speech API with AI services for voice commands
  */
 
-import { logger } from '../lib/logging/logger'
+import { logger } from '../lib/logging/logger';
 
 // TypeScript interfaces for Web Speech API (not available globally)
 interface SpeechRecognition extends EventTarget {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  maxAlternatives: number
-  onstart: ((event: Event) => void) | null
-  onresult: ((event: SpeechRecognitionEvent) => void) | null
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
-  onend: ((event: Event) => void) | null
-  onaudiostart: ((event: Event) => void) | null
-  onsoundstart: ((event: Event) => void) | null
-  onspeechstart: ((event: Event) => void) | null
-  onspeechend: ((event: Event) => void) | null
-  onsoundend: ((event: Event) => void) | null
-  onaudioend: ((event: Event) => void) | null
-  onnomatch: ((event: SpeechRecognitionEvent) => void) | null
-  start(): void
-  stop(): void
-  abort(): void
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onstart: ((event: Event) => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: ((event: Event) => void) | null;
+  onaudiostart: ((event: Event) => void) | null;
+  onsoundstart: ((event: Event) => void) | null;
+  onspeechstart: ((event: Event) => void) | null;
+  onspeechend: ((event: Event) => void) | null;
+  onsoundend: ((event: Event) => void) | null;
+  onaudioend: ((event: Event) => void) | null;
+  onnomatch: ((event: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
 }
 
 interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList
-  resultIndex: number
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
 }
 
 interface SpeechRecognitionResultList {
-  length: number
-  item(index: number): SpeechRecognitionResult
-  [index: number]: SpeechRecognitionResult
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
-  isFinal: boolean
-  length: number
-  item(index: number): SpeechRecognitionAlternative
-  [index: number]: SpeechRecognitionAlternative
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
 }
 
 interface SpeechRecognitionAlternative {
-  transcript: string
-  confidence: number
+  transcript: string;
+  confidence: number;
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
-  error: string
-  message: string
+  error: string;
+  message: string;
 }
 
 interface SpeechSynthesis extends EventTarget {
-  pending: boolean
-  speaking: boolean
-  paused: boolean
-  onvoiceschanged: ((event: Event) => void) | null
-  speak(utterance: SpeechSynthesisUtterance): void
-  cancel(): void
-  pause(): void
-  resume(): void
-  getVoices(): SpeechSynthesisVoice[]
+  pending: boolean;
+  speaking: boolean;
+  paused: boolean;
+  onvoiceschanged: ((event: Event) => void) | null;
+  speak(utterance: SpeechSynthesisUtterance): void;
+  cancel(): void;
+  pause(): void;
+  resume(): void;
+  getVoices(): SpeechSynthesisVoice[];
 }
 
 interface SpeechSynthesisUtterance extends EventTarget {
-  text: string
-  lang: string
-  voice: SpeechSynthesisVoice | null
-  volume: number
-  rate: number
-  pitch: number
-  onstart: ((event: Event) => void) | null
-  onend: ((event: Event) => void) | null
-  onerror: ((event: SpeechSynthesisErrorEvent) => void) | null
-  onpause: ((event: Event) => void) | null
-  onresume: ((event: Event) => void) | null
-  onmark: ((event: SpeechSynthesisEvent) => void) | null
-  onboundary: ((event: SpeechSynthesisEvent) => void) | null
+  text: string;
+  lang: string;
+  voice: SpeechSynthesisVoice | null;
+  volume: number;
+  rate: number;
+  pitch: number;
+  onstart: ((event: Event) => void) | null;
+  onend: ((event: Event) => void) | null;
+  onerror: ((event: SpeechSynthesisErrorEvent) => void) | null;
+  onpause: ((event: Event) => void) | null;
+  onresume: ((event: Event) => void) | null;
+  onmark: ((event: SpeechSynthesisEvent) => void) | null;
+  onboundary: ((event: SpeechSynthesisEvent) => void) | null;
 }
 
 interface SpeechSynthesisEvent extends Event {
-  name: string
-  charIndex: number
-  elapsedTime: number
+  name: string;
+  charIndex: number;
+  elapsedTime: number;
 }
 
 interface SpeechSynthesisErrorEvent extends SpeechSynthesisEvent {
-  error: string
+  error: string;
 }
 
 interface SpeechSynthesisVoice {
-  name: string
-  lang: string
-  localService: boolean
-  default: boolean
-  voiceURI: string
+  name: string;
+  lang: string;
+  localService: boolean;
+  default: boolean;
+  voiceURI: string;
 }
 
 // Extend Window interface
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition
-    webkitSpeechRecognition: new () => SpeechRecognition
-    SpeechSynthesisUtterance: new (text: string) => SpeechSynthesisUtterance
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechSynthesisUtterance: new (text: string) => SpeechSynthesisUtterance;
   }
 }
 
@@ -118,29 +118,29 @@ export const VOICE_COMMANDS = {
   PIX: ['fazer um pix', 'transferir', 'enviar dinheiro', 'pix'],
   DASHBOARD: ['ir para dashboard', 'dashboard', 'início', 'home'],
   TRANSACTIONS: ['ver transações', 'transações', 'histórico'],
-} as const
+} as const;
 
-export type VoiceCommandType = keyof typeof VOICE_COMMANDS
+export type VoiceCommandType = keyof typeof VOICE_COMMANDS;
 
 export interface VoiceRecognitionResult {
-  transcript: string
-  confidence: number
-  command?: VoiceCommandType
-  intent?: string
+  transcript: string;
+  confidence: number;
+  command?: VoiceCommandType;
+  intent?: string;
 }
 
 export interface VoiceServiceConfig {
-  language?: string
-  continuous?: boolean
-  interimResults?: boolean
-  maxAlternatives?: number
+  language?: string;
+  continuous?: boolean;
+  interimResults?: boolean;
+  maxAlternatives?: number;
 }
 
 class VoiceService {
-  private recognition: SpeechRecognition | null = null
-  private synthesis: SpeechSynthesis | null = null
-  private isListening = false
-  private config: VoiceServiceConfig
+  private recognition: SpeechRecognition | null = null;
+  private synthesis: SpeechSynthesis | null = null;
+  private isListening = false;
+  private config: VoiceServiceConfig;
 
   constructor(config: VoiceServiceConfig = {}) {
     this.config = {
@@ -149,10 +149,10 @@ class VoiceService {
       interimResults: false,
       maxAlternatives: 1,
       ...config,
-    }
+    };
 
-    this.initializeRecognition()
-    this.initializeSynthesis()
+    this.initializeRecognition();
+    this.initializeSynthesis();
   }
 
   private initializeRecognition() {
@@ -160,29 +160,29 @@ class VoiceService {
       logger.warn('Speech Recognition API not supported in this browser', {
         userAgent: navigator.userAgent,
         feature: 'webkitSpeechRecognition|SpeechRecognition',
-      })
-      return
+      });
+      return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    this.recognition = new SpeechRecognition()
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    this.recognition = new SpeechRecognition();
 
     if (this.recognition) {
-      this.recognition.lang = this.config.language || 'pt-BR'
-      this.recognition.continuous = this.config.continuous || false
-      this.recognition.interimResults = this.config.interimResults || false
-      this.recognition.maxAlternatives = this.config.maxAlternatives || 1
+      this.recognition.lang = this.config.language || 'pt-BR';
+      this.recognition.continuous = this.config.continuous || false;
+      this.recognition.interimResults = this.config.interimResults || false;
+      this.recognition.maxAlternatives = this.config.maxAlternatives || 1;
     }
   }
 
   private initializeSynthesis() {
     if ('speechSynthesis' in window) {
-      this.synthesis = window.speechSynthesis
+      this.synthesis = window.speechSynthesis;
     } else {
       logger.warn('Speech Synthesis API not supported in this browser', {
         userAgent: navigator.userAgent,
         feature: 'speechSynthesis',
-      })
+      });
     }
   }
 
@@ -194,32 +194,32 @@ class VoiceService {
     onError?: (error: Error) => void
   ): void {
     if (!this.recognition) {
-      onError?.(new Error('Speech Recognition not available'))
-      return
+      onError?.(new Error('Speech Recognition not available'));
+      return;
     }
 
     if (this.isListening) {
       logger.warn('Already listening to voice commands', {
         component: 'VoiceService',
         action: 'startListening',
-      })
-      return
+      });
+      return;
     }
 
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const result = event.results[event.results.length - 1]
-      const transcript = result[0].transcript.toLowerCase().trim()
-      const confidence = result[0].confidence
+      const result = event.results[event.results.length - 1];
+      const transcript = result[0].transcript.toLowerCase().trim();
+      const confidence = result[0].confidence;
 
-      const command = this.detectCommand(transcript)
+      const command = this.detectCommand(transcript);
 
       onResult({
         transcript,
         confidence,
         command,
         intent: command ? this.getCommandIntent(command) : undefined,
-      })
-    }
+      });
+    };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       logger.voiceError(`Speech recognition error: ${event.error}`, {
@@ -227,31 +227,31 @@ class VoiceService {
         errorMessage: event.message,
         component: 'VoiceService',
         action: 'recognition',
-      })
-      this.isListening = false
-      onError?.(new Error(`Speech recognition error: ${event.error}`))
-    }
+      });
+      this.isListening = false;
+      onError?.(new Error(`Speech recognition error: ${event.error}`));
+    };
 
     this.recognition.onend = () => {
-      this.isListening = false
-    }
+      this.isListening = false;
+    };
 
     try {
-      this.recognition.start()
-      this.isListening = true
+      this.recognition.start();
+      this.isListening = true;
       logger.voiceCommand('Voice recognition started', 1.0, {
         component: 'VoiceService',
         action: 'startListening',
         language: this.config.language,
         continuous: this.config.continuous,
-      })
+      });
     } catch (error) {
       logger.voiceError('Error starting recognition', {
         error: error instanceof Error ? error.message : String(error),
         component: 'VoiceService',
         action: 'startRecognition',
-      })
-      onError?.(error as Error)
+      });
+      onError?.(error as Error);
     }
   }
 
@@ -260,8 +260,8 @@ class VoiceService {
    */
   stopListening(): void {
     if (this.recognition && this.isListening) {
-      this.recognition.stop()
-      this.isListening = false
+      this.recognition.stop();
+      this.isListening = false;
     }
   }
 
@@ -272,11 +272,11 @@ class VoiceService {
     for (const [command, patterns] of Object.entries(VOICE_COMMANDS)) {
       for (const pattern of patterns) {
         if (transcript.includes(pattern)) {
-          return command as VoiceCommandType
+          return command as VoiceCommandType;
         }
       }
     }
-    return undefined
+    return undefined;
   }
 
   /**
@@ -290,8 +290,8 @@ class VoiceService {
       PIX: '/pix',
       DASHBOARD: '/dashboard',
       TRANSACTIONS: '/transactions',
-    }
-    return intentMap[command]
+    };
+    return intentMap[command];
   }
 
   /**
@@ -300,27 +300,27 @@ class VoiceService {
   speak(text: string, options?: Partial<SpeechSynthesisUtterance>): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.synthesis) {
-        reject(new Error('Speech Synthesis not available'))
-        return
+        reject(new Error('Speech Synthesis not available'));
+        return;
       }
 
       // Cancel any ongoing speech
-      this.synthesis.cancel()
+      this.synthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = this.config.language || 'pt-BR'
-      utterance.rate = options?.rate ?? 1.0
-      utterance.pitch = options?.pitch ?? 1.0
-      utterance.volume = options?.volume ?? 1.0
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = this.config.language || 'pt-BR';
+      utterance.rate = options?.rate ?? 1.0;
+      utterance.pitch = options?.pitch ?? 1.0;
+      utterance.volume = options?.volume ?? 1.0;
 
-      utterance.onend = () => resolve()
+      utterance.onend = () => resolve();
       utterance.onerror = (event: any) => {
-        const speechError = event as SpeechSynthesisErrorEvent
-        reject(new Error(`Speech synthesis error: ${speechError.error}`))
-      }
+        const speechError = event as SpeechSynthesisErrorEvent;
+        reject(new Error(`Speech synthesis error: ${speechError.error}`));
+      };
 
-      this.synthesis.speak(utterance as any)
-    })
+      this.synthesis.speak(utterance as any);
+    });
   }
 
   /**
@@ -328,7 +328,7 @@ class VoiceService {
    */
   stopSpeaking(): void {
     if (this.synthesis) {
-      this.synthesis.cancel()
+      this.synthesis.cancel();
     }
   }
 
@@ -336,50 +336,50 @@ class VoiceService {
    * Check if currently listening
    */
   getIsListening(): boolean {
-    return this.isListening
+    return this.isListening;
   }
 
   /**
    * Check if Speech Recognition is supported
    */
   static isSupported(): boolean {
-    return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window
+    return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
   }
 
   /**
    * Check if Speech Synthesis is supported
    */
   static isSynthesisSupported(): boolean {
-    return 'speechSynthesis' in window
+    return 'speechSynthesis' in window;
   }
 
   /**
    * Get available voices
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
-    if (!this.synthesis) return []
-    return this.synthesis.getVoices()
+    if (!this.synthesis) return [];
+    return this.synthesis.getVoices();
   }
 
   /**
    * Get Portuguese voices
    */
   getPortugueseVoices(): SpeechSynthesisVoice[] {
-    return this.getAvailableVoices().filter((voice) => voice.lang.startsWith('pt'))
+    return this.getAvailableVoices().filter((voice) => voice.lang.startsWith('pt'));
   }
 }
 
 // Singleton instance
-let voiceServiceInstance: VoiceService | null = null
+let voiceServiceInstance: VoiceService | null = null;
 
 /**
  * Get or create VoiceService instance
  */
 export function getVoiceService(config?: VoiceServiceConfig): VoiceService {
   if (!voiceServiceInstance) {
-    voiceServiceInstance = new VoiceService(config)
+    voiceServiceInstance = new VoiceService(config);
   }
-  return voiceServiceInstance
+  return voiceServiceInstance;
 }
 
 /**
@@ -395,6 +395,6 @@ export const VOICE_FEEDBACK = {
     `Seu saldo total é ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}`,
   BILLS_RESPONSE: (count: number) => `Você tem ${count} contas pendentes`,
   BUDGET_RESPONSE: (percentage: number) => `Você utilizou ${percentage}% do seu orçamento mensal`,
-} as const
+} as const;
 
-export default VoiceService
+export default VoiceService;

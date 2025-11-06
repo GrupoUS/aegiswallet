@@ -5,48 +5,60 @@
  * LGPD-compliant security infrastructure for AegisWallet
  */
 
-import { createBiometricAuthService, BiometricAuthService, BiometricConfig } from './biometricAuth'
-import { createSMSProvider, SMSProvider, SMSConfig } from './smsProvider'
-import { createPushProvider, PushProvider, PushConfig } from './pushProvider'
-import { createFraudDetectionService, FraudDetectionService, FraudDetectionConfig } from './fraudDetection'
-import { createDeviceFingerprintingService, DeviceFingerprintingService, FingerprintConfig } from './deviceFingerprinting'
+import {
+  type BiometricAuthService,
+  type BiometricConfig,
+  createBiometricAuthService,
+} from './biometricAuth';
+import {
+  createDeviceFingerprintingService,
+  type DeviceFingerprintingService,
+  type FingerprintConfig,
+} from './deviceFingerprinting';
+import {
+  createFraudDetectionService,
+  type FraudDetectionConfig,
+  type FraudDetectionService,
+} from './fraudDetection';
+import { createPushProvider, type PushConfig, type PushProvider } from './pushProvider';
+import { createSMSProvider, type SMSConfig, type SMSProvider } from './smsProvider';
 
 export interface SecurityConfig {
-  biometric: Partial<BiometricConfig>
+  biometric: Partial<BiometricConfig>;
   sms: {
-    enabled: boolean
-    config?: SMSConfig
-  }
+    enabled: boolean;
+    config?: SMSConfig;
+  };
   push: {
-    enabled: boolean
-    config?: PushConfig
-  }
+    enabled: boolean;
+    config?: PushConfig;
+  };
   fraudDetection: {
-    enabled: boolean
-    config?: Partial<FraudDetectionConfig>
-  }
+    enabled: boolean;
+    config?: Partial<FraudDetectionConfig>;
+  };
   deviceFingerprinting: {
-    enabled: boolean
-    config?: Partial<FingerprintConfig>
-  }
+    enabled: boolean;
+    config?: Partial<FingerprintConfig>;
+  };
   monitoring: {
-    enabled: boolean
-    logLevel: 'debug' | 'info' | 'warn' | 'error'
+    enabled: boolean;
+    logLevel: 'debug' | 'info' | 'warn' | 'error';
     alertThresholds: {
-      failedAuthPerHour: number
-      suspiciousActivityPerHour: number
-      accountLockoutThreshold: number
-    }
-  }
+      failedAuthPerHour: number;
+      suspiciousActivityPerHour: number;
+      accountLockoutThreshold: number;
+    };
+  };
 }
 
 export interface SecuritySystem {
-  biometricAuth: BiometricAuthService
-  smsProvider?: SMSProvider
-  pushProvider?: PushProvider
-  fraudDetection?: FraudDetectionService
-  deviceFingerprinting?: DeviceFingerprintingService
-  config: SecurityConfig
+  biometricAuth: BiometricAuthService;
+  smsProvider?: SMSProvider;
+  pushProvider?: PushProvider;
+  fraudDetection?: FraudDetectionService;
+  deviceFingerprinting?: DeviceFingerprintingService;
+  config: SecurityConfig;
 }
 
 /**
@@ -95,8 +107,8 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
         critical: 1.0,
       },
       timeWindows: {
-        short: 1 * 60 * 60 * 1000,    // 1 hour
-        medium: 24 * 60 * 60 * 1000,  // 24 hours
+        short: 1 * 60 * 60 * 1000, // 1 hour
+        medium: 24 * 60 * 60 * 1000, // 24 hours
         long: 7 * 24 * 60 * 60 * 1000, // 7 days
       },
       maxFailedAttempts: 5,
@@ -131,7 +143,7 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       accountLockoutThreshold: 3,
     },
   },
-}
+};
 
 /**
  * Security System Factory
@@ -141,19 +153,16 @@ export class SecuritySystemFactory {
    * Create complete security system
    */
   static async createSecuritySystem(config?: Partial<SecurityConfig>): Promise<SecuritySystem> {
-    const finalConfig = this.mergeConfig(DEFAULT_SECURITY_CONFIG, config || {})
+    const finalConfig = SecuritySystemFactory.mergeConfig(DEFAULT_SECURITY_CONFIG, config || {});
 
     // Validate configuration
-    this.validateConfig(finalConfig)
+    SecuritySystemFactory.validateConfig(finalConfig);
 
     // Initialize security providers
-    const providers = await this.initializeProviders(finalConfig)
+    const providers = await SecuritySystemFactory.initializeProviders(finalConfig);
 
     // Create biometric auth service with all providers
-    const biometricAuth = createBiometricAuthService(
-      finalConfig.biometric,
-      providers
-    )
+    const biometricAuth = createBiometricAuthService(finalConfig.biometric, providers);
 
     return {
       biometricAuth,
@@ -162,7 +171,7 @@ export class SecuritySystemFactory {
       fraudDetection: providers.fraudDetection,
       deviceFingerprinting: providers.deviceFingerprinting,
       config: finalConfig,
-    }
+    };
   }
 
   /**
@@ -175,14 +184,14 @@ export class SecuritySystemFactory {
       push: { enabled: false },
       fraudDetection: { enabled: false },
       deviceFingerprinting: { enabled: false },
-    }
+    };
 
-    const biometricAuth = createBiometricAuthService(config.biometric)
+    const biometricAuth = createBiometricAuthService(config.biometric);
 
     return {
       biometricAuth,
       config,
-    }
+    };
   }
 
   /**
@@ -196,7 +205,10 @@ export class SecuritySystemFactory {
       sms: { enabled: true, ...configOverrides?.sms },
       push: { enabled: true, ...configOverrides?.push },
       fraudDetection: { enabled: true, ...configOverrides?.fraudDetection },
-      deviceFingerprinting: { enabled: true, ...configOverrides?.deviceFingerprinting },
+      deviceFingerprinting: {
+        enabled: true,
+        ...configOverrides?.deviceFingerprinting,
+      },
       monitoring: {
         enabled: true,
         logLevel: 'warn',
@@ -207,9 +219,9 @@ export class SecuritySystemFactory {
         },
         ...configOverrides?.monitoring,
       },
-    }
+    };
 
-    return this.createSecuritySystem(productionConfig)
+    return SecuritySystemFactory.createSecuritySystem(productionConfig);
   }
 
   /**
@@ -240,90 +252,88 @@ export class SecuritySystemFactory {
         },
       },
       monitoring: { ...defaults.monitoring, ...overrides.monitoring },
-    }
+    };
   }
 
   /**
    * Validate security configuration
    */
   private static validateConfig(config: SecurityConfig): void {
-    const errors: string[] = []
+    const errors: string[] = [];
 
     // Validate SMS configuration
     if (config.sms.enabled) {
       if (!config.sms.config?.accountSid) {
-        errors.push('SMS enabled but Twilio Account SID not provided')
+        errors.push('SMS enabled but Twilio Account SID not provided');
       }
       if (!config.sms.config?.authToken) {
-        errors.push('SMS enabled but Twilio Auth Token not provided')
+        errors.push('SMS enabled but Twilio Auth Token not provided');
       }
       if (!config.sms.config?.fromNumber) {
-        errors.push('SMS enabled but Twilio Phone Number not provided')
+        errors.push('SMS enabled but Twilio Phone Number not provided');
       }
     }
 
     // Validate Push configuration
     if (config.push.enabled) {
       if (!config.push.config?.vapidPublicKey) {
-        errors.push('Push enabled but VAPID Public Key not provided')
+        errors.push('Push enabled but VAPID Public Key not provided');
       }
       if (!config.push.config?.vapidPrivateKey) {
-        errors.push('Push enabled but VAPID Private Key not provided')
+        errors.push('Push enabled but VAPID Private Key not provided');
       }
       if (!config.push.config?.vapidSubject) {
-        errors.push('Push enabled but VAPID Subject not provided')
+        errors.push('Push enabled but VAPID Subject not provided');
       }
     }
 
     // Validate biometric configuration
     if (config.biometric.maxPinAttempts < 3) {
-      errors.push('Max PIN attempts should be at least 3 for security')
+      errors.push('Max PIN attempts should be at least 3 for security');
     }
     if (config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
-      errors.push('PIN lockout duration should be at least 5 minutes')
+      errors.push('PIN lockout duration should be at least 5 minutes');
     }
 
     if (errors.length > 0) {
-      throw new Error(`Security configuration validation failed:\n${errors.join('\n')}`)
+      throw new Error(`Security configuration validation failed:\n${errors.join('\n')}`);
     }
   }
 
   /**
    * Initialize security providers
    */
-  private static async initializeProviders(
-    config: SecurityConfig
-  ): Promise<{
-    sms?: SMSProvider
-    push?: PushProvider
-    fraudDetection?: FraudDetectionService
-    deviceFingerprinting?: DeviceFingerprintingService
+  private static async initializeProviders(config: SecurityConfig): Promise<{
+    sms?: SMSProvider;
+    push?: PushProvider;
+    fraudDetection?: FraudDetectionService;
+    deviceFingerprinting?: DeviceFingerprintingService;
   }> {
-    const providers: any = {}
+    const providers: any = {};
 
     // Initialize SMS provider
     if (config.sms.enabled && config.sms.config) {
-      providers.sms = createSMSProvider(config.sms.config)
+      providers.sms = createSMSProvider(config.sms.config);
     }
 
     // Initialize Push provider
     if (config.push.enabled && config.push.config) {
-      providers.push = createPushProvider(config.push.config)
+      providers.push = createPushProvider(config.push.config);
     }
 
     // Initialize Fraud Detection
     if (config.fraudDetection.enabled) {
-      providers.fraudDetection = createFraudDetectionService(config.fraudDetection.config)
+      providers.fraudDetection = createFraudDetectionService(config.fraudDetection.config);
     }
 
     // Initialize Device Fingerprinting
     if (config.deviceFingerprinting.enabled) {
       providers.deviceFingerprinting = createDeviceFingerprintingService(
         config.deviceFingerprinting.config
-      )
+      );
     }
 
-    return providers
+    return providers;
   }
 }
 
@@ -331,99 +341,106 @@ export class SecuritySystemFactory {
  * Security monitoring and alerting system
  */
 export class SecurityMonitor {
-  private config: SecurityConfig['monitoring']
-  private alertCounts: Map<string, number> = new Map()
+  private config: SecurityConfig['monitoring'];
+  private alertCounts: Map<string, number> = new Map();
 
   constructor(config: SecurityConfig['monitoring']) {
-    this.config = config
-    this.initializeMonitoring()
+    this.config = config;
+    this.initializeMonitoring();
   }
 
   /**
    * Initialize security monitoring
    */
   private initializeMonitoring(): void {
-    if (!this.config.enabled) return
+    if (!this.config.enabled) return;
 
     // Set up periodic monitoring
     setInterval(() => {
-      this.performHealthCheck()
-    }, 60000) // Every minute
+      this.performHealthCheck();
+    }, 60000); // Every minute
 
     // Set up daily cleanup
-    setInterval(() => {
-      this.performDailyCleanup()
-    }, 24 * 60 * 60 * 1000) // Every 24 hours
+    setInterval(
+      () => {
+        this.performDailyCleanup();
+      },
+      24 * 60 * 60 * 1000
+    ); // Every 24 hours
   }
 
   /**
    * Log security event with monitoring
    */
   logSecurityEvent(event: {
-    userId: string
-    eventType: string
-    method: string
-    metadata?: Record<string, any>
+    userId: string;
+    eventType: string;
+    method: string;
+    metadata?: Record<string, any>;
   }): void {
-    if (!this.config.enabled) return
+    if (!this.config.enabled) return;
 
-    const eventKey = `${event.eventType}_${event.userId}`
-    const currentCount = this.alertCounts.get(eventKey) || 0
-    this.alertCounts.set(eventKey, currentCount + 1)
+    const eventKey = `${event.eventType}_${event.userId}`;
+    const currentCount = this.alertCounts.get(eventKey) || 0;
+    this.alertCounts.set(eventKey, currentCount + 1);
 
     // Check alert thresholds
-    this.checkAlertThresholds(event)
+    this.checkAlertThresholds(event);
   }
 
   /**
    * Check if alert thresholds are exceeded
    */
   private checkAlertThresholds(event: {
-    userId: string
-    eventType: string
-    method: string
-    metadata?: Record<string, any>
+    userId: string;
+    eventType: string;
+    method: string;
+    metadata?: Record<string, any>;
   }): void {
-    const eventKey = `${event.eventType}_${event.userId}`
-    const count = this.alertCounts.get(eventKey) || 0
+    const eventKey = `${event.eventType}_${event.userId}`;
+    const count = this.alertCounts.get(eventKey) || 0;
 
     // Check failed authentication threshold
-    if (event.eventType === 'auth_failure' && 
-        count >= this.config.alertThresholds.failedAuthPerHour) {
+    if (
+      event.eventType === 'auth_failure' &&
+      count >= this.config.alertThresholds.failedAuthPerHour
+    ) {
       this.triggerAlert('high_failed_auth_rate', {
         userId: event.userId,
         count,
         threshold: this.config.alertThresholds.failedAuthPerHour,
-      })
+      });
     }
 
     // Check suspicious activity threshold
-    if (event.eventType === 'suspicious_activity' && 
-        count >= this.config.alertThresholds.suspiciousActivityPerHour) {
+    if (
+      event.eventType === 'suspicious_activity' &&
+      count >= this.config.alertThresholds.suspiciousActivityPerHour
+    ) {
       this.triggerAlert('high_suspicious_activity', {
         userId: event.userId,
         count,
         threshold: this.config.alertThresholds.suspiciousActivityPerHour,
-      })
+      });
     }
 
     // Check account lockout threshold
-    if (event.eventType === 'account_locked' && 
-        count >= this.config.alertThresholds.accountLockoutThreshold) {
+    if (
+      event.eventType === 'account_locked' &&
+      count >= this.config.alertThresholds.accountLockoutThreshold
+    ) {
       this.triggerAlert('account_lockout_threshold', {
         userId: event.userId,
         count,
         threshold: this.config.alertThresholds.accountLockoutThreshold,
-      })
+      });
     }
   }
 
   /**
    * Trigger security alert
    */
-  private triggerAlert(alertType: string, metadata: Record<string, any>): void {
-    console.warn(`[SecurityMonitor] ALERT: ${alertType}`, metadata)
-
+  private triggerAlert(_alertType: string, _metadata: Record<string, any>): void {
     // In production, this would send alerts to:
     // - Security team
     // - Admin dashboard
@@ -449,25 +466,28 @@ export class SecurityMonitor {
    */
   private performDailyCleanup(): void {
     // Reset alert counters
-    this.alertCounts.clear()
+    this.alertCounts.clear();
   }
 
   /**
    * Get monitoring statistics
    */
   getStatistics(): {
-    totalAlerts: number
-    activeAlerts: number
-    alertCounts: Record<string, number>
+    totalAlerts: number;
+    activeAlerts: number;
+    alertCounts: Record<string, number>;
   } {
-    const totalAlerts = Array.from(this.alertCounts.values()).reduce((sum, count) => sum + count, 0)
-    const activeAlerts = this.alertCounts.size
+    const totalAlerts = Array.from(this.alertCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+    const activeAlerts = this.alertCounts.size;
 
     return {
       totalAlerts,
       activeAlerts,
       alertCounts: Object.fromEntries(this.alertCounts),
-    }
+    };
   }
 }
 
@@ -477,23 +497,23 @@ export class SecurityMonitor {
 export async function initializeSecurity(
   config?: Partial<SecurityConfig>
 ): Promise<SecuritySystem> {
-  return SecuritySystemFactory.createSecuritySystem(config)
+  return SecuritySystemFactory.createSecuritySystem(config);
 }
 
 export function initializeMinimalSecurity(): SecuritySystem {
-  return SecuritySystemFactory.createMinimalSecuritySystem()
+  return SecuritySystemFactory.createMinimalSecuritySystem();
 }
 
 export async function initializeProductionSecurity(
   configOverrides?: Partial<SecurityConfig>
 ): Promise<SecuritySystem> {
-  return SecuritySystemFactory.createProductionSecuritySystem(configOverrides)
+  return SecuritySystemFactory.createProductionSecuritySystem(configOverrides);
 }
 
+export * from './auditLogger';
 // Export all security components
-export * from './biometricAuth'
-export * from './smsProvider'
-export * from './pushProvider'
-export * from './fraudDetection'
-export * from './deviceFingerprinting'
-export * from './auditLogger'
+export * from './biometricAuth';
+export * from './deviceFingerprinting';
+export * from './fraudDetection';
+export * from './pushProvider';
+export * from './smsProvider';

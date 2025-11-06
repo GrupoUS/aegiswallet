@@ -1,48 +1,48 @@
 // PIX API stub implementation for Brazilian instant payments
 // This is a mock implementation for development purposes
 
-export type PixKeyType = 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
+export type PixKeyType = 'cpf' | 'cnpj' | 'email' | 'phone' | 'random';
 
 export interface PixKey {
-  id: string
-  type: PixKeyType
-  value: string
-  account_id: string
-  created_at: string
-  status: 'active' | 'inactive' | 'pending'
+  id: string;
+  type: PixKeyType;
+  value: string;
+  account_id: string;
+  created_at: string;
+  status: 'active' | 'inactive' | 'pending';
 }
 
 export interface PixTransaction {
-  id: string
-  amount: number
-  description?: string
+  id: string;
+  amount: number;
+  description?: string;
   sender: {
-    name: string
-    document: string
-    bank: string
-    key?: string
-  }
+    name: string;
+    document: string;
+    bank: string;
+    key?: string;
+  };
   receiver: {
-    name: string
-    document: string
-    bank: string
-    key: string
-  }
-  status: 'pending' | 'completed' | 'failed' | 'cancelled'
-  created_at: string
-  completed_at?: string
-  end_to_end_id?: string
-  transaction_id: string
+    name: string;
+    document: string;
+    bank: string;
+    key: string;
+  };
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  created_at: string;
+  completed_at?: string;
+  end_to_end_id?: string;
+  transaction_id: string;
 }
 
 export interface PixQRCode {
-  id: string
-  qr_code: string
-  qr_code_url: string
-  amount?: number
-  description?: string
-  expires_at: string
-  status: 'active' | 'expired' | 'used'
+  id: string;
+  qr_code: string;
+  qr_code_url: string;
+  amount?: number;
+  description?: string;
+  expires_at: string;
+  status: 'active' | 'expired' | 'used';
 }
 
 // Mock data for development
@@ -63,7 +63,7 @@ const mockPixKeys: PixKey[] = [
     created_at: '2024-01-20T14:30:00Z',
     status: 'active',
   },
-]
+];
 
 const mockPixTransactions: PixTransaction[] = [
   {
@@ -88,7 +88,7 @@ const mockPixTransactions: PixTransaction[] = [
     end_to_end_id: 'E12345678202410151230000000001',
     transaction_id: 'TXN_PIX_001',
   },
-]
+];
 
 /**
  * PIX API Client - Stub Implementation
@@ -96,34 +96,27 @@ const mockPixTransactions: PixTransaction[] = [
  * In production, this would integrate with actual PIX infrastructure
  */
 export class PixApiClient {
-  private baseUrl: string
-  private apiKey: string
-
   constructor(apiKey: string, environment: 'sandbox' | 'production' = 'sandbox') {
-    this.apiKey = apiKey
+    this.apiKey = apiKey;
     this.baseUrl =
-      environment === 'sandbox' ? 'https://sandbox-pix.bcb.gov.br' : 'https://api-pix.bcb.gov.br'
+      environment === 'sandbox' ? 'https://sandbox-pix.bcb.gov.br' : 'https://api-pix.bcb.gov.br';
   }
 
   /**
    * Get user's PIX keys
    */
-  async getPixKeys(userId: string): Promise<PixKey[]> {
+  async getPixKeys(_userId: string): Promise<PixKey[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    console.log(`Fetching PIX keys for user: ${userId}`)
-    return mockPixKeys
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockPixKeys;
   }
 
   /**
    * Create a new PIX key
    */
-  async createPixKey(userId: string, type: PixKeyType, value: string): Promise<PixKey> {
+  async createPixKey(_userId: string, type: PixKeyType, value: string): Promise<PixKey> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    console.log(`Creating PIX key for user: ${userId}`, { type, value })
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const newKey: PixKey = {
       id: `key_${Date.now()}`,
@@ -132,24 +125,22 @@ export class PixApiClient {
       account_id: 'acc_001', // Mock account
       created_at: new Date().toISOString(),
       status: 'pending',
-    }
+    };
 
-    return newKey
+    return newKey;
   }
 
   /**
    * Send PIX payment
    */
   async sendPixPayment(
-    fromAccountId: string,
+    _fromAccountId: string,
     toPixKey: string,
     amount: number,
     description?: string
   ): Promise<PixTransaction> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    console.log(`Sending PIX payment`, { fromAccountId, toPixKey, amount, description })
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const transaction: PixTransaction = {
       id: `pix_${Date.now()}`,
@@ -177,24 +168,22 @@ export class PixApiClient {
         .toString()
         .padStart(6, '0')}`,
       transaction_id: `TXN_PIX_${Date.now()}`,
-    }
+    };
 
-    return transaction
+    return transaction;
   }
 
   /**
    * Generate PIX QR Code
    */
   async generateQRCode(
-    accountId: string,
+    _accountId: string,
     amount?: number,
     description?: string,
     expiresInMinutes: number = 30
   ): Promise<PixQRCode> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 600))
-
-    console.log(`Generating PIX QR Code`, { accountId, amount, description })
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     const qrCode: PixQRCode = {
       id: `qr_${Date.now()}`,
@@ -208,35 +197,33 @@ export class PixApiClient {
       description,
       expires_at: new Date(Date.now() + expiresInMinutes * 60 * 1000).toISOString(),
       status: 'active',
-    }
+    };
 
-    return qrCode
+    return qrCode;
   }
 
   /**
    * Get PIX transaction history
    */
   async getPixTransactions(
-    accountId: string,
+    _accountId: string,
     startDate?: string,
     endDate?: string
   ): Promise<PixTransaction[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 700))
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
-    console.log(`Fetching PIX transactions for account: ${accountId}`, { startDate, endDate })
-
-    let transactions = [...mockPixTransactions]
+    let transactions = [...mockPixTransactions];
 
     // Apply date filters if provided
     if (startDate) {
-      transactions = transactions.filter((t) => t.created_at >= startDate)
+      transactions = transactions.filter((t) => t.created_at >= startDate);
     }
     if (endDate) {
-      transactions = transactions.filter((t) => t.created_at <= endDate)
+      transactions = transactions.filter((t) => t.created_at <= endDate);
     }
 
-    return transactions
+    return transactions;
   }
 
   /**
@@ -246,40 +233,38 @@ export class PixApiClient {
     pixKey: string
   ): Promise<{ valid: boolean; type?: PixKeyType; name?: string }> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 400))
-
-    console.log(`Validating PIX key: ${pixKey}`)
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     // Simple validation logic (mock)
     if (pixKey.includes('@')) {
-      return { valid: true, type: 'email', name: 'Usuário Email' }
+      return { valid: true, type: 'email', name: 'Usuário Email' };
     } else if (pixKey.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-      return { valid: true, type: 'cpf', name: 'Usuário CPF' }
+      return { valid: true, type: 'cpf', name: 'Usuário CPF' };
     } else if (pixKey.match(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)) {
-      return { valid: true, type: 'phone', name: 'Usuário Telefone' }
+      return { valid: true, type: 'phone', name: 'Usuário Telefone' };
     } else if (pixKey.length === 32) {
-      return { valid: true, type: 'random', name: 'Usuário Chave Aleatória' }
+      return { valid: true, type: 'random', name: 'Usuário Chave Aleatória' };
     }
 
-    return { valid: false }
+    return { valid: false };
   }
 }
 
 // Default client instance
-export const pixClient = new PixApiClient(process.env.PIX_API_KEY || 'mock_pix_key', 'sandbox')
+export const pixClient = new PixApiClient(process.env.PIX_API_KEY || 'mock_pix_key', 'sandbox');
 
 // PIX utility functions
 export const pixUtils = {
   formatPixKey: (key: string, type: PixKeyType) => {
     switch (type) {
       case 'cpf':
-        return key.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        return key.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
       case 'cnpj':
-        return key.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+        return key.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
       case 'phone':
-        return key.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3')
+        return key.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
       default:
-        return key
+        return key;
     }
   },
 
@@ -290,19 +275,19 @@ export const pixUtils = {
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       phone: /^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/,
       random: /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i,
-    }
+    };
 
-    return patterns[type]?.test(key) || false
+    return patterns[type]?.test(key) || false;
   },
 
   generateEndToEndId: () => {
     const timestamp = new Date()
       .toISOString()
       .replace(/[-:T.Z]/g, '')
-      .slice(0, 14)
+      .slice(0, 14);
     const random = Math.floor(Math.random() * 1000000)
       .toString()
-      .padStart(6, '0')
-    return `E12345678${timestamp}${random}`
+      .padStart(6, '0');
+    return `E12345678${timestamp}${random}`;
   },
-}
+};

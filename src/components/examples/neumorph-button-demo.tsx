@@ -1,11 +1,11 @@
-import { NeumorphButton } from '@/components/ui'
+import { NeumorphButton } from '@/components/ui';
 
 export function NeumorphButtonDemo() {
   return (
     <div className="flex flex-col gap-4 p-8">
-      <h2 className="text-2xl font-bold mb-4">Neumorph Button Examples</h2>
+      <h2 className="mb-4 font-bold text-2xl">Neumorph Button Examples</h2>
 
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         <NeumorphButton intent="default">Default Button</NeumorphButton>
 
         <NeumorphButton intent="primary">Primary Button</NeumorphButton>
@@ -15,7 +15,7 @@ export function NeumorphButtonDemo() {
         <NeumorphButton intent="danger">Danger Button</NeumorphButton>
       </div>
 
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         <NeumorphButton size="small">Small Button</NeumorphButton>
 
         <NeumorphButton size="medium">Medium Button</NeumorphButton>
@@ -23,7 +23,7 @@ export function NeumorphButtonDemo() {
         <NeumorphButton size="large">Large Button</NeumorphButton>
       </div>
 
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         <NeumorphButton loading>Loading Button</NeumorphButton>
 
         <NeumorphButton disabled>Disabled Button</NeumorphButton>
@@ -31,13 +31,13 @@ export function NeumorphButtonDemo() {
         <NeumorphButton fullWidth>Full Width Button</NeumorphButton>
       </div>
 
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         <NeumorphButton onClick={() => alert('Button clicked!')}>Click Me</NeumorphButton>
 
-        <NeumorphButton intent="primary" onClick={() => console.log('Primary button clicked')}>
+        <NeumorphButton intent="primary" onClick={() => {}}>
           Console Log
         </NeumorphButton>
       </div>
     </div>
-  )
+  );
 }

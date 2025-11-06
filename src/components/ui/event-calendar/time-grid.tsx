@@ -1,18 +1,18 @@
-import { format, isSameDay } from 'date-fns'
-import { cn } from '@/lib/utils'
-import { EventCard } from './event-card'
-import type { CalendarEvent, EventPosition, TimeSlot, WeekDay } from './types'
+import { format, isSameDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { EventCard } from './event-card';
+import type { CalendarEvent, EventPosition, TimeSlot, WeekDay } from './types';
 
 interface TimeGridProps {
-  weekDays: WeekDay[]
-  hours: TimeSlot[]
-  events: CalendarEvent[]
-  onEventUpdate?: (event: CalendarEvent) => void
-  onEventEdit?: (event: CalendarEvent) => void
+  weekDays: WeekDay[];
+  hours: TimeSlot[];
+  events: CalendarEvent[];
+  onEventUpdate?: (event: CalendarEvent) => void;
+  onEventEdit?: (event: CalendarEvent) => void;
 }
 
-const HOUR_HEIGHT = 60 // pixels per hour
-const START_HOUR = 8
+const HOUR_HEIGHT = 60; // pixels per hour
+const START_HOUR = 8;
 
 function calculateEventPosition(
   event: CalendarEvent,
@@ -20,40 +20,40 @@ function calculateEventPosition(
   weekDays: WeekDay[]
 ): EventPosition | null {
   // Find which day this event belongs to
-  const eventDay = weekDays.findIndex((day) => isSameDay(day.date, event.start))
+  const eventDay = weekDays.findIndex((day) => isSameDay(day.date, event.start));
 
-  if (eventDay !== dayIndex) return null
+  if (eventDay !== dayIndex) return null;
 
   // Calculate position
-  const startMinutes = event.start.getHours() * 60 + event.start.getMinutes()
-  const endMinutes = event.end.getHours() * 60 + event.end.getMinutes()
-  const startOffset = startMinutes - START_HOUR * 60
-  const duration = endMinutes - startMinutes
+  const startMinutes = event.start.getHours() * 60 + event.start.getMinutes();
+  const endMinutes = event.end.getHours() * 60 + event.end.getMinutes();
+  const startOffset = startMinutes - START_HOUR * 60;
+  const duration = endMinutes - startMinutes;
 
   // Skip events outside visible hours
-  if (startOffset < 0 || startOffset > 12 * 60) return null
+  if (startOffset < 0 || startOffset > 12 * 60) return null;
 
   return {
     top: (startOffset / 60) * HOUR_HEIGHT,
     left: `${(dayIndex / 7) * 100}%`,
     height: (duration / 60) * HOUR_HEIGHT,
     width: `${(1 / 7) * 100}%`,
-  }
+  };
 }
 
 export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps) {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header with days */}
-      <div className="sticky top-0 z-20 bg-background border-b grid grid-cols-8">
-        <div className="col-span-1 p-3 text-xs text-muted-foreground border-r">GMT-3</div>
+      <div className="sticky top-0 z-20 grid grid-cols-8 border-b bg-background">
+        <div className="col-span-1 border-r p-3 text-muted-foreground text-xs">GMT-3</div>
         {weekDays.map((day, index) => (
           <div
             key={index}
-            className={cn('col-span-1 p-3 text-center border-r', day.isToday && 'bg-primary/5')}
+            className={cn('col-span-1 border-r p-3 text-center', day.isToday && 'bg-primary/5')}
           >
-            <div className="text-xs text-muted-foreground">{format(day.date, 'EEE')}</div>
-            <div className={cn('text-lg font-semibold mt-1', day.isToday && 'text-primary')}>
+            <div className="text-muted-foreground text-xs">{format(day.date, 'EEE')}</div>
+            <div className={cn('mt-1 font-semibold text-lg', day.isToday && 'text-primary')}>
               {format(day.date, 'dd')}
             </div>
           </div>
@@ -70,7 +70,7 @@ export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps
             style={{ height: `${HOUR_HEIGHT}px` }}
           >
             {/* Hour label */}
-            <div className="col-span-1 p-2 text-xs text-muted-foreground border-r">
+            <div className="col-span-1 border-r p-2 text-muted-foreground text-xs">
               {timeSlot.label}
             </div>
 
@@ -85,12 +85,12 @@ export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps
         ))}
 
         {/* Events layer */}
-        <div className="absolute inset-0 pointer-events-none" style={{ left: `${(1 / 8) * 100}%` }}>
+        <div className="pointer-events-none absolute inset-0" style={{ left: `${(1 / 8) * 100}%` }}>
           {weekDays.map((_, dayIndex) => (
             <div key={dayIndex}>
               {events.map((event) => {
-                const position = calculateEventPosition(event, dayIndex, weekDays)
-                if (!position) return null
+                const position = calculateEventPosition(event, dayIndex, weekDays);
+                if (!position) return null;
 
                 return (
                   <EventCard
@@ -99,12 +99,12 @@ export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps
                     position={position}
                     onEdit={onEventEdit}
                   />
-                )
+                );
               })}
             </div>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }

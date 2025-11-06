@@ -5,13 +5,13 @@ import {
   Outlet,
   useLocation,
   useNavigate,
-} from '@tanstack/react-router'
-import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react'
-import { motion } from 'motion/react'
+} from '@tanstack/react-router';
+import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react';
+import { motion } from 'motion/react';
 
-import { CalendarProvider } from '@/components/calendar/calendar-context'
-import { TRPCProvider } from '@/components/providers/TRPCProvider'
-import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { CalendarProvider } from '@/components/calendar/calendar-context';
+import { TRPCProvider } from '@/components/providers/TRPCProvider';
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import {
   Sidebar,
   SidebarBody,
@@ -19,66 +19,66 @@ import {
   SidebarLink,
   SidebarProvider,
   useSidebar,
-} from '@/components/ui/sidebar'
-import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/sidebar';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 function ErrorBoundary({ error }: ErrorComponentProps) {
   return (
-    <div className="p-4 text-destructive bg-destructive/10 min-h-screen flex flex-col items-center justify-center">
-      <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-destructive mb-4">Oops, something went wrong!</h2>
-        <p className="text-destructive mb-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-destructive/10 p-4 text-destructive">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg">
+        <h2 className="mb-4 font-bold text-2xl text-destructive">Oops, something went wrong!</h2>
+        <p className="mb-4 text-destructive">
           We encountered an unexpected error. Please try again later.
         </p>
-        <pre className="bg-destructive/10 p-4 rounded-md text-sm text-destructive overflow-auto">
+        <pre className="overflow-auto rounded-md bg-destructive/10 p-4 text-destructive text-sm">
           <code>{error.message}</code>
           {error.stack && <div className="mt-4 text-xs">{error.stack}</div>}
         </pre>
       </div>
     </div>
-  )
+  );
 }
 
 export const Route = createRootRoute({
   component: RootComponent,
   errorComponent: ErrorBoundary,
-})
+});
 
 function RootComponent() {
-  const location = useLocation()
+  const location = useLocation();
 
   // Pages that should not show the sidebar
-  const noSidebarPages = ['/login']
-  const showSidebar = !noSidebarPages.includes(location.pathname)
+  const noSidebarPages = ['/login'];
+  const showSidebar = !noSidebarPages.includes(location.pathname);
 
   const links = [
     {
       label: 'Dashboard',
       href: '/dashboard',
-      icon: <Home className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+      icon: <Home className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
     },
     {
       label: 'Saldo',
       href: '/saldo',
-      icon: <Wallet className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+      icon: <Wallet className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
     },
     {
       label: 'Calendário',
       href: '/calendario',
-      icon: <Calendar className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+      icon: <Calendar className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
     },
     {
       label: 'Contas',
       href: '/contas',
-      icon: <FileText className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+      icon: <FileText className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
     },
     {
       label: 'PIX',
       href: '/pix',
-      icon: <Send className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+      icon: <Send className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
     },
-  ]
+  ];
 
   // Render without sidebar for login page
   if (!showSidebar) {
@@ -90,7 +90,7 @@ function RootComponent() {
           </div>
         </CalendarProvider>
       </TRPCProvider>
-    )
+    );
   }
 
   // Render with sidebar for authenticated pages
@@ -101,7 +101,7 @@ function RootComponent() {
           <div className="flex h-screen w-full">
             <Sidebar>
               <SidebarBody className="justify-between gap-10">
-                <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
                   <SidebarContent>
                     <SidebarContentWrapper links={links} />
                   </SidebarContent>
@@ -114,7 +114,7 @@ function RootComponent() {
                     link={{
                       label: 'Assistente de Voz',
                       href: '/',
-                      icon: <Mic className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />,
+                      icon: <Mic className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
                     }}
                   />
                   <LogoutButton />
@@ -128,11 +128,11 @@ function RootComponent() {
         </SidebarProvider>
       </CalendarProvider>
     </TRPCProvider>
-  )
+  );
 }
 
 const SidebarContentWrapper = ({ links }: { links: any[] }) => {
-  const { open } = useSidebar()
+  const { open } = useSidebar();
 
   return (
     <>
@@ -143,62 +143,65 @@ const SidebarContentWrapper = ({ links }: { links: any[] }) => {
         ))}
       </div>
     </>
-  )
-}
+  );
+};
 
 const Logo = () => {
   return (
     <Link
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-foreground py-1 relative z-20"
+      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm"
     >
-      <div className="h-5 w-6 bg-gradient-to-r from-primary to-accent rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-      <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-pre">
+      <div className="h-5 w-6 flex-shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-gradient-to-r from-primary to-accent" />
+      <span className="whitespace-pre bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-transparent text-xl">
         AegisWallet
       </span>
     </Link>
-  )
-}
+  );
+};
 
 const LogoIcon = () => {
   return (
     <Link
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-foreground py-1 relative z-20"
+      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm"
     >
-      <div className="h-5 w-6 bg-gradient-to-r from-primary to-accent rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <div className="h-5 w-6 flex-shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-gradient-to-r from-primary to-accent" />
     </Link>
-  )
-}
+  );
+};
 
 const LogoutButton = () => {
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-  const { open } = useSidebar()
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const { open } = useSidebar();
 
   const handleLogout = async () => {
-    await signOut()
-    navigate({ to: '/login', search: { redirect: '/dashboard', error: undefined } })
-  }
+    await signOut();
+    navigate({
+      to: '/login',
+      search: { redirect: '/dashboard', error: undefined },
+    });
+  };
 
   return (
     <button
       onClick={handleLogout}
       className={cn(
-        'flex items-center justify-start gap-2 group/sidebar py-2 w-full text-left',
-        'hover:bg-sidebar-accent rounded-md px-2 transition-colors'
+        'group/sidebar flex w-full items-center justify-start gap-2 py-2 text-left',
+        'rounded-md px-2 transition-colors hover:bg-sidebar-accent'
       )}
     >
-      <LogOut className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />
+      <LogOut className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />
       <motion.span
         animate={{
           display: open ? 'inline-block' : 'none',
           opacity: open ? 1 : 0,
         }}
-        className="text-sidebar-foreground text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="!p-0 !m-0 inline-block whitespace-pre text-sidebar-foreground text-sm transition duration-150 group-hover/sidebar:translate-x-1"
       >
         Sair
       </motion.span>
     </button>
-  )
-}
+  );
+};

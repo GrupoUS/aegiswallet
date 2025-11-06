@@ -3,8 +3,8 @@
  * Validates logging functionality, data sanitization, and environment configuration
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Logger, LogLevel } from "../lib/logging/logger";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Logger, LogLevel } from '../lib/logging/logger';
 
 // Removed unused imports - LoggerProvider and ReactNode not used in current tests
 
@@ -16,7 +16,7 @@ let testLogger: Logger;
 
 // Mock fetch for remote logging is defined globally in setup.ts
 
-describe("Logger Core Functionality", () => {
+describe('Logger Core Functionality', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     testLogger = new Logger();
@@ -28,11 +28,11 @@ describe("Logger Core Functionality", () => {
     });
   });
 
-  it("should log messages at different levels", () => {
-    testLogger.debug("Debug message", { debug: true });
-    testLogger.info("Info message", { info: true });
-    testLogger.warn("Warning message", { warn: true });
-    testLogger.error("Error message", { error: true });
+  it('should log messages at different levels', () => {
+    testLogger.debug('Debug message', { debug: true });
+    testLogger.info('Info message', { info: true });
+    testLogger.warn('Warning message', { warn: true });
+    testLogger.error('Error message', { error: true });
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(4);
@@ -42,13 +42,13 @@ describe("Logger Core Functionality", () => {
     expect(logs[3].level).toBe(LogLevel.ERROR);
   });
 
-  it("should respect log level configuration", () => {
+  it('should respect log level configuration', () => {
     testLogger.updateConfig({ level: LogLevel.WARN });
 
-    testLogger.debug("Debug message");
-    testLogger.info("Info message");
-    testLogger.warn("Warning message");
-    testLogger.error("Error message");
+    testLogger.debug('Debug message');
+    testLogger.info('Info message');
+    testLogger.warn('Warning message');
+    testLogger.error('Error message');
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(2);
@@ -56,128 +56,126 @@ describe("Logger Core Functionality", () => {
     expect(logs[1].level).toBe(LogLevel.ERROR);
   });
 
-  it("should include proper metadata in log entries", () => {
-    testLogger.info("Test message", { userId: "123", action: "test" });
+  it('should include proper metadata in log entries', () => {
+    testLogger.info('Test message', { userId: '123', action: 'test' });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
     expect(log).toMatchObject({
       level: LogLevel.INFO,
-      message: "Test message",
-      context: { userId: "123", action: "test" },
+      message: 'Test message',
+      context: { userId: '123', action: 'test' },
       sessionId: expect.stringMatching(/^session_\d+_\w+$/),
     });
-    expect(log.timestamp).toMatch(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-    );
+    expect(log.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
 
-  it("should sanitize sensitive data in production mode", () => {
+  it('should sanitize sensitive data in production mode', () => {
     testLogger.updateConfig({ sanitizeData: true });
 
     const sensitiveData = {
-      email: "user@example.com",
-      password: "secret123",
-      token: "abc123xyz",
+      email: 'user@example.com',
+      password: 'secret123',
+      token: 'abc123xyz',
       balance: 1500.5,
-      cpf: "123.456.789-00",
+      cpf: '123.456.789-00',
       nested: {
-        secretKey: "hidden",
-        normalField: "visible",
+        secretKey: 'hidden',
+        normalField: 'visible',
       },
     };
 
-    testLogger.info("Sensitive data test", sensitiveData);
+    testLogger.info('Sensitive data test', sensitiveData);
 
     const logs = testLogger.getLogs();
     const context = logs[0].context;
 
     expect(context).toEqual({
-      email: "[REDACTED]",
-      password: "[REDACTED]",
-      token: "[REDACTED]",
-      balance: "[REDACTED]",
-      cpf: "[REDACTED]",
+      email: '[REDACTED]',
+      password: '[REDACTED]',
+      token: '[REDACTED]',
+      balance: '[REDACTED]',
+      cpf: '[REDACTED]',
       nested: {
-        secretKey: "[REDACTED]",
-        normalField: "visible",
+        secretKey: '[REDACTED]',
+        normalField: 'visible',
       },
     });
   });
 
-  it("should handle voice command logging", () => {
-    testLogger.voiceCommand("What is my balance?", 0.95, {
+  it('should handle voice command logging', () => {
+    testLogger.voiceCommand('What is my balance?', 0.95, {
       processingTime: 250,
-      language: "pt-BR",
+      language: 'pt-BR',
     });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
-    expect(log.message).toBe("Voice command processed");
+    expect(log.message).toBe('Voice command processed');
     expect(log.context).toMatchObject({
-      command: "What is my balance?",
+      command: 'What is my balance?',
       confidence: 0.95,
       processingTime: 250,
-      language: "pt-BR",
+      language: 'pt-BR',
     });
   });
 
-  it("should handle authentication event logging", () => {
-    testLogger.authEvent("login_success", "user123abc", {
-      method: "google_oauth",
+  it('should handle authentication event logging', () => {
+    testLogger.authEvent('login_success', 'user123abc', {
+      method: 'google_oauth',
       timestamp: Date.now(),
     });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
-    expect(log.message).toBe("Authentication event");
+    expect(log.message).toBe('Authentication event');
     expect(log.context).toMatchObject({
-      event: "login_success",
-      userId: "user123a...", // Truncated for privacy
-      method: "google_oauth",
+      event: 'login_success',
+      userId: 'user123a...', // Truncated for privacy
+      method: 'google_oauth',
     });
   });
 
-  it("should handle security event logging", () => {
-    testLogger.securityEvent("suspicious_login_attempt", {
-      ip: "192.168.1.100",
-      userAgent: "Mozilla/5.0...",
+  it('should handle security event logging', () => {
+    testLogger.securityEvent('suspicious_login_attempt', {
+      ip: '192.168.1.100',
+      userAgent: 'Mozilla/5.0...',
       attempts: 5,
     });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
-    expect(log.message).toBe("Security event");
+    expect(log.message).toBe('Security event');
     expect(log.context).toMatchObject({
-      event: "suspicious_login_attempt",
-      ip: "192.168.1.100",
-      userAgent: "Mozilla/5.0...",
+      event: 'suspicious_login_attempt',
+      ip: '192.168.1.100',
+      userAgent: 'Mozilla/5.0...',
       attempts: 5,
     });
   });
 
-  it("should handle user action logging", () => {
-    testLogger.userAction("button_clicked", "DashboardComponent", {
-      buttonId: "balance-button",
+  it('should handle user action logging', () => {
+    testLogger.userAction('button_clicked', 'DashboardComponent', {
+      buttonId: 'balance-button',
       timestamp: Date.now(),
     });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
-    expect(log.message).toBe("User action");
+    expect(log.message).toBe('User action');
     expect(log.context).toMatchObject({
-      action: "button_clicked",
-      component: "DashboardComponent",
-      buttonId: "balance-button",
+      action: 'button_clicked',
+      component: 'DashboardComponent',
+      buttonId: 'balance-button',
     });
   });
 
-  it("should limit log history to prevent memory issues", () => {
+  it('should limit log history to prevent memory issues', () => {
     testLogger.updateConfig({ maxEntries: 5 });
 
     // Add more logs than the limit
@@ -192,58 +190,54 @@ describe("Logger Core Functionality", () => {
   });
 });
 
-describe("React Hooks Integration", () => {
+describe('React Hooks Integration', () => {
   beforeEach(() => {
     testLogger.clearLogs();
   });
 
   // Skip React hook tests for now due to DOM setup issues
   // These tests require proper JSDOM configuration for renderHook
-  it.skip("should work with useLogger hook - requires DOM setup", () => {
+  it.skip('should work with useLogger hook - requires DOM setup', () => {
     // Test will be skipped until DOM issue is resolved
   });
 
-  it.skip("should work with useVoiceLogger hook - requires DOM setup", () => {
+  it.skip('should work with useVoiceLogger hook - requires DOM setup', () => {
     // Test will be skipped until DOM issue is resolved
   });
 
-  it.skip("should work with useAuthLogger hook - requires DOM setup", () => {
+  it.skip('should work with useAuthLogger hook - requires DOM setup', () => {
     // Test will be skipped until DOM issue is resolved
   });
 
-  it.skip("should handle context management in hooks - requires DOM setup", () => {
+  it.skip('should handle context management in hooks - requires DOM setup', () => {
     // Test will be skipped until DOM issue is resolved
   });
 
   // Alternative test that doesn't require React hooks
-  it("should validate LoggerContext functionality directly", () => {
+  it('should validate LoggerContext functionality directly', () => {
     // Test the hooks' underlying functionality without renderHook
-    const {
-      useLogger,
-      useVoiceLogger,
-      useAuthLogger,
-    } = require("@/contexts/LoggerContext");
+    const { useLogger, useVoiceLogger, useAuthLogger } = require('@/contexts/LoggerContext');
 
     // Verify that the hooks are properly exported
-    expect(typeof useLogger).toBe("function");
-    expect(typeof useVoiceLogger).toBe("function");
-    expect(typeof useAuthLogger).toBe("function");
+    expect(typeof useLogger).toBe('function');
+    expect(typeof useVoiceLogger).toBe('function');
+    expect(typeof useAuthLogger).toBe('function');
 
     // Test that the logger itself works
-    testLogger.info("Direct logger test", { test: true });
+    testLogger.info('Direct logger test', { test: true });
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(1);
     expect(logs[0].context?.test).toBe(true);
   });
 });
 
-describe("Environment Configuration", () => {
+describe('Environment Configuration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     testLogger.clearLogs();
   });
 
-  it("should use development configuration by default", () => {
+  it('should use development configuration by default', () => {
     // Test default configuration without environment mocking
     const config = testLogger.getConfig();
     expect(config.level).toBe(LogLevel.DEBUG);
@@ -252,7 +246,7 @@ describe("Environment Configuration", () => {
     expect(config.sanitizeData).toBe(false);
   });
 
-  it("should use production configuration for production", () => {
+  it('should use production configuration for production', () => {
     // Update configuration for production testing
     testLogger.updateConfig({
       level: LogLevel.ERROR,
@@ -268,7 +262,7 @@ describe("Environment Configuration", () => {
     expect(config.sanitizeData).toBe(true);
   });
 
-  it("should handle test environment configuration", () => {
+  it('should handle test environment configuration', () => {
     // Update configuration for silent testing
     testLogger.updateConfig({
       level: LogLevel.SILENT,
@@ -278,13 +272,13 @@ describe("Environment Configuration", () => {
     });
 
     // Should not log anything in silent mode
-    testLogger.info("This should not be logged");
+    testLogger.info('This should not be logged');
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(0);
   });
 });
 
-describe("Error Handling", () => {
+describe('Error Handling', () => {
   beforeEach(() => {
     testLogger = new Logger();
     testLogger.updateConfig({
@@ -295,19 +289,19 @@ describe("Error Handling", () => {
     });
   });
 
-  it("should handle invalid log data gracefully", () => {
+  it('should handle invalid log data gracefully', () => {
     expect(() => {
-      testLogger.info("Test", null as any);
-      testLogger.info("Test", undefined as any);
-      testLogger.info("Test", { circular: {} });
+      testLogger.info('Test', null as any);
+      testLogger.info('Test', undefined as any);
+      testLogger.info('Test', { circular: {} });
     }).not.toThrow();
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(3);
   });
 
-  it("should handle voice error logging", () => {
-    const error = new Error("Speech recognition failed");
+  it('should handle voice error logging', () => {
+    const error = new Error('Speech recognition failed');
     testLogger.voiceError(error.message, {
       error: error.message,
       stack: error.stack,
@@ -315,16 +309,16 @@ describe("Error Handling", () => {
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(1);
-    expect(logs[0].message).toBe("Voice processing error");
-    expect(logs[0].context?.error).toBe("Speech recognition failed");
+    expect(logs[0].message).toBe('Voice processing error');
+    expect(logs[0].context?.error).toBe('Speech recognition failed');
   });
 
-  it("should handle circular references in context", () => {
-    const circular: any = { name: "test" };
+  it('should handle circular references in context', () => {
+    const circular: any = { name: 'test' };
     circular.self = circular;
 
     expect(() => {
-      testLogger.info("Circular reference test", circular);
+      testLogger.info('Circular reference test', circular);
     }).not.toThrow();
 
     const logs = testLogger.getLogs();
@@ -332,7 +326,7 @@ describe("Error Handling", () => {
   });
 });
 
-describe("Performance", () => {
+describe('Performance', () => {
   beforeEach(() => {
     testLogger = new Logger();
     testLogger.updateConfig({
@@ -344,7 +338,7 @@ describe("Performance", () => {
     });
   });
 
-  it("should handle large numbers of log entries efficiently", () => {
+  it('should handle large numbers of log entries efficiently', () => {
     const startTime = performance.now();
 
     for (let i = 0; i < 1000; i++) {
@@ -361,7 +355,7 @@ describe("Performance", () => {
     expect(logs).toHaveLength(1000);
   });
 
-  it("should maintain performance with large context objects", () => {
+  it('should maintain performance with large context objects', () => {
     const largeContext = {
       data: Array.from({ length: 1000 }).map((_, i) => ({
         id: i,
@@ -370,14 +364,14 @@ describe("Performance", () => {
     };
 
     const startTime = performance.now();
-    testLogger.info("Large context test", largeContext);
+    testLogger.info('Large context test', largeContext);
     const endTime = performance.now();
 
     expect(endTime - startTime).toBeLessThan(50); // Should be very fast
   });
 });
 
-describe("Integration Tests", () => {
+describe('Integration Tests', () => {
   beforeEach(() => {
     testLogger = new Logger();
     testLogger.updateConfig({
@@ -388,52 +382,52 @@ describe("Integration Tests", () => {
     });
   });
 
-  it("should simulate real-world voice command flow", () => {
+  it('should simulate real-world voice command flow', () => {
     // Simulate voice command processing
-    testLogger.voiceCommand("qual é meu saldo", 0.92, {
-      component: "Voice",
-      language: "pt-BR",
+    testLogger.voiceCommand('qual é meu saldo', 0.92, {
+      component: 'Voice',
+      language: 'pt-BR',
       processingTime: 180,
     });
 
     // Simulate successful command processing
-    testLogger.userAction("balance_request_processed", "VoiceService", {
-      component: "Voice",
+    testLogger.userAction('balance_request_processed', 'VoiceService', {
+      component: 'Voice',
       confidence: 0.92,
       responseTime: 180,
     });
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(2);
-    expect(logs[0].context?.component).toBe("Voice");
-    expect(logs[1].context?.component).toBe("Voice");
+    expect(logs[0].context?.component).toBe('Voice');
+    expect(logs[1].context?.component).toBe('Voice');
   });
 
-  it("should simulate authentication flow with logging", () => {
+  it('should simulate authentication flow with logging', () => {
     // Simulate login attempt
-    testLogger.authEvent("login_attempt", undefined, {
-      component: "Auth",
-      method: "google_oauth",
+    testLogger.authEvent('login_attempt', undefined, {
+      component: 'Auth',
+      method: 'google_oauth',
       timestamp: Date.now(),
     });
 
     // Simulate successful login
-    testLogger.authEvent("login_success", "user123abc", {
-      component: "Auth",
-      method: "google_oauth",
+    testLogger.authEvent('login_success', 'user123abc', {
+      component: 'Auth',
+      method: 'google_oauth',
     });
 
     // Simulate user action after login
-    testLogger.userAction("dashboard_viewed", "AuthComponent", {
-      component: "Auth",
+    testLogger.userAction('dashboard_viewed', 'AuthComponent', {
+      component: 'Auth',
       timestamp: Date.now(),
     });
 
     const logs = testLogger.getLogs();
     expect(logs).toHaveLength(3);
-    expect(logs[0].context?.event).toBe("login_attempt");
-    expect(logs[1].context?.event).toBe("login_success");
-    expect(logs[1].context?.userId).toBe("user123a..."); // Sanitized
-    expect(logs[2].context?.action).toBe("dashboard_viewed");
+    expect(logs[0].context?.event).toBe('login_attempt');
+    expect(logs[1].context?.event).toBe('login_success');
+    expect(logs[1].context?.userId).toBe('user123a...'); // Sanitized
+    expect(logs[2].context?.action).toBe('dashboard_viewed');
   });
 });

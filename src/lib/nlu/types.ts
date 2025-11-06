@@ -30,15 +30,15 @@ export enum IntentType {
  * Intent definition with patterns and slots
  */
 export interface IntentDefinition {
-  type: IntentType
-  name: string
-  description: string
-  patterns: string[] // Regex patterns for matching
-  keywords: string[] // Keywords for fallback matching
-  requiredSlots: EntityType[]
-  optionalSlots: EntityType[]
-  examples: string[] // Example utterances
-  confidence_threshold: number // Minimum confidence to accept
+  type: IntentType;
+  name: string;
+  description: string;
+  patterns: string[]; // Regex patterns for matching
+  keywords: string[]; // Keywords for fallback matching
+  requiredSlots: EntityType[];
+  optionalSlots: EntityType[];
+  examples: string[]; // Example utterances
+  confidence_threshold: number; // Minimum confidence to accept
 }
 
 // ============================================================================
@@ -63,23 +63,23 @@ export enum EntityType {
  * Extracted entity with metadata
  */
 export interface ExtractedEntity {
-  type: EntityType
-  value: string // Original text value
-  normalizedValue: any // Normalized/parsed value
-  confidence: number // Confidence score (0-1)
-  startIndex: number // Start position in text
-  endIndex: number // End position in text
-  metadata?: Record<string, any> // Additional metadata
+  type: EntityType;
+  value: string; // Original text value
+  normalizedValue: any; // Normalized/parsed value
+  confidence: number; // Confidence score (0-1)
+  startIndex: number; // Start position in text
+  endIndex: number; // End position in text
+  metadata?: Record<string, any>; // Additional metadata
 }
 
 /**
  * Entity pattern for extraction
  */
 export interface EntityPattern {
-  type: EntityType
-  pattern: RegExp
-  normalizer: (match: string) => any
-  validator?: (value: any) => boolean
+  type: EntityType;
+  pattern: RegExp;
+  normalizer: (match: string) => any;
+  validator?: (value: any) => boolean;
 }
 
 // ============================================================================
@@ -90,30 +90,30 @@ export interface EntityPattern {
  * Complete NLU processing result
  */
 export interface NLUResult {
-  intent: IntentType
-  confidence: number // Intent classification confidence (0-1)
-  entities: ExtractedEntity[]
-  originalText: string
-  normalizedText: string
-  processingTime: number // Processing time in milliseconds
-  requiresConfirmation: boolean
-  requiresDisambiguation: boolean
-  missingSlots: EntityType[] // Required slots not found
+  intent: IntentType;
+  confidence: number; // Intent classification confidence (0-1)
+  entities: ExtractedEntity[];
+  originalText: string;
+  normalizedText: string;
+  processingTime: number; // Processing time in milliseconds
+  requiresConfirmation: boolean;
+  requiresDisambiguation: boolean;
+  missingSlots: EntityType[]; // Required slots not found
   metadata?: {
-    classificationMethod?: 'pattern' | 'tfidf' | 'ensemble'
-    alternativeIntents?: Array<{ intent: IntentType; confidence: number }>
-    contextUsed?: boolean
-  }
+    classificationMethod?: 'pattern' | 'tfidf' | 'ensemble';
+    alternativeIntents?: Array<{ intent: IntentType; confidence: number }>;
+    contextUsed?: boolean;
+  };
 }
 
 /**
  * Intent classification result
  */
 export interface IntentClassificationResult {
-  intent: IntentType
-  confidence: number
-  method: 'pattern' | 'tfidf' | 'ensemble'
-  alternatives: Array<{ intent: IntentType; confidence: number }>
+  intent: IntentType;
+  confidence: number;
+  method: 'pattern' | 'tfidf' | 'ensemble';
+  alternatives: Array<{ intent: IntentType; confidence: number }>;
 }
 
 // ============================================================================
@@ -124,43 +124,43 @@ export interface IntentClassificationResult {
  * Disambiguation request when intent is ambiguous
  */
 export interface DisambiguationRequest {
-  originalText: string
-  possibleIntents: Array<{ intent: IntentType; confidence: number }>
-  question: string // Question to ask user
-  options: DisambiguationOption[]
-  timeout: number // Timeout in milliseconds
-  context?: ConversationContext
+  originalText: string;
+  possibleIntents: Array<{ intent: IntentType; confidence: number }>;
+  question: string; // Question to ask user
+  options: DisambiguationOption[];
+  timeout: number; // Timeout in milliseconds
+  context?: ConversationContext;
 }
 
 /**
  * Disambiguation option for user selection
  */
 export interface DisambiguationOption {
-  label: string
-  value: IntentType
-  description?: string
+  label: string;
+  value: IntentType;
+  description?: string;
 }
 
 /**
  * Conversation context for multi-turn interactions
  */
 export interface ConversationContext {
-  userId: string
-  sessionId: string
-  history: ConversationTurn[]
-  lastIntent?: IntentType
-  lastEntities?: ExtractedEntity[]
-  timestamp: Date
+  userId: string;
+  sessionId: string;
+  history: ConversationTurn[];
+  lastIntent?: IntentType;
+  lastEntities?: ExtractedEntity[];
+  timestamp: Date;
 }
 
 /**
  * Single conversation turn
  */
 export interface ConversationTurn {
-  userInput: string
-  nluResult: NLUResult
-  systemResponse: string
-  timestamp: Date
+  userInput: string;
+  nluResult: NLUResult;
+  systemResponse: string;
+  timestamp: Date;
 }
 
 // ============================================================================
@@ -171,68 +171,68 @@ export interface ConversationTurn {
  * NLU performance metrics
  */
 export interface NLUMetrics {
-  totalProcessed: number
-  successfulClassifications: number
-  failedClassifications: number
-  averageConfidence: number
-  averageProcessingTime: number
-  intentDistribution: Record<IntentType, number>
-  accuracyByIntent: Record<IntentType, number>
-  falsePositives: number
-  falseNegatives: number
-  disambiguationRate: number
+  totalProcessed: number;
+  successfulClassifications: number;
+  failedClassifications: number;
+  averageConfidence: number;
+  averageProcessingTime: number;
+  intentDistribution: Record<IntentType, number>;
+  accuracyByIntent: Record<IntentType, number>;
+  falsePositives: number;
+  falseNegatives: number;
+  disambiguationRate: number;
   // Enhanced metrics for Brazilian Portuguese learning
-  regionalAccuracy: Record<string, number>
-  slangCorrectness: number
-  formalCorrectness: number
-  colloquialCorrectness: number
-  temporalAccuracy: Record<string, number> // Accuracy by time of day
-  learningProgress: number // Improvement rate over time
+  regionalAccuracy: Record<string, number>;
+  slangCorrectness: number;
+  formalCorrectness: number;
+  colloquialCorrectness: number;
+  temporalAccuracy: Record<string, number>; // Accuracy by time of day
+  learningProgress: number; // Improvement rate over time
   patternEvolution: Array<{
-    pattern: string
-    frequency: number
-    accuracy: number
-    lastSeen: Date
-  }>
+    pattern: string;
+    frequency: number;
+    accuracy: number;
+    lastSeen: Date;
+  }>;
 }
 
 /**
  * Enhanced classification log entry for tracking and learning
  */
 export interface ClassificationLog {
-  id: string
-  userId: string
-  sessionId: string
-  originalText: string
-  normalizedText: string
-  predictedIntent: IntentType
-  confidence: number
-  entities: ExtractedEntity[]
-  processingTime: number
-  correctIntent?: IntentType // For feedback/training
-  feedback?: 'correct' | 'incorrect' | 'ambiguous'
-  timestamp: Date
+  id: string;
+  userId: string;
+  sessionId: string;
+  originalText: string;
+  normalizedText: string;
+  predictedIntent: IntentType;
+  confidence: number;
+  entities: ExtractedEntity[];
+  processingTime: number;
+  correctIntent?: IntentType; // For feedback/training
+  feedback?: 'correct' | 'incorrect' | 'ambiguous';
+  timestamp: Date;
   // Enhanced Brazilian Portuguese learning fields
-  regionalVariation?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown'
-  linguisticStyle?: 'slang' | 'formal' | 'colloquial' | 'mixed'
+  regionalVariation?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
+  linguisticStyle?: 'slang' | 'formal' | 'colloquial' | 'mixed';
   contextualClues?: {
-    previousIntent?: IntentType
-    timeOfDay: string
-    dayOfWeek: string
-    conversationTurn: number
-  }
+    previousIntent?: IntentType;
+    timeOfDay: string;
+    dayOfWeek: string;
+    conversationTurn: number;
+  };
   errorAnalysis?: {
-    errorType: 'pattern_miss' | 'entity_extraction' | 'intent_confusion' | 'low_confidence'
-    confusedWith?: IntentType
-    missedEntities?: EntityType[]
-    patternUsed?: string
-  }
+    errorType: 'pattern_miss' | 'entity_extraction' | 'intent_confusion' | 'low_confidence';
+    confusedWith?: IntentType;
+    missedEntities?: EntityType[];
+    patternUsed?: string;
+  };
   learningSignals?: {
-    userCorrection: boolean
-    repetition: boolean
-    userFrustration: boolean // Inferred from repeated failures
-    adaptationSuccess: boolean
-  }
+    userCorrection: boolean;
+    repetition: boolean;
+    userFrustration: boolean; // Inferred from repeated failures
+    adaptationSuccess: boolean;
+  };
 }
 
 // ============================================================================
@@ -244,27 +244,27 @@ export interface ClassificationLog {
  */
 export interface NLUConfig {
   // Classification thresholds
-  highConfidenceThreshold: number // >0.8: Accept immediately
-  mediumConfidenceThreshold: number // 0.6-0.8: Request confirmation
-  lowConfidenceThreshold: number // <0.6: Reject or disambiguate
+  highConfidenceThreshold: number; // >0.8: Accept immediately
+  mediumConfidenceThreshold: number; // 0.6-0.8: Request confirmation
+  lowConfidenceThreshold: number; // <0.6: Reject or disambiguate
 
   // Performance settings
-  maxProcessingTime: number // Maximum processing time in ms
-  cacheEnabled: boolean
-  cacheTTL: number // Cache TTL in milliseconds
+  maxProcessingTime: number; // Maximum processing time in ms
+  cacheEnabled: boolean;
+  cacheTTL: number; // Cache TTL in milliseconds
 
   // Context settings
-  contextEnabled: boolean
-  maxContextTurns: number // Maximum conversation turns to keep
+  contextEnabled: boolean;
+  maxContextTurns: number; // Maximum conversation turns to keep
 
   // Logging settings
-  loggingEnabled: boolean
-  logToSupabase: boolean
+  loggingEnabled: boolean;
+  logToSupabase: boolean;
 
   // Feature flags
-  tfidfEnabled: boolean
-  ensembleVotingEnabled: boolean
-  disambiguationEnabled: boolean
+  tfidfEnabled: boolean;
+  ensembleVotingEnabled: boolean;
+  disambiguationEnabled: boolean;
 }
 
 // ============================================================================
@@ -275,31 +275,31 @@ export interface NLUConfig {
  * Training utterance with intent label
  */
 export interface TrainingUtterance {
-  text: string
-  intent: IntentType
+  text: string;
+  intent: IntentType;
   entities?: Array<{
-    type: EntityType
-    value: string
-    startIndex: number
-    endIndex: number
-  }>
-  region?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste'
+    type: EntityType;
+    value: string;
+    startIndex: number;
+    endIndex: number;
+  }>;
+  region?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
   metadata?: {
-    slang?: boolean
-    formal?: boolean
-    colloquial?: boolean
-  }
+    slang?: boolean;
+    formal?: boolean;
+    colloquial?: boolean;
+  };
 }
 
 /**
  * Utterance dataset structure
  */
 export interface UtteranceDataset {
-  version: string
-  lastUpdated: string
-  totalUtterances: number
-  utterancesByIntent: Record<IntentType, TrainingUtterance[]>
-  regionalVariations: Record<string, number>
+  version: string;
+  lastUpdated: string;
+  totalUtterances: number;
+  utterancesByIntent: Record<IntentType, TrainingUtterance[]>;
+  regionalVariations: Record<string, number>;
 }
 
 // ============================================================================
@@ -315,8 +315,8 @@ export class NLUError extends Error {
     public code: NLUErrorCode,
     public originalError?: unknown
   ) {
-    super(message)
-    this.name = 'NLUError'
+    super(message);
+    this.name = 'NLUError';
   }
 }
 
@@ -341,19 +341,19 @@ export enum NLUErrorCode {
  * Text normalization result
  */
 export interface NormalizedText {
-  original: string
-  normalized: string
-  tokens: string[]
-  removedStopwords: string[]
-  expandedContractions: Record<string, string>
+  original: string;
+  normalized: string;
+  tokens: string[];
+  removedStopwords: string[];
+  expandedContractions: Record<string, string>;
 }
 
 /**
  * Confidence score with explanation
  */
 export interface ConfidenceScore {
-  value: number // 0-1
-  level: 'high' | 'medium' | 'low'
-  explanation: string
-  factors: Record<string, number> // Contributing factors
+  value: number; // 0-1
+  level: 'high' | 'medium' | 'low';
+  explanation: string;
+  factors: Record<string, number>; // Contributing factors
 }

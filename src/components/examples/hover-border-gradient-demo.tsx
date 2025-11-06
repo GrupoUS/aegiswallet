@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 
 /**
  * Aceternity UI Style Demo
@@ -13,13 +13,13 @@ export default function HoverBorderGradientDemo() {
         variant="rotating"
         containerClassName="rounded-full"
         as="button"
-        className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+        className="flex items-center space-x-2 bg-white text-black dark:bg-black dark:text-white"
       >
         <AceternityLogo />
         <span>Aceternity UI</span>
       </HoverBorderGradient>
     </div>
-  )
+  );
 }
 
 const AceternityLogo = () => {
@@ -32,6 +32,7 @@ const AceternityLogo = () => {
       xmlns="http://www.w3.org/2000/svg"
       className="h-3 w-3 text-black dark:text-white"
     >
+      <title>Aceternity Logo</title>
       <path
         d="M8 8.05571C8 8.05571 54.9009 18.1782 57.8687 30.062C60.8365 41.9458 9.05432 57.4696 9.05432 57.4696"
         stroke="currentColor"
@@ -40,5 +41,5 @@ const AceternityLogo = () => {
         strokeLinecap="round"
       />
     </svg>
-  )
-}
+  );
+};

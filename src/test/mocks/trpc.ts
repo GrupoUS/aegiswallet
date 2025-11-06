@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 // Mock do tRPC router
 export const createMockTRPCRouter = () => ({
@@ -90,11 +90,11 @@ export const createMockTRPCRouter = () => ({
       remaining_daily: 4900.0,
     }),
   },
-})
+});
 
 // Mock do tRPC client
 export const createMockTRPCClient = () => {
-  const mockRouter = createMockTRPCRouter()
+  const mockRouter = createMockTRPCRouter();
 
   return {
     auth: mockRouter.auth,
@@ -102,12 +102,12 @@ export const createMockTRPCClient = () => {
     voice: mockRouter.voice,
     banking: mockRouter.banking,
     pix: mockRouter.pix,
-  }
-}
+  };
+};
 
 // Mock do createCaller para testes de backend
 export const createMockCaller = () => {
-  const mockRouter = createMockTRPCRouter()
+  const mockRouter = createMockTRPCRouter();
 
   return {
     auth: mockRouter.auth,
@@ -120,14 +120,21 @@ export const createMockCaller = () => {
       id: 'test-user-id',
       email: 'test@example.com',
     },
-  }
-}
+  };
+};
 
 // Mock de dados de teste
 export const mockTRPCResponses = {
   auth: {
-    signIn: { success: true, user: { id: 'test-user-id', email: 'test@example.com' } },
-    getProfile: { id: 'test-user-id', email: 'test@example.com', autonomy_level: 50 },
+    signIn: {
+      success: true,
+      user: { id: 'test-user-id', email: 'test@example.com' },
+    },
+    getProfile: {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      autonomy_level: 50,
+    },
   },
   transactions: {
     getAll: [
@@ -148,4 +155,4 @@ export const mockTRPCResponses = {
       response: 'Seu saldo atual é de R$ 1.234,56',
     },
   },
-}
+};

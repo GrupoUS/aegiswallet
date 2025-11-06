@@ -1,5 +1,5 @@
-import { JSDOM } from 'jsdom'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { JSDOM } from 'jsdom';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('DOM Environment Test', () => {
   beforeAll(() => {
@@ -9,29 +9,29 @@ describe('DOM Environment Test', () => {
         pretendToBeVisual: true,
         resources: 'usable',
         url: 'http://localhost:3000',
-      })
+      });
 
-      global.window = dom.window as any
-      global.document = dom.window.document
-      global.navigator = dom.window.navigator
-      globalThis.window = dom.window as any
-      globalThis.document = dom.window.document
-      globalThis.navigator = dom.window.navigator
+      global.window = dom.window as any;
+      global.document = dom.window.document;
+      global.navigator = dom.window.navigator;
+      globalThis.window = dom.window as any;
+      globalThis.document = dom.window.document;
+      globalThis.navigator = dom.window.navigator;
     }
-  })
+  });
 
   it('should have access to document', () => {
-    expect(document).toBeDefined()
-    expect(document.body).toBeDefined()
-  })
+    expect(document).toBeDefined();
+    expect(document.body).toBeDefined();
+  });
 
   it('should have access to window', () => {
-    expect(window).toBeDefined()
-    expect(typeof window.addEventListener).toBe('function')
-  })
+    expect(window).toBeDefined();
+    expect(typeof window.addEventListener).toBe('function');
+  });
 
   it('should have access to navigator', () => {
-    expect(navigator).toBeDefined()
-    expect(typeof navigator.userAgent).toBe('string')
-  })
-})
+    expect(navigator).toBeDefined();
+    expect(typeof navigator.userAgent).toBe('string');
+  });
+});

@@ -7,45 +7,38 @@
  * @module nlu/enhancedNLUEngine
  */
 
-import { logger } from '@/lib/logging/logger'
-import { supabase } from '@/integrations/supabase/client'
-import { createEntityExtractor } from '@/lib/nlu/entityExtractor'
-import { createIntentClassifier } from '@/lib/nlu/intentClassifier'
-import { INTENT_DEFINITIONS } from '@/lib/nlu/intents'
-import { createTextNormalizer } from '@/lib/nlu/textNormalizer'
+import { logger } from '@/lib/logging/logger';
+import {
+  createNLUAnalytics,
+  type HitMissMetrics,
+  type LearningAnalytics,
+  type NLUAnalytics,
+} from '@/lib/nlu/analytics';
+import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
+import {
+  type BrazilianContext,
+  type ContextProcessor,
+  createContextProcessor,
+  type FinancialContext,
+  type UserPreferences,
+} from '@/lib/nlu/contextProcessor';
+import { createEntityExtractor } from '@/lib/nlu/entityExtractor';
+import { createErrorRecoverySystem, type ErrorRecoverySystem } from '@/lib/nlu/errorRecovery';
+import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
+import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';
+import {
+  createNLUPerformanceTracker,
+  type NLUPerformanceTracker,
+  type PerformanceMetrics,
+} from '@/lib/nlu/performance';
+import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
 import {
   IntentType,
   type NLUConfig,
   NLUError,
   NLUErrorCode,
   type NLUResult,
-  type ExtractedEntity,
-} from '@/lib/nlu/types'
-import {
-  NLUAnalytics,
-  createNLUAnalytics,
-  type HitMissMetrics,
-  type LearningAnalytics,
-} from '@/lib/nlu/analytics'
-import {
-  ContextProcessor,
-  createContextProcessor,
-  type BrazilianContext,
-  type UserPreferences,
-  type FinancialContext,
-} from '@/lib/nlu/contextProcessor'
-import {
-  ErrorRecoverySystem,
-  createErrorRecoverySystem,
-  type ErrorClassification,
-  type RecoveryResult,
-} from '@/lib/nlu/errorRecovery'
-import {
-  NLUPerformanceTracker,
-  createNLUPerformanceTracker,
-  type PerformanceMetrics,
-} from '@/lib/nlu/performance'
-import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns'
+} from '@/lib/nlu/types';
 
 // ============================================================================
 // Enhanced NLU Configuration
@@ -53,38 +46,38 @@ import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns'
 
 export interface EnhancedNLUConfig extends NLUConfig {
   analytics: {
-    enabled: boolean
-    batchSize: number
-    batchInterval: number
-    learningEnabled: boolean
-    persistenceEnabled: boolean
-  }
+    enabled: boolean;
+    batchSize: number;
+    batchInterval: number;
+    learningEnabled: boolean;
+    persistenceEnabled: boolean;
+  };
   context: {
-    enabled: boolean
-    maxContextTurns: number
-    userPreferencesEnabled: boolean
-    financialContextEnabled: boolean
-    regionalContextEnabled: boolean
-  }
+    enabled: boolean;
+    maxContextTurns: number;
+    userPreferencesEnabled: boolean;
+    financialContextEnabled: boolean;
+    regionalContextEnabled: boolean;
+  };
   errorRecovery: {
-    enabled: boolean
-    maxRecoveryAttempts: number
-    learningEnabled: boolean
-    autoCorrectionEnabled: boolean
-    userFeedbackEnabled: boolean
-  }
+    enabled: boolean;
+    maxRecoveryAttempts: number;
+    learningEnabled: boolean;
+    autoCorrectionEnabled: boolean;
+    userFeedbackEnabled: boolean;
+  };
   performance: {
-    enabled: boolean
-    realTimeMonitoring: boolean
-    alertingEnabled: boolean
-    persistenceEnabled: boolean
-  }
+    enabled: boolean;
+    realTimeMonitoring: boolean;
+    alertingEnabled: boolean;
+    persistenceEnabled: boolean;
+  };
   brazilian: {
-    regionalAdaptationEnabled: boolean
-    slangRecognitionEnabled: boolean
-    culturalContextEnabled: boolean
-    linguisticStyleDetection: boolean
-  }
+    regionalAdaptationEnabled: boolean;
+    slangRecognitionEnabled: boolean;
+    culturalContextEnabled: boolean;
+    linguisticStyleDetection: boolean;
+  };
 }
 
 const DEFAULT_ENHANCED_CONFIG: EnhancedNLUConfig = {
@@ -137,7 +130,7 @@ const DEFAULT_ENHANCED_CONFIG: EnhancedNLUConfig = {
     culturalContextEnabled: true,
     linguisticStyleDetection: true,
   },
-}
+};
 
 // ============================================================================
 // Enhanced NLU Result
@@ -146,47 +139,47 @@ const DEFAULT_ENHANCED_CONFIG: EnhancedNLUConfig = {
 export interface EnhancedNLUResult extends NLUResult {
   enhanced: {
     analytics: {
-      classificationId: string
-      trackingEnabled: boolean
-      feedbackCollected: boolean
-    }
+      classificationId: string;
+      trackingEnabled: boolean;
+      feedbackCollected: boolean;
+    };
     context: {
-      brazilianContext: BrazilianContext
-      userPreferences: UserPreferences
-      financialContext: FinancialContext
-      confidenceAdjustment: number
-      contextualInsights: string[]
-    }
+      brazilianContext: BrazilianContext;
+      userPreferences: UserPreferences;
+      financialContext: FinancialContext;
+      confidenceAdjustment: number;
+      contextualInsights: string[];
+    };
     errorRecovery: {
-      recoveryAttempted: boolean
-      recoverySuccessful: boolean
-      appliedStrategies: string[]
-      originalIntent?: IntentType
-      originalConfidence: number
-    }
+      recoveryAttempted: boolean;
+      recoverySuccessful: boolean;
+      appliedStrategies: string[];
+      originalIntent?: IntentType;
+      originalConfidence: number;
+    };
     performance: {
-      processingTime: number
-      cacheHit: boolean
-      systemLoad: number
-      optimizationApplied: boolean
-    }
+      processingTime: number;
+      cacheHit: boolean;
+      systemLoad: number;
+      optimizationApplied: boolean;
+    };
     learning: {
-      adaptationApplied: boolean
-      patternMatched: boolean
-      regionalVariationDetected: boolean
-      confidenceImprovement: number
-    }
-  }
+      adaptationApplied: boolean;
+      patternMatched: boolean;
+      regionalVariationDetected: boolean;
+      confidenceImprovement: number;
+    };
+  };
   recommendations: {
-    clarificationNeeded: boolean
-    suggestedQuestions: string[]
-    contextualHints: string[]
+    clarificationNeeded: boolean;
+    suggestedQuestions: string[];
+    contextualHints: string[];
     alternativeIntents: Array<{
-      intent: IntentType
-      confidence: number
-      reasoning: string
-    }>
-  }
+      intent: IntentType;
+      confidence: number;
+      reasoning: string;
+    }>;
+  };
 }
 
 // ============================================================================
@@ -194,39 +187,39 @@ export interface EnhancedNLUResult extends NLUResult {
 // ============================================================================
 
 export class EnhancedNLUEngine {
-  private config: EnhancedNLUConfig
-  private normalizer = createTextNormalizer()
-  private classifier = createIntentClassifier()
-  private extractor = createEntityExtractor()
-  private brazilianAnalyzer = new BrazilianContextAnalyzer()
+  private config: EnhancedNLUConfig;
+  private normalizer = createTextNormalizer();
+  private classifier = createIntentClassifier();
+  private extractor = createEntityExtractor();
+  private brazilianAnalyzer = new BrazilianContextAnalyzer();
 
   // Enhanced systems
-  private analytics: NLUAnalytics
-  private contextProcessor: ContextProcessor
-  private errorRecovery: ErrorRecoverySystem
-  private performanceTracker: NLUPerformanceTracker
+  private analytics: NLUAnalytics;
+  private contextProcessor: ContextProcessor;
+  private errorRecovery: ErrorRecoverySystem;
+  private performanceTracker: NLUPerformanceTracker;
 
   // Cache and stats
-  private cache = new Map<string, any>()
+  private cache = new Map<string, any>();
   private cacheStats = {
     hits: 0,
     misses: 0,
     totalRequests: 0,
-  }
+  };
 
   // Session tracking
   private activeSessions = new Map<
     string,
     {
-      userId: string
-      startTime: Date
-      requestCount: number
-      lastActivity: Date
+      userId: string;
+      startTime: Date;
+      requestCount: number;
+      lastActivity: Date;
     }
-  >()
+  >();
 
   constructor(config: Partial<EnhancedNLUConfig> = {}) {
-    this.config = { ...DEFAULT_ENHANCED_CONFIG, ...config }
+    this.config = { ...DEFAULT_ENHANCED_CONFIG, ...config };
 
     // Initialize enhanced systems
     this.analytics = createNLUAnalytics({
@@ -235,7 +228,7 @@ export class EnhancedNLUEngine {
       batchInterval: this.config.analytics.batchInterval,
       learningEnabled: this.config.analytics.learningEnabled,
       persistenceEnabled: this.config.analytics.persistenceEnabled,
-    })
+    });
 
     this.contextProcessor = createContextProcessor({
       enabled: this.config.context.enabled,
@@ -245,7 +238,7 @@ export class EnhancedNLUEngine {
       regionalContextEnabled: this.config.context.regionalContextEnabled,
       learningEnabled: true,
       persistenceEnabled: true,
-    })
+    });
 
     this.errorRecovery = createErrorRecoverySystem({
       enabled: this.config.errorRecovery.enabled,
@@ -254,14 +247,14 @@ export class EnhancedNLUEngine {
       autoCorrectionEnabled: this.config.errorRecovery.autoCorrectionEnabled,
       userFeedbackEnabled: this.config.errorRecovery.userFeedbackEnabled,
       persistenceEnabled: true,
-    })
+    });
 
     this.performanceTracker = createNLUPerformanceTracker({
       enabled: this.config.performance.enabled,
       realTimeMonitoring: this.config.performance.realTimeMonitoring,
       alertingEnabled: this.config.performance.alertingEnabled,
       persistenceEnabled: this.config.performance.persistenceEnabled,
-    })
+    });
   }
 
   // ============================================================================
@@ -276,37 +269,37 @@ export class EnhancedNLUEngine {
     userId: string,
     sessionId: string
   ): Promise<EnhancedNLUResult> {
-    const startTime = Date.now()
-    const classificationId = this.generateClassificationId()
+    const startTime = Date.now();
+    const classificationId = this.generateClassificationId();
 
     try {
       // Validate input
       if (!text || text.trim().length === 0) {
-        throw new NLUError('Empty input text', NLUErrorCode.INVALID_INPUT)
+        throw new NLUError('Empty input text', NLUErrorCode.INVALID_INPUT);
       }
 
       // Update session tracking
-      this.updateSessionTracking(userId, sessionId)
+      this.updateSessionTracking(userId, sessionId);
 
       // Check cache
-      const cached = this.getFromCache(text)
+      const cached = this.getFromCache(text);
       if (cached) {
-        this.cacheStats.hits++
+        this.cacheStats.hits++;
         this.performanceTracker.trackCachePerformance(
           (this.cacheStats.hits / this.cacheStats.totalRequests) * 100,
           this.cache.size,
           Date.now() - startTime
-        )
+        );
 
-        return this.enhanceCachedResult(cached, classificationId, userId, sessionId)
+        return this.enhanceCachedResult(cached, classificationId, userId, sessionId);
       }
-      this.cacheStats.misses++
+      this.cacheStats.misses++;
 
       // Brazilian context analysis
-      const brazilianContext = this.brazilianAnalyzer.analyzeContext(text)
+      const brazilianContext = this.brazilianAnalyzer.analyzeContext(text);
 
       // Initial NLU processing
-      const initialResult = await this.performInitialNLUProcessing(text, brazilianContext)
+      const initialResult = await this.performInitialNLUProcessing(text, brazilianContext);
 
       // Context-aware enhancement
       const contextResult = await this.contextProcessor.processWithContext(
@@ -314,15 +307,15 @@ export class EnhancedNLUEngine {
         userId,
         sessionId,
         initialResult
-      )
+      );
 
       // Start with context-enhanced result
-      let result = contextResult.result
-      let recoveryAttempts = 0
+      let result = contextResult.result;
+      let recoveryAttempts = 0;
 
       // Error recovery if needed
       if (this.shouldAttemptErrorRecovery(result)) {
-        const errorClassification = await this.classifyError(result, text, userId, sessionId)
+        const errorClassification = await this.classifyError(result, text, userId, sessionId);
         const recoveryResult = await this.attemptErrorRecovery(
           errorClassification,
           text,
@@ -330,10 +323,10 @@ export class EnhancedNLUEngine {
           userId,
           sessionId,
           recoveryAttempts++
-        )
+        );
 
         if (recoveryResult.success) {
-          result = recoveryResult.correctedResult || result
+          result = recoveryResult.correctedResult || result;
         }
       }
 
@@ -348,7 +341,7 @@ export class EnhancedNLUEngine {
         userId,
         sessionId,
         startTime
-      )
+      );
 
       // Track analytics
       if (this.config.analytics.enabled) {
@@ -357,20 +350,20 @@ export class EnhancedNLUEngine {
           userId,
           sessionId,
           result.confidence > 0.8 ? 'correct' : undefined
-        )
+        );
       }
 
       // Track performance
-      const processingTime = Date.now() - startTime
+      const processingTime = Date.now() - startTime;
       this.performanceTracker.trackRequest(
         processingTime,
         result,
         result.confidence > 0.6 && result.intent !== IntentType.UNKNOWN,
         brazilianContext.region
-      )
+      );
 
       // Cache result
-      this.addToCache(text, enhancedResult)
+      this.addToCache(text, enhancedResult);
 
       // Log successful processing
       logger.voiceCommand(text, result.confidence, {
@@ -379,11 +372,11 @@ export class EnhancedNLUEngine {
         region: brazilianContext.region,
         hasContext: contextResult.context.history.length > 0,
         recoveryAttempted: recoveryAttempts > 0,
-      })
+      });
 
-      return enhancedResult
+      return enhancedResult;
     } catch (error) {
-      const processingTime = Date.now() - startTime
+      const processingTime = Date.now() - startTime;
 
       // Handle errors with recovery
       if (error instanceof NLUError) {
@@ -394,10 +387,10 @@ export class EnhancedNLUEngine {
           sessionId,
           classificationId,
           processingTime
-        )
+        );
 
         if (errorResult) {
-          return errorResult
+          return errorResult;
         }
       }
 
@@ -409,7 +402,7 @@ export class EnhancedNLUEngine {
         userId,
         sessionId,
         processingTime
-      )
+      );
     }
   }
 
@@ -433,7 +426,7 @@ export class EnhancedNLUEngine {
           feedback,
           correctedIntent,
           correctedText,
-        })
+        });
       }
 
       // Update learning systems
@@ -451,9 +444,12 @@ export class EnhancedNLUEngine {
         classificationId,
         userId,
         feedback,
-      })
+      });
     } catch (error) {
-      logger.error('Failed to process user feedback', { error, classificationId })
+      logger.error('Failed to process user feedback', {
+        error,
+        classificationId,
+      });
     }
   }
 
@@ -467,13 +463,13 @@ export class EnhancedNLUEngine {
     possibleIntents: Array<{ intent: IntentType; confidence: number }>
   ): Promise<{
     suggestions: Array<{
-      intent: IntentType
-      question: string
-      contextualRationale: string
-      confidenceAdjustment: number
-    }>
-    recommendedNextAction: string
-    contextualHints: string[]
+      intent: IntentType;
+      question: string;
+      contextualRationale: string;
+      confidenceAdjustment: number;
+    }>;
+    recommendedNextAction: string;
+    contextualHints: string[];
   }> {
     try {
       return await this.contextProcessor.getContextualDisambiguation(
@@ -481,9 +477,9 @@ export class EnhancedNLUEngine {
         sessionId,
         ambiguousText,
         possibleIntents
-      )
+      );
     } catch (error) {
-      logger.error('Failed to get disambiguation suggestions', { error })
+      logger.error('Failed to get disambiguation suggestions', { error });
 
       // Fallback suggestions
       return {
@@ -495,7 +491,7 @@ export class EnhancedNLUEngine {
         })),
         recommendedNextAction: 'Por favor, clarifique sua intenção',
         contextualHints: ['Tente ser mais específico sobre o que você quer fazer'],
-      }
+      };
     }
   }
 
@@ -508,16 +504,16 @@ export class EnhancedNLUEngine {
     errorText: string,
     errorType: string
   ): Promise<{
-    primaryQuestion: string
-    followUpQuestions: string[]
-    contextualHints: string[]
-    suggestedCommands: string[]
+    primaryQuestion: string;
+    followUpQuestions: string[];
+    contextualHints: string[];
+    suggestedCommands: string[];
   }> {
     try {
-      const context = await this.contextProcessor.getOrCreateContext(userId, sessionId)
-      const userPreferences = await this.contextProcessor.getUserPreferences(userId)
-      const financialContext = await this.contextProcessor.getFinancialContext(userId)
-      const brazilianContext = this.brazilianAnalyzer.analyzeContext(errorText)
+      const context = await this.contextProcessor.getOrCreateContext(userId, sessionId);
+      const userPreferences = await this.contextProcessor.getUserPreferences(userId);
+      const financialContext = await this.contextProcessor.getFinancialContext(userId);
+      const brazilianContext = this.brazilianAnalyzer.analyzeContext(errorText);
 
       const recoveryContext = {
         originalText: errorText,
@@ -530,7 +526,7 @@ export class EnhancedNLUEngine {
         brazilianContext,
         recoveryAttempts: 0,
         previousErrors: [],
-      }
+      };
 
       return await this.errorRecovery.generateClarificationQuestions(
         {
@@ -543,16 +539,16 @@ export class EnhancedNLUEngine {
           contextualFactors: [],
         },
         recoveryContext
-      )
+      );
     } catch (error) {
-      logger.error('Failed to get clarification questions', { error })
+      logger.error('Failed to get clarification questions', { error });
 
       return {
         primaryQuestion: 'Pode repetir seu comando de forma diferente?',
         followUpQuestions: ['O que você gostaria de fazer?'],
         contextualHints: [],
         suggestedCommands: ['Qual é meu saldo', 'Pagar contas', 'Fazer transferência'],
-      }
+      };
     }
   }
 
@@ -564,11 +560,11 @@ export class EnhancedNLUEngine {
    * Get comprehensive analytics data
    */
   getAnalytics(): {
-    hitMissMetrics: HitMissMetrics
-    learningAnalytics: LearningAnalytics
-    performanceMetrics: PerformanceMetrics
-    systemHealth: any
-    recommendations: string[]
+    hitMissMetrics: HitMissMetrics;
+    learningAnalytics: LearningAnalytics;
+    performanceMetrics: PerformanceMetrics;
+    systemHealth: any;
+    recommendations: string[];
   } {
     return {
       hitMissMetrics: this.analytics.getHitMissMetrics(),
@@ -582,28 +578,28 @@ export class EnhancedNLUEngine {
           .map((p) => `Padrão "${p.pattern}" está em declínio, considere revisar`),
         ...this.performanceTracker.getRecommendations(),
       ],
-    }
+    };
   }
 
   /**
    * Get error recovery statistics
    */
   getErrorRecoveryStatistics() {
-    return this.errorRecovery.getRecoveryStatistics()
+    return this.errorRecovery.getRecoveryStatistics();
   }
 
   /**
    * Get active alerts
    */
   getActiveAlerts() {
-    return this.performanceTracker.getActiveAlerts()
+    return this.performanceTracker.getActiveAlerts();
   }
 
   /**
    * Generate performance report
    */
   generatePerformanceReport(timeRange: 'hour' | 'day' | 'week' | 'month' = 'day') {
-    return this.performanceTracker.generatePerformanceReport(timeRange)
+    return this.performanceTracker.generatePerformanceReport(timeRange);
   }
 
   // ============================================================================
@@ -614,47 +610,51 @@ export class EnhancedNLUEngine {
    * Health check for all systems
    */
   async healthCheck(): Promise<{
-    overall: boolean
-    nlu: boolean
-    analytics: boolean
-    context: boolean
-    errorRecovery: boolean
-    performance: boolean
-    issues: string[]
+    overall: boolean;
+    nlu: boolean;
+    analytics: boolean;
+    context: boolean;
+    errorRecovery: boolean;
+    performance: boolean;
+    issues: string[];
   }> {
-    const issues: string[] = []
+    const issues: string[] = [];
 
     // NLU health check
-    let nluHealthy = false
+    let nluHealthy = false;
     try {
       const testResult = await this.performInitialNLUProcessing(
         'qual é meu saldo?',
         this.brazilianAnalyzer.analyzeContext('qual é meu saldo?')
-      )
-      nluHealthy = testResult.intent === IntentType.CHECK_BALANCE
-      if (!nluHealthy) issues.push('NLU basic processing failed')
-    } catch (error) {
-      issues.push('NLU health check error')
+      );
+      nluHealthy = testResult.intent === IntentType.CHECK_BALANCE;
+      if (!nluHealthy) issues.push('NLU basic processing failed');
+    } catch (_error) {
+      issues.push('NLU health check error');
     }
 
     // Analytics health check
-    const analyticsHealthy = this.config.analytics.enabled
-    if (!analyticsHealthy) issues.push('Analytics system disabled')
+    const analyticsHealthy = this.config.analytics.enabled;
+    if (!analyticsHealthy) issues.push('Analytics system disabled');
 
     // Context processor health check
-    const contextHealthy = this.config.context.enabled
-    if (!contextHealthy) issues.push('Context processor disabled')
+    const contextHealthy = this.config.context.enabled;
+    if (!contextHealthy) issues.push('Context processor disabled');
 
     // Error recovery health check
-    const errorRecoveryHealthy = this.config.errorRecovery.enabled
-    if (!errorRecoveryHealthy) issues.push('Error recovery system disabled')
+    const errorRecoveryHealthy = this.config.errorRecovery.enabled;
+    if (!errorRecoveryHealthy) issues.push('Error recovery system disabled');
 
     // Performance tracking health check
-    const performanceHealthy = this.config.performance.enabled
-    if (!performanceHealthy) issues.push('Performance tracking disabled')
+    const performanceHealthy = this.config.performance.enabled;
+    if (!performanceHealthy) issues.push('Performance tracking disabled');
 
     const overall =
-      nluHealthy && analyticsHealthy && contextHealthy && errorRecoveryHealthy && performanceHealthy
+      nluHealthy &&
+      analyticsHealthy &&
+      contextHealthy &&
+      errorRecoveryHealthy &&
+      performanceHealthy;
 
     return {
       overall,
@@ -664,14 +664,14 @@ export class EnhancedNLUEngine {
       errorRecovery: errorRecoveryHealthy,
       performance: performanceHealthy,
       issues,
-    }
+    };
   }
 
   /**
    * Update configuration
    */
   updateConfig(config: Partial<EnhancedNLUConfig>): void {
-    this.config = { ...this.config, ...config }
+    this.config = { ...this.config, ...config };
 
     // Update subsystems with new config
     if (config.analytics) {
@@ -692,27 +692,27 @@ export class EnhancedNLUEngine {
    * Get current configuration
    */
   getConfig(): EnhancedNLUConfig {
-    return { ...this.config }
+    return { ...this.config };
   }
 
   /**
    * Clear all caches and reset statistics
    */
   async clearCacheAndReset(): Promise<void> {
-    this.cache.clear()
+    this.cache.clear();
     this.cacheStats = {
       hits: 0,
       misses: 0,
       totalRequests: 0,
-    }
+    };
 
     // Reset analytics
-    this.analytics.resetCacheStats()
+    this.analytics.resetCacheStats();
 
     // Reset performance tracking
-    this.errorRecovery.resetLearning()
+    this.errorRecovery.resetLearning();
 
-    logger.info('Enhanced NLU engine cache cleared and statistics reset')
+    logger.info('Enhanced NLU engine cache cleared and statistics reset');
   }
 
   /**
@@ -721,16 +721,16 @@ export class EnhancedNLUEngine {
   async cleanup(): Promise<void> {
     try {
       // Cleanup all subsystems
-      await this.analytics.cleanup()
-      await this.errorRecovery.cleanup()
-      this.performanceTracker.cleanup()
+      await this.analytics.cleanup();
+      await this.errorRecovery.cleanup();
+      this.performanceTracker.cleanup();
 
       // Clear timers and sessions
-      this.activeSessions.clear()
+      this.activeSessions.clear();
 
-      logger.info('Enhanced NLU engine cleaned up successfully')
+      logger.info('Enhanced NLU engine cleaned up successfully');
     } catch (error) {
-      logger.error('Error during Enhanced NLU engine cleanup', { error })
+      logger.error('Error during Enhanced NLU engine cleanup', { error });
     }
   }
 
@@ -739,65 +739,65 @@ export class EnhancedNLUEngine {
   // ============================================================================
 
   private generateClassificationId(): string {
-    return `nlu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `nlu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private updateSessionTracking(userId: string, sessionId: string): void {
-    const sessionKey = `${userId}_${sessionId}`
-    const existingSession = this.activeSessions.get(sessionKey)
+    const sessionKey = `${userId}_${sessionId}`;
+    const existingSession = this.activeSessions.get(sessionKey);
 
     if (existingSession) {
-      existingSession.requestCount++
-      existingSession.lastActivity = new Date()
+      existingSession.requestCount++;
+      existingSession.lastActivity = new Date();
     } else {
       this.activeSessions.set(sessionKey, {
         userId,
         startTime: new Date(),
         requestCount: 1,
         lastActivity: new Date(),
-      })
+      });
     }
 
     // Cleanup old sessions
-    const oneHourAgo = Date.now() - 60 * 60 * 1000
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
     for (const [key, session] of this.activeSessions) {
       if (session.lastActivity.getTime() < oneHourAgo) {
-        this.activeSessions.delete(key)
+        this.activeSessions.delete(key);
       }
     }
   }
 
   private getFromCache(text: string): EnhancedNLUResult | null {
-    const entry = this.cache.get(text.toLowerCase())
-    if (!entry) return null
+    const entry = this.cache.get(text.toLowerCase());
+    if (!entry) return null;
 
     // Check if expired
-    const age = Date.now() - entry.timestamp
+    const age = Date.now() - entry.timestamp;
     if (age > this.config.cacheTTL) {
-      this.cache.delete(text.toLowerCase())
-      return null
+      this.cache.delete(text.toLowerCase());
+      return null;
     }
 
-    return entry.result
+    return entry.result;
   }
 
   private addToCache(text: string, result: EnhancedNLUResult): void {
     this.cache.set(text.toLowerCase(), {
       result,
       timestamp: Date.now(),
-    })
+    });
 
     // Cleanup old entries if cache is too large
     if (this.cache.size > 1000) {
-      this.cleanupCache()
+      this.cleanupCache();
     }
   }
 
   private cleanupCache(): void {
-    const now = Date.now()
+    const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.config.cacheTTL) {
-        this.cache.delete(key)
+        this.cache.delete(key);
       }
     }
   }
@@ -805,8 +805,8 @@ export class EnhancedNLUEngine {
   private enhanceCachedResult(
     cached: EnhancedNLUResult,
     classificationId: string,
-    userId: string,
-    sessionId: string
+    _userId: string,
+    _sessionId: string
   ): EnhancedNLUResult {
     return {
       ...cached,
@@ -817,7 +817,7 @@ export class EnhancedNLUEngine {
           classificationId,
         },
       },
-    }
+    };
   }
 
   private async performInitialNLUProcessing(
@@ -825,28 +825,28 @@ export class EnhancedNLUEngine {
     brazilianContext: BrazilianContext
   ): Promise<NLUResult> {
     // Normalize text with Brazilian context
-    const normalized = this.normalizer.normalize(text)
+    const normalized = this.normalizer.normalize(text);
 
     // Classify intent
-    const classification = await this.classifier.classify(text)
+    const classification = await this.classifier.classify(text);
 
     // Extract entities with Brazilian patterns
-    const entities = this.extractor.extract(text)
+    const entities = this.extractor.extract(text);
 
     // Determine if confirmation needed
     const requiresConfirmation = this.needsConfirmation(
       classification.intent,
       classification.confidence
-    )
+    );
 
     // Determine if disambiguation needed
     const requiresDisambiguation = this.needsDisambiguation(
       classification.confidence,
       classification.alternatives
-    )
+    );
 
     // Check for missing required slots
-    const missingSlots = this.getMissingSlots(classification.intent, entities)
+    const missingSlots = this.getMissingSlots(classification.intent, entities);
 
     return {
       intent: classification.intent,
@@ -866,7 +866,7 @@ export class EnhancedNLUEngine {
         linguisticStyle: brazilianContext.linguisticStyle,
         regionalVariation: brazilianContext.region,
       },
-    }
+    };
   }
 
   private shouldAttemptErrorRecovery(result: NLUResult): boolean {
@@ -875,27 +875,27 @@ export class EnhancedNLUEngine {
       result.confidence < this.config.lowConfidenceThreshold ||
       result.intent === IntentType.UNKNOWN ||
       result.requiresDisambiguation
-    )
+    );
   }
 
   private async classifyError(
     result: NLUResult,
-    text: string,
-    userId: string,
-    sessionId: string
+    _text: string,
+    _userId: string,
+    _sessionId: string
   ): Promise<ErrorClassification> {
-    let errorType = 'low_confidence'
-    let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+    let errorType = 'low_confidence';
+    let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
 
     if (result.intent === IntentType.UNKNOWN) {
-      errorType = 'pattern_miss'
-      severity = 'high'
+      errorType = 'pattern_miss';
+      severity = 'high';
     } else if (result.confidence < this.config.lowConfidenceThreshold) {
-      errorType = 'low_confidence'
-      severity = 'medium'
+      errorType = 'low_confidence';
+      severity = 'medium';
     } else if (result.requiresDisambiguation) {
-      errorType = 'intent_confusion'
-      severity = 'medium'
+      errorType = 'intent_confusion';
+      severity = 'medium';
     }
 
     return {
@@ -906,7 +906,7 @@ export class EnhancedNLUEngine {
       suggestedFixes: ['Try context-aware processing', 'Apply regional variations'],
       learningOpportunities: ['Add more training examples', 'Improve pattern matching'],
       contextualFactors: [],
-    }
+    };
   }
 
   private async attemptErrorRecovery(
@@ -917,15 +917,15 @@ export class EnhancedNLUEngine {
     sessionId: string,
     recoveryAttempts: number
   ): Promise<{
-    success: boolean
-    correctedResult?: NLUResult
-    appliedStrategies: string[]
+    success: boolean;
+    correctedResult?: NLUResult;
+    appliedStrategies: string[];
   }> {
     try {
-      const context = await this.contextProcessor.getOrCreateContext(userId, sessionId)
-      const userPreferences = await this.contextProcessor.getUserPreferences(userId)
-      const financialContext = await this.contextProcessor.getFinancialContext(userId)
-      const brazilianContext = this.brazilianAnalyzer.analyzeContext(text)
+      const context = await this.contextProcessor.getOrCreateContext(userId, sessionId);
+      const userPreferences = await this.contextProcessor.getUserPreferences(userId);
+      const financialContext = await this.contextProcessor.getFinancialContext(userId);
+      const brazilianContext = this.brazilianAnalyzer.analyzeContext(text);
 
       const recoveryContext = {
         originalText: text,
@@ -938,12 +938,12 @@ export class EnhancedNLUEngine {
         brazilianContext,
         recoveryAttempts,
         previousErrors: [errorClassification],
-      }
+      };
 
       const recoveryResult = await this.errorRecovery.attemptRecovery(
         errorClassification,
         recoveryContext
-      )
+      );
 
       return {
         success: recoveryResult.success,
@@ -959,28 +959,28 @@ export class EnhancedNLUEngine {
             }
           : undefined,
         appliedStrategies: [recoveryResult.appliedStrategy],
-      }
+      };
     } catch (error) {
-      logger.error('Error recovery attempt failed', { error })
+      logger.error('Error recovery attempt failed', { error });
       return {
         success: false,
         appliedStrategies: [],
-      }
+      };
     }
   }
 
   private async createEnhancedResult(
     result: NLUResult,
-    originalText: string,
+    _originalText: string,
     brazilianContext: BrazilianContext,
     conversationContext: any,
     contextEnhancements: any,
     classificationId: string,
-    userId: string,
-    sessionId: string,
+    _userId: string,
+    _sessionId: string,
     startTime: number
   ): Promise<EnhancedNLUResult> {
-    const processingTime = Date.now() - startTime
+    const processingTime = Date.now() - startTime;
 
     return {
       ...result,
@@ -1027,11 +1027,11 @@ export class EnhancedNLUEngine {
             reasoning: `Alternative intent with ${alt.confidence} confidence`,
           })) || [],
       },
-    }
+    };
   }
 
   private async handleNLUError(
-    error: NLUError,
+    _error: NLUError,
     text: string,
     userId: string,
     sessionId: string,
@@ -1055,7 +1055,7 @@ export class EnhancedNLUEngine {
         text,
         userId,
         sessionId
-      )
+      );
 
       const recoveryResult = await this.attemptErrorRecovery(
         errorClassification,
@@ -1074,7 +1074,7 @@ export class EnhancedNLUEngine {
         userId,
         sessionId,
         0
-      )
+      );
 
       if (recoveryResult.success && recoveryResult.correctedResult) {
         return await this.createEnhancedResult(
@@ -1087,21 +1087,23 @@ export class EnhancedNLUEngine {
           userId,
           sessionId,
           processingTime
-        )
+        );
       }
     } catch (recoveryError) {
-      logger.error('Error recovery during NLU error handling failed', { recoveryError })
+      logger.error('Error recovery during NLU error handling failed', {
+        recoveryError,
+      });
     }
 
-    return null
+    return null;
   }
 
   private createErrorResult(
     error: Error,
     text: string,
     classificationId: string,
-    userId: string,
-    sessionId: string,
+    _userId: string,
+    _sessionId: string,
     processingTime: number
   ): EnhancedNLUResult {
     return {
@@ -1157,44 +1159,44 @@ export class EnhancedNLUEngine {
         contextualHints: ['Tente ser mais específico sobre o que você quer fazer'],
         alternativeIntents: [],
       },
-    }
+    };
   }
 
   private generateSuggestedQuestions(result: NLUResult, contextEnhancements: any): string[] {
-    const questions = []
+    const questions = [];
 
     if (result.requiresDisambiguation) {
-      questions.push('Pode confirmar o que você quer fazer?')
+      questions.push('Pode confirmar o que você quer fazer?');
     }
 
     if (result.missingSlots && result.missingSlots.length > 0) {
-      questions.push('Pode fornecer mais detalhes para completar esta operação?')
+      questions.push('Pode fornecer mais detalhes para completar esta operação?');
     }
 
     if (
       contextEnhancements.missingContextualInfo &&
       contextEnhancements.missingContextualInfo.length > 0
     ) {
-      questions.push('Pode me dar mais contexto sobre o que você quer?')
+      questions.push('Pode me dar mais contexto sobre o que você quer?');
     }
 
-    return questions
+    return questions;
   }
 
   private needsConfirmation(intent: IntentType, confidence: number): boolean {
-    const highRiskIntents = [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY]
+    const highRiskIntents = [IntentType.PAY_BILL, IntentType.TRANSFER_MONEY];
     if (highRiskIntents.includes(intent)) {
-      return true
+      return true;
     }
 
     if (
       confidence >= this.config.mediumConfidenceThreshold &&
       confidence < this.config.highConfidenceThreshold
     ) {
-      return true
+      return true;
     }
 
-    return false
+    return false;
   }
 
   private needsDisambiguation(
@@ -1202,32 +1204,32 @@ export class EnhancedNLUEngine {
     alternatives: Array<{ intent: IntentType; confidence: number }> | undefined
   ): boolean {
     if (!this.config.disambiguationEnabled) {
-      return false
+      return false;
     }
 
     if (confidence < this.config.mediumConfidenceThreshold) {
-      return true
+      return true;
     }
 
     if (!alternatives || alternatives.length === 0) {
-      return false
+      return false;
     }
 
     const highConfidenceAlternatives = alternatives.filter(
       (alt) => alt.confidence >= this.config.mediumConfidenceThreshold
-    )
+    );
 
-    return highConfidenceAlternatives.length > 1
+    return highConfidenceAlternatives.length > 1;
   }
 
   private getMissingSlots(intent: IntentType, entities: any[]): any[] {
-    const definition = INTENT_DEFINITIONS[intent]
-    if (!definition) return []
+    const definition = INTENT_DEFINITIONS[intent];
+    if (!definition) return [];
 
-    const extractedTypes = new Set(entities.map((e) => e.type))
-    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot))
+    const extractedTypes = new Set(entities.map((e) => e.type));
+    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot));
 
-    return missingSlots
+    return missingSlots;
   }
 
   private getIntentDescription(intent: IntentType): string {
@@ -1238,9 +1240,9 @@ export class EnhancedNLUEngine {
       [IntentType.CHECK_BUDGET]: 'analisar seu orçamento',
       [IntentType.CHECK_INCOME]: 'consultar seus rendimentos',
       [IntentType.FINANCIAL_PROJECTION]: 'ver uma projeção financeira',
-    }
+    };
 
-    return descriptions[intent] || 'realizar uma operação financeira'
+    return descriptions[intent] || 'realizar uma operação financeira';
   }
 }
 
@@ -1249,12 +1251,12 @@ export class EnhancedNLUEngine {
 // ============================================================================
 
 export function createEnhancedNLUEngine(config?: Partial<EnhancedNLUConfig>): EnhancedNLUEngine {
-  return new EnhancedNLUEngine(config)
+  return new EnhancedNLUEngine(config);
 }
 
 // ============================================================================
 // Exports
 // ============================================================================
 
-export { DEFAULT_ENHANCED_CONFIG }
-export type { EnhancedNLUConfig, EnhancedNLUResult }
+export { DEFAULT_ENHANCED_CONFIG };
+export type { EnhancedNLUConfig, EnhancedNLUResult };

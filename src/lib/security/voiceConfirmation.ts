@@ -5,7 +5,7 @@
  * LGPD-compliant with encryption and audit logs
  */
 
-import { createAuditLog } from '@/lib/security/auditLogger'
+import { createAuditLog } from '@/lib/security/auditLogger';
 
 export enum FailureScenario {
   LOW_CONFIDENCE = 'low_confidence',
@@ -16,20 +16,20 @@ export enum FailureScenario {
 }
 
 export interface VoiceConfirmationConfig {
-  requiresBiometric: boolean
-  minAmount: number // R$ threshold for confirmation
-  maxAttempts: number
-  timeoutSeconds: number
-  enableRecording: boolean // LGPD consent required
+  requiresBiometric: boolean;
+  minAmount: number; // R$ threshold for confirmation
+  maxAttempts: number;
+  timeoutSeconds: number;
+  enableRecording: boolean; // LGPD consent required
 }
 
 export interface ConfirmationResult {
-  success: boolean
-  method: 'voice' | 'biometric' | 'fallback' | 'timeout'
-  confidence: number
-  transcription?: string
-  processingTime: number
-  auditLogId?: string
+  success: boolean;
+  method: 'voice' | 'biometric' | 'fallback' | 'timeout';
+  confidence: number;
+  transcription?: string;
+  processingTime: number;
+  auditLogId?: string;
 }
 
 const DEFAULT_CONFIG: VoiceConfirmationConfig = {
@@ -38,26 +38,26 @@ const DEFAULT_CONFIG: VoiceConfirmationConfig = {
   maxAttempts: 3,
   timeoutSeconds: 30,
   enableRecording: false, // User must consent
-}
+};
 
 export class VoiceConfirmationService {
-  private config: VoiceConfirmationConfig
+  private config: VoiceConfirmationConfig;
 
   constructor(config?: Partial<VoiceConfirmationConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
   /**
    * Request voice + biometric confirmation for transaction
    */
   async confirmTransaction(params: {
-    userId: string
-    transactionType: string
-    amount: number
-    recipient?: string
-    expectedPhrase: string
+    userId: string;
+    transactionType: string;
+    amount: number;
+    recipient?: string;
+    expectedPhrase: string;
   }): Promise<ConfirmationResult> {
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     try {
       // Check if amount requires confirmation
@@ -67,35 +67,35 @@ export class VoiceConfirmationService {
           method: 'voice',
           confidence: 1.0,
           processingTime: Date.now() - startTime,
-        }
+        };
       }
 
       // 1. Voice Confirmation
-      const voiceResult = await this.confirmVoice(params.expectedPhrase)
+      const voiceResult = await this.confirmVoice(params.expectedPhrase);
 
       if (!voiceResult.success) {
-        await this.logFailedAttempt(params)
+        await this.logFailedAttempt(params);
         return {
           success: false,
           method: 'voice',
           confidence: voiceResult.confidence,
           transcription: voiceResult.transcription,
           processingTime: Date.now() - startTime,
-        }
+        };
       }
 
       // 2. Biometric Confirmation (if required)
       if (this.config.requiresBiometric) {
-        const biometricResult = await this.confirmBiometric(params.userId)
+        const biometricResult = await this.confirmBiometric(params.userId);
 
         if (!biometricResult.success) {
-          await this.logFailedAttempt(params)
+          await this.logFailedAttempt(params);
           return {
             success: false,
             method: 'biometric',
             confidence: 0,
             processingTime: Date.now() - startTime,
-          }
+          };
         }
       }
 
@@ -108,7 +108,7 @@ export class VoiceConfirmationService {
         method: this.config.requiresBiometric ? 'voice+biometric' : 'voice',
         confidence: voiceResult.confidence,
         transcription: this.config.enableRecording ? voiceResult.transcription : undefined,
-      })
+      });
 
       return {
         success: true,
@@ -117,15 +117,14 @@ export class VoiceConfirmationService {
         transcription: voiceResult.transcription,
         processingTime: Date.now() - startTime,
         auditLogId,
-      }
-    } catch (error) {
-      console.error('[VoiceConfirmation] Error:', error)
+      };
+    } catch (_error) {
       return {
         success: false,
         method: 'fallback',
         confidence: 0,
         processingTime: Date.now() - startTime,
-      }
+      };
     }
   }
 
@@ -133,48 +132,48 @@ export class VoiceConfirmationService {
    * Confirm via voice transcription
    */
   private async confirmVoice(expectedPhrase: string): Promise<{
-    success: boolean
-    confidence: number
-    transcription?: string
+    success: boolean;
+    confidence: number;
+    transcription?: string;
   }> {
     // Use Web Speech API for simplicity (already available)
     return new Promise((resolve) => {
       if (!('webkitSpeechRecognition' in window)) {
-        resolve({ success: false, confidence: 0 })
-        return
+        resolve({ success: false, confidence: 0 });
+        return;
       }
 
-      const recognition = new (window as any).webkitSpeechRecognition()
-      recognition.lang = 'pt-BR'
-      recognition.continuous = false
-      recognition.interimResults = false
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
 
       const timeout = setTimeout(() => {
-        recognition.stop()
-        resolve({ success: false, confidence: 0 })
-      }, this.config.timeoutSeconds * 1000)
+        recognition.stop();
+        resolve({ success: false, confidence: 0 });
+      }, this.config.timeoutSeconds * 1000);
 
       recognition.onresult = (event: any) => {
-        clearTimeout(timeout)
-        const transcript = event.results[0][0].transcript.toLowerCase()
-        const confidence = event.results[0][0].confidence
+        clearTimeout(timeout);
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const confidence = event.results[0][0].confidence;
 
-        const match = this.fuzzyMatch(transcript, expectedPhrase.toLowerCase())
+        const match = this.fuzzyMatch(transcript, expectedPhrase.toLowerCase());
 
         resolve({
           success: match && confidence > 0.7,
           confidence,
           transcription: transcript,
-        })
-      }
+        });
+      };
 
       recognition.onerror = () => {
-        clearTimeout(timeout)
-        resolve({ success: false, confidence: 0 })
-      }
+        clearTimeout(timeout);
+        resolve({ success: false, confidence: 0 });
+      };
 
-      recognition.start()
-    })
+      recognition.start();
+    });
   }
 
   /**
@@ -191,16 +190,16 @@ export class VoiceConfirmationService {
             rpId: window.location.hostname,
             userVerification: 'required',
           },
-        })
+        });
 
-        return { success: !!credential }
+        return { success: !!credential };
       } catch {
-        return { success: false }
+        return { success: false };
       }
     }
 
     // Fallback: assume biometric passed (would be handled by native app)
-    return { success: true }
+    return { success: true };
   }
 
   /**
@@ -212,47 +211,47 @@ export class VoiceConfirmationService {
       str
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, ' ')
-        .trim()
+        .trim();
 
-    const cleanTranscript = clean(transcript)
-    const cleanExpected = clean(expected)
+    const cleanTranscript = clean(transcript);
+    const cleanExpected = clean(expected);
 
     // Levenshtein distance for similarity
-    const distance = this.levenshteinDistance(cleanTranscript, cleanExpected)
-    const similarity = 1 - distance / Math.max(cleanTranscript.length, cleanExpected.length)
+    const distance = this.levenshteinDistance(cleanTranscript, cleanExpected);
+    const similarity = 1 - distance / Math.max(cleanTranscript.length, cleanExpected.length);
 
-    return similarity > 0.75 // 75% similarity threshold
+    return similarity > 0.75; // 75% similarity threshold
   }
 
   /**
    * Calculate Levenshtein distance
    */
   private levenshteinDistance(a: string, b: string): number {
-    const matrix: number[][] = []
+    const matrix: number[][] = [];
 
     for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i]
+      matrix[i] = [i];
     }
 
     for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j
+      matrix[0][j] = j;
     }
 
     for (let i = 1; i <= b.length; i++) {
       for (let j = 1; j <= a.length; j++) {
         if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1]
+          matrix[i][j] = matrix[i - 1][j - 1];
         } else {
           matrix[i][j] = Math.min(
             matrix[i - 1][j - 1] + 1,
             matrix[i][j - 1] + 1,
             matrix[i - 1][j] + 1
-          )
+          );
         }
       }
     }
 
-    return matrix[b.length][a.length]
+    return matrix[b.length][a.length];
   }
 
   /**
@@ -266,7 +265,7 @@ export class VoiceConfirmationService {
       amount: params.amount,
       method: 'voice',
       confidence: 0,
-    })
+    });
   }
 
   /**
@@ -277,19 +276,19 @@ export class VoiceConfirmationService {
       transfer: ['Eu autorizo esta transferência', 'Confirmo a transferência', 'Sim, eu autorizo'],
       payment: ['Eu autorizo este pagamento', 'Confirmo o pagamento', 'Sim, pago a conta'],
       bill: ['Eu autorizo pagar esta conta', 'Confirmo o pagamento', 'Sim, eu pago'],
-    }
+    };
 
-    const actionPhrases = phrases[action as keyof typeof phrases] || phrases.transfer
-    return actionPhrases[Math.floor(Math.random() * actionPhrases.length)]
+    const actionPhrases = phrases[action as keyof typeof phrases] || phrases.transfer;
+    return actionPhrases[Math.floor(Math.random() * actionPhrases.length)];
   }
 
   /**
    * Determine fallback strategy based on failure scenario
    */
   getFallbackStrategy(scenario: FailureScenario): {
-    action: 'retry' | 'pin_fallback' | 'cancel'
-    maxRetries: number
-    message: string
+    action: 'retry' | 'pin_fallback' | 'cancel';
+    maxRetries: number;
+    message: string;
   } {
     const strategies = {
       [FailureScenario.LOW_CONFIDENCE]: {
@@ -317,47 +316,25 @@ export class VoiceConfirmationService {
         maxRetries: 0,
         message: 'Tempo esgotado. Tente novamente',
       },
-    }
+    };
 
-    return strategies[scenario]
-  }
-
-  /**
-   * Determine failure scenario from error
-   */
-  private determineFailureScenario(error: Error): FailureScenario {
-    const message = error.message.toLowerCase()
-
-    if (message.includes('network') || message.includes('connection')) {
-      return FailureScenario.NETWORK_ERROR
-    }
-    if (message.includes('all providers') || message.includes('all recognition')) {
-      return FailureScenario.ALL_PROVIDERS_FAILED
-    }
-    if (message.includes('audio quality') || message.includes('too low')) {
-      return FailureScenario.AUDIO_QUALITY
-    }
-    if (message.includes('timeout')) {
-      return FailureScenario.TIMEOUT
-    }
-
-    return FailureScenario.LOW_CONFIDENCE
+    return strategies[scenario];
   }
 }
 
 /**
  * Singleton instance
  */
-let voiceConfirmationService: VoiceConfirmationService | null = null
+let voiceConfirmationService: VoiceConfirmationService | null = null;
 
 export function getVoiceConfirmationService(
   config?: Partial<VoiceConfirmationConfig>
 ): VoiceConfirmationService {
   if (!voiceConfirmationService) {
-    voiceConfirmationService = new VoiceConfirmationService(config)
+    voiceConfirmationService = new VoiceConfirmationService(config);
   } else if (config) {
-    voiceConfirmationService = new VoiceConfirmationService(config)
+    voiceConfirmationService = new VoiceConfirmationService(config);
   }
 
-  return voiceConfirmationService
+  return voiceConfirmationService;
 }

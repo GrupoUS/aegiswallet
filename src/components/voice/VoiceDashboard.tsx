@@ -1,22 +1,13 @@
-import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, History, Settings, Volume2 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useAccessibility } from "@/components/accessibility/AccessibilityProvider";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
-import {
-  ProcessedCommand,
-  processVoiceCommand,
-} from "@/lib/voiceCommandProcessor";
-import { VoiceIndicator } from "@/components/voice/VoiceIndicator";
-import { VoiceResponse } from "@/components/voice/VoiceResponse";
+import { useNavigate } from '@tanstack/react-router';
+import { ChevronRight, History, Settings, Volume2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { VoiceIndicator } from '@/components/voice/VoiceIndicator';
+import { VoiceResponse } from '@/components/voice/VoiceResponse';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { type ProcessedCommand, processVoiceCommand } from '@/lib/voiceCommandProcessor';
 
 interface VoiceDashboardProps {
   className?: string;
@@ -38,8 +29,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     stopListening,
   } = useVoiceRecognition({});
 
-  const [currentResponse, setCurrentResponse] =
-    useState<ProcessedCommand | null>(null);
+  const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
   const [commandHistory, setCommandHistory] = useState<
     Array<{
       command: string;
@@ -108,9 +98,9 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
   // Otimizar funções com useCallback
   const speakResponse = useCallback((text: string) => {
-    if ("speechSynthesis" in window) {
+    if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "pt-BR";
+      utterance.lang = 'pt-BR';
       utterance.rate = 0.9;
       speechSynthesis.speak(utterance);
     }
@@ -127,52 +117,52 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   // Otimizar saudação com useMemo
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
-    return "Boa noite";
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
   }, []);
 
   // Otimizar ações rápidas com useMemo
   const quickActions = useMemo(
     () => [
       {
-        title: "Saldo",
-        icon: "💰",
+        title: 'Saldo',
+        icon: '💰',
         action: () => {
-          navigate({ to: "/saldo" });
-          announce("Navegando para página de saldo");
+          navigate({ to: '/saldo' });
+          announce('Navegando para página de saldo');
         },
-        description: "Ver seu saldo e transações",
+        description: 'Ver seu saldo e transações',
       },
       {
-        title: "Orçamento",
-        icon: "📊",
+        title: 'Orçamento',
+        icon: '📊',
         action: () => {
-          navigate({ to: "/dashboard" });
-          announce("Navegando para dashboard com orçamentos");
+          navigate({ to: '/dashboard' });
+          announce('Navegando para dashboard com orçamentos');
         },
-        description: "Analisar seu orçamento mensal",
+        description: 'Analisar seu orçamento mensal',
       },
       {
-        title: "Contas",
-        icon: "📄",
+        title: 'Contas',
+        icon: '📄',
         action: () => {
-          navigate({ to: "/contas" });
-          announce("Navegando para página de contas");
+          navigate({ to: '/contas' });
+          announce('Navegando para página de contas');
         },
-        description: "Gerenciar suas contas e pagamentos",
+        description: 'Gerenciar suas contas e pagamentos',
       },
       {
-        title: "PIX",
-        icon: "🚀",
+        title: 'PIX',
+        icon: '🚀',
         action: () => {
-          navigate({ to: "/pix" });
-          announce("Navegando para página de PIX");
+          navigate({ to: '/pix' });
+          announce('Navegando para página de PIX');
         },
-        description: "Fazer transferências PIX",
+        description: 'Fazer transferências PIX',
       },
     ],
-    [navigate, announce],
+    [navigate, announce]
   );
 
   // Otimizar histórico de comandos com useMemo
@@ -182,20 +172,18 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
   return (
     <div className={`h-full w-full bg-background p-4 ${className}`}>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">{greeting}! 👋</h1>
-          <p className="text-lg text-muted-foreground">
-            Como posso ajudar com suas finanças hoje?
-          </p>
+        <div className="space-y-2 text-center">
+          <h1 className="font-bold text-3xl text-foreground">{greeting}! 👋</h1>
+          <p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
         </div>
 
         {/* Main Voice Interface */}
         <Card className="relative overflow-hidden">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-xl flex items-center justify-center gap-2">
-              <Volume2 className="w-6 h-6" />
+          <CardHeader className="pb-2 text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-xl">
+              <Volume2 className="h-6 w-6" />
               Assistente Financeiro
             </CardTitle>
           </CardHeader>
@@ -215,16 +203,16 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             {/* Confidence Indicator */}
             {transcript && confidence > 0 && (
               <div className="mt-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center justify-center gap-2 text-gray-600 text-sm">
                   <span>Confiança:</span>
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                  <div className="h-2 w-24 rounded-full bg-gray-200">
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
                         confidence > 0.8
-                          ? "bg-success"
+                          ? 'bg-success'
                           : confidence > 0.6
-                            ? "bg-warning"
-                            : "bg-destructive"
+                            ? 'bg-warning'
+                            : 'bg-destructive'
                       }`}
                       style={{ width: `${confidence * 100}%` }}
                     />
@@ -238,7 +226,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
         {/* Voice Response */}
         {currentResponse && (
-          <div className="animate-in slide-in-from-bottom-2 duration-300">
+          <div className="slide-in-from-bottom-2 animate-in duration-300">
             <VoiceResponse
               type={currentResponse.type}
               message={currentResponse.message}
@@ -246,7 +234,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             />
 
             {currentResponse.requiresConfirmation && (
-              <div className="mt-4 flex gap-3 justify-center">
+              <div className="mt-4 flex justify-center gap-3">
                 <Button onClick={() => speakResponse(currentResponse.message)}>
                   🔊 Ouvir resposta
                 </Button>
@@ -259,12 +247,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {quickActions.map((action) => (
             <Button
               key={action.title}
               variant="outline"
-              className="h-20 flex flex-col gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-20 flex-col gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               onClick={action.action}
               aria-label={`${action.title}: ${action.description}`}
               title={action.description}
@@ -281,36 +269,29 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         {commandHistory.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-lg">
                 <span className="flex items-center gap-2">
-                  <History className="w-5 h-5" />
+                  <History className="h-5 w-5" />
                   Comandos Recentes
                 </span>
                 <Button variant="ghost" size="sm">
                   Ver todos
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-3">
                 {recentCommands.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="w-2 h-2 bg-info rounded-full mt-2 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        "{item.command}"
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {item.response.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {item.timestamp.toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
+                  <div key={index} className="flex items-start gap-3 rounded-lg bg-gray-50 p-3">
+                    <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-info" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 text-sm">"{item.command}"</p>
+                      <p className="mt-1 text-gray-600 text-sm">{item.response.message}</p>
+                      <p className="mt-1 text-gray-400 text-xs">
+                        {item.timestamp.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </p>
                     </div>
@@ -322,18 +303,18 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         )}
 
         {/* Settings Button */}
-        <div className="fixed bottom-4 right-4">
+        <div className="fixed right-4 bottom-4">
           <Button
             size="lg"
-            className="w-14 h-14 rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="h-14 w-14 rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Configurações de acessibilidade"
             onClick={() => {
-              announce("Abrindo configurações de acessibilidade");
+              announce('Abrindo configurações de acessibilidade');
               // Implementar navegação para configurações quando disponível
             }}
             title="Configurações de acessibilidade"
           >
-            <Settings className="w-6 h-6" />
+            <Settings className="h-6 w-6" />
           </Button>
         </div>
 
@@ -341,10 +322,10 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         <button
           className="skip-link"
           onClick={() => {
-            const mainContent = document.querySelector("main");
+            const mainContent = document.querySelector('main');
             if (mainContent) {
               mainContent.focus();
-              announce("Pulado para conteúdo principal");
+              announce('Pulado para conteúdo principal');
             }
           }}
         >

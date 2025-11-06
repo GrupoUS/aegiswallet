@@ -3,6 +3,10 @@ dist/
 build/
 .next/
 out/
+node_modules
+.next
+dist
+build
 
 # Dependencies
 node_modules/

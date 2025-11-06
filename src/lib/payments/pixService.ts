@@ -3,25 +3,25 @@
  */
 
 export interface PIXTransfer {
-  recipientKey: string
-  amount: number
-  message?: string
+  recipientKey: string;
+  amount: number;
+  message?: string;
 }
 
 export class PIXService {
   async validateKey(_key: string): Promise<{ valid: boolean; name?: string }> {
-    return { valid: true, name: 'João Silva' }
+    return { valid: true, name: 'João Silva' };
   }
 
   async initiateTransfer(_transfer: PIXTransfer): Promise<{ transactionId: string }> {
-    return { transactionId: `pix_${Date.now()}` }
+    return { transactionId: `pix_${Date.now()}` };
   }
 
   async getTransferStatus(_transactionId: string): Promise<'pending' | 'completed' | 'failed'> {
-    return 'completed'
+    return 'completed';
   }
 }
 
 export function getPIXService(): PIXService {
-  return new PIXService()
+  return new PIXService();
 }

@@ -3,7 +3,7 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest';
 
 describe('LGPD Compliance Issues', () => {
   describe('Data Collection and Consent', () => {
@@ -15,11 +15,11 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice consent is missing
         voice_data_consent: true,
         biometric_consent: true,
-      }
+      };
 
-      expect(mockUserConsent.voice_data_consent).toBeDefined()
-      expect(mockUserConsent.biometric_consent).toBeDefined()
-    })
+      expect(mockUserConsent.voice_data_consent).toBeDefined();
+      expect(mockUserConsent.biometric_consent).toBeDefined();
+    });
 
     it('should have data retention policies for voice data', () => {
       // This test exposes missing data retention policies
@@ -30,12 +30,12 @@ describe('LGPD Compliance Issues', () => {
         voice_data_retention: '90_days',
         biometric_data_retention: '30_days',
         audit_log_retention: '5_years',
-      }
+      };
 
-      expect(mockDataRetention.voice_data_retention).toBeDefined()
-      expect(mockDataRetention.biometric_data_retention).toBeDefined()
-      expect(mockDataRetention.audit_log_retention).toBeDefined()
-    })
+      expect(mockDataRetention.voice_data_retention).toBeDefined();
+      expect(mockDataRetention.biometric_data_retention).toBeDefined();
+      expect(mockDataRetention.audit_log_retention).toBeDefined();
+    });
 
     it('should have data minimization principles implemented', () => {
       // This test exposes missing data minimization
@@ -48,12 +48,12 @@ describe('LGPD Compliance Issues', () => {
           optional: ['voice_pattern'],
           retention_period: '90_days',
         },
-      }
+      };
 
-      expect(mockDataCollection.voice_fields).toBeDefined()
-      expect(mockDataCollection.voice_fields.required).toContain('voice_sample')
-    })
-  })
+      expect(mockDataCollection.voice_fields).toBeDefined();
+      expect(mockDataCollection.voice_fields.required).toContain('voice_sample');
+    });
+  });
 
   describe('User Rights Implementation', () => {
     it('should provide data export functionality', () => {
@@ -65,11 +65,11 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice data export is missing
         include_voice_data: true,
         include_biometric_data: false,
-      }
+      };
 
-      expect(mockDataExport.include_voice_data).toBeDefined()
-      expect(mockDataExport.include_biometric_data).toBeDefined()
-    })
+      expect(mockDataExport.include_voice_data).toBeDefined();
+      expect(mockDataExport.include_biometric_data).toBeDefined();
+    });
 
     it('should support data deletion requests', () => {
       // This test exposes incomplete data deletion
@@ -80,11 +80,11 @@ describe('LGPD Compliance Issues', () => {
         delete_voice_data: true,
         delete_voice_models: true,
         delete_audit_trail: false,
-      }
+      };
 
-      expect(mockDeletionRequest.delete_voice_data).toBeDefined()
-      expect(mockDeletionRequest.delete_voice_models).toBeDefined()
-    })
+      expect(mockDeletionRequest.delete_voice_data).toBeDefined();
+      expect(mockDeletionRequest.delete_voice_models).toBeDefined();
+    });
 
     it('should have consent withdrawal mechanisms', () => {
       // This test exposes missing consent withdrawal
@@ -95,12 +95,12 @@ describe('LGPD Compliance Issues', () => {
         withdraw_voice_consent: true,
         withdraw_biometric_consent: true,
         effective_date: '2024-01-01',
-      }
+      };
 
-      expect(mockConsentWithdrawal.withdraw_voice_consent).toBeDefined()
-      expect(mockConsentWithdrawal.withdraw_biometric_consent).toBeDefined()
-    })
-  })
+      expect(mockConsentWithdrawal.withdraw_voice_consent).toBeDefined();
+      expect(mockConsentWithdrawal.withdraw_biometric_consent).toBeDefined();
+    });
+  });
 
   describe('Data Processing Records', () => {
     it('should maintain audit logs for voice data processing', () => {
@@ -119,11 +119,11 @@ describe('LGPD Compliance Issues', () => {
         },
         legal_basis: 'user_consent',
         purpose: 'transaction_processing',
-      }
+      };
 
-      expect(mockAuditLog.voice_metadata).toBeDefined()
-      expect(mockAuditLog.voice_metadata.confidence_score).toBeDefined()
-    })
+      expect(mockAuditLog.voice_metadata).toBeDefined();
+      expect(mockAuditLog.voice_metadata.confidence_score).toBeDefined();
+    });
 
     it('should record data sharing activities', () => {
       // This test exposes missing data sharing records
@@ -135,11 +135,11 @@ describe('LGPD Compliance Issues', () => {
         voice_data_shared: false,
         sharing_purpose: 'payment_processing',
         legal_basis: 'contractual_necessity',
-      }
+      };
 
-      expect(mockDataSharing.voice_data_shared).toBeDefined()
-    })
-  })
+      expect(mockDataSharing.voice_data_shared).toBeDefined();
+    });
+  });
 
   describe('Security and Encryption', () => {
     it('should encrypt sensitive voice data at rest', () => {
@@ -155,11 +155,11 @@ describe('LGPD Compliance Issues', () => {
         },
         encryption_algorithm: 'AES-256-GCM',
         key_rotation_period: '90_days',
-      }
+      };
 
-      expect(mockEncryptionConfig.field_encryption.voice_samples).toBeDefined()
-      expect(mockEncryptionConfig.field_encryption.voice_patterns).toBeDefined()
-    })
+      expect(mockEncryptionConfig.field_encryption.voice_samples).toBeDefined();
+      expect(mockEncryptionConfig.field_encryption.voice_patterns).toBeDefined();
+    });
 
     it('should have secure voice data transmission', () => {
       // This test exposes missing secure transmission
@@ -170,12 +170,12 @@ describe('LGPD Compliance Issues', () => {
         voice_encryption: 'end_to_end',
         biometric_encryption: 'end_to_end',
         certificate_validation: true,
-      }
+      };
 
-      expect(mockTransmissionConfig.voice_encryption).toBeDefined()
-      expect(mockTransmissionConfig.biometric_encryption).toBeDefined()
-    })
-  })
+      expect(mockTransmissionConfig.voice_encryption).toBeDefined();
+      expect(mockTransmissionConfig.biometric_encryption).toBeDefined();
+    });
+  });
 
   describe('International Data Transfers', () => {
     it('should document international data transfers', () => {
@@ -188,10 +188,10 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice data transfer is missing
         voice_data_transferred: false,
         transfer_date: '2024-01-01',
-      }
+      };
 
-      expect(mockDataTransfer.voice_data_transferred).toBeDefined()
-    })
+      expect(mockDataTransfer.voice_data_transferred).toBeDefined();
+    });
 
     it('should have appropriate safeguards for voice data', () => {
       // This test exposes missing international safeguards
@@ -201,12 +201,12 @@ describe('LGPD Compliance Issues', () => {
         // @ts-expect-error - This should fail because voice data safeguards are missing
         voice_data_safeguards: ['explicit_consent', 'encryption'],
         biometric_safeguards: ['explicit_consent', 'local_processing'],
-      }
+      };
 
-      expect(mockSafeguards.voice_data_safeguards).toBeDefined()
-      expect(mockSafeguards.biometric_safeguards).toBeDefined()
-    })
-  })
+      expect(mockSafeguards.voice_data_safeguards).toBeDefined();
+      expect(mockSafeguards.biometric_safeguards).toBeDefined();
+    });
+  });
 
   describe('Data Protection Impact Assessment', () => {
     it('should have DPIA for voice processing', () => {
@@ -222,10 +222,10 @@ describe('LGPD Compliance Issues', () => {
           accent_processing: 'low',
         },
         review_date: '2024-01-01',
-      }
+      };
 
-      expect(mockDPIA.voice_specific_risks).toBeDefined()
-      expect(mockDPIA.voice_specific_risks.voice_pattern_analysis).toBeDefined()
-    })
-  })
-})
+      expect(mockDPIA.voice_specific_risks).toBeDefined();
+      expect(mockDPIA.voice_specific_risks.voice_pattern_analysis).toBeDefined();
+    });
+  });
+});

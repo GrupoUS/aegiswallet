@@ -1,20 +1,20 @@
-import '@testing-library/jest-dom'
-import { vi, beforeAll, afterAll, afterEach } from 'vitest'
+import '@testing-library/jest-dom';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // Ensure DOM is available immediately (before tests run)
 if (typeof globalThis.document === 'undefined') {
-  const { JSDOM } = require('jsdom')
+  const { JSDOM } = require('jsdom');
   const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
     url: 'http://localhost',
     pretendToBeVisual: true,
     resources: 'usable',
-  })
+  });
 
-  globalThis.window = dom.window
-  globalThis.document = dom.window.document
-  globalThis.navigator = dom.window.navigator
-  globalThis.HTMLElement = dom.window.HTMLElement
-  globalThis.Element = dom.window.Element
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.navigator = dom.window.navigator;
+  globalThis.HTMLElement = dom.window.HTMLElement;
+  globalThis.Element = dom.window.Element;
 }
 
 // Setup global DOM environment for Vitest
@@ -32,14 +32,14 @@ beforeAll(() => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     })),
-  })
+  });
 
   // Mock ResizeObserver
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
     observe: vi.fn(),
     unobserve: vi.fn(),
     disconnect: vi.fn(),
-  }))
+  }));
 
   // Mock localStorage
   const localStorageMock = {
@@ -47,8 +47,8 @@ beforeAll(() => {
     setItem: vi.fn(),
     removeItem: vi.fn(),
     clear: vi.fn(),
-  }
-  vi.stubGlobal('localStorage', localStorageMock)
+  };
+  vi.stubGlobal('localStorage', localStorageMock);
 
   // Mock Speech Synthesis API for voice service tests
   const mockSpeechSynthesis = {
@@ -79,7 +79,7 @@ beforeAll(() => {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }
+  };
 
   // Mock Speech Synthesis Utterance
   const mockSpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
@@ -96,7 +96,7 @@ beforeAll(() => {
     onboundary: null,
     onpause: null,
     onresume: null,
-  }))
+  }));
 
   // Mock Speech Recognition API
   const mockSpeechRecognition = vi.fn().mockImplementation(() => ({
@@ -118,54 +118,54 @@ beforeAll(() => {
     start: vi.fn(),
     stop: vi.fn(),
     abort: vi.fn(),
-  }))
+  }));
 
   // Set up global Speech API mocks (avoid redefinition)
   if (!globalThis.SpeechSynthesisUtterance) {
-    vi.stubGlobal('SpeechSynthesisUtterance', mockSpeechSynthesisUtterance)
+    vi.stubGlobal('SpeechSynthesisUtterance', mockSpeechSynthesisUtterance);
   }
   if (!globalThis.speechSynthesis) {
-    vi.stubGlobal('speechSynthesis', mockSpeechSynthesis)
+    vi.stubGlobal('speechSynthesis', mockSpeechSynthesis);
   }
   if (!(globalThis as any).SpeechRecognition) {
-    vi.stubGlobal('SpeechRecognition', mockSpeechRecognition)
+    vi.stubGlobal('SpeechRecognition', mockSpeechRecognition);
   }
   if (!(globalThis as any).webkitSpeechRecognition) {
-    vi.stubGlobal('webkitSpeechRecognition', mockSpeechRecognition)
+    vi.stubGlobal('webkitSpeechRecognition', mockSpeechRecognition);
   }
 
   // Ensure window object has Speech API
   if (typeof window !== 'undefined') {
-    window.speechSynthesis = mockSpeechSynthesis
-    window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance
-    window.SpeechRecognition = mockSpeechRecognition
-    window.webkitSpeechRecognition = mockSpeechRecognition
+    window.speechSynthesis = mockSpeechSynthesis;
+    window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
+    window.SpeechRecognition = mockSpeechRecognition;
+    window.webkitSpeechRecognition = mockSpeechRecognition;
   }
 
   // Mock navigator for tests
   Object.defineProperty(navigator, 'userAgent', {
     value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     writable: true,
-  })
+  });
 
   Object.defineProperty(navigator, 'language', {
     value: 'pt-BR',
     writable: true,
-  })
+  });
 
   // Mock fetch for remote logging tests
-  global.fetch = vi.fn()
-})
+  global.fetch = vi.fn();
+});
 
 // Clean up mocks after each test
 afterEach(() => {
-  vi.clearAllMocks()
-})
+  vi.clearAllMocks();
+});
 
 // Clean up global stubs after all tests
 afterAll(() => {
-  vi.unstubAllGlobals()
-})
+  vi.unstubAllGlobals();
+});
 
 // Export mock helpers for tests
 export const createMockSpeechRecognitionEvent = (
@@ -180,15 +180,15 @@ export const createMockSpeechRecognitionEvent = (
     },
   ],
   resultIndex: 0,
-})
+});
 
 export const createMockSpeechRecognitionError = (error: string, message?: string) => ({
   error,
   message: message || `Speech recognition error: ${error}`,
-})
+});
 
 export const createMockSpeechSynthesisEvent = (name: string, charIndex: number = 0) => ({
   name,
   charIndex,
   elapsedTime: 0,
-})
+});

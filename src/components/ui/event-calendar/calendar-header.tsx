@@ -1,45 +1,32 @@
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  format,
-  subDays,
-  subMonths,
-  subWeeks,
-} from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Calendar,
+  CalendarCheck,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock,
+  Filter,
   Plus,
+  Receipt,
   Search,
   X,
-  Filter,
-  CalendarCheck,
-  Receipt,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-
-import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useCalendarSearch } from "@/hooks/use-calendar-search";
-import type { CalendarView } from "./types";
+} from '@/components/ui/select';
+import { useCalendarSearch } from '@/hooks/use-calendar-search';
+import type { CalendarView } from './types';
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -89,9 +76,9 @@ export function CalendarHeader({
   };
 
   const handlePrevious = () => {
-    if (view === "month") {
+    if (view === 'month') {
       onDateChange(subMonths(currentDate, 1));
-    } else if (view === "week") {
+    } else if (view === 'week') {
       onDateChange(subWeeks(currentDate, 1));
     } else {
       onDateChange(subDays(currentDate, 1));
@@ -99,9 +86,9 @@ export function CalendarHeader({
   };
 
   const handleNext = () => {
-    if (view === "month") {
+    if (view === 'month') {
       onDateChange(addMonths(currentDate, 1));
-    } else if (view === "week") {
+    } else if (view === 'week') {
       onDateChange(addWeeks(currentDate, 1));
     } else {
       onDateChange(addDays(currentDate, 1));
@@ -118,11 +105,11 @@ export function CalendarHeader({
 
   const getViewIcon = (view: CalendarView) => {
     switch (view) {
-      case "month":
+      case 'month':
         return <Calendar className="h-4 w-4" />;
-      case "week":
+      case 'week':
         return <CalendarDays className="h-4 w-4" />;
-      case "day":
+      case 'day':
         return <Clock className="h-4 w-4" />;
       default:
         return <Calendar className="h-4 w-4" />;
@@ -131,48 +118,33 @@ export function CalendarHeader({
 
   const getDateFormat = (view: CalendarView) => {
     switch (view) {
-      case "month":
-        return "MMMM yyyy";
-      case "week":
+      case 'month':
+        return 'MMMM yyyy';
+      case 'week':
         return "w 'de' MMMM yyyy";
-      case "day":
+      case 'day':
         return "EEEE, d 'de' MMMM 'de' yyyy";
       default:
-        return "MMMM yyyy";
+        return 'MMMM yyyy';
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 border-b bg-background">
+    <div className="flex flex-col gap-4 border-b bg-background p-4">
       {/* First row: Date navigation and view switcher */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-semibold">
+          <h2 className="font-semibold text-2xl">
             {format(currentDate, getDateFormat(view), { locale: ptBR })}
           </h2>
           <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrevious}
-              className="h-8 w-8"
-            >
+            <Button variant="outline" size="icon" onClick={handlePrevious} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleToday}
-              className="h-8"
-            >
+            <Button variant="outline" size="sm" onClick={handleToday} className="h-8">
               Hoje
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNext}
-              className="h-8 w-8"
-            >
+            <Button variant="outline" size="icon" onClick={handleNext} className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -218,11 +190,11 @@ export function CalendarHeader({
 
       {/* Second row: Search and filters */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative max-w-md flex-1">
+          <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-muted-foreground" />
           <Input
             placeholder="Buscar eventos e transações..."
-            className="pl-10 pr-10"
+            className="pr-10 pl-10"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => setShowSearch(true)}
@@ -231,7 +203,7 @@ export function CalendarHeader({
             <Button
               variant="ghost"
               size="sm"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              className="-translate-y-1/2 absolute top-1/2 right-1 h-6 w-6 transform p-0"
               onClick={clearSearch}
             >
               <X className="h-4 w-4" />
@@ -244,7 +216,7 @@ export function CalendarHeader({
           <Select value={searchType} onValueChange={handleSearchTypeChange}>
             <SelectTrigger className="w-40">
               <div className="flex items-center gap-2">
-                {searchType === "events" ? (
+                {searchType === 'events' ? (
                   <CalendarCheck className="h-4 w-4" />
                 ) : (
                   <Receipt className="h-4 w-4" />
@@ -276,10 +248,7 @@ export function CalendarHeader({
               <Button variant="outline" size="sm" className="gap-2">
                 <Filter className="h-4 w-4" />
                 Filtros
-                {(filters.startDate ||
-                  filters.endDate ||
-                  filters.typeId ||
-                  filters.categoryId) && (
+                {(filters.startDate || filters.endDate || filters.typeId || filters.categoryId) && (
                   <Badge variant="secondary" className="h-5 px-1 text-xs">
                     {Object.values(filters).filter(Boolean).length}
                   </Badge>
@@ -293,38 +262,30 @@ export function CalendarHeader({
                 {/* Date range filters */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Data Início</label>
+                    <label className="font-medium text-sm">Data Início</label>
                     <Input
                       type="date"
-                      value={filters.startDate || ""}
-                      onChange={(e) =>
-                        handleFilterChange("startDate", e.target.value)
-                      }
+                      value={filters.startDate || ''}
+                      onChange={(e) => handleFilterChange('startDate', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Data Fim</label>
+                    <label className="font-medium text-sm">Data Fim</label>
                     <Input
                       type="date"
-                      value={filters.endDate || ""}
-                      onChange={(e) =>
-                        handleFilterChange("endDate", e.target.value)
-                      }
+                      value={filters.endDate || ''}
+                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
                     />
                   </div>
                 </div>
 
                 {/* Type filter (for events) */}
-                {searchType === "events" && (
+                {searchType === 'events' && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Tipo de Evento
-                    </label>
+                    <label className="font-medium text-sm">Tipo de Evento</label>
                     <Select
-                      value={filters.typeId || ""}
-                      onValueChange={(value) =>
-                        handleFilterChange("typeId", value)
-                      }
+                      value={filters.typeId || ''}
+                      onValueChange={(value) => handleFilterChange('typeId', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Todos os tipos" />
@@ -339,12 +300,10 @@ export function CalendarHeader({
 
                 {/* Category filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Categoria</label>
+                  <label className="font-medium text-sm">Categoria</label>
                   <Select
-                    value={filters.categoryId || ""}
-                    onValueChange={(value) =>
-                      handleFilterChange("categoryId", value)
-                    }
+                    value={filters.categoryId || ''}
+                    onValueChange={(value) => handleFilterChange('categoryId', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todas as categorias" />
@@ -363,7 +322,7 @@ export function CalendarHeader({
                   onClick={() => handleFiltersChange({})}
                   className="w-full"
                 >
-                  <X className="h-4 w-4 mr-2" />
+                  <X className="mr-2 h-4 w-4" />
                   Limpar Filtros
                 </Button>
               </div>
@@ -381,7 +340,7 @@ export function CalendarHeader({
         {/* Loading indicator */}
         {showSearch && isLoading && (
           <Badge variant="outline" className="gap-1">
-            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+            <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
             Buscando...
           </Badge>
         )}

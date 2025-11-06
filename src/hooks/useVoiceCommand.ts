@@ -1,28 +1,28 @@
-import { useNavigate } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { useNavigate } from '@tanstack/react-router';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useVoiceLogger } from '@/hooks/useLogger';
 import {
   getVoiceService,
   VOICE_FEEDBACK,
   type VoiceRecognitionResult,
-} from '@/services/voiceService'
-import { useVoiceLogger } from '@/hooks/useLogger'
+} from '@/services/voiceService';
 
 export interface UseVoiceCommandOptions {
-  autoNavigate?: boolean
-  onCommandDetected?: (result: VoiceRecognitionResult) => void
-  onError?: (error: Error) => void
-  enableFeedback?: boolean
+  autoNavigate?: boolean;
+  onCommandDetected?: (result: VoiceRecognitionResult) => void;
+  onError?: (error: Error) => void;
+  enableFeedback?: boolean;
 }
 
 export interface UseVoiceCommandReturn {
-  isListening: boolean
-  isSupported: boolean
-  startListening: () => void
-  stopListening: () => void
-  speak: (text: string) => Promise<void>
-  lastTranscript: string | null
-  lastCommand: string | null
+  isListening: boolean;
+  isSupported: boolean;
+  startListening: () => void;
+  stopListening: () => void;
+  speak: (text: string) => Promise<void>;
+  lastTranscript: string | null;
+  lastCommand: string | null;
 }
 
 /**
@@ -30,93 +30,93 @@ export interface UseVoiceCommandReturn {
  * Provides voice recognition and text-to-speech capabilities
  */
 export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
-  const { autoNavigate = true, onCommandDetected, onError, enableFeedback = true } = options
+  const { autoNavigate = true, onCommandDetected, onError, enableFeedback = true } = options;
 
-  const navigate = useNavigate()
-  const [isListening, setIsListening] = useState(false)
-  const [lastTranscript, setLastTranscript] = useState<string | null>(null)
-  const [lastCommand, setLastCommand] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [isListening, setIsListening] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState<string | null>(null);
+  const [lastCommand, setLastCommand] = useState<string | null>(null);
 
-  const logger = useVoiceLogger()
-  logger.setContext({ hook: 'useVoiceCommand', autoNavigate, enableFeedback })
+  const logger = useVoiceLogger();
+  logger.setContext({ hook: 'useVoiceCommand', autoNavigate, enableFeedback });
 
-  const voiceService = getVoiceService()
+  const voiceService = getVoiceService();
   const isSupported =
     typeof window !== 'undefined' &&
-    ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+    ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
 
   /**
    * Handle voice recognition result
    */
   const handleResult = useCallback(
     (result: VoiceRecognitionResult) => {
-      setLastTranscript(result.transcript)
-      setIsListening(false)
+      setLastTranscript(result.transcript);
+      setIsListening(false);
 
       // Show transcript in toast
       if (enableFeedback) {
         toast.info(`Você disse: "${result.transcript}"`, {
           duration: 3000,
-        })
+        });
       }
 
       // If command detected
       if (result.command && result.intent) {
-        setLastCommand(result.command)
+        setLastCommand(result.command);
 
         // Notify callback
-        onCommandDetected?.(result)
+        onCommandDetected?.(result);
 
         // Auto-navigate if enabled
         if (autoNavigate) {
-          const destination = getDestinationName(result.intent)
+          const destination = getDestinationName(result.intent);
 
           if (enableFeedback) {
             toast.success(VOICE_FEEDBACK.NAVIGATING(destination), {
               duration: 2000,
-            })
+            });
           }
 
           // Navigate after a short delay for feedback
           setTimeout(() => {
-            navigate({ to: result.intent as any })
-          }, 500)
+            navigate({ to: result.intent as any });
+          }, 500);
         }
       } else {
         // No command detected
         if (enableFeedback) {
           toast.error(VOICE_FEEDBACK.ERROR, {
             duration: 3000,
-          })
+          });
         }
       }
     },
     [navigate, autoNavigate, onCommandDetected, enableFeedback]
-  )
+  );
 
   /**
    * Handle voice recognition error
    */
   const handleError = useCallback(
     (error: Error) => {
-      setIsListening(false)
+      setIsListening(false);
       logger.voiceError(error.message, {
         errorMessage: error.message,
         stack: error.stack,
         enableFeedback,
         action: 'handleRecognitionError',
-      })
+      });
 
       if (enableFeedback) {
         toast.error(`Erro: ${error.message}`, {
           duration: 3000,
-        })
+        });
       }
 
-      onError?.(error)
+      onError?.(error);
     },
     [onError, enableFeedback, logger]
-  )
+  );
 
   /**
    * Start listening for voice commands
@@ -126,35 +126,35 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       if (enableFeedback) {
         toast.error(VOICE_FEEDBACK.NOT_SUPPORTED, {
           duration: 3000,
-        })
+        });
       }
-      return
+      return;
     }
 
     if (isListening) {
-      return
+      return;
     }
 
-    setIsListening(true)
+    setIsListening(true);
 
     if (enableFeedback) {
       toast.info(VOICE_FEEDBACK.LISTENING, {
         duration: 2000,
-      })
+      });
     }
 
-    voiceService.startListening(handleResult, handleError)
-  }, [isSupported, isListening, voiceService, handleResult, handleError, enableFeedback])
+    voiceService.startListening(handleResult, handleError);
+  }, [isSupported, isListening, voiceService, handleResult, handleError, enableFeedback]);
 
   /**
    * Stop listening for voice commands
    */
   const stopListening = useCallback(() => {
     if (isListening) {
-      voiceService.stopListening()
-      setIsListening(false)
+      voiceService.stopListening();
+      setIsListening(false);
     }
-  }, [isListening, voiceService])
+  }, [isListening, voiceService]);
 
   /**
    * Speak text using text-to-speech
@@ -165,24 +165,24 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         logger.voiceCommand('Speaking text', 1.0, {
           textLength: text.length,
           action: 'speak',
-        })
-        await voiceService.speak(text)
+        });
+        await voiceService.speak(text);
       } catch (error) {
         logger.voiceError('Speech synthesis error', {
           error: error instanceof Error ? error.message : String(error),
           textLength: text.length,
           enableFeedback,
           action: 'speak',
-        })
+        });
         if (enableFeedback) {
           toast.error('Erro ao falar', {
             duration: 2000,
-          })
+          });
         }
       }
     },
     [voiceService, enableFeedback, logger]
-  )
+  );
 
   /**
    * Cleanup on unmount
@@ -190,10 +190,10 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   useEffect(() => {
     return () => {
       if (isListening) {
-        voiceService.stopListening()
+        voiceService.stopListening();
       }
-    }
-  }, [isListening, voiceService])
+    };
+  }, [isListening, voiceService]);
 
   return {
     isListening,
@@ -203,7 +203,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     speak,
     lastTranscript,
     lastCommand,
-  }
+  };
 }
 
 /**
@@ -217,17 +217,17 @@ function getDestinationName(path: string): string {
     '/pix': 'PIX',
     '/dashboard': 'Dashboard',
     '/transactions': 'Transações',
-  }
-  return names[path] || path
+  };
+  return names[path] || path;
 }
 
 /**
  * Hook for voice feedback only (no navigation)
  */
 export function useVoiceFeedback() {
-  const voiceService = getVoiceService()
-  const logger = useVoiceLogger()
-  logger.setContext({ hook: 'useVoiceFeedback' })
+  const voiceService = getVoiceService();
+  const logger = useVoiceLogger();
+  logger.setContext({ hook: 'useVoiceFeedback' });
 
   const speak = useCallback(
     async (text: string) => {
@@ -235,28 +235,28 @@ export function useVoiceFeedback() {
         logger.voiceCommand('Voice feedback speaking', 1.0, {
           textLength: text.length,
           action: 'voiceFeedback',
-        })
-        await voiceService.speak(text)
+        });
+        await voiceService.speak(text);
       } catch (error) {
         logger.voiceError('Voice feedback synthesis error', {
           error: error instanceof Error ? error.message : String(error),
           textLength: text.length,
           action: 'voiceFeedback',
-        })
+        });
       }
     },
     [voiceService, logger]
-  )
+  );
 
   const stopSpeaking = useCallback(() => {
-    voiceService.stopSpeaking()
-  }, [voiceService])
+    voiceService.stopSpeaking();
+  }, [voiceService]);
 
   return {
     speak,
     stopSpeaking,
     isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
-  }
+  };
 }
 
-export default useVoiceCommand
+export default useVoiceCommand;

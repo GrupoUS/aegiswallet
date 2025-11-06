@@ -1,6 +1,6 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import type { Context } from '@/server/context'
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import type { Context } from '@/server/context';
 
 export const createUserRouter = (t: any) => ({
   /**
@@ -11,16 +11,16 @@ export const createUserRouter = (t: any) => ({
       .from('profiles')
       .select('*')
       .eq('id', ctx.user.id)
-      .single()
+      .single();
 
     if (error) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Profile not found',
-      })
+      });
     }
 
-    return data
+    return data;
   }),
 
   /**
@@ -42,15 +42,15 @@ export const createUserRouter = (t: any) => ({
         })
         .eq('id', ctx.user.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: error.message,
-        })
+        });
       }
 
-      return data
+      return data;
     }),
-})
+});

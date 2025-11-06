@@ -1,16 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { lazy } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { createFileRoute } from '@tanstack/react-router';
+import { lazy } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Loading placeholder component
 function SaldoLoader() {
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto space-y-6 p-4">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <Skeleton className="h-9 w-24 mb-2" />
+          <Skeleton className="mb-2 h-9 w-24" />
           <Skeleton className="h-5 w-48" />
         </div>
         <Skeleton className="h-12 w-48" />
@@ -36,8 +36,8 @@ function SaldoLoader() {
 
       {/* Accounts Breakdown */}
       <div>
-        <Skeleton className="h-8 w-32 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Skeleton className="mb-4 h-8 w-32" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
@@ -59,17 +59,17 @@ function SaldoLoader() {
       {/* Balance History Chart Placeholder */}
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-40 mb-2" />
+          <Skeleton className="mb-2 h-6 w-40" />
           <CardDescription>
             <Skeleton className="h-4 w-28" />
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+          <div className="flex h-64 items-center justify-center rounded-lg border-2 border-muted border-dashed">
             <div className="text-center">
-              <Skeleton className="h-12 w-12 mx-auto mb-2 rounded" />
-              <Skeleton className="h-5 w-48 mx-auto mb-1" />
-              <Skeleton className="h-4 w-36 mx-auto" />
+              <Skeleton className="mx-auto mb-2 h-12 w-12 rounded" />
+              <Skeleton className="mx-auto mb-1 h-5 w-48" />
+              <Skeleton className="mx-auto h-4 w-36" />
             </div>
           </div>
         </CardContent>
@@ -78,7 +78,7 @@ function SaldoLoader() {
       {/* Recent Transactions */}
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="mb-2 h-6 w-48" />
           <CardDescription>
             <Skeleton className="h-4 w-36" />
           </CardDescription>
@@ -86,11 +86,11 @@ function SaldoLoader() {
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex justify-between items-center p-3 border rounded-lg">
+              <div key={i} className="flex items-center justify-between rounded-lg border p-3">
                 <div className="flex items-center gap-3">
-                  <Skeleton className="w-5 h-5" />
+                  <Skeleton className="h-5 w-5" />
                   <div>
-                    <Skeleton className="h-4 w-32 mb-1" />
+                    <Skeleton className="mb-1 h-4 w-32" />
                     <Skeleton className="h-3 w-24" />
                   </div>
                 </div>
@@ -102,24 +102,24 @@ function SaldoLoader() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="h-auto py-4">
             <CardContent className="pt-6">
               <div className="text-center">
-                <Skeleton className="h-6 w-6 mx-auto mb-2" />
-                <Skeleton className="h-5 w-20 mx-auto mb-1" />
-                <Skeleton className="h-3 w-24 mx-auto" />
+                <Skeleton className="mx-auto mb-2 h-6 w-6" />
+                <Skeleton className="mx-auto mb-1 h-5 w-20" />
+                <Skeleton className="mx-auto h-3 w-24" />
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export const Route = createFileRoute('/saldo')({
   component: lazy(() => import('./saldo.lazy').then((m) => ({ default: m.Saldo }))),
   pendingComponent: () => <SaldoLoader />,
-})
+});

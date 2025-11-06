@@ -3,14 +3,14 @@
  * Validates that voice command processing meets ≤2s target latency
  */
 
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useVoiceRecognition } from '@/hooks/useVoiceRecognition'
-import { createSTTService } from '@/lib/stt/speechToTextService'
-import { createVAD } from '@/lib/stt/voiceActivityDetection'
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { createSTTService } from '@/lib/stt/speechToTextService';
+import { createVAD } from '@/lib/stt/voiceActivityDetection';
 
 // Mock Web Speech API
-const mockSpeechRecognition = vi.fn()
+const mockSpeechRecognition = vi.fn();
 const mockSpeechRecognitionInstance = {
   continuous: false,
   interimResults: true,
@@ -21,25 +21,25 @@ const mockSpeechRecognitionInstance = {
   onend: null,
   onresult: null as ((event: any) => void) | null,
   onerror: null,
-}
+};
 
-mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance)
+mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance);
 
 // Mock browser APIs
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'webkitSpeechRecognition', {
     value: mockSpeechRecognition,
     writable: true,
-  })
+  });
 
   Object.defineProperty(window, 'SpeechRecognition', {
     value: mockSpeechRecognition,
     writable: true,
-  })
+  });
 } else {
   // Fallback for Node.js environment
-  ;(globalThis as any).SpeechRecognition = mockSpeechRecognition
-  ;(globalThis as any).webkitSpeechRecognition = mockSpeechRecognition
+  (globalThis as any).SpeechRecognition = mockSpeechRecognition;
+  (globalThis as any).webkitSpeechRecognition = mockSpeechRecognition;
 }
 
 // Mock MediaRecorder
@@ -49,23 +49,23 @@ const mockMediaRecorder = {
   state: 'inactive',
   ondataavailable: null,
   onstop: null,
-}
+};
 
 // Mock MediaRecorder constructor with isTypeSupported
-const mockMediaRecorderConstructor = vi.fn(() => mockMediaRecorder)
+const mockMediaRecorderConstructor = vi.fn(() => mockMediaRecorder);
 Object.defineProperty(mockMediaRecorderConstructor, 'isTypeSupported', {
   value: vi.fn(() => true),
   writable: true,
-})
+});
 
 // Mock MediaRecorder
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'MediaRecorder', {
     value: mockMediaRecorderConstructor,
     writable: true,
-  })
+  });
 } else {
-  ;(globalThis as any).MediaRecorder = mockMediaRecorderConstructor
+  (globalThis as any).MediaRecorder = mockMediaRecorderConstructor;
 }
 
 // Mock getUserMedia
@@ -79,9 +79,9 @@ if (typeof navigator !== 'undefined') {
       ),
     },
     writable: true,
-  })
+  });
 } else {
-  ;(globalThis as any).navigator = {
+  (globalThis as any).navigator = {
     mediaDevices: {
       getUserMedia: vi.fn(() =>
         Promise.resolve({
@@ -96,46 +96,46 @@ if (typeof navigator !== 'undefined') {
         })
       ),
     },
-  }
+  };
 }
 
 describe('Voice Command Performance', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers()
-  })
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
 
   afterEach(() => {
-    vi.useRealTimers()
-  })
+    vi.useRealTimers();
+  });
 
   describe('useVoiceRecognition Performance', () => {
     it('should initialize voice recognition within 100ms', async () => {
-      const startTime = performance.now()
+      const startTime = performance.now();
 
-      const { result } = renderHook(() => useVoiceRecognition())
+      const { result } = renderHook(() => useVoiceRecognition());
 
       await waitFor(() => {
-        expect(result.current.supported).toBe(true)
-      })
+        expect(result.current.supported).toBe(true);
+      });
 
-      const endTime = performance.now()
-      const initTime = endTime - startTime
+      const endTime = performance.now();
+      const initTime = endTime - startTime;
 
-      expect(initTime).toBeLessThan(100) // Should initialize within 100ms
-    })
+      expect(initTime).toBeLessThan(100); // Should initialize within 100ms
+    });
 
     it('should process commands within 500ms of final result', async () => {
-      const { result } = renderHook(() => useVoiceRecognition())
+      const { result } = renderHook(() => useVoiceRecognition());
 
-      expect(result.current.supported).toBe(true)
+      expect(result.current.supported).toBe(true);
 
       // Start listening
       act(() => {
-        result.current.startListening()
-      })
+        result.current.startListening();
+      });
 
-      expect(mockSpeechRecognitionInstance.start).toHaveBeenCalled()
+      expect(mockSpeechRecognitionInstance.start).toHaveBeenCalled();
 
       // Simulate speech recognition result
       const mockResult = {
@@ -149,87 +149,87 @@ describe('Voice Command Performance', () => {
             isFinal: true,
           },
         ],
-      }
+      };
 
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       act(() => {
         if (mockSpeechRecognitionInstance.onresult) {
-          mockSpeechRecognitionInstance.onresult(mockResult)
+          mockSpeechRecognitionInstance.onresult(mockResult);
         }
-      })
+      });
 
       // Fast-forward timers to trigger processing timeout
       act(() => {
-        vi.advanceTimersByTime(100) // Reduced from 500ms to 100ms
-      })
+        vi.advanceTimersByTime(100); // Reduced from 500ms to 100ms
+      });
 
       await waitFor(() => {
-        expect(result.current.recognizedCommand).not.toBeNull()
-        expect(result.current.recognizedCommand?.command).toBe('BALANCE')
-        expect(result.current.isProcessing).toBe(false)
-      })
+        expect(result.current.recognizedCommand).not.toBeNull();
+        expect(result.current.recognizedCommand?.command).toBe('BALANCE');
+        expect(result.current.isProcessing).toBe(false);
+      });
 
-      const endTime = performance.now()
-      const processingTime = endTime - startTime
+      const endTime = performance.now();
+      const processingTime = endTime - startTime;
 
-      expect(processingTime).toBeLessThan(500) // Should process within 500ms
-    })
+      expect(processingTime).toBeLessThan(500); // Should process within 500ms
+    });
 
     it('should auto-stop listening within 3 seconds', async () => {
-      const { result } = renderHook(() => useVoiceRecognition())
+      const { result } = renderHook(() => useVoiceRecognition());
 
       // Start listening
       act(() => {
-        result.current.startListening()
-      })
+        result.current.startListening();
+      });
 
-      expect(result.current.isListening).toBe(true)
+      expect(result.current.isListening).toBe(true);
 
       // Fast-forward 3 seconds
       act(() => {
-        vi.advanceTimersByTime(3000)
-      })
+        vi.advanceTimersByTime(3000);
+      });
 
       await waitFor(() => {
-        expect(result.current.isListening).toBe(false)
-        expect(result.current.error).toBe('Tempo esgotado. Tente novamente.')
-      })
-    })
+        expect(result.current.isListening).toBe(false);
+        expect(result.current.error).toBe('Tempo esgotado. Tente novamente.');
+      });
+    });
 
     it('should cleanup resources properly on unmount', () => {
-      const { unmount } = renderHook(() => useVoiceRecognition())
+      const { unmount } = renderHook(() => useVoiceRecognition());
 
-      unmount()
+      unmount();
 
-      expect(mockSpeechRecognitionInstance.stop).toHaveBeenCalled()
-    })
-  })
+      expect(mockSpeechRecognitionInstance.stop).toHaveBeenCalled();
+    });
+  });
 
   describe('Speech-to-Text Service Performance', () => {
     it('should use optimized timeout of 8 seconds', () => {
-      const sttService = createSTTService('test-key')
+      const sttService = createSTTService('test-key');
 
       // Access private config through type assertion for testing
-      const config = (sttService as any).config
+      const config = (sttService as any).config;
 
-      expect(config.timeout).toBe(8000) // Should be 8 seconds
-    })
+      expect(config.timeout).toBe(8000); // Should be 8 seconds
+    });
 
     it('should validate audio file size efficiently', async () => {
-      const sttService = createSTTService('test-key')
+      const sttService = createSTTService('test-key');
 
       // Test with optimized file size limit (5MB)
       const largeAudio = new Blob([new Uint8Array(6 * 1024 * 1024)], {
         type: 'audio/webm',
-      })
+      });
 
-      await expect(sttService.transcribe(largeAudio)).rejects.toThrow('Audio file too large')
+      await expect(sttService.transcribe(largeAudio)).rejects.toThrow('Audio file too large');
 
       // Test with acceptable file size
       const normalAudio = new Blob([new Uint8Array(1024)], {
         type: 'audio/webm',
-      })
+      });
 
       // Should not throw for file size validation
       expect(async () => {
@@ -253,105 +253,105 @@ describe('Voice Command Performance', () => {
             url: '',
             bytes: () => Promise.resolve(new Uint8Array()),
           } as Response)
-        )
+        );
 
-        await sttService.transcribe(normalAudio)
-      }).not.toThrow()
-    })
-  })
+        await sttService.transcribe(normalAudio);
+      }).not.toThrow();
+    });
+  });
 
   describe('Voice Activity Detection Performance', () => {
     it('should initialize VAD within 50ms', async () => {
       const mockStream = {
         getTracks: () => [{ stop: vi.fn() }],
-      }
+      };
 
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       const vad = createVAD({
         energyThreshold: 0.02,
         minSpeechDuration: 300,
         silenceDuration: 1500,
-      })
+      });
 
-      await vad.initialize(mockStream as any)
+      await vad.initialize(mockStream as any);
 
-      const endTime = performance.now()
-      const initTime = endTime - startTime
+      const endTime = performance.now();
+      const initTime = endTime - startTime;
 
-      expect(initTime).toBeLessThan(50) // Should initialize within 50ms
-      expect(vad.isActive()).toBe(true)
+      expect(initTime).toBeLessThan(50); // Should initialize within 50ms
+      expect(vad.isActive()).toBe(true);
 
-      vad.stop()
-    })
+      vad.stop();
+    });
 
     it('should detect voice activity with low latency', async () => {
       const mockStream = {
         getTracks: () => [{ stop: vi.fn() }],
-      }
+      };
 
-      const vad = createVAD()
-      await vad.initialize(mockStream as any)
+      const vad = createVAD();
+      await vad.initialize(mockStream as any);
 
       vad.onSpeechStartCallback(() => {
         // Speech detected - VAD working correctly
-      })
+      });
 
       vad.onSpeechEndCallback(() => {
         // Speech ended - VAD working correctly
-      })
+      });
 
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       // Simulate voice activity detection
       act(() => {
-        vi.advanceTimersByTime(16) // One frame at 60fps
-      })
+        vi.advanceTimersByTime(16); // One frame at 60fps
+      });
 
-      const endTime = performance.now()
-      const detectionTime = endTime - startTime
+      const endTime = performance.now();
+      const detectionTime = endTime - startTime;
 
-      expect(detectionTime).toBeLessThan(20) // Should detect within 20ms
+      expect(detectionTime).toBeLessThan(20); // Should detect within 20ms
 
-      vad.stop()
-    })
-  })
+      vad.stop();
+    });
+  });
 
   describe('Memory Leak Prevention', () => {
     it('should clean up intervals and timeouts properly', () => {
-      const { unmount } = renderHook(() => useVoiceRecognition())
+      const { unmount } = renderHook(() => useVoiceRecognition());
 
       // Start some operations
       act(() => {
-        vi.advanceTimersByTime(1000)
-      })
+        vi.advanceTimersByTime(1000);
+      });
 
       // Verify timers are active
-      expect(vi.getTimerCount()).toBeGreaterThan(0)
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
       // Unmount should clean up
-      unmount()
+      unmount();
 
       // All timers should be cleared
-      expect(vi.getTimerCount()).toBe(0)
-    })
-  })
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
 
   describe('End-to-End Performance', () => {
     it('should complete full voice command cycle within 2 seconds', async () => {
-      const { result } = renderHook(() => useVoiceRecognition())
+      const { result } = renderHook(() => useVoiceRecognition());
 
-      const totalStartTime = performance.now()
+      const totalStartTime = performance.now();
 
       // 1. Initialize (should be <100ms)
       await waitFor(() => {
-        expect(result.current.supported).toBe(true)
-      })
+        expect(result.current.supported).toBe(true);
+      });
 
       // 2. Start listening (<50ms)
       act(() => {
-        result.current.startListening()
-      })
+        result.current.startListening();
+      });
 
       // 3. Simulate speech recognition (<100ms)
       setTimeout(() => {
@@ -365,28 +365,28 @@ describe('Voice Command Performance', () => {
                   isFinal: true,
                 },
               ],
-            })
+            });
           }
-        })
-      }, 100)
+        });
+      }, 100);
 
       // 4. Process command (<500ms)
       act(() => {
-        vi.advanceTimersByTime(600) // 100ms for speech + 500ms processing
-      })
+        vi.advanceTimersByTime(600); // 100ms for speech + 500ms processing
+      });
 
       await waitFor(() => {
-        expect(result.current.recognizedCommand).not.toBeNull()
-        expect(result.current.isProcessing).toBe(false)
-      })
+        expect(result.current.recognizedCommand).not.toBeNull();
+        expect(result.current.isProcessing).toBe(false);
+      });
 
-      const totalEndTime = performance.now()
-      const totalTime = totalEndTime - totalStartTime
+      const totalEndTime = performance.now();
+      const totalTime = totalEndTime - totalStartTime;
 
-      expect(totalTime).toBeLessThan(2000) // Should complete within 2 seconds
-    })
-  })
-})
+      expect(totalTime).toBeLessThan(2000); // Should complete within 2 seconds
+    });
+  });
+});
 
 // Performance benchmark utilities
 export const performanceBenchmark = {
@@ -397,51 +397,51 @@ export const performanceBenchmark = {
     fn: () => Promise<T> | T,
     iterations = 1
   ): Promise<{ result: T; averageTime: number; totalTime: number }> => {
-    const times: number[] = []
-    let result: T
+    const times: number[] = [];
+    let result: T;
 
     for (let i = 0; i < iterations; i++) {
-      const start = performance.now()
-      result = await fn()
-      const end = performance.now()
-      times.push(end - start)
+      const start = performance.now();
+      result = await fn();
+      const end = performance.now();
+      times.push(end - start);
     }
 
-    const totalTime = times.reduce((sum, time) => sum + time, 0)
-    const averageTime = totalTime / iterations
+    const totalTime = times.reduce((sum, time) => sum + time, 0);
+    const averageTime = totalTime / iterations;
 
     return {
       result: result!,
       averageTime,
       totalTime,
-    }
+    };
   },
 
   /**
    * Validate voice command performance meets targets
    */
   validateVoicePerformance: async (): Promise<{
-    passed: boolean
+    passed: boolean;
     metrics: {
-      initializationTime: number
-      processingTime: number
-      totalTime: number
-    }
+      initializationTime: number;
+      processingTime: number;
+      totalTime: number;
+    };
   }> => {
-    const { result } = renderHook(() => useVoiceRecognition())
+    const { result } = renderHook(() => useVoiceRecognition());
 
     // Measure initialization time
     const initResult = await performanceBenchmark.measureTime(async () => {
       await waitFor(() => {
-        expect(result.current.supported).toBe(true)
-      })
-    })
+        expect(result.current.supported).toBe(true);
+      });
+    });
 
     // Measure processing time
     const processResult = await performanceBenchmark.measureTime(async () => {
       act(() => {
-        result.current.startListening()
-      })
+        result.current.startListening();
+      });
 
       act(() => {
         if (mockSpeechRecognitionInstance.onresult) {
@@ -453,21 +453,21 @@ export const performanceBenchmark = {
                 isFinal: true,
               },
             ],
-          })
+          });
         }
-      })
+      });
 
       act(() => {
-        vi.advanceTimersByTime(100)
-      })
+        vi.advanceTimersByTime(100);
+      });
 
       await waitFor(() => {
-        expect(result.current.recognizedCommand).not.toBeNull()
-      })
-    })
+        expect(result.current.recognizedCommand).not.toBeNull();
+      });
+    });
 
-    const totalTime = initResult.averageTime + processResult.averageTime
-    const passed = totalTime < 2000 // 2 second target
+    const totalTime = initResult.averageTime + processResult.averageTime;
+    const passed = totalTime < 2000; // 2 second target
 
     return {
       passed,
@@ -476,6 +476,6 @@ export const performanceBenchmark = {
         processingTime: processResult.averageTime,
         totalTime,
       },
-    }
+    };
   },
-}
+};

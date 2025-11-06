@@ -1,21 +1,21 @@
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useAuth } from '@/contexts/AuthContext'
+import { useNavigate } from '@tanstack/react-router';
+import { ArrowLeft } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy loading components
-const PixQRCodeGenerator = lazy(() => import('../components/PixQRCodeGenerator'))
-const PixKeysList = lazy(() => import('../components/PixKeysList'))
+const PixQRCodeGenerator = lazy(() => import('../components/PixQRCodeGenerator'));
+const PixKeysList = lazy(() => import('../components/PixKeysList'));
 
 // Mock PIX keys - replace with real data
 const mockPixKeys = [
   { type: 'email', value: 'usuario@exemplo.com', label: 'Email Principal' },
   { type: 'phone', value: '+55 (11) 99999-9999', label: 'Celular' },
   { type: 'cpf', value: '123.456.789-00', label: 'CPF' },
-]
+];
 
 // Loading placeholder components
 function QRCodeGeneratorLoader() {
@@ -23,7 +23,7 @@ function QRCodeGeneratorLoader() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Skeleton className="w-5 h-5" />
+          <Skeleton className="h-5 w-5" />
           <Skeleton className="h-6 w-32" />
         </CardTitle>
       </CardHeader>
@@ -37,14 +37,14 @@ function QRCodeGeneratorLoader() {
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-full" />
         </div>
-        <div className="bg-muted aspect-square rounded-lg flex items-center justify-center">
-          <Skeleton className="w-16 h-16" />
+        <div className="flex aspect-square items-center justify-center rounded-lg bg-muted">
+          <Skeleton className="h-16 w-16" />
         </div>
         <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-3 w-24 mx-auto" />
+        <Skeleton className="mx-auto h-3 w-24" />
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function PixKeysListLoader() {
@@ -57,60 +57,63 @@ function PixKeysListLoader() {
       </CardHeader>
       <CardContent className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+          <div key={i} className="flex items-center justify-between rounded-lg border p-3">
             <div className="flex-1">
-              <Skeleton className="h-4 w-24 mb-1" />
+              <Skeleton className="mb-1 h-4 w-24" />
               <Skeleton className="h-3 w-32" />
             </div>
-            <Skeleton className="w-8 h-8" />
+            <Skeleton className="h-8 w-8" />
           </div>
         ))}
-        <div className="bg-info/10 dark:bg-info/20 p-4 rounded-lg mt-4">
+        <div className="mt-4 rounded-lg bg-info/10 p-4 dark:bg-info/20">
           <Skeleton className="h-4 w-full" />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function PixReceivePage() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const navigate = useNavigate()
-  const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: '/login', search: { redirect: '/pix/receber', error: undefined } })
+      navigate({
+        to: '/login',
+        search: { redirect: '/pix/receber', error: undefined },
+      });
     }
-  }, [isAuthenticated, isLoading, navigate])
+  }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-financial-positive"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2"></div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pix' })} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar ao Dashboard PIX
         </Button>
-        <h1 className="text-3xl font-bold">Receber via PIX</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="font-bold text-3xl">Receber via PIX</h1>
+        <p className="mt-2 text-muted-foreground">
           Compartilhe suas chaves PIX ou gere um QR Code para receber pagamentos
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* QR Code Generator */}
         <Suspense fallback={<QRCodeGeneratorLoader />}>
           <PixQRCodeGenerator
@@ -133,11 +136,11 @@ export function PixReceivePage() {
           <CardTitle>Últimas Transações Recebidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             Nenhuma transação recebida recentemente
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

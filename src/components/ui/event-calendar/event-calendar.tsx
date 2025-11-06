@@ -1,18 +1,18 @@
-import { useState } from 'react'
-import { CalendarDndProvider } from './calendar-dnd-provider'
-import { CalendarHeader } from './calendar-header'
-import { DayView } from './day-view'
-import { EventDialog } from './event-dialog'
-import { MonthView } from './month-view'
-import type { CalendarEvent, CalendarView } from './types'
-import { WeekView } from './week-view'
+import { useState } from 'react';
+import { CalendarDndProvider } from './calendar-dnd-provider';
+import { CalendarHeader } from './calendar-header';
+import { DayView } from './day-view';
+import { EventDialog } from './event-dialog';
+import { MonthView } from './month-view';
+import type { CalendarEvent, CalendarView } from './types';
+import { WeekView } from './week-view';
 
 interface EventCalendarProps {
-  events: CalendarEvent[]
-  initialView?: CalendarView
-  onEventAdd?: (event: Partial<CalendarEvent>) => void
-  onEventUpdate?: (event: CalendarEvent) => void
-  onEventEdit?: (event: CalendarEvent) => void
+  events: CalendarEvent[];
+  initialView?: CalendarView;
+  onEventAdd?: (event: Partial<CalendarEvent>) => void;
+  onEventUpdate?: (event: CalendarEvent) => void;
+  onEventEdit?: (event: CalendarEvent) => void;
 }
 
 export function EventCalendar({
@@ -22,22 +22,22 @@ export function EventCalendar({
   onEventUpdate,
   onEventEdit,
 }: EventCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [view, setView] = useState<CalendarView>(initialView)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [dialogInitialDate, setDialogInitialDate] = useState<Date | undefined>()
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<CalendarView>(initialView);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogInitialDate, setDialogInitialDate] = useState<Date | undefined>();
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   const handleNewEvent = () => {
-    setEditingEvent(null)
-    setDialogInitialDate(currentDate)
-    setIsDialogOpen(true)
-  }
+    setEditingEvent(null);
+    setDialogInitialDate(currentDate);
+    setIsDialogOpen(true);
+  };
 
   const handleEditEvent = (event: CalendarEvent) => {
-    setEditingEvent(event)
-    setIsDialogOpen(true)
-  }
+    setEditingEvent(event);
+    setIsDialogOpen(true);
+  };
 
   const handleSaveEvent = (eventData: Partial<CalendarEvent>) => {
     if (editingEvent && onEventUpdate) {
@@ -45,19 +45,19 @@ export function EventCalendar({
       onEventUpdate({
         ...editingEvent,
         ...eventData,
-      } as CalendarEvent)
+      } as CalendarEvent);
     } else if (onEventAdd) {
       // Create new event
       onEventAdd({
         ...eventData,
         id: `event-${Date.now()}`,
-      })
+      });
     }
-  }
+  };
 
   return (
     <CalendarDndProvider onEventUpdate={onEventUpdate || (() => {})}>
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex h-full flex-col bg-background">
         <CalendarHeader
           currentDate={currentDate}
           onDateChange={setCurrentDate}
@@ -101,5 +101,5 @@ export function EventCalendar({
         initialDate={dialogInitialDate}
       />
     </CalendarDndProvider>
-  )
+  );
 }

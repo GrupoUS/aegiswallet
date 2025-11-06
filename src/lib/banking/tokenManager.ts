@@ -105,7 +105,7 @@ export class TokenManager {
       : null
 
     const { error } = await supabase.from('bank_tokens').upsert({
-      connection_id: connectionId,
+      institution_id: connectionId,
       user_id: userId,
       encrypted_access_token: encryptedAccess.encrypted,
       encrypted_refresh_token: encryptedRefresh?.encrypted,
@@ -139,7 +139,7 @@ export class TokenManager {
       {
         encrypted: data.encrypted_access_token,
         iv: data.encryption_iv,
-        algorithm: data.encryption_algorithm,
+        algorithm: data.encryption_algorithm || 'aes-256-gcm',
       },
       userId
     )
@@ -150,7 +150,7 @@ export class TokenManager {
         {
           encrypted: data.encrypted_refresh_token,
           iv: data.encryption_iv,
-          algorithm: data.encryption_algorithm,
+          algorithm: data.encryption_algorithm || 'aes-256-gcm',
         },
         userId
       )
@@ -159,7 +159,7 @@ export class TokenManager {
     return {
       accessToken,
       refreshToken,
-      expiresAt: new Date(data.expires_at),
+      expiresAt: data.expires_at ? new Date(data.expires_at) : new Date(),
       refreshExpiresAt: data.refresh_expires_at ? new Date(data.refresh_expires_at) : undefined,
       scopes: data.scopes || [],
     }

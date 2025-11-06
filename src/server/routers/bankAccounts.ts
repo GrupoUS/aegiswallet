@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '../trpc-helpers'
+import { protectedProcedure, router } from '@/server/trpc-helpers'
+import { logger, logError, logOperation } from '@/server/lib/logger'
 
 /**
  * Bank Accounts Router - Gerenciamento de contas bancárias
@@ -18,16 +19,26 @@ export const bankAccountsRouter = router({
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error fetching bank accounts:', error)
+        logError('fetch_bank_accounts', ctx.user.id, error, {
+          resource: 'bank_accounts',
+          operation: 'getAll',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contas bancárias',
         })
       }
 
+      logOperation('fetch_bank_accounts_success', ctx.user.id, 'bank_accounts', undefined, {
+        accountsCount: data?.length || 0,
+      })
+
       return data || []
     } catch (error) {
-      console.error('Bank accounts fetch error:', error)
+      logError('fetch_bank_accounts_unexpected', ctx.user.id, error as Error, {
+        resource: 'bank_accounts',
+        operation: 'getAll',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar contas bancárias',
@@ -49,12 +60,19 @@ export const bankAccountsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('fetch_bank_account_not_found', ctx.user.id, 'bank_accounts', input.id, {
+              reason: 'account_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Conta bancária não encontrada',
             })
           }
-          console.error('Error fetching bank account:', error)
+          logError('fetch_bank_account_by_id', ctx.user.id, error, {
+            resource: 'bank_accounts',
+            operation: 'getById',
+            accountId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar conta bancária',
@@ -63,7 +81,11 @@ export const bankAccountsRouter = router({
 
         return data
       } catch (error) {
-        console.error('Bank account fetch error:', error)
+        logError('fetch_bank_account_by_id_unexpected', ctx.user.id, error as Error, {
+          resource: 'bank_accounts',
+          operation: 'getById',
+          accountId: input.id,
+        })
         throw error
       }
     }),
@@ -107,16 +129,38 @@ export const bankAccountsRouter = router({
           .single()
 
         if (error) {
-          console.error('Error creating bank account:', error)
+          logError('create_bank_account', ctx.user.id, error, {
+            resource: 'bank_accounts',
+            operation: 'create',
+            institutionName: input.institution_name,
+            accountMask: input.account_mask,
+            isPrimary: input.is_primary,
+            currency: input.currency,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar conta bancária',
           })
         }
 
+        logOperation('create_bank_account_success', ctx.user.id, 'bank_accounts', data?.id, {
+          institutionName: input.institution_name,
+          accountMask: input.account_mask,
+          isPrimary: input.is_primary,
+          currency: input.currency,
+          initialBalance: input.balance,
+        })
+
         return data
       } catch (error) {
-        console.error('Bank account creation error:', error)
+        logError('create_bank_account_unexpected', ctx.user.id, error as Error, {
+          resource: 'bank_accounts',
+          operation: 'create',
+          institutionName: input.institution_name,
+          accountMask: input.account_mask,
+          isPrimary: input.is_primary,
+          currency: input.currency,
+        })
         throw error
       }
     }),
@@ -161,21 +205,38 @@ export const bankAccountsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('update_bank_account_not_found', ctx.user.id, 'bank_accounts', input.id, {
+              reason: 'account_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Conta bancária não encontrada',
             })
           }
-          console.error('Error updating bank account:', error)
+          logError('update_bank_account', ctx.user.id, error, {
+            resource: 'bank_accounts',
+            operation: 'update',
+            accountId: input.id,
+            updateFields: Object.keys(updateData),
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar conta bancária',
           })
         }
 
+        logOperation('update_bank_account_success', ctx.user.id, 'bank_accounts', input.id, {
+          updateFields: Object.keys(updateData),
+        })
+
         return data
       } catch (error) {
-        console.error('Bank account update error:', error)
+        logError('update_bank_account_unexpected', ctx.user.id, error as Error, {
+          resource: 'bank_accounts',
+          operation: 'update',
+          accountId: input.id,
+          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+        })
         throw error
       }
     }),
@@ -198,21 +259,37 @@ export const bankAccountsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('delete_bank_account_not_found', ctx.user.id, 'bank_accounts', input.id, {
+              reason: 'account_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Conta bancária não encontrada',
             })
           }
-          console.error('Error deleting bank account:', error)
+          logError('delete_bank_account', ctx.user.id, error, {
+            resource: 'bank_accounts',
+            operation: 'delete',
+            accountId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao deletar conta bancária',
           })
         }
 
+        logOperation('delete_bank_account_success', ctx.user.id, 'bank_accounts', input.id, {
+          deletedAccountId: input.id,
+          softDelete: true,
+        })
+
         return data
       } catch (error) {
-        console.error('Bank account deletion error:', error)
+        logError('delete_bank_account_unexpected', ctx.user.id, error as Error, {
+          resource: 'bank_accounts',
+          operation: 'delete',
+          accountId: input.id,
+        })
         throw error
       }
     }),
@@ -227,7 +304,10 @@ export const bankAccountsRouter = router({
         .eq('is_active', true)
 
       if (error) {
-        console.error('Error fetching total balance:', error)
+        logError('fetch_total_balance', ctx.user.id, error, {
+          resource: 'bank_accounts',
+          operation: 'getTotalBalance',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar saldo total',
@@ -246,9 +326,17 @@ export const bankAccountsRouter = router({
         {} as Record<string, number>
       )
 
+      logOperation('fetch_total_balance_success', ctx.user.id, 'bank_accounts', undefined, {
+        currencies: Object.keys(balances),
+        accountsCount: data?.length || 0,
+      })
+
       return balances
     } catch (error) {
-      console.error('Total balance fetch error:', error)
+      logError('fetch_total_balance_unexpected', ctx.user.id, error as Error, {
+        resource: 'bank_accounts',
+        operation: 'getTotalBalance',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar saldo total',
@@ -281,7 +369,12 @@ export const bankAccountsRouter = router({
           .single()
 
         if (error) {
-          console.error('Error updating balance:', error)
+          logError('update_balance', ctx.user.id, error, {
+            resource: 'bank_accounts',
+            operation: 'updateBalance',
+            accountId: input.id,
+            newBalance: input.balance,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar saldo',
@@ -297,9 +390,20 @@ export const bankAccountsRouter = router({
           source: 'sync',
         } as any)
 
+        logOperation('update_balance_success', ctx.user.id, 'bank_accounts', input.id, {
+          newBalance: input.balance,
+          availableBalance: input.available_balance ?? input.balance,
+          source: 'sync',
+        })
+
         return data
       } catch (error) {
-        console.error('Balance update error:', error)
+        logError('update_balance_unexpected', ctx.user.id, error as Error, {
+          resource: 'bank_accounts',
+          operation: 'updateBalance',
+          accountId: input.id,
+          newBalance: input.balance,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao atualizar saldo',
@@ -328,7 +432,12 @@ export const bankAccountsRouter = router({
           .order('recorded_at', { ascending: true })
 
         if (error) {
-          console.error('Error fetching balance history:', error)
+          logError('fetch_balance_history', 'system', error, {
+            resource: 'account_balance_history',
+            operation: 'getBalanceHistory',
+            accountId: input.accountId,
+            days: input.days,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar histórico de saldos',
@@ -337,7 +446,12 @@ export const bankAccountsRouter = router({
 
         return data || []
       } catch (error) {
-        console.error('Balance history fetch error:', error)
+        logError('fetch_balance_history_unexpected', 'system', error as Error, {
+          resource: 'account_balance_history',
+          operation: 'getBalanceHistory',
+          accountId: input.accountId,
+          days: input.days,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar histórico de saldos',

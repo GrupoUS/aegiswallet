@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import type { Context } from '../context'
+import type { Context } from '@/server/context'
+import { logger, logError } from '@/server/lib/logger'
 
 export const createBankingRouter = (t: any) => ({
   /**
@@ -87,7 +88,11 @@ export const createBankingRouter = (t: any) => ({
           lastUpdated: data && data.length > 0 ? data[0].updated_at : null,
         }
       } catch (error) {
-        console.error('Failed to get balances:', error)
+        logError('get_balances_failed', ctx.session?.user?.id || 'anonymous', error as Error, {
+          resource: 'bank_accounts',
+          operation: 'getBalances',
+          linkId: input.linkId,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error instanceof Error ? error.message : 'Failed to retrieve balances',

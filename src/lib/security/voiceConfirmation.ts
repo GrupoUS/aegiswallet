@@ -5,7 +5,7 @@
  * LGPD-compliant with encryption and audit logs
  */
 
-import { createAuditLog } from './auditLogger'
+import { createAuditLog } from '@/lib/security/auditLogger'
 
 export enum FailureScenario {
   LOW_CONFIDENCE = 'low_confidence',

@@ -65,7 +65,7 @@ export class OpenBankingConnector {
     return [
       {
         id: 'tx_1',
-        accountId,
+        accountId: _accountId,
         date: new Date(),
         amount: -150.0,
         description: 'Supermercado',

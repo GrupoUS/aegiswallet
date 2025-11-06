@@ -5,8 +5,8 @@
 
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import type { PixKey, PixQRCode, PixTransaction } from '../../types/pix'
-import { protectedProcedure, router } from '../trpc-helpers'
+import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix'
+import { protectedProcedure, router } from '@/server/trpc-helpers'
 
 // =====================================================
 // Validation Schemas

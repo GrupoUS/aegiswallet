@@ -3,6 +3,8 @@
  * LGPD compliance and data security
  */
 
+import { logger } from '@/lib/logging/logger'
+
 export class SecurityComplianceService {
   async encryptSensitiveData(data: string): Promise<string> {
     // Use Web Crypto API
@@ -25,7 +27,13 @@ export class SecurityComplianceService {
     action: string
   }): Promise<void> {
     // Log to audit table
-    console.log('[Audit]', params)
+    logger.securityEvent('Data access audit', {
+      userId: params.userId.substring(0, 8) + '...', // Partial user ID for privacy
+      resource: params.resource,
+      action: params.action,
+      timestamp: new Date().toISOString(),
+      component: 'SecurityComplianceService',
+    })
   }
 
   validateLGPDCompliance(): boolean {

@@ -33,15 +33,8 @@ export function useFinancialTransactions(filters?: {
 
   const { mutate: createTransaction, isPending: isCreating } =
     trpc.financialTransactions.create.useMutation({
-      onSuccess: (data) => {
-        utils.financialTransactions.getAll.setData(filters || {}, (old) => {
-          if (!old) return { transactions: [data], total: 1, hasMore: false }
-          return {
-            ...old,
-            transactions: [data, ...old.transactions],
-            total: old.total + 1,
-          }
-        })
+      onSuccess: () => {
+        utils.financialTransactions.getAll.invalidate()
         utils.financialTransactions.getStats.invalidate()
         toast.success('Transação criada com sucesso!')
       },
@@ -52,21 +45,14 @@ export function useFinancialTransactions(filters?: {
 
   const { mutate: updateTransaction, isPending: isUpdating } =
     trpc.financialTransactions.update.useMutation({
-      onSuccess: (data) => {
-        utils.financialTransactions.getAll.setData(filters || {}, (old) => {
-          if (!old) return old
-          return {
-            ...old,
-            transactions: old.transactions.map((t) => (t.id === data.id ? data : t)),
-          }
-        })
+      onSuccess: () => {
+        utils.financialTransactions.getAll.invalidate()
         utils.financialTransactions.getStats.invalidate()
         toast.success('Transação atualizada com sucesso!')
       },
       onError: (error) => {
         toast.error(error.message || 'Erro ao atualizar transação')
-      },
-    })
+
 
   const { mutate: deleteTransaction, isPending: isDeleting } =
     trpc.financialTransactions.delete.useMutation({
@@ -162,7 +148,7 @@ export function useTransactionStats(period: string = '30d') {
 /**
  * Hook para transações por categoria
  */
-export function useTransactionsByCategory(period: string = '30d') {
+export function useTransactionsByCategory(period: "7d" | "30d" | "1y" | "90d" = '30d') {
   const {
     data: categoryStats,
     isLoading,

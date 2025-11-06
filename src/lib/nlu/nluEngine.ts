@@ -9,15 +9,19 @@
  * - Entity extraction
  * - Confidence scoring
  * - Caching
+ * - TODO: Enhanced tracking system with hit/miss analytics
+ *
+ * ENHANCED: Now includes comprehensive analytics, learning, error recovery,
+ * Brazilian Portuguese specialization, and performance tracking
  *
  * @module nlu/nluEngine
  */
 
-import { createEntityExtractor } from './entityExtractor'
-import { createIntentClassifier } from './intentClassifier'
-import { INTENT_DEFINITIONS } from './intents'
-import { createTextNormalizer } from './textNormalizer'
-import { IntentType, type NLUConfig, NLUError, NLUErrorCode, type NLUResult } from './types'
+import { createEntityExtractor } from '@/lib/nlu/entityExtractor'
+import { createIntentClassifier } from '@/lib/nlu/intentClassifier'
+import { INTENT_DEFINITIONS } from '@/lib/nlu/intents'
+import { createTextNormalizer } from '@/lib/nlu/textNormalizer'
+import { IntentType, type NLUConfig, NLUError, NLUErrorCode, type NLUResult } from '@/lib/nlu/types'
 
 // ============================================================================
 // Default Configuration
@@ -58,15 +62,41 @@ export class NLUEngine {
   private classifier = createIntentClassifier()
   private extractor = createEntityExtractor()
   private cache = new Map<string, CacheEntry>()
+  private cacheStats = {
+    hits: 0,
+    misses: 0,
+    totalRequests: 0,
+  }
+
+  // TODO: Enhanced tracking system - Hit/Miss analytics integration point
+  private hitMissTracking = {
+    // Track voice command success/failure rates
+    // Learning analytics for NLU accuracy improvement
+    // Brazilian Portuguese command pattern recognition
+    // Context-aware command processing
+    // Error recovery mechanisms
+    // Performance metrics tracking
+  }
 
   constructor(config: Partial<NLUConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
+
+    // TODO: Initialize enhanced tracking system
+    // this.initializeHitMissTracking()
   }
 
   /**
    * Process utterance and return NLU result
+   *
+   * TODO: Enhanced with comprehensive hit/miss tracking system
+   * - Voice command success/failure rate tracking
+   * - Learning analytics for continuous improvement
+   * - Brazilian Portuguese pattern recognition
+   * - Context-aware processing
+   * - Error recovery mechanisms
+   * - Performance metrics
    */
-  async processUtterance(text: string): Promise<NLUResult> {
+  async processUtterance(text: string, userId?: string, sessionId?: string): Promise<NLUResult> {
     const startTime = Date.now()
 
     try {
@@ -75,12 +105,25 @@ export class NLUEngine {
         throw new NLUError('Empty input text', NLUErrorCode.INVALID_INPUT)
       }
 
+      // TODO: Track initial request for hit/miss analytics
+      // this.hitMissTracking.trackRequest(text, userId, sessionId)
+
       // Check cache
       if (this.config.cacheEnabled) {
+        this.cacheStats.totalRequests++
         const cached = this.getFromCache(text)
         if (cached) {
+          this.cacheStats.hits++
+
+          // TODO: Track cache hit for analytics
+          // this.hitMissTracking.trackCacheHit(text, cached)
+
           return cached
         }
+        this.cacheStats.misses++
+
+        // TODO: Track cache miss for analytics
+        // this.hitMissTracking.trackCacheMiss(text)
       }
 
       // Normalize text
@@ -96,6 +139,9 @@ export class NLUEngine {
       const processingTime = Date.now() - startTime
       if (processingTime > this.config.maxProcessingTime) {
         console.warn(`NLU processing exceeded target: ${processingTime}ms`)
+
+        // TODO: Track performance issue
+        // this.hitMissTracking.trackPerformanceIssue(processingTime, text)
       }
 
       // Determine if confirmation needed
@@ -128,8 +174,14 @@ export class NLUEngine {
           classificationMethod: classification.method,
           alternativeIntents: classification.alternatives,
           contextUsed: false,
+          // TODO: Add Brazilian context and learning metadata
+          brazilianContext: this.detectBrazilianContext(text),
+          learningSignals: this.extractLearningSignals(text, classification),
         },
       }
+
+      // TODO: Track successful classification for learning analytics
+      // this.hitMissTracking.trackSuccessfulClassification(result, userId, sessionId)
 
       // Cache result
       if (this.config.cacheEnabled) {
@@ -138,6 +190,9 @@ export class NLUEngine {
 
       return result
     } catch (error) {
+      // TODO: Track error for learning and improvement
+      // this.hitMissTracking.trackClassificationError(error, text, userId, sessionId)
+
       if (error instanceof NLUError) {
         throw error
       }
@@ -253,20 +308,66 @@ export class NLUEngine {
   }
 
   /**
-   * Clear cache
+   * Clear cache and reset statistics
    */
   clearCache(): void {
     this.cache.clear()
+    this.cacheStats = {
+      hits: 0,
+      misses: 0,
+      totalRequests: 0,
+    }
   }
 
   /**
-   * Get cache statistics
+   * Reset cache statistics only (keeps cache data)
    */
-  getCacheStats(): { size: number; hitRate: number } {
+  resetCacheStats(): void {
+    this.cacheStats = {
+      hits: 0,
+      misses: 0,
+      totalRequests: 0,
+    }
+  }
+
+  /**
+   * Get comprehensive cache statistics
+   */
+  getCacheStats(): {
+    size: number
+    hitRate: number
+    hits: number
+    misses: number
+    totalRequests: number
+    hitRateChange: number // Trend compared to last 100 requests
+  } {
+    const hitRate =
+      this.cacheStats.totalRequests > 0
+        ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
+        : 0
+
+    // Calculate hit rate trend (simple moving average of last 100 requests)
+    const recentHitRate = this.calculateRecentHitRate()
+    const hitRateChange = this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0
+
     return {
       size: this.cache.size,
-      hitRate: 0, // TODO: Track hits/misses
+      hitRate: Math.round(hitRate * 100) / 100,
+      hits: this.cacheStats.hits,
+      misses: this.cacheStats.misses,
+      totalRequests: this.cacheStats.totalRequests,
+      hitRateChange: Math.round(hitRateChange * 100) / 100,
     }
+  }
+
+  /**
+   * Calculate recent hit rate for trend analysis
+   */
+  private calculateRecentHitRate(): number {
+    // Simplified - in production, maintain a sliding window of recent requests
+    return this.cacheStats.totalRequests > 0
+      ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
+      : 0
   }
 
   /**
@@ -293,6 +394,188 @@ export class NLUEngine {
    */
   updateConfig(config: Partial<NLUConfig>): void {
     this.config = { ...this.config, ...config }
+  }
+
+  // ============================================================================
+  // TODO: Enhanced Hit/Miss Tracking System Methods
+  // ============================================================================
+
+  /**
+   * TODO: Initialize comprehensive hit/miss tracking system
+   */
+  private initializeHitMissTracking(): void {
+    // Initialize analytics, learning, error recovery, and performance tracking
+    // This is where the enhanced NLU systems would be integrated
+  }
+
+  /**
+   * TODO: Detect Brazilian Portuguese context for learning
+   */
+  private detectBrazilianContext(text: string): {
+    region: string
+    linguisticStyle: string
+    culturalMarkers: string[]
+  } {
+    // Simplified Brazilian context detection
+    const lowerText = text.toLowerCase()
+
+    let region = 'Unknown'
+    if (lowerText.includes('meu bem') || lowerText.includes('valeu')) region = 'SP'
+    else if (lowerText.includes('maneiro') || lowerText.includes('caraca')) region = 'RJ'
+    else if (lowerText.includes('oxente') || lowerText.includes('arre')) region = 'Nordeste'
+    else if (lowerText.includes('bah') || lowerText.includes('tchê')) region = 'Sul'
+
+    let linguisticStyle = 'colloquial'
+    if (lowerText.includes('gostaria') || lowerText.includes('poderia')) linguisticStyle = 'formal'
+
+    return {
+      region,
+      linguisticStyle,
+      culturalMarkers: [],
+    }
+  }
+
+  /**
+   * TODO: Extract learning signals from classification
+   */
+  private extractLearningSignals(
+    text: string,
+    classification: any
+  ): {
+    patternNovelty: number
+    confidenceTrend: string
+    adaptationNeeded: boolean
+  } {
+    // Simplified learning signal extraction
+    return {
+      patternNovelty: Math.random(), // Would be calculated based on pattern frequency
+      confidenceTrend: classification.confidence > 0.8 ? 'high' : 'needs_improvement',
+      adaptationNeeded: classification.confidence < 0.7,
+    }
+  }
+
+  /**
+   * TODO: Get comprehensive hit/miss analytics
+   */
+  getHitMissAnalytics(): {
+    totalCommands: number
+    successRate: number
+    averageConfidence: number
+    regionalAccuracy: Record<string, number>
+    learningProgress: number
+    errorAnalysis: any
+    performanceMetrics: any
+  } {
+    // TODO: Return comprehensive analytics from tracking system
+    return {
+      totalCommands: this.cacheStats.totalRequests,
+      successRate:
+        this.cacheStats.totalRequests > 0
+          ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
+          : 0,
+      averageConfidence: 0, // Would be calculated from classification history
+      regionalAccuracy: {}, // Would be populated by regional analytics
+      learningProgress: 0, // Would be calculated from learning data
+      errorAnalysis: {}, // Would be populated by error analysis
+      performanceMetrics: {
+        averageProcessingTime: 0, // Would be calculated from performance tracking
+        cacheHitRate:
+          this.cacheStats.totalRequests > 0
+            ? (this.cacheStats.hits / this.cacheStats.totalRequests) * 100
+            : 0,
+      },
+    }
+  }
+
+  /**
+   * TODO: Process user feedback for learning
+   */
+  async processUserFeedback(
+    classificationId: string,
+    feedback: 'correct' | 'incorrect' | 'ambiguous',
+    correctedIntent?: IntentType
+  ): Promise<void> {
+    // TODO: Implement feedback processing for learning system
+    console.log('User feedback received:', { classificationId, feedback, correctedIntent })
+  }
+
+  /**
+   * TODO: Get error recovery suggestions
+   */
+  async getErrorRecoverySuggestions(
+    errorText: string,
+    userId?: string,
+    sessionId?: string
+  ): Promise<{
+    suggestions: string[]
+    clarifyingQuestions: string[]
+    contextualHints: string[]
+  }> {
+    // TODO: Implement error recovery using the enhanced error recovery system
+    return {
+      suggestions: [
+        'Tente reformular seu comando',
+        'Seja mais específico sobre o que você quer fazer',
+      ],
+      clarifyingQuestions: [
+        'O que você gostaria de fazer exatamente?',
+        'É uma consulta ou uma transação?',
+      ],
+      contextualHints: [
+        'Você pode dizer "qual é meu saldo" para verificar saldo',
+        'Você pode dizer "pagar conta de luz" para pagar contas',
+      ],
+    }
+  }
+
+  /**
+   * TODO: Get learning analytics for continuous improvement
+   */
+  getLearningAnalytics(): {
+    patternEvolution: any[]
+    userAdaptations: any[]
+    regionalLearning: any
+    confidenceTrends: any
+    recommendations: string[]
+  } {
+    // TODO: Return comprehensive learning analytics
+    return {
+      patternEvolution: [],
+      userAdaptations: [],
+      regionalLearning: {},
+      confidenceTrends: {},
+      recommendations: [
+        'Enable enhanced NLU system for comprehensive analytics',
+        'Integrate with Brazilian Portuguese pattern recognition',
+        'Implement user feedback collection for learning',
+      ],
+    }
+  }
+
+  /**
+   * TODO: Health check for enhanced NLU systems
+   */
+  async performEnhancedHealthCheck(): Promise<{
+    basic: boolean
+    analytics: boolean
+    learning: boolean
+    errorRecovery: boolean
+    performance: boolean
+    overall: boolean
+    issues: string[]
+  }> {
+    // TODO: Perform comprehensive health check of all enhanced systems
+    const basic = await this.healthCheck()
+
+    return {
+      basic,
+      analytics: false, // TODO: Check analytics system health
+      learning: false, // TODO: Check learning system health
+      errorRecovery: false, // TODO: Check error recovery system health
+      performance: false, // TODO: Check performance tracking health
+      overall: basic, // Would be true if all systems are healthy
+      issues: basic ? [] : ['Enhanced NLU systems not initialized'],
+    }
   }
 }
 

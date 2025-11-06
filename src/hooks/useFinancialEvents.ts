@@ -64,12 +64,15 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
 function eventToRow(event: Partial<FinancialEvent>, userId: string): Partial<FinancialEventRow> {
   return {
     user_id: userId,
-    title: event.title,
+    title: event.title || '',
     description: event.description || null,
-    amount: event.amount,
+    amount: event.amount || 0,
     is_income: event.type === 'income',
-    event_date: event.start?.toISOString().split('T')[0], // Use only the date part
-    due_date: event.end?.toISOString().split('T')[0],
+    event_date: event.start?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0], // Use only the date part, fallback to today
+    due_date:
+      event.end?.toISOString().split('T')[0] ||
+      event.start?.toISOString().split('T')[0] ||
+      new Date().toISOString().split('T')[0],
     is_recurring: event.recurring || false,
     is_completed: event.status === 'completed',
     completed_at: event.status === 'completed' ? new Date().toISOString() : null,

@@ -8,7 +8,7 @@
  * @module nlu/intents
  */
 
-import { EntityType, type IntentDefinition, IntentType } from './types'
+import { EntityType, type IntentDefinition, IntentType } from '@/lib/nlu/types'
 
 // ============================================================================
 // Intent Definitions

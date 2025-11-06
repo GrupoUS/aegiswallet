@@ -1,5 +1,11 @@
 // Debug component exports
-import { BentoGrid, BentoCard, PopoverAnchor, SheetOverlay, SheetPortal } from './src/components/ui/index.js'
+import {
+  BentoGrid,
+  BentoCard,
+  PopoverAnchor,
+  SheetOverlay,
+  SheetPortal,
+} from './src/components/ui/index.js'
 
 console.log('BentoGrid type:', typeof BentoGrid)
 console.log('BentoCard type:', typeof BentoCard)

@@ -1,8 +1,12 @@
-import app from './index'
+import app from '@/server/index'
 
 const port = process.env.PORT || 3000
 
-console.log(`🚀 Server running on http://localhost:${port}`)
+logger.info(`🚀 Server running on http://localhost:${port}`, {
+  port,
+  environment: process.env.NODE_ENV || 'development',
+  service: 'aegiswallet-server',
+})
 
 export default {
   port,

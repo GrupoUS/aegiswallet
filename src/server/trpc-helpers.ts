@@ -1,6 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import superjson from 'superjson'
-import { Context } from './context'
+import { Context } from '@/server/context'
 
 export interface Meta {
   // Add any meta information here

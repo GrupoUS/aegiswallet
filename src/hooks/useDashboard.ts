@@ -1,18 +1,18 @@
-import { useBankAccounts, useBankAccountsStats, useTotalBalance } from './useBankAccounts'
+import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts'
 import {
   useContacts,
   useContactsForTransfer,
   useContactsStats,
   useFavoriteContacts,
-} from './useContacts'
-import { useCalendarStats, useOverdueEvents, useUpcomingEvents } from './useFinancialCalendar'
-import { useFinancialEvents } from './useFinancialEvents'
+} from '@/hooks/useContacts'
+import { useCalendarStats, useOverdueEvents, useUpcomingEvents } from '@/hooks/useFinancialCalendar'
+import { useFinancialEvents, useFinancialEventMutations } from '@/hooks/useFinancialEvents'
 import {
   useFinancialTransactions,
   useRecentTransactions,
   useTransactionStats,
-} from './useFinancialTransactions'
-import { useProfile, useUserStatus } from './useProfile'
+} from '@/hooks/useFinancialTransactions'
+import { useProfile, useUserStatus } from '@/hooks/useProfile'
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
@@ -216,7 +216,7 @@ export function useDashboardSettings() {
  */
 export function useDashboardActions() {
   const { createTransaction } = useFinancialTransactions()
-  const { createEvent } = useFinancialEvents()
+  const { addEvent } = useFinancialEventMutations()
   const { createContact } = useContacts()
   const { createAccount } = useBankAccounts()
 
@@ -228,7 +228,7 @@ export function useDashboardActions() {
 
     quickEvent: (data: any) => {
       // Implementar lógica para evento rápido
-      return createEvent(data)
+      return addEvent(data)
     },
 
     quickContact: (data: any) => {

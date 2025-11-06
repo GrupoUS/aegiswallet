@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '../trpc-helpers'
+import { protectedProcedure, router } from '@/server/trpc-helpers'
+import { logger, logError, logOperation } from '@/server/lib/logger'
 
 /**
  * Contacts Router - Gerenciamento de contatos
@@ -36,7 +37,14 @@ export const contactsRouter = router({
           .range(input.offset, input.offset + input.limit - 1)
 
         if (error) {
-          console.error('Error fetching contacts:', error)
+          logError('fetch_contacts', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'getAll',
+            search: input.search,
+            isFavorite: input.isFavorite,
+            limit: input.limit,
+            offset: input.offset,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar contatos',
@@ -49,7 +57,14 @@ export const contactsRouter = router({
           hasMore: (count || 0) > input.offset + input.limit,
         }
       } catch (error) {
-        console.error('Contacts fetch error:', error)
+        logError('fetch_contacts_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'getAll',
+          search: input.search,
+          isFavorite: input.isFavorite,
+          limit: input.limit,
+          offset: input.offset,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contatos',
@@ -71,12 +86,19 @@ export const contactsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('fetch_contact_not_found', ctx.user.id, 'contacts', input.id, {
+              reason: 'contact_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Contato não encontrado',
             })
           }
-          console.error('Error fetching contact:', error)
+          logError('fetch_contact_by_id', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'getById',
+            contactId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar contato',
@@ -85,7 +107,11 @@ export const contactsRouter = router({
 
         return data
       } catch (error) {
-        console.error('Contact fetch error:', error)
+        logError('fetch_contact_by_id_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'getById',
+          contactId: input.id,
+        })
         throw error
       }
     }),
@@ -117,21 +143,45 @@ export const contactsRouter = router({
 
         if (error) {
           if (error.code === '23505') {
+            logOperation('create_contact_conflict', ctx.user.id, 'contacts', undefined, {
+              reason: 'duplicate_email_or_phone',
+              email: input.email,
+              phone: input.phone,
+            })
             throw new TRPCError({
               code: 'CONFLICT',
               message: 'Email ou telefone já cadastrado para este usuário',
             })
           }
-          console.error('Error creating contact:', error)
+          logError('create_contact', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'create',
+            contactName: input.name,
+            hasEmail: !!input.email,
+            hasPhone: !!input.phone,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar contato',
           })
         }
 
+        logOperation('create_contact_success', ctx.user.id, 'contacts', data?.id, {
+          contactName: input.name,
+          hasEmail: !!input.email,
+          hasPhone: !!input.phone,
+          isFavorite: input.isFavorite,
+        })
+
         return data
       } catch (error) {
-        console.error('Contact creation error:', error)
+        logError('create_contact_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'create',
+          contactName: input.name,
+          hasEmail: !!input.email,
+          hasPhone: !!input.phone,
+        })
         throw error
       }
     }),
@@ -166,27 +216,49 @@ export const contactsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('update_contact_not_found', ctx.user.id, 'contacts', input.id, {
+              reason: 'contact_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Contato não encontrado',
             })
           }
           if (error.code === '23505') {
+            logOperation('update_contact_conflict', ctx.user.id, 'contacts', input.id, {
+              reason: 'duplicate_email_or_phone',
+              email: input.email,
+              phone: input.phone,
+            })
             throw new TRPCError({
               code: 'CONFLICT',
               message: 'Email ou telefone já cadastrado para este usuário',
             })
           }
-          console.error('Error updating contact:', error)
+          logError('update_contact', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'update',
+            contactId: input.id,
+            updateFields: Object.keys(updateData),
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar contato',
           })
         }
 
+        logOperation('update_contact_success', ctx.user.id, 'contacts', input.id, {
+          updateFields: Object.keys(updateData),
+        })
+
         return data
       } catch (error) {
-        console.error('Contact update error:', error)
+        logError('update_contact_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'update',
+          contactId: input.id,
+          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+        })
         throw error
       }
     }),
@@ -206,21 +278,36 @@ export const contactsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('delete_contact_not_found', ctx.user.id, 'contacts', input.id, {
+              reason: 'contact_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Contato não encontrado',
             })
           }
-          console.error('Error deleting contact:', error)
+          logError('delete_contact', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'delete',
+            contactId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao deletar contato',
           })
         }
 
+        logOperation('delete_contact_success', ctx.user.id, 'contacts', input.id, {
+          deletedContactId: input.id,
+        })
+
         return data
       } catch (error) {
-        console.error('Contact deletion error:', error)
+        logError('delete_contact_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'delete',
+          contactId: input.id,
+        })
         throw error
       }
     }),
@@ -247,16 +334,32 @@ export const contactsRouter = router({
           .limit(input.limit)
 
         if (error) {
-          console.error('Error searching contacts:', error)
+          logError('search_contacts', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'search',
+            searchQuery: input.query,
+            limit: input.limit,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar contatos',
           })
         }
 
+        logOperation('search_contacts_success', ctx.user.id, 'contacts', undefined, {
+          searchQuery: input.query,
+          resultsCount: data?.length || 0,
+          limit: input.limit,
+        })
+
         return data || []
       } catch (error) {
-        console.error('Contact search error:', error)
+        logError('search_contacts_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'search',
+          searchQuery: input.query,
+          limit: input.limit,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contatos',
@@ -275,16 +378,26 @@ export const contactsRouter = router({
         .order('name', { ascending: true })
 
       if (error) {
-        console.error('Error fetching favorite contacts:', error)
+        logError('fetch_favorite_contacts', ctx.user.id, error, {
+          resource: 'contacts',
+          operation: 'getFavorites',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar contatos favoritos',
         })
       }
 
+      logOperation('fetch_favorite_contacts_success', ctx.user.id, 'contacts', undefined, {
+        favoritesCount: data?.length || 0,
+      })
+
       return data || []
     } catch (error) {
-      console.error('Favorite contacts fetch error:', error)
+      logError('fetch_favorite_contacts_unexpected', ctx.user.id, error as Error, {
+        resource: 'contacts',
+        operation: 'getFavorites',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar contatos favoritos',
@@ -325,16 +438,30 @@ export const contactsRouter = router({
           .single()
 
         if (error) {
-          console.error('Error toggling favorite status:', error)
+          logError('toggle_favorite_status', ctx.user.id, error, {
+            resource: 'contacts',
+            operation: 'toggleFavorite',
+            contactId: input.id,
+            previousStatus: currentContact.is_favorite,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao alternar status de favorito',
           })
         }
 
+        logOperation('toggle_favorite_success', ctx.user.id, 'contacts', input.id, {
+          previousStatus: currentContact.is_favorite,
+          newStatus: !currentContact.is_favorite,
+        })
+
         return data
       } catch (error) {
-        console.error('Toggle favorite error:', error)
+        logError('toggle_favorite_unexpected', ctx.user.id, error as Error, {
+          resource: 'contacts',
+          operation: 'toggleFavorite',
+          contactId: input.id,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao alternar status de favorito',
@@ -351,7 +478,10 @@ export const contactsRouter = router({
         .eq('user_id', ctx.user.id)
 
       if (error) {
-        console.error('Error fetching contact stats:', error)
+        logError('fetch_contact_stats', ctx.user.id, error, {
+          resource: 'contacts',
+          operation: 'getStats',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar estatísticas de contatos',
@@ -373,7 +503,10 @@ export const contactsRouter = router({
         favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
       }
     } catch (error) {
-      console.error('Contact stats error:', error)
+      logError('fetch_contact_stats_unexpected', ctx.user.id, error as Error, {
+        resource: 'contacts',
+        operation: 'getStats',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar estatísticas de contatos',

@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '../trpc-helpers'
+import { protectedProcedure, router } from '@/server/trpc-helpers'
+import { logger, logError, logOperation } from '@/server/lib/logger'
 
 /**
  * Transactions Router - Gerenciamento de transações financeiras
@@ -63,12 +64,37 @@ export const transactionsRouter = router({
           .range(input.offset, input.offset + input.limit - 1)
 
         if (error) {
-          console.error('Error fetching transactions:', error)
+          logError('fetch_transactions', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'getAll',
+            limit: input.limit,
+            offset: input.offset,
+            categoryId: input.categoryId,
+            accountId: input.accountId,
+            type: input.type,
+            status: input.status,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            search: input.search,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transações',
           })
         }
+
+        logOperation('fetch_transactions_success', ctx.user.id, 'transactions', undefined, {
+          resultsCount: data?.length || 0,
+          total: count || 0,
+          hasMore: (count || 0) > input.offset + input.limit,
+          filters: {
+            categoryId: input.categoryId,
+            accountId: input.accountId,
+            type: input.type,
+            status: input.status,
+            search: input.search,
+          },
+        })
 
         return {
           transactions: data || [],
@@ -76,7 +102,19 @@ export const transactionsRouter = router({
           hasMore: (count || 0) > input.offset + input.limit,
         }
       } catch (error) {
-        console.error('Transactions fetch error:', error)
+        logError('fetch_transactions_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'getAll',
+          limit: input.limit,
+          offset: input.offset,
+          categoryId: input.categoryId,
+          accountId: input.accountId,
+          type: input.type,
+          status: input.status,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          search: input.search,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar transações',
@@ -102,12 +140,19 @@ export const transactionsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('fetch_transaction_not_found', ctx.user.id, 'transactions', input.id, {
+              reason: 'transaction_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
             })
           }
-          console.error('Error fetching transaction:', error)
+          logError('fetch_transaction_by_id', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'getById',
+            transactionId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transação',
@@ -116,7 +161,11 @@ export const transactionsRouter = router({
 
         return data
       } catch (error) {
-        console.error('Transaction fetch error:', error)
+        logError('fetch_transaction_by_id_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'getById',
+          transactionId: input.id,
+        })
         throw error
       }
     }),
@@ -161,16 +210,39 @@ export const transactionsRouter = router({
           .single()
 
         if (error) {
-          console.error('Error creating transaction:', error)
+          logError('create_transaction', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'create',
+            amount: input.amount,
+            type: input.transaction_type,
+            description: input.description,
+            merchantName: input.merchant_name,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao criar transação',
           })
         }
 
+        logOperation('create_transaction_success', ctx.user.id, 'transactions', data?.id, {
+          amount: input.amount,
+          type: input.transaction_type,
+          description: input.description,
+          merchantName: input.merchant_name,
+          status: input.status,
+          isManualEntry: input.is_manual_entry,
+        })
+
         return data
       } catch (error) {
-        console.error('Transaction creation error:', error)
+        logError('create_transaction_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'create',
+          amount: input.amount,
+          type: input.transaction_type,
+          description: input.description,
+          merchantName: input.merchant_name,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar transação',
@@ -216,21 +288,38 @@ export const transactionsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('update_transaction_not_found', ctx.user.id, 'transactions', input.id, {
+              reason: 'transaction_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
             })
           }
-          console.error('Error updating transaction:', error)
+          logError('update_transaction', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'update',
+            transactionId: input.id,
+            updateFields: Object.keys(input).filter((k) => k !== 'id'),
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar transação',
           })
         }
 
+        logOperation('update_transaction_success', ctx.user.id, 'transactions', input.id, {
+          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+        })
+
         return data
       } catch (error) {
-        console.error('Transaction update error:', error)
+        logError('update_transaction_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'update',
+          transactionId: input.id,
+          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+        })
         throw error
       }
     }),
@@ -250,21 +339,36 @@ export const transactionsRouter = router({
 
         if (error) {
           if (error.code === 'PGRST116') {
+            logOperation('delete_transaction_not_found', ctx.user.id, 'transactions', input.id, {
+              reason: 'transaction_not_found',
+            })
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Transação não encontrada',
             })
           }
-          console.error('Error deleting transaction:', error)
+          logError('delete_transaction', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'delete',
+            transactionId: input.id,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao deletar transação',
           })
         }
 
+        logOperation('delete_transaction_success', ctx.user.id, 'transactions', input.id, {
+          deletedTransactionId: input.id,
+        })
+
         return data
       } catch (error) {
-        console.error('Transaction deletion error:', error)
+        logError('delete_transaction_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'delete',
+          transactionId: input.id,
+        })
         throw error
       }
     }),
@@ -316,7 +420,13 @@ export const transactionsRouter = router({
         const { data, error } = await query
 
         if (error) {
-          console.error('Error fetching transaction stats:', error)
+          logError('fetch_transaction_stats', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'getStats',
+            period: input.period,
+            categoryId: input.categoryId,
+            accountId: input.accountId,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar estatísticas de transações',
@@ -356,7 +466,13 @@ export const transactionsRouter = router({
           period: input.period,
         }
       } catch (error) {
-        console.error('Transaction stats error:', error)
+        logError('fetch_transaction_stats_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'getStats',
+          period: input.period,
+          categoryId: input.categoryId,
+          accountId: input.accountId,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar estatísticas de transações',
@@ -404,7 +520,11 @@ export const transactionsRouter = router({
           .not('category_id', 'is', null)
 
         if (error) {
-          console.error('Error fetching transactions by category:', error)
+          logError('fetch_transactions_by_category', ctx.user.id, error, {
+            resource: 'transactions',
+            operation: 'getByCategory',
+            period: input.period,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar transações por categoria',
@@ -446,7 +566,11 @@ export const transactionsRouter = router({
 
         return Object.values(categoryStats)
       } catch (error) {
-        console.error('Transactions by category error:', error)
+        logError('fetch_transactions_by_category_unexpected', ctx.user.id, error as Error, {
+          resource: 'transactions',
+          operation: 'getByCategory',
+          period: input.period,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar transações por categoria',

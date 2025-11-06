@@ -1,31 +1,35 @@
-import { trpc } from '@/lib/trpc'
+import { trpc } from "@/lib/trpc";
 
 export function useTransactions(filters?: {
-  limit?: number
-  offset?: number
-  categoryId?: string
-  accountId?: string
-  type?: string
-  status?: string
-  startDate?: string
-  endDate?: string
-  search?: string
+  limit?: number;
+  offset?: number;
+  categoryId?: string;
+  accountId?: string;
+  type?: "transfer" | "debit" | "credit" | "pix" | "boleto";
+  status?: "cancelled" | "failed" | "pending" | "posted";
+  startDate?: string;
+  endDate?: string;
+  search?: string;
 }) {
-  return trpc.transactions.getAll.useQuery(filters || {})
+  return trpc.financialTransactions.getAll.useQuery(filters || {});
 }
 
 export function useCreateTransaction() {
-  return trpc.transactions.create.useMutation()
+  return trpc.financialTransactions.create.useMutation();
 }
 
 export function useDeleteTransaction() {
-  return trpc.transactions.delete.useMutation()
+  return trpc.financialTransactions.delete.useMutation();
 }
 
-export function useTransactionsStats(period?: string, categoryId?: string, accountId?: string) {
-  return trpc.transactions.getStats.useQuery({
-    period: (period as any) || '30d',
+export function useTransactionsStats(
+  period?: "7d" | "30d" | "1y" | "90d",
+  categoryId?: string,
+  accountId?: string,
+) {
+  return trpc.financialTransactions.getStats.useQuery({
+    period: period || "30d",
     categoryId,
     accountId,
-  })
+  });
 }

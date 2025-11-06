@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import type { Context } from '../context'
+import type { Context } from '@/server/context'
 
 export const createUserRouter = (t: any) => ({
   /**

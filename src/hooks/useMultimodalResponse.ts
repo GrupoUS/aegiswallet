@@ -19,6 +19,7 @@ import {
 } from '@/lib/multimodal/responseTemplates'
 import type { IntentType } from '@/lib/nlu/types'
 import { getTTSService } from '@/lib/tts/textToSpeechService'
+import { useLogger } from '@/hooks/useLogger'
 
 // ============================================================================
 // Types
@@ -101,6 +102,18 @@ export function useMultimodalResponse(
   // TTS Service
   const ttsService = getTTSService()
 
+  // Logger
+  const logger = useLogger({
+    component: 'MultimodalResponse',
+    defaultContext: {
+      module: 'multimodal-response',
+      enableVoice,
+      enableVisual,
+      autoSpeak,
+      collectFeedback,
+    },
+  })
+
   /**
    * Send multimodal response
    */
@@ -138,7 +151,12 @@ export function useMultimodalResponse(
 
           // Track performance
           if (ttsResult.duration > 800) {
-            console.warn(`[Multimodal] TTS response time exceeded target: ${ttsResult.duration}ms`)
+            logger.warn(`TTS response time exceeded target: ${ttsResult.duration}ms`, {
+              duration: ttsResult.duration,
+              target: 800,
+              responseId,
+              intent: typeof intent === 'string' ? intent : 'unknown',
+            })
           }
 
           // Show feedback prompt after speaking
@@ -154,7 +172,13 @@ export function useMultimodalResponse(
           }, 2000)
         }
       } catch (error) {
-        console.error('[Multimodal] Error sending response:', error)
+        logger.error('Error sending multimodal response', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          intent: typeof intent === 'string' ? intent : 'unknown',
+          enableVoice,
+          autoSpeak,
+        })
         setState((prev) => ({
           ...prev,
           isLoading: false,
@@ -198,7 +222,11 @@ export function useMultimodalResponse(
     try {
       await ttsService.speak(state.currentResponse.voice, state.currentResponse.ssmlOptions)
     } catch (error) {
-      console.error('[Multimodal] Error repeating response:', error)
+      logger.error('Error repeating multimodal response', {
+        error: error instanceof Error ? error.message : String(error),
+        responseId: currentResponseId,
+        hasVoiceResponse: !!state.currentResponse?.voice,
+      })
     } finally {
       setState((prev) => ({ ...prev, isSpeaking: false }))
     }
@@ -235,7 +263,13 @@ export function useMultimodalResponse(
       }
 
       // Store feedback (in production, send to analytics/database)
-      console.log('[Multimodal] Feedback submitted:', feedback)
+      logger.userAction('Response feedback submitted', {
+        component: 'MultimodalResponse',
+        rating,
+        helpful: feedback.helpful,
+        hasComment: !!comment,
+        responseId: feedback.responseId,
+      })
 
       if (onFeedback) {
         onFeedback(feedback)

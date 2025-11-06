@@ -6,48 +6,6 @@
           "name": "biome"
         }
       }
-    },
-    "JavaScript": {
-      "formatter": {
-        "language_server": {
-          "name": "biome"
-        }
-      },
-      "lsp": {
-        "biome": {
-          "binary": {
-            "path_lookup": "working_directory"
-          }
-        }
-      }
-    },
-    "TSX": {
-      "formatter": {
-        "language_server": {
-          "name": "biome"
-        }
-      },
-      "lsp": {
-        "biome": {
-          "binary": {
-            "path_lookup": "working_directory"
-          }
-        }
-      }
-    },
-    "JSX": {
-      "formatter": {
-        "language_server": {
-          "name": "biome"
-        }
-      },
-      "lsp": {
-        "biome": {
-          "binary": {
-            "path_lookup": "working_directory"
-          }
-        }
-      }
     }
   },
   "lsp": {

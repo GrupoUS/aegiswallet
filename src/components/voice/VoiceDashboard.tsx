@@ -27,8 +27,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     supported,
     startListening,
     stopListening,
-    resetState,
-  } = useVoiceRecognition()
+  } = useVoiceRecognition({})
 
   const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null)
   const [commandHistory, setCommandHistory] = useState<
@@ -81,7 +80,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       }
 
       resetTimeoutRef.current = setTimeout(() => {
-        resetState()
+        // resetState() - removed as it doesn't exist
         resetTimeoutRef.current = null
       }, 800) // Reduced from 2000ms to 800ms for better responsiveness
 
@@ -95,7 +94,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         responseTimeoutRef.current = null
       }, 5000)
     }
-  }, [transcript, confidence, resetState, announce, speak])
+  }, [transcript, confidence, announce, speak])
 
   // Otimizar funções com useCallback
   const speakResponse = useCallback((text: string) => {
@@ -173,191 +172,6 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
   return (
     <div className={`h-full w-full bg-background p-4 ${className}`}>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">{greeting}! 👋</h1>
-          <p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
-        </div>
-
-        {/* Main Voice Interface */}
-        <Card className="relative overflow-hidden">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-xl flex items-center justify-center gap-2">
-              <Volume2 className="w-6 h-6" />
-              Assistente Financeiro
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="relative">
-              <VoiceIndicator
-                isActive={isListening}
-                isProcessing={isProcessing}
-                isSupported={supported}
-                transcript={transcript}
-                error={error}
-                onStart={startListening}
-                onStop={stopListening}
-              />
-            </div>
-
-            {/* Confidence Indicator */}
-            {transcript && confidence > 0 && (
-              <div className="mt-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                  <span>Confiança:</span>
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        confidence > 0.8
-                          ? 'bg-success'
-                          : confidence > 0.6
-                            ? 'bg-warning'
-                            : 'bg-destructive'
-                      }`}
-                      style={{ width: `${confidence * 100}%` }}
-                    />
-                  </div>
-                  <span>{Math.round(confidence * 100)}%</span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Current Response */}
-        {currentResponse && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="relative"
-          >
-            <Card className="border-primary">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Comando Processado</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCloseResponse}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-sm text-gray-500">Comando:</span>
-                    <p className="font-medium">{currentResponse.command}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Resposta:</span>
-                    <p className="text-primary">{currentResponse.message}</p>
-                  </div>
-                  {currentResponse.action && (
-                    <Button
-                      onClick={currentResponse.action}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {currentResponse.actionLabel}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <motion.div
-              key={action.title}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Card
-                className="cursor-pointer hover:shadow-lg transition-all duration-200"
-                onClick={action.action}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl mb-2">{action.icon}</div>
-                  <h3 className="font-semibold text-sm">{action.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{action.description}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Recent Commands */}
-        {recentCommands.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <History className="w-5 h-5" />
-                Comandos Recentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentCommands.map((item, index) => (
-                  <motion.div
-                    key={`${item.command}-${item.timestamp.getTime()}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{item.command}</p>
-                      <p className="text-xs text-gray-500">
-                        {item.timestamp.toLocaleTimeString('pt-BR')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
-                        {item.response.type}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => speakResponse(item.response.message)}
-                      >
-                        <Volume2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Performance Indicator for Development */}
-        {process.env.NODE_ENV === 'development' && (
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-sm text-yellow-800">
-                <Zap className="w-4 h-4" />
-                <span>Modo de otimização de voz ativo</span>
-                <span className="text-xs bg-yellow-200 px-2 py-1 rounded">
-                  Latência alvo: ≤2s
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
-  )
-}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -520,4 +334,5 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       </div>
     </div>
   )
-}
+})
+

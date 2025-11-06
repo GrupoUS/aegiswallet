@@ -1,15 +1,15 @@
 // Debug script for STT service
-const { SpeechToTextService } = require('./src/lib/stt/speechToTextService.ts');
+const { SpeechToTextService } = require('./src/lib/stt/speechToTextService.ts')
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = jest.fn()
 
 async function debugSTT() {
   const sttService = new SpeechToTextService({
     apiKey: 'test-api-key-12345',
     language: 'pt',
     timeout: 5000,
-  });
+  })
 
   // Mock successful response
   global.fetch.mockResolvedValueOnce({
@@ -24,16 +24,16 @@ async function debugSTT() {
         },
       ],
     }),
-  });
+  })
 
-  const audioBlob = new Blob([new Uint8Array(1024)], { type: 'audio/webm' });
-  
+  const audioBlob = new Blob([new Uint8Array(1024)], { type: 'audio/webm' })
+
   try {
-    const result = await sttService.transcribe(audioBlob);
-    console.log('Result:', result);
+    const result = await sttService.transcribe(audioBlob)
+    console.log('Result:', result)
   } catch (error) {
-    console.log('Error:', error);
+    console.log('Error:', error)
   }
 }
 
-debugSTT();
+debugSTT()

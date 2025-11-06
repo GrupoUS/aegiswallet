@@ -1,6 +1,7 @@
 import { AuthError, Session, User } from '@supabase/supabase-js'
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { logger } from '@/lib/logging/logger'
 
 export interface AuthContextType {
   user: User | null
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       setIsAuthenticated(!!session?.user)
@@ -72,7 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     if (error) {
-      console.error('Google sign-in error:', error.message)
+      logger.authEvent('google_sign_in_error', undefined, {
+        error: error.message,
+        errorType: error.status ? 'oauth_error' : 'unknown_error',
+        component: 'AuthProvider',
+      })
     }
   }
 

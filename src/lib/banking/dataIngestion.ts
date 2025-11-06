@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client'
-import { getOpenBankingConnector } from './openBankingConnector'
+import { getOpenBankingConnector } from '@/lib/banking/openBankingConnector'
 
 export class DataIngestionPipeline {
   private intervalId: NodeJS.Timeout | null = null
@@ -48,10 +48,9 @@ export class DataIngestionPipeline {
 
     for (const tx of transactions) {
       await supabase.from('transactions').upsert({
-        id: tx.id,
         user_id: userId,
         account_id: accountId,
-        date: tx.date.toISOString(),
+        transaction_date: tx.date.toISOString(),
         amount: tx.amount,
         description: tx.description,
         type: tx.type,

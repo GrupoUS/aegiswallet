@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { supabase } from '@/integrations/supabase/client'
-import { protectedProcedure, router } from '../trpc-helpers'
+import { protectedProcedure, router } from '@/server/trpc-helpers'
+import { logger, logError, logOperation } from '@/server/lib/logger'
 
 /**
  * Users Router - Gerenciamento de perfis de usuário
@@ -20,16 +21,26 @@ export const usersRouter = router({
         .single()
 
       if (error) {
-        console.error('Error fetching user profile:', error)
+        logError('fetch_user_profile', ctx.user.id, error, {
+          resource: 'users',
+          operation: 'getProfile',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar perfil do usuário',
         })
       }
 
+      logOperation('fetch_user_profile_success', ctx.user.id, 'users', ctx.user.id, {
+        hasPreferences: !!data?.user_preferences,
+      })
+
       return data
     } catch (error) {
-      console.error('Profile fetch error:', error)
+      logError('fetch_user_profile_unexpected', ctx.user.id, error as Error, {
+        resource: 'users',
+        operation: 'getProfile',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar perfil do usuário',
@@ -65,16 +76,29 @@ export const usersRouter = router({
           .single()
 
         if (error) {
-          console.error('Error updating user profile:', error)
+          logError('update_user_profile', ctx.user.id, error, {
+            resource: 'users',
+            operation: 'updateProfile',
+            updateFields: Object.keys(input),
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar perfil do usuário',
           })
         }
 
+        logOperation('update_user_profile_success', ctx.user.id, 'users', ctx.user.id, {
+          updateFields: Object.keys(input),
+          hasProfileChanges: true,
+        })
+
         return data
       } catch (error) {
-        console.error('Profile update error:', error)
+        logError('update_user_profile_unexpected', ctx.user.id, error as Error, {
+          resource: 'users',
+          operation: 'updateProfile',
+          updateFields: Object.keys(input),
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao atualizar perfil do usuário',
@@ -111,16 +135,28 @@ export const usersRouter = router({
           .single()
 
         if (error) {
-          console.error('Error updating user preferences:', error)
+          logError('update_user_preferences', ctx.user.id, error, {
+            resource: 'user_preferences',
+            operation: 'updatePreferences',
+            updateFields: Object.keys(input),
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao atualizar preferências do usuário',
           })
         }
 
+        logOperation('update_user_preferences_success', ctx.user.id, 'user_preferences', data?.id, {
+          updateFields: Object.keys(input),
+        })
+
         return data
       } catch (error) {
-        console.error('Preferences update error:', error)
+        logError('update_user_preferences_unexpected', ctx.user.id, error as Error, {
+          resource: 'user_preferences',
+          operation: 'updatePreferences',
+          updateFields: Object.keys(input),
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao atualizar preferências do usuário',
@@ -146,16 +182,31 @@ export const usersRouter = router({
         })
 
         if (error) {
-          console.error('Error getting financial summary:', error)
+          logError('get_financial_summary', ctx.user.id, error, {
+            resource: 'users',
+            operation: 'getFinancialSummary',
+            periodStart: input.period_start,
+            periodEnd: input.period_end,
+          })
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao buscar resumo financeiro',
           })
         }
 
+        logOperation('get_financial_summary_success', ctx.user.id, 'users', undefined, {
+          periodStart: input.period_start,
+          periodEnd: input.period_end,
+        })
+
         return data
       } catch (error) {
-        console.error('Financial summary error:', error)
+        logError('get_financial_summary_unexpected', ctx.user.id, error as Error, {
+          resource: 'users',
+          operation: 'getFinancialSummary',
+          periodStart: input.period_start,
+          periodEnd: input.period_end,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar resumo financeiro',
@@ -177,16 +228,26 @@ export const usersRouter = router({
         .single()
 
       if (error) {
-        console.error('Error updating last login:', error)
+        logError('update_last_login', ctx.user.id, error, {
+          resource: 'users',
+          operation: 'updateLastLogin',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao atualizar último login',
         })
       }
 
+      logOperation('update_last_login_success', ctx.user.id, 'users', ctx.user.id, {
+        loginTime: new Date().toISOString(),
+      })
+
       return data
     } catch (error) {
-      console.error('Last login update error:', error)
+      logError('update_last_login_unexpected', ctx.user.id, error as Error, {
+        resource: 'users',
+        operation: 'updateLastLogin',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao atualizar último login',
@@ -204,19 +265,30 @@ export const usersRouter = router({
         .single()
 
       if (error) {
-        console.error('Error checking user status:', error)
+        logError('check_user_status', ctx.user.id, error, {
+          resource: 'users',
+          operation: 'checkUserStatus',
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao verificar status do usuário',
         })
       }
 
+      logOperation('check_user_status_success', ctx.user.id, 'users', ctx.user.id, {
+        isActive: data?.is_active ?? false,
+        hasLastLogin: !!data?.last_login,
+      })
+
       return {
         is_active: data?.is_active ?? false,
         last_login: data?.last_login,
       }
     } catch (error) {
-      console.error('User status check error:', error)
+      logError('check_user_status_unexpected', ctx.user.id, error as Error, {
+        resource: 'users',
+        operation: 'checkUserStatus',
+      })
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao verificar status do usuário',

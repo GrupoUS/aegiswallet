@@ -199,7 +199,6 @@ if (!globalThis.window.navigator) {
     },
     geolocation: {
       getCurrentPosition: vi.fn((success) => success({ coords: { latitude: 0, longitude: 0 } })),
-      getCurrentPosition: vi.fn((success) => success({ coords: { latitude: 0, longitude: 0 } })),
       watchPosition: vi.fn(),
       clearWatch: vi.fn(),
     },
@@ -209,136 +208,137 @@ if (!globalThis.window.navigator) {
   console.log('Setting up global DOM environment...')
   setupGlobalDOM()
 
-// Enhanced navigator mock for all tests
-if (!globalThis.window.navigator) {
-  ;(globalThis as any).window.navigator = {
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    language: 'pt-BR',
-    languages: ['pt-BR', 'pt', 'en-US', 'en'],
-    platform: 'Win32',
-    vendor: 'Google Inc.',
-    vendorSub: '',
-    maxTouchPoints: 0,
-    hardwareConcurrency: 8,
-    cookieEnabled: true,
-    appCodeName: 'Mozilla',
-    appName: 'Netscape',
-    appVersion: '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    onLine: true,
-    product: 'Gecko',
-    productSub: '20030107',
-    getGamepads: vi.fn(() => []),
-    getVRDisplays: vi.fn(() => []),
-    permissions: {
-      query: vi.fn(() => Promise.resolve({ state: 'granted' })),
-    },
-    geolocation: {
-      getCurrentPosition: vi.fn((success) => success({ coords: { latitude: 0, longitude: 0 } })),
-      watchPosition: vi.fn(),
-      clearWatch: vi.fn(),
-    },
+  // Enhanced navigator mock for all tests
+  if (!globalThis.window.navigator) {
+    ;(globalThis as any).window.navigator = {
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      language: 'pt-BR',
+      languages: ['pt-BR', 'pt', 'en-US', 'en'],
+      platform: 'Win32',
+      vendor: 'Google Inc.',
+      vendorSub: '',
+      maxTouchPoints: 0,
+      hardwareConcurrency: 8,
+      cookieEnabled: true,
+      appCodeName: 'Mozilla',
+      appName: 'Netscape',
+      appVersion: '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      onLine: true,
+      product: 'Gecko',
+      productSub: '20030107',
+      getGamepads: vi.fn(() => []),
+      getVRDisplays: vi.fn(() => []),
+      permissions: {
+        query: vi.fn(() => Promise.resolve({ state: 'granted' })),
+      },
+      geolocation: {
+        getCurrentPosition: vi.fn((success) => success({ coords: { latitude: 0, longitude: 0 } })),
+        watchPosition: vi.fn(),
+        clearWatch: vi.fn(),
+      },
+    }
   }
-}
 
-// Execute immediately
-console.log('Setting up global DOM environment...')
-setupGlobalDOM()
-console.log('DOM setup completed. Document:', typeof document, 'Window:', typeof window)
+  // Execute immediately
+  console.log('Setting up global DOM environment...')
+  setupGlobalDOM()
+  console.log('DOM setup completed. Document:', typeof document, 'Window:', typeof window)
 
-beforeAll(() => {
-  // DOM globals are already set up at module level
-  // Additional test-specific setup continues below
+  beforeAll(() => {
+    // DOM globals are already set up at module level
+    // Additional test-specific setup continues below
 
-  // Setup de ambiente para testes
-  // Mock window.matchMedia
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(), // deprecated
-      removeListener: vi.fn(), // deprecated
+    // Setup de ambiente para testes
+    // Mock window.matchMedia
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(), // deprecated
+        removeListener: vi.fn(), // deprecated
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    })
+
+    // Mock ResizeObserver
+    global.ResizeObserver = vi.fn().mockImplementation(() => ({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    }))
+
+    // Mock localStorage
+    const localStorageMock = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    }
+    vi.stubGlobal('localStorage', localStorageMock)
+
+    // Mock SpeechSynthesis API
+    const mockSpeechSynthesis = {
+      speaking: false,
+      pending: false,
+      paused: false,
+      cancel: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+      speak: vi.fn(),
+      getVoices: vi.fn(() => [
+        {
+          name: 'Google português do Brasil',
+          lang: 'pt-BR',
+          default: false,
+          localService: false,
+          voiceURI: 'Google português do Brasil',
+        },
+      ]),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
-    })),
+    }
+
+    // Mock SpeechSynthesisUtterance
+    const mockSpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
+      text,
+      lang: 'pt-BR',
+      voice: null,
+      volume: 1,
+      rate: 1,
+      pitch: 1,
+      onstart: null,
+      onend: null,
+      onerror: null,
+      onmark: null,
+      onboundary: null,
+      onpause: null,
+      onresume: null,
+    }))
+
+    vi.stubGlobal('SpeechSynthesisUtterance', mockSpeechSynthesisUtterance)
+    vi.stubGlobal('speechSynthesis', mockSpeechSynthesis)
+
+    // Ensure window has speechSynthesis
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis = mockSpeechSynthesis
+      window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance
+    }
+
+    // Enhanced DOM setup already handled above - no duplicate code needed
   })
 
-  // Mock ResizeObserver
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }))
+  // Limpar mocks após cada teste
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
-  // Mock localStorage
-  const localStorageMock = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  }
-  vi.stubGlobal('localStorage', localStorageMock)
-
-  // Mock SpeechSynthesis API
-  const mockSpeechSynthesis = {
-    speaking: false,
-    pending: false,
-    paused: false,
-    cancel: vi.fn(),
-    pause: vi.fn(),
-    resume: vi.fn(),
-    speak: vi.fn(),
-    getVoices: vi.fn(() => [
-      {
-        name: 'Google português do Brasil',
-        lang: 'pt-BR',
-        default: false,
-        localService: false,
-        voiceURI: 'Google português do Brasil',
-      },
-    ]),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }
-
-  // Mock SpeechSynthesisUtterance
-  const mockSpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
-    text,
-    lang: 'pt-BR',
-    voice: null,
-    volume: 1,
-    rate: 1,
-    pitch: 1,
-    onstart: null,
-    onend: null,
-    onerror: null,
-    onmark: null,
-    onboundary: null,
-    onpause: null,
-    onresume: null,
-  }))
-
-  vi.stubGlobal('SpeechSynthesisUtterance', mockSpeechSynthesisUtterance)
-  vi.stubGlobal('speechSynthesis', mockSpeechSynthesis)
-
-  // Ensure window has speechSynthesis
-  if (typeof window !== 'undefined') {
-    window.speechSynthesis = mockSpeechSynthesis
-    window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance
-  }
-
-  // Enhanced DOM setup already handled above - no duplicate code needed
-})
-
-// Limpar mocks após cada teste
-afterEach(() => {
-  vi.clearAllMocks()
-})
-
-// Cleanup after all tests
-afterAll(() => {
-  vi.unstubAllGlobals()
-})
+  // Cleanup after all tests
+  afterAll(() => {
+    vi.unstubAllGlobals()
+  })
+}

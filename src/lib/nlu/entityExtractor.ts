@@ -12,7 +12,7 @@
  * @module nlu/entityExtractor
  */
 
-import { type EntityPattern, EntityType, type ExtractedEntity } from './types'
+import { type EntityPattern, EntityType, type ExtractedEntity } from '@/lib/nlu/types'
 
 // ============================================================================
 // Number Words Mapping (Brazilian Portuguese)

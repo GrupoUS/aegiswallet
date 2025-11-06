@@ -12,7 +12,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { AudioEncryptionService, type EncryptedData } from './audioEncryption'
+import { AudioEncryptionService, type EncryptedData } from '@/lib/security/audioEncryption'
 
 // ============================================================================
 // Types & Interfaces

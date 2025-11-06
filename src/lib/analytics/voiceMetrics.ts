@@ -272,18 +272,9 @@ export class VoiceMetricsService {
     }>
   > {
     try {
-      const { data, error } = await supabase.from('regional_performance').select('*')
-
-      if (error) {
-        throw error
-      }
-
-      return data.map((row) => ({
-        region: row.user_region,
-        totalCommands: row.total_commands,
-        accuracyPercent: row.accuracy_percent,
-        avgLatencyMs: row.avg_latency_ms,
-      }))
+      // Note: regional_performance table doesn't exist yet
+      // Returning empty array for now until the table is created
+      return []
     } catch (error) {
       console.error('Error getting regional performance:', error)
       return []

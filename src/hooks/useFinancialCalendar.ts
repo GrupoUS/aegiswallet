@@ -23,11 +23,8 @@ export function useFinancialEvents(filters?: {
   } = trpc.calendar.getEvents.useQuery(filters as any)
 
   const { mutate: createEvent, isPending: isCreating } = trpc.calendar.create.useMutation({
-    onSuccess: (data) => {
-      utils.calendar.getEvents.setData(filters as any, (old) => {
-        if (!old) return [data]
-        return [...old, data]
-      })
+    onSuccess: () => {
+      utils.calendar.getEvents.invalidate()
       toast.success('Evento financeiro criado com sucesso!')
     },
     onError: (error) => {
@@ -36,11 +33,8 @@ export function useFinancialEvents(filters?: {
   })
 
   const { mutate: updateEvent, isPending: isUpdating } = trpc.calendar.update.useMutation({
-    onSuccess: (data) => {
-      utils.calendar.getEvents.setData(filters as any, (old) => {
-        if (!old) return old
-        return old.map((event) => (event.id === data.id ? data : event))
-      })
+    onSuccess: () => {
+      utils.calendar.getEvents.invalidate()
       toast.success('Evento financeiro atualizado com sucesso!')
     },
     onError: (error) => {

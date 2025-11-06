@@ -181,10 +181,23 @@ export interface NLUMetrics {
   falsePositives: number
   falseNegatives: number
   disambiguationRate: number
+  // Enhanced metrics for Brazilian Portuguese learning
+  regionalAccuracy: Record<string, number>
+  slangCorrectness: number
+  formalCorrectness: number
+  colloquialCorrectness: number
+  temporalAccuracy: Record<string, number> // Accuracy by time of day
+  learningProgress: number // Improvement rate over time
+  patternEvolution: Array<{
+    pattern: string
+    frequency: number
+    accuracy: number
+    lastSeen: Date
+  }>
 }
 
 /**
- * Classification log entry for tracking
+ * Enhanced classification log entry for tracking and learning
  */
 export interface ClassificationLog {
   id: string
@@ -199,6 +212,27 @@ export interface ClassificationLog {
   correctIntent?: IntentType // For feedback/training
   feedback?: 'correct' | 'incorrect' | 'ambiguous'
   timestamp: Date
+  // Enhanced Brazilian Portuguese learning fields
+  regionalVariation?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown'
+  linguisticStyle?: 'slang' | 'formal' | 'colloquial' | 'mixed'
+  contextualClues?: {
+    previousIntent?: IntentType
+    timeOfDay: string
+    dayOfWeek: string
+    conversationTurn: number
+  }
+  errorAnalysis?: {
+    errorType: 'pattern_miss' | 'entity_extraction' | 'intent_confusion' | 'low_confidence'
+    confusedWith?: IntentType
+    missedEntities?: EntityType[]
+    patternUsed?: string
+  }
+  learningSignals?: {
+    userCorrection: boolean
+    repetition: boolean
+    userFrustration: boolean // Inferred from repeated failures
+    adaptationSuccess: boolean
+  }
 }
 
 // ============================================================================

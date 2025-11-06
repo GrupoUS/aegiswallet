@@ -3,6 +3,8 @@
  * Integrates Web Speech API with AI services for voice commands
  */
 
+import { logger } from '@/lib/logging/logger'
+
 // Voice command patterns in Portuguese
 export const VOICE_COMMANDS = {
   BALANCE: ['qual é meu saldo', 'mostrar saldo', 'ver saldo', 'saldo'],
@@ -50,7 +52,10 @@ class VoiceService {
 
   private initializeRecognition() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.warn('Speech Recognition API not supported in this browser')
+      logger.warn('Speech Recognition API not supported in this browser', {
+        userAgent: navigator.userAgent,
+        feature: 'webkitSpeechRecognition|SpeechRecognition',
+      })
       return
     }
 
@@ -69,7 +74,10 @@ class VoiceService {
     if ('speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis
     } else {
-      console.warn('Speech Synthesis API not supported in this browser')
+      logger.warn('Speech Synthesis API not supported in this browser', {
+        userAgent: navigator.userAgent,
+        feature: 'speechSynthesis',
+      })
     }
   }
 
@@ -86,7 +94,10 @@ class VoiceService {
     }
 
     if (this.isListening) {
-      console.warn('Already listening')
+      logger.warn('Already listening to voice commands', {
+        component: 'VoiceService',
+        action: 'startListening',
+      })
       return
     }
 
@@ -106,7 +117,12 @@ class VoiceService {
     }
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Speech recognition error:', event.error)
+      logger.voiceError(`Speech recognition error: ${event.error}`, {
+        error: event.error,
+        errorMessage: event.message,
+        component: 'VoiceService',
+        action: 'recognition',
+      })
       this.isListening = false
       onError?.(new Error(`Speech recognition error: ${event.error}`))
     }
@@ -118,8 +134,18 @@ class VoiceService {
     try {
       this.recognition.start()
       this.isListening = true
+      logger.voiceCommand('Voice recognition started', 1.0, {
+        component: 'VoiceService',
+        action: 'startListening',
+        language: this.config.language,
+        continuous: this.config.continuous,
+      })
     } catch (error) {
-      console.error('Error starting recognition:', error)
+      logger.voiceError('Error starting recognition', {
+        error: error instanceof Error ? error.message : String(error),
+        component: 'VoiceService',
+        action: 'startRecognition',
+      })
       onError?.(error as Error)
     }
   }

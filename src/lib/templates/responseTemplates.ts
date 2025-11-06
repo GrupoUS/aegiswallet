@@ -20,8 +20,8 @@ import {
   formatDate,
   formatPercentage,
   formatRelativeDate,
-} from '../formatters/brazilianFormatters'
-import { IntentType } from '../nlu/types'
+} from '@/lib/formatters/brazilianFormatters'
+import { IntentType } from '@/lib/nlu/types'
 
 // ============================================================================
 // Types

@@ -21,5 +21,10 @@
     "es2022": true,
     "node": true
   },
+  "settings": {
+    "jsx-a11y": {
+      "polyfills": true
+    }
+  },
   "ignore": ["node_modules/", "dist/", "build/", "coverage/", "*.config.js", "*.config.ts"]
 }

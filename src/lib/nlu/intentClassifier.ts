@@ -11,9 +11,9 @@
  * @module nlu/intentClassifier
  */
 
-import { getValidIntents, INTENT_DEFINITIONS } from './intents'
-import { createTextNormalizer } from './textNormalizer'
-import { type IntentClassificationResult, IntentType } from './types'
+import { getValidIntents, INTENT_DEFINITIONS } from '@/lib/nlu/intents'
+import { createTextNormalizer } from '@/lib/nlu/textNormalizer'
+import { type IntentClassificationResult, IntentType } from '@/lib/nlu/types'
 
 // ============================================================================
 // Intent Classifier Class

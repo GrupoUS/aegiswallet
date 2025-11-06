@@ -7,9 +7,7 @@
     "source.organizeImports.biome": "explicit"
   },
   "css.lint.unknownProperties": "ignore",
-  "tailwindCSS.experimental.classRegex": [
-    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-  ],
+  "tailwindCSS.experimental.classRegex": [["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]],
   "tailwindCSS.validate": true,
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.colorDecorators": true,

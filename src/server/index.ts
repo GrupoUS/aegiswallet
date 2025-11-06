@@ -3,8 +3,8 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { createContext } from './context'
-import { appRouter } from './trpc'
+import { createContext } from '@/server/context'
+import { appRouter } from '@/server/trpc'
 
 const app = new Hono()
 

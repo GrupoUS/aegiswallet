@@ -1,7 +1,7 @@
 import { initTRPC } from '@trpc/server'
 import superjson from 'superjson'
-import { Context } from './context'
-import { type Meta, router } from './trpc-helpers'
+import { Context } from '@/server/context'
+import { type Meta, router } from '@/server/trpc-helpers'
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,
@@ -10,20 +10,20 @@ const t = initTRPC.context<Context>().meta<Meta>().create({
 /**
  * Import procedures functions
  */
-import { createAuthRouter } from './procedures/auth'
-import { createBankingRouter } from './procedures/banking'
-import { createTransactionRouter } from './procedures/transactions'
-import { createUserRouter } from './procedures/users'
-import { createVoiceRouter } from './procedures/voice'
-import { bankAccountsRouter } from './routers/bankAccounts'
-import { calendarRouter } from './routers/calendar'
-import { contactsRouter } from './routers/contacts'
+import { createAuthRouter } from '@/server/procedures/auth'
+import { createBankingRouter } from '@/server/procedures/banking'
+import { createTransactionRouter } from '@/server/procedures/transactions'
+import { createUserRouter } from '@/server/procedures/users'
+import { createVoiceRouter } from '@/server/procedures/voice'
+import { bankAccountsRouter } from '@/server/routers/bankAccounts'
+import { calendarRouter } from '@/server/routers/calendar'
+import { contactsRouter } from '@/server/routers/contacts'
 /**
  * Import routers
  */
-import { pixRouter } from './routers/pix'
-import { transactionsRouter } from './routers/transactions'
-import { usersRouter } from './routers/users'
+import { pixRouter } from '@/server/routers/pix'
+import { transactionsRouter } from '@/server/routers/transactions'
+import { usersRouter } from '@/server/routers/users'
 
 /**
  * Main router with all procedures

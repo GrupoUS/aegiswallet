@@ -22,9 +22,7 @@
   },
   "Semantic Info Token": {
     "prefix": "color-info",
-    "body": [
-      "className=\"${1|bg-info/10,text-info,border-info/20,bg-info,hover:bg-info/20|}\""
-    ],
+    "body": ["className=\"${1|bg-info/10,text-info,border-info/20,bg-info,hover:bg-info/20|}\""],
     "description": "Insert info semantic color token"
   },
   "Financial Positive Token": {
@@ -57,9 +55,7 @@
   },
   "PIX Gradient": {
     "prefix": "gradient-pix",
-    "body": [
-      "className=\"bg-gradient-to-r from-pix-primary to-pix-accent\""
-    ],
+    "body": ["className=\"bg-gradient-to-r from-pix-primary to-pix-accent\""],
     "description": "Insert PIX brand gradient"
   },
   "Status Badge Success": {
@@ -138,4 +134,3 @@
     "description": "Insert received transaction card"
   }
 }
-

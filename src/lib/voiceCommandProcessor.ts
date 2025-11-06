@@ -1,8 +1,9 @@
 // Voice command processor for Brazilian Portuguese
 // Enhanced with NLU Engine (Story 01.02)
 
-import { createNLUEngine } from './nlu/nluEngine'
-import { IntentType } from './nlu/types'
+import { createNLUEngine } from '@/lib/nlu/nluEngine'
+import { IntentType } from '@/lib/nlu/types'
+import { logger } from '@/lib/logging/logger'
 
 // Mock data for demonstration - replace with real Supabase data
 const mockFinancialData = {
@@ -175,7 +176,12 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
         }
     }
   } catch (error) {
-    console.error('NLU processing error:', error)
+    logger.voiceError('NLU processing error', {
+      error: error instanceof Error ? error.message : String(error),
+      transcript: transcript.substring(0, 100), // Limit transcript length for privacy
+      stack: error instanceof Error ? error.stack : undefined,
+      component: 'VoiceCommandProcessor',
+    })
     return {
       type: 'error',
       message: 'Erro ao processar comando. Tente novamente.',

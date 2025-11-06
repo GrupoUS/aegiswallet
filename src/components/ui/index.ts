@@ -78,6 +78,8 @@ export { GradientButton, gradientButtonVariants } from './gradient-button'
 export { HoverBorderGradient } from './hover-border-gradient'
 export { Input } from './input'
 export { Label } from './label'
+// Progress Components
+export { Progress } from './progress'
 // Theme Components
 export { ModeToggle } from './mode-toggle'
 // Neumorphic Components
@@ -120,6 +122,8 @@ export {
 export { Skeleton } from './skeleton'
 export { Toaster } from './sonner'
 export { Switch } from './switch'
+// Tab Components
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
 // Data Display Components
 export {
   Table,
@@ -133,6 +137,29 @@ export {
 } from './table'
 export { Textarea } from './textarea'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
+// Event Calendar Components
+export {
+  CalendarHeader,
+  DayView,
+  EnhancedEventCard,
+  EventCalendar,
+  EventCard,
+  EventDialog,
+  MonthView,
+  TimeGrid,
+  WeekView,
+} from './event-calendar'
+export type {
+  CalendarCategory,
+  CalendarEvent,
+  CalendarFilter,
+  CalendarSettings,
+  CalendarView,
+  EventColor,
+  EventPosition,
+  TimeSlot,
+  WeekDay,
+} from './event-calendar'
 // Voice Components
 export {
   VoiceDashboard,

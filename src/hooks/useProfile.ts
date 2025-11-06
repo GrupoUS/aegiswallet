@@ -11,8 +11,8 @@ export function useProfile() {
 
   const { mutate: updateProfile, isPending: isUpdatingProfile } =
     trpc.profiles.updateProfile.useMutation({
-      onSuccess: (data) => {
-        utils.profiles.getProfile.setData(undefined, data)
+      onSuccess: () => {
+        utils.profiles.getProfile.invalidate()
         toast.success('Perfil atualizado com sucesso!')
       },
       onError: (error) => {

@@ -6,6 +6,7 @@ import {
   VOICE_FEEDBACK,
   type VoiceRecognitionResult,
 } from '@/services/voiceService'
+import { useVoiceLogger } from '@/hooks/useLogger'
 
 export interface UseVoiceCommandOptions {
   autoNavigate?: boolean
@@ -35,6 +36,9 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const [isListening, setIsListening] = useState(false)
   const [lastTranscript, setLastTranscript] = useState<string | null>(null)
   const [lastCommand, setLastCommand] = useState<string | null>(null)
+
+  const logger = useVoiceLogger()
+  logger.setContext({ hook: 'useVoiceCommand', autoNavigate, enableFeedback })
 
   const voiceService = getVoiceService()
   const isSupported =
@@ -96,7 +100,12 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const handleError = useCallback(
     (error: Error) => {
       setIsListening(false)
-      console.error('Voice recognition error:', error)
+      logger.voiceError(error.message, {
+        errorMessage: error.message,
+        stack: error.stack,
+        enableFeedback,
+        action: 'handleRecognitionError',
+      })
 
       if (enableFeedback) {
         toast.error(`Erro: ${error.message}`, {
@@ -106,7 +115,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
       onError?.(error)
     },
-    [onError, enableFeedback]
+    [onError, enableFeedback, logger]
   )
 
   /**
@@ -153,9 +162,18 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const speak = useCallback(
     async (text: string) => {
       try {
+        logger.voiceCommand('Speaking text', 1.0, {
+          textLength: text.length,
+          action: 'speak',
+        })
         await voiceService.speak(text)
       } catch (error) {
-        console.error('Speech synthesis error:', error)
+        logger.voiceError('Speech synthesis error', {
+          error: error instanceof Error ? error.message : String(error),
+          textLength: text.length,
+          enableFeedback,
+          action: 'speak',
+        })
         if (enableFeedback) {
           toast.error('Erro ao falar', {
             duration: 2000,
@@ -163,7 +181,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         }
       }
     },
-    [voiceService, enableFeedback]
+    [voiceService, enableFeedback, logger]
   )
 
   /**
@@ -208,16 +226,26 @@ function getDestinationName(path: string): string {
  */
 export function useVoiceFeedback() {
   const voiceService = getVoiceService()
+  const logger = useVoiceLogger()
+  logger.setContext({ hook: 'useVoiceFeedback' })
 
   const speak = useCallback(
     async (text: string) => {
       try {
+        logger.voiceCommand('Voice feedback speaking', 1.0, {
+          textLength: text.length,
+          action: 'voiceFeedback',
+        })
         await voiceService.speak(text)
       } catch (error) {
-        console.error('Speech synthesis error:', error)
+        logger.voiceError('Voice feedback synthesis error', {
+          error: error instanceof Error ? error.message : String(error),
+          textLength: text.length,
+          action: 'voiceFeedback',
+        })
       }
     },
-    [voiceService]
+    [voiceService, logger]
   )
 
   const stopSpeaking = useCallback(() => {

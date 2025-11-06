@@ -13,7 +13,7 @@
  * @module nlu/textNormalizer
  */
 
-import type { NormalizedText } from './types'
+import type { NormalizedText } from '@/lib/nlu/types'
 
 // ============================================================================
 // Brazilian Portuguese Stopwords

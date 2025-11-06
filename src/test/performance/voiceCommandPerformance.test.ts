@@ -19,22 +19,28 @@ const mockSpeechRecognitionInstance = {
   stop: vi.fn(),
   onstart: null,
   onend: null,
-  onresult: null,
+  onresult: null as ((event: any) => void) | null,
   onerror: null,
 }
 
 mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance)
 
 // Mock browser APIs
-Object.defineProperty(window, 'webkitSpeechRecognition', {
-  value: mockSpeechRecognition,
-  writable: true,
-})
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'webkitSpeechRecognition', {
+    value: mockSpeechRecognition,
+    writable: true,
+  })
 
-Object.defineProperty(window, 'SpeechRecognition', {
-  value: mockSpeechRecognition,
-  writable: true,
-})
+  Object.defineProperty(window, 'SpeechRecognition', {
+    value: mockSpeechRecognition,
+    writable: true,
+  })
+} else {
+  // Fallback for Node.js environment
+  ;(globalThis as any).SpeechRecognition = mockSpeechRecognition
+  ;(globalThis as any).webkitSpeechRecognition = mockSpeechRecognition
+}
 
 // Mock MediaRecorder
 const mockMediaRecorder = {
@@ -45,22 +51,53 @@ const mockMediaRecorder = {
   onstop: null,
 }
 
-Object.defineProperty(window, 'MediaRecorder', {
-  value: vi.fn(() => mockMediaRecorder),
+// Mock MediaRecorder constructor with isTypeSupported
+const mockMediaRecorderConstructor = vi.fn(() => mockMediaRecorder)
+Object.defineProperty(mockMediaRecorderConstructor, 'isTypeSupported', {
+  value: vi.fn(() => true),
   writable: true,
 })
 
+// Mock MediaRecorder
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'MediaRecorder', {
+    value: mockMediaRecorderConstructor,
+    writable: true,
+  })
+} else {
+  ;(globalThis as any).MediaRecorder = mockMediaRecorderConstructor
+}
+
 // Mock getUserMedia
-Object.defineProperty(navigator, 'mediaDevices', {
-  value: {
-    getUserMedia: vi.fn(() =>
-      Promise.resolve({
-        getTracks: () => [{ stop: vi.fn() }],
-      })
-    ),
-  },
-  writable: true,
-})
+if (typeof navigator !== 'undefined') {
+  Object.defineProperty(navigator, 'mediaDevices', {
+    value: {
+      getUserMedia: vi.fn(() =>
+        Promise.resolve({
+          getTracks: () => [{ stop: vi.fn() }],
+        })
+      ),
+    },
+    writable: true,
+  })
+} else {
+  ;(globalThis as any).navigator = {
+    mediaDevices: {
+      getUserMedia: vi.fn(() =>
+        Promise.resolve({
+          getTracks: () => [{ stop: vi.fn() }],
+          active: true,
+          id: 'mock-stream-id',
+          onaddtrack: null,
+          onremovetrack: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        })
+      ),
+    },
+  }
+}
 
 describe('Voice Command Performance', () => {
   beforeEach(() => {
@@ -117,7 +154,9 @@ describe('Voice Command Performance', () => {
       const startTime = performance.now()
 
       act(() => {
-        mockSpeechRecognitionInstance.onresult(mockResult)
+        if (mockSpeechRecognitionInstance.onresult) {
+          mockSpeechRecognitionInstance.onresult(mockResult)
+        }
       })
 
       // Fast-forward timers to trigger processing timeout
@@ -198,8 +237,22 @@ describe('Voice Command Performance', () => {
         global.fetch = vi.fn(() =>
           Promise.resolve({
             ok: true,
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers(),
             json: () => Promise.resolve({ text: 'test transcription' }),
-          })
+            text: () => Promise.resolve('test transcription'),
+            clone: vi.fn(),
+            body: null,
+            bodyUsed: false,
+            arrayBuffer: vi.fn(),
+            blob: vi.fn(),
+            formData: vi.fn(),
+            redirected: false,
+            type: 'basic',
+            url: '',
+            bytes: () => Promise.resolve(new Uint8Array()),
+          } as Response)
         )
 
         await sttService.transcribe(normalAudio)
@@ -240,15 +293,12 @@ describe('Voice Command Performance', () => {
       const vad = createVAD()
       await vad.initialize(mockStream as any)
 
-      let _speechDetected = false
-      let _speechEnded = false
-
       vad.onSpeechStartCallback(() => {
-        _speechDetected = true
+        // Speech detected - VAD working correctly
       })
 
       vad.onSpeechEndCallback(() => {
-        _speechEnded = true
+        // Speech ended - VAD working correctly
       })
 
       const startTime = performance.now()
@@ -306,15 +356,17 @@ describe('Voice Command Performance', () => {
       // 3. Simulate speech recognition (<100ms)
       setTimeout(() => {
         act(() => {
-          mockSpeechRecognitionInstance.onresult({
-            resultIndex: 0,
-            results: [
-              {
-                0: { transcript: 'ver saldo', confidence: 0.9 },
-                isFinal: true,
-              },
-            ],
-          })
+          if (mockSpeechRecognitionInstance.onresult) {
+            mockSpeechRecognitionInstance.onresult({
+              resultIndex: 0,
+              results: [
+                {
+                  0: { transcript: 'test command', confidence: 0.9 },
+                  isFinal: true,
+                },
+              ],
+            })
+          }
         })
       }, 100)
 
@@ -392,15 +444,17 @@ export const performanceBenchmark = {
       })
 
       act(() => {
-        mockSpeechRecognitionInstance.onresult({
-          resultIndex: 0,
-          results: [
-            {
-              0: { transcript: 'test command', confidence: 0.9 },
-              isFinal: true,
-            },
-          ],
-        })
+        if (mockSpeechRecognitionInstance.onresult) {
+          mockSpeechRecognitionInstance.onresult({
+            resultIndex: 0,
+            results: [
+              {
+                0: { transcript: 'test command', confidence: 0.9 },
+                isFinal: true,
+              },
+            ],
+          })
+        }
       })
 
       act(() => {

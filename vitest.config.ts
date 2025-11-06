@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import * as path from 'path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -59,7 +59,7 @@ export default defineConfig({
     // Enhanced timeout for async operations
     testTimeout: 10000,
     // Better error reporting
-    reporter: ['verbose'],
+    reporters: ['default'],
     // Sequential testing for debugging (can be enabled for troubleshooting)
     // fileParallelism: false,
     // Better isolate tests
@@ -71,5 +71,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  optimizeDeps: {
+    include: ['@testing-library/react', '@testing-library/jest-dom'],
   },
 })

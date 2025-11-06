@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createAudioProcessor } from '@/lib/stt/audioProcessor'
-import { createSTTService, type STTResult } from '@/lib/stt/speechToTextService'
+import { createSTTService } from '@/lib/stt/speechToTextService'
 import { createVAD, type VoiceActivityDetector } from '@/lib/stt/voiceActivityDetection'
 
 // Voice recognition state interface
@@ -12,6 +12,7 @@ interface VoiceState {
   error: string | null
   supported: boolean
   processingTimeMs?: number
+  recognizedCommand?: VoiceCommand | null
 }
 
 // Voice command interface
@@ -33,13 +34,15 @@ const VOICE_COMMANDS = {
   TRANSFER: ['transferir para', 'enviar para', 'pagar para'],
 } as const
 
-export function useVoiceRecognition(options: {
-  onTranscript?: (transcript: string, confidence: number) => void
-  onCommand?: (command: VoiceCommand) => void
-  onError?: (error: string) => void
-  autoRestart?: boolean
-  maxDuration?: number
-}) {
+export function useVoiceRecognition(
+  options: {
+    onTranscript?: (transcript: string, confidence: number) => void
+    onCommand?: (command: VoiceCommand) => void
+    onError?: (error: string) => void
+    autoRestart?: boolean
+    maxDuration?: number
+  } = {}
+) {
   const [state, setState] = useState<VoiceState>({
     isListening: false,
     isProcessing: false,
@@ -47,6 +50,7 @@ export function useVoiceRecognition(options: {
     confidence: 0,
     error: null,
     supported: false,
+    recognizedCommand: null,
   })
 
   const recognitionRef = useRef<any>(null)
@@ -74,6 +78,13 @@ export function useVoiceRecognition(options: {
             const processingTime = performance.now() - startTime
             command.parameters.processingTime = processingTime
 
+            setState((prev) => ({
+              ...prev,
+              recognizedCommand: command,
+              isProcessing: false,
+              processingTimeMs: processingTime,
+            }))
+
             options.onCommand?.(command)
             return
           }
@@ -90,16 +101,20 @@ export function useVoiceRecognition(options: {
   const startListening = useCallback(async () => {
     if (state.isListening || state.isProcessing) return
 
-    const startTime = performance.now()
-
     try {
-      setState((prev) => ({ ...prev, isListening: true, error: null }))
+      setState((prev) => ({
+        ...prev,
+        isListening: true,
+        error: null,
+        isProcessing: true,
+        recognizedCommand: null,
+      }))
 
       // Initialize VAD for better performance
       if (!vadRef.current) {
         vadRef.current = createVAD({
           minSpeechDuration: 0.3,
-          maxSpeechDuration: 5.0,
+          silenceDuration: 1500,
         })
       }
 
@@ -107,13 +122,11 @@ export function useVoiceRecognition(options: {
       if (!audioProcessorRef.current) {
         audioProcessorRef.current = createAudioProcessor({
           sampleRate: 16000,
-          bufferSize: 4096,
-          maxDuration: options.maxDuration || 10000, // 10s max instead of 30s
         })
       }
 
       // Initialize STT service with optimized settings
-      const sttService = createSTTService('pt-BR')
+      createSTTService('pt-BR')
 
       // Start speech recognition with timeout
       // Note: Mock implementation for type fixing - will be replaced with actual STT integration
@@ -126,9 +139,17 @@ export function useVoiceRecognition(options: {
 
       // Set timeout for auto-stop (reduced from 10s to 3s)
       timeoutRef.current = setTimeout(() => {
-        if (state.isListening) {
-          stopListening()
+        if (recognitionRef.current) {
+          recognitionRef.current.stop()
+          recognitionRef.current = null
         }
+
+        setState((prev) => ({
+          ...prev,
+          isListening: false,
+          isProcessing: false,
+          error: 'Tempo esgotado. Tente novamente.',
+        }))
       }, 3000)
     } catch (error) {
       setState((prev) => ({

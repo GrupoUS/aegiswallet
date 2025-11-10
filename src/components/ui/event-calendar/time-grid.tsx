@@ -1,7 +1,7 @@
-import { format, isSameDay } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { EventCard } from './event-card';
-import type { CalendarEvent, EventPosition, TimeSlot, WeekDay } from './types';
+import { format, isSameDay } from "date-fns";
+import { cn } from "@/lib/utils";
+import { EventCard } from "./event-card";
+import type { CalendarEvent, EventPosition, TimeSlot, WeekDay } from "./types";
 
 interface TimeGridProps {
   weekDays: WeekDay[];
@@ -17,10 +17,12 @@ const START_HOUR = 8;
 function calculateEventPosition(
   event: CalendarEvent,
   dayIndex: number,
-  weekDays: WeekDay[]
+  weekDays: WeekDay[],
 ): EventPosition | null {
   // Find which day this event belongs to
-  const eventDay = weekDays.findIndex((day) => isSameDay(day.date, event.start));
+  const eventDay = weekDays.findIndex((day) =>
+    isSameDay(day.date, event.start),
+  );
 
   if (eventDay !== dayIndex) return null;
 
@@ -41,20 +43,37 @@ function calculateEventPosition(
   };
 }
 
-export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps) {
+export function TimeGrid({
+  weekDays,
+  hours,
+  events,
+  onEventEdit,
+}: TimeGridProps) {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header with days */}
       <div className="sticky top-0 z-20 grid grid-cols-8 border-b bg-background">
-        <div className="col-span-1 border-r p-3 text-muted-foreground text-xs">GMT-3</div>
-        {weekDays.map((day, index) => (
+        <div className="col-span-1 border-r p-3 text-muted-foreground text-xs">
+          GMT-3
+        </div>
+        {weekDays.map((day) => (
           <div
-            key={index}
-            className={cn('col-span-1 border-r p-3 text-center', day.isToday && 'bg-primary/5')}
+            key={day.date.toISOString()}
+            className={cn(
+              "col-span-1 border-r p-3 text-center",
+              day.isToday && "bg-primary/5",
+            )}
           >
-            <div className="text-muted-foreground text-xs">{format(day.date, 'EEE')}</div>
-            <div className={cn('mt-1 font-semibold text-lg', day.isToday && 'text-primary')}>
-              {format(day.date, 'dd')}
+            <div className="text-muted-foreground text-xs">
+              {format(day.date, "EEE")}
+            </div>
+            <div
+              className={cn(
+                "mt-1 font-semibold text-lg",
+                day.isToday && "text-primary",
+              )}
+            >
+              {format(day.date, "dd")}
             </div>
           </div>
         ))}
@@ -77,19 +96,29 @@ export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps
             {/* Day columns */}
             {weekDays.map((day, dayIndex) => (
               <div
-                key={dayIndex}
-                className={cn('col-span-1 border-r', day.isToday && 'bg-primary/5')}
+                key={day.date.toISOString()}
+                className={cn(
+                  "col-span-1 border-r",
+                  day.isToday && "bg-primary/5",
+                )}
               />
             ))}
           </div>
         ))}
 
         {/* Events layer */}
-        <div className="pointer-events-none absolute inset-0" style={{ left: `${(1 / 8) * 100}%` }}>
-          {weekDays.map((_, dayIndex) => (
-            <div key={dayIndex}>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ left: `${(1 / 8) * 100}%` }}
+        >
+          {weekDays.map((day, dayIndex) => (
+            <div key={day.date.toISOString()}>
               {events.map((event) => {
-                const position = calculateEventPosition(event, dayIndex, weekDays);
+                const position = calculateEventPosition(
+                  event,
+                  dayIndex,
+                  weekDays,
+                );
                 if (!position) return null;
 
                 return (

@@ -30,7 +30,7 @@ export function useDashboard() {
   const { accounts, isLoading: accountsLoading } = useBankAccounts();
   const { balances, isLoading: balancesLoading } = useTotalBalance();
   const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 });
-  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('30d');
+  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('month');
 
   // Dados do calendário
   const { upcomingEvents, isLoading: upcomingLoading } = useUpcomingEvents();
@@ -111,7 +111,7 @@ export function useDashboard() {
 export function useDashboardWidgets() {
   // Widget 1: Resumo Financeiro
   const { balances } = useTotalBalance();
-  const { stats } = useTransactionStats('30d');
+  const { stats } = useTransactionStats('month');
 
   // Widget 2: Próximos Eventos
   const { upcomingEvents } = useUpcomingEvents();
@@ -127,7 +127,7 @@ export function useDashboardWidgets() {
       totalBalance: balances.BRL || 0,
       income: stats?.income || 0,
       expenses: stats?.expenses || 0,
-      netBalance: stats?.netBalance || 0,
+      balance: stats?.balance || 0,
       period: '30d',
     },
 

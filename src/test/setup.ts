@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
+// Enable fake timers for all tests
+vi.useFakeTimers();
+
+// Set required environment variables for tests
+process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
+process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+
 // Ensure DOM is available immediately (before tests run)
 if (typeof globalThis.document === 'undefined') {
   const { JSDOM } = require('jsdom');
@@ -16,6 +23,55 @@ if (typeof globalThis.document === 'undefined') {
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.Element = dom.window.Element;
 }
+
+// Mock audio processor, VAD, and STT services at module level
+vi.mock('@/lib/stt/audioProcessor', () => {
+  const mockAudioProcessor = {
+    dispose: vi.fn(),
+    processAudio: vi.fn().mockResolvedValue({
+      blob: new Blob(),
+      duration: 1000,
+      sampleRate: 16000,
+      hasVoice: true,
+      averageVolume: 0.5,
+      peakVolume: 0.8,
+    }),
+    validateAudio: vi.fn().mockResolvedValue({ valid: true }),
+  };
+
+  return {
+    createAudioProcessor: vi.fn(() => mockAudioProcessor),
+    AudioProcessor: vi.fn(() => mockAudioProcessor),
+  };
+});
+
+vi.mock('@/lib/stt/voiceActivityDetection', () => {
+  const mockVAD = {
+    detectVoiceActivity: vi.fn().mockResolvedValue({ hasVoice: true }),
+    dispose: vi.fn(),
+  };
+
+  return {
+    createVAD: vi.fn(() => mockVAD),
+  };
+});
+
+vi.mock('@/lib/stt/speechToTextService', () => {
+  const mockSTTService = {
+    startRecognition: vi.fn(),
+    stopRecognition: vi.fn(),
+    transcribe: vi.fn().mockResolvedValue({
+      text: 'comando teste',
+      confidence: 0.95,
+    }),
+    dispose: vi.fn(),
+  };
+
+  return {
+    createSpeechToTextService: vi.fn(() => mockSTTService),
+    SpeechToTextService: vi.fn(() => mockSTTService),
+  };
+});
 
 // Setup global DOM environment for Vitest
 beforeAll(() => {
@@ -48,7 +104,7 @@ beforeAll(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
   };
-  vi.stubGlobal('localStorage', localStorageMock);
+  (globalThis as any).localStorage = localStorageMock;
 
   // Mock Speech Synthesis API for voice service tests
   const mockSpeechSynthesis = {
@@ -99,7 +155,7 @@ beforeAll(() => {
   }));
 
   // Mock Speech Recognition API
-  const mockSpeechRecognition = vi.fn().mockImplementation(() => ({
+  vi.fn().mockImplementation(() => ({
     continuous: false,
     interimResults: false,
     lang: 'pt-BR',
@@ -120,26 +176,18 @@ beforeAll(() => {
     abort: vi.fn(),
   }));
 
-  // Set up global Speech API mocks (avoid redefinition)
+  // Set up global Speech API mocks (avoid redefinition) - only TTS, not Speech Recognition
   if (!globalThis.SpeechSynthesisUtterance) {
-    vi.stubGlobal('SpeechSynthesisUtterance', mockSpeechSynthesisUtterance);
+    (globalThis as any).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
   }
   if (!globalThis.speechSynthesis) {
-    vi.stubGlobal('speechSynthesis', mockSpeechSynthesis);
-  }
-  if (!(globalThis as any).SpeechRecognition) {
-    vi.stubGlobal('SpeechRecognition', mockSpeechRecognition);
-  }
-  if (!(globalThis as any).webkitSpeechRecognition) {
-    vi.stubGlobal('webkitSpeechRecognition', mockSpeechRecognition);
+    (globalThis as any).speechSynthesis = mockSpeechSynthesis;
   }
 
-  // Ensure window object has Speech API
+  // Ensure window object has Speech API (only TTS, not Speech Recognition)
   if (typeof window !== 'undefined') {
     window.speechSynthesis = mockSpeechSynthesis;
     window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
-    window.SpeechRecognition = mockSpeechRecognition;
-    window.webkitSpeechRecognition = mockSpeechRecognition;
   }
 
   // Mock navigator for tests
@@ -153,8 +201,124 @@ beforeAll(() => {
     writable: true,
   });
 
+  // Mock screen object for device fingerprinting tests
+  (globalThis as any).screen = {
+    width: 1920,
+    height: 1080,
+    colorDepth: 24,
+    pixelDepth: 24,
+    availWidth: 1920,
+    availHeight: 1040,
+    availLeft: 0,
+    availTop: 40,
+    orientation: {
+      angle: 0,
+      type: 'landscape-primary',
+    },
+  };
+
+  // Mock window.screen to ensure it's available
+  if (typeof window !== 'undefined') {
+    window.screen = (globalThis as any).screen;
+  }
+
+  // Mock AudioContext for voice activity detection tests
+  const mockAudioContext = vi.fn().mockImplementation(() => ({
+    close: vi.fn(),
+    createMediaStreamSource: vi.fn().mockReturnValue({
+      connect: vi.fn(),
+    }),
+    createAnalyser: vi.fn().mockReturnValue({
+      connect: vi.fn(),
+      frequencyBinCount: 2048,
+      getFloatTimeDomainData: vi.fn(),
+      getByteFrequencyData: vi.fn(),
+      fftSize: 2048,
+    }),
+    decodeAudioData: vi.fn(),
+    resume: vi.fn(),
+    suspend: vi.fn(),
+    destination: {},
+    sampleRate: 44100,
+    state: 'running',
+  }));
+
+  if (!(globalThis as any).AudioContext) {
+    (globalThis as any).AudioContext = mockAudioContext;
+  }
+  if (!(globalThis as any).webkitAudioContext) {
+    (globalThis as any).webkitAudioContext = mockAudioContext;
+  }
+
+  // Mock requestAnimationFrame for voice activity detection
+  (globalThis as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+    return setTimeout(() => callback(performance.now()), 16) as unknown as number;
+  });
+  (globalThis as any).cancelAnimationFrame = vi.fn((id: number) => {
+    clearTimeout(id);
+  });
+
   // Mock fetch for remote logging tests
   global.fetch = vi.fn();
+
+  // Mock Supabase configuration for tests
+  vi.mock('@/integrations/supabase/client', () => ({
+    supabase: {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            order: vi.fn(() => ({
+              data: [],
+              error: null,
+            })),
+          })),
+        })),
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => ({
+              data: null,
+              error: null,
+            })),
+          })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => ({
+                data: null,
+                error: null,
+              })),
+            })),
+          })),
+        })),
+        delete: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            select: vi.fn(),
+          })),
+        })),
+      })),
+      auth: {
+        getUser: vi.fn(() => ({
+          data: { user: { id: 'test-user' } },
+          error: null,
+        })),
+        signInWithOAuth: vi.fn(),
+        signInWithPassword: vi.fn(),
+        signOut: vi.fn(),
+        signUp: vi.fn(),
+      },
+      realtime: {
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+      },
+      storage: {
+        from: vi.fn(() => ({
+          upload: vi.fn(),
+          getPublicUrl: vi.fn(() => ({ data: { publicUrl: '' } })),
+        })),
+      },
+    },
+  }));
 });
 
 // Clean up mocks after each test
@@ -164,7 +328,16 @@ afterEach(() => {
 
 // Clean up global stubs after all tests
 afterAll(() => {
-  vi.unstubAllGlobals();
+  // Manual cleanup since vi.unstubAllGlobals() might not be available
+  delete (globalThis as any).localStorage;
+  delete (globalThis as any).SpeechSynthesisUtterance;
+  delete (globalThis as any).speechSynthesis;
+  delete (globalThis as any).SpeechRecognition;
+  delete (globalThis as any).webkitSpeechRecognition;
+  delete (globalThis as any).AudioContext;
+  delete (globalThis as any).webkitAudioContext;
+  delete (globalThis as any).requestAnimationFrame;
+  delete (globalThis as any).cancelAnimationFrame;
 });
 
 // Export mock helpers for tests
@@ -192,3 +365,8 @@ export const createMockSpeechSynthesisEvent = (name: string, charIndex: number =
   charIndex,
   elapsedTime: 0,
 });
+
+// Make vi available globally for test files that don't import it
+if (typeof (globalThis as any).vi === 'undefined') {
+  (globalThis as any).vi = vi;
+}

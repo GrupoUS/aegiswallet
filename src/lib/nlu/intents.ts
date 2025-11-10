@@ -29,6 +29,8 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\bquanto\s+(t[áÁ]|est[áÁ])\s+na\s+conta\b/i,
       // More specific pattern - avoid overlap with other intents
       /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo)\b/i,
+      // Enhanced pattern for "qual é meu saldo?"
+      /\bqual\s+é\s+(meu|o)?\s*saldo\?*$/i,
     ],
     keywords: ['saldo', 'dinheiro', 'grana', 'tenho', 'sobrou', 'disponivel'],
     requiredSlots: [],

@@ -18,6 +18,7 @@ import {
   IntentType,
   type NLUResult,
 } from '@/lib/nlu/types';
+import type { TransactionEntity } from '@/types/nlu.types';
 
 // ============================================================================
 // Context Processing Configuration
@@ -905,16 +906,16 @@ export class ContextProcessor {
 
       const preferences: UserPreferences = {
         id: data.id,
-        userId: data.user_id,
-        preferredLanguage: data.preferred_language,
-        regionalVariation: data.regional_variation,
-        linguisticStyle: data.linguistic_style,
-        financialHabits: data.financial_habits,
-        interactionPreferences: data.interaction_preferences,
-        temporalPatterns: data.temporal_patterns,
-        learningProfile: data.learning_profile,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
+        userId: data.user_id || '',
+        preferredLanguage: 'pt-BR', // Default for Brazilian users
+        regionalVariation: 'Unknown', // Will be detected
+        linguisticStyle: 'formal', // Default
+        financialHabits: {}, // Empty for now
+        interactionPreferences: {}, // Empty for now
+        temporalPatterns: {}, // Empty for now
+        learningProfile: {}, // Empty for now
+        createdAt: data.created_at ? new Date(data.created_at) : new Date(),
+        updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
       };
 
       this.userPreferencesCache.set(userId, preferences);
@@ -973,7 +974,7 @@ export class ContextProcessor {
     try {
       // Load financial data from Supabase
       const { data: accounts, error: accountError } = await supabase
-        .from('accounts')
+        .from('bank_accounts')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -1174,11 +1175,11 @@ export class ContextProcessor {
   private generateDisambiguationQuestion(intent: IntentType, rationale: string): string {
     const questions = {
       [IntentType.CHECK_BALANCE]: `Você quer verificar seu saldo? ${rationale}`,
-      [IntentType.PAY_BILL]: `Você quer pagar uma conta? ${ration}`,
-      [IntentType.TRANSFER_MONEY]: `Você quer fazer uma transferência? ${ration}`,
-      [IntentType.CHECK_BUDGET]: `Você quer analisar seu orçamento? ${ration}`,
-      [IntentType.CHECK_INCOME]: `Você quer consultar seus rendimentos? ${ration}`,
-      [IntentType.FINANCIAL_PROJECTION]: `Você quer ver uma projeção financeira? ${ration}`,
+      [IntentType.PAY_BILL]: `Você quer pagar uma conta? ${rationale}`,
+      [IntentType.TRANSFER_MONEY]: `Você quer fazer uma transferência? ${rationale}`,
+      [IntentType.CHECK_BUDGET]: `Você quer analisar seu orçamento? ${rationale}`,
+      [IntentType.CHECK_INCOME]: `Você quer consultar seus rendimentos? ${rationale}`,
+      [IntentType.FINANCIAL_PROJECTION]: `Você quer ver uma projeção financeira? ${rationale}`,
     };
 
     return questions[intent] || `Você quis dizer ${this.getIntentDescription(intent)}?`;
@@ -1311,7 +1312,7 @@ export class ContextProcessor {
   // Data Processing Helpers
   // ============================================================================
 
-  private calculateMonthlyAverage(transactions: any[]): number {
+  private calculateMonthlyAverage(transactions: TransactionEntity[]): number {
     if (transactions.length === 0) return 0;
 
     const monthlyTotal = transactions.reduce((sum, transaction) => {
@@ -1322,7 +1323,7 @@ export class ContextProcessor {
   }
 
   private calculateTopCategories(
-    transactions: any[]
+    transactions: TransactionEntity[]
   ): Array<{ category: string; amount: number; percentage: number }> {
     const categoryTotals = transactions.reduce(
       (acc, transaction) => {
@@ -1345,7 +1346,7 @@ export class ContextProcessor {
       .slice(0, 5);
   }
 
-  private calculateAverageTransfer(transactions: any[]): number {
+  private calculateAverageTransfer(transactions: TransactionEntity[]): number {
     const transfers = transactions.filter((t) => t.type === 'transfer');
     if (transfers.length === 0) return 0;
 
@@ -1353,7 +1354,7 @@ export class ContextProcessor {
     return total / transfers.length;
   }
 
-  private calculateMonthlyIncome(transactions: any[]): number {
+  private calculateMonthlyIncome(transactions: TransactionEntity[]): number {
     const income = transactions.filter((t) => (t.amount || 0) > 0);
     if (income.length === 0) return 0;
 

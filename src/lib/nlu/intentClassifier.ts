@@ -97,13 +97,13 @@ export class IntentClassifier {
       } else if (keywordMatches.length > 0) {
         // Penalize very generic queries that only match keywords without context
         const textWords = text.toLowerCase().split(/\s+/).length;
-        const isVeryGeneric = textWords <= 6 && keywordMatches.length <= 1;
+        const isVeryGeneric = textWords <= 4 && keywordMatches.length <= 1;
 
-        let score = 0.6 + keywordMatches.length * 0.1;
+        let score = 0.5 + keywordMatches.length * 0.15;
         if (isVeryGeneric) {
-          score = Math.min(0.4, score); // Cap at low confidence for generic queries
+          score = Math.min(0.45, score); // Cap at low confidence for generic queries
         } else {
-          score = Math.min(0.75, score);
+          score = Math.min(0.8, score);
         }
 
         candidates.push({ intent, score, patternCount: 0 });

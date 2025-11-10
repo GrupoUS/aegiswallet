@@ -98,6 +98,12 @@ export function useMultimodalResponse(
   const isLoading = useMemo(() => newHook.state.isLoading, [newHook.state.isLoading]);
   const error = useMemo(() => newHook.state.error, [newHook.state.error]);
 
+  // Enhanced clearResponse that also clears compatibility metrics
+  const clearResponseCompat = useCallback(() => {
+    newHook.clearResponse();
+    setMetrics(null);
+  }, [newHook.clearResponse]);
+
   return {
     // Legacy interface
     generateAndSpeak,
@@ -106,13 +112,13 @@ export function useMultimodalResponse(
     isLoading,
     error,
 
-    // Forward new interface
+    // Forward new interface (with enhanced clearResponse)
     state: newHook.state,
     stopSpeaking: newHook.stopSpeaking,
     pauseSpeaking: newHook.pauseSpeaking,
     resumeSpeaking: newHook.resumeSpeaking,
     repeatResponse: newHook.repeatResponse,
-    clearResponse: newHook.clearResponse,
+    clearResponse: clearResponseCompat,
     submitFeedback: newHook.submitFeedback,
     toggleVoice: newHook.toggleVoice,
     toggleVisual: newHook.toggleVisual,

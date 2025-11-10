@@ -160,7 +160,7 @@ describe('Component Export Problems', () => {
       // We'll test that components can be created and have expected structure
 
       // Test Button component creation
-      const { Button: _Button } = require('@/components/ui/button');
+      const { Button } = require('@/components/ui/button');
       expect(() => {
         return React.createElement(Button, { children: 'Test' });
       }).not.toThrow();

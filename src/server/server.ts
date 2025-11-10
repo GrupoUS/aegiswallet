@@ -1,14 +1,15 @@
+import { logger } from '@/lib/logging/logger';
+import { environment } from '@/server/config/environment';
 import app from '@/server/index';
 
-const port = process.env.PORT || 3000;
-
-logger.info(`🚀 Server running on http://localhost:${port}`, {
-  port,
-  environment: process.env.NODE_ENV || 'development',
+logger.info(`🚀 AegisWallet Server starting...`, {
+  port: environment.PORT,
+  environment: environment.NODE_ENV,
   service: 'aegiswallet-server',
+  mode: environment.IS_DEVELOPMENT ? 'development' : 'production',
 });
 
 export default {
-  port,
+  port: environment.PORT,
   fetch: app.fetch,
 };

@@ -28,14 +28,14 @@ export function useFinancialTransactions(filters?: {
   }, [data]);
 
   const total = useMemo(() => {
-    return data?.total || 0;
+    return data?.totalCount || 0;
   }, [data]);
 
   const { mutate: createTransaction, isPending: isCreating } =
     trpc.financialTransactions.create.useMutation({
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
-        utils.financialTransactions.getStats.invalidate();
+        utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação criada com sucesso!');
       },
       onError: (error) => {
@@ -47,7 +47,7 @@ export function useFinancialTransactions(filters?: {
     trpc.financialTransactions.update.useMutation({
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
-        utils.financialTransactions.getStats.invalidate();
+        utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação atualizada com sucesso!');
       },
       onError: (error) => {
@@ -59,7 +59,7 @@ export function useFinancialTransactions(filters?: {
     trpc.financialTransactions.delete.useMutation({
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
-        utils.financialTransactions.getStats.invalidate();
+        utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação removida com sucesso!');
       },
       onError: (error) => {
@@ -82,8 +82,8 @@ export function useFinancialTransactions(filters?: {
         },
         (_payload) => {
           utils.financialTransactions.getAll.invalidate();
-          utils.financialTransactions.getStats.invalidate();
-          utils.financialTransactions.getByCategory.invalidate();
+          utils.financialTransactions.getStatistics.invalidate();
+          // getByCategory procedure doesn't exist - removed
         }
       )
       .subscribe();
@@ -131,12 +131,12 @@ export function useFinancialTransaction(transactionId: string) {
 /**
  * Hook para estatísticas de transações
  */
-export function useTransactionStats(period: '7d' | '30d' | '1y' | '90d' = '30d') {
+export function useTransactionStats(period: 'week' | 'month' | 'quarter' | 'year' = 'month') {
   const {
     data: stats,
     isLoading,
     error,
-  } = trpc.financialTransactions.getStats.useQuery({ period }, { enabled: !!period });
+  } = trpc.financialTransactions.getStatistics.useQuery({ period }, { enabled: !!period });
 
   return {
     stats,
@@ -148,15 +148,24 @@ export function useTransactionStats(period: '7d' | '30d' | '1y' | '90d' = '30d')
 /**
  * Hook para transações por categoria
  */
-export function useTransactionsByCategory(period: '7d' | '30d' | '1y' | '90d' = '30d') {
+export function useTransactionsByCategory(
+  period: 'week' | 'month' | 'quarter' | 'year',
+  categoryId?: string
+) {
   const {
     data: categoryStats,
     isLoading,
     error,
-  } = trpc.financialTransactions.getByCategory.useQuery({ period }, { enabled: !!period });
+  } = trpc.financialTransactions.getAll.useQuery(
+    {
+      limit: 100,
+      categoryId,
+    },
+    { enabled: !!categoryId }
+  );
 
   return {
-    categoryStats: categoryStats || [],
+    categoryStats: categoryStats?.transactions || [],
     isLoading,
     error,
   };
@@ -165,10 +174,10 @@ export function useTransactionsByCategory(period: '7d' | '30d' | '1y' | '90d' = 
 /**
  * Hook para resumo financeiro
  */
-export function useFinancialSummary() {
+export function useFinancialSummary(period: 'week' | 'month' | 'quarter' | 'year' = 'month') {
   const { transactions } = useFinancialTransactions();
-  const { stats } = useTransactionStats('30d');
-  const { categoryStats } = useTransactionsByCategory('30d');
+  const { stats } = useTransactionStats(period);
+  const { categoryStats } = useTransactionsByCategory(period);
 
   const summary = useMemo(() => {
     const totalIncome = transactions
@@ -179,7 +188,9 @@ export function useFinancialSummary() {
       .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
-    const topCategories = categoryStats.sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5);
+    const topCategories = (categoryStats || [])
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 5);
 
     return {
       totalIncome,

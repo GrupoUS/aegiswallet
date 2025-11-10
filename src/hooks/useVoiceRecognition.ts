@@ -126,12 +126,57 @@ export function useVoiceRecognition(
       }
 
       // Initialize STT service with optimized settings
-      createSTTService('pt-BR');
+      const _sttService = createSTTService('pt-BR');
 
-      recognitionRef.current = {
-        stop: () => {},
-        start: () => {},
-      } as any;
+      // Use browser SpeechRecognition when available, otherwise fallback to STT service
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'pt-BR';
+
+        recognitionRef.current.onstart = () => {
+          console.log('Speech recognition started');
+        };
+
+        recognitionRef.current.onresult = (event: any) => {
+          const result = event.results[0][0];
+          if (result) {
+            _processVoiceCommand(result.transcript, result.confidence);
+          }
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          setState((prev) => ({
+            ...prev,
+            error: `Speech recognition error: ${event.error}`,
+            isListening: false,
+            isProcessing: false,
+          }));
+          options.onError?.(`Speech recognition error: ${event.error}`);
+        };
+
+        recognitionRef.current.onend = () => {
+          setState((prev) => ({
+            ...prev,
+            isListening: false,
+          }));
+        };
+      } else {
+        // Fallback to mock for testing
+        recognitionRef.current = {
+          stop: () => {},
+          start: () => {},
+        } as any;
+      }
+
+      // Start the recognition
+      if (recognitionRef.current && recognitionRef.current.start) {
+        recognitionRef.current.start();
+      }
 
       // Set timeout for auto-stop (reduced from 10s to 3s)
       timeoutRef.current = setTimeout(() => {
@@ -171,7 +216,7 @@ export function useVoiceRecognition(
     }
 
     if (audioProcessorRef.current) {
-      audioProcessorRef.current.cleanup();
+      audioProcessorRef.current.dispose();
       audioProcessorRef.current = null;
     }
 

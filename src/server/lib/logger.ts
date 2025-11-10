@@ -1,5 +1,4 @@
 import crypto from 'node:crypto';
-import pino from 'pino';
 
 // LGPD-compliant data sanitizer for Brazilian financial regulations
 interface SensitiveData {
@@ -41,33 +40,12 @@ interface AuditLogData {
  * Implements structured logging with data sanitization and audit trails
  */
 class Logger {
-  private logger: pino.Logger;
   private auditLogs: AuditLogData[] = [];
+  private logLevel: string;
 
   constructor() {
-    // Configure Pino for production use
-    this.logger = pino({
-      level: process.env.LOG_LEVEL || 'info',
-      formatters: {
-        level: (label) => ({ level: label }),
-        log: (object) => {
-          // Remove sensitive data from all logs
-          return this.sanitizeLogData(object);
-        },
-      },
-      timestamp: pino.stdTimeFunctions.isoTime,
-      // Add request ID to all logs in development
-      ...(process.env.NODE_ENV === 'development' && {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-          },
-        },
-      }),
-    });
+    // Configure log level
+    this.logLevel = process.env.LOG_LEVEL || 'info';
   }
 
   /**
@@ -112,6 +90,16 @@ class Logger {
   }
 
   /**
+   * Check if should log based on level
+   */
+  private shouldLog(level: string): boolean {
+    const levels = ['debug', 'info', 'warn', 'error'];
+    const currentLevelIndex = levels.indexOf(this.logLevel);
+    const requestedLevelIndex = levels.indexOf(level);
+    return requestedLevelIndex >= currentLevelIndex;
+  }
+
+  /**
    * Enhanced logging with context
    */
   private logWithContext(
@@ -119,6 +107,8 @@ class Logger {
     message: string,
     context: LogContext = {}
   ) {
+    if (!this.shouldLog(level)) return;
+
     const enhancedContext = {
       ...context,
       requestId: context.requestId || this.generateRequestId(),
@@ -127,10 +117,17 @@ class Logger {
       environment: process.env.NODE_ENV || 'development',
     };
 
-    this.logger[level]({
+    const timestamp = new Date().toISOString();
+    const logData = {
       ...enhancedContext,
       message,
-    });
+      timestamp,
+    };
+
+    const sanitizedData = this.sanitizeLogData(logData);
+    const logMessage = `[${timestamp}] ${level.toUpperCase()} ${message}`;
+
+    console[level](logMessage, sanitizedData);
   }
 
   /**
@@ -228,10 +225,10 @@ class Logger {
   /**
    * Create child logger with additional context
    */
-  child(context: LogContext): Logger {
-    const childLogger = Object.create(Logger.prototype);
-    childLogger.logger = this.logger.child(context);
+  child(_context: LogContext): Logger {
+    const childLogger = new Logger();
     childLogger.auditLogs = this.auditLogs;
+    // Note: In this simplified implementation, context is passed per log call
     return childLogger;
   }
 }
@@ -280,6 +277,28 @@ export const logError = (
     success: false,
     error: error.message,
     details: { ...context, errorMessage: error.message },
+  });
+};
+
+// Security event logging function
+export const logSecurityEvent = (
+  event: string,
+  userId: string,
+  details: Record<string, any> = {},
+  severity: 'low' | 'medium' | 'high' = 'low'
+) => {
+  logger.createAuditLog({
+    userId,
+    operation: `security_${event}`,
+    resource: 'security',
+    success: true,
+    error: undefined,
+    details: {
+      ...details,
+      securityEvent: event,
+      severity,
+      timestamp: new Date().toISOString(),
+    },
   });
 };
 

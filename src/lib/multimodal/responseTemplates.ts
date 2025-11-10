@@ -71,6 +71,7 @@ export function buildBalanceResponse(data: {
       visual: {
         type: 'balance',
         data: { balance: 0, income: 0, expenses: 0 },
+        accessibility: 'Screen reader support available',
       },
     };
   }
@@ -196,10 +197,11 @@ export function buildBillsResponse(data: {
   if (!Number.isFinite(totalAmount)) {
     return {
       text: 'Valores das contas indisponíveis',
-      voice: 'Valores das contas indisponíveis',
+      voice: 'Valores das contas indirecíveis',
       visual: {
         type: 'bills',
         data: { bills: [], totalAmount: 0, pastDueCount: 0 },
+        accessibility: 'Screen reader available',
       },
     };
   }

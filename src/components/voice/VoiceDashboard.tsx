@@ -32,6 +32,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
   const [commandHistory, setCommandHistory] = useState<
     Array<{
+      id: string;
       command: string;
       response: ProcessedCommand;
       timestamp: Date;
@@ -67,6 +68,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       // Add to history
       setCommandHistory((prev) => [
         {
+          id: crypto.randomUUID(),
           command: transcript,
           response,
           timestamp: new Date(),
@@ -282,9 +284,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-3">
-                {recentCommands.map((item, index) => (
-                  <div key={index} className="flex items-start gap-3 rounded-lg bg-gray-50 p-3">
-                    <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-info" />
+                {recentCommands.map((item) => (
+                  <div
+                    key={item.id || item.command}
+                    className="flex items-start gap-3 rounded-lg bg-gray-50 p-3"
+                  >
+                    <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-info" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 text-sm">"{item.command}"</p>
                       <p className="mt-1 text-gray-600 text-sm">{item.response.message}</p>
@@ -320,6 +325,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
         {/* Skip to main content for keyboard navigation */}
         <button
+          type="button"
           className="skip-link"
           onClick={() => {
             const mainContent = document.querySelector('main');

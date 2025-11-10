@@ -64,30 +64,54 @@ ChartContainer.displayName = 'Chart';
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, config]) => config.theme || config.color);
 
-  if (!colorConfig.length) {
-    return null;
-  }
+  // Create CSS styles safely without using dangerouslySetInnerHTML
+  React.useEffect(() => {
+    // Return early if no color config
+    if (!colorConfig.length) {
+      return;
+    }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join('\n')}
-}
-`
-          )
-          .join('\n'),
-      }}
-    />
-  );
+    // Create or update style element safely
+    let styleElement = document.getElementById(`chart-styles-${id}`) as HTMLStyleElement;
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = `chart-styles-${id}`;
+      styleElement.type = 'text/css';
+      document.head.appendChild(styleElement);
+    }
+
+    // Build CSS string safely with proper escaping
+    const cssRules = Object.entries(THEMES)
+      .map(([theme, prefix]) => {
+        const selector = `${prefix} [data-chart="${id.replace(/"/g, '\\"')}"]`;
+        const colorRules = colorConfig
+          .map(([key, itemConfig]) => {
+            const color =
+              itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+            return color ? `  --color-${key}: ${color};` : null;
+          })
+          .filter(Boolean)
+          .join('\n');
+
+        return colorRules ? `${selector} {\n${colorRules}\n}` : '';
+      })
+      .filter(Boolean)
+      .join('\n\n');
+
+    // Set CSS content safely
+    styleElement.textContent = cssRules;
+
+    // Cleanup function
+    return () => {
+      if (styleElement && styleElement.parentNode === document.head) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, [id, colorConfig]);
+
+  // Return empty fragment as the styles are applied via useEffect
+  return React.createElement(React.Fragment);
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;

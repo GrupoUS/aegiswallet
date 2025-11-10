@@ -186,12 +186,7 @@ export {
   TooltipProvider,
   TooltipTrigger,
 } from './tooltip';
-// Voice Components
-export {
-  VoiceDashboard,
-  VoiceDashboardLoader,
-  VoiceIndicator,
-  VoiceInterface,
-  VoiceInterfaceLoader,
-  VoiceResponse,
-} from './voice';
+// Voice Components - Temporarily commented out due to Supabase import issues
+// export { VoiceDashboard } from '../voice/VoiceDashboard';
+// export { VoiceIndicator } from '../voice/VoiceIndicator';
+// export { VoiceResponse } from '../voice/VoiceResponse';

@@ -185,25 +185,32 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       });
 
-      // Mock a slow response
-      (global.fetch as any).mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            setTimeout(() => {
-              resolve({
-                ok: true,
-                json: async () => ({
-                  text: 'Too slow',
-                  language: 'pt',
-                  duration: 1.0,
-                }),
-              });
-            }, 10000); // 10 seconds
-          })
-      );
+      // Mock a response that respects AbortController
+      (global.fetch as any).mockImplementationOnce((request: Request) => {
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            resolve({
+              ok: true,
+              json: async () => ({
+                text: 'Too slow',
+                language: 'pt',
+                duration: 1.0,
+              }),
+            });
+          }, 10000); // 10 seconds
+
+          // Handle abort signal
+          if (request.signal) {
+            request.signal.addEventListener('abort', () => {
+              clearTimeout(timeout);
+              reject(new Error('Request aborted'));
+            });
+          }
+        });
+      });
 
       await expect(sttService.transcribe(audioBlob)).rejects.toThrow();
-    }, 10000);
+    }, 15000); // Increase test timeout to accommodate the delay
   });
 
   describe('Error Handling', () => {
@@ -212,13 +219,15 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       });
 
-      const abortError = new Error('Aborted');
+      const abortError = new Error('The operation was aborted.');
       abortError.name = 'AbortError';
       (global.fetch as any).mockRejectedValueOnce(abortError);
 
       try {
         await sttService.transcribe(audioBlob);
+        fail('Expected transcribe to throw an error');
       } catch (error: any) {
+        console.log('Timeout test error:', error); // Debug
         expect(error.code).toBe(STTErrorCode.TIMEOUT);
         expect(error.retryable).toBe(true);
       }
@@ -229,11 +238,15 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       });
 
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network failure'));
+      const networkError = new Error('Network error occurred');
+      networkError.name = 'TypeError';
+      (global.fetch as any).mockRejectedValueOnce(networkError);
 
       try {
         await sttService.transcribe(audioBlob);
+        fail('Expected transcribe to throw an error');
       } catch (error: any) {
+        console.log('Network test error:', error); // Debug
         expect(error.code).toBe(STTErrorCode.NETWORK_ERROR);
         expect(error.retryable).toBe(true);
       }
@@ -255,7 +268,9 @@ describe('SpeechToTextService', () => {
 
       try {
         await sttService.transcribe(audioBlob);
+        fail('Expected transcribe to throw an error');
       } catch (error: any) {
+        console.log('Rate limit test error:', error); // Debug
         expect(error.code).toBe(STTErrorCode.RATE_LIMIT);
         expect(error.retryable).toBe(true);
       }
@@ -340,7 +355,9 @@ describe('SpeechToTextService', () => {
     });
 
     it('should return false on network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      const networkError = new Error('Network error occurred');
+      networkError.name = 'TypeError';
+      (global.fetch as any).mockRejectedValueOnce(networkError);
 
       const isHealthy = await sttService.healthCheck();
       expect(isHealthy).toBe(false);

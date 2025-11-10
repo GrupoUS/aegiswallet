@@ -273,7 +273,7 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
                   key={method.value}
                   variant={paymentMethod === method.value ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setPaymentMethod(method.value as string)}
+                  onClick={() => setPaymentMethod(method.value as 'debit' | 'credit' | 'pix')}
                   className="flex-1"
                 >
                   {method.label}

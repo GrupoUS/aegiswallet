@@ -519,7 +519,7 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
     text: 'mandar R$ 100 para o João',
     intent: IntentType.TRANSFER_MONEY,
     entities: [
-      { type: EntityType.AMOUNT, value: 100, startIndex: 10, endIndex: 13 },
+      { type: EntityType.AMOUNT, value: '100', startIndex: 10, endIndex: 13 },
       {
         type: EntityType.RECIPIENT,
         value: 'João',
@@ -545,7 +545,7 @@ export const BRAZILIAN_TRAINING_DATA: TrainingUtterance[] = [
     intent: IntentType.TRANSFER_MONEY,
     metadata: { slang: true },
     entities: [
-      { type: EntityType.AMOUNT, value: 50, startIndex: 6, endIndex: 13 },
+      { type: EntityType.AMOUNT, value: '50', startIndex: 6, endIndex: 13 },
       {
         type: EntityType.RECIPIENT,
         value: 'irmão',
@@ -755,11 +755,3 @@ export class BrazilianContextAnalyzer {
 // ============================================================================
 // Exports
 // ============================================================================
-
-export {
-  BRAZILIAN_REGIONS,
-  BRAZILIAN_ENTITY_PATTERNS,
-  BRAZILIAN_INTENT_PATTERNS,
-  BRAZILIAN_TRAINING_DATA,
-};
-export type { RegionalVariation, BrazilianContext };

@@ -7,6 +7,23 @@
 import '@testing-library/jest-dom';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Ensure DOM is available for this test
+if (typeof globalThis.document === 'undefined') {
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+    url: 'http://localhost',
+    pretendToBeVisual: true,
+    resources: 'usable',
+  });
+
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.navigator = dom.window.navigator;
+  globalThis.HTMLElement = dom.window.HTMLElement;
+  globalThis.Element = dom.window.Element;
+}
+
 import { useMultimodalResponse } from '@/hooks/useMultimodalResponseCompat';
 import {
   formatCurrency,
@@ -130,7 +147,6 @@ describe('Multimodal Response Hook', () => {
           available: 1500,
           total: 3000,
           spent: 1500,
-          period: 'mês',
         });
       });
 

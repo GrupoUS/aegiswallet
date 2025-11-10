@@ -23,13 +23,11 @@ export function useDeleteTransaction() {
 }
 
 export function useTransactionsStats(
-  period?: '7d' | '30d' | '1y' | '90d',
-  categoryId?: string,
+  period?: 'week' | 'month' | 'quarter' | 'year',
   accountId?: string
 ) {
-  return trpc.financialTransactions.getStats.useQuery({
-    period: period || '30d',
-    categoryId,
+  return trpc.financialTransactions.getStatistics.useQuery({
+    period: period || 'month',
     accountId,
   });
 }

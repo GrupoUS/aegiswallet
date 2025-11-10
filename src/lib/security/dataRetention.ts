@@ -361,21 +361,23 @@ export class DataRetentionManager {
         let count = 0;
 
         switch (dataType) {
-          case 'voice_recordings':
+          case 'voice_recordings': {
             const { count: voiceCount } = await supabase
               .from('voice_recordings')
               .select('*', { count: 'exact', head: true })
               .lt('created_at', cutoffDate.toISOString());
             count = voiceCount || 0;
             break;
+          }
 
-          case 'sessions':
+          case 'sessions': {
             const { count: sessionCount } = await supabase
               .from('user_sessions')
               .select('*', { count: 'exact', head: true })
               .lt('created_at', cutoffDate.toISOString());
             count = sessionCount || 0;
             break;
+          }
         }
 
         stats[dataType] = {

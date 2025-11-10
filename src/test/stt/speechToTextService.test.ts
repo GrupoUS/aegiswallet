@@ -4,11 +4,20 @@
  * Story: 01.01 - Motor de Speech-to-Text Brasil
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SpeechToTextService, STTErrorCode } from '@/lib/stt/speechToTextService';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+let SpeechToTextService: typeof import('@/lib/stt/speechToTextService').SpeechToTextService;
+let STTErrorCode: typeof import('@/lib/stt/speechToTextService').STTErrorCode;
 
 // Mock fetch globally
 global.fetch = vi.fn();
+
+beforeAll(async () => {
+  const module = await vi.importActual<typeof import('@/lib/stt/speechToTextService')>(
+    '@/lib/stt/speechToTextService'
+  );
+  SpeechToTextService = module.SpeechToTextService;
+  STTErrorCode = module.STTErrorCode;
+});
 
 describe('SpeechToTextService', () => {
   let sttService: SpeechToTextService;
@@ -16,9 +25,14 @@ describe('SpeechToTextService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    global.fetch = vi.fn();
+
     sttService = new SpeechToTextService({
       apiKey: mockApiKey,
+
       language: 'pt',
+
       timeout: 5000,
     });
   });
@@ -46,13 +60,19 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       });
 
-      await expect(sttService.transcribe(largeBlob)).rejects.toThrow('Audio file too large');
+      await expect(sttService.transcribe(largeBlob)).rejects.toMatchObject({
+        code: STTErrorCode.INVALID_AUDIO,
+        message: 'Audio file too large',
+      });
     });
 
     it('should reject invalid audio types', async () => {
       const invalidBlob = new Blob(['test'], { type: 'text/plain' });
 
-      await expect(sttService.transcribe(invalidBlob)).rejects.toThrow('Invalid audio type');
+      await expect(sttService.transcribe(invalidBlob)).rejects.toMatchObject({
+        code: STTErrorCode.INVALID_AUDIO,
+        message: 'Invalid audio type',
+      });
     });
 
     it('should accept valid audio types', async () => {
@@ -223,14 +243,10 @@ describe('SpeechToTextService', () => {
       abortError.name = 'AbortError';
       (global.fetch as any).mockRejectedValueOnce(abortError);
 
-      try {
-        await sttService.transcribe(audioBlob);
-        fail('Expected transcribe to throw an error');
-      } catch (error: any) {
-        console.log('Timeout test error:', error); // Debug
-        expect(error.code).toBe(STTErrorCode.TIMEOUT);
-        expect(error.retryable).toBe(true);
-      }
+      await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
+        code: STTErrorCode.TIMEOUT,
+        retryable: true,
+      });
     });
 
     it('should categorize network errors', async () => {
@@ -242,14 +258,10 @@ describe('SpeechToTextService', () => {
       networkError.name = 'TypeError';
       (global.fetch as any).mockRejectedValueOnce(networkError);
 
-      try {
-        await sttService.transcribe(audioBlob);
-        fail('Expected transcribe to throw an error');
-      } catch (error: any) {
-        console.log('Network test error:', error); // Debug
-        expect(error.code).toBe(STTErrorCode.NETWORK_ERROR);
-        expect(error.retryable).toBe(true);
-      }
+      await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
+        code: STTErrorCode.NETWORK_ERROR,
+        retryable: true,
+      });
     });
 
     it('should categorize rate limit errors', async () => {
@@ -266,14 +278,10 @@ describe('SpeechToTextService', () => {
         }),
       });
 
-      try {
-        await sttService.transcribe(audioBlob);
-        fail('Expected transcribe to throw an error');
-      } catch (error: any) {
-        console.log('Rate limit test error:', error); // Debug
-        expect(error.code).toBe(STTErrorCode.RATE_LIMIT);
-        expect(error.retryable).toBe(true);
-      }
+      await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
+        code: STTErrorCode.RATE_LIMIT,
+        retryable: true,
+      });
     });
 
     it('should categorize authentication errors', async () => {
@@ -290,12 +298,10 @@ describe('SpeechToTextService', () => {
         }),
       });
 
-      try {
-        await sttService.transcribe(audioBlob);
-      } catch (error: any) {
-        expect(error.code).toBe(STTErrorCode.AUTHENTICATION_ERROR);
-        expect(error.retryable).toBe(false);
-      }
+      await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
+        code: STTErrorCode.AUTHENTICATION_ERROR,
+        retryable: false,
+      });
     });
   });
 

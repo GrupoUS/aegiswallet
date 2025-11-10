@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
-import { rateLimitManager, RATE_LIMIT_CONFIGS } from '@/lib/security/rateLimiter';
 import { logger } from '@/lib/logging';
+import { rateLimitManager } from '@/lib/security/rateLimiter';
 
 export interface RateLimitMiddlewareOptions {
   limiterName: string;
@@ -146,7 +146,7 @@ export const dataExportRateLimit = createRateLimitMiddleware({
       message: 'Authentication required for data export',
     });
   },
-  customResponse: (limitInfo) => 'Limite de exportação de dados atingido. Tente novamente amanhã.',
+  customResponse: (_limitInfo) => 'Limite de exportação de dados atingido. Tente novamente amanhã.',
 });
 
 export const generalApiRateLimit = createRateLimitMiddleware({
@@ -155,7 +155,7 @@ export const generalApiRateLimit = createRateLimitMiddleware({
 });
 
 // Advanced rate limiting for specific patterns
-export const createProgressiveRateLimit = (baseConfig: any) => {
+export const createProgressiveRateLimit = () => {
   return createRateLimitMiddleware({
     limiterName: 'progressive',
     keyGenerator: (ctx) => {

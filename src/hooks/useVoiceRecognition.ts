@@ -174,7 +174,7 @@ export function useVoiceRecognition(
       }
 
       // Start the recognition
-      if (recognitionRef.current && recognitionRef.current.start) {
+      if (recognitionRef.current?.start) {
         recognitionRef.current.start();
       }
 
@@ -201,7 +201,7 @@ export function useVoiceRecognition(
       }));
       options.onError?.(error instanceof Error ? error.message : 'Failed to start recognition');
     }
-  }, [state.isListening, state.isProcessing, options]);
+  }, [state.isListening, state.isProcessing, options, _processVoiceCommand]);
 
   // Stop listening with proper cleanup
   const stopListening = useCallback(() => {

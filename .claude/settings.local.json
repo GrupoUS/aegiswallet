@@ -94,7 +94,10 @@
       "mcp__shadcn__view_items_in_registries",
       "mcp__chrome-devtools__list_console_messages",
       "mcp__chrome-devtools__navigate_page",
-      "mcp__chrome-devtools__click"
+      "mcp__chrome-devtools__click",
+      "SlashCommand(/bmad:bmm:workflows:story-context)",
+      "SlashCommand(/bmad:bmm:workflows:create-story)",
+      "SlashCommand(/bmad:bmm:workflows:dev-story)"
     ],
     "deny": [
       "Edit",

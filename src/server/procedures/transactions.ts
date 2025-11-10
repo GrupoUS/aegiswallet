@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { financialSchemas, validateTransactionForFraud } from '@/lib/security/financial-validator';
-import { transactionRateLimit, securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { Context } from '@/server/context';
+import { securityMiddleware, transactionRateLimit } from '@/server/middleware/securityMiddleware';
 
 export const createTransactionRouter = (t: any) => ({
   /**

@@ -1,4 +1,4 @@
-project_id = "clvdvpbnuifxedpqgrgo"
+project_id = ""
 [functions.get_financial_summary]
 enabled = true
 verify_jwt = true

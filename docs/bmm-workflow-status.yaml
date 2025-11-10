@@ -26,4 +26,4 @@ workflow_status:
   solutioning-gate-check: docs/implementation-readiness-report-2025-11-10.md  # agent: architect
 
   # Phase 3: Implementation
-  sprint-planning: required  # agent: sm
+  sprint-planning: .bmad-ephemeral/sprint-status.yaml  # agent: sm

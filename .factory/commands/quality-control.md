@@ -58,6 +58,7 @@ QUALITY_CONTROL_PHASES:
 - **Data**: **Supabase** (Postgres + Auth + Realtime + RLS) + Audit logging
 - **QA & Testing**: Vitest, Playwright, OXLint, Biome, TypeScript strict
 - **Quality Tools**: **OXLint** (50-100x faster), Biome (formatter), Dprint, Sentry
+- **Diagnostic Tools**: **Zed Context** (real-time validation), **Native Diagnostics** (project-wide scanning), **Project Diagnostics Suite**
 - **Research Tools**: **Serena MCP**, **Context7 MCP**, **Tavily MCP**, **Archon MCP**
 - **LGPD Focus**: Healthcare compliance, data protection, security validation
 
@@ -71,373 +72,56 @@ QUALITY_CONTROL_PHASES:
 
 ---
 
-## 🤖 FACTORY DROIDS COORDINATION FRAMEWORK
+## 🔍 PHASE 1: Error Detection & Analysis
 
-**Objective**: Orchestrate specialized factory droids for coordinated atomic subtask execution with parallel processing, adaptive resource management, and multi-agent quality validation.
+**Objective**: Comprehensive identification and cataloging of all code quality issues using automated tools and semantic analysis.
 
-### **Core Droid Orchestra Architecture**
+### **1.1 Detection Tools & Usage**
 
 ```yaml
-DROID_COORDINATION_SYSTEM:
-  primary_orchestrator:
-    droid: "tdd-orchestrator"
-    role: "Master coordination and multi-agent quality assurance"
-    capabilities: ["Parallel execution engine", "Resource management", "Quality gate orchestration"]
-    coordination_pattern: "Adaptive switching based on context and performance"
+PRIMARY_DETECTION_TOOLS:
+  oxlint:
+    purpose: "Primary linter with 570+ rules and healthcare compliance"
+    performance: "50-100x faster than ESLint"
+    usage: "bun lint"
+    coverage: "90% of quality issues"
 
-  specialized_droids:
-    apex_dev:
-      role: "Implementation specialist with Archon task management"
-      phase_focus: ["Phase 4 Execution", "Atomic task implementation"]
-      tools: ["Archon MCP", "Serena MCP", "Desktop Commander"]
-      expertise: ["Code implementation", "Task orchestration", "Problem solving"]
+  serena_mcp:
+    purpose: "Semantic codebase search and pattern analysis"
+    performance: "Deep contextual understanding"
+    usage: "Mandatory for codebase search (NOT native tools)"
+    coverage: "Error pattern analysis across codebase"
 
-    code_reviewer:
-      role: "Elite code review with OXLint optimization"
-      phase_focus: ["Phase 1 Detection", "Quality validation", "Security scanning"]
-      tools: ["OXLint", "Biome", "Security scanners"]
-      expertise: ["Code quality", "Performance optimization", "Healthcare compliance"]
+  typescript:
+    purpose: "Type safety and strict mode enforcement"
+    performance: "Native Bun integration"
+    usage: "bun type-check"
+    coverage: "Type errors and interface violations"
 
-    test_auditor:
-      role: "TDD RED phase testing specialist"
-      phase_focus: ["Phase 4 Validation", "Test coverage", "Healthcare compliance testing"]
-      tools: ["Vitest", "Playwright", "Performance testing"]
-      expertise: ["Test definition", "Coverage validation", "Performance optimization"]
-
-    architect_review:
-      role: "Master software architect for system design validation"
-      phase_focus: ["Phase 2 Research", "Architecture validation", "Design patterns"]
-      tools: ["Architecture analysis", "Scalability assessment", "Pattern validation"]
-      expertise: ["System architecture", "Design patterns", "Scalability analysis"]
-
-    apex_researcher:
-      role: "Research intelligence with multi-source validation"
-      phase_focus: ["Phase 2 Research", "Solution validation", "Best practices"]
-      tools: ["Context7 MCP", "Tavily MCP", "Archon RAG"]
-      expertise: ["Research methodology", "Documentation analysis", "Solution validation"]
-
-    database_specialist:
-      role: "Database architecture and performance specialist"
-      phase_focus: ["Phase 1 Detection", "Database validation", "Performance optimization"]
-      tools: ["Database analysis", "Query optimization", "Schema validation"]
-      expertise: ["Database design", "Performance tuning", "Data integrity"]
+  biome:
+    purpose: "Code formatting and style consistency"
+    performance: "Ultra-fast formatting"
+    usage: "bun format"
+    coverage: "10% formatting issues"
 ```
 
-### **Multi-Agent Coordination Patterns**
+### **1.2 Error Detection Workflow**
 
-```yaml
-COORDINATION_PATTERNS:
-  sequential_execution:
-    trigger_conditions:
-      - "healthcare_compliance == true"
-      - "dependencies.linear == true"
-      - "security_critical == true"
-    description: "Linear execution for compliance and security-critical tasks"
-    droids_involved: ["test_auditor", "code_reviewer", "apex_dev"]
-    performance_factor: "0.8x (slower but safer)"
+```bash
+# Step 1: Run comprehensive quality checks
+bun quality              # All quality gates
+bun lint                 # OXLint 50-100x faster validation
+bun type-check          # TypeScript strict mode
+bun format:check        # Biome formatting validation
 
-  parallel_execution:
-    trigger_conditions:
-      - "independent_agents == true"
-      - "resource_constraints.low == true"
-      - "non_critical_errors == true"
-    description: "Concurrent execution for independent quality improvements"
-    droids_involved: ["code_reviewer", "apex_dev", "database_specialist"]
-    performance_factor: "3-5x (faster execution)"
+# Step 2: Use Serena MCP for pattern analysis
+# Search for error patterns across codebase
+# Example: Find all instances of a specific error pattern
+# serena_mcp.search_for_pattern(pattern="error_pattern", context_lines=5)
 
-  hybrid_coordination:
-    trigger_conditions:
-      - "mixed_dependencies == true"
-      - "complexity.medium == true"
-      - "partial_independence == true"
-    description: "Mixed sequential and parallel for complex scenarios"
-    droids_involved: ["tdd-orchestrator", "apex_researcher", "code_reviewer"]
-    performance_factor: "2-3x (balanced approach)"
-
-  adaptive_orchestration:
-    trigger_conditions:
-      - "dynamic_context == true"
-      - "performance_requirements.high == true"
-      - "resource_constraints.variable == true"
-    description: "Dynamic switching based on execution context and performance"
-    droids_involved: ["tdd-orchestrator", "all_available_droids"]
-    performance_factor: "2-5x (context-dependent optimization)"
-```
-
-### **Resource Management & Performance Optimization**
-
-```yaml
-RESOURCE_ALLOCATION_SYSTEM:
-  agent_pool:
-    dynamic_scaling: true
-    max_concurrent_droids: 8
-    min_active_droids: 2
-    scaling_algorithm: "performance_based"
-    health_check_interval: "30s"
-
-  task_queue_management:
-    priority_levels: ["critical", "high", "medium", "low"]
-    optimization_algorithm: "intelligent_load_balancing"
-    auto_balancing: true
-    dependency_resolution: "automatic"
-
-  performance_monitoring:
-    metrics_tracked:
-      - "execution_time_per_droid"
-      - "agent_utilization_rate"
-      - "error_resolution_accuracy"
-      - "cross_agent_coordination_efficiency"
-    monitoring_frequency: "real-time"
-    adjustment_triggers: "performance_degradation > 15%"
-
-  conflict_resolution:
-    strategy: "automatic_with_human_escaltion"
-    conflict_types: ["resource_contention", "priority_conflicts", "dependency_cycles"]
-    resolution_time: "< 60s"
-    escalation_threshold: "3 failed_attempts"
-```
-
-### **Agent-Specific Quality Gates**
-
-```yaml
-SPECIALIZED_QUALITY_GATES:
-  code_reviewer_gates:
-    gate_1_oxlint_validation:
-      threshold: "Zero errors (69 warnings acceptable)"
-      execution_time: "< 10s"
-      healthcare_compliance: "Mandatory for patient data files"
-
-    gate_2_performance_analysis:
-      threshold: "No regression in Core Web Vitals"
-      bundle_size_limit: "< 500KB critical path"
-      memory_usage: "< 30% increase"
-
-    gate_3_security_validation:
-      threshold: "Zero high-severity vulnerabilities"
-      lgpd_compliance: "100% validation"
-      audit_trail: "Complete logging"
-
-  test_auditor_gates:
-    gate_1_test_coverage:
-      threshold: "≥90% for critical components"
-      execution_time: "< 30s"
-      flaky_test_tolerance: "0%"
-
-    gate_2_healthcare_compliance:
-      threshold: "100% LGPD compliance validation"
-      patient_data_testing: "Mandatory coverage"
-      security_testing: "Comprehensive validation"
-
-    gate_3_performance_testing:
-      threshold: "Core Web Vitals maintained"
-      load_testing: "Essential workflows only"
-      memory_leaks: "Zero tolerance"
-
-  architect_review_gates:
-    gate_1_architectural_integrity:
-      threshold: "No architectural violations"
-      scalability_impact: "Positive or neutral"
-      maintainability_score: "≥8/10"
-
-    gate_2_design_pattern_compliance:
-      threshold: "Consistent with project patterns"
-      complexity_increase: "< 10%"
-      technical_debt: "No increase"
-
-  apex_researcher_gates:
-    gate_1_research_quality:
-      threshold: "≥95% confidence in solutions"
-      source_authority: "Official documentation only"
-      cross_validation: "Minimum 3 sources"
-
-    gate_2_solution_validity:
-      threshold: "Validated against project standards"
-      implementation_risk: "Low or medium"
-      rollback_feasibility: "100% documented"
-```
-
-### **Cross-Agent Communication Protocols**
-
-```yaml
-COMMUNICATION_PROTOCOLS:
-  agent_handoff:
-    trigger: "Task completion or dependency requirement"
-    protocol: "Structured state transfer with validation"
-    data_package: "Context + progress + blockers + next_steps"
-    validation: "Receiving agent confirms understanding"
-
-  conflict_resolution:
-    trigger: "Resource contention or priority conflicts"
-    protocol: "TDD-Orchestrator mediated negotiation"
-    resolution_criteria: "Project impact + urgency + dependencies"
-    escalation: "Automatic to human if unresolved in 60s"
-
-  progress_reporting:
-    frequency: "Every atomic task completion"
-    format: "Structured status + metrics + blockers"
-    recipients: "TDD-Orchestrator + dependent agents"
-    persistence: "Archon knowledge base update"
-
-  quality_validation:
-    trigger: "Pre and post each atomic task"
-    protocol: "Multi-agent validation checklist"
-    validation_types: ["Functional", "Security", "Performance", "Compliance"]
-    failure_handling: "Automatic rollback + agent reassignment"
-```
-
-### **Droid Workflow Integration Matrix**
-
-```yaml
-WORKFLOW_INTEGRATION:
-  phase_1_detection_enhanced:
-    primary_droid: "code_reviewer"
-    supporting_droids: ["database_specialist", "test_auditor"]
-    coordination_pattern: "parallel_analysis"
-    output: "Enhanced error catalog with droid-specific insights"
-
-  phase_2_research_orchestrated:
-    primary_droid: "apex_researcher"
-    supporting_droids: ["architect_review", "code_reviewer"]
-    coordination_pattern: "hybrid_research"
-    output: "Multi-validated research intelligence with architectural review"
-
-  phase_3_planning_distributed:
-    primary_droid: "tdd-orchestrator"
-    supporting_droids: ["apex_dev", "test_auditor"]
-    coordination_pattern: "adaptive_task_decomposition"
-    output: "Distributed atomic tasks with resource allocation"
-
-  phase_4_execution_parallel:
-    primary_droid: "tdd-orchestrator"
-    supporting_droids: ["apex_dev", "test_auditor", "code_reviewer"]
-    coordination_pattern: "parallel_execution_with_validation"
-    output: "Coordinated implementation with real-time quality gates"
-```
-
----
-
-## 🔍 PHASE 1: Error Detection & Analysis (Enhanced with Droid Coordination)
-
-**Objective**: Comprehensive identification and cataloging of all code quality issues using coordinated multi-agent analysis and specialized tool orchestration.
-
-### **1.1 Enhanced Detection Tools & Multi-Agent Coordination**
-
-```yaml
-ENHANCED_DETECTION_ORCHESTRATION:
-  primary_coordination:
-    orchestrator: "code_reviewer"
-    supporting_droids: ["database_specialist", "test_auditor"]
-    coordination_pattern: "parallel_analysis"
-    performance_gain: "3-5x faster than single-agent analysis"
-
-  droid_specific_capabilities:
-    code_reviewer:
-      primary_tools: ["OXLint", "Biome", "Security scanners"]
-      specialization: "Code quality, performance optimization, healthcare compliance"
-      detection_focus: ["Type safety", "Security vulnerabilities", "Performance issues"]
-      execution_time: "< 10s for full scan"
-
-    database_specialist:
-      primary_tools: ["Database analysis", "Query optimization", "Schema validation"]
-      specialization: "Database design, performance tuning, data integrity"
-      detection_focus: ["SQL patterns", "Schema inconsistencies", "Query performance"]
-      execution_time: "< 30s for database analysis"
-
-    test_auditor:
-      primary_tools: ["Coverage analysis", "Test pattern detection", "Compliance validation"]
-      specialization: "Test coverage, healthcare compliance testing, performance validation"
-      detection_focus: ["Missing tests", "Coverage gaps", "Compliance violations"]
-      execution_time: "< 20s for coverage analysis"
-
-  integrated_toolchain:
-    oxlint_enhanced:
-      purpose: "Primary linter with 570+ rules and healthcare compliance"
-      performance: "50-100x faster than ESLint"
-      usage: "bun lint (coordinated across droids)"
-      coverage: "90% of quality issues"
-      droid_integration: "code_reviewer + database_specialist"
-
-    serena_mcp_orchestrated:
-      purpose: "Semantic codebase search with multi-agent pattern analysis"
-      performance: "Deep contextual understanding with parallel processing"
-      usage: "Coordinated search across all droids"
-      coverage: "Error pattern analysis across codebase with specialized insights"
-      droid_integration: "all_available_droids"
-
-    typescript_distributed:
-      purpose: "Type safety with distributed analysis"
-      performance: "Native Bun integration + parallel validation"
-      usage: "bun type-check (coordinated validation)"
-      coverage: "Type errors, interface violations, architectural inconsistencies"
-      droid_integration: "code_reviewer + architect_review"
-
-    biome_automated:
-      purpose: "Code formatting with style consistency validation"
-      performance: "Ultra-fast formatting with automated fixes"
-      usage: "bun format (coordinated across codebases)"
-      coverage: "10% formatting issues + 90% style consistency"
-      droid_integration: "code_reviewer"
-```
-
-### **1.2 Multi-Agent Error Detection Workflow**
-
-```yaml
-ENHANCED_DETECTION_WORKFLOW:
-  step_1_parallel_analysis:
-    coordinator: "code_reviewer"
-    parallel_droids: ["database_specialist", "test_auditor"]
-    commands:
-      - "bun quality                    # All quality gates (coordinated)"
-      - "bun lint                       # OXLint validation (code_reviewer)"
-      - "bun type-check                 # TypeScript analysis (distributed)"
-      - "bun format:check               # Style validation (automated)"
-    coordination_pattern: "parallel_execution"
-    expected_time: "< 60s for complete analysis"
-
-  step_2_pattern_orchestration:
-    coordinator: "tdd-orchestrator"
-    participating_droids: ["code_reviewer", "database_specialist", "test_auditor"]
-    coordinated_search:
-      serena_mcp_patterns:
-        - "pattern: 'any\\s+type' (code_reviewer - type safety)"
-        - "pattern: 'SQL.*injection' (database_specialist - security)"
-        - "pattern: 'test.*coverage' (test_auditor - testing gaps)"
-        - "pattern: 'patient.*data.*(?!encrypt)' (all droids - LGPD)"
-    execution_pattern: "parallel_pattern_analysis"
-    expected_time: "< 45s for comprehensive pattern detection"
-
-  step_3_distributed_analysis:
-    coordinator: "tdd-orchestrator"
-    analysis_tasks:
-      code_reviewer:
-        - "Identify code quality hotspots"
-        - "Analyze error distribution by category"
-        - "Assess security vulnerability patterns"
-        - "Evaluate performance degradation indicators"
-
-      database_specialist:
-        - "Detect database query inefficiencies"
-        - "Identify schema inconsistencies"
-        - "Analyze data access pattern violations"
-        - "Validate data integrity issues"
-
-      test_auditor:
-        - "Map test coverage gaps"
-        - "Identify missing compliance tests"
-        - "Analyze test performance bottlenecks"
-        - "Validate healthcare test requirements"
-    coordination_pattern: "hybrid_coordination"
-    expected_time: "< 90s for complete distributed analysis"
-
-  step_4_synthesis_and_cataloging:
-    coordinator: "tdd-orchestrator"
-    synthesizing_droids: ["code_reviewer", "apex_researcher"]
-    output: "Comprehensive error catalog with multi-agent insights"
-    deliverables:
-      - "Consolidated error database with droid-specific annotations"
-      - "Prioritized error list with cross-droid impact assessment"
-      - "Resource allocation recommendations for Phase 2"
-      - "Performance impact analysis with optimization opportunities"
+# Step 3: Analyze error distribution
+# Identify hotspots and recurring patterns
+# Group errors by category and severity
 ```
 
 ### **1.3 Error Cataloging Template**
@@ -552,6 +236,202 @@ ERROR_CATEGORIES:
 ```
 
 ### **1.5 Serena MCP Search Patterns for Error Analysis**
+### **1.5 Project Diagnostics Integration**
+
+**Objective**: Implement comprehensive project-wide diagnostics using Serena MCP, Zed Context, and native diagnostic tools for complete code quality coverage.
+
+#### **1.5.1 Diagnostic Tools Integration**
+
+```yaml
+PROJECT_DIAGNOSTICS_SUITE:
+  primary_tools:
+    - name: "Serena MCP"
+      purpose: "Semantic code analysis and symbol resolution"
+      capabilities: ["error detection", "symbol tracking", "dependency analysis"]
+      priority: 1
+    
+    - name: "Zed Context"
+      purpose: "Real-time code validation and IDE integration"
+      capabilities: ["live diagnostics", "context-aware suggestions", "instant feedback"]
+      priority: 2
+    
+    - name: "Native Diagnostics"
+      purpose: "Comprehensive project-wide error scanning"
+      capabilities: ["type checking", "linting", "compilation errors"]
+      priority: 3
+```
+
+#### **1.5.2 Comprehensive Diagnostic Workflow**
+
+```yaml
+DIAGNOSTIC_WORKFLOW:
+  phase_1_initial_scan:
+    action: "Run comprehensive project diagnostics"
+    tools: ["diagnostics", "serena_mcp", "zed_context"]
+    commands:
+      - "diagnostics"  # Project-wide scan
+      - "serena_mcp.search_for_pattern(pattern='.*')"  # Full codebase analysis
+    output: "Complete error catalog with severity classification"
+    
+  phase_2_categorization:
+    action: "Categorize and prioritize detected issues"
+    tools: ["sequential_thinking", "analysis"]
+    criteria:
+      - "Critical: Breaking errors that prevent compilation/execution"
+      - "High: Type safety and security vulnerabilities"
+      - "Medium: Code quality and performance issues" 
+      - "Low: Style and optimization suggestions"
+    output: "Prioritized error resolution plan"
+    
+  phase_3_zed_integration:
+    action: "Configure Zed Context for real-time validation"
+    tools: ["zed_context", "configuration"]
+    setup:
+      - "Enable real-time diagnostics"
+      - "Configure error highlighting"
+      - "Set up auto-fix suggestions"
+    output: "Continuous monitoring environment"
+    
+  phase_4_monitoring:
+    action: "Establish continuous diagnostic monitoring"
+    tools: ["automated_checks", "quality_gates"]
+    frequency: "On file change + pre-commit validation"
+    output: "Ongoing quality assurance"
+```
+
+#### **1.5.3 Zed Context Integration Setup**
+
+```yaml
+ZED_CONTEXT_CONFIG:
+  real_time_diagnostics:
+    enabled: true
+    check_on_save: true
+    check_on_focus: false
+    
+  error_categories:
+    typescript_errors: 
+      enabled: true
+      severity: "critical"
+      auto_fix: false
+    
+    linting_issues:
+      enabled: true
+      severity: "medium"
+      auto_fix: true
+      
+    performance_warnings:
+      enabled: true
+      severity: "low"
+      auto_fix: false
+      
+  integration_points:
+    serena_mcp:
+      enabled: true
+      features: ["symbol_navigation", "error_context"]
+      
+    quality_gates:
+      enabled: true
+      blocking_errors: ["typescript_errors", "security_issues"]
+```
+
+#### **1.5.4 Diagnostic Error Catalog Template**
+
+```yaml
+PROJECT_ERROR_CATALOG:
+  error_id: "PROJECT-XXX"
+  detection_source: "serena_mcp|zed_context|native_diagnostics"
+  
+  error_details:
+    type: "typescript_error|security_vulnerability|performance_issue|code_quality"
+    severity: "critical|high|medium|low"
+    auto_fixable: true|false
+    impact_scope: "file|component|module|project"
+    
+  location_details:
+    file_path: "exact file location"
+    line_range: "start_line-end_line"
+    column_range: "start_col-end_col"
+    context_lines: "surrounding code context"
+    affected_symbols: "functions/variables/types affected"
+    
+  diagnostic_context:
+    zed_context_data: "IDE-specific information if available"
+    serena_analysis: "Semantic analysis results"
+    compilation_output: "Build/runtime error details"
+    
+  resolution_tracking:
+    fix_method: "manual|automated|refactor_required"
+    estimated_effort: "minutes|hours|days"
+    dependencies: "other errors or components that block resolution"
+    rollback_plan: "how to revert if fix causes issues"
+    
+  quality_metrics:
+    complexity_impact: "cyclomatic complexity change"
+    coverage_impact: "test coverage impact"
+    performance_impact: "execution time impact"
+```
+
+#### **1.5.5 Serena MCP Diagnostic Commands**
+
+```yaml
+SERENA_DIAGNOSTIC_COMMANDS:
+  comprehensive_scan:
+    command: "serena_mcp.search_for_pattern(pattern='.*')"
+    purpose: "Full codebase semantic analysis"
+    output: "All potential issues and improvements"
+    
+  error_context_analysis:
+    command: "serena_mcp.find_symbol(name_path='{error_function}')"
+    purpose: "Get detailed context for specific errors"
+    output: "Function usage, dependencies, and impact analysis"
+    
+  dependency_validation:
+    command: "serena_mcp.find_referencing_symbols(symbol='{component}')"
+    purpose: "Validate component dependencies"
+    output: "All references and potential breaking changes"
+    
+  security_scan:
+    command: "serena_mcp.search_for_pattern(pattern='(eval|innerHTML|dangerouslySetInnerHTML|Function.*constructor)')"
+    purpose: "Identify security vulnerabilities"
+    output: "All potential security risks"
+    
+  type_safety_check:
+    command: "serena_mcp.search_for_pattern(pattern=':\\s*any|as\\s+any|@ts-ignore')"
+    purpose: "Find type safety violations"
+    output: "All type safety issues"
+```
+
+#### **1.5.6 Diagnostic Quality Gates**
+
+```yaml
+DIAGNOSTIC_QUALITY_GATES:
+  gate_1_critical_errors:
+    threshold: "0 critical errors"
+    blocking: true
+    check_command: "diagnostics --filter=error"
+    
+  gate_2_type_safety:
+    threshold: "0 type errors"
+    blocking: true
+    check_command: "diagnostics --filter=typescript"
+    
+  gate_3_security_issues:
+    threshold: "0 high/critical security issues"
+    blocking: true
+    check_command: "serena_mcp.search_for_pattern(pattern='(eval|innerHTML)')"
+    
+  gate_4_performance_impact:
+    threshold: "< 5 performance warnings"
+    blocking: false
+    check_command: "diagnostics --filter=performance"
+    
+  gate_5_code_quality:
+    threshold: "< 10 medium/low quality issues"
+    blocking: false
+    check_command: "diagnostics --filter=quality"
+```
+
+### **1.6 Serena MCP Search Patterns for Error Analysis**
 
 ```yaml
 SERENA_SEARCH_PATTERNS:
@@ -578,126 +458,40 @@ SERENA_SEARCH_PATTERNS:
 
 ---
 
-## 🔬 PHASE 2: Orchestrated Research-Driven Solution Planning
+## 🔬 PHASE 2: Research-Driven Solution Planning
 
-**Objective**: Leverage specialized factory droids for coordinated research intelligence, multi-source validation, and authoritative solution planning with architectural oversight.
+**Objective**: Leverage authoritative sources and best practices to develop research-backed solutions for identified quality issues.
 
-### **2.1 Multi-Agent Research Orchestration**
+### **2.1 Research Methodology Integration**
 
-This phase integrates the comprehensive research capabilities of specialized droids coordinated by the TDD-Orchestrator to ensure all solutions are based on authoritative sources with multi-perspective validation.
+This phase integrates the comprehensive research methodology from `research.md` and the apex-researcher agent patterns to ensure all solutions are based on authoritative sources.
 
 ```yaml
-ORCHESTRATED_RESEARCH_WORKFLOW:
-  step_1_context_analysis_distributed:
-    coordinator: "apex_researcher"
-    supporting_droids: ["architect_review", "code_reviewer"]
-    coordinated_analysis:
-      apex_researcher:
-        - "Comprehensive error context and impact analysis"
-        - "Healthcare compliance implications assessment"
-        - "Research depth classification (L1-L10)"
-        - "Solution complexity evaluation"
-      
-      architect_review:
-        - "Architectural impact assessment"
-        - "Design pattern compatibility analysis"
-        - "Scalability and maintainability implications"
-        - "System integration requirements"
-      
-      code_reviewer:
-        - "Code quality impact analysis"
-        - "Performance implications assessment"
-        - "Security vulnerability considerations"
-        - "Implementation complexity evaluation"
-    coordination_pattern: "parallel_analysis"
-    expected_output: "Multi-perspective error context analysis"
+RESEARCH_WORKFLOW:
+  step_1_context_analysis:
+    action: "Understand the error context and implications"
+    tools: ["Sequential Thinking", "Serena MCP"]
+    output: "Comprehensive error context analysis"
 
-  step_2_authoritative_source_discovery:
-    coordinator: "apex_researcher"
-    specialized_research_teams:
-      team_official_documentation:
-        lead_droid: "apex_researcher"
-        tools: ["Context7 MCP", "Archon RAG"]
-        focus_areas: ["TypeScript", "React", "Supabase", "Healthcare standards"]
-        validation_threshold: "≥95% authority confidence"
+  step_2_source_discovery:
+    action: "Search authoritative documentation and best practices"
+    tools: ["Archon RAG", "Context7 MCP", "Tavily MCP"]
+    output: "Relevant documentation and solution patterns"
 
-      team_community_intelligence:
-        lead_droid: "apex_researcher"
-        tools: ["Tavily MCP", "Archon Knowledge Base"]
-        focus_areas: ["Best practices", "Common patterns", "Recent developments"]
-        validation_threshold: "≥85% community validation"
+  step_3_multi_source_validation:
+    action: "Cross-reference findings across multiple sources"
+    tools: ["apex-researcher", "Sequential Thinking"]
+    output: "Validated solution approaches with confidence levels"
 
-      team_architectural_validation:
-        lead_droid: "architect_review"
-        tools: ["Archon RAG", "Pattern analysis"]
-        focus_areas: ["Design patterns", "Architecture decisions", "Scalability"]
-        validation_threshold: "≥90% architectural soundness"
+  step_4_constitutional_review:
+    action: "Ensure compliance with project standards and healthcare regulations"
+    tools: ["Constitutional Analysis", "LGPD Validation"]
+    output: "Compliance-validated solution recommendations"
 
-      team_security_compliance:
-        lead_droid: "code_reviewer"
-        tools: ["Security databases", "Compliance frameworks"]
-        focus_areas: ["LGPD compliance", "Security best practices", "Healthcare regulations"]
-        validation_threshold: "≥100% compliance validation"
-    coordination_pattern: "hybrid_research"
-    expected_output: "Multi-validated authoritative source database"
-
-  step_3_cross_droid_solution_validation:
-    coordinator: "tdd-orchestrator"
-    validation_committee:
-      apex_researcher:
-        role: "Research methodology validation"
-        validation_criteria: ["Source authority", "Methodology soundness", "Confidence assessment"]
-      
-      architect_review:
-        role: "Architectural integrity validation"
-        validation_criteria: ["Design pattern compliance", "Scalability", "Maintainability"]
-      
-      code_reviewer:
-        role: "Implementation feasibility validation"
-        validation_criteria: ["Code quality impact", "Performance implications", "Security considerations"]
-      
-      test_auditor:
-        role: "Testing strategy validation"
-        validation_criteria: ["Test coverage requirements", "Compliance testing", "Performance validation"]
-    coordination_pattern: "sequential_validation"
-    expected_output: "Cross-validated solution recommendations"
-
-  step_4_constitutional_compliance_review:
-    coordinator: "apex_researcher"
-    compliance_validation:
-      lgpd_compliance:
-        validator: "test_auditor"
-        checks: ["Patient data protection", "Consent management", "Audit requirements"]
-        threshold: "100% compliance"
-      
-      architectural_compliance:
-        validator: "architect_review"
-        checks: ["Clean architecture principles", "Design patterns", "System boundaries"]
-        threshold: "≥90% compliance"
-      
-      quality_compliance:
-        validator: "code_reviewer"
-        checks: ["Code quality standards", "Performance targets", "Security requirements"]
-        threshold: "≥95% compliance"
-    coordination_pattern: "parallel_compliance"
-    expected_output: "Comprehensive compliance validation report"
-
-  step_5_knowledge_integration_and_documentation:
-    coordinator: "apex_researcher"
-    knowledge_management:
-      research_artifacts:
-        - "Solution methodology documentation"
-        - "Authoritative source references"
-        - "Implementation guidelines"
-        - "Risk assessment and mitigation strategies"
-      
-      integration_points:
-        - "Archon knowledge base updates"
-        - "Best practice library expansion"
-        - "Pattern repository enhancements"
-        - "Compliance guideline updates"
-    coordination_pattern: "distributed_documentation"
-    expected_output: "Persistent knowledge artifacts with cross-droid validation"
+  step_5_knowledge_integration:
+    action: "Document findings in knowledge base for future reference"
+    tools: ["Archon Knowledge Management", "Desktop Commander"]
+    output: "Persistent knowledge artifacts"
 ```
 
 ### **2.2 Apex-Researcher Agent Integration**
@@ -877,9 +671,9 @@ RESEARCH_SOURCES:
 
 ---
 
-## 🎯 PHASE 3: Orchestrated Atomic Task Decomposition
+## 🎯 PHASE 3: Atomic Task Decomposition
 
-**Objective**: Break down each quality issue into detailed, actionable atomic subtasks using TDD-Orchestrator's parallel execution engine and adaptive resource management with multi-agent coordination.
+**Objective**: Break down each quality issue into detailed, actionable atomic subtasks with clear implementation guidance and validation criteria.
 
 ### **3.1 Atomic Task Template**
 
@@ -994,132 +788,7 @@ ATOMIC_TASK_TEMPLATE:
     changelog: "Changelog entry"
 ```
 
-### **3.2 TDD-Orchestrator Parallel Task Decomposition**
-
-**Objective**: Leverage TDD-Orchestrator's parallel execution engine and adaptive resource management for intelligent atomic task distribution and coordination.
-
-```yaml
-PARALLEL_TASK_ORCHESTRATION:
-  coordination_engine:
-    primary_orchestrator: "tdd-orchestrator"
-    execution_engine: "Parallel processing with adaptive resource allocation"
-    resource_pool: "All available specialized droids"
-    optimization_algorithm: "Intelligent load balancing with dependency resolution"
-
-  task_distribution_strategy:
-    parallel_eligibility_analysis:
-      criteria:
-        - "Independent tasks with no dependencies"
-        - "Non-healthcare-compliance tasks"
-        - "Resource constraints: low"
-        - "Error complexity: medium or lower"
-      
-      parallel_task_types:
-        code_quality_fixes:
-          droid: "code_reviewer"
-          parallel_capacity: "3-5 concurrent tasks"
-          examples: ["Formatting issues", "Import optimization", "Style consistency"]
-        
-        test_improvements:
-          droid: "test_auditor"
-          parallel_capacity: "2-3 concurrent tasks"
-          examples: ["Test coverage gaps", "Missing unit tests", "Test optimization"]
-        
-        documentation_updates:
-          droid: "apex_researcher"
-          parallel_capacity: "2-4 concurrent tasks"
-          examples: ["API documentation", "Knowledge base articles", "Code comments"]
-
-    sequential_necessity_analysis:
-      criteria:
-        - "Healthcare compliance tasks (LGPD/ANVISA)"
-        - "Security-critical fixes"
-        - "Tasks with linear dependencies"
-        - "Complex architectural changes"
-      
-      sequential_task_flow:
-        phase_1_compliance:
-          required_order: ["test_auditor", "code_reviewer", "apex_dev"]
-          validation_point: "After each task completion"
-          rollback_capability: "Immediate"
-        
-        phase_2_architecture:
-          required_order: ["architect_review", "apex_dev", "test_auditor"]
-          validation_point: "After architectural validation"
-          rollback_capability: "Documented checkpoint"
-
-    hybrid_coordination_patterns:
-      mixed_dependency_resolution:
-        strategy: "Parallel execution with dependency-aware scheduling"
-        implementation: "TDD-Orchestrator analyzes DAG and creates optimal execution plan"
-        
-      resource_optimization:
-        strategy: "Dynamic resource allocation based on task complexity"
-        implementation: "Real-time droid availability monitoring and task assignment"
-        
-      quality_gate_integration:
-        strategy: "Parallel execution with sequential validation points"
-        implementation: "Tasks run in parallel but validation checkpoints are sequential"
-
-  adaptive_resource_management:
-    scaling_algorithm:
-      performance_monitoring:
-        metrics: ["Task completion rate", "Droid utilization", "Error resolution accuracy"]
-        monitoring_interval: "30 seconds"
-        adjustment_triggers: "Performance degradation > 15% or resource contention > 80%"
-      
-      dynamic_scaling:
-        scale_up_conditions:
-          - "Task queue > 5 pending tasks"
-          - "Average task completion time > 25 minutes"
-          - "Available system resources > 70%"
-        
-        scale_down_conditions:
-          - "Task queue < 2 pending tasks"
-          - "Droid utilization < 40%"
-          - "Performance targets exceeded"
-
-    conflict_resolution:
-      resource_contention:
-        detection: "Real-time monitoring of droid assignment conflicts"
-        resolution: "Priority-based reassignment with escalation"
-        escalation_threshold: "3 failed assignment attempts"
-      
-      dependency_conflicts:
-        detection: "Automated dependency graph analysis"
-        resolution: "Task reordering with parallel optimization"
-        prevention: "Pre-execution dependency validation"
-
-  cross-droid_task_coordination:
-    handoff_protocols:
-      structured_state_transfer:
-        data_package: "Task context + progress + blockers + validation_results"
-        validation: "Receiving droid confirms understanding and capability"
-        confirmation: "Bidirectional acknowledgment before task handoff"
-      
-      quality_validation_chain:
-        process: "Each droid validates their specific quality criteria"
-        handoff_condition: "All droid-specific validations pass"
-        failure_handling: "Automatic rollback to previous validation state"
-
-    collaborative_task_execution:
-      joint_task_types:
-        security_compliance:
-          participants: ["code_reviewer", "test_auditor"]
-          coordination_pattern: "Sequential validation with parallel analysis"
-          example: "LGPD compliance validation with code review and security testing"
-        
-        architectural_validation:
-          participants: ["architect_review", "code_reviewer", "apex_dev"]
-          coordination_pattern: "Architectural review first, then parallel implementation"
-          example: "Complex refactoring with architectural impact assessment"
-        
-        performance_optimization:
-          participants: ["code_reviewer", "test_auditor", "database_specialist"]
-          coordination_pattern: "Parallel analysis with coordinated implementation"
-          example: "Database query optimization with performance testing"
-
-### **3.3 Task Decomposition Strategy (Enhanced)**
+### **3.2 Task Decomposition Strategy**
 
 ```yaml
 DECOMPOSITION_PRINCIPLES:
@@ -1241,13 +910,13 @@ EXAMPLE_DECOMPOSITION:
 
 ---
 
-## ⚡ PHASE 4: Multi-Agent Parallel Systematic Execution
+## ⚡ PHASE 4: Systematic Execution
 
-**Objective**: Implement fixes systematically using coordinated multi-agent orchestration with adaptive parallel execution, real-time quality gates, and continuous healthcare compliance verification.
+**Objective**: Implement fixes systematically with continuous validation, healthcare compliance verification, and quality gates enforcement.
 
-### **4.1 Coordinated Multi-Agent Execution Workflow**
+### **4.1 Execution Workflow**
 
-**CRITICAL RULE**: Only begin implementation after completing Phases 1-3 (Detection → Research → Planning) with TDD-Orchestrator approval
+**CRITICAL RULE**: Only begin implementation after completing Phases 1-3 (Detection → Research → Planning)
 
 ```yaml
 EXECUTION_WORKFLOW:
@@ -1284,140 +953,7 @@ EXECUTION_WORKFLOW:
       - "Update documentation and knowledge base"
 ```
 
-### **4.2 Multi-Agent Parallel Execution Orchestration**
-
-**Objective**: Coordinate parallel execution of atomic tasks across specialized droids with adaptive resource management and real-time quality validation.
-
-```yaml
-PARALLEL_EXECUTION_ORCHESTRATION:
-  execution_coordination:
-    primary_orchestrator: "tdd-orchestrator"
-    execution_pattern: "Adaptive parallel with sequential validation checkpoints"
-    resource_management: "Dynamic droid allocation based on task complexity and dependencies"
-    quality_integration: "Real-time quality gates with cross-droid validation"
-
-  parallel_execution_streams:
-    stream_1_code_quality:
-      primary_droid: "code_reviewer"
-      supporting_droids: ["apex_dev"]
-      execution_mode: "Parallel task execution"
-      task_types:
-        - "TypeScript interface updates"
-        - "Code formatting fixes"
-        - "Import optimization"
-        - "Security vulnerability patches"
-      quality_gates:
-        - "OXLint validation after each task"
-        - "TypeScript compilation check"
-        - "Security scan completion"
-      
-    stream_2_testing_validation:
-      primary_droid: "test_auditor"
-      supporting_droids: ["apex_dev"]
-      execution_mode: "Sequential validation with parallel test execution"
-      task_types:
-        - "Unit test creation/updates"
-        - "Integration test validation"
-        - "Healthcare compliance testing"
-        - "Performance test execution"
-      quality_gates:
-        - "Test coverage ≥90% for critical components"
-        - "All tests passing with zero failures"
-        - "LGPD compliance validation"
-
-    stream_3_architectural_validation:
-      primary_droid: "architect_review"
-      supporting_droids: ["code_reviewer", "apex_dev"]
-      execution_mode: "Sequential architectural validation"
-      task_types:
-        - "Architecture compliance checks"
-        - "Design pattern validation"
-        - "Scalability impact assessment"
-        - "Integration compatibility verification"
-      quality_gates:
-        - "No architectural violations"
-        - "Design pattern consistency"
-        - "System integration validation"
-
-    stream_4_database_optimization:
-      primary_droid: "database_specialist"
-      supporting_droids: ["code_reviewer", "test_auditor"]
-      execution_mode: "Parallel analysis with coordinated implementation"
-      task_types:
-        - "Database query optimization"
-        - "Schema validation"
-        - "Data integrity checks"
-        - "Performance tuning"
-      quality_gates:
-        - "Query performance ≤100ms"
-        - "Data consistency validation"
-        - "Schema compliance verification"
-
-  coordination_protocols:
-    task_assignment_algorithm:
-      dependency_analysis:
-        - "Pre-execution dependency graph analysis"
-        - "Critical path identification"
-        - "Parallel opportunity detection"
-        - "Resource constraint evaluation"
-      
-      resource_optimization:
-        - "Real-time droid availability monitoring"
-        - "Task complexity estimation"
-        - "Dynamic load balancing"
-        - "Performance-based scaling"
-
-    quality_checkpoint_system:
-      validation_frequency: "After each atomic task completion"
-      validation_hierarchy:
-        level_1_individual: "Each droid validates their specific quality criteria"
-        level_2_cross_droid: "Peer validation across specialized droids"
-        level_3_orchestrator: "TDD-Orchestrator validates overall coordination"
-        level_4_integration: "Full system integration validation"
-      
-      failure_handling:
-        individual_task_failure: "Immediate rollback and droid reassignment"
-        quality_gate_failure: "Pause execution and root cause analysis"
-        coordination_failure: "TDD-Orchestrator intervention and recovery"
-        system_failure: "Emergency rollback and human escalation"
-
-    progress_monitoring:
-      real_time_metrics:
-        - "Task completion rate per droid"
-        - "Quality gate pass/fail rates"
-        - "Resource utilization efficiency"
-        - "Coordination overhead measurement"
-      
-      adaptive_adjustments:
-        - "Dynamic resource reallocation"
-        - "Execution strategy optimization"
-        - "Quality gate threshold adjustment"
-        - "Coordination protocol refinement"
-
-  healthcare_compliance_coordination:
-    compliance_validation_stream:
-      primary_validator: "test_auditor"
-      supporting_validators: ["code_reviewer", "apex_researcher"]
-      validation_types:
-        lgpd_compliance:
-          - "Patient data encryption validation"
-          - "Consent management verification"
-          - "Audit trail completeness"
-          - "Data access logging validation"
-        
-        anvisa_compliance:
-          - "Medical device data handling"
-          - "Equipment tracking validation"
-          - "Regulatory reporting verification"
-          - "Quality control procedure validation"
-      
-      coordination_requirements:
-        - "Sequential execution for compliance tasks"
-        - "Mandatory validation checkpoints"
-        - "Complete audit trail maintenance"
-        - "Immediate rollback capability"
-
-### **4.3 Implementation Commands (Multi-Agent Coordinated)**
+### **4.2 Implementation Commands (Bun-Optimized)**
 
 ```bash
 # Pre-Implementation Setup
@@ -1425,10 +961,16 @@ git checkout -b quality-control/QC-XXX-batch
 bun install                    # Ensure dependencies are current
 
 # Step 1: Identify Issues (Already completed in Phase 1)
+diagnostics                   # Run comprehensive project diagnostics
 bun quality                    # Verify current state
 bun lint                       # OXLint 50-100x faster validation
 bun type-check                 # TypeScript strict mode
 bun format:check               # Biome formatting validation
+
+# Project-Specific Diagnostics
+diagnostics --filter=error      # Show only critical errors
+diagnostics --filter=warning   # Show warnings and above
+diagnostics --filter=all       # Show all diagnostic issues
 
 # Step 2: Execute Atomic Tasks (Following Phase 3 plan)
 # For each atomic task:
@@ -1450,14 +992,17 @@ code packages/types/src/appointment.ts
 # 3. Validate step
 bun type-check                 # Verify no new errors
 bun lint                       # Verify linting passes
+diagnostics                   # Verify project diagnostics are clean
 
 # Step 3: Continuous Validation (After each task)
 bun quality                    # Re-run quality checks
+diagnostics                   # Verify project diagnostics status
 bun test                       # Run affected tests (3-5x faster)
 bun test:coverage              # Verify coverage maintained
 
 # Step 4: Final Validation (After all tasks)
 bun quality                    # Full quality check
+diagnostics                   # Final project diagnostics validation
 bun test                       # Complete test suite
 bun test:e2e                   # E2E validation
 bun type-check                 # Final type check
@@ -1500,6 +1045,19 @@ QUALITY_GATES:
     tools: ["Bundle Analyzer", "Performance Tests"]
     threshold: "No degradation in Core Web Vitals"
     command: "bun analyze:bundle && bun test:performance"
+    blocking: false
+    warning_only: true
+
+  gate_6_diagnostics_validation:
+    tools: ["Native Diagnostics", "Zed Context", "Serena MCP"]
+    threshold: "Zero diagnostic errors"
+    command: "diagnostics && zed_context_validate"
+    blocking: true
+
+  gate_7_zed_integration:
+    tools: ["Zed Context", "Real-time Validation"]
+    threshold: "Real-time diagnostics enabled"
+    command: "zed_context_check && diagnostics --filter=error"
     blocking: false
     warning_only: true
 ```
@@ -2256,114 +1814,7 @@ PERFORMANCE_METRICS:
 - **`vitest.config.ts`**: Testing (single config)
 - **`playwright.config.ts`**: E2E testing (3 browsers)
 
-## 🤖 Factory Droids Coordination Reference
-
-### **Droid Specialization Matrix**
-
-| Droid | Primary Role | Phase Focus | Key Capabilities | Coordination Pattern |
-|-------|--------------|-------------|------------------|---------------------|
-| **tdd-orchestrator** | Master coordination | All phases | Parallel execution, resource management, quality gate orchestration | Adaptive orchestration |
-| **apex-dev** | Implementation specialist | Phase 4 | Archon task management, code implementation, problem solving | Parallel task execution |
-| **code-reviewer** | Code quality expert | Phase 1, 4 | OXLint optimization, security scanning, performance analysis | Parallel analysis |
-| **test-auditor** | TDD RED phase specialist | Phase 1, 4 | Healthcare compliance testing, coverage validation, performance testing | Sequential validation |
-| **architect-review** | System architect | Phase 2, 3 | Architecture validation, design patterns, scalability analysis | Sequential validation |
-| **apex-researcher** | Research intelligence | Phase 2 | Multi-source validation, documentation analysis, solution validation | Hybrid research |
-| **database-specialist** | Database expert | Phase 1, 4 | Query optimization, schema validation, data integrity | Parallel analysis |
-
-### **When to Use Which Droid**
-
-**Multi-Agent Coordination:**
-- **tdd-orchestrator**: Master coordination for complex quality control workflows
-- **Parallel execution**: Independent code quality fixes with no dependencies
-- **Sequential execution**: Healthcare compliance and security-critical tasks
-- **Hybrid coordination**: Complex scenarios with mixed dependencies
-
-**Specialized Scenarios:**
-- **@apex-dev + @code-reviewer**: Code implementation with quality validation
-- **@test-auditor + @apex-researcher**: Compliance validation with research backing
-- **@architect-review + @code-reviewer**: Architecture validation with implementation review
-- **@database-specialist + @test-auditor**: Database optimization with performance testing
-
-### **Droid Workflow Examples**
-
-```yaml
-# Multi-Agent Quality Control Workflow
-complex_lgpd_compliance_issue:
-  phase_1_detection:
-    coordinator: "code_reviewer"
-    parallel_droids: ["test_auditor", "database_specialist"]
-    execution_pattern: "parallel_analysis"
-  
-  phase_2_research:
-    coordinator: "apex_researcher"
-    supporting_droids: ["architect_review", "code_reviewer"]
-    execution_pattern: "hybrid_research"
-  
-  phase_3_planning:
-    coordinator: "tdd-orchestrator"
-    supporting_droids: ["apex_dev", "test_auditor"]
-    execution_pattern: "adaptive_task_decomposition"
-  
-  phase_4_execution:
-    coordinator: "tdd-orchestrator"
-    parallel_streams: ["code_reviewer", "test_auditor", "database_specialist"]
-    execution_pattern: "parallel_execution_with_validation"
-
-# Simple Code Quality Fix
-formatting_and_style_issues:
-  coordinator: "code_reviewer"
-  execution_pattern: "parallel_execution"
-  parallel_tasks: 3-5 concurrent fixes
-  validation: "OXLint + Biome validation"
-
-# Healthcare Compliance Validation
-patient_data_compliance:
-  coordinator: "test_auditor"
-  execution_pattern: "sequential_execution"
-  required_order: ["test_auditor" → "code_reviewer" → "apex_dev"]
-  validation: "LGPD compliance + security validation"
-```
-
-### **Droid-Specific Tool Integration**
-
-```yaml
-tdd-orchestrator_tools:
-  primary: ["Archon MCP", "Task management", "Resource allocation"]
-  coordination: ["Parallel execution engine", "Quality gate orchestration"]
-  monitoring: ["Performance tracking", "Conflict resolution"]
-
-apex-dev_tools:
-  primary: ["Archon MCP", "Serena MCP", "Desktop Commander"]
-  implementation: ["Code editing", "Task orchestration", "Problem solving"]
-  validation: ["Type checking", "Testing", "Documentation"]
-
-code_reviewer_tools:
-  primary: ["OXLint", "Biome", "Security scanners"]
-  analysis: ["Code quality", "Performance optimization", "Healthcare compliance"]
-  validation: ["Security validation", "LGPD compliance checking"]
-
-test_auditor_tools:
-  primary: ["Vitest", "Playwright", "Performance testing"]
-  testing: ["Coverage analysis", "Compliance validation", "Performance testing"]
-  healthcare: ["LGPD testing", "Security testing", "Compliance validation"]
-
-architect_review_tools:
-  primary: ["Architecture analysis", "Scalability assessment", "Pattern validation"]
-  validation: ["Architectural integrity", "Design pattern compliance", "System integration"]
-  analysis: ["Scalability", "Maintainability", "Technical debt assessment"]
-
-apex_researcher_tools:
-  primary: ["Context7 MCP", "Tavily MCP", "Archon RAG"]
-  research: ["Multi-source validation", "Documentation analysis", "Solution validation"]
-  methodology: ["Research intelligence chain", "Knowledge integration"]
-
-database_specialist_tools:
-  primary: ["Database analysis", "Query optimization", "Schema validation"]
-  optimization: ["Performance tuning", "Query analysis", "Data integrity"]
-  validation: ["Schema compliance", "Performance validation", "Data consistency"]
-```
-
-## Legacy Agent Coordination
+## Agent Coordination
 
 ### **When to Use Which Agent**
 
@@ -2440,6 +1891,110 @@ bun test                       # Run test suite
 ```
 
 ---
+
+## 📊 PROJECT DIAGNOSTICS METRICS
+
+### **Diagnostic Success Metrics**
+
+```yaml
+DIAGNOSTIC_EFFECTIVENESS_METRICS:
+  error_resolution_rate:
+    target: "≥95% of identified issues resolved"
+    measurement: "Compare initial diagnostics with final state"
+    tool: "diagnostics --before-after"
+    
+  diagnostic_coverage:
+    target: "100% project file coverage"
+    measurement: "Percentage of files scanned for issues"
+    tool: "diagnostics --coverage-report"
+    
+  false_positive_rate:
+    target: "<5% false positives"
+    measurement: "Manual validation of reported issues"
+    tool: "diagnostics --validate"
+    
+  detection_speed:
+    target: "<30 seconds for full project scan"
+    measurement: "Time from start to diagnostic completion"
+    tool: "time diagnostics"
+```
+
+### **Zed Context Integration Metrics**
+
+```yaml
+ZED_CONTEXT_METRICS:
+  real_time_effectiveness:
+    target: "Detect issues within 2 seconds of file change"
+    measurement: "Time between file save and error detection"
+    tool: "zed_context_benchmark"
+    
+  integration_success:
+    target: "100% of Zed features working correctly"
+    measurement: "Functional testing of all Zed Context features"
+    tool: "zed_context_test_integration"
+    
+  performance_impact:
+    target: "<5% overhead on development workflow"
+    measurement: "Comparison of development speed with/without Zed Context"
+    tool: "performance_benchmark --zed-context"
+    
+  developer_satisfaction:
+    target: "≥4.5/5 developer satisfaction rating"
+    measurement: "Developer feedback surveys"
+    tool: "satisfaction_survey --zed-context"
+```
+
+### **Continuous Quality Monitoring**
+
+```yaml
+CONTINUOUS_MONITORING_WORKFLOW:
+  pre_commit_hooks:
+    - "diagnostics --filter=error"
+    - "bun quality"
+    - "bun test:coverage"
+    - "zed_context_check"
+    
+  ci_cd_pipeline:
+    - "diagnostics --full"
+    - "bun quality:ci"
+    - "bun test:ci"
+    - "zed_context_validate"
+    
+  real_time_monitoring:
+    - "zed_context_enable --watch"
+    - "diagnostics --watch"
+    - "quality_metrics_dashboard"
+    
+  periodic_reports:
+    - "diagnostics --report=daily"
+    - "quality_metrics --weekly"
+    - "zed_context_analytics --monthly"
+```
+
+### **Diagnostic Quality Gates**
+
+```yaml
+DIAGNOSTIC_QUALITY_GATES:
+  gate_1_no_critical_errors:
+    threshold: "0 critical diagnostic errors"
+    check: "diagnostics --filter=error"
+    blocking: true
+    
+  gate_2_type_safety:
+    threshold: "0 TypeScript compilation errors"
+    check: "bun type-check"
+    blocking: true
+    
+  gate_3_real_time_validation:
+    threshold: "Zed Context actively monitoring"
+    check: "zed_context_check"
+    blocking: false
+    
+  gate_4_performance_impact:
+    threshold: "<100ms diagnostic response time"
+    check: "time diagnostics --file=sample"
+    blocking: false
+```
 
 ## 🎓 LEARNING PATHWAYS
 

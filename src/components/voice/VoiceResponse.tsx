@@ -1,212 +1,191 @@
 import { AlertCircle, ArrowUpRight, CheckCircle, CreditCard, Info, TrendingUp } from 'lucide-react';
-import * as React from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import type {
+  BalanceResponseData,
+  BillsResponseData,
+  BudgetResponseData,
+  ErrorResponseData,
+  IncomingResponseData,
+  ProjectionResponseData,
+  SuccessResponseData,
+  TransferResponseData,
+  TypedVoiceResponseProps,
+  VoiceResponseType,
+} from '@/types/voice/responseTypes';
+import {
+  isBalanceResponse,
+  isBillsResponse,
+  isBudgetResponse,
+  isErrorResponse,
+  isIncomingResponse,
+  isProjectionResponse,
+  isSuccessResponse,
+  isTransferResponse,
+} from '@/types/voice/responseTypes';
 
-interface VoiceResponseProps {
-  type:
-    | 'success'
-    | 'error'
-    | 'info'
-    | 'balance'
-    | 'budget'
-    | 'bills'
-    | 'incoming'
-    | 'projection'
-    | 'transfer';
-  message: string;
-  data?: any;
-  className?: string;
-}
+// ============================================================================
+// Typed Data Renderer Components
+// ============================================================================
 
-// Memoize the formatCurrency function to prevent recreation
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(amount);
-};
+const BalanceData: React.FC<{ data: BalanceResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">Saldo: R$ {data.currentBalance.toFixed(2)}</p>
+    {data.income !== undefined && (
+      <p className="text-xs text-muted-foreground">Receitas: R$ {data.income.toFixed(2)}</p>
+    )}
+    {data.expenses !== undefined && (
+      <p className="text-xs text-muted-foreground">Despesas: R$ {data.expenses.toFixed(2)}</p>
+    )}
+    {data.accountType && <p className="text-xs text-muted-foreground">Conta: {data.accountType}</p>}
+  </div>
+);
 
-// Memoize the BalanceData component
-const BalanceData = React.memo(function BalanceData({ data }: { data: any }) {
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600 text-sm">Saldo atual:</span>
-        <span className="font-bold text-financial-positive text-lg">
-          {formatCurrency(data.currentBalance)}
-        </span>
-      </div>
-      {data.income && (
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-sm">Receitas:</span>
-          <span className="font-medium text-financial-positive text-sm">
-            +{formatCurrency(data.income)}
-          </span>
-        </div>
-      )}
-      {data.expenses && (
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-sm">Despesas:</span>
-          <span className="font-medium text-financial-negative text-sm">
-            -{formatCurrency(data.expenses)}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-});
+const BudgetData: React.FC<{ data: BudgetResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">Disponível: R$ {data.available.toFixed(2)}</p>
+    <p className="text-xs text-muted-foreground">
+      Gasto: R$ {data.spent.toFixed(2)} / R$ {data.total.toFixed(2)}
+    </p>
+    <p className="text-xs text-muted-foreground">Utilizado: {data.spentPercentage.toFixed(1)}%</p>
+    {data.category && <p className="text-xs text-muted-foreground">Categoria: {data.category}</p>}
+  </div>
+);
 
-// Memoize the BudgetData component
-const BudgetData = React.memo(function BudgetData({ data }: { data: any }) {
-  const progressBarColor = React.useMemo(() => {
-    if (data.spentPercentage > 90) return 'bg-destructive';
-    if (data.spentPercentage > 70) return 'bg-warning';
-    return 'bg-success';
-  }, [data.spentPercentage]);
-
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600 text-sm">Disponível:</span>
-        <span className="font-bold text-financial-positive text-lg">
-          {formatCurrency(data.available)}
-        </span>
-      </div>
-      <div className="h-2 w-full rounded-full bg-gray-200">
-        <div
-          className={cn('h-2 rounded-full transition-all duration-300', progressBarColor)}
-          style={{ width: `${Math.min(data.spentPercentage, 100)}%` }}
-        />
-      </div>
-      <p className="text-gray-500 text-xs">
-        {data.spentPercentage.toFixed(1)}% do orçamento utilizado
+const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">
+      {data.bills.length} {data.bills.length === 1 ? 'conta' : 'contas'} para pagar
+    </p>
+    <p className="text-xs text-muted-foreground">Total: R$ {data.totalAmount.toFixed(2)}</p>
+    {data.pastDueCount > 0 && (
+      <p className="text-xs text-destructive">
+        {data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
       </p>
-    </div>
-  );
-});
+    )}
+    {data.bills.slice(0, 3).map((bill, index) => (
+      <p key={`bill-${bill.name}-${index}`} className="text-xs text-muted-foreground">
+        {bill.name}: R$ {bill.amount.toFixed(2)}
+      </p>
+    ))}
+  </div>
+);
 
-// Memoize the BillsData component
-const BillsData = React.memo(function BillsData({ data }: { data: any }) {
-  return (
-    <div className="mt-3 space-y-2">
-      {data.bills?.slice(0, 3).map((bill: any) => (
-        <div
-          key={bill.id || bill.name}
-          className="flex items-center justify-between rounded bg-white p-2"
-        >
-          <div>
-            <p className="font-medium text-sm">{bill.name}</p>
-            <p className="text-gray-500 text-xs">
-              Vence: {new Date(bill.dueDate).toLocaleDateString('pt-BR')}
-            </p>
-          </div>
-          <span className="font-bold text-financial-negative text-sm">
-            {formatCurrency(bill.amount)}
-          </span>
-        </div>
-      ))}
-      {data.bills?.length > 3 && (
-        <p className="text-center text-gray-500 text-xs">+{data.bills.length - 3} outras contas</p>
+const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">Recebimentos: R$ {data.totalExpected.toFixed(2)}</p>
+    {data.nextIncome && (
+      <p className="text-xs text-muted-foreground">
+        Próximo: {data.nextIncome.source} - R$ {data.nextIncome.amount.toFixed(2)}
+      </p>
+    )}
+    {data.incoming.slice(0, 3).map((income, index) => (
+      <p key={`income-${income.source}-${index}`} className="text-xs text-muted-foreground">
+        {income.source}: R$ {income.amount.toFixed(2)}
+      </p>
+    ))}
+  </div>
+);
+
+const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">
+      Projeção ({data.period}): R$ {data.projectedBalance.toFixed(2)}
+    </p>
+    <p className="text-xs text-muted-foreground">
+      Saldo atual: R$ {data.currentBalance.toFixed(2)}
+    </p>
+    <p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
+      Variação: {data.variation >= 0 ? '+' : ''}R$ {data.variation.toFixed(2)}
+    </p>
+    {data.confidence && (
+      <p className="text-xs text-muted-foreground">
+        Confiança: {(data.confidence * 100).toFixed(0)}%
+      </p>
+    )}
+  </div>
+);
+
+const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="font-medium text-sm">Para: {data.recipient}</p>
+    <p className="text-xs text-muted-foreground">Valor: R$ {data.amount.toFixed(2)}</p>
+    <p className="text-xs text-muted-foreground">Método: {data.method}</p>
+    <p
+      className={cn(
+        'font-medium text-xs',
+        data.status === 'pending'
+          ? 'text-warning'
+          : data.status === 'processing'
+            ? 'text-info'
+            : data.status === 'completed'
+              ? 'text-success'
+              : 'text-destructive'
       )}
-    </div>
-  );
-});
+    >
+      Status:{' '}
+      {
+        {
+          pending: 'Pendente',
+          processing: 'Processando',
+          completed: 'Concluído',
+          failed: 'Falhou',
+        }[data.status]
+      }
+    </p>
+    {data.estimatedTime && (
+      <p className="text-xs text-muted-foreground">Tempo estimado: {data.estimatedTime}</p>
+    )}
+    {data.fees && data.fees > 0 && (
+      <p className="text-xs text-muted-foreground">Taxas: R$ {data.fees.toFixed(2)}</p>
+    )}
+  </div>
+);
 
-// Memoize the IncomingData component
-const IncomingData = React.memo(function IncomingData({ data }: { data: any }) {
-  return (
-    <div className="mt-3 space-y-2">
-      {data.incoming?.slice(0, 3).map((item: any) => (
-        <div
-          key={item.id || item.source}
-          className="flex items-center justify-between rounded bg-white p-2"
-        >
-          <div>
-            <p className="font-medium text-sm">{item.source}</p>
-            <p className="text-gray-500 text-xs">
-              Previsto: {new Date(item.expectedDate).toLocaleDateString('pt-BR')}
-            </p>
-          </div>
-          <span className="font-bold text-financial-positive text-sm">
-            +{formatCurrency(item.amount)}
-          </span>
-        </div>
-      ))}
-      {data.incoming?.length > 3 && (
-        <p className="text-center text-gray-500 text-xs">
-          +{data.incoming.length - 3} outros recebimentos
-        </p>
-      )}
-    </div>
-  );
-});
+const SuccessData: React.FC<{ data: SuccessResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="text-sm text-success">{data.message}</p>
+    {data.action && <p className="text-xs text-muted-foreground">Ação: {data.action}</p>}
+    {data.details && <p className="text-xs text-muted-foreground">{data.details}</p>}
+  </div>
+);
 
-// Memoize the ProjectionData component
-const ProjectionData = React.memo(function ProjectionData({ data }: { data: any }) {
-  const projectedBalanceColor = React.useMemo(() => {
-    return data.projectedBalance >= 0 ? 'text-financial-positive' : 'text-financial-negative';
-  }, [data.projectedBalance]);
-
-  const variationColor = React.useMemo(() => {
-    return data.variation >= 0 ? 'text-financial-positive' : 'text-financial-negative';
-  }, [data.variation]);
-
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600 text-sm">Saldo projetado:</span>
-        <span className={cn('font-bold text-lg', projectedBalanceColor)}>
-          {formatCurrency(data.projectedBalance)}
-        </span>
+const ErrorData: React.FC<{ data: ErrorResponseData }> = ({ data }) => (
+  <div className="mt-2 space-y-1">
+    <p className="text-sm text-destructive">{data.message}</p>
+    {data.code && <p className="text-xs text-muted-foreground">Código: {data.code}</p>}
+    {data.details && <p className="text-xs text-muted-foreground">{data.details}</p>}
+    {data.recoverable && <p className="text-xs text-warning">Este erro pode ser recuperado</p>}
+    {data.suggestedActions && data.suggestedActions.length > 0 && (
+      <div className="mt-1">
+        <p className="text-xs font-medium text-muted-foreground">Sugestões:</p>
+        {data.suggestedActions.map((action, index) => (
+          <p
+            key={`suggestion-${action.replace(/\s+/g, '-')}-${index}`}
+            className="text-xs text-muted-foreground ml-2"
+          >
+            • {action}
+          </p>
+        ))}
       </div>
-      {data.variation && (
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-sm">Variação:</span>
-          <span className={cn('font-medium text-sm', variationColor)}>
-            {data.variation >= 0 ? '+' : ''}
-            {formatCurrency(data.variation)}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-});
+    )}
+  </div>
+);
 
-// Memoize the TransferData component
-const TransferData = React.memo(function TransferData({ data }: { data: any }) {
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600 text-sm">Destinatário:</span>
-        <span className="font-medium text-sm">{data.recipient}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600 text-sm">Valor:</span>
-        <span className="font-bold text-info text-sm">{formatCurrency(data.amount)}</span>
-      </div>
-      {data.method && (
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-sm">Método:</span>
-          <span className="font-medium text-sm">{data.method}</span>
-        </div>
-      )}
-      {data.estimatedTime && (
-        <p className="mt-2 text-center text-gray-500 text-xs">
-          Tempo estimado: {data.estimatedTime}
-        </p>
-      )}
-    </div>
-  );
-});
+// ============================================================================
+// Main VoiceResponse Component
+// ============================================================================
 
 export const VoiceResponse = React.memo(function VoiceResponse({
   type,
   message,
   data,
   className,
-}: VoiceResponseProps) {
-  // Memoize the icon to prevent recalculation
+  timestamp,
+  accessibility,
+}: TypedVoiceResponseProps) {
+  // Memoize icon to prevent recalculation
   const icon = React.useMemo(() => {
     switch (type) {
       case 'success':
@@ -225,12 +204,14 @@ export const VoiceResponse = React.memo(function VoiceResponse({
         return <TrendingUp className="h-6 w-6 text-accent" />;
       case 'transfer':
         return <ArrowUpRight className="h-6 w-6 text-info" />;
-      default:
+      default: {
+        const _exhaustiveCheck: never = type;
         return <Info className="h-6 w-6 text-info" />;
+      }
     }
   }, [type]);
 
-  // Memoize the card color to prevent recalculation
+  // Memoize card color to prevent recalculation
   const cardColor = React.useMemo(() => {
     switch (type) {
       case 'success':
@@ -249,44 +230,124 @@ export const VoiceResponse = React.memo(function VoiceResponse({
         return 'border-accent bg-accent/10';
       case 'transfer':
         return 'border-info/20 bg-info/10';
-      default:
+      default: {
+        const _exhaustiveCheck: never = type;
         return 'border-gray-200 bg-gray-50';
+      }
     }
   }, [type]);
 
-  // Memoize the render data function
+  // Type-safe data rendering with validation
   const renderData = React.useMemo(() => {
     if (!data) return null;
 
-    switch (type) {
-      case 'balance':
-        return <BalanceData data={data} />;
-      case 'budget':
-        return <BudgetData data={data} />;
-      case 'bills':
-        return <BillsData data={data} />;
-      case 'incoming':
-        return <IncomingData data={data} />;
-      case 'projection':
-        return <ProjectionData data={data} />;
-      case 'transfer':
-        return <TransferData data={data} />;
-      default:
-        return null;
+    // Use type guards for safe rendering
+    if (type === 'balance' && isBalanceResponse(data)) {
+      return <BalanceData data={data} />;
     }
+    if (type === 'budget' && isBudgetResponse(data)) {
+      return <BudgetData data={data} />;
+    }
+    if (type === 'bills' && isBillsResponse(data)) {
+      return <BillsData data={data} />;
+    }
+    if (type === 'incoming' && isIncomingResponse(data)) {
+      return <IncomingData data={data} />;
+    }
+    if (type === 'projection' && isProjectionResponse(data)) {
+      return <ProjectionData data={data} />;
+    }
+    if (type === 'transfer' && isTransferResponse(data)) {
+      return <TransferData data={data} />;
+    }
+    if (type === 'success' && isSuccessResponse(data)) {
+      return <SuccessData data={data} />;
+    }
+    if (type === 'error' && isErrorResponse(data)) {
+      return <ErrorData data={data} />;
+    }
+
+    // Type-safe fallback - this should never happen with proper typing
+    console.warn('Invalid data type for VoiceResponse:', { type, data });
+    return null;
   }, [type, data]);
 
+  // Generate accessibility properties
+  const accessibilityProps = React.useMemo(() => {
+    const props: Record<string, any> = {};
+
+    if (accessibility) {
+      if (accessibility['aria-live']) {
+        props['aria-live'] = accessibility['aria-live'];
+      }
+      if (accessibility['aria-atomic']) {
+        props['aria-atomic'] = accessibility['aria-atomic'];
+      }
+      if (accessibility.role) {
+        props.role = accessibility.role;
+      }
+    }
+
+    // Default accessibility based on type
+    if (!props.role) {
+      switch (type) {
+        case 'error':
+        case 'success':
+          props.role = 'alert';
+          break;
+        case 'transfer':
+          props.role = 'status';
+          break;
+        default:
+          props.role = 'status';
+      }
+    }
+
+    if (!props['aria-live']) {
+      props['aria-live'] = type === 'error' ? 'assertive' : 'polite';
+    }
+
+    return props;
+  }, [accessibility, type]);
+
   return (
-    <Card className={cn('border-2 transition-all duration-300', cardColor, className)}>
+    <Card
+      className={cn('border-2 transition-all duration-300', cardColor, className)}
+      {...accessibilityProps}
+    >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {icon}
           <div className="flex-1">
             <p className="font-medium text-gray-800 text-sm">{message}</p>
             {renderData}
+            {timestamp && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {new Date(timestamp).toLocaleString('pt-BR')}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
     </Card>
   );
 });
+
+VoiceResponse.displayName = 'VoiceResponse';
+
+// ============================================================================
+// Component Type Exports
+// ============================================================================
+
+export type {
+  TypedVoiceResponseProps,
+  VoiceResponseType,
+  BalanceResponseData,
+  BudgetResponseData,
+  BillsResponseData,
+  IncomingResponseData,
+  ProjectionResponseData,
+  TransferResponseData,
+  SuccessResponseData,
+  ErrorResponseData,
+};

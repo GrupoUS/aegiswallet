@@ -149,7 +149,7 @@ export function useTransactionStats(period: 'week' | 'month' | 'quarter' | 'year
  * Hook para transações por categoria
  */
 export function useTransactionsByCategory(
-  period: 'week' | 'month' | 'quarter' | 'year',
+  _period: 'week' | 'month' | 'quarter' | 'year',
   categoryId?: string
 ) {
   const {

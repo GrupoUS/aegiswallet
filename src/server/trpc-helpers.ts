@@ -2,7 +2,10 @@ import { initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from '@/server/context';
 
-export type Meta = {};
+export type Meta = {
+  /** Additional metadata for tRPC procedures */
+  [key: string]: any;
+};
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,

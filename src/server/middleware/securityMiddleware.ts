@@ -1,63 +1,67 @@
-import { middleware } from './trpc';
+/**
+ * Security Middleware for tRPC procedures
+ * Provides comprehensive security measures including rate limiting, authentication, and input validation
+ */
+
 import { TRPCError } from '@trpc/server';
+import { logger } from '@/lib/logging';
+import type { Context } from '../context';
 import {
   authRateLimit,
-  voiceCommandRateLimit,
-  transactionRateLimit,
   dataExportRateLimit,
   generalApiRateLimit,
+  transactionRateLimit,
+  voiceCommandRateLimit,
 } from './rateLimitMiddleware';
-import { logger } from '@/lib/logging';
 
-// Security middleware factory
-export const createSecurityMiddleware = (
-  options: {
-    enableRateLimit?: boolean;
-    enableAuthValidation?: boolean;
-    enableInputValidation?: boolean;
-    enableAuditLogging?: boolean;
-  } = {}
-) => {
-  const {
-    enableRateLimit = true,
-    enableAuthValidation = true,
-    enableInputValidation = true,
-    enableAuditLogging = true,
-  } = options;
+// Security middleware options
+export interface SecurityMiddlewareOptions {
+  enableRateLimit?: boolean;
+  enableAuthValidation?: boolean;
+  enableInputValidation?: boolean;
+  enableAuditLogging?: boolean;
+}
 
-  return middleware(async ({ ctx, next, type }) => {
+// Default security options
+const DEFAULT_SECURITY_OPTIONS: Required<SecurityMiddlewareOptions> = {
+  enableRateLimit: true,
+  enableAuthValidation: true,
+  enableInputValidation: true,
+  enableAuditLogging: true,
+};
+
+/**
+ * Create security middleware with configurable options
+ */
+export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}) => {
+  const opts = { ...DEFAULT_SECURITY_OPTIONS, ...options };
+
+  return async ({ ctx, next, type }: { ctx: Context; next: any; type?: string }) => {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
+    const procedureType = type || 'unknown';
 
     try {
       // Log request start
-      if (enableAuditLogging) {
+      if (opts.enableAuditLogging) {
         logger.info('Request started', {
           requestId,
-          type,
-          path: ctx.req?.url,
-          method: ctx.req?.method,
-          userAgent: ctx.req?.headers['user-agent'],
-          ip: ctx.req?.headers['x-forwarded-for'] || ctx.req?.socket?.remoteAddress,
+          type: procedureType,
           userId: ctx.user?.id,
         });
       }
 
-      // Apply security measures based on procedure type
-      await applySecurityMeasures(ctx, type, {
-        enableRateLimit,
-        enableAuthValidation,
-        enableInputValidation,
-      });
+      // Apply security measures
+      await applySecurityMeasures(ctx, procedureType, opts);
 
       // Execute the procedure
       const result = await next();
 
       // Log successful completion
-      if (enableAuditLogging) {
+      if (opts.enableAuditLogging) {
         logger.info('Request completed', {
           requestId,
-          type,
+          type: procedureType,
           duration: Date.now() - startTime,
           userId: ctx.user?.id,
           success: true,
@@ -67,10 +71,10 @@ export const createSecurityMiddleware = (
       return result;
     } catch (error) {
       // Log error
-      if (enableAuditLogging) {
+      if (opts.enableAuditLogging) {
         logger.error('Request failed', {
           requestId,
-          type,
+          type: procedureType,
           duration: Date.now() - startTime,
           userId: ctx.user?.id,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -85,19 +89,17 @@ export const createSecurityMiddleware = (
 
       throw error;
     }
-  });
+  };
 };
 
-// Apply appropriate security measures based on procedure type
+/**
+ * Apply appropriate security measures based on procedure type
+ */
 const applySecurityMeasures = async (
-  ctx: any,
+  ctx: Context,
   type: string,
-  options: {
-    enableRateLimit: boolean;
-    enableAuthValidation: boolean;
-    enableInputValidation: boolean;
-  }
-) => {
+  options: Required<SecurityMiddlewareOptions>
+): Promise<void> => {
   const { enableRateLimit, enableAuthValidation, enableInputValidation } = options;
 
   // Rate limiting
@@ -116,8 +118,10 @@ const applySecurityMeasures = async (
   }
 };
 
-// Apply rate limiting based on procedure type
-const applyRateLimiting = async (ctx: any, type: string) => {
+/**
+ * Apply rate limiting based on procedure type
+ */
+const applyRateLimiting = async (ctx: Context, type: string): Promise<void> => {
   // Map procedure types to rate limiters
   const rateLimitMap: Record<string, any> = {
     'auth.login': authRateLimit,
@@ -141,8 +145,10 @@ const applyRateLimiting = async (ctx: any, type: string) => {
   }
 };
 
-// Validate authentication requirements
-const validateAuthentication = async (ctx: any, type: string) => {
+/**
+ * Validate authentication requirements
+ */
+const validateAuthentication = async (ctx: Context, type: string): Promise<void> => {
   // Procedures that don't require authentication
   const publicProcedures = [
     'auth.login',
@@ -168,7 +174,7 @@ const validateAuthentication = async (ctx: any, type: string) => {
     'data.exportAll', // Only admins can export all data
   ];
 
-  if (adminProcedures.includes(type) && ctx.user?.role !== 'admin') {
+  if (adminProcedures.includes(type) && ctx.user?.user_metadata?.role !== 'admin') {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required for this operation',
@@ -176,9 +182,11 @@ const validateAuthentication = async (ctx: any, type: string) => {
   }
 };
 
-// Validate input for security
-const validateInput = async (ctx: any, type: string) => {
-  const input = ctx.input;
+/**
+ * Validate input for security
+ */
+const validateInput = async (ctx: Context, type: string): Promise<void> => {
+  const input = (ctx as any).input;
 
   if (!input) return;
 
@@ -229,8 +237,10 @@ const validateInput = async (ctx: any, type: string) => {
   await validateSpecificInput(ctx, type, input);
 };
 
-// Validate input for specific procedure types
-const validateSpecificInput = async (ctx: any, type: string, input: any) => {
+/**
+ * Validate input for specific procedure types
+ */
+const validateSpecificInput = async (ctx: Context, type: string, input: any): Promise<void> => {
   switch (type) {
     case 'auth.login':
       await validateLoginInput(ctx, input);
@@ -247,7 +257,7 @@ const validateSpecificInput = async (ctx: any, type: string, input: any) => {
   }
 };
 
-const validateLoginInput = async (ctx: any, input: any) => {
+const validateLoginInput = async (_ctx: Context, input: any): Promise<void> => {
   if (!input.email || !input.password) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -273,7 +283,7 @@ const validateLoginInput = async (ctx: any, input: any) => {
   }
 };
 
-const validateRegisterInput = async (ctx: any, input: any) => {
+const validateRegisterInput = async (ctx: Context, input: any): Promise<void> => {
   await validateLoginInput(ctx, input);
 
   if (!input.fullName || input.fullName.trim().length < 2) {
@@ -292,7 +302,7 @@ const validateRegisterInput = async (ctx: any, input: any) => {
   }
 };
 
-const validateTransactionInput = async (ctx: any, input: any) => {
+const validateTransactionInput = async (_ctx: Context, input: any): Promise<void> => {
   if (!input.amount || input.amount <= 0) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -318,7 +328,6 @@ const validateTransactionInput = async (ctx: any, input: any) => {
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(input.description)) {
       logger.warn('Suspicious transaction description detected', {
-        userId: ctx.user?.id,
         description: input.description,
         amount: input.amount,
       });
@@ -326,7 +335,7 @@ const validateTransactionInput = async (ctx: any, input: any) => {
   }
 };
 
-const validateVoiceCommandInput = async (ctx: any, input: any) => {
+const validateVoiceCommandInput = async (_ctx: Context, input: any): Promise<void> => {
   if (!input.command && !input.audioData) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -352,7 +361,9 @@ const validateVoiceCommandInput = async (ctx: any, input: any) => {
   }
 };
 
-// Helper function to validate CPF
+/**
+ * Helper function to validate CPF
+ */
 const validateCPF = (cpf: string): boolean => {
   const cleaned = cpf.replace(/[^\d]/g, '');
 
@@ -362,25 +373,27 @@ const validateCPF = (cpf: string): boolean => {
 
   let sum = 0;
   for (let i = 1; i <= 9; i++) {
-    sum += parseInt(cleaned.substring(i - 1, i)) * (11 - i);
+    sum += parseInt(cleaned.substring(i - 1, i), 10) * (11 - i);
   }
 
   let remainder = (sum * 10) % 11;
   if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cleaned.substring(9, 10))) return false;
+  if (remainder !== parseInt(cleaned.substring(9, 10), 10)) return false;
 
   sum = 0;
   for (let i = 1; i <= 10; i++) {
-    sum += parseInt(cleaned.substring(i - 1, i)) * (12 - i);
+    sum += parseInt(cleaned.substring(i - 1, i), 10) * (12 - i);
   }
 
   remainder = (sum * 10) % 11;
   if (remainder === 10 || remainder === 11) remainder = 0;
 
-  return remainder === parseInt(cleaned.substring(10, 11));
+  return remainder === parseInt(cleaned.substring(10, 11), 10);
 };
 
-// Check if error is security-related
+/**
+ * Check if error is security-related
+ */
 const isSecurityError = (error: any): boolean => {
   if (error instanceof TRPCError) {
     return ['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'].includes(error.code);
@@ -388,9 +401,14 @@ const isSecurityError = (error: any): boolean => {
   return false;
 };
 
-// Log security events
-const logSecurityEvent = async (ctx: any, error: any, requestId: string) => {
+/**
+ * Log security events
+ */
+const logSecurityEvent = async (ctx: Context, error: any, requestId: string): Promise<void> => {
   try {
+    const { createServerClient } = await import('@/integrations/supabase/factory');
+    const supabase = createServerClient();
+
     await supabase.from('audit_logs').insert({
       user_id: ctx.user?.id,
       action: 'security_violation',
@@ -399,24 +417,27 @@ const logSecurityEvent = async (ctx: any, error: any, requestId: string) => {
         requestId,
         error_code: error.code,
         error_message: error.message,
-        path: ctx.req?.url,
-        method: ctx.req?.method,
-        ip: ctx.req?.headers['x-forwarded-for'] || ctx.req?.socket?.remoteAddress,
-        userAgent: ctx.req?.headers['user-agent'],
         timestamp: new Date().toISOString(),
       },
       success: false,
     });
   } catch (logError) {
-    logger.error('Failed to log security event:', logError);
+    logger.error('Failed to log security event', { error: logError });
   }
 };
 
-// Export middleware instances
+// Export pre-configured middleware instances
 export const securityMiddleware = createSecurityMiddleware();
 export const strictSecurityMiddleware = createSecurityMiddleware({
   enableRateLimit: true,
   enableAuthValidation: true,
   enableInputValidation: true,
   enableAuditLogging: true,
+});
+
+export const relaxedSecurityMiddleware = createSecurityMiddleware({
+  enableRateLimit: false,
+  enableAuthValidation: true,
+  enableInputValidation: true,
+  enableAuditLogging: false,
 });

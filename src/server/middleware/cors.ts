@@ -12,6 +12,6 @@ import { corsConfig } from '@/server/config/environment';
 export const corsMiddleware = cors({
   origin: corsConfig.origins,
   credentials: corsConfig.credentials,
-  allowMethods: corsConfig.allowMethods,
-  allowHeaders: corsConfig.allowHeaders,
+  allowMethods: [...corsConfig.allowMethods],
+  allowHeaders: [...corsConfig.allowHeaders],
 });

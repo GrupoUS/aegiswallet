@@ -7,40 +7,37 @@ import {
   isSameMonth,
   startOfMonth,
   startOfWeek,
-} from "date-fns";
-import { useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { EnhancedEventCard } from "./enhanced-event-card";
-import type { CalendarEvent } from "./types";
+} from 'date-fns';
+import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import { EnhancedEventCard } from './enhanced-event-card';
+import type { CalendarEvent } from './types';
 
 interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   onEventEdit?: (event: CalendarEvent) => void;
   onEventClick?: (event: CalendarEvent) => void;
-  onEventUpdate?: (event: CalendarEvent) => void;
 }
 
-export function MonthView({
-  currentDate,
-  events,
-  onEventEdit,
-  onEventClick,
-}: MonthViewProps) {
+export function MonthView({ currentDate, events, onEventEdit, onEventClick }: MonthViewProps) {
   const monthDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
     const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
-    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+    return eachDayOfInterval({
+      start: calendarStart,
+      end: calendarEnd,
+    });
   }, [currentDate]);
+
+  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   const getEventsForDay = (day: Date) => {
     return events.filter((event) => isSameDay(new Date(event.start), day));
   };
-
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
     <div className="flex-1 bg-background">
@@ -58,7 +55,7 @@ export function MonthView({
 
       {/* Calendar days grid */}
       <div className="grid flex-1 grid-cols-7">
-        {monthDays.map((day) => {
+        {monthDays.map((day, dayIndex) => {
           const dayEvents = getEventsForDay(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isToday = isSameDay(day, new Date());
@@ -67,22 +64,22 @@ export function MonthView({
             <div
               key={day.toISOString()}
               className={cn(
-                "min-h-[100px] overflow-hidden border border-r border-b p-1",
-                !isCurrentMonth && "bg-muted/30",
-                isToday && "bg-primary/5",
-                dayIndex % 7 === 6 && "border-r-0",
-                dayIndex >= monthDays.length - 7 && "border-b-0",
+                'min-h-[100px] overflow-hidden border border-r border-b p-1',
+                !isCurrentMonth && 'bg-muted/30',
+                isToday && 'bg-primary/5',
+                dayIndex % 7 === 6 && 'border-r-0',
+                dayIndex >= monthDays.length - 7 && 'border-b-0'
               )}
             >
               {/* Day number */}
               <div
                 className={cn(
-                  "mb-1 px-1 font-medium text-sm",
-                  !isCurrentMonth && "text-muted-foreground",
-                  isToday && "font-bold text-primary",
+                  'mb-1 px-1 font-medium text-sm',
+                  !isCurrentMonth && 'text-muted-foreground',
+                  isToday && 'font-bold text-primary'
                 )}
               >
-                {format(day, "d")}
+                {format(day, 'd')}
               </div>
 
               {/* Events for this day */}
@@ -92,14 +89,13 @@ export function MonthView({
                     key={event.id}
                     event={event}
                     variant="compact"
-                    onClick={() => onEventClick?.(event)}
-                    onEdit={() => onEventEdit?.(event)}
-                    className="px-1 py-0.5 text-xs"
+                    onEdit={onEventEdit}
+                    onClick={onEventClick}
                   />
                 ))}
                 {dayEvents.length > 3 && (
-                  <div className="px-1 py-0.5 text-muted-foreground text-xs">
-                    +{dayEvents.length - 3} mais
+                  <div className="text-xs text-muted-foreground px-1">
+                    +{dayEvents.length - 3} more
                   </div>
                 )}
               </div>

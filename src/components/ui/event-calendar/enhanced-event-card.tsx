@@ -1,29 +1,22 @@
-import { differenceInMinutes, format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import {
-  Clock,
-  Edit2,
-  MapPin,
-  MoreHorizontal,
-  Trash2,
-  Users,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { differenceInMinutes, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Clock, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import type { CalendarEvent, EventColor } from "./types";
-import { EVENT_COLOR_STYLES } from "./types";
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import type { CalendarEvent, EventColor } from './types';
+import { EVENT_COLOR_STYLES } from './types';
 
 interface EnhancedEventCardProps {
   event: CalendarEvent;
-  variant?: "compact" | "detailed" | "draggable";
+  variant?: 'compact' | 'detailed' | 'draggable';
   position?: { top: number; left: string; height: number; width: string };
   onClick?: (event: CalendarEvent) => void;
   onEdit?: (event: CalendarEvent) => void;
@@ -33,7 +26,7 @@ interface EnhancedEventCardProps {
 
 export function EnhancedEventCard({
   event,
-  variant = "draggable",
+  variant = 'draggable',
   position,
   onClick,
   onEdit,
@@ -45,7 +38,7 @@ export function EnhancedEventCard({
   const duration = differenceInMinutes(eventEnd, eventStart);
   const isAllDay = event.allDay || duration >= 24 * 60;
 
-  const eventColor = (event.color ?? "blue") as EventColor;
+  const eventColor = (event.color ?? 'blue') as EventColor;
   const colorTokens = EVENT_COLOR_STYLES[eventColor] ?? EVENT_COLOR_STYLES.blue;
   const colorClasses = {
     bg: colorTokens.subtleBg,
@@ -68,12 +61,12 @@ export function EnhancedEventCard({
   };
 
   // Compact variant for month view
-  if (variant === "compact") {
+  if (variant === 'compact') {
     return (
       <div
         onClick={handleClick}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleClick();
           }
@@ -82,11 +75,11 @@ export function EnhancedEventCard({
         tabIndex={0}
         aria-label={`Ver evento: ${event.title}`}
         className={cn(
-          "cursor-pointer truncate rounded px-1 py-0.5 font-medium text-xs",
+          'cursor-pointer truncate rounded px-1 py-0.5 font-medium text-xs',
           colorClasses.bg,
           colorClasses.text,
-          "transition-opacity hover:opacity-80",
-          className,
+          'transition-opacity hover:opacity-80',
+          className
         )}
       >
         <span className="truncate">{event.title}</span>
@@ -95,12 +88,12 @@ export function EnhancedEventCard({
   }
 
   // Detailed variant for day view
-  if (variant === "detailed") {
+  if (variant === 'detailed') {
     return (
       <div
         onClick={handleClick}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleClick();
           }
@@ -109,22 +102,18 @@ export function EnhancedEventCard({
         tabIndex={0}
         aria-label={`Ver evento: ${event.title}`}
         className={cn(
-          "cursor-pointer space-y-2 rounded-lg border p-3 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+          'cursor-pointer space-y-2 rounded-lg border p-3 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500',
           colorClasses.bg,
           colorClasses.border,
-          className,
+          className
         )}
       >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <h4 className={cn("truncate font-semibold", colorClasses.text)}>
-              {event.title}
-            </h4>
+            <h4 className={cn('truncate font-semibold', colorClasses.text)}>{event.title}</h4>
             {event.description && (
-              <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
-                {event.description}
-              </p>
+              <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">{event.description}</p>
             )}
           </div>
 
@@ -142,10 +131,7 @@ export function EnhancedEventCard({
               {onDelete && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className="text-destructive"
-                  >
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                     <Trash2 className="mr-2 h-4 w-4" />
                     Excluir
                   </DropdownMenuItem>
@@ -160,12 +146,12 @@ export function EnhancedEventCard({
           <div className="flex items-center text-muted-foreground text-sm">
             <Clock className="mr-1 h-3 w-3" />
             {isAllDay ? (
-              "Dia inteiro"
+              'Dia inteiro'
             ) : (
               <>
-                {format(eventStart, "HH:mm", { locale: ptBR })}
-                {" - "}
-                {format(eventEnd, "HH:mm", { locale: ptBR })}
+                {format(eventStart, 'HH:mm', { locale: ptBR })}
+                {' - '}
+                {format(eventEnd, 'HH:mm', { locale: ptBR })}
               </>
             )}
           </div>
@@ -181,7 +167,7 @@ export function EnhancedEventCard({
             <div className="flex items-center text-muted-foreground text-sm">
               <Users className="mr-1 h-3 w-3" />
               {event.attendees.length} participante
-              {event.attendees.length !== 1 ? "s" : ""}
+              {event.attendees.length !== 1 ? 's' : ''}
             </div>
           )}
         </div>
@@ -196,14 +182,10 @@ export function EnhancedEventCard({
 
           {event.priority && (
             <Badge
-              variant={event.priority === "high" ? "destructive" : "outline"}
+              variant={event.priority === 'high' ? 'destructive' : 'outline'}
               className="text-xs"
             >
-              {event.priority === "high"
-                ? "Alta"
-                : event.priority === "medium"
-                  ? "Média"
-                  : "Baixa"}
+              {event.priority === 'high' ? 'Alta' : event.priority === 'medium' ? 'Média' : 'Baixa'}
             </Badge>
           )}
 
@@ -222,7 +204,7 @@ export function EnhancedEventCard({
     <div
       onClick={handleClick}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleClick();
         }
@@ -231,28 +213,22 @@ export function EnhancedEventCard({
       tabIndex={0}
       aria-label={`Ver evento: ${event.title}`}
       className={cn(
-        "cursor-pointer space-y-1 rounded border p-2 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+        'cursor-pointer space-y-1 rounded border p-2 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500',
         colorClasses.bg,
         colorClasses.border,
-        className,
+        className
       )}
       style={position}
     >
-      <h4 className={cn("truncate font-semibold text-sm", colorClasses.text)}>
-        {event.title}
-      </h4>
+      <h4 className={cn('truncate font-semibold text-sm', colorClasses.text)}>{event.title}</h4>
 
       <div className="flex items-center text-muted-foreground text-xs">
         <Clock className="mr-1 h-3 w-3" />
-        {isAllDay
-          ? "Dia inteiro"
-          : format(eventStart, "HH:mm", { locale: ptBR })}
+        {isAllDay ? 'Dia inteiro' : format(eventStart, 'HH:mm', { locale: ptBR })}
       </div>
 
       {event.description && (
-        <p className="line-clamp-2 text-muted-foreground text-xs">
-          {event.description}
-        </p>
+        <p className="line-clamp-2 text-muted-foreground text-xs">{event.description}</p>
       )}
     </div>
   );

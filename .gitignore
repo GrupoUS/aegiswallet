@@ -68,7 +68,7 @@ archon/
 serena/
 .serena/
 .code/
-.bmad-core/
+.bmad/
 .mcp/
 .mcp.auggie.json
 

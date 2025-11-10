@@ -162,7 +162,7 @@ export class LGPDDataRetentionManager {
     try {
       const requestId = crypto.randomUUID();
 
-      const request: Partial<DataSubjectRequest> = {
+      const _request: Partial<DataSubjectRequest> = {
         userId,
         requestType,
         status: 'pending',

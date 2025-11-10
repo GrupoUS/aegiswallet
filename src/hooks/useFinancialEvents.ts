@@ -128,7 +128,7 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, supabase]);
+  }, [startDate, endDate]);
 
   useEffect(() => {
     fetchEvents();

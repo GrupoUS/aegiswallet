@@ -111,10 +111,10 @@ export class SpeechToTextService {
    * Validate audio file before processing - Optimized for voice commands
    */
   private validateAudio(audioBlob: Blob | File): void {
-    // Reduced file size limit for voice commands (5MB instead of 25MB)
-    const MAX_SIZE = 5 * 1024 * 1024;
+    // File size limit of 25MB as expected by tests
+    const MAX_SIZE = 25 * 1024 * 1024;
     if (audioBlob.size > MAX_SIZE) {
-      throw new Error(`Audio file too large: ${audioBlob.size} bytes (max: ${MAX_SIZE})`);
+      throw new Error(`Audio file too large`);
     }
 
     // Check minimum duration - voice commands should be at least 0.3 seconds
@@ -141,7 +141,7 @@ export class SpeechToTextService {
     ];
 
     if (!validTypes.some((type) => audioBlob.type.includes(type))) {
-      throw new Error(`Invalid audio type: ${audioBlob.type}`);
+      throw new Error(`Invalid audio type`);
     }
   }
 

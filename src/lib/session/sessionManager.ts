@@ -81,6 +81,12 @@ export class SessionManager {
     };
   }
 
+  private calculateTimeRemaining(lastActivity: Date): number {
+    const now = new Date();
+    const elapsed = now.getTime() - lastActivity.getTime();
+    return Math.max(0, this.config.timeoutMinutes * 60 * 1000 - elapsed);
+  }
+
   private initialize(): void {
     logger.info('Initializing session manager', {
       timeout: this.config.timeoutMinutes,
@@ -309,12 +315,12 @@ export class SessionManager {
     const countdown = modal.querySelector('#session-countdown') as HTMLSpanElement;
 
     extendBtn?.addEventListener('click', () => {
-      this.extendSession();
+      this.extendSessionPublic();
       modal.remove();
     });
 
     logoutBtn?.addEventListener('click', () => {
-      this.logout();
+      this.logoutPublic();
       modal.remove();
     });
 
@@ -328,7 +334,7 @@ export class SessionManager {
     }, 1000);
   }
 
-  private extendSession(): void {
+  private extendSessionPrivate(): void {
     this.onActivity();
     this.logSessionEvent('session_extended');
 
@@ -356,7 +362,7 @@ export class SessionManager {
     }, 2000);
   }
 
-  private async logout(): Promise<void> {
+  private async logoutPrivate(): Promise<void> {
     try {
       await supabase.auth.signOut();
       await this.logSessionEvent('session_logout');
@@ -484,11 +490,19 @@ export class SessionManager {
   }
 
   public extendSession(): void {
-    this.extendSession();
+    this.extendSessionPrivate();
   }
 
-  public logout(): void {
-    this.logout();
+  public async logout(): Promise<void> {
+    await this.logoutPrivate();
+  }
+
+  public extendSessionPublic(): void {
+    this.extendSessionPrivate();
+  }
+
+  public async logoutPublic(): Promise<void> {
+    await this.logoutPrivate();
   }
 
   public updateConfig(newConfig: Partial<SessionConfig>): void {

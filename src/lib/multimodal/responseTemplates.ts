@@ -19,7 +19,7 @@ import {
   formatPercentage,
   pluralize,
 } from '@/lib/formatters/brazilianFormatters';
-import { IntentType } from '@/lib/nlu/types';
+import type { IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Types
@@ -32,9 +32,9 @@ export interface MultimodalResponse {
     type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'info';
     data: any;
   };
-  accessibility: {
-    ariaLabel: string;
-    screenReaderText: string;
+  accessibility?: {
+    'aria-label': string;
+    'aria-live'?: 'polite' | 'assertive' | 'off';
     role?: string;
   };
   ssmlOptions?: {
@@ -71,7 +71,11 @@ export function buildBalanceResponse(data: {
       visual: {
         type: 'balance',
         data: { balance: 0, income: 0, expenses: 0 },
-        accessibility: 'Screen reader support available',
+      },
+      accessibility: {
+        'aria-label': 'Saldo indisponível',
+        'aria-live': 'polite' as const,
+        role: 'status',
       },
     };
   }
@@ -106,8 +110,8 @@ export function buildBalanceResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Saldo atual: ${formatCurrency(currentBalance)}`,
-    screenReaderText: voice,
+    'aria-label': `Saldo atual: ${formatCurrency(currentBalance)}`,
+    'aria-live': 'polite' as const,
     role: 'status',
   };
 
@@ -135,37 +139,41 @@ export function buildBudgetResponse(data: {
 }): MultimodalResponse {
   const { available, total, spent, spentPercentage, category } = data;
 
-  // Voice output
+  // Voice output - handle invalid types safely
   const safeSpentPercentage =
     typeof spentPercentage === 'number' && !Number.isNaN(spentPercentage) ? spentPercentage : 0;
+  const safeAvailable = typeof available === 'number' && !Number.isNaN(available) ? available : 0;
+  const safeTotal = typeof total === 'number' && !Number.isNaN(total) ? total : 0;
+  const safeSpent = typeof spent === 'number' && !Number.isNaN(spent) ? spent : 0;
+
   const categoryText = category ? `do orçamento de ${category}` : 'do seu orçamento';
   const voice = [
-    `Você ainda pode gastar ${formatCurrencyForVoice(available)} ${categoryText}`,
+    `Você ainda pode gastar ${formatCurrencyForVoice(safeAvailable)} ${categoryText}`,
     `Você já utilizou ${formatPercentage(safeSpentPercentage)} do limite`,
   ].join('. ');
 
   // Text output
   const percentageText =
     category && safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : '';
-  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(available)} disponíveis${percentageText}`;
+  const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(safeAvailable)} disponíveis${percentageText}`;
 
-  // Visual data
+  // Visual data - ensure safe values for display
   const visual = {
     type: 'budget' as const,
     data: {
-      available,
-      total,
-      spent,
-      spentPercentage,
+      available: safeAvailable,
+      total: safeTotal,
+      spent: safeSpent,
+      spentPercentage: safeSpentPercentage,
       category,
     },
   };
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Orçamento disponível: ${formatCurrency(available)}`,
-    screenReaderText: voice,
-    role: 'status',
+    'aria-label': `Orçamento disponível: ${formatCurrency(available)}`,
+    'aria-live': 'polite' as const,
+    role: 'status' as const,
   };
 
   return {
@@ -201,7 +209,10 @@ export function buildBillsResponse(data: {
       visual: {
         type: 'bills',
         data: { bills: [], totalAmount: 0, pastDueCount: 0 },
-        accessibility: 'Screen reader available',
+      },
+      accessibility: {
+        'aria-label': 'Valores das contas indisponíveis',
+        'aria-live': 'polite',
       },
     };
   }
@@ -231,9 +242,9 @@ export function buildBillsResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `${billCount} contas a pagar, total ${formatCurrency(totalAmount)}`,
-    screenReaderText: voice,
-    role: 'alert',
+    'aria-label': `${billCount} contas a pagar, total ${formatCurrency(totalAmount)}`,
+    'aria-live': 'assertive' as const,
+    role: 'alert' as const,
   };
 
   return {
@@ -288,9 +299,9 @@ export function buildIncomeResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Recebimentos previstos: ${formatCurrency(totalExpected)}`,
-    screenReaderText: voice,
-    role: 'status',
+    'aria-label': `Recebimentos previstos: ${formatCurrency(totalExpected)}`,
+    'aria-live': 'polite' as const,
+    role: 'status' as const,
   };
 
   return {
@@ -332,9 +343,9 @@ export function buildProjectionResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Projeção financeira: ${formatCurrency(projectedBalance)}`,
-    screenReaderText: voice,
-    role: 'status',
+    'aria-label': `Projeção financeira: ${formatCurrency(projectedBalance)}`,
+    'aria-live': 'polite' as const,
+    role: 'status' as const,
   };
 
   return {
@@ -396,9 +407,9 @@ export function buildTransferResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Transferência de ${formatCurrency(amount)} para ${recipient}`,
-    screenReaderText: voice,
-    role: status === 'pending' ? 'alertdialog' : 'status',
+    'aria-label': `Transferência de ${formatCurrency(amount)} para ${recipient}`,
+    'aria-live': status === 'pending' ? ('assertive' as const) : ('polite' as const),
+    role: status === 'pending' ? ('alertdialog' as const) : ('status' as const),
   };
 
   return {
@@ -434,9 +445,9 @@ export function buildErrorResponse(error: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Erro: ${message}`,
-    screenReaderText: voice,
-    role: 'alert',
+    'aria-label': `Erro: ${message}`,
+    'aria-live': 'assertive' as const,
+    role: 'alert' as const,
   };
 
   return {
@@ -474,9 +485,9 @@ export function buildConfirmationResponse(data: {
 
   // Accessibility
   const accessibility = {
-    ariaLabel: `Confirmação necessária: ${action}`,
-    screenReaderText: voice,
-    role: 'alertdialog',
+    'aria-label': `Confirmação necessária: ${action}`,
+    'aria-live': 'assertive' as const,
+    role: 'alertdialog' as const,
   };
 
   return {
@@ -496,16 +507,16 @@ export function buildConfirmationResponse(data: {
 // ============================================================================
 
 export const responseBuilders = {
-  check_balance: buildBalanceResponse,
-  check_budget: buildBudgetResponse,
-  pay_bill: buildBillsResponse,
-  check_income: buildIncomeResponse,
-  financial_projection: buildProjectionResponse,
-  transfer_money: buildTransferResponse,
-  unknown: buildErrorResponse,
+  [IntentType.CHECK_BALANCE]: buildBalanceResponse,
+  [IntentType.CHECK_BUDGET]: buildBudgetResponse,
+  [IntentType.PAY_BILL]: buildBillsResponse,
+  [IntentType.CHECK_INCOME]: buildIncomeResponse,
+  [IntentType.FINANCIAL_PROJECTION]: buildProjectionResponse,
+  [IntentType.TRANSFER_MONEY]: buildTransferResponse,
+  [IntentType.UNKNOWN]: buildErrorResponse,
   error: buildErrorResponse,
   confirmation: buildConfirmationResponse,
-};
+} as const;
 
 /**
  * Build multimodal response based on intent
@@ -515,7 +526,7 @@ export function buildMultimodalResponse(
   data: any
 ): MultimodalResponse {
   const intentKey = intent === IntentType.UNKNOWN ? 'unknown' : intent;
-  const builder = responseBuilders[intentKey];
+  const builder = responseBuilders[intentKey as keyof typeof responseBuilders];
 
   if (!builder) {
     return buildErrorResponse({

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { sessionManager, SessionState } from '@/lib/session/sessionManager';
+import { useCallback, useEffect, useState } from 'react';
+import { type SessionState, sessionManager } from '@/lib/session/sessionManager';
 
 export const useSessionManager = () => {
   const [sessionState, setSessionState] = useState<SessionState>(() => sessionManager.getState());

@@ -7,9 +7,9 @@ import {
   getClientIP,
   recordAuthenticationAttempt,
 } from '@/lib/security/rate-limiter';
-import { authRateLimit, generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
-import { securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { Context } from '@/server/context';
+import { authRateLimit } from '@/server/middleware/rateLimitMiddleware';
+import { securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { RouterBuilder } from '@/server/types';
 
 // Type definitions for auth procedures

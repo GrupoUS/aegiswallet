@@ -11,17 +11,24 @@ process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
 // Ensure DOM is available immediately (before tests run)
 if (typeof globalThis.document === 'undefined') {
   const { JSDOM } = require('jsdom');
-  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-    url: 'http://localhost',
-    pretendToBeVisual: true,
-    resources: 'usable',
-  });
+  const dom = new JSDOM(
+    '<!DOCTYPE html><html><head><title>Test</title></head><body><div id="root"></div></body></html>',
+    {
+      url: 'http://localhost:3000',
+      pretendToBeVisual: true,
+      resources: 'usable',
+    }
+  );
 
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
   globalThis.navigator = dom.window.navigator;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.Element = dom.window.Element;
+
+  // Set up global document for Testing Library
+  global.document = dom.window.document;
+  global.window = dom.window;
 }
 
 // Mock audio processor, VAD, and STT services at module level
@@ -47,12 +54,25 @@ vi.mock('@/lib/stt/audioProcessor', () => {
 
 vi.mock('@/lib/stt/voiceActivityDetection', () => {
   const mockVAD = {
+    initialize: vi.fn().mockResolvedValue(undefined),
     detectVoiceActivity: vi.fn().mockResolvedValue({ hasVoice: true }),
     dispose: vi.fn(),
+    stop: vi.fn(),
+    isActive: vi.fn().mockReturnValue(false),
+    getCurrentState: vi.fn().mockReturnValue({
+      isSpeaking: false,
+      energy: 0,
+      speechStartTime: null,
+      speechDuration: 0,
+    }),
+    onSpeechStartCallback: vi.fn(),
+    onSpeechEndCallback: vi.fn(),
+    setEnergyThreshold: vi.fn(),
   };
 
   return {
     createVAD: vi.fn(() => mockVAD),
+    VoiceActivityDetector: vi.fn(() => mockVAD),
   };
 });
 
@@ -222,6 +242,12 @@ beforeAll(() => {
     window.screen = (globalThis as any).screen;
   }
 
+  // Ensure document.body exists for Testing Library
+  if (!document.body) {
+    document.body = document.createElement('body');
+    document.body.innerHTML = '<div id="root"></div>';
+  }
+
   // Mock AudioContext for voice activity detection tests
   const mockAudioContext = vi.fn().mockImplementation(() => ({
     close: vi.fn(),
@@ -262,63 +288,65 @@ beforeAll(() => {
   global.fetch = vi.fn();
 
   // Mock Supabase configuration for tests
-  vi.mock('@/integrations/supabase/client', () => ({
-    supabase: {
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            order: vi.fn(() => ({
-              data: [],
-              error: null,
-            })),
-          })),
-        })),
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => ({
-              data: null,
-              error: null,
-            })),
-          })),
-        })),
-        update: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: null,
-                error: null,
-              })),
-            })),
-          })),
-        })),
-        delete: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(),
-          })),
-        })),
-      })),
-      auth: {
-        getUser: vi.fn(() => ({
-          data: { user: { id: 'test-user' } },
+  vi.mock('@/integrations/supabase/client', () => {
+    // Helper function to create chainable query builders
+    const createQueryBuilder = () => {
+      const queryBuilder = {
+        data: [],
+        error: null,
+        single: () => ({
+          data: null,
           error: null,
-        })),
-        signInWithOAuth: vi.fn(),
-        signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
-        signUp: vi.fn(),
+        }),
+        eq: () => queryBuilder,
+        neq: () => queryBuilder,
+        gt: () => queryBuilder,
+        gte: () => queryBuilder,
+        lt: () => queryBuilder,
+        lte: () => queryBuilder,
+        like: () => queryBuilder,
+        ilike: () => queryBuilder,
+        in: () => queryBuilder,
+        contains: () => queryBuilder,
+        order: () => queryBuilder,
+        limit: () => queryBuilder,
+        range: () => queryBuilder,
+        select: () => queryBuilder,
+        update: () => queryBuilder,
+        delete: () => queryBuilder,
+        then: (resolve: (value: { data: unknown[]; error: null }) => void) => {
+          resolve({ data: queryBuilder.data, error: queryBuilder.error });
+        },
+      };
+      return queryBuilder;
+    };
+
+    return {
+      supabase: {
+        from: vi.fn(() => createQueryBuilder()),
+        auth: {
+          getUser: vi.fn(() => ({
+            data: { user: { id: 'test-user' } },
+            error: null,
+          })),
+          signInWithOAuth: vi.fn(),
+          signInWithPassword: vi.fn(),
+          signOut: vi.fn(),
+          signUp: vi.fn(),
+        },
+        realtime: {
+          subscribe: vi.fn(),
+          unsubscribe: vi.fn(),
+        },
+        storage: {
+          from: vi.fn(() => ({
+            upload: vi.fn(),
+            getPublicUrl: vi.fn(() => ({ data: { publicUrl: '' } })),
+          })),
+        },
       },
-      realtime: {
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
-      },
-      storage: {
-        from: vi.fn(() => ({
-          upload: vi.fn(),
-          getPublicUrl: vi.fn(() => ({ data: { publicUrl: '' } })),
-        })),
-      },
-    },
-  }));
+    };
+  });
 });
 
 // Clean up mocks after each test

@@ -58,6 +58,7 @@ QUALITY_CONTROL_PHASES:
 - **Data**: **Supabase** (Postgres + Auth + Realtime + RLS) + Audit logging
 - **QA & Testing**: Vitest, Playwright, OXLint, Biome, TypeScript strict
 - **Quality Tools**: **OXLint** (50-100x faster), Biome (formatter), Dprint, Sentry
+- **Diagnostic Tools**: **Zed Context** (real-time validation), **Native Diagnostics** (project-wide scanning), **Project Diagnostics Suite**
 - **Research Tools**: **Serena MCP**, **Context7 MCP**, **Tavily MCP**, **Archon MCP**
 - **LGPD Focus**: Healthcare compliance, data protection, security validation
 
@@ -234,7 +235,202 @@ ERROR_CATEGORIES:
       - "Test performance optimization"
 ```
 
-### **1.5 Serena MCP Search Patterns for Error Analysis**
+### **1.5 Project Diagnostics Integration**
+
+**Objective**: Implement comprehensive project-wide diagnostics using Serena MCP, Zed Context, and native diagnostic tools for complete code quality coverage.
+
+#### **1.5.1 Diagnostic Tools Integration**
+
+```yaml
+PROJECT_DIAGNOSTICS_SUITE:
+  primary_tools:
+    - name: "Serena MCP"
+      purpose: "Semantic code analysis and symbol resolution"
+      capabilities: ["error detection", "symbol tracking", "dependency analysis"]
+      priority: 1
+    
+    - name: "Zed Context"
+      purpose: "Real-time code validation and IDE integration"
+      capabilities: ["live diagnostics", "context-aware suggestions", "instant feedback"]
+      priority: 2
+    
+    - name: "Native Diagnostics"
+      purpose: "Comprehensive project-wide error scanning"
+      capabilities: ["type checking", "linting", "compilation errors"]
+      priority: 3
+```
+
+#### **1.5.2 Comprehensive Diagnostic Workflow**
+
+```yaml
+DIAGNOSTIC_WORKFLOW:
+  phase_1_initial_scan:
+    action: "Run comprehensive project diagnostics"
+    tools: ["diagnostics", "serena_mcp", "zed_context"]
+    commands:
+      - "diagnostics"  # Project-wide scan
+      - "serena_mcp.search_for_pattern(pattern='.*')"  # Full codebase analysis
+    output: "Complete error catalog with severity classification"
+    
+  phase_2_categorization:
+    action: "Categorize and prioritize detected issues"
+    tools: ["sequential_thinking", "analysis"]
+    criteria:
+      - "Critical: Breaking errors that prevent compilation/execution"
+      - "High: Type safety and security vulnerabilities"
+      - "Medium: Code quality and performance issues" 
+      - "Low: Style and optimization suggestions"
+    output: "Prioritized error resolution plan"
+    
+  phase_3_zed_integration:
+    action: "Configure Zed Context for real-time validation"
+    tools: ["zed_context", "configuration"]
+    setup:
+      - "Enable real-time diagnostics"
+      - "Configure error highlighting"
+      - "Set up auto-fix suggestions"
+    output: "Continuous monitoring environment"
+    
+  phase_4_monitoring:
+    action: "Establish continuous diagnostic monitoring"
+    tools: ["automated_checks", "quality_gates"]
+    frequency: "On file change + pre-commit validation"
+    output: "Ongoing quality assurance"
+```
+
+#### **1.5.3 Zed Context Integration Setup**
+
+```yaml
+ZED_CONTEXT_CONFIG:
+  real_time_diagnostics:
+    enabled: true
+    check_on_save: true
+    check_on_focus: false
+    
+  error_categories:
+    typescript_errors: 
+      enabled: true
+      severity: "critical"
+      auto_fix: false
+    
+    linting_issues:
+      enabled: true
+      severity: "medium"
+      auto_fix: true
+      
+    performance_warnings:
+      enabled: true
+      severity: "low"
+      auto_fix: false
+      
+  integration_points:
+    serena_mcp:
+      enabled: true
+      features: ["symbol_navigation", "error_context"]
+      
+    quality_gates:
+      enabled: true
+      blocking_errors: ["typescript_errors", "security_issues"]
+```
+
+#### **1.5.4 Diagnostic Error Catalog Template**
+
+```yaml
+PROJECT_ERROR_CATALOG:
+  error_id: "PROJECT-XXX"
+  detection_source: "serena_mcp|zed_context|native_diagnostics"
+  
+  error_details:
+    type: "typescript_error|security_vulnerability|performance_issue|code_quality"
+    severity: "critical|high|medium|low"
+    auto_fixable: true|false
+    impact_scope: "file|component|module|project"
+    
+  location_details:
+    file_path: "exact file location"
+    line_range: "start_line-end_line"
+    column_range: "start_col-end_col"
+    context_lines: "surrounding code context"
+    affected_symbols: "functions/variables/types affected"
+    
+  diagnostic_context:
+    zed_context_data: "IDE-specific information if available"
+    serena_analysis: "Semantic analysis results"
+    compilation_output: "Build/runtime error details"
+    
+  resolution_tracking:
+    fix_method: "manual|automated|refactor_required"
+    estimated_effort: "minutes|hours|days"
+    dependencies: "other errors or components that block resolution"
+    rollback_plan: "how to revert if fix causes issues"
+    
+  quality_metrics:
+    complexity_impact: "cyclomatic complexity change"
+    coverage_impact: "test coverage impact"
+    performance_impact: "execution time impact"
+```
+
+#### **1.5.5 Serena MCP Diagnostic Commands**
+
+```yaml
+SERENA_DIAGNOSTIC_COMMANDS:
+  comprehensive_scan:
+    command: "serena_mcp.search_for_pattern(pattern='.*')"
+    purpose: "Full codebase semantic analysis"
+    output: "All potential issues and improvements"
+    
+  error_context_analysis:
+    command: "serena_mcp.find_symbol(name_path='{error_function}')"
+    purpose: "Get detailed context for specific errors"
+    output: "Function usage, dependencies, and impact analysis"
+    
+  dependency_validation:
+    command: "serena_mcp.find_referencing_symbols(symbol='{component}')"
+    purpose: "Validate component dependencies"
+    output: "All references and potential breaking changes"
+    
+  security_scan:
+    command: "serena_mcp.search_for_pattern(pattern='(eval|innerHTML|dangerouslySetInnerHTML|Function.*constructor)')"
+    purpose: "Identify security vulnerabilities"
+    output: "All potential security risks"
+    
+  type_safety_check:
+    command: "serena_mcp.search_for_pattern(pattern=':\\s*any|as\\s+any|@ts-ignore')"
+    purpose: "Find type safety violations"
+    output: "All type safety issues"
+```
+
+#### **1.5.6 Diagnostic Quality Gates**
+
+```yaml
+DIAGNOSTIC_QUALITY_GATES:
+  gate_1_critical_errors:
+    threshold: "0 critical errors"
+    blocking: true
+    check_command: "diagnostics --filter=error"
+    
+  gate_2_type_safety:
+    threshold: "0 type errors"
+    blocking: true
+    check_command: "diagnostics --filter=typescript"
+    
+  gate_3_security_issues:
+    threshold: "0 high/critical security issues"
+    blocking: true
+    check_command: "serena_mcp.search_for_pattern(pattern='(eval|innerHTML)')"
+    
+  gate_4_performance_impact:
+    threshold: "< 5 performance warnings"
+    blocking: false
+    check_command: "diagnostics --filter=performance"
+    
+  gate_5_code_quality:
+    threshold: "< 10 medium/low quality issues"
+    blocking: false
+    check_command: "diagnostics --filter=quality"
+```
+
+### **1.6 Serena MCP Search Patterns for Error Analysis**
 
 ```yaml
 SERENA_SEARCH_PATTERNS:
@@ -764,10 +960,16 @@ git checkout -b quality-control/QC-XXX-batch
 bun install                    # Ensure dependencies are current
 
 # Step 1: Identify Issues (Already completed in Phase 1)
+diagnostics                   # Run comprehensive project diagnostics
 bun quality                    # Verify current state
 bun lint                       # OXLint 50-100x faster validation
 bun type-check                 # TypeScript strict mode
 bun format:check               # Biome formatting validation
+
+# Project-Specific Diagnostics
+diagnostics --filter=error      # Show only critical errors
+diagnostics --filter=warning   # Show warnings and above
+diagnostics --filter=all       # Show all diagnostic issues
 
 # Step 2: Execute Atomic Tasks (Following Phase 3 plan)
 # For each atomic task:
@@ -789,14 +991,17 @@ code packages/types/src/appointment.ts
 # 3. Validate step
 bun type-check                 # Verify no new errors
 bun lint                       # Verify linting passes
+diagnostics                   # Verify project diagnostics are clean
 
 # Step 3: Continuous Validation (After each task)
 bun quality                    # Re-run quality checks
+diagnostics                   # Verify project diagnostics status
 bun test                       # Run affected tests (3-5x faster)
 bun test:coverage              # Verify coverage maintained
 
 # Step 4: Final Validation (After all tasks)
 bun quality                    # Full quality check
+diagnostics                   # Final project diagnostics validation
 bun test                       # Complete test suite
 bun test:e2e                   # E2E validation
 bun type-check                 # Final type check
@@ -839,6 +1044,19 @@ QUALITY_GATES:
     tools: ["Bundle Analyzer", "Performance Tests"]
     threshold: "No degradation in Core Web Vitals"
     command: "bun analyze:bundle && bun test:performance"
+    blocking: false
+    warning_only: true
+
+  gate_6_diagnostics_validation:
+    tools: ["Native Diagnostics", "Zed Context", "Serena MCP"]
+    threshold: "Zero diagnostic errors"
+    command: "diagnostics && zed_context_validate"
+    blocking: true
+
+  gate_7_zed_integration:
+    tools: ["Zed Context", "Real-time Validation"]
+    threshold: "Real-time diagnostics enabled"
+    command: "zed_context_check && diagnostics --filter=error"
     blocking: false
     warning_only: true
 ```
@@ -1672,6 +1890,110 @@ bun test                       # Run test suite
 ```
 
 ---
+
+## 📊 PROJECT DIAGNOSTICS METRICS
+
+### **Diagnostic Success Metrics**
+
+```yaml
+DIAGNOSTIC_EFFECTIVENESS_METRICS:
+  error_resolution_rate:
+    target: "≥95% of identified issues resolved"
+    measurement: "Compare initial diagnostics with final state"
+    tool: "diagnostics --before-after"
+    
+  diagnostic_coverage:
+    target: "100% project file coverage"
+    measurement: "Percentage of files scanned for issues"
+    tool: "diagnostics --coverage-report"
+    
+  false_positive_rate:
+    target: "<5% false positives"
+    measurement: "Manual validation of reported issues"
+    tool: "diagnostics --validate"
+    
+  detection_speed:
+    target: "<30 seconds for full project scan"
+    measurement: "Time from start to diagnostic completion"
+    tool: "time diagnostics"
+```
+
+### **Zed Context Integration Metrics**
+
+```yaml
+ZED_CONTEXT_METRICS:
+  real_time_effectiveness:
+    target: "Detect issues within 2 seconds of file change"
+    measurement: "Time between file save and error detection"
+    tool: "zed_context_benchmark"
+    
+  integration_success:
+    target: "100% of Zed features working correctly"
+    measurement: "Functional testing of all Zed Context features"
+    tool: "zed_context_test_integration"
+    
+  performance_impact:
+    target: "<5% overhead on development workflow"
+    measurement: "Comparison of development speed with/without Zed Context"
+    tool: "performance_benchmark --zed-context"
+    
+  developer_satisfaction:
+    target: "≥4.5/5 developer satisfaction rating"
+    measurement: "Developer feedback surveys"
+    tool: "satisfaction_survey --zed-context"
+```
+
+### **Continuous Quality Monitoring**
+
+```yaml
+CONTINUOUS_MONITORING_WORKFLOW:
+  pre_commit_hooks:
+    - "diagnostics --filter=error"
+    - "bun quality"
+    - "bun test:coverage"
+    - "zed_context_check"
+    
+  ci_cd_pipeline:
+    - "diagnostics --full"
+    - "bun quality:ci"
+    - "bun test:ci"
+    - "zed_context_validate"
+    
+  real_time_monitoring:
+    - "zed_context_enable --watch"
+    - "diagnostics --watch"
+    - "quality_metrics_dashboard"
+    
+  periodic_reports:
+    - "diagnostics --report=daily"
+    - "quality_metrics --weekly"
+    - "zed_context_analytics --monthly"
+```
+
+### **Diagnostic Quality Gates**
+
+```yaml
+DIAGNOSTIC_QUALITY_GATES:
+  gate_1_no_critical_errors:
+    threshold: "0 critical diagnostic errors"
+    check: "diagnostics --filter=error"
+    blocking: true
+    
+  gate_2_type_safety:
+    threshold: "0 TypeScript compilation errors"
+    check: "bun type-check"
+    blocking: true
+    
+  gate_3_real_time_validation:
+    threshold: "Zed Context actively monitoring"
+    check: "zed_context_check"
+    blocking: false
+    
+  gate_4_performance_impact:
+    threshold: "<100ms diagnostic response time"
+    check: "time diagnostics --file=sample"
+    blocking: false
+```
 
 ## 🎓 LEARNING PATHWAYS
 

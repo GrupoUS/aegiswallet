@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { financialSchemas, validateTransactionForFraud } from '@/lib/security/financial-validator';
+import { transactionRateLimit, securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { Context } from '@/server/context';
 
 export const createTransactionRouter = (t: any) => ({
@@ -9,6 +10,7 @@ export const createTransactionRouter = (t: any) => ({
    * Get all transactions for user
    */
   getAll: t.procedure
+    .use(securityMiddleware)
     .input(
       z
         .object({
@@ -73,6 +75,8 @@ export const createTransactionRouter = (t: any) => ({
    * Create new transaction
    */
   create: t.procedure
+    .use(transactionRateLimit)
+    .use(securityMiddleware)
     .input(financialSchemas.transaction)
     .mutation(async ({ ctx, input }: { ctx: Context; input: any }) => {
       if (!ctx.session?.user) {
@@ -175,6 +179,8 @@ export const createTransactionRouter = (t: any) => ({
    * Delete transaction
    */
   delete: t.procedure
+    .use(transactionRateLimit)
+    .use(securityMiddleware)
     .input(
       z.object({
         id: z.string().uuid(),
@@ -207,7 +213,7 @@ export const createTransactionRouter = (t: any) => ({
   /**
    * Get summary statistics
    */
-  getSummary: t.procedure.query(async ({ ctx }: { ctx: Context }) => {
+  getSummary: t.procedure.use(securityMiddleware).query(async ({ ctx }: { ctx: Context }) => {
     if (!ctx.session?.user) {
       return null;
     }

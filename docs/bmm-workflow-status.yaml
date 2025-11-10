@@ -1,0 +1,29 @@
+# Workflow Status - BMad Method Implementation Tracking
+# This tracks progress through BMM methodology phases
+# Phase 3/4 (Implementation) is tracked separately in sprint-status.yaml
+
+generated: "2025-11-10"
+project: "aegiswallet"
+project_type: "software"
+selected_track: "method"
+field_type: "brownfield"
+workflow_path: "method-brownfield.yaml"
+
+workflow_status:
+  # Phase 0: Discovery (Optional)
+  brainstorm-project: docs/brief.md  # agent: analyst
+  research: docs/architecture/  # agent: analyst
+  product-brief: docs/brief.md  # agent: analyst
+
+  # Phase 1: Planning
+  prd: docs/prd.md  # agent: pm
+  validate-prd: required  # agent: pm
+  create-design: docs/design-specs/  # agent: ux-designer
+
+  # Phase 2: Solutioning
+  create-architecture: docs/architecture.md  # agent: architect
+  validate-architecture: required  # agent: architect
+  solutioning-gate-check: docs/implementation-readiness-report-2025-11-10.md  # agent: architect
+
+  # Phase 3: Implementation
+  sprint-planning: required  # agent: sm

@@ -33,7 +33,7 @@ export interface IntentDefinition {
   type: IntentType;
   name: string;
   description: string;
-  patterns: string[]; // Regex patterns for matching
+  patterns: RegExp[]; // Regex patterns for matching
   keywords: string[]; // Keywords for fallback matching
   requiredSlots: EntityType[];
   optionalSlots: EntityType[];

@@ -1,39 +1,29 @@
 // Debug script for STT service
-const { SpeechToTextService } = require('./src/lib/stt/speechToTextService.ts')
+// Note: This script requires proper TypeScript compilation to work
+// Run with: bun debug-stt.js or node debug-stt.js after building
 
-// Mock fetch
-global.fetch = jest.fn()
+console.log('Debug STT service script')
+console.log('Note: This script needs proper setup to work with TypeScript modules')
+console.log('Consider running the actual tests instead: bun test')
 
-async function debugSTT() {
-  const sttService = new SpeechToTextService({
-    apiKey: 'test-api-key-12345',
-    language: 'pt',
-    timeout: 5000,
-  })
-
-  // Mock successful response
-  global.fetch.mockResolvedValueOnce({
-    ok: true,
-    json: async () => ({
-      text: 'Olá, como vai?',
-      language: 'pt',
-      duration: 2.5,
-      segments: [
-        {
-          avg_logprob: -0.2,
-        },
-      ],
-    }),
-  })
-
-  const audioBlob = new Blob([new Uint8Array(1024)], { type: 'audio/webm' })
-
-  try {
-    const result = await sttService.transcribe(audioBlob)
-    console.log('Result:', result)
-  } catch (error) {
-    console.log('Error:', error)
+// Mock fetch for Node.js environment
+if (typeof global !== 'undefined' && !global.fetch) {
+  global.fetch = async (url, options) => {
+    console.log('Mock fetch called:', url, options)
+    return {
+      ok: true,
+      json: async () => ({
+        text: 'Olá, como vai?',
+        language: 'pt',
+        duration: 2.5,
+        segments: [
+          {
+            avg_logprob: -0.2,
+          },
+        ],
+      }),
+    }
   }
 }
 
-debugSTT()
+console.log('Debug script loaded successfully')

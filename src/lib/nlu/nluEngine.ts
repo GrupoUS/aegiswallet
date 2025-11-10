@@ -24,10 +24,14 @@ import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
 import {
   IntentType,
   type NLUConfig,
+  type NLUEntity,
   NLUError,
   NLUErrorCode,
   type NLUResult,
+  type PatternEvolution,
+  type UserAdaptation,
 } from '@/lib/nlu/types';
+import type { NLUIntent } from '@/types/nlu.types';
 
 // ============================================================================
 // Default Configuration
@@ -247,7 +251,7 @@ export class NLUEngine {
   /**
    * Get missing required slots for intent
    */
-  private getMissingSlots(intent: IntentType, entities: any[]): any[] {
+  private getMissingSlots(intent: IntentType, entities: NLUEntity[]): string[] {
     const definition = INTENT_DEFINITIONS[intent];
     if (!definition) return [];
 
@@ -422,7 +426,7 @@ export class NLUEngine {
    */
   private extractLearningSignals(
     _text: string,
-    classification: any
+    classification: NLUIntent
   ): {
     patternNovelty: number;
     confidenceTrend: string;
@@ -445,8 +449,11 @@ export class NLUEngine {
     averageConfidence: number;
     regionalAccuracy: Record<string, number>;
     learningProgress: number;
-    errorAnalysis: any;
-    performanceMetrics: any;
+    errorAnalysis: Record<string, unknown>;
+    performanceMetrics: {
+      averageProcessingTime: number;
+      cacheHitRate: number;
+    };
   } {
     // TODO: Return comprehensive analytics from tracking system
     return {
@@ -511,10 +518,10 @@ export class NLUEngine {
    * TODO: Get learning analytics for continuous improvement
    */
   getLearningAnalytics(): {
-    patternEvolution: any[];
-    userAdaptations: any[];
-    regionalLearning: any;
-    confidenceTrends: any;
+    patternEvolution: PatternEvolution[];
+    userAdaptations: UserAdaptation[];
+    regionalLearning: Record<string, unknown>;
+    confidenceTrends: Record<string, unknown>;
     recommendations: string[];
   } {
     // TODO: Return comprehensive learning analytics

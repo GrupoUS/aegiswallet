@@ -34,76 +34,57 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Vendor chunks
+            // Core React libraries
             if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor'
+              return 'react-core'
             }
 
-            // Router chunk
-            if (id.includes('@tanstack/react-router')) {
-              return 'router'
+            // TanStack libraries (router, query)
+            if (id.includes('@tanstack')) {
+              return 'tanstack'
             }
 
-            // Query chunk
-            if (id.includes('@tanstack/react-query')) {
-              return 'query'
-            }
-
-            // tRPC chunk
+            // tRPC libraries
             if (id.includes('@trpc')) {
               return 'trpc'
             }
 
-            // UI components - split by library
-            if (id.includes('@radix-ui')) {
-              return 'radix-ui'
+            // Supabase libraries
+            if (id.includes('@supabase')) {
+              return 'supabase'
             }
 
-            if (id.includes('lucide-react')) {
-              return 'icons'
+            // UI libraries (radix, lucide)
+            if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+              return 'ui-libraries'
             }
 
-            // Charts and visualization
-            if (id.includes('recharts')) {
-              return 'charts'
-            }
-
-            // Date handling
-            if (id.includes('date-fns')) {
-              return 'date-utils'
-            }
-
-            // Forms
-            if (id.includes('react-hook-form') || id.includes('@hookform')) {
+            // Forms and validation
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
               return 'forms'
             }
 
-            // Voice and speech
+            // Voice and speech features
             if (id.includes('speech') || id.includes('voice') || id.includes('audio')) {
-              return 'voice'
+              return 'voice-features'
             }
 
-            // Calendar components
-            if (id.includes('calendar') || id.includes('react-day-picker')) {
-              return 'calendar'
+            // Charts and visualization
+            if (id.includes('recharts') || id.includes('d3')) {
+              return 'charts'
             }
 
-            // DnD (drag and drop)
-            if (id.includes('@dnd-kit')) {
-              return 'dnd'
+            // Date and time utilities
+            if (id.includes('date-fns') || id.includes('dayjs')) {
+              return 'date-utils'
             }
 
-            // Motion/animation
-            if (id.includes('motion')) {
+            // Animation and motion
+            if (id.includes('motion') || id.includes('framer-motion')) {
               return 'animation'
             }
 
-            // Theme
-            if (id.includes('next-themes')) {
-              return 'theme'
-            }
-
-            // Everything else
+            // Everything else from node_modules
             if (id.includes('node_modules')) {
               return 'vendor'
             }
@@ -126,6 +107,21 @@ export default defineConfig(({ mode }) => {
         '@trpc/server',
         '@trpc/client',
         '@trpc/react-query',
+        '@supabase/supabase-js',
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-select',
+        'lucide-react',
+        'react-hook-form',
+        '@hookform/resolvers',
+        'zod',
+        'date-fns',
+      ],
+      exclude: [
+        // Exclude heavy dependencies from pre-bundling
+        'framer-motion',
+        'recharts',
+        'speech-recognition-polyfill',
       ],
     },
   }

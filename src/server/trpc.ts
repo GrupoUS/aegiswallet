@@ -7,40 +7,41 @@ const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,
 });
 
-/**
- * Import procedures functions
- */
-import { createAuthRouter } from '@/server/procedures/auth';
 import { createBankingRouter } from '@/server/procedures/banking';
-import { createTransactionRouter } from '@/server/procedures/transactions';
-import { createUserRouter } from '@/server/procedures/users';
 import { createVoiceRouter } from '@/server/procedures/voice';
+/**
+ * Import remaining specialized routers that don't have duplicates
+ */
 import { bankAccountsRouter } from '@/server/routers/bankAccounts';
 import { calendarRouter } from '@/server/routers/calendar';
-import { contactsRouter } from '@/server/routers/contacts';
 /**
- * Import routers
+ * Import consolidated routers (unified architecture)
  */
+import { consolidatedRouters } from '@/server/routers/consolidated';
+import { contactsRouter } from '@/server/routers/contacts';
 import { pixRouter } from '@/server/routers/pix';
-import { transactionsRouter } from '@/server/routers/transactions';
-import { usersRouter } from '@/server/routers/users';
 
 /**
- * Main router with all procedures
+ * Main router with consolidated architecture
+ * Eliminates duplication between procedures/ and routers/
  */
 export const appRouter = router({
-  auth: createAuthRouter(t),
-  users: createUserRouter(t),
-  transactions: createTransactionRouter(t),
-  banking: createBankingRouter(t),
-  voice: createVoiceRouter(t),
-  // Enhanced routers with full database integration
-  profiles: usersRouter,
+  // Consolidated routers (unified implementations)
+  auth: consolidatedRouters.auth,
+  users: consolidatedRouters.users,
+  transactions: consolidatedRouters.transactions,
+
+  // Specialized routers (no duplicates found)
+  profiles: consolidatedRouters.users, // Alias for consistency
   bankAccounts: bankAccountsRouter,
-  financialTransactions: transactionsRouter,
+  financialTransactions: consolidatedRouters.transactions, // Alias for consistency
   calendar: calendarRouter,
   contacts: contactsRouter,
   pix: pixRouter,
+
+  // Procedures without router equivalents
+  banking: createBankingRouter(t),
+  voice: createVoiceRouter(t),
 });
 
 export type AppRouter = typeof appRouter;

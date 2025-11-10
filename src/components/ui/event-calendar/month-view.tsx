@@ -7,11 +7,11 @@ import {
   isSameMonth,
   startOfMonth,
   startOfWeek,
-} from 'date-fns';
-import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import { EnhancedEventCard } from './enhanced-event-card';
-import type { CalendarEvent } from './types';
+} from "date-fns";
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { EnhancedEventCard } from "./enhanced-event-card";
+import type { CalendarEvent } from "./types";
 
 interface MonthViewProps {
   currentDate: Date;
@@ -21,7 +21,12 @@ interface MonthViewProps {
   onEventUpdate?: (event: CalendarEvent) => void;
 }
 
-export function MonthView({ currentDate, events, onEventEdit, onEventClick }: MonthViewProps) {
+export function MonthView({
+  currentDate,
+  events,
+  onEventEdit,
+  onEventClick,
+}: MonthViewProps) {
   const monthDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -35,15 +40,15 @@ export function MonthView({ currentDate, events, onEventEdit, onEventClick }: Mo
     return events.filter((event) => isSameDay(new Date(event.start), day));
   };
 
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
     <div className="flex-1 bg-background">
       {/* Week days header */}
       <div className="grid grid-cols-7 border border-b">
-        {weekDays.map((day, index) => (
+        {weekDays.map((day) => (
           <div
-            key={index}
+            key={day}
             className="border border-r p-2 text-center font-medium text-muted-foreground text-sm last:border-r-0"
           >
             {day}
@@ -53,31 +58,31 @@ export function MonthView({ currentDate, events, onEventEdit, onEventClick }: Mo
 
       {/* Calendar days grid */}
       <div className="grid flex-1 grid-cols-7">
-        {monthDays.map((day, dayIndex) => {
+        {monthDays.map((day) => {
           const dayEvents = getEventsForDay(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isToday = isSameDay(day, new Date());
 
           return (
             <div
-              key={dayIndex}
+              key={day.toISOString()}
               className={cn(
-                'min-h-[100px] overflow-hidden border border-r border-b p-1',
-                !isCurrentMonth && 'bg-muted/30',
-                isToday && 'bg-primary/5',
-                dayIndex % 7 === 6 && 'border-r-0',
-                dayIndex >= monthDays.length - 7 && 'border-b-0'
+                "min-h-[100px] overflow-hidden border border-r border-b p-1",
+                !isCurrentMonth && "bg-muted/30",
+                isToday && "bg-primary/5",
+                dayIndex % 7 === 6 && "border-r-0",
+                dayIndex >= monthDays.length - 7 && "border-b-0",
               )}
             >
               {/* Day number */}
               <div
                 className={cn(
-                  'mb-1 px-1 font-medium text-sm',
-                  !isCurrentMonth && 'text-muted-foreground',
-                  isToday && 'font-bold text-primary'
+                  "mb-1 px-1 font-medium text-sm",
+                  !isCurrentMonth && "text-muted-foreground",
+                  isToday && "font-bold text-primary",
                 )}
               >
-                {format(day, 'd')}
+                {format(day, "d")}
               </div>
 
               {/* Events for this day */}

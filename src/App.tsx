@@ -1,71 +1,45 @@
-import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
-import { ThemeProvider } from '@/components/providers/ThemeProvider';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { LoggerProvider } from '@/contexts/LoggerContext';
-import { routeTree } from '@/routeTree.gen';
+import { InnerApp } from '@/components/app/InnerApp';
+import { AppProviders } from '@/components/providers/AppProviders';
+import { useOAuthHandler } from '@/hooks/useOAuthHandler';
+import { secureLogger } from '@/lib/logging/secure-logger';
 
 import '@/styles/accessibility.css';
 
-// Handle OAuth hash fragments before router initialization
-const handleOAuthHash = () => {
-  if (typeof window !== 'undefined') {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const hasOAuthParams = hashParams.has('access_token') || hashParams.has('error');
+/**
+ * Main Application Component
+ * Handles OAuth redirects and provides the application structure
+ */
+function App() {
+  const { isRedirecting, isProcessing, oauthError } = useOAuthHandler();
 
-    if (hasOAuthParams) {
-      // For OAuth redirects, we need to make sure we're on the dashboard path
-      if (!window.location.pathname.includes('/dashboard')) {
-        // Store the hash in sessionStorage and redirect to dashboard
-        sessionStorage.setItem('oauth_hash', window.location.hash);
-        window.location.replace('/dashboard');
-        return true; // Indicate that redirect is happening
-      } else {
-        // Store the hash for processing by the dashboard component
-        sessionStorage.setItem('oauth_hash', window.location.hash);
+  useEffect(() => {
+    // Handle OAuth errors
+    if (oauthError) {
+      secureLogger.error('OAuth Error in App component', {
+        error: oauthError,
+        component: 'App',
+      });
+
+      // Show error notification to user
+      // In a real implementation, you would show a toast or error component
+      if (typeof window !== 'undefined') {
+        // For now, we'll use an alert as a simple error display
+        // In production, this should be replaced with a proper error UI
+        alert(`Erro de autenticação: ${oauthError}. Por favor, tente novamente.`);
       }
     }
+  }, [oauthError]);
+
+  // Don't render anything if redirecting or still processing OAuth
+  if (isRedirecting || isProcessing) {
+    return null;
   }
-  return false;
-};
-
-// Create router instance
-const router = createRouter({
-  routeTree,
-  defaultPreload: 'intent',
-});
-
-// Register router for type safety
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-function InnerApp() {
-  return <RouterProvider router={router} />;
-}
-
-function App() {
-  useEffect(() => {
-    // Handle OAuth hash fragments on app load
-    const isRedirecting = handleOAuthHash();
-    if (isRedirecting) {
-      return; // Don't render anything if redirecting
-    }
-  }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="aegiswallet-theme">
-      <AccessibilityProvider>
-        <LoggerProvider>
-          <AuthProvider>
-            <InnerApp />
-          </AuthProvider>
-        </LoggerProvider>
-      </AccessibilityProvider>
-    </ThemeProvider>
+    <AppProviders>
+      <InnerApp />
+    </AppProviders>
   );
 }
 

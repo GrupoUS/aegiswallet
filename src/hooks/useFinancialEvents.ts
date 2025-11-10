@@ -4,7 +4,7 @@
  */
 
 import { endOfMonth, startOfMonth } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 import type { FinancialEvent } from '@/types/financial-events';
@@ -86,11 +86,7 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -132,7 +128,11 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, supabase]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   return { events, loading, error, refetch: fetchEvents };
 }

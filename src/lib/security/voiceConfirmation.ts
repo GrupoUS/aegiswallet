@@ -283,6 +283,41 @@ export class VoiceConfirmationService {
   }
 
   /**
+   * Determine failure scenario from error
+   */
+  determineFailureScenario(error: Error): FailureScenario {
+    const errorMessage = error.message.toLowerCase();
+
+    if (
+      errorMessage.includes('network') ||
+      errorMessage.includes('fetch') ||
+      errorMessage.includes('connection')
+    ) {
+      return FailureScenario.NETWORK_ERROR;
+    }
+
+    if (errorMessage.includes('all providers failed')) {
+      return FailureScenario.ALL_PROVIDERS_FAILED;
+    }
+
+    if (
+      errorMessage.includes('audio quality') ||
+      errorMessage.includes('microphone') ||
+      errorMessage.includes('too loud') ||
+      errorMessage.includes('too quiet')
+    ) {
+      return FailureScenario.AUDIO_QUALITY;
+    }
+
+    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+      return FailureScenario.TIMEOUT;
+    }
+
+    // Default to low confidence for unknown errors
+    return FailureScenario.LOW_CONFIDENCE;
+  }
+
+  /**
    * Determine fallback strategy based on failure scenario
    */
   getFallbackStrategy(scenario: FailureScenario): {

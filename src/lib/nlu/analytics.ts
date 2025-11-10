@@ -735,12 +735,15 @@ export class NLUAnalytics {
 
   private async loadHistoricalData(): Promise<void> {
     try {
-      // Load recent classification logs from Supabase
-      const { data: recentLogs, error } = await supabase
-        .from('nlu_classification_logs')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(100);
+      // TODO: Load recent classification logs from Supabase - temporarily disabled
+      // const { data: recentLogs, error } = await supabase
+      //   .from('nlu_classification_logs')
+      //   .select('*')
+      //   .order('timestamp', { ascending: false })
+      //   .limit(100);
+
+      const recentLogs: any[] = [];
+      const error = null;
 
       if (error) {
         logger.warn('Failed to load historical NLU data', { error });
@@ -795,6 +798,17 @@ export class NLUAnalytics {
 
   private async persistBatch(batch: ClassificationLog[]): Promise<void> {
     try {
+      // TODO: Implement NLU analytics table in database
+      // Temporarily disabled to fix deployment issues
+      logger.info(
+        `NLU analytics persistence temporarily disabled - ${batch.length} records skipped`,
+        {
+          recordCount: batch.length,
+        }
+      );
+      return;
+
+      /*
       const { error } = await supabase.from('nlu_classification_logs').insert(
         batch.map((log) => ({
           id: log.id,
@@ -820,6 +834,7 @@ export class NLUAnalytics {
       if (error) {
         throw error;
       }
+      */
     } catch (error) {
       logger.error('Failed to persist NLU batch', { error });
       throw error;
@@ -864,4 +879,3 @@ export function createNLUAnalytics(config?: Partial<AnalyticsConfig>): NLUAnalyt
 // ============================================================================
 
 export { DEFAULT_ANALYTICS_CONFIG };
-export type { AnalyticsConfig, HitMissMetrics, LearningAnalytics };

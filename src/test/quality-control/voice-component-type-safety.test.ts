@@ -6,7 +6,7 @@
 // Setup DOM environment BEFORE importing React Testing Library
 import '../../test/setupDOM';
 
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { VoiceResponse } from '@/components/voice/VoiceResponse';

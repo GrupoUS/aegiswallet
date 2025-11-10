@@ -37,6 +37,15 @@ export function EventCard({ event, position, onEdit }: EventCardProps) {
       {...listeners}
       {...attributes}
       onClick={() => onEdit?.(event)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onEdit?.(event);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Editar evento: ${event.title}`}
       className={cn(
         'pointer-events-auto cursor-move rounded-md border-l-4 p-2 text-sm',
         'overflow-hidden transition-shadow hover:shadow-md',

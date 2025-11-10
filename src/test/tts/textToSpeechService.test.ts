@@ -132,6 +132,9 @@ describe('TextToSpeechService', () => {
 
   describe('Voice Control', () => {
     it('should stop speaking', () => {
+      // Mock that speech is currently happening
+      mockSpeechSynthesis.speaking = true;
+
       const tts = new TextToSpeechService();
       tts.stop();
 
@@ -139,6 +142,9 @@ describe('TextToSpeechService', () => {
     });
 
     it('should pause speaking', () => {
+      // Mock that speech is currently happening
+      mockSpeechSynthesis.speaking = true;
+
       const tts = new TextToSpeechService();
       tts.pause();
 
@@ -146,6 +152,10 @@ describe('TextToSpeechService', () => {
     });
 
     it('should resume speaking', () => {
+      // Mock that speech is currently paused
+      mockSpeechSynthesis.speaking = true;
+      mockSpeechSynthesis.paused = true;
+
       const tts = new TextToSpeechService();
       tts.resume();
 

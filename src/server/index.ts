@@ -1,61 +1,25 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/bun';
-import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { createContext } from '@/server/context';
+import { corsMiddleware } from '@/server/middleware/cors';
+import { setupApiRoutes } from '@/server/routes/api';
+import { setupHealthRoute } from '@/server/routes/health';
+import { setupStaticRoutes } from '@/server/routes/static';
 import { appRouter } from '@/server/trpc';
 
+/**
+ * Create and configure Hono application with edge-first architecture
+ */
 const app = new Hono();
 
-// Determine CORS origins based on environment
-const getCorsOrigins = () => {
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  return isDevelopment
-    ? ['http://localhost:5173', 'http://localhost:3000']
-    : ['https://your-domain.com', 'http://localhost:3000']; // Update with your production domain
-};
-
-// Middleware
+// Global middleware
 app.use('*', logger());
+app.use('*', corsMiddleware);
 
-// Cache middleware for static assets
-app.use('/assets/*', async (c, next) => {
-  // Set aggressive caching for static assets in production
-  if (process.env.NODE_ENV === 'production') {
-    c.header('Cache-Control', 'public, max-age=31536000, immutable');
-  }
-  await next();
-});
-
-// Cache middleware for HTML files
-app.use('/*.html', async (c, next) => {
-  // Prevent caching of HTML files to ensure fresh content
-  c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  c.header('Pragma', 'no-cache');
-  c.header('Expires', '0');
-  await next();
-});
-
-// CORS configuration
-app.use(
-  '*',
-  cors({
-    origin: getCorsOrigins(),
-    credentials: true,
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  })
-);
-
-// Health check endpoint
-app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-  });
-});
+// Setup route handlers
+setupHealthRoute(app);
+setupApiRoutes(app);
 
 // tRPC endpoint
 app.use('/trpc/*', async (c) => {
@@ -67,34 +31,8 @@ app.use('/trpc/*', async (c) => {
   });
 });
 
-// API routes placeholder
-app.get('/api/ping', (c) => {
-  return c.json({ message: 'pong', timestamp: new Date().toISOString() });
-});
-
-// Serve static files from dist (for production)
-// In development, Vite dev server handles static files
-if (process.env.NODE_ENV === 'production') {
-  app.use('/*', serveStatic({ root: './dist' }));
-
-  // Fallback for SPA routing - serve index.html for non-API routes
-  app.use(
-    '/*',
-    serveStatic({
-      path: './dist/index.html',
-      rewriteRequestPath: (path) => path,
-    })
-  );
-} else {
-  // Development mode message
-  app.get('/*', (c) => {
-    return c.json({
-      message: 'Development mode - Frontend served by Vite dev server on port 5173',
-      frontend: 'http://localhost:5173',
-      api: 'http://localhost:3000',
-    });
-  });
-}
+// Setup static file serving (development/production aware)
+setupStaticRoutes(app);
 
 // 404 handler
 app.notFound((c) => {

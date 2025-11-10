@@ -90,8 +90,11 @@ const BudgetData = React.memo(function BudgetData({ data }: { data: any }) {
 const BillsData = React.memo(function BillsData({ data }: { data: any }) {
   return (
     <div className="mt-3 space-y-2">
-      {data.bills?.slice(0, 3).map((bill: any, index: number) => (
-        <div key={index} className="flex items-center justify-between rounded bg-white p-2">
+      {data.bills?.slice(0, 3).map((bill: any) => (
+        <div
+          key={bill.id || bill.name}
+          className="flex items-center justify-between rounded bg-white p-2"
+        >
           <div>
             <p className="font-medium text-sm">{bill.name}</p>
             <p className="text-gray-500 text-xs">
@@ -114,8 +117,11 @@ const BillsData = React.memo(function BillsData({ data }: { data: any }) {
 const IncomingData = React.memo(function IncomingData({ data }: { data: any }) {
   return (
     <div className="mt-3 space-y-2">
-      {data.incoming?.slice(0, 3).map((item: any, index: number) => (
-        <div key={index} className="flex items-center justify-between rounded bg-white p-2">
+      {data.incoming?.slice(0, 3).map((item: any) => (
+        <div
+          key={item.id || item.source}
+          className="flex items-center justify-between rounded bg-white p-2"
+        >
           <div>
             <p className="font-medium text-sm">{item.source}</p>
             <p className="text-gray-500 text-xs">

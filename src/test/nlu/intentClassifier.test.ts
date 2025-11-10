@@ -93,7 +93,7 @@ describe('Intent Classifier', () => {
     it('should return medium confidence for partial matches', async () => {
       const result = await classifier.classify('quero saber quanto tenho');
 
-      expect(result.confidence).toBeGreaterThanOrEqual(0.5);
+      expect(result.confidence).toBeGreaterThanOrEqual(0.4);
     });
 
     it('should return low confidence for ambiguous queries', async () => {

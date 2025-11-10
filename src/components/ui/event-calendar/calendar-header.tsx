@@ -262,16 +262,22 @@ export function CalendarHeader({
                 {/* Date range filters */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
-                    <label className="font-medium text-sm">Data Início</label>
+                    <label htmlFor="start-date" className="font-medium text-sm">
+                      Data Início
+                    </label>
                     <Input
+                      id="start-date"
                       type="date"
                       value={filters.startDate || ''}
                       onChange={(e) => handleFilterChange('startDate', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-medium text-sm">Data Fim</label>
+                    <label htmlFor="end-date" className="font-medium text-sm">
+                      Data Fim
+                    </label>
                     <Input
+                      id="end-date"
                       type="date"
                       value={filters.endDate || ''}
                       onChange={(e) => handleFilterChange('endDate', e.target.value)}
@@ -282,7 +288,9 @@ export function CalendarHeader({
                 {/* Type filter (for events) */}
                 {searchType === 'events' && (
                   <div className="space-y-2">
-                    <label className="font-medium text-sm">Tipo de Evento</label>
+                    <label htmlFor="event-type" className="font-medium text-sm">
+                      Tipo de Evento
+                    </label>
                     <Select
                       value={filters.typeId || ''}
                       onValueChange={(value) => handleFilterChange('typeId', value)}
@@ -300,7 +308,9 @@ export function CalendarHeader({
 
                 {/* Category filter */}
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Categoria</label>
+                  <label htmlFor="category" className="font-medium text-sm">
+                    Categoria
+                  </label>
                   <Select
                     value={filters.categoryId || ''}
                     onValueChange={(value) => handleFilterChange('categoryId', value)}

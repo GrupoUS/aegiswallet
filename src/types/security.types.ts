@@ -364,7 +364,7 @@ export type {
   SecurityConfig,
   FraudDetectionConfig,
   // Validation types
-  PinValidation,
+  PINValidation,
   PhoneNumberValidation,
   OtpValidation,
   // Analytics types

@@ -7,6 +7,8 @@ import {
   getClientIP,
   recordAuthenticationAttempt,
 } from '@/lib/security/rate-limiter';
+import { authRateLimit, generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
+import { securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { Context } from '@/server/context';
 import type { RouterBuilder } from '@/server/types';
 
@@ -30,7 +32,7 @@ export const createAuthRouter = (t: RouterBuilder) => ({
   /**
    * Get current user session
    */
-  getSession: t.procedure.query(async ({ ctx }: { ctx: Context }) => {
+  getSession: t.procedure.use(securityMiddleware).query(async ({ ctx }: { ctx: Context }) => {
     return ctx.session?.user ?? null;
   }),
 
@@ -38,6 +40,8 @@ export const createAuthRouter = (t: RouterBuilder) => ({
    * Sign in with email and password
    */
   signIn: t.procedure
+    .use(authRateLimit)
+    .use(securityMiddleware)
     .input(
       z.object({
         email: z.string().email(),
@@ -90,6 +94,8 @@ export const createAuthRouter = (t: RouterBuilder) => ({
    * Sign up with email and password
    */
   signUp: t.procedure
+    .use(authRateLimit)
+    .use(securityMiddleware)
     .input(
       z.object({
         email: z.string().email(),
@@ -159,9 +165,13 @@ export const createAuthRouter = (t: RouterBuilder) => ({
    * Sign out
    */
   signOut: t.procedure
+    .use(securityMiddleware)
     .use(({ ctx, next }: { ctx: Context; next: () => Promise<any> }) => {
       if (!ctx.session?.user) {
-        throw new Error('Not authenticated');
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Not authenticated',
+        });
       }
       return next({
         ctx: {

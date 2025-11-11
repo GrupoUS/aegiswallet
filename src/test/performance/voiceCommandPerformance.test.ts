@@ -5,7 +5,7 @@
 
 import '@/test/setup';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { createSTTService } from '@/lib/stt/speechToTextService';
 import { createVAD } from '@/lib/stt/voiceActivityDetection';
@@ -103,22 +103,16 @@ if (typeof navigator !== 'undefined') {
 describe('Voice Command Performance', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   describe('useVoiceRecognition Performance', () => {
     it('should initialize voice recognition within 100ms', async () => {
       const startTime = performance.now();
 
-      const { result } = renderHook(() => useVoiceRecognition());
+      const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
-      await waitFor(() => {
-        expect(result.current.supported).toBe(true);
-      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(result.current.supported).toBe(true);
 
       const endTime = performance.now();
       const initTime = endTime - startTime;
@@ -127,30 +121,14 @@ describe('Voice Command Performance', () => {
     });
 
     it('should process commands within 500ms of final result', async () => {
-      const { result } = renderHook(() => useVoiceRecognition());
+      const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
       expect(result.current.supported).toBe(true);
-
-      // Debug: Check if SpeechRecognition is available
-      console.log(
-        'SpeechRecognition available:',
-        !!(window.SpeechRecognition || window.webkitSpeechRecognition)
-      );
-      console.log('MockSpeechRecognition call count:', mockSpeechRecognition.mock.calls.length);
 
       // Start listening
       act(() => {
         result.current.startListening();
       });
-
-      console.log(
-        'After startListening - MockSpeechRecognition call count:',
-        mockSpeechRecognition.mock.calls.length
-      );
-      console.log(
-        'MockSpeechRecognitionInstance.start call count:',
-        mockSpeechRecognitionInstance.start.mock.calls.length
-      );
 
       expect(mockSpeechRecognitionInstance.start).toHaveBeenCalled();
 
@@ -176,11 +154,7 @@ describe('Voice Command Performance', () => {
         }
       });
 
-      // Fast-forward timers to trigger processing timeout
-      act(() => {
-        // Use vi directly since we're in a vitest environment
-        vi?.advanceTimersByTime?.(100);
-      });
+      await new Promise((resolve) => setTimeout(resolve, 120));
 
       await waitFor(() => {
         expect(result.current.recognizedCommand).not.toBeNull();
@@ -195,7 +169,7 @@ describe('Voice Command Performance', () => {
     });
 
     it('should auto-stop listening within 3 seconds', async () => {
-      const { result } = renderHook(() => useVoiceRecognition());
+      const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 250 }));
 
       // Start listening
       act(() => {
@@ -204,10 +178,8 @@ describe('Voice Command Performance', () => {
 
       expect(result.current.isListening).toBe(true);
 
-      // Fast-forward 3 seconds
-      act(() => {
-        vi?.advanceTimersByTime?.(3000);
-      });
+      // Wait for auto-stop timeout (shortened in hook options)
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       await waitFor(() => {
         expect(result.current.isListening).toBe(false);
@@ -216,7 +188,7 @@ describe('Voice Command Performance', () => {
     });
 
     it('should cleanup resources properly on unmount', () => {
-      const { unmount } = renderHook(() => useVoiceRecognition());
+      const { unmount } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
       unmount();
 
@@ -322,9 +294,7 @@ describe('Voice Command Performance', () => {
       const startTime = performance.now();
 
       // Simulate voice activity detection
-      act(() => {
-        vi?.advanceTimersByTime?.(16); // One frame at 60fps
-      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const endTime = performance.now();
       const detectionTime = endTime - startTime;
@@ -337,27 +307,21 @@ describe('Voice Command Performance', () => {
 
   describe('Memory Leak Prevention', () => {
     it('should clean up intervals and timeouts properly', () => {
-      const { unmount } = renderHook(() => useVoiceRecognition());
+      const { unmount } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
-      // Start some operations
-      act(() => {
-        vi?.advanceTimersByTime?.(50);
-      });
-
-      // Verify timers are active (mock check since vi.getTimerCount doesn't exist)
-      expect(vi).toBeDefined();
-
-      // Unmount should clean up
       unmount();
 
-      // All timers should be cleared (mock check since vi.getTimerCount doesn't exist)
-      expect(vi).toBeDefined();
+      expect(mockSpeechRecognitionInstance.stop.mock.calls.length).toBeGreaterThanOrEqual(1);
     });
   });
 
   describe('End-to-End Performance', () => {
     it('should complete full voice command cycle within 2 seconds', async () => {
-      const { result } = renderHook(() => useVoiceRecognition());
+      const { result } = renderHook(() =>
+        useVoiceRecognition({
+          autoStopTimeoutMs: 400,
+        })
+      );
 
       const totalStartTime = performance.now();
 
@@ -388,10 +352,8 @@ describe('Voice Command Performance', () => {
         });
       }, 100);
 
-      // 4. Process command (<500ms)
-      act(() => {
-        vi?.advanceTimersByTime?.(600); // 100ms for speech + 500ms processing
-      });
+      // Allow recognition + processing cycle to finish
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       await waitFor(() => {
         expect(result.current.recognizedCommand).not.toBeNull();

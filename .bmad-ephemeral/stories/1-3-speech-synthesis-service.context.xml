@@ -1,0 +1,101 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Speech Synthesis Service</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>D:\Coders\aegiswallet\.bmad-ephemeral\stories\1-3-speech-synthesis-service.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user of AegisWallet</asA>
+    <iWant>to receive spoken responses to my voice commands in natural-sounding Portuguese</iWant>
+    <soThat>I can get immediate feedback and confirmation for my financial interactions</soThat>
+    <tasks>- [ ] Implement Web Speech Synthesis API Integration (AC: #1, #5)
+  - [ ] Create SpeechSynthesisService wrapper class
+  - [ ] Configure Brazilian Portuguese voice options
+  - [ ] Add voice selection and preference management
+  - [ ] Implement browser compatibility layer
+- [ ] Create Audio Formatting Engine (AC: #3, #5)
+  - [ ] Implement Brazilian currency formatting (R$)
+  - [ ] Add date and time formatting for Portuguese
+  [ ] Create number pronunciation algorithms
+  - [ ] Add financial term pronunciation dictionary
+- [ ] Implement Voice Tone System (AC: #4)
+  - [ ] Create voice personality options (informational, warning, confirmation)
+  - [ ] Implement emotion detection and tone matching
+  - [ ] Add configurable tone intensity levels
+  - [ ] Create tone switching for different scenarios
+- [ ] Add Performance Optimization (AC: #5)
+  - [ ] Optimize synthesis for real-time financial data
+  - [ ] Implement audio caching for common responses
+  - [ ] Add preloading for frequently used phrases
+  - [ ] Create streaming synthesis for long responses
+- [ ] Create User Preference Management (AC: #2)
+  - [ ] Speech rate adjustment controls
+  - [ ] Volume control with safety limits
+  - [ ] Voice selection and personality preferences
+  - [ ] Store user preferences in database
+- [ ] Create Comprehensive Testing Suite (AC: #1-5)
+  - [ ] Unit tests for synthesis accuracy and quality
+  - [ ] Integration tests with voice command processing
+  - [ ] Accessibility testing for users with hearing impairments
+  - [ ] Performance testing for real-time synthesis
+  - ] Cross-browser compatibility testing</tasks>
+  </story>
+
+  <acceptanceCriteria>1. [ ] Natural Brazilian Portuguese voice synthesis
+2. [ ] Adjustable speech rate and volume
+3. [ ] Proper pronunciation of financial terms and currency values
+4. [ ] Support for different voice tones (informational, warning, confirmation)
+5. [ ] Real-time synthesis for dynamic financial data</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/epics/voice-interface-foundation.md" title="Voice Interface Foundation Epic" section="Story 1.3" snippet="Implement text-to-speech service that provides natural-sounding Portuguese voice responses for financial information and confirmations with Brazilian Portuguese voice synthesis, adjustable speech rate and volume, proper pronunciation of financial terms and currency values." />
+      <doc path="docs/architecture.md" title="AegisWallet Architecture" section="Voice Processing" snippet="Voice command processing flow with SpeechRecognitionService and SpeechSynthesisService, 6 Essential Voice Commands, and AI autonomy levels from 50% to 95% trust." />
+    </docs>
+    <code>
+      <artifact path="src/lib/tts/textToSpeechService.ts" kind="service" symbol="TextToSpeechService" lines="135-418" reason="Existing comprehensive TTS service implementation with Brazilian Portuguese support, SSML, caching, and Web Speech API integration" />
+      <artifact path="src/hooks/useMultimodalResponse.ts" kind="hook" symbol="useMultimodalResponse" lines="77-330" reason="Existing hook that orchestrates multimodal responses including TTS output, already integrated with TTS service" />
+      <artifact path="src/components/voice/VoiceResponse.tsx" kind="component" symbol="VoiceResponse" lines="54-152" reason="Existing voice response UI component with Brazilian currency formatting and visual feedback patterns" />
+      <artifact path="src/lib/speech/" kind="directory" symbol="Speech Services" lines="" reason="Planned location for SpeechSynthesisService.ts per architecture documentation" />
+    </code>
+    <dependencies>
+      <dependency ecosystem="web-apis" name="Web Speech API" version="native" reason="Core browser speech synthesis API" />
+      <dependency ecosystem="runtime" name="Bun" version="latest" reason="JavaScript runtime for performance optimization" />
+      <dependency ecosystem="framework" name="React" version="19.2.0" reason="UI framework for voice response components" />
+      <dependency ecosystem="database" name="Supabase" version="2.80.0" reason="For storing user voice preferences and settings" />
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture" description="Follow KISS/YAGNI principles - build on existing voice infrastructure rather than creating new patterns" />
+    <constraint type="performance" description="Voice response time: &lt;500ms (target), &lt;1s (max) per architecture requirements" />
+    <constraint type="brazilian-market" description="Must support Brazilian Portuguese with proper R$ currency pronunciation and financial terminology" />
+    <constraint type="accessibility" description="Provide text-based alternatives for users with hearing impairments per LGPD compliance" />
+    <constraint type="integration" description="Enhance existing useMultimodalResponse hook and VoiceResponse component rather than replacing" />
+    <constraint type="testing" description="Achieve 90%+ test coverage for critical business logic using Vitest framework" />
+    <constraint type="browser-compatibility" description="Implement fallback for browsers without Web Speech API support" />
+  </constraints>
+  <interfaces>
+    <interface name="TTSConfig" kind="typescript-interface" signature="interface TTSConfig { voice: 'pt-BR-Francisca' | 'pt-BR-Antonio' | 'default'; rate: number; pitch: number; volume: number; ssmlEnabled: boolean; cachingEnabled: boolean; }" path="src/lib/tts/textToSpeechService.ts" />
+    <interface name="SSMLOptions" kind="typescript-interface" signature="interface SSMLOptions { emphasis?: 'strong' | 'moderate' | 'reduced'; pauseDuration?: number; prosody?: { rate?: 'x-slow' | 'slow' | 'medium' | 'fast' | 'x-fast'; pitch?: 'x-low' | 'low' | 'medium' | 'high' | 'x-high'; volume?: 'silent' | 'x-soft' | 'soft' | 'medium' | 'loud' | 'x-loud'; }; }" path="src/lib/tts/textToSpeechService.ts" />
+    <interface name="TextToSpeechService" kind="class" signature="class TextToSpeechService { speak(text: string, options?: SSMLOptions): Promise&lt;TTSResponse&gt;; stop(): void; pause(): void; resume(): void; getAvailableVoices(): SpeechSynthesisVoice[]; updateConfig(config: Partial&lt;TTSConfig&gt;): void; }" path="src/lib/tts/textToSpeechService.ts" />
+    <interface name="useMultimodalResponse" kind="react-hook" signature="function useMultimodalResponse(options?: UseMultimodalResponseOptions): UseMultimodalResponseReturn" path="src/hooks/useMultimodalResponse.ts" />
+  </interfaces>
+  <tests>
+    <standards>Use Vitest for unit/integration tests (3-5x faster than Jest), Test RLS policies with crafted JWTs, Include performance testing for financial operations, Achieve 90%+ test coverage for critical business logic, Mock external dependencies appropriately, Use property-based testing for complex logic</standards>
+    <locations>src/lib/tts/__tests__/TextToSpeechService.test.ts, src/test/voice/multimodal/multimodalResponse.test.ts, src/lib/speech/__tests__/SpeechSynthesisService.test.ts</locations>
+    <ideas>
+      <test ac="1" idea="Unit test for Brazilian Portuguese voice synthesis accuracy with regional accents" />
+      <test ac="2" idea="Integration test for speech rate and volume adjustment controls" />
+      <test ac="3" idea="Test Brazilian currency formatting (R$) pronunciation with various amounts" />
+      <test ac="4" idea="Test voice personality switching between informational, warning, and confirmation tones" />
+      <test ac="5" idea="Performance test for real-time synthesis &lt;800ms per architecture requirements" />
+      <test ac="accessibility" idea="Test text-based fallback functionality for accessibility compliance" />
+    </ideas>
+  </tests>
+</story-context>

@@ -53,43 +53,72 @@ vi.mock('@/lib/stt/audioProcessor', () => {
 });
 
 vi.mock('@/lib/stt/voiceActivityDetection', () => {
-  const mockVAD = {
-    initialize: vi.fn().mockResolvedValue(undefined),
-    detectVoiceActivity: vi.fn().mockResolvedValue({ hasVoice: true }),
-    dispose: vi.fn(),
-    stop: vi.fn(),
-    isActive: vi.fn().mockReturnValue(false),
-    getCurrentState: vi.fn().mockReturnValue({
-      isSpeaking: false,
-      energy: 0,
-      speechStartTime: null,
-      speechDuration: 0,
-    }),
-    onSpeechStartCallback: vi.fn(),
-    onSpeechEndCallback: vi.fn(),
-    setEnergyThreshold: vi.fn(),
+  const createMockVAD = () => {
+    let active = false;
+
+    return {
+      initialize: vi.fn(async () => {
+        active = true;
+      }),
+      detectVoiceActivity: vi.fn().mockResolvedValue({ hasVoice: true }),
+      dispose: vi.fn(() => {
+        active = false;
+      }),
+      stop: vi.fn(() => {
+        active = false;
+      }),
+      isActive: vi.fn(() => active),
+      getCurrentState: vi.fn(() => ({
+        isSpeaking: active,
+        energy: active ? 0.6 : 0,
+        speechStartTime: active ? Date.now() : null,
+        speechDuration: active ? 320 : 0,
+      })),
+      onSpeechStartCallback: vi.fn(),
+      onSpeechEndCallback: vi.fn(),
+      setEnergyThreshold: vi.fn(),
+    };
   };
 
   return {
-    createVAD: vi.fn(() => mockVAD),
-    VoiceActivityDetector: vi.fn(() => mockVAD),
+    createVAD: vi.fn(() => createMockVAD()),
+    VoiceActivityDetector: vi.fn(() => createMockVAD()),
   };
 });
 
 vi.mock('@/lib/stt/speechToTextService', () => {
-  const mockSTTService = {
+  const createMockSTTService = () => ({
+    config: {
+      apiKey: 'test-key',
+      language: 'pt',
+      model: 'whisper-1',
+      temperature: 0,
+      timeout: 8000,
+    },
     startRecognition: vi.fn(),
     stopRecognition: vi.fn(),
-    transcribe: vi.fn().mockResolvedValue({
-      text: 'comando teste',
-      confidence: 0.95,
+    transcribe: vi.fn(async (audio: Blob) => {
+      const maxBytes = 5 * 1024 * 1024;
+
+      if (audio.size > maxBytes) {
+        throw new Error('Audio file too large');
+      }
+
+      return {
+        text: 'comando teste',
+        confidence: 0.95,
+        language: 'pt-BR',
+        duration: 1.1,
+        timestamp: new Date(),
+        processingTimeMs: 150,
+      };
     }),
     dispose: vi.fn(),
-  };
+  });
 
   return {
-    createSpeechToTextService: vi.fn(() => mockSTTService),
-    SpeechToTextService: vi.fn(() => mockSTTService),
+    createSTTService: vi.fn(() => createMockSTTService()),
+    SpeechToTextService: vi.fn(() => createMockSTTService()),
   };
 });
 
@@ -357,15 +386,15 @@ afterEach(() => {
 // Clean up global stubs after all tests
 afterAll(() => {
   // Manual cleanup since vi.unstubAllGlobals() might not be available
-  delete (globalThis as any).localStorage;
-  delete (globalThis as any).SpeechSynthesisUtterance;
-  delete (globalThis as any).speechSynthesis;
-  delete (globalThis as any).SpeechRecognition;
-  delete (globalThis as any).webkitSpeechRecognition;
-  delete (globalThis as any).AudioContext;
-  delete (globalThis as any).webkitAudioContext;
-  delete (globalThis as any).requestAnimationFrame;
-  delete (globalThis as any).cancelAnimationFrame;
+  (globalThis as any).localStorage = undefined;
+  (globalThis as any).SpeechSynthesisUtterance = undefined;
+  (globalThis as any).speechSynthesis = undefined;
+  (globalThis as any).SpeechRecognition = undefined;
+  (globalThis as any).webkitSpeechRecognition = undefined;
+  (globalThis as any).AudioContext = undefined;
+  (globalThis as any).webkitAudioContext = undefined;
+  (globalThis as any).requestAnimationFrame = undefined;
+  (globalThis as any).cancelAnimationFrame = undefined;
 });
 
 // Export mock helpers for tests

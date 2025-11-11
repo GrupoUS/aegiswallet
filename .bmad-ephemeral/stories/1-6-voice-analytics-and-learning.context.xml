@@ -1,0 +1,635 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>6</storyId>
+    <title>Voice Analytics and Learning</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>1-6-voice-analytics-and-learning.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user of AegisWallet</asA>
+    <iWant>the voice system to learn and improve from my interactions over time</iWant>
+    <soThat>voice recognition becomes more accurate and personalized to my speech patterns while maintaining privacy</soThat>
+    <tasks>Create Voice Analytics Service, Build Machine Learning Adaptation System, Create Analytics Dashboard, Implement Privacy and Compliance Framework, Build Continuous Improvement System, Create Data Infrastructure, Build Comprehensive Testing Suite</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Track command success rates and user corrections
+2. Machine learning model for accent adaptation
+3. Analytics dashboard for voice interaction metrics
+4. Privacy-compliant data collection and processing
+5. Continuous improvement mechanisms
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Analytics Foundation -->
+      <artifact path="src/lib/nlu/analytics.ts" description="NLU Analytics and Learning System">
+        <snippet line="21-51">export interface AnalyticsConfig {
+  enabled: boolean;
+  batchSize: number;
+  batchInterval: number; // milliseconds
+  persistenceEnabled: boolean;
+  learningEnabled: boolean;
+  regionalAnalysisEnabled: boolean;
+  realTimeMetricsEnabled: boolean;
+  performanceThresholds: {
+    maxProcessingTime: number;
+    minConfidenceThreshold: number;
+    maxErrorRate: number;
+  };
+}</snippet>
+        <snippet line="57-108">export interface HitMissMetrics {
+  totalCommands: number;
+  successfulClassifications: number;
+  failedClassifications: number;
+  hitRate: number;
+  missRate: number;
+  averageConfidence: number;
+  confidenceDistribution: Record<string, number>;
+  intentAccuracy: Record<IntentType, { total: number; correct: number; accuracy: number; }>;
+  entityAccuracy: Record<EntityType, { total: number; correct: number; accuracy: number; }>;
+  regionalAccuracy: Record<string, number>;
+  learningProgress: {
+    weeklyImprovement: number;
+    monthlyImprovement: number;
+    patternEvolution: number;
+    adaptationRate: number;
+  };
+}</snippet>
+      </artifact>
+
+      <!-- Voice Metrics Service -->
+      <artifact path="src/lib/analytics/voiceMetrics.ts" description="Voice Metrics Collection Service">
+        <snippet line="21-39">export interface VoiceMetric {
+  userId: string;
+  sessionId: string;
+  commandType: string;
+  intentType?: string;
+  transcript: string;
+  confidenceScore: number;
+  processingTimeMs: number;
+  sttTimeMs?: number;
+  nluTimeMs?: number;
+  responseTimeMs?: number;
+  success: boolean;
+  errorType?: string;
+  errorMessage?: string;
+  userRegion?: string;
+  deviceType?: string;
+  browser?: string;
+  metadata?: Record<string, any>;
+}</snippet>
+      </artifact>
+
+      <!-- Brazilian Learner -->
+      <artifact path="src/lib/nlu/brazilianLearner.ts" description="Brazilian Portuguese Learning System">
+        <snippet line="18-42">interface RegionalPattern {
+  region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
+  patterns: string[];
+  slangTerms: Record<string, string>; // slang -> standard
+  commonPhrases: string[];
+  confidence: number;
+}
+
+interface PatternEvolution {
+  pattern: string;
+  frequency: number;
+  successRate: number;
+  lastSeen: Date;
+  trend: 'improving' | 'declining' | 'stable';
+  contexts: string[]; // Contexts where pattern works well
+}</snippet>
+      </artifact>
+
+      <!-- LGPD Privacy Compliance -->
+      <artifact path="src/lib/lgpd/dataRetention.ts" description="LGPD Data Retention Manager">
+        <snippet line="25-82">private readonly RETENTION_POLICIES: RetentionPolicy[] = [
+    {
+      dataType: 'voice_recordings',
+      retentionPeriod: '30 dias',
+      retentionMonths: 1,
+      autoDelete: true,
+      legalHold: false,
+      deletionMethod: 'hard_delete',
+    },
+    {
+      dataType: 'biometric_patterns',
+      retentionPeriod: '2 anos após inatividade',
+      retentionMonths: 24,
+      autoDelete: true,
+      legalHold: false,
+      deletionMethod: 'hard_delete',
+    },
+    {
+      dataType: 'analytics_data',
+      retentionPeriod: '13 meses',
+      retentionMonths: 13,
+      autoDelete: true,
+      legalHold: false,
+      deletionMethod: 'anonymization',
+    },
+];</snippet>
+      </artifact>
+
+      <!-- Dashboard Components -->
+      <artifact path="src/components/voice/VoiceDashboard.tsx" description="Voice Analytics Dashboard Component">
+        <snippet line="31-78">const {
+    isListening,
+    isProcessing,
+    transcript,
+    confidence,
+    error,
+    supported,
+    startListening,
+    stopListening,
+  } = useVoiceRecognition({});
+
+const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
+const [commandHistory, setCommandHistory] = useState<
+    Array<{
+      id: string;
+      command: string;
+      response: ProcessedCommand;
+      timestamp: Date;
+    }>
+>([]);</snippet>
+      </artifact>
+
+      <!-- Feedback Loop -->
+      <artifact path="src/lib/ai/feedbackLoop.ts" description="Continuous Learning Feedback System">
+        <snippet line="5-33">export interface FeedbackData {
+  decisionId: string;
+  userAccepted: boolean;
+  outcome: 'success' | 'failure';
+  userRating?: number;
+  comments?: string;
+}
+
+export class FeedbackLoop {
+  async submitFeedback(_feedback: FeedbackData): Promise<void> {
+    // Store feedback for model retraining
+  }
+
+  async getModelPerformance(): Promise<{
+    accuracy: number;
+    acceptanceRate: number;
+    userSatisfaction: number;
+  }> {
+    return {
+      accuracy: 0.92,
+      acceptanceRate: 0.85,
+      userSatisfaction: 4.2,
+    };
+  }</snippet>
+      </artifact>
+    </docs>
+
+    <code>
+      <!-- Database Schema for Analytics -->
+      <artifact path="src/types/database.types.ts" description="Database Types for Analytics">
+        <snippet comment="voice_metrics table tracking all voice interactions">
+export interface Database {
+  public: {
+    Tables: {
+      voice_metrics: {
+        Row: {
+          id: string;
+          user_id: string;
+          command: string;
+          confidence_score: number;
+          processing_time_ms: number;
+          success: boolean;
+          error_type: string | null;
+          created_at: string;
+        };
+        Insert: { /* ... */ };
+        Update: { /* ... */ };
+      };
+      nlu_classification_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          session_id: string;
+          original_text: string;
+          predicted_intent: string;
+          confidence: number;
+          feedback: string | null;
+          timestamp: string;
+          regional_variation: string;
+          linguistic_style: string;
+        };
+      };
+    };
+  };
+}
+        </snippet>
+      </artifact>
+
+      <!-- Chart Components -->
+      <artifact path="src/components/ui/chart.tsx" description="Analytics Visualization Components">
+        <snippet line="19-61">const ChartContainer = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<'div'> & {
+    config: ChartConfig;
+    children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>['children'];
+  }
+>(({ id, className, children, config, ...props }, ref) => {
+  const uniqueId = React.useId();
+  const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`;
+
+  return (
+    <ChartContext.Provider value={{ config }}>
+      <div
+        data-chart={chartId}
+        ref={ref}
+        className={cn(
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground",
+          className
+        )}
+        {...props}
+      >
+        <ChartStyle id={chartId} config={config} />
+        <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+      </div>
+    </ChartContext.Provider>
+  );
+});</snippet>
+      </artifact>
+
+      <!-- Dashboard Hooks -->
+      <artifact path="src/hooks/useDashboard.ts" description="Dashboard Data Management">
+        <snippet line="24-106">export function useDashboard() {
+  // Dados do usuário
+  const { profile, isLoading: profileLoading } = useProfile();
+  const { status: userStatus, isActive } = useUserStatus();
+
+  // Dados financeiros
+  const { accounts, isLoading: accountsLoading } = useBankAccounts();
+  const { balances, isLoading: balancesLoading } = useTotalBalance();
+  const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 });
+  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('month');
+
+  const dashboardData = {
+    user: { profile, isActive, status: userStatus },
+    financial: { totalBalance: balances.BRL || 0, totalAccounts: accounts.length, /* ... */ },
+    events: { upcoming: upcomingEvents.length, overdue: overdueEvents.length, /* ... */ },
+    contacts: { total: contactStats?.totalContacts || 0, /* ... */ },
+  };</snippet>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <!-- Analytics & ML Libraries -->
+      <dependency name="recharts" version="^3.3.0" purpose="Analytics visualization and charting"/>
+      <dependency name="@tanstack/react-query" version="^5.90.7" purpose="Data fetching and caching for analytics"/>
+      
+      <!-- Supabase for Data Storage -->
+      <dependency name="@supabase/supabase-js" version="^2.80.0" purpose="Analytics data persistence and real-time updates"/>
+      
+      <!-- Testing Frameworks -->
+      <dependency name="vitest" version="^3.2.4" purpose="ML model and analytics testing"/>
+      <dependency name="@vitest/coverage-v8" version="^3.2.4" purpose="Test coverage for analytics systems"/>
+      <dependency name="@testing-library/react" version="^16.3.0" purpose="Component testing for dashboard"/>
+      
+      <!-- TypeScript for Type Safety -->
+      <dependency name="typescript" version="^5.9.3" purpose="Type safety for analytics data structures"/>
+      <dependency name="zod" version="^4.1.12" purpose="Schema validation for analytics data"/>
+      
+      <!-- Brazilian Market Compliance -->
+      <framework name="LGPD" purpose="Brazilian data protection compliance" type="privacy"/>
+      <framework name="Accent Detection" purpose="Regional accent recognition for Brazilian Portuguese" type="ml"/>
+      
+      <!-- Performance Monitoring -->
+      <framework name="Core Web Vitals" purpose="Performance standards for analytics dashboard" type="performance"/>
+      <framework name="Real-time Analytics" purpose="Live voice interaction monitoring" type="monitoring"/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Privacy & Compliance Constraints -->
+    <constraint type="privacy" source="LGPD">
+      Voice recordings must be automatically deleted after 30 days unless explicitly retained by user
+    </constraint>
+    <constraint type="privacy" source="LGPD">
+      Analytics data must be anonymized after 13 months per Brazilian data protection laws
+    </constraint>
+    <constraint type="privacy" source="LGPD">
+      User must have explicit consent for biometric pattern storage and processing
+    </constraint>
+    <constraint type="privacy" source="LGPD">
+      Data subject requests must be processed within 15 days per LGPD requirements
+    </constraint>
+
+    <!-- Performance Constraints -->
+    <constraint type="performance" source="Core Web Vitals">
+      Analytics dashboard must load within 2 seconds (P95) and maintain Lighthouse score ≥ 90
+    </constraint>
+    <constraint type="performance" source="Real-time">
+      Voice metrics must be tracked and processed with ≤ 100ms latency impact
+    </constraint>
+    <constraint type="performance" source="Edge Computing">
+      ML model inference must complete within 200ms for accent adaptation
+    </constraint>
+
+    <!-- Technical Constraints -->
+    <constraint type="architecture" source="Technology Stack">
+      Must use Bun runtime, Supabase database, and React 19 components
+    </constraint>
+    <constraint type="architecture" source="tRPC">
+      All analytics endpoints must use tRPC v11 with proper Zod validation
+    </constraint>
+    <constraint type="architecture" source="RLS">
+      All analytics tables must implement Row Level Security for tenant isolation
+    </constraint>
+    <constraint type="architecture" source="Type Safety">
+      TypeScript strict mode required - no implicit any types in analytics code
+    </constraint>
+
+    <!-- Business Constraints -->
+    <constraint type="business" source="Brazilian Market">
+      Must support Brazilian Portuguese regional variations (SP, RJ, Nordeste, Sul)
+    </constraint>
+    <constraint type="business" source="User Experience">
+      Analytics must be understandable to non-technical users with clear visualizations
+    </constraint>
+    <constraint type="business" source="Cost">
+      ML model training and inference must be optimized for cost efficiency
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- Analytics Collection Interface -->
+    <interface name="VoiceMetricsService" type="service">
+      <method name="trackMetric" input="VoiceMetric" output="Promise&lt;void&gt;" description="Track voice command performance metrics"/>
+      <method name="getMetricsSummary" input="days: number" output="Promise&lt;MetricsSummary&gt;" description="Get comprehensive metrics summary"/>
+      <method name="getAccuracyByCommand" input="days: number" output="Promise&lt;Record&lt;string, number&gt;&gt;" description="Get accuracy breakdown by command type"/>
+      <method name="getLatencyPercentiles" input="" output="Promise&lt;LatencyBreakdown&gt;" description="Get processing time distribution"/>
+      <method name="checkThresholds" input="AlertThreshold[]" output="Promise&lt;ThresholdViolation[]&gt;" description="Check performance thresholds"/>
+    </interface>
+
+    <!-- Machine Learning Interface -->
+    <interface name="BrazilianLearner" type="service">
+      <method name="detectRegionalVariation" input="text: string" output="RegionalDetection" description="Detect Brazilian regional variation"/>
+      <method name="detectLinguisticStyle" input="text: string" output="StyleDetection" description="Detect linguistic style (slang, formal, colloquial)"/>
+      <method name="learnFromClassification" input="ClassificationLog" output="void" description="Learn from classification results"/>
+      <method name="suggestPatternImprovements" input="IntentType" output="PatternSuggestion[]" description="Suggest pattern improvements"/>
+      <method name="getLearningReport" input="" output="LearningReport" description="Get comprehensive learning analytics"/>
+    </interface>
+
+    <!-- Analytics Dashboard Interface -->
+    <interface name="VoiceAnalyticsDashboard" type="component">
+      <prop name="metricsData" type="MetricsSummary" description="Current metrics summary"/>
+      <prop name="regionalData" type="RegionalPerformance[]" description="Regional performance breakdown"/>
+      <prop name="learningProgress" type="LearningAnalytics" description="Machine learning progress data"/>
+      <prop name="privacySettings" type="PrivacySettings" description="User privacy configuration"/>
+      <method name="exportAnalytics" input="format: 'csv' | 'json' | 'pdf'" output="Promise&lt;Blob&gt;" description="Export analytics data"/>
+      <method name="refreshData" input="" output="Promise&lt;void&gt;" description="Refresh analytics data"/>
+    </interface>
+
+    <!-- Privacy Management Interface -->
+    <interface name="LGPDDataRetentionManager" type="service">
+      <method name="checkRetentionEligibility" input="userId: string" output="Promise&lt;RetentionEligibility[]&gt;" description="Check data eligibility for deletion"/>
+      <method name="processRetentionPolicy" input="userId: string" output="Promise&lt;void&gt;" description="Process automatic data retention"/>
+      <method name="createDataSubjectRequest" input="userId, requestType" output="Promise&lt;string&gt;" description="Create LGPD data subject request"/>
+      <method name="processDeletionRequest" input="userId, requestId" output="Promise&lt;void&gt;" description="Process right to be forgotten request"/>
+      <method name="getUserData" input="userId: string" output="Promise&lt;UserDataExport&gt;" description="Get user data for access request"/>
+    </interface>
+
+    <!-- Feedback Loop Interface -->
+    <interface name="FeedbackLoop" type="service">
+      <method name="submitFeedback" input="FeedbackData" output="Promise&lt;void&gt;" description="Submit user feedback for learning"/>
+      <method name="getModelPerformance" input="" output="Promise&lt;ModelPerformance&gt;" description="Get current model performance metrics"/>
+      <method name="triggerRetraining" input="" output="Promise&lt;void&gt;" description="Trigger ML model retraining"/>
+      <method name="getLearningInsights" input="userId: string" output="Promise&lt;LearningInsights&gt;" description="Get personalized learning insights"/>
+    </interface>
+
+    <!-- Real-time Monitoring Interface -->
+    <interface name="RealTimeAnalytics" type="service">
+      <event name="metricUpdated" data="MetricUpdate" description="Real-time metric update event"/>
+      <event name="thresholdViolation" data="ThresholdViolation" description="Performance threshold violation alert"/>
+      <event name="learningProgress" data="LearningUpdate" description="ML learning progress update"/>
+      <event name="privacyAlert" data="PrivacyAlert" description="Privacy/compliance alert"/>
+      <method name="subscribeToMetrics" input="callback: (metrics: MetricsSummary) => void" output="Unsubscribe" description="Subscribe to real-time metrics"/>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <!-- ML Model Testing Standards -->
+      <standard type="ml-accuracy" description="Accent adaptation models must achieve ≥ 85% accuracy on test dataset"/>
+      <standard type="ml-accuracy" description="Voice command classification must maintain ≥ 92% accuracy across regions"/>
+      <standard type="ml-accuracy" description="Regional variation detection must achieve ≥ 80% confidence"/>
+      <standard type="ml-performance" description="Model inference time must be ≤ 200ms (P95)"/>
+      <standard type="ml-performance" description="Model training must complete within 30 minutes for full dataset"/>
+      <standard type="ml-robustness" description="Models must handle noisy audio with ≥ 10dB SNR degradation"/>
+      <standard type="ml-bias" description="Model bias testing across Brazilian regions with ≤ 5% accuracy variance"/>
+
+      <!-- Analytics Testing Standards -->
+      <standard type="analytics-accuracy" description="Metrics tracking must have 99.9% data integrity"/>
+      <standard type="analytics-performance" description="Analytics processing must add ≤ 50ms latency"/>
+      <standard type="analytics-coverage" description="Test coverage for analytics code must be ≥ 95%"/>
+      <standard type="analytics-accuracy" description="Dashboard metrics must match raw data within 0.1% tolerance"/>
+
+      <!-- Privacy Testing Standards -->
+      <standard type="privacy-compliance" description="All automated deletion processes must be verified with integration tests"/>
+      <standard type="privacy-compliance" description="LGPD compliance must be validated with mock data subject requests"/>
+      <standard type="privacy-security" description="Anonymization must be cryptographically verified"/>
+      <standard type="privacy-security" description="Data retention policies must be tested with edge cases"/>
+
+      <!-- Performance Testing Standards -->
+      <standard type="performance-load" description="Dashboard must handle 100 concurrent users with ≤ 2s response time"/>
+      <standard type="performance-load" description="Analytics pipeline must process 1000 events/second"/>
+      <standard type="performance-stress" description="System must maintain performance under 3x load spike"/>
+      <standard type="performance-endurance" description="24-hour load test with no memory leaks"/>
+
+      <!-- Usability Testing Standards -->
+      <standard type="usability-accessibility" description="Dashboard must meet WCAG 2.1 AA standards"/>
+      <standard type="usability-comprehension" description="Analytics visualizations must be understood by 90% of users"/>
+      <standard type="usability-efficiency" description="Users must find required information within 3 clicks"/>
+      <standard type="usability-satisfaction" description="User satisfaction score must be ≥ 4.0/5.0"/>
+    </standards>
+
+    <locations>
+      <!-- Unit Test Locations -->
+      <test type="unit" location="src/lib/analytics/__tests__/voiceMetrics.test.ts" description="Voice metrics collection functionality"/>
+      <test type="unit" location="src/lib/nlu/__tests__/brazilianLearner.test.ts" description="Brazilian Portuguese learning system"/>
+      <test type="unit" location="src/lib/lgpd/__tests__/dataRetention.test.ts" description="LGPD data retention policies"/>
+      <test type="unit" location="src/lib/ai/__tests__/feedbackLoop.test.ts" description="Machine learning feedback system"/>
+      <test type="unit" location="src/components/voice/__tests__/VoiceDashboard.test.tsx" description="Voice analytics dashboard component"/>
+
+      <!-- Integration Test Locations -->
+      <test type="integration" location="src/test/integration/analytics-pipeline.test.ts" description="End-to-end analytics processing pipeline"/>
+      <test type="integration" location="src/test/integration/ml-model-integration.test.ts" description="ML model training and inference integration"/>
+      <test type="integration" location="src/test/integration/privacy-workflows.test.ts" description="LGPD compliance workflows"/>
+      <test type="integration" location="src/test/integration/real-time-analytics.test.ts" description="Real-time analytics and monitoring"/>
+      <test type="integration" location="src/test/integration/dashboard-data-integration.test.ts" description="Dashboard data integration accuracy"/>
+
+      <!-- E2E Test Locations -->
+      <test type="e2e" location="src/test/e2e/voice-analytics-journey.test.ts" description="Complete voice analytics user journey"/>
+      <test type="e2e" location="src/test/e2e/privacy-controls.test.ts" description="User privacy controls and data deletion"/>
+      <test type="e2e" location="src/test/e2e/analytics-dashboard-workflows.test.ts" description="Dashboard interaction workflows"/>
+      <test type="e2e" location="src/test/e2e/learning-adaptation.test.ts" description="Voice learning and adaptation over time"/>
+
+      <!-- Performance Test Locations -->
+      <test type="performance" location="src/test/performance/analytics-load.test.ts" description="Analytics system load testing"/>
+      <test type="performance" location="src/test/performance/ml-inference-latency.test.ts" description="ML model inference performance"/>
+      <test type="performance" location="src/test/performance/dashboard-rendering.test.ts" description="Dashboard rendering performance"/>
+      <test type="performance" location="src/test/performance/data-pipeline-throughput.test.ts" description="Analytics data pipeline throughput"/>
+
+      <!-- Security Test Locations -->
+      <test type="security" location="src/test/security/data-anonymization.test.ts" description="Data anonymization security"/>
+      <test type="security" location="src/test/security/privacy-controls.test.ts" description="Privacy control security"/>
+      <test type="security" location="src/test/security/audit-trail-integrity.test.ts" description="Audit trail integrity verification"/>
+    </locations>
+
+    <ideas>
+      <!-- Acceptance Criteria 1: Command Success Rates -->
+      <test idea="Track command success/failure rates across different regions and time periods" acceptance="1" type="analytics">
+        <scenario>User issues 100 voice commands across different Brazilian regions</scenario>
+        <given>Voice analytics system is tracking all interactions</given>
+        <when>User provides feedback on command accuracy</when>
+        <then>System calculates success rates by region and command type</then>
+        <then>Dashboard displays success rate trends over time</then>
+        <then>Alerts are generated for success rates below 85%</then>
+      </test>
+
+      <test idea="Validate user correction tracking and learning" acceptance="1" type="ml-learning">
+        <scenario>User corrects voice command misunderstandings</scenario>
+        <given>Voice command is incorrectly classified</given>
+        <when>User provides correction feedback</when>
+        <then>System logs correction for model training</then>
+        <then>Learning system adapts patterns based on corrections</then>
+        <then>Success rate improves in subsequent interactions</then>
+      </test>
+
+      <!-- Acceptance Criteria 2: Accent Adaptation ML -->
+      <test idea="Test Brazilian regional accent adaptation accuracy" acceptance="2" type="ml-regional">
+        <scenario>Users from SP, RJ, Nordeste, and Sul regions test voice commands</scenario>
+        <given>Regional accent detection is enabled</given>
+        <when>Users speak with regional accents and slang</when>
+        <then>System accurately detects regional variation ≥ 80% confidence</then>
+        <then>Command processing accuracy ≥ 85% for all regions</then>
+        <then>Model adapts and improves over time for each region</then>
+      </test>
+
+      <test idea="Validate continuous learning for accent patterns" acceptance="2" type="ml-training">
+        <scenario>ML model learns from regional voice interactions</scenario>
+        <given>Regional interaction data is collected</given>
+        <when>Model training process runs weekly</when>
+        <then>Regional accuracy improves by ≥ 5% monthly</then>
+        <then>New regional patterns are incorporated</then>
+        <then>Model performance is validated against test dataset</then>
+      </test>
+
+      <!-- Acceptance Criteria 3: Analytics Dashboard -->
+      <test idea="Verify dashboard displays comprehensive voice metrics" acceptance="3" type="ui-dashboard">
+        <scenario>User accesses voice analytics dashboard</scenario>
+        <given>User has voice interaction history</given>
+        <when>User navigates to analytics dashboard</when>
+        <then>Dashboard shows success rates, confidence scores, and processing times</then>
+        <then>Regional performance breakdown is displayed</then>
+        <then>Trend charts show improvement over time</then>
+        <then>Export functionality works for CSV and PDF formats</then>
+      </test>
+
+      <test idea="Test real-time dashboard updates" acceptance="3" type="real-time">
+        <scenario>User performs voice command while viewing dashboard</scenario>
+        <given>Dashboard is open and displaying metrics</given>
+        <when>User executes new voice command</when>
+        <then>Dashboard updates metrics in real-time without page refresh</then>
+        <then>New data point appears in trend charts</then>
+        <then>Performance indicators update immediately</then>
+      </test>
+
+      <!-- Acceptance Criteria 4: Privacy Compliance -->
+      <test idea="Test automated data deletion per LGPD" acceptance="4" type="privacy">
+        <scenario>Voice recording data reaches retention limit</scenario>
+        <given>Data retention policy is configured for 30 days</given>
+        <when>Voice recordings reach 30 days old</when>
+        <then>System automatically deletes old recordings</then>
+        <then>Audit log records deletion action</then>
+        <then>User receives notification of data deletion</then>
+      </test>
+
+      <test idea="Validate data subject request processing" acceptance="4" type="privacy">
+        <scenario>User requests data access and deletion</scenario>
+        <given>User submits LGPD data subject request</given>
+        <when>Request is processed by system</when>
+        <then>User receives complete data export within 15 days</then>
+        <then>All user data is deleted upon request confirmation</then>
+        <then>Audit trail documents entire process</then>
+      </test>
+
+      <!-- Acceptance Criteria 5: Continuous Improvement -->
+      <test idea="Test feedback loop integration" acceptance="5" type="feedback">
+        <scenario>System collects and processes user feedback</scenario>
+        <given>User provides feedback on voice interactions</given>
+        <when>Feedback is submitted through various channels</when>
+        <then>System aggregates feedback and generates insights</then>
+        <then>ML model retraining is triggered based on feedback</then>
+        <then>Performance improvements are measurable</then>
+      </test>
+
+      <test idea="Validate model improvement over time" acceptance="5" type="ml-improvement">
+        <scenario>ML model performance is monitored over extended period</scenario>
+        <given>Model is trained on initial dataset</given>
+        <when>System processes interactions over 3 months</when>
+        <then>Overall accuracy improves by ≥ 10%</then>
+        <then>Regional accuracy variance decreases to ≤ 5%</then>
+        <then>User satisfaction scores increase</then>
+      </test>
+
+      <!-- Performance and Security Test Ideas -->
+      <test idea="Load test analytics dashboard under concurrent users" type="performance">
+        <scenario>100 users access analytics dashboard simultaneously</scenario>
+        <given>Dashboard is deployed with realistic data volume</given>
+        <when>100 concurrent users load dashboard pages</when>
+        <then>Page load times remain ≤ 2 seconds (P95)</then>
+        <then>Server CPU usage stays ≤ 80%</then>
+        <then>No memory leaks detected over 1 hour test</then>
+      </test>
+
+      <test idea="Test analytics data integrity under load" type="performance">
+        <scenario>High-volume voice interactions generate analytics data</scenario>
+        <given>Voice analytics system is processing normal load</given>
+        <when>Volume increases to 10x normal traffic</when>
+        <then>No data loss occurs in metrics collection</then>
+        <then>Data processing latency stays ≤ 1 second</then>
+        <then>Database performance remains acceptable</then>
+      </test>
+
+      <test idea="Security test for analytics data access controls" type="security">
+        <scenario>Unauthorized user attempts to access analytics data</scenario>
+        <given>User authentication and authorization are configured</given>
+        <when>Unauthorized user tries to access another user's analytics</when>
+        <then>Access is denied with appropriate error message</then>
+        <then>Audit log records access attempt</then>
+        <then>No data leakage occurs</then>
+      </test>
+
+      <!-- Accessibility Test Ideas -->
+      <test idea="Verify dashboard accessibility compliance" type="accessibility">
+        <scenario>User with assistive technology accesses analytics dashboard</scenario>
+        <given>Dashboard follows accessibility guidelines</given>
+        <when>User navigates with screen reader</when>
+        <then>All charts have alternative text descriptions</then>
+        <then>Keyboard navigation works for all interactive elements</then>
+        <then>Color contrast meets WCAG 2.1 AA standards</then>
+      </test>
+
+      <!-- Integration Test Ideas -->
+      <test idea="End-to-end voice analytics workflow" type="integration">
+        <scenario>Complete voice analytics workflow from interaction to insight</scenario>
+        <given>All system components are integrated</given>
+        <when>User performs voice command and provides feedback</when>
+        <then>Data flows through entire analytics pipeline</then>
+        <then>Insights are generated and displayed in dashboard</then>
+        <then>ML model improves from feedback</then>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

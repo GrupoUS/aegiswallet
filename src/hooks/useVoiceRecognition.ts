@@ -34,15 +34,16 @@ const VOICE_COMMANDS = {
   TRANSFER: ['transferir para', 'enviar para', 'pagar para'],
 } as const;
 
-export function useVoiceRecognition(
-  options: {
-    onTranscript?: (transcript: string, confidence: number) => void;
-    onCommand?: (command: VoiceCommand) => void;
-    onError?: (error: string) => void;
-    autoRestart?: boolean;
-    maxDuration?: number;
-  } = {}
-) {
+type VoiceRecognitionOptions = {
+  onTranscript?: (transcript: string, confidence: number) => void;
+  onCommand?: (command: VoiceCommand) => void;
+  onError?: (error: string) => void;
+  autoRestart?: boolean;
+  maxDuration?: number;
+  autoStopTimeoutMs?: number;
+};
+
+export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
   const [state, setState] = useState<VoiceState>({
     isListening: false,
     isProcessing: false,
@@ -178,7 +179,9 @@ export function useVoiceRecognition(
         recognitionRef.current.start();
       }
 
-      // Set timeout for auto-stop (reduced from 10s to 3s)
+      const autoStopTimeout = options.autoStopTimeoutMs ?? 3000;
+
+      // Set timeout for auto-stop
       timeoutRef.current = setTimeout(() => {
         if (recognitionRef.current) {
           recognitionRef.current.stop();
@@ -191,7 +194,7 @@ export function useVoiceRecognition(
           isProcessing: false,
           error: 'Tempo esgotado. Tente novamente.',
         }));
-      }, 3000);
+      }, autoStopTimeout);
     } catch (error) {
       setState((prev) => ({
         ...prev,

@@ -1,12 +1,18 @@
-import { Clock, Database, Eye, Mail, Mic, Shield } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
+import { Clock, Database, Eye, Mail, Mic, Shield } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface ConsentData {
   voice_data_processing: boolean;
@@ -16,6 +22,27 @@ interface ConsentData {
   marketing_communications: boolean;
 }
 
+type UserConsentRow = {
+  consent_type: keyof ConsentData;
+  granted: boolean;
+};
+
+type UserConsentInsert = {
+  user_id: string;
+  consent_type: keyof ConsentData;
+  granted: boolean;
+  consent_version: string;
+  consent_date: string;
+  updated_at: string;
+};
+
+type AuditLogInsert = {
+  user_id: string;
+  action: string;
+  resource_type: string;
+  details: Record<string, unknown>;
+};
+
 interface LGPDConsentFormProps {
   userId: string;
   onConsentComplete?: () => void;
@@ -23,45 +50,50 @@ interface LGPDConsentFormProps {
   className?: string;
 }
 
+const consentDefaults: ConsentData = {
+  voice_data_processing: false,
+  biometric_data: false,
+  audio_recording: false,
+  data_retention: false,
+  marketing_communications: false,
+};
+
 export function LGPDConsentForm({
   userId,
   onConsentComplete,
   requiredOnly = false,
   className,
 }: LGPDConsentFormProps) {
-  const [consents, setConsents] = useState<ConsentData>({
-    voice_data_processing: false,
-    biometric_data: false,
-    audio_recording: false,
-    data_retention: false,
-    marketing_communications: false,
-  });
-
+  const [consents, setConsents] = useState<ConsentData>(consentDefaults);
   const [loading, setLoading] = useState(false);
-  const [existingConsents, setExistingConsents] = useState<ConsentData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadExistingConsents = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('user_consent')
-        .select('*')
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false });
+        .from<UserConsentRow>("user_consent")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false });
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        const latestConsents = data.reduce((acc, consent) => {
-          acc[consent.consent_type as keyof ConsentData] = consent.granted;
-          return acc;
-        }, {} as ConsentData);
+      const typedData = data as UserConsentRow[] | null;
 
-        setExistingConsents(latestConsents);
+      if (typedData?.length) {
+        const latestConsents = typedData.reduce<ConsentData>(
+          (acc, consent) => {
+            const consentKey = consent.consent_type as keyof ConsentData;
+            acc[consentKey] = Boolean(consent.granted);
+            return acc;
+          },
+          { ...consentDefaults },
+        );
+
         setConsents(latestConsents);
       }
     } catch (err) {
-      console.error('Error loading consents:', err);
+      console.error("Error loading consents:", err);
     }
   }, [userId]);
 
@@ -69,7 +101,10 @@ export function LGPDConsentForm({
     loadExistingConsents();
   }, [loadExistingConsents]);
 
-  const handleConsentChange = (consentType: keyof ConsentData, granted: boolean) => {
+  const handleConsentChange = (
+    consentType: keyof ConsentData,
+    granted: boolean,
+  ) => {
     setConsents((prev) => ({
       ...prev,
       [consentType]: granted,
@@ -78,14 +113,14 @@ export function LGPDConsentForm({
 
   const validateRequiredConsents = (): boolean => {
     // Required consents for core functionality
-    const required = ['voice_data_processing', 'audio_recording'];
+    const required = ["voice_data_processing", "audio_recording"];
     return required.every((consent) => consents[consent as keyof ConsentData]);
   };
 
   const handleSubmit = async () => {
     if (!validateRequiredConsents()) {
       setError(
-        'Você deve consentir com o processamento de dados de voz e gravação de áudio para usar os recursos principais.'
+        "Você deve consentir com o processamento de dados de voz e gravação de áudio para usar os recursos principais.",
       );
       return;
     }
@@ -94,37 +129,36 @@ export function LGPDConsentForm({
     setError(null);
 
     try {
-      const consentVersion = '1.0.0';
+      const consentVersion = "1.0.0";
       const consentTypes = Object.keys(consents) as (keyof ConsentData)[];
 
       // Insert or update each consent type
       for (const consentType of consentTypes) {
         if (
           !requiredOnly ||
-          consentType === 'voice_data_processing' ||
-          consentType === 'audio_recording'
+          consentType === "voice_data_processing" ||
+          consentType === "audio_recording"
         ) {
-          await supabase.from('user_consent').upsert(
-            {
-              user_id: userId,
-              consent_type: consentType,
-              granted: consents[consentType],
-              consent_version: consentVersion,
-              consent_date: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            {
-              onConflict: 'user_id,consent_type',
-            }
-          );
+          const consentPayload: UserConsentInsert = {
+            user_id: userId,
+            consent_type: consentType,
+            granted: consents[consentType],
+            consent_version: consentVersion,
+            consent_date: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          await supabase.from("user_consent").upsert(consentPayload, {
+            onConflict: "user_id,consent_type",
+          });
         }
       }
 
       // Log consent activity for audit
-      await supabase.from('audit_logs').insert({
+      const auditPayload: AuditLogInsert = {
         user_id: userId,
-        action: 'lgpd_consent_updated',
-        resource_type: 'user_consent',
+        action: "lgpd_consent_updated",
+        resource_type: "user_consent",
         details: {
           consent_version: consentVersion,
           consents_granted: Object.entries(consents)
@@ -132,12 +166,14 @@ export function LGPDConsentForm({
             .map(([type]) => type),
           timestamp: new Date().toISOString(),
         },
-      });
+      };
+
+      await supabase.from("audit_logs").insert(auditPayload);
 
       onConsentComplete?.();
     } catch (err) {
-      console.error('Error saving consents:', err);
-      setError('Erro ao salvar suas preferências. Tente novamente.');
+      console.error("Error saving consents:", err);
+      setError("Erro ao salvar suas preferências. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -145,80 +181,87 @@ export function LGPDConsentForm({
 
   const consentItems = [
     {
-      key: 'voice_data_processing' as keyof ConsentData,
-      title: 'Processamento de Dados de Voz',
-      description: 'Permitir o processamento de comandos de voz para operações financeiras',
+      key: "voice_data_processing" as keyof ConsentData,
+      title: "Processamento de Dados de Voz",
+      description:
+        "Permitir o processamento de comandos de voz para operações financeiras",
       icon: <Mic className="h-4 w-4" />,
       required: true,
       lgpd: {
-        purpose: 'Essencial para funcionalidade principal',
-        retention: 'Enquanto usuário ativo',
-        sharing: 'Não compartilhado com terceiros',
+        purpose: "Essencial para funcionalidade principal",
+        retention: "Enquanto usuário ativo",
+        sharing: "Não compartilhado com terceiros",
       },
     },
     {
-      key: 'audio_recording' as keyof ConsentData,
-      title: 'Gravação de Áudio',
-      description: 'Permitir gravação temporária de áudio para processamento de comandos',
+      key: "audio_recording" as keyof ConsentData,
+      title: "Gravação de Áudio",
+      description:
+        "Permitir gravação temporária de áudio para processamento de comandos",
       icon: <Mic className="h-4 w-4" />,
       required: true,
       lgpd: {
-        purpose: 'Processamento de comandos de voz',
-        retention: '48 horas após processamento',
-        sharing: 'Não compartilhado',
+        purpose: "Processamento de comandos de voz",
+        retention: "48 horas após processamento",
+        sharing: "Não compartilhado",
       },
     },
     {
-      key: 'biometric_data' as keyof ConsentData,
-      title: 'Dados Biométricos',
-      description: 'Permitir uso de dados biométricos para autenticação',
+      key: "biometric_data" as keyof ConsentData,
+      title: "Dados Biométricos",
+      description: "Permitir uso de dados biométricos para autenticação",
       icon: <Shield className="h-4 w-4" />,
       required: false,
       lgpd: {
-        purpose: 'Autenticação e segurança',
-        retention: 'Enquanto autorizado',
-        sharing: 'Não compartilhado',
+        purpose: "Autenticação e segurança",
+        retention: "Enquanto autorizado",
+        sharing: "Não compartilhado",
       },
     },
     {
-      key: 'data_retention' as keyof ConsentData,
-      title: 'Retenção de Dados',
-      description: 'Permitir armazenamento de dados conforme políticas de retenção',
+      key: "data_retention" as keyof ConsentData,
+      title: "Retenção de Dados",
+      description:
+        "Permitir armazenamento de dados conforme políticas de retenção",
       icon: <Clock className="h-4 w-4" />,
       required: false,
       lgpd: {
-        purpose: 'Conformidade com regulamentações',
-        retention: 'Períodos obrigatórios legais',
-        sharing: 'Autoridades quando requerido',
+        purpose: "Conformidade com regulamentações",
+        retention: "Períodos obrigatórios legais",
+        sharing: "Autoridades quando requerido",
       },
     },
     {
-      key: 'marketing_communications' as keyof ConsentData,
-      title: 'Comunicações de Marketing',
-      description: 'Permitir envio de comunicações sobre produtos e serviços',
+      key: "marketing_communications" as keyof ConsentData,
+      title: "Comunicações de Marketing",
+      description: "Permitir envio de comunicações sobre produtos e serviços",
       icon: <Mail className="h-4 w-4" />,
       required: false,
       lgpd: {
-        purpose: 'Marketing e relacionamento',
-        retention: 'Até revogação do consentimento',
-        sharing: 'Não compartilhado',
+        purpose: "Marketing e relacionamento",
+        retention: "Até revogação do consentimento",
+        sharing: "Não compartilhado",
       },
     },
   ];
 
-  const filteredItems = requiredOnly ? consentItems.filter((item) => item.required) : consentItems;
+  const filteredItems = requiredOnly
+    ? consentItems.filter((item) => item.required)
+    : consentItems;
 
   return (
-    <Card className={cn('w-full max-w-4xl mx-auto', className)}>
+    <Card className={cn("w-full max-w-4xl mx-auto", className)}>
       <CardHeader className="text-center">
         <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <Shield className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl">LGPD - Lei Geral de Proteção de Dados</CardTitle>
+        <CardTitle className="text-2xl">
+          LGPD - Lei Geral de Proteção de Dados
+        </CardTitle>
         <CardDescription>
           {requiredOnly
-            ? 'Consentimentos necessários para usar os recursos principais'
-            : 'Gerencie suas preferências de privacidade e consentimento'}
+            ? "Consentimentos necessários para usar os recursos principais"
+            : "Gerencie suas preferências de privacidade e consentimento"}
         </CardDescription>
       </CardHeader>
 
@@ -234,8 +277,8 @@ export function LGPDConsentForm({
             <div
               key={item.key}
               className={cn(
-                'p-4 border rounded-lg space-y-3',
-                item.required && 'border-primary/20 bg-primary/5'
+                "p-4 border rounded-lg space-y-3",
+                item.required && "border-primary/20 bg-primary/5",
               )}
             >
               <div className="flex items-start gap-3">
@@ -249,7 +292,9 @@ export function LGPDConsentForm({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {item.description}
+                  </p>
                 </div>
               </div>
 
@@ -258,7 +303,9 @@ export function LGPDConsentForm({
                   <Checkbox
                     id={item.key}
                     checked={consents[item.key]}
-                    onCheckedChange={(checked) => handleConsentChange(item.key, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      handleConsentChange(item.key, checked as boolean)
+                    }
                   />
                   <Label htmlFor={item.key} className="text-sm cursor-pointer">
                     Eu concordo com o {item.title.toLowerCase()}
@@ -296,15 +343,22 @@ export function LGPDConsentForm({
             disabled={loading || !validateRequiredConsents()}
             className="w-full"
           >
-            {loading ? 'Salvando...' : requiredOnly ? 'Continuar' : 'Salvar Preferências'}
+            {loading
+              ? "Salvando..."
+              : requiredOnly
+                ? "Continuar"
+                : "Salvar Preferências"}
           </Button>
         </div>
 
         <div className="text-center text-xs text-muted-foreground">
-          <p>Você pode alterar suas preferências a qualquer momento nas configurações da conta.</p>
+          <p>
+            Você pode alterar suas preferências a qualquer momento nas
+            configurações da conta.
+          </p>
           <p className="mt-1">
-            Para exercer seus direitos de acesso, correção, exclusão ou portabilidade de dados,
-            entre em contato conosco.
+            Para exercer seus direitos de acesso, correção, exclusão ou
+            portabilidade de dados, entre em contato conosco.
           </p>
         </div>
       </CardContent>

@@ -1,0 +1,131 @@
+/**
+ * Centralized logging utility for AegisWallet
+ * Provides structured logging with different levels and contexts
+ */
+
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+}
+
+export interface LogEntry {
+  level: LogLevel;
+  message: string;
+  timestamp: Date;
+  context?: any;
+  userId?: string;
+  requestId?: string;
+}
+
+export interface LogContext {
+  userId?: string;
+  requestId?: string;
+  ip?: string;
+  userAgent?: string;
+  [key: string]: any;
+}
+
+class Logger {
+  private static instance: Logger;
+  private logLevel: LogLevel = LogLevel.INFO;
+
+  private constructor() {}
+
+  static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+
+  setLogLevel(level: LogLevel): void {
+    this.logLevel = level;
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return level >= this.logLevel;
+  }
+
+  private formatMessage(entry: LogEntry): string {
+    const timestamp = entry.timestamp.toISOString();
+    const level = LogLevel[entry.level].padEnd(5);
+    const context = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
+    return `[${timestamp}] ${level} ${entry.message}${context}`;
+  }
+
+  private log(level: LogLevel, message: string, context?: LogContext): void {
+    if (!this.shouldLog(level)) {
+      return;
+    }
+
+    const entry: LogEntry = {
+      level,
+      message,
+      timestamp: new Date(),
+      context,
+    };
+
+    const formattedMessage = this.formatMessage(entry);
+
+    switch (level) {
+      case LogLevel.DEBUG:
+        console.debug(formattedMessage);
+        break;
+      case LogLevel.INFO:
+        console.info(formattedMessage);
+        break;
+      case LogLevel.WARN:
+        console.warn(formattedMessage);
+        break;
+      case LogLevel.ERROR:
+        console.error(formattedMessage);
+        break;
+    }
+  }
+
+  debug(message: string, context?: LogContext): void {
+    this.log(LogLevel.DEBUG, message, context);
+  }
+
+  info(message: string, context?: LogContext): void {
+    this.log(LogLevel.INFO, message, context);
+  }
+
+  warn(message: string, context?: LogContext): void {
+    this.log(LogLevel.WARN, message, context);
+  }
+
+  error(message: string, context?: LogContext): void {
+    this.log(LogLevel.ERROR, message, context);
+  }
+
+  // Convenience methods for specific contexts
+  security(message: string, context?: LogContext): void {
+    this.warn(`[SECURITY] ${message}`, context);
+  }
+
+  audit(message: string, context?: LogContext): void {
+    this.info(`[AUDIT] ${message}`, context);
+  }
+
+  performance(message: string, context?: LogContext): void {
+    this.info(`[PERF] ${message}`, context);
+  }
+}
+
+// Export singleton instance
+export const logger = Logger.getInstance();
+
+// Set default log level based on environment
+if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
+  logger.setLogLevel(LogLevel.INFO);
+} else if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+  logger.setLogLevel(LogLevel.DEBUG);
+} else {
+  logger.setLogLevel(LogLevel.INFO);
+}
+
+// Export types for external use
+export type { LogContext as LogContextType };

@@ -1,0 +1,75 @@
+# generated: 2025-11-10
+# project: aegiswallet
+# project_key: aegiswallet
+# tracking_system: file-system
+# story_location: D:\Coders\aegiswallet\docs\stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Next epic tech context created by *epic-tech-context (required)
+#
+# Story Status:
+#   - drafted: Story file created in stories folder by *create-story
+#   - ready-for-dev: Draft approved and story context created by *story-ready
+#   - in-progress: Developer actively working on implementation by *dev-story
+#   - review: Implementation complete, ready for review by *code-review
+#   - done: Story completed by *story-done
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done by *retrospective
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
+
+generated: 2025-11-10
+project: aegiswallet
+project_key: aegiswallet
+tracking_system: file-system
+story_location: D:\Coders\aegiswallet\docs\stories
+
+development_status:
+  # Epic 1: Voice Interface Foundation
+  epic-1: contexted
+  1-1-speech-recognition-service: review
+  1-2-voice-command-processor: ready-for-dev
+  1-3-speech-synthesis-service: ready-for-dev
+  1-4-voice-security-confirmation: ready-for-dev
+  1-5-voice-command-integration-framework: ready-for-dev
+  1-6-voice-analytics-and-learning: ready-for-dev
+  epic-1-retrospective: optional
+
+  # Epic 2: Banking Integration Core
+  epic-2: contexted
+  2-1-open-banking-api-integration: backlog
+  2-2-account-management-system: backlog
+  2-3-transaction-synchronization-engine: backlog
+  2-4-pix-payment-integration: backlog
+  2-5-banking-security-framework: backlog
+  2-6-banking-error-handling-and-recovery: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Smart Payment Automation
+  epic-3: contexted
+  3-1-bill-recognition-and-extraction: backlog
+  3-2-payment-scheduling-engine: backlog
+  3-3-automated-payment-execution: backlog
+  3-4-recurring-payment-management: backlog
+  3-5-payment-intelligence-and-optimization: backlog
+  3-6-payment-security-and-controls: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Mobile Interface & Dashboard
+  epic-4: contexted
+  4-1-mobile-application-framework: backlog
+  4-2-financial-dashboard-core: backlog
+  4-3-voice-interface-visual-feedback: backlog
+  4-4-transaction-management-interface: backlog
+  4-5-settings-and-configuration-interface: backlog
+  4-6-emergency-and-critical-alerts-interface: backlog
+  epic-4-retrospective: optional

@@ -1,0 +1,404 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/voice-command-integration" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Voice Command Integration Framework</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-10</generatedAt>
+    <generator>BMAD Story Context Workflow v6-alpha</generator>
+    <sourceStoryPath>docs/epics/voice-interface-foundation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user of AegisWallet</asA>
+    <iWant>voice commands to seamlessly integrate with the banking and financial system components</iWant>
+    <soThat>I can execute financial operations through natural voice commands while the system handles all the technical integration complexity</soThat>
+    <tasks>Create Voice Command Integration Service, Build Banking Operations Integration Layer, Implement Error Handling and Recovery System, Create Context and Session Management, Build Security and Authentication Integration, Implement Multi-Language Framework, Build Comprehensive Testing Suite</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Seamless integration with banking operations
+2. Error handling for unrecognized commands
+3. Context persistence across voice sessions
+4. Integration with existing security and authentication
+5. Support for multi-language future expansion
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc id="prd" path="docs/prd.md">
+        <relevance>High - Defines voice-first interface as primary interaction method, 6 essential commands covering 95% of financial needs, and 95% automation target</relevance>
+        <snippets>
+          <snippet path="docs/prd.md" line="271-278">6 Essential Voice Commands: "Como está meu saldo?", "Quanto posso gastar esse mês?", "Tem algum boleto programado para pagar?", "Tem algum recebimento programado para entrar?", "Como ficará meu saldo no final do mês?", "Faz uma transferência para tal pessoa?"</snippet>
+          <snippet path="docs/prd.md" line="310-314">Voice Command Success: 95%+ taxa de reconhecimento, Voice Response Time: &lt;1 segundo médio</snippet>
+          <snippet path="docs/prd.md" line="367-376">Open Banking Integration: Sincronização automática 24/7 com 5 maiores bancos brasileiros via APIs Open Banking maduras, API integration patterns, Error handling and fallback mechanisms</snippet>
+        </snippets>
+      </doc>
+      <doc id="architecture" path="docs/architecture.md">
+        <relevance>High - Core technology stack, voice processing architecture, real-time subscriptions, and existing voice components</relevance>
+        <snippets>
+          <snippet path="docs/architecture.md" line="58-70">Technology Stack: Bun + Hono + tRPC + Supabase + React 19, TanStack Router v5 + TanStack Query v5 + Vite + Tailwind CSS</snippet>
+          <snippet path="docs/architecture.md" line="160-179">Voice Processing: 6 Essential Voice Commands, ESSENTIAL_COMMANDS array, interface VoiceCommand with intent classification</snippet>
+          <snippet path="docs/architecture.md" line="328-371">Real-time Subscriptions: WebSocket connections for voice commands, transactions, balances, and PIX status updates</snippet>
+          <snippet path="docs/architecture.md" line="271-324">API Design: tRPC procedures for voice commands with proper input validation, authentication, and error handling</snippet>
+        </snippets>
+      </doc>
+      <doc id="epic" path="docs/epics/voice-interface-foundation.md">
+        <relevance>Critical - Defines Story 1.5 requirements and integration patterns</relevance>
+        <snippets>
+          <snippet path="docs/epics/voice-interface-foundation.md" line="77-91">Story 1.5 Requirements: Integration layer that connects voice recognition to existing financial system components and APIs, API integration patterns, Error handling and fallback mechanisms, Session management and context tracking</snippet>
+          <snippet path="docs/epics/voice-interface-foundation.md" line="107-112">Dependencies: Banking integration (Epic 2) for command execution, Security integration, Performance: Must meet &lt;1 second response time requirements</snippet>
+        </snippets>
+      </doc>
+      <doc id="testing" path="docs/design-specs/TESTING-RESULTS.md">
+        <relevance>High - Testing patterns and performance requirements for voice components</relevance>
+        <snippets>
+          <snippet path="docs/design-specs/TESTING-RESULTS.md" line="225-242">Performance Testing: Core Web Vitals maintained, Voice command processing &lt;2s target latency, No regressions in voice functionality</snippet>
+          <snippet path="docs/design-specs/TESTING-RESULTS.md" line="43-55">Automated Test Results: 150+ tests passed, Voice component tests included, 90%+ coverage for critical business logic</snippet>
+        </snippets>
+      </doc>
+    </docs>
+    
+    <code>
+      <component id="voiceService" path="src/services/voiceService.ts" type="service">
+        <purpose>Core voice recognition and synthesis service with Web Speech API integration</purpose>
+        <interfaces>
+          <interface name="VoiceService">startListening(), stopListening(), speak(), detectCommand(), getCommandIntent()</interface>
+          <interface name="VoiceRecognitionResult">transcript, confidence, command, intent</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="Singleton Pattern">Global voice service instance management</pattern>
+          <pattern name="Command Detection">Pattern matching for Portuguese voice commands</pattern>
+          <pattern name="Error Handling">Browser compatibility checks and fallbacks</pattern>
+        </patterns>
+        <constraints>Browser Web Speech API support required, Portuguese language optimization, 1000ms response time target</constraints>
+      </component>
+      
+      <component id="voiceProcessor" path="src/lib/voiceCommandProcessor.ts" type="processor">
+        <purpose>NLU-enhanced voice command processing with Brazilian Portuguese patterns</purpose>
+        <interfaces>
+          <interface name="ProcessedCommand">type, message, data, requiresConfirmation, confidence</interface>
+          <interface name="brazilianFinancialUtils">formatCurrency, isValidCPF, isValidCNPJ, formatPhone</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="Command Pattern">6 essential voice commands with regex patterns</pattern>
+          <pattern name="NLU Integration">Natural Language Understanding engine integration</pattern>
+          <pattern name="Mock Data Service">Financial data simulation for development</pattern>
+        </patterns>
+        <constraints>0.7 confidence threshold, Brazilian Portuguese regional support, Financial context awareness</constraints>
+      </component>
+      
+      <component id="voiceProcedures" path="src/server/procedures/voice.ts" type="api">
+        <purpose>tRPC procedures for voice command processing, feedback, and analytics</purpose>
+        <interfaces>
+          <interface name="VoiceRouter">processCommand, submitFeedback, getHistory, getAnalytics</interface>
+          <interface name="Context">Authenticated user session with Supabase integration</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="tRPC Pattern">Type-safe API procedures with Zod validation</pattern>
+          <pattern name="Security Middleware">Rate limiting and authentication checks</pattern>
+          <pattern name="Audit Logging">Comprehensive logging for voice commands and feedback</pattern>
+        </patterns>
+        <constraints>User authentication required, Rate limiting enforced, GDPR/LGPD compliance</constraints>
+      </component>
+      
+      <component id="bankingConnector" path="src/lib/banking/openBankingConnector.ts" type="connector">
+        <purpose>Open Banking integration connector for Brazilian financial institutions</purpose>
+        <interfaces>
+          <interface name="BankAccount">id, institution, type, balance, currency, accountNumber</interface>
+          <interface name="Transaction">id, accountId, date, amount, description, type, category</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="Connector Pattern">Belvo API integration abstraction</pattern>
+          <pattern name="Mock Implementation">Development fallback with sample data</pattern>
+        </patterns>
+        <constraints>Brazilian institution support, Real-time balance queries, Transaction history access</constraints>
+      </component>
+      
+      <component id="sessionManager" path="src/lib/session/sessionManager.ts" type="session">
+        <purpose>Comprehensive session management with activity tracking and timeout handling</purpose>
+        <interfaces>
+          <interface name="SessionManager">getState(), extendSession(), logout(), isSessionActive()</interface>
+          <interface name="SessionConfig">timeoutMinutes, warningMinutes, extendOnActivity, enableTracking</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="Singleton Pattern">Global session manager instance</pattern>
+          <pattern name="Observer Pattern">Activity event listeners and timeout monitoring</pattern>
+          <pattern name="Local Storage Persistence">Session state persistence across page reloads</pattern>
+        </patterns>
+        <constraints>30-minute default timeout, 5-minute warning period, Activity tracking enabled, GDPR/LGPD audit logging</constraints>
+      </component>
+      
+      <component id="sessionHook" path="src/hooks/useSessionManager.ts" type="hook">
+        <purpose>React hook for session management integration</purpose>
+        <interfaces>
+          <interface name="useSessionManager">sessionState, isInitialized, extendSession, logout, getSessionInfo</interface>
+        </interfaces>
+        <patterns>
+          <pattern name="React Hook Pattern">State management and lifecycle handling</pattern>
+          <pattern name="Real-time Updates">Periodic session state synchronization</pattern>
+        </patterns>
+        <constraints>1000ms update interval, Automatic session extension, Formatted time display</constraints>
+      </component>
+    </code>
+    
+    <dependencies>
+      <framework name="Bun" version="Latest" purpose="Runtime performance optimization">
+        <compatibility>Full - Bun runtime used throughout project</compatibility>
+        <considerations>3-5x faster than npm/pnpm, TypeScript-first runtime</considerations>
+      </framework>
+      
+      <framework name="Hono" version="4.9.9" purpose="Edge-first API framework">
+        <compatibility>Full - Backend API framework</compatibility>
+        <considerations>Lightweight, fast, edge-ready for voice processing</considerations>
+      </framework>
+      
+      <framework name="tRPC" version="11.6.0" purpose="Type-safe API layer">
+        <compatibility>Full - Used for all API procedures</compatibility>
+        <considerations>End-to-end type safety, excellent for voice command APIs</considerations>
+      </framework>
+      
+      <framework name="React" version="19.2.0" purpose="UI framework">
+        <compatibility>Full - Frontend framework</compatibility>
+        <considerations>Latest features for voice component state management</considerations>
+      </framework>
+      
+      <framework name="TanStack Query" version="5.90.2" purpose="Server state management">
+        <compatibility>Full - Used for API state management</compatibility>
+        <considerations>Critical for real-time voice command responses</considerations>
+      </framework>
+      
+      <framework name="Supabase" version="2.58.0" purpose="Database and auth">
+        <compatibility>Full - Managed PostgreSQL + Auth + Realtime</compatibility>
+        <considerations>Realtime subscriptions essential for voice feedback</considerations>
+      </framework>
+      
+      <library name="Zod" version="4.1.11" purpose="Schema validation">
+        <compatibility>Full - Input validation for all voice commands</compatibility>
+        <considerations>Type safety for voice command parameters</considerations>
+      </library>
+      
+      <library name="Vitest" version="3.2.4" purpose="Testing framework">
+        <compatibility>Full - Unit and integration testing</compatibility>
+        <considerations>3-5x faster than Jest, essential for voice testing</considerations>
+      </library>
+      
+      <library name="Web Speech API" version="Native" purpose="Voice recognition and synthesis">
+        <compatibility>Browser-dependent - Chrome/Firefox/Safari support</compatibility>
+        <considerations>Requires browser support checks and fallbacks</considerations>
+      </library>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <technical>
+      <constraint id="performance" priority="critical">Voice command processing &lt;1s response time, End-to-end cycle &lt;2s target</constraint>
+      <constraint id="accuracy" priority="critical">95%+ voice command recognition accuracy for 6 essential commands</constraint>
+      <constraint id="language" priority="high">Brazilian Portuguese with regional accent recognition</constraint>
+      <constraint id="security" priority="critical">LGPD compliance, Row Level Security, Voice biometric verification</constraint>
+      <constraint id="realtime" priority="high">Instant feedback via Supabase realtime subscriptions</constraint>
+      <constraint id="offline" priority="medium">Graceful degradation when network unavailable</constraint>
+    </technical>
+    
+    <business>
+      <constraint id="regulation" priority="critical">Brazilian financial regulations and LGPD compliance</constraint>
+      <constraint id="banks" priority="high">Integration with 5 major Brazilian banks via Open Banking</constraint>
+      <constraint id="trust" priority="high">Progressive autonomy building from 50% to 95%</constraint>
+      <constraint id="accessibility" priority="medium">WCAG 2.1 AA compliance for voice interfaces</constraint>
+    </business>
+    
+    <development>
+      <constraint id="kiss" priority="high">Keep It Simple Stupid - avoid over-engineering</constraint>
+      <constraint id="yagni" priority="high">You Aren't Gonna Need It - implement only essential features</constraint>
+      <constraint id="typesafe" priority="critical">TypeScript strict mode, end-to-end type safety</constraint>
+      <constraint id="testing" priority="high">90%+ test coverage for critical voice components</constraint>
+    </development>
+  </constraints>
+
+  <interfaces>
+    <internal>
+      <interface name="VoiceToBanking" direction="voice-processor → banking-connector">
+        <purpose>Execute financial operations from voice commands</purpose>
+        <methods>
+          <method name="executeTransfer" signature="executeTransfer(amount: number, recipient: string): Promise&lt;TransferResult&gt;" usage="PIX transfers from voice commands"/>
+          <method name="checkBalance" signature="checkBalance(accountId?: string): Promise&lt;BalanceInfo&gt;" usage="Balance queries from voice commands"/>
+          <method name="listPendingBills" signature="listPendingBills(): Promise&lt;Bill[]&gt;" usage="Bill payment queries from voice commands"/>
+        </methods>
+        <dataflows>Voice intent → Banking operation → Voice response</dataflows>
+      </interface>
+      
+      <interface name="SessionToVoice" direction="session-manager → voice-service">
+        <purpose>Maintain voice context within user sessions</purpose>
+        <methods>
+          <method name="getContextualData" signature="getContextualData(sessionId: string): Promise&lt;VoiceContext&gt;" usage="Retrieve conversation context"/>
+          <method name="updateContext" signature="updateContext(sessionId: string, context: Partial&lt;VoiceContext&gt;): Promise&lt;void&gt;" usage="Update conversation state"/>
+        </methods>
+        <dataflows>Session activity → Voice context persistence → Context restoration</dataflows>
+      </interface>
+      
+      <interface name="SecurityToVoice" direction="auth-middleware → voice-procedures">
+        <purpose>Secure voice command processing</purpose>
+        <methods>
+          <method name="verifyVoiceCommand" signature="verifyVoiceCommand(userId: string, command: string, audioData?: ArrayBuffer): Promise&lt;AuthResult&gt;" usage="Voice biometric verification"/>
+          <method name="auditVoiceAccess" signature="auditVoiceAccess(userId: string, command: string, result: any): Promise&lt;void&gt;" usage="Security audit logging"/>
+        </methods>
+        <dataflows>User authentication → Voice command verification → Audit trail</dataflows>
+      </interface>
+    </internal>
+    
+    <external>
+      <interface name="BelvoAPI" direction="banking-connector → belvo">
+        <purpose>Open Banking integration for Brazilian banks</purpose>
+        <methods>
+          <method name="linkAccount" signature="POST /link" usage="Connect user bank accounts"/>
+          <method name="getAccounts" signature="GET /accounts" usage="Retrieve account information"/>
+          <method name="getTransactions" signature="GET /transactions" usage="Fetch transaction history"/>
+        </methods>
+        <considerations>Rate limiting, error handling, data privacy</considerations>
+      </interface>
+      
+      <interface name="SpeechAPI" direction="voice-service → browser">
+        <purpose>Web Speech API for recognition and synthesis</purpose>
+        <methods>
+          <method name="recognize" signature="webkitSpeechRecognition" usage="Convert speech to text"/>
+          <method name="synthesize" signature="speechSynthesis.speak" usage="Convert text to speech"/>
+        </methods>
+        <considerations>Browser compatibility, permission handling, fallback support</considerations>
+      </interface>
+    </external>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <standard name="Performance Testing">
+        <requirement>Voice command processing &lt;1s, End-to-end cycle &lt;2s</requirement>
+        <tools>Vitest performance tests, Lighthouse metrics</tools>
+        <coverage>All voice command paths, 100% critical path coverage</coverage>
+      </standard>
+      
+      <standard name="Accuracy Testing">
+        <requirement>95%+ recognition accuracy for 6 essential commands</requirement>
+        <tools>Mock speech recognition, Command pattern validation</tools>
+        <coverage>All command variations, Brazilian Portuguese accents</coverage>
+      </standard>
+      
+      <standard name="Integration Testing">
+        <requirement>Seamless voice-to-banking integration</requirement>
+        <tools>Supabase test database, Mock banking APIs</tools>
+        <coverage>All voice command → banking operation flows</coverage>
+      </standard>
+      
+      <standard name="Security Testing">
+        <requirement>LGPD compliance, Row Level Security, Voice biometrics</requirement>
+        <tools>Security audit tests, Penetration testing</tools>
+        <coverage>All authentication paths, data access controls</coverage>
+      </standard>
+      
+      <standard name="Accessibility Testing">
+        <requirement>WCAG 2.1 AA compliance</requirement>
+        <tools>Screen reader testing, Keyboard navigation</tools>
+        <coverage>Voice interface alternatives, Error handling</coverage>
+      </standard>
+    </standards>
+    
+    <locations>
+      <location path="src/test/performance/voiceCommandPerformance.test.ts" type="performance">
+        <existing>true</existing>
+        <coverage>Voice command latency, Memory leak prevention, Resource cleanup</coverage>
+      </location>
+      
+      <location path="src/test/security/voiceConfirmation.test.ts" type="security">
+        <existing>true</existing>
+        <coverage>Voice biometric verification, Authentication flows</coverage>
+      </location>
+      
+      <location path="src/test/quality-control/voice-component-type-safety.test.ts" type="types">
+        <existing>true</existing>
+        <coverage>TypeScript type safety, Interface contracts</coverage>
+      </location>
+      
+      <location path="src/integration/test/voiceBankingIntegration.test.ts" type="integration">
+        <existing>false</existing>
+        <coverage>Voice command → Banking operation flows</coverage>
+      </location>
+      
+      <location path="src/e2e/test/voiceWorkflow.test.ts" type="e2e">
+        <existing>false</existing>
+        <coverage>Complete voice command user journeys</coverage>
+      </location>
+    </locations>
+    
+    <ideas>
+      <acceptance-criteria id="ac1" title="Seamless integration with banking operations">
+        <test-idea type="integration">Test all 6 essential voice commands executing corresponding banking operations</test-idea>
+        <test-idea type="performance">Measure end-to-end latency from voice input to banking response</test-idea>
+        <test-idea type="error">Test banking API failures and voice command fallback responses</test-idea>
+        <test-idea type="load">Test concurrent voice commands and banking operation queuing</test-idea>
+      </acceptance-criteria>
+      
+      <acceptance-criteria id="ac2" title="Error handling for unrecognized commands">
+        <test-idea type="unit">Test confidence threshold rejection with user-friendly error messages</test-idea>
+        <test-idea type="accessibility">Test voice error responses for clarity and WCAG compliance</test-idea>
+        <test-idea type="performance">Test error response latency under 500ms</test-idea>
+        <test-idea type="edge">Test with background noise, accented speech, and partial commands</test-idea>
+      </acceptance-criteria>
+      
+      <acceptance-criteria id="ac3" title="Context persistence across voice sessions">
+        <test-idea type="integration">Test conversation context preservation across multiple voice commands</test-idea>
+        <test-idea type="session">Test session timeout and context restoration scenarios</test-idea>
+        <test-idea type="storage">Test localStorage fallback for context persistence</test-idea>
+        <test-idea type="concurrency">Test multiple tabs with shared voice session context</test-idea>
+      </acceptance-criteria>
+      
+      <acceptance-criteria id="ac4" title="Integration with existing security and authentication">
+        <test-idea type="security">Test voice biometric verification integration with Supabase auth</test-idea>
+        <test-idea type="audit">Test comprehensive audit logging for all voice interactions</test-idea>
+        <test-idea type="compliance">Test LGPD compliance for voice data handling and retention</test-idea>
+        <test-idea type="rate-limiting">Test voice command rate limiting and DoS protection</test-idea>
+      </acceptance-criteria>
+      
+      <acceptance-criteria id="ac5" title="Support for multi-language future expansion">
+        <test-idea type="architecture">Test language abstraction layer for future multi-language support</test-idea>
+        <test-idea type="config">Test language switching and configuration management</test-idea>
+        <test-idea type="fallback">Test graceful degradation when language packs unavailable</test-idea>
+        <test-idea type="extensibility">Test plugin architecture for adding new language modules</test-idea>
+      </acceptance-criteria>
+      
+      <additional-ideas>
+        <test-idea type="regional">Test Brazilian regional accents (São Paulo, Rio, Northeast)</test-idea>
+        <test-idea type="financial">Test Brazilian-specific financial terms and currency formatting</test-idea>
+        <test-idea type="realtime">Test real-time voice feedback during banking operations</test-idea>
+        <test-idea type="offline">Test offline mode detection and appropriate voice responses</test-idea>
+        <test-idea type="mobile">Test voice recognition on mobile devices with varying microphone quality</test-idea>
+        <test-idea type="cross-browser">Test voice functionality across Chrome, Firefox, Safari, Edge</test-idea>
+      </additional-ideas>
+    </ideas>
+  </tests>
+
+  <implementation-guidance>
+    <key-patterns>
+      <pattern name="Voice Command Router">Centralized command routing from voice recognition to appropriate banking operations</pattern>
+      <pattern name="Context Manager">Maintain conversation context across multiple voice interactions within a session</pattern>
+      <pattern name="Error Recovery">Graceful handling of unrecognized commands with helpful suggestions and retries</pattern>
+      <pattern name="Security Integration">Voice biometric verification integrated with existing Supabase authentication</pattern>
+      <pattern name="Real-time Feedback">Instant voice responses for banking operation status and confirmations</pattern>
+    </key-patterns>
+    
+    <implementation-order>
+      <step priority="1">Create VoiceCommandIntegrationService to orchestrate voice-to-banking operations</step>
+      <step priority="2">Implement context persistence layer using existing SessionManager</step>
+      <step priority="3">Build banking operations integration using existing OpenBankingConnector</step>
+      <step priority="4">Add comprehensive error handling with user-friendly voice responses</step>
+      <step priority="5">Integrate security middleware for voice biometric verification</step>
+      <step priority="6">Create multi-language abstraction layer for future expansion</step>
+      <step priority="7">Build comprehensive testing suite covering all acceptance criteria</step>
+    </implementation-order>
+    
+    <integration-points>
+      <point name="VoiceService" usage="Use existing VoiceService for speech recognition and synthesis" modifications="Add integration hooks for command routing"/>
+      <point name="SessionManager" usage="Extend for voice context persistence" modifications="Add voice-specific context fields and conversation history"/>
+      <point name="BankingConnector" usage="Integrate with existing OpenBankingConnector" modifications="Add voice-triggered operation methods"/>
+      <point name="tRPC Procedures" usage="Extend existing voice procedures" modifications="Add banking operation endpoints"/>
+    </integration-points>
+  </implementation-guidance>
+</story-context>

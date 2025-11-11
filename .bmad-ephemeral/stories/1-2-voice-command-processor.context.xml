@@ -1,0 +1,150 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Voice Command Processor</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>.bmad-ephemeral/stories/1-2-voice-command-processor.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user of AegisWallet</asA>
+    <iWant>to speak natural language commands and have the system understand my financial intent</iWant>
+    <soThat>I can issue complex financial instructions conversationally</soThat>
+    <tasks>
+      - [ ] Implement Natural Language Processing engine (AC: #1, #3)
+        - [ ] Create Portuguese NLP tokenization and parsing
+        - [ ] Implement command pattern matching algorithms
+        - [ ] Add synonym handling and variant recognition
+      - [ ] Create Intent Classification System (AC: #1, #5)
+        - [ ] Define intent categories for financial commands
+        - [ ] Implement machine learning or rule-based classifier
+        - [ ] Create confidence scoring algorithms
+        - [ ] Add training data for Portuguese financial commands
+      - [ ] Implement Parameter Extraction Engine (AC: #2)
+        - [ ] Create named entity recognition for financial terms
+        - [ ] Extract amounts, names, dates, and financial parameters
+        - [ ] Validate and normalize extracted parameters
+        - [ ] Handle Portuguese number and currency formats
+      - [ ] Create Context Management System (AC: #5)
+        - [ ] Implement conversation state tracking
+        - [ ] Handle follow-up commands and contextual understanding
+        - [ ] Create session persistence for multi-turn conversations
+        - [ ] Add context timeout and reset mechanisms
+      - [ ] Add Performance Optimization (AC: #1)
+        - [ ] Optimize NLP processing for real-time response
+        - [ ] Implement caching for common command patterns
+        - [ ] Add performance monitoring and benchmarks
+      - [ ] Create Comprehensive Testing Suite (AC: #1-5)
+        - [ ] Unit tests for intent classification accuracy
+        - [ ] Integration tests with speech recognition service
+        - [ ] Parameter extraction validation tests
+        - [ ] Context management scenario tests
+        - [ ] Performance and load testing
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. [ ] Classifies 6 essential voice commands with 98% accuracy
+    2. [ ] Extracts parameters from commands (amounts, names, dates)
+    3. [ ] Handles variations in phrasing and synonyms
+    4. [ ] Provides confidence scoring for intent classification
+    5. [ ] Supports contextual understanding for follow-up commands
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/epics/voice-interface-foundation.md" title="Epic 1: Voice Interface Foundation" section="Story 1.2: Voice Command Processor">
+        Create command classification and intent recognition system that processes speech input and identifies user financial intent with 98% accuracy for 6 essential commands and natural language processing for Portuguese.
+      </doc>
+      <doc path="docs/architecture.md" title="AegisWallet Architecture" section="Voice Processing">
+        Defines VoiceCommand interface with command, intent, confidence, and response fields. Lists 6 essential voice commands. Mentions existing voiceCommandProcessor service in src/services/.
+      </doc>
+      <doc path="docs/prd.md" title="PRD: Assistente Financeiro Autônomo" section="Functional Requirements">
+        6 Essential Voice Commands interface conversational principal. Must support variations in phrasing and contextual understanding for follow-up commands.
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/services/voiceCommandProcessor.ts" kind="service" symbol="VoiceCommandProcessor" lines="" reason="Existing business logic service that will consume command processing results">
+        Current voice command processor service that will be enhanced with NLP capabilities.
+      </artifact>
+      <artifact path="src/components/voice/" kind="directory" symbol="VoiceComponents" lines="" reason="Voice interface components directory for UI integration">
+        Existing directory for voice-related React components.
+      </artifact>
+      <artifact path="src/hooks/useVoiceCommand.ts" kind="hook" symbol="useVoiceCommand" lines="" reason="React hook for voice command functionality that needs NLP integration">
+        Existing hook that will be enhanced with command processing capabilities.
+      </artifact>
+      <artifact path="src/types/voice.ts" kind="types" symbol="VoiceTypes" lines="" reason="Voice-related type definitions that will need extension">
+        Existing type definitions that will be extended for NLP and command processing.
+      </artifact>
+      <artifact path="vite.config.ts" kind="config" symbol="ViteConfig" lines="" reason="Build configuration for performance optimization">
+        Vite configuration for optimizing NLP processing performance to meet sub-second response times.
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="javascript">
+        <package name="natural" version="" reason="Natural language processing library for Portuguese"/>
+        <package name="@tensorflow/tfjs" version="" reason="Machine learning for intent classification"/>
+        <package name="compromise" version="" reason="Text similarity and fuzzy matching for command recognition"/>
+        <package name="react" version="19.2.0" reason="React 19 for UI components"/>
+        <package name="typescript" version="latest" reason="TypeScript for type safety"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must process Portuguese natural language for Brazilian market
+    - Must achieve 98% accuracy classification rate for 6 essential commands
+    - Must maintain sub-second processing time for real-time conversation flow
+    - Must integrate with existing VoiceCommandProcessor service
+    - Must use existing voice_commands database table for logging
+    - Must handle Portuguese financial terminology and currency formats
+    - Must support contextual understanding for multi-turn conversations
+    - Must follow TypeScript strict mode and existing project patterns
+    - Must implement comprehensive error handling for NLP failures
+    - Must use Vitest framework for testing following established patterns
+  </constraints>
+
+  <interfaces>
+    <interface name="VoiceCommandProcessor" kind="class" signature="class VoiceCommandProcessor { constructor(); processCommand(text: string): Promise&lt;ProcessedCommand&gt;; extractParameters(text: string): CommandParameters; }" path="src/lib/nlp/VoiceCommandProcessor.ts">
+      Main service class for natural language processing and command classification.
+    </interface>
+    <interface name="ProcessedCommand" kind="type" signature="interface ProcessedCommand { intent: string; parameters: CommandParameters; confidence: number; context?: ConversationContext; }" path="src/types/voiceCommandTypes.ts">
+      Type definition for processed command results including intent classification and extracted parameters.
+    </interface>
+    <interface name="CommandParameters" kind="type" signature="interface CommandParameters { amount?: number; recipient?: string; date?: Date; category?: string; }" path="src/types/voiceCommandTypes.ts">
+      Type definition for extracted command parameters with financial data.
+    </interface>
+    <interface name="ConversationContext" kind="type" signature="interface ConversationContext { sessionId: string; previousCommands: string[]; lastIntent?: string; timestamp: Date; }" path="src/types/voiceCommandTypes.ts">
+      Type definition for conversation context tracking for multi-turn conversations.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Vitest for unit and integration tests. Follow existing test patterns from Story 1.1. Include NLP accuracy testing for Portuguese language processing. Performance testing must verify sub-second processing times. Context testing must validate multi-turn conversation flows. Parameter extraction testing must validate Brazilian financial data formats.
+    </standards>
+    <locations>
+      Unit tests: src/lib/nlp/__tests__/
+      Integration tests: src/components/voice/__tests__/
+      NLP tests: src/lib/nlp/__tests__/accuracy/
+      Context tests: src/lib/nlp/__tests__/context/
+      Performance tests: src/lib/nlp/__tests__/performance/
+    </locations>
+    <ideas>
+      - Test intent classification accuracy for Portuguese financial commands (98% target)
+      - Test parameter extraction for amounts, names, and dates in Portuguese formats
+      - Test synonym and phrasing variant handling for natural language
+      - Test confidence scoring thresholds and validation
+      - Test contextual understanding for follow-up commands
+      - Test conversation state management and persistence
+      - Test NLP performance under various conditions
+      - Test integration with SpeechRecognitionService (Story 1.1)
+      - Test Brazilian financial terminology recognition
+      - Test multi-turn conversation flows
+      - Test error handling for unclear or ambiguous commands
+    </ideas>
+  </tests>
+</story-context>

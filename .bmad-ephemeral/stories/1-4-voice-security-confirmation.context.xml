@@ -1,0 +1,1151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story-context id="story-1-4-voice-security-confirmation" version="6.0-alpha">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Voice Security Confirmation</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-10</generatedAt>
+    <generator>BMAD Story Context Workflow v6-alpha</generator>
+    <sourceStoryPath>D:\Coders\aegiswallet\.bmad-ephemeral\stories\1-4-voice-security-confirmation.md</sourceStoryPath>
+    <collectedAt>2025-11-10</collectedAt>
+    <researchCompletion>comprehensive</researchCompletion>
+  </metadata>
+
+  <story>
+    <asA>user of AegisWallet</asA>
+    <iWant>to use voice biometric verification for sensitive financial operations</iWant>
+    <soThat>I can securely authorize transactions with voice authentication while having fallback options for accessibility</soThat>
+    <tasks>
+      <!-- Task 1: Voice Biometric Verification System -->
+      <task id="voice-biometric-system" acceptanceCriteria="#1,#5">
+        <title>Implement Voice Biometric Verification System</title>
+        <description>Create comprehensive voice biometric verification for sensitive operations with anti-spoofing protection</description>
+        <effort>medium</effort>
+        <priority>high</priority>
+        <subtasks>
+          <subtask id="voice-pattern-recognition">Create VoicePatternRecognitionService for voiceprint matching</subtask>
+          <subtask id="voice-enrollment">Implement voice enrollment workflow for initial biometric setup</subtask>
+          <subtask id="voice-challenge">Add voice authentication challenge-response mechanism</subtask>
+          <subtask id="voice-liveness">Create voice liveness detection to prevent replay attacks</subtask>
+        </subtasks>
+      </task>
+
+      <!-- Task 2: Secure Audio Processing Pipeline -->
+      <task id="secure-audio-pipeline" acceptanceCriteria="#3,#4">
+        <title>Create Secure Audio Processing Pipeline</title>
+        <description>Implement encrypted audio capture, processing, and storage with LGPD compliance</description>
+        <effort>high</effort>
+        <priority>high</priority>
+        <subtasks>
+          <subtask id="encrypted-audio-capture">Implement encrypted audio capture and processing</subtask>
+          <subtask id="secure-voice-storage">Add secure voice pattern storage with encryption at rest</subtask>
+          <subtask id="lgpd-data-retention">Create voice data retention policies for LGPD compliance</subtask>
+          <subtask id="voice-data-deletion">Implement secure voice data deletion and user consent management</subtask>
+        </subtasks>
+      </task>
+
+      <!-- Task 3: Fallback Verification System -->
+      <task id="fallback-verification" acceptanceCriteria="#2">
+        <title>Build Fallback Verification System</title>
+        <description>Create alternative authentication methods for accessibility and voice verification failures</description>
+        <effort>medium</effort>
+        <priority>medium</priority>
+        <subtasks>
+          <subtask id="alternative-auth">Create alternative authentication methods (PIN, biometric fallback)</subtask>
+          <subtask id="auth-selection">Implement verification method selection interface</subtask>
+          <subtask id="accessibility-support">Add accessibility support for users unable to use voice authentication</subtask>
+          <subtask id="retry-mechanisms">Create verification failure retry mechanisms with exponential backoff</subtask>
+        </subtasks>
+      </task>
+
+      <!-- Task 4: Anti-Spoofing Protection -->
+      <task id="anti-spoofing" acceptanceCriteria="#5">
+        <title>Implement Anti-Spoofing Protection</title>
+        <description>Add comprehensive anti-spoofing mechanisms to prevent voice replay and deepfake attacks</description>
+        <effort>high</effort>
+        <priority>high</priority>
+        <subtasks>
+          <subtask id="liveness-detection">Add voice liveness detection with challenge phrases</subtask>
+          <subtask id="deepfake-detection">Implement audio deepfake detection algorithms</subtask>
+          <subtask id="anomaly-detection">Create anomaly detection for unusual voice patterns</subtask>
+          <subtask id="device-fingerprinting">Add device fingerprinting for additional security layer</subtask>
+        </subtasks>
+      </task>
+
+      <!-- Task 5: Security Integration Framework -->
+      <task id="security-integration" acceptanceCriteria="#1-5">
+        <title>Create Security Integration Framework</title>
+        <description>Integrate voice security with existing authentication and authorization systems</description>
+        <effort>medium</effort>
+        <priority>medium</priority>
+        <subtasks>
+          <subtask id="auth-integration">Integrate with existing authentication and authorization systems</subtask>
+          <subtask id="audit-logging">Add voice security audit logging and monitoring</subtask>
+          <subtask id="incident-response">Create security incident response for voice authentication failures</subtask>
+          <subtask id="rate-limiting">Implement rate limiting and abuse prevention for voice attempts</subtask>
+        </subtasks>
+      </task>
+
+      <!-- Task 6: Comprehensive Testing Suite -->
+      <task id="testing-suite" acceptanceCriteria="#1-5">
+        <title>Build Comprehensive Testing Suite</title>
+        <description>Create thorough test coverage for all voice security components</description>
+        <effort>high</effort>
+        <priority>medium</priority>
+        <subtasks>
+          <subtask id="unit-tests">Unit tests for voice pattern recognition accuracy</subtask>
+          <subtask id="security-testing">Security penetration testing for spoofing resistance</subtask>
+          <subtask id="accessibility-testing">Accessibility testing with alternative verification methods</subtask>
+          <subtask id="performance-testing">Performance testing for real-time voice authentication</subtask>
+          <subtask id="lgpd-testing">LGPD compliance testing for data handling and deletion</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">
+      <description>Voice biometric verification for sensitive operations</description>
+      <validation>
+        Voice authentication successfully verifies user identity for transactions above R$100
+        Confidence score ≥90% for successful voice biometric verification
+        Integration with existing transaction authorization workflow
+      </validation>
+    </criterion>
+    <criterion id="2">
+      <description>Fallback to alternative verification methods</description>
+      <validation>
+        PIN fallback works when voice authentication fails
+        Biometric fallback (FaceID/TouchID) available on supported devices
+        SMS OTP verification as secondary fallback
+        Accessibility support for users unable to use voice authentication
+      </validation>
+    </criterion>
+    <criterion id="3">
+      <description>Secure audio processing and storage</description>
+      <validation>
+      </validation>
+    </criterion>
+    <criterion id="4">
+      <description>Compliance with LGPD voice data requirements</description>
+      <validation>
+      </validation>
+    </criterion>
+    <criterion id="5">
+      <description>Anti-spoofing protection mechanisms</description>
+      <validation>
+      </validation>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Epic Documentation -->
+      <doc id="epic-voice-interface" type="epic">
+        <path>docs/epics/voice-interface-foundation.md</path>
+        <description>Epic 1: Voice Interface Foundation - comprehensive requirements for voice security confirmation</description>
+        <relevance>primary</relevance>
+        <contentSummary>
+          Defines Story 1.4 requirements for voice security confirmation including:
+          - Voice biometric verification for sensitive operations
+          - Fallback verification methods
+          - Secure audio processing and storage
+          - LGPD compliance requirements
+          - Anti-spoofing protection mechanisms
+        </contentSummary>
+      </doc>
+
+      <!-- Security Documentation -->
+      <doc id="security-architecture" type="technical">
+        <path>src/lib/security/</path>
+        <description>Comprehensive security infrastructure documentation and implementation</description>
+        <relevance>primary</relevance>
+        <contentSummary>
+          Complete security framework including:
+          - VoiceConfirmationService with comprehensive voice + biometric workflow
+          - BiometricAuthService with WebAuthn integration and multiple fallbacks
+          - AudioEncryptionService with AES-256-GCM encryption
+          - DeviceFingerprintingService with advanced device identification
+          - LGPD-compliant data handling and audit logging
+        </contentSummary>
+      </doc>
+
+      <!-- Research Documentation -->
+      <doc id="anti-spoofing-research" type="research">
+        <source>FaceAI SDK Anti-Spoofing Documentation</source>
+        <description>Comprehensive anti-spoofing patterns and liveness detection techniques</description>
+        <relevance>secondary</relevance>
+        <contentSummary>
+          Advanced anti-spoofing techniques including:
+          - Silent liveness detection vs action liveness detection
+          - Multi-angle face enrollment for better matching
+          - Real-time liveness checks in poor lighting
+          - Device fingerprinting for additional security layers
+          - Face quality detection and closed-eye detection
+        </contentSummary>
+      </doc>
+
+      <!-- LGPD Compliance -->
+      <doc id="lgpd-compliance" type="regulatory">
+        <source>Implemented in security infrastructure</source>
+        <description>LGPD compliance requirements for voice data handling in Brazil</description>
+        <relevance>critical</relevance>
+        <contentSummary>
+          LGPD compliance features already implemented:
+          - Audio encryption at rest and in transit (AES-256-GCM)
+          - Personal data anonymization (CPF, phones, emails, credit cards)
+          - Secure audit logging with immutable records
+          - Data retention policies with automatic deletion
+          - User consent management for voice data processing
+          - Right to data deletion and portability
+        </contentSummary>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Core Voice Confirmation Implementation -->
+      <codeFile id="voice-confirmation-service" type="implementation">
+        <path>src/lib/security/voiceConfirmation.ts</path>
+        <description>Core VoiceConfirmationService implementation with comprehensive voice biometric verification</description>
+        <completeness>90%</completeness>
+        <keyComponents>
+          - VoiceConfirmationService class with transaction confirmation workflow
+          - Fuzzy matching algorithm for voice transcription comparison
+          - Web Speech API integration with Brazilian Portuguese support
+          - Comprehensive fallback strategies and error handling
+          - LGPD-compliant audit logging integration
+          - Multiple failure scenario detection and handling
+          - Challenge phrase generation for security verification
+        </keyComponents>
+        <interfaces>
+          - VoiceConfirmationConfig interface for service configuration
+          - ConfirmationResult interface for standardized responses
+          - FailureScenario enum for error categorization
+        </interfaces>
+        <dependencies>
+          - Web Speech API (webkitSpeechRecognition)
+          - Audit logging service (createAuditLog)
+          - Browser crypto API for secure operations
+        </dependencies>
+      </codeFile>
+
+      <!-- Enhanced Biometric Authentication -->
+      <codeFile id="biometric-auth-service" type="implementation">
+        <path>src/lib/security/biometricAuth.ts</path>
+        <description>Enhanced BiometricAuthService with WebAuthn and comprehensive fallback options</description>
+        <completeness>95%</completeness>
+        <keyComponents>
+          - WebAuthn integration (FaceID, TouchID, Windows Hello)
+          - PIN fallback with progressive lockout and rate limiting
+          - SMS OTP verification with expiration and retry logic
+          - Push notification authentication with device approval
+          - Fraud detection integration with risk scoring
+          - Device fingerprinting for enhanced security
+          - Session management with timeout and cleanup
+        </keyComponents>
+        <interfaces>
+          - BiometricConfig interface for authentication configuration
+          - BiometricResult interface for standardized responses
+          - SecurityEventLog interface for audit trail
+          - AuthSession interface for session management
+        </interfaces>
+        <dependencies>
+          - Web Authentication API (PublicKeyCredential)
+          - Supabase client for data persistence
+          - Fraud detection and device fingerprinting services
+          - SMS and push notification providers
+        </dependencies>
+      </codeFile>
+
+      <!-- Audio Encryption Service -->
+      <codeFile id="audio-encryption-service" type="implementation">
+        <path>src/lib/security/audioEncryption.ts</path>
+        <description>AudioEncryptionService with AES-256-GCM encryption and LGPD compliance</description>
+        <completeness>100%</completeness>
+        <keyComponents>
+          - AES-256-GCM encryption for audio files and transcriptions
+          - Secure key derivation from master encryption key
+          - Initialization vector (IV) generation for unique encryption
+          - Authenticated encryption to prevent tampering
+          - LGPD-compliant text anonymization for personal data
+          - Base64 encoding for encrypted data storage
+        </keyComponents>
+        <interfaces>
+          - EncryptedData interface for encrypted content structure
+          - EncryptionConfig interface for service configuration
+        </interfaces>
+        <dependencies>
+          - Web Crypto API (crypto.subtle)
+          - Environment variables for encryption keys
+        </dependencies>
+      </codeFile>
+
+      <!-- Device Fingerprinting Service -->
+      <codeFile id="device-fingerprinting-service" type="implementation">
+        <path>src/lib/security/deviceFingerprinting.ts</path>
+        <description>DeviceFingerprintingService with advanced device identification and anti-spoofing</description>
+        <completeness>95%</completeness>
+        <keyComponents>
+          - Canvas fingerprinting with unique rendering detection
+          - WebGL fingerprinting for hardware identification
+          - Audio fingerprinting using AudioContext API
+          - Font detection system with cross-reference validation
+          - Hardware and browser characteristics collection
+          - Risk scoring based on device anomalies
+          - Fingerprint similarity comparison for fraud detection
+        </keyComponents>
+        <interfaces>
+          - DeviceFingerprint interface for comprehensive device data
+          - DeviceProfile interface for user-device relationships
+          - FingerprintConfig interface for service configuration
+        </interfaces>
+        <dependencies>
+          - Canvas API, WebGL context, AudioContext
+          - Navigator APIs for hardware detection
+          - Browser feature detection capabilities
+        </dependencies>
+      </codeFile>
+
+      <!-- Speech-to-Text Service -->
+      <codeFile id="speech-to-text-service" type="implementation">
+        <path>src/lib/stt/speechToTextService.ts</path>
+        <description>SpeechToTextService with OpenAI Whisper API and Brazilian Portuguese support</description>
+        <completeness>90%</completeness>
+        <keyComponents>
+          - OpenAI Whisper API integration for accurate transcription
+          - Brazilian Portuguese language optimization
+          - Audio validation and preprocessing
+          - Confidence scoring and error categorization
+          - Retry logic with exponential backoff
+          - Timeout handling and network error recovery
+          - Comprehensive error classification system
+        </keyComponents>
+        <interfaces>
+          - STTConfig interface for service configuration
+          - STTResult interface for transcription responses
+          - STTError interface for structured error handling
+          - STTErrorCode enum for error categorization
+        </interfaces>
+        <dependencies>
+          - OpenAI API (Whisper model)
+          - Fetch API for HTTP requests
+          - FormData API for multipart file uploads
+        </dependencies>
+      </codeFile>
+
+      <!-- Supporting Security Infrastructure -->
+      <codeFile id="security-audit-logger" type="infrastructure">
+        <path>src/lib/security/auditLogger.ts</path>
+        <description>Audit logging service for security event tracking and compliance</description>
+        <completeness>100%</completeness>
+        <keyComponents>
+          - Comprehensive security event logging
+          - Supabase integration for persistent storage
+          - Structured event metadata collection
+          - Error handling for logging failures
+        </keyComponents>
+        <dependencies>
+          - Supabase client for database operations
+        </dependencies>
+      </codeFile>
+
+      <codeFile id="security-rate-limiter" type="infrastructure">
+        <path>src/lib/security/rateLimiter.ts</path>
+        <description>Rate limiting service for preventing abuse and brute force attacks</description>
+        <completeness>85%</completeness>
+        <keyComponents>
+          - Adaptive rate limiting based on recent failures
+          - Exponential backoff for repeated attempts
+          - User-specific rate limit tracking
+          - Progressive timeout increases
+        </keyComponents>
+      </codeFile>
+
+      <codeFile id="security-fraud-detection" type="infrastructure">
+        <path>src/lib/security/fraudDetection.ts</path>
+        <description>Fraud detection service with pattern analysis and anomaly detection</description>
+        <completeness>80%</completeness>
+        <keyComponents>
+          - Device fingerprinting integration
+          - Location anomaly detection
+          - Behavior pattern analysis
+          - Risk scoring algorithms
+        </keyComponents>
+      </codeFile>
+    </code>
+
+    <dependencies>
+      <!-- Technology Stack Dependencies -->
+      <techStack>
+        <component name="Web APIs">
+          <item>Web Speech API (webkitSpeechRecognition)</item>
+          <item>Web Authentication API (PublicKeyCredential)</item>
+          <item>Web Crypto API (crypto.subtle)</item>
+          <item>Canvas API for fingerprinting</item>
+          <item>WebGL context for hardware detection</item>
+          <item>AudioContext for audio fingerprinting</item>
+        </component>
+        <component name="AegisWallet Infrastructure">
+          <item>Supabase client for data persistence</item>
+          <item>tRPC v11 for API procedures</item>
+          <item>React 19 for UI components</item>
+          <item>TypeScript strict mode for type safety</item>
+          <item>Tailwind CSS for styling</item>
+        </component>
+        <component name="External Services">
+          <item>OpenAI Whisper API for speech-to-text</item>
+          <item>SMS provider integration (Twilio pattern)</item>
+          <item>Push notification service</item>
+        </component>
+      </techStack>
+
+      <!-- Component Dependencies -->
+      <componentDependencies>
+        <dependency source="VoiceConfirmationService" target="AudioEncryptionService" type="required">
+          <description>Encrypt voice data for LGPD compliance</description>
+          <integrationPoint>voiceConfirmation.ts:audioEncryptionService</integrationPoint>
+        </dependency>
+        <dependency source="VoiceConfirmationService" target="BiometricAuthService" type="required">
+          <description>Combine voice with biometric verification</description>
+          <integrationPoint>voiceConfirmation.ts:biometricAuth</integrationPoint>
+        </dependency>
+        <dependency source="VoiceConfirmationService" target="SpeechToTextService" type="required">
+          <description>Convert speech to text for verification</description>
+          <integrationPoint>voiceConfirmation.ts:sttService</integrationPoint>
+        </dependency>
+        <dependency source="VoiceConfirmationService" target="AuditLogger" type="required">
+          <description>Log security events for compliance</description>
+          <integrationPoint>voiceConfirmation.ts:createAuditLog</integrationPoint>
+        </dependency>
+        <dependency source="BiometricAuthService" target="DeviceFingerprintingService" type="optional">
+          <description>Enhanced security with device fingerprinting</description>
+          <integrationPoint>biometricAuth.ts:deviceFingerprinting</integrationPoint>
+        </dependency>
+        <dependency source="BiometricAuthService" target="FraudDetectionService" type="optional">
+          <description>Fraud detection for authentication attempts</description>
+          <integrationPoint>biometricAuth.ts:fraudDetection</integrationPoint>
+        </dependency>
+      </componentDependencies>
+
+      <!-- Data Dependencies -->
+      <dataDependencies>
+        <database name="Supabase PostgreSQL">
+          <table name="security_events" purpose="Security event audit trail"/>
+          <table name="auth_sessions" purpose="Authentication session management"/>
+          <table name="biometric_credentials" purpose="WebAuthn credential storage"/>
+          <table name="user_pins" purpose="PIN authentication data"/>
+          <table name="auth_attempts" purpose="Failed attempt tracking"/>
+          <table name="otp_codes" purpose="SMS OTP verification"/>
+          <table name="push_auth_requests" purpose="Push notification auth"/>
+          <table name="voice_patterns" purpose="Voice biometric data"/>
+          <table name="voice_encryption_keys" purpose="Voice data encryption keys"/>
+        </database>
+      </dataDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Performance Constraints -->
+    <performanceConstraints>
+      <constraint type="response-time" target="&lt;2s" priority="critical">
+        <description>Voice authentication processing time</description>
+        <measurement>From voice capture to confirmation result</measurement>
+      </constraint>
+      <constraint type="confidence-score" target="≥90%" priority="critical">
+        <description>Minimum confidence for voice verification</description>
+        <measurement>Voice pattern matching accuracy</measurement>
+      </constraint>
+      <constraint type="accuracy" target="≥95%" priority="high">
+        <description>Voice command recognition accuracy</description>
+        <measurement>Correct transcription rate</measurement>
+      </constraint>
+      <constraint type="false-positive" target="&lt;0.1%" priority="critical">
+        <description>Voice biometric false positive rate</description>
+        <measurement>Unauthorized access success rate</measurement>
+      </constraint>
+      <constraint type="false-negative" target="&lt;5%" priority="high">
+        <description>Voice biometric false negative rate</description>
+        <measurement>Authorized user rejection rate</measurement>
+      </constraint>
+    </performanceConstraints>
+
+    <!-- Security Constraints -->
+    <securityConstraints>
+      <constraint type="encryption" standard="AES-256-GCM" priority="critical">
+        <description>Voice data encryption at rest and in transit</description>
+        <implementation>AudioEncryptionService with Web Crypto API</implementation>
+      </constraint>
+      <constraint type="key-management" standard="Secure Key Derivation" priority="critical">
+        <description>Secure encryption key generation and storage</description>
+        <implementation>Environment variables with rotation capability</implementation>
+      </constraint>
+      <constraint type="data-retention" standard="LGPD Compliant" priority="critical">
+        <description>Voice data retention and deletion policies</description>
+        <implementation>Automatic cleanup after defined periods</implementation>
+      </constraint>
+      <constraint type="audit-trail" standard="Immutable Logging" priority="critical">
+        <description>Comprehensive security event logging</description>
+        <implementation>Supabase storage with append-only records</implementation>
+      </constraint>
+      <constraint type="rate-limiting" standard="Adaptive Throttling" priority="high">
+        <description>Prevent brute force and abuse attempts</description>
+        <implementation>Progressive timeout increases and account lockout</implementation>
+      </constraint>
+    </securityConstraints>
+
+    <!-- Compliance Constraints -->
+    <complianceConstraints>
+      <constraint type="lgpd" standard="Lei Geral de Proteção de Dados" priority="critical">
+        <description>Brazilian data protection law compliance</description>
+        <requirements>
+          <requirement>Explicit user consent for voice data processing</requirement>
+          <requirement>Right to data deletion and portability</requirement>
+          <requirement>Anonymization of personal data in transcriptions</requirement>
+          <requirement>Secure storage with encryption at rest</requirement>
+          <requirement>Audit trail for all voice data access</requirement>
+        </requirements>
+      </constraint>
+      <constraint type="accessibility" standard="WCAG 2.1 AA" priority="high">
+        <description>Accessibility support for users unable to use voice</description>
+        <requirements>
+          <requirement>Alternative verification methods available</requirement>
+          <requirement>Screen reader compatibility for fallback interfaces</requirement>
+          <requirement>Keyboard navigation support</requirement>
+        </requirements>
+      </constraint>
+    </complianceConstraints>
+
+    <!-- Technical Constraints -->
+    <technicalConstraints>
+      <constraint type="browser-compatibility" standard="Modern Browsers" priority="high">
+        <description>Web APIs availability and compatibility</description>
+        <requirements>
+          <requirement>Web Speech API support (Chrome, Edge, Safari)</requirement>
+          <requirement>WebAuthn support (modern browsers)</requirement>
+          <requirement>Web Crypto API support</requirement>
+        </requirements>
+      </constraint>
+      <constraint type="device-compatibility" standard="Responsive Design" priority="medium">
+        <description>Mobile and desktop compatibility</description>
+        <requirements>
+          <requirement>Microphone access on mobile devices</requirement>
+          <requirement>Touch-friendly fallback interfaces</requirement>
+          <requirement>Biometric sensor availability detection</requirement>
+        </requirements>
+      </constraint>
+      <constraint type="offline-capability" standard="Limited" priority="low">
+        <description>Offline functionality limitations</description>
+        <requirements>
+          <requirement>Voice biometric verification requires internet connectivity</requirement>
+          <requirement>Cached fallback methods available offline</requirement>
+        </requirements>
+      </constraint>
+    </technicalConstraints>
+  </constraints>
+
+  <interfaces>
+    <!-- User Interface Interfaces -->
+    <userInterfaces>
+      <interface id="voice-confirmation-ui" type="react-component">
+        <component>VoiceConfirmationModal</component>
+        <description>Modal interface for voice security confirmation</description>
+        <props>
+          <prop name="transactionDetails" type="object" required="true">
+            <description>Transaction amount, recipient, and type</description>
+          </prop>
+          <prop name="expectedPhrase" type="string" required="true">
+            <description>Security phrase user must speak</description>
+          </prop>
+          <prop name="onConfirmation" type="function" required="true">
+            <description>Callback for successful verification</description>
+          </prop>
+          <prop name="onFallback" type="function" required="true">
+            <description>Callback for fallback method selection</description>
+          </prop>
+          <prop name="onCancel" type="function" required="true">
+            <description>Callback for cancellation</description>
+          </prop>
+        </props>
+        <states>
+          <state name="idle">Waiting for user interaction</state>
+          <state name="listening">Recording user voice</state>
+          <state name="processing">Transcribing and verifying</state>
+          <state name="success">Verification completed successfully</state>
+          <state name="error">Verification failed with error message</state>
+          <state name="fallback">Offering alternative verification methods</state>
+        </states>
+      </interface>
+
+      <interface id="voice-enrollment-ui" type="react-component">
+        <component>VoiceEnrollmentWizard</component>
+        <description>Multi-step wizard for initial voice biometric enrollment</description>
+        <props>
+          <prop name="userId" type="string" required="true">
+            <description>User identifier for voice pattern storage</description>
+          </prop>
+          <prop name="onComplete" type="function" required="true">
+            <description>Callback for successful enrollment</description>
+          </prop>
+          <prop name="onSkip" type="function" required="true">
+            <description>Callback for skipping enrollment</description>
+          </prop>
+        </props>
+        <steps>
+          <step name="introduction">Explain voice biometric enrollment process</step>
+          <step name="permission">Request microphone access</step>
+          <step name="baseline">Record baseline voice sample</step>
+          <step name="verification">Record additional verification samples</step>
+          <step name="completion">Confirm successful enrollment</step>
+        </steps>
+      </interface>
+
+      <interface id="fallback-auth-ui" type="react-component">
+        <component>FallbackAuthenticationModal</component>
+        <description>Modal for alternative authentication methods</description>
+        <props>
+          <prop name="availableMethods" type="array" required="true">
+            <description>List of available fallback methods</description>
+          </prop>
+          <prop name="onAuthentication" type="function" required="true">
+            <description>Callback for successful authentication</description>
+          </prop>
+          <prop name="onMethodSelect" type="function" required="true">
+            <description>Callback for method selection</description>
+          </prop>
+        </props>
+        <methods>
+          <method name="pin">PIN code entry interface</method>
+          <method name="biometric">WebAuthn biometric prompt</method>
+          <method name="sms">SMS OTP verification</method>
+          <method name="push">Push notification approval</method>
+        </methods>
+      </interface>
+    </userInterfaces>
+
+    <!-- API Interfaces -->
+    <apiInterfaces>
+      <interface id="voice-confirmation-api" type="tRPC-procedure">
+        <procedure>voice.confirmTransaction</procedure>
+        <description>tRPC procedure for voice-based transaction confirmation</description>
+        <input schema="z.object({
+          userId: z.string(),
+          transactionId: z.string(),
+          expectedPhrase: z.string(),
+          audioBlob: z.any(), // Blob data
+          requiresBiometric: z.boolean().optional()
+        })"/>
+        <output schema="z.object({
+          success: z.boolean(),
+          method: z.enum(['voice', 'biometric', 'fallback', 'timeout']),
+          confidence: z.number(),
+          transcription: z.string().optional(),
+          processingTime: z.number(),
+          auditLogId: z.string().optional(),
+          error: z.string().optional()
+        })"/>
+        <middleware>
+          <middleware name="authentication">User authentication required</middleware>
+          <middleware name="rateLimiting">Prevent abuse and brute force</middleware>
+          <middleware name="auditLogging">Log all confirmation attempts</middleware>
+        </middleware>
+      </interface>
+
+      <interface id="voice-enrollment-api" type="tRPC-procedure">
+        <procedure>voice.enrollBiometric</procedure>
+        <description>tRPC procedure for voice biometric enrollment</description>
+        <input schema="z.object({
+          userId: z.string(),
+          voiceSamples: z.array(z.any()), // Array of audio blobs
+          userConsent: z.boolean()
+        })"/>
+        <output schema="z.object({
+          success: z.boolean(),
+          voicePatternId: z.string().optional(),
+          quality: z.number().optional(),
+          error: z.string().optional()
+        })"/>
+      </interface>
+
+      <interface id="voice-pattern-api" type="tRPC-procedure">
+        <procedure>voice.verifyPattern</procedure>
+        <description>tRPC procedure for voice pattern verification</description>
+        <input schema="z.object({
+          userId: z.string(),
+          voiceSample: z.any(), // Audio blob
+          expectedPhrase: z.string()
+        })"/>
+        <output schema="z.object({
+          success: z.boolean(),
+          confidence: z.number(),
+          matchDetails: z.object({
+            similarity: z.number(),
+            liveness: z.boolean(),
+            quality: z.number()
+          }).optional(),
+          error: z.string().optional()
+        })"/>
+      </interface>
+    </apiInterfaces>
+
+    <!-- Service Interfaces -->
+    <serviceInterfaces>
+      <interface id="voice-confirmation-service" type="typescript-service">
+        <class>VoiceConfirmationService</class>
+        <file>src/lib/security/voiceConfirmation.ts</file>
+        <description>Main service for voice security confirmation</description>
+        <methods>
+          <method name="confirmTransaction" type="async">
+            <parameters>
+              <param name="userId" type="string">User identifier</param>
+              <param name="transactionType" type="string">Type of transaction</param>
+              <param name="amount" type="number">Transaction amount</param>
+              <param name="recipient" type="string" optional="true">Transaction recipient</param>
+              <param name="expectedPhrase" type="string">Security phrase to verify</param>
+            </parameters>
+            <returns type="Promise&lt;ConfirmationResult&gt;">Verification result with details</returns>
+          </method>
+          <method name="generateConfirmationPhrase" type="sync">
+            <parameters>
+              <param name="action" type="string">Transaction action type</param>
+            </parameters>
+            <returns type="string">Generated security phrase</returns>
+          </method>
+          <method name="determineFailureScenario" type="sync">
+            <parameters>
+              <param name="error" type="Error">Error to categorize</param>
+            </parameters>
+            <returns type="FailureScenario">Categorized failure type</returns>
+          </method>
+        </methods>
+      </interface>
+
+      <interface id="voice-pattern-service" type="typescript-service">
+        <class>VoicePatternRecognitionService</class>
+        <file>src/lib/security/voiceRecognition.ts (to be implemented)</file>
+        <description>Voice pattern recognition and matching service</description>
+        <methods>
+          <method name="enrollVoicePattern" type="async">
+            <parameters>
+              <param name="userId" type="string">User identifier</param>
+              <param name="voiceSamples" type="Blob[]">Voice samples for enrollment</param>
+            </parameters>
+            <returns type="Promise&lt;string&gt;">Voice pattern identifier</returns>
+          </method>
+          <method name="verifyVoicePattern" type="async">
+            <parameters>
+              <param name="userId" type="string">User identifier</param>
+              <param name="voiceSample" type="Blob">Voice sample to verify</param>
+            </parameters>
+            <returns type="Promise&lt;VoiceMatchResult&gt;">Verification result with confidence</returns>
+          </method>
+          <method name="detectLiveness" type="async">
+            <parameters>
+              <param name="voiceSample" type="Blob">Voice sample for liveness detection</param>
+            </parameters>
+            <returns type="Promise&lt;LivenessResult&gt;">Liveness detection result</returns>
+          </method>
+        </methods>
+      </interface>
+
+      <interface id="audio-encryption-service" type="typescript-service">
+        <class>AudioEncryptionService</class>
+        <file>src/lib/security/audioEncryption.ts</file>
+        <description>Audio encryption and LGPD compliance service</description>
+        <methods>
+          <method name="encryptAudio" type="async">
+            <parameters>
+              <param name="audioBlob" type="Blob">Audio data to encrypt</param>
+            </parameters>
+            <returns type="Promise&lt;EncryptedData&gt;">Encrypted audio with metadata</returns>
+          </method>
+          <method name="decryptAudio" type="async">
+            <parameters>
+              <param name="encryptedData" type="EncryptedData">Encrypted audio data</param>
+            </parameters>
+            <returns type="Promise&lt;Blob&gt;">Decrypted audio blob</returns>
+          </method>
+          <method name="anonymizeText" type="static">
+            <parameters>
+              <param name="text" type="string">Text to anonymize</param>
+            </parameters>
+            <returns type="string">Anonymized text</returns>
+          </method>
+        </methods>
+      </interface>
+    </serviceInterfaces>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <!-- Testing Standards and Requirements -->
+      <testingFramework>
+        <framework name="Vitest" primary="true">
+          <description>Unit testing framework for voice security components</description>
+          <configuration>
+            <coverage target="90%">Test coverage requirement for security components</coverage>
+            <timeout default="10000ms">Test timeout for async operations</timeout>
+            <environment node="true" browser="true">Test environment configuration</environment>
+          </configuration>
+        </framework>
+        <framework name="Playwright" primary="true">
+          <description>E2E testing for voice authentication workflows</description>
+          <configuration>
+            <browserSupport chrome="true" firefox="true" safari="true">Cross-browser testing</browserSupport>
+            <deviceSupport mobile="true" desktop="true">Responsive testing</deviceSupport>
+          </configuration>
+        </framework>
+        <framework name="Testing Library" primary="true">
+          <description>React component testing for UI interfaces</description>
+          <configuration>
+            <accessibilityTesting enabled="true">Accessibility compliance testing</accessibilityTesting>
+            <userEventTesting enabled="true">User interaction simulation</userEventTesting>
+          </configuration>
+        </framework>
+      </testingFramework>
+
+      <!-- Security Testing Requirements -->
+      <securityTesting>
+        <penetrationTesting>
+          <test name="Voice Replay Attack Prevention">
+            <description>Verify protection against recorded voice playback</description>
+            <methodology>Test with pre-recorded voice samples</methodology>
+            <expectedResult>All replay attempts should be rejected</expectedResult>
+          </test>
+          <test name="Deepfake Voice Detection">
+            <description>Test resistance to AI-generated voice samples</description>
+            <methodology>Test with synthetic voice samples</methodology>
+            <expectedResult>Deepfake samples should be detected and rejected</expectedResult>
+          </test>
+          <test name="Cross-User Voice Pattern Matching">
+            <description>Ensure voice patterns cannot be used across users</description>
+            <methodology>Test voice samples from different users</methodology>
+            <expectedResult>Cross-user matching should fail consistently</expectedResult>
+          </test>
+        </penetrationTesting>
+
+        <loadTesting>
+          <test name="Concurrent Voice Authentication">
+            <description>Test system under concurrent voice authentication requests</description>
+            <methodology>Simulate 100+ concurrent authentication attempts</methodology>
+            <expectedResult>Response time should remain &lt;2s, 99.9% success rate</expectedResult>
+          </test>
+          <test name="Rate Limiting Effectiveness">
+            <description>Verify rate limiting prevents abuse</description>
+            <methodology>Rapid authentication attempts from same user</methodology>
+            <expectedResult>Rate limiting should activate after threshold</expectedResult>
+          </test>
+        </loadTesting>
+
+        <complianceTesting>
+          <test name="LGPD Data Anonymization">
+            <description>Verify personal data is properly anonymized</description>
+            <methodology>Test with voice samples containing personal information</methodology>
+            <expectedResult>All personal data should be masked or removed</expectedResult>
+          </test>
+          <test name="Data Retention Compliance">
+            <description>Ensure voice data is deleted according to retention policies</description>
+            <methodology>Monitor data lifecycle and deletion processes</methodology>
+            <expectedResult>Data should be automatically deleted after retention period</expectedResult>
+          </test>
+          <test name="Right to Deletion">
+            <description>Verify users can request voice data deletion</description>
+            <methodology>Test user-initiated data deletion requests</methodology>
+            <expectedResult>All voice data should be permanently deleted</expectedResult>
+          </test>
+        </complianceTesting>
+      </testingStandards>
+
+      <!-- Performance Testing Requirements -->
+      <performanceTesting>
+        <benchmarks>
+          <benchmark name="Voice Processing Latency">
+            <target>&lt;2s</target>
+            <description>Time from voice capture to verification result</description>
+            <measurement>95th percentile response time</measurement>
+          </benchmark>
+          <benchmark name="Voice Recognition Accuracy">
+            <target>≥95%</target>
+            <description>Accurate transcription of Portuguese voice commands</description>
+            <measurement>Word error rate on test dataset</measurement>
+          </benchmark>
+          <benchmark name="Biometric Verification Speed">
+            <target>&lt;1s</target>
+            <description>Voice pattern matching processing time</description>
+            <measurement>Time from audio input to match result</measurement>
+          </benchmark>
+          <benchmark name="False Positive Rate">
+            <target>&lt;0.1%</target>
+            <description>Unauthorized access success rate</description>
+            <measurement>Percentage of successful unauthorized attempts</measurement>
+          </benchmark>
+        </benchmarks>
+      </performanceTesting>
+    </standards>
+
+    <locations>
+      <!-- Test File Locations -->
+      <unitTests>
+        <directory path="src/lib/security/__tests__/">
+          <description>Security service unit tests</description>
+          <files>
+            <file name="voiceConfirmation.test.ts">Voice confirmation service tests</file>
+            <file name="biometricAuth.test.ts">Biometric authentication tests</file>
+            <file name="audioEncryption.test.ts">Audio encryption tests</file>
+            <file name="deviceFingerprinting.test.ts">Device fingerprinting tests</file>
+            <file name="voicePatternRecognition.test.ts">Voice pattern recognition tests</file>
+          </files>
+        </directory>
+        <directory path="src/lib/stt/__tests__/">
+          <description>Speech-to-text service tests</description>
+          <files>
+            <file name="speechToTextService.test.ts">STT service tests</file>
+            <file name="whisperAPI.test.ts">OpenAI API integration tests</file>
+          </files>
+        </directory>
+      </unitTests>
+
+      <integrationTests>
+        <directory path="src/test/integration/voice-security/">
+          <description>Voice security integration tests</description>
+          <files>
+            <file name="voiceWorkflow.test.ts">End-to-end voice authentication workflow</file>
+            <file name="fallbackMethods.test.ts">Alternative verification method tests</file>
+            <file name="lgpdCompliance.test.ts">LGPD compliance integration tests</file>
+            <file name="auditLogging.test.ts">Security event logging tests</file>
+          </files>
+        </directory>
+      </integrationTests>
+
+      <e2eTests>
+        <directory path="src/test/e2e/voice-security/">
+          <description>End-to-end voice security tests</description>
+          <files>
+            <file name="voiceConfirmation.spec.ts">Voice confirmation user workflow</file>
+            <file name="voiceEnrollment.spec.ts">Voice biometric enrollment process</file>
+            <file name="fallbackAuthentication.spec.ts">Fallback method selection</file>
+            <file name="accessibility.spec.ts">Accessibility compliance tests</file>
+          </files>
+        </directory>
+      </e2eTests>
+
+      <securityTests>
+        <directory path="src/test/security/voice-security/">
+          <description>Security-focused testing</description>
+          <files>
+            <file name="antiSpoofing.test.ts">Anti-spoofing mechanism tests</file>
+            <file name="penetrationTesting.test.ts">Security penetration tests</file>
+            <file name="loadTesting.test.ts">Performance and load tests</file>
+            <file name="dataBreach.test.ts">Data protection and breach tests</file>
+          </files>
+        </directory>
+      </securityTests>
+
+      <!-- Test Data and Mocks -->
+      <testData>
+        <directory path="src/test/fixtures/voice/">
+          <description>Voice test data and fixtures</description>
+          <files>
+            <file name="sampleVoiceCommands.webm">Sample voice command recordings</file>
+            <file name="mockVoicePatterns.json">Mock voice pattern data</file>
+            <file name="testPhrases.pt.json">Portuguese test phrases</file>
+            <file name="securityTestScenarios.json">Security test scenarios</file>
+          </files>
+        </directory>
+        <directory path="src/test/mocks/">
+          <description>Mock services and APIs</description>
+          <files>
+            <file name="mockSpeechRecognition.ts">Web Speech API mock</file>
+            <file name="mockWebAuthn.ts">Web Authentication API mock</file>
+            <file name="mockOpenAIWhisper.ts">OpenAI Whisper API mock</file>
+            <file name="mockSupabase.ts">Supabase client mock</file>
+          </files>
+        </directory>
+      </testData>
+    </locations>
+
+    <ideas>
+      <!-- Testing Strategies and Approaches -->
+      <testingStrategies>
+        <strategy name="Voice Biometric Testing">
+          <description>Comprehensive testing of voice pattern recognition and matching</description>
+          <approach>
+            <step>Create diverse voice sample dataset with different accents, ages, and genders</step>
+            <step>Test enrollment process with various voice quality levels</step>
+            <step>Verify matching accuracy with known voice samples</step>
+            <step>Test rejection of unknown voice samples</step>
+            <step>Validate liveness detection effectiveness</step>
+          </approach>
+          <tools>
+            <tool>Mock Web Audio API for controllable audio input</tool>
+            <tool>Pre-recorded voice samples with known patterns</tool>
+            <tool>Simulated network conditions for API testing</tool>
+          </tools>
+        </strategy>
+
+        <strategy name="Anti-Spoofing Validation">
+          <description>Testing anti-spoofing mechanisms and replay attack prevention</description>
+          <approach>
+            <step>Test with pre-recorded voice samples from same user</step>
+            <step>Test with AI-generated synthetic voices</step>
+            <step>Test with voice conversion and deepfake samples</step>
+            <step>Verify challenge-response mechanism effectiveness</step>
+            <step>Test device fingerprinting correlation</step>
+          </approach>
+          <tools>
+            <tool>Voice synthesis tools for generating test samples</tool>
+            <tool>Audio manipulation software for creating attack scenarios</tool>
+            <tool>Network simulation tools for various attack vectors</tool>
+          </tools>
+        </strategy>
+
+        <strategy name="LGPD Compliance Testing">
+          <description>Validation of LGPD compliance requirements</description>
+          <approach>
+            <step>Test personal data anonymization in transcriptions</step>
+            <step>Verify encryption of all voice data at rest</step>
+            <step>Test data retention and automatic deletion</step>
+            <step>Validate audit trail completeness and immutability</step>
+            <step>Test user consent management and withdrawal</step>
+          </approach>
+          <tools>
+            <tool>Data privacy scanning tools</tool>
+            <tool>Encryption verification utilities</tool>
+            <container>Audit log analysis tools</tool>
+          </tools>
+        </strategy>
+
+        <strategy name="Performance and Load Testing">
+          <description>Testing system performance under various conditions</description>
+          <approach>
+            <step>Test voice authentication under concurrent load</step>
+            <step>Measure response times across different network conditions</step>
+            <step>Test system behavior with low-quality audio input</step>
+            <step>Validate rate limiting and abuse prevention</step>
+            <step>Test fallback mechanism performance and reliability</step>
+          </approach>
+          <tools>
+            <tool>Load testing frameworks (Artillery, K6)</tool>
+            <tool>Network simulation tools</tool>
+            <tool>Performance monitoring and profiling</tool>
+          </tools>
+        </strategy>
+      </testingStrategies>
+
+      <!-- Test Automation Ideas -->
+      <automationIdeas>
+        <automation name="Continuous Voice Testing Pipeline">
+          <description>Automated testing pipeline for voice security features</description>
+          <implementation>
+            <component>Automated voice sample generation for different test scenarios</component>
+            <component>Integration with CI/CD pipeline for voice security tests</component>
+            <component>Automated performance regression testing</component>
+            <component>Security vulnerability scanning for voice components</component>
+          </implementation>
+        </automation>
+
+        <automation name="Voice Quality Monitoring">
+          <description>Automated monitoring of voice recognition quality</description>
+          <implementation>
+            <component>Real-time accuracy monitoring dashboard</component>
+            <component>Automated alerting for degraded performance</component>
+            <component>A/B testing framework for voice model improvements</component>
+            <component>User feedback collection and analysis system</component>
+          </implementation>
+        </automation>
+      </automationIdeas>
+
+      <!-- Edge Case Testing -->
+      <edgeCases>
+        <edgeCase name="Poor Audio Quality">
+          <description>Testing with various audio quality issues</description>
+          <scenarios>
+            <scenario>Background noise interference</scenario>
+            <scenario>Low microphone volume</scenario>
+            <scenario>Audio compression artifacts</scenario>
+            <scenario>Network connectivity issues during streaming</scenario>
+          </scenarios>
+        </edgeCase>
+
+        <edgeCase name="Accessibility Scenarios">
+          <description>Testing accessibility and fallback scenarios</description>
+          <scenarios>
+            <scenario>Users with speech impediments</scenario>
+            <scenario>Users with heavy accents</scenario>
+            <scenario>Users unable to use voice authentication</scenario>
+            <scenario>Devices without microphone support</scenario>
+          </scenarios>
+        </edgeCase>
+
+        <edgeCase name="Security Attack Scenarios">
+          <description>Testing various security attack scenarios</description>
+          <scenarios>
+            <scenario>Voice recording replay attacks</scenario>
+            <scenario>AI-generated voice synthesis attacks</scenario>
+            <scenario>Man-in-the-middle attacks on audio streams</scenario>
+            <scenario>Cross-device voice pattern theft attempts</scenario>
+          </scenarios>
+        </edgeCase>
+      </edgeCases>
+    </ideas>
+  </tests>
+
+  <!-- Implementation Notes and Recommendations -->
+  <implementationNotes>
+    <currentStatus>
+      <overallCompletion>85%</overallCompletion>
+      <existingComponents>
+        <component name="VoiceConfirmationService" status="90% complete">
+          <description>Core voice confirmation workflow with fuzzy matching and fallback strategies</description>
+          <missingFeatures>
+            <feature>Voice liveness detection implementation</feature>
+            <feature>Anti-spoofing challenge-response mechanisms</feature>
+            <feature>Voice pattern enrollment workflow</feature>
+          </missingFeatures>
+        </component>
+        <component name="BiometricAuthService" status="95% complete">
+          <description>Comprehensive biometric authentication with WebAuthn and multiple fallbacks</description>
+          <missingFeatures>
+            <feature>Enhanced fraud detection integration</feature>
+            <feature>Advanced device fingerprinting correlation</feature>
+          </missingFeatures>
+        </component>
+        <component name="AudioEncryptionService" status="100% complete">
+          <description>AES-256-GCM encryption with LGPD compliance features</description>
+          <missingFeatures>
+            <!-- None identified -->
+          </missingFeatures>
+        </component>
+        <component name="DeviceFingerprintingService" status="95% complete">
+          <description>Advanced device identification and risk scoring</description>
+          <missingFeatures>
+            <feature>Voice-specific device fingerprinting</feature>
+          </missingFeatures>
+        </component>
+      </existingComponents>
+    </currentStatus>
+
+    <recommendedImplementation>
+      <priority order="1">Voice Liveness Detection Implementation</priority>
+      <priority order="2">Anti-Spoofing Challenge-Response System</priority>
+      <priority order="3">Voice Pattern Recognition Service</priority>
+      <priority order="4">Enhanced Testing and Validation</priority>
+      <priority order="5">User Interface Development</priority>
+    </recommendedImplementation>
+
+    <integrationConsiderations>
+      <consideration name="Existing Security Framework">
+        <description>Leverage existing BiometricAuthService and security infrastructure</description>
+        <benefits>Reduced development time, consistent security patterns</benefits>
+      </consideration>
+      <consideration name="LGPD Compliance">
+        <description>Build upon existing AudioEncryptionService for data protection</description>
+        <benefits>Automatic compliance with Brazilian data protection laws</benefits>
+      </consideration>
+      <consideration name="User Experience">
+        <description>Ensure seamless integration with existing authentication flows</description>
+        <benefits>Consistent user experience, reduced learning curve</benefits>
+      </consideration>
+    </integrationConsiderations>
+  </implementationNotes>
+</story-context>

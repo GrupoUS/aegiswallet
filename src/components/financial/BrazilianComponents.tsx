@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/formatters/brazilianFormatters';
 import { cn } from '@/lib/utils';
 

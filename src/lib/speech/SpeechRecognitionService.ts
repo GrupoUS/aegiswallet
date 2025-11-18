@@ -117,13 +117,13 @@ export class SpeechRecognitionService {
    */
   private initializeSpeechRecognition(): void {
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
+
     if (!SpeechRecognitionClass) {
       throw new Error('Web Speech API not supported in this browser');
     }
 
     this.recognition = new SpeechRecognitionClass();
-    
+
     // Configure recognition
     this.recognition.lang = this.config.language;
     this.recognition.maxAlternatives = this.config.maxAlternatives;
@@ -178,10 +178,10 @@ export class SpeechRecognitionService {
       // Handle results
       this.recognition.onresult = (event: SpeechRecognitionEvent) => {
         const result = this.processSpeechRecognitionEvent(event, startTime);
-        
+
         if (result) {
           onResult?.(result);
-          
+
           if (result.isFinal) {
             clearTimeout(timeoutId);
             this.updatePerformanceMetrics(result);
@@ -195,18 +195,16 @@ export class SpeechRecognitionService {
       this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         clearTimeout(timeoutId);
         const error = this.processSpeechRecognitionError(event);
-        
+
         onError?.(error);
-        
+
         // For network errors, try cloud fallback
         if (error.isRetryable) {
-          this.startCloudRecognition(options)
-            .then(resolve)
-            .catch(reject);
+          this.startCloudRecognition(options).then(resolve).catch(reject);
         } else {
           reject(new Error(error.message));
         }
-        
+
         this.stopRecognition();
       };
 
@@ -255,7 +253,7 @@ export class SpeechRecognitionService {
     }
 
     const processingTime = Date.now() - startTime;
-    
+
     // Get alternatives
     const alternatives: RecognitionAlternative[] = [];
     for (let i = 0; i < Math.min(result.length, this.config.maxAlternatives); i++) {
@@ -279,14 +277,25 @@ export class SpeechRecognitionService {
   /**
    * Process speech recognition error
    */
-  private processSpeechRecognitionError(event: SpeechRecognitionErrorEvent): SpeechRecognitionError {
+  private processSpeechRecognitionError(
+    event: SpeechRecognitionErrorEvent
+  ): SpeechRecognitionError {
     const errorMap: Record<string, { isRetryable: boolean; message: string }> = {
-      'network': { isRetryable: true, message: 'Network error. Please check your connection.' },
+      network: { isRetryable: true, message: 'Network error. Please check your connection.' },
       'no-speech': { isRetryable: false, message: 'No speech detected. Please try again.' },
-      'audio-capture': { isRetryable: true, message: 'Audio capture error. Please check microphone permissions.' },
-      'not-allowed': { isRetryable: false, message: 'Microphone access denied. Please enable microphone permissions.' },
-      'service-not-allowed': { isRetryable: true, message: 'Speech recognition service not available.' },
-      'aborted': { isRetryable: true, message: 'Recognition was aborted.' },
+      'audio-capture': {
+        isRetryable: true,
+        message: 'Audio capture error. Please check microphone permissions.',
+      },
+      'not-allowed': {
+        isRetryable: false,
+        message: 'Microphone access denied. Please enable microphone permissions.',
+      },
+      'service-not-allowed': {
+        isRetryable: true,
+        message: 'Speech recognition service not available.',
+      },
+      aborted: { isRetryable: true, message: 'Recognition was aborted.' },
     };
 
     const errorInfo = errorMap[event.error] || {
@@ -313,7 +322,7 @@ export class SpeechRecognitionService {
     } = {}
   ): Promise<RecognitionResult> {
     const startTime = Date.now();
-    
+
     try {
       // Import existing STT service
       const { createSTTService } = await import('../stt/speechToTextService');
@@ -344,7 +353,7 @@ export class SpeechRecognitionService {
           try {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const sttResult = await sttService.transcribe(audioBlob);
-            
+
             const result: RecognitionResult = {
               transcript: sttResult.text,
               confidence: sttResult.confidence,
@@ -368,18 +377,22 @@ export class SpeechRecognitionService {
             options.onError?.(speechError);
             reject(error);
           } finally {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach((track) => {
+              track.stop();
+            });
           }
         };
 
-        mediaRecorder.onerror = (event) => {
-          stream.getTracks().forEach(track => track.stop());
+        mediaRecorder.onerror = (_event) => {
+          stream.getTracks().forEach((track) => {
+            track.stop();
+          });
           reject(new Error('MediaRecorder error'));
         };
 
         // Start recording for maximum 5 seconds (voice command typical length)
         mediaRecorder.start();
-        
+
         // Stop recording after 5 seconds or when user stops speaking
         setTimeout(() => {
           if (mediaRecorder.state === 'recording') {
@@ -412,25 +425,25 @@ export class SpeechRecognitionService {
       const audioContext = new AudioContext();
       const analyser = audioContext.createAnalyser();
       const source = audioContext.createMediaStreamSource(stream);
-      
+
       source.connect(analyser);
       analyser.fftSize = 256;
-      
+
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
-      
+
       let hasActivity = false;
       const checkInterval = setInterval(() => {
         analyser.getByteFrequencyData(dataArray);
-        
+
         // Calculate average volume
         const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
-        
+
         // If volume exceeds threshold, we have voice activity
         if (average > 30) {
           hasActivity = true;
         }
-        
+
         // Stop checking after 2 seconds or when we have activity
         if (hasActivity || Date.now() - performance.now() > 2000) {
           clearInterval(checkInterval);
@@ -447,16 +460,16 @@ export class SpeechRecognitionService {
    */
   private updatePerformanceMetrics(result: RecognitionResult): void {
     this.performanceMetrics.totalRecognitions++;
-    
+
     if (result.confidence >= this.config.confidenceThreshold) {
       this.performanceMetrics.successfulRecognitions++;
     }
 
     // Update running averages
     const total = this.performanceMetrics.totalRecognitions;
-    this.performanceMetrics.averageResponseTime = 
+    this.performanceMetrics.averageResponseTime =
       (this.performanceMetrics.averageResponseTime * (total - 1) + result.processingTime) / total;
-    this.performanceMetrics.averageConfidence = 
+    this.performanceMetrics.averageConfidence =
       (this.performanceMetrics.averageConfidence * (total - 1) + result.confidence) / total;
   }
 
@@ -466,12 +479,15 @@ export class SpeechRecognitionService {
   getPerformanceMetrics() {
     return {
       ...this.performanceMetrics,
-      successRate: this.performanceMetrics.totalRecognitions > 0 
-        ? this.performanceMetrics.successfulRecognitions / this.performanceMetrics.totalRecognitions 
-        : 0,
-      fallbackRate: this.performanceMetrics.totalRecognitions > 0
-        ? this.performanceMetrics.fallbackUsage / this.performanceMetrics.totalRecognitions
-        : 0,
+      successRate:
+        this.performanceMetrics.totalRecognitions > 0
+          ? this.performanceMetrics.successfulRecognitions /
+            this.performanceMetrics.totalRecognitions
+          : 0,
+      fallbackRate:
+        this.performanceMetrics.totalRecognitions > 0
+          ? this.performanceMetrics.fallbackUsage / this.performanceMetrics.totalRecognitions
+          : 0,
     };
   }
 
@@ -541,7 +557,7 @@ export class SpeechRecognitionService {
    */
   updateConfig(newConfig: Partial<SpeechRecognitionConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     if (this.recognition) {
       this.recognition.lang = this.config.language;
       this.recognition.maxAlternatives = this.config.maxAlternatives;
@@ -587,10 +603,10 @@ export function createSpeechRecognitionService(
   config?: Partial<SpeechRecognitionConfig>
 ): SpeechRecognitionService {
   const service = new SpeechRecognitionService(config);
-  
+
   // Add financial grammar by default
   service.addFinancialGrammar();
-  
+
   return service;
 }
 
@@ -602,13 +618,13 @@ export async function recognizeCommand(
   options?: Partial<SpeechRecognitionConfig>
 ): Promise<RecognitionResult> {
   const service = createSpeechRecognitionService(options);
-  
+
   if (audioBlob) {
     // Use cloud fallback for provided audio blob
     const { createSTTService } = await import('../stt/speechToTextService');
     const sttService = createSTTService();
     const sttResult = await sttService.transcribe(audioBlob);
-    
+
     return {
       transcript: sttResult.text,
       confidence: sttResult.confidence,

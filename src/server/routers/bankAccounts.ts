@@ -1,4 +1,4 @@
-import { TRPCError, TRPCError } from '@trpc/server';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logOperation } from '@/server/lib/logger';

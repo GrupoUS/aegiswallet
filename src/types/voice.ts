@@ -9,9 +9,9 @@
 // Voice Command Types
 // ============================================================================
 
-export type VoiceCommandIntent = 
+export type VoiceCommandIntent =
   | 'balance_query'
-  | 'payment_query' 
+  | 'payment_query'
   | 'transfer_query'
   | 'statement_query'
   | 'investment_query'
@@ -74,12 +74,12 @@ export interface SpeechRecognitionErrorEvent {
 // Brazilian Portuguese Regional Types
 // ============================================================================
 
-export type BrazilianRegion = 
-  | 'pt-BR'        // Padrão brasileiro
-  | 'pt-BR-SP'      // São Paulo
-  | 'pt-BR-RJ'      // Rio de Janeiro
-  | 'pt-BR-NE'      // Nordeste
-  | 'pt-BR-SUL';    // Sul
+export type BrazilianRegion =
+  | 'pt-BR' // Padrão brasileiro
+  | 'pt-BR-SP' // São Paulo
+  | 'pt-BR-RJ' // Rio de Janeiro
+  | 'pt-BR-NE' // Nordeste
+  | 'pt-BR-SUL'; // Sul
 
 export interface RegionalAccent {
   region: BrazilianRegion;
@@ -123,8 +123,8 @@ export interface VoicePerformanceMetrics {
 
 export interface PerformanceThresholds {
   maxResponseTime: number; // milliseconds
-  minConfidence: number;   // 0-1
-  minSuccessRate: number;  // 0-1
+  minConfidence: number; // 0-1
+  minSuccessRate: number; // 0-1
   maxFallbackRate: number; // 0-1
 }
 
@@ -175,7 +175,7 @@ export const ESSENTIAL_VOICE_COMMANDS = [
 // Error Types
 // ============================================================================
 
-export type VoiceErrorCode = 
+export type VoiceErrorCode =
   | 'MICROPHONE_DENIED'
   | 'MICROPHONE_NOT_FOUND'
   | 'NETWORK_ERROR'
@@ -216,7 +216,7 @@ export const DEFAULT_VOICE_CONFIG: VoiceConfig = {
     maxResponseTime: 1000, // 1 second
     minConfidence: 0.85,
     minSuccessRate: 0.95,
-    maxFallbackRate: 0.10,
+    maxFallbackRate: 0.1,
   },
   audioConfig: {
     sampleRate: 16000,

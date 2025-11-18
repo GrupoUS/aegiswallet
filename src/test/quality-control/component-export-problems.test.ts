@@ -162,7 +162,7 @@ describe('Component Export Problems', () => {
       // Test Button component creation
       const { Button } = require('@/components/ui/button');
       expect(() => {
-        return React.createElement(Button, { children: 'Test' });
+        return React.createElement(Button, null, 'Test');
       }).not.toThrow();
 
       // Button should be a React component

@@ -1,7 +1,9 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
+
 import { cn } from '@/lib/utils';
+
 import type { CalendarEvent, EventPosition } from './types';
 import { EVENT_COLOR_STYLES } from './types';
 
@@ -31,24 +33,26 @@ export function EventCard({ event, position, onEdit }: EventCardProps) {
   };
 
   return (
-    <div
+    <button
       ref={setNodeRef}
+      type="button"
       style={style}
       {...listeners}
       {...attributes}
       onClick={() => onEdit?.(event)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onEdit?.(event);
-        }
-      }}
-      role="button"
-      tabIndex={0}
       aria-label={`Editar evento: ${event.title}`}
       className={cn(
-        'pointer-events-auto cursor-move rounded-md border-l-4 p-2 text-sm',
-        'overflow-hidden transition-shadow hover:shadow-md',
+        'block',
+        'border-l-4',
+        'cursor-move',
+        'hover:shadow-md',
+        'overflow-hidden',
+        'p-2',
+        'pointer-events-auto',
+        'rounded-md',
+        'text-left',
+        'text-sm',
+        'transition-shadow',
         colorTokens.subtleBg,
         colorTokens.border,
         colorTokens.text,
@@ -61,6 +65,6 @@ export function EventCard({ event, position, onEdit }: EventCardProps) {
           {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
         </div>
       )}
-    </div>
+    </button>
   );
 }

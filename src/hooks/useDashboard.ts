@@ -189,27 +189,35 @@ export function useDashboardMetrics() {
   };
 }
 
-/**
- * Hook para configurações do Dashboard
- */
 export function useDashboardSettings() {
   const { profile } = useProfile();
 
+  const preferences = profile?.user_preferences?.[0] ?? null;
+
   const settings = {
-    theme: profile?.user_preferences?.theme || 'system',
+    theme: preferences?.theme ?? 'system',
+
+    language: preferences?.language ?? 'pt-BR',
+    timezone: preferences?.timezone ?? 'America/Sao_Paulo',
+    currency: preferences?.currency ?? 'BRL',
     notifications: {
-      email: profile?.user_preferences?.notifications_email ?? true,
-      push: profile?.user_preferences?.notifications_push ?? true,
+      enabled: preferences?.notifications_enabled ?? true,
+      email: preferences?.email_notifications ?? true,
+
+      push: preferences?.push_notifications ?? true,
     },
+
     voice: {
-      enabled: profile?.voice_command_enabled ?? true,
-      feedback: profile?.user_preferences?.voice_feedback ?? true,
+      enabled: preferences?.voice_commands_enabled ?? true,
+
+      feedback: preferences?.voice_feedback ?? false,
     },
     accessibility: {
-      highContrast: profile?.user_preferences?.accessibility_high_contrast ?? false,
-      largeText: profile?.user_preferences?.accessibility_large_text ?? false,
-      screenReader: profile?.user_preferences?.accessibility_screen_reader ?? false,
+      highContrast: preferences?.accessibility_high_contrast ?? false,
+      largeText: preferences?.accessibility_large_text ?? false,
+      screenReader: preferences?.accessibility_screen_reader ?? false,
     },
+    autonomyLevel: preferences?.autonomy_level ?? 50,
   };
 
   return settings;

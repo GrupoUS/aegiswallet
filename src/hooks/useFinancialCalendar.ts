@@ -254,7 +254,9 @@ export function useCalendarStats() {
       eventsThisMonth: totalThisMonth,
       completedThisMonth,
       completionRate,
-      urgentEvents: upcomingEvents.filter((event) => event.priority === 'urgent').length,
+      urgentEvents: upcomingEvents.filter(
+        (event) => event.priority === 'high' || event.priority === 'medium'
+      ).length,
       highPriorityEvents: upcomingEvents.filter((event) => event.priority === 'high').length,
     };
   }, [upcomingEvents, overdueEvents, events]);

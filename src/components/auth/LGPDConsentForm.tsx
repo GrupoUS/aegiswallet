@@ -1,367 +1,215 @@
-import { Clock, Database, Eye, Mail, Mic, Shield } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
+import type { CheckedState } from '@radix-ui/react-checkbox';
+import { useState } from 'react';
 
-interface ConsentData {
-  voice_data_processing: boolean;
-  biometric_data: boolean;
-  audio_recording: boolean;
-  data_retention: boolean;
-  marketing_communications: boolean;
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+
+export interface LGPDConsentState {
+  essential: boolean;
+  analytics: boolean;
+  marketing: boolean;
 }
 
-type UserConsentRow = {
-  consent_type: keyof ConsentData;
-  granted: boolean;
-};
-
-type UserConsentInsert = {
-  user_id: string;
-  consent_type: keyof ConsentData;
-  granted: boolean;
-  consent_version: string;
-  consent_date: string;
-  updated_at: string;
-};
-
-type AuditLogInsert = {
-  user_id: string;
-  action: string;
-  resource_type: string;
-  details: Record<string, unknown>;
-};
-
-interface LGPDConsentFormProps {
-  userId: string;
-  onConsentComplete?: () => void;
-  requiredOnly?: boolean;
+export interface LGPDConsentFormProps {
+  defaultValues?: Partial<LGPDConsentState>;
+  onSubmit?: (values: LGPDConsentState) => Promise<void> | void;
+  isSubmitting?: boolean;
   className?: string;
+  policyUrl?: string;
+  submitLabel?: string;
+  errorMessage?: string;
+  successMessage?: string;
 }
-
-const consentDefaults: ConsentData = {
-  voice_data_processing: false,
-  biometric_data: false,
-  audio_recording: false,
-  data_retention: false,
-  marketing_communications: false,
-};
 
 export function LGPDConsentForm({
-  userId,
-  onConsentComplete,
-  requiredOnly = false,
+  defaultValues,
+  onSubmit,
+  isSubmitting,
   className,
+  policyUrl,
+  submitLabel = 'Registrar consentimento',
+  errorMessage,
+  successMessage = 'Consentimento registrado com sucesso.',
 }: LGPDConsentFormProps) {
-  const [consents, setConsents] = useState<ConsentData>(consentDefaults);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [consentState, setConsentState] = useState<LGPDConsentState>({
+    essential: defaultValues?.essential ?? false,
+    analytics: defaultValues?.analytics ?? false,
+    marketing: defaultValues?.marketing ?? false,
+  });
+  const [internalSubmitting, setInternalSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const loadExistingConsents = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from<UserConsentRow>("user_consent")
-        .select("*")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false });
+  const busy = isSubmitting ?? internalSubmitting;
 
-      if (error) throw error;
+  const handleConsentToggle = (field: keyof LGPDConsentState) => (value: CheckedState) => {
+    const isChecked = value === true;
 
-      const typedData = data as UserConsentRow[] | null;
-
-      if (typedData?.length) {
-        const latestConsents = typedData.reduce<ConsentData>(
-          (acc, consent) => {
-            const consentKey = consent.consent_type as keyof ConsentData;
-            acc[consentKey] = Boolean(consent.granted);
-            return acc;
-          },
-          { ...consentDefaults },
-        );
-
-        setConsents(latestConsents);
-      }
-    } catch (err) {
-      console.error("Error loading consents:", err);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    loadExistingConsents();
-  }, [loadExistingConsents]);
-
-  const handleConsentChange = (
-    consentType: keyof ConsentData,
-    granted: boolean,
-  ) => {
-    setConsents((prev) => ({
-      ...prev,
-      [consentType]: granted,
+    setConsentState((previous) => ({
+      ...previous,
+      [field]: isChecked,
     }));
+    setStatus('idle');
+    if (formError) {
+      setFormError(null);
+    }
   };
 
-  const validateRequiredConsents = (): boolean => {
-    // Required consents for core functionality
-    const required = ["voice_data_processing", "audio_recording"];
-    return required.every((consent) => consents[consent as keyof ConsentData]);
-  };
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus('idle');
 
-  const handleSubmit = async () => {
-    if (!validateRequiredConsents()) {
-      setError(
-        "Você deve consentir com o processamento de dados de voz e gravação de áudio para usar os recursos principais.",
-      );
+    if (!consentState.essential) {
+      setFormError('É necessário autorizar o tratamento essencial de dados para continuar.');
+      setStatus('error');
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    setFormError(null);
+
+    if (!onSubmit) {
+      setStatus('success');
+      return;
+    }
+
+    if (isSubmitting === undefined) {
+      setInternalSubmitting(true);
+    }
 
     try {
-      const consentVersion = "1.0.0";
-      const consentTypes = Object.keys(consents) as (keyof ConsentData)[];
-
-      // Insert or update each consent type
-      for (const consentType of consentTypes) {
-        if (
-          !requiredOnly ||
-          consentType === "voice_data_processing" ||
-          consentType === "audio_recording"
-        ) {
-          const consentPayload: UserConsentInsert = {
-            user_id: userId,
-            consent_type: consentType,
-            granted: consents[consentType],
-            consent_version: consentVersion,
-            consent_date: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          await supabase.from("user_consent").upsert(consentPayload, {
-            onConflict: "user_id,consent_type",
-          });
-        }
-      }
-
-      // Log consent activity for audit
-      const auditPayload: AuditLogInsert = {
-        user_id: userId,
-        action: "lgpd_consent_updated",
-        resource_type: "user_consent",
-        details: {
-          consent_version: consentVersion,
-          consents_granted: Object.entries(consents)
-            .filter(([_, granted]) => granted)
-            .map(([type]) => type),
-          timestamp: new Date().toISOString(),
-        },
-      };
-
-      await supabase.from("audit_logs").insert(auditPayload);
-
-      onConsentComplete?.();
-    } catch (err) {
-      console.error("Error saving consents:", err);
-      setError("Erro ao salvar suas preferências. Tente novamente.");
+      await onSubmit(consentState);
+      setStatus('success');
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível registrar o consentimento. Tente novamente.';
+      setFormError(message);
+      setStatus('error');
     } finally {
-      setLoading(false);
+      if (isSubmitting === undefined) {
+        setInternalSubmitting(false);
+      }
     }
   };
 
-  const consentItems = [
-    {
-      key: "voice_data_processing" as keyof ConsentData,
-      title: "Processamento de Dados de Voz",
-      description:
-        "Permitir o processamento de comandos de voz para operações financeiras",
-      icon: <Mic className="h-4 w-4" />,
-      required: true,
-      lgpd: {
-        purpose: "Essencial para funcionalidade principal",
-        retention: "Enquanto usuário ativo",
-        sharing: "Não compartilhado com terceiros",
-      },
-    },
-    {
-      key: "audio_recording" as keyof ConsentData,
-      title: "Gravação de Áudio",
-      description:
-        "Permitir gravação temporária de áudio para processamento de comandos",
-      icon: <Mic className="h-4 w-4" />,
-      required: true,
-      lgpd: {
-        purpose: "Processamento de comandos de voz",
-        retention: "48 horas após processamento",
-        sharing: "Não compartilhado",
-      },
-    },
-    {
-      key: "biometric_data" as keyof ConsentData,
-      title: "Dados Biométricos",
-      description: "Permitir uso de dados biométricos para autenticação",
-      icon: <Shield className="h-4 w-4" />,
-      required: false,
-      lgpd: {
-        purpose: "Autenticação e segurança",
-        retention: "Enquanto autorizado",
-        sharing: "Não compartilhado",
-      },
-    },
-    {
-      key: "data_retention" as keyof ConsentData,
-      title: "Retenção de Dados",
-      description:
-        "Permitir armazenamento de dados conforme políticas de retenção",
-      icon: <Clock className="h-4 w-4" />,
-      required: false,
-      lgpd: {
-        purpose: "Conformidade com regulamentações",
-        retention: "Períodos obrigatórios legais",
-        sharing: "Autoridades quando requerido",
-      },
-    },
-    {
-      key: "marketing_communications" as keyof ConsentData,
-      title: "Comunicações de Marketing",
-      description: "Permitir envio de comunicações sobre produtos e serviços",
-      icon: <Mail className="h-4 w-4" />,
-      required: false,
-      lgpd: {
-        purpose: "Marketing e relacionamento",
-        retention: "Até revogação do consentimento",
-        sharing: "Não compartilhado",
-      },
-    },
-  ];
-
-  const filteredItems = requiredOnly
-    ? consentItems.filter((item) => item.required)
-    : consentItems;
-
   return (
-    <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-      <CardHeader className="text-center">
-        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <Shield className="h-8 w-8 text-primary" />
+    <div className={cn('rounded-lg border bg-card p-6 shadow-sm', className)}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="font-semibold text-foreground text-xl">Consentimento LGPD</h2>
+          <p className="text-muted-foreground text-sm">
+            A Lei Geral de Proteção de Dados (LGPD) exige que obtenhamos o seu consentimento para
+            tratar informações pessoais. Revise as opções abaixo e selecione as permissões que
+            deseja conceder. Você pode alterar suas preferências a qualquer momento.
+          </p>
+          {policyUrl && (
+            <a
+              href={policyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary text-sm underline underline-offset-2 hover:text-primary/80"
+            >
+              Ler política de privacidade completa
+            </a>
+          )}
         </div>
-        <CardTitle className="text-2xl">
-          LGPD - Lei Geral de Proteção de Dados
-        </CardTitle>
-        <CardDescription>
-          {requiredOnly
-            ? "Consentimentos necessários para usar os recursos principais"
-            : "Gerencie suas preferências de privacidade e consentimento"}
-        </CardDescription>
-      </CardHeader>
 
-      <CardContent className="space-y-6">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+        <fieldset className="space-y-4">
+          <legend className="sr-only">Preferências de consentimento</legend>
+
+          <label
+            htmlFor="lgpd-essential"
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-4 transition-colors focus-within:border-primary"
+          >
+            <Checkbox
+              id="lgpd-essential"
+              checked={consentState.essential}
+              onCheckedChange={handleConsentToggle('essential')}
+              aria-describedby="lgpd-essential-description"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="lgpd-essential" className="font-medium text-base text-foreground">
+                Consentimento essencial
+              </Label>
+              <p id="lgpd-essential-description" className="text-muted-foreground text-sm">
+                Autorizo o uso dos meus dados para execução do serviço, autenticação, prevenção a
+                fraudes e comunicação obrigatória. Este consentimento é necessário para utilizar a
+                plataforma.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="lgpd-analytics"
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-4 transition-colors focus-within:border-primary"
+          >
+            <Checkbox
+              id="lgpd-analytics"
+              checked={consentState.analytics}
+              onCheckedChange={handleConsentToggle('analytics')}
+              aria-describedby="lgpd-analytics-description"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="lgpd-analytics" className="font-medium text-base text-foreground">
+                Analytics e personalização
+              </Label>
+              <p id="lgpd-analytics-description" className="text-muted-foreground text-sm">
+                Permito o uso dos meus dados para análises de uso, melhoria contínua e
+                personalização da experiência dentro do aplicativo.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="lgpd-marketing"
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-4 transition-colors focus-within:border-primary"
+          >
+            <Checkbox
+              id="lgpd-marketing"
+              checked={consentState.marketing}
+              onCheckedChange={handleConsentToggle('marketing')}
+              aria-describedby="lgpd-marketing-description"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="lgpd-marketing" className="font-medium text-base text-foreground">
+                Comunicação personalizada
+              </Label>
+              <p id="lgpd-marketing-description" className="text-muted-foreground text-sm">
+                Autorizo o envio de comunicações sobre novos recursos, dicas financeiras e ofertas
+                alinhadas aos meus interesses.
+              </p>
+            </div>
+          </label>
+        </fieldset>
+
+        {(formError || errorMessage) && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-destructive text-sm"
+          >
+            {formError ?? errorMessage}
+          </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {filteredItems.map((item) => (
-            <div
-              key={item.key}
-              className={cn(
-                "p-4 border rounded-lg space-y-3",
-                item.required && "border-primary/20 bg-primary/5",
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-1">{item.icon}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Label className="font-medium">{item.title}</Label>
-                    {item.required && (
-                      <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
-                        Obrigatório
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 pl-7">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id={item.key}
-                    checked={consents[item.key]}
-                    onCheckedChange={(checked) =>
-                      handleConsentChange(item.key, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={item.key} className="text-sm cursor-pointer">
-                    Eu concordo com o {item.title.toLowerCase()}
-                  </Label>
-                </div>
-
-                <div className="text-xs text-muted-foreground space-y-1 bg-muted/50 p-2 rounded">
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    <span>
-                      <strong>Finalidade:</strong> {item.lgpd.purpose}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>
-                      <strong>Retenção:</strong> {item.lgpd.retention}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Database className="h-3 w-3" />
-                    <span>
-                      <strong>Compartilhamento:</strong> {item.lgpd.sharing}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="pt-4 border-t">
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || !validateRequiredConsents()}
-            className="w-full"
+        {status === 'success' && (
+          <div
+            aria-live="polite"
+            className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
           >
-            {loading
-              ? "Salvando..."
-              : requiredOnly
-                ? "Continuar"
-                : "Salvar Preferências"}
-          </Button>
-        </div>
+            {successMessage}
+          </div>
+        )}
 
-        <div className="text-center text-xs text-muted-foreground">
-          <p>
-            Você pode alterar suas preferências a qualquer momento nas
-            configurações da conta.
-          </p>
-          <p className="mt-1">
-            Para exercer seus direitos de acesso, correção, exclusão ou
-            portabilidade de dados, entre em contato conosco.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        <Button type="submit" disabled={busy} className="w-full md:w-auto">
+          {busy ? 'Salvando...' : submitLabel}
+        </Button>
+      </form>
+    </div>
   );
 }
+
+export default LGPDConsentForm;

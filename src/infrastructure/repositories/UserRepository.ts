@@ -10,7 +10,7 @@ import { logError, logOperation } from '@/server/lib/logger';
 export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .select(`
           *,
@@ -40,7 +40,7 @@ export class UserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .select(`
           *,
@@ -71,10 +71,10 @@ export class UserRepository implements IUserRepository {
   async create(user: User): Promise<User> {
     try {
       const userData = user.toJSON();
-      const { preferences, ...userFields } = userData;
+      const { preferences: _unusedPreferences, ...userFields } = userData;
 
       // Insert user
-      const { data: createdUser, error: userError } = await supabase
+      const { error: userError } = await supabase
         .from('users')
         .insert({
           id: userFields.id,
@@ -139,10 +139,10 @@ export class UserRepository implements IUserRepository {
   async update(user: User): Promise<User> {
     try {
       const userData = user.toJSON();
-      const { preferences, ...userFields } = userData;
+      const { preferences: _unusedPreferences, ...userFields } = userData;
 
       // Update user
-      const { data: updatedUser, error: userError } = await supabase
+      const { error: userError } = await supabase
         .from('users')
         .update({
           full_name: userFields.fullName,
@@ -199,7 +199,7 @@ export class UserRepository implements IUserRepository {
 
   async updatePreferences(userId: string, preferences: Partial<UserPreferences>): Promise<User> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,

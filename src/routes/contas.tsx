@@ -7,8 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 function BillsListLoader() {
   return (
     <div className="space-y-4">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="transition-shadow hover:shadow-lg">
+      {Array.from({ length: 6 }, (_, index) => `bill-skeleton-${index}`).map((skeletonId) => (
+        <Card key={skeletonId} className="transition-shadow hover:shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex flex-1 items-center gap-4">

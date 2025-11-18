@@ -973,37 +973,55 @@ export class ContextProcessor {
 
     try {
       // Load financial data from Supabase
-      const { data: accounts, error: accountError } = await supabase
+      const { data: accountData, error: accountError } = await supabase
         .from('bank_accounts')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      const { data: transactions, error: transactionError } = await supabase
+      if (accountError) {
+        logger.error('Failed to load bank accounts for financial context', {
+          userId,
+          error: accountError,
+        });
+      }
+
+      const { data: transactionData, error: transactionError } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
 
+      if (transactionError) {
+        logger.error('Failed to load transactions for financial context', {
+          userId,
+          error: transactionError,
+        });
+      }
+
+      const transactionsList = transactionData ?? [];
+
       // Build financial context from data
       const financialContext: FinancialContext = {
         userId,
         accountSummary: {
-          totalBalance: accounts?.balance || 0,
-          availableBalance: accounts?.available_balance || 0,
-          pendingTransactions: transactions?.filter((t) => t.status === 'pending').length || 0,
+          totalBalance: accountData?.balance || 0,
+          availableBalance: accountData?.available_balance || 0,
+          pendingTransactions: transactionsList.filter((t) => t.status === 'pending').length || 0,
           scheduledPayments: 0, // TODO: Load from scheduled payments table
         },
         recentActivity: {
           lastLogin: new Date(), // TODO: Load from auth logs
-          lastTransaction: transactions?.[0] ? new Date(transactions[0].created_at) : new Date(),
+          lastTransaction: transactionsList[0]
+            ? new Date(transactionsList[0].created_at)
+            : new Date(),
           lastBillPayment: new Date(), // TODO: Load from bill payments
           lastTransfer: new Date(), // TODO: Load from transfers
         },
         spendingPatterns: {
-          monthlyAverage: this.calculateMonthlyAverage(transactions || []),
-          topCategories: this.calculateTopCategories(transactions || []),
+          monthlyAverage: this.calculateMonthlyAverage(transactionsList),
+          topCategories: this.calculateTopCategories(transactionsList),
           unusualSpending: [], // TODO: Implement anomaly detection
         },
         billPatterns: {
@@ -1013,11 +1031,11 @@ export class ContextProcessor {
         },
         transferPatterns: {
           frequentRecipients: [], // TODO: Load from transfers table
-          averageTransferAmount: this.calculateAverageTransfer(transactions || []),
+          averageTransferAmount: this.calculateAverageTransfer(transactionsList),
           preferredTransferTimes: [],
         },
         incomePatterns: {
-          monthlyIncome: this.calculateMonthlyIncome(transactions || []),
+          monthlyIncome: this.calculateMonthlyIncome(transactionsList),
           incomeSources: [], // TODO: Load from income sources
           nextExpectedIncome: new Date(), // TODO: Calculate from patterns
         },

@@ -5,6 +5,7 @@
  */
 
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 let SpeechToTextService: typeof import('@/lib/stt/speechToTextService').SpeechToTextService;
 let STTErrorCode: typeof import('@/lib/stt/speechToTextService').STTErrorCode;
 

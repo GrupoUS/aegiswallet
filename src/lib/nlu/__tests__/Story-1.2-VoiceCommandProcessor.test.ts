@@ -5,10 +5,10 @@
  * Tests NLP engine, intent classification, parameter extraction, and context management
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { processVoiceCommandWithNLU } from '@/lib/voiceCommandProcessor';
+import { describe, expect, it } from 'vitest';
 import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
+import { processVoiceCommandWithNLU } from '@/lib/voiceCommandProcessor';
 
 describe('Story 1.2: Voice Command Processor Validation', () => {
   const nluEngine = createNLUEngine();
@@ -125,17 +125,53 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
     it('should achieve 98% classification accuracy across all essential commands', async () => {
       const testCommands = [
         // Balance commands (7)
-        'qual é meu saldo?', 'quanto tenho?', 'saldo disponível', 'quanto sobrou?', 'me mostra o saldo', 'tá quanto na conta?', 'quanto de grana?',
+        'qual é meu saldo?',
+        'quanto tenho?',
+        'saldo disponível',
+        'quanto sobrou?',
+        'me mostra o saldo',
+        'tá quanto na conta?',
+        'quanto de grana?',
         // Budget commands (7)
-        'quanto posso gastar?', 'qual meu orçamento?', 'quanto sobrou do orçamento?', 'posso gastar quanto?', 'limite de gastos', 'quanto falta do orçamento?', 'orçamento disponível',
+        'quanto posso gastar?',
+        'qual meu orçamento?',
+        'quanto sobrou do orçamento?',
+        'posso gastar quanto?',
+        'limite de gastos',
+        'quanto falta do orçamento?',
+        'orçamento disponível',
         // Bill commands (7)
-        'pagar conta de energia', 'paga o boleto', 'quitar fatura', 'pagar internet', 'conta de luz', 'paga a energia', 'quitar débito',
+        'pagar conta de energia',
+        'paga o boleto',
+        'quitar fatura',
+        'pagar internet',
+        'conta de luz',
+        'paga a energia',
+        'quitar débito',
         // Income commands (7)
-        'quando vou receber?', 'recebimentos do mês', 'quanto vai entrar?', 'quando cai o salário?', 'próximos recebimentos', 'entradas previstas', 'vai receber quanto?',
+        'quando vou receber?',
+        'recebimentos do mês',
+        'quanto vai entrar?',
+        'quando cai o salário?',
+        'próximos recebimentos',
+        'entradas previstas',
+        'vai receber quanto?',
         // Projection commands (7)
-        'projeção do mês', 'como vai ficar o mês?', 'vai sobrar quanto?', 'previsão financeira', 'quanto vai faltar?', 'balanço do mês', 'estimativa mensal',
+        'projeção do mês',
+        'como vai ficar o mês?',
+        'vai sobrar quanto?',
+        'previsão financeira',
+        'quanto vai faltar?',
+        'balanço do mês',
+        'estimativa mensal',
         // Transfer commands (7)
-        'transferir dinheiro', 'fazer um pix', 'enviar 100 reais', 'pix para joão', 'transferência imediata', 'manda 50 reais', 'ted urgent',
+        'transferir dinheiro',
+        'fazer um pix',
+        'enviar 100 reais',
+        'pix para joão',
+        'transferência imediata',
+        'manda 50 reais',
+        'ted urgent',
       ];
 
       let correctClassifications = 0;
@@ -201,7 +237,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
     it('should extract amounts from commands', async () => {
       const testCases = [
         { input: 'transferir 100 reais', expectedAmount: 100 },
-        { input: 'enviar 50,30 reais', expectedAmount: 50.30 },
+        { input: 'enviar 50,30 reais', expectedAmount: 50.3 },
         { input: 'pix de R$ 200', expectedAmount: 200 },
         { input: 'transferir mil reais', expectedAmount: 1000 }, // Natural number processing
       ];
@@ -209,7 +245,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const testCase of testCases) {
         const result = await nluEngine.processUtterance(testCase.input);
         expect(result.entities).toBeDefined();
-        const amountEntity = result.entities?.find(e => e.type === 'amount');
+        const amountEntity = result.entities?.find((e) => e.type === 'amount');
         expect(amountEntity).toBeDefined();
         expect(amountEntity?.value).toBe(testCase.expectedAmount);
       }
@@ -226,7 +262,9 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const testCase of testCases) {
         const result = await nluEngine.processUtterance(testCase.input);
         expect(result.entities).toBeDefined();
-        const nameEntity = result.entities?.find(e => e.type === 'person' || e.type === 'recipient');
+        const nameEntity = result.entities?.find(
+          (e) => e.type === 'person' || e.type === 'recipient'
+        );
         expect(nameEntity).toBeDefined();
         expect(nameEntity?.value).toBe(testCase.expectedName);
       }
@@ -243,7 +281,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const testCase of testCases) {
         const result = await nluEngine.processUtterance(testCase.input);
         expect(result.entities).toBeDefined();
-        const dateEntity = result.entities?.find(e => e.type === 'date');
+        const dateEntity = result.entities?.find((e) => e.type === 'date');
         expect(dateEntity).toBeDefined();
       }
     });
@@ -322,9 +360,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       expect(firstResult.intent).toBe(IntentType.CHECK_BALANCE);
 
       // Follow-up command
-      const followUpResult = await nluEngineWithConversation.processUtterance('e quanto posso gastar?');
+      const followUpResult =
+        await nluEngineWithConversation.processUtterance('e quanto posso gastar?');
       expect(followUpResult.intent).toBe(IntentType.CHECK_BUDGET);
-      
+
       // Should maintain conversation context
       expect(followUpResult.context?.previousIntents).toContain(IntentType.CHECK_BALANCE);
     });
@@ -334,9 +373,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
       // First: check balance
       await nluEngineWithConversation.processUtterance('qual é meu saldo?');
-      
+
       // Follow-up: "quanto sobrou disso?" (referring to the balance)
-      const followUpResult = await nluEngineWithConversation.processUtterance('quanto sobrou disso?');
+      const followUpResult =
+        await nluEngineWithConversation.processUtterance('quanto sobrou disso?');
       expect(followUpResult.confidence).toBeGreaterThan(0.5); // Should recognize it's related to balance
     });
   });
@@ -373,21 +413,17 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
     });
 
     it('should handle multiple rapid consecutive commands', async () => {
-      const commands = [
-        'qual é meu saldo?',
-        'quanto posso gastar?',
-        'quando vou receber?',
-      ];
+      const commands = ['qual é meu saldo?', 'quanto posso gastar?', 'quando vou receber?'];
 
       const startTime = performance.now();
-      
+
       for (const command of commands) {
         await nluEngine.processUtterance(command);
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
-      
+
       // Average should be less than 500ms per command
       expect(totalTime / commands.length).toBeLessThan(500);
     });
@@ -421,7 +457,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const format of currencyFormats) {
         const result = await nluEngine.processUtterance(format);
         expect(result.entities).toBeDefined();
-        const amountEntity = result.entities?.find(e => e.type === 'amount');
+        const amountEntity = result.entities?.find((e) => e.type === 'amount');
         expect(amountEntity).toBeDefined();
       }
     });

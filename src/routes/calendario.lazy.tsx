@@ -22,14 +22,14 @@ function CalendarLoader() {
 
       <div className="flex-1">
         <div className="mb-2 grid grid-cols-7 gap-1">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full" />
+          {['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map((dayKey) => (
+            <Skeleton key={`weekday-${dayKey}`} className="h-8 w-full" />
           ))}
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
+          {Array.from({ length: 35 }, (_, index) => `day-${index}`).map((cellKey) => (
+            <Skeleton key={cellKey} className="h-20 w-full" />
           ))}
         </div>
       </div>

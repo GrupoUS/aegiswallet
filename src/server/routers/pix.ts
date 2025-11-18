@@ -6,7 +6,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
-import type { PixKey, PixQRCode, PixTransaction } from '@/types/pix';
+import type { Database } from '@/types/database.types';
 
 // =====================================================
 // Validation Schemas
@@ -89,7 +89,7 @@ export const pixRouter = router({
       });
     }
 
-    return data as PixKey[];
+    return data as Database['public']['Tables']['pix_keys']['Row'][];
   }),
 
   /**
@@ -111,7 +111,7 @@ export const pixRouter = router({
       });
     }
 
-    return data as PixKey[];
+    return data as Database['public']['Tables']['pix_keys']['Row'][];
   }),
 
   /**
@@ -145,7 +145,7 @@ export const pixRouter = router({
       });
     }
 
-    return data as PixKey;
+    return data as Database['public']['Tables']['pix_keys']['Row'];
   }),
 
   /**
@@ -186,7 +186,7 @@ export const pixRouter = router({
         });
       }
 
-      return data as PixKey;
+      return data as Database['public']['Tables']['pix_keys']['Row'];
     }),
 
   /**
@@ -265,7 +265,7 @@ export const pixRouter = router({
     }
 
     return {
-      transactions: data as PixTransaction[],
+      transactions: data as Database['public']['Tables']['pix_transactions']['Row'][],
       total: count || 0,
       hasMore: (count || 0) > input.offset + input.limit,
     };
@@ -295,7 +295,7 @@ export const pixRouter = router({
         });
       }
 
-      return data as PixTransaction;
+      return data as Database['public']['Tables']['pix_transactions']['Row'];
     }),
 
   /**
@@ -348,7 +348,7 @@ export const pixRouter = router({
           .eq('id', data.id);
       }
 
-      return data as PixTransaction;
+      return data as Database['public']['Tables']['pix_transactions']['Row'];
     }),
 
   /**
@@ -412,7 +412,7 @@ export const pixRouter = router({
         });
       }
 
-      return data as PixQRCode;
+      return data as Database['public']['Tables']['pix_qr_codes']['Row'];
     }),
 
   /**
@@ -433,7 +433,7 @@ export const pixRouter = router({
       });
     }
 
-    return data as PixQRCode[];
+    return data as Database['public']['Tables']['pix_qr_codes']['Row'][];
   }),
 
   /**

@@ -177,7 +177,6 @@ export function useTransactionsByCategory(
 export function useFinancialSummary(period: 'week' | 'month' | 'quarter' | 'year' = 'month') {
   const { transactions } = useFinancialTransactions();
   const { stats } = useTransactionStats(period);
-  const { categoryStats } = useTransactionsByCategory(period);
 
   const summary = useMemo(() => {
     const totalIncome = transactions
@@ -188,7 +187,21 @@ export function useFinancialSummary(period: 'week' | 'month' | 'quarter' | 'year
       .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
-    const topCategories = (categoryStats || [])
+    const categoryTotals = transactions.reduce<Record<string, number>>((acc, transaction) => {
+      const typedTransaction = transaction as {
+        category_id?: string | null;
+        categoryId?: string | null;
+        amount?: number | string;
+      };
+      const categoryKey =
+        typedTransaction.category_id ?? typedTransaction.categoryId ?? 'uncategorized';
+      const amountValue = Number(typedTransaction.amount ?? transaction.amount ?? 0);
+      acc[categoryKey] = (acc[categoryKey] ?? 0) + Math.abs(amountValue);
+      return acc;
+    }, {});
+
+    const topCategories = Object.entries(categoryTotals)
+      .map(([categoryId, totalAmount]) => ({ categoryId, totalAmount }))
       .sort((a, b) => b.totalAmount - a.totalAmount)
       .slice(0, 5);
 
@@ -200,7 +213,7 @@ export function useFinancialSummary(period: 'week' | 'month' | 'quarter' | 'year
       topCategories,
       stats,
     };
-  }, [transactions, stats, categoryStats]);
+  }, [transactions, stats]);
 
   return summary;
 }

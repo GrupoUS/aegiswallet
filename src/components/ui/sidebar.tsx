@@ -77,7 +77,32 @@ const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+        if (typeof window !== 'undefined') {
+          const cookieValue = String(openState);
+          const expiresAt = new Date(Date.now() + SIDEBAR_COOKIE_MAX_AGE * 1000);
+          const globalWindow = window as typeof window & {
+            cookieStore?: {
+              set: (options: {
+                name: string;
+                value: string;
+                expires?: Date;
+                path?: string;
+              }) => Promise<void>;
+            };
+          };
+
+          if (globalWindow.cookieStore?.set) {
+            void globalWindow.cookieStore.set({
+              name: SIDEBAR_COOKIE_NAME,
+              value: cookieValue,
+              expires: expiresAt,
+              path: '/',
+            });
+          } else {
+            // biome-ignore lint/suspicious/noDocumentCookie: CookieStore API is not available in this environment.
+            document.cookie = `${SIDEBAR_COOKIE_NAME}=${cookieValue}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+          }
+        }
       },
       [setOpenProp, open]
     );

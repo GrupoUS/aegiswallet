@@ -102,7 +102,6 @@
     "deny": [
       "Edit",
       "Write",
-      "NotebookRead",
       "NotebookEdit",
       "mcp__archon__create_version",
       "mcp__archon__session_info",

@@ -1,108 +1,165 @@
-import {
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isSameDay,
-  isSameMonth,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
-import { useMemo } from 'react';
+import { format, isSameDay, isSameMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
 import { EnhancedEventCard } from './enhanced-event-card';
 import type { CalendarEvent } from './types';
+
+const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
-  onEventEdit?: (event: CalendarEvent) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  onEventEdit?: (event: CalendarEvent) => void;
+  onEventDelete?: (eventId: string) => void;
+  onNavigate?: (date: Date) => void;
+  className?: string;
 }
 
-export function MonthView({ currentDate, events, onEventEdit, onEventClick }: MonthViewProps) {
-  const monthDays = useMemo(() => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+export function MonthView({
+  currentDate,
+  events,
+  onEventClick,
+  onEventEdit,
+  onEventDelete,
+  onNavigate,
+  className,
+}: MonthViewProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    return eachDayOfInterval({
-      start: calendarStart,
-      end: calendarEnd,
-    });
+  const weeks = useMemo(() => {
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    const start = new Date(startOfMonth);
+    start.setDate(start.getDate() - start.getDay());
+
+    const end = new Date(endOfMonth);
+    end.setDate(end.getDate() + (6 - end.getDay()));
+
+    const days: Date[] = [];
+    const cursor = new Date(start);
+
+    while (cursor <= end) {
+      days.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    const chunked: Date[][] = [];
+    for (let index = 0; index < days.length; index += 7) {
+      chunked.push(days.slice(index, index + 7));
+    }
+
+    return chunked;
   }, [currentDate]);
 
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const getDayEvents = (date: Date) => {
+    return events.filter((event) => isSameDay(new Date(event.start), date));
+  };
 
-  const getEventsForDay = (day: Date) => {
-    return events.filter((event) => isSameDay(new Date(event.start), day));
+  const handlePreviousMonth = () => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+    onNavigate?.(newDate);
+  };
+
+  const handleNextMonth = () => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + 1);
+    onNavigate?.(newDate);
   };
 
   return (
-    <div className="flex-1 bg-background">
-      {/* Week days header */}
-      <div className="grid grid-cols-7 border border-b">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="border border-r p-2 text-center font-medium text-muted-foreground text-sm last:border-r-0"
-          >
-            {day}
-          </div>
-        ))}
+    <div className={cn('w-full', className)}>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-semibold text-lg">
+          {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
+        </h2>
+        <div className="flex gap-1">
+          <Button type="button" variant="outline" size="sm" onClick={handlePreviousMonth}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={handleNextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Calendar days grid */}
-      <div className="grid flex-1 grid-cols-7">
-        {monthDays.map((day, dayIndex) => {
-          const dayEvents = getEventsForDay(day);
-          const isCurrentMonth = isSameMonth(day, currentDate);
-          const isToday = isSameDay(day, new Date());
-
-          return (
-            <div
-              key={day.toISOString()}
-              className={cn(
-                'min-h-[100px] overflow-hidden border border-r border-b p-1',
-                !isCurrentMonth && 'bg-muted/30',
-                isToday && 'bg-primary/5',
-                dayIndex % 7 === 6 && 'border-r-0',
-                dayIndex >= monthDays.length - 7 && 'border-b-0'
-              )}
-            >
-              {/* Day number */}
-              <div
-                className={cn(
-                  'mb-1 px-1 font-medium text-sm',
-                  !isCurrentMonth && 'text-muted-foreground',
-                  isToday && 'font-bold text-primary'
-                )}
+      <table className="w-full border-collapse" aria-label="Calendário mensal">
+        <thead>
+          <tr>
+            {WEEK_DAYS.map((day) => (
+              <th
+                key={day}
+                scope="col"
+                className="px-2 py-2 text-center font-medium text-muted-foreground text-sm"
               >
-                {format(day, 'd')}
-              </div>
+                {day}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((week) => (
+            <tr key={week[0].toISOString()}>
+              {week.map((date) => {
+                const dayEvents = getDayEvents(date);
+                const isCurrentMonth = isSameMonth(date, currentDate);
+                const isToday = isSameDay(date, new Date());
+                const isSelected = selectedDate !== null && isSameDay(date, selectedDate);
+                const dayLabel = format(date, "d 'de' MMMM yyyy", { locale: ptBR });
 
-              {/* Events for this day */}
-              <div className="space-y-1">
-                {dayEvents.slice(0, 3).map((event) => (
-                  <EnhancedEventCard
-                    key={event.id}
-                    event={event}
-                    variant="compact"
-                    onEdit={onEventEdit}
-                    onClick={onEventClick}
-                  />
-                ))}
-                {dayEvents.length > 3 && (
-                  <div className="text-xs text-muted-foreground px-1">
-                    +{dayEvents.length - 3} more
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                return (
+                  <td key={date.toISOString()} className="p-1 align-top">
+                    <div
+                      className={cn(
+                        'min-h-[100px] rounded bg-background p-1 text-left focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background',
+                        !isCurrentMonth && 'text-muted-foreground/50',
+                        isToday && 'bg-primary/5',
+                        isSelected && 'ring-2 ring-primary'
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDate(date)}
+                        onFocus={() => setSelectedDate(date)}
+                        className="mb-1 inline-flex h-8 w-8 items-center justify-center rounded-full font-medium text-sm transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label={`Selecionar ${dayLabel}`}
+                        aria-current={isToday ? 'date' : undefined}
+                      >
+                        {format(date, 'd')}
+                      </button>
+
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <EnhancedEventCard
+                            key={event.id}
+                            event={event}
+                            variant="compact"
+                            onClick={onEventClick}
+                            onEdit={onEventEdit}
+                            onDelete={onEventDelete}
+                          />
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="px-1 text-muted-foreground text-xs">
+                            +{dayEvents.length - 3} eventos
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

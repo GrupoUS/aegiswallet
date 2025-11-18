@@ -1,11 +1,14 @@
 /**
  * Speech Recognition Service Tests
- * 
+ *
  * Story 1.1: Speech Recognition Service
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SpeechRecognitionService, createSpeechRecognitionService } from '../SpeechRecognitionService';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  createSpeechRecognitionService,
+  SpeechRecognitionService,
+} from '../SpeechRecognitionService';
 
 // Mock Web Speech API
 const mockSpeechRecognition = vi.fn();
@@ -33,7 +36,7 @@ describe('SpeechRecognitionService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock successful media access
     global.navigator.mediaDevices.getUserMedia = vi.fn().mockResolvedValue({
       getTracks: () => [{ stop: vi.fn() }],

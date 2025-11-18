@@ -2,7 +2,8 @@
   "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*.{ts,tsx,js,jsx}", "scripts/**/*.{ts,tsx,js,jsx}"]
+    "includes": ["src/**/*.{ts,tsx,js,jsx}", "scripts/**/*.{ts,tsx,js,jsx}"],
+    "ignore": ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/.next/**", "**/.turbo/**"]
   },
   "vcs": {
     "enabled": true,
@@ -23,20 +24,23 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "off",
+        "noExplicitAny": "warn",
         "noDebugger": "error",
         "noDocumentCookie": "warn",
-        "noArrayIndexKey": "warn"
+        "noArrayIndexKey": "warn",
+        "noConsoleLog": "warn"
       },
       "complexity": {
         "noForEach": "off"
       },
       "style": {
         "useConst": "error",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "warn"
       },
       "correctness": {
-        "noUnusedVariables": "warn"
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error"
       },
       "nursery": {
         "useSortedClasses": "error"

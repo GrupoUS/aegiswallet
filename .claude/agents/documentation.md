@@ -1,4 +1,5 @@
 ---
+name: "documentation"
 title: "Documentation Architect Agent"
 llm:
   guardrails:

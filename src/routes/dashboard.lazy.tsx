@@ -1,9 +1,11 @@
 import { Link, useNavigate } from '@tanstack/react-router';
+import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
 import { lazy, Suspense, useEffect } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import type { BentoItem } from '@/components/ui/bento-grid';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy loaded components
@@ -96,75 +98,35 @@ export function Dashboard() {
     handleOAuthCallback();
   }, [navigate]);
 
-  // Bento Grid items for enhanced dashboard sections
-  const bentoItems: BentoItem[] = [
+  // Magic Cards com dados financeiros
+  const magicCardsData = [
     {
-      id: 'automation-stats',
-      title: 'Automação Financeira',
-      description: 'Nível de automação das suas tarefas financeiras',
-      feature: 'chart',
-      statistic: {
-        label: 'Automação',
-        value: '87%',
-        start: 0,
-        end: 87,
-        suffix: '%',
-      },
-      className: 'col-span-1',
+      title: 'Saldo em Conta',
+      value: 'R$ 12.450,00',
+      change: '+5.2%',
+      icon: Wallet,
+      color: 'text-green-600',
     },
     {
-      id: 'transactions-counter',
-      title: 'Transações Processadas',
-      description: 'Total de transações automatizadas este mês',
-      feature: 'counter',
-      statistic: {
-        value: '247',
-        label: 'Transações',
-        start: 0,
-        end: 247,
-        suffix: '',
-      },
-      className: 'col-span-1',
+      title: 'Investimentos',
+      value: 'R$ 45.320,00',
+      change: '+12.8%',
+      icon: TrendingUp,
+      color: 'text-blue-600',
     },
     {
-      id: 'financial-metrics',
-      title: 'Métricas Financeiras',
-      description: 'Indicadores de desempenho do mês',
-      feature: 'metrics',
-      metrics: [
-        {
-          label: 'Taxa de Economia',
-          value: 42,
-          suffix: '%',
-          color: 'primary',
-        },
-        {
-          label: 'Tempo Economizado',
-          value: 18,
-          suffix: 'h',
-          color: 'accent',
-        },
-        {
-          label: 'Redução de Custos',
-          value: 15,
-          suffix: '%',
-          color: 'secondary',
-        },
-      ],
-      className: 'col-span-1',
+      title: 'Economia Mensal',
+      value: 'R$ 2.110,15',
+      change: '+8.4%',
+      icon: PiggyBank,
+      color: 'text-purple-600',
     },
     {
-      id: 'voice-features',
-      title: 'Assistente de Voz',
-      description: 'Recursos disponíveis para comandos de voz',
-      feature: 'spotlight',
-      spotlightItems: [
-        'Pagamentos por voz',
-        'Consulta de saldo',
-        'Análise de gastos',
-        'Alertas inteligentes',
-      ],
-      className: 'col-span-1',
+      title: 'PIX Enviados',
+      value: 'R$ 3.240,00',
+      change: 'Hoje',
+      icon: CreditCard,
+      color: 'text-orange-600',
     },
   ];
 
@@ -179,16 +141,26 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Bento Grid - Insights Inteligentes */}
+      {/* Magic Cards - Insights Financeiros */}
       <div>
-        <h2 className="mb-4 font-semibold text-2xl">Insights Inteligentes</h2>
-        <Suspense fallback={<BentoLoader />}>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {bentoItems.map((item) => (
-              <LazyBentoCard key={item.id} item={item} />
-            ))}
-          </div>
-        </Suspense>
+        <h2 className="mb-4 font-semibold text-2xl">Insights Financeiros</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {magicCardsData.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <MagicCard key={index} className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className={`text-sm ${card.color}`}>{card.change}</p>
+                  </div>
+                  <Icon className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+              </MagicCard>
+            );
+          })}
+        </div>
       </div>
 
       {/* Quick Actions - 3 Columns Layout */}

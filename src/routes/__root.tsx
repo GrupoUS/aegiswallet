@@ -7,21 +7,27 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react';
-import { motion } from 'motion/react';
+import * as React from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { TRPCProvider } from '@/components/providers/TRPCProvider';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import {
   Sidebar,
-  SidebarBody,
   SidebarContent,
-  SidebarLink,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
-  useSidebar,
+  SidebarRail,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 
 function ErrorBoundary({ error }: ErrorComponentProps) {
   return (
@@ -52,33 +58,50 @@ function RootComponent() {
   const noSidebarPages = ['/login'];
   const showSidebar = !noSidebarPages.includes(location.pathname);
 
-  const links = [
+  const navigationItems = [
     {
-      label: 'Dashboard',
+      title: 'Dashboard',
       href: '/dashboard',
-      icon: <Home className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
+      icon: <Home className="h-5 w-5" />,
+      active: location.pathname === '/dashboard',
     },
     {
-      label: 'Saldo',
+      title: 'Saldo',
       href: '/saldo',
-      icon: <Wallet className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
+      icon: <Wallet className="h-5 w-5" />,
+      active: location.pathname === '/saldo',
     },
     {
-      label: 'Calendário',
+      title: 'Calendário',
       href: '/calendario',
-      icon: <Calendar className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
+      icon: <Calendar className="h-5 w-5" />,
+      active: location.pathname === '/calendario',
     },
     {
-      label: 'Contas',
+      title: 'Contas',
       href: '/contas',
-      icon: <FileText className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
+      icon: <FileText className="h-5 w-5" />,
+      active: location.pathname === '/contas',
     },
     {
-      label: 'PIX',
+      title: 'PIX',
       href: '/pix',
-      icon: <Send className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
+      icon: <Send className="h-5 w-5" />,
+      active: location.pathname === '/pix',
     },
   ];
+
+  // Handle logout functionality
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate({
+      to: '/login',
+      search: { redirect: '/dashboard', error: undefined },
+    });
+  };
 
   // Render without sidebar for login page
   if (!showSidebar) {
@@ -98,111 +121,83 @@ function RootComponent() {
     <TRPCProvider>
       <CalendarProvider>
         <SidebarProvider>
-          <div className="flex h-screen w-full">
-            <Sidebar>
-              <SidebarBody className="justify-between gap-10">
-                <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-                  <SidebarContent>
-                    <SidebarContentWrapper links={links} />
-                  </SidebarContent>
+          <Sidebar>
+            <SidebarHeader>
+              <Link
+                to="/"
+                className="flex items-center gap-3 text-foreground hover:text-foreground transition-colors px-2 py-1"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <span className="font-bold text-sm">AW</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center py-2">
-                    <AnimatedThemeToggler />
-                  </div>
-                  <SidebarLink
-                    link={{
-                      label: 'Assistente de Voz',
-                      href: '/',
-                      icon: <Mic className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />,
-                    }}
-                  />
-                  <LogoutButton />
-                </div>
-              </SidebarBody>
-            </Sidebar>
-            <div className="flex-1">
-              <Outlet />
+                <span className="font-semibold text-lg">AegisWallet</span>
+              </Link>
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navigationItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={item.active}>
+                          <Link to={item.href}>
+                            {item.icon}
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+              <SidebarGroup>
+                <SidebarGroupLabel>Ações</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <Link to="/">
+                          <Mic className="h-5 w-5" />
+                          <span>Assistente de Voz</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton onClick={handleLogout}>
+                        <LogOut className="h-5 w-5" />
+                        <span>Sair</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+            <div className="p-4 border-t">
+              <AnimatedThemeToggler />
             </div>
-          </div>
+            <SidebarRail />
+          </Sidebar>
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger />
+              <div className="flex flex-col">
+                <h1 className="text-lg font-semibold">
+                  {navigationItems.find((item) => item.active)?.title || 'AegisWallet'}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {navigationItems.find((item) => item.active)?.title
+                    ? 'Seu assistente financeiro inteligente'
+                    : 'Gerencie suas finanças com IA'}
+                </p>
+              </div>
+            </header>
+            <main className="flex-1 overflow-auto">
+              <Outlet />
+            </main>
+          </SidebarInset>
         </SidebarProvider>
       </CalendarProvider>
     </TRPCProvider>
   );
 }
-
-const SidebarContentWrapper = ({ links }: { links: any[] }) => {
-  const { open } = useSidebar();
-
-  return (
-    <>
-      {open ? <Logo /> : <LogoIcon />}
-      <div className="mt-8 flex flex-col gap-2">
-        {links.map((link) => (
-          <SidebarLink key={link.href} link={link} />
-        ))}
-      </div>
-    </>
-  );
-};
-
-const Logo = () => {
-  return (
-    <Link
-      to="/"
-      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm"
-    >
-      <div className="h-5 w-6 flex-shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-gradient-to-r from-primary to-accent" />
-      <span className="whitespace-pre bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-transparent text-xl">
-        AegisWallet
-      </span>
-    </Link>
-  );
-};
-
-const LogoIcon = () => {
-  return (
-    <Link
-      to="/"
-      className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm"
-    >
-      <div className="h-5 w-6 flex-shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-gradient-to-r from-primary to-accent" />
-    </Link>
-  );
-};
-
-const LogoutButton = () => {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-  const { open } = useSidebar();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate({
-      to: '/login',
-      search: { redirect: '/dashboard', error: undefined },
-    });
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleLogout}
-      className={cn(
-        'group/sidebar flex w-full items-center justify-start gap-2 py-2 text-left',
-        'rounded-md px-2 transition-colors hover:bg-sidebar-accent'
-      )}
-    >
-      <LogOut className="h-5 w-5 flex-shrink-0 text-sidebar-foreground" />
-      <motion.span
-        animate={{
-          display: open ? 'inline-block' : 'none',
-          opacity: open ? 1 : 0,
-        }}
-        className="!p-0 !m-0 inline-block whitespace-pre text-sidebar-foreground text-sm transition duration-150 group-hover/sidebar:translate-x-1"
-      >
-        Sair
-      </motion.span>
-    </button>
-  );
-};

@@ -15,7 +15,7 @@
     "build:server": "echo 'Server build completed - using runtime compilation'",
     "build:dev": "vite build --mode development",
     "preview": "bun run build && bun run src/server/server.ts",
-    "types:generate": "(supabase db push 2>/dev/null || true) && supabase gen types typescript --project-id clvdvpbnuifxedpqgrgo > src/types/database.types.ts",
+    "types:generate": "(supabase db push 2>/dev/null || true) && supabase gen types typescript --project-id qatxdwderitvxqvuonqs > src/types/database.types.ts",
     "routes:generate": "bunx @tanstack/router-cli generate",
     "start": "bun run src/server/server.ts",
     "start:prod": "NODE_ENV=production bun run src/server/server.ts",

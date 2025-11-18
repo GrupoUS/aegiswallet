@@ -1,3 +1,7 @@
+---
+name: "rules"
+---
+
 # Rules Architect Mode - Version: 2.0.0
 
 ## Your Role

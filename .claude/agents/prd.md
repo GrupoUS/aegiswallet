@@ -1,3 +1,7 @@
+---
+name: "prd"
+---
+
 # PRD Generation Instructions - Version: 2.0.0
 
 ## Role Definition

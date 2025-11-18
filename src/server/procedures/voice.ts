@@ -2,7 +2,8 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { Context } from '@/server/context';
-import { securityMiddleware, voiceCommandRateLimit } from '@/server/middleware/securityMiddleware';
+import { voiceCommandRateLimit } from '@/server/middleware/rateLimitMiddleware';
+import { securityMiddleware } from '@/server/middleware/securityMiddleware';
 
 export const createVoiceRouter = (t: any) => ({
   /**

@@ -17,9 +17,9 @@ export { Badge, badgeVariants } from './badge';
 // Layout Components
 export {
   BentoCard,
+  BentoGrid,
   type BentoGridProps,
   type BentoItem,
-  default as BentoGrid,
 } from './bento-grid';
 export type { ButtonProps } from './button';
 // Core Components
@@ -43,11 +43,6 @@ export {
 } from './chart';
 // Form Components
 export { Checkbox } from './checkbox';
-export {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from './collapsible';
 export { DatePicker, DateRangePicker } from './date-picker';
 // Dialog & Overlay Components
 export {
@@ -127,8 +122,6 @@ export {
   PopoverContent,
   PopoverTrigger,
 } from './popover';
-// Progress Components
-export { Progress } from './progress';
 export { RadioGroup, RadioGroupItem } from './radio-group';
 export { ScrollArea, ScrollBar } from './scroll-area';
 export {

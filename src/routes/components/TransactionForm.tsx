@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -6,6 +7,12 @@ interface TransactionFormProps {
 }
 
 function TransactionForm({ onCancel }: TransactionFormProps) {
+  const formId = useId();
+  const descriptionId = `${formId}-description`;
+  const amountId = `${formId}-amount`;
+  const categoryId = `${formId}-category`;
+  const dateId = `${formId}-date`;
+
   return (
     <Card className="border-primary/20 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
@@ -15,16 +22,22 @@ function TransactionForm({ onCancel }: TransactionFormProps) {
       <CardContent>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-2 block font-medium text-sm">Descrição</label>
+            <label className="mb-2 block font-medium text-sm" htmlFor={descriptionId}>
+              Descrição
+            </label>
             <input
+              id={descriptionId}
               type="text"
               className="w-full rounded-md border bg-background p-2"
               placeholder="Ex: Supermercado"
             />
           </div>
           <div>
-            <label className="mb-2 block font-medium text-sm">Valor</label>
+            <label className="mb-2 block font-medium text-sm" htmlFor={amountId}>
+              Valor
+            </label>
             <input
+              id={amountId}
               type="number"
               step="0.01"
               className="w-full rounded-md border bg-background p-2"
@@ -32,8 +45,10 @@ function TransactionForm({ onCancel }: TransactionFormProps) {
             />
           </div>
           <div>
-            <label className="mb-2 block font-medium text-sm">Categoria</label>
-            <select className="w-full rounded-md border bg-background p-2">
+            <label className="mb-2 block font-medium text-sm" htmlFor={categoryId}>
+              Categoria
+            </label>
+            <select id={categoryId} className="w-full rounded-md border bg-background p-2">
               <option value="">Selecione...</option>
               <option value="food">Alimentação</option>
               <option value="transport">Transporte</option>
@@ -43,8 +58,10 @@ function TransactionForm({ onCancel }: TransactionFormProps) {
             </select>
           </div>
           <div>
-            <label className="mb-2 block font-medium text-sm">Data</label>
-            <input type="date" className="w-full rounded-md border bg-background p-2" />
+            <label className="mb-2 block font-medium text-sm" htmlFor={dateId}>
+              Data
+            </label>
+            <input id={dateId} type="date" className="w-full rounded-md border bg-background p-2" />
           </div>
         </div>
         <div className="mt-4 flex gap-2">

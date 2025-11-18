@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
+import React from 'react';
 
 // Cria um cliente Query para testes
 export const createTestQueryClient = () => {

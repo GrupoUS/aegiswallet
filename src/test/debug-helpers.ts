@@ -7,28 +7,19 @@
 
 import { vi } from 'vitest';
 
+/* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class TestDebugger {
   static async debugAsync<T>(
-    _name: string,
+    // _name: string, // Would be used for logging
     asyncFn: () => Promise<T>,
     timeout: number = 5000
   ): Promise<T> {
-    const startTime = Date.now();
-
-    try {
-      const result = await Promise.race([
-        asyncFn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Timeout ${timeout}ms`)), timeout)
-        ),
-      ]);
-
-      const _duration = Date.now() - startTime;
-      return result;
-    } catch (error) {
-      const _duration = Date.now() - startTime;
-      throw error;
-    }
+    return Promise.race([
+      asyncFn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout ${timeout}ms`)), timeout)
+      ),
+    ]);
   }
 
   static logMockCalls(_mockName: string, _mock: any) {}
@@ -90,6 +81,7 @@ export class TestDebugger {
 /**
  * Performance measurement helper for tests
  */
+/* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class PerformanceHelper {
   static measureAsync<T>(
     _name: string,
@@ -121,6 +113,7 @@ export class PerformanceHelper {
 /**
  * Voice testing utilities for multimodal tests
  */
+/* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class VoiceTestHelper {
   static createMockUtterance(text: string) {
     return {
@@ -185,6 +178,7 @@ export class VoiceTestHelper {
 /**
  * Portuguese number pattern matching helper
  */
+/* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class PortugueseNumberHelper {
   static getExpectedPatterns(number: number): RegExp[] {
     const numWords = PortugueseNumberHelper.numberToPortugueseWords(number);
@@ -275,6 +269,7 @@ export class PortugueseNumberHelper {
 /**
  * Mock setup helper for complex APIs
  */
+/* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class MockSetupHelper {
   static setupFetchWithResponses(responses: Array<{ status: number; data: any }>) {
     let callCount = 0;

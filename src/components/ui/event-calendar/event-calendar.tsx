@@ -74,11 +74,7 @@ export function EventCalendar({
     switch (view) {
       case 'week':
         return (
-          <WeekView
-            weekStart={currentDate}
-            events={filteredEvents}
-            onEventEdit={handleEventEdit}
-          />
+          <WeekView weekStart={currentDate} events={filteredEvents} onEventEdit={handleEventEdit} />
         );
       case 'day':
         return (
@@ -113,7 +109,9 @@ export function EventCalendar({
         <select
           className="rounded-md border px-3 py-2 text-sm"
           value={statusFilter ?? 'all'}
-          onChange={(event) => setStatusFilter(event.target.value as 'all' | CalendarEvent['status'])}
+          onChange={(event) =>
+            setStatusFilter(event.target.value as 'all' | CalendarEvent['status'])
+          }
         >
           <option value="all">Todos os status</option>
           <option value="confirmed">Confirmados</option>
@@ -123,7 +121,9 @@ export function EventCalendar({
         <select
           className="rounded-md border px-3 py-2 text-sm"
           value={priorityFilter ?? 'all'}
-          onChange={(event) => setPriorityFilter(event.target.value as 'all' | CalendarEvent['priority'])}
+          onChange={(event) =>
+            setPriorityFilter(event.target.value as 'all' | CalendarEvent['priority'])
+          }
         >
           <option value="all">Todas prioridades</option>
           <option value="high">Alta</option>
@@ -131,13 +131,25 @@ export function EventCalendar({
           <option value="low">Baixa</option>
         </select>
         <div className="ml-auto flex gap-2">
-          <Button variant={view === 'month' ? 'default' : 'outline'} size="sm" onClick={() => setView('month')}>
+          <Button
+            variant={view === 'month' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('month')}
+          >
             Mês
           </Button>
-          <Button variant={view === 'week' ? 'default' : 'outline'} size="sm" onClick={() => setView('week')}>
+          <Button
+            variant={view === 'week' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('week')}
+          >
             Semana
           </Button>
-          <Button variant={view === 'day' ? 'default' : 'outline'} size="sm" onClick={() => setView('day')}>
+          <Button
+            variant={view === 'day' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('day')}
+          >
             Dia
           </Button>
           <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
@@ -145,9 +157,7 @@ export function EventCalendar({
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden rounded-lg border bg-background">
-        {renderView()}
-      </div>
+      <div className="flex-1 overflow-hidden rounded-lg border bg-background">{renderView()}</div>
     </section>
   );
 }

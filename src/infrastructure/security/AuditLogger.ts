@@ -225,6 +225,7 @@ export class AuditLogger {
       resource,
       resourceId,
       outcome,
+      source: 'web',
       details: { ...details, timestamp: new Date().toISOString() },
       tags: ['data', 'access'],
     });
@@ -241,6 +242,7 @@ export class AuditLogger {
       severity: amount && amount > 10000 ? AuditSeverity.HIGH : AuditSeverity.MEDIUM,
       userId,
       outcome: 'success',
+      source: 'financial_service',
       details: { amount, ...details, timestamp: new Date().toISOString() },
       tags: ['financial', 'transaction'],
     });
@@ -257,6 +259,7 @@ export class AuditLogger {
       severity,
       userId,
       outcome: 'warning',
+      source: 'security_service',
       details: { ...details, timestamp: new Date().toISOString() },
       tags: ['security', 'alert'],
     });

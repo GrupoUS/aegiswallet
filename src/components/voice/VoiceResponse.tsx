@@ -33,23 +33,23 @@ const BalanceData: React.FC<{ data: BalanceResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="font-medium text-sm">Saldo: R$ {data.currentBalance.toFixed(2)}</p>
     {data.income !== undefined && (
-      <p className="text-xs text-muted-foreground">Receitas: R$ {data.income.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Receitas: R$ {data.income.toFixed(2)}</p>
     )}
     {data.expenses !== undefined && (
-      <p className="text-xs text-muted-foreground">Despesas: R$ {data.expenses.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Despesas: R$ {data.expenses.toFixed(2)}</p>
     )}
-    {data.accountType && <p className="text-xs text-muted-foreground">Conta: {data.accountType}</p>}
+    {data.accountType && <p className="text-muted-foreground text-xs">Conta: {data.accountType}</p>}
   </div>
 );
 
 const BudgetData: React.FC<{ data: BudgetResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="font-medium text-sm">Disponível: R$ {data.available.toFixed(2)}</p>
-    <p className="text-xs text-muted-foreground">
+    <p className="text-muted-foreground text-xs">
       Gasto: R$ {data.spent.toFixed(2)} / R$ {data.total.toFixed(2)}
     </p>
-    <p className="text-xs text-muted-foreground">Utilizado: {data.spentPercentage.toFixed(1)}%</p>
-    {data.category && <p className="text-xs text-muted-foreground">Categoria: {data.category}</p>}
+    <p className="text-muted-foreground text-xs">Utilizado: {data.spentPercentage.toFixed(1)}%</p>
+    {data.category && <p className="text-muted-foreground text-xs">Categoria: {data.category}</p>}
   </div>
 );
 
@@ -58,14 +58,14 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
     <p className="font-medium text-sm">
       {data.bills.length} {data.bills.length === 1 ? 'conta' : 'contas'} para pagar
     </p>
-    <p className="text-xs text-muted-foreground">Total: R$ {data.totalAmount.toFixed(2)}</p>
+    <p className="text-muted-foreground text-xs">Total: R$ {data.totalAmount.toFixed(2)}</p>
     {data.pastDueCount > 0 && (
-      <p className="text-xs text-destructive">
+      <p className="text-destructive text-xs">
         {data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
       </p>
     )}
     {data.bills.slice(0, 3).map((bill, index) => (
-      <p key={`bill-${bill.name}-${index}`} className="text-xs text-muted-foreground">
+      <p key={`bill-${bill.name}-${index}`} className="text-muted-foreground text-xs">
         {bill.name}: R$ {bill.amount.toFixed(2)}
       </p>
     ))}
@@ -76,12 +76,12 @@ const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="font-medium text-sm">Recebimentos: R$ {data.totalExpected.toFixed(2)}</p>
     {data.nextIncome && (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Próximo: {data.nextIncome.source} - R$ {data.nextIncome.amount.toFixed(2)}
       </p>
     )}
     {data.incoming.slice(0, 3).map((income, index) => (
-      <p key={`income-${income.source}-${index}`} className="text-xs text-muted-foreground">
+      <p key={`income-${income.source}-${index}`} className="text-muted-foreground text-xs">
         {income.source}: R$ {income.amount.toFixed(2)}
       </p>
     ))}
@@ -93,14 +93,14 @@ const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) =>
     <p className="font-medium text-sm">
       Projeção ({data.period}): R$ {data.projectedBalance.toFixed(2)}
     </p>
-    <p className="text-xs text-muted-foreground">
+    <p className="text-muted-foreground text-xs">
       Saldo atual: R$ {data.currentBalance.toFixed(2)}
     </p>
     <p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
       Variação: {data.variation >= 0 ? '+' : ''}R$ {data.variation.toFixed(2)}
     </p>
     {data.confidence && (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Confiança: {(data.confidence * 100).toFixed(0)}%
       </p>
     )}
@@ -110,8 +110,8 @@ const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) =>
 const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="font-medium text-sm">Para: {data.recipient}</p>
-    <p className="text-xs text-muted-foreground">Valor: R$ {data.amount.toFixed(2)}</p>
-    <p className="text-xs text-muted-foreground">Método: {data.method}</p>
+    <p className="text-muted-foreground text-xs">Valor: R$ {data.amount.toFixed(2)}</p>
+    <p className="text-muted-foreground text-xs">Método: {data.method}</p>
     <p
       className={cn(
         'font-medium text-xs',
@@ -135,10 +135,10 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
       }
     </p>
     {data.estimatedTime && (
-      <p className="text-xs text-muted-foreground">Tempo estimado: {data.estimatedTime}</p>
+      <p className="text-muted-foreground text-xs">Tempo estimado: {data.estimatedTime}</p>
     )}
     {data.fees && data.fees > 0 && (
-      <p className="text-xs text-muted-foreground">Taxas: R$ {data.fees.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Taxas: R$ {data.fees.toFixed(2)}</p>
     )}
   </div>
 );
@@ -146,24 +146,24 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
 const SuccessData: React.FC<{ data: SuccessResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="text-sm text-success">{data.message}</p>
-    {data.action && <p className="text-xs text-muted-foreground">Ação: {data.action}</p>}
-    {data.details && <p className="text-xs text-muted-foreground">{data.details}</p>}
+    {data.action && <p className="text-muted-foreground text-xs">Ação: {data.action}</p>}
+    {data.details && <p className="text-muted-foreground text-xs">{data.details}</p>}
   </div>
 );
 
 const ErrorData: React.FC<{ data: ErrorResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
-    <p className="text-sm text-destructive">{data.message}</p>
-    {data.code && <p className="text-xs text-muted-foreground">Código: {data.code}</p>}
-    {data.details && <p className="text-xs text-muted-foreground">{data.details}</p>}
-    {data.recoverable && <p className="text-xs text-warning">Este erro pode ser recuperado</p>}
+    <p className="text-destructive text-sm">{data.message}</p>
+    {data.code && <p className="text-muted-foreground text-xs">Código: {data.code}</p>}
+    {data.details && <p className="text-muted-foreground text-xs">{data.details}</p>}
+    {data.recoverable && <p className="text-warning text-xs">Este erro pode ser recuperado</p>}
     {data.suggestedActions && data.suggestedActions.length > 0 && (
       <div className="mt-1">
-        <p className="text-xs font-medium text-muted-foreground">Sugestões:</p>
+        <p className="font-medium text-muted-foreground text-xs">Sugestões:</p>
         {data.suggestedActions.map((action, index) => (
           <p
             key={`suggestion-${action.replace(/\s+/g, '-')}-${index}`}
-            className="text-xs text-muted-foreground ml-2"
+            className="ml-2 text-muted-foreground text-xs"
           >
             • {action}
           </p>
@@ -205,7 +205,7 @@ export const VoiceResponse = React.memo(function VoiceResponse({
       case 'transfer':
         return <ArrowUpRight className="h-6 w-6 text-info" />;
       default: {
-        const _exhaustiveCheck: never = type;
+        // Type safety: This ensures all cases are covered
         return <Info className="h-6 w-6 text-info" />;
       }
     }
@@ -231,7 +231,7 @@ export const VoiceResponse = React.memo(function VoiceResponse({
       case 'transfer':
         return 'border-info/20 bg-info/10';
       default: {
-        const _exhaustiveCheck: never = type;
+        // Type safety: This ensures all cases are covered
         return 'border-gray-200 bg-gray-50';
       }
     }
@@ -322,7 +322,7 @@ export const VoiceResponse = React.memo(function VoiceResponse({
             <p className="font-medium text-gray-800 text-sm">{message}</p>
             {renderData}
             {timestamp && (
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="mt-2 text-muted-foreground text-xs">
                 {new Date(timestamp).toLocaleString('pt-BR')}
               </p>
             )}

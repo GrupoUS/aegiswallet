@@ -148,193 +148,178 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 /**
  * Security System Factory
  */
-export class SecuritySystemFactory {
-  /**
-   * Create complete security system
-   */
-  static async createSecuritySystem(config?: Partial<SecurityConfig>): Promise<SecuritySystem> {
-    const finalConfig = SecuritySystemFactory.mergeConfig(DEFAULT_SECURITY_CONFIG, config || {});
+export async function createSecuritySystem(
+  config?: Partial<SecurityConfig>
+): Promise<SecuritySystem> {
+  const finalConfig = mergeSecurityConfig(DEFAULT_SECURITY_CONFIG, config || {});
 
-    // Validate configuration
-    SecuritySystemFactory.validateConfig(finalConfig);
+  validateSecurityConfig(finalConfig);
 
-    // Initialize security providers
-    const providers = await SecuritySystemFactory.initializeProviders(finalConfig);
+  const providers = await initializeSecurityProviders(finalConfig);
+  const biometricAuth = createBiometricAuthService(finalConfig.biometric, providers);
 
-    // Create biometric auth service with all providers
-    const biometricAuth = createBiometricAuthService(finalConfig.biometric, providers);
+  return {
+    biometricAuth,
+    smsProvider: providers.sms,
+    pushProvider: providers.push,
+    fraudDetection: providers.fraudDetection,
+    deviceFingerprinting: providers.deviceFingerprinting,
+    config: finalConfig,
+  };
+}
 
-    return {
-      biometricAuth,
-      smsProvider: providers.sms,
-      pushProvider: providers.push,
-      fraudDetection: providers.fraudDetection,
-      deviceFingerprinting: providers.deviceFingerprinting,
-      config: finalConfig,
-    };
-  }
+export function createMinimalSecuritySystem(): SecuritySystem {
+  const config: SecurityConfig = {
+    ...DEFAULT_SECURITY_CONFIG,
+    sms: { enabled: false },
+    push: { enabled: false },
+    fraudDetection: { enabled: false },
+    deviceFingerprinting: { enabled: false },
+  };
 
-  /**
-   * Create minimal security system (development)
-   */
-  static createMinimalSecuritySystem(): SecuritySystem {
-    const config: SecurityConfig = {
-      ...DEFAULT_SECURITY_CONFIG,
-      sms: { enabled: false },
-      push: { enabled: false },
-      fraudDetection: { enabled: false },
-      deviceFingerprinting: { enabled: false },
-    };
+  const biometricAuth = createBiometricAuthService(config.biometric);
 
-    const biometricAuth = createBiometricAuthService(config.biometric);
+  return {
+    biometricAuth,
+    config,
+  };
+}
 
-    return {
-      biometricAuth,
-      config,
-    };
-  }
-
-  /**
-   * Create production security system
-   */
-  static async createProductionSecuritySystem(
-    configOverrides?: Partial<SecurityConfig>
-  ): Promise<SecuritySystem> {
-    const productionConfig: Partial<SecurityConfig> = {
-      ...configOverrides,
-      sms: { enabled: true, ...configOverrides?.sms },
-      push: { enabled: true, ...configOverrides?.push },
-      fraudDetection: { enabled: true, ...configOverrides?.fraudDetection },
-      deviceFingerprinting: {
-        enabled: true,
-        ...configOverrides?.deviceFingerprinting,
+export async function createProductionSecuritySystem(
+  configOverrides?: Partial<SecurityConfig>
+): Promise<SecuritySystem> {
+  const productionConfig: Partial<SecurityConfig> = {
+    ...configOverrides,
+    sms: { enabled: true, ...configOverrides?.sms },
+    push: { enabled: true, ...configOverrides?.push },
+    fraudDetection: { enabled: true, ...configOverrides?.fraudDetection },
+    deviceFingerprinting: {
+      enabled: true,
+      ...configOverrides?.deviceFingerprinting,
+    },
+    monitoring: {
+      enabled: true,
+      logLevel: 'warn',
+      alertThresholds: {
+        failedAuthPerHour: 5,
+        suspiciousActivityPerHour: 3,
+        accountLockoutThreshold: 2,
       },
-      monitoring: {
-        enabled: true,
-        logLevel: 'warn',
-        alertThresholds: {
-          failedAuthPerHour: 5,
-          suspiciousActivityPerHour: 3,
-          accountLockoutThreshold: 2,
-        },
-        ...configOverrides?.monitoring,
+      ...configOverrides?.monitoring,
+    },
+  };
+
+  return createSecuritySystem(productionConfig);
+}
+
+export const SecuritySystemFactory = {
+  createSecuritySystem,
+  createMinimalSecuritySystem,
+  createProductionSecuritySystem,
+};
+
+function mergeSecurityConfig(
+  defaults: SecurityConfig,
+  overrides: Partial<SecurityConfig>
+): SecurityConfig {
+  return {
+    biometric: { ...defaults.biometric, ...overrides.biometric },
+    sms: { ...defaults.sms, ...overrides.sms },
+    push: { ...defaults.push, ...overrides.push },
+    fraudDetection: {
+      ...defaults.fraudDetection,
+      ...overrides.fraudDetection,
+      config: {
+        ...defaults.fraudDetection.config,
+        ...overrides.fraudDetection?.config,
       },
-    };
-
-    return SecuritySystemFactory.createSecuritySystem(productionConfig);
-  }
-
-  /**
-   * Merge user configuration with defaults
-   */
-  private static mergeConfig(
-    defaults: SecurityConfig,
-    overrides: Partial<SecurityConfig>
-  ): SecurityConfig {
-    return {
-      biometric: { ...defaults.biometric, ...overrides.biometric },
-      sms: { ...defaults.sms, ...overrides.sms },
-      push: { ...defaults.push, ...overrides.push },
-      fraudDetection: {
-        ...defaults.fraudDetection,
-        ...overrides.fraudDetection,
-        config: {
-          ...defaults.fraudDetection.config,
-          ...overrides.fraudDetection?.config,
-        },
+    },
+    deviceFingerprinting: {
+      ...defaults.deviceFingerprinting,
+      ...overrides.deviceFingerprinting,
+      config: {
+        ...defaults.deviceFingerprinting.config,
+        ...overrides.deviceFingerprinting?.config,
       },
-      deviceFingerprinting: {
-        ...defaults.deviceFingerprinting,
-        ...overrides.deviceFingerprinting,
-        config: {
-          ...defaults.deviceFingerprinting.config,
-          ...overrides.deviceFingerprinting?.config,
-        },
-      },
-      monitoring: { ...defaults.monitoring, ...overrides.monitoring },
-    };
-  }
+    },
+    monitoring: { ...defaults.monitoring, ...overrides.monitoring },
+  };
+}
 
-  /**
-   * Validate security configuration
-   */
-  private static validateConfig(config: SecurityConfig): void {
-    const errors: string[] = [];
+function validateSecurityConfig(config: SecurityConfig): void {
+  const errors: string[] = [];
 
-    // Validate SMS configuration
-    if (config.sms.enabled) {
-      if (!config.sms.config?.accountSid) {
-        errors.push('SMS enabled but Twilio Account SID not provided');
-      }
-      if (!config.sms.config?.authToken) {
-        errors.push('SMS enabled but Twilio Auth Token not provided');
-      }
-      if (!config.sms.config?.fromNumber) {
-        errors.push('SMS enabled but Twilio Phone Number not provided');
-      }
+  if (config.sms.enabled) {
+    if (!config.sms.config?.accountSid) {
+      errors.push('SMS enabled but Twilio Account SID not provided');
     }
-
-    // Validate Push configuration
-    if (config.push.enabled) {
-      if (!config.push.config?.vapidPublicKey) {
-        errors.push('Push enabled but VAPID Public Key not provided');
-      }
-      if (!config.push.config?.vapidPrivateKey) {
-        errors.push('Push enabled but VAPID Private Key not provided');
-      }
-      if (!config.push.config?.vapidSubject) {
-        errors.push('Push enabled but VAPID Subject not provided');
-      }
+    if (!config.sms.config?.authToken) {
+      errors.push('SMS enabled but Twilio Auth Token not provided');
     }
-
-    // Validate biometric configuration
-    if (config.biometric.maxPinAttempts < 3) {
-      errors.push('Max PIN attempts should be at least 3 for security');
-    }
-    if (config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
-      errors.push('PIN lockout duration should be at least 5 minutes');
-    }
-
-    if (errors.length > 0) {
-      throw new Error(`Security configuration validation failed:\n${errors.join('\n')}`);
+    if (!config.sms.config?.fromNumber) {
+      errors.push('SMS enabled but Twilio Phone Number not provided');
     }
   }
 
-  /**
-   * Initialize security providers
-   */
-  private static async initializeProviders(config: SecurityConfig): Promise<{
+  if (config.push.enabled) {
+    if (!config.push.config?.vapidPublicKey) {
+      errors.push('Push enabled but VAPID Public Key not provided');
+    }
+    if (!config.push.config?.vapidPrivateKey) {
+      errors.push('Push enabled but VAPID Private Key not provided');
+    }
+    if (!config.push.config?.vapidSubject) {
+      errors.push('Push enabled but VAPID Subject not provided');
+    }
+  }
+
+  if (config.biometric.maxPinAttempts < 3) {
+    errors.push('Max PIN attempts should be at least 3 for security');
+  }
+  if (config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
+    errors.push('PIN lockout duration should be at least 5 minutes');
+  }
+
+  if (errors.length > 0) {
+    const newline = '\n';
+    const details = errors.join(newline);
+
+    throw new Error(`Security configuration validation failed:${newline}${details}`);
+  }
+}
+
+async function initializeSecurityProviders(config: SecurityConfig): Promise<{
+  sms?: SMSProvider;
+  push?: PushProvider;
+  fraudDetection?: FraudDetectionService;
+  deviceFingerprinting?: DeviceFingerprintingService;
+}> {
+  const providers: {
     sms?: SMSProvider;
     push?: PushProvider;
     fraudDetection?: FraudDetectionService;
     deviceFingerprinting?: DeviceFingerprintingService;
-  }> {
-    const providers: any = {};
+  } = {};
 
-    // Initialize SMS provider
-    if (config.sms.enabled && config.sms.config) {
-      providers.sms = createSMSProvider(config.sms.config);
-    }
-
-    // Initialize Push provider
-    if (config.push.enabled && config.push.config) {
-      providers.push = createPushProvider(config.push.config);
-    }
-
-    // Initialize Fraud Detection
-    if (config.fraudDetection.enabled) {
-      providers.fraudDetection = createFraudDetectionService(config.fraudDetection.config);
-    }
-
-    // Initialize Device Fingerprinting
-    if (config.deviceFingerprinting.enabled) {
-      providers.deviceFingerprinting = createDeviceFingerprintingService(
-        config.deviceFingerprinting.config
-      );
-    }
-
-    return providers;
+  if (config.sms.enabled && config.sms.config) {
+    providers.sms = createSMSProvider(config.sms.config);
   }
+
+  if (config.push.enabled && config.push.config) {
+    providers.push = createPushProvider(config.push.config);
+  }
+
+  if (config.fraudDetection.enabled) {
+    providers.fraudDetection = createFraudDetectionService(config.fraudDetection.config);
+  }
+
+  if (config.deviceFingerprinting.enabled) {
+    providers.deviceFingerprinting = createDeviceFingerprintingService(
+      config.deviceFingerprinting.config
+    );
+  }
+
+  return providers;
 }
 
 /**

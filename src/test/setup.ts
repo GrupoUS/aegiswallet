@@ -343,6 +343,7 @@ beforeAll(() => {
         select: () => queryBuilder,
         update: () => queryBuilder,
         delete: () => queryBuilder,
+        // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are thenable in the real client.
         then: (resolve: (value: { data: unknown[]; error: null }) => void) => {
           resolve({ data: queryBuilder.data, error: queryBuilder.error });
         },

@@ -9,29 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 import type { FinancialEvent } from '@/types/financial-events';
 
-interface FinancialEventRow {
-  id: string;
-  user_id: string;
-  event_type_id: string | null;
-  title: string;
-  description: string | null;
-  amount: number | null;
-  is_income: boolean;
-  account_id: string | null;
-  category_id: string | null;
-  event_date: string;
-  due_date: string | null;
-  is_recurring: boolean;
-  recurrence_rule: string | null;
-  is_completed: boolean;
-  completed_at: string | null;
-  transaction_id: string | null;
-  priority: string;
-  tags: string[] | null;
-  attachments: string[] | null;
-  created_at: string;
-  updated_at: string;
-}
+type FinancialEventRow = Database['public']['Tables']['financial_events']['Row'];
+type FinancialEventInsert = Database['public']['Tables']['financial_events']['Insert'];
 
 /**
  * Convert database row to FinancialEvent
@@ -43,38 +22,48 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
   return {
     id: row.id,
     title: row.title,
-    description: row.description || undefined,
+    description: row.description ?? undefined,
     start: eventDate,
     end: dueDate,
     type: row.is_income ? 'income' : 'expense',
-    amount: Number(row.amount || 0),
-    color: 'emerald', // Default color - can be enhanced based on event_type_id later
-    icon: undefined, // Can be enhanced based on event_type_id later
+    amount: row.amount ?? 0,
+    color: 'emerald',
+    icon: undefined,
     status: row.is_completed ? 'completed' : 'pending',
-    category: undefined, // Can be enhanced based on category_id later
-    account: row.account_id || undefined,
+    category: row.category_id ?? undefined,
+    account: row.account_id ?? undefined,
     location: undefined,
     recurring: row.is_recurring,
-    allDay: true, // Financial events are typically all-day
+    allDay: true,
   };
 }
 
 /**
  * Convert FinancialEvent to database row
  */
-function eventToRow(
-  event: Partial<FinancialEvent>,
-  userId: string
-): Database['public']['Tables']['financial_events']['Insert'] {
-  const today = new Date().toISOString().split('T')[0];
+function eventToRow(event: Partial<FinancialEvent>, userId: string): FinancialEventInsert {
+  const startDate = event.start ?? new Date();
 
   return {
     user_id: userId,
-    title: event.title || '',
-    amount: event.amount || 0,
-    event_date: event.start?.toISOString().split('T')[0] || today,
     event_type_id: null,
-    is_completed: event.status === 'completed' || false,
+    title: event.title ?? '',
+    description: event.description ?? null,
+    amount: event.amount ?? 0,
+    is_income: event.type === 'income',
+    account_id: null,
+    category_id: null,
+    event_date: startDate.toISOString().split('T')[0],
+    due_date: event.end ? event.end.toISOString().split('T')[0] : null,
+    is_recurring: event.recurring ?? false,
+    recurrence_rule: null,
+    priority: 'medium',
+    is_completed: event.status === 'completed' || event.status === 'paid',
+    completed_at:
+      event.status === 'completed' || event.status === 'paid' ? new Date().toISOString() : null,
+    transaction_id: null,
+    tags: null,
+    attachments: null,
   };
 }
 

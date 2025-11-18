@@ -26,9 +26,11 @@ const CalendarLoader = () => (
     </CardHeader>
     <CardContent>
       <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 35 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-full" />
-        ))}
+        {Array.from({ length: 35 }, (_, index) => `calendar-skeleton-${index}`).map(
+          (skeletonId) => (
+            <Skeleton key={skeletonId} className="h-8 w-full" />
+          )
+        )}
       </div>
     </CardContent>
   </Card>
@@ -36,8 +38,8 @@ const CalendarLoader = () => (
 
 const BentoLoader = () => (
   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-    {Array.from({ length: 4 }).map((_, i) => (
-      <Card key={i}>
+    {Array.from({ length: 4 }, (_, index) => `bento-skeleton-${index}`).map((skeletonId) => (
+      <Card key={skeletonId}>
         <CardHeader>
           <Skeleton className="h-6 w-24" />
         </CardHeader>

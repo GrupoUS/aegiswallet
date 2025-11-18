@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createAudioProcessor } from '@/lib/stt/audioProcessor';
-import { createSTTService } from '@/lib/stt/speechToTextService';
 import { createVAD, type VoiceActivityDetector } from '@/lib/stt/voiceActivityDetection';
 
 // Voice recognition state interface
@@ -126,8 +125,8 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
         });
       }
 
-      // Initialize STT service with optimized settings
-      const _sttService = createSTTService('pt-BR');
+      // Initialize STT service with optimized settings (for future use)
+      // const _sttService = createSTTService('pt-BR');
 
       // Use browser SpeechRecognition when available, otherwise fallback to STT service
       const SpeechRecognition =

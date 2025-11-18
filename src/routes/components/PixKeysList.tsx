@@ -30,9 +30,9 @@ export default function PixKeysList({ pixKeys }: PixKeysListProps) {
         <CardTitle>Minhas Chaves PIX</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {pixKeys.map((pixKey, index) => (
+        {pixKeys.map((pixKey) => (
           <div
-            key={index}
+            key={pixKey.value}
             className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent"
           >
             <div className="flex-1">

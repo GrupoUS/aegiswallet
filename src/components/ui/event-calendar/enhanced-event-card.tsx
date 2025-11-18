@@ -1,6 +1,7 @@
 import { differenceInMinutes, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+
 import type { CalendarEvent, EventColor } from './types';
 import { EVENT_COLOR_STYLES } from './types';
 
@@ -63,162 +65,154 @@ export function EnhancedEventCard({
   // Compact variant for month view
   if (variant === 'compact') {
     return (
-      <div
+      <button
+        type="button"
         onClick={handleClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={`Ver evento: ${event.title}`}
         className={cn(
-          'cursor-pointer truncate rounded px-1 py-0.5 font-medium text-xs',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'cursor-pointer font-medium hover:opacity-80',
+          'truncate rounded px-1 py-0.5 text-xs transition-opacity',
           colorClasses.bg,
           colorClasses.text,
-          'transition-opacity hover:opacity-80',
           className
         )}
+        aria-label={`Ver evento: ${event.title}`}
       >
         <span className="truncate">{event.title}</span>
-      </div>
+      </button>
     );
   }
 
   // Detailed variant for day view
   if (variant === 'detailed') {
     return (
-      <div
-        onClick={handleClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={`Ver evento: ${event.title}`}
+      <article
         className={cn(
-          'cursor-pointer space-y-2 rounded-lg border p-3 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+          'rounded-lg border transition-shadow focus-within:ring-2 focus-within:ring-blue-500',
           colorClasses.bg,
           colorClasses.border,
           className
         )}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <h4 className={cn('truncate font-semibold', colorClasses.text)}>{event.title}</h4>
-            {event.description && (
-              <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">{event.description}</p>
+        <div className="flex items-start justify-between gap-2 p-3">
+          <button
+            type="button"
+            onClick={handleClick}
+            className={cn(
+              'min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500'
             )}
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit2 className="mr-2 h-4 w-4" />
-                Editar
-              </DropdownMenuItem>
-              {onDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir
-                  </DropdownMenuItem>
-                </>
+            aria-label={`Ver evento: ${event.title}`}
+          >
+            <div className="space-y-2">
+              <h4 className={cn('truncate font-semibold', colorClasses.text)}>{event.title}</h4>
+              {event.description && (
+                <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
+                  {event.description}
+                </p>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
 
-        {/* Time and location */}
-        <div className="space-y-1">
-          <div className="flex items-center text-muted-foreground text-sm">
-            <Clock className="mr-1 h-3 w-3" />
-            {isAllDay ? (
-              'Dia inteiro'
-            ) : (
-              <>
-                {format(eventStart, 'HH:mm', { locale: ptBR })}
-                {' - '}
-                {format(eventEnd, 'HH:mm', { locale: ptBR })}
-              </>
-            )}
-          </div>
+              <div className="space-y-1">
+                <div className="flex items-center text-muted-foreground text-sm">
+                  <Clock className="mr-1 h-3 w-3" />
+                  {isAllDay
+                    ? 'Dia inteiro'
+                    : `${format(eventStart, 'HH:mm', { locale: ptBR })} - ${format(eventEnd, 'HH:mm', { locale: ptBR })}`}
+                </div>
 
-          {event.location && (
-            <div className="flex items-center text-muted-foreground text-sm">
-              <MapPin className="mr-1 h-3 w-3" />
-              {event.location}
+                {event.location && (
+                  <div className="flex items-center text-muted-foreground text-sm">
+                    <MapPin className="mr-1 h-3 w-3" />
+                    {event.location}
+                  </div>
+                )}
+
+                {event.attendees && event.attendees.length > 0 && (
+                  <div className="flex items-center text-muted-foreground text-sm">
+                    <Users className="mr-1 h-3 w-3" />
+                    {event.attendees.length} participante
+                    {event.attendees.length !== 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1">
+                {event.category && <Badge className="text-xs">{event.category.name}</Badge>}
+
+                {event.priority && (
+                  <Badge
+                    variant={event.priority === 'high' ? 'destructive' : 'outline'}
+                    className="text-xs"
+                  >
+                    {event.priority === 'high'
+                      ? 'Alta'
+                      : event.priority === 'medium'
+                        ? 'Média'
+                        : 'Baixa'}
+                  </Badge>
+                )}
+
+                {event.recurring && (
+                  <Badge variant="outline" className="text-xs">
+                    Recorrente
+                  </Badge>
+                )}
+              </div>
             </div>
-          )}
+          </button>
 
-          {event.attendees && event.attendees.length > 0 && (
-            <div className="flex items-center text-muted-foreground text-sm">
-              <Users className="mr-1 h-3 w-3" />
-              {event.attendees.length} participante
-              {event.attendees.length !== 1 ? 's' : ''}
-            </div>
+          {(onEdit || onDelete) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  aria-label="Abrir ações do evento"
+                >
+                  <MoreHorizontal className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEdit && (
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Editar
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <>
+                    {onEdit && <DropdownMenuSeparator />}
+                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
-
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-1">
-          {event.category && (
-            <Badge variant="secondary" className="text-xs">
-              {event.category.name}
-            </Badge>
-          )}
-
-          {event.priority && (
-            <Badge
-              variant={event.priority === 'high' ? 'destructive' : 'outline'}
-              className="text-xs"
-            >
-              {event.priority === 'high' ? 'Alta' : event.priority === 'medium' ? 'Média' : 'Baixa'}
-            </Badge>
-          )}
-
-          {event.recurring && (
-            <Badge variant="outline" className="text-xs">
-              Recorrente
-            </Badge>
-          )}
-        </div>
-      </div>
+      </article>
     );
   }
 
-  // Draggable variant for week view (existing behavior)
+  // Draggable variant for week view - use button with drag support
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`Ver evento: ${event.title}`}
       className={cn(
-        'cursor-pointer space-y-1 rounded border p-2 transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+        'cursor-pointer border hover:shadow-md',
+        'space-y-1 rounded p-2 text-left transition-shadow',
         colorClasses.bg,
         colorClasses.border,
         className
       )}
+      aria-label={`Ver evento: ${event.title}`}
       style={position}
+      draggable
     >
       <h4 className={cn('truncate font-semibold text-sm', colorClasses.text)}>{event.title}</h4>
 
@@ -230,6 +224,6 @@ export function EnhancedEventCard({
       {event.description && (
         <p className="line-clamp-2 text-muted-foreground text-xs">{event.description}</p>
       )}
-    </div>
+    </button>
   );
 }

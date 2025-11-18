@@ -138,8 +138,8 @@ const SidebarContentWrapper = ({ links }: { links: any[] }) => {
     <>
       {open ? <Logo /> : <LogoIcon />}
       <div className="mt-8 flex flex-col gap-2">
-        {links.map((link, idx) => (
-          <SidebarLink key={idx} link={link} />
+        {links.map((link) => (
+          <SidebarLink key={link.href} link={link} />
         ))}
       </div>
     </>
@@ -186,6 +186,7 @@ const LogoutButton = () => {
 
   return (
     <button
+      type="button"
       onClick={handleLogout}
       className={cn(
         'group/sidebar flex w-full items-center justify-start gap-2 py-2 text-left',

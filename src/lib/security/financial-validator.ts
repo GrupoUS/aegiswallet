@@ -504,7 +504,7 @@ export function validateCPF(cpf: string): boolean {
   if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
 
   let sum = 0;
-  let remainder;
+  let remainder: number;
 
   for (let i = 1; i <= 9; i++) {
     sum += parseInt(cleanCPF.substring(i - 1, i), 10) * (11 - i);

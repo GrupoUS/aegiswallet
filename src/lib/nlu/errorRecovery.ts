@@ -773,9 +773,10 @@ export class ErrorRecoverySystem {
 
     // Extract entities using enhanced patterns
     for (const entityPattern of entityPatterns) {
-      let match;
-      while ((match = entityPattern.pattern.exec(text)) !== null) {
+      let match: RegExpExecArray | null = entityPattern.pattern.exec(text);
+      while (match !== null) {
         extractedEntities.push(entityPattern.extract(match));
+        match = entityPattern.pattern.exec(text);
       }
     }
 

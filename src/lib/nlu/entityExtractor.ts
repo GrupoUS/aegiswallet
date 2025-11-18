@@ -364,7 +364,8 @@ export class EntityExtractor {
     // Reset regex lastIndex for global regexes
     regex.lastIndex = 0;
 
-    while ((match = regex.exec(text)) !== null) {
+    match = regex.exec(text);
+    while (match !== null) {
       try {
         const value = match[0];
         const normalizedValue = pattern.normalizer(value);
@@ -389,6 +390,7 @@ export class EntityExtractor {
           endIndex: match.index + value.length,
         });
       } catch (_error) {}
+      match = regex.exec(text);
     }
 
     return entities;

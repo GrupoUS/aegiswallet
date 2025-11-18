@@ -76,7 +76,7 @@ const SpotlightFeature = ({ items }: { items: string[] }) => {
           transition={{ delay: 0.1 * index }}
           className="flex items-center gap-2"
         >
-          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-[oklch(0.5854_0.2041_277.1173)] dark:text-[oklch(0.9376_0.0260_321.9388)]" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-[oklch(0.5854_0.2041_277.1173)] dark:text-[oklch(0.9376_0.0260_321.9388)]" />
           <span className="text-foreground/70 text-sm dark:text-foreground/60">{item}</span>
         </motion.li>
       ))}
@@ -154,7 +154,7 @@ const TimelineFeature = ({ timeline }: { timeline: Array<{ year: string; event: 
             delay: (0.15 * Number.parseInt(item.year, 10)) % 10,
           }}
         >
-          <div className="z-10 mt-0.5 h-5 w-5 flex-shrink-0 rounded-full border-2 border-[oklch(0.5854_0.2041_277.1173)] bg-background dark:border-[oklch(0.9376_0.0260_321.9388)]" />
+          <div className="z-10 mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-[oklch(0.5854_0.2041_277.1173)] bg-background dark:border-[oklch(0.9376_0.0260_321.9388)]" />
           <div>
             <div className="font-medium text-foreground text-sm">{item.year}</div>
             <div className="text-muted-foreground text-xs">{item.event}</div>
@@ -318,7 +318,7 @@ export const BentoCard = ({ item }: { item: BentoItem }) => {
         href={item.href || undefined}
         className={cn(
           'group relative flex h-full flex-col gap-4 rounded-xl p-5',
-          'border border bg-card',
+          'border bg-card',
           'hover:border-[oklch(0.5854_0.2041_277.1173)] dark:hover:border-[oklch(0.9376_0.0260_321.9388)]',
           'hover:shadow-lg hover:shadow-primary/10',
           'transition-all duration-500 ease-out',

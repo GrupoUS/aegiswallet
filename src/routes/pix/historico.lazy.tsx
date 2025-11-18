@@ -31,16 +31,18 @@ const TransactionsTableLoader = () => (
     </CardHeader>
     <CardContent>
       <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
+        {Array.from({ length: 5 }, (_, index) => `pix-transaction-skeleton-${index}`).map(
+          (skeletonId) => (
+            <div key={skeletonId} className="flex items-center space-x-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+              <Skeleton className="h-4 w-20" />
             </div>
-            <Skeleton className="h-4 w-20" />
-          </div>
-        ))}
+          )
+        )}
       </div>
     </CardContent>
   </Card>

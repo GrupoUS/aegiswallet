@@ -25,10 +25,16 @@ export function useProfile() {
       onSuccess: (data) => {
         utils.profiles.getProfile.setData(undefined, (old) => {
           if (!old) return old;
-          return { ...old, user_preferences: data };
+
+          return {
+            ...old,
+            user_preferences: data ? [data] : [],
+          };
         });
+
         toast.success('Preferências atualizadas com sucesso!');
       },
+
       onError: (error) => {
         toast.error(error.message || 'Erro ao atualizar preferências');
       },

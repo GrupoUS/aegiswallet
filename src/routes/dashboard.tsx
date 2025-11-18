@@ -15,8 +15,8 @@ const DashboardLoader = () => (
     <div className="space-y-6">
       <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
+        {Array.from({ length: 4 }, (_, index) => `dashboard-loader-card-${index}`).map((cardId) => (
+          <Card key={cardId}>
             <CardHeader>
               <Skeleton className="h-6 w-24" />
             </CardHeader>
@@ -27,23 +27,27 @@ const DashboardLoader = () => (
         ))}
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, j) => (
-                  <div key={j} className="flex items-center justify-between">
-                    <Skeleton className="h-5 w-24" />
-                    <Skeleton className="h-5 w-16" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {Array.from({ length: 3 }, (_, index) => `dashboard-loader-section-${index}`).map(
+          (sectionId) => (
+            <Card key={sectionId}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }, (_, index) => `dashboard-loader-row-${index}`).map(
+                    (rowId) => (
+                      <div key={rowId} className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                    )
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
     </div>
   </div>

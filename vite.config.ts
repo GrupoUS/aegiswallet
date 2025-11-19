@@ -1,6 +1,9 @@
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
 import { defineConfig } from 'vite'
+
+const esToolkitAliases = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'aliases.json'), 'utf-8'));
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
@@ -10,6 +13,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        ...esToolkitAliases,
       },
     },
     server: {
@@ -116,11 +120,14 @@ export default defineConfig(({ mode }) => {
         '@hookform/resolvers',
         'zod',
         'date-fns',
+        'es-toolkit/compat',
+        'react-is',
+        'use-sync-external-store',
+        'eventemitter3',
       ],
       exclude: [
         // Exclude heavy dependencies from pre-bundling
         'framer-motion',
-        'recharts',
         'speech-recognition-polyfill',
       ],
     },

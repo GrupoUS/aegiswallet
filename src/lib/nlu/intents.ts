@@ -27,8 +27,10 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\bme\s+(mostra|fala|diz)\s+(o|meu)?\s*saldo\b/i,
       /\b(t[áÁ]|est[áÁ])\s+quanto\s+(na\s+)?conta\b/i,
       /\bquanto\s+(t[áÁ]|est[áÁ])\s+na\s+conta\b/i,
+      /\b(saldo)\s+(da|na)\s+conta\b/i,
       // More specific pattern - avoid overlap with other intents
       /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo)\b/i,
+      /\bquanto\s+(de\s+)?(grana|dinheiro)\s+(eu\s+)?tenho\b/i,
       // Enhanced pattern for "qual é meu saldo?"
       /\bqual\s+é\s+(meu|o)?\s*saldo\?*$/i,
     ],

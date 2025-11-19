@@ -25,18 +25,25 @@ import {
   isTransferResponse,
 } from '@/types/voice/responseTypes';
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const formatCurrency = (value: number): string => `R$ ${currencyFormatter.format(value)}`;
+
 // ============================================================================
 // Typed Data Renderer Components
 // ============================================================================
 
 const BalanceData: React.FC<{ data: BalanceResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
-    <p className="font-medium text-sm">Saldo: R$ {data.currentBalance.toFixed(2)}</p>
+    <p className="font-medium text-sm">Saldo: {formatCurrency(data.currentBalance)}</p>
     {data.income !== undefined && (
-      <p className="text-muted-foreground text-xs">Receitas: R$ {data.income.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Receitas: {formatCurrency(data.income)}</p>
     )}
     {data.expenses !== undefined && (
-      <p className="text-muted-foreground text-xs">Despesas: R$ {data.expenses.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Despesas: {formatCurrency(data.expenses)}</p>
     )}
     {data.accountType && <p className="text-muted-foreground text-xs">Conta: {data.accountType}</p>}
   </div>
@@ -44,9 +51,9 @@ const BalanceData: React.FC<{ data: BalanceResponseData }> = ({ data }) => (
 
 const BudgetData: React.FC<{ data: BudgetResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
-    <p className="font-medium text-sm">Disponível: R$ {data.available.toFixed(2)}</p>
+    <p className="font-medium text-sm">Disponível: {formatCurrency(data.available)}</p>
     <p className="text-muted-foreground text-xs">
-      Gasto: R$ {data.spent.toFixed(2)} / R$ {data.total.toFixed(2)}
+      Gasto: {formatCurrency(data.spent)} / {formatCurrency(data.total)}
     </p>
     <p className="text-muted-foreground text-xs">Utilizado: {data.spentPercentage.toFixed(1)}%</p>
     {data.category && <p className="text-muted-foreground text-xs">Categoria: {data.category}</p>}
@@ -58,7 +65,7 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
     <p className="font-medium text-sm">
       {data.bills.length} {data.bills.length === 1 ? 'conta' : 'contas'} para pagar
     </p>
-    <p className="text-muted-foreground text-xs">Total: R$ {data.totalAmount.toFixed(2)}</p>
+    <p className="text-muted-foreground text-xs">Total: {formatCurrency(data.totalAmount)}</p>
     {data.pastDueCount > 0 && (
       <p className="text-destructive text-xs">
         {data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
@@ -66,7 +73,7 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
     )}
     {data.bills.slice(0, 3).map((bill, index) => (
       <p key={`bill-${bill.name}-${index}`} className="text-muted-foreground text-xs">
-        {bill.name}: R$ {bill.amount.toFixed(2)}
+        {bill.name}: {formatCurrency(bill.amount)}
       </p>
     ))}
   </div>
@@ -74,43 +81,47 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
 
 const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
-    <p className="font-medium text-sm">Recebimentos: R$ {data.totalExpected.toFixed(2)}</p>
+    <p className="font-medium text-sm">Recebimentos: {formatCurrency(data.totalExpected)}</p>
     {data.nextIncome && (
       <p className="text-muted-foreground text-xs">
-        Próximo: {data.nextIncome.source} - R$ {data.nextIncome.amount.toFixed(2)}
+        Próximo: {data.nextIncome.source} - {formatCurrency(data.nextIncome.amount)}
       </p>
     )}
     {data.incoming.slice(0, 3).map((income, index) => (
       <p key={`income-${income.source}-${index}`} className="text-muted-foreground text-xs">
-        {income.source}: R$ {income.amount.toFixed(2)}
+        {income.source}: {formatCurrency(income.amount)}
       </p>
     ))}
   </div>
 );
 
-const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) => (
-  <div className="mt-2 space-y-1">
-    <p className="font-medium text-sm">
-      Projeção ({data.period}): R$ {data.projectedBalance.toFixed(2)}
-    </p>
-    <p className="text-muted-foreground text-xs">
-      Saldo atual: R$ {data.currentBalance.toFixed(2)}
-    </p>
-    <p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
-      Variação: {data.variation >= 0 ? '+' : ''}R$ {data.variation.toFixed(2)}
-    </p>
-    {data.confidence && (
-      <p className="text-muted-foreground text-xs">
-        Confiança: {(data.confidence * 100).toFixed(0)}%
+const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) => {
+  const variationSign = data.variation >= 0 ? '+' : '-';
+  const variationValue = formatCurrency(Math.abs(data.variation));
+
+  return (
+    <div className="mt-2 space-y-1">
+      <p className="font-medium text-sm">
+        Projeção ({data.period}): {formatCurrency(data.projectedBalance)}
       </p>
-    )}
-  </div>
-);
+      <p className="text-muted-foreground text-xs">Saldo atual: {formatCurrency(data.currentBalance)}</p>
+      <p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
+        Variação: {variationSign}
+        {variationValue}
+      </p>
+      {data.confidence && (
+        <p className="text-muted-foreground text-xs">
+          Confiança: {(data.confidence * 100).toFixed(0)}%
+        </p>
+      )}
+    </div>
+  );
+};
 
 const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
   <div className="mt-2 space-y-1">
     <p className="font-medium text-sm">Para: {data.recipient}</p>
-    <p className="text-muted-foreground text-xs">Valor: R$ {data.amount.toFixed(2)}</p>
+    <p className="text-muted-foreground text-xs">Valor: {formatCurrency(data.amount)}</p>
     <p className="text-muted-foreground text-xs">Método: {data.method}</p>
     <p
       className={cn(
@@ -138,7 +149,7 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
       <p className="text-muted-foreground text-xs">Tempo estimado: {data.estimatedTime}</p>
     )}
     {data.fees && data.fees > 0 && (
-      <p className="text-muted-foreground text-xs">Taxas: R$ {data.fees.toFixed(2)}</p>
+      <p className="text-muted-foreground text-xs">Taxas: {formatCurrency(data.fees)}</p>
     )}
   </div>
 );

@@ -2,8 +2,7 @@
   "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*.{ts,tsx,js,jsx}", "scripts/**/*.{ts,tsx,js,jsx}"],
-    "ignore": ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/.next/**", "**/.turbo/**"]
+    "includes": ["src/**/*.{ts,tsx,js,jsx}", "scripts/**/*.{ts,tsx,js,jsx}"]
   },
   "vcs": {
     "enabled": true,
@@ -28,7 +27,7 @@
         "noDebugger": "error",
         "noDocumentCookie": "warn",
         "noArrayIndexKey": "warn",
-        "noConsoleLog": "warn"
+        "noConsole": "warn"
       },
       "complexity": {
         "noForEach": "off"

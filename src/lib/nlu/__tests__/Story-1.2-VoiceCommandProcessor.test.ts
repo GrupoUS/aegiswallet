@@ -247,7 +247,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
         expect(result.entities).toBeDefined();
         const amountEntity = result.entities?.find((e) => e.type === 'amount');
         expect(amountEntity).toBeDefined();
-        expect(amountEntity?.value).toBe(testCase.expectedAmount);
+        expect(amountEntity?.normalizedValue).toBe(testCase.expectedAmount);
       }
     });
 
@@ -266,7 +266,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
           (e) => e.type === 'person' || e.type === 'recipient'
         );
         expect(nameEntity).toBeDefined();
-        expect(nameEntity?.value).toBe(testCase.expectedName);
+        expect(nameEntity?.normalizedValue).toBe(testCase.expectedName);
       }
     });
 

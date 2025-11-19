@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
 
 import { cn } from '@/lib/utils';
+import type { ChartPayload } from '@/types/financial/chart.types';
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const;
@@ -125,12 +126,12 @@ const ChartTooltipContent = React.forwardRef<
     nameKey?: string;
     labelKey?: string;
     active?: boolean;
-    payload?: any[];
-    label?: any;
-    labelFormatter?: (label: any, payload?: any[]) => React.ReactNode;
+    payload?: ChartPayload[];
+    label?: string;
+    labelFormatter?: (label: React.ReactNode, payload?: ChartPayload[]) => React.ReactNode;
     labelClassName?: string;
-    formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode;
-    color?: any;
+    formatter?: (value: number, name: string, item: ChartPayload, index: number, payload: ChartPayload[]) => React.ReactNode;
+    color?: string;
   }
 >(
   (
@@ -196,22 +197,27 @@ const ChartTooltipContent = React.forwardRef<
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
           {payload
-            .filter((item: any) => item.type !== 'none')
-            .map((item: any, index: number) => {
-              const key = `${nameKey || item.name || item.dataKey || 'value'}`;
-              const itemConfig = getPayloadConfigFromPayload(config, item, key);
-              const indicatorColor = color || item.payload.fill || item.color;
+            .filter((item: unknown) => {
+              const chartItem = item as { type?: string };
+              return chartItem.type !== 'none';
+            })
+            .map((item: unknown, index: number) => {
+              // biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
+              const chartItem = item as any;
+              const key = `${nameKey || chartItem.name || chartItem.dataKey || 'value'}`;
+              const itemConfig = getPayloadConfigFromPayload(config, chartItem, key);
+              const indicatorColor = color || chartItem.payload?.fill || chartItem.color;
 
               return (
                 <div
-                  key={item.dataKey}
+                  key={chartItem.dataKey}
                   className={cn(
                     'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground',
                     indicator === 'dot' && 'items-center'
                   )}
                 >
-                  {formatter && item?.value !== undefined && item.name ? (
-                    formatter(item.value, item.name, item, index, item.payload)
+                  {formatter && chartItem?.value !== undefined && chartItem.name ? (
+                    formatter(chartItem.value, chartItem.name, chartItem, index, chartItem.payload)
                   ) : (
                     <>
                       {itemConfig?.icon ? (
@@ -247,12 +253,12 @@ const ChartTooltipContent = React.forwardRef<
                         <div className="grid gap-1.5">
                           {nestLabel ? tooltipLabel : null}
                           <span className="text-muted-foreground">
-                            {itemConfig?.label || item.name}
+                            {itemConfig?.label || chartItem.name}
                           </span>
                         </div>
-                        {item.value && (
+                        {chartItem.value && (
                           <span className="font-medium font-mono text-foreground tabular-nums">
-                            {item.value.toLocaleString()}
+                            {chartItem.value.toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -275,7 +281,7 @@ const ChartLegendContent = React.forwardRef<
   React.ComponentProps<'div'> & {
     hideIcon?: boolean;
     nameKey?: string;
-    payload?: any[];
+    payload?: unknown[];
     verticalAlign?: 'top' | 'bottom' | 'middle';
   }
 >(({ className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey }, ref) => {
@@ -295,7 +301,9 @@ const ChartLegendContent = React.forwardRef<
       )}
     >
       {payload
+        // biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
         .filter((item: any) => item.type !== 'none')
+        // biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
         .map((item: any) => {
           const key = `${nameKey || item.dataKey || 'value'}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);

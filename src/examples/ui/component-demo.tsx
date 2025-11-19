@@ -1,7 +1,13 @@
 import { Calendar, CreditCard, Home, Settings, TrendingUp, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 import { MagicCard } from '../../components/ui/magic-card';
 import {
   Sidebar,

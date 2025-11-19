@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+coverage/
+.git/
+bun.lock
+**/*.map
+**/*.log
+tmp/
+temp/

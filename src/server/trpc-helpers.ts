@@ -14,16 +14,14 @@ const t = initTRPC.context<Context>().meta<Meta>().create({
 
 export const router = t.router;
 export const publicProcedure = t.procedure.use(generalApiRateLimit);
-export const protectedProcedure = t.procedure
-  .use(generalApiRateLimit)
-  .use(({ ctx, next }) => {
-    if (!ctx.session?.user) {
-      throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-    return next({
-      ctx: {
-        ...ctx,
-        user: ctx.session.user,
-      },
-    });
+export const protectedProcedure = t.procedure.use(generalApiRateLimit).use(({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.session.user,
+    },
   });
+});

@@ -10,6 +10,8 @@ export interface LGPDConsentState {
   essential: boolean;
   analytics: boolean;
   marketing: boolean;
+  voice_data_processing: boolean;
+  biometric_data: boolean;
 }
 
 export interface LGPDConsentFormProps {
@@ -37,6 +39,8 @@ export function LGPDConsentForm({
     essential: defaultValues?.essential ?? false,
     analytics: defaultValues?.analytics ?? false,
     marketing: defaultValues?.marketing ?? false,
+    voice_data_processing: defaultValues?.voice_data_processing ?? false,
+    biometric_data: defaultValues?.biometric_data ?? false,
   });
   const [internalSubmitting, setInternalSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -180,6 +184,48 @@ export function LGPDConsentForm({
               <p id="lgpd-marketing-description" className="text-muted-foreground text-sm">
                 Autorizo o envio de comunicações sobre novos recursos, dicas financeiras e ofertas
                 alinhadas aos meus interesses.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="lgpd-voice"
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-4 transition-colors focus-within:border-primary"
+          >
+            <Checkbox
+              id="lgpd-voice"
+              checked={consentState.voice_data_processing}
+              onCheckedChange={handleConsentToggle('voice_data_processing')}
+              aria-describedby="lgpd-voice-description"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="lgpd-voice" className="font-medium text-base text-foreground">
+                Processamento de voz
+              </Label>
+              <p id="lgpd-voice-description" className="text-muted-foreground text-sm">
+                Permito o processamento dos meus comandos de voz para execução de ações financeiras
+                e interação com o assistente.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="lgpd-biometric"
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-4 transition-colors focus-within:border-primary"
+          >
+            <Checkbox
+              id="lgpd-biometric"
+              checked={consentState.biometric_data}
+              onCheckedChange={handleConsentToggle('biometric_data')}
+              aria-describedby="lgpd-biometric-description"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="lgpd-biometric" className="font-medium text-base text-foreground">
+                Dados biométricos de voz
+              </Label>
+              <p id="lgpd-biometric-description" className="text-muted-foreground text-sm">
+                Autorizo o armazenamento de padrões da minha voz para fins de autenticação e
+                segurança (biometria por voz).
               </p>
             </div>
           </label>

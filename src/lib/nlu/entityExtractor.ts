@@ -324,6 +324,15 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     normalizer: () => 'day',
   },
 
+  // Recipient (specific context "para ...")
+  {
+    type: EntityType.RECIPIENT,
+    pattern:
+      /\b(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+([a-zàáâãéêíóôõúç]+(?:\s+[a-zàáâãéêíóôõúç]+)*)\b/gi,
+    normalizer: (match) =>
+      match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
+  },
+
   // Person names (simple pattern - capitalized words)
   {
     type: EntityType.PERSON,

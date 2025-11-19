@@ -80,8 +80,13 @@ export class IntentClassifier {
 
       // Check patterns
       for (const pattern of definition.patterns) {
+        // Reset state for global regexes just in case, though patterns here usually don't have g
+        pattern.lastIndex = 0;
         if (pattern.test(text)) {
+          console.log(`[DEBUG] Match: ${intent} on '${text}' using ${pattern}`);
           patternMatches++;
+        } else {
+          // console.log(`[DEBUG] NO Match: ${intent} on '${text}' using ${pattern}`);
         }
       }
 

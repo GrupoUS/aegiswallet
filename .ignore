@@ -1,0 +1,7 @@
+# Biome ignore patterns
+node_modules
+dist
+coverage
+.next
+.turbo
+

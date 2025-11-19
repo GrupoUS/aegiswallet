@@ -77,6 +77,9 @@ export class NLUEngine {
     misses: 0,
     totalRequests: 0,
   };
+  private context: {
+    previousIntents: IntentType[];
+  } = { previousIntents: [] };
 
   constructor(config: Partial<NLUConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -129,8 +132,9 @@ export class NLUEngine {
       // Normalize text
       const normalized = this.normalizer.normalize(text);
 
-      // Classify intent
-      const classification = await this.classifier.classify(text);
+      // Classify intent and boost essential commands confidence when applicable
+      let classification = await this.classifier.classify(text);
+      classification = this.enhanceClassificationConfidence(text, classification);
 
       // Extract entities
       const entities = this.extractor.extract(text);
@@ -157,6 +161,11 @@ export class NLUEngine {
       // Check for missing required slots
       const missingSlots = this.getMissingSlots(classification.intent, entities);
 
+      // Update context
+      if (this.config.contextEnabled) {
+        this.updateContext(classification.intent);
+      }
+
       // Build result
       const result: NLUResult = {
         intent: classification.intent,
@@ -168,6 +177,7 @@ export class NLUEngine {
         requiresConfirmation,
         requiresDisambiguation,
         missingSlots,
+        context: this.config.contextEnabled ? this.context : undefined,
         metadata: {
           classificationMethod: classification.method,
           alternativeIntents: classification.alternatives,
@@ -196,6 +206,18 @@ export class NLUEngine {
       }
 
       throw new NLUError('NLU processing failed', NLUErrorCode.UNKNOWN_ERROR, error);
+    }
+  }
+
+  /**
+   * Update conversation context
+   */
+  private updateContext(intent: IntentType): void {
+    if (intent === IntentType.UNKNOWN) return;
+
+    this.context.previousIntents.push(intent);
+    if (this.context.previousIntents.length > this.config.maxContextTurns) {
+      this.context.previousIntents.shift();
     }
   }
 
@@ -437,6 +459,50 @@ export class NLUEngine {
       patternNovelty: Math.random(), // Would be calculated based on pattern frequency
       confidenceTrend: classification.confidence > 0.8 ? 'high' : 'needs_improvement',
       adaptationNeeded: classification.confidence < 0.7,
+    };
+  }
+
+  /**
+   * Boost confidence for essential intents based on deterministic signals
+   */
+  private enhanceClassificationConfidence(text: string, classification: NLUIntent): NLUIntent {
+    const definition = INTENT_DEFINITIONS[classification.intent];
+    if (!definition) {
+      return classification;
+    }
+
+    const lowerText = text.toLowerCase();
+
+    // Check if any canonical pattern matches (reset lastIndex when regex is global)
+    const patternMatched = definition.patterns.some((pattern) => {
+      pattern.lastIndex = 0;
+      return pattern.test(text);
+    });
+
+    // Count keyword hits to gauge intent strength
+    const keywordMatches = definition.keywords.filter((keyword) => lowerText.includes(keyword));
+
+    // Determine the minimum confidence required for this intent
+    const requiredConfidence = Math.max(definition.confidence_threshold ?? 0.7, 0.7);
+
+    let boostedConfidence = classification.confidence;
+
+    if (patternMatched) {
+      boostedConfidence = Math.max(boostedConfidence, Math.min(0.95, requiredConfidence + 0.2));
+      classification = { ...classification, method: classification.method ?? 'pattern' };
+    } else if (keywordMatches.length >= 2) {
+      boostedConfidence = Math.max(boostedConfidence, Math.min(0.9, requiredConfidence + 0.15));
+    } else if (keywordMatches.length === 1) {
+      boostedConfidence = Math.max(boostedConfidence, requiredConfidence);
+    }
+
+    if (boostedConfidence === classification.confidence) {
+      return classification;
+    }
+
+    return {
+      ...classification,
+      confidence: boostedConfidence,
     };
   }
 

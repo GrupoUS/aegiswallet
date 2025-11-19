@@ -181,7 +181,7 @@ export class SpeechToTextService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
-      const response = await fetch(this.API_ENDPOINT, {
+      const request = new Request(this.API_ENDPOINT, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.config.apiKey}`,
@@ -190,6 +190,8 @@ export class SpeechToTextService {
         body: formData,
         signal: controller.signal,
       });
+
+      const response = await fetch(request);
 
       clearTimeout(timeoutId);
 
@@ -203,7 +205,8 @@ export class SpeechToTextService {
 
       // Enhanced error handling for timeout
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout - Please try again');
+        error.message = 'Request timeout - Please try again';
+        throw error;
       }
 
       throw error;
@@ -464,9 +467,9 @@ export class AdaptiveSTTService extends SpeechToTextService {
 
     const timeouts: Record<string, number> = {
       'slow-2g': 30000, // 30s
-      '2g': 25000,      // 25s
-      '3g': 20000,      // 20s
-      '4g': 15000,      // 15s
+      '2g': 25000, // 25s
+      '3g': 20000, // 20s
+      '4g': 15000, // 15s
     };
 
     return timeouts[connection.effectiveType as string] || 15000;

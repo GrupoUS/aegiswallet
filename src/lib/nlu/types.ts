@@ -99,6 +99,9 @@ export interface NLUResult {
   requiresConfirmation: boolean;
   requiresDisambiguation: boolean;
   missingSlots: EntityType[]; // Required slots not found
+  context?: {
+    previousIntents: IntentType[];
+  };
   metadata?: {
     classificationMethod?: 'pattern' | 'tfidf' | 'ensemble';
     alternativeIntents?: Array<{ intent: IntentType; confidence: number }>;

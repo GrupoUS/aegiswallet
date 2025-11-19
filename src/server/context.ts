@@ -1,6 +1,6 @@
-import { createServerClient } from '@/integrations/supabase/factory';
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import type { inferAsyncReturnType } from '@trpc/server';
+import { createServerClient } from '@/integrations/supabase/factory';
 
 const supabase = createServerClient();
 

@@ -1,3 +1,7 @@
+/**
+ * AegisWallet Logger
+ */
+
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -7,31 +11,17 @@ export enum LogLevel {
 }
 
 export interface LogContext {
-  userId?: string;
-  sessionId?: string;
   component?: string;
   action?: string;
-  timestamp?: string;
-  ip?: string;
-  userAgent?: string;
-  metadata?: Record<string, unknown>;
-  command?: string;
-  confidence?: number;
-  processingTime?: number;
-  language?: string;
-  event?: string;
-  method?: string;
-  attempts?: number;
-  buttonId?: string;
-  error?: string;
-  stack?: string;
+  userId?: string;
+  [key: string]: any;
 }
 
 export interface LogEntry {
   level: LogLevel;
   message: string;
-  context?: LogContext;
   timestamp: string;
+  context?: LogContext;
   sessionId: string;
 }
 
@@ -44,194 +34,73 @@ export interface LoggerConfig {
 }
 
 export class Logger {
-  private logs: LogEntry[] = [];
   private config: LoggerConfig;
-  private circularRefs = new WeakSet();
+  private logs: LogEntry[] = [];
+  private sessionId: string;
 
-  constructor() {
+  constructor(config?: Partial<LoggerConfig>) {
+    this.sessionId = "session_" + Date.now();
     this.config = {
       level: LogLevel.DEBUG,
       enableConsole: true,
       enableRemote: false,
       sanitizeData: false,
       maxEntries: 1000,
+      ...config,
     };
   }
 
-  updateConfig(config: Partial<LoggerConfig>): void {
-    this.config = { ...this.config, ...config };
-  }
-
-  getConfig(): LoggerConfig {
-    return { ...this.config };
-  }
-
-  getLogs(): LogEntry[] {
-    return [...this.logs];
-  }
-
-  clearLogs(): void {
-    this.logs = [];
-  }
-
-  private generateSessionId(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    return `session_${timestamp}_${random}`;
-  }
-
-  private sanitizeData(data: any): any {
-    if (!this.config.sanitizeData) return data;
-
-    if (typeof data !== 'object' || data === null) return data;
-
-    if (this.circularRefs.has(data)) {
-      return '[CIRCULAR REFERENCE]';
-    }
-
-    this.circularRefs.add(data);
-
-    const sanitized: Record<string, any> = Array.isArray(data) ? [] : {};
-
-    for (const [key, value] of Object.entries(data)) {
-      if (this.isSensitiveField(key)) {
-        sanitized[key] = '[REDACTED]';
-      } else if (typeof value === 'object' && value !== null) {
-        sanitized[key] = this.sanitizeData(value);
-      } else {
-        sanitized[key] = value;
-      }
-    }
-
-    this.circularRefs.delete(data);
-    return sanitized;
-  }
-
-  private isSensitiveField(key: string): boolean {
-    const sensitiveFields = [
-      'password', 'token', 'secret', 'key', 'cpf', 'email', 'balance',
-      'credit_card', 'ssn', 'phone', 'address', 'birth_date'
-    ];
-    return sensitiveFields.some(field => key.toLowerCase().includes(field));
-  }
-
-  private truncateUserId(userId: string): string {
-    if (!userId) return '';
-    return userId.length > 12 ? `${userId.substring(0, 12)}...` : userId;
-  }
-
-  private shouldLog(level: LogLevel): boolean {
-    return level >= this.config.level && this.config.level !== LogLevel.SILENT;
-  }
-
-  private createLogEntry(level: LogLevel, message: string, context?: LogContext): LogEntry {
-    const sessionId = context?.sessionId || this.generateSessionId();
-    const sanitizedContext = context ? this.sanitizeData(context) : undefined;
-
-    return {
-      level,
-      message,
-      context: sanitizedContext,
-      timestamp: new Date().toISOString(),
-      sessionId,
-    };
-  }
-
-  private addLog(entry: LogEntry): void {
-    this.logs.push(entry);
-
-    if (this.logs.length > this.config.maxEntries) {
-      this.logs = this.logs.slice(-this.config.maxEntries);
-    }
-
-    if (this.config.enableConsole) {
-      this.logToConsole(entry);
-    }
-
-    if (this.config.enableRemote) {
-      this.logToRemote(entry);
-    }
-  }
+  getConfig(): LoggerConfig { return { ...this.config }; }
+  updateConfig(config: Partial<LoggerConfig>): void { this.config = { ...this.config, ...config }; }
+  getLogs(): LogEntry[] { return [...this.logs]; }
+  clearLogs(): void { this.logs = []; }
+  exportLogs(): string { return JSON.stringify(this.logs, null, 2); }
 
   private logToConsole(entry: LogEntry): void {
-    const levelName = LogLevel[entry.level].toLowerCase();
-    const message = `[${entry.timestamp}] ${levelName.toUpperCase()}: ${entry.message}`;
-
+    if (!this.config.enableConsole) return;
+    const msg = entry.message;
     switch (entry.level) {
-      case LogLevel.DEBUG:
-        break;
-      case LogLevel.INFO:
-      case LogLevel.WARN:
-        console.warn(mess
-        console.error(message, entry.context);
-        break;
-
-  private logToRemote(entry: LogEntry): void 
-
-  debug(message: strin_entryntext?: LogContext): void 
-    if (this.shouldLog(LogLevel.DEBUG)) {
-      const entry = this.createLogEntry(LogLevel.DEBUG, message, context);
-      this.addLog(entry);
+      case LogLevel.DEBUG: console.debug(msg, entry.context); break;
+      case LogLevel.INFO: console.info(msg, entry.context); break;
+      case LogLevel.WARN: console.warn(msg, entry.context); break;
+      case LogLevel.ERROR: console.error(msg, entry.context); break;
     }
-
-  info(message: string, context?: LogContext): void 
-    if (this.shouldLog(LogLevel.INFO)) {
-      const entry = this.createLogEntry(LogLevel.INFO, message, context);
-      this.addLog(entry);
-    }
-
-  warn(message: string, context?: LogContext): void 
-    if (this.shouldLog(LogLevel.WARN)) {
-      const entry = this.createLogEntry(LogLevel.WARN, message, context);
-      this.addLog(entry);
-    }
-
-  error(message: string, context?: LogContext): void 
-    if (this.shouldLog(LogLevel.ERROR)) {
-      const entry = this.createLogEntry(LogLevel.ERROR, message, context);
-      this.addLog(entry);
-    }
-
-  voiceCommand(command: string, confidence: number, context?: Omit<LogContext, 'command' | 'confidence'>): void {
-    const fullContext: LogContext = {
-      ...context,
-      command,
-      confidence,
-    };
-    this.info('Voice command processed', fullContext);
   }
 
-  authEvent(event: string, userId?: string, context?: Omit<LogContext, 'event' | 'userId'>): void {
-    const fullContext: LogContext = {
-      ...context,
-      event,
-      userId: userId ? this.truncateUserId(userId) : undefined,
+  private log(level: LogLevel, message: string, context?: LogContext): void {
+    if (level < this.config.level) return;
+    const entry = {
+      level,
+      message,
+      timestamp: new Date().toISOString(),
+      context,
+      sessionId: this.sessionId
     };
-    this.info('Authentication event', fullContext);
+    this.logs.push(entry);
+    this.logToConsole(entry);
   }
 
-  securityEvent(event: string, context?: Omit<LogContext, 'event'>): void {
-    const fullContext: LogContext = {
-      ...context,
-      event,
-    };
-    this.warn('Security event', fullContext);
-  }
+  debug(message: string, context?: LogContext): void { this.log(LogLevel.DEBUG, message, context); }
+  info(message: string, context?: LogContext): void { this.log(LogLevel.INFO, message, context); }
+  warn(message: string, context?: LogContext): void { this.log(LogLevel.WARN, message, context); }
+  error(message: string, context?: LogContext): void { this.log(LogLevel.ERROR, message, context); }
 
-  userAction(action: string, component: string, context?: Omit<LogContext, 'action' | 'component'>): void {
-    const fullContext: LogContext = {
-      ...context,
-      action,
-      component,
-    };
-    this.info('User action', fullContext);
+  voiceCommand(command: string, confidence: number, context?: LogContext): void {
+    this.info("Voice command processed", { ...context, command, confidence });
   }
-
-  voiceError(error: string, context?: Omit<LogContext, 'error'>): void {
-    const fullContext: LogContext = {
-      ...context,
-      error,
-    };
-    this.error('Voice processing error', fullContext);
+  voiceError(error: string, context?: LogContext): void {
+    this.error("Voice processing error", { ...context, error });
+  }
+  authEvent(event: string, userId?: string, context?: LogContext): void {
+    this.info("Authentication event", { ...context, event, userId });
+  }
+  securityEvent(event: string, context?: LogContext): void {
+    this.warn("Security event", { event, ...context });
+  }
+  userAction(action: string, component: string, context?: LogContext): void {
+    this.info("User action", { action, component, ...context });
   }
 }
+
+export const logger = new Logger();
+export default logger;

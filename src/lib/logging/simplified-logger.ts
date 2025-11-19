@@ -177,6 +177,9 @@ class SimplifiedLogger {
   }
 }
 
+// Export the class for advanced usage
+export { SimplifiedLogger };
+
 // Create and export singleton instance
 export const simplifiedLogger = new SimplifiedLogger();
 export default simplifiedLogger;

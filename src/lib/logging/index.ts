@@ -8,15 +8,16 @@ export {
   type LogContext as LogEntry,
   type LogContext,
   LogLevel,
-  simplifiedLogger as logger,
-  simplifiedLogger as default,
-} from './simplified-logger';
+  logger,
+  logger as default,
+} from './logger';
 
 // Maintain backward compatibility for any existing code
-import { simplifiedLogger } from './simplified-logger';
+import { logger } from './logger';
+export const simplifiedLogger = logger;
 
 // Legacy exports for compatibility
-export { simplifiedLogger as Logger };
+export { logger as Logger };
 
 // Specialized methods that maintain the same interface
 export const logOperation = (
@@ -26,7 +27,7 @@ export const logOperation = (
   resourceId?: string,
   context?: Record<string, any>
 ): void => {
-  simplifiedLogger.info(`Operation: ${operation}`, {
+  logger.info(`Operation: ${operation}`, {
     userId: `${userId.substring(0, 8)}...`,
     resource,
     resourceId,
@@ -48,7 +49,7 @@ export const logError = (
         }
       : error;
 
-  simplifiedLogger.error(`Operation failed: ${operation}`, {
+  logger.error(`Operation failed: ${operation}`, {
     userId: `${userId.substring(0, 8)}...`,
     error: errorInfo,
     ...context,

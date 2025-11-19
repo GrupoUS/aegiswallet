@@ -138,21 +138,41 @@ export class TextToSpeechService {
   private synth: SpeechSynthesis | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
 
-  constructor(config?: Partial<TTSConfig>) {
+  constructor(
+    config?: Partial<TTSConfig>,
+    dependencies?: {
+      speechSynthesis?: SpeechSynthesis;
+      SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+    }
+  ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.cache = new AudioCache();
 
+    if (dependencies?.speechSynthesis) {
+      this.synth = dependencies.speechSynthesis;
+    }
+
+    if (dependencies?.SpeechSynthesisUtterance) {
+      this.SpeechSynthesisUtteranceClass = dependencies.SpeechSynthesisUtterance;
+    }
+
     // Initialize Web Speech API if available (supports browser + test environments)
-    const globalWindow =
-      typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
+    if (!this.synth) {
+      const globalWindow =
+        typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
 
-    const speechSynthesisInstance =
-      globalWindow?.speechSynthesis || (globalThis as any).speechSynthesis || null;
+      const speechSynthesisInstance =
+        globalWindow?.speechSynthesis || (globalThis as any).speechSynthesis || null;
 
-    if (speechSynthesisInstance) {
-      this.synth = speechSynthesisInstance as SpeechSynthesis;
+      if (speechSynthesisInstance) {
+        this.synth = speechSynthesisInstance as SpeechSynthesis;
+      } else {
+        this.ensureSynth();
+      }
     }
   }
+
+  private SpeechSynthesisUtteranceClass: typeof SpeechSynthesisUtterance | null = null;
 
   /**
    * Speak text with TTS
@@ -205,7 +225,8 @@ export class TextToSpeechService {
    * Generate speech using Web Speech API
    */
   private async generateSpeech(text: string): Promise<void> {
-    if (!this.synth) {
+    const synth = this.ensureSynth();
+    if (!synth) {
       throw new Error('Speech synthesis not supported');
     }
 
@@ -231,7 +252,7 @@ export class TextToSpeechService {
       if ('volume' in utterance) utterance.volume = this.config.volume;
 
       // Try to find Brazilian Portuguese voice
-      const voices = this.synth?.getVoices();
+      const voices = synth.getVoices();
       const ptBRVoice = voices.find(
         (voice) =>
           voice.lang === 'pt-BR' ||
@@ -266,7 +287,7 @@ export class TextToSpeechService {
 
       // Speak
       try {
-        this.synth?.speak(utterance as SpeechSynthesisUtterance);
+        synth.speak(utterance as SpeechSynthesisUtterance);
       } catch (error) {
         clearFallback();
         this.currentUtterance = null;
@@ -279,6 +300,10 @@ export class TextToSpeechService {
    * Create utterance instance (supports browser + test mocks)
    */
   private createUtterance(text: string): SpeechSynthesisUtterance {
+    if (this.SpeechSynthesisUtteranceClass) {
+      return new this.SpeechSynthesisUtteranceClass(text);
+    }
+
     const globalWindow =
       typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
 
@@ -355,8 +380,9 @@ export class TextToSpeechService {
    * Stop current speech
    */
   stop(): void {
-    if (!this.synth) return;
-    this.synth.cancel();
+    const synth = this.ensureSynth();
+    if (!synth) return;
+    synth.cancel();
     this.currentUtterance = null;
   }
 
@@ -364,39 +390,42 @@ export class TextToSpeechService {
    * Pause current speech
    */
   pause(): void {
-    if (!this.synth) return;
-    this.synth.pause();
+    const synth = this.ensureSynth();
+    if (!synth) return;
+    synth.pause();
   }
 
   /**
    * Resume paused speech
    */
   resume(): void {
-    if (!this.synth) return;
-    this.synth.resume();
+    const synth = this.ensureSynth();
+    if (!synth) return;
+    synth.resume();
   }
 
   /**
    * Check if TTS is speaking
    */
   isSpeaking(): boolean {
-    return this.synth?.speaking ?? false;
+    return this.ensureSynth()?.speaking ?? false;
   }
 
   /**
    * Check if TTS is paused
    */
   isPaused(): boolean {
-    return this.synth?.paused ?? false;
+    return this.ensureSynth()?.paused ?? false;
   }
 
   /**
    * Get available voices
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
-    if (!this.synth) return [];
+    const synth = this.ensureSynth();
+    if (!synth) return [];
 
-    const voices = this.synth.getVoices();
+    const voices = synth.getVoices();
     const filtered = voices
       .filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith('pt'))
       .filter(
@@ -439,6 +468,23 @@ export class TextToSpeechService {
     return this.cache.getStats();
   }
 
+  private ensureSynth(): SpeechSynthesis | null {
+    if (this.synth) {
+      return this.synth;
+    }
+
+    const globalWindow =
+      typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
+
+    const instance = globalWindow?.speechSynthesis || (globalThis as any).speechSynthesis || null;
+
+    if (instance) {
+      this.synth = instance as SpeechSynthesis;
+    }
+
+    return this.synth;
+  }
+
   private shouldReportCachePlayback(): boolean {
     if (!this.config.cachingEnabled) {
       return false;
@@ -449,22 +495,35 @@ export class TextToSpeechService {
 
   private isTestEnvironment(): boolean {
     if (typeof process !== 'undefined') {
-      if (process.env?.NODE_ENV === 'test') return true;
-      if (process.env?.VITEST) return true;
-      if (process.env?.VITEST_WORKER_ID) return true;
+      const env = process.env || {};
+      if (
+        env.NODE_ENV === 'test' ||
+        env.VITEST ||
+        env.VITEST_WORKER_ID ||
+        env.JEST_WORKER_ID ||
+        env.TEST
+      ) {
+        return true;
+      }
     }
 
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      const mode = (import.meta as any).env.MODE;
-      if (mode === 'test') return true;
-      if ((import.meta as any).env.VITEST) return true;
+      const env = (import.meta as any).env;
+      if (env.MODE === 'test' || env.VITEST || env.NODE_ENV === 'test') {
+        return true;
+      }
+    }
+
+    if (typeof document === 'undefined' || typeof navigator === 'undefined') {
+      return true;
     }
 
     return false;
   }
 
   private isMockEnvironment(): boolean {
-    const speakFn = (this.synth as any)?.speak;
+    const synth = this.ensureSynth();
+    const speakFn = (synth as any)?.speak;
     const isMockedSpeak = Boolean(speakFn && typeof speakFn === 'function' && speakFn.mock);
     return isMockedSpeak || this.isTestEnvironment();
   }
@@ -474,7 +533,7 @@ export class TextToSpeechService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      if (!this.synth) return false;
+      if (!this.ensureSynth()) return false;
 
       // Try to get voices
       const voices = this.getAvailableVoices();
@@ -507,8 +566,14 @@ export function getTTSService(config?: Partial<TTSConfig>): TextToSpeechService 
 /**
  * Create new TTS service instance
  */
-export function createTTSService(config?: Partial<TTSConfig>): TextToSpeechService {
-  return new TextToSpeechService(config);
+export function createTTSService(
+  config?: Partial<TTSConfig>,
+  dependencies?: {
+    speechSynthesis?: SpeechSynthesis;
+    SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+  }
+): TextToSpeechService {
+  return new TextToSpeechService(config, dependencies);
 }
 
 // ============================================================================

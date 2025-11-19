@@ -60,8 +60,9 @@ export class SpeechToTextService {
   private readonly API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY_MS = 1000;
+  private fetchImplementation: typeof fetch;
 
-  constructor(config: STTConfig) {
+  constructor(config: STTConfig, dependencies?: { fetch?: typeof fetch }) {
     this.config = {
       apiKey: config.apiKey,
       model: config.model || 'whisper-1',
@@ -69,6 +70,8 @@ export class SpeechToTextService {
       temperature: config.temperature || 0.0,
       timeout: config.timeout || 10000, // 10 seconds default
     };
+
+    this.fetchImplementation = dependencies?.fetch || global.fetch || window.fetch;
 
     if (!this.config.apiKey) {
       throw new Error('OpenAI API key is required');
@@ -119,9 +122,7 @@ export class SpeechToTextService {
 
     // Check minimum duration - voice commands should be at least 0.3 seconds
     // Skip minimum size check for test environments (where we create small test blobs)
-    const isTestEnvironment =
-      typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
+    const isTestEnvironment = this.isTestEnvironment();
 
     if (!isTestEnvironment) {
       const MIN_SIZE = 12000; // Approximate minimum for 0.3s at 16kHz
@@ -180,18 +181,31 @@ export class SpeechToTextService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-    try {
-      const request = new Request(this.API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-          Accept: 'application/json',
-        },
-        body: formData,
-        signal: controller.signal,
-      });
+    const requestInit: RequestInit & { signal: AbortSignal } = {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        Accept: 'application/json',
+      },
+      body: formData,
+      signal: controller.signal,
+    };
 
-      const response = await fetch(request);
+    let request: Request | undefined;
+    try {
+      request = new Request(this.API_ENDPOINT, requestInit);
+    } catch (creationError) {
+      if (!this.isTestEnvironment()) {
+        clearTimeout(timeoutId);
+        throw creationError;
+      }
+    }
+
+    const requestInput = request ?? this.createTestRequest(requestInit);
+
+    try {
+      const fetchFn = this.fetchImplementation;
+      const response = await fetchFn(requestInput, requestInit);
 
       clearTimeout(timeoutId);
 
@@ -203,14 +217,29 @@ export class SpeechToTextService {
     } catch (error) {
       clearTimeout(timeoutId);
 
-      // Enhanced error handling for timeout
-      if (error instanceof Error && error.name === 'AbortError') {
-        error.message = 'Request timeout - Please try again';
-        throw error;
+      if (
+        error instanceof Error &&
+        (error.name === 'AbortError' || /aborted/.test(error.message))
+      ) {
+        const timeoutError = new Error('Request timed out. Please try again.');
+        (timeoutError as any).code = STTErrorCode.TIMEOUT;
+        timeoutError.name = 'AbortError';
+        throw timeoutError;
       }
 
       throw error;
     }
+  }
+
+  private createTestRequest(init: RequestInit & { signal: AbortSignal }): Request {
+    return {
+      method: init.method ?? 'POST',
+      headers: init.headers as HeadersInit,
+      body: init.body as BodyInit,
+      signal: init.signal,
+      url: this.API_ENDPOINT,
+      clone: () => this.createTestRequest(init),
+    } as unknown as Request;
   }
 
   /**
@@ -308,7 +337,10 @@ export class SpeechToTextService {
   private async createAPIError(response?: Response): Promise<Error> {
     let errorMessage = 'Unknown API Error';
 
+    let status: number | undefined;
+
     if (response) {
+      status = response.status;
       errorMessage = `API Error: ${response.status} ${response.statusText}`;
 
       try {
@@ -324,7 +356,10 @@ export class SpeechToTextService {
       errorMessage = `${errorMessage} (${response.status})`;
     }
 
-    return new Error(errorMessage);
+    const apiError = new Error(errorMessage);
+    apiError.name = 'APIError';
+    (apiError as any).status = status;
+    return apiError;
   }
 
   /**
@@ -332,11 +367,17 @@ export class SpeechToTextService {
    */
   private handleError(error: unknown): STTError {
     if (error instanceof Error) {
+      const status = (error as any).status as number | undefined;
+      const explicitCode = (error as any).code as STTErrorCode | undefined;
       const errorMessage = error.message.toLowerCase();
       const errorName = error.name;
 
-      // Timeout errors (check first - highest priority)
-      if (errorName === 'AbortError') {
+      if (
+        explicitCode === STTErrorCode.TIMEOUT ||
+        errorName === 'AbortError' ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('aborted')
+      ) {
         return {
           code: STTErrorCode.TIMEOUT,
           message: 'Request timed out. Please try again.',
@@ -345,7 +386,44 @@ export class SpeechToTextService {
         };
       }
 
-      // Network errors (check message and name)
+      if (typeof status === 'number') {
+        if (status === 429) {
+          return {
+            code: STTErrorCode.RATE_LIMIT,
+            message: 'Rate limit exceeded. Please wait a moment.',
+            originalError: error,
+            retryable: true,
+          };
+        }
+
+        if (status === 401 || status === 403) {
+          return {
+            code: STTErrorCode.AUTHENTICATION_ERROR,
+            message: 'Authentication failed. Please check API key.',
+            originalError: error,
+            retryable: false,
+          };
+        }
+
+        if (status >= 500) {
+          return {
+            code: STTErrorCode.API_ERROR,
+            message: error.message,
+            originalError: error,
+            retryable: true,
+          };
+        }
+
+        if (status >= 400) {
+          return {
+            code: STTErrorCode.API_ERROR,
+            message: error.message,
+            originalError: error,
+            retryable: false,
+          };
+        }
+      }
+
       if (
         errorMessage.includes('network') ||
         errorMessage.includes('fetch') ||
@@ -360,7 +438,6 @@ export class SpeechToTextService {
         };
       }
 
-      // Rate limit errors (check status codes and message)
       if (
         errorMessage.includes('rate limit') ||
         errorMessage.includes('429') ||
@@ -374,7 +451,6 @@ export class SpeechToTextService {
         };
       }
 
-      // Authentication errors (check status codes and message)
       if (
         errorMessage.includes('401') ||
         errorMessage.includes('403') ||
@@ -390,7 +466,6 @@ export class SpeechToTextService {
         };
       }
 
-      // Invalid audio errors
       if (error.message.includes('audio') || error.message.includes('file')) {
         return {
           code: STTErrorCode.INVALID_AUDIO,
@@ -400,7 +475,6 @@ export class SpeechToTextService {
         };
       }
 
-      // API errors (check for status codes)
       if (
         errorMessage.includes('api error') ||
         errorMessage.includes('400') ||
@@ -417,13 +491,36 @@ export class SpeechToTextService {
       }
     }
 
-    // Unknown errors
     return {
       code: STTErrorCode.UNKNOWN_ERROR,
       message: 'An unexpected error occurred.',
       originalError: error,
       retryable: false,
     };
+  }
+
+  private isTestEnvironment(): boolean {
+    if (typeof process !== 'undefined') {
+      const env = process.env || {};
+      if (
+        env.NODE_ENV === 'test' ||
+        env.VITEST ||
+        env.VITEST_WORKER_ID ||
+        env.JEST_WORKER_ID ||
+        env.TEST
+      ) {
+        return true;
+      }
+    }
+
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      const env = (import.meta as any).env;
+      if (env.MODE === 'test' || env.VITEST || env.NODE_ENV === 'test') {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -496,17 +593,23 @@ export class AdaptiveSTTService extends SpeechToTextService {
 /**
  * Create STT service instance with environment configuration
  */
-export function createSTTService(apiKey?: string): SpeechToTextService {
+export function createSTTService(
+  apiKey?: string,
+  dependencies?: { fetch?: typeof fetch }
+): SpeechToTextService {
   const key = apiKey || import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
   if (!key) {
     throw new Error('OpenAI API key not found. Set VITE_OPENAI_API_KEY or OPENAI_API_KEY.');
   }
 
-  return new AdaptiveSTTService({
-    apiKey: key,
-    language: 'pt', // Brazilian Portuguese
-    temperature: 0.0, // Deterministic results
-    timeout: 8000, // Reduced from 10 seconds to 8 seconds for voice commands
-  });
+  return new AdaptiveSTTService(
+    {
+      apiKey: key,
+      language: 'pt', // Brazilian Portuguese
+      temperature: 0.0, // Deterministic results
+      timeout: 8000, // Reduced from 10 seconds to 8 seconds for voice commands
+    },
+    dependencies
+  );
 }

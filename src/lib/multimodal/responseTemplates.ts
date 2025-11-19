@@ -19,7 +19,7 @@ import {
   formatPercentage,
   pluralize,
 } from '@/lib/formatters/brazilianFormatters';
-import type { IntentType } from '@/lib/nlu/types';
+import { IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Types
@@ -309,6 +309,10 @@ export function buildIncomeResponse(data: {
     text,
     visual,
     accessibility,
+    ssmlOptions: {
+      emphasis: 'moderate',
+      pauseDuration: 500,
+    },
   };
 }
 
@@ -353,6 +357,10 @@ export function buildProjectionResponse(data: {
     text,
     visual,
     accessibility,
+    ssmlOptions: {
+      emphasis: 'strong',
+      pauseDuration: 300,
+    },
   };
 }
 

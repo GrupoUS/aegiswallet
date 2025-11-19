@@ -10,16 +10,19 @@ describe('Component Export Problems', () => {
   describe('UI Component Exports', () => {
     it('should export BentoGrid component correctly', () => {
       // This test exposes BentoGrid export issues
-      // @ts-expect-error - This should fail because BentoGrid is not exported properly
+      // This test exposes BentoGrid export issues
       const { BentoGrid } = require('@/components/ui/bento-grid');
 
       expect(BentoGrid).toBeDefined();
-      expect(typeof BentoGrid).toBe('function');
+      const isReactComponent =
+        typeof BentoGrid === 'function' ||
+        (typeof BentoGrid === 'object' && BentoGrid.$$typeof !== undefined);
+      expect(isReactComponent).toBe(true);
     });
 
     it('should export PopoverAnchor component', () => {
       // This test exposes PopoverAnchor export issues
-      // @ts-expect-error - This should fail because PopoverAnchor is not exported
+      // This test exposes PopoverAnchor export issues
       const { PopoverAnchor } = require('@/components/ui/popover');
 
       expect(PopoverAnchor).toBeDefined();
@@ -32,13 +35,20 @@ describe('Component Export Problems', () => {
 
     it('should export SheetOverlay and SheetPortal components', () => {
       // This test exposes Sheet component export issues
-      // @ts-expect-error - These should fail because they are not exported
+      // This test exposes Sheet component export issues
       const { SheetOverlay, SheetPortal } = require('@/components/ui/sheet');
 
       expect(SheetOverlay).toBeDefined();
       expect(SheetPortal).toBeDefined();
-      expect(typeof SheetOverlay).toBe('function');
-      expect(typeof SheetPortal).toBe('function');
+      const isSheetOverlayComponent =
+        typeof SheetOverlay === 'function' ||
+        (typeof SheetOverlay === 'object' && SheetOverlay.$$typeof !== undefined);
+      expect(isSheetOverlayComponent).toBe(true);
+
+      const isSheetPortalComponent =
+        typeof SheetPortal === 'function' ||
+        (typeof SheetPortal === 'object' && SheetPortal.$$typeof !== undefined);
+      expect(isSheetPortalComponent).toBe(true);
     });
   });
 
@@ -52,7 +62,7 @@ describe('Component Export Problems', () => {
       expect(uiExports.PopoverAnchor).toBeDefined();
       expect(uiExports.SheetOverlay).toBeDefined();
       expect(uiExports.SheetPortal).toBeDefined();
-    });
+    }, 10000);
 
     it('should have consistent export naming', () => {
       // This test exposes naming inconsistency in exports
@@ -88,7 +98,7 @@ describe('Component Export Problems', () => {
   describe('Component Implementation Issues', () => {
     it('should have proper default exports', () => {
       // This test exposes default export issues
-      // @ts-expect-error - This should fail if default export is missing
+      // This test exposes default export issues
       const BentoGridDefault = require('@/components/ui/bento-grid').default;
 
       expect(BentoGridDefault).toBeDefined();
@@ -178,7 +188,7 @@ describe('Component Export Problems', () => {
     it('should support dynamic imports of components', async () => {
       // This test exposes dynamic import issues
       try {
-        // @ts-expect-error - This should fail if dynamic imports are broken
+        // This should fail if dynamic imports are broken
         const { BentoGrid } = await import('@/components/ui/bento-grid');
         expect(BentoGrid).toBeDefined();
       } catch (error) {

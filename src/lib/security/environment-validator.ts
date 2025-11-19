@@ -25,6 +25,8 @@ export interface EnvironmentConfig {
   };
 }
 
+import { logger } from '@/lib/logging/logger';
+
 /**
  * Validates that all required environment variables are present and properly formatted
  * @throws Error if validation fails with detailed message
@@ -182,8 +184,7 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 
     // Use secure logger if available, fallback to console
     try {
-      const { simplifiedLogger } = require('@/lib/logging/simplified-logger');
-      simplifiedLogger.warn('Environment validation warnings', { warnings: allWarnings });
+      logger.warn('Environment validation warnings', { warnings: allWarnings });
     } catch {
       console.warn(warningMessage);
     }

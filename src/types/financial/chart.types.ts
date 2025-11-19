@@ -33,7 +33,13 @@ export interface ChartData {
   label?: string;
 
   /** Optional formatter function for display values */
-  formatter?: (value: number, name: string, item: ChartPayload, index: number, payload: ChartPayload[]) => React.ReactNode;
+  formatter?: (
+    value: number,
+    name: string,
+    item: ChartPayload,
+    index: number,
+    payload: ChartPayload[]
+  ) => React.ReactNode;
 
   /** Optional tooltip formatter */
   tooltipFormatter?: (value: number, name: string, item: ChartPayload) => string;

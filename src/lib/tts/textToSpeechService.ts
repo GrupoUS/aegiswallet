@@ -260,8 +260,7 @@ export class TextToSpeechService {
       utterance.onerror = (event: SpeechSynthesisErrorEvent | { error?: string }) => {
         clearFallback();
         this.currentUtterance = null;
-        const errorMessage =
-          'error' in event && event.error ? event.error : 'unknown-speech-error';
+        const errorMessage = 'error' in event && event.error ? event.error : 'unknown-speech-error';
         reject(new Error(`Speech synthesis error: ${errorMessage}`));
       };
 

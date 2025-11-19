@@ -104,7 +104,9 @@ const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) =>
       <p className="font-medium text-sm">
         Projeção ({data.period}): {formatCurrency(data.projectedBalance)}
       </p>
-      <p className="text-muted-foreground text-xs">Saldo atual: {formatCurrency(data.currentBalance)}</p>
+      <p className="text-muted-foreground text-xs">
+        Saldo atual: {formatCurrency(data.currentBalance)}
+      </p>
       <p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
         Variação: {variationSign}
         {variationValue}

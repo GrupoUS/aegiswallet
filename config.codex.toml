@@ -1,0 +1,103 @@
+windows_wsl_setup_acknowledged = false
+model = "gpt-5.1-codex"
+[projects.'D:\Coders\aegiswallet']
+trust_level = "trusted"
+tui = { theme = { name = "dark-charcoal-rainbow" }, spinner = { name = "clock" } }
+model = "gpt-5.1-codex"
+
+[mcp_servers.sequential-thinking]
+command = "bunx"
+args = ["@modelcontextprotocol/server-sequential-thinking@latest"]
+type = "stdio"
+
+  [mcp_servers.sequential-thinking.env]
+  DISABLE_THOUGHT_LOGGING = "false"
+  SEQUENTIAL_THINKING_MAX_TOKENS = "16000"
+  SEQUENTIAL_THINKING_THOUGHTS_TO_KEEP = "10"
+  SEQUENTIAL_THINKING_TIMEOUT = "15000"
+
+[mcp_servers.context7]
+command = "bunx"
+args = ["@upstash/context7-mcp@latest"]
+type = "stdio"
+always_allow = ["resolve-library-id", "get-library-docs"]
+
+  [mcp_servers.context7.env]
+  CONTEXT7_API_KEY = "ctx7sk-a19d606d-cbff-4dbf-a37a-c088118805a4"
+  CONTEXT7_MAX_TOKENS = "10000"
+  CONTEXT7_TIMEOUT = "15000"
+
+[mcp_servers.desktop-commander]
+command = "bunx"
+args = ["@wonderwhy-er/desktop-commander@latest"]
+type = "stdio"
+always_allow = [
+  "start_process",
+  "read_file",
+  "read_multiple_files",
+  "write_file",
+  "create_directory",
+  "list_directory",
+  "move_file",
+  "start_search",
+  "get_more_search_results",
+  "stop_search",
+  "list_searches",
+  "edit_block",
+  "read_process_output",
+  "interact_with_process",
+  "force_terminate",
+  "list_processes",
+  "kill_process",
+  "search_files"
+]
+disabled_tools = [
+  "give_feedback_to_desktop_commander",
+  "get_usage_stats",
+  "get_config",
+  "set_config_value",
+  "get_file_info",
+  "list_sessions"
+]
+
+  [mcp_servers.desktop-commander.env]
+  MAX_MCP_OUTPUT_TOKENS = "20000"
+
+[mcp_servers.serena]
+command = "uvx"
+args = [
+  "--from",
+  "git+https://github.com/oraios/serena",
+  "serena",
+  "start-mcp-server",
+  "--context",
+  "ide-assistant",
+  "--project",
+  "D:\\Coders\\aegiswallet"
+]
+type = "stdio"
+
+[mcp_servers.shadcn]
+command = "cmd"
+args = ["/c", "bunx", "shadcn@latest", "mcp"]
+type = "stdio"
+
+[mcp_servers.supabase]
+command = "cmd"
+args = ["/c", "bunx", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_505503d21e6bd415395dcaeed239e1bbf039f6cc"]
+type = "stdio"
+
+[[agents]]
+name = "code"
+enabled = false
+args-read-only = ["-s", "read-only", "-a", "never", "exec", "--skip-git-repo-check"]
+args-write = ["-s", "workspace-write", "-a", "never", "exec", "--skip-git-repo-check"]
+
+[[agents]]
+name = "claude"
+enabled = true
+args-read-only = ["--allowedTools", "Bash(ls:*),", "Bash(cat:*),", "Bash(grep:*),", "Bash(git", "status:*),", "Bash(git", "log:*),", "Bash(find:*),", "Read,", "Grep,", "Glob,", "LS,", "WebFetch,", "TodoRead,", "TodoWrite,", "WebSearch"]
+args-write = ["--dangerously-skip-permissions,", "model", "glm-4.5"]
+
+[notice]
+hide_gpt5_1_migration_prompt = true

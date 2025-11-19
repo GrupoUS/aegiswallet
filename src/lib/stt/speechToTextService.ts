@@ -56,7 +56,7 @@ export enum STTErrorCode {
 // ============================================================================
 
 export class SpeechToTextService {
-  private config: Required<STTConfig>;
+  protected config: Required<STTConfig>;
   private readonly API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY_MS = 1000;
@@ -456,6 +456,36 @@ export class SpeechToTextService {
   }
 }
 
+export class AdaptiveSTTService extends SpeechToTextService {
+  private getNetworkBasedTimeout(): number {
+    const connection = (navigator as any).connection;
+
+    if (!connection) return 15000;
+
+    const timeouts: Record<string, number> = {
+      'slow-2g': 30000, // 30s
+      '2g': 25000,      // 25s
+      '3g': 20000,      // 20s
+      '4g': 15000,      // 15s
+    };
+
+    return timeouts[connection.effectiveType as string] || 15000;
+  }
+
+  async transcribe(audioBlob: Blob | File, options?: Partial<STTConfig>): Promise<STTResult> {
+    const originalTimeout = this.config.timeout;
+    if (typeof navigator !== 'undefined') {
+      this.config.timeout = this.getNetworkBasedTimeout();
+    }
+
+    try {
+      return await super.transcribe(audioBlob, options);
+    } finally {
+      this.config.timeout = originalTimeout;
+    }
+  }
+}
+
 // ============================================================================
 // Factory Function
 // ============================================================================
@@ -470,7 +500,7 @@ export function createSTTService(apiKey?: string): SpeechToTextService {
     throw new Error('OpenAI API key not found. Set VITE_OPENAI_API_KEY or OPENAI_API_KEY.');
   }
 
-  return new SpeechToTextService({
+  return new AdaptiveSTTService({
     apiKey: key,
     language: 'pt', // Brazilian Portuguese
     temperature: 0.0, // Deterministic results

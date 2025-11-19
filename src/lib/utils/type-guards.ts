@@ -238,10 +238,7 @@ export function isValidTransaction(transaction: unknown): transaction is {
  * }
  * ```
  */
-export function isValidArray<T>(
-  arr: unknown,
-  guard: (item: unknown) => item is T
-): arr is T[] {
+export function isValidArray<T>(arr: unknown, guard: (item: unknown) => item is T): arr is T[] {
   return Array.isArray(arr) && arr.every(guard);
 }
 

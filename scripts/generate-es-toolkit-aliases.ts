@@ -1,4 +1,3 @@
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -10,7 +9,7 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-const files = fs.readdirSync(compatDir).filter(f => f.endsWith('.js'));
+const files = fs.readdirSync(compatDir).filter((f) => f.endsWith('.js'));
 
 for (const file of files) {
   const name = path.basename(file, '.js');
@@ -30,4 +29,3 @@ export default ${name};
 }
 
 console.log(JSON.stringify(aliases, null, 2));
-

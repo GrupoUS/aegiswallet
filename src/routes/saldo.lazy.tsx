@@ -12,7 +12,7 @@ const TransactionsList = lazy(() => import('./components/TransactionsList'));
 // Loading placeholder components
 function TransactionFormLoader() {
   return (
-    <Card className="border-primary/20 transition-all duration-300 hover:shadow-lg">
+    <Card className="border-primary/20 transition-all duration-300 hover:shadow-lg" variant="glass">
       <CardHeader>
         <CardTitle>
           <Skeleton className="h-6 w-32" />
@@ -51,7 +51,10 @@ function TransactionFormLoader() {
 
 function TransactionsListLoader() {
   return (
-    <Card className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg">
+    <Card
+      className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg"
+      variant="glass"
+    >
       <CardHeader>
         <CardTitle>
           <Skeleton className="h-6 w-1/2" />
@@ -165,7 +168,10 @@ export function Saldo() {
       </div>
 
       {/* Total Balance Card */}
-      <Card className="cursor-pointer border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+      <Card
+        className="cursor-pointer border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl"
+        variant="glass-hover"
+      >
         <CardHeader>
           <CardDescription>Saldo Total</CardDescription>
           <CardTitle className="text-4xl">
@@ -190,6 +196,7 @@ export function Saldo() {
               <Card
                 key={account.id}
                 className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-primary/30 hover:shadow-xl"
+                variant="glass-hover"
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
@@ -207,7 +214,10 @@ export function Saldo() {
       </div>
 
       {/* Balance History Chart Placeholder */}
-      <Card className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg">
+      <Card
+        className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg"
+        variant="glass"
+      >
         <CardHeader>
           <CardTitle>Histórico de Saldo</CardTitle>
           <CardDescription>Últimos 30 dias</CardDescription>
@@ -224,7 +234,10 @@ export function Saldo() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg">
+      <Card
+        className="transition-all duration-300 hover:scale-[1.005] hover:shadow-lg"
+        variant="glass"
+      >
         <CardHeader>
           <CardTitle>Transações Recentes</CardTitle>
           <CardDescription>Últimas movimentações</CardDescription>

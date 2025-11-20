@@ -17,8 +17,42 @@ interface VoiceState {
 // Voice command interface
 interface VoiceCommand {
   command: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, string | number | boolean | null | undefined>;
   confidence: number;
+}
+
+interface SpeechRecognitionResult {
+  [index: number]: {
+    transcript: string;
+    confidence: number;
+  };
+  length: number;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [index: number]: SpeechRecognitionResult;
+    length: number;
+  };
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message?: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
 }
 
 // Brazilian Portuguese voice commands patterns
@@ -53,8 +87,8 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
     recognizedCommand: null,
   });
 
-  const recognitionRef = useRef<any>(null);
-  const audioProcessorRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioProcessorRef = useRef<{ dispose: () => void } | null>(null);
   const vadRef = useRef<VoiceActivityDetector | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -120,36 +154,41 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 
       // Initialize audio processor with optimizations
       if (!audioProcessorRef.current) {
-        audioProcessorRef.current = createAudioProcessor({
+        const processor = createAudioProcessor({
           sampleRate: 16000,
         });
+        // Ensure the processor matches the expected type
+        audioProcessorRef.current = processor as { dispose: () => void };
       }
 
       // Initialize STT service with optimized settings (for future use)
       // const _sttService = createSTTService('pt-BR');
 
       // Use browser SpeechRecognition when available, otherwise fallback to STT service
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognitionConstructor =
+        (window as unknown as { SpeechRecognition: new () => SpeechRecognition })
+          .SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition: new () => SpeechRecognition })
+          .webkitSpeechRecognition;
 
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
+      if (SpeechRecognitionConstructor) {
+        recognitionRef.current = new SpeechRecognitionConstructor();
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'pt-BR';
 
         recognitionRef.current.onstart = () => {
-          console.log('Speech recognition started');
+          // Speech recognition started
         };
 
-        recognitionRef.current.onresult = (event: any) => {
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
           const result = event.results[0][0];
           if (result) {
             _processVoiceCommand(result.transcript, result.confidence);
           }
         };
 
-        recognitionRef.current.onerror = (event: any) => {
+        recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
           setState((prev) => ({
             ...prev,
             error: `Speech recognition error: ${event.error}`,
@@ -170,7 +209,17 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
         recognitionRef.current = {
           stop: () => {},
           start: () => {},
-        } as any;
+          continuous: false,
+          interimResults: false,
+          lang: '',
+          onstart: null,
+          onresult: null,
+          onerror: null,
+          onend: null,
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        } as SpeechRecognition;
       }
 
       // Start the recognition

@@ -2,7 +2,6 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
 import { lazy, Suspense, useEffect } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
-import type { BentoItem } from '@/components/ui/bento-grid';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
@@ -14,15 +13,10 @@ const LazyMiniCalendarWidget = lazy(() =>
     default: mod.MiniCalendarWidget,
   }))
 );
-const LazyBentoCard = lazy(() =>
-  import('@/components/ui/bento-grid').then((mod) => ({
-    default: mod.BentoCard,
-  }))
-);
 
 // Loading components
 const CalendarLoader = () => (
-  <Card>
+  <Card variant="glass">
     <CardHeader>
       <Skeleton className="h-6 w-32" />
     </CardHeader>
@@ -36,21 +30,6 @@ const CalendarLoader = () => (
       </div>
     </CardContent>
   </Card>
-);
-
-const BentoLoader = () => (
-  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-    {Array.from({ length: 4 }, (_, index) => `bento-skeleton-${index}`).map((skeletonId) => (
-      <Card key={skeletonId}>
-        <CardHeader>
-          <Skeleton className="h-6 w-24" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-20 w-full" />
-        </CardContent>
-      </Card>
-    ))}
-  </div>
 );
 
 export function Dashboard() {
@@ -145,14 +124,14 @@ export function Dashboard() {
       <div>
         <h2 className="mb-4 font-semibold text-2xl">Insights Financeiros</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {magicCardsData.map((card, index) => {
+          {magicCardsData.map((card) => {
             const Icon = card.icon;
             return (
-              <MagicCard key={index} className="p-6">
+              <MagicCard key={card.title} className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="font-medium text-muted-foreground text-sm">{card.title}</p>
+                    <p className="font-bold text-2xl">{card.value}</p>
                     <p className={`text-sm ${card.color}`}>{card.change}</p>
                   </div>
                   <Icon className="h-8 w-8 text-muted-foreground/50" />
@@ -166,7 +145,7 @@ export function Dashboard() {
       {/* Quick Actions - 3 Columns Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Coluna 1: Transações Recentes */}
-        <Card>
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Transações Recentes</CardTitle>
             <CardDescription>Últimas 5 transações</CardDescription>
@@ -209,7 +188,7 @@ export function Dashboard() {
         </Suspense>
 
         {/* Coluna 3: Resumo Mensal */}
-        <Card>
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Resumo Mensal</CardTitle>
             <CardDescription>Novembro 2024</CardDescription>

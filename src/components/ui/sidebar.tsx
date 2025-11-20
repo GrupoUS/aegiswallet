@@ -1,9 +1,10 @@
-"use client";
-import { cn } from "@/lib/utils";
-import { Link, LinkProps } from "@tanstack/react-router";
-// import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
-import React, { createContext, useContext, useState } from "react";
+'use client';
+import { IconMenu2, IconX } from '@tabler/icons-react';
+import { Link, type LinkProps } from '@tanstack/react-router';
+import { AnimatePresence, motion } from 'framer-motion';
+import type React from 'react';
+import { createContext, useContext, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface Links {
   label: string;
@@ -22,7 +23,7 @@ const SidebarContext = createContext<SidebarContextProps | undefined>(undefined)
 export const useSidebar = () => {
   const context = useContext(SidebarContext);
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider");
+    throw new Error('useSidebar must be used within a SidebarProvider');
   }
   return context;
 };
@@ -44,9 +45,7 @@ export const SidebarProvider = ({
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
-      {children}
-    </SidebarContext.Provider>
+    <SidebarContext.Provider value={{ open, setOpen, animate }}>{children}</SidebarContext.Provider>
   );
 };
 
@@ -68,11 +67,11 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<"div">) => {
+export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
   return (
     <>
       <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <MobileSidebar {...(props as React.ComponentProps<'div'>)} />
     </>
   );
 };
@@ -81,64 +80,71 @@ export const DesktopSidebar = ({
   className,
   children,
   ...props
-}: React.ComponentProps<"div">) => {
-  const { open, setOpen } = useSidebar();
+}: React.ComponentProps<typeof motion.div>) => {
+  const { open, setOpen, animate } = useSidebar();
   return (
-    <>
-      <div
-        className={cn(
-          "h-full px-4 py-4 hidden md:flex md:flex-col bg-neutral-100 dark:bg-neutral-800 w-[300px] flex-shrink-0 transition-all duration-300 ease-in-out",
-          className
-        )}
-        style={{ width: open ? "300px" : "60px" }}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        {...props}
-      >
-        {children}
-      </div>
-    </>
+    <motion.div
+      className={cn(
+        'hidden h-full w-[300px] flex-shrink-0 bg-neutral-100 px-4 py-4 md:flex md:flex-col dark:bg-neutral-900',
+        'glass-dark border-white/10 border-r',
+        className
+      )}
+      animate={{
+        width: animate ? (open ? '300px' : '60px') : '300px',
+      }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      {...props}
+    >
+      {children}
+    </motion.div>
   );
 };
 
-export const MobileSidebar = ({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) => {
+export const MobileSidebar = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
   const { open, setOpen } = useSidebar();
   return (
-    <>
-      <div
-        className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-neutral-100 dark:bg-neutral-800 w-full",
-        )}
-        {...props}
-      >
-        <div className="flex justify-end z-20 w-full">
-          <Menu
-            className="text-neutral-800 dark:text-neutral-200"
-            onClick={() => setOpen(!open)}
-          />
-        </div>
-        {open && (
-            <div
-              className={cn(
-                "fixed h-full w-full inset-0 bg-white dark:bg-neutral-900 p-10 z-[100] flex flex-col justify-between",
-                className
-              )}
-            >
-              <div
-                className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200"
-                onClick={() => setOpen(!open)}
-              >
-                <X />
-              </div>
-              {children}
-            </div>
-          )}
+    <div
+      className={cn(
+        'flex h-10 w-full flex-row items-center justify-between bg-neutral-100 px-4 py-4 md:hidden dark:bg-neutral-900',
+        'glass-dark border-white/10 border-b',
+        className
+      )}
+      {...props}
+    >
+      <div className="z-20 flex w-full justify-end">
+        <IconMenu2
+          className="text-neutral-800 dark:text-neutral-200"
+          onClick={() => setOpen(!open)}
+        />
       </div>
-    </>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{
+              duration: 0.3,
+              ease: 'easeInOut',
+            }}
+            className={cn(
+              'fixed inset-0 z-[100] flex h-full w-full flex-col justify-between bg-white p-10 dark:bg-neutral-900',
+              'glass-dark backdrop-blur-xl',
+              className
+            )}
+          >
+            <div
+              className="absolute top-10 right-10 z-50 text-neutral-800 dark:text-neutral-200"
+              onClick={() => setOpen(!open)}
+            >
+              <IconX />
+            </div>
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -151,27 +157,28 @@ export const SidebarLink = ({
   className?: string;
   props?: LinkProps;
 }) => {
-  const { open } = useSidebar();
+  const { open, animate } = useSidebar();
   return (
     <Link
       to={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2",
+        'group/sidebar flex items-center justify-start gap-2 py-2',
+        'rounded-lg px-2 transition-colors duration-200 hover:bg-white/10',
         className
       )}
       {...props}
     >
       {link.icon}
-      <span
-        style={{
-          display: open ? "inline-block" : "none",
-          opacity: open ? 1 : 0,
-          transition: "opacity 0.2s ease-in-out",
+
+      <motion.span
+        animate={{
+          display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
+          opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="!p-0 !m-0 inline-block whitespace-pre text-neutral-700 text-sm transition duration-150 group-hover/sidebar:translate-x-1 dark:text-neutral-200"
       >
         {link.label}
-      </span>
+      </motion.span>
     </Link>
   );
 };

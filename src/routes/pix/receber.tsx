@@ -14,7 +14,7 @@ const PixReceiveLoader = () => (
 
     <div className="grid gap-6 md:grid-cols-2">
       {/* QR Code Generator placeholder */}
-      <Card>
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5" />
@@ -40,7 +40,7 @@ const PixReceiveLoader = () => (
       </Card>
 
       {/* PIX Keys List placeholder */}
-      <Card>
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>
             <Skeleton className="h-6 w-32" />
@@ -64,7 +64,7 @@ const PixReceiveLoader = () => (
     </div>
 
     {/* Recent Received Transactions placeholder */}
-    <Card className="mt-6">
+    <Card className="mt-6" variant="glass">
       <CardHeader>
         <CardTitle>
           <Skeleton className="h-6 w-48" />

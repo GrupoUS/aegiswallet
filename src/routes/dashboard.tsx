@@ -16,7 +16,7 @@ const DashboardLoader = () => (
       <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => `dashboard-loader-card-${index}`).map((cardId) => (
-          <Card key={cardId}>
+          <Card key={cardId} variant="glass">
             <CardHeader>
               <Skeleton className="h-6 w-24" />
             </CardHeader>
@@ -29,7 +29,7 @@ const DashboardLoader = () => (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {Array.from({ length: 3 }, (_, index) => `dashboard-loader-section-${index}`).map(
           (sectionId) => (
-            <Card key={sectionId}>
+            <Card key={sectionId} variant="glass">
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
               </CardHeader>

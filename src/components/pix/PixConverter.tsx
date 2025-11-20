@@ -123,6 +123,7 @@ export const PixConverter = React.memo(function PixConverter() {
 
   return (
     <Card
+      variant="glass"
       className={cn(
         'shrink-0 lg:w-90',
         'shadow-[0_1px_1px_rgba(0,0,0,0.05),_0_2px_2px_rgba(0,0,0,0.05),_0_4px_4px_rgba(0,0,0,0.05),_0_8px_8px_rgba(0,0,0,0.05)]',

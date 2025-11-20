@@ -292,6 +292,15 @@ export function generateSecurityHeaders(
   return headers;
 }
 
+interface ResponseWithHeader {
+  setHeader: (key: string, value: string) => void;
+}
+
+interface RequestWithHeader {
+  headers: Record<string, string | string[] | undefined>;
+  method: string;
+}
+
 /**
  * Express/Node.js middleware function for security headers
  */
@@ -302,7 +311,7 @@ export function securityHeadersMiddleware(config?: SecurityConfig) {
       ? DEVELOPMENT_SECURITY_CONFIG
       : DEFAULT_SECURITY_CONFIG);
 
-  return (req: any, res: any, next: any) => {
+  return (_req: unknown, res: ResponseWithHeader, next: () => void) => {
     const headers = generateSecurityHeaders(securityConfig);
 
     Object.entries(headers).forEach(([key, value]) => {
@@ -312,17 +321,6 @@ export function securityHeadersMiddleware(config?: SecurityConfig) {
     // Add security audit headers
     res.setHeader('X-Security-Audit', 'true');
     res.setHeader('X-Content-Security-Policy-Version', '1.0');
-
-    // Log security headers for audit
-    if (process.env.NODE_ENV !== 'test') {
-      console.log('🔒 Security headers applied:', {
-        url: req.url,
-        method: req.method,
-        userAgent: req.get('User-Agent'),
-        ip: req.ip || req.connection.remoteAddress,
-        headersCount: Object.keys(headers).length,
-      });
-    }
 
     next();
   };
@@ -334,17 +332,24 @@ export function securityHeadersMiddleware(config?: SecurityConfig) {
 export function corsMiddleware(config?: SecurityConfig['cors']) {
   const corsConfig = config || DEFAULT_SECURITY_CONFIG.cors;
 
-  return (req: any, res: any, next: any) => {
+  return (
+    req: { headers: { origin?: string }; method: string },
+    res: {
+      setHeader: (key: string, value: string) => void;
+      status: (code: number) => { end: () => void };
+    },
+    next: () => void
+  ) => {
     const origin = req.headers.origin;
 
     // Check if origin is allowed
     const isAllowedOrigin = Array.isArray(corsConfig.origin)
-      ? corsConfig.origin.includes(origin)
+      ? corsConfig.origin.includes(origin || '')
       : corsConfig.origin === origin || corsConfig.origin === '*';
 
     if (isAllowedOrigin || corsConfig.origin === '*') {
       if (corsConfig.origin !== '*') {
-        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Origin', origin || '');
       } else {
         res.setHeader('Access-Control-Allow-Origin', '*');
       }
@@ -368,16 +373,6 @@ export function corsMiddleware(config?: SecurityConfig['cors']) {
     if (req.method === 'OPTIONS') {
       res.status(200).end();
       return;
-    }
-
-    // Log CORS requests for audit
-    if (process.env.NODE_ENV !== 'test' && origin) {
-      console.log('🌐 CORS request:', {
-        origin,
-        method: req.method,
-        url: req.url,
-        allowed: isAllowedOrigin,
-      });
     }
 
     next();
@@ -409,7 +404,14 @@ export function createHonoSecurityMiddleware(config?: SecurityConfig) {
 
   const headers = generateSecurityHeaders(securityConfig);
 
-  return async (c: any, next: any) => {
+  return async (
+    c: {
+      header: (key: string, value: string) => void;
+      req: { header: (key: string) => string | undefined; method: string };
+      text: (body: string, status: number) => void;
+    },
+    next: () => Promise<void>
+  ) => {
     Object.entries(headers).forEach(([key, value]) => {
       c.header(key, value);
     });

@@ -15,7 +15,7 @@ const LazyPixTransfer = lazy(() =>
 
 // Loading component for PixTransfer
 const PixTransferLoader = () => (
-  <Card>
+  <Card variant="glass">
     <CardHeader>
       <Skeleton className="h-6 w-48" />
     </CardHeader>

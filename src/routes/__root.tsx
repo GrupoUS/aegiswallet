@@ -104,8 +104,8 @@ function RootComponent() {
       <CalendarProvider>
         <div
           className={cn(
-            "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 max-w-7xl mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-            "h-screen" // Use h-screen to take full height
+            'rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+            'h-screen' // Use h-screen to take full height
           )}
         >
           <Sidebar open={open} setOpen={setOpen}>
@@ -123,19 +123,23 @@ function RootComponent() {
                   link={{
                     label: 'Assistente',
                     href: '/',
-                    icon: <Mic className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
+                    icon: (
+                      <Mic className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+                    ),
                   }}
                 />
                 <div onClick={handleLogout} className="cursor-pointer">
-                   <SidebarLink
+                  <SidebarLink
                     link={{
                       label: 'Sair',
                       href: '#',
-                      icon: <LogOut className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
+                      icon: (
+                        <LogOut className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+                      ),
                     }}
                   />
                 </div>
-                <div className="mt-2">
+                <div className="mt-2 pl-1">
                   <AnimatedThemeToggler />
                 </div>
               </div>

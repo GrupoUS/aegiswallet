@@ -20,7 +20,7 @@ const mockPixKeys = [
 // Loading placeholder components
 function QRCodeGeneratorLoader() {
   return (
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Skeleton className="h-5 w-5" />
@@ -49,7 +49,7 @@ function QRCodeGeneratorLoader() {
 
 function PixKeysListLoader() {
   return (
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <CardTitle>
           <Skeleton className="h-6 w-32" />
@@ -131,7 +131,7 @@ export function PixReceivePage() {
       </div>
 
       {/* Recent Received Transactions */}
-      <Card className="mt-6">
+      <Card className="mt-6" variant="glass">
         <CardHeader>
           <CardTitle>Últimas Transações Recebidas</CardTitle>
         </CardHeader>

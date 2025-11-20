@@ -8,6 +8,7 @@
     "quickfix.biome": "explicit"
   },
   "css.lint.unknownProperties": "ignore",
+  "css.lint.unknownAtRules": "ignore",
   "tailwindCSS.experimental.classRegex": [["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]],
   "tailwindCSS.validate": true,
   "tailwindCSS.emmetCompletions": true,

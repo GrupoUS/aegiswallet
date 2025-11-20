@@ -13,7 +13,7 @@ interface BalanceCardProps {
 
 export function BalanceCard({ balance, className }: BalanceCardProps) {
   return (
-    <Card className={cn('w-full', className)}>
+    <Card className={cn('w-full', className)} variant="glass">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -85,7 +85,7 @@ export function StatsCard({ title, value, change, icon, className }: StatsCardPr
   const isPositive = change && change > 0;
 
   return (
-    <Card className={cn('w-full', className)}>
+    <Card className={cn('w-full', className)} variant="glass">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="font-medium text-muted-foreground text-sm">{title}</CardTitle>
         {icon}

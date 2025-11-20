@@ -18,6 +18,7 @@ export interface UseMultimodalResponseCompatOptions {
   autoSpeak?: boolean;
   collectFeedback?: boolean;
   textOnlyMode?: boolean; // Legacy text-only mode
+  performanceTracking?: boolean; // Legacy performance tracking
   onFeedback?: (feedback: any) => void;
   onResponse?: (response: any) => void;
 }
@@ -28,6 +29,7 @@ export interface UseMultimodalResponseCompatReturn {
   response: any;
   metrics: any;
   isLoading: boolean;
+  isSpeaking: boolean;
   error: string | null;
 
   // New interface (forwarded)
@@ -107,9 +109,10 @@ export function useMultimodalResponse(
   return {
     // Legacy interface
     generateAndSpeak,
-    response,
+    response: response ? { ...response, speech: response.voice } : null,
     metrics,
     isLoading,
+    isSpeaking: newHook.state.isSpeaking,
     error,
 
     // Forward new interface (with enhanced clearResponse)

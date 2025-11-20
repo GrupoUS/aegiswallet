@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -36,6 +37,9 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: Inter, sans-serif;
+  --font-display: Inter, sans-serif;
 }
 
 @layer base {
@@ -134,25 +138,26 @@
   }
 
   .tweakcn {
-    --background: 222 47% 11%; /* Deep Blue */
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 43 35% 54%; /* Gold #AC9469 */
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 32% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 32% 17%;
-    --accent-foreground: 210 40% 98%;
+    /* Greenish Theme - Based on TweakCN link */
+    --background: 160 60% 2%;   /* Very Dark Green/Black */
+    --foreground: 60 14% 87%;   /* Off-white */
+    --card: 160 60% 4%;         /* Dark Green Card */
+    --card-foreground: 60 14% 87%;
+    --popover: 160 60% 4%;
+    --popover-foreground: 60 14% 87%;
+    --primary: 166 66% 29%;     /* Teal/Green #187e67 */
+    --primary-foreground: 60 14% 87%;
+    --secondary: 145 36% 17%;   /* Darker Green #1b3a24 */
+    --secondary-foreground: 60 14% 87%;
+    --muted: 145 36% 17%;
+    --muted-foreground: 150 20% 65%;
+    --accent: 145 36% 17%;
+    --accent-foreground: 60 14% 87%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 43 35% 54%;
+    --destructive-foreground: 60 14% 87%;
+    --border: 145 36% 17%;
+    --input: 145 36% 17%;
+    --ring: 166 66% 29%;
 
     /* Status Colors TweakCN */
     --success: 142 71% 45%;
@@ -165,16 +170,16 @@
     /* Financial Colors TweakCN */
     --financial-positive: 142 71% 45%;
     --financial-negative: 0 84% 60%;
-    --financial-neutral: 215 20% 65%;
+    --financial-neutral: 150 20% 65%;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 43 35% 54%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 32% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 43 35% 54%;
+    --sidebar-background: 160 60% 2%;
+    --sidebar-foreground: 60 14% 87%;
+    --sidebar-primary: 166 66% 29%;
+    --sidebar-primary-foreground: 60 14% 87%;
+    --sidebar-accent: 145 36% 17%;
+    --sidebar-accent-foreground: 60 14% 87%;
+    --sidebar-border: 145 36% 17%;
+    --sidebar-ring: 166 66% 29%;
   }
 }
 
@@ -185,6 +190,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
   }
 }
 

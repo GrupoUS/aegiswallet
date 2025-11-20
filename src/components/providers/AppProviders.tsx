@@ -16,7 +16,7 @@ export interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="aegiswallet-theme">
+    <ThemeProvider defaultTheme="tweakcn" storageKey="aegiswallet-theme">
       <ErrorBoundary>
         <AccessibilityProvider>
           <LoggerProvider>

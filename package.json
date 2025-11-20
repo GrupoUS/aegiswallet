@@ -68,6 +68,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "es-toolkit": "^1.42.0",
+    "framer-motion": "^12.23.24",
     "hono": "^4.10.4",
     "lovable-tagger": "^1.1.11",
     "lucide-react": "^0.544.0",
@@ -93,6 +94,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
     "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.17",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/jsdom": "^27.0.0",

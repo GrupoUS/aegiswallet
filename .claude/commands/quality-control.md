@@ -50,6 +50,46 @@ QUALITY_CONTROL_PHASES:
     output: "Validated fixes with healthcare compliance verification"
 ```
 
+## 🧭 Phase 0: Workflow Discovery & Evidence Gathering
+
+**Purpose**: Mirror real user workflows before validating fixes so diagnostics and validation commands stay aligned with production behavior.
+
+- **Source mapping**: Read README, AGENTS/CLAUDE rules, docs/, and onboarding guides to extract end-to-end user journeys (what users actually do, not just APIs).
+- **Pattern scan** (codebase-analyst): Identify architecture, naming, testing patterns, and existing validation commands/scripts so remediation reuses established approaches.
+- **External integration inventory**: List dependent CLIs/APIs (e.g., Supabase, Playwright, GitHub/GitLab, messaging) and note required credentials or sandboxing needs.
+- **Workflow catalog**: Convert each documented journey into an E2E scenario (happy path + failure cases) that will be exercised in validation (see Diagnostics → Validation Bridge).
+- **Evidence log**: Keep URLs/paths and snippets that justify each scenario; attach to error catalogs and atomic tasks to maintain auditability.
+
+### Codebase Analyst Integration (pattern capture)
+
+- **When**: Run before Phase 1 to anchor detection and validation to project conventions.
+- **How**: Use the codebase-analyst template to report project structure, naming, architecture, testing patterns, libraries, and existing validation commands with file/line references.
+- **Deliverable** (store with the workflow catalog):
+  ```yaml
+  codebase_analysis:
+    project:
+      language: "<detected>"
+      framework: "<detected>"
+      structure: "<concise overview>"
+    patterns:
+      naming: { files: "", functions: "", classes: "" }
+      architecture: { services: "", models: "", api: "" }
+      testing: { framework: "", structure: "", commands: [] }
+    similar_implementations:
+      - file: "<path>"
+        relevance: "<why relevant>"
+        pattern: "<what to reuse>"
+    libraries:
+      - name: "<lib>"
+        usage: "<how used>"
+        patterns: "<integration pattern>"
+    validation_commands:
+      syntax: []
+      test: []
+      run: []
+  ```
+- **Usage**: Link the findings to diagnostics entries and reuse patterns in atomic tasks (avoid inventing new file layouts or command shapes).
+
 ## Tech Stack (2025-10-01)
 
 - **Package Manager**: **Bun** (3-5x faster than pnpm/npm)
@@ -428,6 +468,50 @@ DIAGNOSTIC_QUALITY_GATES:
     threshold: "< 10 medium/low quality issues"
     blocking: false
     check_command: "diagnostics --filter=quality"
+```
+
+#### **1.5.7 Diagnostics → Validation Bridge**
+
+**Goal**: Turn diagnostics findings into actionable validation runs and E2E proof that the errors are resolved (aligned with `ultimate_validate_command`).
+
+```yaml
+DIAGNOSTICS_TO_VALIDATION:
+  step_0_workflows:
+    action: "Map documented user journeys (docs/README/agents) into E2E scenarios before touching code"
+    output: "Workflow catalog with success/failure paths tied to features"
+
+  step_1_intake:
+    action: "Ingest diagnostics output into PROJECT_ERROR_CATALOG with source tags (diagnostics|serena|zed)"
+    output: "Annotated catalog entries with affected symbols and severity"
+
+  step_2_pattern_alignment:
+    action: "Run codebase-analyst patterns to see how similar fixes are implemented and validated"
+    tools: ["serena_mcp", "codebase-analyst playbook"]
+    output: "Preferred fix/validation patterns per area (routing, data, UI, auth)"
+
+  step_3_validation_plan:
+    action: "For each error ID, define validation tracks"
+    tracks:
+      lint_type: "lint/type-check commands already in package scripts (reuse, do not invent)"
+      tests: "unit/integration commands (Vitest/Playwright) covering the impacted symbols"
+      e2e_levels:
+        - "Internal API correctness (adapters, handlers)"
+        - "External integration behavior (CLI/API calls to third parties)"
+        - "Complete user journey from docs (happy + failure paths)"
+    output: "Per-error validation steps attached to atomic tasks"
+
+  step_3b_validator_handoff:
+    action: "Engage @validator to craft minimal tests for the changed surface area"
+    inputs: "Changed files/components/functions, expected behavior, mock vs real deps, commands to run"
+    output: "3-5 focused tests per feature (happy path + critical edges) ready to execute"
+
+  step_4_command_sync:
+    action: "Update `.claude/commands/validate.md` to reflect current diagnostics, workflows, and available scripts"
+    note: "Only list commands that exist in package scripts/tooling; link E2E scenarios to Step 0 catalog"
+
+  step_5_execution_record:
+    action: "Record command outputs and artifacts (logs, screenshots) back into catalog and knowledge base"
+    output: "Evidence that each diagnostic issue was validated and closed"
 ```
 
 ### **1.6 Serena MCP Search Patterns for Error Analysis**
@@ -951,6 +1035,19 @@ EXECUTION_WORKFLOW:
       - "Verify no regressions introduced"
       - "Update documentation and knowledge base"
 ```
+
+### **4.1.1 Validator Agent Integration (lightweight tests)**
+
+- **Trigger**: After implementing atomic tasks and before running full validation gates.
+- **Inputs to pass**: What changed (files/components/functions), expected behavior, external dependencies (real vs mocked), and the commands that should run.
+- **Scope**: 3-5 simple tests per feature focusing on happy path plus critical edge cases; avoid over-engineering.
+- **Execution**:
+  - Ask **@validator** to design minimal unit/integration tests using existing project frameworks (Vitest/Playwright) and patterns from the codebase-analyst report.
+  - Run targeted commands (`bun test <pattern>` or `bun test`) and attach outputs to the error catalog entry.
+- **Checklist**:
+  - Test names describe behavior; cover empty/null/error paths; mock third-party calls when applicable.
+  - Tests stay readable and avoid re-testing library internals.
+  - Capture a short validation summary (tests created, command run, pass/fail) and link it in the catalog/knowledge base.
 
 ### **4.2 Implementation Commands (Bun-Optimized)**
 
@@ -1821,6 +1918,8 @@ PERFORMANCE_METRICS:
 - **@code-reviewer**: Code quality, performance optimization
 - **@test-auditor**: Security validation, test coverage
 - **@architect-review**: Architecture decisions, design patterns
+- **@codebase-analyst**: Pattern discovery for structure, naming, testing, and existing validation commands
+- **@validator**: Lightweight post-implementation tests for changed features (happy path + critical edges)
 
 ### **Agent Workflow Examples**
 
@@ -1836,6 +1935,12 @@ PERFORMANCE_METRICS:
 # Architecture decisions
 @architect-review "review data flow for [system]"
 @architect-review "validate design patterns for [feature]"
+
+# Pattern discovery and validation alignment
+@codebase-analyst "map patterns for [feature/domain] and list existing validation commands with file refs"
+
+# Post-implementation lightweight tests
+@validator "create minimal tests for [feature] after changes to [files/components] using Vitest/Playwright"
 ```
 
 ## 🚀 QUICK START GUIDE

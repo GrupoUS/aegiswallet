@@ -9,7 +9,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { IntentType } from '@/lib/nlu/types';
-import { useMultimodalResponse as useNewMultimodalResponse } from './useMultimodalResponse';
+import {
+  type MultimodalResponse,
+  type ResponseFeedback,
+  type UseMultimodalResponseReturn,
+  useMultimodalResponse as useNewMultimodalResponse,
+} from './useMultimodalResponse';
 
 export interface UseMultimodalResponseCompatOptions {
   ttsEnabled?: boolean; // Disable TTS for testing
@@ -19,21 +24,25 @@ export interface UseMultimodalResponseCompatOptions {
   collectFeedback?: boolean;
   textOnlyMode?: boolean; // Legacy text-only mode
   performanceTracking?: boolean; // Legacy performance tracking
-  onFeedback?: (feedback: any) => void;
-  onResponse?: (response: any) => void;
+  onFeedback?: (feedback: ResponseFeedback) => void;
+  onResponse?: (response: MultimodalResponse) => void;
 }
 
 export interface UseMultimodalResponseCompatReturn {
   // Legacy interface
-  generateAndSpeak: (intent: IntentType | 'error' | 'confirmation', data: any) => Promise<void>;
-  response: any;
-  metrics: any;
+  generateAndSpeak: (intent: IntentType | 'error' | 'confirmation', data: unknown) => Promise<void>;
+  response: (MultimodalResponse & { speech: string }) | null;
+  metrics: {
+    totalTime: number;
+    success: boolean;
+    responseCount: number;
+  } | null;
   isLoading: boolean;
   isSpeaking: boolean;
   error: string | null;
 
   // New interface (forwarded)
-  state: any;
+  state: UseMultimodalResponseReturn['state'];
   stopSpeaking: () => void;
   pauseSpeaking: () => void;
   resumeSpeaking: () => void;
@@ -73,30 +82,50 @@ export function useMultimodalResponse(
 
   // Legacy compatibility layer
   const generateAndSpeak = useCallback(
-    async (intent: IntentType | 'error' | 'confirmation', data: any) => {
-      const startTime = Date.now();
+    async (intent: IntentType | 'error' | 'confirmation', data: unknown) => {
+      const shouldTrackPerformance = options.performanceTracking !== false;
+      const now =
+        typeof performance !== 'undefined' && performance.now
+          ? performance.now.bind(performance)
+          : Date.now;
+      const startTime = now();
       try {
         await newHook.sendResponse(intent, data);
-        const endTime = Date.now();
-        setMetrics({
-          totalTime: endTime - startTime,
-          success: true,
-          responseCount: (metrics?.responseCount || 0) + 1,
-        });
+        const endTime = now();
+        if (shouldTrackPerformance) {
+          setMetrics((prev) => {
+            const responseCount = (prev?.responseCount || 0) + 1;
+            const totalTime = Math.max(1, Math.round(endTime - startTime));
+            return { totalTime, success: true, responseCount };
+          });
+        }
       } catch (error) {
-        const endTime = Date.now();
-        setMetrics({
-          totalTime: endTime - startTime,
-          success: false,
-          responseCount: (metrics?.responseCount || 0) + 1,
-        });
+        const endTime = now();
+        if (shouldTrackPerformance) {
+          setMetrics((prev) => {
+            const responseCount = (prev?.responseCount || 0) + 1;
+            const totalTime = Math.max(1, Math.round(endTime - startTime));
+            return { totalTime, success: false, responseCount };
+          });
+        }
         throw error;
       }
     },
-    [newHook.sendResponse, metrics?.responseCount]
+    [newHook.sendResponse, options.performanceTracking]
   );
 
   const response = useMemo(() => newHook.state.currentResponse, [newHook.state.currentResponse]);
+  const decoratedResponse = useMemo(
+    () =>
+      response
+        ? {
+            ...response,
+            speech:
+              response.voice && response.voice.length > 0 ? response.voice : (response.text ?? ''),
+          }
+        : null,
+    [response]
+  );
   const isLoading = useMemo(() => newHook.state.isLoading, [newHook.state.isLoading]);
   const error = useMemo(() => newHook.state.error, [newHook.state.error]);
 
@@ -109,7 +138,7 @@ export function useMultimodalResponse(
   return {
     // Legacy interface
     generateAndSpeak,
-    response: response ? { ...response, speech: response.voice } : null,
+    response: decoratedResponse,
     metrics,
     isLoading,
     isSpeaking: newHook.state.isSpeaking,

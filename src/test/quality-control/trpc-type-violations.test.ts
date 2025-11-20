@@ -21,7 +21,7 @@ describe('tRPC Type Safety Violations', () => {
             email: 'test@example.com',
           },
         },
-        supabase: {} as any,
+        supabase: {} as unknown,
       };
 
       // @ts-expect-error - This should fail because ctx.user is missing in procedures
@@ -34,7 +34,7 @@ describe('tRPC Type Safety Violations', () => {
     it('should properly access user context in procedures', () => {
       // This test exposes the issue where procedures try to access ctx.user
       // but it doesn't exist in the context type
-      const mockProcedure = async ({ ctx }: { ctx: any }) => {
+      const mockProcedure = async ({ ctx }: { ctx: { user?: { id: string } | null } }) => {
         // @ts-expect-error - This should fail because ctx.user is not typed
         if (!ctx.user) {
           throw new Error('User not found');
@@ -45,7 +45,7 @@ describe('tRPC Type Safety Violations', () => {
 
       const mockContext = {
         session: { user: { id: 'test-id' } },
-        supabase: {} as any,
+        supabase: {} as unknown,
       };
 
       expect(mockProcedure({ ctx: mockContext })).resolves.toBe('test-id');

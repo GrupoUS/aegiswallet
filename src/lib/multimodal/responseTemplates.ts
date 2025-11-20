@@ -39,7 +39,7 @@ export interface MultimodalResponse {
       | 'info'
       | 'error'
       | 'confirmation';
-    data: any;
+    data: Record<string, unknown>;
   };
   accessibility?: {
     'aria-label': string;
@@ -55,8 +55,8 @@ export interface MultimodalResponse {
 
 export interface ResponseData {
   intent: IntentType;
-  entities: any[];
-  contextData: any;
+  entities: unknown[];
+  contextData: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -542,17 +542,52 @@ export const responseBuilders = {
  */
 export function buildMultimodalResponse(
   intent: IntentType | 'error' | 'confirmation',
-  data: any
+  data: Record<string, unknown>
 ): MultimodalResponse {
   const intentKey = intent === IntentType.UNKNOWN ? 'unknown' : intent;
 
   // Special handling for PAY_BILL confirmation
   if (intent === IntentType.PAY_BILL && data.confirmed === false) {
     return buildConfirmationResponse({
-      action: 'Pagar conta',
+      action: 'Confirmar pagamento',
       details: `${data.billName || 'Conta'} de ${formatCurrency(data.amount || 0)}`,
       requiresConfirmation: true,
     });
+  }
+
+  if (intent === IntentType.PAY_BILL && data.confirmed === true) {
+    const billName = data.billName || data.bills?.[0]?.name || 'Conta';
+    const amount =
+      data.amount ??
+      data.totalAmount ??
+      (Array.isArray(data.bills) && data.bills[0]?.amount ? data.bills[0].amount : 0);
+
+    return {
+      voice: `Pagamento confirmado de ${formatCurrencyForVoice(amount)} para ${billName}`,
+      text: `Pagamento confirmado: ${formatCurrency(amount)}`,
+      visual: {
+        type: 'bills',
+        data: {
+          ...data,
+          bills: data.bills ?? [
+            {
+              name: billName,
+              amount,
+              dueDate: data.dueDate,
+              isPastDue: false,
+            },
+          ],
+          totalAmount: amount,
+          confirmed: true,
+        },
+      },
+      accessibility: {
+        'aria-label': `Pagamento confirmado de ${formatCurrency(amount)}`,
+        'aria-live': 'assertive',
+        role: 'status',
+      },
+      requiresConfirmation: false,
+    };
   }
 
   const builder = responseBuilders[intentKey as keyof typeof responseBuilders];
@@ -587,7 +622,48 @@ export function buildMultimodalResponse(
               spentPercentage:
                 data.total && data.spent !== undefined ? (data.spent / data.total) * 100 : 0,
             }
-          : data;
+          : intent === IntentType.FINANCIAL_PROJECTION && data.projectedBalance !== undefined
+            ? {
+                ...data,
+                expectedIncome: data.income ?? data.expectedIncome ?? data.currentBalance ?? 0,
+                expectedExpenses: data.expenses ?? data.expectedExpenses ?? 0,
+                variation:
+                  data.variation ??
+                  (data.projectedBalance !== undefined && data.currentBalance !== undefined
+                    ? data.projectedBalance - data.currentBalance
+                    : 0),
+              }
+            : intent === IntentType.CHECK_INCOME && data.nextIncome
+              ? {
+                  ...data,
+                  incoming: data.incoming ?? [
+                    {
+                      source: data.nextIncome.description || data.nextIncome.source || 'Receita',
+                      amount: data.nextIncome.amount ?? 0,
+                      expectedDate:
+                        typeof data.nextIncome.date === 'string'
+                          ? data.nextIncome.date
+                          : (data.nextIncome.date?.toISOString?.() ?? ''),
+                      confirmed: data.nextIncome.confirmed ?? false,
+                    },
+                  ],
+                  totalExpected:
+                    data.totalExpected ?? data.nextIncome.amount ?? data.incoming?.[0]?.amount ?? 0,
+                }
+              : data;
 
-  return builder(mappedData);
+  const response = builder(mappedData);
+
+  if (!response.accessibility) {
+    return {
+      ...response,
+      accessibility: {
+        'aria-label': response.text || 'Resposta gerada',
+        'aria-live': 'polite',
+        role: 'status',
+      },
+    };
+  }
+
+  return response;
 }

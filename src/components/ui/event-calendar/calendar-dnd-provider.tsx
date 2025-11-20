@@ -13,7 +13,7 @@ import {
 import { addMinutes, differenceInMinutes } from 'date-fns';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
-import type { CalendarEvent } from './types';
+import type { CalendarEvent, EventColor } from './types';
 
 // Define the context type
 type CalendarDndContextType = {
@@ -143,7 +143,7 @@ export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProv
           const financialEventUpdate = {
             start: newStart,
             end: newEnd,
-            color: updatedEvent.color as any, // Type assertion for compatibility
+            color: updatedEvent.color as EventColor, // Type-safe color assignment
           };
 
           // Persist to Supabase

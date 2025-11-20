@@ -1,5 +1,6 @@
-// Belvo API stub implementation for banking integration
-// This is a mock implementation for development purposes
+// Belvo API implementation for banking integration
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging/logger';
 
 export interface BelvoAccount {
   id: string;
@@ -30,59 +31,8 @@ export interface BelvoInstitution {
   logo?: string;
 }
 
-// Mock data for development
-const mockAccounts: BelvoAccount[] = [
-  {
-    id: 'acc_001',
-    name: 'Conta Corrente',
-    type: 'checking',
-    balance: 5842.5,
-    currency: 'BRL',
-    institution: 'Banco do Brasil',
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: 'acc_002',
-    name: 'Poupança',
-    type: 'savings',
-    balance: 12500.0,
-    currency: 'BRL',
-    institution: 'Banco do Brasil',
-    lastUpdated: new Date().toISOString(),
-  },
-];
-
-const mockTransactions: BelvoTransaction[] = [
-  {
-    id: 'txn_001',
-    account_id: 'acc_001',
-    amount: 5000.0,
-    description: 'Salário - Empresa XYZ',
-    date: '2024-10-01',
-    type: 'income',
-    category: 'salary',
-  },
-  {
-    id: 'txn_002',
-    account_id: 'acc_001',
-    amount: -1500.0,
-    description: 'Aluguel',
-    date: '2024-10-05',
-    type: 'expense',
-    category: 'housing',
-  },
-  {
-    id: 'txn_003',
-    account_id: 'acc_001',
-    amount: -450.0,
-    description: 'Supermercado Extra',
-    date: '2024-10-10',
-    type: 'expense',
-    category: 'food',
-  },
-];
-
-const mockInstitutions: BelvoInstitution[] = [
+// Static list of supported institutions
+const SUPPORTED_INSTITUTIONS: BelvoInstitution[] = [
   { id: 'bb', name: 'Banco do Brasil', type: 'bank', country: 'BR' },
   { id: 'itau', name: 'Itaú Unibanco', type: 'bank', country: 'BR' },
   { id: 'bradesco', name: 'Bradesco', type: 'bank', country: 'BR' },
@@ -91,18 +41,16 @@ const mockInstitutions: BelvoInstitution[] = [
 ];
 
 /**
- * Belvo API Client - Stub Implementation
- * This is a mock implementation that returns static data
- * In production, this would make actual API calls to Belvo
+ * Belvo API Client - Supabase Implementation
  */
 export class BelvoApiClient {
+  baseUrl: string; // Keep for compatibility if accessed elsewhere, though not used for Supabase
+
   constructor(
-    apiKey: string,
-    secretKey: string,
+    _apiKey: string,
+    _secretKey: string,
     environment: 'sandbox' | 'production' = 'sandbox'
   ) {
-    this.apiKey = apiKey;
-    this.secretKey = secretKey;
     this.baseUrl =
       environment === 'sandbox' ? 'https://sandbox.belvo.com' : 'https://api.belvo.com';
   }
@@ -111,18 +59,33 @@ export class BelvoApiClient {
    * Get available institutions
    */
   async getInstitutions(): Promise<BelvoInstitution[]> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return mockInstitutions;
+    return SUPPORTED_INSTITUTIONS;
   }
 
   /**
    * Get user accounts
    */
-  async getAccounts(_userId: string): Promise<BelvoAccount[]> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    return mockAccounts;
+  async getAccounts(userId: string): Promise<BelvoAccount[]> {
+    const { data, error } = await supabase.from('bank_accounts').select('*').eq('user_id', userId);
+
+    if (error) {
+      logger.error('Failed to fetch accounts', {
+        operation: 'belvo_accounts',
+        userId,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return (data || []).map((account) => ({
+      id: account.id,
+      name: account.name,
+      type: (account.type as 'checking' | 'savings' | 'credit') || 'checking',
+      balance: account.balance || 0,
+      currency: (account.currency as 'BRL') || 'BRL',
+      institution: account.institution_name || 'Unknown',
+      lastUpdated: account.updated_at || new Date().toISOString(),
+    }));
   }
 
   /**
@@ -133,29 +96,62 @@ export class BelvoApiClient {
     startDate?: string,
     endDate?: string
   ): Promise<BelvoTransaction[]> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Note: financial_events are used as transactions.
+    // Currently not strictly linked to account_id in schema, fetching by user via RLS implicitly or we need user_id passed in?
+    // The interface asks for accountId. We'll assume the caller has access to the account's owner.
+    // For now, we'll fetch all financial_events for the current user (handled by RLS or we need to pass user_id).
+    // Since this method signature doesn't include userId, we rely on RLS (supabase.auth.getUser()).
 
-    // Filter transactions by account
-    let transactions = mockTransactions.filter((t) => t.account_id === accountId);
+    let query = supabase.from('financial_events').select('*');
 
-    // Apply date filters if provided
     if (startDate) {
-      transactions = transactions.filter((t) => t.date >= startDate);
+      query = query.gte('start_date', startDate);
     }
     if (endDate) {
-      transactions = transactions.filter((t) => t.date <= endDate);
+      query = query.lte('start_date', endDate);
     }
 
-    return transactions;
+    const { data, error } = await query;
+
+    if (error) {
+      logger.error('Failed to fetch transactions', {
+        operation: 'belvo_transactions',
+        accountId,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return (data || []).map((event) => ({
+      id: event.id,
+      account_id: accountId, // Mapping to requested account for now
+      amount: event.amount,
+      description: event.title,
+      date: event.start_date,
+      type: event.is_income ? 'income' : 'expense',
+      category: event.category || 'uncategorized',
+    }));
   }
 
   /**
    * Sync account data (refresh from bank)
    */
-  async syncAccount(_accountId: string): Promise<{ status: string; message: string }> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  async syncAccount(accountId: string): Promise<{ status: string; message: string }> {
+    // In a real integration, this would trigger a backend sync job.
+    // For now, we'll update the last_sync timestamp in the database.
+    const { error } = await supabase
+      .from('bank_accounts')
+      .update({ last_sync: new Date().toISOString() })
+      .eq('id', accountId);
+
+    if (error) {
+      logger.error('Failed to sync account', {
+        operation: 'belvo_sync_account',
+        accountId,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
 
     return {
       status: 'success',
@@ -167,9 +163,8 @@ export class BelvoApiClient {
    * Create a link token for account connection
    */
   async createLinkToken(userId: string): Promise<{ link_token: string; expiration: string }> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
+    // This would typically call the provider's API.
+    // We'll generate a dummy token for the flow.
     return {
       link_token: `link_token_${Date.now()}_${userId}`,
       expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
@@ -179,8 +174,8 @@ export class BelvoApiClient {
 
 // Default client instance
 export const belvoClient = new BelvoApiClient(
-  process.env.BELVO_API_KEY || 'mock_api_key',
-  process.env.BELVO_SECRET_KEY || 'mock_secret_key',
+  import.meta.env.VITE_BELVO_API_KEY || 'api_key',
+  import.meta.env.VITE_BELVO_SECRET_KEY || 'secret_key',
   'sandbox'
 );
 

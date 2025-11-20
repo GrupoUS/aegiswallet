@@ -19,6 +19,7 @@ import { calendarRouter } from '@/server/routers/calendar';
  */
 import { consolidatedRouters } from '@/server/routers/consolidated';
 import { contactsRouter } from '@/server/routers/contacts';
+import { googleCalendarRouter } from '@/server/routers/google-calendar';
 import { pixRouter } from '@/server/routers/pix';
 
 /**
@@ -36,6 +37,7 @@ export const appRouter = router({
   bankAccounts: bankAccountsRouter,
   financialTransactions: consolidatedRouters.transactions, // Alias for consistency
   calendar: calendarRouter,
+  googleCalendar: googleCalendarRouter,
   contacts: contactsRouter,
   pix: pixRouter,
 

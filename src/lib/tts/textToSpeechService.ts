@@ -136,7 +136,6 @@ export class TextToSpeechService {
   private config: TTSConfig;
   private cache: AudioCache;
   private synth: SpeechSynthesis | null = null;
-  private currentUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor(
     config?: Partial<TTSConfig>,
@@ -427,7 +426,7 @@ export class TextToSpeechService {
 
     const voices = synth.getVoices();
     const filtered = voices
-      .filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith('pt'))
+      .filter((voice) => voice.lang?.toLowerCase().startsWith('pt'))
       .filter(
         (voice, index, arr) =>
           arr.findIndex((v) => v.lang === voice.lang && v.name === voice.name) === index

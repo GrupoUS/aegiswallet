@@ -210,12 +210,29 @@ export class User {
     return new User(userProfile);
   }
 
-  static fromDatabase(data: any): User {
+  static fromDatabase(data: {
+    id: string;
+    email: string;
+    full_name: string;
+    phone?: string;
+    cpf?: string;
+    birth_date?: string | Date | null;
+    avatar_url?: string | null;
+    created_at: string | Date;
+    updated_at: string | Date;
+    preferences?: UserPreferences;
+  }): User {
     return new User({
-      ...data,
+      id: data.id,
+      email: data.email,
+      fullName: data.full_name,
+      phone: data.phone ?? undefined,
+      cpf: data.cpf ?? undefined,
       birthDate: data.birth_date ? new Date(data.birth_date) : undefined,
+      avatarUrl: data.avatar_url ?? undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
+      preferences: data.preferences,
     });
   }
 

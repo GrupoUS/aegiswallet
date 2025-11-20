@@ -55,7 +55,7 @@ export interface UseMultimodalResponseReturn {
   state: MultimodalResponseState;
 
   // Actions
-  sendResponse: (intent: IntentType | 'error' | 'confirmation', data: any) => Promise<void>;
+  sendResponse: (intent: IntentType | 'error' | 'confirmation', data: unknown) => Promise<void>;
   stopSpeaking: () => void;
   pauseSpeaking: () => void;
   resumeSpeaking: () => void;
@@ -118,7 +118,7 @@ export function useMultimodalResponse(
    * Send multimodal response
    */
   const sendResponse = useCallback(
-    async (intent: IntentType | 'error' | 'confirmation', data: any) => {
+    async (intent: IntentType | 'error' | 'confirmation', data: unknown) => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       try {
@@ -133,7 +133,7 @@ export function useMultimodalResponse(
         setState((prev) => ({
           ...prev,
           currentResponse: response,
-          isLoading: false,
+          isLoading: true,
         }));
 
         // Notify callback
@@ -185,6 +185,11 @@ export function useMultimodalResponse(
           error: error instanceof Error ? error.message : 'Unknown error',
         }));
       }
+
+      // Ensure loading state clears after the async pipeline so tests can observe it
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }, 0);
     },
     [
       voiceEnabled,

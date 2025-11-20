@@ -815,18 +815,17 @@ export class BiometricAuthService {
           method: 'pin',
           processingTime: Date.now() - startTime,
         };
-      } else {
-        // Handle failed attempt
-        await this.handleFailedAttempt(userId, 'pin');
-
-        return {
-          success: false,
-          method: 'pin',
-          error: 'Invalid PIN',
-          processingTime: Date.now() - startTime,
-          requiresAction: 'sms',
-        };
       }
+      // Handle failed attempt
+      await this.handleFailedAttempt(userId, 'pin');
+
+      return {
+        success: false,
+        method: 'pin',
+        error: 'Invalid PIN',
+        processingTime: Date.now() - startTime,
+        requiresAction: 'sms',
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -1125,20 +1124,19 @@ export class BiometricAuthService {
           processingTime: Date.now() - startTime,
           sessionToken,
         };
-      } else {
-        // Increment attempts
-        await supabase
-          .from('otp_codes')
-          .update({ attempts: storedOTP.attempts + 1 })
-          .eq('id', storedOTP.id);
-
-        return {
-          success: false,
-          method: 'sms',
-          error: 'Invalid OTP',
-          processingTime: Date.now() - startTime,
-        };
       }
+      // Increment attempts
+      await supabase
+        .from('otp_codes')
+        .update({ attempts: storedOTP.attempts + 1 })
+        .eq('id', storedOTP.id);
+
+      return {
+        success: false,
+        method: 'sms',
+        error: 'Invalid OTP',
+        processingTime: Date.now() - startTime,
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -1218,15 +1216,14 @@ export class BiometricAuthService {
           processingTime: Date.now() - startTime,
           requiresAction: 'push',
         };
-      } else {
-        return {
-          success: false,
-          method: 'push',
-          error: pushResult.error || 'Failed to send push notification',
-          processingTime: Date.now() - startTime,
-          requiresAction: 'sms', // Fallback to SMS
-        };
       }
+      return {
+        success: false,
+        method: 'push',
+        error: pushResult.error || 'Failed to send push notification',
+        processingTime: Date.now() - startTime,
+        requiresAction: 'sms', // Fallback to SMS
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -1281,14 +1278,13 @@ export class BiometricAuthService {
           processingTime: Date.now() - startTime,
           sessionToken,
         };
-      } else {
-        return {
-          success: false,
-          method: 'push',
-          error: 'Push notification denied',
-          processingTime: Date.now() - startTime,
-        };
       }
+      return {
+        success: false,
+        method: 'push',
+        error: 'Push notification denied',
+        processingTime: Date.now() - startTime,
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 

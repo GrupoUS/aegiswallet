@@ -320,4 +320,12 @@ export type VoiceResponseProps = TypedVoiceResponseProps;
 /**
  * @deprecated Use specific response types instead
  */
-export type LegacyVoiceResponseData = any;
+export type LegacyVoiceResponseData =
+  | SuccessResponseData
+  | ErrorResponseData
+  | BalanceResponseData
+  | BudgetResponseData
+  | BillsResponseData
+  | IncomingResponseData
+  | ProjectionResponseData
+  | TransferResponseData;

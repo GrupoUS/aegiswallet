@@ -189,8 +189,8 @@ export class NLUAnalytics {
         'medium (0.6-0.8)': 0,
         'low (<0.6)': 0,
       },
-      intentAccuracy: {} as Record<IntentType, any>,
-      entityAccuracy: {} as Record<EntityType, any>,
+      intentAccuracy: {} as Record<IntentType, number>,
+      entityAccuracy: {} as Record<EntityType, number>,
       regionalAccuracy: {},
       temporalAccuracy: {},
       linguisticAccuracy: {
@@ -646,7 +646,7 @@ export class NLUAnalytics {
   }
 
   private updateRegionalLearning(log: ClassificationLog): void {
-    const region = log.regionalVariation!;
+    const region = log.regionalVariation ?? 'unknown';
 
     if (!this.learningAnalytics.regionalLearning[region]) {
       this.learningAnalytics.regionalLearning[region] = {
@@ -741,7 +741,7 @@ export class NLUAnalytics {
       //   .order('timestamp', { ascending: false })
       //   .limit(100);
 
-      const recentLogs: any[] = [];
+      const recentLogs: ClassificationLog[] = [];
       const error = null;
 
       if (error) {

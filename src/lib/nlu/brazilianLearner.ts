@@ -194,7 +194,7 @@ export class BrazilianLearner {
     const confidence = (Math.min(maxScore / 10, 1.0) * bestRegion[1].score) / 10;
 
     return {
-      region: bestRegion[0] as any,
+      region: String(bestRegion[0]),
       confidence: Math.round(confidence * 100) / 100,
       indicators: bestRegion[1].indicators,
     };
@@ -258,13 +258,14 @@ export class BrazilianLearner {
 
     if (slangRatio > 0.6) {
       return { style: 'slang', confidence: slangRatio, features };
-    } else if (formalRatio > 0.6) {
-      return { style: 'formal', confidence: formalRatio, features };
-    } else if (colloquialRatio > 0.6) {
-      return { style: 'colloquial', confidence: colloquialRatio, features };
-    } else {
-      return { style: 'mixed', confidence: 0.5, features };
     }
+    if (formalRatio > 0.6) {
+      return { style: 'formal', confidence: formalRatio, features };
+    }
+    if (colloquialRatio > 0.6) {
+      return { style: 'colloquial', confidence: colloquialRatio, features };
+    }
+    return { style: 'mixed', confidence: 0.5, features };
   }
 
   /**
@@ -415,7 +416,11 @@ export class BrazilianLearner {
     }
   }
 
-  private updateLearningMetrics(log: ClassificationLog, regional: any, style: any): void {
+  private updateLearningMetrics(
+    log: ClassificationLog,
+    regional: { region: string; confidence: number; indicators: Record<string, number> },
+    style: { tone?: string; confidence?: number; indicators?: Record<string, number> }
+  ): void {
     // Update regional accuracy
     if (regional.region !== 'Unknown') {
       const current = this.learningMetrics.regionalAccuracy[regional.region] || 0;
@@ -466,7 +471,11 @@ export class BrazilianLearner {
     }
   }
 
-  private updateUserProfile(log: ClassificationLog, regional: any, style: any): void {
+  private updateUserProfile(
+    log: ClassificationLog,
+    regional: { region: string; indicators: Record<string, number> },
+    style: { tone?: string; confidence?: number; indicators?: Record<string, number> }
+  ): void {
     const userId = log.userId;
     let profile = this.userPatterns.get(userId);
 
@@ -602,7 +611,7 @@ export class BrazilianLearner {
       recommendations: string[];
     }
   > {
-    const insights: Record<string, any> = {};
+    const insights: Record<string, unknown> = {};
 
     for (const region of ['SP', 'RJ', 'Nordeste', 'Sul'] as const) {
       const accuracy = this.learningMetrics.regionalAccuracy[region] || 0;

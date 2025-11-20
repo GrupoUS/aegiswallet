@@ -8,36 +8,38 @@ import { type LogEntry, type LogLevel, logger } from '@/lib/logging/logger';
 
 interface UseLoggerOptions {
   component?: string;
-  defaultContext?: Record<string, any>;
+  defaultContext?: Record<string, unknown>;
 }
+
+type LoggerContext = Record<string, unknown>;
 
 interface UseLoggerReturn {
   // Basic logging methods
-  debug: (message: string, context?: Record<string, any>) => void;
-  info: (message: string, context?: Record<string, any>) => void;
-  warn: (message: string, context?: Record<string, any>) => void;
-  error: (message: string, context?: Record<string, any>) => void;
+  debug: (message: string, context?: LoggerContext) => void;
+  info: (message: string, context?: LoggerContext) => void;
+  warn: (message: string, context?: LoggerContext) => void;
+  error: (message: string, context?: LoggerContext) => void;
 
   // Specialized logging methods
-  userAction: (action: string, context?: Record<string, any>) => void;
-  voiceCommand: (command: string, confidence: number, context?: Record<string, any>) => void;
-  voiceError: (error: string, context?: Record<string, any>) => void;
-  authEvent: (event: string, userId?: string, context?: Record<string, any>) => void;
-  securityEvent: (event: string, context?: Record<string, any>) => void;
+  userAction: (action: string, context?: LoggerContext) => void;
+  voiceCommand: (command: string, confidence: number, context?: LoggerContext) => void;
+  voiceError: (error: string, context?: LoggerContext) => void;
+  authEvent: (event: string, userId?: string, context?: LoggerContext) => void;
+  securityEvent: (event: string, context?: LoggerContext) => void;
 
   // Utility methods
-  setContext: (context: Record<string, any>) => void;
+  setContext: (context: LoggerContext) => void;
   clearContext: () => void;
   getLogs: (level?: LogLevel) => LogEntry[];
 }
 
 export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   const { component = 'Unknown', defaultContext = {} } = options;
-  const contextRef = useRef<Record<string, any>>(defaultContext);
+  const contextRef = useRef<LoggerContext>(defaultContext);
 
   const createLogMethod = useCallback(
-    (baseMethod: (message: string, context?: Record<string, any>) => void) => {
-      return (message: string, additionalContext?: Record<string, any>) => {
+    (baseMethod: (message: string, context?: LoggerContext) => void) => {
+      return (message: string, additionalContext?: LoggerContext) => {
         const fullContext = {
           ...contextRef.current,
           ...additionalContext,
@@ -60,7 +62,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 
   // Specialized methods
   const userAction = useCallback(
-    (action: string, additionalContext?: Record<string, any>) => {
+    (action: string, additionalContext?: LoggerContext) => {
       const fullContext = {
         ...contextRef.current,
         ...additionalContext,
@@ -73,7 +75,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   );
 
   const voiceCommand = useCallback(
-    (command: string, confidence: number, additionalContext?: Record<string, any>) => {
+    (command: string, confidence: number, additionalContext?: LoggerContext) => {
       const fullContext = {
         ...contextRef.current,
         ...additionalContext,
@@ -86,7 +88,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   );
 
   const voiceError = useCallback(
-    (error: string, additionalContext?: Record<string, any>) => {
+    (error: string, additionalContext?: LoggerContext) => {
       const fullContext = {
         ...contextRef.current,
         ...additionalContext,
@@ -99,7 +101,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   );
 
   const authEvent = useCallback(
-    (event: string, userId?: string, additionalContext?: Record<string, any>) => {
+    (event: string, userId?: string, additionalContext?: LoggerContext) => {
       const fullContext = {
         ...contextRef.current,
         ...additionalContext,
@@ -112,7 +114,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   );
 
   const securityEvent = useCallback(
-    (event: string, additionalContext?: Record<string, any>) => {
+    (event: string, additionalContext?: LoggerContext) => {
       const fullContext = {
         ...contextRef.current,
         ...additionalContext,
@@ -125,7 +127,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
   );
 
   // Context management
-  const setContext = useCallback((newContext: Record<string, any>) => {
+  const setContext = useCallback((newContext: LoggerContext) => {
     contextRef.current = { ...contextRef.current, ...newContext };
   }, []);
 

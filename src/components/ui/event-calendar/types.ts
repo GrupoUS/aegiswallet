@@ -111,6 +111,9 @@ export interface CalendarEvent {
   status?: 'confirmed' | 'tentative' | 'cancelled';
   recurring?: boolean;
   recurrenceRule?: string;
+  externalSource?: 'google' | 'other';
+  syncStatus?: 'synced' | 'pending' | 'error' | 'conflict';
+  icon?: React.ReactNode;
 }
 
 export interface CalendarCategory {

@@ -18,6 +18,7 @@ interface MonthViewProps {
   onEventEdit?: (event: CalendarEvent) => void;
   onEventDelete?: (eventId: string) => void;
   onNavigate?: (date: Date) => void;
+  onEventAdd?: (date: Date) => void;
   className?: string;
 }
 
@@ -28,6 +29,7 @@ export function MonthView({
   onEventEdit,
   onEventDelete,
   onNavigate,
+  onEventAdd,
   className,
 }: MonthViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -117,6 +119,7 @@ export function MonthView({
                 return (
                   <td key={date.toISOString()} className="p-1 align-top">
                     <div
+                      onDoubleClick={() => onEventAdd?.(date)}
                       className={cn(
                         'min-h-[100px] rounded bg-background p-1 text-left focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background',
                         !isCurrentMonth && 'text-muted-foreground/50',

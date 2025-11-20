@@ -5,12 +5,12 @@
 
 import { type IUserRepository, User, type UserPreferences } from '@/domain/models/User';
 import { supabase } from '@/integrations/supabase/client';
-import { logError, logOperation } from '@/server/lib/logger';
+import { logger } from '@/lib/logging/logger';
 
 export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select(`
           *,
@@ -23,16 +23,20 @@ export class UserRepository implements IUserRepository {
         if (error.code === 'PGRST116') {
           return null; // Not found
         }
-        logError('user_repository_find_by_id', id, error, {
+        logger.error('Failed to find user by id', {
           operation: 'findById',
+          userId: id,
+          error: error.message,
         });
         throw new Error(`Failed to find user: ${error.message}`);
       }
 
       return User.fromDatabase(data);
     } catch (error) {
-      logError('user_repository_find_by_id_unexpected', id, error as Error, {
+      logger.error('Unexpected error in findById', {
         operation: 'findById',
+        userId: id,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -40,7 +44,7 @@ export class UserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select(`
           *,
@@ -53,16 +57,20 @@ export class UserRepository implements IUserRepository {
         if (error.code === 'PGRST116') {
           return null; // Not found
         }
-        logError('user_repository_find_by_email', email, error, {
+        logger.error('Failed to find user by email', {
           operation: 'findByEmail',
+          email,
+          error: error.message,
         });
         throw new Error(`Failed to find user by email: ${error.message}`);
       }
 
       return User.fromDatabase(data);
     } catch (error) {
-      logError('user_repository_find_by_email_unexpected', email, error as Error, {
+      logger.error('Unexpected error in findByEmail', {
         operation: 'findByEmail',
+        email,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -71,7 +79,7 @@ export class UserRepository implements IUserRepository {
   async create(user: User): Promise<User> {
     try {
       const userData = user.toJSON();
-      const { preferences: _unusedPreferences, ...userFields } = userData;
+      const { preferences, ...userFields } = userData;
 
       // Insert user
       const { error: userError } = await supabase
@@ -91,8 +99,10 @@ export class UserRepository implements IUserRepository {
         .single();
 
       if (userError) {
-        logError('user_repository_create', user.id, userError, {
+        logger.error('Failed to create user', {
           operation: 'create',
+          userId: user.id,
+          error: userError.message,
         });
         throw new Error(`Failed to create user: ${userError.message}`);
       }
@@ -115,22 +125,29 @@ export class UserRepository implements IUserRepository {
         });
 
         if (preferencesError) {
-          logError('user_repository_create_preferences', user.id, preferencesError, {
+          logger.error('Failed to create user preferences', {
             operation: 'create',
+            userId: user.id,
+            error: preferencesError.message,
           });
           // Don't throw error here, user was created successfully
         }
       }
 
-      logOperation('user_repository_create_success', user.id, 'user', user.id, {
+      logger.info('User created successfully', {
+        operation: 'user_repository_create_success',
+        userId: user.id,
+        resource: 'user',
         email: user.email,
       });
 
       // Fetch complete user with preferences
       return (await this.findById(user.id)) as User;
     } catch (error) {
-      logError('user_repository_create_unexpected', user.id, error as Error, {
+      logger.error('Unexpected error in create user', {
         operation: 'create',
+        userId: user.id,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -157,21 +174,28 @@ export class UserRepository implements IUserRepository {
         .single();
 
       if (userError) {
-        logError('user_repository_update', user.id, userError, {
+        logger.error('Failed to update user', {
           operation: 'update',
+          userId: user.id,
+          error: userError.message,
         });
         throw new Error(`Failed to update user: ${userError.message}`);
       }
 
-      logOperation('user_repository_update_success', user.id, 'user', user.id, {
+      logger.info('User updated successfully', {
+        operation: 'user_repository_update_success',
+        userId: user.id,
+        resource: 'user',
         updatedFields: Object.keys(userFields),
       });
 
       // Fetch complete user with preferences
       return (await this.findById(user.id)) as User;
     } catch (error) {
-      logError('user_repository_update_unexpected', user.id, error as Error, {
+      logger.error('Unexpected error in update user', {
         operation: 'update',
+        userId: user.id,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -182,16 +206,24 @@ export class UserRepository implements IUserRepository {
       const { error } = await supabase.from('users').delete().eq('id', id);
 
       if (error) {
-        logError('user_repository_delete', id, error, {
+        logger.error('Failed to delete user', {
           operation: 'delete',
+          userId: id,
+          error: error.message,
         });
         throw new Error(`Failed to delete user: ${error.message}`);
       }
 
-      logOperation('user_repository_delete_success', id, 'user', id);
+      logger.info('User deleted successfully', {
+        operation: 'user_repository_delete_success',
+        userId: id,
+        resource: 'user',
+      });
     } catch (error) {
-      logError('user_repository_delete_unexpected', id, error as Error, {
+      logger.error('Unexpected error in delete user', {
         operation: 'delete',
+        userId: id,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -210,21 +242,28 @@ export class UserRepository implements IUserRepository {
         .single();
 
       if (error) {
-        logError('user_repository_update_preferences', userId, error, {
+        logger.error('Failed to update user preferences', {
           operation: 'updatePreferences',
+          userId,
+          error: error.message,
         });
         throw new Error(`Failed to update user preferences: ${error.message}`);
       }
 
-      logOperation('user_repository_update_preferences_success', userId, 'user', userId, {
+      logger.info('User preferences updated successfully', {
+        operation: 'user_repository_update_preferences_success',
+        userId,
+        resource: 'user',
         updatedFields: Object.keys(preferences),
       });
 
       // Fetch complete user with updated preferences
       return (await this.findById(userId)) as User;
     } catch (error) {
-      logError('user_repository_update_preferences_unexpected', userId, error as Error, {
+      logger.error('Unexpected error in update user preferences', {
         operation: 'updatePreferences',
+        userId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -263,9 +302,11 @@ export class UserRepository implements IUserRepository {
       const { data, error, count } = await query;
 
       if (error) {
-        logError('user_repository_find_many', 'system', error, {
+        logger.error('Failed to find users', {
           operation: 'findMany',
+          component: 'system',
           options,
+          error: error.message,
         });
         throw new Error(`Failed to find users: ${error.message}`);
       }
@@ -277,9 +318,11 @@ export class UserRepository implements IUserRepository {
         totalCount: count || 0,
       };
     } catch (error) {
-      logError('user_repository_find_many_unexpected', 'system', error as Error, {
+      logger.error('Unexpected error in findMany', {
         operation: 'findMany',
+        component: 'system',
         options,
+        error: (error as Error).message,
       });
       throw error;
     }

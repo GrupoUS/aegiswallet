@@ -179,7 +179,8 @@ export const createBehavioralRateLimit = () => {
         const recentActivity = ctx.user.recent_activity_score || 0;
         if (recentActivity > 0.8) {
           return `${baseKey}:high-activity`;
-        } else if (recentActivity < 0.2) {
+        }
+        if (recentActivity < 0.2) {
           return `${baseKey}:low-activity`;
         }
 

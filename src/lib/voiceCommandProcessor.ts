@@ -1,103 +1,11 @@
 // Voice command processor for Brazilian Portuguese
 // Enhanced with NLU Engine (Story 01.02)
 
+import { supabase } from '@/integrations/supabase/client';
+import { belvoClient } from '@/lib/banking/belvoApi';
 import { logger } from '@/lib/logging/logger';
 import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
-
-// Mock data for demonstration - replace with real Supabase data
-const mockFinancialData = {
-  accounts: [
-    {
-      id: '1',
-      name: 'Conta Principal',
-      balance: 5842.5,
-      type: 'checking',
-    },
-    {
-      id: '2',
-      name: 'Poupança',
-      balance: 12500.0,
-      type: 'savings',
-    },
-  ],
-  transactions: [
-    {
-      id: '1',
-      description: 'Salário',
-      amount: 5000.0,
-      type: 'income',
-      date: new Date('2024-10-01'),
-      category: 'salary',
-    },
-    {
-      id: '2',
-      description: 'Aluguel',
-      amount: -1500.0,
-      type: 'expense',
-      date: new Date('2024-10-05'),
-      category: 'housing',
-    },
-    {
-      id: '3',
-      description: 'Supermercado',
-      amount: -450.0,
-      type: 'expense',
-      date: new Date('2024-10-10'),
-      category: 'food',
-    },
-  ],
-  bills: [
-    {
-      id: '1',
-      name: 'Energia Elétrica',
-      amount: 180.5,
-      dueDate: new Date('2024-10-15'),
-      status: 'pending',
-    },
-    {
-      id: '2',
-      name: 'Internet',
-      amount: 99.9,
-      dueDate: new Date('2024-10-20'),
-      status: 'pending',
-    },
-    {
-      id: '3',
-      name: 'Água',
-      amount: 85.0,
-      dueDate: new Date('2024-10-25'),
-      status: 'pending',
-    },
-  ],
-  incoming: [
-    {
-      id: '1',
-      source: 'Salário',
-      amount: 5000.0,
-      expectedDate: new Date('2024-11-01'),
-      type: 'salary',
-    },
-    {
-      id: '2',
-      source: 'Freelance',
-      amount: 1200.0,
-      expectedDate: new Date('2024-11-05'),
-      type: 'freelance',
-    },
-  ],
-  budget: {
-    total: 3500.0,
-    spent: 2180.5,
-    categories: {
-      food: { budget: 800.0, spent: 450.0 },
-      transport: { budget: 300.0, spent: 150.0 },
-      entertainment: { budget: 400.0, spent: 280.0 },
-      utilities: { budget: 500.0, spent: 380.0 },
-      other: { budget: 1500.0, spent: 920.5 },
-    },
-  },
-};
 
 export interface ProcessedCommand {
   type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
@@ -136,6 +44,17 @@ const COMMAND_PATTERNS = {
  */
 export async function processVoiceCommandWithNLU(transcript: string): Promise<ProcessedCommand> {
   try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return {
+        type: 'error',
+        message: 'Você precisa estar logado para usar comandos de voz.',
+        confidence: 0,
+      };
+    }
+
     const nluEngine = createNLUEngine();
     const nluResult = await nluEngine.processUtterance(transcript);
 
@@ -151,22 +70,22 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
     // Process command based on intent
     switch (nluResult.intent) {
       case IntentType.CHECK_BALANCE:
-        return handleBalanceCommand(nluResult.confidence);
+        return handleBalanceCommand(user.id, nluResult.confidence);
 
       case IntentType.CHECK_BUDGET:
-        return handleBudgetCommand(nluResult.confidence);
+        return handleBudgetCommand(user.id, nluResult.confidence);
 
       case IntentType.PAY_BILL:
-        return handleBillsCommand(nluResult.confidence);
+        return handleBillsCommand(user.id, nluResult.confidence);
 
       case IntentType.CHECK_INCOME:
-        return handleIncomingCommand(nluResult.confidence);
+        return handleIncomingCommand(user.id, nluResult.confidence);
 
       case IntentType.FINANCIAL_PROJECTION:
-        return handleProjectionCommand(nluResult.confidence);
+        return handleProjectionCommand(user.id, nluResult.confidence);
 
       case IntentType.TRANSFER_MONEY:
-        return handleTransferCommand(transcript, nluResult.confidence);
+        return handleTransferCommand(user.id, transcript, nluResult.confidence);
 
       default:
         return {
@@ -191,13 +110,12 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
 }
 
 /**
- * Legacy function - kept for backward compatibility
- * Use processVoiceCommandWithNLU for new implementations
+ * Legacy function - updated to be async and use real data
  */
-export function processVoiceCommand(
+export async function processVoiceCommand(
   transcript: string,
   confidence: number = 0.8
-): ProcessedCommand {
+): Promise<ProcessedCommand> {
   // Check confidence threshold
   if (confidence < CONFIDENCE_THRESHOLD) {
     return {
@@ -207,27 +125,38 @@ export function processVoiceCommand(
     };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      type: 'error',
+      message: 'Você precisa estar logado.',
+      confidence,
+    };
+  }
+
   // Match transcript against command patterns
   const commandType = matchCommand(transcript);
 
   switch (commandType) {
     case 'balance':
-      return handleBalanceCommand(confidence);
+      return handleBalanceCommand(user.id, confidence);
 
     case 'budget':
-      return handleBudgetCommand(confidence);
+      return handleBudgetCommand(user.id, confidence);
 
     case 'bills':
-      return handleBillsCommand(confidence);
+      return handleBillsCommand(user.id, confidence);
 
     case 'incoming':
-      return handleIncomingCommand(confidence);
+      return handleIncomingCommand(user.id, confidence);
 
     case 'projection':
-      return handleProjectionCommand(confidence);
+      return handleProjectionCommand(user.id, confidence);
 
     case 'transfer':
-      return handleTransferCommand(transcript, confidence);
+      return handleTransferCommand(user.id, transcript, confidence);
 
     default:
       return {
@@ -247,30 +176,65 @@ function matchCommand(transcript: string): string | null {
   return null;
 }
 
-function handleBalanceCommand(confidence: number): ProcessedCommand {
-  const totalBalance = mockFinancialData.accounts.reduce(
-    (sum, account) => sum + account.balance,
-    0
-  );
+async function handleBalanceCommand(userId: string, confidence: number): Promise<ProcessedCommand> {
+  try {
+    const accounts = await belvoClient.getAccounts(userId);
+    const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
-  return {
-    type: 'balance',
-    message: `Seu saldo total é de R$ ${totalBalance.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`,
-    data: {
-      totalBalance,
-      accounts: mockFinancialData.accounts,
-    },
-    confidence,
-  };
+    return {
+      type: 'balance',
+      message: `Seu saldo total é de R$ ${totalBalance.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+      data: {
+        totalBalance,
+        accounts,
+      },
+      confidence,
+    };
+  } catch (error) {
+    logger.error('Error fetching balance', { error });
+    return {
+      type: 'error',
+      message: 'Não foi possível consultar seu saldo no momento.',
+      confidence,
+    };
+  }
 }
 
-function handleBudgetCommand(confidence: number): ProcessedCommand {
-  const { total, spent } = mockFinancialData.budget;
-  const available = total - spent;
-  const spentPercentage = (spent / total) * 100;
+async function handleBudgetCommand(userId: string, confidence: number): Promise<ProcessedCommand> {
+  // For now, we calculate budget based on simple income vs expense for current month
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+  const endOfMonth = new Date(startOfMonth);
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+  const { data: events, error } = await supabase
+    .from('financial_events')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('start_date', startOfMonth.toISOString())
+    .lt('start_date', endOfMonth.toISOString());
+
+  if (error) {
+    return { type: 'error', message: 'Erro ao consultar orçamento.', confidence };
+  }
+
+  const income = events
+    .filter((e) => e.event_type === 'income')
+    .reduce((sum, e) => sum + Number(e.amount), 0);
+
+  const expenses = events
+    .filter((e) => e.event_type === 'expense' || e.event_type === 'bill')
+    .reduce((sum, e) => sum + Number(e.amount), 0);
+
+  const available = income - expenses; // Very simple budget logic
+  const total = income > 0 ? income : 5000; // Fallback budget if no income recorded? Or just 0.
+  // If no income, we assume 0 available.
+
+  const spentPercentage = total > 0 ? (expenses / total) * 100 : 0;
 
   let message = '';
   if (spentPercentage > 90) {
@@ -286,19 +250,32 @@ function handleBudgetCommand(confidence: number): ProcessedCommand {
     message,
     data: {
       available,
-      spent,
+      spent: expenses,
       total,
       spentPercentage,
-      categories: mockFinancialData.budget.categories,
+      categories: {}, // We'd need to aggregate categories
     },
     confidence,
   };
 }
 
-function handleBillsCommand(confidence: number): ProcessedCommand {
-  const pendingBills = mockFinancialData.bills.filter((bill) => bill.status === 'pending');
-  const upcomingBills = pendingBills.filter((bill) => {
-    const daysUntilDue = Math.ceil((bill.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+async function handleBillsCommand(userId: string, confidence: number): Promise<ProcessedCommand> {
+  const now = new Date();
+  const { data: bills, error } = await supabase
+    .from('financial_events')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .in('event_type', ['bill', 'expense']) // expenses marked as pending are essentially bills?
+    .gte('start_date', now.toISOString());
+
+  if (error) {
+    return { type: 'error', message: 'Erro ao consultar contas.', confidence };
+  }
+
+  const upcomingBills = bills.filter((bill) => {
+    const dueDate = new Date(bill.due_date || bill.start_date);
+    const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilDue <= 7;
   });
 
@@ -315,18 +292,42 @@ function handleBillsCommand(confidence: number): ProcessedCommand {
     type: 'bills',
     message,
     data: {
-      bills: upcomingBills.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()),
-      totalPending: pendingBills.length,
-      totalAmount: pendingBills.reduce((sum, bill) => sum + bill.amount, 0),
+      bills: upcomingBills
+        .map((b) => ({
+          id: b.id,
+          name: b.title,
+          amount: Number(b.amount),
+          dueDate: new Date(b.due_date || b.start_date),
+          status: b.status,
+        }))
+        .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()),
+      totalPending: bills.length,
+      totalAmount: bills.reduce((sum, bill) => sum + Number(bill.amount), 0),
     },
     confidence,
   };
 }
 
-function handleIncomingCommand(confidence: number): ProcessedCommand {
-  const currentMonth = new Date().getMonth();
-  const upcomingIncoming = mockFinancialData.incoming.filter(
-    (item) => item.expectedDate.getMonth() === currentMonth
+async function handleIncomingCommand(
+  userId: string,
+  confidence: number
+): Promise<ProcessedCommand> {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+
+  const { data: income, error } = await supabase
+    .from('financial_events')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('event_type', 'income')
+    .gte('start_date', now.toISOString());
+
+  if (error) {
+    return { type: 'error', message: 'Erro ao consultar recebimentos.', confidence };
+  }
+
+  const upcomingIncoming = income.filter(
+    (item) => new Date(item.start_date).getMonth() === currentMonth
   );
 
   let message = '';
@@ -342,24 +343,48 @@ function handleIncomingCommand(confidence: number): ProcessedCommand {
     type: 'incoming',
     message,
     data: {
-      incoming: upcomingIncoming.sort(
-        (a, b) => a.expectedDate.getTime() - b.expectedDate.getTime()
-      ),
-      totalExpected: upcomingIncoming.reduce((sum, item) => sum + item.amount, 0),
+      incoming: upcomingIncoming
+        .map((i) => ({
+          id: i.id,
+          source: i.title,
+          amount: Number(i.amount),
+          expectedDate: new Date(i.start_date),
+          type: i.category,
+        }))
+        .sort((a, b) => a.expectedDate.getTime() - b.expectedDate.getTime()),
+      totalExpected: upcomingIncoming.reduce((sum, item) => sum + Number(item.amount), 0),
     },
     confidence,
   };
 }
 
-function handleProjectionCommand(confidence: number): ProcessedCommand {
-  const currentBalance = mockFinancialData.accounts.reduce(
-    (sum, account) => sum + account.balance,
-    0
-  );
-  const pendingBills = mockFinancialData.bills
-    .filter((bill) => bill.status === 'pending')
-    .reduce((sum, bill) => sum + bill.amount, 0);
-  const expectedIncoming = mockFinancialData.incoming.reduce((sum, item) => sum + item.amount, 0);
+async function handleProjectionCommand(
+  userId: string,
+  confidence: number
+): Promise<ProcessedCommand> {
+  // Fetch current balance
+  const accounts = await belvoClient.getAccounts(userId);
+  const currentBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+
+  // Fetch pending bills
+  const { data: bills } = await supabase
+    .from('financial_events')
+    .select('amount')
+    .eq('user_id', userId)
+    .in('event_type', ['bill', 'expense'])
+    .eq('status', 'pending');
+
+  const pendingBills = (bills || []).reduce((sum, bill) => sum + Number(bill.amount), 0);
+
+  // Fetch expected incoming
+  const { data: income } = await supabase
+    .from('financial_events')
+    .select('amount')
+    .eq('user_id', userId)
+    .eq('event_type', 'income')
+    .gte('start_date', new Date().toISOString());
+
+  const expectedIncoming = (income || []).reduce((sum, item) => sum + Number(item.amount), 0);
 
   const projectedBalance = currentBalance - pendingBills + expectedIncoming;
   const variation = projectedBalance - currentBalance;
@@ -387,11 +412,16 @@ function handleProjectionCommand(confidence: number): ProcessedCommand {
   };
 }
 
-function handleTransferCommand(transcript: string, confidence: number): ProcessedCommand {
+async function handleTransferCommand(
+  userId: string,
+  transcript: string,
+  confidence: number
+): Promise<ProcessedCommand> {
   // Simple stub implementation - extract basic info from transcript
+  // In a real app, we'd use NLU entity extraction here too
   const amountMatch = transcript.match(/(\d+[,.]?\d*)/i);
   const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
-  const recipient = 'Destinatário (stub)';
+  const recipient = 'Destinatário (detectado)'; // Mock extraction
 
   if (!recipient) {
     return {
@@ -407,10 +437,8 @@ function handleTransferCommand(transcript: string, confidence: number): Processe
     };
   }
 
-  const currentBalance = mockFinancialData.accounts.reduce(
-    (sum, account) => sum + account.balance,
-    0
-  );
+  const accounts = await belvoClient.getAccounts(userId);
+  const currentBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   if (amount > currentBalance) {
     return {

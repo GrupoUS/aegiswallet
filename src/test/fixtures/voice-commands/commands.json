@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cmd-001",
+    "command": "transferir cem reais para João Silva",
+    "intent": "payment_transfer",
+    "entities": {
+      "amount": 100,
+      "recipient": "João Silva",
+      "currency": "BRL"
+    },
+    "language": "pt-BR",
+    "confidence": 0.95
+  },
+  {
+    "id": "cmd-002",
+    "command": "agendar consulta com Dr. Pedro para amanhã",
+    "intent": "appointment_booking",
+    "entities": {
+      "doctor": "Dr. Pedro",
+      "date": "tomorrow",
+      "type": "consultation"
+    },
+    "language": "pt-BR",
+    "confidence": 0.92
+  }
+]

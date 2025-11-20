@@ -79,7 +79,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
           // Navigate after a short delay for feedback
           setTimeout(() => {
-            navigate({ to: result.intent as any });
+            navigate({ to: String(result.intent) });
           }, 500);
         }
       } else {

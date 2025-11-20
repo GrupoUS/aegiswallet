@@ -30,9 +30,9 @@ interface CalendarContextType {
   setFilters: (filters: Partial<CalendarFilter>) => void;
   settings: CalendarSettings;
   updateSettings: (settings: Partial<CalendarSettings>) => void;
-  addEvent: (event: FinancialEvent) => void;
-  updateEvent: (event: FinancialEvent) => void;
-  deleteEvent: (eventId: string) => void;
+  addEvent: (event: FinancialEvent) => Promise<FinancialEvent>;
+  updateEvent: (event: FinancialEvent) => Promise<FinancialEvent>;
+  deleteEvent: (eventId: string) => Promise<void>;
   getEventsForDate: (date: Date) => FinancialEvent[];
   getEventsForMonth: (date: Date) => FinancialEvent[];
   getFilteredEvents: () => FinancialEvent[];
@@ -100,16 +100,18 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     async (event: FinancialEvent) => {
       const newEvent = await addEventMutation(event);
       setLocalEvents((prev) => [...prev, newEvent]);
+      return newEvent;
     },
     [addEventMutation]
   );
 
   const updateEvent = useCallback(
     async (updatedEvent: FinancialEvent) => {
-      await updateEventMutation(updatedEvent.id, updatedEvent);
+      const result = await updateEventMutation(updatedEvent.id, updatedEvent);
       setLocalEvents((prev) =>
-        prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
+        prev.map((event) => (event.id === updatedEvent.id ? result : event))
       );
+      return result;
     },
     [updateEventMutation]
   );
@@ -247,11 +249,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       setCurrentDate((prev) => {
         if (currentView === 'month') {
           return direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1);
-        } else if (currentView === 'week') {
-          return direction === 'prev' ? addDays(prev, -7) : addDays(prev, 7);
-        } else {
-          return direction === 'prev' ? addDays(prev, -1) : addDays(prev, 1);
         }
+        if (currentView === 'week') {
+          return direction === 'prev' ? addDays(prev, -7) : addDays(prev, 7);
+        }
+        return direction === 'prev' ? addDays(prev, -1) : addDays(prev, 1);
       });
     },
     [currentView]

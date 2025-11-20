@@ -127,7 +127,8 @@ describe('Database Schema Type Safety', () => {
       type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because voice_feedback table is missing
-      const voiceFeedbackTable: DatabaseTables['voice_feedback'] = {} as any;
+      const voiceFeedbackTable: DatabaseTables['voice_feedback'] =
+        {} as unknown as DatabaseTables['voice_feedback'];
 
       expect(voiceFeedbackTable).toBeDefined();
     });
@@ -136,7 +137,8 @@ describe('Database Schema Type Safety', () => {
       type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because voice_metrics table is missing
-      const voiceMetricsTable: DatabaseTables['voice_metrics'] = {} as any;
+      const voiceMetricsTable: DatabaseTables['voice_metrics'] =
+        {} as unknown as DatabaseTables['voice_metrics'];
 
       expect(voiceMetricsTable).toBeDefined();
     });
@@ -145,7 +147,8 @@ describe('Database Schema Type Safety', () => {
       type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because audit_logs table is missing
-      const auditLogsTable: DatabaseTables['audit_logs'] = {} as any;
+      const auditLogsTable: DatabaseTables['audit_logs'] =
+        {} as unknown as DatabaseTables['audit_logs'];
 
       expect(auditLogsTable).toBeDefined();
     });
@@ -154,7 +157,8 @@ describe('Database Schema Type Safety', () => {
       type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because bank_tokens table is missing
-      const bankTokensTable: DatabaseTables['bank_tokens'] = {} as any;
+      const bankTokensTable: DatabaseTables['bank_tokens'] =
+        {} as unknown as DatabaseTables['bank_tokens'];
 
       expect(bankTokensTable).toBeDefined();
     });
@@ -163,7 +167,8 @@ describe('Database Schema Type Safety', () => {
       type DatabaseTables = Database['public']['Tables'];
 
       // @ts-expect-error - This should fail because user_bank_links table is missing
-      const userBankLinksTable: DatabaseTables['user_bank_links'] = {} as any;
+      const userBankLinksTable: DatabaseTables['user_bank_links'] =
+        {} as unknown as DatabaseTables['user_bank_links'];
 
       expect(userBankLinksTable).toBeDefined();
     });

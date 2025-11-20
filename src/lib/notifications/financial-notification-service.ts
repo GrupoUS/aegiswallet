@@ -8,8 +8,8 @@
 import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging/logger';
 import { createPushProvider, type PushConfig, type PushMessage } from '@/lib/security/pushProvider';
-import { logError, logOperation } from '@/server/lib/logger';
 
 // Brazilian financial event types
 export interface BrazilianFinancialEvent {
@@ -113,7 +113,8 @@ export class FinancialNotificationService {
             urgency: 'urgent',
           },
         };
-      } else if (isReceivable) {
+      }
+      if (isReceivable) {
         return {
           title: `💰 Recebimento Hoje: ${event.title}`,
           body: `Você receberá ${formattedAmount} hoje em sua conta.`,
@@ -146,7 +147,8 @@ export class FinancialNotificationService {
             urgency: 'high',
           },
         };
-      } else if (isReceivable) {
+      }
+      if (isReceivable) {
         return {
           title: `💳 Recebimento Amanhã: ${event.title}`,
           body: `Você receberá ${formattedAmount} amanhã (${formattedDate}).`,
@@ -179,7 +181,8 @@ export class FinancialNotificationService {
             urgency: 'normal',
           },
         };
-      } else if (isReceivable) {
+      }
+      if (isReceivable) {
         return {
           title: `📈 Recebimento Esta Semana: ${event.title}`,
           body: `Você receberá ${formattedAmount} em ${daysUntil} dias (${formattedDate}).`,
@@ -290,7 +293,10 @@ export class FinancialNotificationService {
             created_at: new Date().toISOString(),
           });
 
-          logOperation('create_automated_reminder', userId, 'event_reminders', undefined, {
+          logger.info('Created automated reminder', {
+            operation: 'create_automated_reminder',
+            userId,
+            resource: 'event_reminders',
             eventId: event.id,
             daysBefore,
             remindAt,
@@ -299,7 +305,10 @@ export class FinancialNotificationService {
         }
       }
     } catch (error) {
-      logError('create_automated_reminders', userId, error as Error, {
+      logger.error('create_automated_reminders failed', {
+        operation: 'create_automated_reminders',
+        userId,
+        error: (error as Error).message,
         eventId: event.id,
         eventTitle: event.title,
       });
@@ -340,25 +349,29 @@ export class FinancialNotificationService {
       const result = await this.pushProvider.sendPushNotification(userId, pushMessage);
 
       if (result.success) {
-        logOperation('send_financial_notification_success', userId, 'notifications', undefined, {
+        logger.info('Financial notification sent successfully', {
+          operation: 'send_financial_notification_success',
+          userId,
+          resource: 'notifications',
           eventId: event.id,
           eventTitle: event.title,
           daysUntil,
           messageId: result.messageId,
         });
       } else {
-        logError(
-          'send_financial_notification_failed',
+        logger.error('Financial notification failed', {
+          operation: 'send_financial_notification_failed',
           userId,
-          new Error(result.error || 'Unknown error'),
-          {
-            eventId: event.id,
-            eventTitle: event.title,
-          }
-        );
+          error: result.error || 'Unknown error',
+          eventId: event.id,
+          eventTitle: event.title,
+        });
       }
     } catch (error) {
-      logError('send_financial_notification_error', userId, error as Error, {
+      logger.error('send_financial_notification_error', {
+        operation: 'send_financial_notification_error',
+        userId,
+        error: (error as Error).message,
         eventId: event.id,
         eventTitle: event.title,
       });
@@ -397,8 +410,10 @@ export class FinancialNotificationService {
         .order('remind_at', { ascending: true });
 
       if (error) {
-        logError('fetch_pending_reminders', 'system', error, {
+        logger.error('Failed to fetch pending reminders', {
           operation: 'processPendingReminders',
+          component: 'system',
+          error: error.message,
         });
         return;
       }
@@ -419,24 +434,27 @@ export class FinancialNotificationService {
             })
             .eq('id', reminder.id);
         } catch (notificationError) {
-          logError(
-            'process_reminder_notification_failed',
-            event.user_id,
-            notificationError as Error,
-            {
-              reminderId: reminder.id,
-              eventId: event.id,
-            }
-          );
+          logger.error('Failed to process reminder notification', {
+            operation: 'process_reminder_notification_failed',
+            userId: event.user_id,
+            error: (notificationError as Error).message,
+            reminderId: reminder.id,
+            eventId: event.id,
+          });
         }
       }
 
-      logOperation('process_pending_reminders_complete', 'system', 'event_reminders', undefined, {
+      logger.info('Processed pending reminders', {
+        operation: 'process_pending_reminders_complete',
+        component: 'system',
+        resource: 'event_reminders',
         processedCount: reminders?.length || 0,
       });
     } catch (error) {
-      logError('process_pending_reminders_error', 'system', error as Error, {
+      logger.error('process_pending_reminders_error', {
         operation: 'processPendingReminders',
+        component: 'system',
+        error: (error as Error).message,
       });
     }
   }
@@ -482,13 +500,19 @@ export class FinancialNotificationService {
         created_at: new Date().toISOString(),
       });
 
-      logOperation('create_voice_reminder', userId, 'event_reminders', undefined, {
+      logger.info('Created voice reminder', {
+        operation: 'create_voice_reminder',
+        userId,
+        resource: 'event_reminders',
         eventId: event.id,
         reminderTime,
         messageType: 'voice',
       });
     } catch (error) {
-      logError('create_voice_reminder', userId, error as Error, {
+      logger.error('create_voice_reminder failed', {
+        operation: 'create_voice_reminder',
+        userId,
+        error: (error as Error).message,
         eventId: event.id,
         reminderTime,
       });

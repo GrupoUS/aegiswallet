@@ -32,7 +32,7 @@ export class OpenBankingConnector {
   async connectBank(_params: {
     userId: string;
     institutionCode: string;
-    credentials: any;
+    credentials: Record<string, unknown>;
   }): Promise<{ linkId: string }> {
     // Implementation would call Belvo API
     return { linkId: `link_${Date.now()}` };

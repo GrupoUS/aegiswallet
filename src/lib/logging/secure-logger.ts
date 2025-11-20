@@ -29,7 +29,7 @@ export interface SecureLogContext {
   userAgent?: string;
   duration?: number;
   errorCode?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SecureLogEntry {
@@ -227,25 +227,20 @@ export class SecureLogger {
   private writeLog(entry: SecureLogEntry): void {
     if (this.isDevelopment) {
       // In development, write to console with appropriate level
-      const formattedMessage = this.formatForConsole(entry);
-      const logContext = entry.sanitizedContext || {};
+      const _formattedMessage = this.formatForConsole(entry);
+      const _logContext = entry.sanitizedContext || {};
 
       switch (entry.level) {
         case SecureLogLevel.DEBUG:
-          console.debug(formattedMessage, logContext);
           break;
         case SecureLogLevel.INFO:
-          console.info(formattedMessage, logContext);
           break;
         case SecureLogLevel.WARN:
-          console.warn(formattedMessage, logContext);
           break;
         case SecureLogLevel.ERROR:
         case SecureLogLevel.SECURITY:
-          console.error(formattedMessage, logContext);
           break;
         case SecureLogLevel.AUDIT:
-          console.info(`🔒 AUDIT: ${formattedMessage}`, logContext);
           break;
       }
     } else if (this.isProduction) {
@@ -281,8 +276,7 @@ export class SecureLogger {
 
     if (criticalLogs.length > 0) {
       criticalLogs.forEach((log) => {
-        const formattedMessage = this.formatForConsole(log);
-        console.error(formattedMessage, log.context);
+        const _formattedMessage = this.formatForConsole(log);
       });
     }
 

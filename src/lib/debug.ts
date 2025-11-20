@@ -25,7 +25,7 @@ class Logger {
     return `${timestamp} ${level.toUpperCase()}${contextStr}: ${message}`;
   }
 
-  private log(level: LogLevel, message: string, _data?: any, context?: DebugContext): void {
+  private log(level: LogLevel, message: string, _data?: unknown, context?: DebugContext): void {
     if (!this.isDevelopment) return;
 
     const _formattedMessage = this.formatMessage(level, message, context);
@@ -42,48 +42,50 @@ class Logger {
     }
   }
 
-  debug(message: string, data?: any, context?: DebugContext): void {
+  debug(message: string, data?: unknown, context?: DebugContext): void {
     this.log('debug', message, data, context);
   }
 
-  info(message: string, data?: any, context?: DebugContext): void {
+  info(message: string, data?: unknown, context?: DebugContext): void {
     this.log('info', message, data, context);
   }
 
-  warn(message: string, data?: any, context?: DebugContext): void {
+  warn(message: string, data?: unknown, context?: DebugContext): void {
     this.log('warn', message, data, context);
   }
 
-  error(message: string, error?: Error | any, context?: DebugContext): void {
+  error(message: string, error?: unknown, context?: DebugContext): void {
     this.log('error', message, error, context);
   }
 
   // Component-specific logging helpers
   component(componentName: string) {
     return {
-      debug: (message: string, data?: any) =>
+      debug: (message: string, data?: unknown) =>
         this.debug(message, data, { component: componentName }),
-      info: (message: string, data?: any) => this.info(message, data, { component: componentName }),
-      warn: (message: string, data?: any) => this.warn(message, data, { component: componentName }),
-      error: (message: string, error?: Error | any) =>
+      info: (message: string, data?: unknown) =>
+        this.info(message, data, { component: componentName }),
+      warn: (message: string, data?: unknown) =>
+        this.warn(message, data, { component: componentName }),
+      error: (message: string, error?: unknown) =>
         this.error(message, error, { component: componentName }),
       action: (actionName: string) => ({
-        debug: (message: string, data?: any) =>
+        debug: (message: string, data?: unknown) =>
           this.debug(message, data, {
             component: componentName,
             action: actionName,
           }),
-        info: (message: string, data?: any) =>
+        info: (message: string, data?: unknown) =>
           this.info(message, data, {
             component: componentName,
             action: actionName,
           }),
-        warn: (message: string, data?: any) =>
+        warn: (message: string, data?: unknown) =>
           this.warn(message, data, {
             component: componentName,
             action: actionName,
           }),
-        error: (message: string, error?: Error | any) =>
+        error: (message: string, error?: unknown) =>
           this.error(message, error, {
             component: componentName,
             action: actionName,

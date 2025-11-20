@@ -3,7 +3,7 @@
  * Provides unified caching interface with multiple backends
  */
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   data: T;
   expiresAt: number;
   createdAt: number;
@@ -333,10 +333,9 @@ export class CacheManager {
     if (cacheName) {
       const cache = this.getCache(cacheName);
       return cache.clear();
-    } else {
-      // Clear all caches
-      await Promise.all(Array.from(this.caches.values()).map((cache) => cache.clear()));
     }
+    // Clear all caches
+    await Promise.all(Array.from(this.caches.values()).map((cache) => cache.clear()));
   }
 
   /**
@@ -367,16 +366,15 @@ export class CacheManager {
     if (cacheName) {
       const cache = this.getCache(cacheName);
       return cache.deleteByTag(tag);
-    } else {
-      // Invalidate in all caches that support tag deletion
-      let totalDeleted = 0;
-      for (const cache of this.caches.values()) {
-        if ('deleteByTag' in cache) {
-          totalDeleted += await cache.deleteByTag(tag);
-        }
-      }
-      return totalDeleted;
     }
+    // Invalidate in all caches that support tag deletion
+    let totalDeleted = 0;
+    for (const cache of this.caches.values()) {
+      if ('deleteByTag' in cache) {
+        totalDeleted += await cache.deleteByTag(tag);
+      }
+    }
+    return totalDeleted;
   }
 
   /**
@@ -409,7 +407,7 @@ export const cacheManager = new CacheManager();
 /**
  * Cache decorator for functions
  */
-export function cached<T extends (...args: any[]) => Promise<any>>(
+export function cached<T extends (...args: unknown[]) => Promise<unknown>>(
   options: {
     keyPrefix?: string;
     ttl?: number;
@@ -418,7 +416,7 @@ export function cached<T extends (...args: any[]) => Promise<any>>(
     keyGenerator?: (...args: Parameters<T>) => string;
   } = {}
 ) {
-  return (_target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+  return (_target: object, propertyName: string, descriptor: PropertyDescriptor) => {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: Parameters<T>) {

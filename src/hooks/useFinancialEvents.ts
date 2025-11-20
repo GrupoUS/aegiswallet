@@ -109,7 +109,8 @@ export function useFinancialEvents(startDate?: Date, endDate?: Date) {
         return;
       }
 
-      const mappedEvents = (data || []).map((row: any) => rowToEvent(row as FinancialEventRow));
+      const eventRows: FinancialEventRow[] = (data ?? []) as FinancialEventRow[];
+      const mappedEvents = eventRows.map((row) => rowToEvent(row));
       setEvents(mappedEvents);
     } catch (err) {
       setError(err as Error);

@@ -1,5 +1,6 @@
-// PIX API stub implementation for Brazilian instant payments
-// This is a mock implementation for development purposes
+// PIX API implementation for Brazilian instant payments
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging/logger';
 
 export type PixKeyType = 'cpf' | 'cnpj' | 'email' | 'phone' | 'random';
 
@@ -45,59 +46,13 @@ export interface PixQRCode {
   status: 'active' | 'expired' | 'used';
 }
 
-// Mock data for development
-const mockPixKeys: PixKey[] = [
-  {
-    id: 'key_001',
-    type: 'cpf',
-    value: '123.456.789-00',
-    account_id: 'acc_001',
-    created_at: '2024-01-15T10:00:00Z',
-    status: 'active',
-  },
-  {
-    id: 'key_002',
-    type: 'email',
-    value: 'usuario@email.com',
-    account_id: 'acc_001',
-    created_at: '2024-01-20T14:30:00Z',
-    status: 'active',
-  },
-];
-
-const mockPixTransactions: PixTransaction[] = [
-  {
-    id: 'pix_001',
-    amount: 150.0,
-    description: 'Pagamento almoço',
-    sender: {
-      name: 'João Silva',
-      document: '123.456.789-00',
-      bank: 'Banco do Brasil',
-      key: '123.456.789-00',
-    },
-    receiver: {
-      name: 'Maria Santos',
-      document: '987.654.321-00',
-      bank: 'Itaú Unibanco',
-      key: 'maria@email.com',
-    },
-    status: 'completed',
-    created_at: '2024-10-15T12:30:00Z',
-    completed_at: '2024-10-15T12:30:05Z',
-    end_to_end_id: 'E12345678202410151230000000001',
-    transaction_id: 'TXN_PIX_001',
-  },
-];
-
 /**
- * PIX API Client - Stub Implementation
- * This is a mock implementation for Brazilian PIX instant payments
- * In production, this would integrate with actual PIX infrastructure
+ * PIX API Client - Supabase Implementation
  */
 export class PixApiClient {
-  constructor(apiKey: string, environment: 'sandbox' | 'production' = 'sandbox') {
-    this.apiKey = apiKey;
+  baseUrl: string;
+
+  constructor(_apiKey: string, environment: 'sandbox' | 'production' = 'sandbox') {
     this.baseUrl =
       environment === 'sandbox' ? 'https://sandbox-pix.bcb.gov.br' : 'https://api-pix.bcb.gov.br';
   }
@@ -105,72 +60,127 @@ export class PixApiClient {
   /**
    * Get user's PIX keys
    */
-  async getPixKeys(_userId: string): Promise<PixKey[]> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return mockPixKeys;
+  async getPixKeys(userId: string): Promise<PixKey[]> {
+    const { data, error } = await supabase.from('pix_keys').select('*').eq('user_id', userId);
+
+    if (error) {
+      logger.error('Failed to fetch PIX keys', {
+        operation: 'pix_keys_fetch',
+        userId,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return (data || []).map((key) => ({
+      id: key.id,
+      type: key.key_type as PixKeyType,
+      value: key.key_value,
+      account_id: 'default', // Placeholder as DB doesn't link keys to accounts directly
+      created_at: key.created_at || new Date().toISOString(),
+      status: key.is_active ? 'active' : 'inactive',
+    }));
   }
 
   /**
    * Create a new PIX key
    */
-  async createPixKey(_userId: string, type: PixKeyType, value: string): Promise<PixKey> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+  async createPixKey(userId: string, type: PixKeyType, value: string): Promise<PixKey> {
+    const { data, error } = await supabase
+      .from('pix_keys')
+      .insert({
+        user_id: userId,
+        key_type: type,
+        key_value: value,
+        is_active: true,
+      })
+      .select()
+      .single();
 
-    const newKey: PixKey = {
-      id: `key_${Date.now()}`,
-      type,
-      value,
-      account_id: 'acc_001', // Mock account
-      created_at: new Date().toISOString(),
-      status: 'pending',
+    if (error) {
+      logger.error('Failed to create PIX key', {
+        operation: 'pix_keys_create',
+        userId,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      type: data.key_type as PixKeyType,
+      value: data.key_value,
+      account_id: 'default',
+      created_at: data.created_at || new Date().toISOString(),
+      status: data.is_active ? 'active' : 'inactive',
     };
-
-    return newKey;
   }
 
   /**
    * Send PIX payment
    */
   async sendPixPayment(
-    _fromAccountId: string,
+    _fromAccountId: string, // Not used in DB insert currently, assuming user context
     toPixKey: string,
     amount: number,
     description?: string
   ): Promise<PixTransaction> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const transactionId = `TXN_PIX_${Date.now()}`;
+    const endToEndId = pixUtils.generateEndToEndId();
 
-    const transaction: PixTransaction = {
-      id: `pix_${Date.now()}`,
-      amount,
-      description,
+    // Get current user for user_id
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('pix_transfers')
+      .insert({
+        user_id: user.id,
+        pix_key: toPixKey,
+        amount: amount,
+        description: description,
+        status: 'completed', // Simulating instant completion
+        recipient_name: 'Unknown Receiver', // In real flow, this comes from key lookup
+        transaction_id: transactionId,
+        end_to_end_id: endToEndId,
+        confirmed_at: new Date().toISOString(),
+        executed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Pix payment failed', {
+        operation: 'pix_payment',
+        userId: user.id,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      amount: Number(data.amount),
+      description: data.description || undefined,
       sender: {
-        name: 'Usuário Teste',
-        document: '123.456.789-00',
-        bank: 'Banco do Brasil',
-        key: '123.456.789-00',
+        name: 'Me', // Placeholder
+        document: '***',
+        bank: 'NeonPro',
       },
       receiver: {
-        name: 'Destinatário',
-        document: '987.654.321-00',
-        bank: 'Banco Destinatário',
-        key: toPixKey,
+        name: data.recipient_name,
+        document: data.recipient_document || '***',
+        bank: data.recipient_bank || 'Unknown',
+        key: data.pix_key,
       },
-      status: 'completed',
-      created_at: new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-      end_to_end_id: `E12345678${new Date()
-        .toISOString()
-        .replace(/[-:T.Z]/g, '')
-        .slice(0, 14)}${Math.floor(Math.random() * 1000000)
-        .toString()
-        .padStart(6, '0')}`,
-      transaction_id: `TXN_PIX_${Date.now()}`,
+      status: (data.status as PixTransaction['status']) || 'pending',
+      created_at: data.created_at || new Date().toISOString(),
+      completed_at: data.executed_at || undefined,
+      end_to_end_id: data.end_to_end_id || undefined,
+      transaction_id: data.transaction_id || transactionId,
     };
-
-    return transaction;
   }
 
   /**
@@ -182,17 +192,23 @@ export class PixApiClient {
     description?: string,
     expiresInMinutes: number = 30
   ): Promise<PixQRCode> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // This is still largely a mock because generating a real EMV QR code requires backend logic not present in basic DB schema.
+    // However, we can return a structure that the frontend expects.
+    // We could store this in a 'pix_qr_codes' table if we had one, but for now we'll generate on the fly.
+
+    const qrCodeId = `qr_${Date.now()}`;
+
+    // Mocking the QR code string for now as we don't have the generator logic here yet
+    const qrCodeString = `00020126580014BR.GOV.BCB.PIX0136${Date.now()}520400005303986${amount ? `54${amount.toFixed(2).padStart(13, '0')}` : ''}5802BR5925Usuario Teste6009SAO PAULO62070503***6304${Math.floor(
+      Math.random() * 10000
+    )
+      .toString()
+      .padStart(4, '0')}`;
 
     const qrCode: PixQRCode = {
-      id: `qr_${Date.now()}`,
-      qr_code: `00020126580014BR.GOV.BCB.PIX0136${Date.now()}520400005303986${amount ? `54${amount.toFixed(2).padStart(13, '0')}` : ''}5802BR5925Usuario Teste6009SAO PAULO62070503***6304${Math.floor(
-        Math.random() * 10000
-      )
-        .toString()
-        .padStart(4, '0')}`,
-      qr_code_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`, // Mock base64 image
+      id: qrCodeId,
+      qr_code: qrCodeString,
+      qr_code_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==`, // Placeholder image
       amount,
       description,
       expires_at: new Date(Date.now() + expiresInMinutes * 60 * 1000).toISOString(),
@@ -210,20 +226,52 @@ export class PixApiClient {
     startDate?: string,
     endDate?: string
   ): Promise<PixTransaction[]> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
 
-    let transactions = [...mockPixTransactions];
+    let query = supabase.from('pix_transfers').select('*').eq('user_id', user.id);
 
-    // Apply date filters if provided
     if (startDate) {
-      transactions = transactions.filter((t) => t.created_at >= startDate);
+      query = query.gte('created_at', startDate);
     }
     if (endDate) {
-      transactions = transactions.filter((t) => t.created_at <= endDate);
+      query = query.lte('created_at', endDate);
     }
 
-    return transactions;
+    const { data, error } = await query;
+
+    if (error) {
+      logger.error('Failed to fetch PIX transactions', {
+        operation: 'pix_transactions',
+        userId: user.id,
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+
+    return (data || []).map((txn) => ({
+      id: txn.id,
+      amount: Number(txn.amount),
+      description: txn.description || undefined,
+      sender: {
+        name: 'Me',
+        document: '***',
+        bank: 'NeonPro',
+      },
+      receiver: {
+        name: txn.recipient_name,
+        document: txn.recipient_document || '***',
+        bank: txn.recipient_bank || 'Unknown',
+        key: txn.pix_key,
+      },
+      status: (txn.status as PixTransaction['status']) || 'pending',
+      created_at: txn.created_at || new Date().toISOString(),
+      completed_at: txn.executed_at || undefined,
+      end_to_end_id: txn.end_to_end_id || undefined,
+      transaction_id: txn.transaction_id || `TXN_${txn.id}`,
+    }));
   }
 
   /**
@@ -232,18 +280,25 @@ export class PixApiClient {
   async validatePixKey(
     pixKey: string
   ): Promise<{ valid: boolean; type?: PixKeyType; name?: string }> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    // This is a client-side validation helper + potential API check.
+    // Since we don't have a "Dict" API connection, we'll stick to format validation.
 
-    // Simple validation logic (mock)
     if (pixKey.includes('@')) {
+      // Simple email check
       return { valid: true, type: 'email', name: 'Usuário Email' };
-    } else if (pixKey.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
+    }
+    if (pixKey.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
       return { valid: true, type: 'cpf', name: 'Usuário CPF' };
-    } else if (pixKey.match(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)) {
+    }
+    if (pixKey.match(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)) {
       return { valid: true, type: 'phone', name: 'Usuário Telefone' };
-    } else if (pixKey.length === 32) {
+    }
+    if (pixKey.length === 32) {
       return { valid: true, type: 'random', name: 'Usuário Chave Aleatória' };
+    }
+    // Try pure numbers for CPF/Phone
+    if (pixKey.match(/^\d{11}$/)) {
+      return { valid: true, type: 'cpf', name: 'Usuário CPF' }; // or phone
     }
 
     return { valid: false };
@@ -251,7 +306,7 @@ export class PixApiClient {
 }
 
 // Default client instance
-export const pixClient = new PixApiClient(process.env.PIX_API_KEY || 'mock_pix_key', 'sandbox');
+export const pixClient = new PixApiClient(import.meta.env.VITE_PIX_API_KEY || 'api_key', 'sandbox');
 
 // PIX utility functions
 export const pixUtils = {

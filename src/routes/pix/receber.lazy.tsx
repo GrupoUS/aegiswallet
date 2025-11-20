@@ -5,17 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { type PixKey, pixClient } from '@/lib/banking/pixApi';
 
 // Lazy loading components
 const PixQRCodeGenerator = lazy(() => import('../components/PixQRCodeGenerator'));
 const PixKeysList = lazy(() => import('../components/PixKeysList'));
-
-// Mock PIX keys - replace with real data
-const mockPixKeys = [
-  { type: 'email', value: 'usuario@exemplo.com', label: 'Email Principal' },
-  { type: 'phone', value: '+55 (11) 99999-9999', label: 'Celular' },
-  { type: 'cpf', value: '123.456.789-00', label: 'CPF' },
-];
 
 // Loading placeholder components
 function QRCodeGeneratorLoader() {
@@ -78,6 +73,8 @@ export function PixReceivePage() {
   const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [pixKeys, setPixKeys] = useState<PixKey[]>([]);
+  const [isLoadingKeys, setIsLoadingKeys] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -87,6 +84,27 @@ export function PixReceivePage() {
       });
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    const fetchKeys = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const keys = await pixClient.getPixKeys(user.id);
+          setPixKeys(keys);
+        }
+      } catch (_error) {
+      } finally {
+        setIsLoadingKeys(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchKeys();
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -126,7 +144,7 @@ export function PixReceivePage() {
 
         {/* PIX Keys List */}
         <Suspense fallback={<PixKeysListLoader />}>
-          <PixKeysList pixKeys={mockPixKeys} />
+          {isLoadingKeys ? <PixKeysListLoader /> : <PixKeysList pixKeys={pixKeys} />}
         </Suspense>
       </div>
 

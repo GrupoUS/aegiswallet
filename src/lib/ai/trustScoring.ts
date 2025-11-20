@@ -13,7 +13,7 @@ export interface TrustScore {
 }
 
 export class TrustScoringEngine {
-  calculateScore(_userId: string, _data: any): TrustScore {
+  calculateScore(_userId: string, _data: Record<string, unknown>): TrustScore {
     return {
       overall: 75,
       factors: {

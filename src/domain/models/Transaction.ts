@@ -237,10 +237,35 @@ export class Transaction {
     return new Transaction(transactionData);
   }
 
-  static fromDatabase(data: any): Transaction {
+  static fromDatabase(data: {
+    id: string;
+    user_id: string;
+    account_id: string;
+    category_id?: string;
+    type: TransactionType;
+    amount: number;
+    description: string;
+    notes?: string;
+    transaction_date: string | Date;
+    status: TransactionStatus;
+    tags?: string[];
+    created_at: string | Date;
+    updated_at: string | Date;
+    bank_accounts?: BankAccount;
+    transaction_categories?: TransactionCategory;
+  }): Transaction {
     return new Transaction({
-      ...data,
+      id: data.id,
+      userId: data.user_id,
+      accountId: data.account_id,
+      categoryId: data.category_id,
+      type: data.type,
+      amount: data.amount,
+      description: data.description,
+      notes: data.notes,
       transactionDate: new Date(data.transaction_date),
+      status: data.status,
+      tags: data.tags,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       bankAccount: data.bank_accounts,

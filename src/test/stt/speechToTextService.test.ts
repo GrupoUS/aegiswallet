@@ -20,7 +20,7 @@ beforeAll(async () => {
 describe('SpeechToTextService', () => {
   let sttService: SpeechToTextService;
   const mockApiKey = 'test-api-key-12345';
-  let mockFetch: any;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -160,7 +160,7 @@ describe('SpeechToTextService', () => {
       });
 
       // Use mockImplementation to persist through retries
-      mockFetch.mockImplementation((req: Request, init: any) => {
+      mockFetch.mockImplementation((_req: Request, init: unknown) => {
         return new Promise((resolve, reject) => {
           // Respect abort signal
           if (init.signal) {

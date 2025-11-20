@@ -1,6 +1,22 @@
 import '@testing-library/jest-dom';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
+type MutableGlobal = typeof globalThis & {
+  localStorage?: Storage;
+  SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+  speechSynthesis?: SpeechSynthesis;
+  SpeechRecognition?: unknown;
+  webkitSpeechRecognition?: unknown;
+  AudioContext?: typeof AudioContext;
+  webkitAudioContext?: typeof AudioContext;
+  requestAnimationFrame?: typeof requestAnimationFrame;
+  cancelAnimationFrame?: typeof cancelAnimationFrame;
+  vi?: typeof vi;
+  screen?: Screen;
+};
+
+const globalObj = globalThis as MutableGlobal;
+
 // Enable fake timers for all tests
 vi.useFakeTimers();
 
@@ -153,7 +169,7 @@ beforeAll(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
   };
-  (globalThis as any).localStorage = localStorageMock;
+  globalObj.localStorage = localStorageMock;
 
   // Mock Speech Synthesis API for voice service tests
   const mockSpeechSynthesis = {
@@ -226,11 +242,12 @@ beforeAll(() => {
   }));
 
   // Set up global Speech API mocks (avoid redefinition) - only TTS, not Speech Recognition
-  if (!globalThis.SpeechSynthesisUtterance) {
-    (globalThis as any).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
+  if (!globalObj.SpeechSynthesisUtterance) {
+    globalObj.SpeechSynthesisUtterance =
+      mockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance;
   }
-  if (!globalThis.speechSynthesis) {
-    (globalThis as any).speechSynthesis = mockSpeechSynthesis;
+  if (!globalObj.speechSynthesis) {
+    globalObj.speechSynthesis = mockSpeechSynthesis as unknown as SpeechSynthesis;
   }
 
   // Ensure window object has Speech API (only TTS, not Speech Recognition)
@@ -251,7 +268,7 @@ beforeAll(() => {
   });
 
   // Mock screen object for device fingerprinting tests
-  (globalThis as any).screen = {
+  globalObj.screen = {
     width: 1920,
     height: 1080,
     colorDepth: 24,
@@ -267,8 +284,8 @@ beforeAll(() => {
   };
 
   // Mock window.screen to ensure it's available
-  if (typeof window !== 'undefined') {
-    window.screen = (globalThis as any).screen;
+  if (typeof window !== 'undefined' && globalObj.screen) {
+    window.screen = globalObj.screen;
   }
 
   // Ensure document.body exists for Testing Library
@@ -298,18 +315,18 @@ beforeAll(() => {
     state: 'running',
   }));
 
-  if (!(globalThis as any).AudioContext) {
-    (globalThis as any).AudioContext = mockAudioContext;
+  if (!globalObj.AudioContext) {
+    globalObj.AudioContext = mockAudioContext;
   }
-  if (!(globalThis as any).webkitAudioContext) {
-    (globalThis as any).webkitAudioContext = mockAudioContext;
+  if (!globalObj.webkitAudioContext) {
+    globalObj.webkitAudioContext = mockAudioContext;
   }
 
   // Mock requestAnimationFrame for voice activity detection
-  (globalThis as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+  globalObj.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
     return setTimeout(() => callback(performance.now()), 16) as unknown as number;
   });
-  (globalThis as any).cancelAnimationFrame = vi.fn((id: number) => {
+  globalObj.cancelAnimationFrame = vi.fn((id: number) => {
     clearTimeout(id);
   });
 
@@ -387,15 +404,15 @@ afterEach(() => {
 // Clean up global stubs after all tests
 afterAll(() => {
   // Manual cleanup since vi.unstubAllGlobals() might not be available
-  (globalThis as any).localStorage = undefined;
-  (globalThis as any).SpeechSynthesisUtterance = undefined;
-  (globalThis as any).speechSynthesis = undefined;
-  (globalThis as any).SpeechRecognition = undefined;
-  (globalThis as any).webkitSpeechRecognition = undefined;
-  (globalThis as any).AudioContext = undefined;
-  (globalThis as any).webkitAudioContext = undefined;
-  (globalThis as any).requestAnimationFrame = undefined;
-  (globalThis as any).cancelAnimationFrame = undefined;
+  globalObj.localStorage = undefined;
+  globalObj.SpeechSynthesisUtterance = undefined;
+  globalObj.speechSynthesis = undefined;
+  globalObj.SpeechRecognition = undefined;
+  globalObj.webkitSpeechRecognition = undefined;
+  globalObj.AudioContext = undefined;
+  globalObj.webkitAudioContext = undefined;
+  globalObj.requestAnimationFrame = undefined;
+  globalObj.cancelAnimationFrame = undefined;
 });
 
 // Export mock helpers for tests
@@ -425,6 +442,6 @@ export const createMockSpeechSynthesisEvent = (name: string, charIndex: number =
 });
 
 // Make vi available globally for test files that don't import it
-if (typeof (globalThis as any).vi === 'undefined') {
-  (globalThis as any).vi = vi;
+if (typeof globalObj.vi === 'undefined') {
+  globalObj.vi = vi;
 }

@@ -129,11 +129,11 @@ class MetricsStore {
       }
 
       if (filters.startDate) {
-        filtered = filtered.filter((log) => log.timestamp >= filters.startDate!);
+        filtered = filtered.filter((log) => log.timestamp >= filters.startDate);
       }
 
       if (filters.endDate) {
-        filtered = filtered.filter((log) => log.timestamp <= filters.endDate!);
+        filtered = filtered.filter((log) => log.timestamp <= filters.endDate);
       }
 
       if (filters.userId) {
@@ -358,7 +358,8 @@ export function generateReport(): {
   };
 } {
   const metrics = getMetrics();
-  const intentMetrics: any = {};
+  const intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>> =
+    {} as Record<IntentType, ReturnType<typeof getIntentMetrics>>;
 
   for (const intent of Object.values(IntentType)) {
     if (intent !== IntentType.UNKNOWN) {

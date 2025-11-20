@@ -14,8 +14,8 @@ export interface DataSubjectRequest {
   userId: string;
   requestType: 'access' | 'correction' | 'deletion' | 'portability' | 'restriction';
   status: 'pending' | 'processing' | 'completed' | 'rejected';
-  requestData?: any;
-  response?: any;
+  requestData?: Record<string, unknown>;
+  response?: Record<string, unknown>;
   createdAt: Date;
   processedAt?: Date;
   notes?: string;
@@ -157,7 +157,7 @@ export class LGPDDataRetentionManager {
   async createDataSubjectRequest(
     userId: string,
     requestType: DataSubjectRequest['requestType'],
-    requestData?: any
+    requestData?: Record<string, unknown>
   ): Promise<string> {
     try {
       const requestId = crypto.randomUUID();
@@ -277,7 +277,7 @@ export class LGPDDataRetentionManager {
   /**
    * Get user's data for access request
    */
-  async getUserData(userId: string): Promise<any> {
+  async getUserData(userId: string): Promise<Record<string, unknown>> {
     try {
       const userData = {
         profile: await supabase.from('users').select('*').eq('id', userId).single(),

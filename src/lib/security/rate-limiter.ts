@@ -274,16 +274,8 @@ class RateLimiter {
         });
       }
     } catch {
-      // Fallback to console if secure logger is not available
-      console.warn(`🔒 Security Event: ${type}`, {
-        identifier,
-        timestamp: new Date(event.timestamp).toISOString(),
-        ...details,
-      });
-
       // Check for rate limit exceeded events
       if (type === 'rate_limit_exceeded' || type === 'account_locked') {
-        console.error(`🚨 SECURITY ALERT: ${type} for ${identifier}`, details);
       }
     }
   }

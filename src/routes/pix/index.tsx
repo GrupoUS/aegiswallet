@@ -44,7 +44,7 @@ function PixLoader() {
         <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 py-6 max-lg:flex-col">
           {/* Converter widget placeholder */}
           <div className="shrink-0 lg:order-1 lg:w-90">
-            <Card>
+            <Card variant="glass">
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
               </CardHeader>
@@ -58,7 +58,7 @@ function PixLoader() {
 
           {/* Chart and table placeholder */}
           <div className="flex min-w-0 flex-1 flex-col gap-6">
-            <Card>
+            <Card variant="glass">
               <CardHeader>
                 <Skeleton className="h-6 w-40" />
               </CardHeader>
@@ -69,7 +69,7 @@ function PixLoader() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card variant="glass">
               <CardHeader>
                 <Skeleton className="h-6 w-48" />
               </CardHeader>

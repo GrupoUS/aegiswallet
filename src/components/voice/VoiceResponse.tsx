@@ -279,15 +279,12 @@ export const VoiceResponse = React.memo(function VoiceResponse({
     if (type === 'error' && isErrorResponse(data)) {
       return <ErrorData data={data} />;
     }
-
-    // Type-safe fallback - this should never happen with proper typing
-    console.warn('Invalid data type for VoiceResponse:', { type, data });
     return null;
   }, [type, data]);
 
   // Generate accessibility properties
   const accessibilityProps = React.useMemo(() => {
-    const props: Record<string, any> = {};
+    const props: Record<string, string | boolean | undefined> = {};
 
     if (accessibility) {
       if (accessibility['aria-live']) {
@@ -325,6 +322,7 @@ export const VoiceResponse = React.memo(function VoiceResponse({
 
   return (
     <Card
+      variant="glass"
       className={cn('border-2 transition-all duration-300', cardColor, className)}
       {...accessibilityProps}
     >

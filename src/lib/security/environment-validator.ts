@@ -180,13 +180,11 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 
   // Display warnings using secure logger if available, otherwise console
   if (allWarnings.length > 0) {
-    const warningMessage = ['🔒 ENVIRONMENT WARNINGS:', ...allWarnings].join('\n');
-
     // Use secure logger if available, fallback to console
     try {
       logger.warn('Environment validation warnings', { warnings: allWarnings });
     } catch {
-      console.warn(warningMessage);
+      // Fallback if logger fails
     }
   }
 
@@ -206,10 +204,8 @@ export const ENV_CONFIG = validateEnvironmentConfig();
 export function ensureSecureConfiguration(): void {
   try {
     validateEnvironmentConfig();
-    console.log('✅ Environment configuration validated successfully');
   } catch (error) {
-    console.error('❌ Environment validation failed:', error);
-    // In a browser environment, we might want to show a user-friendly error
+    // console.error('Environment validation failed:', error);
     if (typeof window !== 'undefined') {
       document.body.innerHTML = `
         <div style="

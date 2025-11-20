@@ -25,7 +25,7 @@ const LazyPixTransactionsTable = lazy(() =>
 
 // Loading component for transactions table
 const TransactionsTableLoader = () => (
-  <Card>
+  <Card variant="glass">
     <CardHeader>
       <Skeleton className="h-6 w-48" />
     </CardHeader>
@@ -115,7 +115,7 @@ export function PixHistoryPage() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card className="mb-6" variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -178,25 +178,25 @@ export function PixHistoryPage() {
 
       {/* Transactions Summary */}
       <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card variant="glass">
           <CardContent className="pt-6">
             <div className="text-muted-foreground text-sm">Total Transações</div>
             <div className="mt-1 font-bold text-2xl">142</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card variant="glass">
           <CardContent className="pt-6">
             <div className="text-muted-foreground text-sm">Total Enviado</div>
             <div className="mt-1 font-bold text-2xl text-financial-negative">R$ 8.450,00</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card variant="glass">
           <CardContent className="pt-6">
             <div className="text-muted-foreground text-sm">Total Recebido</div>
             <div className="mt-1 font-bold text-2xl text-financial-positive">R$ 12.680,50</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card variant="glass">
           <CardContent className="pt-6">
             <div className="text-muted-foreground text-sm">Saldo Período</div>
             <div className="mt-1 font-bold text-2xl text-financial-positive">R$ 4.230,50</div>

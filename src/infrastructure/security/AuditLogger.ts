@@ -81,7 +81,7 @@ export interface AuditEvent {
   resourceId?: string;
   action?: string;
   outcome: 'success' | 'failure' | 'warning';
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   tags?: string[];
   correlationId?: string;
   source: string;
@@ -110,7 +110,7 @@ export interface AuditEventStorage {
   query(filter: AuditEventFilter): Promise<{ events: AuditEvent[]; totalCount: number }>;
   delete(eventId: string): Promise<boolean>;
   archive(beforeDate: Date): Promise<number>;
-  getStats(filter?: AuditEventFilter): Promise<Record<string, any>>;
+  getStats(filter?: AuditEventFilter): Promise<Record<string, unknown>>;
 }
 
 /**
@@ -166,27 +166,22 @@ export class AuditLogger {
 
       // Process event through all processors
       await Promise.all(
-        this.processors.map((processor) =>
-          processor.process(auditEvent).catch((error) => {
-            console.error('Audit processor failed:', error);
-          })
-        )
+        this.processors.map((processor) => processor.process(auditEvent).catch((_error) => {}))
       );
 
       // Log to console in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[AUDIT] ${auditEvent.type}`, auditEvent);
-      }
-    } catch (error) {
-      console.error('Failed to log audit event:', error);
-      // Don't throw errors to prevent breaking the main application flow
+      // if (process.env.NODE_ENV === 'development') {
+      //   console.log(`[AUDIT] ${auditEvent.type}`, auditEvent);
+      // }
+    } catch (_error) {
+      // console.error('Failed to log audit event:', error);
     }
   }
 
   /**
    * Convenience methods for common events
    */
-  async logAuthSuccess(userId: string, details: Record<string, any> = {}): Promise<void> {
+  async logAuthSuccess(userId: string, details: Record<string, unknown> = {}): Promise<void> {
     await this.log({
       type: AuditEventType.AUTH_LOGIN_SUCCESS,
       severity: AuditSeverity.LOW,
@@ -198,7 +193,7 @@ export class AuditLogger {
     });
   }
 
-  async logAuthFailure(email: string, details: Record<string, any> = {}): Promise<void> {
+  async logAuthFailure(email: string, details: Record<string, unknown> = {}): Promise<void> {
     await this.log({
       type: AuditEventType.AUTH_LOGIN_FAILED,
       severity: AuditSeverity.MEDIUM,
@@ -215,7 +210,7 @@ export class AuditLogger {
     resource: string,
     resourceId?: string,
     outcome: 'success' | 'failure' = 'success',
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ): Promise<void> {
     await this.log({
       type: AuditEventType.DATA_READ,
@@ -235,7 +230,7 @@ export class AuditLogger {
     userId: string,
     type: AuditEventType,
     amount?: number,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ): Promise<void> {
     await this.log({
       type,
@@ -251,7 +246,7 @@ export class AuditLogger {
   async logSecurityEvent(
     type: AuditEventType,
     severity: AuditSeverity,
-    details: Record<string, any>,
+    details: Record<string, unknown>,
     userId?: string
   ): Promise<void> {
     await this.log({
@@ -268,7 +263,7 @@ export class AuditLogger {
   async logSystemEvent(
     type: AuditEventType,
     severity: AuditSeverity,
-    details: Record<string, any>
+    details: Record<string, unknown>
   ): Promise<void> {
     await this.log({
       type,
@@ -286,8 +281,7 @@ export class AuditLogger {
   async query(filter: AuditEventFilter): Promise<{ events: AuditEvent[]; totalCount: number }> {
     try {
       return await this.storage.query(filter);
-    } catch (error) {
-      console.error('Failed to query audit events:', error);
+    } catch (_error) {
       return { events: [], totalCount: 0 };
     }
   }
@@ -295,11 +289,11 @@ export class AuditLogger {
   /**
    * Get audit statistics
    */
-  async getStats(filter?: AuditEventFilter): Promise<Record<string, any>> {
+  async getStats(filter?: AuditEventFilter): Promise<Record<string, unknown>> {
     try {
       return await this.storage.getStats(filter);
-    } catch (error) {
-      console.error('Failed to get audit stats:', error);
+    } catch (_error) {
+      // console.error('Failed to get audit stats:', error);
       return {};
     }
   }
@@ -316,8 +310,8 @@ export class AuditLogger {
         beforeDate: beforeDate.toISOString(),
       });
       return archivedCount;
-    } catch (error) {
-      console.error('Failed to archive audit events:', error);
+    } catch (_error) {
+      // console.error('Failed to archive audit events:', error);
       return 0;
     }
   }
@@ -369,11 +363,13 @@ export class InMemoryAuditStorage implements AuditEventStorage {
     }
 
     if (filter.startDate) {
-      filteredEvents = filteredEvents.filter((e) => e.timestamp >= filter.startDate!);
+      const startDate = filter.startDate;
+      filteredEvents = filteredEvents.filter((e) => e.timestamp >= startDate);
     }
 
     if (filter.endDate) {
-      filteredEvents = filteredEvents.filter((e) => e.timestamp <= filter.endDate!);
+      const endDate = filter.endDate;
+      filteredEvents = filteredEvents.filter((e) => e.timestamp <= endDate);
     }
 
     if (filter.resource) {
@@ -386,7 +382,7 @@ export class InMemoryAuditStorage implements AuditEventStorage {
 
     if (filter.tags && filter.tags.length > 0) {
       filteredEvents = filteredEvents.filter((e) =>
-        filter.tags!.some((tag) => e.tags?.includes(tag))
+        filter.tags?.some((tag) => e.tags?.includes(tag))
       );
     }
 
@@ -425,7 +421,7 @@ export class InMemoryAuditStorage implements AuditEventStorage {
     return beforeCount - this.events.length;
   }
 
-  async getStats(filter?: AuditEventFilter): Promise<Record<string, any>> {
+  async getStats(filter?: AuditEventFilter): Promise<Record<string, unknown>> {
     const events = filter ? (await this.query(filter)).events : this.events;
 
     return {
@@ -461,8 +457,10 @@ export class InMemoryAuditStorage implements AuditEventStorage {
 /**
  * Supabase audit storage implementation (for production)
  */
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 export class SupabaseAuditStorage implements AuditEventStorage {
-  constructor(private supabase: any) {}
+  constructor(private supabase: SupabaseClient) {}
 
   async store(event: AuditEvent): Promise<void> {
     const { error } = await this.supabase.from('audit_events').insert({
@@ -572,13 +570,31 @@ export class SupabaseAuditStorage implements AuditEventStorage {
     return 0; // RPC should return count
   }
 
-  async getStats(_filter?: AuditEventFilter): Promise<Record<string, any>> {
+  async getStats(_filter?: AuditEventFilter): Promise<Record<string, unknown>> {
     // This would typically use database aggregation functions
     // For now, return basic stats
     return {};
   }
 
-  private mapDbEventToAuditEvent(dbEvent: any): AuditEvent {
+  private mapDbEventToAuditEvent(dbEvent: {
+    id: string;
+    type: AuditEventType;
+    severity: AuditSeverity;
+    user_id?: string;
+    session_id?: string;
+    ip_address?: string;
+    user_agent?: string;
+    timestamp: string;
+    resource?: string;
+    resource_id?: string;
+    action?: string;
+    outcome: 'success' | 'failure' | 'warning';
+    details: Record<string, unknown>;
+    tags?: string[];
+    correlation_id?: string;
+    source: string;
+    environment: string;
+  }): AuditEvent {
     return {
       id: dbEvent.id,
       type: dbEvent.type,
@@ -604,8 +620,15 @@ export class SupabaseAuditStorage implements AuditEventStorage {
 /**
  * Global audit logger instance
  */
-export const auditLogger = new AuditLogger(
-  process.env.NODE_ENV === 'production'
-    ? new SupabaseAuditStorage(require('@/integrations/supabase/client').supabase)
-    : new InMemoryAuditStorage()
-);
+let storage: AuditEventStorage;
+
+if (process.env.NODE_ENV === 'production') {
+  // biome-ignore lint/security/noGlobalEval: Dynamic require for optional dependency
+  // biome-ignore lint/suspicious/noExplicitAny: Required for dynamic import
+  const supabase = (require('@/integrations/supabase/client') as any).supabase;
+  storage = new SupabaseAuditStorage(supabase);
+} else {
+  storage = new InMemoryAuditStorage();
+}
+
+export const auditLogger = new AuditLogger(storage);

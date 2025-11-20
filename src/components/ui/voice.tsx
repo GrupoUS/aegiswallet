@@ -35,7 +35,7 @@ export const VoiceInterface = React.forwardRef<
   ) => {
     return (
       <div ref={ref} className={cn('flex flex-col space-y-4', className)} {...props}>
-        <Card className="w-full">
+        <Card className="w-full" variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <div className="relative">
@@ -161,7 +161,7 @@ export const VoiceDashboard = React.forwardRef<
 
   return (
     <div ref={ref} className={cn('space-y-4', className)} {...props}>
-      <Card>
+      <Card variant="glass">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Histórico de Comandos</CardTitle>
@@ -257,7 +257,7 @@ VoiceResponse.displayName = 'VoiceResponse';
 // Loading Components
 export const VoiceInterfaceLoader = () => (
   <div className="space-y-4">
-    <Card className="w-full">
+    <Card className="w-full" variant="glass">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Skeleton className="h-10 w-10 rounded-full" />
@@ -280,7 +280,7 @@ export const VoiceInterfaceLoader = () => (
 
 export const VoiceDashboardLoader = () => (
   <div className="space-y-4">
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-40" />

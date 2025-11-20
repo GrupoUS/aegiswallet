@@ -17,7 +17,7 @@ function SaldoLoader() {
       </div>
 
       {/* Total Balance Card */}
-      <Card className="border-2 border-primary/20">
+      <Card className="border-2 border-primary/20" variant="glass">
         <CardHeader>
           <CardDescription>
             <Skeleton className="h-4 w-24" />
@@ -39,7 +39,7 @@ function SaldoLoader() {
         <Skeleton className="mb-4 h-8 w-32" />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
+            <Card key={i} variant="glass">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardDescription>
@@ -57,7 +57,7 @@ function SaldoLoader() {
       </div>
 
       {/* Balance History Chart Placeholder */}
-      <Card>
+      <Card variant="glass">
         <CardHeader>
           <Skeleton className="mb-2 h-6 w-40" />
           <CardDescription>
@@ -76,7 +76,7 @@ function SaldoLoader() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card>
+      <Card variant="glass">
         <CardHeader>
           <Skeleton className="mb-2 h-6 w-48" />
           <CardDescription>
@@ -104,7 +104,7 @@ function SaldoLoader() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="h-auto py-4">
+          <Card key={i} className="h-auto py-4" variant="glass">
             <CardContent className="pt-6">
               <div className="text-center">
                 <Skeleton className="mx-auto mb-2 h-6 w-6" />

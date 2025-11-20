@@ -29,7 +29,16 @@ export interface MultimodalResponse {
   voice: string; // Natural speech text
   text: string; // Formatted text for display
   visual: {
-    type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'info';
+    type:
+      | 'balance'
+      | 'budget'
+      | 'bills'
+      | 'incoming'
+      | 'projection'
+      | 'transfer'
+      | 'info'
+      | 'error'
+      | 'confirmation';
     data: any;
   };
   accessibility?: {
@@ -41,6 +50,7 @@ export interface MultimodalResponse {
     emphasis?: 'strong' | 'moderate' | 'reduced';
     pauseDuration?: number;
   };
+  requiresConfirmation?: boolean;
 }
 
 export interface ResponseData {
@@ -154,7 +164,7 @@ export function buildBudgetResponse(data: {
 
   // Text output
   const percentageText =
-    category && safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : '';
+    safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : '';
   const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(safeAvailable)} disponíveis${percentageText}`;
 
   // Visual data - ensure safe values for display
@@ -447,7 +457,7 @@ export function buildErrorResponse(error: {
 
   // Visual data
   const visual = {
-    type: 'info' as const,
+    type: 'error' as const,
     data: { error: true, message, details },
   };
 
@@ -487,7 +497,7 @@ export function buildConfirmationResponse(data: {
 
   // Visual data
   const visual = {
-    type: 'info' as const,
+    type: 'confirmation' as const,
     data: { ...data, type: 'confirmation' },
   };
 
@@ -507,6 +517,7 @@ export function buildConfirmationResponse(data: {
       emphasis: 'moderate',
       pauseDuration: 500,
     },
+    requiresConfirmation: true,
   };
 }
 
@@ -534,6 +545,16 @@ export function buildMultimodalResponse(
   data: any
 ): MultimodalResponse {
   const intentKey = intent === IntentType.UNKNOWN ? 'unknown' : intent;
+
+  // Special handling for PAY_BILL confirmation
+  if (intent === IntentType.PAY_BILL && data.confirmed === false) {
+    return buildConfirmationResponse({
+      action: 'Pagar conta',
+      details: `${data.billName || 'Conta'} de ${formatCurrency(data.amount || 0)}`,
+      requiresConfirmation: true,
+    });
+  }
+
   const builder = responseBuilders[intentKey as keyof typeof responseBuilders];
 
   if (!builder) {

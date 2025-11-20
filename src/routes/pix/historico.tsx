@@ -18,7 +18,7 @@ const PixHistoryLoader = () => (
     </div>
 
     {/* Filters placeholder */}
-    <Card className="mb-6">
+    <Card className="mb-6" variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Skeleton className="h-5 w-5" />
@@ -53,7 +53,7 @@ const PixHistoryLoader = () => (
     {/* Transactions Summary placeholder */}
     <div className="mb-6 grid gap-4 md:grid-cols-4">
       {[1, 2, 3, 4].map((i) => (
-        <Card key={i}>
+        <Card key={i} variant="glass">
           <CardContent className="pt-6">
             <Skeleton className="mb-2 h-4 w-32" />
             <Skeleton className="h-8 w-24" />
@@ -63,7 +63,7 @@ const PixHistoryLoader = () => (
     </div>
 
     {/* Transactions Table placeholder */}
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <Skeleton className="h-6 w-48" />
       </CardHeader>

@@ -44,7 +44,7 @@ function App() {
   // Don't render anything if redirecting or still processing OAuth
   if (isRedirecting || isProcessing) {
     console.log('App is waiting for OAuth:', { isRedirecting, isProcessing });
-    return null;
+    return <div className="flex items-center justify-center h-screen">Loading App... ({isRedirecting ? 'Redirecting' : 'Processing'})</div>;
   }
 
   return (

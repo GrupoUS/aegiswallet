@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 
 const esToolkitAliases = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'aliases.json'), 'utf-8'));
 
@@ -9,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

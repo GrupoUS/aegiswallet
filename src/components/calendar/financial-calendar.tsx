@@ -5,8 +5,11 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { useCalendar } from '@/components/calendar/calendar-context';
+import { GoogleCalendarSettings } from '@/components/calendar/google-calendar-settings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,13 +18,16 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { type CalendarEvent, EventCalendar } from '@/components/ui/event-calendar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
 import { cn } from '@/lib/utils';
 import { type FinancialEvent, formatEventAmount } from '@/types/financial-events';
 
 // Converter FinancialEvent para CalendarEvent
-function toCalendarEvent(event: FinancialEvent): CalendarEvent {
+function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEvent {
   return {
     id: event.id,
     title: event.title,
@@ -30,6 +36,8 @@ function toCalendarEvent(event: FinancialEvent): CalendarEvent {
     end: new Date(event.end),
     color: event.color,
     allDay: event.allDay,
+    // Custom property for sync indicator
+    icon: isSynced ? <CalendarIcon className="h-3 w-3" /> : undefined,
   };
 }
 
@@ -37,6 +45,20 @@ export function FinancialCalendar() {
   const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const {
+    isConnected,
+    settings: syncSettings,
+    syncSingleEvent,
+    isSyncing,
+  } = useGoogleCalendarSync();
+
+  // Mock check for synced events (In real app, we'd check 'calendar_sync_mapping' via a query or prop on event)
+  // Since FinancialEvent doesn't have 'isSynced' prop yet, we assume we fetch it or pass it.
+  // For now, let's assume all events are potentially synced if the feature is on.
+  // Ideally, 'financialEvents' should come joined with sync status.
+  // We'll simulate it or add a TODO to update the fetching logic to include sync status.
 
   // Filtrar eventos baseado nos filtros atuais
   const filteredEvents = useMemo(() => {
@@ -70,7 +92,10 @@ export function FinancialCalendar() {
   // Enhanced converter com categorias
   const calendarEvents = useMemo(() => {
     return filteredEvents.map((event) => {
-      const calendarEvent = toCalendarEvent(event);
+      // Check sync status (TODO: real check)
+      const isSynced = isConnected && syncSettings?.sync_enabled;
+
+      const calendarEvent = toCalendarEvent(event, !!isSynced);
 
       // Encontrar a categoria correspondente
       const category = categories.find((cat) => cat.id === event.category);
@@ -80,7 +105,14 @@ export function FinancialCalendar() {
       }
 
       // Adicionar informações adicionais
-      calendarEvent.status = event.status as any;
+      const statusMap: Record<string, 'confirmed' | 'tentative' | 'cancelled'> = {
+        pending: 'tentative',
+        paid: 'confirmed',
+        scheduled: 'confirmed',
+        cancelled: 'cancelled',
+        completed: 'confirmed',
+      };
+      calendarEvent.status = statusMap[event.status] || 'confirmed';
       calendarEvent.priority =
         event.amount && Math.abs(event.amount) > 1000
           ? 'high'
@@ -91,39 +123,59 @@ export function FinancialCalendar() {
 
       return calendarEvent;
     });
-  }, [filteredEvents, categories]);
+  }, [filteredEvents, categories, isConnected, syncSettings]);
 
   const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>) => {
-    // Converter CalendarEvent para FinancialEvent
-    const financialEvent: Partial<FinancialEvent> = {
-      title: calendarEvent.title!,
-      description: calendarEvent.description,
-      start: calendarEvent.start!,
-      end: calendarEvent.end!,
-      color: calendarEvent.color!,
-      allDay: calendarEvent.allDay,
-      type: 'scheduled', // Default type
-      amount: 0, // Default amount
-      status: 'scheduled',
-      icon: '📅',
-    };
+    try {
+      // Converter CalendarEvent para FinancialEvent
+      const financialEvent: Partial<FinancialEvent> = {
+        title: calendarEvent.title || 'Novo Evento',
+        description: calendarEvent.description,
+        start: calendarEvent.start || new Date(),
+        end: calendarEvent.end || new Date(),
+        color: calendarEvent.color || 'blue',
+        allDay: calendarEvent.allDay,
+        type: 'scheduled', // Default type
+        amount: 0, // Default amount
+        status: 'scheduled',
+        icon: '📅',
+      };
 
-    await addEvent(financialEvent as FinancialEvent);
+      const newEvent = await addEvent(financialEvent as FinancialEvent);
+
+      // Sync if enabled
+      if (isConnected && syncSettings?.sync_enabled && newEvent?.id) {
+        toast.info('Sincronizando com Google Calendar...');
+        await syncSingleEvent(newEvent.id, 'to_google');
+      }
+    } catch (_error) {
+      toast.error('Erro ao criar evento');
+    }
   };
 
   const handleEventUpdate = async (calendarEvent: CalendarEvent) => {
-    // Encontrar o evento financeiro original e atualizar
-    const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
-    if (financialEvent) {
-      await updateEvent({
-        ...financialEvent,
-        title: calendarEvent.title,
-        description: calendarEvent.description,
-        start: calendarEvent.start,
-        end: calendarEvent.end,
-        color: calendarEvent.color,
-        allDay: calendarEvent.allDay,
-      });
+    try {
+      // Encontrar o evento financeiro original e atualizar
+      const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
+      if (financialEvent) {
+        const updatedEvent = await updateEvent({
+          ...financialEvent,
+          title: calendarEvent.title,
+          description: calendarEvent.description,
+          start: calendarEvent.start,
+          end: calendarEvent.end,
+          color: calendarEvent.color,
+          allDay: calendarEvent.allDay,
+        });
+
+        // Sync if enabled
+        if (isConnected && syncSettings?.sync_enabled && updatedEvent?.id) {
+          // Debounce could be useful here to avoid too many API calls on drag
+          syncSingleEvent(updatedEvent.id, 'to_google');
+        }
+      }
+    } catch (_error) {
+      toast.error('Erro ao atualizar evento');
     }
   };
 
@@ -137,10 +189,33 @@ export function FinancialCalendar() {
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full gap-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Calendário Financeiro</h2>
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <CalendarIcon className="h-4 w-4" />
+              {isConnected ? 'Google Conectado' : 'Conectar Google'}
+              {isSyncing && <RefreshCw className="h-3 w-3 animate-spin ml-1" />}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Integração Google Calendar</DialogTitle>
+              <DialogDescription>
+                Sincronize seus eventos financeiros com sua agenda pessoal.
+              </DialogDescription>
+            </DialogHeader>
+            <GoogleCalendarSettings />
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <EventCalendar
         events={calendarEvents}
         initialView="week"
+        syncWithGoogle={isConnected && syncSettings?.sync_enabled}
         onEventAdd={handleEventAdd}
         onEventUpdate={handleEventUpdate}
         onEventEdit={handleEventEdit}
@@ -153,6 +228,21 @@ export function FinancialCalendar() {
             <DialogTitle className="flex items-center gap-2">
               <span className="text-2xl">{selectedEvent?.icon}</span>
               {selectedEvent?.title}
+              {isConnected && syncSettings?.sync_enabled && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="secondary" className="ml-2 gap-1">
+                        <CalendarIcon className="h-3 w-3" />
+                        Google
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Este evento está sincronizado com o Google Calendar</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </DialogTitle>
             <DialogDescription>
               {selectedEvent &&
@@ -211,6 +301,6 @@ export function FinancialCalendar() {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

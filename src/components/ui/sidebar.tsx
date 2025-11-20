@@ -85,7 +85,7 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        'hidden h-full w-[300px] flex-shrink-0 bg-neutral-100 px-4 py-4 md:flex md:flex-col dark:bg-neutral-900',
+        'hidden h-full w-[300px] shrink-0 bg-neutral-100 px-4 py-4 md:flex md:flex-col dark:bg-neutral-900',
         'glass-dark border-white/10 border-r',
         className
       )}
@@ -129,17 +129,19 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
               ease: 'easeInOut',
             }}
             className={cn(
-              'fixed inset-0 z-[100] flex h-full w-full flex-col justify-between bg-white p-10 dark:bg-neutral-900',
+              'fixed inset-0 z-100 flex h-full w-full flex-col justify-between bg-white p-10 dark:bg-neutral-900',
               'glass-dark backdrop-blur-xl',
               className
             )}
           >
-            <div
-              className="absolute top-10 right-10 z-50 text-neutral-800 dark:text-neutral-200"
+            <button
+              type="button"
+              className="absolute right-10 top-10 z-50 rounded-md p-2 text-neutral-800 transition-colors hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
               onClick={() => setOpen(!open)}
+              aria-label="Fechar menu lateral"
             >
               <IconX />
-            </div>
+            </button>
             {children}
           </motion.div>
         )}
@@ -175,7 +177,7 @@ export const SidebarLink = ({
           display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="!p-0 !m-0 inline-block whitespace-pre text-neutral-700 text-sm transition duration-150 group-hover/sidebar:translate-x-1 dark:text-neutral-200"
+        className="m-0! inline-block p-0! whitespace-pre text-neutral-700 text-sm transition duration-150 dark:text-neutral-200 group-hover/sidebar:translate-x-1"
       >
         {link.label}
       </motion.span>

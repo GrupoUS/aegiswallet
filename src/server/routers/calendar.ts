@@ -27,9 +27,8 @@ function generateReminderMessage(event: any): string {
 
     if (event.amount < 0) {
       return `💰 Lembrete: Pagamento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
-    } else {
-      return `💳 Lembrete: Recebimento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
     }
+    return `💳 Lembrete: Recebimento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
   }
 
   return `📅 Lembrete: "${event.title}" em ${formattedDate}`;

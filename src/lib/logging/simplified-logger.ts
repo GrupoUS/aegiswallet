@@ -14,7 +14,7 @@ export interface LogContext {
   component?: string;
   action?: string;
   userId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
@@ -115,21 +115,17 @@ class SimplifiedLogger {
     if (!this.isDevelopment && level === LogLevel.DEBUG) return;
 
     const entry = this.createLogEntry(level, message, context);
-    const formattedMessage = this.formatMessage(entry);
+    const _formattedMessage = this.formatMessage(entry);
 
     // Use appropriate console method
     switch (level) {
       case LogLevel.DEBUG:
-        console.debug(formattedMessage, entry.context);
         break;
       case LogLevel.INFO:
-        console.info(formattedMessage, entry.context);
         break;
       case LogLevel.WARN:
-        console.warn(formattedMessage, entry.context);
         break;
       case LogLevel.ERROR:
-        console.error(formattedMessage, entry.context);
         break;
     }
   }

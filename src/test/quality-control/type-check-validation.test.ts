@@ -89,10 +89,14 @@ describe('Type Check Validation', () => {
 
     it('should have voice tables available', () => {
       // These should now exist in the database types without TypeScript errors
-      const voiceFeedbackRow: Tables<'voice_feedback'>['Row'] = {} as any;
-      const voiceMetricsRow: Tables<'voice_metrics'>['Row'] = {} as any;
-      const auditLogsRow: Tables<'audit_logs'>['Row'] = {} as any;
-      const bankTokensRow: Tables<'bank_tokens'>['Row'] = {} as any;
+      const voiceFeedbackRow: Tables<'voice_feedback'>['Row'] =
+        {} as unknown as Tables<'voice_feedback'>['Row'];
+      const voiceMetricsRow: Tables<'voice_metrics'>['Row'] =
+        {} as unknown as Tables<'voice_metrics'>['Row'];
+      const auditLogsRow: Tables<'audit_logs'>['Row'] =
+        {} as unknown as Tables<'audit_logs'>['Row'];
+      const bankTokensRow: Tables<'bank_tokens'>['Row'] =
+        {} as unknown as Tables<'bank_tokens'>['Row'];
 
       expect(voiceFeedbackRow).toBeDefined();
       expect(voiceMetricsRow).toBeDefined();
@@ -107,7 +111,7 @@ describe('Type Check Validation', () => {
       const uiModule = await import('@/components/ui');
 
       // These should exist and be React components (functions or forwardRef objects)
-      const isReactComponent = (component: any) =>
+      const isReactComponent = (component: unknown) =>
         typeof component === 'function' ||
         (typeof component === 'object' && component.$$typeof !== undefined);
 

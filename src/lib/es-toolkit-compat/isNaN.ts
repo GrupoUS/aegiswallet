@@ -1,2 +1,2 @@
-import { isNaN } from 'es-toolkit/compat';
-export default isNaN;
+import { isNaN as isNaNCompat } from 'es-toolkit/compat';
+export default isNaNCompat;

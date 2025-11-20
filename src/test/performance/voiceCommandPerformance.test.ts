@@ -20,11 +20,18 @@ const mockSpeechRecognitionInstance = {
   stop: vi.fn(),
   onstart: null,
   onend: null,
-  onresult: null as ((event: any) => void) | null,
+  onresult: null as ((event: unknown) => void) | null,
   onerror: null,
 };
 
 mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance);
+
+const globalSpeech = globalThis as typeof globalThis & {
+  SpeechRecognition?: unknown;
+  webkitSpeechRecognition?: unknown;
+  MediaRecorder?: unknown;
+  navigator?: Navigator;
+};
 
 // Mock browser APIs
 if (typeof window !== 'undefined') {
@@ -39,8 +46,8 @@ if (typeof window !== 'undefined') {
   });
 } else {
   // Fallback for Node.js environment
-  (globalThis as any).SpeechRecognition = mockSpeechRecognition;
-  (globalThis as any).webkitSpeechRecognition = mockSpeechRecognition;
+  globalSpeech.SpeechRecognition = mockSpeechRecognition;
+  globalSpeech.webkitSpeechRecognition = mockSpeechRecognition;
 }
 
 // Mock MediaRecorder
@@ -66,7 +73,7 @@ if (typeof window !== 'undefined') {
     writable: true,
   });
 } else {
-  (globalThis as any).MediaRecorder = mockMediaRecorderConstructor;
+  globalSpeech.MediaRecorder = mockMediaRecorderConstructor as unknown as typeof MediaRecorder;
 }
 
 // Mock getUserMedia
@@ -82,7 +89,7 @@ if (typeof navigator !== 'undefined') {
     writable: true,
   });
 } else {
-  (globalThis as any).navigator = {
+  globalSpeech.navigator = {
     mediaDevices: {
       getUserMedia: vi.fn(() =>
         Promise.resolve({
@@ -97,7 +104,7 @@ if (typeof navigator !== 'undefined') {
         })
       ),
     },
-  };
+  } as unknown as Navigator;
 }
 
 describe('Voice Command Performance', () => {
@@ -200,7 +207,7 @@ describe('Voice Command Performance', () => {
       const sttService = createSTTService('test-key');
 
       // Access private config through type assertion for testing
-      const config = (sttService as any).config;
+      const config = (sttService as unknown as { config: { timeout: number } }).config;
 
       expect(config.timeout).toBe(8000); // Should be 8 seconds
     });
@@ -263,7 +270,7 @@ describe('Voice Command Performance', () => {
         silenceDuration: 1500,
       });
 
-      await vad.initialize(mockStream as any);
+      await vad.initialize(mockStream as unknown as MediaStream);
 
       const endTime = performance.now();
       const initTime = endTime - startTime;
@@ -280,7 +287,7 @@ describe('Voice Command Performance', () => {
       };
 
       const vad = createVAD();
-      await vad.initialize(mockStream as any);
+      await vad.initialize(mockStream as unknown as MediaStream);
 
       vad.onSpeechStartCallback(() => {
         // Speech detected - VAD working correctly

@@ -25,7 +25,7 @@ export const logOperation = (
   userId: string,
   resource: string,
   resourceId?: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): void => {
   logger.info(`Operation: ${operation}`, {
     userId: `${userId.substring(0, 8)}...`,
@@ -38,8 +38,8 @@ export const logOperation = (
 export const logError = (
   operation: string,
   userId: string,
-  error: Error | Record<string, any>,
-  context?: Record<string, any>
+  error: Error | Record<string, unknown>,
+  context?: Record<string, unknown>
 ): void => {
   const errorInfo =
     error instanceof Error

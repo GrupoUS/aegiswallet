@@ -123,8 +123,8 @@ export interface RecoveryContext {
     result: NLUResult;
     timestamp: Date;
   }>;
-  userPreferences: any;
-  financialContext: any;
+  userPreferences: Record<string, unknown>;
+  financialContext: FinancialContext;
   brazilianContext: BrazilianContext;
   recoveryAttempts: number;
   previousErrors: ErrorClassification[];
@@ -1031,7 +1031,10 @@ export class ErrorRecoverySystem {
     return hints;
   }
 
-  private addRegionalContextToQuestions(questions: any, brazilianContext: BrazilianContext): void {
+  private addRegionalContextToQuestions(
+    questions: { contextualHints: string[] },
+    brazilianContext: BrazilianContext
+  ): void {
     if (brazilianContext.region === 'SP') {
       questions.contextualHints.push('Tente usar termos como "saldo", "pagar", "transferir"');
     } else if (brazilianContext.region === 'RJ') {
@@ -1156,7 +1159,7 @@ export class ErrorRecoverySystem {
     const totalErrors = this.errorPatterns.size;
     let successfulRecoveries = 0;
 
-    const strategyPerformance: Record<string, any> = {};
+    const strategyPerformance: Record<string, { attempts: number; successes: number; failures: number }> = {};
     for (const [id, strategy] of this.recoveryStrategies) {
       strategyPerformance[id] = {
         usage: 0, // TODO: Track usage

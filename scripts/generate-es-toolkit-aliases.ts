@@ -27,5 +27,3 @@ export default ${name};
   aliases[`es-toolkit/compat/${name}`] = path.resolve(process.cwd(), outputDir, `${name}.ts`);
   aliases[`es-toolkit/compat/${name}.js`] = path.resolve(process.cwd(), outputDir, `${name}.ts`);
 }
-
-console.log(JSON.stringify(aliases, null, 2));

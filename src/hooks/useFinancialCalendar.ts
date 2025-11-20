@@ -20,7 +20,7 @@ export function useFinancialEvents(filters?: {
     isLoading,
     error,
     refetch,
-  } = trpc.calendar.getEvents.useQuery(filters as any);
+  } = trpc.calendar.getEvents.useQuery(filters || {});
 
   const { mutate: createEvent, isPending: isCreating } = trpc.calendar.create.useMutation({
     onSuccess: () => {

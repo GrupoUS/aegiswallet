@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
+import type { FinancialEvent } from '@/types/financial-events';
 import type { CalendarView } from './types';
 
 interface CalendarHeaderProps {
@@ -34,7 +35,7 @@ interface CalendarHeaderProps {
   view: CalendarView;
   onViewChange?: (view: CalendarView) => void;
   onNewEvent?: () => void;
-  onSearchResults?: (results: any[]) => void;
+  onSearchResults?: (results: FinancialEvent[]) => void;
 }
 
 export function CalendarHeader({

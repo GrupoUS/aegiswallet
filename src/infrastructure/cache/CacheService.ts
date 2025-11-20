@@ -5,8 +5,19 @@
 
 import type { Transaction, TransactionStatus, TransactionType } from '@/domain/models/Transaction';
 import type { User } from '@/domain/models/User';
-import { logError } from '@/server/lib/logger';
+import { logger } from '@/lib/logging/logger';
 import { cacheManager, type ICache } from './CacheManager';
+
+type TransactionFilters = {
+  limit?: number;
+  offset?: number;
+  type?: TransactionType;
+  status?: TransactionStatus;
+  categoryId?: string;
+  accountId?: string;
+  startDate?: Date;
+  endDate?: Date;
+};
 
 export class CacheService {
   private readonly userCache: ICache;
@@ -28,7 +39,11 @@ export class CacheService {
       const cacheKey = `user:${userId}`;
       return this.userCache.get<User>(cacheKey);
     } catch (error) {
-      logError('cache_get_user', userId, error as Error, { operation: 'getUser' });
+      logger.error('cache_get_user failed', {
+        operation: 'getUser',
+        userId,
+        error: (error as Error).message,
+      });
       return null;
     }
   }
@@ -42,7 +57,11 @@ export class CacheService {
         tags: ['user', `user:${user.id}`],
       });
     } catch (error) {
-      logError('cache_set_user', user.id, error as Error, { operation: 'setUser' });
+      logger.error('cache_set_user failed', {
+        operation: 'setUser',
+        userId: user.id,
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -50,7 +69,11 @@ export class CacheService {
     try {
       await cacheManager.invalidateByTag(`user:${userId}`, 'users');
     } catch (error) {
-      logError('cache_invalidate_user', userId, error as Error, { operation: 'invalidateUser' });
+      logger.error('cache_invalidate_user failed', {
+        operation: 'invalidateUser',
+        userId,
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -59,8 +82,10 @@ export class CacheService {
       const cacheKey = `user:email:${email}`;
       return this.userCache.get<User>(cacheKey);
     } catch (error) {
-      logError('cache_get_user_by_email', email, error as Error, {
+      logger.error('cache_get_user_by_email failed', {
         operation: 'getUserByEmail',
+        email,
+        error: (error as Error).message,
       });
       return null;
     }
@@ -74,8 +99,10 @@ export class CacheService {
         tags: ['user', 'user:email', `user:${user.id}`],
       });
     } catch (error) {
-      logError('cache_set_user_by_email', email, error as Error, {
+      logger.error('cache_set_user_by_email failed', {
         operation: 'setUserByEmail',
+        email,
+        error: (error as Error).message,
       });
     }
   }
@@ -86,9 +113,11 @@ export class CacheService {
       const cacheKey = `transaction:${userId}:${transactionId}`;
       return this.transactionCache.get<Transaction>(cacheKey);
     } catch (error) {
-      logError('cache_get_transaction', transactionId, error as Error, {
+      logger.error('cache_get_transaction failed', {
         operation: 'getTransaction',
+        transactionId,
         userId,
+        error: (error as Error).message,
       });
       return null;
     }
@@ -103,25 +132,18 @@ export class CacheService {
         tags: ['transaction', `user:${transaction.userId}`, `transaction:${transaction.id}`],
       });
     } catch (error) {
-      logError('cache_set_transaction', transaction.id, error as Error, {
+      logger.error('cache_set_transaction failed', {
         operation: 'setTransaction',
+        transactionId: transaction.id,
         userId: transaction.userId,
+        error: (error as Error).message,
       });
     }
   }
 
   async getUserTransactions(
     userId: string,
-    filters: {
-      limit?: number;
-      offset?: number;
-      type?: TransactionType;
-      status?: TransactionStatus;
-      categoryId?: string;
-      accountId?: string;
-      startDate?: Date;
-      endDate?: Date;
-    }
+    filters: TransactionFilters
   ): Promise<{ transactions: Transaction[]; totalCount: number } | null> {
     try {
       // Create a cache key based on filters
@@ -132,9 +154,11 @@ export class CacheService {
         cacheKey
       );
     } catch (error) {
-      logError('cache_get_user_transactions', userId, error as Error, {
+      logger.error('cache_get_user_transactions failed', {
         operation: 'getUserTransactions',
+        userId,
         filters,
+        error: (error as Error).message,
       });
       return null;
     }
@@ -142,7 +166,7 @@ export class CacheService {
 
   async setUserTransactions(
     userId: string,
-    filters: any,
+    filters: TransactionFilters,
     result: { transactions: Transaction[]; totalCount: number },
     ttl: number = 180000 // 3 minutes default
   ): Promise<void> {
@@ -155,8 +179,10 @@ export class CacheService {
         tags: ['transactions', `user:${userId}`],
       });
     } catch (error) {
-      logError('cache_set_user_transactions', userId, error as Error, {
+      logger.error('cache_set_user_transactions failed', {
         operation: 'setUserTransactions',
+        userId,
+        error: (error as Error).message,
       });
     }
   }
@@ -165,8 +191,10 @@ export class CacheService {
     try {
       await cacheManager.invalidateByTag(`user:${userId}`, 'transactions');
     } catch (error) {
-      logError('cache_invalidate_user_transactions', userId, error as Error, {
+      logger.error('cache_invalidate_user_transactions failed', {
         operation: 'invalidateUserTransactions',
+        userId,
+        error: (error as Error).message,
       });
     }
   }
@@ -175,9 +203,11 @@ export class CacheService {
     try {
       await cacheManager.invalidateByTag(`transaction:${transactionId}`, 'transactions');
     } catch (error) {
-      logError('cache_invalidate_transaction', transactionId, error as Error, {
+      logger.error('cache_invalidate_transaction failed', {
         operation: 'invalidateTransaction',
+        transactionId,
         userId,
+        error: (error as Error).message,
       });
     }
   }
@@ -197,9 +227,11 @@ export class CacheService {
       const cacheKey = `user:${userId}:stats:${period}`;
       return this.transactionCache.get(cacheKey);
     } catch (error) {
-      logError('cache_get_transaction_statistics', userId, error as Error, {
+      logger.error('cache_get_transaction_statistics failed', {
         operation: 'getTransactionStatistics',
+        userId,
         period,
+        error: (error as Error).message,
       });
       return null;
     }
@@ -224,29 +256,43 @@ export class CacheService {
         tags: ['statistics', `user:${userId}`],
       });
     } catch (error) {
-      logError('cache_set_transaction_statistics', userId, error as Error, {
+      logger.error('cache_set_transaction_statistics failed', {
         operation: 'setTransactionStatistics',
+        userId,
         period,
+        error: (error as Error).message,
       });
     }
   }
 
   // Session caching methods
-  async getSession(sessionId: string): Promise<any | null> {
+  async getSession<T = unknown>(sessionId: string): Promise<T | null> {
     try {
-      return this.sessionCache.get(`session:${sessionId}`);
+      return this.sessionCache.get<T>(`session:${sessionId}`);
     } catch (error) {
-      logError('cache_get_session', sessionId, error as Error, { operation: 'getSession' });
+      logger.error('cache_get_session failed', {
+        operation: 'getSession',
+        sessionId,
+        error: (error as Error).message,
+      });
       return null;
     }
   }
 
-  async setSession(sessionId: string, sessionData: any, ttl: number = 3600000): Promise<void> {
+  async setSession<T = unknown>(
+    sessionId: string,
+    sessionData: T,
+    ttl: number = 3600000
+  ): Promise<void> {
     // 1 hour default
     try {
       await this.sessionCache.set(`session:${sessionId}`, sessionData, { ttl });
     } catch (error) {
-      logError('cache_set_session', sessionId, error as Error, { operation: 'setSession' });
+      logger.error('cache_set_session failed', {
+        operation: 'setSession',
+        sessionId,
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -254,29 +300,39 @@ export class CacheService {
     try {
       return this.sessionCache.delete(`session:${sessionId}`);
     } catch (error) {
-      logError('cache_invalidate_session', sessionId, error as Error, {
+      logger.error('cache_invalidate_session failed', {
         operation: 'invalidateSession',
+        sessionId,
+        error: (error as Error).message,
       });
       return false;
     }
   }
 
   // API response caching methods
-  async getApiResponse(key: string): Promise<any | null> {
+  async getApiResponse<T = unknown>(key: string): Promise<T | null> {
     try {
-      return this.apiCache.get(key);
+      return this.apiCache.get<T>(key);
     } catch (error) {
-      logError('cache_get_api_response', key, error as Error, { operation: 'getApiResponse' });
+      logger.error('cache_get_api_response failed', {
+        operation: 'getApiResponse',
+        key,
+        error: (error as Error).message,
+      });
       return null;
     }
   }
 
-  async setApiResponse(key: string, data: any, ttl: number = 300000): Promise<void> {
+  async setApiResponse<T = unknown>(key: string, data: T, ttl: number = 300000): Promise<void> {
     // 5 minutes default
     try {
       await this.apiCache.set(key, data, { ttl, tags: ['api'] });
     } catch (error) {
-      logError('cache_set_api_response', key, error as Error, { operation: 'setApiResponse' });
+      logger.error('cache_set_api_response failed', {
+        operation: 'setApiResponse',
+        key,
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -284,8 +340,10 @@ export class CacheService {
     try {
       await cacheManager.invalidateByTag('api', 'api');
     } catch (error) {
-      logError('cache_invalidate_api_responses', 'system', error as Error, {
+      logger.error('cache_invalidate_api_responses failed', {
         operation: 'invalidateApiResponses',
+        key: 'system',
+        error: (error as Error).message,
       });
     }
   }
@@ -299,17 +357,21 @@ export class CacheService {
     try {
       return cacheManager.getOrSet(key, factory, options, options.cacheName);
     } catch (error) {
-      logError('cache_get_or_set', key, error as Error, { operation: 'getOrSet' });
+      logger.error('cache_get_or_set failed', {
+        operation: 'getOrSet',
+        key,
+        error: (error as Error).message,
+      });
       return factory(); // Fallback to direct execution
     }
   }
 
   // Cache statistics
   getCacheStats(): {
-    users: any;
-    transactions: any;
-    sessions: any;
-    api: any;
+    users: ReturnType<ICache['getStats']>;
+    transactions: ReturnType<ICache['getStats']>;
+    sessions: ReturnType<ICache['getStats']>;
+    api: ReturnType<ICache['getStats']>;
   } {
     return {
       users: this.userCache.getStats(),
@@ -347,7 +409,11 @@ export class CacheService {
         ]);
       }
     } catch (error) {
-      logError('cache_clear', cacheName || 'all', error as Error, { operation: 'clearCache' });
+      logger.error('cache_clear failed', {
+        operation: 'clearCache',
+        cacheName: cacheName || 'all',
+        error: (error as Error).message,
+      });
     }
   }
 

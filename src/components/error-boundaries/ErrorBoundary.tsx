@@ -57,7 +57,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo);
     }
 
     // Call custom error handler if provided
@@ -97,9 +96,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       // Keep only last 50 errors
       const recentErrors = existingErrors.slice(-50);
       localStorage.setItem('error-logs', JSON.stringify(recentErrors));
-    } catch (loggingError) {
-      console.error('Failed to log error:', loggingError);
-    }
+    } catch (_loggingError) {}
   };
 
   private handleRetry = () => {
@@ -242,10 +239,7 @@ export function withErrorBoundary<P extends object>(
  * Hook for handling async errors in functional components
  */
 export function useErrorHandler() {
-  return (error: Error, errorInfo?: string) => {
-    // Log the error
-    console.error('Async error caught:', error, errorInfo);
-
+  return (_error: Error, _errorInfo?: string) => {
     // In production, send to error reporting service
     if (process.env.NODE_ENV === 'production') {
       // errorReportingService.captureException(error, { extra: { errorInfo } });

@@ -1,6 +1,6 @@
 import { differenceInMinutes, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react';
+import { Clock, Cloud, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,9 @@ export function EnhancedEventCard({
         aria-label={`Ver evento: ${event.title}`}
       >
         <span className="truncate">{event.title}</span>
+        {event.syncStatus === 'synced' && (
+          <Cloud className="ml-1 inline-block h-3 w-3 opacity-70" />
+        )}
       </button>
     );
   }
@@ -154,6 +157,15 @@ export function EnhancedEventCard({
                 {event.recurring && (
                   <Badge variant="outline" className="text-xs">
                     Recorrente
+                  </Badge>
+                )}
+
+                {event.syncStatus === 'synced' && (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs gap-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  >
+                    <Cloud className="h-3 w-3" /> Google
                   </Badge>
                 )}
               </div>

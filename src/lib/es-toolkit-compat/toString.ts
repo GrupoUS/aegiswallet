@@ -1,2 +1,2 @@
-import { toString } from 'es-toolkit/compat';
-export default toString;
+import { toString as toStringCompat } from 'es-toolkit/compat';
+export default toStringCompat;

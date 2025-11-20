@@ -58,43 +58,47 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   // Process voice commands when recognized
   useEffect(() => {
     if (transcript && confidence > 0.5) {
-      const response = processVoiceCommand(transcript, confidence);
-      setCurrentResponse(response);
+      const handleCommand = async () => {
+        const response = await processVoiceCommand(transcript, confidence);
+        setCurrentResponse(response);
 
-      // Announce response for accessibility
-      announce(response.message);
-      speak(response.message);
+        // Announce response for accessibility
+        announce(response.message);
+        speak(response.message);
 
-      // Add to history
-      setCommandHistory((prev) => [
-        {
-          id: crypto.randomUUID(),
-          command: transcript,
-          response,
-          timestamp: new Date(),
-        },
-        ...prev.slice(0, 9),
-      ]); // Keep last 10 commands
+        // Add to history
+        setCommandHistory((prev) => [
+          {
+            id: crypto.randomUUID(),
+            command: transcript,
+            response,
+            timestamp: new Date(),
+          },
+          ...prev.slice(0, 9),
+        ]); // Keep last 10 commands
 
-      // Optimized state reset - reduced from 2000ms to 800ms
-      if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
-      }
+        // Optimized state reset - reduced from 2000ms to 800ms
+        if (resetTimeoutRef.current) {
+          clearTimeout(resetTimeoutRef.current);
+        }
 
-      resetTimeoutRef.current = setTimeout(() => {
-        // resetState() - removed as it doesn't exist
-        resetTimeoutRef.current = null;
-      }, 800); // Reduced from 2000ms to 800ms for better responsiveness
+        resetTimeoutRef.current = setTimeout(() => {
+          // resetState() - removed as it doesn't exist
+          resetTimeoutRef.current = null;
+        }, 800); // Reduced from 2000ms to 800ms for better responsiveness
 
-      // Auto-clear response after 5 seconds with cleanup
-      if (responseTimeoutRef.current) {
-        clearTimeout(responseTimeoutRef.current);
-      }
+        // Auto-clear response after 5 seconds with cleanup
+        if (responseTimeoutRef.current) {
+          clearTimeout(responseTimeoutRef.current);
+        }
 
-      responseTimeoutRef.current = setTimeout(() => {
-        setCurrentResponse(null);
-        responseTimeoutRef.current = null;
-      }, 5000);
+        responseTimeoutRef.current = setTimeout(() => {
+          setCurrentResponse(null);
+          responseTimeoutRef.current = null;
+        }, 5000);
+      };
+
+      handleCommand();
     }
   }, [transcript, confidence, announce, speak]);
 

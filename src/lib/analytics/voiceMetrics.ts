@@ -35,7 +35,7 @@ export interface VoiceMetric {
   userRegion?: string;
   deviceType?: string;
   browser?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface MetricsSummary {

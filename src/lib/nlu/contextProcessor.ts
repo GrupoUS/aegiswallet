@@ -855,7 +855,8 @@ export class ContextProcessor {
   private async getUserPreferences(userId: string): Promise<UserPreferences> {
     // Check cache first
     if (this.userPreferencesCache.has(userId)) {
-      return this.userPreferencesCache.get(userId)!;
+      const cachedPrefs = this.userPreferencesCache.get(userId);
+      if (cachedPrefs) return cachedPrefs;
     }
 
     try {
@@ -964,9 +965,9 @@ export class ContextProcessor {
   private async getFinancialContext(userId: string): Promise<FinancialContext> {
     // Check cache first
     if (this.financialContextCache.has(userId)) {
-      const cached = this.financialContextCache.get(userId)!;
+      const cached = this.financialContextCache.get(userId);
       // Cache for 5 minutes
-      if (Date.now() - cached.lastUpdated.getTime() < 300000) {
+      if (cached && Date.now() - cached.lastUpdated.getTime() < 300000) {
         return cached;
       }
     }

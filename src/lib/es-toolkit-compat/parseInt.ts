@@ -1,2 +1,2 @@
-import { parseInt } from 'es-toolkit/compat';
-export default parseInt;
+import { parseInt as parseIntCompat } from 'es-toolkit/compat';
+export default parseIntCompat;

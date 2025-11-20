@@ -65,11 +65,11 @@ export enum EntityType {
 export interface ExtractedEntity {
   type: EntityType;
   value: string; // Original text value
-  normalizedValue: any; // Normalized/parsed value
+  normalizedValue: unknown; // Normalized/parsed value
   confidence: number; // Confidence score (0-1)
   startIndex: number; // Start position in text
   endIndex: number; // End position in text
-  metadata?: Record<string, any>; // Additional metadata
+  metadata?: Record<string, unknown>; // Additional metadata
 }
 
 /**
@@ -78,8 +78,8 @@ export interface ExtractedEntity {
 export interface EntityPattern {
   type: EntityType;
   pattern: RegExp;
-  normalizer: (match: string) => any;
-  validator?: (value: any) => boolean;
+  normalizer: (match: string) => unknown;
+  validator?: (value: unknown) => boolean;
 }
 
 // ============================================================================

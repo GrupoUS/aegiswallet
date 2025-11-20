@@ -6,6 +6,26 @@ AegisWallet is an intelligent financial management platform designed specificall
 
 ---
 
+## 📅 Integração Google Calendar
+
+O AegisWallet oferece sincronização bidirecional com Google Calendar, permitindo que você:
+
+- Sincronize eventos financeiros com sua agenda do Google
+- Crie eventos arrastando e soltando no calendário
+- Mantenha seus compromissos financeiros sempre atualizados
+- Controle quais dados são sincronizados (privacidade LGPD)
+
+### Configuração
+
+1. Acesse as configurações do calendário
+2. Clique em "Conectar Google Calendar"
+3. Autorize o acesso à sua conta Google
+4. Configure as opções de sincronização
+
+Para mais detalhes, consulte a [documentação completa](./docs/google-calendar-integration.md).
+
+---
+
 ## 🚀 Quick Start
 
 ```bash
@@ -184,6 +204,7 @@ bun preview
 - [Component Usage Guide](docs/components/color-usage-guide.md)
 - [Implementation Summary](docs/design-specs/IMPLEMENTATION-COMPLETE.md)
 - [Phase 5 Progress](docs/design-specs/PHASE-5-PROGRESS.md)
+- [Integração Google Calendar](docs/google-calendar-integration.md)
 
 ---
 
@@ -228,4 +249,3 @@ Built with:
 ---
 
 **Made with ❤️ for the Brazilian market**
-

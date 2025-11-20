@@ -230,9 +230,6 @@ describe('NLU Engine', () => {
     it('should require disambiguation for low confidence', async () => {
       const result = await nluEngine.processUtterance('quero fazer algo com dinheiro');
 
-      // Debug: Check the actual confidence and intent
-      console.log('Disambiguation test - Intent:', result.intent, 'Confidence:', result.confidence);
-
       // If this is being matched with high confidence, the test needs adjustment
       // For now, let's adjust the expectation based on actual behavior
       if (result.confidence < 0.6) {

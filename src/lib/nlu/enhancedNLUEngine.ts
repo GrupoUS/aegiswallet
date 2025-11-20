@@ -200,7 +200,7 @@ export class EnhancedNLUEngine {
   private performanceTracker: NLUPerformanceTracker;
 
   // Cache and stats
-  private cache = new Map<string, any>();
+  private cache = new Map<string, NLUResult>();
   private cacheStats = {
     hits: 0,
     misses: 0,
@@ -563,7 +563,7 @@ export class EnhancedNLUEngine {
     hitMissMetrics: HitMissMetrics;
     learningAnalytics: LearningAnalytics;
     performanceMetrics: PerformanceMetrics;
-    systemHealth: any;
+    systemHealth: Record<string, unknown>;
     recommendations: string[];
   } {
     return {
@@ -973,8 +973,12 @@ export class EnhancedNLUEngine {
     result: NLUResult,
     _originalText: string,
     brazilianContext: BrazilianContext,
-    conversationContext: any,
-    contextEnhancements: any,
+    conversationContext: Record<string, unknown>,
+    contextEnhancements: {
+      confidenceAdjustment?: number;
+      contextualInsights?: string[];
+      missingContextualInfo?: string[];
+    },
     classificationId: string,
     _userId: string,
     _sessionId: string,
@@ -1021,7 +1025,7 @@ export class EnhancedNLUEngine {
         suggestedQuestions: this.generateSuggestedQuestions(result, contextEnhancements),
         contextualHints: contextEnhancements.missingContextualInfo || [],
         alternativeIntents:
-          result.metadata?.alternativeIntents?.map((alt: any) => ({
+          result.metadata?.alternativeIntents?.map((alt) => ({
             intent: alt.intent,
             confidence: alt.confidence,
             reasoning: `Alternative intent with ${alt.confidence} confidence`,
@@ -1162,7 +1166,10 @@ export class EnhancedNLUEngine {
     };
   }
 
-  private generateSuggestedQuestions(result: NLUResult, contextEnhancements: any): string[] {
+  private generateSuggestedQuestions(
+    result: NLUResult,
+    contextEnhancements: { missingContextualInfo?: string[] }
+  ): string[] {
     const questions = [];
 
     if (result.requiresDisambiguation) {
@@ -1222,7 +1229,7 @@ export class EnhancedNLUEngine {
     return highConfidenceAlternatives.length > 1;
   }
 
-  private getMissingSlots(intent: IntentType, entities: any[]): any[] {
+  private getMissingSlots(intent: IntentType, entities: ExtractedEntity[]): EntityType[] {
     const definition = INTENT_DEFINITIONS[intent];
     if (!definition) return [];
 

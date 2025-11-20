@@ -58,15 +58,14 @@ export function useOAuthHandler(): OAuthHandlerResult {
             window.location.replace('/dashboard');
             setIsRedirecting(true);
             return true; // Indicate that redirect is happening
-          } else {
-            // Store the hash for processing by the dashboard component
-            sessionStorage.setItem('oauth_hash', window.location.hash);
-
-            secureLogger.authEvent('oauth_callback_received', undefined, {
-              pathname: window.location.pathname,
-              hasAccessToken: hashParams.has('access_token'),
-            });
           }
+          // Store the hash for processing by the dashboard component
+          sessionStorage.setItem('oauth_hash', window.location.hash);
+
+          secureLogger.authEvent('oauth_callback_received', undefined, {
+            pathname: window.location.pathname,
+            hasAccessToken: hashParams.has('access_token'),
+          });
         }
 
         setIsProcessing(false);

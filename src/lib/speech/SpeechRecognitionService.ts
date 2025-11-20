@@ -634,8 +634,7 @@ export async function recognizeCommand(
       provider: 'cloud-fallback',
       audioDuration: sttResult.duration,
     };
-  } else {
-    // Use real-time recognition
-    return service.startRecognition();
   }
+  // Use real-time recognition
+  return service.startRecognition();
 }

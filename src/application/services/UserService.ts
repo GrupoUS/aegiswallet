@@ -10,7 +10,7 @@ import {
   type UserPreferences,
   type UserUpdateData,
 } from '@/domain/models/User';
-import { logError, logOperation, logSecurityEvent } from '@/server/lib/logger';
+import { logger } from '@/lib/logging/logger';
 
 export interface UserServiceDependencies {
   userRepository: IUserRepository;
@@ -26,7 +26,9 @@ export class UserService {
     try {
       // Security check: users can only access their own data
       if (requestorId && requestorId !== id) {
-        logSecurityEvent('unauthorized_user_access_attempt', requestorId, {
+        logger.warn('Unauthorized user access attempt', {
+          event: 'unauthorized_user_access_attempt',
+          userId: requestorId,
           targetUserId: id,
           operation: 'getUserById',
         });
@@ -36,16 +38,21 @@ export class UserService {
       const user = await this.dependencies.userRepository.findById(id);
 
       if (!user && requestorId) {
-        logOperation('user_not_found', requestorId, 'user', id, {
-          operation: 'getUserById',
+        logger.info('User not found', {
+          operation: 'user_not_found',
+          userId: requestorId,
+          resource: 'user',
+          resourceId: id,
         });
       }
 
       return user;
     } catch (error) {
-      logError('user_service_get_by_id', id, error as Error, {
+      logger.error('Failed to get user by id', {
         operation: 'getUserById',
+        userId: id,
         requestorId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -59,8 +66,10 @@ export class UserService {
       const user = await this.dependencies.userRepository.findByEmail(email);
       return user;
     } catch (error) {
-      logError('user_service_get_by_email', email, error as Error, {
+      logger.error('Failed to get user by email', {
         operation: 'getUserByEmail',
+        email,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -74,7 +83,9 @@ export class UserService {
       // Validate email uniqueness
       const existingUser = await this.dependencies.userRepository.findByEmail(userData.email);
       if (existingUser) {
-        logSecurityEvent('duplicate_user_creation_attempt', requestorId || 'system', {
+        logger.warn('Duplicate user creation attempt', {
+          event: 'duplicate_user_creation_attempt',
+          userId: requestorId || 'system',
           email: userData.email,
           operation: 'createUser',
         });
@@ -88,7 +99,10 @@ export class UserService {
       const user = User.create(userData);
       const createdUser = await this.dependencies.userRepository.create(user);
 
-      logOperation('user_creation_success', createdUser.id, 'user', createdUser.id, {
+      logger.info('User created successfully', {
+        operation: 'user_creation_success',
+        userId: createdUser.id,
+        resource: 'user',
         email: createdUser.email,
         fullName: createdUser.fullName,
         autonomyLevel: createdUser.autonomyLevel,
@@ -96,8 +110,10 @@ export class UserService {
 
       return createdUser;
     } catch (error) {
-      logError('user_service_create_user', userData.email, error as Error, {
+      logger.error('Failed to create user', {
         operation: 'createUser',
+        email: userData.email,
+        error: (error as Error).message,
         userData: {
           email: userData.email,
           fullName: userData.fullName,
@@ -118,7 +134,9 @@ export class UserService {
     try {
       // Security check: users can only update their own profile
       if (requestorId !== userId) {
-        logSecurityEvent('unauthorized_user_update_attempt', requestorId, {
+        logger.warn('Unauthorized user update attempt', {
+          event: 'unauthorized_user_update_attempt',
+          userId: requestorId,
           targetUserId: userId,
           operation: 'updateUserProfile',
         });
@@ -141,15 +159,20 @@ export class UserService {
       const updatedUser = existingUser.update(validatedUpdateData);
       const savedUser = await this.dependencies.userRepository.update(updatedUser);
 
-      logOperation('user_profile_update_success', userId, 'user', userId, {
+      logger.info('User profile updated successfully', {
+        operation: 'user_profile_update_success',
+        userId,
+        resource: 'user',
         updatedFields: Object.keys(validatedUpdateData),
       });
 
       return savedUser;
     } catch (error) {
-      logError('user_service_update_user_profile', userId, error as Error, {
+      logger.error('Failed to update user profile', {
         operation: 'updateUserProfile',
+        userId,
         requestorId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -166,7 +189,9 @@ export class UserService {
     try {
       // Security check: users can only update their own preferences
       if (requestorId !== userId) {
-        logSecurityEvent('unauthorized_preferences_update_attempt', requestorId, {
+        logger.warn('Unauthorized preferences update attempt', {
+          event: 'unauthorized_preferences_update_attempt',
+          userId: requestorId,
           targetUserId: userId,
           operation: 'updateUserPreferences',
         });
@@ -182,15 +207,20 @@ export class UserService {
         preferences
       );
 
-      logOperation('user_preferences_update_success', userId, 'user', userId, {
+      logger.info('User preferences updated successfully', {
+        operation: 'user_preferences_update_success',
+        userId,
+        resource: 'user',
         updatedPreferences: Object.keys(preferences),
       });
 
       return updatedUser;
     } catch (error) {
-      logError('user_service_update_preferences', userId, error as Error, {
+      logger.error('Failed to update user preferences', {
         operation: 'updateUserPreferences',
+        userId,
         requestorId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -203,7 +233,9 @@ export class UserService {
     try {
       // Security check: users can only delete their own account
       if (requestorId !== userId) {
-        logSecurityEvent('unauthorized_user_deletion_attempt', requestorId, {
+        logger.warn('Unauthorized user deletion attempt', {
+          event: 'unauthorized_user_deletion_attempt',
+          userId: requestorId,
           targetUserId: userId,
           operation: 'deleteUser',
         });
@@ -224,14 +256,19 @@ export class UserService {
       // Delete user
       await this.dependencies.userRepository.delete(userId);
 
-      logOperation('user_deletion_success', userId, 'user', userId, {
+      logger.info('User deleted successfully', {
+        operation: 'user_deletion_success',
+        userId,
+        resource: 'user',
         email: user.email,
         fullName: user.fullName,
       });
     } catch (error) {
-      logError('user_service_delete_user', userId, error as Error, {
+      logger.error('Failed to delete user', {
         operation: 'deleteUser',
+        userId,
         requestorId,
+        error: (error as Error).message,
       });
       throw error;
     }

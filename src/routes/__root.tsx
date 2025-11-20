@@ -6,7 +6,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 import { Calendar, FileText, Home, LogOut, Mic, Send, Wallet } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { TRPCProvider } from '@/components/providers/TRPCProvider';
@@ -104,13 +104,13 @@ function RootComponent() {
       <CalendarProvider>
         <div
           className={cn(
-            'rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+            'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800',
             'h-screen' // Use h-screen to take full height
           )}
         >
           <Sidebar open={open} setOpen={setOpen}>
             <SidebarBody className="justify-between gap-10">
-              <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+              <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
                 <div className="flex flex-col gap-4">
                   <Logo />
                   {navigationItems.map((item, idx) => (
@@ -146,7 +146,7 @@ function RootComponent() {
             </SidebarBody>
           </Sidebar>
           <div className="flex flex-1">
-            <div className="p-2 md:p-10 rounded-tl-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex flex-col gap-2 flex-1 w-full h-full overflow-y-auto">
+            <div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
               <Outlet />
             </div>
           </div>
@@ -158,9 +158,9 @@ function RootComponent() {
 
 export const Logo = () => {
   return (
-    <div className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-      <span className="font-medium text-black dark:text-white whitespace-pre opacity-100">
+    <div className="relative z-20 flex items-center space-x-2 py-1 font-normal text-black text-sm">
+      <div className="h-5 w-6 flex-shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+      <span className="whitespace-pre font-medium text-black opacity-100 dark:text-white">
         AegisWallet
       </span>
     </div>

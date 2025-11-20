@@ -285,11 +285,9 @@ export function getAllPatterns(): Array<{
  * Get all intent keywords
  */
 export function getAllKeywords(): Record<IntentType, string[]> {
-  const keywords: Record<IntentType, string[]> = {} as any;
-
-  for (const intent of getValidIntents()) {
-    keywords[intent] = INTENT_DEFINITIONS[intent].keywords;
-  }
+  const keywords = Object.fromEntries(
+    getValidIntents().map((intent) => [intent, INTENT_DEFINITIONS[intent].keywords])
+  ) as Record<IntentType, string[]>;
 
   return keywords;
 }

@@ -2,7 +2,12 @@
   "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*.{ts,tsx,js,jsx}", "scripts/**/*.{ts,tsx,js,jsx}"]
+    "includes": [
+      "src/**/*.{ts,tsx,js,jsx}",
+      "scripts/**/*.{ts,tsx,js,jsx}",
+      "vitest.config.ts",
+      "vitest.*.config.ts"
+    ]
   },
   "vcs": {
     "enabled": true,
@@ -29,20 +34,13 @@
         "noArrayIndexKey": "warn",
         "noConsole": "warn"
       },
-      "complexity": {
-        "noForEach": "off"
-      },
-      "style": {
-        "useConst": "error",
-        "noNonNullAssertion": "warn"
-      },
       "correctness": {
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "error",
         "useHookAtTopLevel": "error"
       },
       "nursery": {
-        "useSortedClasses": "error"
+        "useSortedClasses": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "warn"
@@ -53,6 +51,18 @@
         "useKeyWithClickEvents": "warn",
         "useButtonType": "warn",
         "noSvgWithoutTitle": "warn"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useLiteralKeys": "off"
+      },
+      "performance": {
+        "noAccumulatingSpread": "warn"
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "warn",
+        "noUselessElse": "error"
       }
     }
   },

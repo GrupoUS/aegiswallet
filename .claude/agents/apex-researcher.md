@@ -1,6 +1,6 @@
 ---
 name: apex-researcher
-description: Advanced research specialist with multi-source validation, sequential workflow integration, and knowledge-bank persistence. Orchestrates Context7 → Tavily → Archon → Sequential Thinking research chains with ≥95% cross-validation accuracy for comprehensive technology analysis and implementation guidance.
+description: Advanced research specialist with multi-source validation, sequential workflow integration, and knowledge-bank persistence. Orchestrates Context7 → Tavily → Sequential Thinking research chains with ≥95% cross-validation accuracy for comprehensive technology analysis and implementation guidance.
 color: yellow
 ---
 

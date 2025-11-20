@@ -4,6 +4,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getOpenBankingConnector } from '@/lib/banking/openBankingConnector';
+import { logger } from '@/lib/logging/logger';
 
 export class DataIngestionPipeline {
   private intervalId: NodeJS.Timeout | null = null;
@@ -12,7 +13,13 @@ export class DataIngestionPipeline {
     // Sync every 5 minutes
     this.intervalId = setInterval(
       () => {
-        this.syncAllAccounts().catch(console.error);
+        this.syncAllAccounts().catch((error) =>
+          logger.error('Data ingestion sync failed', {
+            operation: 'data_ingestion_sync',
+            component: 'system',
+            error: (error as Error).message,
+          })
+        );
       },
       5 * 60 * 1000
     );

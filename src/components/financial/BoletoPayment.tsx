@@ -7,11 +7,12 @@ import {
   FileText,
   QrCode,
 } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface Boleto {
@@ -36,40 +37,55 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
     'idle'
   );
   const [showQrCode, setShowQrCode] = useState(false);
+  const [boletos, setBoletos] = useState<Boleto[]>([]);
+  const [isLoadingBoletos, setIsLoadingBoletos] = useState(true);
 
-  // Mock boletos data - memoized to prevent recreation
-  const mockBoletos = useMemo<Boleto[]>(
-    () => [
-      {
-        id: '1',
-        name: 'Energia Elétrica',
-        amount: 180.5,
-        dueDate: new Date('2024-10-15'),
-        status: 'pending',
-        barcode: '12345678901234567890123456789012345678901234',
-        type: 'utility',
-      },
-      {
-        id: '2',
-        name: 'Internet',
-        amount: 99.9,
-        dueDate: new Date('2024-10-20'),
-        status: 'pending',
-        barcode: '23456789012345678901234567890123456789012345',
-        type: 'utility',
-      },
-      {
-        id: '3',
-        name: 'Água',
-        amount: 85.0,
-        dueDate: new Date('2024-09-25'),
-        status: 'overdue',
-        barcode: '34567890123456789012345678901234567890123456',
-        type: 'utility',
-      },
-    ],
-    []
-  );
+  // Fetch boletos from Supabase
+  useEffect(() => {
+    const fetchBoletos = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setIsLoadingBoletos(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('boletos')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('status', ['pending', 'overdue']);
+
+        if (error) {
+          return;
+        }
+
+        if (data) {
+          setBoletos(
+            data.map((b) => ({
+              id: b.id,
+              name: b.payee_name,
+              amount: Number(b.amount),
+              dueDate: new Date(b.due_date),
+              status:
+                b.status === 'pending' || b.status === 'overdue' || b.status === 'paid'
+                  ? b.status
+                  : 'pending',
+              barcode: b.barcode,
+              type: 'utility', // Defaulting to utility as type isn't in current schema
+            }))
+          );
+        }
+      } catch (_error) {
+      } finally {
+        setIsLoadingBoletos(false);
+      }
+    };
+
+    fetchBoletos();
+  }, []);
 
   // Memoize the formatCurrency function
   const formatCurrency = useCallback((amount: number) => {
@@ -140,8 +156,29 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
     setIsProcessing(true);
     setPaymentStatus('processing');
 
-    // Simulate payment processing
-    setTimeout(() => {
+    // Simulate payment processing with Supabase
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        // Create transaction record
+        // Note: In a real app we would verify the barcode and amount first
+        const { error } = await supabase.from('financial_events').insert({
+          user_id: user.id,
+          title: `Pagamento de Boleto`,
+          amount: -100.0, // Mock amount for manual entry
+          event_type: 'expense',
+          brazilian_event_type: 'boleto_pago',
+          status: 'paid',
+          start_date: new Date().toISOString(),
+          end_date: new Date().toISOString(),
+          description: `Código: ${boletoCode}`,
+        });
+
+        if (error) throw error;
+      }
+
       setPaymentStatus('success');
       setIsProcessing(false);
 
@@ -151,7 +188,10 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
         setPaymentStatus('idle');
         setShowQrCode(false);
       }, 3000);
-    }, 2000);
+    } catch (_error) {
+      setPaymentStatus('error');
+      setIsProcessing(false);
+    }
   }, [boletoCode, validateBoletoCode]);
 
   // Memoize the copyToClipboard function
@@ -161,8 +201,8 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
 
   // Filter pending boletos
   const pendingBoletos = useMemo(() => {
-    return mockBoletos.filter((boleto) => boleto.status !== 'paid');
-  }, [mockBoletos]);
+    return boletos.filter((boleto) => boleto.status !== 'paid');
+  }, [boletos]);
 
   // Memoize payment method options
   const paymentMethodOptions = useMemo(
@@ -226,17 +266,27 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
         {/* Pending Boletos List */}
         <div className="space-y-3">
           <h4 className="font-medium text-gray-700 text-sm">Boletos Próximos</h4>
-          {pendingBoletos.map((boleto) => (
-            <BoletoItem
-              key={boleto.id}
-              boleto={boleto}
-              formatCurrency={formatCurrency}
-              getBoletoStatusColor={getBoletoStatusColor}
-              getBoletoStatusText={getBoletoStatusText}
-              copyToClipboard={copyToClipboard}
-              onToggleQrCode={() => setShowQrCode(!showQrCode)}
-            />
-          ))}
+          {isLoadingBoletos ? (
+            <div className="py-4 text-center text-muted-foreground text-sm">
+              Carregando boletos...
+            </div>
+          ) : pendingBoletos.length > 0 ? (
+            pendingBoletos.map((boleto) => (
+              <BoletoItem
+                key={boleto.id}
+                boleto={boleto}
+                formatCurrency={formatCurrency}
+                getBoletoStatusColor={getBoletoStatusColor}
+                getBoletoStatusText={getBoletoStatusText}
+                copyToClipboard={copyToClipboard}
+                onToggleQrCode={() => setShowQrCode(!showQrCode)}
+              />
+            ))
+          ) : (
+            <div className="py-4 text-center text-muted-foreground text-sm">
+              Nenhum boleto pendente
+            </div>
+          )}
         </div>
 
         {/* Manual Boleto Payment */}

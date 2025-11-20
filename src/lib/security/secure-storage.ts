@@ -92,8 +92,7 @@ export class SecureStorageManager {
         this.encryptionKey = await this.generateEncryptionKey();
         localStorage.setItem(`${this.config.storageKey}_key`, this.encryptionKey);
       }
-    } catch (error) {
-      console.error('Failed to initialize encryption:', error);
+    } catch (_error) {
       this.config.encryptionEnabled = false;
     }
   }
@@ -195,7 +194,6 @@ export class SecureStorageManager {
    */
   async store(key: string, data: SecureStorageData): Promise<boolean> {
     if (!this.storageAvailable) {
-      console.warn('Secure storage not available');
       return false;
     }
 
@@ -214,8 +212,7 @@ export class SecureStorageManager {
       this.updateLastAccess(key);
 
       return true;
-    } catch (error) {
-      console.error('Failed to store data securely:', error);
+    } catch (_error) {
       return false;
     }
   }
@@ -225,7 +222,6 @@ export class SecureStorageManager {
    */
   async retrieve(key: string): Promise<SecureStorageData | null> {
     if (!this.storageAvailable) {
-      console.warn('Secure storage not available');
       return null;
     }
 
@@ -249,8 +245,7 @@ export class SecureStorageManager {
       this.updateLastAccess(key);
 
       return data;
-    } catch (error) {
-      console.error('Failed to retrieve data securely:', error);
+    } catch (_error) {
       return null;
     }
   }
@@ -336,9 +331,7 @@ export class SecureStorageManager {
           }
         }
       });
-    } catch (error) {
-      console.error('Failed to cleanup expired data:', error);
-    }
+    } catch (_error) {}
   }
 
   /**
@@ -354,9 +347,7 @@ export class SecureStorageManager {
           localStorage.removeItem(key);
         }
       });
-    } catch (error) {
-      console.error('Failed to clear all data:', error);
-    }
+    } catch (_error) {}
   }
 
   /**

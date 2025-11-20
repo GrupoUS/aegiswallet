@@ -65,8 +65,50 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
     setIsProcessing(true);
     setTransferStatus('processing');
 
-    // Simulate PIX transfer processing
-    setTimeout(() => {
+    try {
+      const numericAmount = parseFloat(amount.replace(/[^\d,]/g, '').replace(',', '.'));
+
+      // Use default account for now (would come from context/selector in real app)
+      // We need to fetch an account ID first.
+      // Since we don't have account context here, we'll fetch the user's primary account
+      // inside pixClient (refactored to handle this lookup if needed, or we do it here).
+      // Actually pixClient.sendPixPayment requires fromAccountId.
+      // Let's assume we fetch the primary account here first.
+
+      const {
+        data: { user },
+      } = await import('@/integrations/supabase/client').then((m) => m.supabase.auth.getUser());
+
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data: account } = await import('@/integrations/supabase/client').then((m) =>
+        m.supabase
+          .from('bank_accounts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_primary', true)
+          .single()
+      );
+
+      // If no primary account, try any account
+      let accountId = account?.id;
+      if (!accountId) {
+        const { data: anyAccount } = await import('@/integrations/supabase/client').then((m) =>
+          m.supabase.from('bank_accounts').select('id').eq('user_id', user.id).limit(1).single()
+        );
+        accountId = anyAccount?.id;
+      }
+
+      if (!accountId) {
+        throw new Error('No bank account found');
+      }
+
+      await import('@/lib/banking/pixApi').then((m) =>
+        m.pixClient.sendPixPayment(accountId || '', pixKey, numericAmount, description)
+      );
+
       setTransferStatus('success');
       setIsProcessing(false);
 
@@ -77,8 +119,11 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
         setDescription('');
         setTransferStatus('idle');
       }, 3000);
-    }, 2000);
-  }, [pixKey, amount, validatePixKey]);
+    } catch (_error) {
+      setTransferStatus('error');
+      setIsProcessing(false);
+    }
+  }, [pixKey, amount, description, validatePixKey]);
 
   // Memoize the getTransferTypeIcon function
   const getTransferTypeIcon = useCallback(() => {
@@ -142,7 +187,7 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-pix-primary to-pix-accent">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-r from-pix-primary to-pix-accent">
             <span className="font-bold text-white">PIX</span>
           </div>
           Transferência PIX
@@ -156,7 +201,7 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
               key={type.value}
               variant={transferType === type.value ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setTransferType(type.value as any)}
+              onClick={() => setTransferType(type.value as 'key' | 'qr' | 'phone')}
               className="flex-1"
             >
               {type.label}

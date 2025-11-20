@@ -1,5 +1,10 @@
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+export const Route = createLazyFileRoute('/calendario')({
+  component: CalendarioPage,
+});
 
 // Lazy loading do componente FinancialCalendar
 const FinancialCalendar = lazy(() =>
@@ -37,9 +42,9 @@ function CalendarLoader() {
   );
 }
 
-export function CalendarioPage() {
+function CalendarioPage() {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col p-6">
       <Suspense fallback={<CalendarLoader />}>
         <FinancialCalendar />
       </Suspense>

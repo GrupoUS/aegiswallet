@@ -623,9 +623,8 @@ export class SupabaseAuditStorage implements AuditEventStorage {
 let storage: AuditEventStorage;
 
 if (process.env.NODE_ENV === 'production') {
-  // biome-ignore lint/security/noGlobalEval: Dynamic require for optional dependency
-  // biome-ignore lint/suspicious/noExplicitAny: Required for dynamic import
-  const supabase = (require('@/integrations/supabase/client') as any).supabase;
+  const { supabase } =
+    require('@/integrations/supabase/client') as typeof import('@/integrations/supabase/client');
   storage = new SupabaseAuditStorage(supabase);
 } else {
   storage = new InMemoryAuditStorage();

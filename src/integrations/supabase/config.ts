@@ -32,8 +32,15 @@ export const isBrowser = typeof window !== 'undefined' && typeof localStorage !=
 export const isServer = !isBrowser;
 
 // Secure storage implementation
+type SecureStorageEngine = Storage & {
+  secureSession?: {
+    retrieve: () => Promise<unknown>;
+    store: (...args: unknown[]) => Promise<void>;
+  };
+};
+
 class SecureStorageAdapter {
-  private secureStorage: any;
+  private secureStorage: SecureStorageEngine | null;
 
   constructor() {
     // Lazy import to avoid SSR issues

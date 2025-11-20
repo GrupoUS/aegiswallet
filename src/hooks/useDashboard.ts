@@ -233,24 +233,24 @@ export function useDashboardActions() {
   const { createAccount } = useBankAccounts();
 
   const actions = {
-    quickTransaction: (data: any) => {
+    quickTransaction: (data: unknown) => {
       // Implementar lógica para transação rápida
-      return createTransaction(data);
+      return createTransaction(data as Parameters<typeof createTransaction>[0]);
     },
 
-    quickEvent: (data: any) => {
+    quickEvent: (data: unknown) => {
       // Implementar lógica para evento rápido
-      return addEvent(data);
+      return addEvent(data as Parameters<typeof addEvent>[0]);
     },
 
-    quickContact: (data: any) => {
+    quickContact: (data: unknown) => {
       // Implementar lógica para contato rápido
-      return createContact(data);
+      return createContact(data as Parameters<typeof createContact>[0]);
     },
 
-    quickAccount: (data: any) => {
+    quickAccount: (data: unknown) => {
       // Implementar lógica para conta rápida
-      return createAccount(data);
+      return createAccount(data as Parameters<typeof createAccount>[0]);
     },
   };
 

@@ -6,6 +6,20 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { type LogEntry, type LoggerConfig, LogLevel, logger } from '@/lib/logging/logger';
 
+// Enhanced logging context types
+interface LogContext {
+  component?: string;
+  userId?: string;
+  action?: string;
+  [key: string]: unknown;
+}
+
+interface VoiceCommandContext extends LogContext {
+  confidence?: number;
+  language?: string;
+  processingTime?: number;
+}
+
 interface LoggerContextValue {
   config: LoggerConfig;
   updateConfig: (config: Partial<LoggerConfig>) => void;
@@ -127,9 +141,9 @@ export function useLoggingControls() {
 
 // Enhanced logging hooks for specific domains
 export function useLogger(context?: { component?: string; userId?: string }) {
-  const [currentContext, setCurrentContext] = useState<Record<string, any>>(context || {});
+  const [currentContext, setCurrentContext] = useState<LogContext>(context || {});
 
-  const setContext = (newContext: Record<string, any>) => {
+  const setContext = (newContext: LogContext) => {
     setCurrentContext((prev) => ({ ...prev, ...newContext }));
   };
 
@@ -138,13 +152,13 @@ export function useLogger(context?: { component?: string; userId?: string }) {
   };
 
   return {
-    debug: (message: string, additionalContext?: Record<string, any>) =>
+    debug: (message: string, additionalContext?: LogContext) =>
       logger.debug(message, { ...currentContext, ...additionalContext }),
-    info: (message: string, additionalContext?: Record<string, any>) =>
+    info: (message: string, additionalContext?: LogContext) =>
       logger.info(message, { ...currentContext, ...additionalContext }),
-    warn: (message: string, additionalContext?: Record<string, any>) =>
+    warn: (message: string, additionalContext?: LogContext) =>
       logger.warn(message, { ...currentContext, ...additionalContext }),
-    error: (message: string, additionalContext?: Record<string, any>) =>
+    error: (message: string, additionalContext?: LogContext) =>
       logger.error(message, { ...currentContext, ...additionalContext }),
     setContext,
     clearContext,
@@ -153,25 +167,25 @@ export function useLogger(context?: { component?: string; userId?: string }) {
 
 export function useVoiceLogger() {
   return {
-    voiceCommand: (command: string, confidence: number, context?: Record<string, any>) =>
+    voiceCommand: (command: string, confidence: number, context?: VoiceCommandContext) =>
       logger.voiceCommand(command, confidence, {
         component: 'Voice',
         ...context,
       }),
-    voiceError: (error: string, context?: Record<string, any>) =>
+    voiceError: (error: string, context?: VoiceCommandContext) =>
       logger.voiceError(error, { component: 'Voice', ...context }),
-    userAction: (action: string, component: string, context?: Record<string, any>) =>
+    userAction: (action: string, component: string, context?: VoiceCommandContext) =>
       logger.userAction(action, component, { component: 'Voice', ...context }),
   };
 }
 
 export function useAuthLogger() {
   return {
-    authEvent: (event: string, userId?: string, context?: Record<string, any>) =>
+    authEvent: (event: string, userId?: string, context?: LogContext) =>
       logger.authEvent(event, userId, { component: 'Auth', ...context }),
-    userAction: (action: string, component: string, context?: Record<string, any>) =>
+    userAction: (action: string, component: string, context?: LogContext) =>
       logger.userAction(action, component, { component: 'Auth', ...context }),
-    securityEvent: (event: string, context?: Record<string, any>) =>
+    securityEvent: (event: string, context?: LogContext) =>
       logger.securityEvent(event, { component: 'Auth', ...context }),
   };
 }

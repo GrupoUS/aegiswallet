@@ -33,7 +33,7 @@ export class EthicalGovernance {
     },
   ];
 
-  validateDecision(decision: any): { passed: boolean; violations: string[] } {
+  validateDecision(decision: { reasoning?: unknown }): { passed: boolean; violations: string[] } {
     const violations: string[] = [];
 
     // Check explainability

@@ -1,2 +1,2 @@
-import { escape } from 'es-toolkit/compat';
-export default escape;
+import { escape as escapeCompat } from 'es-toolkit/compat';
+export default escapeCompat;

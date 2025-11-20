@@ -1,0 +1,27 @@
+{
+  "lgpd": {
+    "enabled": true,
+    "version": "1.0",
+    "consent_required": true,
+    "data_masking": true,
+    "audit_trail": true
+  },
+  "anvisa": {
+    "enabled": true,
+    "medical_device_tracking": true,
+    "safety_reporting": true,
+    "maintenance_logs": true
+  },
+  "accessibility": {
+    "wcag_level": "AA",
+    "voice_interface": true,
+    "keyboard_navigation": true,
+    "screen_reader_support": true
+  },
+  "voice_interface": {
+    "language": "pt-BR",
+    "confidence_threshold": 0.9,
+    "fallback_enabled": true,
+    "error_handling": true
+  }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "test-patient-001",
+    "name": "João Silva",
+    "cpf": "***.***.***-**",
+    "phone": "+55******1234",
+    "email": "joao.silva@example.com",
+    "lgpdConsent": {
+      "timestamp": "2025-01-15T10:30:00Z",
+      "ip": "127.0.0.1",
+      "deviceId": "test-device-001",
+      "consentType": "treatment",
+      "version": "1.0"
+    }
+  }
+]

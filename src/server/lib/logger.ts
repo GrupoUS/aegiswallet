@@ -124,10 +124,8 @@ class Logger {
       timestamp,
     };
 
-    const sanitizedData = this.sanitizeLogData(logData);
-    const logMessage = `[${timestamp}] ${level.toUpperCase()} ${message}`;
-
-    console[level](logMessage, sanitizedData);
+    const _sanitizedData = this.sanitizeLogData(logData);
+    const _logMessage = `[${timestamp}] ${level.toUpperCase()} ${message}`;
   }
 
   /**

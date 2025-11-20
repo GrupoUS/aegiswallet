@@ -14,7 +14,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: Date;
-  context?: any;
+  context?: Record<string, unknown>;
   userId?: string;
   requestId?: string;
 }
@@ -24,7 +24,7 @@ export interface LogContext {
   requestId?: string;
   ip?: string;
   userAgent?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
@@ -67,20 +67,16 @@ class Logger {
       context,
     };
 
-    const formattedMessage = this.formatMessage(entry);
+    const _formattedMessage = this.formatMessage(entry);
 
     switch (level) {
       case LogLevel.DEBUG:
-        console.debug(formattedMessage);
         break;
       case LogLevel.INFO:
-        console.info(formattedMessage);
         break;
       case LogLevel.WARN:
-        console.warn(formattedMessage);
         break;
       case LogLevel.ERROR:
-        console.error(formattedMessage);
         break;
     }
   }

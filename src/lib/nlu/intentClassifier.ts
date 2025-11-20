@@ -192,13 +192,12 @@ export class IntentClassifier {
         confidence:
           patternResult.confidence * patternWeight + tfidfResult.confidence * tfidfWeight * 0.5,
       };
-    } else {
-      return {
-        intent: tfidfResult.intent,
-        confidence:
-          tfidfResult.confidence * tfidfWeight + patternResult.confidence * patternWeight * 0.5,
-      };
     }
+    return {
+      intent: tfidfResult.intent,
+      confidence:
+        tfidfResult.confidence * tfidfWeight + patternResult.confidence * patternWeight * 0.5,
+    };
   }
 
   /**

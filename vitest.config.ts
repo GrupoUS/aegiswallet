@@ -1,6 +1,6 @@
-import react from '@vitejs/plugin-react'
-import * as path from 'path'
-import { defineConfig } from 'vitest/config'
+import * as path from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
@@ -75,4 +75,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@testing-library/react', '@testing-library/jest-dom'],
   },
-})
+});

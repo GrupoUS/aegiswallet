@@ -19,7 +19,7 @@ class MockSpeechSynthesisUtterance {
   pitch = 1;
   onstart: (() => void) | null = null;
   onend: (() => void) | null = null;
-  onerror: ((event: any) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
   onpause: (() => void) | null = null;
   onresume: (() => void) | null = null;
 
@@ -29,7 +29,19 @@ class MockSpeechSynthesisUtterance {
 }
 
 describe('TextToSpeechService', () => {
-  let mockSpeechSynthesis: any;
+  let mockSpeechSynthesis: {
+    speak: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
+    pause: ReturnType<typeof vi.fn>;
+    resume: ReturnType<typeof vi.fn>;
+    getVoices: ReturnType<typeof vi.fn>;
+    speaking: boolean;
+    paused: boolean;
+    pending: boolean;
+    addEventListener: ReturnType<typeof vi.fn>;
+    removeEventListener: ReturnType<typeof vi.fn>;
+    dispatchEvent: ReturnType<typeof vi.fn>;
+  };
   let tts: TextToSpeechService;
 
   beforeEach(() => {
@@ -38,7 +50,7 @@ describe('TextToSpeechService', () => {
 
     // Setup fresh mock for each test
     mockSpeechSynthesis = {
-      speak: vi.fn().mockImplementation((utterance: any) => {
+      speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
         // Automatically trigger onend for success tests
         setTimeout(() => {
           if (utterance.onend) utterance.onend();
@@ -67,7 +79,8 @@ describe('TextToSpeechService', () => {
     // Inject dependencies
     tts = createTTSService(undefined, {
       speechSynthesis: mockSpeechSynthesis,
-      SpeechSynthesisUtterance: MockSpeechSynthesisUtterance as any,
+      SpeechSynthesisUtterance:
+        MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
     });
   });
 
@@ -90,7 +103,8 @@ describe('TextToSpeechService', () => {
         },
         {
           speechSynthesis: mockSpeechSynthesis,
-          SpeechSynthesisUtterance: MockSpeechSynthesisUtterance as any,
+          SpeechSynthesisUtterance:
+            MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
         }
       );
 
@@ -113,13 +127,15 @@ describe('TextToSpeechService', () => {
     });
 
     it('should handle speech errors', async () => {
-      mockSpeechSynthesis.speak.mockImplementation((utterance: any) => {
-        setTimeout(() => {
-          if (utterance.onerror) {
-            utterance.onerror({ error: 'audio-busy' });
-          }
-        }, 10);
-      });
+      mockSpeechSynthesis.speak.mockImplementation(
+        (utterance: { onerror?: (event?: unknown) => void }) => {
+          setTimeout(() => {
+            if (utterance.onerror) {
+              utterance.onerror({ error: 'audio-busy' });
+            }
+          }, 10);
+        }
+      );
 
       const result = await tts.speak('Test');
 
@@ -165,7 +181,8 @@ describe('TextToSpeechService', () => {
         { cachingEnabled: true },
         {
           speechSynthesis: mockSpeechSynthesis,
-          SpeechSynthesisUtterance: MockSpeechSynthesisUtterance as any,
+          SpeechSynthesisUtterance:
+            MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
         }
       );
 

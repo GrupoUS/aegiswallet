@@ -68,31 +68,31 @@ export function ComponentDemo() {
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
-            <h1 className="text-xl font-semibold">Componentes shadcn/ui</h1>
+            <h1 className="font-semibold text-xl">Componentes shadcn/ui</h1>
           </header>
 
           <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="grid gap-4">
-              <h2 className="text-lg font-semibold">Magic Card Component</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <h2 className="font-semibold text-lg">Magic Card Component</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <MagicCard className="p-6">
-                  <h3 className="font-semibold mb-2">Dashboard Financeiro</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="mb-2 font-semibold">Dashboard Financeiro</h3>
+                  <p className="text-muted-foreground text-sm">
                     Visualize suas finanças em tempo real com gráficos interativos e insights
                     personalizados.
                   </p>
                 </MagicCard>
 
                 <MagicCard className="p-6" gradientFrom="#d2aa60ff" gradientTo="#112031">
-                  <h3 className="font-semibold mb-2">Transferências PIX</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="mb-2 font-semibold">Transferências PIX</h3>
+                  <p className="text-muted-foreground text-sm">
                     Envie e receba dinheiro instantaneamente usando o sistema PIX do Banco Central.
                   </p>
                 </MagicCard>
 
                 <MagicCard className="p-6" gradientSize={300} gradientOpacity={1}>
-                  <h3 className="font-semibold mb-2">Contas Bancárias</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="mb-2 font-semibold">Contas Bancárias</h3>
+                  <p className="text-muted-foreground text-sm">
                     Gerencie todas as suas contas em um único lugar com segurança e praticidade.
                   </p>
                 </MagicCard>
@@ -100,7 +100,7 @@ export function ComponentDemo() {
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-semibold">Exemplo de Uso</h2>
+              <h2 className="font-semibold text-lg">Exemplo de Uso</h2>
               <MagicCard className="p-8">
                 <div className="space-y-4">
                   <div>

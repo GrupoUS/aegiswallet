@@ -18,12 +18,22 @@ export type VoiceCommandIntent =
   | 'help_query'
   | 'unknown';
 
+export interface VoiceCommandParameters {
+  amount?: number;
+  recipient?: string;
+  account?: string;
+  description?: string;
+  category?: string;
+  date?: string;
+  [key: string]: string | number | undefined;
+}
+
 export interface VoiceCommand {
   id: string;
   command: string;
   intent: VoiceCommandIntent;
   confidence: number;
-  parameters?: Record<string, any>;
+  parameters?: VoiceCommandParameters;
   response?: string;
   timestamp: Date;
   processingTime: number;

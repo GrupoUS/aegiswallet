@@ -37,10 +37,10 @@ export interface ProcedureInput<T = unknown> {
 /**
  * tRPC procedure type definitions
  */
-export type Procedure<TInput = unknown, TOutput = unknown> = {
+export interface Procedure<TInput = unknown, TOutput = unknown> {
   query?: (opts: ProcedureInput<TInput>) => Promise<TOutput>;
   mutation?: (opts: ProcedureInput<TInput>) => Promise<TOutput>;
-};
+}
 
 /**
  * Enhanced router builder type

@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addHours, format, setHours, setMinutes } from 'date-fns';
 import { useEffect, useState } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -36,11 +37,7 @@ import type { CalendarEvent, EventColor } from './types';
 import { EVENT_COLOR_STYLES } from './types';
 
 const baseEventFormSchema = z.object({
-  title: z.string().min(1, 'Título é obrigatório'),
-  description: z.string().optional(),
-  date: z.string(),
-  startTime: z.string(),
-  endTime: z.string(),
+  allDay: z.boolean().optional(),
   color: z.enum([
     'emerald',
     'rose',
@@ -57,9 +54,13 @@ const baseEventFormSchema = z.object({
     'teal',
     'cyan',
   ]),
-  allDay: z.boolean().optional(),
-  recurring: z.boolean().optional(),
+  date: z.string(),
+  description: z.string().optional(),
+  endTime: z.string(),
   recurrenceRule: z.string().optional(),
+  recurring: z.boolean().optional(),
+  startTime: z.string(),
+  title: z.string().min(1, 'Título é obrigatório'),
 });
 
 const eventFormSchema = baseEventFormSchema.transform((values) => ({
@@ -79,35 +80,35 @@ interface EventDialogProps {
   initialStartTime?: Date;
 }
 
-const colorOptionDefinitions: Array<{ value: EventColor; label: string }> = [
-  { value: 'emerald', label: 'Verde (Receita)' },
-  { value: 'rose', label: 'Vermelho (Despesa)' },
-  { value: 'orange', label: 'Laranja (Conta)' },
-  { value: 'blue', label: 'Azul (Agendamento)' },
-  { value: 'violet', label: 'Roxo (Transferência)' },
-  { value: 'indigo', label: 'Índigo' },
-  { value: 'amber', label: 'Âmbar' },
-  { value: 'red', label: 'Vermelho' },
-  { value: 'green', label: 'Verde' },
-  { value: 'yellow', label: 'Amarelo' },
-  { value: 'purple', label: 'Roxo' },
-  { value: 'pink', label: 'Rosa' },
-  { value: 'teal', label: 'Ciano' },
-  { value: 'cyan', label: 'Azul claro' },
+const colorOptionDefinitions: { value: EventColor; label: string }[] = [
+  { label: 'Verde (Receita)', value: 'emerald' },
+  { label: 'Vermelho (Despesa)', value: 'rose' },
+  { label: 'Laranja (Conta)', value: 'orange' },
+  { label: 'Azul (Agendamento)', value: 'blue' },
+  { label: 'Roxo (Transferência)', value: 'violet' },
+  { label: 'Índigo', value: 'indigo' },
+  { label: 'Âmbar', value: 'amber' },
+  { label: 'Vermelho', value: 'red' },
+  { label: 'Verde', value: 'green' },
+  { label: 'Amarelo', value: 'yellow' },
+  { label: 'Roxo', value: 'purple' },
+  { label: 'Rosa', value: 'pink' },
+  { label: 'Ciano', value: 'teal' },
+  { label: 'Azul claro', value: 'cyan' },
 ];
 
-const colorOptions: Array<{ value: EventColor; label: string; class: string }> =
+const colorOptions: { value: EventColor; label: string; class: string }[] =
   colorOptionDefinitions.map((option) => ({
     ...option,
     class: (EVENT_COLOR_STYLES[option.value] ?? EVENT_COLOR_STYLES.blue).dot,
   }));
 
 const recurrenceOptions = [
-  { value: 'FREQ=DAILY', label: 'Diariamente' },
-  { value: 'FREQ=WEEKLY', label: 'Semanalmente' },
-  { value: 'FREQ=WEEKLY;BYDAY=MO,WE,FR', label: 'Seg, Qua, Sex' },
-  { value: 'FREQ=MONTHLY', label: 'Mensalmente' },
-  { value: 'FREQ=YEARLY', label: 'Anualmente' },
+  { label: 'Diariamente', value: 'FREQ=DAILY' },
+  { label: 'Semanalmente', value: 'FREQ=WEEKLY' },
+  { label: 'Seg, Qua, Sex', value: 'FREQ=WEEKLY;BYDAY=MO,WE,FR' },
+  { label: 'Mensalmente', value: 'FREQ=MONTHLY' },
+  { label: 'Anualmente', value: 'FREQ=YEARLY' },
 ];
 
 export function EventDialog({
@@ -122,45 +123,45 @@ export function EventDialog({
   const isEditing = !!event;
 
   const form = useForm<EventFormInput>({
-    resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      date: format(initialDate || new Date(), 'yyyy-MM-dd'),
-      startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
-      endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
-      color: 'blue',
       allDay: false,
-      recurring: false,
+      color: 'blue',
+      date: format(initialDate || new Date(), 'yyyy-MM-dd'),
+      description: '',
+      endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
       recurrenceRule: '',
+      recurring: false,
+      startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
+      title: '',
     } satisfies EventFormInput,
+    resolver: zodResolver(eventFormSchema),
   });
 
   // Update form when event changes
   useEffect(() => {
     if (event) {
       form.reset({
-        title: event.title,
-        description: event.description || '',
-        date: format(event.start, 'yyyy-MM-dd'),
-        startTime: format(event.start, 'HH:mm'),
-        endTime: format(event.end, 'HH:mm'),
-        color: event.color,
         allDay: event.allDay || false,
-        recurring: false,
+        color: event.color,
+        date: format(event.start, 'yyyy-MM-dd'),
+        description: event.description || '',
+        endTime: format(event.end, 'HH:mm'),
         recurrenceRule: '',
+        recurring: false,
+        startTime: format(event.start, 'HH:mm'),
+        title: event.title,
       });
     } else if (initialDate || initialStartTime) {
       form.reset({
-        title: '',
-        description: '',
-        date: format(initialDate || new Date(), 'yyyy-MM-dd'),
-        startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
-        endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
-        color: 'blue',
         allDay: false,
-        recurring: false,
+        color: 'blue',
+        date: format(initialDate || new Date(), 'yyyy-MM-dd'),
+        description: '',
+        endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
         recurrenceRule: '',
+        recurring: false,
+        startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
+        title: '',
       });
     }
   }, [event, initialDate, initialStartTime, form]);
@@ -175,13 +176,13 @@ export function EventDialog({
     const end = setMinutes(setHours(baseDate, endHour), endMinute);
 
     const eventData: Partial<CalendarEvent> = {
-      id: event?.id,
-      title: parsed.title,
-      description: parsed.description,
-      start,
-      end,
-      color: parsed.color,
       allDay: parsed.allDay,
+      color: parsed.color,
+      description: parsed.description,
+      end,
+      id: event?.id,
+      start,
+      title: parsed.title,
     };
 
     onSave(eventData);

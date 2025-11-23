@@ -183,24 +183,24 @@ export class AuditLogger {
    */
   async logAuthSuccess(userId: string, details: Record<string, unknown> = {}): Promise<void> {
     await this.log({
-      type: AuditEventType.AUTH_LOGIN_SUCCESS,
-      severity: AuditSeverity.LOW,
-      userId,
-      outcome: 'success',
-      source: 'web',
       details: { ...details, timestamp: new Date().toISOString() },
+      outcome: 'success',
+      severity: AuditSeverity.LOW,
+      source: 'web',
       tags: ['authentication', 'success'],
+      type: AuditEventType.AUTH_LOGIN_SUCCESS,
+      userId,
     });
   }
 
   async logAuthFailure(email: string, details: Record<string, unknown> = {}): Promise<void> {
     await this.log({
-      type: AuditEventType.AUTH_LOGIN_FAILED,
-      severity: AuditSeverity.MEDIUM,
-      source: 'web',
       details: { email, ...details, timestamp: new Date().toISOString() },
       outcome: 'failure',
+      severity: AuditSeverity.MEDIUM,
+      source: 'web',
       tags: ['authentication', 'failure'],
+      type: AuditEventType.AUTH_LOGIN_FAILED,
     });
   }
 
@@ -213,16 +213,16 @@ export class AuditLogger {
     details: Record<string, unknown> = {}
   ): Promise<void> {
     await this.log({
-      type: AuditEventType.DATA_READ,
-      severity: AuditSeverity.LOW,
-      userId,
       action,
+      details: { ...details, timestamp: new Date().toISOString() },
+      outcome,
       resource,
       resourceId,
-      outcome,
+      severity: AuditSeverity.LOW,
       source: 'web',
-      details: { ...details, timestamp: new Date().toISOString() },
       tags: ['data', 'access'],
+      type: AuditEventType.DATA_READ,
+      userId,
     });
   }
 
@@ -233,13 +233,13 @@ export class AuditLogger {
     details: Record<string, unknown> = {}
   ): Promise<void> {
     await this.log({
-      type,
-      severity: amount && amount > 10000 ? AuditSeverity.HIGH : AuditSeverity.MEDIUM,
-      userId,
-      outcome: 'success',
-      source: 'financial_service',
       details: { amount, ...details, timestamp: new Date().toISOString() },
+      outcome: 'success',
+      severity: amount && amount > 10000 ? AuditSeverity.HIGH : AuditSeverity.MEDIUM,
+      source: 'financial_service',
       tags: ['financial', 'transaction'],
+      type,
+      userId,
     });
   }
 
@@ -250,13 +250,13 @@ export class AuditLogger {
     userId?: string
   ): Promise<void> {
     await this.log({
-      type,
-      severity,
-      userId,
-      outcome: 'warning',
-      source: 'security_service',
       details: { ...details, timestamp: new Date().toISOString() },
+      outcome: 'warning',
+      severity,
+      source: 'security_service',
       tags: ['security', 'alert'],
+      type,
+      userId,
     });
   }
 
@@ -266,12 +266,12 @@ export class AuditLogger {
     details: Record<string, unknown>
   ): Promise<void> {
     await this.log({
-      type,
-      severity,
-      outcome: 'success',
       details: { ...details, timestamp: new Date().toISOString() },
-      tags: ['system'],
+      outcome: 'success',
+      severity,
       source: 'system',
+      tags: ['system'],
+      type,
     });
   }
 
@@ -425,10 +425,9 @@ export class InMemoryAuditStorage implements AuditEventStorage {
     const events = filter ? (await this.query(filter)).events : this.events;
 
     return {
-      totalEvents: events.length,
-      eventsByType: events.reduce(
+      eventsByOutcome: events.reduce(
         (acc, event) => {
-          acc[event.type] = (acc[event.type] || 0) + 1;
+          acc[event.outcome] = (acc[event.outcome] || 0) + 1;
           return acc;
         },
         {} as Record<string, number>
@@ -440,9 +439,9 @@ export class InMemoryAuditStorage implements AuditEventStorage {
         },
         {} as Record<string, number>
       ),
-      eventsByOutcome: events.reduce(
+      eventsByType: events.reduce(
         (acc, event) => {
-          acc[event.outcome] = (acc[event.outcome] || 0) + 1;
+          acc[event.type] = (acc[event.type] || 0) + 1;
           return acc;
         },
         {} as Record<string, number>
@@ -450,6 +449,7 @@ export class InMemoryAuditStorage implements AuditEventStorage {
       recentEvents: events.filter(
         (e) => Date.now() - e.timestamp.getTime() < 24 * 60 * 60 * 1000 // Last 24 hours
       ).length,
+      totalEvents: events.length,
     };
   }
 }
@@ -464,23 +464,23 @@ export class SupabaseAuditStorage implements AuditEventStorage {
 
   async store(event: AuditEvent): Promise<void> {
     const { error } = await this.supabase.from('audit_events').insert({
+      action: event.action,
+      correlation_id: event.correlationId,
+      details: event.details,
+      environment: event.environment,
       id: event.id,
-      type: event.type,
-      severity: event.severity,
-      user_id: event.userId,
-      session_id: event.sessionId,
       ip_address: event.ipAddress,
-      user_agent: event.userAgent,
-      timestamp: event.timestamp.toISOString(),
+      outcome: event.outcome,
       resource: event.resource,
       resource_id: event.resourceId,
-      action: event.action,
-      outcome: event.outcome,
-      details: event.details,
-      tags: event.tags,
-      correlation_id: event.correlationId,
+      session_id: event.sessionId,
+      severity: event.severity,
       source: event.source,
-      environment: event.environment,
+      tags: event.tags,
+      timestamp: event.timestamp.toISOString(),
+      type: event.type,
+      user_agent: event.userAgent,
+      user_id: event.userId,
     });
 
     if (error) {
@@ -596,23 +596,23 @@ export class SupabaseAuditStorage implements AuditEventStorage {
     environment: string;
   }): AuditEvent {
     return {
+      action: dbEvent.action,
+      correlationId: dbEvent.correlation_id,
+      details: dbEvent.details,
+      environment: dbEvent.environment,
       id: dbEvent.id,
-      type: dbEvent.type,
-      severity: dbEvent.severity,
-      userId: dbEvent.user_id,
-      sessionId: dbEvent.session_id,
       ipAddress: dbEvent.ip_address,
-      userAgent: dbEvent.user_agent,
-      timestamp: new Date(dbEvent.timestamp),
+      outcome: dbEvent.outcome,
       resource: dbEvent.resource,
       resourceId: dbEvent.resource_id,
-      action: dbEvent.action,
-      outcome: dbEvent.outcome,
-      details: dbEvent.details,
-      tags: dbEvent.tags,
-      correlationId: dbEvent.correlation_id,
+      sessionId: dbEvent.session_id,
+      severity: dbEvent.severity,
       source: dbEvent.source,
-      environment: dbEvent.environment,
+      tags: dbEvent.tags,
+      timestamp: new Date(dbEvent.timestamp),
+      type: dbEvent.type,
+      userAgent: dbEvent.user_agent,
+      userId: dbEvent.user_id,
     };
   }
 }

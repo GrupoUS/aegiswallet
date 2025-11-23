@@ -5,6 +5,8 @@
  * LGPD-compliant device tracking with privacy preservation
  */
 
+import type { NavigatorWithExtensions, WindowWithExtensions } from './browser-types';
+
 export interface DeviceFingerprint {
   id: string;
   userAgent: string;
@@ -33,7 +35,6 @@ export interface DeviceFingerprint {
   audio: string;
   fonts: string[];
   plugins: string[];
-  timezone: string;
   connection?: {
     effectiveType: string;
     downlink: number;
@@ -56,7 +57,7 @@ export interface DeviceProfile {
   frequency: number;
   isTrusted: boolean;
   riskScore: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FingerprintConfig {
@@ -91,9 +92,9 @@ export class DeviceFingerprintingService {
       enableConnection: true,
       salt: 'aegiswallet-fingerprint-salt',
       riskThresholds: {
+        high: 0.8,
         low: 0.3,
         medium: 0.6,
-        high: 0.8,
       },
       ...config,
     };
@@ -108,9 +109,9 @@ export class DeviceFingerprintingService {
     }
 
     const fingerprint: Partial<DeviceFingerprint> = {
-      userAgent: navigator.userAgent,
-      created: new Date(),
       confidence: 0,
+      created: new Date(),
+      userAgent: navigator.userAgent,
     };
     // Screen information
     fingerprint.screen = this.getScreenInfo();
@@ -173,10 +174,10 @@ export class DeviceFingerprintingService {
    */
   private getScreenInfo(): DeviceFingerprint['screen'] {
     return {
-      width: screen.width,
-      height: screen.height,
       colorDepth: screen.colorDepth,
+      height: screen.height,
       pixelRatio: window.devicePixelRatio || 1,
+      width: screen.width,
     };
   }
 
@@ -211,10 +212,11 @@ export class DeviceFingerprintingService {
    * Get hardware information
    */
   private async getHardwareInfo(): Promise<DeviceFingerprint['hardware']> {
+    const nav = navigator as NavigatorWithExtensions;
     return {
       cores: navigator.hardwareConcurrency || 4,
-      memory: (navigator as any).deviceMemory || 4,
-      deviceMemory: (navigator as any).deviceMemory || 4,
+      deviceMemory: nav.deviceMemory || 4,
+      memory: nav.deviceMemory || 4,
     };
   }
 
@@ -227,20 +229,21 @@ export class DeviceFingerprintingService {
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
       if (!gl) {
-        return { vendor: 'unknown', renderer: 'unknown' };
+        return { renderer: 'unknown', vendor: 'unknown' };
       }
 
-      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      const context = gl as WebGLRenderingContext;
+      const debugInfo = context.getExtension('WEBGL_debug_renderer_info');
       if (!debugInfo) {
-        return { vendor: 'unknown', renderer: 'unknown' };
+        return { renderer: 'unknown', vendor: 'unknown' };
       }
 
       return {
-        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
+        renderer: context.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
+        vendor: context.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
       };
     } catch (_error) {
-      return { vendor: 'unknown', renderer: 'unknown' };
+      return { renderer: 'unknown', vendor: 'unknown' };
     }
   }
 
@@ -261,7 +264,6 @@ export class DeviceFingerprintingService {
         // Draw complex shape
         canvas.width = 200;
         canvas.height = 50;
-
         ctx.textBaseline = 'top';
         ctx.font = '14px Arial';
         ctx.fillStyle = '#f60';
@@ -289,7 +291,8 @@ export class DeviceFingerprintingService {
   private async getAudioFingerprint(): Promise<string> {
     return new Promise((resolve) => {
       try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const win = window as unknown as WindowWithExtensions;
+        const AudioContext = window.AudioContext || win.webkitAudioContext;
         if (!AudioContext) {
           resolve('audio-not-supported');
           return;
@@ -371,7 +374,7 @@ export class DeviceFingerprintingService {
       return [];
     }
 
-    const testText = 'mmmmmmmmmmlli';
+    const testText = 'mmmmmmmmlli';
     const baselineSize = 100;
 
     // Get baseline measurement with default font
@@ -411,18 +414,16 @@ export class DeviceFingerprintingService {
    * Get network connection information
    */
   private getConnectionInfo(): DeviceFingerprint['connection'] | undefined {
-    const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
+    const nav = navigator as NavigatorWithExtensions;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
 
     if (!connection) {
       return undefined;
     }
 
     return {
-      effectiveType: connection.effectiveType || 'unknown',
       downlink: connection.downlink || 0,
+      effectiveType: connection.effectiveType || 'unknown',
       rtt: connection.rtt || 0,
     };
   }
@@ -432,15 +433,16 @@ export class DeviceFingerprintingService {
    */
   private async getBatteryInfo(): Promise<DeviceFingerprint['battery'] | undefined> {
     try {
-      const battery = await (navigator as any).getBattery?.();
+      const nav = navigator as NavigatorWithExtensions;
+      const battery = await nav.getBattery?.();
 
       if (!battery) {
         return undefined;
       }
 
       return {
-        level: battery.level,
         charging: battery.charging,
+        level: battery.level,
       };
     } catch {
       return undefined;
@@ -479,7 +481,7 @@ export class DeviceFingerprintingService {
     for (let i = 0; i < dataString.length; i++) {
       const char = dataString.charCodeAt(i);
       hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32-bit integer
+      hash &= hash; // Convert to 32-bit integer
     }
 
     return Math.abs(hash).toString(16);
@@ -494,17 +496,17 @@ export class DeviceFingerprintingService {
 
     // Weight different components
     const weights = {
-      userAgent: 0.15,
-      screen: 0.1,
-      timezone: 0.1,
+      audio: 0.1,
+      canvas: 0.15,
+      fonts: 0.1,
+      hardware: 0.1,
       language: 0.05,
       platform: 0.05,
-      hardware: 0.1,
-      webgl: 0.15,
-      canvas: 0.15,
-      audio: 0.1,
-      fonts: 0.1,
       plugins: 0.05,
+      screen: 0.1,
+      timezone: 0.1,
+      userAgent: 0.15,
+      webgl: 0.15,
     };
 
     Object.entries(weights).forEach(([component, weight]) => {
@@ -552,10 +554,10 @@ export class DeviceFingerprintingService {
           fingerprint.canvas !== 'canvas-error'
         );
       case 'audio':
-        return (
+        return Boolean(
           fingerprint.audio &&
-          fingerprint.audio !== 'audio-not-supported' &&
-          fingerprint.audio !== 'audio-error'
+            fingerprint.audio !== 'audio-not-supported' &&
+            fingerprint.audio !== 'audio-error'
         );
       case 'fonts':
         return fingerprint.fonts && fingerprint.fonts.length > 0;
@@ -583,54 +585,53 @@ export class DeviceFingerprintingService {
     // Compare individual components
     const comparisons = [
       {
-        name: 'userAgent',
         compare: () => fp1.userAgent === fp2.userAgent,
+        name: 'userAgent',
         weight: 0.15,
       },
       {
-        name: 'screen',
         compare: () =>
           fp1.screen.width === fp2.screen.width && fp1.screen.height === fp2.screen.height,
+        name: 'screen',
         weight: 0.1,
       },
       {
-        name: 'timezone',
         compare: () => fp1.timezone.offset === fp2.timezone.offset,
+        name: 'timezone',
         weight: 0.1,
       },
       {
-        name: 'language',
         compare: () => fp1.language[0] === fp2.language[0],
+        name: 'language',
         weight: 0.05,
       },
       {
-        name: 'platform',
         compare: () => fp1.platform === fp2.platform,
+        name: 'platform',
         weight: 0.05,
       },
       {
-        name: 'hardware',
         compare: () => fp1.hardware.cores === fp2.hardware.cores,
+        name: 'hardware',
         weight: 0.1,
       },
       {
-        name: 'webgl',
         compare: () =>
           fp1.webgl.vendor === fp2.webgl.vendor && fp1.webgl.renderer === fp2.webgl.renderer,
+        name: 'webgl',
         weight: 0.15,
       },
       {
-        name: 'canvas',
         compare: () => fp1.canvas === fp2.canvas,
+        name: 'canvas',
         weight: 0.15,
       },
       {
-        name: 'audio',
         compare: () => fp1.audio === fp2.audio,
+        name: 'audio',
         weight: 0.1,
       },
       {
-        name: 'fonts',
         compare: () => {
           const set1 = new Set(fp1.fonts);
           const set2 = new Set(fp2.fonts);
@@ -638,10 +639,10 @@ export class DeviceFingerprintingService {
           const union = new Set([...set1, ...set2]);
           return intersection.size / union.size;
         },
+        name: 'fonts',
         weight: 0.1,
       },
       {
-        name: 'plugins',
         compare: () => {
           const set1 = new Set(fp1.plugins);
           const set2 = new Set(fp2.plugins);
@@ -649,6 +650,7 @@ export class DeviceFingerprintingService {
           const union = new Set([...set1, ...set2]);
           return intersection.size / union.size;
         },
+        name: 'plugins',
         weight: 0.05,
       },
     ];
@@ -656,7 +658,6 @@ export class DeviceFingerprintingService {
     comparisons.forEach(({ name, compare, weight }) => {
       totalComparisons += weight;
       const isSimilar = compare();
-
       if (typeof isSimilar === 'boolean') {
         if (isSimilar) {
           similarity += weight;
@@ -673,8 +674,8 @@ export class DeviceFingerprintingService {
     });
 
     return {
-      similarity: similarity / totalComparisons,
       differences,
+      similarity: similarity / totalComparisons,
     };
   }
 
@@ -733,9 +734,9 @@ export class DeviceFingerprintingService {
     }
 
     return {
-      score,
       level,
       reasons,
+      score,
     };
   }
 

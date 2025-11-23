@@ -1,32 +1,215 @@
-'use client';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+interface AccessibilitySettings {
+  highContrast: boolean;
+  largeText: boolean;
+  reducedMotion: boolean;
+  screenReaderMode: boolean;
+  keyboardMode: boolean;
+  voiceNavigation: boolean;
+  announceChanges: boolean;
+}
 
-// 1. Define the shape of the context data
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
-  updateSetting: (key: keyof AccessibilitySettings, value: boolean | number) => void;
-  showSettings: boolean;
-  setShowSettings: (show: boolean) => void;
-  speak: (text: string) => void;
-  announce: (text: string) => void;
+  updateSetting: <K extends keyof AccessibilitySettings>(
+    key: K,
+    value: AccessibilitySettings[K]
+  ) => void;
+  announceToScreenReader: (message: string, priority?: 'polite' | 'assertive') => void;
+  isKeyboardUser: boolean;
 }
 
-// 2. Define the settings interface
-interface AccessibilitySettings {
-  voiceEnabled: boolean;
-  voiceVolume: number;
-  voiceSpeed: number;
-  highContrast: boolean;
-  autoReadContent: boolean;
-  autoReadImages: boolean;
-  keyboardNavigation: boolean;
-  screenReaderEnabled: boolean;
-  announcements: boolean;
+const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
+
+interface AccessibilityProviderProps {
+  children: ReactNode;
 }
 
-// 3. Create the context with a clear error message for misuse
-const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
+export function AccessibilityProvider({ children }: AccessibilityProviderProps) {
+  const [settings, setSettings] = useState<AccessibilitySettings>({
+    announceChanges: true,
+    highContrast: false,
+    keyboardMode: false,
+    largeText: false,
+    reducedMotion: false,
+    screenReaderMode: false,
+    voiceNavigation: false,
+  });
+
+  const [isKeyboardUser, setIsKeyboardUser] = useState(false);
+
+  // Detect user's accessibility preferences from system
+  useEffect(() => {
+    // Detect high contrast mode
+    const highContrastMediaQuery = window.matchMedia('(prefers-contrast: high)');
+    setSettings((prev) => ({ ...prev, highContrast: highContrastMediaQuery.matches }));
+
+    // Detect reduced motion preference
+    const reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setSettings((prev) => ({ ...prev, reducedMotion: reducedMotionMediaQuery.matches }));
+
+    // Detect if screen reader is being used
+    const detectScreenReader = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const screenReaderPatterns = [/nvda/, /jaws/, /voiceover/, /talkback/, /chromevox/];
+
+      const hasScreenReader = screenReaderPatterns.some((pattern) => pattern.test(userAgent));
+      setSettings((prev) => ({ ...prev, screenReaderMode: hasScreenReader }));
+    };
+
+    detectScreenReader();
+
+    // Listen for changes in system preferences
+    const handleHighContrastChange = (e: MediaQueryListEvent) => {
+      setSettings((prev) => ({ ...prev, highContrast: e.matches }));
+    };
+
+    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+      setSettings((prev) => ({ ...prev, reducedMotion: e.matches }));
+    };
+
+    highContrastMediaQuery.addEventListener('change', handleHighContrastChange);
+    reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange);
+
+    return () => {
+      highContrastMediaQuery.removeEventListener('change', handleHighContrastChange);
+      reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange);
+    };
+  }, []);
+
+  // Detect keyboard navigation usage
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only detect keyboard usage for actual navigation keys
+      const navigationKeys = [
+        'Tab',
+        'Enter',
+        'Space',
+        'ArrowUp',
+        'ArrowDown',
+        'ArrowLeft',
+        'ArrowRight',
+        'Escape',
+      ];
+      if (navigationKeys.includes(e.key)) {
+        setIsKeyboardUser(true);
+        setSettings((prev) => ({ ...prev, keyboardMode: true }));
+      }
+    };
+
+    const handleMouseDown = () => {
+      setIsKeyboardUser(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleMouseDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
+
+  // Apply accessibility settings to document
+  useEffect(() => {
+    const html = document.documentElement;
+
+    // Apply CSS classes for accessibility settings
+    html.classList.toggle('high-contrast', settings.highContrast);
+    html.classList.toggle('large-text', settings.largeText);
+    html.classList.toggle('reduce-motion', settings.reducedMotion);
+    html.classList.toggle('keyboard-navigation', settings.keyboardMode);
+    html.classList.toggle('voice-navigation', settings.voiceNavigation);
+
+    // Add Brazilian accessibility attributes
+    html.setAttribute('lang', 'pt-BR');
+    html.setAttribute('xml:lang', 'pt-BR');
+
+    // Add accessibility metadata for Brazilian e-MAG compliance
+    const existingMeta = document.querySelector('meta[name="eMAG-compliance"]');
+    if (!existingMeta) {
+      const meta = document.createElement('meta');
+      meta.name = 'eMAG-compliance';
+      meta.content = 'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
+      document.head.appendChild(meta);
+    }
+
+    // Add WCAG compliance meta
+    const wcagMeta = document.querySelector('meta[name="wcag-compliance"]');
+    if (!wcagMeta) {
+      const meta = document.createElement('meta');
+      meta.name = 'wcag-compliance';
+      meta.content = 'WCAG 2.1 AA';
+      document.head.appendChild(meta);
+    }
+  }, [settings]);
+
+  const updateSetting = <K extends keyof AccessibilitySettings>(
+    key: K,
+    value: AccessibilitySettings[K]
+  ) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+
+    // Save to localStorage for persistence
+    try {
+      const savedSettings = JSON.parse(
+        localStorage.getItem('aegis-accessibility-settings') || '{}'
+      );
+      savedSettings[key] = value;
+      localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
+    } catch (_error) {}
+  };
+
+  // Load saved settings from localStorage
+  useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem('aegis-accessibility-settings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch (_error) {}
+  }, []);
+
+  // Screen reader announcements
+  const announceToScreenReader = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+    if (!settings.announceChanges || !settings.screenReaderMode) {
+      return;
+    }
+
+    // Create or get announcement element
+    let announcementElement = document.getElementById('screen-reader-announcements');
+    if (!announcementElement) {
+      announcementElement = document.createElement('div');
+      announcementElement.id = 'screen-reader-announcements';
+      announcementElement.setAttribute('aria-live', priority);
+      announcementElement.setAttribute('aria-atomic', 'true');
+      announcementElement.className = 'sr-only';
+      document.body.appendChild(announcementElement);
+    }
+
+    // Update announcement
+    announcementElement.textContent = message;
+
+    // Clear after announcement
+    setTimeout(() => {
+      if (announcementElement) {
+        announcementElement.textContent = '';
+      }
+    }, 1000);
+  };
+
+  const value: AccessibilityContextType = {
+    announceToScreenReader,
+    isKeyboardUser,
+    settings,
+    updateSetting,
+  };
+
+  return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
+}
 
 export function useAccessibility() {
   const context = useContext(AccessibilityContext);
@@ -36,74 +219,42 @@ export function useAccessibility() {
   return context;
 }
 
-// 4. Implement the provider
-export function AccessibilityProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<AccessibilitySettings>({
-    voiceEnabled: true,
-    voiceVolume: 0.7,
-    voiceSpeed: 1.0,
-    highContrast: false,
-    autoReadContent: false,
-    autoReadImages: true,
-    keyboardNavigation: true,
-    screenReaderEnabled: true,
-    announcements: true,
-  });
-  const [showSettings, setShowSettings] = useState(false);
+// Utility component for accessibility announcements
+interface ScreenReaderAnnouncementProps {
+  message: string;
+  priority?: 'polite' | 'assertive';
+}
 
-  const updateSetting = (key: keyof AccessibilitySettings, value: boolean | number) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+export function ScreenReaderAnnouncement({
+  message,
+  priority = 'polite',
+}: ScreenReaderAnnouncementProps) {
+  const { announceToScreenReader } = useAccessibility();
 
-  const speak = (text: string) => {
-    if (settings.voiceEnabled && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'pt-BR';
-      utterance.volume = settings.voiceVolume;
-      utterance.rate = settings.voiceSpeed;
-      speechSynthesis.speak(utterance);
-    }
-  };
-
-  const announce = (text: string) => {
-    if (settings.announcements) {
-      // A more robust solution:
-      const announcementEl = document.getElementById('aria-live-announcer');
-      if (announcementEl) {
-        announcementEl.textContent = text;
-      }
-    }
-  };
-
-  // Add a visually hidden element for aria-live announcements
   useEffect(() => {
-    let announcer = document.getElementById('aria-live-announcer');
-    if (!announcer) {
-      announcer = document.createElement('div');
-      announcer.id = 'aria-live-announcer';
-      announcer.style.position = 'absolute';
-      announcer.style.width = '1px';
-      announcer.style.height = '1px';
-      announcer.style.padding = '0';
-      announcer.style.margin = '-1px';
-      announcer.style.overflow = 'hidden';
-      announcer.style.clip = 'rect(0, 0, 0, 0)';
-      announcer.style.whiteSpace = 'nowrap';
-      announcer.style.border = '0';
-      announcer.setAttribute('aria-live', 'assertive');
-      announcer.setAttribute('aria-atomic', 'true');
-      document.body.appendChild(announcer);
-    }
-  }, []);
+    announceToScreenReader(message, priority);
+  }, [message, priority, announceToScreenReader]);
 
-  const value = {
-    settings,
-    updateSetting,
-    showSettings,
-    setShowSettings,
-    speak,
-    announce,
-  };
+  return null; // This component only makes announcements, doesn't render anything
+}
 
-  return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
+// Skip navigation link component for accessibility
+export function SkipToMainContent() {
+  return (
+    // biome-ignore lint/a11y/useValidAnchor: Skip links are standard accessibility patterns
+    <a
+      href="#main-content"
+      className="skip-link"
+      onClick={(e) => {
+        e.preventDefault();
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+          mainContent.focus();
+          mainContent.scrollIntoView({ behavior: 'smooth' });
+        }
+      }}
+    >
+      Pular para o conteúdo principal
+    </a>
+  );
 }

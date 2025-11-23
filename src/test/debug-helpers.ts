@@ -32,12 +32,12 @@ export class TestDebugger {
     console.log = vi.fn();
 
     return {
+      getErrors: () => (console.error as any).mock.calls,
+      getLogs: () => (console.log as any).mock.calls,
       restore: () => {
         console.error = originalError;
         console.log = originalLog;
       },
-      getErrors: () => (console.error as any).mock.calls,
-      getLogs: () => (console.log as any).mock.calls,
     };
   }
 
@@ -53,14 +53,14 @@ export class TestDebugger {
       onstart: null,
       onend: null,
       // Helper to simulate recognition result
-      simulateResult: function () {
+      simulateResult: function simulateResult() {
         if (this.onresult) {
           this.onresult({
             results: [
               {
                 0: {
-                  transcript,
                   confidence,
+                  transcript,
                 },
                 isFinal: true,
               },
@@ -93,10 +93,10 @@ export class PerformanceHelper {
         try {
           const result = await fn();
           const duration = performance.now() - start;
-          resolve({ result, duration });
+          resolve({ duration, result });
         } catch (error) {
           const duration = performance.now() - start;
-          reject({ error, duration });
+          reject({ duration, error });
         }
       })();
     });
@@ -117,19 +117,19 @@ export class PerformanceHelper {
 export class VoiceTestHelper {
   static createMockUtterance(text: string) {
     return {
-      text,
       lang: 'pt-BR',
-      voice: null,
-      volume: 1,
-      rate: 1,
-      pitch: 1,
-      onstart: null,
+      onboundary: null,
       onend: null,
       onerror: null,
       onmark: null,
-      onboundary: null,
       onpause: null,
       onresume: null,
+      onstart: null,
+      pitch: 1,
+      rate: 1,
+      text,
+      voice: null,
+      volume: 1,
     };
   }
 
@@ -154,14 +154,14 @@ export class VoiceTestHelper {
 
       // Simulate the recognition result
       setTimeout(() => {
-        mockRecognition.simulateResult = function () {
+        mockRecognition.simulateResult = function simulateResult() {
           if (this.onresult) {
             this.onresult({
               results: [
                 {
                   0: {
-                    transcript,
                     confidence,
+                    transcript,
                   },
                   isFinal: true,
                 },
@@ -229,8 +229,12 @@ export class PortugueseNumberHelper {
       'novecentos',
     ];
 
-    if (num < 10) return units[num];
-    if (num < 20) return teens[num - 10];
+    if (num < 10) {
+      return units[num];
+    }
+    if (num < 20) {
+      return teens[num - 10];
+    }
     if (num < 100) {
       const ten = Math.floor(num / 10);
       const unit = num % 10;
@@ -239,10 +243,14 @@ export class PortugueseNumberHelper {
     if (num < 1000) {
       const hundred = Math.floor(num / 100);
       const rest = num % 100;
-      if (rest === 0) return hundreds[hundred - 1];
+      if (rest === 0) {
+        return hundreds[hundred - 1];
+      }
       return `${hundreds[hundred - 1]} e ${PortugueseNumberHelper.numberToPortugueseWords(rest)}`;
     }
-    if (num === 1000) return 'mil';
+    if (num === 1000) {
+      return 'mil';
+    }
     if (num < 2000) {
       const rest = num % 1000;
       return rest > 0 ? `mil e ${PortugueseNumberHelper.numberToPortugueseWords(rest)}` : 'mil';
@@ -271,7 +279,7 @@ export class PortugueseNumberHelper {
  */
 /* biome-ignore lint/complexity/noStaticOnlyClass -- Namespaced test utilities */
 export class MockSetupHelper {
-  static setupFetchWithResponses(responses: Array<{ status: number; data: any }>) {
+  static setupFetchWithResponses(responses: { status: number; data: any }[]) {
     let callCount = 0;
 
     global.fetch = vi.fn().mockImplementation(() => {
@@ -279,9 +287,9 @@ export class MockSetupHelper {
       callCount++;
 
       return Promise.resolve({
+        json: async () => response.data,
         ok: response.status >= 200 && response.status < 300,
         status: response.status,
-        json: async () => response.data,
         text: async () => JSON.stringify(response.data),
       });
     });
@@ -291,8 +299,8 @@ export class MockSetupHelper {
     if (typeof navigator !== 'undefined') {
       Object.defineProperty(navigator, 'credentials', {
         value: {
-          get: vi.fn().mockResolvedValue(shouldSucceed ? { id: 'test-credential' } : null),
           create: vi.fn().mockResolvedValue(shouldSucceed ? { id: 'test-credential' } : null),
+          get: vi.fn().mockResolvedValue(shouldSucceed ? { id: 'test-credential' } : null),
         },
         writable: true,
       });

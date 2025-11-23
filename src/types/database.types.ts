@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type Database = {
+export interface Database {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -579,6 +579,122 @@ export type Database = {
           },
         ];
       };
+      calendar_sync_audit: {
+        Row: {
+          action: string;
+          created_at: string | null;
+          details: Json | null;
+          event_id: string | null;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          action: string;
+          created_at?: string | null;
+          details?: Json | null;
+          event_id?: string | null;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string | null;
+          details?: Json | null;
+          event_id?: string | null;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      calendar_sync_mapping: {
+        Row: {
+          aegis_event_id: string;
+          created_at: string | null;
+          error_message: string | null;
+          google_calendar_id: string | null;
+          google_event_id: string;
+          id: string;
+          last_synced_at: string | null;
+          sync_direction: string;
+          sync_status: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          aegis_event_id: string;
+          created_at?: string | null;
+          error_message?: string | null;
+          google_calendar_id?: string | null;
+          google_event_id: string;
+          id?: string;
+          last_synced_at?: string | null;
+          sync_direction: string;
+          sync_status: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          aegis_event_id?: string;
+          created_at?: string | null;
+          error_message?: string | null;
+          google_calendar_id?: string | null;
+          google_event_id?: string;
+          id?: string;
+          last_synced_at?: string | null;
+          sync_direction?: string;
+          sync_status?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'calendar_sync_mapping_aegis_event_id_fkey';
+            columns: ['aegis_event_id'];
+            isOneToOne: false;
+            referencedRelation: 'financial_events';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      calendar_sync_settings: {
+        Row: {
+          auto_sync_interval_minutes: number | null;
+          created_at: string | null;
+          last_full_sync_at: string | null;
+          sync_categories: string[] | null;
+          sync_direction: string | null;
+          sync_enabled: boolean | null;
+          sync_financial_amounts: boolean | null;
+          sync_token: string | null;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          auto_sync_interval_minutes?: number | null;
+          created_at?: string | null;
+          last_full_sync_at?: string | null;
+          sync_categories?: string[] | null;
+          sync_direction?: string | null;
+          sync_enabled?: boolean | null;
+          sync_financial_amounts?: boolean | null;
+          sync_token?: string | null;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          auto_sync_interval_minutes?: number | null;
+          created_at?: string | null;
+          last_full_sync_at?: string | null;
+          sync_categories?: string[] | null;
+          sync_direction?: string | null;
+          sync_enabled?: boolean | null;
+          sync_financial_amounts?: boolean | null;
+          sync_token?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       data_subject_requests: {
         Row: {
           created_at: string | null;
@@ -844,6 +960,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      google_calendar_tokens: {
+        Row: {
+          access_token: string;
+          created_at: string | null;
+          expiry_timestamp: string;
+          google_user_email: string;
+          id: string;
+          refresh_token: string;
+          scope: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          access_token: string;
+          created_at?: string | null;
+          expiry_timestamp: string;
+          google_user_email: string;
+          id?: string;
+          refresh_token: string;
+          scope: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          access_token?: string;
+          created_at?: string | null;
+          expiry_timestamp?: string;
+          google_user_email?: string;
+          id?: string;
+          refresh_token?: string;
+          scope?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       legal_holds: {
         Row: {
           active: boolean | null;
@@ -918,6 +1070,36 @@ export type Database = {
           otp_code?: string;
           phone_number?: string;
           used_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      patients: {
+        Row: {
+          cpf: string | null;
+          created_at: string;
+          email: string | null;
+          id: string;
+          name: string;
+          phone: string | null;
+          user_id: string;
+        };
+        Insert: {
+          cpf?: string | null;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          name: string;
+          phone?: string | null;
+          user_id: string;
+        };
+        Update: {
+          cpf?: string | null;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          name?: string;
+          phone?: string | null;
           user_id?: string;
         };
         Relationships: [];
@@ -1277,6 +1459,33 @@ export type Database = {
           method?: string | null;
           risk_score?: number | null;
           user_agent?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      services: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          name: string;
+          price: number | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          price?: number | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          price?: number | null;
           user_id?: string;
         };
         Relationships: [];
@@ -1752,7 +1961,7 @@ export type Database = {
       [_ in never]: never;
     };
   };
-};
+}
 
 type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
 

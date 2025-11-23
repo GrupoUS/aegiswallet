@@ -11,12 +11,12 @@ export class SecurityComplianceService {
     if (typeof window !== 'undefined' && window.crypto?.subtle) {
       const encoder = new TextEncoder();
       const dataBuffer = encoder.encode(data);
-      const key = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+      const key = await window.crypto.subtle.generateKey({ length: 256, name: 'AES-GCM' }, true, [
         'encrypt',
       ]);
       const iv = window.crypto.getRandomValues(new Uint8Array(12));
       const encrypted = await window.crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
+        { iv, name: 'AES-GCM' },
         key,
         dataBuffer
       );

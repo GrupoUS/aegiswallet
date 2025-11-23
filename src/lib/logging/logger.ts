@@ -71,7 +71,9 @@ export class Logger {
   }
 
   private logToConsole(entry: LogEntry): void {
-    if (!this.config.enableConsole) return;
+    if (!this.config.enableConsole) {
+      return;
+    }
 
     const msg = `[${entry.timestamp}] [${LogLevel[entry.level]}] ${entry.message}`;
     const context = entry.context ? JSON.stringify(entry.context) : '';
@@ -96,11 +98,11 @@ export class Logger {
 
   private log(level: LogLevel, message: string, context?: LogContext): void {
     const entry: LogEntry = {
+      context,
       level,
       message,
-      timestamp: new Date().toISOString(),
-      context,
       sessionId: this.sessionId,
+      timestamp: new Date().toISOString(),
     };
 
     this.logs.push(entry);

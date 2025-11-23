@@ -3,10 +3,9 @@ import superjson from 'superjson';
 import type { Context } from '@/server/context';
 import { generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
 
-export type Meta = {
-  /** Additional metadata for tRPC procedures */
-  [key: string]: any;
-};
+export interface Meta {
+  [key: string]: unknown;
+}
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,

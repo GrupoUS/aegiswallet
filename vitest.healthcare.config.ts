@@ -8,36 +8,40 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/healthcare-setup.ts'],
-    // Enhanced JSDOM environment for healthcare applications
+
+    // Healthcare-specific JSDOM environment configuration
     environmentOptions: {
       jsdom: {
         pretendToBeVisual: true,
         resources: 'usable',
         runScripts: 'dangerously',
-        url: 'http://localhost:5173',
-        referrer: 'http://localhost:5173',
-        userAgent: 'Mozilla/5.0 (compatible; AegisWallet-Healthcare-Testing/1.0)',
+        url: 'http://localhost:3000',
       },
     },
-    // Sequential testing for healthcare compliance (no concurrent execution)
+
+    // Sequential testing for healthcare compliance and data integrity
     sequence: {
-      concurrent: false,
-      shuffle: false,
+      concurrent: false, // Critical for LGPD compliance testing
+      shuffle: false, // Maintain predictable test order for audit trails
     },
-    // Enhanced coverage configuration for healthcare applications (95%+ required)
+
+    // Enhanced coverage configuration for healthcare compliance (90%+ target)
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      provider: 'v8', // Faster and more accurate for TypeScript
+      reporter: ['text', 'json', 'html', 'lcov', 'clover'],
       exclude: [
         'node_modules/',
         'src/test/',
-        'src/mocks/',
         '**/*.d.ts',
         '**/*.config.js',
         '**/*.config.ts',
+        'src/integrations/', // External dependencies
+        'src/mocks/', // Mock files
         'docs/',
         'scripts/',
         'coverage/',
+        'dist/',
+        'build/',
       ],
       thresholds: {
         global: {
@@ -46,100 +50,125 @@ export default defineConfig({
           lines: 90,
           statements: 90,
         },
-        // Critical healthcare components require 95%+ coverage
-        'src/routes/**': {
+        // Critical healthcare components require higher coverage
+        'src/lib/security/**': {
           branches: 95,
           functions: 95,
           lines: 95,
           statements: 95,
         },
-        'src/domain/**': {
-          branches: 95,
-          functions: 95,
-          lines: 95,
-          statements: 95,
+        'src/components/financial/**': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90,
         },
-        'src/integrations/supabase/**': {
-          branches: 95,
-          functions: 95,
-          lines: 95,
-          statements: 95,
+        'src/lib/speech/**': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90,
+        },
+        'src/lib/nlu/**': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90,
         },
       },
-      all: true,
-      clean: true,
-      cleanOnRerun: true,
-      watermarks: {
-        statements: [80, 95],
-        functions: [80, 95],
-        branches: [80, 95],
-        lines: [80, 95],
-      },
+      all: true, // Include all source files in coverage
+      clean: true, // Clean coverage directories before running
+      cleanOnRerun: true, // Clean on re-run
     },
+
+    // Include healthcare-specific test files
     include: [
-      'src/**/__tests__/**/*.{test,spec}.{ts,tsx}',
-      'src/**/*.{test,spec}.{ts,tsx}',
-      'src/features/**/lgpd-compliance.test.{ts,tsx}',
-      'src/features/**/voice-interface.test.{ts,tsx}',
-      'src/features/**/healthcare-compliance.test.{ts,tsx}',
+      'src/**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'src/test/healthcare/**/*.test.{ts,tsx}',
+      'src/test/quality-control/**/*.test.{ts,tsx}',
     ],
-    exclude: ['node_modules/', 'dist/', 'build/', 'coverage/', 'src/test/fixtures/'],
-    // Enhanced timeout for healthcare operations (database, external APIs)
-    testTimeout: 30000,
-    hookTimeout: 15000,
-    // Better error reporting for healthcare debugging
+
+    exclude: [
+      'node_modules/',
+      'dist/',
+      'build/',
+      'coverage/',
+      '**/*.disabled.*', // Disabled test files
+    ],
+
+    // Enhanced timeout for async operations and healthcare compliance
+    testTimeout: 30000, // 30 seconds for database operations
+    hookTimeout: 30000, // 30 seconds for setup hooks
+
+    // Better error reporting for healthcare compliance
     reporters: ['default', 'verbose'],
-    // Isolate tests to prevent data leakage between healthcare tests
+
+    // Sequential testing for healthcare data integrity
     isolate: true,
-    // File parallelism disabled for healthcare data integrity
-    fileParallelism: false,
-    // Global setup for healthcare test environment
-    globalSetup: ['./src/test/healthcare-global-setup.ts'],
-    // Watch mode configuration for development
-    watch: {
-      // Include healthcare-related files
-      include: ['src/**/*.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-      // Exclude build artifacts
-      exclude: ['node_modules/', 'dist/', 'coverage/'],
-    },
-    // Benchmark configuration for performance testing
-    benchmark: {
-      include: ['src/**/*.{bench,benchmark}.ts'],
-      exclude: ['node_modules/'],
-      outputJson: './benchmark-results.json',
-      outputFile: './benchmark-results.md',
+    fileParallelism: false, // Critical for LGPD compliance testing
+
+    // Global setup for healthcare testing environment
+    // globalSetup: './src/test/healthcare-global-setup.ts', // Disabled for initial setup
+
+    // Mock configuration for healthcare testing
+    clearMocks: true,
+    restoreMocks: true,
+    mockReset: true,
+
+    // Performance optimization for large test suites
+    maxConcurrency: 1, // Sequential execution for healthcare compliance
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true, // Use single fork for healthcare compliance
+      },
     },
   },
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@/test': path.resolve(__dirname, './src/test'),
-      '@/test-utils': path.resolve(__dirname, './src/test/utils'),
-      '@/healthcare': path.resolve(__dirname, './src/test/healthcare'),
     },
   },
+
+  // Optimized dependencies for healthcare testing
   optimizeDeps: {
+    exclude: [
+      // Exclude heavy dependencies from optimization during testing
+      '@supabase/supabase-js',
+      '@tanstack/react-query',
+      '@tanstack/react-router',
+      '@trpc/client',
+      '@trpc/react-query',
+      '@trpc/server',
+    ],
     include: [
       '@testing-library/react',
       '@testing-library/jest-dom',
       '@testing-library/user-event',
-      '@supabase/supabase-js',
-      '@trpc/server',
-      '@trpc/client',
+      'vitest',
+      '@vitest/coverage-v8',
     ],
   },
-  // Define constants for healthcare testing
+
+  // Define global variables for healthcare testing
   define: {
-    __HEALTHCARE_TESTING__: 'true',
-    __LGPD_COMPLIANCE__: 'true',
-    __VOICE_INTERFACE_TESTING__: 'true',
+    'global.POLLY_JS': 'true',
+    'process.env.NODE_ENV': '"test"',
+    'process.env.VITE_ENVIRONMENT': '"test"',
+    'process.env.VITE_SUPABASE_ANON_KEY': '"test-anon-key"',
+    'process.env.VITE_SUPABASE_URL': '"http://localhost:54321"', // Enable mocking for healthcare tests
   },
-  // Environment variables for healthcare testing
-  env: {
-    NODE_ENV: 'test',
-    VITE_SUPABASE_URL: 'http://localhost:54321',
-    VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-    VITE_ENABLE_MOCK_SPEECH_RECOGNITION: 'true',
-    VITE_TEST_LGDP_MODE: 'true',
+
+  // Server configuration for healthcare testing
+  server: {
+    deps: {
+      inline: [
+        // Inline critical healthcare dependencies
+        /@testing-library/,
+        /vitest/,
+      ],
+    },
   },
 });

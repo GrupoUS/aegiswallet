@@ -167,8 +167,8 @@ export class Transaction {
 
   get formattedAmount(): string {
     return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
       currency: 'BRL',
+      style: 'currency',
     }).format(this.data.amount);
   }
 
@@ -255,21 +255,21 @@ export class Transaction {
     transaction_categories?: TransactionCategory;
   }): Transaction {
     return new Transaction({
-      id: data.id,
-      userId: data.user_id,
       accountId: data.account_id,
-      categoryId: data.category_id,
-      type: data.type,
       amount: data.amount,
-      description: data.description,
-      notes: data.notes,
-      transactionDate: new Date(data.transaction_date),
-      status: data.status,
-      tags: data.tags,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
       bankAccount: data.bank_accounts,
       category: data.transaction_categories,
+      categoryId: data.category_id,
+      createdAt: new Date(data.created_at),
+      description: data.description,
+      id: data.id,
+      notes: data.notes,
+      status: data.status,
+      tags: data.tags,
+      transactionDate: new Date(data.transaction_date),
+      type: data.type,
+      updatedAt: new Date(data.updated_at),
+      userId: data.user_id,
     });
   }
 

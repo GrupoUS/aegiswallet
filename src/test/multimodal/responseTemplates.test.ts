@@ -23,10 +23,10 @@ describe('Response Templates', () => {
   describe('Balance Response', () => {
     it('should build complete balance response', () => {
       const response = buildBalanceResponse({
-        currentBalance: 1500.5,
-        income: 3000,
-        expenses: 1500,
         accountType: 'corrente',
+        currentBalance: 1500.5,
+        expenses: 1500,
+        income: 3000,
       });
 
       // Updated to match actual Portuguese number formatting
@@ -53,10 +53,10 @@ describe('Response Templates', () => {
     it('should build budget response with percentage', () => {
       const response = buildBudgetResponse({
         available: 500,
-        total: 1000,
+        category: 'Alimentação',
         spent: 500,
         spentPercentage: 50,
-        category: 'Alimentação',
+        total: 1000,
       });
 
       expect(response.voice).toMatch(/quinhentos.*reais/);
@@ -69,9 +69,9 @@ describe('Response Templates', () => {
     it('should handle budget without category', () => {
       const response = buildBudgetResponse({
         available: 500,
-        total: 1000,
         spent: 500,
         spentPercentage: 50,
+        total: 1000,
       });
 
       expect(response.voice).toContain('orçamento');
@@ -83,8 +83,8 @@ describe('Response Templates', () => {
     it('should build bills response with multiple items', () => {
       const response = buildBillsResponse({
         bills: [
-          { name: 'Energia', amount: 150, dueDate: '2024-01-15' },
-          { name: 'Água', amount: 80, dueDate: '2024-01-20', isPastDue: true },
+          { amount: 150, dueDate: '2024-01-15', name: 'Energia' },
+          { amount: 80, dueDate: '2024-01-20', isPastDue: true, name: 'Água' },
         ],
         totalAmount: 230,
       });
@@ -99,7 +99,7 @@ describe('Response Templates', () => {
 
     it('should handle single bill', () => {
       const response = buildBillsResponse({
-        bills: [{ name: 'Energia', amount: 150, dueDate: '2024-01-15' }],
+        bills: [{ amount: 150, dueDate: '2024-01-15', name: 'Energia' }],
         totalAmount: 150,
       });
 
@@ -112,19 +112,19 @@ describe('Response Templates', () => {
       const response = buildIncomeResponse({
         incoming: [
           {
-            source: 'Salário',
             amount: 5000,
-            expectedDate: '2024-01-05',
             confirmed: true,
+            expectedDate: '2024-01-05',
+            source: 'Salário',
           },
-          { source: 'Freelance', amount: 1500, expectedDate: '2024-01-15' },
+          { amount: 1500, expectedDate: '2024-01-15', source: 'Freelance' },
         ],
-        totalExpected: 6500,
         nextIncome: {
-          source: 'Salário',
           amount: 5000,
           date: '2024-01-05',
+          source: 'Salário',
         },
+        totalExpected: 6500,
       });
 
       expect(response.voice).toContain('6500 reais');
@@ -137,12 +137,12 @@ describe('Response Templates', () => {
   describe('Projection Response', () => {
     it('should build projection with positive variation', () => {
       const response = buildProjectionResponse({
-        projectedBalance: 2000,
         currentBalance: 1500,
-        expectedIncome: 3000,
         expectedExpenses: 2500,
-        variation: 500,
+        expectedIncome: 3000,
         period: 'fim do mês',
+        projectedBalance: 2000,
+        variation: 500,
       });
 
       expect(response.voice).toContain('2000 reais');
@@ -152,12 +152,12 @@ describe('Response Templates', () => {
 
     it('should build projection with negative variation', () => {
       const response = buildProjectionResponse({
-        projectedBalance: 1000,
         currentBalance: 1500,
-        expectedIncome: 2000,
         expectedExpenses: 2500,
-        variation: -500,
+        expectedIncome: 2000,
         period: 'fim do mês',
+        projectedBalance: 1000,
+        variation: -500,
       });
 
       expect(response.voice).toContain('negativa');
@@ -167,10 +167,10 @@ describe('Response Templates', () => {
   describe('Transfer Response', () => {
     it('should build pending transfer response', () => {
       const response = buildTransferResponse({
-        recipient: 'João Silva',
         amount: 100,
-        method: 'PIX',
         estimatedTime: 'Instantâneo',
+        method: 'PIX',
+        recipient: 'João Silva',
         status: 'pending',
       });
 
@@ -184,9 +184,9 @@ describe('Response Templates', () => {
 
     it('should build completed transfer response', () => {
       const response = buildTransferResponse({
-        recipient: 'Maria Santos',
         amount: 200,
         method: 'PIX',
+        recipient: 'Maria Santos',
         status: 'completed',
       });
 
@@ -196,9 +196,9 @@ describe('Response Templates', () => {
 
     it('should build failed transfer response', () => {
       const response = buildTransferResponse({
-        recipient: 'Pedro Costa',
         amount: 300,
         method: 'TED',
+        recipient: 'Pedro Costa',
         status: 'failed',
       });
 
@@ -209,9 +209,9 @@ describe('Response Templates', () => {
   describe('Error Response', () => {
     it('should build error response', () => {
       const response = buildErrorResponse({
-        message: 'Saldo insuficiente',
         code: 'INSUFFICIENT_FUNDS',
         details: 'Adicione fundos e tente novamente',
+        message: 'Saldo insuficiente',
       });
 
       expect(response.voice).toContain('Saldo insuficiente');
@@ -246,6 +246,7 @@ describe('Response Templates', () => {
     });
 
     it('should return error for unknown intent', () => {
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock
       const response = buildMultimodalResponse('unknown_intent' as any, {});
 
       expect(response.visual.data.error).toBe(true);
@@ -259,9 +260,9 @@ describe('Response Templates', () => {
         buildBalanceResponse({ currentBalance: 1000 }),
         buildBudgetResponse({
           available: 500,
-          total: 1000,
           spent: 500,
           spentPercentage: 50,
+          total: 1000,
         }),
         buildBillsResponse({ bills: [], totalAmount: 0 }),
       ];

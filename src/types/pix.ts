@@ -86,9 +86,9 @@ export interface PixStats {
 
 // Validation helpers
 export const PIX_KEY_REGEX = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  cpf: /^\d{11}$/,
   cnpj: /^\d{14}$/,
+  cpf: /^\d{11}$/,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   phone: /^\d{11,13}$/,
   random: /^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/,
 };
@@ -106,11 +106,21 @@ export function validatePixKey(key: string, type?: PixKeyType): boolean {
 export function detectPixKeyType(key: string): PixKeyType | null {
   const cleanKey = key.replace(/[^\w@.-]/g, '');
 
-  if (PIX_KEY_REGEX.email.test(cleanKey)) return 'email';
-  if (PIX_KEY_REGEX.random.test(cleanKey)) return 'random';
-  if (PIX_KEY_REGEX.cnpj.test(cleanKey)) return 'cnpj';
-  if (PIX_KEY_REGEX.cpf.test(cleanKey)) return 'cpf';
-  if (PIX_KEY_REGEX.phone.test(cleanKey)) return 'phone';
+  if (PIX_KEY_REGEX.email.test(cleanKey)) {
+    return 'email';
+  }
+  if (PIX_KEY_REGEX.random.test(cleanKey)) {
+    return 'random';
+  }
+  if (PIX_KEY_REGEX.cnpj.test(cleanKey)) {
+    return 'cnpj';
+  }
+  if (PIX_KEY_REGEX.cpf.test(cleanKey)) {
+    return 'cpf';
+  }
+  if (PIX_KEY_REGEX.phone.test(cleanKey)) {
+    return 'phone';
+  }
 
   return null;
 }

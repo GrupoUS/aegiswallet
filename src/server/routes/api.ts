@@ -18,12 +18,12 @@ export function setupApiRoutes(app: Hono) {
   // API status endpoint with more detailed information
   app.get('/api/status', (c) => {
     return c.json({
-      status: 'operational',
       services: {
         database: 'connected', // TODO: Add actual database health check
         trpc: 'connected',
         auth: 'connected',
       },
+      status: 'operational',
       timestamp: new Date().toISOString(),
     });
   });

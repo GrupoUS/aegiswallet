@@ -15,7 +15,7 @@ import type { Session, User } from '@supabase/supabase-js';
 export interface SecureStorageData {
   session?: Session;
   user?: User;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   lastAccess?: string;
   deviceId?: string;
 }
@@ -79,7 +79,9 @@ export class SecureStorageManager {
    * Initialize encryption key
    */
   private async initializeEncryption(): Promise<void> {
-    if (!this.config.encryptionEnabled) return;
+    if (!this.config.encryptionEnabled) {
+      return;
+    }
 
     try {
       // Try to get existing key from storage
@@ -109,8 +111,8 @@ export class SecureStorageManager {
     try {
       const key = await window.crypto.subtle.generateKey(
         {
-          name: 'AES-GCM',
           length: 256,
+          name: 'AES-GCM',
         },
         true,
         ['encrypt', 'decrypt']
@@ -271,7 +273,9 @@ export class SecureStorageManager {
    * Check if data has expired
    */
   private isDataExpired(data: SecureStorageData): boolean {
-    if (!data.lastAccess) return false;
+    if (!data.lastAccess) {
+      return false;
+    }
 
     const lastAccess = new Date(data.lastAccess).getTime();
     const now = Date.now();
@@ -283,7 +287,9 @@ export class SecureStorageManager {
    * Update last access time
    */
   private updateLastAccess(key: string): void {
-    if (!this.storageAvailable) return;
+    if (!this.storageAvailable) {
+      return;
+    }
 
     try {
       localStorage.setItem(`${this.config.storageKey}_${key}_access`, new Date().toISOString());
@@ -296,7 +302,9 @@ export class SecureStorageManager {
    * Start cleanup interval
    */
   private startCleanupInterval(): void {
-    if (!this.config.enableSecureCleanup) return;
+    if (!this.config.enableSecureCleanup) {
+      return;
+    }
 
     this.cleanupInterval = setInterval(
       () => {
@@ -310,7 +318,9 @@ export class SecureStorageManager {
    * Cleanup expired data
    */
   private cleanupExpiredData(): void {
-    if (!this.storageAvailable) return;
+    if (!this.storageAvailable) {
+      return;
+    }
 
     try {
       const keys = Object.keys(localStorage);
@@ -338,7 +348,9 @@ export class SecureStorageManager {
    * Clear all stored data
    */
   clearAll(): void {
-    if (!this.storageAvailable) return;
+    if (!this.storageAvailable) {
+      return;
+    }
 
     try {
       const keys = Object.keys(localStorage);
@@ -394,10 +406,21 @@ export const secureStorage = new SecureStorageManager();
 
 // Export convenience functions for session management
 export const secureSession = {
-  store: async (session: Session, user: User): Promise<boolean> => {
-    return secureStorage.store('session', { session, user });
+  isValid: async (): Promise<boolean> => {
+    const data = await secureStorage.retrieve('session');
+    return data !== null && !!data.session;
   },
-
+  refresh: async (session: Session): Promise<boolean> => {
+    const data = await secureStorage.retrieve('session');
+    if (data) {
+      data.session = session;
+      return secureStorage.store('session', data);
+    }
+    return false;
+  },
+  remove: (): boolean => {
+    return secureStorage.remove('session');
+  },
   retrieve: async (): Promise<{ session: Session; user: User } | null> => {
     const data = await secureStorage.retrieve('session');
     return data?.session && data.user
@@ -407,23 +430,8 @@ export const secureSession = {
         }
       : null;
   },
-
-  remove: (): boolean => {
-    return secureStorage.remove('session');
-  },
-
-  isValid: async (): Promise<boolean> => {
-    const data = await secureStorage.retrieve('session');
-    return data !== null && !!data.session;
-  },
-
-  refresh: async (session: Session): Promise<boolean> => {
-    const data = await secureStorage.retrieve('session');
-    if (data) {
-      data.session = session;
-      return secureStorage.store('session', data);
-    }
-    return false;
+  store: async (session: Session, user: User): Promise<boolean> => {
+    return secureStorage.store('session', { session, user });
   },
 };
 

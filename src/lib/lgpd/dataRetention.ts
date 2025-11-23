@@ -24,60 +24,60 @@ export interface DataSubjectRequest {
 export class LGPDDataRetentionManager {
   private readonly RETENTION_POLICIES: RetentionPolicy[] = [
     {
+      autoDelete: true,
       dataType: 'voice_recordings',
-      retentionPeriod: '30 dias',
+      deletionMethod: 'hard_delete',
+      legalHold: false,
       retentionMonths: 1,
-      autoDelete: true,
-      legalHold: false,
-      deletionMethod: 'hard_delete',
+      retentionPeriod: '30 dias',
     },
     {
+      autoDelete: true,
       dataType: 'biometric_patterns',
-      retentionPeriod: '2 anos após inatividade',
-      retentionMonths: 24,
-      autoDelete: true,
-      legalHold: false,
       deletionMethod: 'hard_delete',
+      legalHold: false,
+      retentionMonths: 24,
+      retentionPeriod: '2 anos após inatividade',
     },
     {
-      dataType: 'transaction_data',
-      retentionPeriod: '5 anos (obrigação legal)',
-      retentionMonths: 60,
       autoDelete: false,
+      dataType: 'transaction_data',
+      deletionMethod: 'anonymization',
       legalHold: true,
-      deletionMethod: 'anonymization',
+      retentionMonths: 60,
+      retentionPeriod: '5 anos (obrigação legal)',
     },
     {
+      autoDelete: true,
       dataType: 'consent_records',
+      deletionMethod: 'hard_delete',
+      legalHold: false,
+      retentionMonths: 24,
       retentionPeriod: '2 anos após revogação',
-      retentionMonths: 24,
-      autoDelete: true,
-      legalHold: false,
-      deletionMethod: 'hard_delete',
     },
     {
+      autoDelete: true,
       dataType: 'audit_logs',
-      retentionPeriod: '1 ano',
+      deletionMethod: 'hard_delete',
+      legalHold: false,
       retentionMonths: 12,
-      autoDelete: true,
-      legalHold: false,
-      deletionMethod: 'hard_delete',
+      retentionPeriod: '1 ano',
     },
     {
+      autoDelete: true,
       dataType: 'user_preferences',
-      retentionPeriod: '2 anos após inatividade',
-      retentionMonths: 24,
-      autoDelete: true,
-      legalHold: false,
       deletionMethod: 'hard_delete',
+      legalHold: false,
+      retentionMonths: 24,
+      retentionPeriod: '2 anos após inatividade',
     },
     {
-      dataType: 'analytics_data',
-      retentionPeriod: '13 meses',
-      retentionMonths: 13,
       autoDelete: true,
-      legalHold: false,
+      dataType: 'analytics_data',
       deletionMethod: 'anonymization',
+      legalHold: false,
+      retentionMonths: 13,
+      retentionPeriod: '13 meses',
     },
   ];
 
@@ -85,12 +85,12 @@ export class LGPDDataRetentionManager {
    * Check if data is eligible for deletion based on retention policies
    */
   async checkRetentionEligibility(userId: string): Promise<
-    Array<{
+    {
       dataType: string;
       eligible: boolean;
       lastActivity: Date;
       policy: RetentionPolicy;
-    }>
+    }[]
   > {
     try {
       const results = [];
@@ -129,15 +129,15 @@ export class LGPDDataRetentionManager {
 
           // Log the deletion for audit purposes
           await supabase.from('audit_logs').insert({
-            user_id: userId,
             action: 'automatic_data_deletion',
-            resource_type: 'data_retention',
             details: {
               data_type: dataType,
-              policy: policy.retentionPeriod,
               deletion_method: policy.deletionMethod,
+              policy: policy.retentionPeriod,
               timestamp: new Date().toISOString(),
             },
+            resource_type: 'data_retention',
+            user_id: userId,
           });
 
           logger.info(`Automatically deleted ${dataType} for user ${userId}`);
@@ -163,32 +163,32 @@ export class LGPDDataRetentionManager {
       const requestId = crypto.randomUUID();
 
       const _request: Partial<DataSubjectRequest> = {
-        userId,
+        createdAt: new Date(),
+        requestData,
         requestType,
         status: 'pending',
-        requestData,
-        createdAt: new Date(),
+        userId,
       };
 
       await supabase.from('data_subject_requests').insert({
+        created_at: new Date().toISOString(),
         id: requestId,
-        user_id: userId,
+        request_data: requestData,
         request_type: requestType,
         status: 'pending',
-        request_data: requestData,
-        created_at: new Date().toISOString(),
+        user_id: userId,
       });
 
       // Log the request for audit
       await supabase.from('audit_logs').insert({
-        user_id: userId,
         action: 'data_subject_request_created',
-        resource_type: 'lgpd_rights',
         details: {
           request_id: requestId,
           request_type: requestType,
           timestamp: new Date().toISOString(),
         },
+        resource_type: 'lgpd_rights',
+        user_id: userId,
       });
 
       logger.info(`Data subject request created: ${requestId} for user ${userId}`);
@@ -210,8 +210,8 @@ export class LGPDDataRetentionManager {
       await supabase
         .from('data_subject_requests')
         .update({
-          status: 'processing',
           processed_at: new Date().toISOString(),
+          status: 'processing',
         })
         .eq('id', requestId);
 
@@ -226,10 +226,10 @@ export class LGPDDataRetentionManager {
       await supabase
         .from('users')
         .update({
-          email: `deleted_${Date.now()}@deleted.com`,
-          full_name: 'DELETED',
           deleted_at: new Date().toISOString(),
           deletion_reason: 'lgpd_request',
+          email: `deleted_${Date.now()}@deleted.com`,
+          full_name: 'DELETED',
         })
         .eq('id', userId);
 
@@ -237,24 +237,24 @@ export class LGPDDataRetentionManager {
       await supabase
         .from('data_subject_requests')
         .update({
-          status: 'completed',
           response: {
-            deleted_at: new Date().toISOString(),
             data_types_deleted: this.RETENTION_POLICIES.map((p) => p.dataType),
+            deleted_at: new Date().toISOString(),
           },
+          status: 'completed',
         })
         .eq('id', requestId);
 
       // Final audit log
       await supabase.from('audit_logs').insert({
-        user_id: userId,
         action: 'data_deletion_completed',
-        resource_type: 'lgpd_rights',
         details: {
-          request_id: requestId,
           completed_at: new Date().toISOString(),
           data_types_deleted: this.RETENTION_POLICIES.map((p) => p.dataType),
+          request_id: requestId,
         },
+        resource_type: 'lgpd_rights',
+        user_id: userId,
       });
 
       logger.info(`Deletion request ${requestId} completed for user ${userId}`);
@@ -265,8 +265,8 @@ export class LGPDDataRetentionManager {
       await supabase
         .from('data_subject_requests')
         .update({
-          status: 'rejected',
           notes: error instanceof Error ? error.message : 'Unknown error',
+          status: 'rejected',
         })
         .eq('id', requestId);
 
@@ -338,8 +338,8 @@ export class LGPDDataRetentionManager {
             await supabase
               .from('biometric_patterns')
               .update({
-                pattern_data: null,
                 anonymized_at: new Date().toISOString(),
+                pattern_data: null,
               })
               .eq('user_id', userId);
           } else {
@@ -352,9 +352,9 @@ export class LGPDDataRetentionManager {
             await supabase
               .from('transactions')
               .update({
+                anonymized_at: new Date().toISOString(),
                 description: 'ANONYMIZED',
                 notes: 'Data anonymized per retention policy',
-                anonymized_at: new Date().toISOString(),
               })
               .eq('user_id', userId);
           }

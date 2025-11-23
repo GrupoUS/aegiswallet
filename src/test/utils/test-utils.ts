@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type RenderOptions, render } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import React from 'react';
 
@@ -7,11 +8,11 @@ import React from 'react';
 export const createTestQueryClient = () => {
   return new QueryClient({
     defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
       mutations: {
+        retry: false,
+      },
+      queries: {
+        gcTime: 0,
         retry: false,
       },
     },
@@ -47,35 +48,35 @@ export { customRender as render };
 
 // Mocks de dados comuns
 export const mockUser = {
-  id: 'test-user-id',
-  email: 'test@example.com',
   autonomy_level: 50,
+  email: 'test@example.com',
+  id: 'test-user-id',
 };
 
 export const mockBalance = {
-  total: 5000.0,
   available: 4500.0,
   pending: 500.0,
+  total: 5000.0,
 };
 
 export const mockTransaction = {
-  id: 'test-transaction-id',
-  user_id: 'test-user-id',
   amount: -100.5,
-  description: 'Test transaction',
   category: 'food',
-  transaction_date: '2024-01-01T00:00:00Z',
   created_at: '2024-01-01T00:00:00Z',
+  description: 'Test transaction',
+  id: 'test-transaction-id',
+  transaction_date: '2024-01-01T00:00:00Z',
+  user_id: 'test-user-id',
 };
 
 export const mockBankAccount = {
-  id: 'test-account-id',
-  user_id: 'test-user-id',
-  institution_name: 'Test Bank',
   account_mask: '****1234',
   balance: 5000.0,
+  id: 'test-account-id',
+  institution_name: 'Test Bank',
   is_active: true,
   last_sync: '2024-01-01T00:00:00Z',
+  user_id: 'test-user-id',
 };
 
 // Funções utilitárias para testes
@@ -84,8 +85,8 @@ export const waitForLoadingToFinish = () => new Promise((resolve) => setTimeout(
 export const createMockEvent = (type: string) => {
   const event = new Event(type);
   Object.defineProperty(event, 'target', {
-    writable: true,
     value: { value: '' },
+    writable: true,
   });
   return event;
 };

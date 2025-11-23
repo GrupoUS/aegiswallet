@@ -63,8 +63,8 @@ export function useOAuthHandler(): OAuthHandlerResult {
           sessionStorage.setItem('oauth_hash', window.location.hash);
 
           secureLogger.authEvent('oauth_callback_received', undefined, {
-            pathname: window.location.pathname,
             hasAccessToken: hashParams.has('access_token'),
+            pathname: window.location.pathname,
           });
         }
 
@@ -73,8 +73,8 @@ export function useOAuthHandler(): OAuthHandlerResult {
       } catch (error) {
         secureLogger.error('OAuth handling error', {
           error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
           pathname: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+          stack: error instanceof Error ? error.stack : undefined,
         });
 
         setOAuthError('Failed to process OAuth callback');
@@ -90,8 +90,8 @@ export function useOAuthHandler(): OAuthHandlerResult {
   }, []);
 
   return {
-    isRedirecting,
     isProcessing,
+    isRedirecting,
     oauthError,
   };
 }

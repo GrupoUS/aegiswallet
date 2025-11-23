@@ -15,7 +15,7 @@ export interface AuditLogEntry {
   method?: string;
   confidence?: number;
   transcription?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -56,9 +56,9 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<string> {
  */
 async function generateSignature(entry: AuditLogEntry): Promise<string> {
   const data = JSON.stringify({
-    userId: entry.userId,
     action: entry.action,
     timestamp: Date.now(),
+    userId: entry.userId,
   });
 
   // Use Web Crypto API
@@ -70,8 +70,8 @@ async function generateSignature(entry: AuditLogEntry): Promise<string> {
       // Generate key (in production, use stored key)
       const key = await window.crypto.subtle.generateKey(
         {
-          name: 'HMAC',
           hash: 'SHA-256',
+          name: 'HMAC',
         },
         false,
         ['sign']
@@ -125,7 +125,7 @@ export async function queryAuditLogs(params: {
   startDate?: Date;
   endDate?: Date;
   limit?: number;
-}): Promise<any[]> {
+}): Promise<unknown[]> {
   let query = supabase.from('audit_logs').select('*');
 
   if (params.userId) {

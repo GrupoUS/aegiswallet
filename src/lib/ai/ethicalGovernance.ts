@@ -20,16 +20,16 @@ export interface AuditRecord {
 export class EthicalGovernance {
   private rules: EthicalRule[] = [
     {
-      id: 'rule_1',
-      name: 'Transparência Total',
       description: 'Todas as decisões devem ser explicáveis',
       enabled: true,
+      id: 'rule_1',
+      name: 'Transparência Total',
     },
     {
-      id: 'rule_2',
-      name: 'Não Discriminação',
       description: 'Decisões não podem ser baseadas em características protegidas',
       enabled: true,
+      id: 'rule_2',
+      name: 'Não Discriminação',
     },
   ];
 

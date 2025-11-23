@@ -145,38 +145,38 @@ export interface PerformanceThresholds {
 export const ESSENTIAL_VOICE_COMMANDS = [
   {
     command: 'saldo',
-    intent: 'balance_query' as const,
     examples: ['qual o meu saldo', 'quanto tenho na conta', 'ver saldo'],
+    intent: 'balance_query' as const,
     keywords: ['saldo', 'tenho', 'conta', 'disponível'],
   },
   {
     command: 'transferir',
-    intent: 'transfer_query' as const,
     examples: ['transferir dinheiro', 'fazer pix', 'enviar valor'],
+    intent: 'transfer_query' as const,
     keywords: ['transferir', 'pix', 'enviar', 'mandar'],
   },
   {
     command: 'pagar',
-    intent: 'payment_query' as const,
     examples: ['pagar conta', 'fazer pagamento', 'pagar boleto'],
+    intent: 'payment_query' as const,
     keywords: ['pagar', 'conta', 'boleto', 'fatura'],
   },
   {
     command: 'extrato',
-    intent: 'statement_query' as const,
     examples: ['ver extrato', 'movimentações', 'consultar extrato'],
+    intent: 'statement_query' as const,
     keywords: ['extrato', 'movimentações', 'lançamentos', 'consultar'],
   },
   {
     command: 'investir',
-    intent: 'investment_query' as const,
     examples: ['investir dinheiro', 'aplicações', 'rendimentos'],
+    intent: 'investment_query' as const,
     keywords: ['investir', 'aplicar', 'aplicações', 'rendimento'],
   },
   {
     command: 'ajuda',
-    intent: 'help_query' as const,
     examples: ['o que posso fazer', 'ajuda', 'comandos disponíveis'],
+    intent: 'help_query' as const,
     keywords: ['ajuda', 'comandos', 'posso fazer', 'disponível'],
   },
 ] as const;
@@ -217,21 +217,21 @@ export interface VoiceConfig {
 }
 
 export const DEFAULT_VOICE_CONFIG: VoiceConfig = {
-  language: 'pt-BR',
-  region: 'pt-BR',
+  audioConfig: {
+    bitDepth: 16,
+    channels: 1,
+    format: 'webm',
+    sampleRate: 16000,
+  },
   confidenceThreshold: 0.85,
-  enableFallback: true,
   enableContinuousRecognition: false,
+  enableFallback: true,
+  language: 'pt-BR',
   performanceThresholds: {
     maxResponseTime: 1000, // 1 second
     minConfidence: 0.85,
     minSuccessRate: 0.95,
     maxFallbackRate: 0.1,
   },
-  audioConfig: {
-    sampleRate: 16000,
-    channels: 1,
-    bitDepth: 16,
-    format: 'webm',
-  },
+  region: 'pt-BR',
 };

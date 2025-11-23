@@ -13,12 +13,12 @@ export interface EnrichedTransaction {
 
 export class DataNormalizer {
   private categoryMap: Record<string, string> = {
-    supermercado: 'alimentacao',
-    restaurante: 'alimentacao',
-    uber: 'transporte',
     '99': 'transporte',
     netflix: 'entretenimento',
+    restaurante: 'alimentacao',
     spotify: 'entretenimento',
+    supermercado: 'alimentacao',
+    uber: 'transporte',
   };
 
   normalizeTransaction(description: string): EnrichedTransaction {
@@ -35,15 +35,15 @@ export class DataNormalizer {
     }
 
     return {
-      id: `enr_${Date.now()}`,
-      normalizedCategory: category,
-      merchant: description,
-      tags: [category],
       confidence,
+      id: `enr_${Date.now()}`,
+      merchant: description,
+      normalizedCategory: category,
+      tags: [category],
     };
   }
 
-  enrichBatch(transactions: Array<{ description: string }>): EnrichedTransaction[] {
+  enrichBatch(transactions: { description: string }[]): EnrichedTransaction[] {
     return transactions.map((tx) => this.normalizeTransaction(tx.description));
   }
 }

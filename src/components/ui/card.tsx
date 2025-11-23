@@ -1,19 +1,20 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva('rounded-xl border bg-card text-card-foreground shadow', {
+  defaultVariants: {
+    variant: 'default',
+  },
   variants: {
     variant: {
       default: '',
       glass: 'glass-card',
-      hover: 'transition-all duration-300 hover:shadow-lg hover:-translate-y-1',
       'glass-hover': 'glass-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1',
+      hover: 'transition-all duration-300 hover:shadow-lg hover:-translate-y-1',
     },
-  },
-  defaultVariants: {
-    variant: 'default',
   },
 });
 

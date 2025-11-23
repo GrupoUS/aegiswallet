@@ -2,11 +2,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useVoiceLogger } from '@/hooks/useLogger';
-import {
-  getVoiceService,
-  VOICE_FEEDBACK,
-  type VoiceRecognitionResult,
-} from '@/services/voiceService';
+import type { VoiceRecognitionResult } from '@/services/voiceService';
+import { getVoiceService, VOICE_FEEDBACK } from '@/services/voiceService';
 
 export interface UseVoiceCommandOptions {
   autoNavigate?: boolean;
@@ -38,7 +35,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const [lastCommand, setLastCommand] = useState<string | null>(null);
 
   const logger = useVoiceLogger();
-  logger.setContext({ hook: 'useVoiceCommand', autoNavigate, enableFeedback });
+  logger.setContext({ autoNavigate, enableFeedback, hook: 'useVoiceCommand' });
 
   const voiceService = getVoiceService();
   const isSupported =
@@ -101,10 +98,10 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     (error: Error) => {
       setIsListening(false);
       logger.voiceError(error.message, {
+        action: 'handleRecognitionError',
+        enableFeedback,
         errorMessage: error.message,
         stack: error.stack,
-        enableFeedback,
-        action: 'handleRecognitionError',
       });
 
       if (enableFeedback) {
@@ -163,16 +160,16 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     async (text: string) => {
       try {
         logger.voiceCommand('Speaking text', 1.0, {
-          textLength: text.length,
           action: 'speak',
+          textLength: text.length,
         });
         await voiceService.speak(text);
       } catch (error) {
         logger.voiceError('Speech synthesis error', {
+          action: 'speak',
+          enableFeedback,
           error: error instanceof Error ? error.message : String(error),
           textLength: text.length,
-          enableFeedback,
-          action: 'speak',
         });
         if (enableFeedback) {
           toast.error('Erro ao falar', {
@@ -198,11 +195,11 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   return {
     isListening,
     isSupported,
+    lastCommand,
+    lastTranscript,
+    speak,
     startListening,
     stopListening,
-    speak,
-    lastTranscript,
-    lastCommand,
   };
 }
 
@@ -211,11 +208,11 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
  */
 function getDestinationName(path: string): string {
   const names: Record<string, string> = {
-    '/saldo': 'Saldo',
-    '/orcamento': 'Orçamento',
     '/contas': 'Contas',
-    '/pix': 'PIX',
     '/dashboard': 'Dashboard',
+    '/orcamento': 'Orçamento',
+    '/pix': 'PIX',
+    '/saldo': 'Saldo',
     '/transactions': 'Transações',
   };
   return names[path] || path;
@@ -233,15 +230,15 @@ export function useVoiceFeedback() {
     async (text: string) => {
       try {
         logger.voiceCommand('Voice feedback speaking', 1.0, {
-          textLength: text.length,
           action: 'voiceFeedback',
+          textLength: text.length,
         });
         await voiceService.speak(text);
       } catch (error) {
         logger.voiceError('Voice feedback synthesis error', {
+          action: 'voiceFeedback',
           error: error instanceof Error ? error.message : String(error),
           textLength: text.length,
-          action: 'voiceFeedback',
         });
       }
     },
@@ -253,9 +250,9 @@ export function useVoiceFeedback() {
   }, [voiceService]);
 
   return {
+    isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
     speak,
     stopSpeaking,
-    isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
   };
 }
 

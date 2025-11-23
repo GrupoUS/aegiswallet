@@ -5,37 +5,33 @@ import { Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
+import type { ChartConfig } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { usePixTransactions } from '@/hooks/usePix';
 import { cn } from '@/lib/utils';
 
 const chartConfig = {
-  sent: {
-    label: 'Enviado',
-    color: 'hsl(var(--chart-1))',
-  },
   received: {
-    label: 'Recebido',
     color: 'hsl(var(--chart-2))',
+    label: 'Recebido',
+  },
+  sent: {
+    color: 'hsl(var(--chart-1))',
+    label: 'Enviado',
   },
   total: {
-    label: 'Total',
     color: 'hsl(var(--chart-3))',
+    label: 'Total',
   },
 } satisfies ChartConfig;
 
 const TIME_PERIODS = [
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
-  { value: '30d', label: '30d' },
-  { value: '1y', label: '1a' },
+  { label: '24h', value: '24h' },
+  { label: '7d', value: '7d' },
+  { label: '30d', value: '30d' },
+  { label: '1a', value: '1y' },
 ];
 
 export const PixChart = React.memo(function PixChart() {
@@ -51,7 +47,9 @@ export const PixChart = React.memo(function PixChart() {
 
   // Filter transactions by period
   const filteredTransactions = useMemo(() => {
-    if (!transactions) return [];
+    if (!transactions) {
+      return [];
+    }
 
     const now = new Date();
     let startDate: Date;
@@ -85,7 +83,7 @@ export const PixChart = React.memo(function PixChart() {
       (acc, tx) => {
         const date = new Date(tx.createdAt).toISOString().split('T')[0];
         if (!acc[date]) {
-          acc[date] = { date, sent: 0, received: 0 };
+          acc[date] = { date, received: 0, sent: 0 };
         }
 
         if (tx.type === 'sent') {
@@ -114,13 +112,13 @@ export const PixChart = React.memo(function PixChart() {
     const isPositive = balance >= 0;
 
     return {
-      totalSent,
-      totalReceived,
       balance,
-      isPositive,
       formattedBalance: balance.toFixed(2).replace('.', ','),
-      formattedTotalSent: totalSent.toFixed(2).replace('.', ','),
       formattedTotalReceived: totalReceived.toFixed(2).replace('.', ','),
+      formattedTotalSent: totalSent.toFixed(2).replace('.', ','),
+      isPositive,
+      totalReceived,
+      totalSent,
     };
   }, [filteredTransactions]);
 
@@ -202,7 +200,7 @@ export const PixChart = React.memo(function PixChart() {
           <>
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ bottom: 0, left: 10, right: 10, top: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="date"

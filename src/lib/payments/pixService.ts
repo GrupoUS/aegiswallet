@@ -10,7 +10,7 @@ export interface PIXTransfer {
 
 export class PIXService {
   async validateKey(_key: string): Promise<{ valid: boolean; name?: string }> {
-    return { valid: true, name: 'João Silva' };
+    return { name: 'João Silva', valid: true };
   }
 
   async initiateTransfer(_transfer: PIXTransfer): Promise<{ transactionId: string }> {

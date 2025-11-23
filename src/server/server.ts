@@ -3,13 +3,13 @@ import { environment } from '@/server/config/environment';
 import app from '@/server/index';
 
 logger.info(`🚀 AegisWallet Server starting...`, {
-  port: environment.PORT,
   environment: environment.NODE_ENV,
-  service: 'aegiswallet-server',
   mode: environment.IS_DEVELOPMENT ? 'development' : 'production',
+  port: environment.PORT,
+  service: 'aegiswallet-server',
 });
 
 export default {
-  port: environment.PORT,
   fetch: app.fetch,
+  port: environment.PORT,
 };

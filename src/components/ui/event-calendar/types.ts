@@ -23,76 +23,76 @@ export interface EventColorStyles {
 }
 
 const successStyles: EventColorStyles = {
+  border: 'border-success',
   dot: 'bg-success',
   subtleBg: 'bg-success/15',
-  border: 'border-success',
   text: 'text-success',
 };
 
 const destructiveStyles: EventColorStyles = {
+  border: 'border-destructive',
   dot: 'bg-destructive',
   subtleBg: 'bg-destructive/15',
-  border: 'border-destructive',
   text: 'text-destructive',
 };
 
 const warningStyles: EventColorStyles = {
+  border: 'border-warning',
   dot: 'bg-warning',
   subtleBg: 'bg-warning/15',
-  border: 'border-warning',
   text: 'text-warning',
 };
 
 const infoStyles: EventColorStyles = {
+  border: 'border-info',
   dot: 'bg-info',
   subtleBg: 'bg-info/15',
-  border: 'border-info',
   text: 'text-info',
 };
 
 const accentStyles: EventColorStyles = {
+  border: 'border-accent',
   dot: 'bg-accent',
   subtleBg: 'bg-accent/15',
-  border: 'border-accent',
   text: 'text-accent',
 };
 
 const primaryStyles: EventColorStyles = {
+  border: 'border-primary',
   dot: 'bg-primary',
   subtleBg: 'bg-primary/15',
-  border: 'border-primary',
   text: 'text-primary',
 };
 
 const pixPrimaryStyles: EventColorStyles = {
+  border: 'border-pix-primary',
   dot: 'bg-pix-primary',
   subtleBg: 'bg-pix-primary/15',
-  border: 'border-pix-primary',
   text: 'text-pix-primary',
 };
 
 const pixAccentStyles: EventColorStyles = {
+  border: 'border-pix-accent',
   dot: 'bg-pix-accent',
   subtleBg: 'bg-pix-accent/15',
-  border: 'border-pix-accent',
   text: 'text-pix-accent',
 };
 
 export const EVENT_COLOR_STYLES: Record<EventColor, EventColorStyles> = {
-  emerald: successStyles,
-  rose: destructiveStyles,
-  orange: warningStyles,
-  blue: infoStyles,
-  violet: accentStyles,
-  indigo: primaryStyles,
   amber: warningStyles,
-  red: destructiveStyles,
-  green: successStyles,
-  yellow: warningStyles,
-  purple: accentStyles,
-  pink: accentStyles,
-  teal: pixPrimaryStyles,
+  blue: infoStyles,
   cyan: pixAccentStyles,
+  emerald: successStyles,
+  green: successStyles,
+  indigo: primaryStyles,
+  orange: warningStyles,
+  pink: accentStyles,
+  purple: accentStyles,
+  red: destructiveStyles,
+  rose: destructiveStyles,
+  teal: pixPrimaryStyles,
+  violet: accentStyles,
+  yellow: warningStyles,
 };
 
 export interface CalendarEvent {
@@ -167,45 +167,45 @@ export type CalendarView = 'week' | 'day' | 'month';
 
 export const DEFAULT_CALENDAR_CATEGORIES: CalendarCategory[] = [
   {
+    color: 'rose',
+    description: 'Pagamento de contas e faturas',
+    icon: '??',
     id: 'bills',
     name: 'Contas',
-    color: 'rose',
-    icon: '??',
-    description: 'Pagamento de contas e faturas',
   },
   {
+    color: 'emerald',
+    description: 'Recebimentos e salarios',
+    icon: '??',
     id: 'income',
     name: 'Receitas',
-    color: 'emerald',
-    icon: '??',
-    description: 'Recebimentos e salarios',
   },
   {
+    color: 'blue',
+    description: 'Aplicacoes e investimentos',
+    icon: '??',
     id: 'investments',
     name: 'Investimentos',
-    color: 'blue',
-    icon: '??',
-    description: 'Aplicacoes e investimentos',
   },
   {
+    color: 'violet',
+    description: 'Poupanca e reservas',
+    icon: '??',
     id: 'savings',
     name: 'Economias',
-    color: 'violet',
-    icon: '??',
-    description: 'Poupanca e reservas',
   },
   {
+    color: 'orange',
+    description: 'Gastos e despesas do dia a dia',
+    icon: '??',
     id: 'expenses',
     name: 'Despesas',
-    color: 'orange',
-    icon: '??',
-    description: 'Gastos e despesas do dia a dia',
   },
   {
+    color: 'indigo',
+    description: 'Compromissos e eventos pessoais',
+    icon: '??',
     id: 'personal',
     name: 'Pessoal',
-    color: 'indigo',
-    icon: '??',
-    description: 'Compromissos e eventos pessoais',
   },
 ];

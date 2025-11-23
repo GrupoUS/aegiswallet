@@ -9,7 +9,8 @@ import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
-import { createPushProvider, type PushConfig, type PushMessage } from '@/lib/security/pushProvider';
+import type { PushConfig, PushMessage } from '@/lib/security/pushProvider';
+import { createPushProvider } from '@/lib/security/pushProvider';
 
 // Brazilian financial event types
 export interface BrazilianFinancialEvent {
@@ -38,19 +39,19 @@ export interface FinancialReminderConfig {
 export interface NotificationTemplate {
   title: string;
   body: string;
-  actions?: Array<{
+  actions?: {
     action: string;
     title: string;
     icon?: string;
-  }>;
-  data?: Record<string, any>;
+  }[];
+  data?: Record<string, unknown>;
 }
 
 /**
  * Brazilian Financial Notification Service
  */
 export class FinancialNotificationService {
-  private pushProvider: any;
+  private pushProvider: unknown;
   private config: FinancialReminderConfig;
 
   constructor(pushConfig: PushConfig) {
@@ -83,8 +84,8 @@ export class FinancialNotificationService {
     const formattedDate = format(eventDate, "dd 'de' MMMM", { locale: ptBR });
     const formattedAmount = event.amount
       ? new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
           currency: 'BRL',
+          style: 'currency',
         }).format(Math.abs(event.amount))
       : '';
 
@@ -96,131 +97,131 @@ export class FinancialNotificationService {
       // Overdue or due today
       if (isPayment) {
         return {
-          title: `🔴 Pagamento Vencido: ${event.title}`,
-          body: `Pagamento de ${formattedAmount} venceu hoje. Realize o pagamento imediatamente para evitar juros.`,
           actions: [
-            { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
+            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
             {
               action: 'remind',
-              title: 'Lembrar Depois',
               icon: '/icons/clock.png',
+              title: 'Lembrar Depois',
             },
           ],
+          body: `Pagamento de ${formattedAmount} venceu hoje. Realize o pagamento imediatamente para evitar juros.`,
           data: {
-            type: 'payment_overdue',
-            eventId: event.id,
             amount: event.amount,
+            eventId: event.id,
+            type: 'payment_overdue',
             urgency: 'urgent',
           },
+          title: `🔴 Pagamento Vencido: ${event.title}`,
         };
       }
       if (isReceivable) {
         return {
-          title: `💰 Recebimento Hoje: ${event.title}`,
+          actions: [{ action: 'view', icon: '/icons/eye.png', title: 'Ver Detalhes' }],
           body: `Você receberá ${formattedAmount} hoje em sua conta.`,
-          actions: [{ action: 'view', title: 'Ver Detalhes', icon: '/icons/eye.png' }],
           data: {
-            type: 'receipt_today',
-            eventId: event.id,
             amount: event.amount,
+            eventId: event.id,
+            type: 'receipt_today',
           },
+          title: `💰 Recebimento Hoje: ${event.title}`,
         };
       }
     } else if (daysUntil === 1) {
       // Due tomorrow
       if (isPayment) {
         return {
-          title: `⚠️ Pagamento Amanhã: ${event.title}`,
-          body: `Pagamento de ${formattedAmount} vence amanhã (${formattedDate}).`,
           actions: [
-            { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
+            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
             {
               action: 'schedule',
-              title: 'Agendar',
               icon: '/icons/calendar.png',
+              title: 'Agendar',
             },
           ],
+          body: `Pagamento de ${formattedAmount} vence amanhã (${formattedDate}).`,
           data: {
-            type: 'payment_tomorrow',
-            eventId: event.id,
             amount: event.amount,
+            eventId: event.id,
+            type: 'payment_tomorrow',
             urgency: 'high',
           },
+          title: `⚠️ Pagamento Amanhã: ${event.title}`,
         };
       }
       if (isReceivable) {
         return {
-          title: `💳 Recebimento Amanhã: ${event.title}`,
           body: `Você receberá ${formattedAmount} amanhã (${formattedDate}).`,
           data: {
-            type: 'receipt_tomorrow',
-            eventId: event.id,
             amount: event.amount,
+            eventId: event.id,
+            type: 'receipt_tomorrow',
           },
+          title: `💳 Recebimento Amanhã: ${event.title}`,
         };
       }
     } else if (daysUntil <= 7) {
       // Due this week
       if (isPayment) {
         return {
-          title: `📅 Pagamento Esta Semana: ${event.title}`,
-          body: `Pagamento de ${formattedAmount} vence em ${daysUntil} dias (${formattedDate}).`,
           actions: [
-            { action: 'pay', title: 'Pagar Agora', icon: '/icons/pix.png' },
+            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
             {
               action: 'schedule',
-              title: 'Agendar',
               icon: '/icons/calendar.png',
+              title: 'Agendar',
             },
           ],
+          body: `Pagamento de ${formattedAmount} vence em ${daysUntil} dias (${formattedDate}).`,
           data: {
-            type: 'payment_this_week',
-            eventId: event.id,
             amount: event.amount,
             daysUntil,
+            eventId: event.id,
+            type: 'payment_this_week',
             urgency: 'normal',
           },
+          title: `📅 Pagamento Esta Semana: ${event.title}`,
         };
       }
       if (isReceivable) {
         return {
-          title: `📈 Recebimento Esta Semana: ${event.title}`,
           body: `Você receberá ${formattedAmount} em ${daysUntil} dias (${formattedDate}).`,
           data: {
-            type: 'receipt_this_week',
-            eventId: event.id,
             amount: event.amount,
             daysUntil,
+            eventId: event.id,
+            type: 'receipt_this_week',
           },
+          title: `📈 Recebimento Esta Semana: ${event.title}`,
         };
       }
     } else {
       // Future event
       return {
-        title: `📋 Lembrete: ${event.title}`,
-        body: `${event.title} agendado para ${formattedDate}${formattedAmount ? ` - ${formattedAmount}` : ''}`,
         actions: [
-          { action: 'view', title: 'Ver Detalhes', icon: '/icons/eye.png' },
-          { action: 'edit', title: 'Editar', icon: '/icons/edit.png' },
+          { action: 'view', icon: '/icons/eye.png', title: 'Ver Detalhes' },
+          { action: 'edit', icon: '/icons/edit.png', title: 'Editar' },
         ],
+        body: `${event.title} agendado para ${formattedDate}${formattedAmount ? ` - ${formattedAmount}` : ''}`,
         data: {
-          type: 'future_event',
-          eventId: event.id,
           amount: event.amount,
           daysUntil,
+          eventId: event.id,
+          type: 'future_event',
         },
+        title: `📋 Lembrete: ${event.title}`,
       };
     }
 
     // Default fallback
     return {
-      title: `📅 Lembrete Financeiro`,
       body: `${event.title} em ${formattedDate}${formattedAmount ? ` - ${formattedAmount}` : ''}`,
       data: {
-        type: 'generic_reminder',
-        eventId: event.id,
         amount: event.amount,
+        eventId: event.id,
+        type: 'generic_reminder',
       },
+      title: `📅 Lembrete Financeiro`,
     };
   }
 
@@ -286,31 +287,31 @@ export class FinancialNotificationService {
 
           // Create reminder in database
           await supabase.from('event_reminders').insert({
+            created_at: new Date().toISOString(),
             event_id: event.id,
+            message: notification.body,
             remind_at: remindAt,
             reminder_type: 'notification',
-            message: notification.body,
-            created_at: new Date().toISOString(),
           });
 
           logger.info('Created automated reminder', {
-            operation: 'create_automated_reminder',
-            userId,
-            resource: 'event_reminders',
-            eventId: event.id,
             daysBefore,
+            eventId: event.id,
+            operation: 'create_automated_reminder',
             remindAt,
             reminderType: 'notification',
+            resource: 'event_reminders',
+            userId,
           });
         }
       }
     } catch (error) {
       logger.error('create_automated_reminders failed', {
-        operation: 'create_automated_reminders',
-        userId,
         error: (error as Error).message,
         eventId: event.id,
         eventTitle: event.title,
+        operation: 'create_automated_reminders',
+        userId,
       });
       throw error;
     }
@@ -327,53 +328,53 @@ export class FinancialNotificationService {
     try {
       const daysUntil = differenceInDays(parseISO(event.eventDate), new Date());
       const notification = customMessage
-        ? { title: '📅 Lembrete Financeiro', body: customMessage }
+        ? { body: customMessage, title: '📅 Lembrete Financeiro' }
         : this.generateNotificationMessage(event, daysUntil);
 
       const pushMessage: PushMessage = {
-        title: notification.title,
-        body: notification.body,
-        icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
-        requireInteraction: daysUntil <= 1,
-        tag: `financial-event-${event.id}`,
         actions: notification.actions,
+        badge: '/badge-72x72.png',
+        body: notification.body,
         data: {
           ...notification.data,
           eventId: event.id,
           userId,
           timestamp: new Date().toISOString(),
         },
+        icon: '/icon-192x192.png',
+        requireInteraction: daysUntil <= 1,
+        tag: `financial-event-${event.id}`,
+        title: notification.title,
       };
 
       const result = await this.pushProvider.sendPushNotification(userId, pushMessage);
 
       if (result.success) {
         logger.info('Financial notification sent successfully', {
-          operation: 'send_financial_notification_success',
-          userId,
-          resource: 'notifications',
+          daysUntil,
           eventId: event.id,
           eventTitle: event.title,
-          daysUntil,
           messageId: result.messageId,
+          operation: 'send_financial_notification_success',
+          resource: 'notifications',
+          userId,
         });
       } else {
         logger.error('Financial notification failed', {
-          operation: 'send_financial_notification_failed',
-          userId,
           error: result.error || 'Unknown error',
           eventId: event.id,
           eventTitle: event.title,
+          operation: 'send_financial_notification_failed',
+          userId,
         });
       }
     } catch (error) {
       logger.error('send_financial_notification_error', {
-        operation: 'send_financial_notification_error',
-        userId,
         error: (error as Error).message,
         eventId: event.id,
         eventTitle: event.title,
+        operation: 'send_financial_notification_error',
+        userId,
       });
       throw error;
     }
@@ -411,16 +412,18 @@ export class FinancialNotificationService {
 
       if (error) {
         logger.error('Failed to fetch pending reminders', {
-          operation: 'processPendingReminders',
           component: 'system',
           error: error.message,
+          operation: 'processPendingReminders',
         });
         return;
       }
 
       for (const reminder of reminders || []) {
         const event = reminder.financial_events;
-        if (!event) continue;
+        if (!event) {
+          continue;
+        }
 
         try {
           await this.sendFinancialNotification(event, event.user_id, reminder.message);
@@ -435,26 +438,26 @@ export class FinancialNotificationService {
             .eq('id', reminder.id);
         } catch (notificationError) {
           logger.error('Failed to process reminder notification', {
-            operation: 'process_reminder_notification_failed',
-            userId: event.user_id,
             error: (notificationError as Error).message,
-            reminderId: reminder.id,
             eventId: event.id,
+            operation: 'process_reminder_notification_failed',
+            reminderId: reminder.id,
+            userId: event.user_id,
           });
         }
       }
 
       logger.info('Processed pending reminders', {
-        operation: 'process_pending_reminders_complete',
         component: 'system',
-        resource: 'event_reminders',
+        operation: 'process_pending_reminders_complete',
         processedCount: reminders?.length || 0,
+        resource: 'event_reminders',
       });
     } catch (error) {
       logger.error('process_pending_reminders_error', {
-        operation: 'processPendingReminders',
         component: 'system',
         error: (error as Error).message,
+        operation: 'processPendingReminders',
       });
     }
   }
@@ -474,8 +477,8 @@ export class FinancialNotificationService {
       });
       const formattedAmount = event.amount
         ? new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
             currency: 'BRL',
+            style: 'currency',
           }).format(Math.abs(event.amount))
         : '';
 
@@ -493,28 +496,28 @@ export class FinancialNotificationService {
 
       // Create voice reminder in database
       await supabase.from('event_reminders').insert({
+        created_at: new Date().toISOString(),
         event_id: event.id,
+        message: voiceMessage,
         remind_at: reminderTime,
         reminder_type: 'voice',
-        message: voiceMessage,
-        created_at: new Date().toISOString(),
       });
 
       logger.info('Created voice reminder', {
-        operation: 'create_voice_reminder',
-        userId,
-        resource: 'event_reminders',
         eventId: event.id,
-        reminderTime,
         messageType: 'voice',
+        operation: 'create_voice_reminder',
+        reminderTime,
+        resource: 'event_reminders',
+        userId,
       });
     } catch (error) {
       logger.error('create_voice_reminder failed', {
-        operation: 'create_voice_reminder',
-        userId,
         error: (error as Error).message,
         eventId: event.id,
+        operation: 'create_voice_reminder',
         reminderTime,
+        userId,
       });
       throw error;
     }

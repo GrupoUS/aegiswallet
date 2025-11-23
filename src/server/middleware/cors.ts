@@ -10,8 +10,8 @@ import { corsConfig } from '@/server/config/environment';
  * Standardized CORS middleware
  */
 export const corsMiddleware = cors({
-  origin: corsConfig.origins,
-  credentials: corsConfig.credentials,
-  allowMethods: [...corsConfig.allowMethods],
   allowHeaders: [...corsConfig.allowHeaders],
+  allowMethods: [...corsConfig.allowMethods],
+  credentials: corsConfig.credentials,
+  origin: corsConfig.origins,
 });

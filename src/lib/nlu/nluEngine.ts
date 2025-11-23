@@ -21,16 +21,14 @@ import { createEntityExtractor } from '@/lib/nlu/entityExtractor';
 import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
 import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';
 import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
-import {
-  IntentType,
-  type NLUConfig,
-  type NLUEntity,
-  NLUError,
-  NLUErrorCode,
-  type NLUResult,
-  type PatternEvolution,
-  type UserAdaptation,
+import type {
+  NLUConfig,
+  NLUEntity,
+  NLUResult,
+  PatternEvolution,
+  UserAdaptation,
 } from '@/lib/nlu/types';
+import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
 import type { NLUIntent } from '@/types/nlu.types';
 
 // ============================================================================
@@ -168,16 +166,10 @@ export class NLUEngine {
 
       // Build result
       const result: NLUResult = {
-        intent: classification.intent,
         confidence: classification.confidence,
-        entities,
-        originalText: text,
-        normalizedText: normalized.normalized,
-        processingTime,
-        requiresConfirmation,
-        requiresDisambiguation,
-        missingSlots,
         context: this.config.contextEnabled ? this.context : undefined,
+        entities,
+        intent: classification.intent,
         metadata: {
           classificationMethod: classification.method,
           alternativeIntents: classification.alternatives,
@@ -186,6 +178,12 @@ export class NLUEngine {
           brazilianContext: this.detectBrazilianContext(text),
           learningSignals: this.extractLearningSignals(text, classification),
         },
+        missingSlots,
+        normalizedText: normalized.normalized,
+        originalText: text,
+        processingTime,
+        requiresConfirmation,
+        requiresDisambiguation,
       };
 
       // TODO: Track successful classification for learning analytics
@@ -213,7 +211,9 @@ export class NLUEngine {
    * Update conversation context
    */
   private updateContext(intent: IntentType): void {
-    if (intent === IntentType.UNKNOWN) return;
+    if (intent === IntentType.UNKNOWN) {
+      return;
+    }
 
     this.context.previousIntents.push(intent);
     if (this.context.previousIntents.length > this.config.maxContextTurns) {
@@ -275,7 +275,9 @@ export class NLUEngine {
    */
   private getMissingSlots(intent: IntentType, entities: NLUEntity[]): string[] {
     const definition = INTENT_DEFINITIONS[intent];
-    if (!definition) return [];
+    if (!definition) {
+      return [];
+    }
 
     const extractedTypes = new Set(entities.map((e) => e.type));
     const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot));
@@ -288,7 +290,9 @@ export class NLUEngine {
    */
   private getFromCache(text: string): NLUResult | null {
     const entry = this.cache.get(text.toLowerCase());
-    if (!entry) return null;
+    if (!entry) {
+      return null;
+    }
 
     // Check if expired
     const age = Date.now() - entry.timestamp;
@@ -371,12 +375,12 @@ export class NLUEngine {
     const hitRateChange = this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0;
 
     return {
-      size: this.cache.size,
       hitRate: Math.round(hitRate * 100) / 100,
+      hitRateChange: Math.round(hitRateChange * 100) / 100,
       hits: this.cacheStats.hits,
       misses: this.cacheStats.misses,
+      size: this.cache.size,
       totalRequests: this.cacheStats.totalRequests,
-      hitRateChange: Math.round(hitRateChange * 100) / 100,
     };
   }
 
@@ -428,18 +432,25 @@ export class NLUEngine {
     const lowerText = text.toLowerCase();
 
     let region = 'Unknown';
-    if (lowerText.includes('meu bem') || lowerText.includes('valeu')) region = 'SP';
-    else if (lowerText.includes('maneiro') || lowerText.includes('caraca')) region = 'RJ';
-    else if (lowerText.includes('oxente') || lowerText.includes('arre')) region = 'Nordeste';
-    else if (lowerText.includes('bah') || lowerText.includes('tchê')) region = 'Sul';
+    if (lowerText.includes('meu bem') || lowerText.includes('valeu')) {
+      region = 'SP';
+    } else if (lowerText.includes('maneiro') || lowerText.includes('caraca')) {
+      region = 'RJ';
+    } else if (lowerText.includes('oxente') || lowerText.includes('arre')) {
+      region = 'Nordeste';
+    } else if (lowerText.includes('bah') || lowerText.includes('tchê')) {
+      region = 'Sul';
+    }
 
     let linguisticStyle = 'colloquial';
-    if (lowerText.includes('gostaria') || lowerText.includes('poderia')) linguisticStyle = 'formal';
+    if (lowerText.includes('gostaria') || lowerText.includes('poderia')) {
+      linguisticStyle = 'formal';
+    }
 
     return {
-      region,
-      linguisticStyle,
       culturalMarkers: [],
+      linguisticStyle,
+      region,
     };
   }
 
@@ -565,10 +576,6 @@ export class NLUEngine {
   }> {
     // TODO: Implement error recovery using the enhanced error recovery system
     return {
-      suggestions: [
-        'Tente reformular seu comando',
-        'Seja mais específico sobre o que você quer fazer',
-      ],
       clarifyingQuestions: [
         'O que você gostaria de fazer exatamente?',
         'É uma consulta ou uma transação?',
@@ -576,6 +583,10 @@ export class NLUEngine {
       contextualHints: [
         'Você pode dizer "qual é meu saldo" para verificar saldo',
         'Você pode dizer "pagar conta de luz" para pagar contas',
+      ],
+      suggestions: [
+        'Tente reformular seu comando',
+        'Seja mais específico sobre o que você quer fazer',
       ],
     };
   }
@@ -592,15 +603,15 @@ export class NLUEngine {
   } {
     // TODO: Return comprehensive learning analytics
     return {
-      patternEvolution: [],
-      userAdaptations: [],
-      regionalLearning: {},
       confidenceTrends: {},
+      patternEvolution: [],
       recommendations: [
         'Enable enhanced NLU system for comprehensive analytics',
         'Integrate with Brazilian Portuguese pattern recognition',
         'Implement user feedback collection for learning',
       ],
+      regionalLearning: {},
+      userAdaptations: [],
     };
   }
 

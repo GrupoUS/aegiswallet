@@ -134,6 +134,93 @@ export interface Translation {
 }
 
 export const ptBR: Translation = {
+  accessibility: {
+    highContrast: 'Alto contraste',
+    keyboardNavigation: 'Navegação por teclado',
+    largeText: 'Texto grande',
+    reducedMotion: 'Movimento reduzido',
+    screenReader: 'Leitor de tela',
+    voiceActivation: 'Ativação por voz',
+    voiceAnnouncements: 'Anúncios por voz',
+    voiceControl: 'Controle por voz',
+  },
+  actions: {
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+    delete: 'Excluir',
+    deposit: 'Depositar',
+    edit: 'Editar',
+    export: 'Exportar',
+    import: 'Importar',
+    pay: 'Pagar',
+    schedule: 'Agendar',
+    transfer: 'Transferir',
+    view: 'Visualizar',
+    withdraw: 'Sacar',
+  },
+  categories: {
+    entertainment: 'Entretenimento',
+    food: 'Alimentação',
+    health: 'Saúde',
+    income: 'Receitas',
+    other: 'Outros',
+    shopping: 'Compras',
+    transport: 'Transporte',
+    utilities: 'Contas',
+  },
+  errors: {
+    authentication: 'Erro de autenticação. Faça login novamente.',
+    microphoneAccess: 'Permissão para microfone negada. Habilite nas configurações do navegador.',
+    network: 'Erro de conexão. Verifique sua internet.',
+    notFound: 'Página não encontrada.',
+    permission: 'Você não tem permissão para realizar esta ação.',
+    serverError: 'Erro interno do servidor. Tente novamente mais tarde.',
+    validation: 'Dados inválidos. Verifique e tente novamente.',
+    voiceNotSupported: 'Seu navegador não suporta reconhecimento de voz.',
+  },
+  financial: {
+    balance: 'Saldo',
+    budget: 'Orçamento',
+    currency: 'R$',
+    dueDate: 'Data de vencimento',
+    expense: 'Despesa',
+    income: 'Receita',
+    investment: 'Investimento',
+    invoice: 'Fatura',
+    overdue: 'Vencido',
+    paid: 'Pago',
+    payment: 'Pagamento',
+    pending: 'Pendente',
+    receipt: 'Recibo',
+    savings: 'Poupança',
+    scheduled: 'Agendado',
+    transfer: 'Transferência',
+  },
+  status: {
+    empty: 'Nenhum item encontrado',
+    error: 'Erro',
+    info: 'Informação',
+    loading: 'Carregando...',
+    noData: 'Sem dados disponíveis',
+    processing: 'Processando...',
+    success: 'Sucesso!',
+    warning: 'Atenção',
+  },
+  timeFormats: {
+    dateTime: 'dd/MM/yyyy HH:mm',
+    fullDate: 'dd/MM/yyyy',
+    relativeTime: {
+      lastMonth: 'Mês passado',
+      lastWeek: 'Semana passada',
+      thisMonth: 'Este mês',
+      thisWeek: 'Esta semana',
+      today: 'Hoje',
+      tomorrow: 'Amanhã',
+      yesterday: 'Ontem',
+    },
+    shortDate: 'dd/MM',
+    time: 'HH:mm',
+  },
   voice: {
     commands: {
       balance: [
@@ -143,19 +230,19 @@ export const ptBR: Translation = {
         'meu saldo',
         'saldo da conta',
       ],
-      budget: [
-        'quanto posso gastar esse mês',
-        'qual meu limite de gastos',
-        'quanto tenho disponível para gastar',
-        'meu orçamento mensal',
-        'limite de gastos',
-      ],
       bills: [
         'tem algum boleto programado para pagar',
         'contas para pagar',
         'boleto para pagar',
         'quais contas vencem',
         'pagamentos pendentes',
+      ],
+      budget: [
+        'quanto posso gastar esse mês',
+        'qual meu limite de gastos',
+        'quanto tenho disponível para gastar',
+        'meu orçamento mensal',
+        'limite de gastos',
       ],
       incoming: [
         'tem algum recebimento programado para entrar',
@@ -179,16 +266,7 @@ export const ptBR: Translation = {
         'pagar para',
       ],
     },
-    responses: {
-      greeting: 'Olá! Como posso ajudar com suas finanças hoje?',
-      listening: 'Estou ouvindo...',
-      processing: 'Processando comando...',
-      error: 'Não entendi. Poderia repetir?',
-      success: 'Comando processado com sucesso!',
-      notSupported: 'Seu navegador não suporta reconhecimento de voz',
-    },
     hints: {
-      tapToSpeak: 'Toque para falar',
       availableCommands: 'Comandos disponíveis:',
       commands: {
         balance: 'Meu saldo',
@@ -198,100 +276,15 @@ export const ptBR: Translation = {
         projection: 'Projeção',
         transfer: 'Transferência',
       },
+      tapToSpeak: 'Toque para falar',
     },
-  },
-
-  financial: {
-    currency: 'R$',
-    balance: 'Saldo',
-    income: 'Receita',
-    expense: 'Despesa',
-    transfer: 'Transferência',
-    payment: 'Pagamento',
-    invoice: 'Fatura',
-    receipt: 'Recibo',
-    budget: 'Orçamento',
-    savings: 'Poupança',
-    investment: 'Investimento',
-    dueDate: 'Data de vencimento',
-    overdue: 'Vencido',
-    paid: 'Pago',
-    pending: 'Pendente',
-    scheduled: 'Agendado',
-  },
-
-  categories: {
-    food: 'Alimentação',
-    transport: 'Transporte',
-    shopping: 'Compras',
-    utilities: 'Contas',
-    health: 'Saúde',
-    entertainment: 'Entretenimento',
-    income: 'Receitas',
-    other: 'Outros',
-  },
-
-  actions: {
-    pay: 'Pagar',
-    transfer: 'Transferir',
-    deposit: 'Depositar',
-    withdraw: 'Sacar',
-    schedule: 'Agendar',
-    cancel: 'Cancelar',
-    confirm: 'Confirmar',
-    edit: 'Editar',
-    delete: 'Excluir',
-    view: 'Visualizar',
-    export: 'Exportar',
-    import: 'Importar',
-  },
-
-  status: {
-    loading: 'Carregando...',
-    processing: 'Processando...',
-    success: 'Sucesso!',
-    error: 'Erro',
-    warning: 'Atenção',
-    info: 'Informação',
-    empty: 'Nenhum item encontrado',
-    noData: 'Sem dados disponíveis',
-  },
-
-  accessibility: {
-    voiceControl: 'Controle por voz',
-    voiceActivation: 'Ativação por voz',
-    screenReader: 'Leitor de tela',
-    keyboardNavigation: 'Navegação por teclado',
-    highContrast: 'Alto contraste',
-    largeText: 'Texto grande',
-    reducedMotion: 'Movimento reduzido',
-    voiceAnnouncements: 'Anúncios por voz',
-  },
-
-  errors: {
-    network: 'Erro de conexão. Verifique sua internet.',
-    authentication: 'Erro de autenticação. Faça login novamente.',
-    permission: 'Você não tem permissão para realizar esta ação.',
-    validation: 'Dados inválidos. Verifique e tente novamente.',
-    notFound: 'Página não encontrada.',
-    serverError: 'Erro interno do servidor. Tente novamente mais tarde.',
-    voiceNotSupported: 'Seu navegador não suporta reconhecimento de voz.',
-    microphoneAccess: 'Permissão para microfone negada. Habilite nas configurações do navegador.',
-  },
-
-  timeFormats: {
-    fullDate: 'dd/MM/yyyy',
-    shortDate: 'dd/MM',
-    time: 'HH:mm',
-    dateTime: 'dd/MM/yyyy HH:mm',
-    relativeTime: {
-      today: 'Hoje',
-      yesterday: 'Ontem',
-      tomorrow: 'Amanhã',
-      thisWeek: 'Esta semana',
-      lastWeek: 'Semana passada',
-      thisMonth: 'Este mês',
-      lastMonth: 'Mês passado',
+    responses: {
+      error: 'Não entendi. Poderia repetir?',
+      greeting: 'Olá! Como posso ajudar com suas finanças hoje?',
+      listening: 'Estou ouvindo...',
+      notSupported: 'Seu navegador não suporta reconhecimento de voz',
+      processing: 'Processando comando...',
+      success: 'Comando processado com sucesso!',
     },
   },
 };
@@ -303,8 +296,8 @@ export const brazilianLocalization = {
    */
   formatCurrency: (amount: number): string => {
     return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
       currency: 'BRL',
+      style: 'currency',
     }).format(amount);
   },
 
@@ -338,11 +331,21 @@ export const brazilianLocalization = {
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Hoje';
-    if (diffDays === 1) return 'Amanhã';
-    if (diffDays === -1) return 'Ontem';
-    if (diffDays > 0 && diffDays <= 7) return `Em ${diffDays} dias`;
-    if (diffDays < 0 && diffDays >= -7) return `Há ${Math.abs(diffDays)} dias`;
+    if (diffDays === 0) {
+      return 'Hoje';
+    }
+    if (diffDays === 1) {
+      return 'Amanhã';
+    }
+    if (diffDays === -1) {
+      return 'Ontem';
+    }
+    if (diffDays > 0 && diffDays <= 7) {
+      return `Em ${diffDays} dias`;
+    }
+    if (diffDays < 0 && diffDays >= -7) {
+      return `Há ${Math.abs(diffDays)} dias`;
+    }
 
     return date.toLocaleDateString('pt-BR');
   },
@@ -363,7 +366,9 @@ export const brazilianLocalization = {
    */
   validateCPF: (cpf: string): boolean => {
     const cleanedCPF = cpf.replace(/[^\d]/g, '');
-    if (cleanedCPF.length !== 11) return false;
+    if (cleanedCPF.length !== 11) {
+      return false;
+    }
 
     // Basic CPF validation
     let sum = 0;
@@ -374,8 +379,12 @@ export const brazilianLocalization = {
     }
 
     remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(cleanedCPF.substring(9, 10), 10)) return false;
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0;
+    }
+    if (remainder !== parseInt(cleanedCPF.substring(9, 10), 10)) {
+      return false;
+    }
 
     sum = 0;
     for (let i = 1; i <= 10; i++) {
@@ -383,8 +392,12 @@ export const brazilianLocalization = {
     }
 
     remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(cleanedCPF.substring(10, 11), 10)) return false;
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0;
+    }
+    if (remainder !== parseInt(cleanedCPF.substring(10, 11), 10)) {
+      return false;
+    }
 
     return true;
   },
@@ -394,7 +407,9 @@ export const brazilianLocalization = {
    */
   validateCNPJ: (cnpj: string): boolean => {
     const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
-    if (cleanedCNPJ.length !== 14) return false;
+    if (cleanedCNPJ.length !== 14) {
+      return false;
+    }
 
     // Basic CNPJ validation
     // First digit verification

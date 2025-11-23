@@ -176,48 +176,48 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
       let correctClassifications = 0;
       const expectedClassifications = {
-        'qual é meu saldo?': IntentType.CHECK_BALANCE,
-        'quanto tenho?': IntentType.CHECK_BALANCE,
-        'saldo disponível': IntentType.CHECK_BALANCE,
-        'quanto sobrou?': IntentType.CHECK_BALANCE,
-        'me mostra o saldo': IntentType.CHECK_BALANCE,
-        'tá quanto na conta?': IntentType.CHECK_BALANCE,
-        'quanto de grana?': IntentType.CHECK_BALANCE,
-        'quanto posso gastar?': IntentType.CHECK_BUDGET,
-        'qual meu orçamento?': IntentType.CHECK_BUDGET,
-        'quanto sobrou do orçamento?': IntentType.CHECK_BUDGET,
-        'posso gastar quanto?': IntentType.CHECK_BUDGET,
-        'limite de gastos': IntentType.CHECK_BUDGET,
-        'quanto falta do orçamento?': IntentType.CHECK_BUDGET,
-        'orçamento disponível': IntentType.CHECK_BUDGET,
-        'pagar conta de energia': IntentType.PAY_BILL,
-        'paga o boleto': IntentType.PAY_BILL,
-        'quitar fatura': IntentType.PAY_BILL,
-        'pagar internet': IntentType.PAY_BILL,
-        'conta de luz': IntentType.PAY_BILL,
-        'paga a energia': IntentType.PAY_BILL,
-        'quitar débito': IntentType.PAY_BILL,
-        'quando vou receber?': IntentType.CHECK_INCOME,
-        'recebimentos do mês': IntentType.CHECK_INCOME,
-        'quanto vai entrar?': IntentType.CHECK_INCOME,
-        'quando cai o salário?': IntentType.CHECK_INCOME,
-        'próximos recebimentos': IntentType.CHECK_INCOME,
-        'entradas previstas': IntentType.CHECK_INCOME,
-        'vai receber quanto?': IntentType.CHECK_INCOME,
-        'projeção do mês': IntentType.FINANCIAL_PROJECTION,
-        'como vai ficar o mês?': IntentType.FINANCIAL_PROJECTION,
-        'vai sobrar quanto?': IntentType.FINANCIAL_PROJECTION,
-        'previsão financeira': IntentType.FINANCIAL_PROJECTION,
-        'quanto vai faltar?': IntentType.FINANCIAL_PROJECTION,
         'balanço do mês': IntentType.FINANCIAL_PROJECTION,
-        'estimativa mensal': IntentType.FINANCIAL_PROJECTION,
-        'transferir dinheiro': IntentType.TRANSFER_MONEY,
-        'fazer um pix': IntentType.TRANSFER_MONEY,
+        'como vai ficar o mês?': IntentType.FINANCIAL_PROJECTION,
+        'conta de luz': IntentType.PAY_BILL,
+        'entradas previstas': IntentType.CHECK_INCOME,
         'enviar 100 reais': IntentType.TRANSFER_MONEY,
-        'pix para joão': IntentType.TRANSFER_MONEY,
-        'transferência imediata': IntentType.TRANSFER_MONEY,
+        'estimativa mensal': IntentType.FINANCIAL_PROJECTION,
+        'fazer um pix': IntentType.TRANSFER_MONEY,
+        'limite de gastos': IntentType.CHECK_BUDGET,
         'manda 50 reais': IntentType.TRANSFER_MONEY,
+        'me mostra o saldo': IntentType.CHECK_BALANCE,
+        'orçamento disponível': IntentType.CHECK_BUDGET,
+        'paga a energia': IntentType.PAY_BILL,
+        'paga o boleto': IntentType.PAY_BILL,
+        'pagar conta de energia': IntentType.PAY_BILL,
+        'pagar internet': IntentType.PAY_BILL,
+        'pix para joão': IntentType.TRANSFER_MONEY,
+        'posso gastar quanto?': IntentType.CHECK_BUDGET,
+        'previsão financeira': IntentType.FINANCIAL_PROJECTION,
+        'projeção do mês': IntentType.FINANCIAL_PROJECTION,
+        'próximos recebimentos': IntentType.CHECK_INCOME,
+        'qual meu orçamento?': IntentType.CHECK_BUDGET,
+        'qual é meu saldo?': IntentType.CHECK_BALANCE,
+        'quando cai o salário?': IntentType.CHECK_INCOME,
+        'quando vou receber?': IntentType.CHECK_INCOME,
+        'quanto de grana?': IntentType.CHECK_BALANCE,
+        'quanto falta do orçamento?': IntentType.CHECK_BUDGET,
+        'quanto posso gastar?': IntentType.CHECK_BUDGET,
+        'quanto sobrou do orçamento?': IntentType.CHECK_BUDGET,
+        'quanto sobrou?': IntentType.CHECK_BALANCE,
+        'quanto tenho?': IntentType.CHECK_BALANCE,
+        'quanto vai entrar?': IntentType.CHECK_INCOME,
+        'quanto vai faltar?': IntentType.FINANCIAL_PROJECTION,
+        'quitar débito': IntentType.PAY_BILL,
+        'quitar fatura': IntentType.PAY_BILL,
+        'recebimentos do mês': IntentType.CHECK_INCOME,
+        'saldo disponível': IntentType.CHECK_BALANCE,
         'ted urgent': IntentType.TRANSFER_MONEY,
+        'transferir dinheiro': IntentType.TRANSFER_MONEY,
+        'transferência imediata': IntentType.TRANSFER_MONEY,
+        'tá quanto na conta?': IntentType.CHECK_BALANCE,
+        'vai receber quanto?': IntentType.CHECK_INCOME,
+        'vai sobrar quanto?': IntentType.FINANCIAL_PROJECTION,
       };
 
       for (const command of testCommands) {
@@ -236,10 +236,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
   describe('Acceptance Criteria 2: Extracts parameters from commands', () => {
     it('should extract amounts from commands', async () => {
       const testCases = [
-        { input: 'transferir 100 reais', expectedAmount: 100 },
-        { input: 'enviar 50,30 reais', expectedAmount: 50.3 },
-        { input: 'pix de R$ 200', expectedAmount: 200 },
-        { input: 'transferir mil reais', expectedAmount: 1000 }, // Natural number processing
+        { expectedAmount: 100, input: 'transferir 100 reais' },
+        { expectedAmount: 50.3, input: 'enviar 50,30 reais' },
+        { expectedAmount: 200, input: 'pix de R$ 200' },
+        { expectedAmount: 1000, input: 'transferir mil reais' }, // Natural number processing
       ];
 
       for (const testCase of testCases) {
@@ -253,10 +253,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
     it('should extract names and recipients from commands', async () => {
       const testCases = [
-        { input: 'pix para joão', expectedName: 'joão' },
-        { input: 'transferir para maria', expectedName: 'maria' },
-        { input: 'enviar dinheiro para pedro', expectedName: 'pedro' },
-        { input: 'pagar para a empresa xyz', expectedName: 'empresa xyz' },
+        { expectedName: 'joão', input: 'pix para joão' },
+        { expectedName: 'maria', input: 'transferir para maria' },
+        { expectedName: 'pedro', input: 'enviar dinheiro para pedro' },
+        { expectedName: 'empresa xyz', input: 'pagar para a empresa xyz' },
       ];
 
       for (const testCase of testCases) {
@@ -272,10 +272,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
     it('should extract dates from commands', async () => {
       const testCases = [
-        { input: 'pagar conta amanhã', hasDate: true },
-        { input: 'receber na próxima sexta-feira', hasDate: true },
-        { input: 'projeção para o próximo mês', hasDate: true },
-        { input: 'saldo hoje', hasDate: true },
+        { hasDate: true, input: 'pagar conta amanhã' },
+        { hasDate: true, input: 'receber na próxima sexta-feira' },
+        { hasDate: true, input: 'projeção para o próximo mês' },
+        { hasDate: true, input: 'saldo hoje' },
       ];
 
       for (const testCase of testCases) {
@@ -306,13 +306,13 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
     it('should handle synonyms for financial terms', async () => {
       const synonymTestCases = [
-        { input: 'quanto de grana?', expectedIntent: IntentType.CHECK_BALANCE },
-        { input: 'me diz o dinheiro', expectedIntent: IntentType.CHECK_BALANCE },
-        { input: 'quanto de bufunfa?', expectedIntent: IntentType.CHECK_BALANCE },
-        { input: 'fazer um pix', expectedIntent: IntentType.TRANSFER_MONEY },
-        { input: 'manda dinheiro', expectedIntent: IntentType.TRANSFER_MONEY },
-        { input: 'paga a luz', expectedIntent: IntentType.PAY_BILL },
-        { input: 'quitar o débito', expectedIntent: IntentType.PAY_BILL },
+        { expectedIntent: IntentType.CHECK_BALANCE, input: 'quanto de grana?' },
+        { expectedIntent: IntentType.CHECK_BALANCE, input: 'me diz o dinheiro' },
+        { expectedIntent: IntentType.CHECK_BALANCE, input: 'quanto de bufunfa?' },
+        { expectedIntent: IntentType.TRANSFER_MONEY, input: 'fazer um pix' },
+        { expectedIntent: IntentType.TRANSFER_MONEY, input: 'manda dinheiro' },
+        { expectedIntent: IntentType.PAY_BILL, input: 'paga a luz' },
+        { expectedIntent: IntentType.PAY_BILL, input: 'quitar o débito' },
       ];
 
       for (const testCase of synonymTestCases) {
@@ -432,11 +432,11 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
   describe('Brazilian Portuguese Specialization', () => {
     it('should handle Brazilian financial terminology', async () => {
       const brazilianTerms = [
-        { input: 'pagar boleto', expectedIntent: IntentType.PAY_BILL },
-        { input: 'fazer pix', expectedIntent: IntentType.TRANSFER_MONEY },
-        { input: 'saldo da conta', expectedIntent: IntentType.CHECK_BALANCE },
-        { input: 'receber salário', expectedIntent: IntentType.CHECK_INCOME },
-        { input: 'orçamento mensal', expectedIntent: IntentType.CHECK_BUDGET },
+        { expectedIntent: IntentType.PAY_BILL, input: 'pagar boleto' },
+        { expectedIntent: IntentType.TRANSFER_MONEY, input: 'fazer pix' },
+        { expectedIntent: IntentType.CHECK_BALANCE, input: 'saldo da conta' },
+        { expectedIntent: IntentType.CHECK_INCOME, input: 'receber salário' },
+        { expectedIntent: IntentType.CHECK_BUDGET, input: 'orçamento mensal' },
       ];
 
       for (const testCase of brazilianTerms) {

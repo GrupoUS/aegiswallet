@@ -13,7 +13,8 @@
 
 import { getValidIntents, INTENT_DEFINITIONS } from '@/lib/nlu/intents';
 import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
-import { type IntentClassificationResult, IntentType } from '@/lib/nlu/types';
+import type { IntentClassificationResult } from '@/lib/nlu/types';
+import { IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Intent Classifier Class
@@ -43,10 +44,10 @@ export class IntentClassifier {
     // If pattern confidence is high enough, return pattern method with alternatives
     if (patternResult.confidence >= 0.7) {
       return {
-        intent: patternResult.intent,
-        confidence: patternResult.confidence,
-        method: 'pattern',
         alternatives: this.getAlternatives(patternResult, tfidfResult),
+        confidence: patternResult.confidence,
+        intent: patternResult.intent,
+        method: 'pattern',
       };
     }
 
@@ -54,10 +55,10 @@ export class IntentClassifier {
     const ensembleResult = this.ensembleVote(patternResult, tfidfResult);
 
     return {
-      intent: ensembleResult.intent,
-      confidence: ensembleResult.confidence,
-      method: 'ensemble',
       alternatives: this.getAlternatives(patternResult, tfidfResult),
+      confidence: ensembleResult.confidence,
+      intent: ensembleResult.intent,
+      method: 'ensemble',
     };
   }
 
@@ -68,11 +69,11 @@ export class IntentClassifier {
     intent: IntentType;
     confidence: number;
   } {
-    const candidates: Array<{
+    const candidates: {
       intent: IntentType;
       score: number;
       patternCount: number;
-    }> = [];
+    }[] = [];
 
     for (const intent of getValidIntents()) {
       const definition = INTENT_DEFINITIONS[intent];
@@ -95,7 +96,7 @@ export class IntentClassifier {
       if (patternMatches > 0) {
         // Higher confidence for more specific patterns (more matches)
         const score = Math.min(0.95, 0.85 + patternMatches * 0.05);
-        candidates.push({ intent, score, patternCount: patternMatches });
+        candidates.push({ intent, patternCount: patternMatches, score });
       } else if (keywordMatches.length > 0) {
         // Penalize very generic queries that only match keywords without context
         const textWords = text.toLowerCase().split(/\s+/).length;
@@ -108,7 +109,7 @@ export class IntentClassifier {
           score = Math.min(0.8, score);
         }
 
-        candidates.push({ intent, score, patternCount: 0 });
+        candidates.push({ intent, patternCount: 0, score });
       }
     }
 
@@ -123,8 +124,8 @@ export class IntentClassifier {
 
     const best = candidates[0];
     return {
-      intent: best?.intent || IntentType.UNKNOWN,
       confidence: best?.score || 0,
+      intent: best?.intent || IntentType.UNKNOWN,
     };
   }
 
@@ -142,7 +143,9 @@ export class IntentClassifier {
 
     for (const intent of getValidIntents()) {
       const intentVector = this.tfidfVectors.get(intent);
-      if (!intentVector) continue;
+      if (!intentVector) {
+        continue;
+      }
 
       const similarity = this.cosineSimilarity(inputVector, intentVector);
       if (similarity > bestScore) {
@@ -152,8 +155,8 @@ export class IntentClassifier {
     }
 
     return {
-      intent: bestIntent,
       confidence: bestScore,
+      intent: bestIntent,
     };
   }
 
@@ -167,8 +170,8 @@ export class IntentClassifier {
     // If both agree, high confidence
     if (patternResult.intent === tfidfResult.intent) {
       return {
-        intent: patternResult.intent,
         confidence: Math.max(patternResult.confidence, tfidfResult.confidence),
+        intent: patternResult.intent,
       };
     }
 
@@ -188,15 +191,15 @@ export class IntentClassifier {
 
     if (patternResult.confidence * patternWeight > tfidfResult.confidence * tfidfWeight) {
       return {
-        intent: patternResult.intent,
         confidence:
           patternResult.confidence * patternWeight + tfidfResult.confidence * tfidfWeight * 0.5,
+        intent: patternResult.intent,
       };
     }
     return {
-      intent: tfidfResult.intent,
       confidence:
         tfidfResult.confidence * tfidfWeight + patternResult.confidence * patternWeight * 0.5,
+      intent: tfidfResult.intent,
     };
   }
 
@@ -206,7 +209,7 @@ export class IntentClassifier {
   private getAlternatives(
     patternResult: { intent: IntentType; confidence: number },
     tfidfResult: { intent: IntentType; confidence: number }
-  ): Array<{ intent: IntentType; confidence: number }> {
+  ): { intent: IntentType; confidence: number }[] {
     const alternatives = new Map<IntentType, number>();
 
     if (patternResult.intent !== IntentType.UNKNOWN) {
@@ -219,7 +222,7 @@ export class IntentClassifier {
     }
 
     return Array.from(alternatives.entries())
-      .map(([intent, confidence]) => ({ intent, confidence }))
+      .map(([intent, confidence]) => ({ confidence, intent }))
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, 3);
   }
@@ -307,10 +310,10 @@ export class IntentClassifier {
 
     if (result.confidence < threshold) {
       return {
-        intent: IntentType.UNKNOWN,
-        confidence: result.confidence,
-        method: result.method,
         alternatives: result.alternatives,
+        confidence: result.confidence,
+        intent: IntentType.UNKNOWN,
+        method: result.method,
       };
     }
 

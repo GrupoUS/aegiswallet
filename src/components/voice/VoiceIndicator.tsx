@@ -92,24 +92,40 @@ export const VoiceIndicator = React.memo(function VoiceIndicator({
 }: VoiceIndicatorProps) {
   // Memoize the state color to prevent recalculation
   const stateColor = React.useMemo(() => {
-    if (error) return 'bg-destructive';
-    if (isProcessing) return 'bg-info';
-    if (isActive) return 'bg-warning';
+    if (error) {
+      return 'bg-destructive';
+    }
+    if (isProcessing) {
+      return 'bg-info';
+    }
+    if (isActive) {
+      return 'bg-warning';
+    }
     return 'bg-gray-400';
   }, [error, isProcessing, isActive]);
 
   // Memoize the state text to prevent recalculation
   const stateText = React.useMemo(() => {
-    if (error) return error;
-    if (isProcessing) return 'Processando comando...';
-    if (isActive) return 'Ouvindo...';
+    if (error) {
+      return error;
+    }
+    if (isProcessing) {
+      return 'Processando comando...';
+    }
+    if (isActive) {
+      return 'Ouvindo...';
+    }
     return 'Toque para falar';
   }, [error, isProcessing, isActive]);
 
   // Memoize the state icon to prevent recalculation
   const stateIcon = React.useMemo(() => {
-    if (isProcessing) return <Loader2 className="h-6 w-6 animate-spin" />;
-    if (isActive) return <Volume2 className="h-6 w-6" />;
+    if (isProcessing) {
+      return <Loader2 className="h-6 w-6 animate-spin" />;
+    }
+    if (isActive) {
+      return <Volume2 className="h-6 w-6" />;
+    }
     return <Mic className="h-6 w-6" />;
   }, [isProcessing, isActive]);
 

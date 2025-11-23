@@ -12,15 +12,15 @@ export const transactionsRouter = router({
   getAll: protectedProcedure
     .input(
       z.object({
+        accountId: z.string().uuid().optional(),
+        categoryId: z.string().uuid().optional(),
+        endDate: z.string().optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().default(0),
-        categoryId: z.string().uuid().optional(),
-        accountId: z.string().uuid().optional(),
-        type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']).optional(),
-        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
         search: z.string().optional(),
+        startDate: z.string().optional(),
+        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).optional(),
+        type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -65,17 +65,17 @@ export const transactionsRouter = router({
 
         if (error) {
           logError('fetch_transactions', ctx.user.id, error, {
-            resource: 'transactions',
-            operation: 'getAll',
+            accountId: input.accountId,
+            categoryId: input.categoryId,
+            endDate: input.endDate,
             limit: input.limit,
             offset: input.offset,
-            categoryId: input.categoryId,
-            accountId: input.accountId,
-            type: input.type,
-            status: input.status,
-            startDate: input.startDate,
-            endDate: input.endDate,
+            operation: 'getAll',
+            resource: 'transactions',
             search: input.search,
+            startDate: input.startDate,
+            status: input.status,
+            type: input.type,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -84,36 +84,36 @@ export const transactionsRouter = router({
         }
 
         logOperation('fetch_transactions_success', ctx.user.id, 'transactions', undefined, {
+          filters: {
+            accountId: input.accountId,
+            categoryId: input.categoryId,
+            search: input.search,
+            status: input.status,
+            type: input.type,
+          },
+          hasMore: (count || 0) > input.offset + input.limit,
           resultsCount: data?.length || 0,
           total: count || 0,
-          hasMore: (count || 0) > input.offset + input.limit,
-          filters: {
-            categoryId: input.categoryId,
-            accountId: input.accountId,
-            type: input.type,
-            status: input.status,
-            search: input.search,
-          },
         });
 
         return {
-          transactions: data || [],
-          total: count || 0,
           hasMore: (count || 0) > input.offset + input.limit,
+          total: count || 0,
+          transactions: data || [],
         };
       } catch (error) {
         logError('fetch_transactions_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
-          operation: 'getAll',
+          accountId: input.accountId,
+          categoryId: input.categoryId,
+          endDate: input.endDate,
           limit: input.limit,
           offset: input.offset,
-          categoryId: input.categoryId,
-          accountId: input.accountId,
-          type: input.type,
-          status: input.status,
-          startDate: input.startDate,
-          endDate: input.endDate,
+          operation: 'getAll',
+          resource: 'transactions',
           search: input.search,
+          startDate: input.startDate,
+          status: input.status,
+          type: input.type,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -149,8 +149,8 @@ export const transactionsRouter = router({
             });
           }
           logError('fetch_transaction_by_id', ctx.user.id, error, {
-            resource: 'transactions',
             operation: 'getById',
+            resource: 'transactions',
             transactionId: input.id,
           });
           throw new TRPCError({
@@ -162,8 +162,8 @@ export const transactionsRouter = router({
         return data;
       } catch (error) {
         logError('fetch_transaction_by_id_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
           operation: 'getById',
+          resource: 'transactions',
           transactionId: input.id,
         });
         throw error;
@@ -175,20 +175,20 @@ export const transactionsRouter = router({
     .input(
       z.object({
         accountId: z.string().uuid().optional(),
-        categoryId: z.string().uuid().optional(),
         amount: z.number(),
+        attachments: z.array(z.string()).default([]),
+        categoryId: z.string().uuid().optional(),
         description: z.string().min(1, 'Descrição é obrigatória'),
+        is_manual_entry: z.boolean().default(true),
+        is_recurring: z.boolean().default(false),
         merchant_name: z.string().optional(),
+        notes: z.string().optional(),
+        payment_method: z.string().optional(),
+        recurring_rule: z.string().optional(),
+        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).default('posted'),
+        tags: z.array(z.string()).default([]),
         transaction_date: z.string(),
         transaction_type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']),
-        payment_method: z.string().optional(),
-        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).default('posted'),
-        is_recurring: z.boolean().default(false),
-        recurring_rule: z.string().optional(),
-        tags: z.array(z.string()).default([]),
-        notes: z.string().optional(),
-        attachments: z.array(z.string()).default([]),
-        is_manual_entry: z.boolean().default(true),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -211,12 +211,12 @@ export const transactionsRouter = router({
 
         if (error) {
           logError('create_transaction', ctx.user.id, error, {
-            resource: 'transactions',
-            operation: 'create',
             amount: input.amount,
-            type: input.transaction_type,
             description: input.description,
             merchantName: input.merchant_name,
+            operation: 'create',
+            resource: 'transactions',
+            type: input.transaction_type,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -226,22 +226,22 @@ export const transactionsRouter = router({
 
         logOperation('create_transaction_success', ctx.user.id, 'transactions', data?.id, {
           amount: input.amount,
-          type: input.transaction_type,
           description: input.description,
+          isManualEntry: input.is_manual_entry,
           merchantName: input.merchant_name,
           status: input.status,
-          isManualEntry: input.is_manual_entry,
+          type: input.transaction_type,
         });
 
         return data;
       } catch (error) {
         logError('create_transaction_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
-          operation: 'create',
           amount: input.amount,
-          type: input.transaction_type,
           description: input.description,
           merchantName: input.merchant_name,
+          operation: 'create',
+          resource: 'transactions',
+          type: input.transaction_type,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -254,17 +254,17 @@ export const transactionsRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
-        categoryId: z.string().uuid().optional(),
         amount: z.number().optional(),
+        categoryId: z.string().uuid().optional(),
         description: z.string().optional(),
+        id: z.string().uuid(),
+        is_categorized: z.boolean().optional(),
         merchant_name: z.string().optional(),
-        transaction_date: z.string().optional(),
+        notes: z.string().optional(),
         payment_method: z.string().optional(),
         status: z.enum(['pending', 'posted', 'failed', 'cancelled']).optional(),
         tags: z.array(z.string()).optional(),
-        notes: z.string().optional(),
-        is_categorized: z.boolean().optional(),
+        transaction_date: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -297,8 +297,8 @@ export const transactionsRouter = router({
             });
           }
           logError('update_transaction', ctx.user.id, error, {
-            resource: 'transactions',
             operation: 'update',
+            resource: 'transactions',
             transactionId: input.id,
             updateFields: Object.keys(input).filter((k) => k !== 'id'),
           });
@@ -315,8 +315,8 @@ export const transactionsRouter = router({
         return data;
       } catch (error) {
         logError('update_transaction_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
           operation: 'update',
+          resource: 'transactions',
           transactionId: input.id,
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
         });
@@ -348,8 +348,8 @@ export const transactionsRouter = router({
             });
           }
           logError('delete_transaction', ctx.user.id, error, {
-            resource: 'transactions',
             operation: 'delete',
+            resource: 'transactions',
             transactionId: input.id,
           });
           throw new TRPCError({
@@ -365,8 +365,8 @@ export const transactionsRouter = router({
         return data;
       } catch (error) {
         logError('delete_transaction_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
           operation: 'delete',
+          resource: 'transactions',
           transactionId: input.id,
         });
         throw error;
@@ -377,9 +377,9 @@ export const transactionsRouter = router({
   getStats: protectedProcedure
     .input(
       z.object({
-        period: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
-        categoryId: z.string().uuid().optional(),
         accountId: z.string().uuid().optional(),
+        categoryId: z.string().uuid().optional(),
+        period: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -421,11 +421,11 @@ export const transactionsRouter = router({
 
         if (error) {
           logError('fetch_transaction_stats', ctx.user.id, error, {
-            resource: 'transactions',
+            accountId: input.accountId,
+            categoryId: input.categoryId,
             operation: 'getStats',
             period: input.period,
-            categoryId: input.categoryId,
-            accountId: input.accountId,
+            resource: 'transactions',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -457,21 +457,21 @@ export const transactionsRouter = router({
             : 0;
 
         return {
-          income,
-          expenses,
-          netBalance: income - expenses,
-          totalTransactions,
           averageTransaction,
+          expenses,
+          income,
           largestTransaction,
+          netBalance: income - expenses,
           period: input.period,
+          totalTransactions,
         };
       } catch (error) {
         logError('fetch_transaction_stats_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
+          accountId: input.accountId,
+          categoryId: input.categoryId,
           operation: 'getStats',
           period: input.period,
-          categoryId: input.categoryId,
-          accountId: input.accountId,
+          resource: 'transactions',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -521,9 +521,9 @@ export const transactionsRouter = router({
 
         if (error) {
           logError('fetch_transactions_by_category', ctx.user.id, error, {
-            resource: 'transactions',
             operation: 'getByCategory',
             period: input.period,
+            resource: 'transactions',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -535,17 +535,19 @@ export const transactionsRouter = router({
         const categoryStats = (data || []).reduce(
           (acc, transaction) => {
             const category = transaction.transaction_categories;
-            if (!category) return acc;
+            if (!category) {
+              return acc;
+            }
 
             if (!acc[category.id]) {
               acc[category.id] = {
-                id: category.id,
-                name: category.name,
                 color: category.color,
+                expenses: 0,
+                id: category.id,
+                income: 0,
+                name: category.name,
                 totalAmount: 0,
                 transactionCount: 0,
-                income: 0,
-                expenses: 0,
               };
             }
 
@@ -567,9 +569,9 @@ export const transactionsRouter = router({
         return Object.values(categoryStats);
       } catch (error) {
         logError('fetch_transactions_by_category_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
           operation: 'getByCategory',
           period: input.period,
+          resource: 'transactions',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

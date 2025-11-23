@@ -43,7 +43,7 @@ export interface SecurityEvent {
     latitude: number;
     longitude: number;
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FraudDetectionResult {
@@ -68,23 +68,23 @@ export interface FraudPattern {
 
 export interface UserBehaviorProfile {
   userId: string;
-  knownLocations: Array<{
+  knownLocations: {
     country: string;
     city: string;
     frequency: number;
     lastSeen: Date;
-  }>;
-  knownDevices: Array<{
+  }[];
+  knownDevices: {
     fingerprint: string;
     userAgent: string;
     frequency: number;
     lastSeen: Date;
-  }>;
+  }[];
   typicalBehavior: {
     loginFrequency: number; // logins per day
-    activeHours: Array<number>; // hours of day when typically active
+    activeHours: number[]; // hours of day when typically active
     averageSessionDuration: number; // minutes
-    preferredAuthMethods: Array<string>;
+    preferredAuthMethods: string[];
   };
   lastUpdated: Date;
 }
@@ -100,10 +100,10 @@ export class FraudDetectionService {
   constructor(config: Partial<FraudDetectionConfig> = {}) {
     this.config = {
       riskThresholds: {
+        critical: 1.0,
+        high: 0.9,
         low: 0.3,
         medium: 0.7,
-        high: 0.9,
-        critical: 1.0,
       },
       timeWindows: {
         short: 1 * 60 * 60 * 1000, // 1 hour
@@ -265,31 +265,31 @@ export class FraudDetectionService {
 
       // Log fraud detection result
       await this.logFraudDetection(event, {
-        riskScore: totalRiskScore,
-        riskLevel,
         detectedAnomalies,
-        shouldBlock,
         requiresReview,
+        riskLevel,
+        riskScore: totalRiskScore,
+        shouldBlock,
       });
 
       return {
-        riskScore: totalRiskScore,
-        riskLevel,
         detectedAnomalies,
-        recommendations,
-        shouldBlock,
-        requiresReview,
         processingTime: Date.now() - startTime,
+        recommendations,
+        requiresReview,
+        riskLevel,
+        riskScore: totalRiskScore,
+        shouldBlock,
       };
     } catch (_error) {
       return {
-        riskScore: 0,
-        riskLevel: 'low',
         detectedAnomalies: [],
-        recommendations: [],
-        shouldBlock: false,
-        requiresReview: false,
         processingTime: Date.now() - startTime,
+        recommendations: [],
+        requiresReview: false,
+        riskLevel: 'low',
+        riskScore: 0,
+        shouldBlock: false,
       };
     }
   }
@@ -334,7 +334,7 @@ export class FraudDetectionService {
       recommendations.push('Implement immediate rate limiting');
     }
 
-    return { score, anomalies, recommendations };
+    return { anomalies, recommendations, score };
   }
 
   /**
@@ -353,7 +353,7 @@ export class FraudDetectionService {
     let score = 0;
 
     if (!event.location) {
-      return { score, anomalies, recommendations };
+      return { anomalies, recommendations, score };
     }
 
     // Check if location is known
@@ -409,7 +409,7 @@ export class FraudDetectionService {
       }
     }
 
-    return { score, anomalies, recommendations };
+    return { anomalies, recommendations, score };
   }
 
   /**
@@ -428,7 +428,7 @@ export class FraudDetectionService {
     let score = 0;
 
     if (!event.deviceFingerprint) {
-      return { score, anomalies, recommendations };
+      return { anomalies, recommendations, score };
     }
 
     // Check if device is known
@@ -474,7 +474,7 @@ export class FraudDetectionService {
       }
     }
 
-    return { score, anomalies, recommendations };
+    return { anomalies, recommendations, score };
   }
 
   /**
@@ -523,7 +523,7 @@ export class FraudDetectionService {
       recommendations.push('Immediate security review required');
     }
 
-    return { score, anomalies, recommendations };
+    return { anomalies, recommendations, score };
   }
 
   /**
@@ -552,7 +552,7 @@ export class FraudDetectionService {
       recommendations.push('Implement stricter rate limiting');
     }
 
-    return { score, anomalies, recommendations };
+    return { anomalies, recommendations, score };
   }
 
   /**
@@ -561,7 +561,10 @@ export class FraudDetectionService {
   private async getUserBehaviorProfile(userId: string): Promise<UserBehaviorProfile> {
     // Check cache first
     if (this.userProfiles.has(userId)) {
-      return this.userProfiles.get(userId)!;
+      const profile = this.userProfiles.get(userId);
+      if (profile) {
+        return profile;
+      }
     }
 
     // Fetch from database or create default
@@ -575,29 +578,29 @@ export class FraudDetectionService {
 
     if (profileData) {
       profile = {
-        userId: profileData.user_id,
-        knownLocations: profileData.known_locations || [],
         knownDevices: profileData.known_devices || [],
+        knownLocations: profileData.known_locations || [],
+        lastUpdated: new Date(profileData.last_updated),
         typicalBehavior: profileData.typical_behavior || {
-          loginFrequency: 0,
           activeHours: [9, 10, 11, 14, 15, 16, 17, 18, 19, 20],
           averageSessionDuration: 30,
+          loginFrequency: 0,
           preferredAuthMethods: [],
         },
-        lastUpdated: new Date(profileData.last_updated),
+        userId: profileData.user_id,
       };
     } else {
       profile = {
-        userId,
-        knownLocations: [],
         knownDevices: [],
+        knownLocations: [],
+        lastUpdated: new Date(),
         typicalBehavior: {
-          loginFrequency: 0,
           activeHours: [9, 10, 11, 14, 15, 16, 17, 18, 19, 20],
           averageSessionDuration: 30,
+          loginFrequency: 0,
           preferredAuthMethods: [],
         },
-        lastUpdated: new Date(),
+        userId,
       };
     }
 
@@ -623,8 +626,8 @@ export class FraudDetectionService {
         existingLocation.lastSeen = event.timestamp;
       } else {
         profile.knownLocations.push({
-          country: event.location.country,
           city: event.location.city,
+          country: event.location.country,
           frequency: 1,
           lastSeen: event.timestamp,
         });
@@ -643,9 +646,9 @@ export class FraudDetectionService {
       } else {
         profile.knownDevices.push({
           fingerprint: event.deviceFingerprint,
-          userAgent: event.userAgent,
           frequency: 1,
           lastSeen: event.timestamp,
+          userAgent: event.userAgent,
         });
       }
     }
@@ -662,11 +665,11 @@ export class FraudDetectionService {
     this.userProfiles.set(event.userId, profile);
 
     await supabase.from('user_behavior_profiles').upsert({
-      user_id: profile.userId,
-      known_locations: profile.knownLocations,
       known_devices: profile.knownDevices,
-      typical_behavior: profile.typicalBehavior,
+      known_locations: profile.knownLocations,
       last_updated: profile.lastUpdated.toISOString(),
+      typical_behavior: profile.typicalBehavior,
+      user_id: profile.userId,
     });
   }
 
@@ -674,11 +677,11 @@ export class FraudDetectionService {
    * Get recent user locations
    */
   private async getRecentUserLocations(userId: string): Promise<
-    Array<{
+    {
       latitude: number;
       longitude: number;
       timestamp: Date;
-    }>
+    }[]
   > {
     const { data } = await supabase
       .from('security_events')
@@ -688,7 +691,9 @@ export class FraudDetectionService {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    if (!data) return [];
+    if (!data) {
+      return [];
+    }
 
     return data
       .filter((event) => event.metadata?.location)
@@ -712,7 +717,9 @@ export class FraudDetectionService {
       .order('created_at', { ascending: false })
       .limit(5);
 
-    if (!data) return [];
+    if (!data) {
+      return [];
+    }
 
     return data.map((event) => event.metadata?.authMethod).filter(Boolean) as string[];
   }
@@ -785,9 +792,15 @@ export class FraudDetectionService {
    * Determine risk level from score
    */
   private determineRiskLevel(score: number): 'low' | 'medium' | 'high' | 'critical' {
-    if (score >= this.config.riskThresholds.critical) return 'critical';
-    if (score >= this.config.riskThresholds.high) return 'high';
-    if (score >= this.config.riskThresholds.medium) return 'medium';
+    if (score >= this.config.riskThresholds.critical) {
+      return 'critical';
+    }
+    if (score >= this.config.riskThresholds.high) {
+      return 'high';
+    }
+    if (score >= this.config.riskThresholds.medium) {
+      return 'medium';
+    }
     return 'low';
   }
 
@@ -806,19 +819,19 @@ export class FraudDetectionService {
   ): Promise<void> {
     try {
       await supabase.from('fraud_detection_logs').insert({
-        user_id: event.userId,
-        event_type: event.eventType,
-        risk_score: result.riskScore,
-        risk_level: result.riskLevel,
+        created_at: new Date().toISOString(),
         detected_anomalies: result.detectedAnomalies,
-        should_block: result.shouldBlock,
-        requires_review: result.requiresReview,
-        ip_address: event.ipAddress,
-        user_agent: event.userAgent,
         device_fingerprint: event.deviceFingerprint,
+        event_type: event.eventType,
+        ip_address: event.ipAddress,
         location: event.location,
         metadata: event.metadata,
-        created_at: new Date().toISOString(),
+        requires_review: result.requiresReview,
+        risk_level: result.riskLevel,
+        risk_score: result.riskScore,
+        should_block: result.shouldBlock,
+        user_agent: event.userAgent,
+        user_id: event.userId,
       });
     } catch (_error) {}
   }

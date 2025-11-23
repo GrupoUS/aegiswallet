@@ -14,17 +14,20 @@ export function useGoogleCalendarSync() {
 
   // Mutations
   const updateSettingsMutation = trpc.googleCalendar.updateSyncSettings.useMutation({
+    onError: (error: { message: string }) => {
+      toast.error(`Erro ao atualizar: ${error.message}`);
+    },
     onSuccess: () => {
       toast.success('Configurações atualizadas');
       utils.googleCalendar.getSyncSettings.invalidate();
       utils.googleCalendar.getSyncStatus.invalidate();
     },
-    onError: (error: any) => {
-      toast.error(`Erro ao atualizar: ${error.message}`);
-    },
   });
 
   const requestFullSyncMutation = trpc.googleCalendar.requestFullSync.useMutation({
+    onError: (error: { message: string }) => {
+      toast.error(`Erro na sincronização: ${error.message}`);
+    },
     onMutate: () => setIsSyncing(true),
     onSettled: () => setIsSyncing(false),
     onSuccess: (data: { processed?: number }) => {
@@ -32,12 +35,12 @@ export function useGoogleCalendarSync() {
       utils.googleCalendar.getSyncStatus.invalidate();
       utils.googleCalendar.getSyncHistory.invalidate();
     },
-    onError: (error: any) => {
-      toast.error(`Erro na sincronização: ${error.message}`);
-    },
   });
 
   const requestIncrementalSyncMutation = trpc.googleCalendar.requestIncrementalSync.useMutation({
+    onError: (error: { message: string }) => {
+      toast.error(`Erro na sincronização incremental: ${error.message}`);
+    },
     onMutate: () => setIsSyncing(true),
     onSettled: () => setIsSyncing(false),
     onSuccess: (data: { processed: number }) => {
@@ -45,9 +48,6 @@ export function useGoogleCalendarSync() {
         toast.success(`${data.processed} eventos sincronizados`);
       }
       utils.googleCalendar.getSyncStatus.invalidate();
-    },
-    onError: (error: any) => {
-      toast.error(`Erro na sincronização incremental: ${error.message}`);
     },
   });
 
@@ -90,9 +90,11 @@ export function useGoogleCalendarSync() {
     eventId: string,
     direction: 'to_google' | 'from_google' = 'to_google'
   ) => {
-    if (!syncStatus?.isConnected || !settings?.sync_enabled) return;
+    if (!syncStatus?.isConnected || !settings?.sync_enabled) {
+      return;
+    }
     try {
-      await syncEventMutation.mutateAsync({ eventId, direction });
+      await syncEventMutation.mutateAsync({ direction, eventId });
     } catch (_error) {
       toast.error('Falha ao sincronizar evento');
     }
@@ -106,7 +108,9 @@ export function useGoogleCalendarSync() {
 
   // Auto-sync logic
   useEffect(() => {
-    if (!settings?.sync_enabled || !settings.auto_sync_interval_minutes) return;
+    if (!settings?.sync_enabled || !settings.auto_sync_interval_minutes) {
+      return;
+    }
 
     const intervalMs = settings.auto_sync_interval_minutes * 60 * 1000;
     const intervalId = setInterval(() => {
@@ -120,16 +124,16 @@ export function useGoogleCalendarSync() {
   }, [settings?.sync_enabled, settings?.auto_sync_interval_minutes, runIncrementalSync]);
 
   return {
-    syncStatus,
-    settings,
     isConnected: !!syncStatus?.isConnected,
     isLoading: isLoadingStatus || isLoadingSettings,
     isSyncing,
-    updateSettings: updateSettingsMutation.mutate,
+    requestFullSync: requestFullSyncMutation.mutate,
+    requestIncrementalSync: requestIncrementalSyncMutation.mutate,
+    settings,
     startOAuthFlow,
     syncNow,
     syncSingleEvent: syncEvent,
-    requestFullSync: requestFullSyncMutation.mutate,
-    requestIncrementalSync: requestIncrementalSyncMutation.mutate,
+    syncStatus,
+    updateSettings: updateSettingsMutation.mutate,
   };
 }

@@ -21,8 +21,8 @@ export class FeedbackLoop {
     userSatisfaction: number;
   }> {
     return {
-      accuracy: 0.92,
       acceptanceRate: 0.85,
+      accuracy: 0.92,
       userSatisfaction: 4.2,
     };
   }

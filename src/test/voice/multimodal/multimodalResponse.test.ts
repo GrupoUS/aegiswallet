@@ -12,9 +12,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 if (typeof globalThis.document === 'undefined') {
   const { JSDOM } = require('jsdom');
   const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-    url: 'http://localhost',
     pretendToBeVisual: true,
     resources: 'usable',
+    url: 'http://localhost',
   });
 
   globalThis.window = dom.window;
@@ -105,8 +105,8 @@ describe('Multimodal Response Hook', () => {
 
       await act(async () => {
         await result.current.generateAndSpeak(IntentType.CHECK_BALANCE, {
-          balance: 5842.5,
           accountName: 'Conta Principal',
+          balance: 5842.5,
         });
       });
 
@@ -145,8 +145,8 @@ describe('Multimodal Response Hook', () => {
       await act(async () => {
         await result.current.generateAndSpeak(IntentType.CHECK_BUDGET, {
           available: 1500,
-          total: 3000,
           spent: 1500,
+          total: 3000,
         });
       });
 
@@ -166,10 +166,10 @@ describe('Multimodal Response Hook', () => {
 
       await act(async () => {
         await result.current.generateAndSpeak(IntentType.PAY_BILL, {
-          billName: 'Energia Elétrica',
           amount: 180.5,
-          dueDate: new Date('2025-01-15'),
+          billName: 'Energia Elétrica',
           confirmed: false,
+          dueDate: new Date('2025-01-15'),
         });
       });
 
@@ -186,10 +186,10 @@ describe('Multimodal Response Hook', () => {
 
       await act(async () => {
         await result.current.generateAndSpeak(IntentType.PAY_BILL, {
-          billName: 'Energia Elétrica',
           amount: 180.5,
-          dueDate: new Date('2025-01-15'),
+          billName: 'Energia Elétrica',
           confirmed: true,
+          dueDate: new Date('2025-01-15'),
         });
       });
 
@@ -204,8 +204,8 @@ describe('Multimodal Response Hook', () => {
     it('should track response time', async () => {
       const { result } = renderHook(() =>
         useMultimodalResponse({
-          ttsEnabled: false,
           performanceTracking: true,
+          ttsEnabled: false,
         })
       );
 
@@ -223,8 +223,8 @@ describe('Multimodal Response Hook', () => {
     it('should meet <800ms performance target', async () => {
       const { result } = renderHook(() =>
         useMultimodalResponse({
-          ttsEnabled: false,
           performanceTracking: true,
+          ttsEnabled: false,
         })
       );
 
@@ -341,38 +341,38 @@ describe('Response Templates', () => {
   describe('All Intents', () => {
     it('should generate responses for all 6 intents', async () => {
       const intents = [
-        { intent: IntentType.CHECK_BALANCE, data: { balance: 1000 } },
+        { data: { balance: 1000 }, intent: IntentType.CHECK_BALANCE },
         {
+          data: { available: 500, spent: 500, total: 1000 },
           intent: IntentType.CHECK_BUDGET,
-          data: { available: 500, total: 1000, spent: 500 },
         },
         {
+          data: { amount: 100, billName: 'Test', dueDate: new Date() },
           intent: IntentType.PAY_BILL,
-          data: { billName: 'Test', amount: 100, dueDate: new Date() },
         },
         {
-          intent: IntentType.CHECK_INCOME,
           data: {
             nextIncome: {
-              description: 'Salário',
               amount: 5000,
               date: new Date(),
+              description: 'Salário',
             },
           },
+          intent: IntentType.CHECK_INCOME,
         },
         {
-          intent: IntentType.FINANCIAL_PROJECTION,
           data: {
-            projectedBalance: 1000,
             currentBalance: 800,
-            period: 'mês',
-            income: 5000,
             expenses: 4800,
+            income: 5000,
+            period: 'mês',
+            projectedBalance: 1000,
           },
+          intent: IntentType.FINANCIAL_PROJECTION,
         },
         {
+          data: { amount: 100, recipient: 'João' },
           intent: IntentType.TRANSFER_MONEY,
-          data: { recipient: 'João', amount: 100 },
         },
       ];
 

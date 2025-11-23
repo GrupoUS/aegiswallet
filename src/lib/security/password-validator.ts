@@ -29,15 +29,15 @@ export interface PasswordPolicyConfig {
  * Default password policy configuration for financial applications
  */
 export const DEFAULT_PASSWORD_POLICY: PasswordPolicyConfig = {
-  minLength: 8,
   maxLength: 128,
-  requireUppercase: true,
+  minLength: 8,
+  minStrengthScore: 60,
+  preventCommonPasswords: true,
+  preventPersonalInfo: true,
   requireLowercase: true,
   requireNumbers: true,
   requireSpecialChars: true,
-  preventCommonPasswords: true,
-  preventPersonalInfo: true,
-  minStrengthScore: 60, // Minimum acceptable strength score
+  requireUppercase: true, // Minimum acceptable strength score
 };
 
 /**
@@ -111,7 +111,9 @@ const CHARACTER_SETS = {
  * Check if password contains personal information
  */
 function containsPersonalInfo(password: string, email?: string, name?: string): boolean {
-  if (!email && !name) return false;
+  if (!email && !name) {
+    return false;
+  }
 
   const lowerPassword = password.toLowerCase();
 
@@ -123,8 +125,12 @@ function containsPersonalInfo(password: string, email?: string, name?: string): 
 
     // Remove common separators and check
     const cleanEmailLocal = emailLocal.replace(/[._-]/g, '');
-    if (lowerPassword.includes(cleanEmailLocal)) return true;
-    if (emailDomain && lowerPassword.includes(emailDomain.split('.')[0])) return true;
+    if (lowerPassword.includes(cleanEmailLocal)) {
+      return true;
+    }
+    if (emailDomain && lowerPassword.includes(emailDomain.split('.')[0])) {
+      return true;
+    }
   }
 
   // Check name components
@@ -147,15 +153,29 @@ function calculatePasswordStrength(password: string): number {
   let score = 0;
 
   // Length component (up to 40 points)
-  if (password.length >= 8) score += 20;
-  if (password.length >= 12) score += 10;
-  if (password.length >= 16) score += 10;
+  if (password.length >= 8) {
+    score += 20;
+  }
+  if (password.length >= 12) {
+    score += 10;
+  }
+  if (password.length >= 16) {
+    score += 10;
+  }
 
   // Character variety (up to 40 points)
-  if (CHARACTER_SETS.lowercase.test(password)) score += 10;
-  if (CHARACTER_SETS.uppercase.test(password)) score += 10;
-  if (CHARACTER_SETS.numbers.test(password)) score += 10;
-  if (CHARACTER_SETS.special.test(password)) score += 10;
+  if (CHARACTER_SETS.lowercase.test(password)) {
+    score += 10;
+  }
+  if (CHARACTER_SETS.uppercase.test(password)) {
+    score += 10;
+  }
+  if (CHARACTER_SETS.numbers.test(password)) {
+    score += 10;
+  }
+  if (CHARACTER_SETS.special.test(password)) {
+    score += 10;
+  }
 
   // Pattern variety (up to 20 points)
   const hasRepeatingChars = /(.)\1{2,}/.test(password);
@@ -165,9 +185,15 @@ function calculatePasswordStrength(password: string): number {
     );
   const hasKeyboardPattern = /(qwerty|asdf|zxcv|1234|abcd)/i.test(password);
 
-  if (!hasRepeatingChars) score += 7;
-  if (!hasSequentialChars) score += 7;
-  if (!hasKeyboardPattern) score += 6;
+  if (!hasRepeatingChars) {
+    score += 7;
+  }
+  if (!hasSequentialChars) {
+    score += 7;
+  }
+  if (!hasKeyboardPattern) {
+    score += 6;
+  }
 
   return Math.min(score, 100);
 }
@@ -264,11 +290,11 @@ export function validatePassword(
   }
 
   return {
+    errors,
     isValid: errors.length === 0 && score >= config.minStrengthScore,
     score,
-    errors,
-    warnings,
     suggestions,
+    warnings,
   };
 }
 
@@ -313,8 +339,8 @@ export function shouldChangePassword(lastChanged: Date, maxAge: number = 90): bo
 }
 
 export default {
-  validatePassword,
+  DEFAULT_PASSWORD_POLICY,
   generateSecurePassword,
   shouldChangePassword,
-  DEFAULT_PASSWORD_POLICY,
+  validatePassword,
 };

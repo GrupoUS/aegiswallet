@@ -61,10 +61,10 @@ class Logger {
     }
 
     const entry: LogEntry = {
+      context,
       level,
       message,
       timestamp: new Date(),
-      context,
     };
 
     const _formattedMessage = this.formatMessage(entry);

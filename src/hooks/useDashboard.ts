@@ -45,34 +45,34 @@ export function useDashboard() {
   const dashboardData = {
     // Informações do usuário
     user: {
-      profile,
       isActive,
+      profile,
       status: userStatus,
     },
 
     // Resumo financeiro
     financial: {
-      totalBalance: balances.BRL || 0,
-      totalAccounts: accounts.length,
-      totalTransactions: transactions.length,
+      accounts,
       recentTransactions: transactions.slice(0, 5),
       stats: transactionStats,
-      accounts,
+      totalAccounts: accounts.length,
+      totalBalance: balances.BRL || 0,
+      totalTransactions: transactions.length,
     },
 
     // Eventos e lembretes
     events: {
-      upcoming: upcomingEvents.length,
       overdue: overdueEvents.length,
-      upcomingEvents: upcomingEvents.slice(0, 3),
       overdueEvents: overdueEvents.slice(0, 3),
+      upcoming: upcomingEvents.length,
+      upcomingEvents: upcomingEvents.slice(0, 3),
     },
 
     // Contatos
     contacts: {
-      total: contactStats?.totalContacts || 0,
-      favorites: favoriteContacts.length,
       favoriteContacts: favoriteContacts.slice(0, 5),
+      favorites: favoriteContacts.length,
+      total: contactStats?.totalContacts || 0,
       transferableContacts: transferContacts.slice(0, 5),
     },
 
@@ -123,27 +123,24 @@ export function useDashboardWidgets() {
   const { transactions } = useRecentTransactions(5);
 
   const widgets = {
-    financialSummary: {
-      totalBalance: balances.BRL || 0,
-      income: stats?.income || 0,
-      expenses: stats?.expenses || 0,
-      balance: stats?.balance || 0,
-      period: '30d',
-    },
-
-    upcomingEvents: {
-      count: upcomingEvents.length,
-      events: upcomingEvents.slice(0, 3),
-    },
-
     favoriteContacts: {
-      count: favoriteContacts.length,
       contacts: favoriteContacts.slice(0, 4),
+      count: favoriteContacts.length,
     },
-
+    financialSummary: {
+      balance: stats?.balance || 0,
+      expenses: stats?.expenses || 0,
+      income: stats?.income || 0,
+      period: '30d',
+      totalBalance: balances.BRL || 0,
+    },
     recentTransactions: {
       count: transactions.length,
       transactions: transactions.slice(0, 4),
+    },
+    upcomingEvents: {
+      count: upcomingEvents.length,
+      events: upcomingEvents.slice(0, 3),
     },
   };
 
@@ -175,17 +172,17 @@ export function useDashboardMetrics() {
   const metrics = {
     loadingTime: 0, // Seria calculado com performance.now()
     dataPoints: {
-      transactions: 0,
-      events: 0,
-      contacts: 0,
       accounts: 0,
+      contacts: 0,
+      events: 0,
+      transactions: 0,
     },
     lastUpdated: new Date().toISOString(),
   };
 
   return {
-    metrics,
     isLoading,
+    metrics,
   };
 }
 
@@ -195,29 +192,26 @@ export function useDashboardSettings() {
   const preferences = profile?.user_preferences?.[0] ?? null;
 
   const settings = {
-    theme: preferences?.theme ?? 'system',
-
-    language: preferences?.language ?? 'pt-BR',
-    timezone: preferences?.timezone ?? 'America/Sao_Paulo',
-    currency: preferences?.currency ?? 'BRL',
-    notifications: {
-      enabled: preferences?.notifications_enabled ?? true,
-      email: preferences?.email_notifications ?? true,
-
-      push: preferences?.push_notifications ?? true,
-    },
-
-    voice: {
-      enabled: preferences?.voice_commands_enabled ?? true,
-
-      feedback: preferences?.voice_feedback ?? false,
-    },
     accessibility: {
       highContrast: preferences?.accessibility_high_contrast ?? false,
       largeText: preferences?.accessibility_large_text ?? false,
       screenReader: preferences?.accessibility_screen_reader ?? false,
     },
     autonomyLevel: preferences?.autonomy_level ?? 50,
+    currency: preferences?.currency ?? 'BRL',
+    language: preferences?.language ?? 'pt-BR',
+    notifications: {
+      email: preferences?.email_notifications ?? true,
+      enabled: preferences?.notifications_enabled ?? true,
+      push: preferences?.push_notifications ?? true,
+    },
+    theme: preferences?.theme ?? 'system',
+    timezone: preferences?.timezone ?? 'America/Sao_Paulo',
+    voice: {
+      enabled: preferences?.voice_commands_enabled ?? true,
+
+      feedback: preferences?.voice_feedback ?? false,
+    },
   };
 
   return settings;
@@ -233,24 +227,21 @@ export function useDashboardActions() {
   const { createAccount } = useBankAccounts();
 
   const actions = {
-    quickTransaction: (data: unknown) => {
-      // Implementar lógica para transação rápida
-      return createTransaction(data as Parameters<typeof createTransaction>[0]);
+    quickAccount: (data: unknown) => {
+      // Implementar lógica para conta rápida
+      return createAccount(data as Parameters<typeof createAccount>[0]);
     },
-
-    quickEvent: (data: unknown) => {
-      // Implementar lógica para evento rápido
-      return addEvent(data as Parameters<typeof addEvent>[0]);
-    },
-
     quickContact: (data: unknown) => {
       // Implementar lógica para contato rápido
       return createContact(data as Parameters<typeof createContact>[0]);
     },
-
-    quickAccount: (data: unknown) => {
-      // Implementar lógica para conta rápida
-      return createAccount(data as Parameters<typeof createAccount>[0]);
+    quickEvent: (data: unknown) => {
+      // Implementar lógica para evento rápido
+      return addEvent(data as Parameters<typeof addEvent>[0]);
+    },
+    quickTransaction: (data: unknown) => {
+      // Implementar lógica para transação rápida
+      return createTransaction(data as Parameters<typeof createTransaction>[0]);
     },
   };
 

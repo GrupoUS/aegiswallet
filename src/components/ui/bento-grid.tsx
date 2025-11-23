@@ -12,7 +12,8 @@
  */
 
 import { ArrowUpRight, CheckCircle2, Clock, Sparkles, Zap } from 'lucide-react';
-import { motion, useMotionValue, useTransform, type Variants } from 'motion/react';
+import type { Variants } from 'motion/react';
+import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -23,14 +24,14 @@ export interface BentoItem {
   href?: string;
   feature?: 'chart' | 'counter' | 'timeline' | 'spotlight' | 'typing' | 'metrics';
   spotlightItems?: string[];
-  timeline?: Array<{ year: string; event: string }>;
+  timeline?: { year: string; event: string }[];
   typingText?: string;
-  metrics?: Array<{
+  metrics?: {
     label: string;
     value: number;
     suffix?: string;
     color?: string;
-  }>;
+  }[];
   statistic?: {
     value: string;
     label: string;
@@ -46,11 +47,11 @@ const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
-    y: 0,
     transition: {
       duration: 0.5,
       ease: 'easeOut',
     },
+    y: 0,
   },
 };
 
@@ -59,8 +60,8 @@ const staggerContainer: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
       delayChildren: 0.3,
+      staggerChildren: 0.15,
     },
   },
 };
@@ -140,7 +141,7 @@ const ChartAnimation = ({ value }: { value: number }) => {
   );
 };
 
-const TimelineFeature = ({ timeline }: { timeline: Array<{ year: string; event: string }> }) => {
+const TimelineFeature = ({ timeline }: { timeline: { year: string; event: string }[] }) => {
   return (
     <div className="relative mt-3">
       <div className="absolute top-0 bottom-0 left-[9px] w-[2px] bg-border" />
@@ -214,17 +215,17 @@ const TypingCodeFeature = ({ text }: { text: string }) => {
 const MetricsFeature = ({
   metrics,
 }: {
-  metrics: Array<{
+  metrics: {
     label: string;
     value: number;
     suffix?: string;
     color?: string;
-  }>;
+  }[];
 }) => {
   const getColorClass = (color = 'primary') => {
     const colors = {
-      primary: 'bg-[oklch(0.5854_0.2041_277.1173)] dark:bg-[oklch(0.9376_0.0260_321.9388)]',
       accent: 'bg-[oklch(0.9376_0.0260_321.9388)] dark:bg-[oklch(0.5854_0.2041_277.1173)]',
+      primary: 'bg-[oklch(0.5854_0.2041_277.1173)] dark:bg-[oklch(0.9376_0.0260_321.9388)]',
       secondary: 'bg-[oklch(0.8687_0.0043_56.3660)]',
     };
     return colors[color as keyof typeof colors] || colors.primary;
@@ -260,9 +261,9 @@ const MetricsFeature = ({
                 width: `${Math.min(100, metric.value)}%`,
               }}
               transition={{
+                delay: 0.15 * index,
                 duration: 1.2,
                 ease: 'easeOut',
-                delay: 0.15 * index,
               }}
             />
           </div>
@@ -303,7 +304,7 @@ export const BentoCard = ({ item }: { item: BentoItem }) => {
     <motion.div
       variants={fadeInUp}
       whileHover={{ y: -5 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      transition={{ damping: 20, stiffness: 300, type: 'spring' }}
       className="h-full"
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={handleMouseLeave}

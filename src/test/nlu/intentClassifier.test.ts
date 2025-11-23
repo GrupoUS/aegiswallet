@@ -108,12 +108,12 @@ describe('Intent Classifier', () => {
 
   describe('All Intent Types', () => {
     const intentTests = [
-      { text: 'qual é meu saldo?', expected: IntentType.CHECK_BALANCE },
-      { text: 'quanto posso gastar?', expected: IntentType.CHECK_BUDGET },
-      { text: 'pagar conta de luz', expected: IntentType.PAY_BILL },
-      { text: 'quando vou receber?', expected: IntentType.CHECK_INCOME },
-      { text: 'projeção do mês', expected: IntentType.FINANCIAL_PROJECTION },
-      { text: 'transferir para João', expected: IntentType.TRANSFER_MONEY },
+      { expected: IntentType.CHECK_BALANCE, text: 'qual é meu saldo?' },
+      { expected: IntentType.CHECK_BUDGET, text: 'quanto posso gastar?' },
+      { expected: IntentType.PAY_BILL, text: 'pagar conta de luz' },
+      { expected: IntentType.CHECK_INCOME, text: 'quando vou receber?' },
+      { expected: IntentType.FINANCIAL_PROJECTION, text: 'projeção do mês' },
+      { expected: IntentType.TRANSFER_MONEY, text: 'transferir para João' },
     ];
 
     intentTests.forEach(({ text, expected }) => {

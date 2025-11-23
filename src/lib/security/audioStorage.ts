@@ -12,7 +12,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AudioEncryptionService, type EncryptedData } from '@/lib/security/audioEncryption';
+import type { EncryptedData } from '@/lib/security/audioEncryption';
+import { AudioEncryptionService } from '@/lib/security/audioEncryption';
 
 // ============================================================================
 // Types & Interfaces
@@ -49,7 +50,7 @@ export interface AuditLog {
   action: 'upload' | 'download' | 'delete' | 'access';
   audioId: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -61,10 +62,10 @@ export class AudioStorageService {
 
   constructor(config: AudioStorageConfig) {
     this.config = {
-      supabase: config.supabase,
-      encryptionService: config.encryptionService,
       bucketName: config.bucketName || 'voice-recordings',
-      retentionDays: config.retentionDays || 365, // 12 months
+      encryptionService: config.encryptionService,
+      retentionDays: config.retentionDays || 365,
+      supabase: config.supabase, // 12 months
     };
   }
 
@@ -128,15 +129,15 @@ export class AudioStorageService {
       const { data, error: dbError } = await this.config.supabase
         .from('voice_transcriptions')
         .insert({
-          id: audioId,
-          user_id: userId,
           audio_storage_path: storagePath,
-          transcript: JSON.stringify(encryptedTranscript),
           confidence_score: metadata.confidence,
+          created_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          id: audioId,
           language: metadata.language,
           processing_time_ms: metadata.processingTimeMs,
-          expires_at: expiresAt.toISOString(),
-          created_at: new Date().toISOString(),
+          transcript: JSON.stringify(encryptedTranscript),
+          user_id: userId,
         })
         .select()
         .single();
@@ -150,23 +151,23 @@ export class AudioStorageService {
 
       // Log audit trail
       await this.logAudit(userId, 'upload', audioId, {
-        storagePath,
         confidence: metadata.confidence,
+        storagePath,
       });
 
       return {
-        id: audioId,
-        userId,
-        storagePath,
-        transcript: anonymizedTranscript,
         confidence: metadata.confidence,
-        language: metadata.language,
-        processingTimeMs: metadata.processingTimeMs,
         createdAt: new Date(data.created_at),
         expiresAt,
+        id: audioId,
+        language: metadata.language,
+        processingTimeMs: metadata.processingTimeMs,
+        storagePath,
+        transcript: anonymizedTranscript,
+        userId,
       };
     } catch (error) {
-      throw new Error(`Audio storage failed: ${error}`);
+      throw new Error(`Audio storage failed: ${error}`, { cause: error });
     }
   }
 
@@ -212,7 +213,7 @@ export class AudioStorageService {
 
       return audioBlob;
     } catch (error) {
-      throw new Error(`Audio retrieval failed: ${error}`);
+      throw new Error(`Audio retrieval failed: ${error}`, { cause: error });
     }
   }
 
@@ -258,7 +259,7 @@ export class AudioStorageService {
       // Log audit trail
       await this.logAudit(userId, 'delete', audioId);
     } catch (error) {
-      throw new Error(`Audio deletion failed: ${error}`);
+      throw new Error(`Audio deletion failed: ${error}`, { cause: error });
     }
   }
 
@@ -289,17 +290,17 @@ export class AudioStorageService {
   async recordConsent(userId: string, consentGiven: boolean): Promise<void> {
     try {
       const { error } = await this.config.supabase.from('voice_consent').upsert({
-        user_id: userId,
-        consent_given: consentGiven,
         consent_date: new Date().toISOString(),
+        consent_given: consentGiven,
         updated_at: new Date().toISOString(),
+        user_id: userId,
       });
 
       if (error) {
         throw new Error(`Consent recording failed: ${error.message}`);
       }
     } catch (error) {
-      throw new Error(`Consent recording failed: ${error}`);
+      throw new Error(`Consent recording failed: ${error}`, { cause: error });
     }
   }
 
@@ -310,15 +311,15 @@ export class AudioStorageService {
     userId: string,
     action: AuditLog['action'],
     audioId: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
       await this.config.supabase.from('voice_audit_logs').insert({
-        user_id: userId,
         action,
         audio_id: audioId,
         metadata: metadata || {},
         timestamp: new Date().toISOString(),
+        user_id: userId,
       });
     } catch (_error) {}
   }
@@ -350,7 +351,7 @@ export class AudioStorageService {
 
       return deletedCount;
     } catch (error) {
-      throw new Error(`Cleanup failed: ${error}`);
+      throw new Error(`Cleanup failed: ${error}`, { cause: error });
     }
   }
 }
@@ -367,9 +368,9 @@ export function createAudioStorageService(
   encryptionService: AudioEncryptionService
 ): AudioStorageService {
   return new AudioStorageService({
-    supabase,
-    encryptionService,
     bucketName: 'voice-recordings',
-    retentionDays: 365, // 12 months LGPD compliance
+    encryptionService,
+    retentionDays: 365,
+    supabase, // 12 months LGPD compliance
   });
 }

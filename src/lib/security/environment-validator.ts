@@ -112,22 +112,22 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 
   // Construct configuration object
   const config: EnvironmentConfig = {
-    supabase: {
-      url: supabaseUrl || '',
-      anonKey: supabaseAnonKey || '',
-    },
     api: {
       baseUrl: getEnvVar('VITE_API_URL') || 'http://localhost:3000',
       version: getEnvVar('VITE_APP_VERSION') || '1.0.0',
     },
+    app: {
+      debug: appEnv === 'development' || getEnvVar('VITE_DEBUG') === 'true',
+      env: appEnv as 'development' | 'staging' | 'production',
+    },
     security: {
+      auditLogging: getEnvVar('VITE_AUDIT_LOGGING_ENABLED') !== 'false',
       encryptionEnabled: getEnvVar('VITE_ENCRYPTION_ENABLED') === 'true',
       lgpdCompliance: getEnvVar('VITE_LGPD_ENABLED') !== 'false',
-      auditLogging: getEnvVar('VITE_AUDIT_LOGGING_ENABLED') !== 'false',
     },
-    app: {
-      env: appEnv as 'development' | 'staging' | 'production',
-      debug: appEnv === 'development' || getEnvVar('VITE_DEBUG') === 'true',
+    supabase: {
+      anonKey: supabaseAnonKey || '',
+      url: supabaseUrl || '',
     },
   };
 

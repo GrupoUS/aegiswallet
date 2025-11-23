@@ -11,11 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { trpc, trpcClient } from '@/lib/trpc';
 import type { PixTransaction, PixTransactionType } from '@/types/pix';
 
-type PixTransactionsResponse = {
+interface PixTransactionsResponse {
   transactions: PixTransaction[];
   total: number;
   hasMore: boolean;
-};
+}
 
 type PixTransactionRealtimePayload = Partial<PixTransaction> & {
   transaction_type?: PixTransactionType;
@@ -32,38 +32,40 @@ export function usePixKeys() {
 
   const { data: keys, isLoading, error } = trpc.pix.getKeys.useQuery();
   const { mutate: createKey } = trpc.pix.createKey.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao cadastrar chave PIX');
+    },
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
       toast.success('Chave PIX cadastrada com sucesso!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao cadastrar chave PIX');
-    },
   });
 
   const { mutate: updateKey } = trpc.pix.updateKey.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao atualizar chave PIX');
+    },
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
       toast.success('Chave PIX atualizada!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar chave PIX');
-    },
   });
 
   const { mutate: deleteKey } = trpc.pix.deleteKey.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao remover chave PIX');
+    },
     onSuccess: () => {
       utils.pix.getKeys.invalidate();
       toast.success('Chave PIX removida!');
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao remover chave PIX');
     },
   });
 
   // Realtime subscription for PIX keys
   useEffect(() => {
-    if (!keys) return;
+    if (!keys) {
+      return;
+    }
 
     const channel = supabase
       .channel('pix_keys_changes')
@@ -86,12 +88,12 @@ export function usePixKeys() {
   }, [keys, utils]);
 
   return {
-    keys: keys || [],
-    isLoading,
-    error,
     createKey,
-    updateKey,
     deleteKey,
+    error,
+    isLoading,
+    keys: keys || [],
+    updateKey,
   };
 }
 
@@ -99,9 +101,9 @@ export function usePixFavorites() {
   const { data: favorites, isLoading, error } = trpc.pix.getFavorites.useQuery();
 
   return {
+    error,
     favorites: favorites || [],
     isLoading,
-    error,
   };
 }
 
@@ -149,17 +151,6 @@ export function usePixTransactions(filters?: {
     typeof queryKey,
     number
   >({
-    queryKey,
-    initialPageParam: baseOffset,
-    queryFn: async ({ pageParam = baseOffset }) =>
-      trpcClient.pix.getTransactions.query({
-        type: typeFilter,
-        status: statusFilter,
-        startDate: startDateFilter,
-        endDate: endDateFilter,
-        limit,
-        offset: pageParam,
-      }),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.hasMore) {
         return undefined;
@@ -172,6 +163,17 @@ export function usePixTransactions(filters?: {
 
       return baseOffset + loadedCount;
     },
+    initialPageParam: baseOffset,
+    queryFn: async ({ pageParam = baseOffset }) =>
+      trpcClient.pix.getTransactions.query({
+        endDate: endDateFilter,
+        limit,
+        offset: pageParam,
+        startDate: startDateFilter,
+        status: statusFilter,
+        type: typeFilter,
+      }),
+    queryKey,
   });
 
   const transactions = useMemo(
@@ -185,6 +187,9 @@ export function usePixTransactions(filters?: {
   }, [queryClient, utils]);
 
   const { mutate: createTransaction } = trpc.pix.createTransaction.useMutation({
+    onError: (mutationError) => {
+      toast.error(mutationError.message || 'Erro ao realizar transferência PIX');
+    },
     onSuccess: (transaction) => {
       invalidatePixTransactions();
       utils.pix.getStats.invalidate();
@@ -194,9 +199,6 @@ export function usePixTransactions(filters?: {
       } else {
         toast.success('Transferência PIX realizada com sucesso!');
       }
-    },
-    onError: (mutationError) => {
-      toast.error(mutationError.message || 'Erro ao realizar transferência PIX');
     },
   });
 
@@ -237,13 +239,13 @@ export function usePixTransactions(filters?: {
   }, [invalidatePixTransactions, utils.pix.getStats.invalidate]);
 
   return {
-    transactions,
-    total: data?.pages[0]?.total ?? 0,
-    isLoading,
-    error,
     createTransaction,
+    error,
     fetchNextPage,
     hasNextPage,
+    isLoading,
+    total: data?.pages[0]?.total ?? 0,
+    transactions,
   };
 }
 
@@ -251,9 +253,9 @@ export function usePixTransaction(id: string) {
   const { data: transaction, isLoading, error } = trpc.pix.getTransaction.useQuery({ id });
 
   return {
-    transaction,
-    isLoading,
     error,
+    isLoading,
+    transaction,
   };
 }
 
@@ -261,16 +263,16 @@ export function usePixStats(period: '24h' | '7d' | '30d' | '1y' = '30d') {
   const { data: stats, isLoading, error } = trpc.pix.getStats.useQuery({ period });
 
   return {
+    error,
+    isLoading,
     stats: stats || {
-      totalSent: 0,
-      totalReceived: 0,
-      transactionCount: 0,
       averageTransaction: 0,
       largestTransaction: 0,
       period,
+      totalReceived: 0,
+      totalSent: 0,
+      transactionCount: 0,
     },
-    isLoading,
-    error,
   };
 }
 
@@ -284,28 +286,30 @@ export function usePixQRCodes() {
   const { data: qrCodes, isLoading, error } = trpc.pix.getQRCodes.useQuery();
 
   const { mutate: generateQRCode, isPending: isGenerating } = trpc.pix.generateQRCode.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao gerar QR Code');
+    },
     onSuccess: () => {
       utils.pix.getQRCodes.invalidate();
       toast.success('QR Code gerado com sucesso!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao gerar QR Code');
-    },
   });
 
   const { mutate: deactivateQRCode } = trpc.pix.deactivateQRCode.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao desativar QR Code');
+    },
     onSuccess: () => {
       utils.pix.getQRCodes.invalidate();
       toast.success('QR Code desativado!');
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao desativar QR Code');
     },
   });
 
   // Realtime subscription for QR codes
   useEffect(() => {
-    if (!qrCodes) return;
+    if (!qrCodes) {
+      return;
+    }
 
     const channel = supabase
       .channel('pix_qr_codes_changes')
@@ -328,12 +332,12 @@ export function usePixQRCodes() {
   }, [qrCodes, utils]);
 
   return {
-    qrCodes: qrCodes || [],
-    isLoading,
+    deactivateQRCode,
     error,
     generateQRCode,
     isGenerating,
-    deactivateQRCode,
+    isLoading,
+    qrCodes: qrCodes || [],
   };
 }
 
@@ -350,7 +354,9 @@ export function usePixTransactionMonitor(transactionId?: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!transactionId) return;
+    if (!transactionId) {
+      return;
+    }
 
     const channel = supabase
       .channel(`pix_transaction_${transactionId}`)
@@ -358,9 +364,9 @@ export function usePixTransactionMonitor(transactionId?: string) {
         'postgres_changes',
         {
           event: 'UPDATE',
+          filter: `id=eq.${transactionId}`,
           schema: 'public',
           table: 'pix_transactions',
-          filter: `id=eq.${transactionId}`,
         },
         (payload) => {
           const updated = payload.new as PixTransactionRealtimePayload;
@@ -387,11 +393,11 @@ export function usePixTransactionMonitor(transactionId?: string) {
   }, [queryClient, transactionId, utils]);
 
   return {
-    transaction,
-    isLoading,
     isCompleted: transaction?.status === 'completed',
     isFailed: transaction?.status === 'failed',
+    isLoading,
     isPending: transaction?.status === 'pending' || transaction?.status === 'processing',
+    transaction,
   };
 }
 

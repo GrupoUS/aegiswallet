@@ -20,10 +20,10 @@ export default async function setup() {
   if (typeof globalThis.navigator === 'undefined') {
     // @ts-expect-error - we're setting up the global environment
     globalThis.navigator = {
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       language: 'pt-BR',
       languages: ['pt-BR', 'pt', 'en-US', 'en'],
       platform: 'Win32',
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     };
   }
 }

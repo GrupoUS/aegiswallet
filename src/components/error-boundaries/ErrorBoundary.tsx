@@ -36,19 +36,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
-      hasError: false,
       error: null,
-      errorInfo: null,
       errorId: '',
+      errorInfo: null,
+      hasError: false,
       retryCount: 0,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return {
-      hasError: true,
       error,
       errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      hasError: true,
     };
   }
 
@@ -77,13 +77,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     try {
       // In production, this would send to an error reporting service
       const errorData = {
-        message: error.message,
-        stack: error.stack,
         componentStack: errorInfo.componentStack,
         errorId: this.state.errorId,
+        message: error.message,
+        stack: error.stack,
         timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
         url: window.location.href,
+        userAgent: navigator.userAgent,
       };
 
       // Example: Send to error reporting service
@@ -105,9 +105,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     if (retryCount < maxRetries) {
       this.setState((prevState) => ({
-        hasError: false,
         error: null,
         errorInfo: null,
+        hasError: false,
         retryCount: prevState.retryCount + 1,
       }));
     }

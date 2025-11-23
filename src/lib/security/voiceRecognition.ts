@@ -49,9 +49,9 @@ export interface TranscriptionResult {
 // ============================================================================
 
 const DEFAULT_CONFIG: VoiceRecognitionConfig = {
-  primaryProvider: 'openai',
-  fallbackProviders: ['gemini', 'elevenlabs'],
   confidenceThreshold: 0.8,
+  fallbackProviders: ['gemini', 'elevenlabs'],
+  primaryProvider: 'openai',
   timeout: 10000, // 10s
 };
 
@@ -91,12 +91,12 @@ export class VoiceRecognitionService {
       const isConfirmed = similarity >= this.config.confidenceThreshold;
 
       return {
-        isConfirmed,
-        transcription: result.transcription,
         confidence: result.confidence,
-        provider: this.config.primaryProvider,
+        isConfirmed,
         processingTime: Date.now() - startTime,
+        provider: this.config.primaryProvider,
         similarity,
+        transcription: result.transcription,
       };
     } catch (_error) {}
 
@@ -109,12 +109,12 @@ export class VoiceRecognitionService {
         const isConfirmed = similarity >= this.config.confidenceThreshold;
 
         return {
-          isConfirmed,
-          transcription: result.transcription,
           confidence: result.confidence,
-          provider,
+          isConfirmed,
           processingTime: Date.now() - startTime,
+          provider,
           similarity,
+          transcription: result.transcription,
         };
       } catch (_error) {}
     }
@@ -156,11 +156,11 @@ export class VoiceRecognitionService {
     formData.append('language', 'pt');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
+      body: formData,
       headers: {
         Authorization: `Bearer ${this.openaiKey}`,
       },
-      body: formData,
+      method: 'POST',
     });
 
     if (!response.ok) {
@@ -170,8 +170,8 @@ export class VoiceRecognitionService {
     const data = await response.json();
 
     return {
-      transcription: data.text,
-      confidence: 0.95, // Whisper doesn't return confidence, assume high
+      confidence: 0.95,
+      transcription: data.text, // Whisper doesn't return confidence, assume high
     };
   }
 
@@ -190,10 +190,6 @@ export class VoiceRecognitionService {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.geminiKey}`,
       {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           contents: [
             {
@@ -205,6 +201,10 @@ export class VoiceRecognitionService {
             },
           ],
         }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
       }
     );
 
@@ -216,8 +216,8 @@ export class VoiceRecognitionService {
     const transcription = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     return {
-      transcription,
-      confidence: 0.92, // Gemini doesn't return confidence, assume good
+      confidence: 0.92,
+      transcription, // Gemini doesn't return confidence, assume good
     };
   }
 
@@ -233,11 +233,11 @@ export class VoiceRecognitionService {
     formData.append('audio', audioBlob);
 
     const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-      method: 'POST',
+      body: formData,
       headers: {
         'xi-api-key': this.elevenlabsKey,
       },
-      body: formData,
+      method: 'POST',
     });
 
     if (!response.ok) {
@@ -247,8 +247,8 @@ export class VoiceRecognitionService {
     const data = await response.json();
 
     return {
-      transcription: data.text || '',
-      confidence: 0.9, // ElevenLabs doesn't return confidence, assume decent
+      confidence: 0.9,
+      transcription: data.text || '', // ElevenLabs doesn't return confidence, assume decent
     };
   }
 
@@ -272,7 +272,9 @@ export class VoiceRecognitionService {
 
     // Convert to similarity score (0-1)
     const maxLength = Math.max(normalized1.length, normalized2.length);
-    if (maxLength === 0) return 1.0;
+    if (maxLength === 0) {
+      return 1.0;
+    }
 
     return (maxLength - distance) / maxLength;
   }

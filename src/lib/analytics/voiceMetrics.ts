@@ -118,23 +118,23 @@ export class VoiceMetricsService {
           : 0;
 
       return {
-        totalCommands,
-        successfulCommands,
-        failedCommands,
         accuracyPercent,
-        avgLatencyMs,
-        p95LatencyMs,
         avgConfidence,
+        avgLatencyMs,
+        failedCommands,
+        p95LatencyMs,
+        successfulCommands,
+        totalCommands,
       };
     } catch (_error) {
       return {
-        totalCommands: 0,
-        successfulCommands: 0,
-        failedCommands: 0,
         accuracyPercent: 0,
-        avgLatencyMs: 0,
-        p95LatencyMs: 0,
         avgConfidence: 0,
+        avgLatencyMs: 0,
+        failedCommands: 0,
+        p95LatencyMs: 0,
+        successfulCommands: 0,
+        totalCommands: 0,
       };
     }
   }
@@ -198,7 +198,7 @@ export class VoiceMetricsService {
       const latencies = data.map((row) => row.processing_time_ms).sort((a, b) => a - b);
 
       if (latencies.length === 0) {
-        return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 };
+        return { avg: 0, max: 0, p50: 0, p95: 0, p99: 0 };
       }
 
       const p50Index = Math.floor(latencies.length * 0.5);
@@ -206,14 +206,14 @@ export class VoiceMetricsService {
       const p99Index = Math.floor(latencies.length * 0.99);
 
       return {
+        avg: latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
+        max: Math.max(...latencies),
         p50: latencies[p50Index] || 0,
         p95: latencies[p95Index] || 0,
         p99: latencies[p99Index] || 0,
-        avg: latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
-        max: Math.max(...latencies),
       };
     } catch (_error) {
-      return { p50: 0, p95: 0, p99: 0, avg: 0, max: 0 };
+      return { avg: 0, max: 0, p50: 0, p95: 0, p99: 0 };
     }
   }
 
@@ -257,12 +257,12 @@ export class VoiceMetricsService {
    * Get regional performance
    */
   async getRegionalPerformance(): Promise<
-    Array<{
+    {
       region: string;
       totalCommands: number;
       accuracyPercent: number;
       avgLatencyMs: number;
-    }>
+    }[]
   > {
     try {
       // Note: regional_performance table doesn't exist yet
@@ -277,19 +277,19 @@ export class VoiceMetricsService {
    * Check if metrics are below threshold
    */
   async checkThresholds(thresholds: AlertThreshold[]): Promise<
-    Array<{
+    {
       metric: string;
       currentValue: number;
       threshold: number;
       violated: boolean;
-    }>
+    }[]
   > {
-    const results: Array<{
+    const results: {
       metric: string;
       currentValue: number;
       threshold: number;
       violated: boolean;
-    }> = [];
+    }[] = [];
 
     for (const threshold of thresholds) {
       let currentValue = 0;
@@ -318,8 +318,8 @@ export class VoiceMetricsService {
       }
 
       results.push({
-        metric: threshold.metric,
         currentValue,
+        metric: threshold.metric,
         threshold: threshold.threshold,
         violated,
       });

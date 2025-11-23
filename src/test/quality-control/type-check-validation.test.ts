@@ -11,17 +11,17 @@ describe('Type Check Validation', () => {
     it('should have user_preferences with voice_feedback', () => {
       // This should now work without errors
       const mockPreferences: Tables<'user_preferences'>['Row'] = {
-        id: 'test-id',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: 'user-id',
-        notifications_email: true,
-        notifications_push: false,
-        theme: 'dark',
-        voice_feedback: true,
         accessibility_high_contrast: true,
         accessibility_large_text: false,
         accessibility_screen_reader: true,
+        created_at: new Date().toISOString(),
+        id: 'test-id',
+        notifications_email: true,
+        notifications_push: false,
+        theme: 'dark',
+        updated_at: new Date().toISOString(),
+        user_id: 'user-id',
+        voice_feedback: true,
       };
 
       expect(mockPreferences.voice_feedback).toBe(true);
@@ -30,14 +30,14 @@ describe('Type Check Validation', () => {
 
     it('should have bank_accounts with is_primary', () => {
       const mockAccount: Tables<'bank_accounts'>['Row'] = {
-        id: 'test-id',
         account_mask: '1234',
-        institution_name: 'Test Bank',
         balance: 1000,
+        created_at: new Date().toISOString(),
         currency: 'BRL',
+        id: 'test-id',
+        institution_name: 'Test Bank',
         is_active: true,
         is_primary: true,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: 'user-id',
       };
@@ -47,20 +47,20 @@ describe('Type Check Validation', () => {
 
     it('should have financial_events with new properties', () => {
       const mockEvent: Tables<'financial_events'>['Row'] = {
-        id: 'test-id',
-        title: 'Test Event',
-        event_date: '2024-01-01',
+        account_id: 'account-id',
         amount: 100,
-        is_completed: false,
+        category_id: 'category-id',
         created_at: new Date().toISOString(),
+        description: 'Test description',
+        event_date: '2024-01-01',
+        event_type_id: 'type-id',
+        id: 'test-id',
+        is_completed: false,
+        is_income: true,
+        priority: 'high',
+        title: 'Test Event',
         updated_at: new Date().toISOString(),
         user_id: 'user-id',
-        event_type_id: 'type-id',
-        description: 'Test description',
-        is_income: true,
-        account_id: 'account-id',
-        category_id: 'category-id',
-        priority: 'high',
       };
 
       expect(mockEvent.description).toBe('Test description');
@@ -70,18 +70,18 @@ describe('Type Check Validation', () => {
 
     it('should have transactions with date field', () => {
       const mockTransaction: Tables<'transactions'>['Row'] = {
-        id: 'test-id',
-        description: 'Test Transaction',
+        account_id: 'account-id',
         amount: 100,
-        transaction_type: 'credit',
-        transaction_date: '2024-01-01',
-        date: '2024-01-01',
+        category_id: 'category-id',
         created_at: new Date().toISOString(),
+        date: '2024-01-01',
+        description: 'Test Transaction',
+        id: 'test-id',
+        status: 'completed',
+        transaction_date: '2024-01-01',
+        transaction_type: 'credit',
         updated_at: new Date().toISOString(),
         user_id: 'user-id',
-        account_id: 'account-id',
-        category_id: 'category-id',
-        status: 'completed',
       };
 
       expect(mockTransaction.date).toBe('2024-01-01');

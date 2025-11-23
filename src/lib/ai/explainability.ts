@@ -6,23 +6,23 @@ export interface Explanation {
   decision: string;
   reasoning: string[];
   confidence: number;
-  factors: Array<{ name: string; impact: number }>;
+  factors: { name: string; impact: number }[];
 }
 
 export class ExplainabilityService {
   explainDecision(_decisionId: string): Explanation {
     return {
+      confidence: 0.92,
       decision: 'approved',
+      factors: [
+        { impact: 35, name: 'Histórico' },
+        { impact: 25, name: 'Valor' },
+        { impact: 32, name: 'Padrão' },
+      ],
       reasoning: [
         'Seu histórico de pagamentos é excelente',
         'O valor está dentro do seu limite diário',
         'Transação similar foi aprovada recentemente',
-      ],
-      confidence: 0.92,
-      factors: [
-        { name: 'Histórico', impact: 35 },
-        { name: 'Valor', impact: 25 },
-        { name: 'Padrão', impact: 32 },
       ],
     };
   }

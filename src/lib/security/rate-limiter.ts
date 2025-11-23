@@ -29,35 +29,49 @@ export interface SecurityEvent {
   type: 'rate_limit_exceeded' | 'account_locked' | 'account_unlocked' | 'login_attempt';
   identifier: string; // IP address or user ID
   timestamp: number;
-  details?: any;
+  details?: unknown;
+}
+
+interface RateLimitRequest {
+  headers: Record<string, string | string[] | undefined>;
+  connection?: { remoteAddress?: string };
+  socket?: { remoteAddress?: string };
+  ip?: string;
+  [key: string]: unknown;
+}
+
+interface RateLimitResponse {
+  status: (code: number) => RateLimitResponse;
+  json: (body: unknown) => void;
+  [key: string]: unknown;
 }
 
 /**
  * Default rate limit configurations for different scenarios
  */
 export const RATE_LIMIT_CONFIGS = {
-  authentication: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: 5, // 5 attempts per window
-    lockoutDuration: 30 * 60 * 1000, // 30 minutes lockout
-    progressiveDelay: true,
-  },
-  passwordReset: {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    maxAttempts: 3, // 3 attempts per hour
-    lockoutDuration: 2 * 60 * 60 * 1000, // 2 hours lockout
-    progressiveDelay: true,
-  },
   apiGeneral: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxAttempts: 100, // 100 requests per window
     lockoutDuration: 5 * 60 * 1000, // 5 minutes lockout
     progressiveDelay: false,
   },
+  authentication: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxAttempts: 5, // 5 attempts per window
+    lockoutDuration: 30 * 60 * 1000, // 30 minutes lockout
+    progressiveDelay: true,
+  },
   financialOperations: {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxAttempts: 20, // 20 operations per hour
     lockoutDuration: 60 * 60 * 1000, // 1 hour lockout
+    progressiveDelay: true,
+  },
+  passwordReset: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxAttempts: 3, // 3 attempts per hour
+    lockoutDuration: 2 * 60 * 60 * 1000, // 2 hours lockout
     progressiveDelay: true,
   },
 };
@@ -134,8 +148,8 @@ class RateLimiter {
       this.attempts.set(identifier, {
         attempts: 0,
         firstAttempt: now,
-        lastAttempt: now,
         isLocked: false,
+        lastAttempt: now,
       });
 
       this.logSecurityEvent('login_attempt', identifier, { success: true });
@@ -155,8 +169,8 @@ class RateLimiter {
         });
       } else {
         this.logSecurityEvent('login_attempt', identifier, {
-          success: false,
           attempts: record.attempts,
+          success: false,
         });
       }
 
@@ -212,8 +226,8 @@ class RateLimiter {
     const newRecord: AttemptRecord = {
       attempts: 0,
       firstAttempt: Date.now(),
-      lastAttempt: Date.now(),
       isLocked: false,
+      lastAttempt: Date.now(),
     };
 
     this.attempts.set(identifier, newRecord);
@@ -243,12 +257,16 @@ class RateLimiter {
   /**
    * Log security event
    */
-  private logSecurityEvent(type: SecurityEvent['type'], identifier: string, details?: any): void {
+  private logSecurityEvent(
+    type: SecurityEvent['type'],
+    identifier: string,
+    details?: unknown
+  ): void {
     const event: SecurityEvent = {
-      type,
+      details,
       identifier,
       timestamp: Date.now(),
-      details,
+      type,
     };
 
     this.securityEvents.push(event);
@@ -296,10 +314,10 @@ class RateLimiter {
  * Global rate limiter instances for different use cases
  */
 export const rateLimiters = {
-  authentication: new RateLimiter(RATE_LIMIT_CONFIGS.authentication),
-  passwordReset: new RateLimiter(RATE_LIMIT_CONFIGS.passwordReset),
   apiGeneral: new RateLimiter(RATE_LIMIT_CONFIGS.apiGeneral),
+  authentication: new RateLimiter(RATE_LIMIT_CONFIGS.authentication),
   financialOperations: new RateLimiter(RATE_LIMIT_CONFIGS.financialOperations),
+  passwordReset: new RateLimiter(RATE_LIMIT_CONFIGS.passwordReset),
 };
 
 /**
@@ -307,9 +325,9 @@ export const rateLimiters = {
  */
 export function createRateLimitMiddleware(
   limiter: RateLimiter,
-  identifierExtractor: (req: any) => string
+  identifierExtractor: (req: RateLimitRequest) => string
 ) {
-  return (req: any, res: any, next: any) => {
+  return (req: RateLimitRequest, res: RateLimitResponse, next: () => void) => {
     const identifier = identifierExtractor(req);
     const result = limiter.canAttempt(identifier);
 
@@ -329,10 +347,12 @@ export function createRateLimitMiddleware(
 /**
  * Get client IP address from request
  */
-export function getClientIP(req: any): string {
+export function getClientIP(req: RateLimitRequest): string {
   return (
-    req.headers['x-forwarded-for']?.split(',')[0] ||
-    req.headers['x-real-ip'] ||
+    (Array.isArray(req.headers['x-forwarded-for'])
+      ? req.headers['x-forwarded-for'][0]
+      : req.headers['x-forwarded-for']?.split(',')[0]) ||
+    (req.headers['x-real-ip'] as string) ||
     req.connection?.remoteAddress ||
     req.socket?.remoteAddress ||
     req.ip ||
@@ -371,11 +391,11 @@ export function recordAuthenticationAttempt(email: string, ip: string, success: 
 }
 
 export default {
+  RATE_LIMIT_CONFIGS,
   RateLimiter,
-  rateLimiters,
+  checkAuthenticationRateLimit,
   createRateLimitMiddleware,
   getClientIP,
-  checkAuthenticationRateLimit,
+  rateLimiters,
   recordAuthenticationAttempt,
-  RATE_LIMIT_CONFIGS,
 };

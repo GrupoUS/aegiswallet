@@ -94,7 +94,7 @@ export class VoiceActivityDetector {
       this.isListening = true;
       this.startAnalysis();
     } catch (error) {
-      throw new Error(`VAD initialization failed: ${error}`);
+      throw new Error(`VAD initialization failed: ${error}`, { cause: error });
     }
   }
 
@@ -102,13 +102,17 @@ export class VoiceActivityDetector {
    * Start voice activity analysis
    */
   private startAnalysis(): void {
-    if (!this.analyser || !this.isListening) return;
+    if (!this.analyser || !this.isListening) {
+      return;
+    }
 
     const bufferLength = this.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
     const analyze = () => {
-      if (!this.isListening || !this.analyser) return;
+      if (!this.isListening || !this.analyser) {
+        return;
+      }
 
       this.analyser.getByteFrequencyData(dataArray);
 
@@ -163,10 +167,10 @@ export class VoiceActivityDetector {
     const speechDuration = this.speechStartTime ? currentTime - this.speechStartTime : 0;
 
     return {
-      isSpeaking: this.speechStartTime !== null,
       energy: this.calculateCurrentEnergy(),
-      speechStartTime: this.speechStartTime,
+      isSpeaking: this.speechStartTime !== null,
       speechDuration,
+      speechStartTime: this.speechStartTime,
     };
   }
 
@@ -174,7 +178,9 @@ export class VoiceActivityDetector {
    * Calculate current energy level
    */
   private calculateCurrentEnergy(): number {
-    if (!this.analyser) return 0;
+    if (!this.analyser) {
+      return 0;
+    }
 
     const bufferLength = this.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -285,9 +291,9 @@ export async function detectVoiceActivity(
             const duration = audio.duration * 1000; // Convert to milliseconds
 
             resolve({
-              hasVoice: avgEnergy > (options.energyThreshold || 0.01),
               confidence: Math.min(1, avgEnergy / (options.energyThreshold || 0.01)),
               duration,
+              hasVoice: avgEnergy > (options.energyThreshold || 0.01),
             });
 
             audioContext.close();

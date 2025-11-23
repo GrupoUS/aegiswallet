@@ -17,15 +17,15 @@ export const transactionsRouter = router({
   getAll: protectedProcedure
     .input(
       z.object({
+        accountId: z.string().uuid().optional(),
+        categoryId: z.string().uuid().optional(),
+        endDate: z.string().datetime().optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().default(0),
-        categoryId: z.string().uuid().optional(),
-        accountId: z.string().uuid().optional(),
-        type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']).optional(),
-        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).optional(),
-        startDate: z.string().datetime().optional(),
-        endDate: z.string().datetime().optional(),
         search: z.string().optional(),
+        startDate: z.string().datetime().optional(),
+        status: z.enum(['pending', 'posted', 'failed', 'cancelled']).optional(),
+        type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -70,8 +70,8 @@ export const transactionsRouter = router({
 
         if (error) {
           logError('fetch_transactions', ctx.user.id, error, {
-            operation: 'getAll',
             filters: input,
+            operation: 'getAll',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -85,14 +85,14 @@ export const transactionsRouter = router({
         });
 
         return {
-          transactions: data || [],
-          totalCount: count || 0,
           hasMore: input.offset + input.limit < (count || 0),
+          totalCount: count || 0,
+          transactions: data || [],
         };
       } catch (error) {
         logError('fetch_transactions_unexpected', ctx.user.id, error as Error, {
-          operation: 'getAll',
           input,
+          operation: 'getAll',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -182,9 +182,9 @@ export const transactionsRouter = router({
 
         if (!fraudValidation.isValid) {
           logSecurityEvent('suspicious_transaction_blocked', ctx.user.id, {
-            transaction: input,
             reasons: fraudValidation.reasons,
             riskScore: fraudValidation.riskScore,
+            transaction: input,
           });
 
           throw new TRPCError({
@@ -219,8 +219,8 @@ export const transactionsRouter = router({
 
         logOperation('create_transaction_success', ctx.user.id, 'transactions', data.id, {
           amount: input.amount,
-          type: input.transaction_type,
           category: input.category_id,
+          type: input.transaction_type,
         });
 
         return data;
@@ -245,14 +245,14 @@ export const transactionsRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
         data: z.object({
-          description: z.string().optional(),
           amount: z.number().optional(),
           category_id: z.string().uuid().optional(),
+          description: z.string().optional(),
           notes: z.string().optional(),
           tags: z.array(z.string()).optional(),
         }),
+        id: z.string().uuid(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -394,8 +394,8 @@ export const transactionsRouter = router({
   getStatistics: protectedProcedure
     .input(
       z.object({
-        period: z.enum(['week', 'month', 'quarter', 'year']).default('month'),
         accountId: z.string().uuid().optional(),
+        period: z.enum(['week', 'month', 'quarter', 'year']).default('month'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -455,23 +455,23 @@ export const transactionsRouter = router({
         const balance = income - expenses;
 
         const statistics = {
-          period: input.period,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          income,
-          expenses,
-          balance,
-          transactionCount: transactions.length,
           averageTransaction:
             transactions.length > 0
               ? expenses /
                 transactions.filter((t) => ['debit', 'pix'].includes(t.transaction_type)).length
               : 0,
+          balance,
+          endDate: endDate.toISOString(),
+          expenses,
+          income,
+          period: input.period,
+          startDate: startDate.toISOString(),
+          transactionCount: transactions.length,
         };
 
         logOperation('fetch_transaction_statistics_success', ctx.user.id, 'transactions', null, {
-          period: input.period,
           balance,
+          period: input.period,
           transactionCount: transactions.length,
         });
 

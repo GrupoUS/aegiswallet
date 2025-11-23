@@ -69,19 +69,19 @@ export class SpeechRecognitionService {
 
   // Performance tracking
   private performanceMetrics = {
-    totalRecognitions: 0,
-    successfulRecognitions: 0,
-    averageResponseTime: 0,
     averageConfidence: 0,
+    averageResponseTime: 0,
     fallbackUsage: 0,
+    successfulRecognitions: 0,
+    totalRecognitions: 0,
   };
 
   // Brazilian Portuguese regional variants
   private readonly BRAZILIAN_VARIANTS = {
     'pt-BR': 'Português Brasileiro (Padrão)',
-    'pt-BR-SP': 'Português Paulista',
-    'pt-BR-RJ': 'Português Carioca',
     'pt-BR-NE': 'Português Nordestino',
+    'pt-BR-RJ': 'Português Carioca',
+    'pt-BR-SP': 'Português Paulista',
     'pt-BR-SUL': 'Português Sulista',
   };
 
@@ -101,9 +101,9 @@ export class SpeechRecognitionService {
 
     // Audio preprocessing configuration
     this.audioConfig = {
-      noiseReduction: true,
       autoGainControl: true,
       echoCancellation: true,
+      noiseReduction: true,
       sampleRate: 16000,
     };
 
@@ -258,19 +258,19 @@ export class SpeechRecognitionService {
     const alternatives: RecognitionAlternative[] = [];
     for (let i = 0; i < Math.min(result.length, this.config.maxAlternatives); i++) {
       alternatives.push({
-        transcript: result[i].transcript,
         confidence: result[i].confidence || 0,
+        transcript: result[i].transcript,
       });
     }
 
     return {
-      transcript: result[0].transcript,
-      confidence: result[0].confidence || 0,
       alternatives,
+      audioDuration: processingTime,
+      confidence: result[0].confidence || 0,
       isFinal: result.isFinal,
       processingTime,
       provider: 'web-speech',
-      audioDuration: processingTime, // Approximate
+      transcript: result[0].transcript, // Approximate
     };
   }
 
@@ -281,12 +281,13 @@ export class SpeechRecognitionService {
     event: SpeechRecognitionErrorEvent
   ): SpeechRecognitionError {
     const errorMap: Record<string, { isRetryable: boolean; message: string }> = {
-      network: { isRetryable: true, message: 'Network error. Please check your connection.' },
-      'no-speech': { isRetryable: false, message: 'No speech detected. Please try again.' },
+      aborted: { isRetryable: true, message: 'Recognition was aborted.' },
       'audio-capture': {
         isRetryable: true,
         message: 'Audio capture error. Please check microphone permissions.',
       },
+      network: { isRetryable: true, message: 'Network error. Please check your connection.' },
+      'no-speech': { isRetryable: false, message: 'No speech detected. Please try again.' },
       'not-allowed': {
         isRetryable: false,
         message: 'Microphone access denied. Please enable microphone permissions.',
@@ -295,7 +296,6 @@ export class SpeechRecognitionService {
         isRetryable: true,
         message: 'Speech recognition service not available.',
       },
-      aborted: { isRetryable: true, message: 'Recognition was aborted.' },
     };
 
     const errorInfo = errorMap[event.error] || {
@@ -304,10 +304,10 @@ export class SpeechRecognitionService {
     };
 
     return {
-      error: event.error,
-      message: errorInfo.message,
       code: event.errorCode,
+      error: event.error,
       isRetryable: errorInfo.isRetryable,
+      message: errorInfo.message,
       provider: 'web-speech',
     };
   }
@@ -331,9 +331,9 @@ export class SpeechRecognitionService {
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          noiseSuppression: this.audioConfig.noiseReduction,
           autoGainControl: this.audioConfig.autoGainControl,
           echoCancellation: this.audioConfig.echoCancellation,
+          noiseSuppression: this.audioConfig.noiseReduction,
           sampleRate: this.audioConfig.sampleRate,
         },
       });
@@ -370,8 +370,8 @@ export class SpeechRecognitionService {
           } catch (error) {
             const speechError: SpeechRecognitionError = {
               error: 'cloud-fallback-error',
-              message: error instanceof Error ? error.message : 'Cloud recognition failed',
               isRetryable: false,
+              message: error instanceof Error ? error.message : 'Cloud recognition failed',
               provider: 'cloud-fallback',
             };
             options.onError?.(speechError);
@@ -413,7 +413,7 @@ export class SpeechRecognitionService {
         });
       });
     } catch (error) {
-      throw new Error(`Cloud fallback failed: ${error}`);
+      throw new Error(`Cloud fallback failed: ${error}`, { cause: error });
     }
   }
 
@@ -518,11 +518,11 @@ export class SpeechRecognitionService {
 
     const grammar = `
       #JSGF V1.0;
-      
+
       grammar financialCommands;
-      
+
       public <command> = <balance> | <transfer> | <payment> | <statement> | <investment> | <help>;
-      
+
       <balance> = saldo | quanto tenho | ver saldo | consultar saldo;
       <transfer> = transferir | enviar dinheiro | fazer transferência | pix;
       <payment> = pagar conta | fazer pagamento | pagar boleto;
@@ -571,11 +571,11 @@ export class SpeechRecognitionService {
    */
   resetMetrics(): void {
     this.performanceMetrics = {
-      totalRecognitions: 0,
-      successfulRecognitions: 0,
-      averageResponseTime: 0,
       averageConfidence: 0,
+      averageResponseTime: 0,
       fallbackUsage: 0,
+      successfulRecognitions: 0,
+      totalRecognitions: 0,
     };
   }
 }
@@ -586,9 +586,9 @@ export class SpeechRecognitionService {
 
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-    SpeechGrammarList: any;
+    SpeechRecognition: unknown;
+    webkitSpeechRecognition: unknown;
+    SpeechGrammarList: unknown;
   }
 }
 
@@ -626,13 +626,13 @@ export async function recognizeCommand(
     const sttResult = await sttService.transcribe(audioBlob);
 
     return {
-      transcript: sttResult.text,
-      confidence: sttResult.confidence,
       alternatives: [],
+      audioDuration: sttResult.duration,
+      confidence: sttResult.confidence,
       isFinal: true,
       processingTime: sttResult.processingTimeMs,
       provider: 'cloud-fallback',
-      audioDuration: sttResult.duration,
+      transcript: sttResult.text,
     };
   }
   // Use real-time recognition

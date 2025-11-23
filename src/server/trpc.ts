@@ -1,7 +1,8 @@
 import { initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from '@/server/context';
-import { type Meta, router } from '@/server/trpc-helpers';
+import type { Meta } from '@/server/trpc-helpers';
+import { router } from '@/server/trpc-helpers';
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,

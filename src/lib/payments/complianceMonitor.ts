@@ -21,14 +21,14 @@ export class ComplianceMonitor {
     if (params.amount > 10000) {
       alerts.push({
         id: `alert_${Date.now()}`,
-        type: 'limit_exceeded',
-        severity: 'high',
         message: 'Transaction exceeds daily limit',
+        severity: 'high',
         timestamp: new Date(),
+        type: 'limit_exceeded',
       });
     }
 
-    return { approved: alerts.length === 0, alerts };
+    return { alerts, approved: alerts.length === 0 };
   }
 
   async logFailure(_paymentId: string, _reason: string): Promise<void> {

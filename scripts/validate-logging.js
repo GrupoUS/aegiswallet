@@ -100,9 +100,9 @@ function validateConsoleReplacement() {
 function validateEnvironmentConfig() {
   // Check if logger configuration is properly set up
   const mockConfig = {
-    level: 'debug',
     enableConsole: true,
     enableRemote: false,
+    level: 'debug',
     sanitizeData: false,
   };
 
@@ -127,19 +127,21 @@ function validateEnvironmentConfig() {
 function validateDataSanitization() {
   // Mock sensitive data
   const sensitiveData = {
-    email: 'user@example.com',
-    password: 'secret123',
-    token: 'abc123xyz',
+    accountNumber: '12345-6',
     balance: 1500.5,
     cpf: '123.456.789-00',
-    accountNumber: '12345-6',
-    secretKey: 'hidden_value',
+    email: 'user@example.com',
     normalField: 'visible_value',
+    password: 'secret123',
+    secretKey: 'hidden_value',
+    token: 'abc123xyz',
   };
 
   // Mock sanitization function (simplified version)
   function sanitizeForProduction(data) {
-    if (typeof data !== 'object' || data === null) return data;
+    if (typeof data !== 'object' || data === null) {
+      return data;
+    }
 
     const sensitiveKeys = [
       'password',
@@ -196,24 +198,24 @@ function validateDataSanitization() {
 function validateHookIntegration() {
   // Mock React hook functionality
   const mockLogger = {
-    debug: (message, context) => ({ level: 'debug', message, context }),
-    info: (message, context) => ({ level: 'info', message, context }),
-    warn: (message, context) => ({ level: 'warn', message, context }),
-    error: (message, context) => ({ level: 'error', message, context }),
+    debug: (message, context) => ({ context, level: 'debug', message }),
+    error: (message, context) => ({ context, level: 'error', message }),
+    info: (message, context) => ({ context, level: 'info', message }),
     userAction: (action, component, context) => ({
-      level: 'info',
-      message: 'User action',
       action,
       component,
       context,
+      level: 'info',
+      message: 'User action',
     }),
     voiceCommand: (command, confidence, context) => ({
-      level: 'info',
-      message: 'Voice command processed',
       command,
       confidence,
       context,
+      level: 'info',
+      message: 'Voice command processed',
     }),
+    warn: (message, context) => ({ context, level: 'warn', message }),
   };
 
   // Test specialized logger functions
@@ -240,10 +242,10 @@ function validatePerformance() {
   for (let i = 0; i < 1000; i++) {
     // Mock logging operation
     const logEntry = {
+      context: { index: i },
       level: 'info',
       message: `Test message ${i}`,
       timestamp: new Date().toISOString(),
-      context: { index: i },
     };
 
     // Simulate log processing

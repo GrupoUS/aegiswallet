@@ -10,7 +10,7 @@ import { IntentType } from '@/lib/nlu/types';
 export interface ProcessedCommand {
   type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   requiresConfirmation?: boolean;
   confidence?: number;
 }
@@ -21,8 +21,8 @@ const CONFIDENCE_THRESHOLD = 0.7;
 // Essential voice commands patterns for Brazilian Portuguese
 const COMMAND_PATTERNS = {
   balance: [/como está meu saldo/i, /qual meu saldo/i, /saldo atual/i, /quanto tenho/i],
-  budget: [/quanto posso gastar/i, /orçamento disponível/i, /quanto resta/i, /limite de gastos/i],
   bills: [/boleto.*pagar/i, /contas.*pagar/i, /pagamentos pendentes/i, /próximos vencimentos/i],
+  budget: [/quanto posso gastar/i, /orçamento disponível/i, /quanto resta/i, /limite de gastos/i],
   incoming: [
     /recebimento.*entrar/i,
     /dinheiro.*entrar/i,
@@ -49,9 +49,9 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
     } = await supabase.auth.getUser();
     if (!user) {
       return {
-        type: 'error',
-        message: 'Você precisa estar logado para usar comandos de voz.',
         confidence: 0,
+        message: 'Você precisa estar logado para usar comandos de voz.',
+        type: 'error',
       };
     }
 
@@ -61,9 +61,9 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
     // Check confidence threshold
     if (nluResult.confidence < CONFIDENCE_THRESHOLD) {
       return {
-        type: 'error',
-        message: 'Não entendi bem. Poderia repetir mais claramente?',
         confidence: nluResult.confidence,
+        message: 'Não entendi bem. Poderia repetir mais claramente?',
+        type: 'error',
       };
     }
 
@@ -89,9 +89,9 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
 
       default:
         return {
-          type: 'error',
-          message: 'Comando não reconhecido. Tente: "Qual é meu saldo?" ou "Quanto posso gastar?"',
           confidence: nluResult.confidence,
+          message: 'Comando não reconhecido. Tente: "Qual é meu saldo?" ou "Quanto posso gastar?"',
+          type: 'error',
         };
     }
   } catch (error) {
@@ -102,9 +102,9 @@ export async function processVoiceCommandWithNLU(transcript: string): Promise<Pr
       component: 'VoiceCommandProcessor',
     });
     return {
-      type: 'error',
-      message: 'Erro ao processar comando. Tente novamente.',
       confidence: 0,
+      message: 'Erro ao processar comando. Tente novamente.',
+      type: 'error',
     };
   }
 }
@@ -119,9 +119,9 @@ export async function processVoiceCommand(
   // Check confidence threshold
   if (confidence < CONFIDENCE_THRESHOLD) {
     return {
-      type: 'error',
-      message: 'Não entendi bem. Poderia repetir mais claramente?',
       confidence,
+      message: 'Não entendi bem. Poderia repetir mais claramente?',
+      type: 'error',
     };
   }
 
@@ -130,9 +130,9 @@ export async function processVoiceCommand(
   } = await supabase.auth.getUser();
   if (!user) {
     return {
-      type: 'error',
-      message: 'Você precisa estar logado.',
       confidence,
+      message: 'Você precisa estar logado.',
+      type: 'error',
     };
   }
 
@@ -160,9 +160,9 @@ export async function processVoiceCommand(
 
     default:
       return {
-        type: 'error',
-        message: 'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
         confidence,
+        message: 'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
+        type: 'error',
       };
   }
 }
@@ -182,23 +182,23 @@ async function handleBalanceCommand(userId: string, confidence: number): Promise
     const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
     return {
-      type: 'balance',
-      message: `Seu saldo total é de R$ ${totalBalance.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      data: {
-        totalBalance,
-        accounts,
-      },
       confidence,
+      data: {
+        accounts,
+        totalBalance,
+      },
+      message: `Seu saldo total é de R$ ${totalBalance.toLocaleString('pt-BR', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+      })}`,
+      type: 'balance',
     };
   } catch (error) {
     logger.error('Error fetching balance', { error });
     return {
-      type: 'error',
-      message: 'Não foi possível consultar seu saldo no momento.',
       confidence,
+      message: 'Não foi possível consultar seu saldo no momento.',
+      type: 'error',
     };
   }
 }
@@ -215,20 +215,16 @@ async function handleBudgetCommand(userId: string, confidence: number): Promise<
     .from('financial_events')
     .select('*')
     .eq('user_id', userId)
-    .gte('start_date', startOfMonth.toISOString())
-    .lt('start_date', endOfMonth.toISOString());
+    .gte('start_date', startOfMonth.toISOString().split('T')[0])
+    .lt('start_date', endOfMonth.toISOString().split('T')[0]);
 
   if (error) {
-    return { type: 'error', message: 'Erro ao consultar orçamento.', confidence };
+    return { confidence, message: 'Erro ao consultar orçamento.', type: 'error' };
   }
 
-  const income = events
-    .filter((e) => e.event_type === 'income')
-    .reduce((sum, e) => sum + Number(e.amount), 0);
+  const income = events.filter((e) => e.is_income).reduce((sum, e) => sum + Number(e.amount), 0);
 
-  const expenses = events
-    .filter((e) => e.event_type === 'expense' || e.event_type === 'bill')
-    .reduce((sum, e) => sum + Number(e.amount), 0);
+  const expenses = events.filter((e) => !e.is_income).reduce((sum, e) => sum + Number(e.amount), 0);
 
   const available = income - expenses; // Very simple budget logic
   const total = income > 0 ? income : 5000; // Fallback budget if no income recorded? Or just 0.
@@ -246,16 +242,16 @@ async function handleBudgetCommand(userId: string, confidence: number): Promise<
   }
 
   return {
-    type: 'budget',
-    message,
+    confidence,
     data: {
       available,
+      categories: {},
       spent: expenses,
-      total,
       spentPercentage,
-      categories: {}, // We'd need to aggregate categories
+      total, // We'd need to aggregate categories
     },
-    confidence,
+    message,
+    type: 'budget',
   };
 }
 
@@ -267,10 +263,10 @@ async function handleBillsCommand(userId: string, confidence: number): Promise<P
     .eq('user_id', userId)
     .eq('status', 'pending')
     .in('event_type', ['bill', 'expense']) // expenses marked as pending are essentially bills?
-    .gte('start_date', now.toISOString());
+    .gte('start_date', now.toISOString().split('T')[0]);
 
   if (error) {
-    return { type: 'error', message: 'Erro ao consultar contas.', confidence };
+    return { confidence, message: 'Erro ao consultar contas.', type: 'error' };
   }
 
   const upcomingBills = bills.filter((bill) => {
@@ -289,22 +285,22 @@ async function handleBillsCommand(userId: string, confidence: number): Promise<P
   }
 
   return {
-    type: 'bills',
-    message,
+    confidence,
     data: {
       bills: upcomingBills
         .map((b) => ({
-          id: b.id,
-          name: b.title,
           amount: Number(b.amount),
           dueDate: new Date(b.due_date || b.start_date),
+          id: b.id,
+          name: b.title,
           status: b.status,
         }))
         .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()),
-      totalPending: bills.length,
       totalAmount: bills.reduce((sum, bill) => sum + Number(bill.amount), 0),
+      totalPending: bills.length,
     },
-    confidence,
+    message,
+    type: 'bills',
   };
 }
 
@@ -320,10 +316,10 @@ async function handleIncomingCommand(
     .select('*')
     .eq('user_id', userId)
     .eq('event_type', 'income')
-    .gte('start_date', now.toISOString());
+    .gte('start_date', now.toISOString().split('T')[0]);
 
   if (error) {
-    return { type: 'error', message: 'Erro ao consultar recebimentos.', confidence };
+    return { confidence, message: 'Erro ao consultar recebimentos.', type: 'error' };
   }
 
   const upcomingIncoming = income.filter(
@@ -340,21 +336,21 @@ async function handleIncomingCommand(
   }
 
   return {
-    type: 'incoming',
-    message,
+    confidence,
     data: {
       incoming: upcomingIncoming
         .map((i) => ({
-          id: i.id,
-          source: i.title,
           amount: Number(i.amount),
           expectedDate: new Date(i.start_date),
+          id: i.id,
+          source: i.title,
           type: i.category,
         }))
         .sort((a, b) => a.expectedDate.getTime() - b.expectedDate.getTime()),
       totalExpected: upcomingIncoming.reduce((sum, item) => sum + Number(item.amount), 0),
     },
-    confidence,
+    message,
+    type: 'incoming',
   };
 }
 
@@ -382,7 +378,7 @@ async function handleProjectionCommand(
     .select('amount')
     .eq('user_id', userId)
     .eq('event_type', 'income')
-    .gte('start_date', new Date().toISOString());
+    .gte('start_date', new Date().toISOString().split('T')[0]);
 
   const expectedIncoming = (income || []).reduce((sum, item) => sum + Number(item.amount), 0);
 
@@ -399,16 +395,16 @@ async function handleProjectionCommand(
   }
 
   return {
-    type: 'projection',
-    message,
+    confidence,
     data: {
       currentBalance,
+      expectedIncoming,
+      pendingBills,
       projectedBalance,
       variation,
-      pendingBills,
-      expectedIncoming,
     },
-    confidence,
+    message,
+    type: 'projection',
   };
 }
 
@@ -425,15 +421,15 @@ async function handleTransferCommand(
 
   if (!recipient) {
     return {
-      type: 'error',
       message: 'Para quem você gostaria de transferir?',
+      type: 'error',
     };
   }
 
   if (!amount) {
     return {
-      type: 'error',
       message: 'Qual valor você gostaria de transferir?',
+      type: 'error',
     };
   }
 
@@ -442,46 +438,36 @@ async function handleTransferCommand(
 
   if (amount > currentBalance) {
     return {
-      type: 'error',
       message: 'Saldo insuficiente para esta transferência.',
+      type: 'error',
     };
   }
 
   return {
-    type: 'transfer',
-    message: `Transferência de ${formatCurrency(amount)} para ${recipient}`,
+    confidence,
     data: {
-      recipient,
       amount,
-      method: 'PIX',
       estimatedTime: 'Instantâneo',
+      method: 'PIX',
+      recipient,
       requiresConfirmation: true,
     },
-    confidence,
+    message: `Transferência de ${formatCurrency(amount)} para ${recipient}`,
     requiresConfirmation: true,
+    type: 'transfer',
   };
 }
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
     currency: 'BRL',
+    style: 'currency',
   }).format(amount);
 }
 
 // Brazilian financial utilities
 export const brazilianFinancialUtils = {
   formatCurrency,
-  isValidCPF: (cpf: string) => {
-    // Basic CPF validation
-    const cleanedCPF = cpf.replace(/[^\d]/g, '');
-    return cleanedCPF.length === 11;
-  },
-  isValidCNPJ: (cnpj: string) => {
-    // Basic CNPJ validation
-    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
-    return cleanedCNPJ.length === 14;
-  },
   formatPhone: (phone: string) => {
     // Format Brazilian phone number
     const cleaned = phone.replace(/[^\d]/g, '');
@@ -489,5 +475,15 @@ export const brazilianFinancialUtils = {
       return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
     }
     return phone;
+  },
+  isValidCNPJ: (cnpj: string) => {
+    // Basic CNPJ validation
+    const cleanedCNPJ = cnpj.replace(/[^\d]/g, '');
+    return cleanedCNPJ.length === 14;
+  },
+  isValidCPF: (cpf: string) => {
+    // Basic CPF validation
+    const cleanedCPF = cpf.replace(/[^\d]/g, '');
+    return cleanedCPF.length === 11;
   },
 };

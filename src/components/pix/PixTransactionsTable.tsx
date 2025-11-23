@@ -42,32 +42,32 @@ const getStatusIcon = React.memo(function getStatusIcon(status: PixTransaction['
 
 const getStatusBadge = React.memo(function getStatusBadge(status: PixTransaction['status']) {
   const config = {
-    completed: {
-      variant: 'default' as const,
-      label: 'Concluída',
-      className: 'bg-success/10 text-success border-success/20',
+    cancelled: {
+      className:
+        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
+      label: 'Cancelada',
+      variant: 'outline' as const,
     },
-    processing: {
-      variant: 'secondary' as const,
-      label: 'Processando',
-      className: 'bg-warning/10 text-warning border-warning/20',
+    completed: {
+      className: 'bg-success/10 text-success border-success/20',
+      label: 'Concluída',
+      variant: 'default' as const,
     },
     failed: {
-      variant: 'destructive' as const,
-      label: 'Falhou',
       className: 'bg-destructive/10 text-destructive border-destructive/20',
+      label: 'Falhou',
+      variant: 'destructive' as const,
     },
     pending: {
-      variant: 'outline' as const,
+      className:
+        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
       label: 'Pendente',
-      className:
-        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
-    },
-    cancelled: {
       variant: 'outline' as const,
-      label: 'Cancelada',
-      className:
-        'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400 border-gray-200 dark:border-gray-800',
+    },
+    processing: {
+      className: 'bg-warning/10 text-warning border-warning/20',
+      label: 'Processando',
+      variant: 'secondary' as const,
     },
   };
 
@@ -85,8 +85,12 @@ export const PixTransactionsTable = React.memo(function PixTransactionsTable() {
   const { transactions, isLoading } = usePixTransactions();
 
   const filteredTransactions = useMemo(() => {
-    if (!transactions) return [];
-    if (!searchTerm.trim()) return transactions;
+    if (!transactions) {
+      return [];
+    }
+    if (!searchTerm.trim()) {
+      return transactions;
+    }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
     return transactions.filter(
@@ -184,9 +188,9 @@ const TransactionRow = React.memo(function TransactionRow({
   const formattedDate = useMemo(() => {
     return new Date(transaction.createdAt).toLocaleDateString('pt-BR', {
       day: '2-digit',
-      month: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      month: '2-digit',
     });
   }, [transaction.createdAt]);
 

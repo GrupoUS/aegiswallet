@@ -113,10 +113,10 @@ declare global {
 // Voice command patterns in Portuguese
 export const VOICE_COMMANDS = {
   BALANCE: ['qual é meu saldo', 'mostrar saldo', 'ver saldo', 'saldo'],
-  BUDGET: ['como está meu orçamento', 'ver orçamento', 'orçamento', 'gastos'],
   BILLS: ['quais contas tenho que pagar', 'contas a pagar', 'contas', 'pagamentos'],
-  PIX: ['fazer um pix', 'transferir', 'enviar dinheiro', 'pix'],
+  BUDGET: ['como está meu orçamento', 'ver orçamento', 'orçamento', 'gastos'],
   DASHBOARD: ['ir para dashboard', 'dashboard', 'início', 'home'],
+  PIX: ['fazer um pix', 'transferir', 'enviar dinheiro', 'pix'],
   TRANSACTIONS: ['ver transações', 'transações', 'histórico'],
 } as const;
 
@@ -158,8 +158,8 @@ class VoiceService {
   private initializeRecognition() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       logger.warn('Speech Recognition API not supported in this browser', {
-        userAgent: navigator.userAgent,
         feature: 'webkitSpeechRecognition|SpeechRecognition',
+        userAgent: navigator.userAgent,
       });
       return;
     }
@@ -180,8 +180,8 @@ class VoiceService {
       this.synthesis = window.speechSynthesis;
     } else {
       logger.warn('Speech Synthesis API not supported in this browser', {
-        userAgent: navigator.userAgent,
         feature: 'speechSynthesis',
+        userAgent: navigator.userAgent,
       });
     }
   }
@@ -200,8 +200,8 @@ class VoiceService {
 
     if (this.isListening) {
       logger.warn('Already listening to voice commands', {
-        component: 'VoiceService',
         action: 'startListening',
+        component: 'VoiceService',
       });
       return;
     }
@@ -214,19 +214,19 @@ class VoiceService {
       const command = this.detectCommand(transcript);
 
       onResult({
-        transcript,
-        confidence,
         command,
+        confidence,
         intent: command ? this.getCommandIntent(command) : undefined,
+        transcript,
       });
     };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       logger.voiceError(`Speech recognition error: ${event.error}`, {
+        action: 'recognition',
+        component: 'VoiceService',
         error: event.error,
         errorMessage: event.message,
-        component: 'VoiceService',
-        action: 'recognition',
       });
       this.isListening = false;
       onError?.(new Error(`Speech recognition error: ${event.error}`));
@@ -240,16 +240,16 @@ class VoiceService {
       this.recognition.start();
       this.isListening = true;
       logger.voiceCommand('Voice recognition started', 1.0, {
-        component: 'VoiceService',
         action: 'startListening',
-        language: this.config.language,
+        component: 'VoiceService',
         continuous: this.config.continuous,
+        language: this.config.language,
       });
     } catch (error) {
       logger.voiceError('Error starting recognition', {
-        error: error instanceof Error ? error.message : String(error),
-        component: 'VoiceService',
         action: 'startRecognition',
+        component: 'VoiceService',
+        error: error instanceof Error ? error.message : String(error),
       });
       onError?.(error as Error);
     }
@@ -285,10 +285,10 @@ class VoiceService {
   private getCommandIntent(command: VoiceCommandType): string {
     const intentMap: Record<VoiceCommandType, string> = {
       BALANCE: '/saldo',
-      BUDGET: '/orcamento',
       BILLS: '/contas',
-      PIX: '/pix',
+      BUDGET: '/orcamento',
       DASHBOARD: '/dashboard',
+      PIX: '/pix',
       TRANSACTIONS: '/transactions',
     };
     return intentMap[command];
@@ -357,7 +357,9 @@ class VoiceService {
    * Get available voices
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
-    if (!this.synthesis) return [];
+    if (!this.synthesis) {
+      return [];
+    }
     return this.synthesis.getVoices();
   }
 
@@ -386,15 +388,15 @@ export function getVoiceService(config?: VoiceServiceConfig): VoiceService {
  * Voice feedback messages in Portuguese
  */
 export const VOICE_FEEDBACK = {
-  LISTENING: 'Estou ouvindo...',
-  PROCESSING: 'Processando comando...',
-  NAVIGATING: (destination: string) => `Navegando para ${destination}`,
-  ERROR: 'Desculpe, não entendi o comando',
-  NOT_SUPPORTED: 'Reconhecimento de voz não suportado neste navegador',
   BALANCE_RESPONSE: (amount: number) =>
-    `Seu saldo total é ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}`,
+    `Seu saldo total é ${new Intl.NumberFormat('pt-BR', { currency: 'BRL', style: 'currency' }).format(amount)}`,
   BILLS_RESPONSE: (count: number) => `Você tem ${count} contas pendentes`,
   BUDGET_RESPONSE: (percentage: number) => `Você utilizou ${percentage}% do seu orçamento mensal`,
+  ERROR: 'Desculpe, não entendi o comando',
+  LISTENING: 'Estou ouvindo...',
+  NAVIGATING: (destination: string) => `Navegando para ${destination}`,
+  NOT_SUPPORTED: 'Reconhecimento de voz não suportado neste navegador',
+  PROCESSING: 'Processando comando...',
 } as const;
 
 export default VoiceService;

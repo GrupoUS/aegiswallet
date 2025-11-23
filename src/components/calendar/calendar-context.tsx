@@ -4,7 +4,8 @@
  */
 
 import { addDays, addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns';
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type {
   CalendarCategory,
   CalendarFilter,
@@ -72,11 +73,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<CalendarFilter>({});
   const [settings, setSettings] = useState<CalendarSettings>({
     defaultView: 'week',
-    weekStartsOn: 0,
+    showWeekNumbers: false,
+    showWeekends: true,
     timeFormat: '24h',
     timezone: 'America/Sao_Paulo',
-    showWeekends: true,
-    showWeekNumbers: false,
+    weekStartsOn: 0,
   });
 
   // Initialize with Supabase data only - no mock data fallback
@@ -226,7 +227,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   // Search function
   const searchEvents = useCallback(
     (query: string): FinancialEvent[] => {
-      if (!query.trim()) return localEvents;
+      if (!query.trim()) {
+        return localEvents;
+      }
 
       const searchLower = query.toLowerCase();
       return localEvents.filter(
@@ -270,28 +273,28 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value: CalendarContextType = {
-    currentDate,
-    setCurrentDate,
-    currentView,
-    setCurrentView,
-    events: localEvents,
-    categories,
-    filters,
-    setFilters: setFiltersCallback,
-    settings,
-    updateSettings,
     addEvent,
-    updateEvent,
+    categories,
+    currentDate,
+    currentView,
     deleteEvent,
+    events: localEvents,
+    filters,
     getEventsForDate,
     getEventsForMonth,
     getFilteredEvents,
-    visibleColors,
-    toggleColorVisibility,
-    isColorVisible,
-    searchEvents,
     goToToday,
+    isColorVisible,
     navigateDate,
+    searchEvents,
+    setCurrentDate,
+    setCurrentView,
+    setFilters: setFiltersCallback,
+    settings,
+    toggleColorVisibility,
+    updateEvent,
+    updateSettings,
+    visibleColors,
   };
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>;

@@ -59,12 +59,12 @@ export interface NLUContext {
     name?: string;
     preferences?: Record<string, unknown>;
   };
-  conversationHistory: Array<{
+  conversationHistory: {
     timestamp: string;
     userMessage: string;
     systemResponse: string;
     intent?: NLUIntent;
-  }>;
+  }[];
 }
 
 export interface PatternEvolution {
@@ -79,21 +79,21 @@ export interface UserAdaptation {
   userId: string;
   patterns: Record<string, number>;
   preferences: Record<string, unknown>;
-  adaptationHistory: Array<{
+  adaptationHistory: {
     timestamp: string;
     pattern: string;
     outcome: 'success' | 'failure';
     confidence: number;
-  }>;
+  }[];
 }
 
 export interface NLUResponse {
   intent: NLUIntent;
   response: string;
-  actions: Array<{
+  actions: {
     type: string;
     parameters: Record<string, unknown>;
-  }>;
+  }[];
   followUpQuestions?: string[];
   confidence: number;
 }

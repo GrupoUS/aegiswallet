@@ -51,14 +51,14 @@ export interface ICache {
 export class MemoryCache implements ICache {
   private cache = new Map<string, CacheEntry>();
   private stats: CacheStats = {
-    hits: 0,
-    misses: 0,
-    sets: 0,
     deletes: 0,
     evictions: 0,
     hitRate: 0,
-    size: 0,
+    hits: 0,
     memoryUsage: 0,
+    misses: 0,
+    sets: 0,
+    size: 0,
   };
   private cleanupInterval: NodeJS.Timeout;
   private maxEntries: number;
@@ -102,10 +102,10 @@ export class MemoryCache implements ICache {
     const expiresAt = now + ttl;
 
     const entry: CacheEntry<T> = {
+      accessCount: 0,
+      createdAt: now,
       data: value,
       expiresAt,
-      createdAt: now,
-      accessCount: 0,
       lastAccessed: now,
       tags: options.tags,
     };
@@ -132,20 +132,22 @@ export class MemoryCache implements ICache {
   async clear(): Promise<void> {
     this.cache.clear();
     this.stats = {
-      hits: 0,
-      misses: 0,
-      sets: 0,
       deletes: 0,
       evictions: 0,
       hitRate: 0,
-      size: 0,
+      hits: 0,
       memoryUsage: 0,
+      misses: 0,
+      sets: 0,
+      size: 0,
     };
   }
 
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
-    if (!entry) return false;
+    if (!entry) {
+      return false;
+    }
 
     // Check if expired
     if (Date.now() > entry.expiresAt) {
@@ -159,7 +161,9 @@ export class MemoryCache implements ICache {
   async keys(pattern?: string): Promise<string[]> {
     const allKeys = Array.from(this.cache.keys());
 
-    if (!pattern) return allKeys;
+    if (!pattern) {
+      return allKeys;
+    }
 
     const regex = new RegExp(pattern.replace(/\*/g, '.*'));
     return allKeys.filter((key) => regex.test(key));
@@ -167,7 +171,9 @@ export class MemoryCache implements ICache {
 
   async getEntry<T>(key: string): Promise<CacheEntry<T> | null> {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+      return null;
+    }
 
     // Check if expired
     if (Date.now() > entry.expiresAt) {
@@ -419,7 +425,7 @@ export function cached<T extends (...args: unknown[]) => Promise<unknown>>(
   return (_target: object, propertyName: string, descriptor: PropertyDescriptor) => {
     const method = descriptor.value;
 
-    descriptor.value = async function (...args: Parameters<T>) {
+    descriptor.value = async function value(...args: Parameters<T>) {
       const keyGenerator =
         options.keyGenerator ||
         ((...args: Parameters<T>) => {
@@ -432,8 +438,8 @@ export function cached<T extends (...args: unknown[]) => Promise<unknown>>(
         key,
         () => method.apply(this, args),
         {
-          ttl: options.ttl,
           tags: options.tags,
+          ttl: options.ttl,
         },
         options.cacheName
       );

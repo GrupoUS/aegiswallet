@@ -16,12 +16,12 @@ describe('Entity Extractor', () => {
 
   describe('Amount Extraction', () => {
     const amountTests = [
-      { text: 'transferir 100 reais', expected: 100 },
-      { text: 'pagar R$ 250,50', expected: 250.5 },
-      { text: 'enviar cinquenta reais', expected: 50 },
-      { text: 'mandar cem reais', expected: 100 },
-      { text: 'transferir 1000', expected: 1000 },
-      { text: 'pagar 99,99 reais', expected: 99.99 },
+      { expected: 100, text: 'transferir 100 reais' },
+      { expected: 250.5, text: 'pagar R$ 250,50' },
+      { expected: 50, text: 'enviar cinquenta reais' },
+      { expected: 100, text: 'mandar cem reais' },
+      { expected: 1000, text: 'transferir 1000' },
+      { expected: 99.99, text: 'pagar 99,99 reais' },
     ];
 
     amountTests.forEach(({ text, expected }) => {
@@ -66,10 +66,10 @@ describe('Entity Extractor', () => {
 
   describe('Person/Recipient Extraction', () => {
     const nameTests = [
-      { text: 'transferir para João', expected: 'João' },
-      { text: 'enviar para Maria Silva', expected: 'Maria Silva' },
-      { text: 'pagar para minha mãe', expected: 'minha mãe' },
-      { text: 'PIX para o Pedro', expected: 'Pedro' },
+      { expected: 'João', text: 'transferir para João' },
+      { expected: 'Maria Silva', text: 'enviar para Maria Silva' },
+      { expected: 'minha mãe', text: 'pagar para minha mãe' },
+      { expected: 'Pedro', text: 'PIX para o Pedro' },
     ];
 
     nameTests.forEach(({ text }) => {
@@ -88,12 +88,12 @@ describe('Entity Extractor', () => {
 
   describe('Category Extraction', () => {
     const categoryTests = [
-      { text: 'pagar conta de energia', expected: 'energia' },
-      { text: 'boleto da água', expected: 'água' },
-      { text: 'conta de internet', expected: 'internet' },
-      { text: 'pagar luz', expected: 'luz' },
-      { text: 'boleto do gás', expected: 'gás' },
-      { text: 'conta de telefone', expected: 'telefone' },
+      { expected: 'energia', text: 'pagar conta de energia' },
+      { expected: 'água', text: 'boleto da água' },
+      { expected: 'internet', text: 'conta de internet' },
+      { expected: 'luz', text: 'pagar luz' },
+      { expected: 'gás', text: 'boleto do gás' },
+      { expected: 'telefone', text: 'conta de telefone' },
     ];
 
     categoryTests.forEach(({ text, expected }) => {
@@ -188,9 +188,9 @@ describe('Entity Extractor', () => {
 
     it('should normalize currency formats', () => {
       const testCases = [
-        { text: 'R$ 100', expected: 100 },
-        { text: '100 reais', expected: 100 },
-        { text: '100,50', expected: 100.5 },
+        { expected: 100, text: 'R$ 100' },
+        { expected: 100, text: '100 reais' },
+        { expected: 100.5, text: '100,50' },
       ];
 
       testCases.forEach(({ text, expected }) => {

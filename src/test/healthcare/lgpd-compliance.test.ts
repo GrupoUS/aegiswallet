@@ -9,83 +9,7 @@ import type { TestUtils } from '../healthcare-setup';
 import '../healthcare-setup';
 
 // Mock healthcare components (these would be your actual components)
-const PatientForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
-  const [consent, setConsent] = React.useState(false);
-  const [formData, setFormData] = React.useState({
-    name: '',
-    email: '',
-    phone: '',
-    cpf: '',
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!consent) return;
-
-    onSubmit({
-      ...formData,
-      lgpdConsent: (global.testUtils as TestUtils).createMockLGPDConsent(),
-      // Mask sensitive data automatically
-      cpf: formData.cpf.replace(/(\d{3})\d{3}(\d{3})\d{2}$/, '$1.***.$2-**'),
-      phone: formData.phone.replace(/(\d{2})(\d{1})\d{4}(\d{4})$/, '$1$2****$3'),
-    });
-  };
-
-  return React.createElement('form', { onSubmit: handleSubmit }, [
-    React.createElement('input', {
-      key: 'name',
-      type: 'text',
-      placeholder: 'Nome completo',
-      'data-testid': 'patient-name',
-      value: formData.name,
-      onChange: (e) => setFormData({ ...formData, name: e.target.value }),
-    }),
-    React.createElement('input', {
-      key: 'email',
-      type: 'email',
-      placeholder: 'Email',
-      'data-testid': 'patient-email',
-      value: formData.email,
-      onChange: (e) => setFormData({ ...formData, email: e.target.value }),
-    }),
-    React.createElement('input', {
-      key: 'phone',
-      type: 'tel',
-      placeholder: 'Telefone',
-      'data-testid': 'patient-phone',
-      value: formData.phone,
-      onChange: (e) => setFormData({ ...formData, phone: e.target.value }),
-    }),
-    React.createElement('input', {
-      key: 'cpf',
-      type: 'text',
-      placeholder: 'CPF',
-      'data-testid': 'patient-cpf',
-      value: formData.cpf,
-      onChange: (e) => setFormData({ ...formData, cpf: e.target.value }),
-    }),
-    React.createElement('label', { key: 'consent-label' }, [
-      React.createElement('input', {
-        key: 'consent-checkbox',
-        type: 'checkbox',
-        'data-testid': 'lgpd-consent',
-        checked: consent,
-        onChange: (e) => setConsent(e.target.checked),
-      }),
-      'Concordo com o tratamento de meus dados conforme LGPD',
-    ]),
-    React.createElement(
-      'button',
-      {
-        key: 'submit',
-        type: 'submit',
-        'data-testid': 'submit-patient',
-        disabled: !consent,
-      },
-      'Cadastrar Paciente'
-    ),
-  ]);
-};
+const const PatientForm = ({ onSubmit }: { onSubmit: (data: PatientData) => void }) => {;
 
 describe('LGPD Compliance Testing', () => {
   beforeEach(() => {
@@ -145,10 +69,10 @@ describe('LGPD Compliance Testing', () => {
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
             lgpdConsent: expect.objectContaining({
-              timestamp: expect.any(String),
-              ip: '127.0.0.1',
-              deviceId: 'test-device-id',
               consentType: 'treatment',
+              deviceId: 'test-device-id',
+              ip: '127.0.0.1',
+              timestamp: expect.any(String),
               version: '1.0',
             }),
           })
@@ -232,8 +156,8 @@ describe('LGPD Compliance Testing', () => {
       const erasureRequest = {
         patientId: 'test-patient-id',
         reason: 'user_request',
-        timestamp: new Date().toISOString(),
         requestId: 'erasure-001',
+        timestamp: new Date().toISOString(),
       };
 
       // Log the erasure request
@@ -241,8 +165,8 @@ describe('LGPD Compliance Testing', () => {
         action: 'DATA_ERASURE',
         patientId: erasureRequest.patientId,
         reason: erasureRequest.reason,
-        timestamp: erasureRequest.timestamp,
         requestId: erasureRequest.requestId,
+        timestamp: erasureRequest.timestamp,
       });
 
       expect(logAuditEntry).toHaveBeenCalledWith(
@@ -262,21 +186,21 @@ describe('LGPD Compliance Testing', () => {
 
       // Simulate patient data access
       const accessEvent = {
-        userId: 'test-user-001',
-        patientId: 'test-patient-001',
         action: 'READ',
-        timestamp: new Date().toISOString(),
         ipAddress: '127.0.0.1',
+        patientId: 'test-patient-001',
+        timestamp: new Date().toISOString(),
+        userId: 'test-user-001',
       };
 
       logAccess(accessEvent);
 
       expect(logAccess).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'test-user-001',
-          patientId: 'test-patient-001',
           action: 'READ',
           ipAddress: '127.0.0.1',
+          patientId: 'test-patient-001',
+          userId: 'test-user-001',
         })
       );
     });
@@ -286,29 +210,29 @@ describe('LGPD Compliance Testing', () => {
 
       // Simulate patient data update
       const modificationEvent = {
-        userId: 'test-user-001',
-        patientId: 'test-patient-001',
         action: 'UPDATE',
         fieldsChanged: ['phone', 'email'],
-        previousValues: {
-          phone: '+55******4321',
-          email: 'old@example.com',
-        },
         newValues: {
-          phone: '+55******9999',
           email: 'new@example.com',
+          phone: '+55******9999',
+        },
+        patientId: 'test-patient-001',
+        previousValues: {
+          email: 'old@example.com',
+          phone: '+55******4321',
         },
         timestamp: new Date().toISOString(),
+        userId: 'test-user-001',
       };
 
       logModification(modificationEvent);
 
       expect(logModification).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'test-user-001',
-          patientId: 'test-patient-001',
           action: 'UPDATE',
           fieldsChanged: ['phone', 'email'],
+          patientId: 'test-patient-001',
+          userId: 'test-user-001',
         })
       );
     });
@@ -338,10 +262,10 @@ describe('LGPD Compliance Testing', () => {
 
     it('should have clear purpose limitation for data processing', () => {
       const dataProcessingPurposes = {
-        patient_registration: ['name', 'email', 'phone'],
         appointment_scheduling: ['name', 'phone'],
-        payment_processing: ['name', 'cpf'],
         emergency_contact: ['name', 'phone', 'emergency_contact'],
+        patient_registration: ['name', 'email', 'phone'],
+        payment_processing: ['name', 'cpf'],
       };
 
       // Validate that each purpose has a defined and limited set of data fields

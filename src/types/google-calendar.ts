@@ -93,7 +93,9 @@ export function isSyncEnabled(settings?: CalendarSyncSettings): boolean {
 }
 
 export function shouldSyncEvent(event: FinancialEvent, settings: CalendarSyncSettings): boolean {
-  if (!settings.sync_enabled) return false;
+  if (!settings.sync_enabled) {
+    return false;
+  }
   if (settings.sync_categories && settings.sync_categories.length > 0) {
     if (!event.category || !settings.sync_categories.includes(event.category)) {
       return false;

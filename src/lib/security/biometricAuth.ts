@@ -17,26 +17,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { createAuditLog } from '@/lib/security/auditLogger';
-import {
-  createDeviceFingerprintingService,
-  type DeviceFingerprintingService,
-} from '@/lib/security/deviceFingerprinting';
-import {
-  createFraudDetectionService,
-  type FraudDetectionService,
-} from '@/lib/security/fraudDetection';
-import {
-  createPushProvider,
-  type PushConfig,
-  type PushProvider,
-} from '@/lib/security/pushProvider';
-import { createSMSProvider, type SMSConfig, type SMSProvider } from '@/lib/security/smsProvider';
+import type { DeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
+import { createDeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
+import type { FraudDetectionService } from '@/lib/security/fraudDetection';
+import { createFraudDetectionService } from '@/lib/security/fraudDetection';
+import type { PushConfig, PushProvider } from '@/lib/security/pushProvider';
+import { createPushProvider } from '@/lib/security/pushProvider';
+import type { SMSConfig, SMSProvider } from '@/lib/security/smsProvider';
+import { createSMSProvider } from '@/lib/security/smsProvider';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type BiometricType = 'platform' | 'cross-platform' | 'pin' | 'sms' | 'push';
+export type BiometricType = 'platform' | 'cross-platform' | 'pin' | 'sms' | 'push' | 'otp';
 export type SecurityEvent =
   | 'auth_success'
   | 'auth_failure'
@@ -48,6 +42,8 @@ export type SecurityEvent =
   | 'otp_sent'
   | 'otp_verified'
   | 'push_sent'
+  | 'pin_sent'
+  | 'pin_verified'
   | 'biometric_enrolled';
 
 export interface BiometricConfig {
@@ -79,8 +75,9 @@ export interface SecurityEventLog {
   method: BiometricType;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   riskScore?: number;
+  deviceFingerprint?: string;
 }
 
 export interface AuthSession {
@@ -97,6 +94,13 @@ export interface FraudDetectionRule {
   type: 'location_anomaly' | 'device_anomaly' | 'behavior_anomaly' | 'frequency_anomaly';
   threshold: number;
   enabled: boolean;
+}
+
+interface FraudResult {
+  shouldBlock: boolean;
+  riskScore: number;
+  detectedAnomalies?: string[];
+  requiresReview?: boolean;
 }
 
 // ============================================================================
@@ -224,14 +228,15 @@ export class BiometricAuthService {
   private pushProvider?: PushProvider;
   private fraudDetectionService?: FraudDetectionService;
   private deviceFingerprintingService?: DeviceFingerprintingService;
+  private fraudRules: FraudDetectionRule[] = [];
 
   constructor(
     config: Partial<BiometricConfig> = {},
     securityProviders?: {
       sms?: { config: SMSConfig };
       push?: { config: PushConfig };
-      fraudDetection?: { config?: any };
-      deviceFingerprinting?: { config?: any };
+      fraudDetection?: { config?: unknown };
+      deviceFingerprinting?: { config?: unknown };
     }
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -268,8 +273,8 @@ export class BiometricAuthService {
   private initializeSecurityProviders(providers?: {
     sms?: { config: SMSConfig };
     push?: { config: PushConfig };
-    fraudDetection?: { config?: any };
-    deviceFingerprinting?: { config?: any };
+    fraudDetection?: { config?: Record<string, unknown> };
+    deviceFingerprinting?: { config?: Record<string, unknown> };
   }): void {
     // Initialize SMS provider if config provided
     if (providers?.sms?.config) {
@@ -297,9 +302,7 @@ export class BiometricAuthService {
     try {
       // Always try to create audit log first
       await createAuditLog({
-        userId: event.userId,
         action: `auth_${event.event}`,
-        method: event.method,
         metadata: {
           event: event.event,
           ipAddress: event.ipAddress,
@@ -307,20 +310,22 @@ export class BiometricAuthService {
           riskScore: event.riskScore,
           ...event.metadata,
         },
+        method: event.method,
+        userId: event.userId,
       });
 
       // Try to store in database for detailed security monitoring
       // If table doesn't exist, we'll still have the audit log
       try {
         await supabase.from('security_events').insert({
-          user_id: event.userId,
-          event_type: event.event,
-          method: event.method,
-          ip_address: event.ipAddress,
-          user_agent: event.userAgent,
-          metadata: event.metadata,
-          risk_score: event.riskScore || 0,
           created_at: new Date().toISOString(),
+          event_type: event.event,
+          ip_address: event.ipAddress,
+          metadata: event.metadata,
+          method: event.method,
+          risk_score: event.riskScore || 0,
+          user_agent: event.userAgent,
+          user_id: event.userId,
         });
       } catch (_dbError) {}
     } catch (_error) {}
@@ -380,13 +385,13 @@ export class BiometricAuthService {
   private async sendSecurityAlerts(
     userId: string,
     alertType: 'login_attempt' | 'account_locked' | 'suspicious_activity',
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
       // Get user's contact information
-      const { data: user } = await supabase
+      const { data: userData, error: fetchError } = await supabase
         .from('users')
-        .select('phone_number, email')
+        .select('phone')
         .eq('id', userId)
         .single();
 
@@ -398,17 +403,17 @@ export class BiometricAuthService {
       // Send push notification if available
       if (this.pushProvider) {
         const pushMessage = {
-          title: 'AegisWallet - Alerta de Segurança',
-          body: this.getSecurityAlertMessage(alertType, metadata),
-          icon: '/icon-192x192.png',
           badge: '/badge-72x72.png',
-          requireInteraction: true,
-          tag: `security-${alertType}`,
+          body: this.getSecurityAlertMessage(alertType, metadata),
           data: {
-            type: 'security-alert',
             alertType,
             metadata,
+            type: 'security-alert',
           },
+          icon: '/icon-192x192.png',
+          requireInteraction: true,
+          tag: `security-${alertType}`,
+          title: 'AegisWallet - Alerta de Segurança',
         };
 
         await this.pushProvider.sendPushNotification(userId, pushMessage);
@@ -416,12 +421,12 @@ export class BiometricAuthService {
 
       // Log security alert sent
       await this.logSecurityEvent({
-        userId,
         event: 'security_alert_sent',
-        method: 'system',
         ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         metadata: { alertType, channels: ['sms', 'push'].filter(Boolean) },
+        method: 'system',
+        userAgent: getUserAgent(),
+        userId,
       });
     } catch (_error) {}
   }
@@ -431,7 +436,7 @@ export class BiometricAuthService {
    */
   private getSecurityAlertMessage(
     alertType: 'login_attempt' | 'account_locked' | 'suspicious_activity',
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): string {
     switch (alertType) {
       case 'login_attempt':
@@ -455,26 +460,26 @@ export class BiometricAuthService {
     const expiresAt = new Date(Date.now() + this.config.sessionTimeout);
 
     const session: AuthSession = {
-      userId,
-      sessionToken,
-      method,
+      createdAt: new Date(),
       expiresAt,
       isActive: true,
-      createdAt: new Date(),
       lastActivity: new Date(),
+      method,
+      sessionToken,
+      userId,
     };
 
     this.activeSessions.set(sessionToken, session);
 
     // Store in database
     await supabase.from('auth_sessions').insert({
-      user_id: userId,
-      session_token: sessionToken,
-      method: method,
+      created_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),
       is_active: true,
-      created_at: new Date().toISOString(),
       last_activity: new Date().toISOString(),
+      method: method,
+      session_token: sessionToken,
+      user_id: userId,
     });
 
     return sessionToken;
@@ -495,15 +500,15 @@ export class BiometricAuthService {
         .eq('is_active', true)
         .single();
 
-      if (data && new Date(data.expires_at) > new Date()) {
+      if (data && new Date(data.expires_at || '') > new Date()) {
         const dbSession: AuthSession = {
-          userId: data.user_id,
-          sessionToken: data.session_token,
+          createdAt: new Date(data.created_at || ''),
+          expiresAt: new Date(data.expires_at || ''),
+          isActive: data.is_active || false,
+          lastActivity: new Date(data.last_activity || ''),
           method: data.method as BiometricType,
-          expiresAt: new Date(data.expires_at),
-          isActive: data.is_active,
-          createdAt: new Date(data.created_at),
-          lastActivity: new Date(data.last_activity),
+          sessionToken: data.session_token || '',
+          userId: data.user_id || '',
         };
 
         this.activeSessions.set(sessionToken, dbSession);
@@ -567,20 +572,20 @@ export class BiometricAuthService {
     const rateLimit = this.checkRateLimit(userId);
     if (!rateLimit.allowed) {
       return {
-        success: false,
-        method: 'platform',
         error: `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.remainingTime || 0) / 1000)} seconds.`,
+        method: 'platform',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
 
     // Check if WebAuthn is available
     if (!window.PublicKeyCredential) {
       return {
-        success: false,
-        method: 'platform',
         error: 'WebAuthn not supported',
+        method: 'platform',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
 
@@ -593,39 +598,39 @@ export class BiometricAuthService {
       }
 
       // Analyze security event for fraud detection
-      let fraudResult: any = null;
+      let fraudResult: FraudResult | null = null;
       if (this.fraudDetectionService) {
-        fraudResult = await this.fraudDetectionService.analyzeSecurityEvent({
-          userId,
-          eventType: 'login_attempt',
-          timestamp: new Date(),
-          ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
+        fraudResult = (await this.fraudDetectionService.analyzeSecurityEvent({
           deviceFingerprint,
-          location: await this.getUserLocation(),
-        });
+          eventType: 'login_attempt',
+          ipAddress: getClientIP(),
+          location: undefined,
+          timestamp: new Date(),
+          userAgent: getUserAgent(),
+          userId,
+        })) as FraudResult;
 
         // Block if fraud detection indicates high risk
         if (fraudResult.shouldBlock) {
           await this.logSecurityEvent({
-            userId,
-            event: 'account_locked',
-            method: 'platform',
-            ipAddress: getClientIP(),
-            userAgent: getUserAgent(),
             deviceFingerprint,
+            event: 'account_locked',
+            ipAddress: getClientIP(),
             metadata: {
+              anomalies: fraudResult.detectedAnomalies,
               reason: 'fraud_detection',
               riskScore: fraudResult.riskScore,
-              anomalies: fraudResult.detectedAnomalies,
             },
+            method: 'platform',
+            userAgent: getUserAgent(),
+            userId,
           });
 
           return {
-            success: false,
-            method: 'platform',
             error: 'Security verification required. Please contact support.',
+            method: 'platform',
             processingTime: Date.now() - startTime,
+            success: false,
           };
         }
       }
@@ -637,37 +642,36 @@ export class BiometricAuthService {
       // Request authentication
       const credential = await navigator.credentials.get({
         publicKey: {
+          authenticatorSelection: {
+            authenticatorAttachment: config.authenticatorAttachment,
+            userVerification: config.userVerification,
+          },
           challenge,
           timeout: this.config.timeout,
-          userVerification: this.config.userVerification,
-          authenticatorSelection: {
-            authenticatorAttachment: this.config.authenticatorAttachment,
-            userVerification: this.config.userVerification,
-          },
         },
       });
 
       if (!credential) {
         // Log failed attempt with enhanced metadata
         await this.logSecurityEvent({
-          userId,
-          event: 'auth_failure',
-          method: 'platform',
-          ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
           deviceFingerprint,
+          event: 'auth_failure',
+          ipAddress: getClientIP(),
           metadata: {
-            reason: 'authentication_cancelled',
             fraudRiskScore: fraudResult?.riskScore,
+            reason: 'authentication_cancelled',
           },
+          method: 'platform',
+          userAgent: getUserAgent(),
+          userId,
         });
 
         return {
-          success: false,
-          method: 'platform',
           error: 'Authentication cancelled',
+          method: 'platform',
           processingTime: Date.now() - startTime,
           requiresAction: fraudResult?.requiresReview ? 'pin' : undefined,
+          success: false,
         };
       }
 
@@ -676,48 +680,48 @@ export class BiometricAuthService {
 
       // Log successful authentication with enhanced metadata
       await this.logSecurityEvent({
-        userId,
-        event: 'auth_success',
-        method: 'platform',
-        ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         deviceFingerprint,
+        event: 'auth_success',
+        ipAddress: getClientIP(),
         metadata: {
           credentialId: credential.id,
           fraudRiskScore: fraudResult?.riskScore,
         },
+        method: 'platform',
+        userAgent: getUserAgent(),
+        userId,
       });
 
       return {
-        success: true,
         method: 'platform',
         processingTime: Date.now() - startTime,
         sessionToken,
+        success: true,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       // Log failed attempt with enhanced metadata
       await this.logSecurityEvent({
-        userId,
         event: 'auth_failure',
-        method: 'platform',
         ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         metadata: {
-          error: errorMessage,
           deviceFingerprint: this.deviceFingerprintingService
             ? (await this.deviceFingerprintingService.generateFingerprint()).id
             : undefined,
+          error: errorMessage,
         },
+        method: 'platform',
+        userAgent: getUserAgent(),
+        userId,
       });
 
       return {
-        success: false,
-        method: 'platform',
         error: errorMessage,
+        method: 'platform',
         processingTime: Date.now() - startTime,
         requiresAction: 'pin',
+        success: false,
       };
     }
   }
@@ -731,10 +735,10 @@ export class BiometricAuthService {
     // Validate PIN format (4-6 digits)
     if (!/^\d{4,6}$/.test(pin)) {
       return {
-        success: false,
-        method: 'pin',
         error: 'Invalid PIN format',
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
 
@@ -742,10 +746,10 @@ export class BiometricAuthService {
     const rateLimit = this.checkRateLimit(userId);
     if (!rateLimit.allowed) {
       return {
-        success: false,
-        method: 'pin',
         error: `Too many attempts. Try again in ${Math.ceil((rateLimit.remainingTime || 0) / 1000)} seconds.`,
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
 
@@ -763,11 +767,11 @@ export class BiometricAuthService {
         const remainingTime = new Date(lockout.lockout_until).getTime() - Date.now();
 
         return {
-          success: false,
-          method: 'pin',
           error: 'Account temporarily locked for security',
-          processingTime: Date.now() - startTime,
           lockoutRemaining: remainingTime,
+          method: 'pin',
+          processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
@@ -780,10 +784,10 @@ export class BiometricAuthService {
 
       if (!storedPin) {
         return {
-          success: false,
-          method: 'pin',
           error: 'PIN not set up',
+          method: 'pin',
           processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
@@ -803,46 +807,46 @@ export class BiometricAuthService {
 
         // Log success
         await this.logSecurityEvent({
-          userId,
           event: 'auth_success',
-          method: 'pin',
           ipAddress: getClientIP(),
+          method: 'pin',
           userAgent: getUserAgent(),
+          userId,
         });
 
         return {
-          success: true,
           method: 'pin',
           processingTime: Date.now() - startTime,
+          success: true,
         };
       }
       // Handle failed attempt
       await this.handleFailedAttempt(userId, 'pin');
 
       return {
-        success: false,
-        method: 'pin',
         error: 'Invalid PIN',
+        method: 'pin',
         processingTime: Date.now() - startTime,
         requiresAction: 'sms',
+        success: false,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       await this.logSecurityEvent({
-        userId,
         event: 'auth_failure',
-        method: 'pin',
         ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         metadata: { error: errorMessage },
+        method: 'pin',
+        userAgent: getUserAgent(),
+        userId,
       });
 
       return {
-        success: false,
-        method: 'pin',
         error: errorMessage,
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
   }
@@ -876,25 +880,25 @@ export class BiometricAuthService {
         .from('auth_attempts')
         .update({
           failed_attempts: newAttempts,
-          is_locked,
-          lockout_until: lockoutUntil?.toISOString(),
+          is_locked: isLocked,
           last_attempt_at: new Date().toISOString(),
+          lockout_until: lockoutUntil?.toISOString(),
         })
         .eq('id', attemptRecord.id);
 
       if (isLocked) {
         // Enhanced lockout events
         await this.logSecurityEvent({
-          userId,
           event: 'pin_lockout',
-          method,
           ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
           metadata: {
             failed_attempts: newAttempts,
             lockout_duration: lockoutDuration,
             lockout_until: lockoutUntil?.toISOString(),
           },
+          method,
+          userAgent: getUserAgent(),
+          userId,
         });
 
         // Send security alerts via available channels
@@ -906,27 +910,27 @@ export class BiometricAuthService {
     } else {
       // Create new attempt record
       await supabase.from('auth_attempts').insert({
-        user_id: userId,
-        method,
+        created_at: new Date().toISOString(),
         failed_attempts: 1,
         is_locked: false,
         last_attempt_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
+        method,
+        user_id: userId,
       });
     }
 
     // Log failure with enhanced metadata
     await this.logSecurityEvent({
-      userId,
       event: 'auth_failure',
-      method,
       ipAddress: getClientIP(),
-      userAgent: getUserAgent(),
       metadata: {
         device_fingerprint: this.deviceFingerprintingService
           ? (await this.deviceFingerprintingService.generateFingerprint()).id
           : undefined,
       },
+      method,
+      userAgent: getUserAgent(),
+      userId,
     });
   }
 
@@ -965,21 +969,21 @@ export class BiometricAuthService {
     } else {
       // Create new PIN
       await supabase.from('user_pins').insert({
-        user_id: userId,
+        created_at: new Date().toISOString(),
         pin_hash: hash,
         salt: salt,
-        created_at: new Date().toISOString(),
+        user_id: userId,
       });
     }
 
     // Initialize auth attempts record
     await supabase.from('auth_attempts').upsert({
-      user_id: userId,
-      method: 'pin',
+      created_at: new Date().toISOString(),
       failed_attempts: 0,
       is_locked: false,
       last_attempt_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
+      method: 'pin',
+      user_id: userId,
     });
 
     return true;
@@ -996,12 +1000,12 @@ export class BiometricAuthService {
 
       // Store OTP
       await supabase.from('otp_codes').insert({
-        user_id: userId,
-        phone_number: phoneNumber,
-        otp_code: otp,
-        expires_at: expiresAt.toISOString(),
         attempts: 0,
         created_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+        otp_code: otp,
+        phone_number: phoneNumber,
+        user_id: userId,
       });
 
       // Send OTP using SMS provider if available
@@ -1019,12 +1023,12 @@ export class BiometricAuthService {
       if (smsSent) {
         // Log OTP sent
         await this.logSecurityEvent({
-          userId,
           event: 'otp_sent',
-          method: 'sms',
           ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
           metadata: { phone_number: phoneNumber },
+          method: 'sms',
+          userAgent: getUserAgent(),
+          userId,
         });
       }
 
@@ -1047,10 +1051,10 @@ export class BiometricAuthService {
     // Validate OTP format (6 digits)
     if (!/^\d{6}$/.test(otp)) {
       return {
-        success: false,
-        method: 'sms',
         error: 'Invalid OTP format',
+        method: 'sms',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
 
@@ -1068,31 +1072,31 @@ export class BiometricAuthService {
 
       if (!storedOTP) {
         return {
-          success: false,
-          method: 'sms',
           error: 'OTP not found or expired',
+          method: 'sms',
           processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
       // Check if OTP has expired
       if (new Date(storedOTP.expires_at) < new Date()) {
         return {
-          success: false,
-          method: 'sms',
           error: 'OTP has expired',
+          method: 'sms',
           processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
       // Check attempts
-      if (storedOTP.attempts >= this.config.maxOtpAttempts) {
+      if ((storedOTP?.attempts || 0) >= this.config.maxOtpAttempts) {
         return {
-          success: false,
-          method: 'sms',
           error: 'Maximum OTP attempts exceeded',
-          processingTime: Date.now() - startTime,
-        };
+            method: 'otp',
+            processingTime: Date.now() - startTime,
+            success: false,
+          };
       }
 
       // Verify OTP
@@ -1110,19 +1114,19 @@ export class BiometricAuthService {
 
         // Log success
         await this.logSecurityEvent({
-          userId,
           event: 'otp_verified',
-          method: 'sms',
-          ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
-          metadata: { phone_number: phoneNumber },
-        });
+            ipAddress: getClientIP(),
+            metadata: { phone_number: phoneNumber },
+            method: 'otp',
+            userAgent: getUserAgent(),
+            userId,
+          });
 
         return {
-          success: true,
-          method: 'sms',
+          method: 'otp',
           processingTime: Date.now() - startTime,
           sessionToken,
+          success: true,
         };
       }
       // Increment attempts
@@ -1132,28 +1136,28 @@ export class BiometricAuthService {
         .eq('id', storedOTP.id);
 
       return {
-        success: false,
-        method: 'sms',
         error: 'Invalid OTP',
+        method: 'otp',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       await this.logSecurityEvent({
-        userId,
         event: 'auth_failure',
-        method: 'sms',
         ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         metadata: { error: errorMessage, phone_number: phoneNumber },
+        method: 'pin',
+        userAgent: getUserAgent(),
+        userId,
       });
 
       return {
-        success: false,
-        method: 'sms',
         error: errorMessage,
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
   }
@@ -1166,75 +1170,75 @@ export class BiometricAuthService {
 
     try {
       // Get user's phone number for fallback SMS
-      const { data: user } = await supabase
+      const { data: user } = await supabase;
+      const { data: userData, error: fetchError } = await supabase
         .from('users')
-        .select('phone_number')
+        .select('phone')
         .eq('id', userId)
         .single();
 
-      const phoneNumber = user?.phone_number;
+      const phoneNumber = userData?.phone;
 
       // Send push notification using push provider if available
-      let pushResult: any = null;
+      let pushResult: { success: boolean; error?: string } | null = null;
       if (this.pushProvider) {
         pushResult = await this.pushProvider.sendAuthPush(userId, phoneNumber || '');
       } else {
         // Fallback: simulate push request
         const pushToken = generateSecureRandom(16);
         await supabase.from('push_auth_requests').insert({
-          user_id: userId,
-          push_token: pushToken,
-          expires_at: new Date(Date.now() + this.config.otpExpiry).toISOString(),
-          status: 'pending',
           created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + this.config.otpExpiry).toISOString(),
+          push_token: pushToken,
+          status: 'pending',
+          user_id: userId,
         });
 
         pushResult = {
-          success: true,
           requiresAction: 'push',
+          success: true,
         };
       }
 
       // Log push sent
       await this.logSecurityEvent({
-        userId,
         event: 'push_sent',
-        method: 'push',
         ipAddress: getClientIP(),
-        userAgent: getUserAgent(),
         metadata: {
-          push_result: pushResult.success,
           phone_number: phoneNumber,
+          push_result: pushResult.success,
         },
+        method: 'push',
+        userAgent: getUserAgent(),
+        userId,
       });
 
-      if (pushResult.success) {
+      if (pushResult?.success) {
         return {
-          success: false,
-          method: 'push',
           error: 'Push notification sent. Please approve on your device.',
+          method: 'push',
           processingTime: Date.now() - startTime,
           requiresAction: 'push',
+          success: false,
         };
       }
       return {
-        success: false,
-        method: 'push',
         error: pushResult.error || 'Failed to send push notification',
+        method: 'push',
         processingTime: Date.now() - startTime,
-        requiresAction: 'sms', // Fallback to SMS
+        requiresAction: 'sms',
+        success: false, // Fallback to SMS
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       return {
-        success: false,
-        method: 'push',
         error: errorMessage,
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
-  }
 
   /**
    * Verify push response
@@ -1252,10 +1256,10 @@ export class BiometricAuthService {
 
       if (!pushRequest) {
         return {
-          success: false,
-          method: 'push',
           error: 'Invalid or expired push request',
+          method: 'push',
           processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
@@ -1263,8 +1267,8 @@ export class BiometricAuthService {
       await supabase
         .from('push_auth_requests')
         .update({
-          status: approved ? 'approved' : 'denied',
           responded_at: new Date().toISOString(),
+          status: approved ? 'approved' : 'denied',
         })
         .eq('id', pushRequest.id);
 
@@ -1273,26 +1277,26 @@ export class BiometricAuthService {
         const sessionToken = await this.createSession(pushRequest.user_id, 'push');
 
         return {
-          success: true,
           method: 'push',
           processingTime: Date.now() - startTime,
           sessionToken,
+          success: true,
         };
       }
       return {
-        success: false,
-        method: 'push',
-        error: 'Push notification denied',
+        error: 'Push notification failed',
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       return {
-        success: false,
-        method: 'push',
         error: errorMessage,
+        method: 'pin',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
   }
@@ -1316,24 +1320,24 @@ export class BiometricAuthService {
       // Create credential
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge,
-          rp: {
-            name: 'AegisWallet',
-            id: window.location.hostname,
-          },
-          user: {
-            id: userIdBuffer,
-            name: userName,
-            displayName: userName,
-          },
-          pubKeyCredParams: [
-            { type: 'public-key', alg: -7 }, // ES256
-            { type: 'public-key', alg: -257 }, // RS256
-          ],
-          timeout: this.config.timeout,
           authenticatorSelection: {
             authenticatorAttachment: this.config.authenticatorAttachment,
             userVerification: this.config.userVerification,
+          },
+          challenge,
+          pubKeyCredParams: [
+            { alg: -7, type: 'public-key' }, // ES256
+            { alg: -257, type: 'public-key' }, // RS256
+          ],
+          rp: {
+            id: window.location.hostname,
+            name: 'AegisWallet',
+          },
+          timeout: this.config.timeout,
+          user: {
+            displayName: userName,
+            id: userIdBuffer,
+            name: userName,
           },
         },
       });
@@ -1341,20 +1345,20 @@ export class BiometricAuthService {
       if (credential) {
         // Store credential info
         await supabase.from('biometric_credentials').insert({
-          user_id: userId,
+          created_at: new Date().toISOString(),
           credential_id: credential.id,
           credential_type: 'public-key',
-          created_at: new Date().toISOString(),
+          user_id: userId,
         });
 
         // Log enrollment
         await this.logSecurityEvent({
-          userId,
           event: 'biometric_enrolled',
-          method: 'platform',
           ipAddress: getClientIP(),
-          userAgent: getUserAgent(),
           metadata: { credential_id: credential.id },
+          method: 'platform',
+          userAgent: getUserAgent(),
+          userId,
         });
 
         return true;

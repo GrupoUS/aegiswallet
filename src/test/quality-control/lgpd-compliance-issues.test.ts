@@ -44,8 +44,8 @@ describe('LGPD Compliance Issues', () => {
         optional_fields: ['phone', 'cpf'],
         // @ts-expect-error - This should fail because voice fields are not categorized
         voice_fields: {
-          required: ['voice_sample'],
           optional: ['voice_pattern'],
+          required: ['voice_sample'],
           retention_period: '90_days',
         },
       };
@@ -112,8 +112,8 @@ describe('LGPD Compliance Issues', () => {
         data_types: ['command_text', 'audio_file'],
         // @ts-expect-error - This should fail because detailed audit fields are missing
         voice_metadata: {
-          duration_ms: 1500,
           confidence_score: 0.95,
+          duration_ms: 1500,
           language: 'pt-BR',
           model_version: 'v2.1',
         },
@@ -145,6 +145,7 @@ describe('LGPD Compliance Issues', () => {
     it('should encrypt sensitive voice data at rest', () => {
       // This test exposes missing voice data encryption
       const mockEncryptionConfig = {
+        encryption_algorithm: 'AES-256-GCM',
         field_encryption: {
           cpf: true,
           email: false,
@@ -153,7 +154,6 @@ describe('LGPD Compliance Issues', () => {
           voice_patterns: true,
           biometric_templates: true,
         },
-        encryption_algorithm: 'AES-256-GCM',
         key_rotation_period: '90_days',
       };
 
@@ -217,9 +217,9 @@ describe('LGPD Compliance Issues', () => {
         mitigation_measures: ['encryption', 'consent'],
         // @ts-expect-error - This should fail because voice-specific DPIA is missing
         voice_specific_risks: {
+          accent_processing: 'low',
           biometric_identification: 'medium',
           voice_pattern_analysis: 'high',
-          accent_processing: 'low',
         },
         review_date: '2024-01-01',
       };

@@ -95,7 +95,9 @@ export class User {
 
   // Business logic methods
   get age(): number | undefined {
-    if (!this.data.birthDate) return undefined;
+    if (!this.data.birthDate) {
+      return undefined;
+    }
 
     const today = new Date();
     const birthDate = new Date(this.data.birthDate);
@@ -110,12 +112,16 @@ export class User {
   }
 
   get isValidCPF(): boolean {
-    if (!this.data.cpf) return false;
+    if (!this.data.cpf) {
+      return false;
+    }
     return this.validateCPF(this.data.cpf);
   }
 
   get isValidPhone(): boolean {
-    if (!this.data.phone) return true; // Phone is optional
+    if (!this.data.phone) {
+      return true;
+    } // Phone is optional
     return this.validatePhone(this.data.phone);
   }
 
@@ -151,10 +157,14 @@ export class User {
     cpf = cpf.replace(/\D/g, '');
 
     // Check if all digits are the same
-    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    if (/^(\d)\1{10}$/.test(cpf)) {
+      return false;
+    }
 
     // Check length
-    if (cpf.length !== 11) return false;
+    if (cpf.length !== 11) {
+      return false;
+    }
 
     // Calculate first digit
     let sum = 0;
@@ -162,8 +172,12 @@ export class User {
       sum += parseInt(cpf[i], 10) * (10 - i);
     }
     let digit = 11 - (sum % 11);
-    if (digit > 9) digit = 0;
-    if (digit !== parseInt(cpf[9], 10)) return false;
+    if (digit > 9) {
+      digit = 0;
+    }
+    if (digit !== parseInt(cpf[9], 10)) {
+      return false;
+    }
 
     // Calculate second digit
     sum = 0;
@@ -171,8 +185,12 @@ export class User {
       sum += parseInt(cpf[i], 10) * (11 - i);
     }
     digit = 11 - (sum % 11);
-    if (digit > 9) digit = 0;
-    if (digit !== parseInt(cpf[10], 10)) return false;
+    if (digit > 9) {
+      digit = 0;
+    }
+    if (digit !== parseInt(cpf[10], 10)) {
+      return false;
+    }
 
     return true;
   }
@@ -187,9 +205,10 @@ export class User {
   static create(data: UserCreationData): User {
     const now = new Date();
     const userProfile: UserProfile = {
-      id: crypto.randomUUID(),
+      createdAt: now,
       email: data.email,
       fullName: data.fullName,
+      id: crypto.randomUUID(),
       phone: data.phone,
       preferences: {
         theme: 'system',
@@ -203,7 +222,6 @@ export class User {
         autonomyLevel: 50,
         ...data.preferences,
       },
-      createdAt: now,
       updatedAt: now,
     };
 
@@ -223,16 +241,16 @@ export class User {
     preferences?: UserPreferences;
   }): User {
     return new User({
-      id: data.id,
+      avatarUrl: data.avatar_url ?? undefined,
+      birthDate: data.birth_date ? new Date(data.birth_date) : undefined,
+      cpf: data.cpf ?? undefined,
+      createdAt: new Date(data.created_at),
       email: data.email,
       fullName: data.full_name,
+      id: data.id,
       phone: data.phone ?? undefined,
-      cpf: data.cpf ?? undefined,
-      birthDate: data.birth_date ? new Date(data.birth_date) : undefined,
-      avatarUrl: data.avatar_url ?? undefined,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
       preferences: data.preferences,
+      updatedAt: new Date(data.updated_at),
     });
   }
 
@@ -250,19 +268,19 @@ export class User {
     if (data.preferences) {
       const currentPrefs = this.data.preferences;
       const newPrefs: UserPreferences = {
-        theme: data.preferences.theme ?? currentPrefs?.theme ?? 'system',
-        language: data.preferences.language ?? currentPrefs?.language ?? 'pt-BR',
-        timezone: data.preferences.timezone ?? currentPrefs?.timezone ?? 'America/Sao_Paulo',
+        autonomyLevel: data.preferences.autonomyLevel ?? currentPrefs?.autonomyLevel ?? 50,
         currency: data.preferences.currency ?? currentPrefs?.currency ?? 'BRL',
-        notificationsEnabled:
-          data.preferences.notificationsEnabled ?? currentPrefs?.notificationsEnabled ?? true,
         emailNotifications:
           data.preferences.emailNotifications ?? currentPrefs?.emailNotifications ?? true,
+        language: data.preferences.language ?? currentPrefs?.language ?? 'pt-BR',
+        notificationsEnabled:
+          data.preferences.notificationsEnabled ?? currentPrefs?.notificationsEnabled ?? true,
         pushNotifications:
           data.preferences.pushNotifications ?? currentPrefs?.pushNotifications ?? true,
+        theme: data.preferences.theme ?? currentPrefs?.theme ?? 'system',
+        timezone: data.preferences.timezone ?? currentPrefs?.timezone ?? 'America/Sao_Paulo',
         voiceCommandsEnabled:
           data.preferences.voiceCommandsEnabled ?? currentPrefs?.voiceCommandsEnabled ?? true,
-        autonomyLevel: data.preferences.autonomyLevel ?? currentPrefs?.autonomyLevel ?? 50,
       };
 
       updatedData.preferences = newPrefs;
@@ -277,15 +295,15 @@ export class User {
 
   updatePreferences(preferences: Partial<UserPreferences>): User {
     const currentPrefs: UserPreferences = this.data.preferences || {
-      theme: 'system',
-      language: 'pt-BR',
-      timezone: 'America/Sao_Paulo',
-      currency: 'BRL',
-      notificationsEnabled: true,
-      emailNotifications: true,
-      pushNotifications: true,
-      voiceCommandsEnabled: true,
       autonomyLevel: 50,
+      currency: 'BRL',
+      emailNotifications: true,
+      language: 'pt-BR',
+      notificationsEnabled: true,
+      pushNotifications: true,
+      theme: 'system',
+      timezone: 'America/Sao_Paulo',
+      voiceCommandsEnabled: true,
     };
 
     const updatedData: UserProfile = {

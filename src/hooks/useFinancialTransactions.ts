@@ -33,43 +33,45 @@ export function useFinancialTransactions(filters?: {
 
   const { mutate: createTransaction, isPending: isCreating } =
     trpc.financialTransactions.create.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao criar transação');
+      },
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
         utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação criada com sucesso!');
       },
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao criar transação');
-      },
     });
 
   const { mutate: updateTransaction, isPending: isUpdating } =
     trpc.financialTransactions.update.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao atualizar transação');
+      },
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
         utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação atualizada com sucesso!');
       },
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar transação');
-      },
     });
 
   const { mutate: deleteTransaction, isPending: isDeleting } =
     trpc.financialTransactions.delete.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao remover transação');
+      },
       onSuccess: () => {
         utils.financialTransactions.getAll.invalidate();
         utils.financialTransactions.getStatistics.invalidate();
         toast.success('Transação removida com sucesso!');
       },
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao remover transação');
-      },
     });
 
   // Real-time subscription para transações
   useEffect(() => {
-    if (!transactions.length) return;
+    if (!transactions.length) {
+      return;
+    }
 
     const channel = supabase
       .channel('transactions_changes')
@@ -94,17 +96,17 @@ export function useFinancialTransactions(filters?: {
   }, [transactions.length, utils]);
 
   return {
-    transactions,
-    total,
-    isLoading,
-    error,
-    refetch,
     createTransaction,
-    updateTransaction,
     deleteTransaction,
+    error,
     isCreating,
-    isUpdating,
     isDeleting,
+    isLoading,
+    isUpdating,
+    refetch,
+    total,
+    transactions,
+    updateTransaction,
   };
 }
 
@@ -122,9 +124,9 @@ export function useFinancialTransaction(transactionId: string) {
   );
 
   return {
-    transaction,
-    isLoading,
     error,
+    isLoading,
+    transaction,
   };
 }
 
@@ -139,9 +141,9 @@ export function useTransactionStats(period: 'week' | 'month' | 'quarter' | 'year
   } = trpc.financialTransactions.getStatistics.useQuery({ period }, { enabled: !!period });
 
   return {
-    stats,
-    isLoading,
     error,
+    isLoading,
+    stats,
   };
 }
 
@@ -158,16 +160,16 @@ export function useTransactionsByCategory(
     error,
   } = trpc.financialTransactions.getAll.useQuery(
     {
-      limit: 100,
       categoryId,
+      limit: 100,
     },
     { enabled: !!categoryId }
   );
 
   return {
     categoryStats: categoryStats?.transactions || [],
-    isLoading,
     error,
+    isLoading,
   };
 }
 
@@ -206,12 +208,12 @@ export function useFinancialSummary(period: 'week' | 'month' | 'quarter' | 'year
       .slice(0, 5);
 
     return {
-      totalIncome,
-      totalExpenses,
       netBalance: totalIncome - totalExpenses,
-      totalTransactions: transactions.length,
-      topCategories,
       stats,
+      topCategories,
+      totalExpenses,
+      totalIncome,
+      totalTransactions: transactions.length,
     };
   }, [transactions, stats]);
 
@@ -228,8 +230,8 @@ export function useTransactionSearch(query: string, limit: number = 10) {
     error,
   } = trpc.financialTransactions.getAll.useQuery(
     {
-      search: query,
       limit,
+      search: query,
     },
     {
       enabled: !!query && query.length >= 2,
@@ -237,9 +239,9 @@ export function useTransactionSearch(query: string, limit: number = 10) {
   );
 
   return {
-    results: results?.transactions || [],
-    isLoading,
     error,
+    isLoading,
+    results: results?.transactions || [],
   };
 }
 
@@ -258,8 +260,8 @@ export function useRecentTransactions(limit: number = 5) {
   );
 
   return {
-    transactions: data?.transactions || [],
-    isLoading,
     error,
+    isLoading,
+    transactions: data?.transactions || [],
   };
 }

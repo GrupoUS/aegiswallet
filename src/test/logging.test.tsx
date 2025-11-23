@@ -21,9 +21,9 @@ describe('Logger Core Functionality', () => {
     vi.clearAllMocks();
     testLogger = new Logger();
     testLogger.updateConfig({
-      level: LogLevel.DEBUG,
       enableConsole: true,
       enableRemote: false,
+      level: LogLevel.DEBUG,
       sanitizeData: false,
     });
   });
@@ -57,15 +57,15 @@ describe('Logger Core Functionality', () => {
   });
 
   it('should include proper metadata in log entries', () => {
-    testLogger.info('Test message', { userId: '123', action: 'test' });
+    testLogger.info('Test message', { action: 'test', userId: '123' });
 
     const logs = testLogger.getLogs();
     const log = logs[0];
 
     expect(log).toMatchObject({
+      context: { action: 'test', userId: '123' },
       level: LogLevel.INFO,
       message: 'Test message',
-      context: { userId: '123', action: 'test' },
       sessionId: expect.stringMatching(/^session_\d+_\w+$/),
     });
     expect(log.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
@@ -75,15 +75,15 @@ describe('Logger Core Functionality', () => {
     testLogger.updateConfig({ sanitizeData: true });
 
     const sensitiveData = {
-      email: 'user@example.com',
-      password: 'secret123',
-      token: 'abc123xyz',
       balance: 1500.5,
       cpf: '123.456.789-00',
+      email: 'user@example.com',
       nested: {
-        secretKey: 'hidden',
         normalField: 'visible',
+        secretKey: 'hidden',
       },
+      password: 'secret123',
+      token: 'abc123xyz',
     };
 
     testLogger.info('Sensitive data test', sensitiveData);
@@ -92,22 +92,22 @@ describe('Logger Core Functionality', () => {
     const context = logs[0].context;
 
     expect(context).toEqual({
-      email: '[REDACTED]',
-      password: '[REDACTED]',
-      token: '[REDACTED]',
       balance: '[REDACTED]',
       cpf: '[REDACTED]',
+      email: '[REDACTED]',
       nested: {
-        secretKey: '[REDACTED]',
         normalField: 'visible',
+        secretKey: '[REDACTED]',
       },
+      password: '[REDACTED]',
+      token: '[REDACTED]',
     });
   });
 
   it('should handle voice command logging', () => {
     testLogger.voiceCommand('What is my balance?', 0.95, {
-      processingTime: 250,
       language: 'pt-BR',
+      processingTime: 250,
     });
 
     const logs = testLogger.getLogs();
@@ -117,8 +117,8 @@ describe('Logger Core Functionality', () => {
     expect(log.context).toMatchObject({
       command: 'What is my balance?',
       confidence: 0.95,
-      processingTime: 250,
       language: 'pt-BR',
+      processingTime: 250,
     });
   });
 
@@ -141,9 +141,9 @@ describe('Logger Core Functionality', () => {
 
   it('should handle security event logging', () => {
     testLogger.securityEvent('suspicious_login_attempt', {
+      attempts: 5,
       ip: '192.168.1.100',
       userAgent: 'Mozilla/5.0...',
-      attempts: 5,
     });
 
     const logs = testLogger.getLogs();
@@ -151,10 +151,10 @@ describe('Logger Core Functionality', () => {
 
     expect(log.message).toBe('Security event');
     expect(log.context).toMatchObject({
+      attempts: 5,
       event: 'suspicious_login_attempt',
       ip: '192.168.1.100',
       userAgent: 'Mozilla/5.0...',
-      attempts: 5,
     });
   });
 
@@ -170,8 +170,8 @@ describe('Logger Core Functionality', () => {
     expect(log.message).toBe('User action');
     expect(log.context).toMatchObject({
       action: 'button_clicked',
-      component: 'DashboardComponent',
       buttonId: 'balance-button',
+      component: 'DashboardComponent',
     });
   });
 
@@ -249,9 +249,9 @@ describe('Environment Configuration', () => {
   it('should use production configuration for production', () => {
     // Update configuration for production testing
     testLogger.updateConfig({
-      level: LogLevel.ERROR,
       enableConsole: false,
       enableRemote: true,
+      level: LogLevel.ERROR,
       sanitizeData: true,
     });
 
@@ -265,9 +265,9 @@ describe('Environment Configuration', () => {
   it('should handle test environment configuration', () => {
     // Update configuration for silent testing
     testLogger.updateConfig({
-      level: LogLevel.SILENT,
       enableConsole: false,
       enableRemote: false,
+      level: LogLevel.SILENT,
       sanitizeData: true,
     });
 
@@ -282,9 +282,9 @@ describe('Error Handling', () => {
   beforeEach(() => {
     testLogger = new Logger();
     testLogger.updateConfig({
-      level: LogLevel.DEBUG,
       enableConsole: true,
       enableRemote: false,
+      level: LogLevel.DEBUG,
       sanitizeData: false,
     });
   });
@@ -375,9 +375,9 @@ describe('Integration Tests', () => {
   beforeEach(() => {
     testLogger = new Logger();
     testLogger.updateConfig({
-      level: LogLevel.DEBUG,
       enableConsole: true,
       enableRemote: false,
+      level: LogLevel.DEBUG,
       sanitizeData: false,
     });
   });

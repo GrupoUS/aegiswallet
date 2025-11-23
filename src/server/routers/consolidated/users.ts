@@ -26,8 +26,8 @@ export const usersRouter = router({
 
       if (error) {
         logError('fetch_user_profile', ctx.user.id, error, {
-          resource: 'users',
           operation: 'getProfile',
+          resource: 'users',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -42,8 +42,8 @@ export const usersRouter = router({
       return data;
     } catch (error) {
       logError('fetch_user_profile_unexpected', ctx.user.id, error as Error, {
-        resource: 'users',
         operation: 'getProfile',
+        resource: 'users',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -58,21 +58,21 @@ export const usersRouter = router({
   updateProfile: protectedProcedure
     .input(
       z.object({
-        full_name: z.string().min(2).max(100).optional(),
-        phone: z
-          .string()
-          .regex(/^\+?[1-9]\d{1,14}$/)
-          .optional(),
+        autonomy_level: z.number().min(50).max(95).optional(),
+        birth_date: z.string().datetime().optional(),
         cpf: z
           .string()
           .regex(/^\d{11}$/)
           .optional(),
-        birth_date: z.string().datetime().optional(),
-        autonomy_level: z.number().min(50).max(95).optional(),
-        voice_command_enabled: z.boolean().optional(),
-        language: z.string().min(2).max(5).optional(),
-        timezone: z.string().optional(),
         currency: z.string().length(3).optional(),
+        full_name: z.string().min(2).max(100).optional(),
+        language: z.string().min(2).max(5).optional(),
+        phone: z
+          .string()
+          .regex(/^\+?[1-9]\d{1,14}$/)
+          .optional(),
+        timezone: z.string().optional(),
+        voice_command_enabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -100,8 +100,8 @@ export const usersRouter = router({
 
         if (error) {
           logError('update_user_profile', ctx.user.id, error, {
-            resource: 'users',
             operation: 'updateProfile',
+            resource: 'users',
             updateFields: Object.keys(input),
           });
           throw new TRPCError({
@@ -111,8 +111,8 @@ export const usersRouter = router({
         }
 
         logOperation('update_user_profile_success', ctx.user.id, 'users', ctx.user.id, {
-          updateFields: Object.keys(input),
           hasProfileChanges: true,
+          updateFields: Object.keys(input),
         });
 
         return data;
@@ -122,8 +122,8 @@ export const usersRouter = router({
         }
 
         logError('update_user_profile_unexpected', ctx.user.id, error as Error, {
-          resource: 'users',
           operation: 'updateProfile',
+          resource: 'users',
           updateFields: Object.keys(input),
         });
         throw new TRPCError({
@@ -139,15 +139,15 @@ export const usersRouter = router({
   updatePreferences: protectedProcedure
     .input(
       z.object({
-        theme: z.enum(['light', 'dark', 'system']).optional(),
-        language: z.string().min(2).max(5).optional(),
-        timezone: z.string().optional(),
-        currency: z.string().length(3).optional(),
-        notifications_enabled: z.boolean().optional(),
-        email_notifications: z.boolean().optional(),
-        push_notifications: z.boolean().optional(),
-        voice_commands_enabled: z.boolean().optional(),
         autonomy_level: z.number().min(50).max(95).optional(),
+        currency: z.string().length(3).optional(),
+        email_notifications: z.boolean().optional(),
+        language: z.string().min(2).max(5).optional(),
+        notifications_enabled: z.boolean().optional(),
+        push_notifications: z.boolean().optional(),
+        theme: z.enum(['light', 'dark', 'system']).optional(),
+        timezone: z.string().optional(),
+        voice_commands_enabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -164,8 +164,8 @@ export const usersRouter = router({
 
         if (error) {
           logError('update_user_preferences', ctx.user.id, error, {
-            resource: 'user_preferences',
             operation: 'updatePreferences',
+            resource: 'user_preferences',
             updateFields: Object.keys(input),
           });
           throw new TRPCError({
@@ -181,8 +181,8 @@ export const usersRouter = router({
         return data;
       } catch (error) {
         logError('update_user_preferences_unexpected', ctx.user.id, error as Error, {
-          resource: 'user_preferences',
           operation: 'updatePreferences',
+          resource: 'user_preferences',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -197,8 +197,8 @@ export const usersRouter = router({
   deleteAccount: protectedProcedure
     .input(
       z.object({
-        password: z.string().min(1),
         confirmation: z.string().min(1, 'Digite "EXCLUIR" para confirmar'),
+        password: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -288,8 +288,8 @@ export const usersRouter = router({
       }
 
       return {
-        profile: profileResult.data,
         preferences: preferencesResult.data,
+        profile: profileResult.data,
       };
     } catch (error) {
       logError('fetch_user_settings_unexpected', ctx.user.id, error as Error, {
@@ -319,8 +319,8 @@ export const usersRouter = router({
 
       if (error) {
         logError('update_last_login', ctx.user.id, error, {
-          resource: 'users',
           operation: 'updateLastLogin',
+          resource: 'users',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -335,8 +335,8 @@ export const usersRouter = router({
       return data;
     } catch (error) {
       logError('update_last_login_unexpected', ctx.user.id, error as Error, {
-        resource: 'users',
         operation: 'updateLastLogin',
+        resource: 'users',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -351,24 +351,24 @@ export const usersRouter = router({
   getFinancialSummary: protectedProcedure
     .input(
       z.object({
-        period_start: z.string(),
         period_end: z.string(),
+        period_start: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
       try {
         const { data, error } = await supabase.rpc('get_financial_summary', {
-          p_user_id: ctx.user.id,
-          p_period_start: input.period_start,
           p_period_end: input.period_end,
+          p_period_start: input.period_start,
+          p_user_id: ctx.user.id,
         });
 
         if (error) {
           logError('get_financial_summary', ctx.user.id, error, {
-            resource: 'users',
             operation: 'getFinancialSummary',
-            periodStart: input.period_start,
             periodEnd: input.period_end,
+            periodStart: input.period_start,
+            resource: 'users',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -377,17 +377,17 @@ export const usersRouter = router({
         }
 
         logOperation('get_financial_summary_success', ctx.user.id, 'users', undefined, {
-          periodStart: input.period_start,
           periodEnd: input.period_end,
+          periodStart: input.period_start,
         });
 
         return data;
       } catch (error) {
         logError('get_financial_summary_unexpected', ctx.user.id, error as Error, {
-          resource: 'users',
           operation: 'getFinancialSummary',
-          periodStart: input.period_start,
           periodEnd: input.period_end,
+          periodStart: input.period_start,
+          resource: 'users',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -409,8 +409,8 @@ export const usersRouter = router({
 
       if (error) {
         logError('check_user_status', ctx.user.id, error, {
-          resource: 'users',
           operation: 'checkUserStatus',
+          resource: 'users',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -419,8 +419,8 @@ export const usersRouter = router({
       }
 
       logOperation('check_user_status_success', ctx.user.id, 'users', ctx.user.id, {
-        isActive: data?.is_active ?? false,
         hasLastLogin: !!data?.last_login,
+        isActive: data?.is_active ?? false,
       });
 
       return {
@@ -429,8 +429,8 @@ export const usersRouter = router({
       };
     } catch (error) {
       logError('check_user_status_unexpected', ctx.user.id, error as Error, {
-        resource: 'users',
         operation: 'checkUserStatus',
+        resource: 'users',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',

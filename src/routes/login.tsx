@@ -4,11 +4,11 @@ import { LoginForm } from '@/components/login-form';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const Route = createFileRoute('/login')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    redirect: (search.redirect as string) || '/dashboard',
-    error: (search.error as string) || undefined,
-  }),
   component: LoginComponent,
+  validateSearch: (search: Record<string, unknown>) => ({
+    error: (search.error as string) || undefined,
+    redirect: (search.redirect as string) || '/dashboard',
+  }),
 });
 
 function LoginComponent() {

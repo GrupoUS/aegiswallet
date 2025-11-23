@@ -39,7 +39,9 @@ export function LoginForm({
     e.preventDefault();
     setInternalError('');
 
-    if (!onSubmit) return;
+    if (!onSubmit) {
+      return;
+    }
 
     setInternalLoading(true);
     try {
@@ -57,7 +59,9 @@ export function LoginForm({
   };
 
   const handleGoogleSignIn = async () => {
-    if (!onGoogleSignIn) return;
+    if (!onGoogleSignIn) {
+      return;
+    }
 
     setInternalError('');
     setInternalLoading(true);
@@ -139,7 +143,7 @@ export function LoginForm({
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border border-t"></div>
+                  <div className="w-full border border-t" />
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="bg-card px-2 text-muted-foreground">Ou continue com</span>

@@ -1,230 +1,267 @@
-import { useId, useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useFinancialEvents } from "@/hooks/useFinancialEvents";
+import type {
+  FinancialEventCategory,
+  FinancialEventStatus,
+} from "@/types/financial.interfaces";
+import type { FinancialEvent, EventStatus } from "@/types/financial-events";
 
 interface TransactionFormProps {
   onCancel: () => void;
   onSuccess?: () => void;
 }
 
-// Map UI categories to Supabase constraints
-const mapCategoryToDb = (
-  uiCategory: string,
-  type: 'income' | 'expense'
-): { merchantCategory: string | null; brazilianType: string | null } => {
-  if (type === 'income') {
-    if (uiCategory === 'salary') return { merchantCategory: null, brazilianType: 'salario' };
-    if (uiCategory === 'other') return { merchantCategory: null, brazilianType: 'outros' }; // fallback
-    // Add more income mappings if needed
-    return { merchantCategory: null, brazilianType: 'outros' };
-  }
+// Use the actual BankAccount type from financial.interfaces.ts
 
-  // Expenses
-  switch (uiCategory) {
-    case 'food':
-      return { merchantCategory: 'restaurante', brazilianType: null };
-    case 'transport':
-      return { merchantCategory: 'transporte', brazilianType: null };
-    case 'bills':
-      return { merchantCategory: 'outros', brazilianType: null }; // 'contas' not in merchant_category, use outros
-    case 'leisure':
-      return { merchantCategory: 'lazer', brazilianType: null };
-    case 'health':
-      return { merchantCategory: 'saude', brazilianType: null };
-    case 'education':
-      return { merchantCategory: 'educacao', brazilianType: null };
-    case 'clothes':
-      return { merchantCategory: 'vestuario', brazilianType: null };
-    case 'electronics':
-      return { merchantCategory: 'eletronicos', brazilianType: null };
-    case 'home':
-      return { merchantCategory: 'casa_moradia', brazilianType: null };
-    case 'other':
-      return { merchantCategory: 'outros', brazilianType: null };
-    default:
-      return { merchantCategory: 'outros', brazilianType: null };
-  }
-};
-
-function TransactionForm({ onCancel, onSuccess }: TransactionFormProps) {
-  const formId = useId();
+export default function TransactionForm({
+  onCancel,
+  onSuccess,
+}: TransactionFormProps) {
+  const { createEvent } = useFinancialEvents();
+  const { accounts } = useBankAccounts();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form state
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [isIncome, setIsIncome] = useState(false);
+  const [category, setCategory] = useState<FinancialEventCategory>("OUTROS");
 
-  const descriptionId = `${formId}-description`;
-  const amountId = `${formId}-amount`;
-  const categoryId = `${formId}-category`;
-  const dateId = `${formId}-date`;
-  const typeId = `${formId}-type`;
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [status, setStatus] = useState<FinancialEventStatus>("PENDENTE");
+  const [accountId, setAccountId] = useState<string>("");
 
-  const handleSubmit = async () => {
-    if (!description || !amount || !category || !date) {
-      toast.error('Erro', {
-        description: 'Por favor, preencha todos os campos.',
-      });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!title || !amount || !date) {
+      toast.error("Preencha os campos obrigatórios");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const numericAmount = parseFloat(amount);
+      const finalAmount = isIncome
+        ? Math.abs(numericAmount)
+        : -Math.abs(numericAmount);
 
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      const eventData: Omit<FinancialEvent, "id"> = {
+        title,
+        amount: finalAmount,
+        category,
+        start: new Date(date),
+        end: new Date(date),
+        allDay: true,
+        recurring: false,
+        color: isIncome ? "emerald" : "rose",
+        status: "pending" as EventStatus,
+        type: isIncome ? "income" : "expense",
+      };
+
+      await createEvent(eventData);
+
+      if (onSuccess) {
+        onSuccess();
       }
 
-      const numericAmount = parseFloat(amount);
-      const finalAmount = type === 'expense' ? -Math.abs(numericAmount) : Math.abs(numericAmount);
-
-      const { merchantCategory, brazilianType } = mapCategoryToDb(category, type);
-
-      const { error } = await supabase.from('financial_events').insert({
-        user_id: user.id,
-        title: description,
-        amount: finalAmount,
-        category: category, // Keep original category for UI display if needed, or map it too? Schema has 'category' text field.
-        event_type: type,
-        start_date: new Date(date).toISOString(),
-        end_date: new Date(date).toISOString(),
-        status: 'paid', // Assuming manual entry is for completed transactions
-        is_income: type === 'income',
-        merchant_category: merchantCategory,
-        brazilian_event_type: brazilianType,
-      });
-
-      if (error) throw error;
-
-      toast.success('Sucesso', {
-        description: 'Transação adicionada com sucesso!',
-      });
-
-      // Reset form
-      setDescription('');
-      setAmount('');
-      setCategory('');
-
-      if (onSuccess) onSuccess();
+      // Reset
+      setTitle("");
+      setAmount("");
+      setCategory("OUTROS");
+      setIsIncome(false);
     } catch (_error) {
-      toast.error('Erro', {
-        description: 'Não foi possível salvar a transação.',
-      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="border-primary/20 transition-all duration-300 hover:shadow-lg">
+    <Card
+      className="border-primary/20 transition-all duration-300 hover:shadow-lg"
+      role="form"
+      aria-labelledby="transaction-form-title"
+    >
       <CardHeader>
-        <CardTitle>Nova Transação</CardTitle>
-        <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
+        <CardTitle id="transaction-form-title">Nova Transação</CardTitle>
+        <CardDescription>
+          Adicione uma nova transação ao seu histórico
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block font-medium text-sm" htmlFor={descriptionId}>
-              Descrição
-            </label>
-            <input
-              id={descriptionId}
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border bg-background p-2"
-              placeholder="Ex: Supermercado"
-            />
+        <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Descrição</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex: Supermercado"
+                required
+                aria-required="true"
+                aria-describedby="title-description"
+              />
+              <span id="title-description" className="sr-only">
+                Descrição obrigatória da transação financeira
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">Valor</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                required
+                aria-required="true"
+                aria-describedby="amount-description"
+                inputMode="decimal"
+              />
+              <span id="amount-description" className="sr-only">
+                Valor monetário da transação em reais
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="type">Tipo</Label>
+              <Select
+                value={isIncome.toString()}
+                onValueChange={(v) => setIsIncome(v === "true")}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">Despesa</SelectItem>
+                  <SelectItem value="true">Receita</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as FinancialEventStatus)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PENDENTE">Pendente</SelectItem>
+                  <SelectItem value="CONFIRMADO">Confirmado</SelectItem>
+                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                  <SelectItem value="AGENDADO">Agendado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={category}
+                onValueChange={(v) => setCategory(v as FinancialEventCategory)}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="RECEITA">Receita</SelectItem>
+                  <SelectItem value="DESPESA_FIXA">Despesa Fixa</SelectItem>
+                  <SelectItem value="DESPESA_VARIAVEL">
+                    Despesa Variável
+                  </SelectItem>
+                  <SelectItem value="TRANSPORTE">Transporte</SelectItem>
+                  <SelectItem value="ALIMENTACAO">Alimentação</SelectItem>
+                  <SelectItem value="MORADIA">Moradia</SelectItem>
+                  <SelectItem value="SAUDE">Saúde</SelectItem>
+                  <SelectItem value="EDUCACAO">Educação</SelectItem>
+                  <SelectItem value="LAZER">Lazer</SelectItem>
+                  <SelectItem value="OUTROS">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="account">Conta Bancária (Opcional)</Label>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger id="account">
+                  <SelectValue placeholder="Selecione a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.institution_name} ({account.account_mask})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <label className="mb-2 block font-medium text-sm" htmlFor={typeId}>
-              Tipo
-            </label>
-            <select
-              id={typeId}
-              value={type}
-              onChange={(e) => setType(e.target.value as 'income' | 'expense')}
-              className="w-full rounded-md border bg-background p-2"
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+              aria-label="Cancelar formulário de transação"
             >
-              <option value="expense">Despesa</option>
-              <option value="income">Receita</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium text-sm" htmlFor={amountId}>
-              Valor
-            </label>
-            <input
-              id={amountId}
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-md border bg-background p-2"
-              placeholder="0.00"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-medium text-sm" htmlFor={categoryId}>
-              Categoria
-            </label>
-            <select
-              id={categoryId}
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-md border bg-background p-2"
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              aria-label={
+                isLoading ? "Salvando transação" : "Salvar nova transação"
+              }
+              aria-busy={isLoading}
             >
-              <option value="">Selecione...</option>
-              <option value="food">Alimentação</option>
-              <option value="transport">Transporte</option>
-              <option value="bills">Contas</option>
-              <option value="salary">Salário</option>
-              <option value="leisure">Lazer</option>
-              <option value="health">Saúde</option>
-              <option value="education">Educação</option>
-              <option value="clothes">Vestuário</option>
-              <option value="electronics">Eletrônicos</option>
-              <option value="home">Casa/Moradia</option>
-              <option value="other">Outros</option>
-            </select>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Salvar"
+              )}
+            </Button>
           </div>
-
-          <div>
-            <label className="mb-2 block font-medium text-sm" htmlFor={dateId}>
-              Data
-            </label>
-            <input
-              id={dateId}
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-md border bg-background p-2"
-            />
-          </div>
-        </div>
-        <div className="mt-4 flex gap-2">
-          <Button withGradient onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar'}
-          </Button>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            Cancelar
-          </Button>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );
 }
-
-export default TransactionForm;

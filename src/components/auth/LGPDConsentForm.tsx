@@ -36,11 +36,11 @@ export function LGPDConsentForm({
   successMessage = 'Consentimento registrado com sucesso.',
 }: LGPDConsentFormProps) {
   const [consentState, setConsentState] = useState<LGPDConsentState>({
-    essential: defaultValues?.essential ?? false,
     analytics: defaultValues?.analytics ?? false,
+    biometric_data: defaultValues?.biometric_data ?? false,
+    essential: defaultValues?.essential ?? false,
     marketing: defaultValues?.marketing ?? false,
     voice_data_processing: defaultValues?.voice_data_processing ?? false,
-    biometric_data: defaultValues?.biometric_data ?? false,
   });
   const [internalSubmitting, setInternalSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');

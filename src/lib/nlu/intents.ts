@@ -8,7 +8,8 @@
  * @module nlu/intents
  */
 
-import { EntityType, type IntentDefinition, IntentType } from '@/lib/nlu/types';
+import type { IntentDefinition } from '@/lib/nlu/types';
+import { EntityType, IntentType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Intent Definitions
@@ -16,9 +17,20 @@ import { EntityType, type IntentDefinition, IntentType } from '@/lib/nlu/types';
 
 export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
   [IntentType.CHECK_BALANCE]: {
-    type: IntentType.CHECK_BALANCE,
-    name: 'Consultar Saldo',
+    confidence_threshold: 0.7,
     description: 'Check account balance',
+    examples: [
+      'qual é meu saldo?',
+      'quanto tenho de dinheiro?',
+      'saldo disponível',
+      'quanto sobrou?',
+      'me mostra o saldo',
+      'tá quanto na conta?',
+      'quanto de grana eu tenho?',
+    ],
+    keywords: ['saldo', 'dinheiro', 'grana', 'tenho', 'sobrou', 'disponivel'],
+    name: 'Consultar Saldo',
+    optionalSlots: [EntityType.ACCOUNT, EntityType.DATE],
     patterns: [
       /\b(qual|quanto|ver|mostrar|consultar|checar)\s+(é|eh|e|o|meu)?\s*(saldo|dinheiro|grana|bufunfa)\b/i,
       /\b(saldo|dinheiro|grana)\s+(disponivel|atual|hoje|agora)\b/i,
@@ -34,25 +46,25 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       // Enhanced pattern for "qual é meu saldo?"
       /\bqual\s+é\s+(meu|o)?\s*saldo\?*$/i,
     ],
-    keywords: ['saldo', 'dinheiro', 'grana', 'tenho', 'sobrou', 'disponivel'],
     requiredSlots: [],
-    optionalSlots: [EntityType.ACCOUNT, EntityType.DATE],
-    examples: [
-      'qual é meu saldo?',
-      'quanto tenho de dinheiro?',
-      'saldo disponível',
-      'quanto sobrou?',
-      'me mostra o saldo',
-      'tá quanto na conta?',
-      'quanto de grana eu tenho?',
-    ],
-    confidence_threshold: 0.7,
+    type: IntentType.CHECK_BALANCE,
   },
 
   [IntentType.CHECK_BUDGET]: {
-    type: IntentType.CHECK_BUDGET,
-    name: 'Consultar Orçamento',
+    confidence_threshold: 0.7,
     description: 'Check budget and spending limits',
+    examples: [
+      'quanto posso gastar?',
+      'qual meu orçamento?',
+      'quanto sobrou do orçamento?',
+      'posso gastar quanto?',
+      'limite de gastos',
+      'quanto falta do orçamento?',
+      'orçamento disponível',
+    ],
+    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto'],
+    name: 'Consultar Orçamento',
+    optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
     patterns: [
       // High confidence patterns for budget queries
       /\b(quanto|qual)\s+(posso|consigo|dá|da|pode)\s+(gastar|usar|pegar)\b/i,
@@ -63,31 +75,21 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\b(quanto|qual)\s+(sobrou|restou)\s+(do|no)?\s*(orcamento|or[cç]amento)\b/i,
       /\b(t[áÁ]|est[áÁ])\s+quanto\s+(no|na)?\s*(orcamento|or[cç]amento)\b/i,
     ],
-    keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto'],
     requiredSlots: [],
-    optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
-    examples: [
-      'quanto posso gastar?',
-      'qual meu orçamento?',
-      'quanto sobrou do orçamento?',
-      'posso gastar quanto?',
-      'limite de gastos',
-      'quanto falta do orçamento?',
-      'orçamento disponível',
-    ],
-    confidence_threshold: 0.7,
+    type: IntentType.CHECK_BUDGET,
   },
 
   [IntentType.PAY_BILL]: {
-    type: IntentType.PAY_BILL,
-    name: 'Pagar Conta',
+    confidence_threshold: 0.75,
     description: 'Pay bills and invoices',
-    patterns: [
-      /\b(pagar|paga|quitar|quita)\s+(o|a|meu|minha)?\s*(conta|boleto|fatura)\b/i,
-      /\b(pagar|paga)\s+(energia|luz|agua|internet|telefone|gas|aluguel)\b/i,
-      /\b(conta|boleto|fatura)\s+(da|de|do)\s+(energia|luz|agua|internet|telefone)\b/i,
-      /\b(quitar|quita)\s+(divida|debito|pendencia)\b/i,
-      /\b(fazer|faz)\s+pagamento\b/i,
+    examples: [
+      'pagar conta de energia',
+      'paga o boleto da água',
+      'quitar fatura do cartão',
+      'pagar internet',
+      'conta de luz',
+      'paga a energia',
+      'quitar débito',
     ],
     keywords: [
       'pagar',
@@ -100,31 +102,30 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       'agua',
       'internet',
     ],
-    requiredSlots: [EntityType.BILL_TYPE],
+    name: 'Pagar Conta',
     optionalSlots: [EntityType.AMOUNT, EntityType.DATE],
-    examples: [
-      'pagar conta de energia',
-      'paga o boleto da água',
-      'quitar fatura do cartão',
-      'pagar internet',
-      'conta de luz',
-      'paga a energia',
-      'quitar débito',
+    patterns: [
+      /\b(pagar|paga|quitar|quita)\s+(o|a|meu|minha)?\s*(conta|boleto|fatura)\b/i,
+      /\b(pagar|paga)\s+(energia|luz|agua|internet|telefone|gas|aluguel)\b/i,
+      /\b(conta|boleto|fatura)\s+(da|de|do)\s+(energia|luz|agua|internet|telefone)\b/i,
+      /\b(quitar|quita)\s+(divida|debito|pendencia)\b/i,
+      /\b(fazer|faz)\s+pagamento\b/i,
     ],
-    confidence_threshold: 0.75,
+    requiredSlots: [EntityType.BILL_TYPE],
+    type: IntentType.PAY_BILL,
   },
 
   [IntentType.CHECK_INCOME]: {
-    type: IntentType.CHECK_INCOME,
-    name: 'Consultar Recebimentos',
+    confidence_threshold: 0.7,
     description: 'Check incoming payments and income',
-    patterns: [
-      // High confidence patterns for income queries
-      /\b(quando|qual)\s+(vou|vai)\s+(receber|cair|entrar)\b/i,
-      /\b(recebimento|entrada|credito|sal[áa]rio)\s+(do\s+mes|mensal|proximo|pendente)\b/i,
-      /\b(vai|vou)\s+(ter|receber|entrar)\s+quanto\b/i,
-      /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber)\b/i,
-      /\b(sal[áa]rio)\s+(cai|entra)\s+quando\b/i,
+    examples: [
+      'quando vou receber?',
+      'recebimentos do mês',
+      'quanto vai entrar?',
+      'quando cai o salário?',
+      'próximos recebimentos',
+      'entradas previstas',
+      'vai receber quanto?',
     ],
     keywords: [
       'receber',
@@ -136,31 +137,31 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       'entrar',
       'ganhar',
     ],
-    requiredSlots: [],
+    name: 'Consultar Recebimentos',
     optionalSlots: [EntityType.PERIOD, EntityType.DATE],
-    examples: [
-      'quando vou receber?',
-      'recebimentos do mês',
-      'quanto vai entrar?',
-      'quando cai o salário?',
-      'próximos recebimentos',
-      'entradas previstas',
-      'vai receber quanto?',
+    patterns: [
+      // High confidence patterns for income queries
+      /\b(quando|qual)\s+(vou|vai)\s+(receber|cair|entrar)\b/i,
+      /\b(recebimento|entrada|credito|sal[áa]rio)\s+(do\s+mes|mensal|proximo|pendente)\b/i,
+      /\b(vai|vou)\s+(ter|receber|entrar)\s+quanto\b/i,
+      /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber)\b/i,
+      /\b(sal[áa]rio)\s+(cai|entra)\s+quando\b/i,
     ],
-    confidence_threshold: 0.7,
+    requiredSlots: [],
+    type: IntentType.CHECK_INCOME,
   },
 
   [IntentType.FINANCIAL_PROJECTION]: {
-    type: IntentType.FINANCIAL_PROJECTION,
-    name: 'Projeção Financeira',
+    confidence_threshold: 0.7,
     description: 'Financial projections and forecasts',
-    patterns: [
-      // High confidence patterns for projection queries
-      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+mes|mensal|anual)\b/i,
-      /\b(como|qual)\s+(vai|fica|esta|est[áÁ])\s+(meu|o)?\s*(mes|ano|semana)\b/i,
-      /\b(vou|vai)\s+(sobrar|faltar|ter)\s+quanto\b/i,
-      /\b(quanto|qual)\s+(sobra|falta|resta)\s+(no\s+fim|final)\s+(do\s+mes|mes)\b/i,
-      /\b(balan[çc]o|resultado)\s+(do\s+mes|mensal|previsto)\b/i,
+    examples: [
+      'projeção do mês',
+      'como vai ficar o mês?',
+      'vai sobrar quanto?',
+      'previsão financeira',
+      'quanto vai faltar?',
+      'balanço do mês',
+      'estimativa mensal',
     ],
     keywords: [
       'projeção',
@@ -172,32 +173,31 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       'faltar',
       'balanço',
     ],
-    requiredSlots: [EntityType.PERIOD],
+    name: 'Projeção Financeira',
     optionalSlots: [EntityType.CATEGORY],
-    examples: [
-      'projeção do mês',
-      'como vai ficar o mês?',
-      'vai sobrar quanto?',
-      'previsão financeira',
-      'quanto vai faltar?',
-      'balanço do mês',
-      'estimativa mensal',
+    patterns: [
+      // High confidence patterns for projection queries
+      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+mes|mensal|anual)\b/i,
+      /\b(como|qual)\s+(vai|fica|esta|est[áÁ])\s+(meu|o)?\s*(mes|ano|semana)\b/i,
+      /\b(vou|vai)\s+(sobrar|faltar|ter)\s+quanto\b/i,
+      /\b(quanto|qual)\s+(sobra|falta|resta)\s+(no\s+fim|final)\s+(do\s+mes|mes)\b/i,
+      /\b(balan[çc]o|resultado)\s+(do\s+mes|mensal|previsto)\b/i,
     ],
-    confidence_threshold: 0.7,
+    requiredSlots: [EntityType.PERIOD],
+    type: IntentType.FINANCIAL_PROJECTION,
   },
 
   [IntentType.TRANSFER_MONEY]: {
-    type: IntentType.TRANSFER_MONEY,
-    name: 'Transferir Dinheiro',
+    confidence_threshold: 0.75,
     description: 'Transfer money via PIX or TED',
-    patterns: [
-      /\b(transferir|transfere|enviar|envia|mandar|manda)\s+(dinheiro|grana|real|reais)\b/i,
-      /\b(fazer|faz)\s+(pix|ted|transfer[êe]ncia)\b/i,
-      /\b(pix|ted)\s+(para|pra|pro)\b/i,
-      /\b(transferir|transfere)\s+(para|pra|pro)\b/i,
-      /\b(enviar|envia|mandar|manda)\s+\d+\s*(reais|real|r\$)\b/i,
-      /\b(pix|ted)\s+(de|para)\s+\d+/i,
-      /\b(transfer[êe]ncia|pix)\s+(imediata|urgente)\b/i,
+    examples: [
+      'transferir para João',
+      'fazer PIX de 100 reais',
+      'enviar dinheiro',
+      'transfere 50 reais',
+      'PIX para Maria',
+      'mandar 200 reais',
+      'fazer transferência',
     ],
     keywords: [
       'transferir',
@@ -209,30 +209,31 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       'transferencia',
       'transferência',
     ],
-    requiredSlots: [EntityType.RECIPIENT, EntityType.AMOUNT],
+    name: 'Transferir Dinheiro',
     optionalSlots: [EntityType.DATE],
-    examples: [
-      'transferir para João',
-      'fazer PIX de 100 reais',
-      'enviar dinheiro',
-      'transfere 50 reais',
-      'PIX para Maria',
-      'mandar 200 reais',
-      'fazer transferência',
+    patterns: [
+      /\b(transferir|transfere|enviar|envia|mandar|manda)\s+(dinheiro|grana|real|reais)\b/i,
+      /\b(fazer|faz)\s+(pix|ted|transfer[êe]ncia)\b/i,
+      /\b(pix|ted)\s+(para|pra|pro)\b/i,
+      /\b(transferir|transfere)\s+(para|pra|pro)\b/i,
+      /\b(enviar|envia|mandar|manda)\s+\d+\s*(reais|real|r\$)\b/i,
+      /\b(pix|ted)\s+(de|para)\s+\d+/i,
+      /\b(transfer[êe]ncia|pix)\s+(imediata|urgente)\b/i,
     ],
-    confidence_threshold: 0.75,
+    requiredSlots: [EntityType.RECIPIENT, EntityType.AMOUNT],
+    type: IntentType.TRANSFER_MONEY,
   },
 
   [IntentType.UNKNOWN]: {
-    type: IntentType.UNKNOWN,
-    name: 'Desconhecido',
-    description: 'Unknown or unrecognized intent',
-    patterns: [],
-    keywords: [],
-    requiredSlots: [],
-    optionalSlots: [],
-    examples: [],
     confidence_threshold: 0.0,
+    description: 'Unknown or unrecognized intent',
+    examples: [],
+    keywords: [],
+    name: 'Desconhecido',
+    optionalSlots: [],
+    patterns: [],
+    requiredSlots: [],
+    type: IntentType.UNKNOWN,
   },
 };
 
@@ -265,11 +266,11 @@ export function getIntentDefinition(intent: IntentType): IntentDefinition {
 /**
  * Get all intent patterns
  */
-export function getAllPatterns(): Array<{
+export function getAllPatterns(): {
   intent: IntentType;
   pattern: RegExp;
-}> {
-  const patterns: Array<{ intent: IntentType; pattern: RegExp }> = [];
+}[] {
+  const patterns: { intent: IntentType; pattern: RegExp }[] = [];
 
   for (const intent of getValidIntents()) {
     const definition = INTENT_DEFINITIONS[intent];

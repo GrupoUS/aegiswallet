@@ -20,11 +20,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { type CalendarEvent, EventCalendar } from '@/components/ui/event-calendar';
+import type { CalendarEvent } from '@/components/ui/event-calendar';
+import { EventCalendar } from '@/components/ui/event-calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
 import { cn } from '@/lib/utils';
-import { type FinancialEvent, formatEventAmount } from '@/types/financial-events';
+import type { FinancialEvent } from '@/types/financial-events';
+import { formatEventAmount } from '@/types/financial-events';
 
 // Converter FinancialEvent para CalendarEvent
 function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEvent {
@@ -106,11 +108,11 @@ export function FinancialCalendar() {
 
       // Adicionar informações adicionais
       const statusMap: Record<string, 'confirmed' | 'tentative' | 'cancelled'> = {
-        pending: 'tentative',
-        paid: 'confirmed',
-        scheduled: 'confirmed',
         cancelled: 'cancelled',
         completed: 'confirmed',
+        paid: 'confirmed',
+        pending: 'tentative',
+        scheduled: 'confirmed',
       };
       calendarEvent.status = statusMap[event.status] || 'confirmed';
       calendarEvent.priority =
@@ -215,7 +217,6 @@ export function FinancialCalendar() {
       <EventCalendar
         events={calendarEvents}
         initialView="week"
-        syncWithGoogle={isConnected && syncSettings?.sync_enabled}
         onEventAdd={handleEventAdd}
         onEventUpdate={handleEventUpdate}
         onEventEdit={handleEventEdit}

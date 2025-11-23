@@ -51,6 +51,32 @@ export enum STTErrorCode {
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 
+interface ExtendedError extends Error {
+  code?: STTErrorCode | string;
+  status?: number;
+}
+
+interface WhisperSegment {
+  avg_logprob?: number;
+  [key: string]: unknown;
+}
+
+interface WhisperResponse {
+  text?: string;
+  language?: string;
+  duration?: number;
+  segments?: WhisperSegment[];
+  [key: string]: unknown;
+}
+
+interface NetworkInformation {
+  effectiveType: string;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 // ============================================================================
 // Speech-to-Text Service Class
 // ============================================================================
@@ -65,8 +91,8 @@ export class SpeechToTextService {
   constructor(config: STTConfig, dependencies?: { fetch?: typeof fetch }) {
     this.config = {
       apiKey: config.apiKey,
-      model: config.model || 'whisper-1',
       language: config.language || 'pt',
+      model: config.model || 'whisper-1',
       temperature: config.temperature || 0.0,
       timeout: config.timeout || 10000, // 10 seconds default
     };
@@ -182,12 +208,12 @@ export class SpeechToTextService {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     const requestInit: RequestInit & { signal: AbortSignal } = {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.config.apiKey}`,
-        Accept: 'application/json',
-      },
       body: formData,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+      method: 'POST',
       signal: controller.signal,
     };
 
@@ -221,8 +247,8 @@ export class SpeechToTextService {
         error instanceof Error &&
         (error.name === 'AbortError' || /aborted/.test(error.message))
       ) {
-        const timeoutError = new Error('Request timed out. Please try again.');
-        (timeoutError as any).code = STTErrorCode.TIMEOUT;
+        const timeoutError = new Error('Request timed out. Please try again.') as ExtendedError;
+        timeoutError.code = STTErrorCode.TIMEOUT;
         timeoutError.name = 'AbortError';
         throw timeoutError;
       }
@@ -233,12 +259,12 @@ export class SpeechToTextService {
 
   private createTestRequest(init: RequestInit & { signal: AbortSignal }): Request {
     return {
-      method: init.method ?? 'POST',
-      headers: init.headers as HeadersInit,
       body: init.body as BodyInit,
+      clone: () => this.createTestRequest(init),
+      headers: init.headers as HeadersInit,
+      method: init.method ?? 'POST',
       signal: init.signal,
       url: this.API_ENDPOINT,
-      clone: () => this.createTestRequest(init),
     } as unknown as Request;
   }
 
@@ -246,17 +272,17 @@ export class SpeechToTextService {
    * Parse API response and extract transcription
    */
   private async parseResponse(response: Response, startTime: number): Promise<STTResult> {
-    const data = await response.json();
+    const data = (await response.json()) as WhisperResponse;
 
     const processingTimeMs = Math.max(1, Date.now() - startTime);
 
     return {
-      text: data.text || '',
-      language: data.language || this.config.language,
-      duration: data.duration || 0,
       confidence: this.calculateConfidence(data),
-      timestamp: new Date(),
+      duration: data.duration || 0,
+      language: data.language || this.config.language,
       processingTimeMs,
+      text: data.text || '',
+      timestamp: new Date(),
     };
   }
 
@@ -266,12 +292,14 @@ export class SpeechToTextService {
    * Note: Whisper API doesn't return confidence directly,
    * so we estimate based on response characteristics
    */
-  private calculateConfidence(data: any): number {
+  private calculateConfidence(data: WhisperResponse): number {
     // If we have segments with avg_logprob, use that
     if (data.segments && data.segments.length > 0) {
       const avgLogProb =
-        data.segments.reduce((sum: number, seg: any) => sum + (seg.avg_logprob || 0), 0) /
-        data.segments.length;
+        data.segments.reduce(
+          (sum: number, seg: WhisperSegment) => sum + (seg.avg_logprob || 0),
+          0
+        ) / data.segments.length;
 
       // Convert log probability to confidence (0-1)
       // avg_logprob typically ranges from -1 to 0
@@ -356,9 +384,9 @@ export class SpeechToTextService {
       errorMessage = `${errorMessage} (${response.status})`;
     }
 
-    const apiError = new Error(errorMessage);
+    const apiError = new Error(errorMessage) as ExtendedError;
     apiError.name = 'APIError';
-    (apiError as any).status = status;
+    apiError.status = status;
     return apiError;
   }
 
@@ -367,8 +395,8 @@ export class SpeechToTextService {
    */
   private handleError(error: unknown): STTError {
     if (error instanceof Error) {
-      const status = (error as any).status as number | undefined;
-      const explicitCode = (error as any).code as STTErrorCode | undefined;
+      const status = (error as ExtendedError).status;
+      const explicitCode = (error as ExtendedError).code as STTErrorCode | undefined;
       const errorMessage = error.message.toLowerCase();
       const errorName = error.name;
 
@@ -513,8 +541,9 @@ export class SpeechToTextService {
       }
     }
 
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      const env = (import.meta as any).env;
+    const importMeta = import.meta as { env?: Record<string, unknown> };
+    if (typeof import.meta !== 'undefined' && importMeta.env) {
+      const env = importMeta.env;
       if (env.MODE === 'test' || env.VITEST || env.NODE_ENV === 'test') {
         return true;
       }
@@ -541,15 +570,23 @@ export class SpeechToTextService {
       // Try to transcribe (will likely fail but confirms API is reachable)
       await this.transcribe(testBlob);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If we get an authentication or API error, the service is reachable
       // Network errors are the only ones that indicate the service is unreachable
-      const errorMessage = error?.message || '';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorName = error instanceof Error ? error.name : '';
+
+      // Check for STT network error code
+      const isSTTNetworkError = (error as any)?.code === 'NETWORK_ERROR';
+
+      // Check for original network error or wrapped network error
       const isNetworkError =
+        isSTTNetworkError ||
         errorMessage.includes('Network error') ||
         errorMessage.includes('fetch') ||
         errorMessage.includes('TypeError') ||
-        error?.name === 'TypeError';
+        errorName === 'TypeError' ||
+        errorMessage.includes('Network error. Please check your connection.');
 
       return !isNetworkError;
     }
@@ -558,9 +595,12 @@ export class SpeechToTextService {
 
 export class AdaptiveSTTService extends SpeechToTextService {
   private getNetworkBasedTimeout(): number {
-    const connection = (navigator as any).connection;
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection;
 
-    if (!connection) return 15000;
+    if (!connection) {
+      return 15000;
+    }
 
     const timeouts: Record<string, number> = {
       'slow-2g': 30000, // 30s

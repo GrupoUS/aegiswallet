@@ -51,9 +51,9 @@ export interface FinancialEvent {
  */
 export function getColorForEventType(type: FinancialEventType): EventColor {
   const colorMap: Record<FinancialEventType, EventColor> = {
-    income: 'emerald',
-    expense: 'rose',
     bill: 'orange',
+    expense: 'rose',
+    income: 'emerald',
     scheduled: 'blue',
     transfer: 'violet',
   };
@@ -65,9 +65,9 @@ export function getColorForEventType(type: FinancialEventType): EventColor {
  */
 export function getIconForEventType(type: FinancialEventType): string {
   const iconMap: Record<FinancialEventType, string> = {
-    income: '💰',
-    expense: '💸',
     bill: '📄',
+    expense: '💸',
+    income: '💰',
     scheduled: '📅',
     transfer: '↔️',
   };
@@ -79,7 +79,7 @@ export function getIconForEventType(type: FinancialEventType): string {
  */
 export function formatEventAmount(amount: number): string {
   return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
     currency: 'BRL',
+    style: 'currency',
   }).format(Math.abs(amount));
 }

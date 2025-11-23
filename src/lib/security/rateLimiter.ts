@@ -25,7 +25,7 @@ export interface RateLimitResult {
 }
 
 export class InMemoryRateLimiter {
-  private attempts = new Map<string, Array<number>>();
+  private attempts = new Map<string, number[]>();
   private config: RateLimitConfig;
 
   constructor(config: RateLimitConfig) {
@@ -39,6 +39,17 @@ export class InMemoryRateLimiter {
     setInterval(() => this.cleanup(), this.config.windowMs);
   }
 
+  private createEmptyLimitInfo(key: string, windowStart: number): RateLimitInfo {
+    return {
+      currentAttempts: 0,
+      identifier: key,
+      isBlocked: false,
+      maxAttempts: this.config.maxAttempts,
+      remainingAttempts: this.config.maxAttempts,
+      resetTime: new Date(windowStart + this.config.windowMs),
+    };
+  }
+
   checkLimit(identifier: string, options?: { success?: boolean }): RateLimitResult {
     const key = this.config.keyGenerator ? this.config.keyGenerator(identifier) : identifier;
     const now = Date.now();
@@ -49,7 +60,10 @@ export class InMemoryRateLimiter {
       this.attempts.set(key, []);
     }
 
-    const attempts = this.attempts.get(key)!;
+    const attempts = this.attempts.get(key);
+    if (!attempts) {
+      return { allowed: true, limitInfo: this.createEmptyLimitInfo(key, windowStart) };
+    }
 
     // Remove old attempts outside the window
     const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
@@ -60,12 +74,12 @@ export class InMemoryRateLimiter {
       return {
         allowed: true,
         limitInfo: {
-          identifier: key,
           currentAttempts: recentAttempts.length,
+          identifier: key,
+          isBlocked: false,
           maxAttempts: this.config.maxAttempts,
           remainingAttempts: this.config.maxAttempts - recentAttempts.length,
           resetTime: new Date(windowStart + this.config.windowMs),
-          isBlocked: false,
         },
       };
     }
@@ -74,12 +88,12 @@ export class InMemoryRateLimiter {
       return {
         allowed: true,
         limitInfo: {
-          identifier: key,
           currentAttempts: recentAttempts.length,
+          identifier: key,
+          isBlocked: false,
           maxAttempts: this.config.maxAttempts,
           remainingAttempts: this.config.maxAttempts - recentAttempts.length,
           resetTime: new Date(windowStart + this.config.windowMs),
-          isBlocked: false,
         },
       };
     }
@@ -93,12 +107,12 @@ export class InMemoryRateLimiter {
       const retryAfter = Math.ceil((oldestAttempt + this.config.windowMs - now) / 1000);
 
       const limitInfo: RateLimitInfo = {
-        identifier: key,
         currentAttempts: recentAttempts.length,
+        identifier: key,
+        isBlocked: true,
         maxAttempts: this.config.maxAttempts,
         remainingAttempts: 0,
         resetTime: new Date(oldestAttempt + this.config.windowMs),
-        isBlocked: true,
       };
 
       // Call callback if provided
@@ -106,8 +120,8 @@ export class InMemoryRateLimiter {
 
       // Log rate limit hit
       logger.warn('Rate limit exceeded', {
-        identifier,
         attempts: recentAttempts.length,
+        identifier,
         maxAttempts: this.config.maxAttempts,
         retryAfter,
       });
@@ -124,12 +138,12 @@ export class InMemoryRateLimiter {
     this.attempts.set(key, recentAttempts);
 
     const limitInfo: RateLimitInfo = {
-      identifier: key,
       currentAttempts: recentAttempts.length,
+      identifier: key,
+      isBlocked: false,
       maxAttempts: this.config.maxAttempts,
       remainingAttempts: this.config.maxAttempts - recentAttempts.length,
       resetTime: new Date(now + this.config.windowMs),
-      isBlocked: false,
     };
 
     return {
@@ -157,12 +171,12 @@ export class InMemoryRateLimiter {
     const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
 
     return {
-      identifier: key,
       currentAttempts: recentAttempts.length,
+      identifier: key,
+      isBlocked: recentAttempts.length >= this.config.maxAttempts,
       maxAttempts: this.config.maxAttempts,
       remainingAttempts: Math.max(0, this.config.maxAttempts - recentAttempts.length),
       resetTime: new Date(Math.max(...recentAttempts) + this.config.windowMs),
-      isBlocked: recentAttempts.length >= this.config.maxAttempts,
     };
   }
 
@@ -202,7 +216,7 @@ export class InMemoryRateLimiter {
       }
     }
 
-    return { totalEntries, blockedRequests };
+    return { blockedRequests, totalEntries };
   }
 }
 
@@ -313,9 +327,9 @@ export class RateLimitManager {
   ): void {
     // Log to audit trail
     logger.warn('Rate limit threshold reached', {
-      limiterName,
-      identifier,
       attempts: limitInfo.currentAttempts,
+      identifier,
+      limiterName,
       maxAttempts: limitInfo.maxAttempts,
       resetTime: limitInfo.resetTime,
     });

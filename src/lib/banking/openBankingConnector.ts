@@ -42,13 +42,13 @@ export class OpenBankingConnector {
     // Mock data for MVP
     return [
       {
+        accountNumber: '12345-6',
+        balance: 5000.0,
+        branch: '0001',
+        currency: 'BRL',
         id: 'acc_1',
         institution: 'Banco do Brasil',
         type: 'checking',
-        balance: 5000.0,
-        currency: 'BRL',
-        accountNumber: '12345-6',
-        branch: '0001',
       },
     ];
   }
@@ -61,13 +61,13 @@ export class OpenBankingConnector {
     // Mock data for MVP
     return [
       {
-        id: 'tx_1',
         accountId: _accountId,
-        date: new Date(),
         amount: -150.0,
-        description: 'Supermercado',
-        type: 'debit',
         category: 'food',
+        date: new Date(),
+        description: 'Supermercado',
+        id: 'tx_1',
+        type: 'debit',
       },
     ];
   }

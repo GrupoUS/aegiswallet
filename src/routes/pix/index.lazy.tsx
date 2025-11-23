@@ -36,7 +36,7 @@ export function PixDashboard() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-pix-primary border-b-2"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-pix-primary border-b-2" />
       </div>
     );
   }

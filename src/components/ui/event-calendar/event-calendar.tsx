@@ -1,11 +1,5 @@
-import {
-  DndContext,
-  type DragEndEvent,
-  PointerSensor,
-  useDraggable,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useDraggable, useSensor, useSensors } from '@dnd-kit/core';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +30,10 @@ function DraggableNewEvent() {
       {...attributes}
       variant="secondary"
       size="sm"
+      type="button"
       className="cursor-grab active:cursor-grabbing"
+      aria-label="Arrastar para criar novo evento"
+      draggable="true"
     >
       + Novo Evento
     </Button>
@@ -129,9 +126,9 @@ export function EventCalendar({
             // Set default duration 1 hour
             // If in day view, newDate might have time.
             onEventAdd?.({
-              start: newDate,
-              end: new Date(newDate.getTime() + 60 * 60 * 1000),
               allDay: view === 'month',
+              end: new Date(newDate.getTime() + 60 * 60 * 1000),
+              start: newDate,
             });
           }
           return;
@@ -185,8 +182,7 @@ export function EventCalendar({
             events={filteredEvents}
             onEventEdit={handleEventEdit}
             onEventClick={handleEventClick}
-            onEventAdd={(date: Date) => onEventAdd?.({ start: date, end: date, allDay: true })}
-            onEventUpdate={onEventUpdate}
+            onEventAdd={(date: Date) => onEventAdd?.({ allDay: true, end: date, start: date })}
           />
         );
     }
@@ -205,13 +201,16 @@ export function EventCalendar({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar eventos..."
               className="w-full max-w-xs"
+              aria-label="Buscar eventos por título ou descrição"
+              type="search"
             />
             <select
-              className="rounded-md border px-3 py-2 text-sm"
+              className="rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={statusFilter ?? 'all'}
               onChange={(event) =>
                 setStatusFilter(event.target.value as 'all' | CalendarEvent['status'])
               }
+              aria-label="Filtrar por status dos eventos"
             >
               <option value="all">Todos os status</option>
               <option value="confirmed">Confirmados</option>
@@ -219,11 +218,12 @@ export function EventCalendar({
               <option value="cancelled">Cancelados</option>
             </select>
             <select
-              className="rounded-md border px-3 py-2 text-sm"
+              className="rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={priorityFilter ?? 'all'}
               onChange={(event) =>
                 setPriorityFilter(event.target.value as 'all' | CalendarEvent['priority'])
               }
+              aria-label="Filtrar por prioridade dos eventos"
             >
               <option value="all">Todas prioridades</option>
               <option value="high">Alta</option>
@@ -234,25 +234,40 @@ export function EventCalendar({
               <Button
                 variant={view === 'month' ? 'default' : 'outline'}
                 size="sm"
+                type="button"
                 onClick={() => setView('month')}
+                aria-label="Visualizar calendário por mês"
+                aria-pressed={view === 'month'}
               >
                 Mês
               </Button>
               <Button
                 variant={view === 'week' ? 'default' : 'outline'}
                 size="sm"
+                type="button"
                 onClick={() => setView('week')}
+                aria-label="Visualizar calendário por semana"
+                aria-pressed={view === 'week'}
               >
                 Semana
               </Button>
               <Button
                 variant={view === 'day' ? 'default' : 'outline'}
                 size="sm"
+                type="button"
                 onClick={() => setView('day')}
+                aria-label="Visualizar calendário por dia"
+                aria-pressed={view === 'day'}
               >
                 Dia
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => setCurrentDate(new Date())}
+                aria-label="Ir para a data de hoje"
+              >
                 Hoje
               </Button>
             </div>

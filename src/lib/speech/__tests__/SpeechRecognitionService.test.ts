@@ -32,7 +32,7 @@ Object.defineProperty(global.navigator, 'mediaDevices', {
 
 describe('SpeechRecognitionService', () => {
   let service: SpeechRecognitionService;
-  let mockInstance: any;
+  let mockInstance: Record<string, unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -44,17 +44,17 @@ describe('SpeechRecognitionService', () => {
 
     // Mock SpeechRecognition
     mockInstance = {
+      continuous: false,
+      grammars: null,
+      interimResults: true,
       lang: '',
       maxAlternatives: 3,
-      continuous: false,
-      interimResults: true,
-      grammars: null,
+      onend: null,
+      onerror: null,
+      onresult: null,
+      onstart: null,
       start: vi.fn(),
       stop: vi.fn(),
-      onresult: null,
-      onerror: null,
-      onend: null,
-      onstart: null,
     };
 
     mockSpeechRecognition.mockReturnValue(mockInstance);
@@ -80,8 +80,11 @@ describe('SpeechRecognitionService', () => {
     });
 
     it('should handle unsupported browsers gracefully', () => {
-      delete (global as any).window.SpeechRecognition;
-      delete (global as any).window.webkitSpeechRecognition;
+      const globalAny = global as unknown as {
+        window: { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
+      };
+      delete globalAny.window.SpeechRecognition;
+      delete globalAny.window.webkitSpeechRecognition;
 
       const unsupportedService = new SpeechRecognitionService();
       expect(unsupportedService.isWebSpeechSupported()).toBe(false);

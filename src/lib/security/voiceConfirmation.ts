@@ -63,10 +63,10 @@ export class VoiceConfirmationService {
       // Check if amount requires confirmation
       if (params.amount < this.config.minAmount) {
         return {
-          success: true,
-          method: 'voice',
           confidence: 1.0,
+          method: 'voice',
           processingTime: Date.now() - startTime,
+          success: true,
         };
       }
 
@@ -76,11 +76,11 @@ export class VoiceConfirmationService {
       if (!voiceResult.success) {
         await this.logFailedAttempt(params);
         return {
-          success: false,
-          method: 'voice',
           confidence: voiceResult.confidence,
-          transcription: voiceResult.transcription,
+          method: 'voice',
           processingTime: Date.now() - startTime,
+          success: false,
+          transcription: voiceResult.transcription,
         };
       }
 
@@ -91,39 +91,39 @@ export class VoiceConfirmationService {
         if (!biometricResult.success) {
           await this.logFailedAttempt(params);
           return {
-            success: false,
-            method: 'biometric',
             confidence: 0,
+            method: 'biometric',
             processingTime: Date.now() - startTime,
+            success: false,
           };
         }
       }
 
       // 3. Create audit log
       const auditLogId = await createAuditLog({
-        userId: params.userId,
         action: 'transaction_confirmed',
-        transactionType: params.transactionType,
         amount: params.amount,
-        method: this.config.requiresBiometric ? 'voice+biometric' : 'voice',
         confidence: voiceResult.confidence,
+        method: this.config.requiresBiometric ? 'voice+biometric' : 'voice',
+        transactionType: params.transactionType,
         transcription: this.config.enableRecording ? voiceResult.transcription : undefined,
+        userId: params.userId,
       });
 
       return {
-        success: true,
-        method: this.config.requiresBiometric ? 'biometric' : 'voice',
-        confidence: voiceResult.confidence,
-        transcription: voiceResult.transcription,
-        processingTime: Date.now() - startTime,
         auditLogId,
+        confidence: voiceResult.confidence,
+        method: this.config.requiresBiometric ? 'biometric' : 'voice',
+        processingTime: Date.now() - startTime,
+        success: true,
+        transcription: voiceResult.transcription,
       };
     } catch (_error) {
       return {
-        success: false,
-        method: 'fallback',
         confidence: 0,
+        method: 'fallback',
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
   }
@@ -138,22 +138,51 @@ export class VoiceConfirmationService {
   }> {
     // Use Web Speech API for simplicity (already available)
     return new Promise((resolve) => {
-      if (!('webkitSpeechRecognition' in window)) {
-        resolve({ success: false, confidence: 0 });
+      // Type definition for Web Speech API
+      interface SpeechRecognitionEvent {
+        results: {
+          [key: number]: {
+            [key: number]: {
+              transcript: string;
+              confidence: number;
+            };
+          };
+        };
+      }
+
+      interface ISpeechRecognition {
+        lang: string;
+        continuous: boolean;
+        interimResults: boolean;
+        start: () => void;
+        stop: () => void;
+        onresult: (event: SpeechRecognitionEvent) => void;
+        onerror: (event: unknown) => void;
+      }
+
+      // Check for browser support
+      const SpeechRecognition =
+        (window as unknown as { webkitSpeechRecognition: new () => ISpeechRecognition })
+          .webkitSpeechRecognition ||
+        (window as unknown as { SpeechRecognition: new () => ISpeechRecognition })
+          .SpeechRecognition;
+
+      if (!SpeechRecognition) {
+        resolve({ confidence: 0, success: false });
         return;
       }
 
-      const recognition = new (window as any).webkitSpeechRecognition();
+      const recognition = new SpeechRecognition();
       recognition.lang = 'pt-BR';
       recognition.continuous = false;
       recognition.interimResults = false;
 
       const timeout = setTimeout(() => {
         recognition.stop();
-        resolve({ success: false, confidence: 0 });
+        resolve({ confidence: 0, success: false });
       }, this.config.timeoutSeconds * 1000);
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         clearTimeout(timeout);
         const transcript = event.results[0][0].transcript.toLowerCase();
         const confidence = event.results[0][0].confidence;
@@ -161,15 +190,15 @@ export class VoiceConfirmationService {
         const match = this.fuzzyMatch(transcript, expectedPhrase.toLowerCase());
 
         resolve({
-          success: match && confidence > 0.7,
           confidence,
+          success: match && confidence > 0.7,
           transcription: transcript,
         });
       };
 
       recognition.onerror = () => {
         clearTimeout(timeout);
-        resolve({ success: false, confidence: 0 });
+        resolve({ confidence: 0, success: false });
       };
 
       recognition.start();
@@ -184,7 +213,12 @@ export class VoiceConfirmationService {
     if ('credentials' in navigator) {
       try {
         // Web Authentication API (FaceID, TouchID, PIN)
-        const credential = await (navigator.credentials as any).get({
+        // Using unknown casting for cleaner type safety
+        const credentials = navigator.credentials as unknown as {
+          get: (options: unknown) => Promise<unknown>;
+        };
+
+        const credential = await credentials.get({
           publicKey: {
             challenge: new Uint8Array(32), // Random challenge
             rpId: window.location.hostname,
@@ -257,14 +291,19 @@ export class VoiceConfirmationService {
   /**
    * Log failed confirmation attempt
    */
-  private async logFailedAttempt(params: any): Promise<void> {
+  private async logFailedAttempt(params: {
+    userId: string;
+    transactionType: string;
+    amount: number;
+    [key: string]: unknown;
+  }): Promise<void> {
     await createAuditLog({
-      userId: params.userId,
       action: 'confirmation_failed',
-      transactionType: params.transactionType,
       amount: params.amount,
-      method: 'voice',
       confidence: 0,
+      method: 'voice',
+      transactionType: params.transactionType,
+      userId: params.userId,
     });
   }
 
@@ -273,9 +312,9 @@ export class VoiceConfirmationService {
    */
   generateConfirmationPhrase(action: string): string {
     const phrases = {
-      transfer: ['Eu autorizo esta transferência', 'Confirmo a transferência', 'Sim, eu autorizo'],
-      payment: ['Eu autorizo este pagamento', 'Confirmo o pagamento', 'Sim, pago a conta'],
       bill: ['Eu autorizo pagar esta conta', 'Confirmo o pagamento', 'Sim, eu pago'],
+      payment: ['Eu autorizo este pagamento', 'Confirmo o pagamento', 'Sim, pago a conta'],
+      transfer: ['Eu autorizo esta transferência', 'Confirmo a transferência', 'Sim, eu autorizo'],
     };
 
     const actionPhrases = phrases[action as keyof typeof phrases] || phrases.transfer;

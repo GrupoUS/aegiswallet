@@ -36,7 +36,7 @@ export interface ProcessedAudio {
 export interface VADResult {
   hasVoice: boolean;
   confidence: number;
-  speechSegments: Array<{ start: number; end: number }>;
+  speechSegments: { start: number; end: number }[];
 }
 
 // ============================================================================
@@ -105,7 +105,7 @@ export class AudioProcessor {
         peakVolume: analysis.peakVolume,
       };
     } catch (error) {
-      throw new Error(`Audio processing failed: ${error}`);
+      throw new Error(`Audio processing failed: ${error}`, { cause: error });
     }
   }
 
@@ -117,7 +117,7 @@ export class AudioProcessor {
   private detectVoiceActivity(audioBuffer: AudioBuffer): VADResult {
     const channelData = audioBuffer.getChannelData(0);
     const frameSize = Math.floor(audioBuffer.sampleRate * 0.02); // 20ms frames
-    const speechSegments: Array<{ start: number; end: number }> = [];
+    const speechSegments: { start: number; end: number }[] = [];
 
     let voiceFrames = 0;
     let totalFrames = 0;
@@ -140,8 +140,8 @@ export class AudioProcessor {
       } else if (inSpeech) {
         // End of speech segment
         speechSegments.push({
-          start: speechStart,
           end: i / audioBuffer.sampleRate,
+          start: speechStart,
         });
         inSpeech = false;
       }
@@ -150,8 +150,8 @@ export class AudioProcessor {
     // Close last segment if still in speech
     if (inSpeech) {
       speechSegments.push({
-        start: speechStart,
         end: audioBuffer.duration,
+        start: speechStart,
       });
     }
 
@@ -159,8 +159,8 @@ export class AudioProcessor {
     const hasVoice = confidence > 0.1; // At least 10% voice activity
 
     return {
-      hasVoice,
       confidence,
+      hasVoice,
       speechSegments,
     };
   }
@@ -334,40 +334,40 @@ export class AudioProcessor {
       // Check minimum duration
       if (processed.duration < this.config.minAudioDuration) {
         return {
-          valid: false,
           reason: `Audio too short: ${processed.duration}ms (min: ${this.config.minAudioDuration}ms)`,
+          valid: false,
         };
       }
 
       // Check maximum duration
       if (processed.duration > this.config.maxAudioDuration) {
         return {
-          valid: false,
           reason: `Audio too long: ${processed.duration}ms (max: ${this.config.maxAudioDuration}ms)`,
+          valid: false,
         };
       }
 
       // Check for voice activity
       if (!processed.hasVoice) {
         return {
-          valid: false,
           reason: 'No voice activity detected',
+          valid: false,
         };
       }
 
       // Check volume
       if (processed.averageVolume < this.config.volumeThreshold) {
         return {
-          valid: false,
           reason: 'Audio volume too low',
+          valid: false,
         };
       }
 
       return { valid: true };
     } catch (error) {
       return {
-        valid: false,
         reason: `Validation error: ${error}`,
+        valid: false,
       };
     }
   }

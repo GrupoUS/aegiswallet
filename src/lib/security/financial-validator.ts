@@ -274,25 +274,25 @@ export const BRAZILIAN_BANKS = new Set([
  * PIX key validation patterns
  */
 export const PIX_PATTERNS = {
-  CPF: {
-    regex: /^\d{11}$/,
-    format: 'XXX.XXX.XXX-XX',
-  },
   CNPJ: {
-    regex: /^\d{14}$/,
     format: 'XX.XXX.XXX/XXXX-XX',
+    regex: /^\d{14}$/,
+  },
+  CPF: {
+    format: 'XXX.XXX.XXX-XX',
+    regex: /^\d{11}$/,
   },
   EMAIL: {
-    regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     format: 'email@example.com',
+    regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
   PHONE: {
-    regex: /^\+?\d{10,15}$/,
     format: '+55 (XX) XXXXX-XXXX',
+    regex: /^\+?\d{10,15}$/,
   },
   RANDOM_KEY: {
-    regex: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     format: 'XXXX-XXXX-XXXX-XXXX-XXXX',
+    regex: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   },
 };
 
@@ -300,7 +300,6 @@ export const PIX_PATTERNS = {
  * Transaction categories for Brazilian financial operations
  */
 export const TRANSACTION_CATEGORIES = {
-  INCOME: ['salario', 'freelancer', 'investimentos', 'aluguel', 'vendas', 'outros_recebimentos'],
   EXPENSE: [
     'alimentacao',
     'moradia',
@@ -313,6 +312,7 @@ export const TRANSACTION_CATEGORIES = {
     'impostos',
     'outros_gastos',
   ],
+  INCOME: ['salario', 'freelancer', 'investimentos', 'aluguel', 'vendas', 'outros_recebimentos'],
 };
 
 /**
@@ -355,19 +355,35 @@ export const financialSchemas = {
       (val) => Number.isFinite(val) && Number(val.toFixed(2)) === val,
       'Amount must have at most 2 decimal places'
     ),
-
-  transaction: z.object({
-    description: z
+  bankAccount: z.object({
+    account: z
       .string()
-      .min(3, 'Description must be at least 3 characters')
-      .max(200, 'Description must be less than 200 characters')
-      .refine(
-        (desc) =>
-          !FRAUD_PATTERNS.SUSPICIOUS_DESCRIPTIONS.some((pattern) =>
-            desc.toLowerCase().includes(pattern)
-          ),
-        'Description contains suspicious content'
-      ),
+      .regex(/^\d{1,12}$/, 'Account must be 1-12 digits')
+      .refine((account) => !/^0+$/.test(account), 'Account cannot be all zeros'),
+    accountDigit: z.string().regex(/^\d$/, 'Account digit must be a single digit'),
+    agency: z
+      .string()
+      .regex(/^\d{1,6}$/, 'Agency must be 1-6 digits')
+      .refine((agency) => !/^0+$/.test(agency), 'Agency cannot be all zeros'),
+    bankCode: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid Brazilian bank code'),
+  }),
+  financialInstitution: z.object({
+    code: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid bank code'),
+    name: z
+      .string()
+      .min(2, 'Institution name must be at least 2 characters')
+      .max(100, 'Institution name must be less than 100 characters'),
+  }),
+  pixKey: z
+    .object({
+      key: z.string().min(1, 'PIX key cannot be empty'),
+      type: z.enum(['cpf', 'cnpj', 'email', 'phone', 'random']),
+    })
+    .refine((data) => {
+      const pattern = PIX_PATTERNS[data.type.toUpperCase() as keyof typeof PIX_PATTERNS];
+      return pattern.regex.test(data.key.replace(/\D/g, ''));
+    }, 'Invalid PIX key format for the specified type'),
+  transaction: z.object({
     amount: z.number(),
     category: z
       .string()
@@ -384,37 +400,17 @@ export const financialSchemas = {
         parsed <= new Date(Date.now() + 24 * 60 * 60 * 1000)
       ); // Allow tomorrow
     }, 'Invalid date. Must be a valid date between 2020-01-01 and tomorrow'),
-  }),
-
-  pixKey: z
-    .object({
-      type: z.enum(['cpf', 'cnpj', 'email', 'phone', 'random']),
-      key: z.string().min(1, 'PIX key cannot be empty'),
-    })
-    .refine((data) => {
-      const pattern = PIX_PATTERNS[data.type.toUpperCase() as keyof typeof PIX_PATTERNS];
-      return pattern.regex.test(data.key.replace(/\D/g, ''));
-    }, 'Invalid PIX key format for the specified type'),
-
-  bankAccount: z.object({
-    bankCode: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid Brazilian bank code'),
-    agency: z
+    description: z
       .string()
-      .regex(/^\d{1,6}$/, 'Agency must be 1-6 digits')
-      .refine((agency) => !/^0+$/.test(agency), 'Agency cannot be all zeros'),
-    account: z
-      .string()
-      .regex(/^\d{1,12}$/, 'Account must be 1-12 digits')
-      .refine((account) => !/^0+$/.test(account), 'Account cannot be all zeros'),
-    accountDigit: z.string().regex(/^\d$/, 'Account digit must be a single digit'),
-  }),
-
-  financialInstitution: z.object({
-    name: z
-      .string()
-      .min(2, 'Institution name must be at least 2 characters')
-      .max(100, 'Institution name must be less than 100 characters'),
-    code: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid bank code'),
+      .min(3, 'Description must be at least 3 characters')
+      .max(200, 'Description must be less than 200 characters')
+      .refine(
+        (desc) =>
+          !FRAUD_PATTERNS.SUSPICIOUS_DESCRIPTIONS.some((pattern) =>
+            desc.toLowerCase().includes(pattern)
+          ),
+        'Description contains suspicious content'
+      ),
   }),
 };
 
@@ -425,7 +421,7 @@ export function validateTransactionForFraud(transaction: {
   amount: number;
   description: string;
   userId: string;
-  previousTransactions?: Array<{ amount: number; timestamp: number }>;
+  previousTransactions?: { amount: number; timestamp: number }[];
 }): {
   isValid: boolean;
   riskLevel: 'low' | 'medium' | 'high';
@@ -487,10 +483,10 @@ export function validateTransactionForFraud(transaction: {
   }
 
   return {
+    blocked,
     isValid: !blocked,
     riskLevel,
     warnings,
-    blocked,
   };
 }
 
@@ -500,8 +496,12 @@ export function validateTransactionForFraud(transaction: {
 export function validateCPF(cpf: string): boolean {
   const cleanCPF = cpf.replace(/\D/g, '');
 
-  if (cleanCPF.length !== 11) return false;
-  if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+  if (cleanCPF.length !== 11) {
+    return false;
+  }
+  if (/^(\d)\1{10}$/.test(cleanCPF)) {
+    return false;
+  }
 
   let sum = 0;
   let remainder: number;
@@ -511,8 +511,12 @@ export function validateCPF(cpf: string): boolean {
   }
 
   remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cleanCPF.substring(9, 10), 10)) return false;
+  if (remainder === 10 || remainder === 11) {
+    remainder = 0;
+  }
+  if (remainder !== parseInt(cleanCPF.substring(9, 10), 10)) {
+    return false;
+  }
 
   sum = 0;
   for (let i = 1; i <= 10; i++) {
@@ -520,8 +524,12 @@ export function validateCPF(cpf: string): boolean {
   }
 
   remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cleanCPF.substring(10, 11), 10)) return false;
+  if (remainder === 10 || remainder === 11) {
+    remainder = 0;
+  }
+  if (remainder !== parseInt(cleanCPF.substring(10, 11), 10)) {
+    return false;
+  }
 
   return true;
 }
@@ -532,8 +540,12 @@ export function validateCPF(cpf: string): boolean {
 export function validateCNPJ(cnpj: string): boolean {
   const cleanCNPJ = cnpj.replace(/\D/g, '');
 
-  if (cleanCNPJ.length !== 14) return false;
-  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+  if (cleanCNPJ.length !== 14) {
+    return false;
+  }
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) {
+    return false;
+  }
 
   // Validate first check digit
   let sum = 0;
@@ -546,7 +558,9 @@ export function validateCNPJ(cnpj: string): boolean {
   let remainder = sum % 11;
   const firstDigit = remainder < 2 ? 0 : 11 - remainder;
 
-  if (firstDigit !== parseInt(cleanCNPJ[12], 10)) return false;
+  if (firstDigit !== parseInt(cleanCNPJ[12], 10)) {
+    return false;
+  }
 
   // Validate second check digit
   sum = 0;
@@ -587,45 +601,45 @@ export function validateAndFormatCurrency(amount: string | number): {
     }
 
     if (!Number.isFinite(numeric)) {
-      return { isValid: false, error: 'Invalid numeric value' };
+      return { error: 'Invalid numeric value', isValid: false };
     }
 
     if (numeric < CURRENCY_PATTERNS.BRL.minAmount) {
-      return { isValid: false, error: 'Amount below minimum (R$ 0,01)' };
+      return { error: 'Amount below minimum (R$ 0,01)', isValid: false };
     }
 
     if (numeric > CURRENCY_PATTERNS.BRL.maxAmount) {
-      return { isValid: false, error: 'Amount exceeds maximum (R$ 999.999.999,99)' };
+      return { error: 'Amount exceeds maximum (R$ 999.999.999,99)', isValid: false };
     }
 
     // Format to 2 decimal places
     const formatted = numeric.toLocaleString('pt-BR', {
-      style: 'currency',
       currency: 'BRL',
+      style: 'currency',
     });
 
     return {
-      isValid: true,
       formatted,
+      isValid: true,
       numeric: Number(numeric.toFixed(2)),
     };
   } catch (error) {
     return {
-      isValid: false,
       error: error instanceof Error ? error.message : 'Invalid currency format',
+      isValid: false,
     };
   }
 }
 
 export default {
-  financialSchemas,
-  validateTransactionForFraud,
-  validateCPF,
-  validateCNPJ,
-  validateAndFormatCurrency,
-  CURRENCY_PATTERNS,
   BRAZILIAN_BANKS,
+  CURRENCY_PATTERNS,
+  FRAUD_PATTERNS,
   PIX_PATTERNS,
   TRANSACTION_CATEGORIES,
-  FRAUD_PATTERNS,
+  financialSchemas,
+  validateAndFormatCurrency,
+  validateCNPJ,
+  validateCPF,
+  validateTransactionForFraud,
 };

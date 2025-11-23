@@ -27,7 +27,7 @@ export function useTransactionsStats(
   accountId?: string
 ) {
   return trpc.financialTransactions.getStatistics.useQuery({
-    period: period || 'month',
     accountId,
+    period: period || 'month',
   });
 }

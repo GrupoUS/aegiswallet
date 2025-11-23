@@ -14,65 +14,65 @@ export function ComponentDemo() {
   const [open, setOpen] = useState(false);
   const [demoData] = useState([
     {
+      change: '+5.2%',
+      color: 'text-green-600',
+      icon: Wallet,
       title: 'Saldo em Conta',
       value: 'R$ 12.450,00',
-      change: '+5.2%',
-      icon: Wallet,
-      color: 'text-green-600',
     },
     {
+      change: '+12.8%',
+      color: 'text-blue-600',
+      icon: TrendingUp,
       title: 'Investimentos',
       value: 'R$ 45.320,00',
-      change: '+12.8%',
-      icon: TrendingUp,
-      color: 'text-blue-600',
     },
     {
+      change: 'Hoje',
+      color: 'text-purple-600',
+      icon: CreditCard,
       title: 'PIX Enviados',
       value: 'R$ 3.240,00',
-      change: 'Hoje',
-      icon: CreditCard,
-      color: 'text-purple-600',
     },
     {
+      change: 'Pagamento',
+      color: 'text-orange-600',
+      icon: Calendar,
       title: 'Próximo Agendamento',
       value: '15 Jan 2024',
-      change: 'Pagamento',
-      icon: Calendar,
-      color: 'text-orange-600',
     },
   ]);
 
   const links = [
     {
-      label: 'Dashboard',
       href: '#',
       icon: <Home className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'Dashboard',
     },
     {
-      label: 'Contas',
       href: '#',
       icon: <Wallet className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'Contas',
     },
     {
-      label: 'PIX',
       href: '#',
       icon: <CreditCard className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'PIX',
     },
     {
-      label: 'Calendário',
       href: '#',
       icon: <Calendar className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'Calendário',
     },
     {
-      label: 'Investimentos',
       href: '#',
       icon: <TrendingUp className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'Investimentos',
     },
     {
-      label: 'Configurações',
       href: '#',
       icon: <Settings className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />,
+      label: 'Configurações',
     },
   ];
 

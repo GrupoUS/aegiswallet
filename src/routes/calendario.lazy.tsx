@@ -42,7 +42,7 @@ function CalendarLoader() {
   );
 }
 
-function CalendarioPage() {
+export function CalendarioPage() {
   return (
     <div className="flex h-full flex-col p-6">
       <Suspense fallback={<CalendarLoader />}>

@@ -46,13 +46,13 @@ export class TokenManager {
 
     return crypto.subtle.deriveKey(
       {
+        hash: 'SHA-256',
+        iterations: 100000,
         name: 'PBKDF2',
         salt: encoder.encode(userId),
-        iterations: 100000,
-        hash: 'SHA-256',
       },
       keyMaterial,
-      { name: 'AES-GCM', length: 256 },
+      { length: 256, name: 'AES-GCM' },
       false,
       ['encrypt', 'decrypt']
     );
@@ -67,15 +67,15 @@ export class TokenManager {
     const encoder = new TextEncoder();
 
     const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { iv, name: 'AES-GCM' },
       key,
       encoder.encode(token)
     );
 
     return {
+      algorithm: 'AES-256-GCM',
       encrypted: Buffer.from(encrypted).toString('base64'),
       iv: Buffer.from(iv).toString('base64'),
-      algorithm: 'AES-256-GCM',
     };
   }
 
@@ -87,7 +87,7 @@ export class TokenManager {
     const decoder = new TextDecoder();
 
     const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: Buffer.from(encrypted.iv, 'base64') },
+      { iv: Buffer.from(encrypted.iv, 'base64'), name: 'AES-GCM' },
       key,
       Buffer.from(encrypted.encrypted, 'base64')
     );
@@ -105,15 +105,15 @@ export class TokenManager {
       : null;
 
     const { error } = await supabase.from('bank_tokens').upsert({
-      institution_id: connectionId,
-      user_id: userId,
       encrypted_access_token: encryptedAccess.encrypted,
       encrypted_refresh_token: encryptedRefresh?.encrypted,
-      encryption_iv: encryptedAccess.iv,
       encryption_algorithm: encryptedAccess.algorithm,
+      encryption_iv: encryptedAccess.iv,
       expires_at: tokens.expiresAt.toISOString(),
+      institution_id: connectionId,
       refresh_expires_at: tokens.refreshExpiresAt?.toISOString(),
       scopes: tokens.scopes,
+      user_id: userId,
     });
 
     if (error) {
@@ -137,9 +137,9 @@ export class TokenManager {
 
     const accessToken = await this.decryptToken(
       {
+        algorithm: data.encryption_algorithm || 'aes-256-gcm',
         encrypted: data.encrypted_access_token,
         iv: data.encryption_iv,
-        algorithm: data.encryption_algorithm || 'aes-256-gcm',
       },
       userId
     );
@@ -148,9 +148,9 @@ export class TokenManager {
     if (data.encrypted_refresh_token) {
       refreshToken = await this.decryptToken(
         {
+          algorithm: data.encryption_algorithm || 'aes-256-gcm',
           encrypted: data.encrypted_refresh_token,
           iv: data.encryption_iv,
-          algorithm: data.encryption_algorithm || 'aes-256-gcm',
         },
         userId
       );
@@ -158,9 +158,9 @@ export class TokenManager {
 
     return {
       accessToken,
-      refreshToken,
       expiresAt: data.expires_at ? new Date(data.expires_at) : new Date(),
       refreshExpiresAt: data.refresh_expires_at ? new Date(data.refresh_expires_at) : undefined,
+      refreshToken,
       scopes: data.scopes || [],
     };
   }

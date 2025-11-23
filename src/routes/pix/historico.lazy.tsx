@@ -59,8 +59,8 @@ export function PixHistoryPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate({
+        search: { error: undefined, redirect: '/pix/historico' },
         to: '/login',
-        search: { redirect: '/pix/historico', error: undefined },
       });
     }
   }, [isAuthenticated, isLoading, navigate]);
@@ -84,7 +84,7 @@ export function PixHistoryPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2" />
       </div>
     );
   }

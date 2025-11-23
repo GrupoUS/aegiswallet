@@ -30,12 +30,12 @@ export interface PushMessage {
   icon?: string;
   badge?: string;
   image?: string;
-  actions?: Array<{
+  actions?: {
     action: string;
     title: string;
     icon?: string;
-  }>;
-  data?: Record<string, any>;
+  }[];
+  data?: Record<string, unknown>;
   requireInteraction?: boolean;
   silent?: boolean;
   tag?: string;
@@ -57,7 +57,7 @@ export interface AuthPushRequest {
   status: 'pending' | 'approved' | 'denied' | 'expired';
   createdAt: Date;
   respondedAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -108,19 +108,19 @@ export class PushProvider {
     }
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
       applicationServerKey: this.base64UrlToUint8Array(this.config.vapidPublicKey),
+      userVisibleOnly: true,
     });
 
     // Store subscription in database
     await supabase.from('push_subscriptions').upsert({
-      user_id: userId,
-      endpoint: subscription.endpoint,
-      p256dh_key: subscription.keys.p256dh,
       auth_key: subscription.keys.auth,
-      is_active: true,
       created_at: new Date().toISOString(),
+      endpoint: subscription.endpoint,
+      is_active: true,
+      p256dh_key: subscription.keys.p256dh,
       updated_at: new Date().toISOString(),
+      user_id: userId,
     });
 
     this.subscriptions.set(userId, subscription);
@@ -153,7 +153,7 @@ export class PushProvider {
   async getUserSubscription(userId: string): Promise<PushSubscription | null> {
     // Check in-memory cache first
     if (this.subscriptions.has(userId)) {
-      return this.subscriptions.get(userId)!;
+      return this.subscriptions.get(userId) as PushSubscription;
     }
 
     // Fetch from database
@@ -168,8 +168,8 @@ export class PushProvider {
       const subscription: PushSubscription = {
         endpoint: data.endpoint,
         keys: {
-          p256dh: data.p256dh_key,
           auth: data.auth_key,
+          p256dh: data.p256dh_key,
         },
       };
       this.subscriptions.set(userId, subscription);
@@ -189,49 +189,49 @@ export class PushProvider {
       const subscription = await this.getUserSubscription(userId);
       if (!subscription) {
         return {
-          success: false,
           error: 'No active push subscription found',
           processingTime: Date.now() - startTime,
+          success: false,
         };
       }
 
       // Prepare payload
       const payload = JSON.stringify({
-        title: message.title,
-        body: message.body,
-        icon: message.icon || '/icon-192x192.png',
-        badge: message.badge || '/badge-72x72.png',
-        image: message.image,
         actions: message.actions,
+        badge: message.badge || '/badge-72x72.png',
+        body: message.body,
         data: {
           ...message.data,
           url: message.url || '/',
           timestamp: Date.now(),
         },
+        icon: message.icon || '/icon-192x192.png',
+        image: message.image,
         requireInteraction: message.requireInteraction || false,
         silent: message.silent || false,
         tag: message.tag,
+        title: message.title,
       });
 
       // Send via backend API
       const response = await fetch('/api/push/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          subscription,
-          payload,
           options: {
+            ttl: this.config.ttl,
+            urgency: this.config.urgency,
             vapidDetails: {
               subject: this.config.vapidSubject,
               publicKey: this.config.vapidPublicKey,
               privateKey: this.config.vapidPrivateKey,
             },
-            ttl: this.config.ttl,
-            urgency: this.config.urgency,
           },
+          payload,
+          subscription,
         }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
       });
 
       if (!response.ok) {
@@ -245,9 +245,9 @@ export class PushProvider {
       await this.logPushNotification(userId, message, data.messageId, 'sent');
 
       return {
-        success: true,
         messageId: data.messageId,
         processingTime: Date.now() - startTime,
+        success: true,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -256,9 +256,9 @@ export class PushProvider {
       await this.logPushNotification(userId, message, undefined, 'failed', errorMessage);
 
       return {
-        success: false,
         error: errorMessage,
         processingTime: Date.now() - startTime,
+        success: false,
       };
     }
   }
@@ -275,15 +275,15 @@ export class PushProvider {
   ): Promise<void> {
     try {
       await supabase.from('push_logs').insert({
-        user_id: userId,
-        message_title: message.title,
+        created_at: new Date().toISOString(),
+        data: message.data,
+        error,
         message_body: message.body,
         message_id: messageId,
+        message_title: message.title,
         status,
-        error,
-        data: message.data,
         tag: message.tag,
-        created_at: new Date().toISOString(),
+        user_id: userId,
       });
     } catch (_logError) {}
   }
@@ -296,22 +296,22 @@ export class PushProvider {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     const request: AuthPushRequest = {
-      id: this.generateSecureToken(8),
-      userId,
-      pushToken,
-      expiresAt,
-      status: 'pending',
       createdAt: new Date(),
+      expiresAt,
+      id: this.generateSecureToken(8),
+      pushToken,
+      status: 'pending',
+      userId,
     };
 
     // Store in database
     await supabase.from('push_auth_requests').insert({
-      id: request.id,
-      user_id: userId,
-      push_token: pushToken,
-      expires_at: expiresAt.toISOString(),
-      status: 'pending',
       created_at: request.createdAt.toISOString(),
+      expires_at: expiresAt.toISOString(),
+      id: request.id,
+      push_token: pushToken,
+      status: 'pending',
+      user_id: userId,
     });
 
     return request;
@@ -325,37 +325,37 @@ export class PushProvider {
       const authRequest = await this.createAuthPushRequest(userId);
 
       const message: PushMessage = {
-        title: 'AegisWallet - Aprovação de Login',
-        body: 'Nova tentativa de login detectada. Aprove ou negue para continuar.',
-        icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
-        requireInteraction: true,
-        tag: 'auth-request',
-        data: {
-          type: 'auth-request',
-          requestId: authRequest.id,
-          phoneNumber,
-        },
         actions: [
           {
             action: 'approve',
-            title: 'Aprovar',
             icon: '/icons/checkmark.png',
+            title: 'Aprovar',
           },
           {
             action: 'deny',
-            title: 'Negar',
             icon: '/icons/close.png',
+            title: 'Negar',
           },
         ],
+        badge: '/badge-72x72.png',
+        body: 'Nova tentativa de login detectada. Aprove ou negue para continuar.',
+        data: {
+          phoneNumber,
+          requestId: authRequest.id,
+          type: 'auth-request',
+        },
+        icon: '/icon-192x192.png',
+        requireInteraction: true,
+        tag: 'auth-request',
+        title: 'AegisWallet - Aprovação de Login',
       };
 
       return this.sendPushNotification(userId, message);
     } catch (error) {
       return {
-        success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         processingTime: 0,
+        success: false,
       };
     }
   }
@@ -369,8 +369,8 @@ export class PushProvider {
       await supabase
         .from('push_auth_requests')
         .update({
-          status: approved ? 'approved' : 'denied',
           responded_at: new Date().toISOString(),
+          status: approved ? 'approved' : 'denied',
         })
         .eq('id', requestId);
 
@@ -378,9 +378,9 @@ export class PushProvider {
       await this.logPushNotification(
         userId,
         {
-          title: 'Auth Response',
           body: `Authentication ${approved ? 'approved' : 'denied'}`,
-          data: { requestId, approved },
+          data: { approved, requestId },
+          title: 'Auth Response',
         },
         undefined,
         'delivered'

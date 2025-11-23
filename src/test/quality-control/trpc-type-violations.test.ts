@@ -17,8 +17,8 @@ describe('tRPC Type Safety Violations', () => {
       const mockContext = {
         session: {
           user: {
-            id: 'user-id',
             email: 'test@example.com',
+            id: 'user-id',
           },
         },
         supabase: {} as unknown,
@@ -97,9 +97,9 @@ describe('tRPC Type Safety Violations', () => {
 
       // @ts-expect-error - This should fail because date field is wrong
       const result = mockBankAccount({
-        institution_name: 'Test Bank',
         account_mask: '1234',
-        date: '2024-01-01', // Should be created_at
+        date: '2024-01-01',
+        institution_name: 'Test Bank', // Should be created_at
       });
 
       expect(result).toBeDefined();
@@ -113,8 +113,8 @@ describe('tRPC Type Safety Violations', () => {
 
       // @ts-expect-error - This should fail because startDate is required but undefined
       const result = mockCalendarQuery({
-        startDate: undefined,
         endDate: '2024-01-31',
+        startDate: undefined,
       });
 
       expect(result).toBeDefined();

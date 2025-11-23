@@ -5,7 +5,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
-import { type Database, SUPABASE_CONFIG } from './config';
+import type { Database } from './config';
+import { SUPABASE_CONFIG } from './config';
 
 /**
  * Creates a Supabase client instance with appropriate configuration
@@ -46,8 +47,8 @@ export function createServerClient(): SupabaseClient<Database> {
   // For server-side, we create a fresh client without browser-specific options
   return createSupabaseClient({
     auth: {
-      persistSession: false,
       autoRefreshToken: false,
+      persistSession: false,
     },
   });
 }

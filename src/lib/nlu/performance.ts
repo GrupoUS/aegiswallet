@@ -43,17 +43,21 @@ export interface PerformanceConfig {
 }
 
 const DEFAULT_PERFORMANCE_CONFIG: PerformanceConfig = {
-  enabled: true,
-  realTimeMonitoring: true,
-  persistenceEnabled: true,
-  alertingEnabled: true,
-  metricsRetentionDays: 30,
   alertThresholds: {
+    maxErrorRate: 15,
+    maxMemoryUsage: 512,
     maxProcessingTime: 500,
     minAccuracy: 85,
-    maxErrorRate: 15,
-    minCacheHitRate: 60,
-    maxMemoryUsage: 512, // MB
+    minCacheHitRate: 60, // MB
+  },
+  alertingEnabled: true,
+  enabled: true,
+  metricsRetentionDays: 30,
+  monitoringIntervals: {
+    metrics: 30000, // 30 seconds
+    health: 60000, // 1 minute
+    persistence: 300000, // 5 minutes
+    alerts: 15000, // 15 seconds
   },
   performanceTargets: {
     p95ProcessingTime: 200,
@@ -61,12 +65,8 @@ const DEFAULT_PERFORMANCE_CONFIG: PerformanceConfig = {
     systemUptime: 99.9, // percentage
     errorRecoveryRate: 80,
   },
-  monitoringIntervals: {
-    metrics: 30000, // 30 seconds
-    health: 60000, // 1 minute
-    persistence: 300000, // 5 minutes
-    alerts: 15000, // 15 seconds
-  },
+  persistenceEnabled: true,
+  realTimeMonitoring: true,
 };
 
 // ============================================================================
@@ -156,20 +156,22 @@ export interface PerformanceSnapshot {
 // Performance Tracker Class
 // ============================================================================
 
+interface NLURequestMetrics {
+  timestamp: Date;
+  processingTime: number;
+  success: boolean;
+  intent: IntentType;
+  confidence: number;
+  region?: string;
+}
+
 export class NLUPerformanceTracker {
   private config: PerformanceConfig;
   private metrics: PerformanceMetrics;
   private alerts: PerformanceAlert[] = [];
   private snapshots: PerformanceSnapshot[] = [];
   private processingTimes: number[] = [];
-  private requestBuffer: Array<{
-    timestamp: Date;
-    processingTime: number;
-    success: boolean;
-    intent: IntentType;
-    confidence: number;
-    region?: string;
-  }> = [];
+  private requestBuffer: NLURequestMetrics[] = [];
   private timers: Map<string, NodeJS.Timeout> = new Map();
   private startTime = Date.now();
 
@@ -187,16 +189,18 @@ export class NLUPerformanceTracker {
    * Track NLU request performance
    */
   trackRequest(processingTime: number, result: NLUResult, success: boolean, region?: string): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     try {
       const request = {
-        timestamp: new Date(),
-        processingTime,
-        success,
-        intent: result.intent,
         confidence: result.confidence,
+        intent: result.intent,
+        processingTime,
         region,
+        success,
+        timestamp: new Date(),
       };
 
       // Add to request buffer
@@ -223,11 +227,11 @@ export class NLUPerformanceTracker {
 
       // Log performance data
       logger.debug('NLU request tracked', {
-        processingTime,
-        intent: result.intent,
         confidence: result.confidence,
-        success,
+        intent: result.intent,
+        processingTime,
         region,
+        success,
       });
     } catch (error) {
       logger.error('Failed to track NLU request', { error });
@@ -238,7 +242,9 @@ export class NLUPerformanceTracker {
    * Track cache performance
    */
   trackCachePerformance(hitRate: number, size: number, lookupTime: number): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     this.metrics.cache.hitRate = hitRate;
     this.metrics.cache.missRate = 100 - hitRate;
@@ -248,12 +254,12 @@ export class NLUPerformanceTracker {
     // Check cache performance alerts
     if (hitRate < this.config.alertThresholds.minCacheHitRate) {
       this.createAlert({
-        type: 'performance',
-        severity: 'warning',
-        title: 'Low Cache Hit Rate',
-        message: `Cache hit rate is ${hitRate.toFixed(1)}%, below threshold of ${this.config.alertThresholds.minCacheHitRate}%`,
-        threshold: this.config.alertThresholds.minCacheHitRate,
         currentValue: hitRate,
+        message: `Cache hit rate is ${hitRate.toFixed(1)}%, below threshold of ${this.config.alertThresholds.minCacheHitRate}%`,
+        severity: 'warning',
+        threshold: this.config.alertThresholds.minCacheHitRate,
+        title: 'Low Cache Hit Rate',
+        type: 'performance',
       });
     }
   }
@@ -262,7 +268,9 @@ export class NLUPerformanceTracker {
    * Track system resource usage
    */
   trackSystemResources(memoryUsage: number, cpuUsage: number): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     this.metrics.system.memoryUsage = memoryUsage;
     this.metrics.system.cpuUsage = cpuUsage;
@@ -270,12 +278,12 @@ export class NLUPerformanceTracker {
     // Check system resource alerts
     if (memoryUsage > this.config.alertThresholds.maxMemoryUsage) {
       this.createAlert({
-        type: 'system',
-        severity: 'critical',
-        title: 'High Memory Usage',
-        message: `Memory usage is ${memoryUsage.toFixed(1)}MB, above threshold of ${this.config.alertThresholds.maxMemoryUsage}MB`,
-        threshold: this.config.alertThresholds.maxMemoryUsage,
         currentValue: memoryUsage,
+        message: `Memory usage is ${memoryUsage.toFixed(1)}MB, above threshold of ${this.config.alertThresholds.maxMemoryUsage}MB`,
+        severity: 'critical',
+        threshold: this.config.alertThresholds.maxMemoryUsage,
+        title: 'High Memory Usage',
+        type: 'system',
       });
     }
   }
@@ -284,7 +292,9 @@ export class NLUPerformanceTracker {
    * Track error recovery performance
    */
   trackErrorRecovery(errorType: string, recoveryTime: number, recoverySuccess: boolean): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     // Update error metrics
     if (!this.metrics.errors.errorTypes[errorType]) {
@@ -309,9 +319,9 @@ export class NLUPerformanceTracker {
     // Log recovery performance
     logger.info('Error recovery tracked', {
       errorType,
-      recoveryTime,
-      recoverySuccess,
       recoveryRate: this.metrics.errors.recoveryRate,
+      recoverySuccess,
+      recoveryTime,
     });
   }
 
@@ -332,61 +342,61 @@ export class NLUPerformanceTracker {
     processing: number;
     accuracy: number;
     system: number;
-    factors: Array<{
+    factors: {
       name: string;
       score: number;
       weight: number;
       impact: string;
-    }>;
+    }[];
   } {
     const factors = [];
 
     // Processing performance score
     const processingScore = this.calculateProcessingScore();
     factors.push({
+      impact:
+        processingScore < 70 ? 'High processing times detected' : 'Processing times within targets',
       name: 'Processing Performance',
       score: processingScore,
       weight: 0.3,
-      impact:
-        processingScore < 70 ? 'High processing times detected' : 'Processing times within targets',
     });
 
     // Accuracy score
     const accuracyScore = this.calculateAccuracyScore();
     factors.push({
+      impact: accuracyScore < 80 ? 'Accuracy below target' : 'Accuracy within acceptable range',
       name: 'Accuracy',
       score: accuracyScore,
       weight: 0.4,
-      impact: accuracyScore < 80 ? 'Accuracy below target' : 'Accuracy within acceptable range',
     });
 
     // System health score
     const systemScore = this.calculateSystemScore();
     factors.push({
+      impact: systemScore < 70 ? 'System resources under stress' : 'System resources healthy',
       name: 'System Health',
       score: systemScore,
       weight: 0.2,
-      impact: systemScore < 70 ? 'System resources under stress' : 'System resources healthy',
     });
 
     // Error handling score
     const errorScore = this.calculateErrorScore();
     factors.push({
+      impact: errorScore < 60 ? 'High error rate detected' : 'Error rate within acceptable range',
       name: 'Error Handling',
       score: errorScore,
       weight: 0.1,
-      impact: errorScore < 60 ? 'High error rate detected' : 'Error rate within acceptable range',
     });
 
     // Calculate overall score
     const overall = factors.reduce((sum, factor) => sum + factor.score * factor.weight, 0);
 
     return {
+      accuracy: Math.round(accuracyScore),
+      factors,
       overall: Math.round(overall),
       processing: Math.round(processingScore),
-      accuracy: Math.round(accuracyScore),
       system: Math.round(systemScore),
-      factors,
     };
   }
 
@@ -479,23 +489,19 @@ export class NLUPerformanceTracker {
     const recommendations = this.getRecommendations();
 
     const summary = {
-      totalRequests: metrics.processing.totalRequests,
+      activeAlerts: alerts.length,
+      averageProcessingTime: metrics.processing.averageProcessingTime,
+      healthScore: healthScore.overall,
+      overallAccuracy: metrics.accuracy.overallAccuracy,
       successRate:
         metrics.processing.totalRequests > 0
           ? (metrics.processing.successfulRequests / metrics.processing.totalRequests) * 100
           : 0,
-      averageProcessingTime: metrics.processing.averageProcessingTime,
-      overallAccuracy: metrics.accuracy.overallAccuracy,
-      healthScore: healthScore.overall,
-      activeAlerts: alerts.length,
+      totalRequests: metrics.processing.totalRequests,
     };
 
     // Calculate trends (simplified)
     const trends = {
-      processingTime: this.calculateTrend(this.processingTimes.slice(-10)) as
-        | 'improving'
-        | 'stable'
-        | 'degrading',
       accuracy: this.calculateTrend(Object.values(metrics.accuracy.intentAccuracy).slice(-5)) as
         | 'improving'
         | 'stable'
@@ -504,13 +510,17 @@ export class NLUPerformanceTracker {
         | 'improving'
         | 'stable'
         | 'degrading',
+      processingTime: this.calculateTrend(this.processingTimes.slice(-10)) as
+        | 'improving'
+        | 'stable'
+        | 'degrading',
     };
 
     return {
-      summary,
-      metrics,
       alerts,
+      metrics,
       recommendations,
+      summary,
       trends,
     };
   }
@@ -523,64 +533,66 @@ export class NLUPerformanceTracker {
     const now = new Date();
 
     return {
-      timestamp: now,
-      processing: {
-        totalRequests: 0,
-        successfulRequests: 0,
-        failedRequests: 0,
-        averageProcessingTime: 0,
-        p95ProcessingTime: 0,
-        p99ProcessingTime: 0,
-        minProcessingTime: Infinity,
-        maxProcessingTime: 0,
-        requestsPerSecond: 0,
-      },
       accuracy: {
-        overallAccuracy: 0,
-        intentAccuracy: {} as Record<IntentType, number>,
-        entityAccuracy: {} as Record<EntityType, number>,
         confidenceDistribution: {
           high: 0,
-          medium: 0,
           low: 0,
+          medium: 0,
         },
         confusionMatrix: {},
+        entityAccuracy: {} as Record<EntityType, number>,
+        intentAccuracy: {} as Record<IntentType, number>,
+        overallAccuracy: 0,
       },
       cache: {
+        averageLookupTime: 0,
+        evictions: 0,
         hitRate: 0,
         missRate: 0,
         size: 0,
-        evictions: 0,
-        averageLookupTime: 0,
-      },
-      system: {
-        memoryUsage: 0,
-        cpuUsage: 0,
-        uptime: 0,
-        activeContexts: 0,
-        queuedRequests: 0,
       },
       errors: {
+        averageRecoveryTime: 0,
         errorRate: 0,
         errorTypes: {},
         recoveryRate: 0,
-        averageRecoveryTime: 0,
+      },
+      processing: {
+        averageProcessingTime: 0,
+        failedRequests: 0,
+        maxProcessingTime: 0,
+        minProcessingTime: Infinity,
+        p95ProcessingTime: 0,
+        p99ProcessingTime: 0,
+        requestsPerSecond: 0,
+        successfulRequests: 0,
+        totalRequests: 0,
       },
       regional: {
         accuracyByRegion: {},
-        requestVolumeByRegion: {},
         processingTimeByRegion: {},
+        requestVolumeByRegion: {},
+      },
+      system: {
+        activeContexts: 0,
+        cpuUsage: 0,
+        memoryUsage: 0,
+        queuedRequests: 0,
+        uptime: 0,
       },
       temporal: {
+        accuracyByDayOfWeek: {},
         accuracyByHour: {},
         requestVolumeByHour: {},
-        accuracyByDayOfWeek: {},
       },
+      timestamp: now,
     };
   }
 
   private startMonitoring(): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     // Start metrics collection
     if (this.config.realTimeMonitoring) {
@@ -621,14 +633,14 @@ export class NLUPerformanceTracker {
     }
 
     logger.info('NLU performance monitoring started', {
-      enabled: this.config.enabled,
-      realTimeMonitoring: this.config.realTimeMonitoring,
-      persistenceEnabled: this.config.persistenceEnabled,
       alertingEnabled: this.config.alertingEnabled,
+      enabled: this.config.enabled,
+      persistenceEnabled: this.config.persistenceEnabled,
+      realTimeMonitoring: this.config.realTimeMonitoring,
     });
   }
 
-  private updateProcessingMetrics(request: any): void {
+  private updateProcessingMetrics(request: NLURequestMetrics): void {
     const processing = this.metrics.processing;
 
     processing.totalRequests++;
@@ -685,7 +697,7 @@ export class NLUPerformanceTracker {
       (this.metrics.temporal.requestVolumeByDayOfWeek[dayOfWeek] || 0) + 1;
   }
 
-  private updateAccuracyMetrics(request: any): void {
+  private updateAccuracyMetrics(request: NLURequestMetrics): void {
     const accuracy = this.metrics.accuracy;
 
     // Update confidence distribution
@@ -752,7 +764,7 @@ export class NLUPerformanceTracker {
       this.metrics.temporal.requestVolumeByDayOfWeek[dayOfWeek];
   }
 
-  private updateErrorMetrics(request: any): void {
+  private updateErrorMetrics(request: NLURequestMetrics): void {
     if (!request.success) {
       const errors = this.metrics.errors;
 
@@ -775,40 +787,40 @@ export class NLUPerformanceTracker {
     }
   }
 
-  private checkAlerts(request: any): void {
+  private checkAlerts(request: NLURequestMetrics): void {
     // Processing time alert
     if (request.processingTime > this.config.alertThresholds.maxProcessingTime) {
       this.createAlert({
-        type: 'performance',
-        severity: 'warning',
-        title: 'High Processing Time',
-        message: `Processing time of ${request.processingTime}ms exceeds threshold of ${this.config.alertThresholds.maxProcessingTime}ms`,
-        threshold: this.config.alertThresholds.maxProcessingTime,
         currentValue: request.processingTime,
+        message: `Processing time of ${request.processingTime}ms exceeds threshold of ${this.config.alertThresholds.maxProcessingTime}ms`,
+        severity: 'warning',
+        threshold: this.config.alertThresholds.maxProcessingTime,
+        title: 'High Processing Time',
+        type: 'performance',
       });
     }
 
     // Low confidence alert
     if (request.confidence < 0.5) {
       this.createAlert({
-        type: 'accuracy',
-        severity: 'info',
-        title: 'Low Confidence Result',
-        message: `Confidence score of ${(request.confidence * 100).toFixed(1)}% is below optimal threshold`,
-        threshold: 50,
         currentValue: request.confidence * 100,
+        message: `Confidence score of ${(request.confidence * 100).toFixed(1)}% is below optimal threshold`,
+        severity: 'info',
+        threshold: 50,
+        title: 'Low Confidence Result',
+        type: 'accuracy',
       });
     }
 
     // Failed request alert
     if (!request.success) {
       this.createAlert({
-        type: 'error',
-        severity: 'warning',
-        title: 'Request Failed',
-        message: 'NLU request processing failed',
-        threshold: 0,
         currentValue: 1,
+        message: 'NLU request processing failed',
+        severity: 'warning',
+        threshold: 0,
+        title: 'Request Failed',
+        type: 'error',
       });
     }
   }
@@ -819,24 +831,24 @@ export class NLUPerformanceTracker {
     // Check overall error rate
     if (metrics.errors.errorRate > this.config.alertThresholds.maxErrorRate) {
       this.createAlert({
-        type: 'error',
-        severity: 'critical',
-        title: 'High Error Rate',
-        message: `Error rate of ${metrics.errors.errorRate.toFixed(1)}% exceeds threshold of ${this.config.alertThresholds.maxErrorRate}%`,
-        threshold: this.config.alertThresholds.maxErrorRate,
         currentValue: metrics.errors.errorRate,
+        message: `Error rate of ${metrics.errors.errorRate.toFixed(1)}% exceeds threshold of ${this.config.alertThresholds.maxErrorRate}%`,
+        severity: 'critical',
+        threshold: this.config.alertThresholds.maxErrorRate,
+        title: 'High Error Rate',
+        type: 'error',
       });
     }
 
     // Check accuracy
     if (metrics.accuracy.overallAccuracy < this.config.alertThresholds.minAccuracy) {
       this.createAlert({
-        type: 'accuracy',
-        severity: 'warning',
-        title: 'Low Accuracy',
-        message: `Overall accuracy of ${metrics.accuracy.overallAccuracy.toFixed(1)}% is below threshold of ${this.config.alertThresholds.minAccuracy}%`,
-        threshold: this.config.alertThresholds.minAccuracy,
         currentValue: metrics.accuracy.overallAccuracy,
+        message: `Overall accuracy of ${metrics.accuracy.overallAccuracy.toFixed(1)}% is below threshold of ${this.config.alertThresholds.minAccuracy}%`,
+        severity: 'warning',
+        threshold: this.config.alertThresholds.minAccuracy,
+        title: 'Low Accuracy',
+        type: 'accuracy',
       });
     }
   }
@@ -857,11 +869,11 @@ export class NLUPerformanceTracker {
 
     // Log alert
     logger.warn('NLU performance alert created', {
-      type: alert.type,
-      severity: alert.severity,
-      title: alert.title,
       currentValue: alert.currentValue,
+      severity: alert.severity,
       threshold: alert.threshold,
+      title: alert.title,
+      type: alert.type,
     });
   }
 
@@ -871,12 +883,12 @@ export class NLUPerformanceTracker {
 
       // Create performance snapshot
       const snapshot: PerformanceSnapshot = {
-        id: `snapshot_${Date.now()}`,
-        timestamp: new Date(),
-        metrics: { ...this.metrics },
         alerts: this.getActiveAlerts(),
         healthScore: this.getHealthScore().overall,
+        id: `snapshot_${Date.now()}`,
+        metrics: { ...this.metrics },
         recommendations: this.getRecommendations(),
+        timestamp: new Date(),
       };
 
       this.snapshots.push(snapshot);
@@ -886,10 +898,10 @@ export class NLUPerformanceTracker {
       this.snapshots = this.snapshots.filter((s) => s.timestamp.getTime() > oneDayAgo);
 
       logger.debug('Performance metrics collected', {
-        totalRequests: this.metrics.processing.totalRequests,
         averageProcessingTime: this.metrics.processing.averageProcessingTime,
-        overallAccuracy: this.metrics.accuracy.overallAccuracy,
         healthScore: snapshot.healthScore,
+        overallAccuracy: this.metrics.accuracy.overallAccuracy,
+        totalRequests: this.metrics.processing.totalRequests,
       });
     } catch (error) {
       logger.error('Failed to collect performance metrics', { error });
@@ -903,9 +915,9 @@ export class NLUPerformanceTracker {
       // Log health status
       if (healthScore.overall < 70) {
         logger.warn('NLU system health degraded', {
+          accuracy: healthScore.accuracy,
           overall: healthScore.overall,
           processing: healthScore.processing,
-          accuracy: healthScore.accuracy,
           system: healthScore.system,
         });
       } else if (healthScore.overall >= 90) {
@@ -919,19 +931,21 @@ export class NLUPerformanceTracker {
   }
 
   private async persistMetrics(): Promise<void> {
-    if (!this.config.persistenceEnabled) return;
+    if (!this.config.persistenceEnabled) {
+      return;
+    }
 
     try {
       // Persist current metrics to Supabase
       const { error } = await supabase.from('nlu_performance_metrics').insert({
-        timestamp: new Date().toISOString(),
-        processing_metrics: this.metrics.processing,
         accuracy_metrics: this.metrics.accuracy,
         cache_metrics: this.metrics.cache,
-        system_metrics: this.metrics.system,
         error_metrics: this.metrics.errors,
+        processing_metrics: this.metrics.processing,
         regional_metrics: this.metrics.regional,
+        system_metrics: this.metrics.system,
         temporal_metrics: this.metrics.temporal,
+        timestamp: new Date().toISOString(),
       });
 
       if (error) {
@@ -943,17 +957,17 @@ export class NLUPerformanceTracker {
       if (activeAlerts.length > 0) {
         const { error: alertError } = await supabase.from('nlu_performance_alerts').upsert(
           activeAlerts.map((alert) => ({
-            id: alert.id,
-            type: alert.type,
-            severity: alert.severity,
-            title: alert.title,
-            message: alert.message,
-            threshold: alert.threshold,
             current_value: alert.currentValue,
-            timestamp: alert.timestamp.toISOString(),
+            id: alert.id,
+            message: alert.message,
+            resolution_notes: alert.resolutionNotes,
             resolved: alert.resolved,
             resolved_at: alert.resolvedAt?.toISOString(),
-            resolution_notes: alert.resolutionNotes,
+            severity: alert.severity,
+            threshold: alert.threshold,
+            timestamp: alert.timestamp.toISOString(),
+            title: alert.title,
+            type: alert.type,
           }))
         );
 
@@ -1059,20 +1073,28 @@ export class NLUPerformanceTracker {
   }
 
   private calculateTrend(values: number[]): 'improving' | 'stable' | 'degrading' {
-    if (values.length < 3) return 'stable';
+    if (values.length < 3) {
+      return 'stable';
+    }
 
     const recent = values.slice(-Math.min(5, values.length));
     const older = values.slice(0, Math.max(0, values.length - 5));
 
-    if (recent.length === 0 || older.length === 0) return 'stable';
+    if (recent.length === 0 || older.length === 0) {
+      return 'stable';
+    }
 
     const recentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
     const olderAvg = older.reduce((sum, val) => sum + val, 0) / older.length;
 
     const change = ((recentAvg - olderAvg) / olderAvg) * 100;
 
-    if (change > 5) return 'improving';
-    if (change < -5) return 'degrading';
+    if (change > 5) {
+      return 'improving';
+    }
+    if (change < -5) {
+      return 'degrading';
+    }
     return 'stable';
   }
 

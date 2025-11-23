@@ -13,10 +13,10 @@ export class MonitoringService {
   async checkConnectorHealth(_connectorId: string): Promise<ConnectorHealth> {
     // Simulate health check
     return {
-      status: 'healthy',
-      latency: 150,
       errorRate: 0.01,
       lastSync: new Date(),
+      latency: 150,
+      status: 'healthy',
     };
   }
 
@@ -26,9 +26,9 @@ export class MonitoringService {
     avgLatency: number;
   }> {
     return {
-      totalRequests: 1000,
-      successRate: 0.99,
       avgLatency: 200,
+      successRate: 0.99,
+      totalRequests: 1000,
     };
   }
 }

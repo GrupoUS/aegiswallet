@@ -20,7 +20,9 @@ export default function PixQRCodeGenerator({
 }: PixQRCodeGeneratorProps) {
   const formatCurrency = (value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '');
-    if (!cleanValue) return '';
+    if (!cleanValue) {
+      return '';
+    }
     const formatted = (Number(cleanValue) / 100).toFixed(2);
     return `R$ ${formatted.replace('.', ',')}`;
   };

@@ -14,8 +14,8 @@ export class AutonomyController {
     return {
       autoPayBillsUnder: 100,
       autoTransferEnabled: false,
-      requireConfirmationAbove: 100,
       dailyLimit: 1000,
+      requireConfirmationAbove: 100,
     };
   }
 

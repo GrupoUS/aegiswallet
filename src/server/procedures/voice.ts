@@ -4,8 +4,21 @@ import { secureLogger } from '@/lib/logging/secure-logger';
 import type { Context } from '@/server/context';
 import { voiceCommandRateLimit } from '@/server/middleware/rateLimitMiddleware';
 import { securityMiddleware } from '@/server/middleware/securityMiddleware';
+import type { ProcessVoiceCommandInputType } from '@/types/server.types';
 
-export const createVoiceRouter = (t: any) => ({
+// Type-safe tRPC router builder interface
+interface TRPCRouterBuilder {
+  procedure: {
+    use: (middleware: unknown) => TRPCRouterBuilder;
+    input: (schema: z.ZodSchema) => TRPCRouterBuilder;
+    mutation: (
+      handler: (opts: { ctx: Context; input: unknown }) => Promise<unknown>
+    ) => TRPCRouterBuilder;
+    query: (handler: (opts: { ctx: Context }) => Promise<unknown>) => TRPCRouterBuilder;
+  };
+}
+
+export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
   /**
    * Process voice command
    */
@@ -16,10 +29,12 @@ export const createVoiceRouter = (t: any) => ({
       z.object({
         command: z.string().min(1).max(1000),
         sessionId: z.string().uuid().optional(),
-        audioData: z.any().optional(), // For future audio file support
+        audioData: z.instanceof(Buffer).optional(), // Typed audio data support
+        language: z.string().default('pt-BR'),
+        requireConfirmation: z.boolean().default(false),
       })
     )
-    .mutation(async ({ ctx, input }: { ctx: Context; input: any }) => {
+    .mutation(async ({ ctx, input }: { ctx: Context; input: ProcessVoiceCommandInputType }) => {
       if (!ctx.session?.user) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -30,22 +45,22 @@ export const createVoiceRouter = (t: any) => ({
       try {
         // Log voice command processing
         secureLogger.audit('Voice command processing started', {
-          userId: ctx.user.id,
-          sessionId: input.sessionId,
           commandLength: input.command.length,
-          hasAudioData: !!input.audioData,
           component: 'voice.processCommand',
+          hasAudioData: !!input.audioData,
+          sessionId: input.sessionId,
+          userId: ctx.user.id,
         });
 
         // Store command for feedback collection
         const { data: commandData, error: commandError } = await ctx.supabase
           .from('voice_commands')
           .insert({
-            user_id: ctx.user.id,
             command_text: input.command,
+            created_at: new Date().toISOString(),
             session_id: input.sessionId,
             status: 'processing',
-            created_at: new Date().toISOString(),
+            user_id: ctx.user.id,
           })
           .select('id')
           .single();
@@ -60,13 +75,13 @@ export const createVoiceRouter = (t: any) => ({
         // TODO: Integrate with actual NLU processing
         // For now, simulate processing
         const processingResult = {
-          intent: 'transaction',
+          confidence: 0.95,
           entities: {
             amount: 100,
             category: 'food',
             description: 'Comida no restaurante',
           },
-          confidence: 0.95,
+          intent: 'transaction',
           processed_at: new Date().toISOString(),
         };
 
@@ -74,26 +89,26 @@ export const createVoiceRouter = (t: any) => ({
         await ctx.supabase
           .from('voice_commands')
           .update({
-            status: 'completed',
-            intent: processingResult.intent,
-            entities: processingResult.entities,
             confidence: processingResult.confidence,
+            entities: processingResult.entities,
+            intent: processingResult.intent,
             processed_at: processingResult.processed_at,
+            status: 'completed',
           })
           .eq('id', commandData.id);
 
         secureLogger.audit('Voice command processed successfully', {
-          userId: ctx.user.id,
           commandId: commandData.id,
-          intent: processingResult.intent,
-          confidence: processingResult.confidence,
           component: 'voice.processCommand',
+          confidence: processingResult.confidence,
+          intent: processingResult.intent,
+          userId: ctx.user.id,
         });
 
         return {
-          success: true,
           commandId: commandData.id,
           result: processingResult,
+          success: true,
         };
       } catch (error) {
         secureLogger.error('Voice command processing failed', {
@@ -118,10 +133,10 @@ export const createVoiceRouter = (t: any) => ({
     .input(
       z.object({
         commandId: z.string().uuid(),
-        rating: z.number().min(1).max(5),
-        feedback: z.string().max(500).optional(),
-        wasCorrect: z.boolean().optional(),
         correction: z.string().max(200).optional(),
+        feedback: z.string().max(500).optional(),
+        rating: z.number().min(1).max(5),
+        wasCorrect: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }: { ctx: Context; input: any }) => {
@@ -152,15 +167,15 @@ export const createVoiceRouter = (t: any) => ({
         const { data: feedbackData, error: feedbackError } = await ctx.supabase
           .from('voice_feedback')
           .insert({
-            user_id: ctx.user.id,
             command_text: command.command_text,
-            recognized_intent: command.intent,
             confidence_score: command.confidence,
-            rating: input.rating,
-            feedback_text: input.feedback,
-            was_correct: input.wasCorrect,
             correction_made: input.correction,
             created_at: new Date().toISOString(),
+            feedback_text: input.feedback,
+            rating: input.rating,
+            recognized_intent: command.intent,
+            user_id: ctx.user.id,
+            was_correct: input.wasCorrect,
           })
           .select('id')
           .single();
@@ -173,24 +188,24 @@ export const createVoiceRouter = (t: any) => ({
         }
 
         secureLogger.audit('Voice feedback submitted', {
-          userId: ctx.user.id,
           commandId: input.commandId,
+          component: 'voice.submitFeedback',
           feedbackId: feedbackData.id,
           rating: input.rating,
+          userId: ctx.user.id,
           wasCorrect: input.wasCorrect,
-          component: 'voice.submitFeedback',
         });
 
         return {
-          success: true,
           feedbackId: feedbackData.id,
+          success: true,
         };
       } catch (error) {
         secureLogger.error('Voice feedback submission failed', {
-          userId: ctx.user.id,
           commandId: input.commandId,
-          error: error instanceof Error ? error.message : 'Unknown error',
           component: 'voice.submitFeedback',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: ctx.user.id,
         });
 
         throw new TRPCError({
@@ -238,14 +253,14 @@ export const createVoiceRouter = (t: any) => ({
 
         return {
           commands: data || [],
-          totalCount: count || 0,
           hasMore: input.offset + input.limit < (count || 0),
+          totalCount: count || 0,
         };
       } catch (error) {
         secureLogger.error('Voice history fetch failed', {
-          userId: ctx.user.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
           component: 'voice.getHistory',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: ctx.user.id,
         });
 
         throw new TRPCError({
@@ -311,20 +326,20 @@ export const createVoiceRouter = (t: any) => ({
         ) || {};
 
       return {
-        totalCommands,
-        successfulCommands,
-        successRate: totalCommands > 0 ? (successfulCommands / totalCommands) * 100 : 0,
+        accuracyRate: Math.round(accuracyRate * 100),
         averageConfidence: Math.round(averageConfidence * 100) / 100,
         averageRating: Math.round(averageRating * 100) / 100,
-        accuracyRate: Math.round(accuracyRate * 100),
         intentDistribution: intentCounts,
+        successRate: totalCommands > 0 ? (successfulCommands / totalCommands) * 100 : 0,
+        successfulCommands,
+        totalCommands,
         totalFeedback: feedback?.length || 0,
       };
     } catch (error) {
       secureLogger.error('Voice analytics fetch failed', {
-        userId: ctx.user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
         component: 'voice.getAnalytics',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: ctx.user.id,
       });
 
       throw new TRPCError({

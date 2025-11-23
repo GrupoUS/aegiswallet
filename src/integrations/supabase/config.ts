@@ -23,8 +23,8 @@ function getRequiredEnvVar(key: string): string {
 }
 
 export const SUPABASE_CONFIG = {
-  URL: getRequiredEnvVar('SUPABASE_URL'),
   ANON_KEY: getRequiredEnvVar('SUPABASE_ANON_KEY'),
+  URL: getRequiredEnvVar('SUPABASE_URL'),
 } as const;
 
 // Environment detection
@@ -63,7 +63,9 @@ class SecureStorageAdapter {
 
   async getItem(key: string): Promise<string | null> {
     const storage = this.getSecureStorage();
-    if (!storage) return null;
+    if (!storage) {
+      return null;
+    }
 
     try {
       if (storage.secureSession) {
@@ -78,7 +80,9 @@ class SecureStorageAdapter {
 
   async setItem(key: string, value: string): Promise<void> {
     const storage = this.getSecureStorage();
-    if (!storage) return;
+    if (!storage) {
+      return;
+    }
 
     try {
       if (storage.secureSession && key.includes('supabase.auth')) {
@@ -94,7 +98,9 @@ class SecureStorageAdapter {
 
   async removeItem(key: string): Promise<void> {
     const storage = this.getSecureStorage();
-    if (!storage) return;
+    if (!storage) {
+      return;
+    }
 
     try {
       if (storage.secureSession && key.includes('supabase.auth')) {
@@ -114,11 +120,11 @@ const secureStorageAdapter = new SecureStorageAdapter();
 // Client configuration options
 export const getClientOptions = () => ({
   auth: {
-    storage: isBrowser ? secureStorageAdapter : undefined,
-    persistSession: isBrowser,
     autoRefreshToken: isBrowser,
     detectSessionInUrl: true,
     flowType: 'pkce',
+    persistSession: isBrowser,
+    storage: isBrowser ? secureStorageAdapter : undefined,
   },
 });
 

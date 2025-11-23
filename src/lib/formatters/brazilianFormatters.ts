@@ -36,10 +36,10 @@ export function formatCurrency(
   }
 
   const formatted = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
     currency: 'BRL',
-    minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+    style: 'currency',
   }).format(amount);
 
   const normalized = formatted.replace(/\u00A0/g, ' ');
@@ -67,7 +67,7 @@ export function formatCompactCurrency(amount: number, showSymbol = true): string
     return `${sign}${symbol}${(absAmount / 1_000).toFixed(1)}K`;
   }
 
-  return formatCurrency(amount, { showSymbol, decimals: 0 });
+  return formatCurrency(amount, { decimals: 0, showSymbol });
 }
 
 /**
@@ -119,7 +119,9 @@ export function formatDate(
 
   if (relative) {
     const relativeDays = getRelativeDays(dateObj);
-    if (relativeDays !== null) return relativeDays;
+    if (relativeDays !== null) {
+      return relativeDays;
+    }
   }
 
   let formatted = dateObj.toLocaleDateString('pt-BR', {
@@ -190,7 +192,9 @@ export function formatDateForVoice(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
   const relative = getRelativeDays(dateObj);
-  if (relative) return relative;
+  if (relative) {
+    return relative;
+  }
 
   const day = dateObj.getDate();
   const month = dateObj.toLocaleDateString('pt-BR', { month: 'long' });
@@ -240,8 +244,8 @@ export function formatNumber(
   }
 
   return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
   }).format(num);
 }
 
@@ -271,7 +275,9 @@ export function formatCompactNumber(num: number): string {
  * Format percentage
  */
 export function formatPercentage(value: number | undefined | null, decimals = 1): string {
-  if (value === undefined || value === null) return '0%';
+  if (value === undefined || value === null) {
+    return '0%';
+  }
   const effectiveDecimals = Number.isInteger(value) ? 0 : decimals;
   const formatted = value.toFixed(effectiveDecimals);
 
@@ -354,7 +360,9 @@ export function formatPhone(phone: string): string {
  * Pluralize word based on count
  */
 export function pluralize(count: number, singular: string, plural?: string): string {
-  if (count === 1) return singular;
+  if (count === 1) {
+    return singular;
+  }
 
   return plural || `${singular}s`;
 }
@@ -387,7 +395,9 @@ export function formatDuration(milliseconds: number): string {
  * Format file size
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) {
+    return '0 B';
+  }
 
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -414,8 +424,12 @@ export function ordinal(num: number, gender: 'masculine' | 'feminine' = 'masculi
 export function isValidCPF(cpf: string): boolean {
   const cleaned = cpf.replace(/\D/g, '');
 
-  if (cleaned.length !== 11) return false;
-  if (/^(\d)\1{10}$/.test(cleaned)) return false; // All same digits
+  if (cleaned.length !== 11) {
+    return false;
+  }
+  if (/^(\d)\1{10}$/.test(cleaned)) {
+    return false;
+  } // All same digits
 
   // Calculate verification digits
   let sum = 0;
@@ -423,16 +437,22 @@ export function isValidCPF(cpf: string): boolean {
     sum += parseInt(cleaned.charAt(i), 10) * (10 - i);
   }
   let digit = 11 - (sum % 11);
-  if (digit >= 10) digit = 0;
+  if (digit >= 10) {
+    digit = 0;
+  }
 
-  if (digit !== parseInt(cleaned.charAt(9), 10)) return false;
+  if (digit !== parseInt(cleaned.charAt(9), 10)) {
+    return false;
+  }
 
   sum = 0;
   for (let i = 0; i < 10; i++) {
     sum += parseInt(cleaned.charAt(i), 10) * (11 - i);
   }
   digit = 11 - (sum % 11);
-  if (digit >= 10) digit = 0;
+  if (digit >= 10) {
+    digit = 0;
+  }
 
   return digit === parseInt(cleaned.charAt(10), 10);
 }
@@ -443,8 +463,12 @@ export function isValidCPF(cpf: string): boolean {
 export function isValidCNPJ(cnpj: string): boolean {
   const cleaned = cnpj.replace(/\D/g, '');
 
-  if (cleaned.length !== 14) return false;
-  if (/^(\d)\1{13}$/.test(cleaned)) return false;
+  if (cleaned.length !== 14) {
+    return false;
+  }
+  if (/^(\d)\1{13}$/.test(cleaned)) {
+    return false;
+  }
 
   // CNPJ validation algorithm
   const weights = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
@@ -471,9 +495,15 @@ export function isValidCNPJ(cnpj: string): boolean {
 
 // Number-to-words converter for Brazilian Portuguese
 export function numberToWords(num: number): string {
-  if (num === 0) return 'zero';
-  if (num === 100) return 'cem';
-  if (num === 1000) return 'mil';
+  if (num === 0) {
+    return 'zero';
+  }
+  if (num === 100) {
+    return 'cem';
+  }
+  if (num === 1000) {
+    return 'mil';
+  }
 
   const units = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
 
@@ -516,8 +546,12 @@ export function numberToWords(num: number): string {
     'novecentos',
   ];
 
-  if (num < 10) return units[num];
-  if (num < 20) return teens[num - 10];
+  if (num < 10) {
+    return units[num];
+  }
+  if (num < 20) {
+    return teens[num - 10];
+  }
   if (num < 100) {
     const ten = Math.floor(num / 10);
     const unit = num % 10;
@@ -527,10 +561,14 @@ export function numberToWords(num: number): string {
   if (num < 1000) {
     const hundred = Math.floor(num / 100);
     const remainder = num % 100;
-    if (remainder === 0) return hundreds[hundred];
+    if (remainder === 0) {
+      return hundreds[hundred];
+    }
 
     // Special case for 100
-    if (hundred === 1) return `cem e ${numberToWords(remainder)}`;
+    if (hundred === 1) {
+      return `cem e ${numberToWords(remainder)}`;
+    }
 
     return `${hundreds[hundred]} e ${numberToWords(remainder)}`;
   }
@@ -538,9 +576,13 @@ export function numberToWords(num: number): string {
   if (num < 2000) {
     const thousand = Math.floor(num / 1000);
     const remainder = num % 1000;
-    if (remainder === 0) return thousand === 1 ? 'mil' : `${numberToWords(thousand)} mil`;
+    if (remainder === 0) {
+      return thousand === 1 ? 'mil' : `${numberToWords(thousand)} mil`;
+    }
 
-    if (thousand === 1) return `mil e ${numberToWords(remainder)}`;
+    if (thousand === 1) {
+      return `mil e ${numberToWords(remainder)}`;
+    }
     return `${numberToWords(thousand)} mil e ${numberToWords(remainder)}`;
   }
 
@@ -549,29 +591,29 @@ export function numberToWords(num: number): string {
 }
 
 export const brazilianFormatters = {
-  currency: formatCurrency,
+  cep: formatCEP,
+  cnpj: formatCNPJ,
   compactCurrency: formatCompactCurrency,
+  compactNumber: formatCompactNumber,
+  cpf: formatCPF,
+  currency: formatCurrency,
   currencyForVoice: formatCurrencyForVoice,
   date: formatDate,
   dateForVoice: formatDateForVoice,
-  relativeDays: getRelativeDays,
-  relativeDate: formatRelativeDate,
-  timeRange: formatTimeRange,
-  number: formatNumber,
-  compactNumber: formatCompactNumber,
-  percentage: formatPercentage,
-  cpf: formatCPF,
-  cnpj: formatCNPJ,
-  cep: formatCEP,
-  phone: formatPhone,
-  pluralize,
   duration: formatDuration,
   fileSize: formatFileSize,
-  ordinal,
+  number: formatNumber,
   numberToWords,
+  ordinal,
+  percentage: formatPercentage,
+  phone: formatPhone,
+  pluralize,
+  relativeDate: formatRelativeDate,
+  relativeDays: getRelativeDays,
+  timeRange: formatTimeRange,
 };
 
 export const brazilianValidators = {
-  cpf: isValidCPF,
   cnpj: isValidCNPJ,
+  cpf: isValidCPF,
 };

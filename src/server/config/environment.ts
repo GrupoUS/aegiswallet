@@ -4,10 +4,10 @@
  */
 
 export const environment = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: Number(process.env.PORT) || 3000,
   IS_DEVELOPMENT: process.env.NODE_ENV !== 'production',
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: Number(process.env.PORT) || 3000,
 } as const;
 
 export const corsConfig = {
@@ -20,6 +20,6 @@ export const corsConfig = {
 } as const;
 
 export const cacheConfig = {
-  staticAssets: environment.IS_PRODUCTION ? 'public, max-age=31536000, immutable' : 'no-cache',
   htmlFiles: 'no-cache, no-store, must-revalidate',
+  staticAssets: environment.IS_PRODUCTION ? 'public, max-age=31536000, immutable' : 'no-cache',
 } as const;

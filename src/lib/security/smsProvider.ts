@@ -41,32 +41,32 @@ export interface SMSTemplate {
 // Default SMS templates for Brazilian market
 const DEFAULT_TEMPLATES: SMSTemplate[] = [
   {
-    id: 'otp',
-    name: 'OTP Verification',
     body: 'Seu código de verificação AegisWallet: {{otp}}. Válido por 5 minutos. Não compartilhe este código.',
-    language: 'pt-BR',
     category: 'otp',
+    id: 'otp',
+    language: 'pt-BR',
+    name: 'OTP Verification',
   },
   {
-    id: 'security_alert',
-    name: 'Security Alert',
     body: 'AegisWallet: Nova tentativa de login detectada. Se não foi você, acesse o app imediatamente.',
-    language: 'pt-BR',
     category: 'security',
+    id: 'security_alert',
+    language: 'pt-BR',
+    name: 'Security Alert',
   },
   {
-    id: 'account_locked',
-    name: 'Account Locked',
     body: 'AegisWallet: Sua conta foi temporariamente bloqueada por segurança. Contate o suporte se necessário.',
-    language: 'pt-BR',
     category: 'security',
+    id: 'account_locked',
+    language: 'pt-BR',
+    name: 'Account Locked',
   },
   {
-    id: 'push_approval',
-    name: 'Push Approval Request',
     body: 'AegisWallet: Aprovação de login necessária. Abra o app para confirmar sua identidade.',
-    language: 'pt-BR',
     category: 'security',
+    id: 'push_approval',
+    language: 'pt-BR',
+    name: 'Push Approval Request',
   },
 ];
 
@@ -146,16 +146,16 @@ export class SMSProvider {
   ): Promise<void> {
     try {
       await supabase.from('sms_logs').insert({
-        user_id: userId,
-        to: message.to,
         body: message.body,
-        template: message.template,
-        variables: message.variables,
-        message_id: result.messageId,
-        status: result.status,
-        error: result.error,
-        processing_time: result.processingTime,
         created_at: new Date().toISOString(),
+        error: result.error,
+        message_id: result.messageId,
+        processing_time: result.processingTime,
+        status: result.status,
+        template: message.template,
+        to: message.to,
+        user_id: userId,
+        variables: message.variables,
       });
     } catch (_error) {}
   }
@@ -171,9 +171,9 @@ export class SMSProvider {
       if (!this.validateBrazilianPhone(message.to)) {
         const error = 'Invalid Brazilian phone number format';
         const result: SMSResult = {
-          success: false,
           error,
           processingTime: Date.now() - startTime,
+          success: false,
         };
         await this.logSMSMessage(userId, message, result);
         return result;
@@ -185,27 +185,29 @@ export class SMSProvider {
       // Process template if provided
       let finalBody = message.body;
       if (message.template && this.templates.has(message.template)) {
-        const template = this.templates.get(message.template)!;
-        finalBody = this.replaceTemplateVariables(template.body, message.variables || {});
+        const template = this.templates.get(message.template);
+        if (template) {
+          finalBody = this.replaceTemplateVariables(template.body, message.variables || {});
+        }
       }
 
       // Prepare Twilio request
       const requestBody = new URLSearchParams({
-        To: formattedPhone,
-        From: this.config.fromNumber,
         Body: finalBody,
+        From: this.config.fromNumber,
+        MaxPrice: '0.10',
         StatusCallback: `${window.location.origin}/api/sms/status`,
-        MaxPrice: '0.10', // Limit cost for Brazilian SMS
+        To: formattedPhone, // Limit cost for Brazilian SMS
       });
 
       // Make API request to backend (server-side)
       const response = await fetch('/api/sms/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Bearer ${this.config.authToken}`,
-        },
         body: requestBody.toString(),
+        headers: {
+          Authorization: `Bearer ${this.config.authToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        method: 'POST',
       });
 
       if (!response.ok) {
@@ -216,10 +218,10 @@ export class SMSProvider {
       const data = await response.json();
 
       const result: SMSResult = {
-        success: true,
         messageId: data.sid,
-        status: data.status,
         processingTime: Date.now() - startTime,
+        status: data.status,
+        success: true,
       };
 
       await this.logSMSMessage(userId, message, result);
@@ -228,9 +230,9 @@ export class SMSProvider {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       const result: SMSResult = {
-        success: false,
         error: errorMessage,
         processingTime: Date.now() - startTime,
+        success: false,
       };
 
       await this.logSMSMessage(userId, message, result);
@@ -243,8 +245,8 @@ export class SMSProvider {
    */
   async sendOTP(userId: string, phoneNumber: string, otp: string): Promise<SMSResult> {
     return this.sendMessage(userId, {
-      to: phoneNumber,
       template: 'otp',
+      to: phoneNumber,
       variables: { otp },
     });
   }
@@ -258,14 +260,14 @@ export class SMSProvider {
     alertType: 'login_attempt' | 'account_locked' | 'suspicious_activity'
   ): Promise<SMSResult> {
     const templateMap = {
-      login_attempt: 'security_alert',
       account_locked: 'account_locked',
+      login_attempt: 'security_alert',
       suspicious_activity: 'security_alert',
     };
 
     return this.sendMessage(userId, {
-      to: phoneNumber,
       template: templateMap[alertType],
+      to: phoneNumber,
     });
   }
 
@@ -274,8 +276,8 @@ export class SMSProvider {
    */
   async sendPushApproval(userId: string, phoneNumber: string): Promise<SMSResult> {
     return this.sendMessage(userId, {
-      to: phoneNumber,
       template: 'push_approval',
+      to: phoneNumber,
     });
   }
 

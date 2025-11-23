@@ -46,8 +46,8 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
         results: [
           [
             {
-              transcript: 'transferir cem reais para João',
               confidence: 0.95,
+              transcript: 'transferir cem reais para João',
             },
           ],
         ],
@@ -65,10 +65,10 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
+        'data-testid': 'start-listening',
+        disabled: isListening,
         key: 'start-btn',
         onClick: startListening,
-        disabled: isListening,
-        'data-testid': 'start-listening',
       },
       isListening ? 'Ouvindo...' : 'Iniciar Assistente de Voz'
     ),
@@ -76,10 +76,10 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
+        'data-testid': 'stop-listening',
+        disabled: !isListening,
         key: 'stop-btn',
         onClick: stopListening,
-        disabled: !isListening,
-        'data-testid': 'stop-listening',
       },
       'Parar'
     ),
@@ -87,10 +87,10 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'div',
       {
-        key: 'status',
-        role: 'status',
         'aria-live': 'polite',
         'data-testid': 'voice-status',
+        key: 'status',
+        role: 'status',
       },
       isListening ? 'Ouvindo comando de voz...' : 'Pronto para ouvir'
     ),
@@ -98,8 +98,8 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'div',
       {
-        key: 'transcript',
         'data-testid': 'voice-transcript',
+        key: 'transcript',
       },
       lastCommand && `Último comando: "${lastCommand}"`
     ),
@@ -111,16 +111,16 @@ describe('Voice Interface Testing (Portuguese)', () => {
     vi.clearAllMocks();
     // Reset SpeechRecognition mock to default implementation
     global.SpeechRecognition.mockImplementation(() => ({
-      lang: 'pt-BR',
+      abort: vi.fn(),
       continuous: false,
       interimResults: false,
+      lang: 'pt-BR',
+      onend: null,
+      onerror: null,
+      onresult: null,
+      onstart: null,
       start: vi.fn(),
       stop: vi.fn(),
-      abort: vi.fn(),
-      onresult: null,
-      onerror: null,
-      onstart: null,
-      onend: null,
     }));
   });
 
@@ -183,9 +183,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
       // Mock different command
       const mockRecognition = {
         lang: 'pt-BR',
-        start: vi.fn(),
-        onresult: null,
         onerror: null,
+        onresult: null,
+        start: vi.fn(),
       };
 
       global.SpeechRecognition.mockImplementation(() => mockRecognition);
@@ -205,8 +205,8 @@ describe('Voice Interface Testing (Portuguese)', () => {
           results: [
             [
               {
-                transcript: 'agendar consulta com Dr. Pedro para amanhã',
                 confidence: 0.92,
+                transcript: 'agendar consulta com Dr. Pedro para amanhã',
               },
             ],
           ],
@@ -245,9 +245,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
       const onCommand = vi.fn();
       const lowConfidenceRecognition = {
         lang: 'pt-BR',
-        start: vi.fn(),
-        onresult: null,
         onerror: null,
+        onresult: null,
+        start: vi.fn(),
       };
 
       global.SpeechRecognition.mockImplementation(() => lowConfidenceRecognition);
@@ -263,8 +263,8 @@ describe('Voice Interface Testing (Portuguese)', () => {
           results: [
             [
               {
-                transcript: 'comando incerto',
-                confidence: 0.45, // Below threshold
+                confidence: 0.45,
+                transcript: 'comando incerto', // Below threshold
               },
             ],
           ],
@@ -328,9 +328,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
     it('should handle speech recognition errors gracefully', async () => {
       const errorRecognition = {
         lang: 'pt-BR',
-        start: vi.fn(),
-        onresult: null,
         onerror: null,
+        onresult: null,
+        start: vi.fn(),
       };
 
       global.SpeechRecognition.mockImplementation(() => errorRecognition);

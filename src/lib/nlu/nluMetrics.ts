@@ -8,7 +8,8 @@
  * @module nlu/nluMetrics
  */
 
-import { type ClassificationLog, IntentType, type NLUMetrics } from './types';
+import type { ClassificationLog, NLUMetrics } from './types';
+import { IntentType } from './types';
 
 // ============================================================================
 // In-Memory Metrics Store (Replace with Supabase in production)
@@ -17,16 +18,16 @@ import { type ClassificationLog, IntentType, type NLUMetrics } from './types';
 class MetricsStore {
   private logs: ClassificationLog[] = [];
   private metrics: NLUMetrics = {
-    totalProcessed: 0,
-    successfulClassifications: 0,
-    failedClassifications: 0,
+    accuracyByIntent: {} as Record<IntentType, number>,
     averageConfidence: 0,
     averageProcessingTime: 0,
-    intentDistribution: {} as Record<IntentType, number>,
-    accuracyByIntent: {} as Record<IntentType, number>,
-    falsePositives: 0,
-    falseNegatives: 0,
     disambiguationRate: 0,
+    failedClassifications: 0,
+    falseNegatives: 0,
+    falsePositives: 0,
+    intentDistribution: {} as Record<IntentType, number>,
+    successfulClassifications: 0,
+    totalProcessed: 0,
   };
 
   constructor() {
@@ -86,7 +87,7 @@ class MetricsStore {
 
     // Initialize counters
     for (const intent of Object.values(IntentType)) {
-      intentCounts[intent] = { total: 0, correct: 0 };
+      intentCounts[intent] = { correct: 0, total: 0 };
     }
 
     // Count correct predictions per intent
@@ -218,25 +219,25 @@ class MetricsStore {
     const f1Score = precision + recall > 0 ? (2 * (precision * recall)) / (precision + recall) : 0;
 
     return {
+      f1Score: f1Score * 100,
       precision: precision * 100,
       recall: recall * 100,
-      f1Score: f1Score * 100,
     };
   }
 
   clear(): void {
     this.logs = [];
     this.metrics = {
-      totalProcessed: 0,
-      successfulClassifications: 0,
-      failedClassifications: 0,
+      accuracyByIntent: {} as Record<IntentType, number>,
       averageConfidence: 0,
       averageProcessingTime: 0,
-      intentDistribution: {} as Record<IntentType, number>,
-      accuracyByIntent: {} as Record<IntentType, number>,
-      falsePositives: 0,
-      falseNegatives: 0,
       disambiguationRate: 0,
+      failedClassifications: 0,
+      falseNegatives: 0,
+      falsePositives: 0,
+      intentDistribution: {} as Record<IntentType, number>,
+      successfulClassifications: 0,
+      totalProcessed: 0,
     };
 
     // Reinitialize intent counters
@@ -358,8 +359,10 @@ export function generateReport(): {
   };
 } {
   const metrics = getMetrics();
-  const intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>> =
-    {} as Record<IntentType, ReturnType<typeof getIntentMetrics>>;
+  const intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>> = {} as Record<
+    IntentType,
+    ReturnType<typeof getIntentMetrics>
+  >;
 
   for (const intent of Object.values(IntentType)) {
     if (intent !== IntentType.UNKNOWN) {
@@ -370,18 +373,18 @@ export function generateReport(): {
   const logs = getLogs();
 
   return {
-    summary: metrics,
     intentMetrics,
     retrainingCandidates: {
-      falsePositives: getFalsePositives(),
       falseNegatives: getFalseNegatives(),
-      lowConfidenceCorrect: logs.filter(
-        (log) => log.feedback === 'correct' && log.confidence < 0.7
-      ),
+      falsePositives: getFalsePositives(),
       highConfidenceIncorrect: logs.filter(
         (log) => log.feedback === 'incorrect' && log.confidence > 0.8
       ),
+      lowConfidenceCorrect: logs.filter(
+        (log) => log.feedback === 'correct' && log.confidence < 0.7
+      ),
     },
+    summary: metrics,
   };
 }
 

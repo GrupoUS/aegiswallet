@@ -22,7 +22,9 @@ function calculateEventPosition(
   // Find which day this event belongs to
   const eventDay = weekDays.findIndex((day) => isSameDay(day.date, event.start));
 
-  if (eventDay !== dayIndex) return null;
+  if (eventDay !== dayIndex) {
+    return null;
+  }
 
   // Calculate position
   const startMinutes = event.start.getHours() * 60 + event.start.getMinutes();
@@ -31,12 +33,14 @@ function calculateEventPosition(
   const duration = endMinutes - startMinutes;
 
   // Skip events outside visible hours
-  if (startOffset < 0 || startOffset > 12 * 60) return null;
+  if (startOffset < 0 || startOffset > 12 * 60) {
+    return null;
+  }
 
   return {
-    top: (startOffset / 60) * HOUR_HEIGHT,
-    left: `${(dayIndex / 7) * 100}%`,
     height: (duration / 60) * HOUR_HEIGHT,
+    left: `${(dayIndex / 7) * 100}%`,
+    top: (startOffset / 60) * HOUR_HEIGHT,
     width: `${(1 / 7) * 100}%`,
   };
 }
@@ -90,7 +94,9 @@ export function TimeGrid({ weekDays, hours, events, onEventEdit }: TimeGridProps
             <div key={day.date.toISOString()}>
               {events.map((event) => {
                 const position = calculateEventPosition(event, dayIndex, weekDays);
-                if (!position) return null;
+                if (!position) {
+                  return null;
+                }
 
                 return (
                   <EventCard

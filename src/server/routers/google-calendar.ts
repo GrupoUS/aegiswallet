@@ -4,6 +4,44 @@ import type { CalendarSyncSettings } from '../../types/google-calendar';
 import { protectedProcedure, router } from '../trpc-helpers';
 
 export const googleCalendarRouter = router({
+  getSyncHistory: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const { data, error } = await ctx.supabase
+        .from('calendar_sync_audit')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(input.limit);
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+      return data;
+    }),
+  getSyncSettings: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id;
+    const { data, error } = await ctx.supabase
+      .from('calendar_sync_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw new TRPCError({
+        cause: error,
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch settings',
+      });
+    }
+
+    return data as CalendarSyncSettings | null;
+  }),
   getSyncStatus: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
@@ -29,43 +67,72 @@ export const googleCalendarRouter = router({
       .single();
 
     return {
-      isConnected: !!tokens,
       email: tokens?.google_user_email,
-      tokenExpiry: tokens?.expiry_timestamp,
-      settings: settings as CalendarSyncSettings | null,
+      isConnected: !!tokens,
       lastSync: lastSync?.created_at,
+      settings: settings as CalendarSyncSettings | null,
+      tokenExpiry: tokens?.expiry_timestamp,
     };
   }),
+  requestFullSync: protectedProcedure.mutation(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
+      body: { action: 'full_sync' },
+    });
 
-  getSyncSettings: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user.id;
-    const { data, error } = await ctx.supabase
-      .from('calendar_sync_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch settings',
-        cause: error,
-      });
+    if (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    }
+    if (data.error) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: data.error });
     }
 
-    return data as CalendarSyncSettings | null;
+    return data;
   }),
+  requestIncrementalSync: protectedProcedure.mutation(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
+      body: { action: 'incremental_sync' },
+    });
 
+    if (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    }
+    // If error is "Sync token invalidated", client should retry full sync. Handled by hook?
+    return data;
+  }),
+  syncEvent: protectedProcedure
+    .input(
+      z.object({
+        direction: z.enum(['to_google', 'from_google']).default('to_google'),
+        eventId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
+        body: {
+          action: input.direction === 'to_google' ? 'sync_to_google' : 'sync_from_google',
+          event_id: input.eventId,
+        },
+      });
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+      if (data.error) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: data.error });
+      }
+
+      return data;
+    }),
   updateSyncSettings: protectedProcedure
     .input(
       z.object({
-        sync_enabled: z.boolean().optional(),
+        auto_sync_interval_minutes: z.number().min(5).optional(),
+        sync_categories: z.array(z.string()).nullable().optional(),
         sync_direction: z
           .enum(['one_way_to_google', 'one_way_from_google', 'bidirectional'])
           .optional(),
+        sync_enabled: z.boolean().optional(),
         sync_financial_amounts: z.boolean().optional(),
-        auto_sync_interval_minutes: z.number().min(5).optional(),
-        sync_categories: z.array(z.string()).nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -83,16 +150,16 @@ export const googleCalendarRouter = router({
 
       if (error) {
         throw new TRPCError({
+          cause: error,
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to update settings',
-          cause: error,
         });
       }
 
       // Audit log
       await ctx.supabase.from('calendar_sync_audit').insert({
-        user_id: userId,
-        action: 'sync_updated', // Note: type in DB might be 'event_updated' or generic, let's use 'sync_updated' if possible, but schema said strict check. Wait, schema had 'sync_started', 'sync_completed', 'sync_failed', 'event_created', 'event_updated', 'event_deleted', 'auth_granted', 'auth_revoked'.
+        action: 'sync_updated',
+        user_id: userId, // Note: type in DB might be 'event_updated' or generic, let's use 'sync_updated' if possible, but schema said strict check. Wait, schema had 'sync_started', 'sync_completed', 'sync_failed', 'event_created', 'event_updated', 'event_deleted', 'auth_granted', 'auth_revoked'.
         // Use 'event_updated' with details or maybe just skip strictly checking if we used check constraint?
         // Schema said: CHECK (action IN ('sync_started', 'sync_completed', 'sync_failed', 'event_created', 'event_updated', 'event_deleted', 'auth_granted', 'auth_revoked'))
         // So 'sync_updated' is NOT allowed. I will use 'event_updated' with details context, or just skip auditing settings change for now to avoid constraint error.
@@ -102,65 +169,4 @@ export const googleCalendarRouter = router({
 
       return data as CalendarSyncSettings;
     }),
-
-  getSyncHistory: protectedProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(50).default(10),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const userId = ctx.user.id;
-      const { data, error } = await ctx.supabase
-        .from('calendar_sync_audit')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(input.limit);
-
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
-      return data;
-    }),
-
-  syncEvent: protectedProcedure
-    .input(
-      z.object({
-        eventId: z.string(),
-        direction: z.enum(['to_google', 'from_google']).default('to_google'),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
-        body: {
-          action: input.direction === 'to_google' ? 'sync_to_google' : 'sync_from_google',
-          event_id: input.eventId,
-        },
-      });
-
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
-      if (data.error) throw new TRPCError({ code: 'BAD_REQUEST', message: data.error });
-
-      return data;
-    }),
-
-  requestFullSync: protectedProcedure.mutation(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
-      body: { action: 'full_sync' },
-    });
-
-    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
-    if (data.error) throw new TRPCError({ code: 'BAD_REQUEST', message: data.error });
-
-    return data;
-  }),
-
-  requestIncrementalSync: protectedProcedure.mutation(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase.functions.invoke('google-calendar-sync', {
-      body: { action: 'incremental_sync' },
-    });
-
-    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
-    // If error is "Sync token invalidated", client should retry full sync. Handled by hook?
-    return data;
-  }),
 });

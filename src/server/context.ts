@@ -20,8 +20,8 @@ export const createContext = async (): Promise<CreateContextOptions> => {
 
   return {
     session,
-    user: session?.user ?? null,
     supabase,
+    user: session?.user ?? null,
   };
 };
 

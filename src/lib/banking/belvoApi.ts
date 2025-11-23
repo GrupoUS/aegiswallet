@@ -33,11 +33,11 @@ export interface BelvoInstitution {
 
 // Static list of supported institutions
 const SUPPORTED_INSTITUTIONS: BelvoInstitution[] = [
-  { id: 'bb', name: 'Banco do Brasil', type: 'bank', country: 'BR' },
-  { id: 'itau', name: 'Itaú Unibanco', type: 'bank', country: 'BR' },
-  { id: 'bradesco', name: 'Bradesco', type: 'bank', country: 'BR' },
-  { id: 'santander', name: 'Santander Brasil', type: 'bank', country: 'BR' },
-  { id: 'caixa', name: 'Caixa Econômica Federal', type: 'bank', country: 'BR' },
+  { country: 'BR', id: 'bb', name: 'Banco do Brasil', type: 'bank' },
+  { country: 'BR', id: 'itau', name: 'Itaú Unibanco', type: 'bank' },
+  { country: 'BR', id: 'bradesco', name: 'Bradesco', type: 'bank' },
+  { country: 'BR', id: 'santander', name: 'Santander Brasil', type: 'bank' },
+  { country: 'BR', id: 'caixa', name: 'Caixa Econômica Federal', type: 'bank' },
 ];
 
 /**
@@ -70,21 +70,21 @@ export class BelvoApiClient {
 
     if (error) {
       logger.error('Failed to fetch accounts', {
+        error: (error as Error).message,
         operation: 'belvo_accounts',
         userId,
-        error: (error as Error).message,
       });
       throw error;
     }
 
     return (data || []).map((account) => ({
-      id: account.id,
-      name: account.name,
-      type: (account.type as 'checking' | 'savings' | 'credit') || 'checking',
       balance: account.balance || 0,
       currency: (account.currency as 'BRL') || 'BRL',
+      id: account.id,
       institution: account.institution_name || 'Unknown',
       lastUpdated: account.updated_at || new Date().toISOString(),
+      name: account.name,
+      type: (account.type as 'checking' | 'savings' | 'credit') || 'checking',
     }));
   }
 
@@ -115,9 +115,9 @@ export class BelvoApiClient {
 
     if (error) {
       logger.error('Failed to fetch transactions', {
-        operation: 'belvo_transactions',
         accountId,
         error: (error as Error).message,
+        operation: 'belvo_transactions',
       });
       throw error;
     }
@@ -146,16 +146,16 @@ export class BelvoApiClient {
 
     if (error) {
       logger.error('Failed to sync account', {
-        operation: 'belvo_sync_account',
         accountId,
         error: (error as Error).message,
+        operation: 'belvo_sync_account',
       });
       throw error;
     }
 
     return {
-      status: 'success',
       message: 'Account data synchronized successfully',
+      status: 'success',
     };
   }
 
@@ -166,8 +166,8 @@ export class BelvoApiClient {
     // This would typically call the provider's API.
     // We'll generate a dummy token for the flow.
     return {
-      link_token: `link_token_${Date.now()}_${userId}`,
-      expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+      expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      link_token: `link_token_${Date.now()}_${userId}`, // 30 minutes
     };
   }
 }

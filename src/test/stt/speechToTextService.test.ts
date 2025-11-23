@@ -78,19 +78,19 @@ describe('SpeechToTextService', () => {
         type: 'audio/webm',
       });
       const mockResponse = {
-        text: 'Olá, como vai?',
-        language: 'pt',
         duration: 2.5,
+        language: 'pt',
         segments: [
           {
             avg_logprob: -0.2,
           },
         ],
+        text: 'Olá, como vai?',
       };
 
       mockFetch.mockResolvedValueOnce({
-        ok: true,
         json: async () => mockResponse,
+        ok: true,
       });
 
       const result = await sttService.transcribe(audioBlob);
@@ -106,12 +106,12 @@ describe('SpeechToTextService', () => {
       });
 
       mockFetch.mockResolvedValueOnce({
-        ok: true,
         json: async () => ({
-          text: 'Test',
-          language: 'pt',
           duration: 1.0,
+          language: 'pt',
+          text: 'Test',
         }),
+        ok: true,
       });
 
       await sttService.transcribe(audioBlob);
@@ -131,12 +131,12 @@ describe('SpeechToTextService', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({
-          ok: true,
           json: async () => ({
-            text: 'Success after retry',
-            language: 'pt',
             duration: 1.0,
+            language: 'pt',
+            text: 'Success after retry',
           }),
+          ok: true,
         });
 
       const result = await sttService.transcribe(audioBlob);
@@ -172,7 +172,7 @@ describe('SpeechToTextService', () => {
           }
           // Simulate response slower than timeout
           setTimeout(() => {
-            resolve({ ok: true, json: async () => ({}) });
+            resolve({ json: async () => ({}), ok: true });
           }, 200);
         });
       });
@@ -223,12 +223,12 @@ describe('SpeechToTextService', () => {
 
       // Use mockResolvedValue to persist through retries
       mockFetch.mockResolvedValue({
-        ok: false,
-        status: 429,
-        statusText: 'Too Many Requests',
         json: async () => ({
           error: { message: 'Rate limit exceeded' },
         }),
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
       });
 
       await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
@@ -243,12 +243,12 @@ describe('SpeechToTextService', () => {
       });
 
       mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
         json: async () => ({
           error: { message: 'Invalid API key' },
         }),
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
       });
 
       await expect(sttService.transcribe(audioBlob)).rejects.toMatchObject({
@@ -261,12 +261,12 @@ describe('SpeechToTextService', () => {
   describe('Health Check', () => {
     it('should return true when API is reachable', async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
         json: async () => ({
           error: { message: 'Invalid audio' },
         }),
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
       });
 
       const isHealthy = await sttService.healthCheck();
@@ -276,8 +276,7 @@ describe('SpeechToTextService', () => {
     it('should return false on network errors', async () => {
       const networkError = new Error('Network error occurred');
       networkError.name = 'TypeError';
-      // Use mockRejectedValue to persist through retries (though healthCheck doesn't retry, transcribe does)
-      // healthCheck calls transcribe. transcribe retries.
+      // Ensure mock consistently rejects through all retries
       mockFetch.mockRejectedValue(networkError);
 
       const isHealthy = await sttService.healthCheck();

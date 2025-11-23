@@ -44,8 +44,8 @@ export function EnhancedEventCard({
   const colorTokens = EVENT_COLOR_STYLES[eventColor] ?? EVENT_COLOR_STYLES.blue;
   const colorClasses = {
     bg: colorTokens.subtleBg,
-    text: colorTokens.text,
     border: colorTokens.border,
+    text: colorTokens.text,
   };
 
   const handleClick = () => {

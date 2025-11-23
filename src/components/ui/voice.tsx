@@ -43,8 +43,12 @@ export const VoiceInterface = React.forwardRef<
                   size="sm"
                   variant={isListening ? 'destructive' : 'default'}
                   className="h-10 w-10 rounded-full"
+                  type="button"
                   onClick={isListening ? onStopListening : onStartListening}
                   disabled={isProcessing}
+                  aria-label={isListening ? 'Parar gravação de voz' : 'Iniciar gravação de voz'}
+                  aria-pressed={isListening}
+                  aria-live="polite"
                 >
                   {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
@@ -68,8 +72,10 @@ export const VoiceInterface = React.forwardRef<
                   <Button
                     size="sm"
                     variant="ghost"
+                    type="button"
                     onClick={onClearTranscript}
                     className="h-6 px-2 text-xs"
+                    aria-label="Limpar transcrição de voz"
                   >
                     Limpar
                   </Button>
@@ -146,12 +152,12 @@ VoiceIndicator.displayName = 'VoiceIndicator';
 export const VoiceDashboard = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & {
-    commands?: Array<{
+    commands?: {
       id: string;
       command: string;
       response: string;
       timestamp: Date;
-    }>;
+    }[];
     isListening?: boolean;
     onClearHistory?: () => void;
   }
@@ -166,7 +172,13 @@ export const VoiceDashboard = React.forwardRef<
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Histórico de Comandos</CardTitle>
             {commands.length > 0 && (
-              <Button size="sm" variant="outline" onClick={onClearHistory}>
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={onClearHistory}
+                aria-label="Limpar histórico de comandos de voz"
+              >
                 Limpar Histórico
               </Button>
             )}
@@ -218,7 +230,9 @@ export const VoiceResponse = React.forwardRef<
     onClose?: () => void;
   }
 >(({ className, text = '', isSpeaking = false, onClose, ...props }, ref) => {
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   return (
     <div
@@ -244,7 +258,14 @@ export const VoiceResponse = React.forwardRef<
           <p className="text-muted-foreground text-sm">{text}</p>
         </div>
         {onClose && (
-          <Button size="sm" variant="ghost" onClick={onClose} className="h-6 w-6 p-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            onClick={onClose}
+            className="h-6 w-6 p-0"
+            aria-label="Fechar resposta de voz"
+          >
             ×
           </Button>
         )}

@@ -8,13 +8,8 @@
  */
 
 import { logger } from '@/lib/logging/logger';
-import {
-  type ClassificationLog,
-  type EntityType,
-  type ExtractedEntity,
-  IntentType,
-  type NLUResult,
-} from './types';
+import type { ClassificationLog, EntityType, ExtractedEntity, NLUResult } from './types';
+import { IntentType } from './types';
 
 // ============================================================================
 // Analytics Configuration
@@ -44,9 +39,9 @@ const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   regionalAnalysisEnabled: true,
   realTimeMetricsEnabled: true,
   performanceThresholds: {
+    maxErrorRate: 0.1,
     maxProcessingTime: 200,
     minConfidenceThreshold: 0.7,
-    maxErrorRate: 0.1,
   },
 };
 
@@ -112,7 +107,7 @@ export interface HitMissMetrics {
 // ============================================================================
 
 export interface LearningAnalytics {
-  patternEvolution: Array<{
+  patternEvolution: {
     pattern: string;
     frequency: number;
     accuracy: number;
@@ -120,42 +115,42 @@ export interface LearningAnalytics {
     lastSeen: Date;
     trend: 'improving' | 'stable' | 'declining';
     regionalVariations: Record<string, number>;
-  }>;
-  userAdaptations: Array<{
+  }[];
+  userAdaptations: {
     userId: string;
     adaptationType: 'correction' | 'preference' | 'regional';
     originalPattern: string;
     adaptedPattern: string;
     confidence: number;
     timestamp: Date;
-  }>;
+  }[];
   regionalLearning: Record<
     string,
     {
       totalCommands: number;
       accuracyRate: number;
-      commonPatterns: Array<{
+      commonPatterns: {
         pattern: string;
         frequency: number;
         accuracy: number;
-      }>;
-      linguisticMarkers: Array<{
+      }[];
+      linguisticMarkers: {
         marker: string;
         frequency: number;
         accuracy: number;
-      }>;
+      }[];
     }
   >;
-  confidenceLearning: Array<{
+  confidenceLearning: {
     intent: IntentType;
     averageConfidence: number;
     confidenceTrend: 'improving' | 'stable' | 'declining';
-    factors: Array<{
+    factors: {
       factor: string;
       impact: number;
       trend: 'positive' | 'negative' | 'neutral';
-    }>;
-  }>;
+    }[];
+  }[];
 }
 
 // ============================================================================
@@ -178,59 +173,59 @@ export class NLUAnalytics {
 
   private initializeHitMissMetrics(): HitMissMetrics {
     return {
-      totalCommands: 0,
-      successfulClassifications: 0,
-      failedClassifications: 0,
-      hitRate: 0,
-      missRate: 0,
       averageConfidence: 0,
       confidenceDistribution: {
         'high (>0.8)': 0,
-        'medium (0.6-0.8)': 0,
         'low (<0.6)': 0,
+        'medium (0.6-0.8)': 0,
       },
-      intentAccuracy: {} as Record<IntentType, number>,
       entityAccuracy: {} as Record<EntityType, number>,
-      regionalAccuracy: {},
-      temporalAccuracy: {},
-      linguisticAccuracy: {
-        slang: 0,
-        formal: 0,
-        colloquial: 0,
-        mixed: 0,
-      },
-      learningProgress: {
-        weeklyImprovement: 0,
-        monthlyImprovement: 0,
-        patternEvolution: 0,
-        adaptationRate: 0,
-      },
       errorAnalysis: {
-        patternMisses: 0,
         entityExtractionFailures: 0,
         intentConfusion: 0,
         lowConfidenceIssues: 0,
+        patternMisses: 0,
         regionalMisunderstandings: 0,
       },
+      failedClassifications: 0,
+      hitRate: 0,
+      intentAccuracy: {} as Record<IntentType, number>,
+      learningProgress: {
+        adaptationRate: 0,
+        monthlyImprovement: 0,
+        patternEvolution: 0,
+        weeklyImprovement: 0,
+      },
+      linguisticAccuracy: {
+        colloquial: 0,
+        formal: 0,
+        mixed: 0,
+        slang: 0,
+      },
+      missRate: 0,
       performanceMetrics: {
         averageProcessingTime: 0,
+        cacheHitRate: 0,
         processingTimeDistribution: {
           'fast (<100ms)': 0,
           'normal (100-200ms)': 0,
           'slow (>200ms)': 0,
         },
-        cacheHitRate: 0,
         systemHealth: 'excellent',
       },
+      regionalAccuracy: {},
+      successfulClassifications: 0,
+      temporalAccuracy: {},
+      totalCommands: 0,
     };
   }
 
   private initializeLearningAnalytics(): LearningAnalytics {
     return {
-      patternEvolution: [],
-      userAdaptations: [],
-      regionalLearning: {},
       confidenceLearning: [],
+      patternEvolution: [],
+      regionalLearning: {},
+      userAdaptations: [],
     };
   }
 
@@ -242,7 +237,9 @@ export class NLUAnalytics {
    * Initialize analytics system and start batch processing
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      return;
+    }
 
     try {
       // Load existing analytics data from Supabase
@@ -257,9 +254,9 @@ export class NLUAnalytics {
 
       this.isInitialized = true;
       logger.info('NLU Analytics initialized', {
+        batchSize: this.config.batchSize,
         enabled: this.config.enabled,
         learningEnabled: this.config.learningEnabled,
-        batchSize: this.config.batchSize,
       });
     } catch (error) {
       logger.error('Failed to initialize NLU Analytics', { error });
@@ -276,7 +273,9 @@ export class NLUAnalytics {
     sessionId: string,
     feedback?: 'correct' | 'incorrect' | 'ambiguous'
   ): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     try {
       const log: ClassificationLog = {
@@ -295,9 +294,9 @@ export class NLUAnalytics {
         regionalVariation: this.detectRegionalVariation(result.originalText),
         linguisticStyle: this.detectLinguisticStyle(result.originalText),
         contextualClues: {
-          timeOfDay: new Date().getHours().toString(),
+          conversationTurn: 0,
           dayOfWeek: new Date().getDay().toString(),
-          conversationTurn: 0, // Will be updated by context processor
+          timeOfDay: new Date().getHours().toString(), // Will be updated by context processor
         },
       };
 
@@ -310,9 +309,9 @@ export class NLUAnalytics {
 
       // Log to system logger
       logger.voiceCommand(result.originalText, result.confidence, {
+        entities: result.entities.length,
         intent: result.intent,
         processingTime: result.processingTime,
-        entities: result.entities.length,
         requiresConfirmation: result.requiresConfirmation,
         requiresDisambiguation: result.requiresDisambiguation,
       });
@@ -335,11 +334,15 @@ export class NLUAnalytics {
     confidence: number,
     entities?: ExtractedEntity[]
   ): void {
-    if (!this.config.learningEnabled) return;
+    if (!this.config.learningEnabled) {
+      return;
+    }
 
     try {
       const logIndex = this.classificationLogs.findIndex((log) => log.id === logId);
-      if (logIndex === -1) return;
+      if (logIndex === -1) {
+        return;
+      }
 
       const log = this.classificationLogs[logIndex];
       log.correctIntent = correctIntent;
@@ -349,11 +352,11 @@ export class NLUAnalytics {
       this.analyzeLearningPattern(log, correctIntent, entities);
 
       logger.info('User feedback tracked', {
+        confidence,
+        correctIntent,
+        improvement: log.predictedIntent !== correctIntent,
         logId,
         originalIntent: log.predictedIntent,
-        correctIntent,
-        confidence,
-        improvement: log.predictedIntent !== correctIntent,
       });
     } catch (error) {
       logger.error('Failed to track user feedback', { error, logId });
@@ -426,14 +429,17 @@ export class NLUAnalytics {
     }
 
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (score < 70) status = 'critical';
-    else if (score < 85) status = 'warning';
+    if (score < 70) {
+      status = 'critical';
+    } else if (score < 85) {
+      status = 'warning';
+    }
 
     return {
-      status,
-      score: Math.max(0, score),
       issues,
       recommendations,
+      score: Math.max(0, score),
+      status,
     };
   }
 
@@ -490,10 +496,18 @@ export class NLUAnalytics {
     const hasFormal = formalTerms.some((term) => lowerText.includes(term));
     const hasColloquial = colloquialTerms.some((term) => lowerText.includes(term));
 
-    if (hasFormal && !hasSlang) return 'formal';
-    if (hasSlang && !hasFormal) return 'slang';
-    if (hasColloquial && !hasFormal && !hasSlang) return 'colloquial';
-    if (hasSlang && hasFormal) return 'mixed';
+    if (hasFormal && !hasSlang) {
+      return 'formal';
+    }
+    if (hasSlang && !hasFormal) {
+      return 'slang';
+    }
+    if (hasColloquial && !hasFormal && !hasSlang) {
+      return 'colloquial';
+    }
+    if (hasSlang && hasFormal) {
+      return 'mixed';
+    }
 
     return 'colloquial'; // Default
   }
@@ -608,13 +622,13 @@ export class NLUAnalytics {
     );
     if (!patternEvolution) {
       patternEvolution = {
-        pattern: patternKey,
-        frequency: 0,
         accuracy: 0,
         confidence: 0,
+        frequency: 0,
         lastSeen: new Date(),
-        trend: 'stable',
+        pattern: patternKey,
         regionalVariations: {},
+        trend: 'stable',
       };
       this.learningAnalytics.patternEvolution.push(patternEvolution);
     }
@@ -650,10 +664,10 @@ export class NLUAnalytics {
 
     if (!this.learningAnalytics.regionalLearning[region]) {
       this.learningAnalytics.regionalLearning[region] = {
-        totalCommands: 0,
         accuracyRate: 0,
         commonPatterns: [],
         linguisticMarkers: [],
+        totalCommands: 0,
       };
     }
 
@@ -673,10 +687,10 @@ export class NLUAnalytics {
     );
     if (!confidenceLearning) {
       confidenceLearning = {
-        intent: log.predictedIntent,
         averageConfidence: log.confidence,
         confidenceTrend: 'stable',
         factors: [],
+        intent: log.predictedIntent,
       };
       this.learningAnalytics.confidenceLearning.push(confidenceLearning);
     }
@@ -724,10 +738,10 @@ export class NLUAnalytics {
 
       // Create learning signal for pattern improvement
       logger.warn('Intent confusion detected', {
+        confidence: log.confidence,
+        correctIntent,
         originalText: log.originalText,
         predictedIntent: log.predictedIntent,
-        correctIntent,
-        confidence: log.confidence,
       });
     }
   }
@@ -774,7 +788,9 @@ export class NLUAnalytics {
   }
 
   private async processBatch(): Promise<void> {
-    if (this.classificationLogs.length === 0) return;
+    if (this.classificationLogs.length === 0) {
+      return;
+    }
 
     const batch = [...this.classificationLogs];
     this.classificationLogs = [];

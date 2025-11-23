@@ -3,7 +3,15 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ['@testing-library/react', '@testing-library/jest-dom'],
+  },
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
@@ -66,13 +74,5 @@ export default defineConfig({
     isolate: true,
     // Hook timeout
     hookTimeout: 10000,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  optimizeDeps: {
-    include: ['@testing-library/react', '@testing-library/jest-dom'],
   },
 });

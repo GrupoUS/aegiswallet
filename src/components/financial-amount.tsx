@@ -16,18 +16,18 @@ export function FinancialAmount({
   size = 'md',
 }: FinancialAmountProps) {
   const formatted = new Intl.NumberFormat('en-US', {
-    style: 'currency',
     currency,
-    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: 'currency',
   }).format(Math.abs(amount));
 
   const sign = showSign && amount > 0 ? '+' : amount < 0 ? '-' : '';
 
   const sizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
     lg: 'text-lg',
+    md: 'text-base',
+    sm: 'text-sm',
     xl: 'text-xl',
   };
 

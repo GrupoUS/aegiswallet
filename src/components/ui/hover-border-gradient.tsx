@@ -91,12 +91,12 @@ const HoverBorderGradient = React.forwardRef<HTMLElement, HoverBorderGradientPro
     );
 
     const movingMap: Record<Direction, string> = {
-      TOP: 'radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
-      LEFT: 'radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
       BOTTOM:
         'radial-gradient(20.7% 50% at 50% 100%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
+      LEFT: 'radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
       RIGHT:
         'radial-gradient(16.2% 41.199999999999996% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
+      TOP: 'radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)',
     };
 
     const highlight =
@@ -148,15 +148,15 @@ const HoverBorderGradient = React.forwardRef<HTMLElement, HoverBorderGradientPro
             className={cn('absolute inset-0 z-0 flex-none overflow-hidden rounded-[inherit]')}
             style={{
               filter: 'blur(2px)',
+              height: '100%',
               position: 'absolute',
               width: '100%',
-              height: '100%',
             }}
             initial={{ background: movingMap[direction] }}
             animate={{
               background: hovered ? [movingMap[direction], highlight] : movingMap[direction],
             }}
-            transition={{ ease: 'linear', duration: duration ?? 1 }}
+            transition={{ duration: duration ?? 1, ease: 'linear' }}
           />
           <div className="absolute inset-[2px] z-1 flex-none rounded-[100px] bg-black" />
         </Tag>

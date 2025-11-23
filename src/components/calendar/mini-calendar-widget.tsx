@@ -38,8 +38,8 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
     (date: Date) => {
       setSelectedDate(date);
       navigate({
-        to: '/calendario',
         search: { date: format(date, 'yyyy-MM-dd') },
+        to: '/calendario',
       });
     },
     [navigate]

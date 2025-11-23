@@ -15,7 +15,9 @@ for (const file of files) {
   const name = path.basename(file, '.js');
 
   // Skip potential problematic ones or handle them
-  if (name === 'function') continue; // Keyword
+  if (name === 'function') {
+    continue;
+  } // Keyword
 
   const content = `
 import { ${name} } from 'es-toolkit/compat';

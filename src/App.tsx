@@ -19,16 +19,16 @@ function App() {
     // SessionManager auto-initializes when imported, but we ensure it's active
     if (typeof window !== 'undefined') {
       secureLogger.info('Session manager initialized', {
-        sessionId: sessionManager.getSessionId(),
         isActive: sessionManager.isSessionActive(),
+        sessionId: sessionManager.getSessionId(),
       });
     }
 
     // Handle OAuth errors
     if (oauthError) {
       secureLogger.error('OAuth Error in App component', {
-        error: oauthError,
         component: 'App',
+        error: oauthError,
       });
 
       // Show error notification to user

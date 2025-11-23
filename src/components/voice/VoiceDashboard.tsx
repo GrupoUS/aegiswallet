@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { VoiceIndicator } from '@/components/voice/VoiceIndicator';
 import { VoiceResponse } from '@/components/voice/VoiceResponse';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
-import { type ProcessedCommand, processVoiceCommand } from '@/lib/voiceCommandProcessor';
+import type { ProcessedCommand } from '@/lib/voiceCommandProcessor';
+import { processVoiceCommand } from '@/lib/voiceCommandProcessor';
 
 interface VoiceDashboardProps {
   className?: string;
@@ -31,12 +32,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
   const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
   const [commandHistory, setCommandHistory] = useState<
-    Array<{
+    {
       id: string;
       command: string;
       response: ProcessedCommand;
       timestamp: Date;
-    }>
+    }[]
   >([]);
 
   // Timeout refs for cleanup
@@ -69,8 +70,8 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         // Add to history
         setCommandHistory((prev) => [
           {
-            id: crypto.randomUUID(),
             command: transcript,
+            id: crypto.randomUUID(),
             response,
             timestamp: new Date(),
           },
@@ -123,8 +124,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   // Otimizar saudação com useMemo
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Bom dia';
-    if (hour < 18) return 'Boa tarde';
+    if (hour < 12) {
+      return 'Bom dia';
+    }
+    if (hour < 18) {
+      return 'Boa tarde';
+    }
     return 'Boa noite';
   }, []);
 
@@ -132,40 +137,40 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   const quickActions = useMemo(
     () => [
       {
-        title: 'Saldo',
-        icon: '💰',
         action: () => {
           navigate({ to: '/saldo' });
           announce('Navegando para página de saldo');
         },
         description: 'Ver seu saldo e transações',
+        icon: '💰',
+        title: 'Saldo',
       },
       {
-        title: 'Orçamento',
-        icon: '📊',
         action: () => {
           navigate({ to: '/dashboard' });
           announce('Navegando para dashboard com orçamentos');
         },
         description: 'Analisar seu orçamento mensal',
+        icon: '📊',
+        title: 'Orçamento',
       },
       {
-        title: 'Contas',
-        icon: '📄',
         action: () => {
           navigate({ to: '/contas' });
           announce('Navegando para página de contas');
         },
         description: 'Gerenciar suas contas e pagamentos',
+        icon: '📄',
+        title: 'Contas',
       },
       {
-        title: 'PIX',
-        icon: '🚀',
         action: () => {
           navigate({ to: '/pix' });
           announce('Navegando para página de PIX');
         },
         description: 'Fazer transferências PIX',
+        icon: '🚀',
+        title: 'PIX',
       },
     ],
     [navigate, announce]

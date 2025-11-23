@@ -280,25 +280,25 @@ export function createDefaultResponseData(type: VoiceResponseType) {
     case 'balance':
       return { currentBalance: 0 } as BalanceResponseData;
     case 'budget':
-      return { available: 0, total: 0, spent: 0, spentPercentage: 0 } as BudgetResponseData;
+      return { available: 0, spent: 0, spentPercentage: 0, total: 0 } as BudgetResponseData;
     case 'bills':
-      return { bills: [], totalAmount: 0, pastDueCount: 0 } as BillsResponseData;
+      return { bills: [], pastDueCount: 0, totalAmount: 0 } as BillsResponseData;
     case 'incoming':
       return { incoming: [], totalExpected: 0 } as IncomingResponseData;
     case 'projection':
       return {
-        projectedBalance: 0,
         currentBalance: 0,
-        expectedIncome: 0,
         expectedExpenses: 0,
-        variation: 0,
+        expectedIncome: 0,
         period: 'mensal',
+        projectedBalance: 0,
+        variation: 0,
       } as ProjectionResponseData;
     case 'transfer':
       return {
-        recipient: '',
         amount: 0,
         method: 'pix',
+        recipient: '',
         status: 'pending' as const,
       } as TransferResponseData;
     default: {

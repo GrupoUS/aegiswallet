@@ -15,13 +15,13 @@ export interface TrustScore {
 export class TrustScoringEngine {
   calculateScore(_userId: string, _data: Record<string, unknown>): TrustScore {
     return {
-      overall: 75,
       factors: {
         accountAge: 20,
-        transactionHistory: 25,
         paymentBehavior: 20,
+        transactionHistory: 25,
         verificationLevel: 10,
       },
+      overall: 75,
     };
   }
 

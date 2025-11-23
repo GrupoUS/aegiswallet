@@ -18,8 +18,8 @@ if (args.length === 0) {
 // Execute bun x with all arguments
 const bunPath = process.env.BUN_PATH || 'bun';
 const child = spawn(bunPath, ['x', ...args], {
-  stdio: 'inherit',
   shell: false,
+  stdio: 'inherit',
 });
 
 child.on('error', (_error) => {

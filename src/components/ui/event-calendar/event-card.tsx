@@ -16,20 +16,20 @@ interface EventCardProps {
 
 export function EventCard({ event, position, onEdit }: EventCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: event.id,
     data: event,
+    id: event.id,
   });
   const colorTokens = EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue;
 
   const style = {
+    height: `${position.height}px`,
+    left: position.left,
+    opacity: isDragging ? 0.5 : 1,
     position: 'absolute' as const,
     top: `${position.top}px`,
-    left: position.left,
-    height: `${position.height}px`,
-    width: position.width,
     transform: CSS.Translate.toString(transform),
+    width: position.width,
     zIndex: isDragging ? 50 : 10,
-    opacity: isDragging ? 0.5 : 1,
   };
 
   return (

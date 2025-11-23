@@ -18,8 +18,12 @@ export const SessionStatus: React.FC = () => {
   }
 
   const getWarningLevel = () => {
-    if (timeRemaining < 60 * 1000) return 'critical'; // Less than 1 minute
-    if (timeRemaining < 5 * 60 * 1000) return 'warning'; // Less than 5 minutes
+    if (timeRemaining < 60 * 1000) {
+      return 'critical';
+    } // Less than 1 minute
+    if (timeRemaining < 5 * 60 * 1000) {
+      return 'warning';
+    } // Less than 5 minutes
     return 'normal';
   };
 
@@ -114,7 +118,9 @@ export const SessionStatus: React.FC = () => {
 export const SessionStatusCompact: React.FC = () => {
   const { isActive, timeRemainingFormatted, timeRemaining, extendSession } = useSessionManager();
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   const isWarning = timeRemaining < 5 * 60 * 1000; // Less than 5 minutes
   const isCritical = timeRemaining < 60 * 1000; // Less than 1 minute
@@ -149,7 +155,9 @@ export const SessionStatusMobile: React.FC = () => {
   const { isActive, timeRemainingFormatted, timeRemaining, extendSession, logout } =
     useSessionManager();
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   const isWarning = timeRemaining < 5 * 60 * 1000;
 

@@ -52,7 +52,9 @@ class SimplifiedLogger {
    * Sanitize sensitive data for logging
    */
   private sanitizeContext(context?: LogContext): LogContext | undefined {
-    if (!context) return context;
+    if (!context) {
+      return context;
+    }
 
     const sensitiveKeys = [
       'password',
@@ -86,13 +88,13 @@ class SimplifiedLogger {
    */
   private createLogEntry(level: LogLevel, message: string, context?: LogContext): LogEntry {
     return {
-      level,
-      message,
-      timestamp: new Date().toISOString(),
       context: this.sanitizeContext({
         ...context,
         userId: this.currentUserId || context?.userId,
       }),
+      level,
+      message,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -112,7 +114,9 @@ class SimplifiedLogger {
    */
   private log(level: LogLevel, message: string, context?: LogContext): void {
     // Skip debug logs in production
-    if (!this.isDevelopment && level === LogLevel.DEBUG) return;
+    if (!this.isDevelopment && level === LogLevel.DEBUG) {
+      return;
+    }
 
     const entry = this.createLogEntry(level, message, context);
     const _formattedMessage = this.formatMessage(entry);

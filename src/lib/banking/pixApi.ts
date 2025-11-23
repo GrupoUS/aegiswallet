@@ -65,9 +65,9 @@ export class PixApiClient {
 
     if (error) {
       logger.error('Failed to fetch PIX keys', {
+        error: (error as Error).message,
         operation: 'pix_keys_fetch',
         userId,
-        error: (error as Error).message,
       });
       throw error;
     }
@@ -89,30 +89,30 @@ export class PixApiClient {
     const { data, error } = await supabase
       .from('pix_keys')
       .insert({
-        user_id: userId,
+        is_active: true,
         key_type: type,
         key_value: value,
-        is_active: true,
+        user_id: userId,
       })
       .select()
       .single();
 
     if (error) {
       logger.error('Failed to create PIX key', {
+        error: (error as Error).message,
         operation: 'pix_keys_create',
         userId,
-        error: (error as Error).message,
       });
       throw error;
     }
 
     return {
-      id: data.id,
-      type: data.key_type as PixKeyType,
-      value: data.key_value,
       account_id: 'default',
       created_at: data.created_at || new Date().toISOString(),
+      id: data.id,
       status: data.is_active ? 'active' : 'inactive',
+      type: data.key_type as PixKeyType,
+      value: data.key_value,
     };
   }
 
@@ -132,7 +132,9 @@ export class PixApiClient {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
     const { data, error } = await supabase
       .from('pix_transfers')
@@ -153,32 +155,32 @@ export class PixApiClient {
 
     if (error) {
       logger.error('Pix payment failed', {
+        error: (error as Error).message,
         operation: 'pix_payment',
         userId: user.id,
-        error: (error as Error).message,
       });
       throw error;
     }
 
     return {
-      id: data.id,
       amount: Number(data.amount),
+      completed_at: data.executed_at || undefined,
+      created_at: data.created_at || new Date().toISOString(),
       description: data.description || undefined,
+      end_to_end_id: data.end_to_end_id || undefined,
+      id: data.id,
+      receiver: {
+        bank: data.recipient_bank || 'Unknown',
+        document: data.recipient_document || '***',
+        key: data.pix_key,
+        name: data.recipient_name,
+      },
       sender: {
         name: 'Me', // Placeholder
         document: '***',
         bank: 'NeonPro',
       },
-      receiver: {
-        name: data.recipient_name,
-        document: data.recipient_document || '***',
-        bank: data.recipient_bank || 'Unknown',
-        key: data.pix_key,
-      },
       status: (data.status as PixTransaction['status']) || 'pending',
-      created_at: data.created_at || new Date().toISOString(),
-      completed_at: data.executed_at || undefined,
-      end_to_end_id: data.end_to_end_id || undefined,
       transaction_id: data.transaction_id || transactionId,
     };
   }
@@ -229,7 +231,9 @@ export class PixApiClient {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {
+      return [];
+    }
 
     let query = supabase.from('pix_transfers').select('*').eq('user_id', user.id);
 
@@ -244,32 +248,32 @@ export class PixApiClient {
 
     if (error) {
       logger.error('Failed to fetch PIX transactions', {
+        error: (error as Error).message,
         operation: 'pix_transactions',
         userId: user.id,
-        error: (error as Error).message,
       });
       throw error;
     }
 
     return (data || []).map((txn) => ({
-      id: txn.id,
       amount: Number(txn.amount),
+      completed_at: txn.executed_at || undefined,
+      created_at: txn.created_at || new Date().toISOString(),
       description: txn.description || undefined,
-      sender: {
-        name: 'Me',
-        document: '***',
-        bank: 'NeonPro',
-      },
+      end_to_end_id: txn.end_to_end_id || undefined,
+      id: txn.id,
       receiver: {
-        name: txn.recipient_name,
-        document: txn.recipient_document || '***',
         bank: txn.recipient_bank || 'Unknown',
+        document: txn.recipient_document || '***',
         key: txn.pix_key,
+        name: txn.recipient_name,
+      },
+      sender: {
+        bank: 'NeonPro',
+        document: '***',
+        name: 'Me',
       },
       status: (txn.status as PixTransaction['status']) || 'pending',
-      created_at: txn.created_at || new Date().toISOString(),
-      completed_at: txn.executed_at || undefined,
-      end_to_end_id: txn.end_to_end_id || undefined,
       transaction_id: txn.transaction_id || `TXN_${txn.id}`,
     }));
   }
@@ -285,20 +289,20 @@ export class PixApiClient {
 
     if (pixKey.includes('@')) {
       // Simple email check
-      return { valid: true, type: 'email', name: 'Usuário Email' };
+      return { name: 'Usuário Email', type: 'email', valid: true };
     }
     if (pixKey.match(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)) {
-      return { valid: true, type: 'cpf', name: 'Usuário CPF' };
+      return { name: 'Usuário CPF', type: 'cpf', valid: true };
     }
     if (pixKey.match(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)) {
-      return { valid: true, type: 'phone', name: 'Usuário Telefone' };
+      return { name: 'Usuário Telefone', type: 'phone', valid: true };
     }
     if (pixKey.length === 32) {
-      return { valid: true, type: 'random', name: 'Usuário Chave Aleatória' };
+      return { name: 'Usuário Chave Aleatória', type: 'random', valid: true };
     }
     // Try pure numbers for CPF/Phone
     if (pixKey.match(/^\d{11}$/)) {
-      return { valid: true, type: 'cpf', name: 'Usuário CPF' }; // or phone
+      return { name: 'Usuário CPF', type: 'cpf', valid: true }; // or phone
     }
 
     return { valid: false };
@@ -306,7 +310,7 @@ export class PixApiClient {
 }
 
 // Default client instance
-export const pixClient = new PixApiClient(import.meta.env.VITE_PIX_API_KEY || 'api_key', 'sandbox');
+export const pixClient = new PixApiClient(process.env.NODE_ENV as 'sandbox' | 'production');
 
 // PIX utility functions
 export const pixUtils = {
@@ -322,19 +326,6 @@ export const pixUtils = {
         return key;
     }
   },
-
-  validatePixKeyFormat: (key: string, type: PixKeyType) => {
-    const patterns = {
-      cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/,
-      cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$|^\d{14}$/,
-      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      phone: /^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/,
-      random: /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i,
-    };
-
-    return patterns[type]?.test(key) || false;
-  },
-
   generateEndToEndId: () => {
     const timestamp = new Date()
       .toISOString()
@@ -344,5 +335,16 @@ export const pixUtils = {
       .toString()
       .padStart(6, '0');
     return `E12345678${timestamp}${random}`;
+  },
+  validatePixKeyFormat: (key: string, type: PixKeyType) => {
+    const patterns = {
+      cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$|^\d{14}$/,
+      cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      phone: /^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/,
+      random: /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i,
+    };
+
+    return patterns[type]?.test(key) || false;
   },
 };

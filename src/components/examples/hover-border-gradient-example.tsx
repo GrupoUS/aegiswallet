@@ -24,7 +24,7 @@ export function HoverBorderGradientExample() {
             as="button"
             containerClassName="rounded-full"
             className="px-6 py-3 font-medium text-sm"
-            clockwise={true}
+            clockwise
           >
             <span>Clockwise Rotation</span>
           </HoverBorderGradient>

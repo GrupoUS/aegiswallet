@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Origin': '*',
 };
 
 // Encryption helpers
@@ -24,7 +23,7 @@ async function getCryptoKey(secret: string) {
       hash: 'SHA-256',
     },
     keyMaterial,
-    { name: 'AES-GCM', length: 256 },
+    { length: 256, name: 'AES-GCM' },
     false,
     ['encrypt', 'decrypt']
   );
@@ -36,7 +35,7 @@ async function encrypt(text: string, keyString: string): Promise<string> {
   const encoded = new TextEncoder().encode(text);
 
   const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
+    { iv, name: 'AES-GCM' },
     key,
     encoded
   );
@@ -64,20 +63,20 @@ Deno.serve(async (req) => {
     const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '';
     const googleRedirectUri = Deno.env.get('GOOGLE_REDIRECT_URI') ?? '';
 
-    if (!encryptionKey) throw new Error('Encryption key not configured');
+    if (!encryptionKey) {throw new Error('Encryption key not configured');}
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify user
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('Missing Authorization header');
+    if (!authHeader) {throw new Error('Missing Authorization header');}
 
     const { data: { user }, error: userError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
-    if (userError || !user) throw new Error('Invalid user token');
+    if (userError || !user) {throw new Error('Invalid user token');}
 
     if (action === 'start') {
       const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
@@ -90,23 +89,17 @@ Deno.serve(async (req) => {
 
     if (action === 'callback') {
       const code = url.searchParams.get('code');
-      if (!code) throw new Error('Missing code parameter');
+      if (!code) {throw new Error('Missing code parameter');}
 
       // Exchange code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          code,
-          client_id: googleClientId,
-          client_secret: googleClientSecret,
-          redirect_uri: googleRedirectUri,
-          grant_type: 'authorization_code',
-        }),
+          client_id: googleClientId, client_secret: googleClientSecret, code, grant_type: 'authorization_code', redirect_uri: googleRedirectUri,
+        }), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, method: 'POST',
       });
 
       const tokens = await tokenResponse.json();
-      if (tokens.error) throw new Error(`Google Auth Error: ${tokens.error_description || tokens.error}`);
+      if (tokens.error) {throw new Error(`Google Auth Error: ${tokens.error_description || tokens.error}`);}
 
       // Get user email
       const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -124,12 +117,7 @@ Deno.serve(async (req) => {
 
       // Store tokens
       await supabase.from('google_calendar_tokens').upsert({
-        user_id: user.id,
-        access_token: encryptedAccessToken,
-        refresh_token: encryptedRefreshToken,
-        expiry_timestamp: expiryDate.toISOString(),
-        scope: tokens.scope,
-        google_user_email: userInfo.email,
+        access_token: encryptedAccessToken, expiry_timestamp: expiryDate.toISOString(), google_user_email: userInfo.email, refresh_token: encryptedRefreshToken, scope: tokens.scope, user_id: user.id,
       });
 
       // Initialize settings if not exists
@@ -141,18 +129,13 @@ Deno.serve(async (req) => {
 
       if (!existingSettings) {
         await supabase.from('calendar_sync_settings').insert({
-          user_id: user.id,
-          sync_enabled: true,
-          sync_direction: 'bidirectional',
-          auto_sync_interval_minutes: 15,
+          auto_sync_interval_minutes: 15, sync_direction: 'bidirectional', sync_enabled: true, user_id: user.id,
         });
       }
 
       // Audit log
       await supabase.from('calendar_sync_audit').insert({
-        user_id: user.id,
-        action: 'auth_granted',
-        details: { email: userInfo.email },
+        action: 'auth_granted', details: { email: userInfo.email }, user_id: user.id,
       });
 
       return new Response(JSON.stringify({ success: true }), {
@@ -184,9 +167,7 @@ Deno.serve(async (req) => {
 
         // Audit log
         await supabase.from('calendar_sync_audit').insert({
-            user_id: user.id,
-            action: 'auth_revoked',
-            details: {},
+            action: 'auth_revoked', details: {}, user_id: user.id,
         });
 
         return new Response(JSON.stringify({ success: true }), {
@@ -199,8 +180,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400,
     });
   }
 });

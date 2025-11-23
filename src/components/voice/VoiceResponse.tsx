@@ -26,8 +26,8 @@ import {
 } from '@/types/voice/responseTypes';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
-  minimumFractionDigits: 2,
   maximumFractionDigits: 2,
+  minimumFractionDigits: 2,
 });
 
 const formatCurrency = (value: number): string => `R$ ${currencyFormatter.format(value)}`;
@@ -140,10 +140,10 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
       Status:{' '}
       {
         {
-          pending: 'Pendente',
-          processing: 'Processando',
           completed: 'Concluído',
           failed: 'Falhou',
+          pending: 'Pendente',
+          processing: 'Processando',
         }[data.status]
       }
     </p>
@@ -252,7 +252,9 @@ export const VoiceResponse = React.memo(function VoiceResponse({
 
   // Type-safe data rendering with validation
   const renderData = React.useMemo(() => {
-    if (!data) return null;
+    if (!data) {
+      return null;
+    }
 
     // Use type guards for safe rendering
     if (type === 'balance' && isBalanceResponse(data)) {

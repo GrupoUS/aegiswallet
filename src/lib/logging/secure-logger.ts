@@ -124,7 +124,7 @@ export class SecureLogger {
       sanitizedContext = this.sanitizeContextObject(context);
     }
 
-    return { sanitizedMessage, sanitizedContext };
+    return { sanitizedContext, sanitizedMessage };
   }
 
   /**
@@ -202,11 +202,11 @@ export class SecureLogger {
     const { sanitizedMessage, sanitizedContext } = this.sanitizeData(message, context);
 
     return {
+      context: sanitizedContext,
       level,
       message: sanitizedMessage,
-      timestamp: new Date().toISOString(),
-      context: sanitizedContext,
       sanitized: true,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -265,7 +265,9 @@ export class SecureLogger {
    * Flush buffer to external logging service
    */
   private flushBuffer(): void {
-    if (this.logBuffer.length === 0) return;
+    if (this.logBuffer.length === 0) {
+      return;
+    }
 
     const logsToFlush = [...this.logBuffer];
     this.logBuffer = [];
@@ -289,7 +291,9 @@ export class SecureLogger {
    */
   private log(level: SecureLogLevel, message: string, context?: SecureLogContext): void {
     // Skip debug logs in production
-    if (!this.isDevelopment && level === SecureLogLevel.DEBUG) return;
+    if (!this.isDevelopment && level === SecureLogLevel.DEBUG) {
+      return;
+    }
 
     const entry = this.createLogEntry(level, message, context);
     this.writeLog(entry);
@@ -358,9 +362,9 @@ export class SecureLogger {
     lastFlush: Date | null;
   } {
     return {
-      size: this.logBuffer.length,
+      lastFlush: new Date(),
       maxSize: this.maxBufferSize,
-      lastFlush: new Date(), // Simplified - would track actual flush time
+      size: this.logBuffer.length, // Simplified - would track actual flush time
     };
   }
 
@@ -386,11 +390,11 @@ export default secureLogger;
 
 // Export convenience functions for backward compatibility
 export const log = {
+  audit: (message: string, context?: SecureLogContext) => secureLogger.audit(message, context),
   debug: (message: string, context?: SecureLogContext) => secureLogger.debug(message, context),
-  info: (message: string, context?: SecureLogContext) => secureLogger.info(message, context),
-  warn: (message: string, context?: SecureLogContext) => secureLogger.warn(message, context),
   error: (message: string, context?: SecureLogContext) => secureLogger.error(message, context),
+  info: (message: string, context?: SecureLogContext) => secureLogger.info(message, context),
   security: (message: string, context?: SecureLogContext) =>
     secureLogger.security(message, context),
-  audit: (message: string, context?: SecureLogContext) => secureLogger.audit(message, context),
+  warn: (message: string, context?: SecureLogContext) => secureLogger.warn(message, context),
 };

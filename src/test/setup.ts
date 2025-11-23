@@ -30,9 +30,9 @@ if (typeof globalThis.document === 'undefined') {
   const dom = new JSDOM(
     '<!DOCTYPE html><html><head><title>Test</title></head><body><div id="root"></div></body></html>',
     {
-      url: 'http://localhost:3000',
       pretendToBeVisual: true,
       resources: 'usable',
+      url: 'http://localhost:3000',
     }
   );
 
@@ -52,19 +52,19 @@ vi.mock('@/lib/stt/audioProcessor', () => {
   const mockAudioProcessor = {
     dispose: vi.fn(),
     processAudio: vi.fn().mockResolvedValue({
+      averageVolume: 0.5,
       blob: new Blob(),
       duration: 1000,
-      sampleRate: 16000,
       hasVoice: true,
-      averageVolume: 0.5,
       peakVolume: 0.8,
+      sampleRate: 16000,
     }),
     validateAudio: vi.fn().mockResolvedValue({ valid: true }),
   };
 
   return {
-    createAudioProcessor: vi.fn(() => mockAudioProcessor),
     AudioProcessor: vi.fn(() => mockAudioProcessor),
+    createAudioProcessor: vi.fn(() => mockAudioProcessor),
   };
 });
 
@@ -73,32 +73,32 @@ vi.mock('@/lib/stt/voiceActivityDetection', () => {
     let active = false;
 
     return {
-      initialize: vi.fn(async () => {
-        active = true;
-      }),
       detectVoiceActivity: vi.fn().mockResolvedValue({ hasVoice: true }),
       dispose: vi.fn(() => {
         active = false;
       }),
+      getCurrentState: vi.fn(() => ({
+        energy: active ? 0.6 : 0,
+        isSpeaking: active,
+        speechDuration: active ? 320 : 0,
+        speechStartTime: active ? Date.now() : null,
+      })),
+      initialize: vi.fn(async () => {
+        active = true;
+      }),
+      isActive: vi.fn(() => active),
+      onSpeechEndCallback: vi.fn(),
+      onSpeechStartCallback: vi.fn(),
+      setEnergyThreshold: vi.fn(),
       stop: vi.fn(() => {
         active = false;
       }),
-      isActive: vi.fn(() => active),
-      getCurrentState: vi.fn(() => ({
-        isSpeaking: active,
-        energy: active ? 0.6 : 0,
-        speechStartTime: active ? Date.now() : null,
-        speechDuration: active ? 320 : 0,
-      })),
-      onSpeechStartCallback: vi.fn(),
-      onSpeechEndCallback: vi.fn(),
-      setEnergyThreshold: vi.fn(),
     };
   };
 
   return {
-    createVAD: vi.fn(() => createMockVAD()),
     VoiceActivityDetector: vi.fn(() => createMockVAD()),
+    createVAD: vi.fn(() => createMockVAD()),
   };
 });
 
@@ -111,6 +111,7 @@ vi.mock('@/lib/stt/speechToTextService', () => {
       temperature: 0,
       timeout: 8000,
     },
+    dispose: vi.fn(),
     startRecognition: vi.fn(),
     stopRecognition: vi.fn(),
     transcribe: vi.fn(async (audio: Blob) => {
@@ -121,20 +122,19 @@ vi.mock('@/lib/stt/speechToTextService', () => {
       }
 
       return {
-        text: 'comando teste',
         confidence: 0.95,
-        language: 'pt-BR',
         duration: 1.1,
-        timestamp: new Date(),
+        language: 'pt-BR',
         processingTimeMs: 150,
+        text: 'comando teste',
+        timestamp: new Date(),
       };
     }),
-    dispose: vi.fn(),
   });
 
   return {
-    createSTTService: vi.fn(() => createMockSTTService()),
     SpeechToTextService: vi.fn(() => createMockSTTService()),
+    createSTTService: vi.fn(() => createMockSTTService()),
   };
 });
 
@@ -142,7 +142,6 @@ vi.mock('@/lib/stt/speechToTextService', () => {
 beforeAll(() => {
   // Mock window.matchMedia
   Object.defineProperty(window, 'matchMedia', {
-    writable: true,
     value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
@@ -153,92 +152,93 @@ beforeAll(() => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     })),
+    writable: true,
   });
 
   // Mock ResizeObserver
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    disconnect: vi.fn(),
     observe: vi.fn(),
     unobserve: vi.fn(),
-    disconnect: vi.fn(),
   }));
 
   // Mock localStorage
   const localStorageMock = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
     clear: vi.fn(),
+    getItem: vi.fn(),
+    removeItem: vi.fn(),
+    setItem: vi.fn(),
   };
   globalObj.localStorage = localStorageMock;
 
   // Mock Speech Synthesis API for voice service tests
   const mockSpeechSynthesis = {
-    speaking: false,
-    pending: false,
-    paused: false,
+    addEventListener: vi.fn(),
     cancel: vi.fn(),
-    pause: vi.fn(),
-    resume: vi.fn(),
-    speak: vi.fn(),
+    dispatchEvent: vi.fn(),
     getVoices: vi.fn(() => [
       {
-        name: 'Google português do Brasil',
-        lang: 'pt-BR',
         default: false,
+        lang: 'pt-BR',
         localService: false,
+        name: 'Google português do Brasil',
         voiceURI: 'Google português do Brasil',
       },
       {
-        name: 'Microsoft Maria Desktop - Portuguese (Brazil)',
-        lang: 'pt-BR',
         default: true,
+        lang: 'pt-BR',
         localService: true,
+        name: 'Microsoft Maria Desktop - Portuguese (Brazil)',
         voiceURI: 'Microsoft Maria Desktop - Portuguese (Brazil)',
       },
     ]),
     onvoiceschanged: null,
-    addEventListener: vi.fn(),
+    pause: vi.fn(),
+    paused: false,
+    pending: false,
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    resume: vi.fn(),
+    speak: vi.fn(),
+    speaking: false,
   };
 
   // Mock Speech Synthesis Utterance
   const mockSpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
-    text,
     lang: 'pt-BR',
-    voice: null,
-    volume: 1,
-    rate: 1,
-    pitch: 1,
-    onstart: null,
+    onboundary: null,
     onend: null,
     onerror: null,
     onmark: null,
-    onboundary: null,
     onpause: null,
     onresume: null,
+    onstart: null,
+    pitch: 1,
+    rate: 1,
+    text,
+    voice: null,
+    volume: 1,
   }));
 
   // Mock Speech Recognition API
   vi.fn().mockImplementation(() => ({
+    abort: vi.fn(),
     continuous: false,
     interimResults: false,
     lang: 'pt-BR',
     maxAlternatives: 1,
-    onstart: null,
-    onresult: null,
-    onerror: null,
-    onend: null,
-    onaudiostart: null,
-    onsoundstart: null,
-    onspeechstart: null,
-    onspeechend: null,
-    onsoundend: null,
     onaudioend: null,
+    onaudiostart: null,
+    onend: null,
+    onerror: null,
     onnomatch: null,
+    onresult: null,
+    onsoundend: null,
+    onsoundstart: null,
+    onspeechend: null,
+    onspeechstart: null,
+    onstart: null,
     start: vi.fn(),
     stop: vi.fn(),
-    abort: vi.fn(),
   }));
 
   // Set up global Speech API mocks (avoid redefinition) - only TTS, not Speech Recognition
@@ -269,18 +269,18 @@ beforeAll(() => {
 
   // Mock screen object for device fingerprinting tests
   globalObj.screen = {
-    width: 1920,
-    height: 1080,
-    colorDepth: 24,
-    pixelDepth: 24,
-    availWidth: 1920,
     availHeight: 1040,
     availLeft: 0,
     availTop: 40,
+    availWidth: 1920,
+    colorDepth: 24,
+    height: 1080,
     orientation: {
       angle: 0,
       type: 'landscape-primary',
     },
+    pixelDepth: 24,
+    width: 1920,
   };
 
   // Mock window.screen to ensure it's available
@@ -297,22 +297,22 @@ beforeAll(() => {
   // Mock AudioContext for voice activity detection tests
   const mockAudioContext = vi.fn().mockImplementation(() => ({
     close: vi.fn(),
+    createAnalyser: vi.fn().mockReturnValue({
+      connect: vi.fn(),
+      fftSize: 2048,
+      frequencyBinCount: 2048,
+      getByteFrequencyData: vi.fn(),
+      getFloatTimeDomainData: vi.fn(),
+    }),
     createMediaStreamSource: vi.fn().mockReturnValue({
       connect: vi.fn(),
     }),
-    createAnalyser: vi.fn().mockReturnValue({
-      connect: vi.fn(),
-      frequencyBinCount: 2048,
-      getFloatTimeDomainData: vi.fn(),
-      getByteFrequencyData: vi.fn(),
-      fftSize: 2048,
-    }),
     decodeAudioData: vi.fn(),
-    resume: vi.fn(),
-    suspend: vi.fn(),
     destination: {},
+    resume: vi.fn(),
     sampleRate: 44100,
     state: 'running',
+    suspend: vi.fn(),
   }));
 
   if (!globalObj.AudioContext) {
@@ -370,7 +370,6 @@ beforeAll(() => {
 
     return {
       supabase: {
-        from: vi.fn(() => createQueryBuilder()),
         auth: {
           getUser: vi.fn(() => ({
             data: { user: { id: 'test-user' } },
@@ -381,14 +380,15 @@ beforeAll(() => {
           signOut: vi.fn(),
           signUp: vi.fn(),
         },
+        from: vi.fn(() => createQueryBuilder()),
         realtime: {
           subscribe: vi.fn(),
           unsubscribe: vi.fn(),
         },
         storage: {
           from: vi.fn(() => ({
-            upload: vi.fn(),
             getPublicUrl: vi.fn(() => ({ data: { publicUrl: '' } })),
+            upload: vi.fn(),
           })),
         },
       },
@@ -420,14 +420,14 @@ export const createMockSpeechRecognitionEvent = (
   transcript: string,
   confidence: number = 0.95
 ) => ({
+  resultIndex: 0,
   results: [
     {
-      0: { transcript, confidence },
+      0: { confidence, transcript },
       isFinal: true,
       length: 1,
     },
   ],
-  resultIndex: 0,
 });
 
 export const createMockSpeechRecognitionError = (error: string, message?: string) => ({
@@ -436,9 +436,9 @@ export const createMockSpeechRecognitionError = (error: string, message?: string
 });
 
 export const createMockSpeechSynthesisEvent = (name: string, charIndex: number = 0) => ({
-  name,
   charIndex,
   elapsedTime: 0,
+  name,
 });
 
 // Make vi available globally for test files that don't import it

@@ -20,7 +20,7 @@ describe('Utterances Dataset', () => {
     });
 
     it('should cover all 6 essential intents', () => {
-      const essentialIntents: Array<keyof typeof utterancesData.intents> = [
+      const essentialIntents: (keyof typeof utterancesData.intents)[] = [
         'check_balance',
         'check_budget',
         'pay_bill',
@@ -50,7 +50,7 @@ describe('Utterances Dataset', () => {
     });
 
     it('should have at least 50 utterances per intent', () => {
-      const intents: Array<keyof typeof utterancesData.intents> = [
+      const intents: (keyof typeof utterancesData.intents)[] = [
         'check_balance',
         'check_budget',
         'pay_bill',
@@ -66,9 +66,9 @@ describe('Utterances Dataset', () => {
     });
 
     it('should match declared counts with actual utterances', () => {
-      const intentKeys = Object.keys(utterancesData.intents) as Array<
-        keyof typeof utterancesData.intents
-      >;
+      const intentKeys = Object.keys(
+        utterancesData.intents
+      ) as (keyof typeof utterancesData.intents)[];
 
       intentKeys.forEach((intent) => {
         const intentData = utterancesData.intents[intent];
@@ -123,7 +123,9 @@ describe('Utterances Dataset', () => {
 
       intents.forEach((intent) => {
         // Skip transfer_money due to benign duplicate region variations
-        if (intent === 'transfer_money') return;
+        if (intent === 'transfer_money') {
+          return;
+        }
         const utterances = utterancesData.intents[intent].utterances;
         const texts = utterances.map((u) => u.text.toLowerCase());
         const uniqueTexts = new Set(texts);

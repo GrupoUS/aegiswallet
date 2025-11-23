@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { type PixKey, pixClient } from '@/lib/banking/pixApi';
+import type { PixKey } from '@/lib/banking/pixApi';
+import { pixClient } from '@/lib/banking/pixApi';
 
 // Lazy loading components
 const PixQRCodeGenerator = lazy(() => import('../components/PixQRCodeGenerator'));
@@ -79,8 +80,8 @@ export function PixReceivePage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate({
+        search: { error: undefined, redirect: '/pix/receber' },
         to: '/login',
-        search: { redirect: '/pix/receber', error: undefined },
       });
     }
   }, [isAuthenticated, isLoading, navigate]);
@@ -109,7 +110,7 @@ export function PixReceivePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-financial-positive border-b-2" />
       </div>
     );
   }

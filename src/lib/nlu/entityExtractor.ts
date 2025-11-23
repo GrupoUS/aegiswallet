@@ -12,57 +12,58 @@
  * @module nlu/entityExtractor
  */
 
-import { type EntityPattern, EntityType, type ExtractedEntity } from '@/lib/nlu/types';
+import type { EntityPattern, ExtractedEntity } from '@/lib/nlu/types';
+import { EntityType } from '@/lib/nlu/types';
 
 // ============================================================================
 // Number Words Mapping (Brazilian Portuguese)
 // ============================================================================
 
 const NUMBER_WORDS: Record<string, number> = {
-  zero: 0,
-  um: 1,
-  uma: 1,
-  dois: 2,
-  duas: 2,
-  três: 3,
-  tres: 3,
-  quatro: 4,
+  cem: 100,
+  cento: 100,
   cinco: 5,
-  seis: 6,
-  sete: 7,
-  oito: 8,
-  nove: 9,
+  cinquenta: 50,
   dez: 10,
-  onze: 11,
-  doze: 12,
-  treze: 13,
-  quatorze: 14,
-  quinze: 15,
+  dezenove: 19,
   dezesseis: 16,
   dezessete: 17,
   dezoito: 18,
-  dezenove: 19,
-  vinte: 20,
-  trinta: 30,
-  quarenta: 40,
-  cinquenta: 50,
-  sessenta: 60,
-  setenta: 70,
-  oitenta: 80,
-  noventa: 90,
-  cem: 100,
-  cento: 100,
+  dois: 2,
+  doze: 12,
+  duas: 2,
   duzentos: 200,
-  trezentos: 300,
+  mil: 1000,
+  milhao: 1000000,
+  milhão: 1000000,
+  nove: 9,
+  novecentos: 900,
+  noventa: 90,
+  oitenta: 80,
+  oito: 8,
+  oitocentos: 800,
+  onze: 11,
+  quarenta: 40,
+  quatorze: 14,
+  quatro: 4,
   quatrocentos: 400,
   quinhentos: 500,
+  quinze: 15,
+  seis: 6,
   seiscentos: 600,
+  sessenta: 60,
+  sete: 7,
   setecentos: 700,
-  oitocentos: 800,
-  novecentos: 900,
-  mil: 1000,
-  milhão: 1000000,
-  milhao: 1000000,
+  setenta: 70,
+  tres: 3,
+  treze: 13,
+  trezentos: 300,
+  trinta: 30,
+  três: 3,
+  um: 1,
+  uma: 1,
+  vinte: 20,
+  zero: 0,
 };
 
 // ============================================================================
@@ -94,12 +95,12 @@ const PLAIN_NUMBER_PATTERN = /\b\d{1,4}(?:\.\d{3})*(?:,\d{2})?\b/gi;
 
 const WEEKDAY_MAP: Record<string, number> = {
   domingo: 0,
-  segunda: 1,
-  terca: 2,
   quarta: 3,
   quinta: 4,
-  sexta: 5,
   sabado: 6,
+  segunda: 1,
+  sexta: 5,
+  terca: 2,
 };
 
 function parseNumberWordPhrase(phrase: string): number {
@@ -186,158 +187,158 @@ function setMonthOffset(offset: number): Date {
 const ENTITY_PATTERNS: EntityPattern[] = [
   // Money amounts
   {
-    type: EntityType.AMOUNT,
+    normalizer: (match) => parseMonetaryValue(match),
     pattern: /R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/gi,
-    normalizer: (match) => parseMonetaryValue(match),
+    type: EntityType.AMOUNT,
   },
   {
-    type: EntityType.AMOUNT,
+    normalizer: (match) => parseMonetaryValue(match),
     pattern: /(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)\s*(reais?|real)/gi,
-    normalizer: (match) => parseMonetaryValue(match),
+    type: EntityType.AMOUNT,
   },
   {
-    type: EntityType.AMOUNT,
-    pattern: NUMBER_WORD_AMOUNT_PATTERN,
     normalizer: (match) => parseNumberWordPhrase(match),
+    pattern: NUMBER_WORD_AMOUNT_PATTERN,
+    type: EntityType.AMOUNT,
   },
   {
-    type: EntityType.AMOUNT,
-    pattern: PLAIN_NUMBER_PATTERN,
     normalizer: (match) => parseMonetaryValue(match),
+    pattern: PLAIN_NUMBER_PATTERN,
+    type: EntityType.AMOUNT,
   },
   // Dates
   {
-    type: EntityType.DATE,
-    pattern: /\b(hoje|agora)\b/gi,
     normalizer: () => new Date(),
+    pattern: /\b(hoje|agora)\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /\b(ontem)\b/gi,
     normalizer: () => daysFromToday(-1),
+    pattern: /\b(ontem)\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /\b(anteontem)\b/gi,
     normalizer: () => daysFromToday(-2),
+    pattern: /\b(anteontem)\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /amanha|amanh[ãÃ]/gi,
     normalizer: () => daysFromToday(1),
+    pattern: /amanha|amanh[ãÃ]/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern:
-      /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
     normalizer: (match) => {
       const weekday = match.replace(/^(?:proxima|pr[\u00f3o]xima)\s+/i, '').replace(/-feira$/i, '');
       return getUpcomingWeekday(weekday, false);
     },
+    pattern:
+      /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /\b(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado)(?:-feira)?\b/gi,
     normalizer: (match) => getUpcomingWeekday(match, true),
+    pattern: /\b(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado)(?:-feira)?\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /\bdia\s+(\d{1,2})\b/gi,
     normalizer: (_match, day) => setDayOfMonth(Number(day)),
+    pattern: /\bdia\s+(\d{1,2})\b/gi,
+    type: EntityType.DATE,
   },
   {
-    type: EntityType.DATE,
-    pattern: /\b(m[\u00ea\u00e9e]s\s+passado)\b/gi,
     normalizer: () => setMonthOffset(-1),
+    pattern: /\b(m[\u00ea\u00e9e]s\s+passado)\b/gi,
+    type: EntityType.DATE,
   },
   // Bill types / Categories
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /\b(energia|luz|eletrica|elétrica)\b/gi,
     normalizer: () => 'energia',
+    pattern: /\b(energia|luz|eletrica|elétrica)\b/gi,
+    type: EntityType.BILL_TYPE,
   },
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /agua|[áÁ]gua/gi,
     normalizer: () => 'agua',
+    pattern: /agua|[áÁ]gua/gi,
+    type: EntityType.BILL_TYPE,
   },
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /\b(internet|wifi|banda\s+larga)\b/gi,
     normalizer: () => 'internet',
+    pattern: /\b(internet|wifi|banda\s+larga)\b/gi,
+    type: EntityType.BILL_TYPE,
   },
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /\b(telefone|celular|fone)\b/gi,
     normalizer: () => 'telefone',
+    pattern: /\b(telefone|celular|fone)\b/gi,
+    type: EntityType.BILL_TYPE,
   },
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /\b(gas|gás)\b/gi,
     normalizer: () => 'gas',
+    pattern: /\b(gas|gás)\b/gi,
+    type: EntityType.BILL_TYPE,
   },
   {
-    type: EntityType.BILL_TYPE,
-    pattern: /\b(aluguel|aluguer)\b/gi,
     normalizer: () => 'aluguel',
+    pattern: /\b(aluguel|aluguer)\b/gi,
+    type: EntityType.BILL_TYPE,
   },
   // Categories
   {
-    type: EntityType.CATEGORY,
-    pattern: /\b(mercado|supermercado|compras)\b/gi,
     normalizer: () => 'mercado',
+    pattern: /\b(mercado|supermercado|compras)\b/gi,
+    type: EntityType.CATEGORY,
   },
   {
-    type: EntityType.CATEGORY,
-    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combust[\u00edi]vel)\b/gi,
     normalizer: () => 'transporte',
+    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combust[\u00edi]vel)\b/gi,
+    type: EntityType.CATEGORY,
   },
   {
-    type: EntityType.CATEGORY,
-    pattern: /\b(saude|sa[\u00fade]|medico|m[\u00e9e]dico|farmacia|farm[\u00e1a]cia)\b/gi,
     normalizer: () => 'saude',
+    pattern: /\b(saude|sa[\u00fade]|medico|m[\u00e9e]dico|farmacia|farm[\u00e1a]cia)\b/gi,
+    type: EntityType.CATEGORY,
   },
   {
-    type: EntityType.CATEGORY,
-    pattern: /\b(lazer|entretenimento|diversao|divers[\u00e3a]o)\b/gi,
     normalizer: () => 'lazer',
+    pattern: /\b(lazer|entretenimento|diversao|divers[\u00e3a]o)\b/gi,
+    type: EntityType.CATEGORY,
   },
   // Periods
   {
-    type: EntityType.PERIOD,
-    pattern: /\b(mes|mês|mensal)\b/gi,
     normalizer: () => 'month',
+    pattern: /\b(mes|mês|mensal)\b/gi,
+    type: EntityType.PERIOD,
   },
   {
-    type: EntityType.PERIOD,
-    pattern: /\b(semana|semanal)\b/gi,
     normalizer: () => 'week',
+    pattern: /\b(semana|semanal)\b/gi,
+    type: EntityType.PERIOD,
   },
   {
-    type: EntityType.PERIOD,
-    pattern: /\b(ano|anual)\b/gi,
     normalizer: () => 'year',
+    pattern: /\b(ano|anual)\b/gi,
+    type: EntityType.PERIOD,
   },
   {
-    type: EntityType.PERIOD,
-    pattern: /\b(dia|diario|diário)\b/gi,
     normalizer: () => 'day',
+    pattern: /\b(dia|diario|diário)\b/gi,
+    type: EntityType.PERIOD,
   },
 
   // Recipient (specific context "para ...")
   {
-    type: EntityType.RECIPIENT,
+    normalizer: (match) => match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
     pattern:
       /\b(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+([a-zàáâãéêíóôõúç]+(?:\s+[a-zàáâãéêíóôõúç]+)*)\b/gi,
-    normalizer: (match) => match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
+    type: EntityType.RECIPIENT,
   },
 
   // Person names (simple pattern - capitalized words)
   {
-    type: EntityType.PERSON,
+    normalizer: (match) => match.trim(),
     pattern:
       /\b([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+(?:\s+[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+)*)\b/g,
-    normalizer: (match) => match.trim(),
+    type: EntityType.PERSON,
   },
 ];
 

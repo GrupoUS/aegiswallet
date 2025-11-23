@@ -25,30 +25,30 @@ export const AppLayout = React.memo(function AppLayout() {
   const links = useMemo(
     () => [
       {
-        label: 'Dashboard',
         href: '/dashboard',
         icon: <IconHome className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
+        label: 'Dashboard',
       },
       {
-        label: 'Transactions',
         href: '/transactions',
         icon: (
           <IconReceipt className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
+        label: 'Transactions',
       },
       {
-        label: 'Profile',
         href: '/profile',
         icon: (
           <IconUserBolt className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
+        label: 'Profile',
       },
       {
-        label: 'Settings',
         href: '/settings',
         icon: (
           <IconSettings className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
         ),
+        label: 'Settings',
       },
     ],
     []
@@ -111,7 +111,6 @@ export const AppLayout = React.memo(function AppLayout() {
 
             <SidebarLink
               link={{
-                label: user?.email || 'User',
                 href: '#',
                 icon: (
                   <img
@@ -122,6 +121,7 @@ export const AppLayout = React.memo(function AppLayout() {
                     alt="Avatar"
                   />
                 ),
+                label: user?.email || 'User',
               }}
             />
             <Button

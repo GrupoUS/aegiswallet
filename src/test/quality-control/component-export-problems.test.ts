@@ -11,7 +11,7 @@ describe('Component Export Problems', () => {
     it('should export BentoGrid component correctly', () => {
       // This test exposes BentoGrid export issues
       // This test exposes BentoGrid export issues
-      const { BentoGrid } = require('@/components/ui/bento-grid');
+      import { BentoGrid } from '@/components/ui/bento-grid';
 
       expect(BentoGrid).toBeDefined();
       const isReactComponent =
@@ -23,7 +23,7 @@ describe('Component Export Problems', () => {
     it('should export PopoverAnchor component', () => {
       // This test exposes PopoverAnchor export issues
       // This test exposes PopoverAnchor export issues
-      const { PopoverAnchor } = require('@/components/ui/popover');
+      import { PopoverAnchor } from '@/components/ui/popover';
 
       expect(PopoverAnchor).toBeDefined();
       // React.forwardRef components are objects with $$typeof property (Symbol)
@@ -36,7 +36,7 @@ describe('Component Export Problems', () => {
     it('should export SheetOverlay and SheetPortal components', () => {
       // This test exposes Sheet component export issues
       // This test exposes Sheet component export issues
-      const { SheetOverlay, SheetPortal } = require('@/components/ui/sheet');
+      import { Sheet, SheetOverlay, SheetPortal } from '@/components/ui/sheet';
 
       expect(SheetOverlay).toBeDefined();
       expect(SheetPortal).toBeDefined();
@@ -55,7 +55,7 @@ describe('Component Export Problems', () => {
   describe('Index File Exports', () => {
     it('should re-export all UI components correctly', () => {
       // This test exposes UI index export issues
-      const uiExports = require('@/components/ui/index');
+      import uiExports from '@/components/ui/index';
 
       // These should fail because components are not properly exported
       expect(uiExports.BentoGrid).toBeDefined();
@@ -66,7 +66,7 @@ describe('Component Export Problems', () => {
 
     it('should have consistent export naming', () => {
       // This test exposes naming inconsistency in exports
-      const componentExports = require('@/components/ui/index');
+      import componentExports from '@/components/ui/index';
 
       // All these should be properly exported and typed
       const expectedExports = [
@@ -99,14 +99,14 @@ describe('Component Export Problems', () => {
     it('should have proper default exports', () => {
       // This test exposes default export issues
       // This test exposes default export issues
-      const BentoGridDefault = require('@/components/ui/bento-grid').default;
+      import BentoGridModule from '@/components/ui/bento-grid';
 
       expect(BentoGridDefault).toBeDefined();
     });
 
     it('should have proper named exports', () => {
       // This test exposes named export issues
-      const bentoGridModule = require('@/components/ui/bento-grid');
+      import bentoGridModule from '@/components/ui/bento-grid';
 
       // Should export both default and named versions
       expect(bentoGridModule.BentoGrid).toBeDefined();
@@ -139,7 +139,7 @@ describe('Component Export Problems', () => {
       ];
 
       componentPaths.forEach((path) => {
-        const module = require(path);
+        const module = await import(path);
 
         // Each component should have at least one export
         expect(Object.keys(module).length).toBeGreaterThan(0);
@@ -158,7 +158,7 @@ describe('Component Export Problems', () => {
       // This test exposes component type export issues
       // Type exports can't be tested with require() in JavaScript tests
       // Instead, we test that the module exports the expected keys
-      const buttonModule = require('@/components/ui/button');
+      import buttonModule from '@/components/ui/button';
 
       // Should export Button component
       expect(buttonModule.Button).toBeDefined();
@@ -170,7 +170,7 @@ describe('Component Export Problems', () => {
       // We'll test that components can be created and have expected structure
 
       // Test Button component creation
-      const { Button } = require('@/components/ui/button');
+      import { Button } from '@/components/ui/button';
       expect(() => {
         return React.createElement(Button, null, 'Test');
       }).not.toThrow();

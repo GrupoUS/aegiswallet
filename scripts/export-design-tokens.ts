@@ -45,7 +45,9 @@ function parseCSSVariables(content: string, selector: string): TokenGroup {
   const selectorRegex = new RegExp(`${selector}\\s*{([^}]+)}`, 's');
   const match = content.match(selectorRegex);
 
-  if (!match) return tokens;
+  if (!match) {
+    return tokens;
+  }
 
   const block = match[1];
 
@@ -55,17 +57,21 @@ function parseCSSVariables(content: string, selector: string): TokenGroup {
 
   while (true) {
     varMatch = varRegex.exec(block);
-    if (varMatch === null) break;
+    if (varMatch === null) {
+      break;
+    }
     const [, name, value] = varMatch;
 
     // Skip non-color tokens
-    if (name.includes('radius') || name.includes('chart')) continue;
+    if (name.includes('radius') || name.includes('chart')) {
+      continue;
+    }
 
     tokens[name] = {
-      name,
-      value: `oklch(${value})`,
-      type: 'color',
       description: getTokenDescription(name),
+      name,
+      type: 'color',
+      value: `oklch(${value})`,
     };
   }
 
@@ -75,19 +81,19 @@ function parseCSSVariables(content: string, selector: string): TokenGroup {
 // Get token description
 function getTokenDescription(name: string): string {
   const descriptions: Record<string, string> = {
+    destructive: 'Error and destructive action color',
+    'destructive-foreground': 'Text color on destructive backgrounds',
+    'financial-negative': 'Negative financial amounts (expenses, sent)',
+    'financial-neutral': 'Neutral financial amounts (pending)',
+    'financial-positive': 'Positive financial amounts (income, received)',
+    info: 'Information color for neutral actions and messages',
+    'info-foreground': 'Text color on info backgrounds',
+    'pix-accent': 'PIX accent color for gradients and highlights',
+    'pix-primary': 'Primary PIX branding color',
     success: 'Success state color for confirmations and positive feedback',
     'success-foreground': 'Text color on success backgrounds',
     warning: 'Warning state color for cautions and pending states',
     'warning-foreground': 'Text color on warning backgrounds',
-    info: 'Information color for neutral actions and messages',
-    'info-foreground': 'Text color on info backgrounds',
-    destructive: 'Error and destructive action color',
-    'destructive-foreground': 'Text color on destructive backgrounds',
-    'financial-positive': 'Positive financial amounts (income, received)',
-    'financial-negative': 'Negative financial amounts (expenses, sent)',
-    'financial-neutral': 'Neutral financial amounts (pending)',
-    'pix-primary': 'Primary PIX branding color',
-    'pix-accent': 'PIX accent color for gradients and highlights',
   };
 
   return descriptions[name] || `Color token: ${name}`;
@@ -99,12 +105,12 @@ const darkTokens = parseCSSVariables(cssContent, '\\.dark');
 
 // Create design tokens object
 const designTokens: DesignTokens = {
-  version: '2.0.0',
-  lastUpdated: new Date().toISOString(),
   colors: {
-    light: lightTokens,
     dark: darkTokens,
+    light: lightTokens,
   },
+  lastUpdated: new Date().toISOString(),
+  version: '2.0.0',
 };
 
 // Write to JSON file

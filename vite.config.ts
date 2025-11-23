@@ -10,33 +10,8 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
 
   return {
-    plugins: [react(), tailwindcss()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        ...esToolkitAliases,
-      },
-    },
-    server: {
-      host: true,
-      port: 8080,
-      proxy: {
-        '/trpc': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-        },
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-        },
-      },
-    },
     build: {
-      outDir: 'dist',
-      emptyOutDir: true,
-      sourcemap: !isProduction,
-      minify: isProduction ? 'terser' : false,
-      rollupOptions: {
+      chunkSizeWarningLimit: 1000, emptyOutDir: true, minify: isProduction ? 'terser' : false, outDir: 'dist', rollupOptions: {
         output: {
           manualChunks: (id) => {
             // Core React libraries
@@ -95,16 +70,17 @@ export default defineConfig(({ mode }) => {
             }
           },
         },
-      },
-      chunkSizeWarningLimit: 1000,
-    },
-    define: {
+      }, sourcemap: !isProduction,
+    }, define: {
       ...(!isProduction && {
         __DEV__: true,
       }),
-    },
-    optimizeDeps: {
-      include: [
+    }, optimizeDeps: {
+      exclude: [
+        // Exclude heavy dependencies from pre-bundling
+        'framer-motion',
+        'speech-recognition-polyfill',
+      ], include: [
         'react',
         'react-dom',
         '@tanstack/react-router',
@@ -126,11 +102,21 @@ export default defineConfig(({ mode }) => {
         'use-sync-external-store',
         'eventemitter3',
       ],
-      exclude: [
-        // Exclude heavy dependencies from pre-bundling
-        'framer-motion',
-        'speech-recognition-polyfill',
-      ],
+    }, plugins: [react(), tailwindcss()], resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+        ...esToolkitAliases,
+      },
+    }, server: {
+      host: true,
+      port: 8080,
+      proxy: {
+        '/api': {
+          changeOrigin: true, target: 'http://localhost:3000',
+        }, '/trpc': {
+          changeOrigin: true, target: 'http://localhost:3000',
+        },
+      },
     },
   }
 })

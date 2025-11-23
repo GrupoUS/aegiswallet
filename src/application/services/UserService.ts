@@ -3,13 +3,13 @@
  * Application service for User business logic and workflows
  */
 
-import {
-  type IUserRepository,
-  User,
-  type UserCreationData,
-  type UserPreferences,
-  type UserUpdateData,
+import type {
+  IUserRepository,
+  UserCreationData,
+  UserPreferences,
+  UserUpdateData,
 } from '@/domain/models/User';
+import { User } from '@/domain/models/User';
 import { logger } from '@/lib/logging/logger';
 
 export interface UserServiceDependencies {
@@ -28,9 +28,9 @@ export class UserService {
       if (requestorId && requestorId !== id) {
         logger.warn('Unauthorized user access attempt', {
           event: 'unauthorized_user_access_attempt',
-          userId: requestorId,
-          targetUserId: id,
           operation: 'getUserById',
+          targetUserId: id,
+          userId: requestorId,
         });
         throw new Error('Unauthorized: Cannot access other user data');
       }
@@ -40,19 +40,19 @@ export class UserService {
       if (!user && requestorId) {
         logger.info('User not found', {
           operation: 'user_not_found',
-          userId: requestorId,
           resource: 'user',
           resourceId: id,
+          userId: requestorId,
         });
       }
 
       return user;
     } catch (error) {
       logger.error('Failed to get user by id', {
-        operation: 'getUserById',
-        userId: id,
-        requestorId,
         error: (error as Error).message,
+        operation: 'getUserById',
+        requestorId,
+        userId: id,
       });
       throw error;
     }
@@ -67,9 +67,9 @@ export class UserService {
       return user;
     } catch (error) {
       logger.error('Failed to get user by email', {
-        operation: 'getUserByEmail',
         email,
         error: (error as Error).message,
+        operation: 'getUserByEmail',
       });
       throw error;
     }
@@ -84,10 +84,10 @@ export class UserService {
       const existingUser = await this.dependencies.userRepository.findByEmail(userData.email);
       if (existingUser) {
         logger.warn('Duplicate user creation attempt', {
-          event: 'duplicate_user_creation_attempt',
-          userId: requestorId || 'system',
           email: userData.email,
+          event: 'duplicate_user_creation_attempt',
           operation: 'createUser',
+          userId: requestorId || 'system',
         });
         throw new Error('User with this email already exists');
       }
@@ -100,20 +100,20 @@ export class UserService {
       const createdUser = await this.dependencies.userRepository.create(user);
 
       logger.info('User created successfully', {
-        operation: 'user_creation_success',
-        userId: createdUser.id,
-        resource: 'user',
+        autonomyLevel: createdUser.autonomyLevel,
         email: createdUser.email,
         fullName: createdUser.fullName,
-        autonomyLevel: createdUser.autonomyLevel,
+        operation: 'user_creation_success',
+        resource: 'user',
+        userId: createdUser.id,
       });
 
       return createdUser;
     } catch (error) {
       logger.error('Failed to create user', {
-        operation: 'createUser',
         email: userData.email,
         error: (error as Error).message,
+        operation: 'createUser',
         userData: {
           email: userData.email,
           fullName: userData.fullName,
@@ -136,9 +136,9 @@ export class UserService {
       if (requestorId !== userId) {
         logger.warn('Unauthorized user update attempt', {
           event: 'unauthorized_user_update_attempt',
-          userId: requestorId,
-          targetUserId: userId,
           operation: 'updateUserProfile',
+          targetUserId: userId,
+          userId: requestorId,
         });
         throw new Error('Unauthorized: Cannot update other user profile');
       }
@@ -161,18 +161,18 @@ export class UserService {
 
       logger.info('User profile updated successfully', {
         operation: 'user_profile_update_success',
-        userId,
         resource: 'user',
         updatedFields: Object.keys(validatedUpdateData),
+        userId,
       });
 
       return savedUser;
     } catch (error) {
       logger.error('Failed to update user profile', {
-        operation: 'updateUserProfile',
-        userId,
-        requestorId,
         error: (error as Error).message,
+        operation: 'updateUserProfile',
+        requestorId,
+        userId,
       });
       throw error;
     }
@@ -191,9 +191,9 @@ export class UserService {
       if (requestorId !== userId) {
         logger.warn('Unauthorized preferences update attempt', {
           event: 'unauthorized_preferences_update_attempt',
-          userId: requestorId,
-          targetUserId: userId,
           operation: 'updateUserPreferences',
+          targetUserId: userId,
+          userId: requestorId,
         });
         throw new Error('Unauthorized: Cannot update other user preferences');
       }
@@ -209,18 +209,18 @@ export class UserService {
 
       logger.info('User preferences updated successfully', {
         operation: 'user_preferences_update_success',
-        userId,
         resource: 'user',
         updatedPreferences: Object.keys(preferences),
+        userId,
       });
 
       return updatedUser;
     } catch (error) {
       logger.error('Failed to update user preferences', {
-        operation: 'updateUserPreferences',
-        userId,
-        requestorId,
         error: (error as Error).message,
+        operation: 'updateUserPreferences',
+        requestorId,
+        userId,
       });
       throw error;
     }
@@ -235,9 +235,9 @@ export class UserService {
       if (requestorId !== userId) {
         logger.warn('Unauthorized user deletion attempt', {
           event: 'unauthorized_user_deletion_attempt',
-          userId: requestorId,
-          targetUserId: userId,
           operation: 'deleteUser',
+          targetUserId: userId,
+          userId: requestorId,
         });
         throw new Error('Unauthorized: Cannot delete other user account');
       }
@@ -257,18 +257,18 @@ export class UserService {
       await this.dependencies.userRepository.delete(userId);
 
       logger.info('User deleted successfully', {
-        operation: 'user_deletion_success',
-        userId,
-        resource: 'user',
         email: user.email,
         fullName: user.fullName,
+        operation: 'user_deletion_success',
+        resource: 'user',
+        userId,
       });
     } catch (error) {
       logger.error('Failed to delete user', {
-        operation: 'deleteUser',
-        userId,
-        requestorId,
         error: (error as Error).message,
+        operation: 'deleteUser',
+        requestorId,
+        userId,
       });
       throw error;
     }
@@ -356,10 +356,14 @@ export class UserService {
     cpf = cpf.replace(/\D/g, '');
 
     // Check if all digits are the same
-    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    if (/^(\d)\1{10}$/.test(cpf)) {
+      return false;
+    }
 
     // Check length
-    if (cpf.length !== 11) return false;
+    if (cpf.length !== 11) {
+      return false;
+    }
 
     // Calculate first digit
     let sum = 0;
@@ -367,8 +371,12 @@ export class UserService {
       sum += parseInt(cpf[i], 10) * (10 - i);
     }
     let digit = 11 - (sum % 11);
-    if (digit > 9) digit = 0;
-    if (digit !== parseInt(cpf[9], 10)) return false;
+    if (digit > 9) {
+      digit = 0;
+    }
+    if (digit !== parseInt(cpf[9], 10)) {
+      return false;
+    }
 
     // Calculate second digit
     sum = 0;
@@ -376,8 +384,12 @@ export class UserService {
       sum += parseInt(cpf[i], 10) * (11 - i);
     }
     digit = 11 - (sum % 11);
-    if (digit > 9) digit = 0;
-    if (digit !== parseInt(cpf[10], 10)) return false;
+    if (digit > 9) {
+      digit = 0;
+    }
+    if (digit !== parseInt(cpf[10], 10)) {
+      return false;
+    }
 
     return true;
   }

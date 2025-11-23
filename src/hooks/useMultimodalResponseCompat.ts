@@ -9,12 +9,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { IntentType } from '@/lib/nlu/types';
-import {
-  type MultimodalResponse,
-  type ResponseFeedback,
-  type UseMultimodalResponseReturn,
-  useMultimodalResponse as useNewMultimodalResponse,
+import type {
+  MultimodalResponse,
+  ResponseFeedback,
+  UseMultimodalResponseReturn,
 } from './useMultimodalResponse';
+import { useMultimodalResponse as useNewMultimodalResponse } from './useMultimodalResponse';
 
 export interface UseMultimodalResponseCompatOptions {
   ttsEnabled?: boolean; // Disable TTS for testing
@@ -61,11 +61,11 @@ export function useMultimodalResponse(
 ): UseMultimodalResponseCompatReturn {
   // Convert legacy options to new interface
   const newOptions = {
-    enableVoice:
-      options.ttsEnabled !== false && options.enableVoice !== false && !options.textOnlyMode,
-    enableVisual: options.enableVisual !== false && !options.textOnlyMode,
     autoSpeak: options.ttsEnabled !== false && !options.textOnlyMode,
     collectFeedback: options.collectFeedback !== false,
+    enableVisual: options.enableVisual !== false && !options.textOnlyMode,
+    enableVoice:
+      options.ttsEnabled !== false && options.enableVoice !== false && !options.textOnlyMode,
     onFeedback: options.onFeedback,
     onResponse: options.onResponse,
   };
@@ -96,7 +96,7 @@ export function useMultimodalResponse(
           setMetrics((prev) => {
             const responseCount = (prev?.responseCount || 0) + 1;
             const totalTime = Math.max(1, Math.round(endTime - startTime));
-            return { totalTime, success: true, responseCount };
+            return { responseCount, success: true, totalTime };
           });
         }
       } catch (error) {
@@ -105,7 +105,7 @@ export function useMultimodalResponse(
           setMetrics((prev) => {
             const responseCount = (prev?.responseCount || 0) + 1;
             const totalTime = Math.max(1, Math.round(endTime - startTime));
-            return { totalTime, success: false, responseCount };
+            return { responseCount, success: false, totalTime };
           });
         }
         throw error;

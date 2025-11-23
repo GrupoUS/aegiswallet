@@ -9,15 +9,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
-import { type BrazilianContext, BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
-import {
-  type ConversationContext,
-  type ConversationTurn,
-  EntityType,
-  type ExtractedEntity,
-  IntentType,
-  type NLUResult,
+import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
+import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
+import type {
+  ConversationContext,
+  ConversationTurn,
+  ExtractedEntity,
+  NLUResult,
 } from '@/lib/nlu/types';
+import { EntityType, IntentType } from '@/lib/nlu/types';
 import type { TransactionEntity } from '@/types/nlu.types';
 
 // ============================================================================
@@ -48,6 +48,14 @@ const DEFAULT_CONTEXT_CONFIG: ContextConfig = {
   persistenceEnabled: true,
 };
 
+export interface ContextEnhancements {
+  improvedIntent?: IntentType;
+  suggestedEntities?: ExtractedEntity[];
+  contextualInsights?: string[];
+  confidenceAdjustment: number;
+  missingContextualInfo?: string[];
+}
+
 // ============================================================================
 // User Preferences
 // ============================================================================
@@ -61,17 +69,17 @@ export interface UserPreferences {
   financialHabits: {
     commonBills: string[];
     preferredPaymentMethods: string[];
-    typicalTransferRecipients: Array<{
+    typicalTransferRecipients: {
       name: string;
       identifier: string;
       frequency: number;
       lastUsed: Date;
-    }>;
-    spendingCategories: Array<{
+    }[];
+    spendingCategories: {
       category: string;
       typicalAmount: number;
       frequency: string;
-    }>;
+    }[];
   };
   interactionPreferences: {
     confirmationLevel: 'high' | 'medium' | 'low';
@@ -113,47 +121,47 @@ export interface FinancialContext {
   };
   spendingPatterns: {
     monthlyAverage: number;
-    topCategories: Array<{
+    topCategories: {
       category: string;
       amount: number;
       percentage: number;
-    }>;
-    unusualSpending: Array<{
+    }[];
+    unusualSpending: {
       category: string;
       amount: number;
       date: Date;
       reason: string;
-    }>;
+    }[];
   };
   billPatterns: {
-    upcomingBills: Array<{
+    upcomingBills: {
       type: string;
       amount: number;
       dueDate: Date;
       status: 'pending' | 'overdue' | 'paid';
-    }>;
+    }[];
     averageBillAmount: number;
     mostCommonBills: string[];
   };
   transferPatterns: {
-    frequentRecipients: Array<{
+    frequentRecipients: {
       name: string;
       identifier: string;
       totalAmount: number;
       frequency: string;
       lastTransfer: Date;
-    }>;
+    }[];
     averageTransferAmount: number;
     preferredTransferTimes: string[];
   };
   incomePatterns: {
     monthlyIncome: number;
-    incomeSources: Array<{
+    incomeSources: {
       source: string;
       amount: number;
       frequency: string;
       reliability: number;
-    }>;
+    }[];
     nextExpectedIncome: Date;
   };
   lastUpdated: Date;
@@ -189,19 +197,13 @@ export class ContextProcessor {
   ): Promise<{
     result: NLUResult;
     context: ConversationContext;
-    enhancements: {
-      improvedIntent?: IntentType;
-      suggestedEntities?: ExtractedEntity[];
-      contextualInsights?: string[];
-      confidenceAdjustment: number;
-      missingContextualInfo?: string[];
-    };
+    enhancements: ContextEnhancements;
   }> {
     if (!this.config.enabled) {
       return {
-        result: nluResult,
         context: this.createBasicContext(userId, sessionId),
         enhancements: { confidenceAdjustment: 0 },
+        result: nluResult,
       };
     }
 
@@ -249,34 +251,34 @@ export class ContextProcessor {
       }
 
       logger.info('Context-aware processing completed', {
-        userId,
-        sessionId,
-        originalIntent: nluResult.intent,
-        enhancedIntent: enhancements.improvedIntent,
         confidenceAdjustment: enhancements.confidenceAdjustment,
         contextTurns: context.history.length,
+        enhancedIntent: enhancements.improvedIntent,
+        originalIntent: nluResult.intent,
+        sessionId,
+        userId,
       });
 
       return {
+        context,
+        enhancements,
         result: enhancements.improvedIntent
           ? { ...nluResult, intent: enhancements.improvedIntent }
           : nluResult,
-        context,
-        enhancements,
       };
     } catch (error) {
       logger.error('Context-aware processing failed', {
         error,
-        userId,
         sessionId,
         text: text.substring(0, 50),
+        userId,
       });
 
       // Fallback to basic processing
       return {
-        result: nluResult,
         context: this.createBasicContext(userId, sessionId),
         enhancements: { confidenceAdjustment: 0 },
+        result: nluResult,
       };
     }
   }
@@ -288,14 +290,14 @@ export class ContextProcessor {
     userId: string,
     sessionId: string,
     _ambiguousText: string,
-    possibleIntents: Array<{ intent: IntentType; confidence: number }>
+    possibleIntents: { intent: IntentType; confidence: number }[]
   ): Promise<{
-    suggestions: Array<{
+    suggestions: {
       intent: IntentType;
       question: string;
       contextualRationale: string;
       confidenceAdjustment: number;
-    }>;
+    }[];
     recommendedNextAction: string;
   }> {
     try {
@@ -319,10 +321,10 @@ export class ContextProcessor {
         );
 
         return {
+          confidenceAdjustment,
+          contextualRationale,
           intent: option.intent,
           question: this.generateDisambiguationQuestion(option.intent, contextualRationale),
-          contextualRationale,
-          confidenceAdjustment,
         };
       });
 
@@ -338,21 +340,21 @@ export class ContextProcessor {
       );
 
       return {
-        suggestions,
         recommendedNextAction,
+        suggestions,
       };
     } catch (error) {
       logger.error('Contextual disambiguation failed', { error, userId });
 
       // Fallback to basic suggestions
       return {
+        recommendedNextAction: 'Por favor, clarifique sua intenção',
         suggestions: possibleIntents.map((option) => ({
+          confidenceAdjustment: 0,
+          contextualRationale: 'Baseado no texto fornecido',
           intent: option.intent,
           question: `Você quis dizer ${this.getIntentDescription(option.intent)}?`,
-          contextualRationale: 'Baseado no texto fornecido',
-          confidenceAdjustment: 0,
         })),
-        recommendedNextAction: 'Por favor, clarifique sua intenção',
       };
     }
   }
@@ -366,11 +368,11 @@ export class ContextProcessor {
     errorText: string,
     errorType: 'unknown_intent' | 'low_confidence' | 'missing_entities' | 'processing_error'
   ): Promise<{
-    recoverySuggestions: Array<{
+    recoverySuggestions: {
       suggestedText: string;
       rationale: string;
       confidenceImprovement: number;
-    }>;
+    }[];
     clarifyingQuestions: string[];
     contextualHints: string[];
   }> {
@@ -401,24 +403,24 @@ export class ContextProcessor {
       );
 
       return {
-        recoverySuggestions,
         clarifyingQuestions,
         contextualHints,
+        recoverySuggestions,
       };
     } catch (error) {
       logger.error('Contextual error recovery failed', { error, userId });
 
       // Fallback suggestions
       return {
-        recoverySuggestions: [
-          {
-            suggestedText: 'Pode repetir de outra forma?',
-            rationale: 'Erro no processamento',
-            confidenceImprovement: 0.1,
-          },
-        ],
         clarifyingQuestions: ['O que você gostaria de fazer?'],
         contextualHints: ['Tente ser mais específico sobre sua intenção'],
+        recoverySuggestions: [
+          {
+            confidenceImprovement: 0.1,
+            rationale: 'Erro no processamento',
+            suggestedText: 'Pode repetir de outra forma?',
+          },
+        ],
       };
     }
   }
@@ -452,19 +454,19 @@ export class ContextProcessor {
 
   private createNewContext(userId: string, sessionId: string): ConversationContext {
     return {
-      userId,
-      sessionId,
       history: [],
+      sessionId,
       timestamp: new Date(),
+      userId,
     };
   }
 
   private createBasicContext(userId: string, sessionId: string): ConversationContext {
     return {
-      userId,
-      sessionId,
       history: [],
+      sessionId,
       timestamp: new Date(),
+      userId,
     };
   }
 
@@ -481,16 +483,10 @@ export class ContextProcessor {
     userPreferences: UserPreferences,
     financialContext: FinancialContext,
     brazilianContext: BrazilianContext
-  ): Promise<{
-    improvedIntent?: IntentType;
-    suggestedEntities?: ExtractedEntity[];
-    contextualInsights?: string[];
-    confidenceAdjustment: number;
-    missingContextualInfo?: string[];
-  }> {
+  ): Promise<ContextEnhancements> {
     const enhancements = {
-      contextualInsights: [] as string[],
       confidenceAdjustment: 0,
+      contextualInsights: [] as string[],
       missingContextualInfo: [] as string[],
     };
 
@@ -535,11 +531,11 @@ export class ContextProcessor {
     const suggestedEntities = this.suggestMissingEntities(nluResult, context, financialContext);
 
     return {
-      improvedIntent,
-      suggestedEntities,
-      contextualInsights: enhancements.contextualInsights,
       confidenceAdjustment: Math.max(-0.3, Math.min(0.3, enhancements.confidenceAdjustment)),
+      contextualInsights: enhancements.contextualInsights,
+      improvedIntent,
       missingContextualInfo: enhancements.missingContextualInfo,
+      suggestedEntities,
     };
   }
 
@@ -791,13 +787,13 @@ export class ContextProcessor {
         const avgAmount = financialContext.transferPatterns.averageTransferAmount;
         if (avgAmount > 0) {
           suggestions.push({
+            confidence: 0.7,
+            endIndex: 0,
+            metadata: { source: 'user_average', suggested: true },
+            normalizedValue: avgAmount,
+            startIndex: 0,
             type: EntityType.AMOUNT,
             value: avgAmount.toString(),
-            normalizedValue: avgAmount,
-            confidence: 0.7,
-            startIndex: 0,
-            endIndex: 0,
-            metadata: { suggested: true, source: 'user_average' },
           });
         }
       }
@@ -812,13 +808,13 @@ export class ContextProcessor {
       if (frequentRecipients.length > 0) {
         const mostFrequent = frequentRecipients[0];
         suggestions.push({
+          confidence: 0.8,
+          endIndex: 0,
+          metadata: { source: 'frequent_recipient', suggested: true },
+          normalizedValue: { type: 'name', value: mostFrequent.name },
+          startIndex: 0,
           type: EntityType.RECIPIENT,
           value: mostFrequent.name,
-          normalizedValue: { type: 'name', value: mostFrequent.name },
-          confidence: 0.8,
-          startIndex: 0,
-          endIndex: 0,
-          metadata: { suggested: true, source: 'frequent_recipient' },
         });
       }
     }
@@ -830,7 +826,7 @@ export class ContextProcessor {
     context: ConversationContext,
     text: string,
     nluResult: NLUResult,
-    enhancements: any
+    enhancements: ContextEnhancements
   ): void {
     const turn: ConversationTurn = {
       userInput: text,
@@ -856,7 +852,9 @@ export class ContextProcessor {
     // Check cache first
     if (this.userPreferencesCache.has(userId)) {
       const cachedPrefs = this.userPreferencesCache.get(userId);
-      if (cachedPrefs) return cachedPrefs;
+      if (cachedPrefs) {
+        return cachedPrefs;
+      }
     }
 
     try {
@@ -870,35 +868,35 @@ export class ContextProcessor {
       if (error || !data) {
         // Create default preferences
         const defaultPreferences: UserPreferences = {
-          id: `pref_${Date.now()}`,
-          userId,
-          preferredLanguage: 'pt-BR',
-          regionalVariation: 'Unknown',
-          linguisticStyle: 'colloquial',
+          createdAt: new Date(),
           financialHabits: {
             commonBills: [],
             preferredPaymentMethods: ['PIX'],
-            typicalTransferRecipients: [],
             spendingCategories: [],
+            typicalTransferRecipients: [],
           },
+          id: `pref_${Date.now()}`,
           interactionPreferences: {
             confirmationLevel: 'medium',
-            verbosityLevel: 'friendly',
             feedbackFrequency: 'on_error',
+            verbosityLevel: 'friendly',
           },
+          learningProfile: {
+            adaptabilityScore: 0.5,
+            confidenceLevel: 0.7,
+            errorCorrectionRate: 0.5,
+            patternRecognitionScore: 0.5,
+          },
+          linguisticStyle: 'colloquial',
+          preferredLanguage: 'pt-BR',
+          regionalVariation: 'Unknown',
           temporalPatterns: {
             mostActiveHours: [9, 14, 19],
             preferredDays: [1, 2, 3, 4, 5],
             typicalSessionDuration: 300,
           },
-          learningProfile: {
-            adaptabilityScore: 0.5,
-            errorCorrectionRate: 0.5,
-            patternRecognitionScore: 0.5,
-            confidenceLevel: 0.7,
-          },
-          createdAt: new Date(),
           updatedAt: new Date(),
+          userId,
         };
 
         this.userPreferencesCache.set(userId, defaultPreferences);
@@ -926,35 +924,35 @@ export class ContextProcessor {
 
       // Return default preferences on error
       const defaultPreferences: UserPreferences = {
-        id: `pref_${Date.now()}`,
-        userId,
-        preferredLanguage: 'pt-BR',
-        regionalVariation: 'Unknown',
-        linguisticStyle: 'colloquial',
+        createdAt: new Date(),
         financialHabits: {
           commonBills: [],
           preferredPaymentMethods: ['PIX'],
-          typicalTransferRecipients: [],
           spendingCategories: [],
+          typicalTransferRecipients: [],
         },
+        id: `pref_${Date.now()}`,
         interactionPreferences: {
           confirmationLevel: 'medium',
-          verbosityLevel: 'friendly',
           feedbackFrequency: 'on_error',
+          verbosityLevel: 'friendly',
         },
+        learningProfile: {
+          adaptabilityScore: 0.5,
+          confidenceLevel: 0.7,
+          errorCorrectionRate: 0.5,
+          patternRecognitionScore: 0.5,
+        },
+        linguisticStyle: 'colloquial',
+        preferredLanguage: 'pt-BR',
+        regionalVariation: 'Unknown',
         temporalPatterns: {
           mostActiveHours: [9, 14, 19],
           preferredDays: [1, 2, 3, 4, 5],
           typicalSessionDuration: 300,
         },
-        learningProfile: {
-          adaptabilityScore: 0.5,
-          errorCorrectionRate: 0.5,
-          patternRecognitionScore: 0.5,
-          confidenceLevel: 0.7,
-        },
-        createdAt: new Date(),
         updatedAt: new Date(),
+        userId,
       };
 
       this.userPreferencesCache.set(userId, defaultPreferences);
@@ -982,8 +980,8 @@ export class ContextProcessor {
 
       if (accountError) {
         logger.error('Failed to load bank accounts for financial context', {
-          userId,
           error: accountError,
+          userId,
         });
       }
 
@@ -996,8 +994,8 @@ export class ContextProcessor {
 
       if (transactionError) {
         logger.error('Failed to load transactions for financial context', {
-          userId,
           error: transactionError,
+          userId,
         });
       }
 
@@ -1005,13 +1003,23 @@ export class ContextProcessor {
 
       // Build financial context from data
       const financialContext: FinancialContext = {
-        userId,
         accountSummary: {
-          totalBalance: accountData?.balance || 0,
           availableBalance: accountData?.available_balance || 0,
           pendingTransactions: transactionsList.filter((t) => t.status === 'pending').length || 0,
-          scheduledPayments: 0, // TODO: Load from scheduled payments table
+          scheduledPayments: 0,
+          totalBalance: accountData?.balance || 0, // TODO: Load from scheduled payments table
         },
+        billPatterns: {
+          upcomingBills: [], // TODO: Load from bills table
+          averageBillAmount: 0,
+          mostCommonBills: [],
+        },
+        incomePatterns: {
+          monthlyIncome: this.calculateMonthlyIncome(transactionsList),
+          incomeSources: [], // TODO: Load from income sources
+          nextExpectedIncome: new Date(), // TODO: Calculate from patterns
+        },
+        lastUpdated: new Date(),
         recentActivity: {
           lastLogin: new Date(), // TODO: Load from auth logs
           lastTransaction: transactionsList[0]
@@ -1025,22 +1033,12 @@ export class ContextProcessor {
           topCategories: this.calculateTopCategories(transactionsList),
           unusualSpending: [], // TODO: Implement anomaly detection
         },
-        billPatterns: {
-          upcomingBills: [], // TODO: Load from bills table
-          averageBillAmount: 0,
-          mostCommonBills: [],
-        },
         transferPatterns: {
           frequentRecipients: [], // TODO: Load from transfers table
           averageTransferAmount: this.calculateAverageTransfer(transactionsList),
           preferredTransferTimes: [],
         },
-        incomePatterns: {
-          monthlyIncome: this.calculateMonthlyIncome(transactionsList),
-          incomeSources: [], // TODO: Load from income sources
-          nextExpectedIncome: new Date(), // TODO: Calculate from patterns
-        },
-        lastUpdated: new Date(),
+        userId,
       };
 
       this.financialContextCache.set(userId, financialContext);
@@ -1050,17 +1048,27 @@ export class ContextProcessor {
 
       // Return empty financial context on error
       const emptyContext: FinancialContext = {
-        userId,
         accountSummary: {
-          totalBalance: 0,
           availableBalance: 0,
           pendingTransactions: 0,
           scheduledPayments: 0,
+          totalBalance: 0,
         },
+        billPatterns: {
+          averageBillAmount: 0,
+          mostCommonBills: [],
+          upcomingBills: [],
+        },
+        incomePatterns: {
+          incomeSources: [],
+          monthlyIncome: 0,
+          nextExpectedIncome: new Date(),
+        },
+        lastUpdated: new Date(),
         recentActivity: {
+          lastBillPayment: new Date(),
           lastLogin: new Date(),
           lastTransaction: new Date(),
-          lastBillPayment: new Date(),
           lastTransfer: new Date(),
         },
         spendingPatterns: {
@@ -1068,22 +1076,12 @@ export class ContextProcessor {
           topCategories: [],
           unusualSpending: [],
         },
-        billPatterns: {
-          upcomingBills: [],
-          averageBillAmount: 0,
-          mostCommonBills: [],
-        },
         transferPatterns: {
-          frequentRecipients: [],
           averageTransferAmount: 0,
+          frequentRecipients: [],
           preferredTransferTimes: [],
         },
-        incomePatterns: {
-          monthlyIncome: 0,
-          incomeSources: [],
-          nextExpectedIncome: new Date(),
-        },
-        lastUpdated: new Date(),
+        userId,
       };
 
       this.financialContextCache.set(userId, emptyContext);
@@ -1111,7 +1109,9 @@ export class ContextProcessor {
     previousEntities: ExtractedEntity[],
     currentEntities: ExtractedEntity[]
   ): number {
-    if (previousEntities.length === 0 || currentEntities.length === 0) return 0;
+    if (previousEntities.length === 0 || currentEntities.length === 0) {
+      return 0;
+    }
 
     const matches = currentEntities.filter((current) =>
       previousEntities.some(
@@ -1240,41 +1240,41 @@ export class ContextProcessor {
     context: ConversationContext,
     _userPreferences: UserPreferences,
     _financialContext: FinancialContext
-  ): Array<{
+  ): {
     suggestedText: string;
     rationale: string;
     confidenceImprovement: number;
-  }> {
+  }[] {
     const suggestions = [];
 
     switch (errorType) {
       case 'unknown_intent':
         suggestions.push({
-          suggestedText: 'Quero verificar meu saldo',
-          rationale: 'Comando claro para verificar saldo',
           confidenceImprovement: 0.4,
+          rationale: 'Comando claro para verificar saldo',
+          suggestedText: 'Quero verificar meu saldo',
         });
         suggestions.push({
-          suggestedText: 'Pagar a conta de luz',
-          rationale: 'Comando claro para pagar conta',
           confidenceImprovement: 0.4,
+          rationale: 'Comando claro para pagar conta',
+          suggestedText: 'Pagar a conta de luz',
         });
         break;
 
       case 'low_confidence':
         suggestions.push({
-          suggestedText: `${errorText}, por favor`,
-          rationale: 'Adicionar polidez para melhor reconhecimento',
           confidenceImprovement: 0.2,
+          rationale: 'Adicionar polidez para melhor reconhecimento',
+          suggestedText: `${errorText}, por favor`,
         });
         break;
 
       case 'missing_entities':
         if (context.lastIntent === IntentType.TRANSFER_MONEY) {
           suggestions.push({
-            suggestedText: 'Transferir R$ 100 para o João',
-            rationale: 'Incluir valor e destinatário',
             confidenceImprovement: 0.3,
+            rationale: 'Incluir valor e destinatário',
+            suggestedText: 'Transferir R$ 100 para o João',
           });
         }
         break;
@@ -1332,7 +1332,9 @@ export class ContextProcessor {
   // ============================================================================
 
   private calculateMonthlyAverage(transactions: TransactionEntity[]): number {
-    if (transactions.length === 0) return 0;
+    if (transactions.length === 0) {
+      return 0;
+    }
 
     const monthlyTotal = transactions.reduce((sum, transaction) => {
       return sum + (transaction.amount || 0);
@@ -1343,7 +1345,7 @@ export class ContextProcessor {
 
   private calculateTopCategories(
     transactions: TransactionEntity[]
-  ): Array<{ category: string; amount: number; percentage: number }> {
+  ): { category: string; amount: number; percentage: number }[] {
     const categoryTotals = transactions.reduce(
       (acc, transaction) => {
         const category = transaction.category || 'outros';
@@ -1357,8 +1359,8 @@ export class ContextProcessor {
 
     return Object.entries(categoryTotals)
       .map(([category, amount]) => ({
-        category,
         amount,
+        category,
         percentage: total > 0 ? (amount / total) * 100 : 0,
       }))
       .sort((a, b) => b.amount - a.amount)
@@ -1367,7 +1369,9 @@ export class ContextProcessor {
 
   private calculateAverageTransfer(transactions: TransactionEntity[]): number {
     const transfers = transactions.filter((t) => t.type === 'transfer');
-    if (transfers.length === 0) return 0;
+    if (transfers.length === 0) {
+      return 0;
+    }
 
     const total = transfers.reduce((sum, transfer) => sum + Math.abs(transfer.amount || 0), 0);
     return total / transfers.length;
@@ -1375,7 +1379,9 @@ export class ContextProcessor {
 
   private calculateMonthlyIncome(transactions: TransactionEntity[]): number {
     const income = transactions.filter((t) => (t.amount || 0) > 0);
-    if (income.length === 0) return 0;
+    if (income.length === 0) {
+      return 0;
+    }
 
     return income.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
   }
@@ -1405,10 +1411,10 @@ export class ContextProcessor {
       userPreferences.updatedAt = new Date();
 
       logger.debug('Learning from interaction', {
-        userId,
-        intent: nluResult.intent,
         confidence: nluResult.confidence,
+        intent: nluResult.intent,
         region: brazilianContext.region,
+        userId,
       });
     } catch (error) {
       logger.error('Failed to learn from interaction', { error, userId });
@@ -1418,16 +1424,16 @@ export class ContextProcessor {
   private async updateUserPreferences(preferences: UserPreferences): Promise<void> {
     try {
       const { error } = await supabase.from('user_preferences').upsert({
+        financial_habits: preferences.financialHabits,
         id: preferences.id,
-        user_id: preferences.userId,
+        interaction_preferences: preferences.interactionPreferences,
+        learning_profile: preferences.learningProfile,
+        linguistic_style: preferences.linguisticStyle,
         preferred_language: preferences.preferredLanguage,
         regional_variation: preferences.regionalVariation,
-        linguistic_style: preferences.linguisticStyle,
-        financial_habits: preferences.financialHabits,
-        interaction_preferences: preferences.interactionPreferences,
         temporal_patterns: preferences.temporalPatterns,
-        learning_profile: preferences.learningProfile,
         updated_at: preferences.updatedAt.toISOString(),
+        user_id: preferences.userId,
       });
 
       if (error) {
@@ -1441,12 +1447,12 @@ export class ContextProcessor {
   private async persistContext(context: ConversationContext): Promise<void> {
     try {
       const { error } = await supabase.from('conversation_contexts').upsert({
-        user_id: context.userId,
-        session_id: context.sessionId,
         history: context.history,
-        last_intent: context.lastIntent,
         last_entities: context.lastEntities,
+        last_intent: context.lastIntent,
+        session_id: context.sessionId,
         timestamp: context.timestamp.toISOString(),
+        user_id: context.userId,
       });
 
       if (error) {
@@ -1474,12 +1480,12 @@ export class ContextProcessor {
       }
 
       return {
-        userId: data.user_id,
-        sessionId: data.session_id,
         history: data.history || [],
-        lastIntent: data.last_intent,
         lastEntities: data.last_entities || [],
+        lastIntent: data.last_intent,
+        sessionId: data.session_id,
         timestamp: new Date(data.timestamp),
+        userId: data.user_id,
       };
     } catch (error) {
       logger.error('Failed to load context from persistence', { error });

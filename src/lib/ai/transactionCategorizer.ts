@@ -32,10 +32,9 @@ export interface Subcategory {
 // Brazilian financial categories with local patterns
 const BRAZILIAN_CATEGORIES: Category[] = [
   {
-    id: 'food',
-    name: 'Alimentação',
-    icon: '🍽️',
     color: '#ef4444',
+    icon: '🍽️',
+    id: 'food',
     keywords: [
       'restaurante',
       'lanchonete',
@@ -49,6 +48,7 @@ const BRAZILIAN_CATEGORIES: Category[] = [
       'comida',
       'alimentação',
     ],
+    name: 'Alimentação',
     patterns: [
       /mercado.*super/i,
       /restaurante/i,
@@ -61,7 +61,6 @@ const BRAZILIAN_CATEGORIES: Category[] = [
     subcategories: [
       {
         id: 'groceries',
-        name: 'Supermercado',
         keywords: [
           'supermercado',
           'mercado',
@@ -70,27 +69,27 @@ const BRAZILIAN_CATEGORIES: Category[] = [
           'carrefour',
           'pão de açúcar',
         ],
+        name: 'Supermercado',
         patterns: [/supermercado/i, /mercado/i, /atacarejo/i, /atacadão/i],
       },
       {
         id: 'restaurant',
-        name: 'Restaurante',
         keywords: ['restaurante', 'comida', 'refeição', 'almoço', 'jantar'],
+        name: 'Restaurante',
         patterns: [/restaurante/i, /refeição/i],
       },
       {
         id: 'delivery',
-        name: 'Delivery',
         keywords: ['delivery', 'ifood', 'rappi', 'uber eats'],
+        name: 'Delivery',
         patterns: [/delivery/i, /ifood/i, /rappi/i, /uber eats/i],
       },
     ],
   },
   {
-    id: 'transport',
-    name: 'Transporte',
-    icon: '🚗',
     color: '#3b82f6',
+    icon: '🚗',
+    id: 'transport',
     keywords: [
       'uber',
       '99',
@@ -102,140 +101,141 @@ const BRAZILIAN_CATEGORIES: Category[] = [
       'ônibus',
       'metrô',
     ],
+    name: 'Transporte',
     patterns: [/uber/i, /99/i, /taxi/i, /posto.*gasolina/i, /estacionamento/i],
     subcategories: [
       {
         id: 'ride_sharing',
-        name: 'Transporte App',
         keywords: ['uber', '99', 'cabify'],
+        name: 'Transporte App',
         patterns: [/uber/i, /99/i, /cabify/i],
       },
       {
         id: 'fuel',
-        name: 'Combustível',
         keywords: ['gasolina', 'álcool', 'posto', 'combustível'],
+        name: 'Combustível',
         patterns: [/gasolina/i, /álcool/i, /posto/i, /combustível/i],
       },
       {
         id: 'public_transport',
-        name: 'Transporte Público',
         keywords: ['ônibus', 'metrô', 'trem', 'bilhete'],
+        name: 'Transporte Público',
         patterns: [/ônibus/i, /metrô/i, /trem/i, /bilhete/i],
       },
     ],
   },
   {
-    id: 'shopping',
-    name: 'Compras',
-    icon: '🛍️',
     color: '#8b5cf6',
+    icon: '🛍️',
+    id: 'shopping',
     keywords: ['loja', 'shopping', 'roupa', 'calçado', 'compra', 'mercado', 'varejo'],
+    name: 'Compras',
     patterns: [/shopping/i, /loja/i, /roupa/i, /calçado/i],
     subcategories: [
       {
         id: 'clothing',
-        name: 'Roupas',
         keywords: ['roupa', 'calçado', 'vestuário'],
+        name: 'Roupas',
         patterns: [/roupa/i, /calçado/i, /vestuário/i],
       },
       {
         id: 'electronics',
-        name: 'Eletrônicos',
         keywords: ['celular', 'computador', 'eletrônico'],
+        name: 'Eletrônicos',
         patterns: [/celular/i, /computador/i, /eletrônico/i],
       },
     ],
   },
   {
-    id: 'utilities',
-    name: 'Contas',
-    icon: '📄',
     color: '#f59e0b',
+    icon: '📄',
+    id: 'utilities',
     keywords: ['energia', 'luz', 'água', 'internet', 'telefone', 'conta', 'boleto'],
+    name: 'Contas',
     patterns: [/energia.*elétrica/i, /luz/i, /água/i, /internet/i, /telefone/i],
     subcategories: [
       {
         id: 'electricity',
-        name: 'Energia',
         keywords: ['energia', 'luz', 'eletropaulo', 'light'],
+        name: 'Energia',
         patterns: [/energia/i, /luz/i, /eletropaulo/i, /light/i],
       },
       {
         id: 'water',
-        name: 'Água',
         keywords: ['água', 'sabesp'],
+        name: 'Água',
         patterns: [/água/i, /sabesp/i],
       },
       {
         id: 'internet',
-        name: 'Internet',
         keywords: ['internet', 'net', 'vivo', 'claro', 'oi'],
+        name: 'Internet',
         patterns: [/internet/i, /net/i, /vivo/i, /claro/i, /oi/i],
       },
     ],
   },
   {
-    id: 'health',
-    name: 'Saúde',
-    icon: '🏥',
     color: '#10b981',
+    icon: '🏥',
+    id: 'health',
     keywords: ['farmácia', 'médico', 'hospital', 'plano', 'saúde', 'remédio'],
+    name: 'Saúde',
     patterns: [/farmácia/i, /médico/i, /hospital/i, /plano.*saúde/i],
     subcategories: [
       {
         id: 'pharmacy',
-        name: 'Farmácia',
         keywords: ['farmácia', 'remédio', 'medicamento'],
+        name: 'Farmácia',
         patterns: [/farmácia/i, /remédio/i, /medicamento/i],
       },
       {
         id: 'medical',
-        name: 'Médico',
         keywords: ['médico', 'consulta', 'hospital'],
+        name: 'Médico',
         patterns: [/médico/i, /consulta/i, /hospital/i],
       },
     ],
   },
   {
-    id: 'entertainment',
-    name: 'Entretenimento',
-    icon: '🎬',
     color: '#ec4899',
+    icon: '🎬',
+    id: 'entertainment',
     keywords: ['cinema', 'netflix', 'spotify', 'show', 'teatro', 'jogo'],
+    name: 'Entretenimento',
     patterns: [/cinema/i, /netflix/i, /spotify/i, /show/i],
     subcategories: [
       {
         id: 'streaming',
-        name: 'Streaming',
         keywords: ['netflix', 'spotify', 'prime', 'hbo'],
+        name: 'Streaming',
         patterns: [/netflix/i, /spotify/i, /prime/i, /hbo/i],
       },
       {
         id: 'cinema',
-        name: 'Cinema',
         keywords: ['cinema', 'filmes'],
+        name: 'Cinema',
         patterns: [/cinema/i, /filme/i],
       },
     ],
   },
   {
-    id: 'income',
-    name: 'Receitas',
-    icon: '💰',
     color: '#22c55e',
+    icon: '💰',
+    id: 'income',
     keywords: ['salário', 'pagamento', 'recebimento', 'depósito', 'renda'],
+    name: 'Receitas',
     patterns: [/salário/i, /pagamento/i, /recebimento/i, /depósito/i],
     subcategories: [
       {
         id: 'salary',
-        name: 'Salário',
         keywords: ['salário', 'ordenado'],
+        name: 'Salário',
         patterns: [/salário/i, /ordenado/i],
       },
       {
         id: 'freelance',
-        name: 'Freelance',
         keywords: ['freelance', 'pj', 'autônomo'],
+        name: 'Freelance',
         patterns: [/freelance/i, /pj/i, /autônomo/i],
       },
     ],
@@ -325,8 +325,8 @@ export class TransactionCategorizer {
       if (totalScore > bestMatch.confidence) {
         bestMatch = {
           category,
-          subcategory: bestSubcategory,
           confidence: totalScore,
+          subcategory: bestSubcategory,
         };
       }
     }
@@ -344,7 +344,7 @@ export class TransactionCategorizer {
    */
   categorizeTransactions(
     transactions: Transaction[]
-  ): Array<Transaction & { category: string; subcategory?: string; confidence: number }> {
+  ): (Transaction & { category: string; subcategory?: string; confidence: number })[] {
     return transactions.map((transaction) => this.categorizeTransaction(transaction));
   }
 
@@ -374,9 +374,7 @@ export class TransactionCategorizer {
   /**
    * Get spending insights by category
    */
-  getCategoryInsights(
-    transactions: Array<Transaction & { category: string; subcategory?: string }>
-  ) {
+  getCategoryInsights(transactions: (Transaction & { category: string; subcategory?: string })[]) {
     const insights = transactions
       .filter((t) => t.type === 'expense')
       .reduce(
@@ -384,8 +382,8 @@ export class TransactionCategorizer {
           const categoryId = transaction.category;
           if (!acc[categoryId]) {
             acc[categoryId] = {
-              total: 0,
               count: 0,
+              total: 0,
               transactions: [],
             };
           }
@@ -408,7 +406,7 @@ export class TransactionCategorizer {
   /**
    * Predict future spending based on historical patterns
    */
-  predictSpending(transactions: Array<Transaction & { category: string }>, daysAhead: number = 30) {
+  predictSpending(transactions: (Transaction & { category: string })[], daysAhead: number = 30) {
     const now = new Date();
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -425,9 +423,9 @@ export class TransactionCategorizer {
 
         return {
           category: category.id,
-          predictedSpending: dailyAverage * daysAhead,
           confidence:
             categoryTransactions.length > 0 ? Math.min(categoryTransactions.length / 10, 1) : 0.1,
+          predictedSpending: dailyAverage * daysAhead,
         };
       })
       .filter((pred) => pred.confidence > 0.2);

@@ -44,7 +44,9 @@ function isAllowedException(content: string, matchIndex: number): boolean {
   for (const pattern of ALLOWED_PATTERNS) {
     const matches = content.matchAll(pattern);
     for (const match of matches) {
-      if (match.index === undefined) continue;
+      if (match.index === undefined) {
+        continue;
+      }
       const start = match.index;
       const end = start + match[0].length;
       if (matchIndex >= start && matchIndex <= end) {
@@ -61,8 +63,8 @@ function isAllowedException(content: string, matchIndex: number): boolean {
 function getLineAndColumn(content: string, index: number): { line: number; column: number } {
   const lines = content.substring(0, index).split('\n');
   return {
-    line: lines.length,
     column: lines[lines.length - 1].length + 1,
+    line: lines.length,
   };
 }
 
@@ -95,7 +97,9 @@ async function scanFile(filePath: string): Promise<void> {
       const matches = content.matchAll(pattern);
 
       for (const match of matches) {
-        if (match.index === undefined) continue;
+        if (match.index === undefined) {
+          continue;
+        }
 
         // Skip if this is an allowed exception
         if (isAllowedException(content, match.index)) {
@@ -106,11 +110,11 @@ async function scanFile(filePath: string): Promise<void> {
         const context = getContext(content, line);
 
         violations.push({
+          column,
+          context,
           file: filePath,
           line,
-          column,
           match: match[0],
-          context,
         });
       }
     }

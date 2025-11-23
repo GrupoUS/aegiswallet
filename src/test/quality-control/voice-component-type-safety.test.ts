@@ -25,17 +25,17 @@ describe('Voice Component Type Safety', () => {
   describe('VoiceResponse Component', () => {
     it('should handle properly typed balance data', () => {
       const mockData: BalanceResponseData = {
-        currentBalance: 1000,
-        income: 2000,
-        expenses: 500,
         accountType: 'Corrente',
+        currentBalance: 1000,
+        expenses: 500,
+        income: 2000,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'balance',
-          message: 'Test balance response',
           data: mockData,
+          message: 'Test balance response',
+          type: 'balance',
         })
       );
 
@@ -49,17 +49,17 @@ describe('Voice Component Type Safety', () => {
     it('should validate budget data types', () => {
       const budgetData: BudgetResponseData = {
         available: 500,
-        spent: 800,
-        total: 1300,
-        spentPercentage: 61.5,
         category: 'Alimentação',
+        spent: 800,
+        spentPercentage: 61.5,
+        total: 1300,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'budget',
-          message: 'Budget information',
           data: budgetData,
+          message: 'Budget information',
+          type: 'budget',
         })
       );
 
@@ -72,20 +72,20 @@ describe('Voice Component Type Safety', () => {
 
     it('should handle transfer data with proper typing', () => {
       const transferData: TransferResponseData = {
-        recipient: 'João Silva',
         amount: 250.0,
-        method: 'PIX',
         estimatedTime: 'Imediato',
+        fees: 0,
+        method: 'PIX',
+        recipient: 'João Silva',
         status: 'pending',
         transactionId: 'tx_123',
-        fees: 0,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'transfer',
-          message: 'Transfer information',
           data: transferData,
+          message: 'Transfer information',
+          type: 'transfer',
         })
       );
 
@@ -101,31 +101,31 @@ describe('Voice Component Type Safety', () => {
       const billsData: BillsResponseData = {
         bills: [
           {
-            name: 'Conta de Luz',
             amount: 150.0,
+            category: 'Utilidades',
             dueDate: '2024-01-10',
             isPastDue: true,
+            name: 'Conta de Luz',
             status: 'overdue',
-            category: 'Utilidades',
           },
           {
-            name: 'Internet',
             amount: 99.9,
+            category: 'Utilidades',
             dueDate: '2024-01-15',
             isPastDue: false,
+            name: 'Internet',
             status: 'pending',
-            category: 'Utilidades',
           },
         ],
-        totalAmount: 249.9,
         pastDueCount: 1,
+        totalAmount: 249.9,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'bills',
-          message: 'Bills information',
           data: billsData,
+          message: 'Bills information',
+          type: 'bills',
         })
       );
 
@@ -141,35 +141,35 @@ describe('Voice Component Type Safety', () => {
       const incomingData: IncomingResponseData = {
         incoming: [
           {
-            source: 'Salário',
             amount: 5000.0,
-            expectedDate: '2024-01-05',
-            confirmed: true,
             category: 'Renda Fixa',
+            confirmed: true,
+            expectedDate: '2024-01-05',
             recurring: true,
+            source: 'Salário',
           },
           {
-            source: 'Freelance',
             amount: 1200.0,
-            expectedDate: '2024-01-10',
-            confirmed: false,
             category: 'Renda Variável',
+            confirmed: false,
+            expectedDate: '2024-01-10',
             recurring: false,
+            source: 'Freelance',
           },
         ],
-        totalExpected: 6200.0,
         nextIncome: {
-          source: 'Salário',
           amount: 5000.0,
           date: '2024-01-05',
+          source: 'Salário',
         },
+        totalExpected: 6200.0,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'incoming',
-          message: 'Incoming information',
           data: incomingData,
+          message: 'Incoming information',
+          type: 'incoming',
         })
       );
 
@@ -182,21 +182,21 @@ describe('Voice Component Type Safety', () => {
 
     it('should handle projection data with proper typing', () => {
       const projectionData: ProjectionResponseData = {
-        projectedBalance: 3200.0,
-        currentBalance: 1500.0,
-        expectedIncome: 5000.0,
-        expectedExpenses: 3300.0,
-        variation: 1700.0,
-        period: 'mensal',
-        currency: 'BRL',
         confidence: 0.85,
+        currency: 'BRL',
+        currentBalance: 1500.0,
+        expectedExpenses: 3300.0,
+        expectedIncome: 5000.0,
+        period: 'mensal',
+        projectedBalance: 3200.0,
+        variation: 1700.0,
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'projection',
-          message: 'Projection information',
           data: projectionData,
+          message: 'Projection information',
+          type: 'projection',
         })
       );
 
@@ -209,17 +209,17 @@ describe('Voice Component Type Safety', () => {
 
     it('should handle success responses', () => {
       const successData: SuccessResponseData = {
-        message: 'Operação realizada com sucesso',
         action: 'Transferência enviada',
         details: 'O valor será creditado em até 2 dias úteis',
         duration: 1500,
+        message: 'Operação realizada com sucesso',
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'success',
-          message: 'Success',
           data: successData,
+          message: 'Success',
+          type: 'success',
         })
       );
 
@@ -231,18 +231,18 @@ describe('Voice Component Type Safety', () => {
 
     it('should handle error responses', () => {
       const errorData: ErrorResponseData = {
-        message: 'Falha na transferência',
         code: 'INSUFFICIENT_FUNDS',
         details: 'Saldo insuficiente para completar a operação',
+        message: 'Falha na transferência',
         recoverable: true,
         suggestedActions: ['Verificar saldo disponível', 'Realizar depósito', 'Tentar valor menor'],
       };
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'error',
-          message: 'Error',
           data: errorData,
+          message: 'Error',
+          type: 'error',
         })
       );
 
@@ -266,14 +266,14 @@ describe('Voice Component Type Safety', () => {
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'balance',
-          message: 'Test balance response',
-          data: mockData,
           accessibility: {
-            'aria-live': 'assertive',
             'aria-atomic': true,
+            'aria-live': 'assertive',
             role: 'status',
           },
+          data: mockData,
+          message: 'Test balance response',
+          type: 'balance',
         })
       );
 
@@ -290,10 +290,10 @@ describe('Voice Component Type Safety', () => {
 
       render(
         React.createElement(VoiceResponse, {
-          type: 'balance',
-          message: 'Test balance response',
           data: mockData,
+          message: 'Test balance response',
           timestamp,
+          type: 'balance',
         })
       );
 
@@ -328,9 +328,9 @@ describe('Voice Component Type Safety', () => {
       expect(() =>
         render(
           React.createElement(VoiceResponse, {
-            type: 'balance',
-            message: 'Valid data test',
             data: validData,
+            message: 'Valid data test',
+            type: 'balance',
           })
         )
       ).not.toThrow();
@@ -339,8 +339,8 @@ describe('Voice Component Type Safety', () => {
     it('should handle missing data gracefully', () => {
       render(
         React.createElement(VoiceResponse, {
-          type: 'balance',
           message: 'Test without data',
+          type: 'balance',
           // data is optional and should be handled gracefully
         })
       );

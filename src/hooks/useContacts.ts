@@ -25,9 +25,14 @@ export function useContacts(filters?: {
   }, [data]);
 
   const { mutate: createContact, isPending: isCreating } = trpc.contacts.create.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao criar contato');
+    },
     onSuccess: (data) => {
       utils.contacts.getAll.setData(filters || {}, (old) => {
-        if (!old) return { contacts: [data], total: 1, hasMore: false };
+        if (!old) {
+          return { contacts: [data], hasMore: false, total: 1 };
+        }
         return {
           ...old,
           contacts: [data, ...old.contacts],
@@ -37,15 +42,17 @@ export function useContacts(filters?: {
       utils.contacts.getStats.invalidate();
       toast.success('Contato criado com sucesso!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao criar contato');
-    },
   });
 
   const { mutate: updateContact, isPending: isUpdating } = trpc.contacts.update.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao atualizar contato');
+    },
     onSuccess: (data) => {
       utils.contacts.getAll.setData(filters || {}, (old) => {
-        if (!old) return old;
+        if (!old) {
+          return old;
+        }
         return {
           ...old,
           contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
@@ -54,27 +61,29 @@ export function useContacts(filters?: {
       utils.contacts.getStats.invalidate();
       toast.success('Contato atualizado com sucesso!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar contato');
-    },
   });
 
   const { mutate: deleteContact, isPending: isDeleting } = trpc.contacts.delete.useMutation({
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao remover contato');
+    },
     onSuccess: () => {
       utils.contacts.getAll.invalidate();
       utils.contacts.getStats.invalidate();
       toast.success('Contato removido com sucesso!');
     },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao remover contato');
-    },
   });
 
   const { mutate: toggleFavorite, isPending: isTogglingFavorite } =
     trpc.contacts.toggleFavorite.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao alternar favorito');
+      },
       onSuccess: (data) => {
         utils.contacts.getAll.setData(filters || {}, (old) => {
-          if (!old) return old;
+          if (!old) {
+            return old;
+          }
           return {
             ...old,
             contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
@@ -86,14 +95,13 @@ export function useContacts(filters?: {
           data.is_favorite ? 'Contato adicionado aos favoritos!' : 'Contato removido dos favoritos!'
         );
       },
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao alternar favorito');
-      },
     });
 
   // Real-time subscription para contatos
   useEffect(() => {
-    if (!contacts.length) return;
+    if (!contacts.length) {
+      return;
+    }
 
     const channel = supabase
       .channel('contacts_changes')
@@ -119,18 +127,18 @@ export function useContacts(filters?: {
 
   return {
     contacts,
-    total,
-    isLoading,
-    error,
-    refetch,
     createContact,
-    updateContact,
     deleteContact,
-    toggleFavorite,
+    error,
     isCreating,
-    isUpdating,
     isDeleting,
+    isLoading,
     isTogglingFavorite,
+    isUpdating,
+    refetch,
+    toggleFavorite,
+    total,
+    updateContact,
   };
 }
 
@@ -146,8 +154,8 @@ export function useContact(contactId: string) {
 
   return {
     contact,
-    isLoading,
     error,
+    isLoading,
   };
 }
 
@@ -158,9 +166,9 @@ export function useFavoriteContacts() {
   const { data: favoriteContacts, isLoading, error } = trpc.contacts.getFavorites.useQuery();
 
   return {
+    error,
     favoriteContacts: favoriteContacts || [],
     isLoading,
-    error,
   };
 }
 
@@ -172,12 +180,12 @@ export function useContactSearch(query: string, limit: number = 10) {
     data: searchResults,
     isLoading,
     error,
-  } = trpc.contacts.search.useQuery({ query, limit }, { enabled: !!query && query.length >= 2 });
+  } = trpc.contacts.search.useQuery({ limit, query }, { enabled: !!query && query.length >= 2 });
 
   return {
-    searchResults: searchResults || [],
-    isLoading,
     error,
+    isLoading,
+    searchResults: searchResults || [],
   };
 }
 
@@ -188,9 +196,9 @@ export function useContactsStats() {
   const { data: stats, isLoading, error } = trpc.contacts.getStats.useQuery();
 
   return {
-    stats,
-    isLoading,
     error,
+    isLoading,
+    stats,
   };
 }
 
@@ -205,8 +213,8 @@ export function useRecentContacts(limit: number = 5) {
 
   return {
     contacts: data?.contacts || [],
-    isLoading,
     error,
+    isLoading,
   };
 }
 
@@ -313,8 +321,8 @@ export function useContactValidation() {
   };
 
   return {
+    validateCPF,
     validateEmail,
     validatePhone,
-    validateCPF,
   };
 }

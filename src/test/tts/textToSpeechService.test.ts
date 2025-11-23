@@ -7,7 +7,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createTTSService, type TextToSpeechService } from '@/lib/tts/textToSpeechService';
+import type { TextToSpeechService } from '@/lib/tts/textToSpeechService';
+import { createTTSService } from '@/lib/tts/textToSpeechService';
 
 // Create a mock SpeechSynthesisUtterance class
 class MockSpeechSynthesisUtterance {
@@ -50,37 +51,39 @@ describe('TextToSpeechService', () => {
 
     // Setup fresh mock for each test
     mockSpeechSynthesis = {
-      speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
-        // Automatically trigger onend for success tests
-        setTimeout(() => {
-          if (utterance.onend) utterance.onend();
-        }, 10);
-      }),
+      addEventListener: vi.fn(),
       cancel: vi.fn(),
-      pause: vi.fn(),
-      resume: vi.fn(),
+      dispatchEvent: vi.fn(),
       getVoices: vi.fn(() => [
         {
-          name: 'Google português do Brasil',
-          lang: 'pt-BR',
           default: false,
+          lang: 'pt-BR',
           localService: false,
+          name: 'Google português do Brasil',
           voiceURI: 'Google português do Brasil',
         },
       ]),
-      speaking: false,
+      pause: vi.fn(),
       paused: false,
       pending: false,
-      addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
+      resume: vi.fn(),
+      speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
+        // Automatically trigger onend for success tests
+        setTimeout(() => {
+          if (utterance.onend) {
+            utterance.onend();
+          }
+        }, 10);
+      }),
+      speaking: false,
     };
 
     // Inject dependencies
     tts = createTTSService(undefined, {
-      speechSynthesis: mockSpeechSynthesis,
       SpeechSynthesisUtterance:
         MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+      speechSynthesis: mockSpeechSynthesis,
     });
   });
 
@@ -98,13 +101,13 @@ describe('TextToSpeechService', () => {
       const customTTS = createTTSService(
         {
           rate: 1.2,
-          volume: 1.0,
           ssmlEnabled: false,
+          volume: 1.0,
         },
         {
-          speechSynthesis: mockSpeechSynthesis,
           SpeechSynthesisUtterance:
             MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+          speechSynthesis: mockSpeechSynthesis,
         }
       );
 
@@ -180,9 +183,9 @@ describe('TextToSpeechService', () => {
       const cachedTTS = createTTSService(
         { cachingEnabled: true },
         {
-          speechSynthesis: mockSpeechSynthesis,
           SpeechSynthesisUtterance:
             MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+          speechSynthesis: mockSpeechSynthesis,
         }
       );
 

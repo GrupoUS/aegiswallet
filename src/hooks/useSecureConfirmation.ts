@@ -3,11 +3,8 @@
  */
 
 import { useCallback, useState } from 'react';
-import {
-  type ConfirmationResult,
-  getVoiceConfirmationService,
-  type VoiceConfirmationConfig,
-} from '@/lib/security/voiceConfirmation';
+import type { ConfirmationResult, VoiceConfirmationConfig } from '@/lib/security/voiceConfirmation';
+import { getVoiceConfirmationService } from '@/lib/security/voiceConfirmation';
 
 export function useSecureConfirmation(config?: Partial<VoiceConfirmationConfig>) {
   const [isConfirming, setIsConfirming] = useState(false);
@@ -35,10 +32,10 @@ export function useSecureConfirmation(config?: Partial<VoiceConfirmationConfig>)
         const errorMessage = err instanceof Error ? err.message : 'Confirmation failed';
         setError(errorMessage);
         return {
-          success: false,
-          method: 'fallback' as const,
           confidence: 0,
+          method: 'fallback' as const,
           processingTime: 0,
+          success: false,
         };
       } finally {
         setIsConfirming(false);
@@ -53,10 +50,10 @@ export function useSecureConfirmation(config?: Partial<VoiceConfirmationConfig>)
   }, []);
 
   return {
-    isConfirming,
-    result,
-    error,
     confirmTransaction,
+    error,
+    isConfirming,
     reset,
+    result,
   };
 }

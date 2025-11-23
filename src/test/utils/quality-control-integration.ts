@@ -6,50 +6,50 @@ export interface QualityControlPhase {
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   startTime?: Date;
   endTime?: Date;
-  errors: Array<{
+  errors: {
     id: string;
     type: 'code_quality' | 'security' | 'performance' | 'compliance';
     severity: 'critical' | 'high' | 'medium' | 'low';
     message: string;
     location?: string;
     resolution?: string;
-  }>;
+  }[];
   research?: {
-    sources: Array<{
+    sources: {
       type: 'context7' | 'tavily' | 'archon' | 'project_memory';
       query: string;
       result: unknown;
       confidence: number;
-    }>;
+    }[];
     recommendations: string[];
     bestPractices: string[];
   };
   plan?: {
-    atomicTasks: Array<{
+    atomicTasks: {
       id: string;
       name: string;
       estimatedTime: number; // minutes
       priority: 'P0' | 'P1' | 'P2' | 'P3';
       dependencies: string[];
       validationCriteria: string[];
-    }>;
+    }[];
   };
   execution?: {
     completedTasks: string[];
-    validationResults: Array<{
+    validationResults: {
       taskId: string;
       passed: boolean;
       metrics: Record<string, number>;
       notes?: string;
-    }>;
+    }[];
   };
 }
 
 export class QualityControlTestingFramework {
   private currentPhase: QualityControlPhase = {
+    errors: [],
     phase: 'detection',
     status: 'pending',
-    errors: [],
   };
 
   private phases: Record<string, QualityControlPhase> = {};
@@ -61,10 +61,10 @@ export class QualityControlTestingFramework {
   // Phase 1: Error Detection & Analysis
   async startDetectionPhase(): Promise<QualityControlPhase> {
     this.currentPhase = {
-      phase: 'detection',
-      status: 'in_progress',
-      startTime: new Date(),
       errors: [],
+      phase: 'detection',
+      startTime: new Date(),
+      status: 'in_progress',
     };
 
     // Run comprehensive test suite for error detection
@@ -81,15 +81,15 @@ export class QualityControlTestingFramework {
   // Phase 2: Research-Driven Solution Planning
   async startResearchPhase(errors: QualityControlPhase['errors']): Promise<QualityControlPhase> {
     this.currentPhase = {
-      phase: 'research',
-      status: 'in_progress',
-      startTime: new Date(),
       errors,
+      phase: 'research',
       research: {
-        sources: [],
-        recommendations: [],
         bestPractices: [],
+        recommendations: [],
+        sources: [],
       },
+      startTime: new Date(),
+      status: 'in_progress',
     };
 
     // Research solutions for each error category
@@ -116,14 +116,14 @@ export class QualityControlTestingFramework {
     researchData: QualityControlPhase['research']
   ): Promise<QualityControlPhase> {
     this.currentPhase = {
-      phase: 'planning',
-      status: 'in_progress',
-      startTime: new Date(),
       errors: [],
-      research: researchData,
+      phase: 'planning',
       plan: {
         atomicTasks: [],
       },
+      research: researchData,
+      startTime: new Date(),
+      status: 'in_progress',
     };
 
     // Decompose research findings into atomic tasks
@@ -142,15 +142,15 @@ export class QualityControlTestingFramework {
   // Phase 4: Systematic Execution
   async startExecutionPhase(plan: QualityControlPhase['plan']): Promise<QualityControlPhase> {
     this.currentPhase = {
-      phase: 'execution',
-      status: 'in_progress',
-      startTime: new Date(),
       errors: [],
-      plan,
       execution: {
         completedTasks: [],
         validationResults: [],
       },
+      phase: 'execution',
+      plan,
+      startTime: new Date(),
+      status: 'in_progress',
     };
 
     // Execute atomic tasks
@@ -216,10 +216,10 @@ export class QualityControlTestingFramework {
         if (!passed) {
           errors.push({
             id: `${category.category}_${test.name.replace(/\s+/g, '_').toLowerCase()}`,
-            type: category.category as QualityControlPhase['errors'][number]['type'],
-            severity: test.severity,
-            message: `Test failed: ${test.name}`,
             location: `src/test/${category.category}/`,
+            message: `Test failed: ${test.name}`,
+            severity: test.severity,
+            type: category.category as QualityControlPhase['errors'][number]['type'],
           });
         }
       }
@@ -234,31 +234,31 @@ export class QualityControlTestingFramework {
     // Mock research - in real implementation this would use Context7, Tavily, etc.
     const researchSources = {
       code_quality: {
-        type: 'context7' as const,
-        query: `Biome ${error.message} best practices`,
         confidence: 0.95,
+        query: `Biome ${error.message} best practices`,
         result: {
-          solution: 'Configure Biome rules and run with --write flag',
           examples: ['bunx biome check --write src'],
+          solution: 'Configure Biome rules and run with --write flag',
         },
-      },
-      security: {
-        type: 'tavily' as const,
-        query: `LGPD compliance ${error.message} 2025`,
-        confidence: 0.92,
-        result: {
-          solution: 'Implement data masking and consent management',
-          examples: ['Use zod validation for LGPD compliance'],
-        },
+        type: 'context7' as const,
       },
       performance: {
-        type: 'archon' as const,
-        query: `${error.message} optimization techniques`,
         confidence: 0.88,
+        query: `${error.message} optimization techniques`,
         result: {
-          solution: 'Optimize bundle splitting and lazy loading',
           examples: ['Dynamic imports for non-critical features'],
+          solution: 'Optimize bundle splitting and lazy loading',
         },
+        type: 'archon' as const,
+      },
+      security: {
+        confidence: 0.92,
+        query: `LGPD compliance ${error.message} 2025`,
+        result: {
+          examples: ['Use zod validation for LGPD compliance'],
+          solution: 'Implement data masking and consent management',
+        },
+        type: 'tavily' as const,
       },
     };
 
@@ -270,7 +270,9 @@ export class QualityControlTestingFramework {
 
     const errorsByType = errors.reduce(
       (acc, error) => {
-        if (!acc[error.type]) acc[error.type] = [];
+        if (!acc[error.type]) {
+          acc[error.type] = [];
+        }
         acc[error.type].push(error);
         return acc;
       },
@@ -319,19 +321,19 @@ export class QualityControlTestingFramework {
   ): QualityControlPhase['plan']['atomicTasks'] {
     return [
       {
+        dependencies: [],
+        estimatedTime: 20,
         id: 'task-001',
         name: 'Configure Biome for healthcare compliance',
-        estimatedTime: 20,
         priority: 'P0',
-        dependencies: [],
         validationCriteria: ['Biome lints test files', 'Healthcare rules enabled'],
       },
       {
+        dependencies: ['task-001'],
+        estimatedTime: 25,
         id: 'task-002',
         name: 'Implement LGPD data masking utilities',
-        estimatedTime: 25,
         priority: 'P0',
-        dependencies: ['task-001'],
         validationCriteria: [
           'CPF masking works',
           'Phone number masking works',
@@ -339,11 +341,11 @@ export class QualityControlTestingFramework {
         ],
       },
       {
+        dependencies: [],
+        estimatedTime: 30,
         id: 'task-003',
         name: 'Add voice interface testing',
-        estimatedTime: 30,
         priority: 'P1',
-        dependencies: [],
         validationCriteria: [
           'Portuguese commands recognized',
           '95%+ confidence threshold',
@@ -351,11 +353,11 @@ export class QualityControlTestingFramework {
         ],
       },
       {
+        dependencies: ['task-002'],
+        estimatedTime: 25,
         id: 'task-004',
         name: 'Setup Supabase RLS testing',
-        estimatedTime: 25,
         priority: 'P0',
-        dependencies: ['task-002'],
         validationCriteria: [
           'Patient data access controls',
           'Role-based permissions',
@@ -363,11 +365,11 @@ export class QualityControlTestingFramework {
         ],
       },
       {
+        dependencies: [],
+        estimatedTime: 15,
         id: 'task-005',
         name: 'Configure Vitest healthcare coverage',
-        estimatedTime: 15,
         priority: 'P1',
-        dependencies: [],
         validationCriteria: [
           '95% coverage for patient features',
           '90% global coverage',
@@ -388,14 +390,14 @@ export class QualityControlTestingFramework {
     const passed = Math.random() > 0.1; // 90% success rate for demo
 
     return {
-      taskId: task.id,
-      passed,
       metrics: {
         executionTime: Math.round(executionTime * 100) / 100,
         coverage: Math.round(Math.random() * 20 + 80), // 80-100%
         performance: Math.round(Math.random() * 30 + 70), // 70-100
       },
       notes: passed ? 'Task completed successfully' : 'Task requires further investigation',
+      passed,
+      taskId: task.id,
     };
   }
 
@@ -421,15 +423,15 @@ export class QualityControlTestingFramework {
 
     return {
       phases: this.phases,
+      recommendations: this.phases.research?.recommendations || [],
       summary: {
-        totalErrors: allErrors.length,
         criticalErrors: allErrors.filter((e) => e.severity === 'critical').length,
-        tasksCompleted: completedTasks.length,
-        totalTasks: allTasks.length,
         successRate:
           allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0,
+        tasksCompleted: completedTasks.length,
+        totalErrors: allErrors.length,
+        totalTasks: allTasks.length,
       },
-      recommendations: this.phases.research?.recommendations || [],
     };
   }
 }

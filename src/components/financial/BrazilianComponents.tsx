@@ -206,8 +206,8 @@ export function PaymentReminder({
 // Utility function for currency formatting
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
     currency: 'BRL',
+    style: 'currency',
   }).format(value);
 }
 
@@ -226,23 +226,23 @@ export function QuickActions({
 }: QuickActionsProps) {
   const actions = [
     {
+      icon: <TrendingUp className="h-5 w-5" />,
       id: 'pix-transfer',
       label: 'Transferir PIX',
-      icon: <TrendingUp className="h-5 w-5" />,
       onClick: onPixTransfer,
       primary: true,
     },
     {
+      icon: <Calendar className="h-5 w-5" />,
       id: 'pay-bill',
       label: 'Pagar Conta',
-      icon: <Calendar className="h-5 w-5" />,
       onClick: onPayBill,
       primary: false,
     },
     {
+      icon: <DollarSign className="h-5 w-5" />,
       id: 'view-balance',
       label: 'Ver Saldo',
-      icon: <DollarSign className="h-5 w-5" />,
       onClick: onViewBalance,
       primary: false,
     },

@@ -15,9 +15,9 @@ export class DataIngestionPipeline {
       () => {
         this.syncAllAccounts().catch((error) =>
           logger.error('Data ingestion sync failed', {
-            operation: 'data_ingestion_sync',
             component: 'system',
             error: (error as Error).message,
+            operation: 'data_ingestion_sync',
           })
         );
       },
@@ -34,7 +34,9 @@ export class DataIngestionPipeline {
 
   async syncAllAccounts(): Promise<void> {
     const { data: users } = await supabase.from('user_bank_links').select('*');
-    if (!users) return;
+    if (!users) {
+      return;
+    }
 
     const connector = getOpenBankingConnector();
 
@@ -55,13 +57,13 @@ export class DataIngestionPipeline {
 
     for (const tx of transactions) {
       await supabase.from('transactions').upsert({
-        user_id: userId,
         account_id: accountId,
-        transaction_date: tx.date.toISOString(),
         amount: tx.amount,
-        description: tx.description,
-        transaction_type: tx.type,
         category_id: tx.category,
+        description: tx.description,
+        transaction_date: tx.date.toISOString(),
+        transaction_type: tx.type,
+        user_id: userId,
       });
     }
   }

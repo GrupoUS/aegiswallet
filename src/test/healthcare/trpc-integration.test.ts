@@ -7,20 +7,6 @@ import type { TestUtils } from '../healthcare-setup';
 
 // Mock tRPC router for testing
 const _mockRouter = {
-  patients: {
-    getById: {
-      query: vi.fn(),
-    },
-    create: {
-      mutation: vi.fn(),
-    },
-    update: {
-      mutation: vi.fn(),
-    },
-    delete: {
-      mutation: vi.fn(),
-    },
-  },
   appointments: {
     create: {
       mutation: vi.fn(),
@@ -29,12 +15,26 @@ const _mockRouter = {
       query: vi.fn(),
     },
   },
-  payments: {
-    process: {
+  patients: {
+    create: {
       mutation: vi.fn(),
     },
+    delete: {
+      mutation: vi.fn(),
+    },
+    getById: {
+      query: vi.fn(),
+    },
+    update: {
+      mutation: vi.fn(),
+    },
+  },
+  payments: {
     history: {
       query: vi.fn(),
+    },
+    process: {
+      mutation: vi.fn(),
     },
   },
   voice: {
@@ -49,35 +49,58 @@ const createTrpcMock = () => {
   const msw = createTRPCMsw<AppRouter>();
 
   return {
-    patients: {
-      getById: msw.patients.getById.query((req, res, ctx) => {
-        const { id } = req.input;
+    appointments: {
+      create: msw.appointments.create.mutation((req, res, ctx) => {
+        const appointmentData = req.input;
 
-        // Mock patient data with LGPD compliance
-        if (id === 'test-patient-001') {
+        // Validate required fields
+        if (!appointmentData.patientId || !appointmentData.dateTime) {
           return res(
+            ctx.status(400),
             ctx.data({
-              id: 'test-patient-001',
-              name: 'João Silva',
-              email: 'joao.silva@example.com',
-              phone: '+55******4321', // LGPD masked
-              cpf: '***.***.***-**', // LGPD masked
-              lgpdConsent: {
-                timestamp: '2025-01-15T10:30:00Z',
-                ip: '127.0.0.1',
-                deviceId: 'test-device-001',
-                consentType: 'treatment',
-                version: '1.0',
-              },
-              createdAt: '2025-01-15T10:30:00Z',
-              updatedAt: '2025-01-15T10:30:00Z',
+              code: 'MISSING_REQUIRED_FIELDS',
+              error: 'Missing required fields',
             })
           );
         }
 
-        return res(ctx.status(404), ctx.data({ error: 'Patient not found' }));
+        const newAppointment = {
+          id: 'appointment-001',
+          ...appointmentData,
+          status: 'scheduled',
+          createdAt: new Date().toISOString(),
+        };
+
+        return res(ctx.data(newAppointment));
       }),
 
+      list: msw.appointments.list.query((req, res, ctx) => {
+        const { patientId, dateRange } = req.input;
+
+        // Mock appointment data
+        const appointments = [
+          {
+            dateTime: '2025-01-20T14:00:00Z',
+            doctorId: 'doctor-001',
+            id: 'appointment-001',
+            patientId: 'test-patient-001',
+            status: 'scheduled',
+            type: 'consultation',
+          },
+          {
+            dateTime: '2025-01-25T10:00:00Z',
+            doctorId: 'doctor-002',
+            id: 'appointment-002',
+            patientId: 'test-patient-001',
+            status: 'confirmed',
+            type: 'follow-up',
+          },
+        ].filter((apt) => !patientId || apt.patientId === patientId);
+
+        return res(ctx.data(appointments));
+      }),
+    },
+    patients: {
       create: msw.patients.create.mutation((req, res, ctx) => {
         const patientData = req.input;
 
@@ -86,8 +109,8 @@ const createTrpcMock = () => {
           return res(
             ctx.status(400),
             ctx.data({
-              error: 'LGPD consent is required',
               code: 'LGPD_CONSENT_REQUIRED',
+              error: 'LGPD consent is required',
             })
           );
         }
@@ -106,7 +129,42 @@ const createTrpcMock = () => {
 
         return res(ctx.data(maskedData));
       }),
+      delete: msw.patients.delete.mutation((req, res, ctx) => {
+        const { id } = req.input;
 
+        if (id === 'test-patient-001') {
+          return res(ctx.data({ deletedAt: new Date().toISOString(), success: true }));
+        }
+
+        return res(ctx.status(404), ctx.data({ error: 'Patient not found' }));
+      }),
+      getById: msw.patients.getById.query((req, res, ctx) => {
+        const { id } = req.input;
+
+        // Mock patient data with LGPD compliance
+        if (id === 'test-patient-001') {
+          return res(
+            ctx.data({
+              id: 'test-patient-001',
+              name: 'João Silva',
+              email: 'joao.silva@example.com',
+              phone: '+55******4321', // LGPD masked
+              cpf: '***.***.***-**', // LGPD masked
+              lgpdConsent: {
+                consentType: 'treatment',
+                deviceId: 'test-device-001',
+                ip: '127.0.0.1',
+                timestamp: '2025-01-15T10:30:00Z',
+                version: '1.0',
+              },
+              createdAt: '2025-01-15T10:30:00Z',
+              updatedAt: '2025-01-15T10:30:00Z',
+            })
+          );
+        }
+
+        return res(ctx.status(404), ctx.data({ error: 'Patient not found' }));
+      }),
       update: msw.patients.update.mutation((req, res, ctx) => {
         const { id, data } = req.input;
 
@@ -128,71 +186,35 @@ const createTrpcMock = () => {
 
         return res(ctx.data(updatedData));
       }),
-
-      delete: msw.patients.delete.mutation((req, res, ctx) => {
-        const { id } = req.input;
-
-        if (id === 'test-patient-001') {
-          return res(ctx.data({ success: true, deletedAt: new Date().toISOString() }));
-        }
-
-        return res(ctx.status(404), ctx.data({ error: 'Patient not found' }));
-      }),
     },
+    payments: {
+      history: msw.payments.history.query((req, res, ctx) => {
+        const { patientId, limit = 10, offset = 0 } = req.input;
 
-    appointments: {
-      create: msw.appointments.create.mutation((req, res, ctx) => {
-        const appointmentData = req.input;
-
-        // Validate required fields
-        if (!appointmentData.patientId || !appointmentData.dateTime) {
-          return res(
-            ctx.status(400),
-            ctx.data({
-              error: 'Missing required fields',
-              code: 'MISSING_REQUIRED_FIELDS',
-            })
-          );
-        }
-
-        const newAppointment = {
-          id: 'appointment-001',
-          ...appointmentData,
-          status: 'scheduled',
-          createdAt: new Date().toISOString(),
-        };
-
-        return res(ctx.data(newAppointment));
-      }),
-
-      list: msw.appointments.list.query((req, res, ctx) => {
-        const { patientId, dateRange } = req.input;
-
-        // Mock appointment data
-        const appointments = [
+        // Mock payment history
+        const payments = [
           {
-            id: 'appointment-001',
+            amount: 150.0,
+            id: 'payment-001',
             patientId: 'test-patient-001',
-            doctorId: 'doctor-001',
-            dateTime: '2025-01-20T14:00:00Z',
-            status: 'scheduled',
+            processedAt: '2025-01-15T14:30:00Z',
+            status: 'completed',
             type: 'consultation',
           },
           {
-            id: 'appointment-002',
+            amount: 75.5,
+            id: 'payment-002',
             patientId: 'test-patient-001',
-            doctorId: 'doctor-002',
-            dateTime: '2025-01-25T10:00:00Z',
-            status: 'confirmed',
-            type: 'follow-up',
+            processedAt: '2025-01-10T11:15:00Z',
+            status: 'completed',
+            type: 'procedure',
           },
-        ].filter((apt) => !patientId || apt.patientId === patientId);
+        ]
+          .filter((payment) => !patientId || payment.patientId === patientId)
+          .slice(offset, offset + limit);
 
-        return res(ctx.data(appointments));
+        return res(ctx.data(payments));
       }),
-    },
-
-    payments: {
       process: msw.payments.process.mutation((req, res, ctx) => {
         const { amount, recipient, type, metadata } = req.input;
 
@@ -201,56 +223,27 @@ const createTrpcMock = () => {
           return res(
             ctx.status(400),
             ctx.data({
-              error: 'Invalid amount',
               code: 'INVALID_AMOUNT',
+              error: 'Invalid amount',
             })
           );
         }
 
         // Process payment (mock)
         const payment = {
-          id: 'payment-001',
           amount,
+          id: 'payment-001',
+          metadata,
+          processedAt: new Date().toISOString(),
           recipient,
-          type,
           status: 'completed',
           transactionId: `TXN${Date.now()}`,
-          processedAt: new Date().toISOString(),
-          metadata,
+          type,
         };
 
         return res(ctx.data(payment));
       }),
-
-      history: msw.payments.history.query((req, res, ctx) => {
-        const { patientId, limit = 10, offset = 0 } = req.input;
-
-        // Mock payment history
-        const payments = [
-          {
-            id: 'payment-001',
-            patientId: 'test-patient-001',
-            amount: 150.0,
-            type: 'consultation',
-            status: 'completed',
-            processedAt: '2025-01-15T14:30:00Z',
-          },
-          {
-            id: 'payment-002',
-            patientId: 'test-patient-001',
-            amount: 75.5,
-            type: 'procedure',
-            status: 'completed',
-            processedAt: '2025-01-10T11:15:00Z',
-          },
-        ]
-          .filter((payment) => !patientId || payment.patientId === patientId)
-          .slice(offset, offset + limit);
-
-        return res(ctx.data(payments));
-      }),
     },
-
     voice: {
       processCommand: msw.voice.processCommand.mutation((req, res, ctx) => {
         const { command, confidence, language } = req.input;
@@ -260,8 +253,8 @@ const createTrpcMock = () => {
           return res(
             ctx.status(400),
             ctx.data({
-              error: 'Voice command confidence too low',
               code: 'LOW_CONFIDENCE',
+              error: 'Voice command confidence too low',
               minRequired: 0.8,
             })
           );
@@ -269,9 +262,9 @@ const createTrpcMock = () => {
 
         // Process command (mock NLP)
         const processedCommand = {
-          intent: 'unknown',
-          entities: {},
           confidence,
+          entities: {},
+          intent: 'unknown',
           language,
           processedAt: new Date().toISOString(),
         };
@@ -315,9 +308,9 @@ describe('tRPC Type-Safe Integration Testing', () => {
       const patientData = await trpc.patients.getById.query({ id: 'test-patient-001' });
 
       expect(patientData).toMatchObject({
+        email: 'joao.silva@example.com',
         id: 'test-patient-001',
         name: 'João Silva',
-        email: 'joao.silva@example.com',
       });
 
       // Validate LGPD compliance
@@ -328,26 +321,26 @@ describe('tRPC Type-Safe Integration Testing', () => {
 
     it('should require LGPD consent for patient creation', async () => {
       const patientData = {
-        name: 'Maria Santos',
-        email: 'maria.santos@example.com',
-        phone: '11987654321',
         cpf: '98765432100',
+        email: 'maria.santos@example.com',
+        name: 'Maria Santos',
+        phone: '11987654321',
       };
 
       // Try to create patient without consent
       await expect(trpc.patients.create.mutate(patientData)).rejects.toMatchObject({
-        error: 'LGPD consent is required',
         code: 'LGPD_CONSENT_REQUIRED',
+        error: 'LGPD consent is required',
       });
     });
 
     it('should create patient with LGPD consent and return masked data', async () => {
       const patientData = {
-        name: 'Maria Santos',
-        email: 'maria.santos@example.com',
-        phone: '11987654321',
         cpf: '98765432100',
+        email: 'maria.santos@example.com',
         lgpdConsent: (global.testUtils as TestUtils).createMockLGPDConsent(),
+        name: 'Maria Santos',
+        phone: '11987654321',
       };
 
       const result = await trpc.patients.create.mutate(patientData);
@@ -370,8 +363,8 @@ describe('tRPC Type-Safe Integration Testing', () => {
       const result = await trpc.patients.delete.mutate({ id: 'test-patient-001' });
 
       expect(result).toMatchObject({
-        success: true,
         deletedAt: expect.any(String),
+        success: true,
       });
 
       // Verify audit logging was called
@@ -389,29 +382,29 @@ describe('tRPC Type-Safe Integration Testing', () => {
       };
 
       await expect(trpc.appointments.create.mutate(invalidAppointment)).rejects.toMatchObject({
-        error: 'Missing required fields',
         code: 'MISSING_REQUIRED_FIELDS',
+        error: 'Missing required fields',
       });
     });
 
     it('should create appointment with valid data', async () => {
       const appointmentData = {
-        patientId: 'test-patient-001',
-        doctorId: 'doctor-001',
         dateTime: '2025-01-20T14:00:00Z',
+        doctorId: 'doctor-001',
+        patientId: 'test-patient-001',
         type: 'consultation',
       };
 
       const result = await trpc.appointments.create.mutate(appointmentData);
 
       expect(result).toMatchObject({
+        createdAt: expect.any(String),
+        dateTime: '2025-01-20T14:00:00Z',
+        doctorId: 'doctor-001',
         id: expect.any(String),
         patientId: 'test-patient-001',
-        doctorId: 'doctor-001',
-        dateTime: '2025-01-20T14:00:00Z',
-        type: 'consultation',
         status: 'scheduled',
-        createdAt: expect.any(String),
+        type: 'consultation',
       });
     });
 
@@ -437,44 +430,44 @@ describe('tRPC Type-Safe Integration Testing', () => {
       };
 
       await expect(trpc.payments.process.mutate(invalidPayment)).rejects.toMatchObject({
-        error: 'Invalid amount',
         code: 'INVALID_AMOUNT',
+        error: 'Invalid amount',
       });
     });
 
     it('should process valid payment successfully', async () => {
       const paymentData = {
         amount: 150.0,
-        recipient: 'Dr. João Silva',
-        type: 'consultation',
         metadata: {
           appointmentId: 'appointment-001',
         },
+        recipient: 'Dr. João Silva',
+        type: 'consultation',
       };
 
       const result = await trpc.payments.process.mutate(paymentData);
 
       expect(result).toMatchObject({
-        id: expect.any(String),
         amount: 150.0,
+        id: expect.any(String),
+        processedAt: expect.any(String),
         recipient: 'Dr. João Silva',
-        type: 'consultation',
         status: 'completed',
         transactionId: expect.stringMatching(/^TXN\d+$/),
-        processedAt: expect.any(String),
+        type: 'consultation',
       });
     });
 
     it('should retrieve payment history for patient', async () => {
       const payments = await trpc.payments.history.query({
-        patientId: 'test-patient-001',
         limit: 10,
+        patientId: 'test-patient-001',
       });
 
       expect(payments).toHaveLength(2);
       expect(payments[0]).toMatchObject({
-        patientId: 'test-patient-001',
         amount: 150.0,
+        patientId: 'test-patient-001',
         status: 'completed',
       });
     });
@@ -489,8 +482,8 @@ describe('tRPC Type-Safe Integration Testing', () => {
       };
 
       await expect(trpc.voice.processCommand.mutate(lowConfidenceCommand)).rejects.toMatchObject({
-        error: 'Voice command confidence too low',
         code: 'LOW_CONFIDENCE',
+        error: 'Voice command confidence too low',
         minRequired: 0.8,
       });
     });
@@ -505,11 +498,11 @@ describe('tRPC Type-Safe Integration Testing', () => {
       const result = await trpc.voice.processCommand.mutate(transferCommand);
 
       expect(result).toMatchObject({
-        intent: 'payment_transfer',
+        confidence: 0.95,
         entities: {
           amount: 100,
         },
-        confidence: 0.95,
+        intent: 'payment_transfer',
         language: 'pt-BR',
         processedAt: expect.any(String),
       });
@@ -525,8 +518,8 @@ describe('tRPC Type-Safe Integration Testing', () => {
       const result = await trpc.voice.processCommand.mutate(appointmentCommand);
 
       expect(result).toMatchObject({
-        intent: 'appointment_booking',
         confidence: 0.92,
+        intent: 'appointment_booking',
         language: 'pt-BR',
         processedAt: expect.any(String),
       });
@@ -538,15 +531,15 @@ describe('tRPC Type-Safe Integration Testing', () => {
       // These would cause TypeScript compilation errors if types were incorrect
       const validPatientQuery = { id: 'string' }; // Correct type
       const validPatientMutation = {
-        name: 'string',
         email: 'string',
         lgpdConsent: {
-          timestamp: 'string',
-          ip: 'string',
-          deviceId: 'string',
           consentType: 'string',
+          deviceId: 'string',
+          ip: 'string',
+          timestamp: 'string',
           version: 'string',
         },
+        name: 'string',
       }; // Correct type
 
       expect(typeof validPatientQuery.id).toBe('string');

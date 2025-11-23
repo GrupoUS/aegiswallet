@@ -1,26 +1,25 @@
+import type { DragEndEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core';
 import {
   DndContext,
-  type DragEndEvent,
   DragOverlay,
-  type DragStartEvent,
   MouseSensor,
   PointerSensor,
   TouchSensor,
-  type UniqueIdentifier,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import { addMinutes, differenceInMinutes } from 'date-fns';
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
 import type { CalendarEvent, EventColor } from './types';
 
 // Define the context type
-type CalendarDndContextType = {
+interface CalendarDndContextType {
   activeEvent: CalendarEvent | null;
   activeId: UniqueIdentifier | null;
   isUpdating: boolean;
-};
+}
 
 // Create the context
 const CalendarDndContext = createContext<CalendarDndContextType>({
@@ -141,9 +140,9 @@ export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProv
 
           // Convert CalendarEvent to FinancialEvent format for database
           const financialEventUpdate = {
-            start: newStart,
+            color: updatedEvent.color as EventColor,
             end: newEnd,
-            color: updatedEvent.color as EventColor, // Type-safe color assignment
+            start: newStart, // Type-safe color assignment
           };
 
           // Persist to Supabase

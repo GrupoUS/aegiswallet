@@ -29,8 +29,8 @@ export class AsyncErrorBoundary extends Component<
   constructor(props: AsyncErrorBoundaryProps) {
     super(props);
     this.state = {
-      hasError: false,
       error: null,
+      hasError: false,
     };
   }
 
@@ -53,8 +53,8 @@ export class AsyncErrorBoundary extends Component<
     const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
 
     this.setState({
-      hasError: true,
       error,
+      hasError: true,
     });
 
     this.props.onError?.(error);
@@ -62,8 +62,8 @@ export class AsyncErrorBoundary extends Component<
 
   private handleRetry = () => {
     this.setState({
-      hasError: false,
       error: null,
+      hasError: false,
     });
   };
 

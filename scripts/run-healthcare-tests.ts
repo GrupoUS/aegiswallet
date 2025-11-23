@@ -50,34 +50,34 @@ interface TestReport {
 
 const HEALTHCARE_TEST_SUITES = [
   {
+    config: 'vitest.healthcare.config.ts',
+    critical: true,
     name: 'LGPD Compliance Tests',
     pattern: 'src/test/healthcare/lgpd-compliance.test.ts',
-    config: 'vitest.healthcare.config.ts',
-    critical: true,
   },
   {
+    config: 'vitest.healthcare.config.ts',
+    critical: true,
     name: 'Voice Interface Tests',
     pattern: 'src/test/healthcare/voice-interface.test.ts',
-    config: 'vitest.healthcare.config.ts',
-    critical: true,
   },
   {
+    config: 'vitest.healthcare.config.ts',
+    critical: true,
     name: 'tRPC Integration Tests',
     pattern: 'src/test/healthcare/trpc-integration.test.ts',
-    config: 'vitest.healthcare.config.ts',
-    critical: true,
   },
   {
+    config: 'vitest.healthcare.config.ts',
+    critical: true,
     name: 'Supabase RLS Tests',
     pattern: 'src/test/healthcare/supabase-rls.test.ts',
-    config: 'vitest.healthcare.config.ts',
-    critical: true,
   },
   {
-    name: 'Quality Control Integration',
-    pattern: 'src/test/utils/quality-control-integration.test.ts',
     config: 'vitest.healthcare.config.ts',
     critical: false,
+    name: 'Quality Control Integration',
+    pattern: 'src/test/utils/quality-control-integration.test.ts',
   },
 ];
 
@@ -99,14 +99,14 @@ function runCommand(
       stdio: 'pipe',
       ...options,
     });
-    return { stdout, stderr: '' };
+    return { stderr: '', stdout };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const execError = error as { stdout?: string; stderr?: string; message?: string };
 
     return {
-      stdout: execError.stdout || '',
       stderr: execError.stderr || errorMessage,
+      stdout: execError.stdout || '',
     };
   }
 }
@@ -134,19 +134,19 @@ function parseVitestOutput(output: string): TestResult {
 
   if (coverageMatch) {
     coverage = {
-      statements: parseInt(coverageMatch[1], 10),
       branches: parseInt(coverageMatch[2], 10),
       functions: parseInt(coverageMatch[3], 10),
       lines: parseInt(coverageMatch[4], 10),
+      statements: parseInt(coverageMatch[1], 10),
     };
   }
 
   return {
+    coverage,
+    duration,
+    errors: failed > 0 ? [`${failed} tests failed`] : undefined,
     name: '',
     status: failed > 0 ? 'failed' : passed > 0 ? 'passed' : 'skipped',
-    duration,
-    coverage,
-    errors: failed > 0 ? [`${failed} tests failed`] : undefined,
   };
 }
 
@@ -168,9 +168,9 @@ function runBiomeLinting(): { success: boolean; errors: string[]; score: number 
   const score = Math.max(0, 100 - errors.length * 5);
 
   return {
-    success,
     errors,
     score,
+    success,
   };
 }
 
@@ -217,9 +217,9 @@ function calculateQualityMetrics(
 
   return {
     codeQuality,
-    security,
-    performance,
     compliance,
+    performance,
+    security,
   };
 }
 
@@ -233,37 +233,37 @@ function generateTestReport(results: TestResult[], biomeScore: number): TestRepo
     .filter((r) => r.coverage)
     .reduce(
       (acc, r) => ({
-        lines: acc.lines + (r.coverage?.lines || 0),
-        functions: acc.functions + (r.coverage?.functions || 0),
         branches: acc.branches + (r.coverage?.branches || 0),
+        functions: acc.functions + (r.coverage?.functions || 0),
+        lines: acc.lines + (r.coverage?.lines || 0),
         statements: acc.statements + (r.coverage?.statements || 0),
       }),
-      { lines: 0, functions: 0, branches: 0, statements: 0 }
+      { branches: 0, functions: 0, lines: 0, statements: 0 }
     );
 
   const coverageCount = results.filter((r) => r.coverage).length;
   const averageCoverage =
     coverageCount > 0
       ? {
-          lines: Math.round(overallCoverage.lines / coverageCount),
-          functions: Math.round(overallCoverage.functions / coverageCount),
           branches: Math.round(overallCoverage.branches / coverageCount),
+          functions: Math.round(overallCoverage.functions / coverageCount),
+          lines: Math.round(overallCoverage.lines / coverageCount),
           statements: Math.round(overallCoverage.statements / coverageCount),
         }
       : undefined;
 
   return {
-    timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'test',
+    qualityMetrics: calculateQualityMetrics(results, biomeScore),
     results,
     summary: {
-      total: results.length,
-      passed,
-      failed,
-      skipped,
       coverage: averageCoverage,
+      failed,
+      passed,
+      skipped,
+      total: results.length,
     },
-    qualityMetrics: calculateQualityMetrics(results, biomeScore),
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -314,10 +314,10 @@ async function main(): Promise<void> {
         }
       } catch (error) {
         results.push({
-          name: suite.name,
-          status: 'failed',
           duration: 0,
           errors: [`Execution failed: ${error}`],
+          name: suite.name,
+          status: 'failed',
         });
       }
     }

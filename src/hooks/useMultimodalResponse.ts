@@ -14,10 +14,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLogger } from '@/hooks/useLogger';
-import {
-  buildMultimodalResponse,
-  type MultimodalResponse,
-} from '@/lib/multimodal/responseTemplates';
+import type { MultimodalResponse } from '@/lib/multimodal/responseTemplates';
+import { buildMultimodalResponse } from '@/lib/multimodal/responseTemplates';
 import type { IntentType } from '@/lib/nlu/types';
 import { getTTSService } from '@/lib/tts/textToSpeechService';
 
@@ -89,10 +87,10 @@ export function useMultimodalResponse(
   // State
   const [state, setState] = useState<MultimodalResponseState>({
     currentResponse: null,
-    isSpeaking: false,
-    isLoading: false,
     error: null,
     feedbackPrompt: false,
+    isLoading: false,
+    isSpeaking: false,
   });
 
   const [voiceEnabled, setVoiceEnabled] = useState(enableVoice);
@@ -106,11 +104,11 @@ export function useMultimodalResponse(
   const logger = useLogger({
     component: 'MultimodalResponse',
     defaultContext: {
-      module: 'multimodal-response',
-      enableVoice,
-      enableVisual,
       autoSpeak,
       collectFeedback,
+      enableVisual,
+      enableVoice,
+      module: 'multimodal-response',
     },
   });
 
@@ -153,9 +151,9 @@ export function useMultimodalResponse(
           if (ttsResult.duration > 800) {
             logger.warn(`TTS response time exceeded target: ${ttsResult.duration}ms`, {
               duration: ttsResult.duration,
-              target: 800,
-              responseId,
               intent: typeof intent === 'string' ? intent : 'unknown',
+              responseId,
+              target: 800,
             });
           }
 
@@ -173,11 +171,11 @@ export function useMultimodalResponse(
         }
       } catch (error) {
         logger.error('Error sending multimodal response', {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          intent: typeof intent === 'string' ? intent : 'unknown',
-          enableVoice,
           autoSpeak,
+          enableVoice,
+          error: error instanceof Error ? error.message : String(error),
+          intent: typeof intent === 'string' ? intent : 'unknown',
+          stack: error instanceof Error ? error.stack : undefined,
         });
         setState((prev) => ({
           ...prev,
@@ -229,7 +227,9 @@ export function useMultimodalResponse(
    * Repeat current response
    */
   const repeatResponse = useCallback(async () => {
-    if (!state.currentResponse) return;
+    if (!state.currentResponse) {
+      return;
+    }
 
     setState((prev) => ({ ...prev, isSpeaking: true }));
 
@@ -238,8 +238,8 @@ export function useMultimodalResponse(
     } catch (error) {
       logger.error('Error repeating multimodal response', {
         error: error instanceof Error ? error.message : String(error),
-        responseId: currentResponseId,
         hasVoiceResponse: !!state.currentResponse?.voice,
+        responseId: currentResponseId,
       });
     } finally {
       setState((prev) => ({ ...prev, isSpeaking: false }));
@@ -253,10 +253,10 @@ export function useMultimodalResponse(
     stopSpeaking();
     setState({
       currentResponse: null,
-      isSpeaking: false,
-      isLoading: false,
       error: null,
       feedbackPrompt: false,
+      isLoading: false,
+      isSpeaking: false,
     });
     setCurrentResponseId(null);
   }, [stopSpeaking]);
@@ -266,22 +266,24 @@ export function useMultimodalResponse(
    */
   const submitFeedback = useCallback(
     (rating: 1 | 2 | 3 | 4 | 5, comment?: string) => {
-      if (!currentResponseId) return;
+      if (!currentResponseId) {
+        return;
+      }
 
       const feedback: ResponseFeedback = {
-        responseId: currentResponseId,
-        rating,
-        helpful: rating >= 4,
         comment,
+        helpful: rating >= 4,
+        rating,
+        responseId: currentResponseId,
         timestamp: new Date(),
       };
 
       // Store feedback (in production, send to analytics/database)
       logger.userAction('Response feedback submitted', {
         component: 'MultimodalResponse',
-        rating,
-        helpful: feedback.helpful,
         hasComment: !!comment,
+        helpful: feedback.helpful,
+        rating,
         responseId: feedback.responseId,
       });
 
@@ -321,16 +323,16 @@ export function useMultimodalResponse(
   }, [ttsService.stop]);
 
   return {
-    state,
-    sendResponse,
-    stopSpeaking,
-    pauseSpeaking,
-    resumeSpeaking,
-    repeatResponse,
     clearResponse,
+    pauseSpeaking,
+    repeatResponse,
+    resumeSpeaking,
+    sendResponse,
+    state,
+    stopSpeaking,
     submitFeedback,
-    toggleVoice,
     toggleVisual,
+    toggleVoice,
   };
 }
 
@@ -343,10 +345,10 @@ export function useMultimodalResponse(
  */
 export function useResponseMetrics() {
   const [metrics, setMetrics] = useState({
-    totalResponses: 0,
     averageRating: 0,
     averageResponseTime: 0,
     feedbackCount: 0,
+    totalResponses: 0,
   });
 
   const trackResponse = useCallback((duration: number) => {
@@ -368,8 +370,8 @@ export function useResponseMetrics() {
 
   return {
     metrics,
-    trackResponse,
     trackFeedback,
+    trackResponse,
   };
 }
 

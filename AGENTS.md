@@ -80,12 +80,6 @@ CONTEXT7:
   selection_trigger: "Unfamiliar patterns, technology decisions, implementation guidance"
   coordination: "Used in planning phase for complex implementations"
 
-CHROME_DEVTOOLS:
-  primary_role: "UI Testing & Performance Validation"
-  use_cases: ["E2E testing", "Performance metrics", "UI validation"]
-  selection_trigger: "Frontend testing, performance validation, UI component testing"
-  coordination: "Used after implementation for validation"
-
 SHADCN:
   primary_role: "Component Library Management"
   use_cases: ["Component discovery", "UI patterns", "Design system integration"]
@@ -187,7 +181,7 @@ TERMINATION_CRITERIA:
 
 ```yaml
 PATTERN_RESEARCH_IMPLEMENTATION:
-  sequence: 
+  sequence:
     1. "sequential-thinking - Analyze requirements"
     2. "context7 - Research best practices"
     3. "serena - Analyze existing code"

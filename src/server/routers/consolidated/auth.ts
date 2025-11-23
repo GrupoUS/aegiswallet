@@ -21,7 +21,7 @@ export const authRouter = router({
   getSession: publicProcedure.query(async ({ ctx }) => {
     try {
       if (!ctx.session?.user) {
-        return { user: null, session: null };
+        return { session: null, user: null };
       }
 
       logOperation('session_check', ctx.user.id, 'auth', ctx.user.id, {
@@ -29,14 +29,14 @@ export const authRouter = router({
       });
 
       return {
-        user: ctx.user,
         session: ctx.session,
+        user: ctx.user,
       };
     } catch (error) {
       logError('session_check_error', ctx.user?.id, error as Error, {
         operation: 'getSession',
       });
-      return { user: null, session: null };
+      return { session: null, user: null };
     }
   }),
 
@@ -95,8 +95,8 @@ export const authRouter = router({
         recordAuthenticationAttempt(input.email, clientIP, true);
 
         logOperation('authentication_success', data.user?.id, 'auth', data.user?.id, {
-          email: input.email,
           clientIP,
+          email: input.email,
           timestamp: new Date().toISOString(),
         });
 
@@ -107,8 +107,8 @@ export const authRouter = router({
         }
 
         logError('authentication_unexpected_error', null, error as Error, {
-          email: input.email,
           clientIP,
+          email: input.email,
           operation: 'signIn',
         });
 
@@ -126,8 +126,8 @@ export const authRouter = router({
     .input(
       z.object({
         email: z.string().email('Email inválido'),
-        password: z.string().min(DEFAULT_PASSWORD_POLICY.minLength),
         name: z.string().min(2).max(100),
+        password: z.string().min(DEFAULT_PASSWORD_POLICY.minLength),
         phone: z.string().optional(),
       })
     )
@@ -157,13 +157,13 @@ export const authRouter = router({
         // Create user account
         const { data, error } = await ctx.supabase.auth.signUp({
           email: input.email,
-          password: input.password,
           options: {
             data: {
               full_name: input.name,
               phone: input.phone,
             },
           },
+          password: input.password,
         });
 
         if (error) {
@@ -179,9 +179,9 @@ export const authRouter = router({
         }
 
         logOperation('registration_success', data.user?.id, 'auth', data.user?.id, {
+          clientIP,
           email: input.email,
           name: input.name,
-          clientIP,
           timestamp: new Date().toISOString(),
         });
 
@@ -192,8 +192,8 @@ export const authRouter = router({
         }
 
         logError('registration_unexpected_error', null, error as Error, {
-          email: input.email,
           clientIP,
+          email: input.email,
           operation: 'signUp',
         });
 
@@ -272,8 +272,8 @@ export const authRouter = router({
         }
 
         logOperation('password_reset_requested', null, 'auth', null, {
-          email: input.email,
           clientIP,
+          email: input.email,
           timestamp: new Date().toISOString(),
         });
 
@@ -284,8 +284,8 @@ export const authRouter = router({
         }
 
         logError('password_reset_unexpected_error', null, error as Error, {
-          email: input.email,
           clientIP,
+          email: input.email,
           operation: 'resetPassword',
         });
 

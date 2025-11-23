@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Origin': '*',
 };
 
 // --- CRYPTO HELPERS (Same as auth) ---
@@ -12,8 +11,8 @@ async function getCryptoKey(secret: string) {
     'raw', encoder.encode(secret), { name: 'PBKDF2' }, false, ['deriveKey']
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: encoder.encode('aegiswallet_salt'), iterations: 100000, hash: 'SHA-256' },
-    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    { hash: 'SHA-256', iterations: 100000, name: 'PBKDF2', salt: encoder.encode('aegiswallet_salt') },
+    keyMaterial, { length: 256, name: 'AES-GCM' }, false, ['encrypt', 'decrypt']
   );
 }
 
@@ -22,7 +21,7 @@ async function decrypt(encryptedText: string, keyString: string): Promise<string
   const combined = new Uint8Array(atob(encryptedText).split('').map(c => c.charCodeAt(0)));
   const iv = combined.slice(0, 12);
   const data = combined.slice(12);
-  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+  const decrypted = await crypto.subtle.decrypt({ iv, name: 'AES-GCM' }, key, data);
   return new TextDecoder().decode(decrypted);
 }
 
@@ -30,7 +29,7 @@ async function encrypt(text: string, keyString: string): Promise<string> {
   const key = await getCryptoKey(keyString);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(text);
-  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+  const encrypted = await crypto.subtle.encrypt({ iv, name: 'AES-GCM' }, key, encoded);
   const encryptedArray = new Uint8Array(encrypted);
   const combined = new Uint8Array(iv.length + encryptedArray.length);
   combined.set(iv);
@@ -42,14 +41,9 @@ async function encrypt(text: string, keyString: string): Promise<string> {
 
 async function refreshGoogleToken(refreshToken: string, clientId: string, clientSecret: string) {
   const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
+      client_id: clientId, client_secret: clientSecret, grant_type: 'refresh_token', refresh_token: refreshToken,
+    }), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, method: 'POST',
   });
 
   const data = await response.json();
@@ -66,7 +60,7 @@ async function getValidAccessToken(supabase: any, userId: string, encryptionKey:
     .eq('user_id', userId)
     .single();
 
-  if (error || !tokens) throw new Error('Google tokens not found. Please connect your account.');
+  if (error || !tokens) {throw new Error('Google tokens not found. Please connect your account.');}
 
   const now = new Date();
   const expiry = new Date(tokens.expiry_timestamp);
@@ -97,7 +91,7 @@ async function getValidAccessToken(supabase: any, userId: string, encryptionKey:
 // --- MAIN HANDLER ---
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {return new Response('ok', { headers: corsHeaders });}
 
   try {
     const url = new URL(req.url);
@@ -109,15 +103,15 @@ Deno.serve(async (req) => {
     const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID') ?? '';
     const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '';
 
-    if (!encryptionKey) throw new Error('Configuration Error: TOKENS_ENCRYPTION_KEY missing');
+    if (!encryptionKey) {throw new Error('Configuration Error: TOKENS_ENCRYPTION_KEY missing');}
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Auth Check
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('Missing Authorization header');
+    if (!authHeader) {throw new Error('Missing Authorization header');}
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (userError || !user) throw new Error('Invalid user token');
+    if (userError || !user) {throw new Error('Invalid user token');}
     const userId = user.id;
 
     // 2. Get Settings
@@ -130,7 +124,7 @@ Deno.serve(async (req) => {
     if (!settings || !settings.sync_enabled) {
        if (action !== 'full_sync' && action !== 'sync_to_google') { // Allow explicit manual sync even if disabled? Let's enforce enabled check generally, but maybe sync_to_google comes from manual action
          // strict check for now
-         if (!settings?.sync_enabled) throw new Error('Sync is disabled in settings');
+         if (!settings?.sync_enabled) {throw new Error('Sync is disabled in settings');}
        }
     }
 
@@ -142,11 +136,11 @@ Deno.serve(async (req) => {
     // --- SYNC TO GOOGLE ---
     if (action === 'sync_to_google') {
       const { event_id } = await req.json();
-      if (!event_id) throw new Error('Missing event_id');
+      if (!event_id) {throw new Error('Missing event_id');}
 
       // Fetch Aegis Event
       const { data: event } = await supabase.from('financial_events').select('*').eq('id', event_id).single();
-      if (!event) throw new Error('Event not found');
+      if (!event) {throw new Error('Event not found');}
 
       // Fetch Mapping
       const { data: mapping } = await supabase
@@ -158,19 +152,13 @@ Deno.serve(async (req) => {
 
       // Prepare Google Event Resource
       const googleEvent: any = {
-        summary: event.title,
         description: settings.sync_financial_amounts
           ? `${event.description || ''}\n\nValor: R$ ${event.amount}\nCategoria: ${event.category || 'Geral'}`.trim()
-          : event.description,
-        start: { dateTime: new Date(event.start).toISOString() },
-        end: { dateTime: new Date(event.end).toISOString() },
-        extendedProperties: {
+          : event.description, end: { dateTime: new Date(event.end).toISOString() }, extendedProperties: {
           private: {
-            aegis_event_id: event.id,
-            aegis_type: event.type,
-            aegis_amount: settings.sync_financial_amounts ? String(event.amount) : 'HIDDEN',
+            aegis_amount: settings.sync_financial_amounts ? String(event.amount) : 'HIDDEN', aegis_event_id: event.id, aegis_type: event.type,
           }
-        }
+        }, start: { dateTime: new Date(event.start).toISOString() }, summary: event.title
       };
 
       // Update or Insert
@@ -184,12 +172,10 @@ Deno.serve(async (req) => {
       }
 
       const gRes = await fetch(apiUrl, {
-        method,
-        headers: {
+        body: JSON.stringify(googleEvent), headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(googleEvent)
+        }, method
       });
 
       if (!gRes.ok) {
@@ -201,16 +187,10 @@ Deno.serve(async (req) => {
 
       // Update Mapping
       await supabase.from('calendar_sync_mapping').upsert({
-        user_id: userId,
-        aegis_event_id: event.id,
-        google_event_id: gData.id,
-        sync_status: 'synced',
-        sync_direction: 'aegis_to_google',
-        last_synced_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        aegis_event_id: event.id, google_event_id: gData.id, last_synced_at: new Date().toISOString(), sync_direction: 'aegis_to_google', sync_status: 'synced', updated_at: new Date().toISOString(), user_id: userId
       }, { onConflict: 'user_id, aegis_event_id' });
 
-      return new Response(JSON.stringify({ success: true, google_event: gData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ google_event: gData, success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // --- INCREMENTAL SYNC ---
@@ -276,9 +256,7 @@ Deno.serve(async (req) => {
                  // Only update if direction allows
                  if (settings.sync_direction !== 'one_way_to_google') {
                       await supabase.from('financial_events').update({
-                          title: item.summary,
-                          start: item.start.dateTime || item.start.date,
-                          end: item.end.dateTime || item.end.date,
+                          end: item.end.dateTime || item.end.date, start: item.start.dateTime || item.start.date, title: item.summary,
                           // Description update? careful overwriting
                       }).eq('id', mapping.aegis_event_id);
 
@@ -299,11 +277,7 @@ Deno.serve(async (req) => {
                  if (isAegis) {
                      // Restore mapping
                       await supabase.from('calendar_sync_mapping').insert({
-                        user_id: userId,
-                        aegis_event_id: isAegis,
-                        google_event_id: googleId,
-                        sync_status: 'synced',
-                        sync_direction: 'bidirectional'
+                        aegis_event_id: isAegis, google_event_id: googleId, sync_direction: 'bidirectional', sync_status: 'synced', user_id: userId
                       });
                  }
              }
@@ -314,12 +288,11 @@ Deno.serve(async (req) => {
       // Update sync token
       if (nextSyncToken) {
         await supabase.from('calendar_sync_settings').update({
-          sync_token: nextSyncToken,
-          last_full_sync_at: new Date().toISOString()
+          last_full_sync_at: new Date().toISOString(), sync_token: nextSyncToken
         }).eq('user_id', userId);
       }
 
-      return new Response(JSON.stringify({ success: true, processed: processedCount }), {
+      return new Response(JSON.stringify({ processed: processedCount, success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -329,8 +302,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400,
     });
   }
 });

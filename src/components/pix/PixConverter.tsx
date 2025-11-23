@@ -26,7 +26,9 @@ export const PixConverter = React.memo(function PixConverter() {
   // Otimizar funções com useCallback
   const formatCurrency = useCallback((value: string) => {
     const cleanValue = value.replace(/[^\d]/g, '');
-    if (!cleanValue) return '';
+    if (!cleanValue) {
+      return '';
+    }
     const formatted = (Number(cleanValue) / 100).toFixed(2);
     return `R$ ${formatted.replace('.', ',')}`;
   }, []);

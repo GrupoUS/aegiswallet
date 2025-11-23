@@ -136,23 +136,11 @@ const CONTRACTIONS: Record<string, string> = {
 // ============================================================================
 
 const ACCENT_MAP: Record<string, string> = {
-  á: 'a',
-  à: 'a',
-  ã: 'a',
-  â: 'a',
-  é: 'e',
-  ê: 'e',
-  í: 'i',
-  ó: 'o',
-  ô: 'o',
-  õ: 'o',
-  ú: 'u',
-  ü: 'u',
-  ç: 'c',
-  Á: 'A',
   À: 'A',
-  Ã: 'A',
+  Á: 'A',
   Â: 'A',
+  Ã: 'A',
+  Ç: 'C',
   É: 'E',
   Ê: 'E',
   Í: 'I',
@@ -161,7 +149,19 @@ const ACCENT_MAP: Record<string, string> = {
   Õ: 'O',
   Ú: 'U',
   Ü: 'U',
-  Ç: 'C',
+  à: 'a',
+  á: 'a',
+  â: 'a',
+  ã: 'a',
+  ç: 'c',
+  é: 'e',
+  ê: 'e',
+  í: 'i',
+  ó: 'o',
+  ô: 'o',
+  õ: 'o',
+  ú: 'u',
+  ü: 'u',
 };
 
 // ============================================================================
@@ -228,11 +228,11 @@ export class TextNormalizer {
         });
 
     return {
-      original,
-      normalized: finalTokens.join(' '),
-      tokens: finalTokens,
-      removedStopwords,
       expandedContractions,
+      normalized: finalTokens.join(' '),
+      original,
+      removedStopwords,
+      tokens: finalTokens,
     };
   }
 
@@ -311,9 +311,9 @@ export class TextNormalizer {
  */
 export function createTextNormalizer(): TextNormalizer {
   return new TextNormalizer({
+    expandContractions: true,
     keepAccents: false,
     keepStopwords: false,
-    expandContractions: true,
   });
 }
 

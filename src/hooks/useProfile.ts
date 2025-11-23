@@ -11,20 +11,25 @@ export function useProfile() {
 
   const { mutate: updateProfile, isPending: isUpdatingProfile } =
     trpc.profiles.updateProfile.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao atualizar perfil');
+      },
       onSuccess: () => {
         utils.profiles.getProfile.invalidate();
         toast.success('Perfil atualizado com sucesso!');
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar perfil');
       },
     });
 
   const { mutate: updatePreferences, isPending: isUpdatingPreferences } =
     trpc.profiles.updatePreferences.useMutation({
+      onError: (error) => {
+        toast.error(error.message || 'Erro ao atualizar preferências');
+      },
       onSuccess: (data) => {
         utils.profiles.getProfile.setData(undefined, (old) => {
-          if (!old) return old;
+          if (!old) {
+            return old;
+          }
 
           return {
             ...old,
@@ -34,23 +39,19 @@ export function useProfile() {
 
         toast.success('Preferências atualizadas com sucesso!');
       },
-
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar preferências');
-      },
     });
 
   const { mutate: updateLastLogin } = trpc.profiles.updateLastLogin.useMutation();
 
   return {
-    profile,
-    isLoading,
     error,
-    updateProfile,
-    updatePreferences,
-    updateLastLogin,
-    isUpdatingProfile,
+    isLoading,
     isUpdatingPreferences,
+    isUpdatingProfile,
+    profile,
+    updateLastLogin,
+    updatePreferences,
+    updateProfile,
   };
 }
 
@@ -60,8 +61,8 @@ export function useProfile() {
 export function useFinancialSummary(startDate: string, endDate: string) {
   const { data, isLoading, error } = trpc.profiles.getFinancialSummary.useQuery(
     {
-      period_start: startDate,
       period_end: endDate,
+      period_start: startDate,
     },
     {
       enabled: !!startDate && !!endDate,
@@ -69,9 +70,9 @@ export function useFinancialSummary(startDate: string, endDate: string) {
   );
 
   return {
-    summary: data,
-    isLoading,
     error,
+    isLoading,
+    summary: data,
   };
 }
 
@@ -82,10 +83,10 @@ export function useUserStatus() {
   const { data, isLoading, error } = trpc.profiles.checkUserStatus.useQuery();
 
   return {
-    status: data,
-    isLoading,
     error,
     isActive: data?.is_active ?? false,
+    isLoading,
     lastLogin: data?.last_login,
+    status: data,
   };
 }

@@ -53,11 +53,11 @@ export function Dashboard() {
         if (error) {
           sessionStorage.removeItem('oauth_hash');
           navigate({
-            to: '/login',
             search: {
-              redirect: '/dashboard',
               error: 'Authentication failed',
+              redirect: '/dashboard',
             },
+            to: '/login',
           });
           return;
         }
@@ -80,32 +80,32 @@ export function Dashboard() {
   // Magic Cards com dados financeiros
   const magicCardsData = [
     {
+      change: '+5.2%',
+      color: 'text-green-600',
+      icon: Wallet,
       title: 'Saldo em Conta',
       value: 'R$ 12.450,00',
-      change: '+5.2%',
-      icon: Wallet,
-      color: 'text-green-600',
     },
     {
+      change: '+12.8%',
+      color: 'text-blue-600',
+      icon: TrendingUp,
       title: 'Investimentos',
       value: 'R$ 45.320,00',
-      change: '+12.8%',
-      icon: TrendingUp,
-      color: 'text-blue-600',
     },
     {
+      change: '+8.4%',
+      color: 'text-purple-600',
+      icon: PiggyBank,
       title: 'Economia Mensal',
       value: 'R$ 2.110,15',
-      change: '+8.4%',
-      icon: PiggyBank,
-      color: 'text-purple-600',
     },
     {
+      change: 'Hoje',
+      color: 'text-orange-600',
+      icon: CreditCard,
       title: 'PIX Enviados',
       value: 'R$ 3.240,00',
-      change: 'Hoje',
-      icon: CreditCard,
-      color: 'text-orange-600',
     },
   ];
 

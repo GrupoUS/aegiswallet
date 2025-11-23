@@ -22,11 +22,11 @@ export class SessionManager {
   private state: SessionState;
   private warningTimeout?: NodeJS.Timeout;
   private expiryTimeout?: NodeJS.Timeout;
-  private activityEventListeners: Array<{
+  private activityEventListeners: {
     target: EventTarget;
     event: string;
     handler: EventListener;
-  }> = [];
+  }[] = [];
   private readonly WARNING_MODAL_ID = 'session-warning-modal';
   private readonly STORAGE_KEYS = {
     LAST_ACTIVITY: 'session_last_activity',
@@ -66,18 +66,18 @@ export class SessionManager {
       return {
         isActive: false,
         lastActivity: now,
-        warningShown: false,
-        timeRemaining: 0,
         sessionId: this.generateSessionId(),
+        timeRemaining: 0,
+        warningShown: false,
       };
     }
 
     return {
       isActive: true,
       lastActivity,
-      warningShown: storedWarningShown,
-      timeRemaining: this.calculateTimeRemaining(lastActivity),
       sessionId: storedSessionId || this.generateSessionId(),
+      timeRemaining: this.calculateTimeRemaining(lastActivity),
+      warningShown: storedWarningShown,
     };
   }
 
@@ -133,11 +133,11 @@ export class SessionManager {
     };
 
     activityEvents.forEach((eventType) => {
-      document.addEventListener(eventType, handleActivity, { passive: true, capture: true });
+      document.addEventListener(eventType, handleActivity, { capture: true, passive: true });
       this.activityEventListeners.push({
-        target: document,
         event: eventType,
         handler: handleActivity,
+        target: document,
       });
     });
 
@@ -149,20 +149,22 @@ export class SessionManager {
     });
 
     this.activityEventListeners.push({
-      target: document,
       event: 'visibilitychange',
       handler: () => {
         if (!document.hidden) {
           this.onActivity();
         }
       },
+      target: document,
     });
   }
 
   private shouldTrackEvent(event: Event): boolean {
     // Ignore events from certain elements
     const target = event.target as HTMLElement;
-    if (!target) return true;
+    if (!target) {
+      return true;
+    }
 
     const ignoredElements = ['script', 'style', 'meta', 'link'];
     const ignoredClasses = ['session-tracking-ignore'];
@@ -174,7 +176,9 @@ export class SessionManager {
   }
 
   private onActivity(): void {
-    if (!this.state.isActive) return;
+    if (!this.state.isActive) {
+      return;
+    }
 
     const now = new Date();
 
@@ -232,7 +236,9 @@ export class SessionManager {
   }
 
   private checkSessionStatus(): void {
-    if (!this.state.isActive) return;
+    if (!this.state.isActive) {
+      return;
+    }
 
     const now = new Date();
     const timeSinceActivity = now.getTime() - this.state.lastActivity.getTime();
@@ -253,7 +259,9 @@ export class SessionManager {
   }
 
   private showWarning(): void {
-    if (!this.config.warningEnabled || this.state.warningShown) return;
+    if (!this.config.warningEnabled || this.state.warningShown) {
+      return;
+    }
 
     this.state.warningShown = true;
     this.saveState();
@@ -343,7 +351,9 @@ export class SessionManager {
   }
 
   private async expireSession(): void {
-    if (!this.state.isActive) return;
+    if (!this.state.isActive) {
+      return;
+    }
 
     this.state.isActive = false;
 
@@ -456,15 +466,15 @@ export class SessionManager {
   private async logSessionEvent(event: string): Promise<void> {
     try {
       await supabase.from('audit_logs').insert({
-        user_id: (await supabase.auth.getUser()).data.user?.id,
         action: event,
-        resource_type: 'session',
         details: {
-          session_id: this.state.sessionId,
           last_activity: this.state.lastActivity.toISOString(),
+          session_id: this.state.sessionId,
           time_remaining: this.state.timeRemaining,
           warning_shown: this.state.warningShown,
         },
+        resource_type: 'session',
+        user_id: (await supabase.auth.getUser()).data.user?.id,
       });
     } catch (error) {
       logger.error('Error logging session event:', error);

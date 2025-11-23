@@ -76,17 +76,17 @@ export function buildBalanceResponse(data: {
 
   if (typeof currentBalance !== 'number' || Number.isNaN(currentBalance)) {
     return {
-      text: 'Saldo indisponível',
-      voice: 'Saldo indisponível',
-      visual: {
-        type: 'balance',
-        data: { balance: 0, income: 0, expenses: 0 },
-      },
       accessibility: {
         'aria-label': 'Saldo indisponível',
         'aria-live': 'polite' as const,
         role: 'status',
       },
+      text: 'Saldo indisponível',
+      visual: {
+        data: { balance: 0, expenses: 0, income: 0 },
+        type: 'balance',
+      },
+      voice: 'Saldo indisponível',
     };
   }
 
@@ -109,13 +109,13 @@ export function buildBalanceResponse(data: {
 
   // Visual data
   const visual = {
-    type: 'balance' as const,
     data: {
-      currentBalance,
-      income,
-      expenses,
       accountType,
+      currentBalance,
+      expenses,
+      income,
     },
+    type: 'balance' as const,
   };
 
   // Accessibility
@@ -126,14 +126,14 @@ export function buildBalanceResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: {
       emphasis: 'strong',
       pauseDuration: 300,
     },
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -169,14 +169,14 @@ export function buildBudgetResponse(data: {
 
   // Visual data - ensure safe values for display
   const visual = {
-    type: 'budget' as const,
     data: {
       available: safeAvailable,
-      total: safeTotal,
+      category,
       spent: safeSpent,
       spentPercentage: safeSpentPercentage,
-      category,
+      total: safeTotal,
     },
+    type: 'budget' as const,
   };
 
   // Accessibility
@@ -187,10 +187,10 @@ export function buildBudgetResponse(data: {
   };
 
   return {
-    voice,
+    accessibility,
     text,
     visual,
-    accessibility,
+    voice,
   };
 }
 
@@ -198,12 +198,12 @@ export function buildBudgetResponse(data: {
  * Build response for PAY_BILL
  */
 export function buildBillsResponse(data: {
-  bills: Array<{
+  bills: {
     name: string;
     amount: number;
     dueDate: string;
     isPastDue?: boolean;
-  }>;
+  }[];
   totalAmount: number;
 }): MultimodalResponse {
   const { bills, totalAmount } = data;
@@ -214,16 +214,16 @@ export function buildBillsResponse(data: {
 
   if (!Number.isFinite(totalAmount)) {
     return {
-      text: 'Valores das contas indisponíveis',
-      voice: 'Valores das contas indirecíveis',
-      visual: {
-        type: 'bills',
-        data: { bills: [], totalAmount: 0, pastDueCount: 0 },
-      },
       accessibility: {
         'aria-label': 'Valores das contas indisponíveis',
         'aria-live': 'polite',
       },
+      text: 'Valores das contas indisponíveis',
+      visual: {
+        data: { bills: [], pastDueCount: 0, totalAmount: 0 },
+        type: 'bills',
+      },
+      voice: 'Valores das contas indirecíveis',
     };
   }
 
@@ -246,8 +246,8 @@ export function buildBillsResponse(data: {
 
   // Visual data
   const visual = {
+    data: { bills, pastDue, totalAmount },
     type: 'bills' as const,
-    data: { bills, totalAmount, pastDue },
   };
 
   // Accessibility
@@ -258,11 +258,11 @@ export function buildBillsResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: pastDue > 0 ? { emphasis: 'strong' } : undefined,
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -270,12 +270,12 @@ export function buildBillsResponse(data: {
  * Build response for CHECK_INCOME
  */
 export function buildIncomeResponse(data: {
-  incoming: Array<{
+  incoming: {
     source: string;
     amount: number;
     expectedDate: string;
     confirmed?: boolean;
-  }>;
+  }[];
   totalExpected: number;
   nextIncome?: {
     source: string;
@@ -303,8 +303,8 @@ export function buildIncomeResponse(data: {
 
   // Visual data
   const visual = {
+    data: { incoming, nextIncome, totalExpected },
     type: 'incoming' as const,
-    data: { incoming, totalExpected, nextIncome },
   };
 
   // Accessibility
@@ -315,14 +315,14 @@ export function buildIncomeResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: {
       emphasis: 'moderate',
       pauseDuration: 500,
     },
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -351,8 +351,8 @@ export function buildProjectionResponse(data: {
 
   // Visual data
   const visual = {
-    type: 'projection' as const,
     data,
+    type: 'projection' as const,
   };
 
   // Accessibility
@@ -363,14 +363,14 @@ export function buildProjectionResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: {
       emphasis: 'strong',
       pauseDuration: 300,
     },
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -419,8 +419,8 @@ export function buildTransferResponse(data: {
 
   // Visual data
   const visual = {
-    type: 'transfer' as const,
     data,
+    type: 'transfer' as const,
   };
 
   // Accessibility
@@ -431,11 +431,11 @@ export function buildTransferResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: status === 'pending' ? { emphasis: 'moderate', pauseDuration: 500 } : undefined,
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -457,8 +457,8 @@ export function buildErrorResponse(error: {
 
   // Visual data
   const visual = {
+    data: { details, error: true, message },
     type: 'error' as const,
-    data: { error: true, message, details },
   };
 
   // Accessibility
@@ -469,13 +469,13 @@ export function buildErrorResponse(error: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
     ssmlOptions: {
       emphasis: 'moderate',
     },
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -497,8 +497,8 @@ export function buildConfirmationResponse(data: {
 
   // Visual data
   const visual = {
-    type: 'confirmation' as const,
     data: { ...data, type: 'confirmation' },
+    type: 'confirmation' as const,
   };
 
   // Accessibility
@@ -509,15 +509,15 @@ export function buildConfirmationResponse(data: {
   };
 
   return {
-    voice,
-    text,
-    visual,
     accessibility,
+    requiresConfirmation: true,
     ssmlOptions: {
       emphasis: 'moderate',
       pauseDuration: 500,
     },
-    requiresConfirmation: true,
+    text,
+    visual,
+    voice,
   };
 }
 
@@ -563,30 +563,30 @@ export function buildMultimodalResponse(
       (Array.isArray(data.bills) && data.bills[0]?.amount ? data.bills[0].amount : 0);
 
     return {
-      voice: `Pagamento confirmado de ${formatCurrencyForVoice(amount)} para ${billName}`,
-      text: `Pagamento confirmado: ${formatCurrency(amount)}`,
-      visual: {
-        type: 'bills',
-        data: {
-          ...data,
-          bills: data.bills ?? [
-            {
-              name: billName,
-              amount,
-              dueDate: data.dueDate,
-              isPastDue: false,
-            },
-          ],
-          totalAmount: amount,
-          confirmed: true,
-        },
-      },
       accessibility: {
         'aria-label': `Pagamento confirmado de ${formatCurrency(amount)}`,
         'aria-live': 'assertive',
         role: 'status',
       },
       requiresConfirmation: false,
+      text: `Pagamento confirmado: ${formatCurrency(amount)}`,
+      visual: {
+        data: {
+          ...data,
+          bills: data.bills ?? [
+            {
+              amount,
+              dueDate: data.dueDate,
+              isPastDue: false,
+              name: billName,
+            },
+          ],
+          totalAmount: amount,
+          confirmed: true,
+        },
+        type: 'bills',
+      },
+      voice: `Pagamento confirmado de ${formatCurrencyForVoice(amount)} para ${billName}`,
     };
   }
 
@@ -594,8 +594,8 @@ export function buildMultimodalResponse(
 
   if (!builder) {
     return buildErrorResponse({
-      message: 'Comando não reconhecido',
       details: 'Tente novamente com um comando conhecido',
+      message: 'Comando não reconhecido',
     });
   }
 
@@ -608,10 +608,10 @@ export function buildMultimodalResponse(
             ...data,
             bills: [
               {
-                name: data.billName,
                 amount: data.amount,
                 dueDate: data.dueDate,
                 isPastDue: false,
+                name: data.billName,
               },
             ],
             totalAmount: data.amount,
@@ -638,13 +638,13 @@ export function buildMultimodalResponse(
                   ...data,
                   incoming: data.incoming ?? [
                     {
-                      source: data.nextIncome.description || data.nextIncome.source || 'Receita',
                       amount: data.nextIncome.amount ?? 0,
+                      confirmed: data.nextIncome.confirmed ?? false,
                       expectedDate:
                         typeof data.nextIncome.date === 'string'
                           ? data.nextIncome.date
                           : (data.nextIncome.date?.toISOString?.() ?? ''),
-                      confirmed: data.nextIncome.confirmed ?? false,
+                      source: data.nextIncome.description || data.nextIncome.source || 'Receita',
                     },
                   ],
                   totalExpected:

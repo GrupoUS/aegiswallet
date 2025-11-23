@@ -1,28 +1,39 @@
-import { CheckCircle, Clock, CreditCard, QrCode, Smartphone, User } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import {
+  CheckCircle,
+  Clock,
+  CreditCard,
+  QrCode,
+  Smartphone,
+  User,
+} from "lucide-react";
+import React, { useCallback, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface PixTransferProps {
   className?: string;
 }
 
-export const PixTransfer = React.memo(function PixTransfer({ className }: PixTransferProps) {
-  const [transferType, setTransferType] = useState<'key' | 'qr' | 'phone'>('key');
-  const [pixKey, setPixKey] = useState('');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [transferStatus, setTransferStatus] = useState<'idle' | 'processing' | 'success' | 'error'>(
-    'idle'
+export const PixTransfer = React.memo(function PixTransfer({
+  className,
+}: PixTransferProps) {
+  const [transferType, setTransferType] = useState<"key" | "qr" | "phone">(
+    "key",
   );
+  const [pixKey, setPixKey] = useState("");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [transferStatus, setTransferStatus] = useState<
+    "idle" | "processing" | "success" | "error"
+  >("idle");
 
   // Memoize the formatCurrency function
   const formatCurrency = useCallback((value: string) => {
-    const cleanValue = value.replace(/[^\d]/g, '');
+    const cleanValue = value.replace(/[^\d]/g, "");
     const formatted = (Number(cleanValue) / 100).toFixed(2);
     return `R$ ${formatted}`;
   }, []);
@@ -30,10 +41,10 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
   // Memoize the handleAmountChange function
   const handleAmountChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/[^\d]/g, '');
+      const value = e.target.value.replace(/[^\d]/g, "");
       setAmount(formatCurrency(value));
     },
-    [formatCurrency]
+    [formatCurrency],
   );
 
   // Memoize the validatePixKey function
@@ -48,9 +59,9 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
 
     return (
       emailRegex.test(key) ||
-      cpfRegex.test(key.replace(/[^\d]/g, '')) ||
-      cnpjRegex.test(key.replace(/[^\d]/g, '')) ||
-      phoneRegex.test(key.replace(/[^\d]/g, '')) ||
+      cpfRegex.test(key.replace(/[^\d]/g, "")) ||
+      cnpjRegex.test(key.replace(/[^\d]/g, "")) ||
+      phoneRegex.test(key.replace(/[^\d]/g, "")) ||
       randomKeyRegex.test(key)
     );
   }, []);
@@ -58,15 +69,17 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
   // Memoize the handleTransfer function
   const handleTransfer = useCallback(async () => {
     if (!validatePixKey(pixKey) || !amount) {
-      setTransferStatus('error');
+      setTransferStatus("error");
       return;
     }
 
     setIsProcessing(true);
-    setTransferStatus('processing');
+    setTransferStatus("processing");
 
     try {
-      const numericAmount = parseFloat(amount.replace(/[^\d,]/g, '').replace(',', '.'));
+      const numericAmount = parseFloat(
+        amount.replace(/[^\d,]/g, "").replace(",", "."),
+      );
 
       // Use default account for now (would come from context/selector in real app)
       // We need to fetch an account ID first.
@@ -77,50 +90,66 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
 
       const {
         data: { user },
-      } = await import('@/integrations/supabase/client').then((m) => m.supabase.auth.getUser());
+      } = await import("@/integrations/supabase/client").then((m) =>
+        m.supabase.auth.getUser(),
+      );
 
       if (!user) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
 
-      const { data: account } = await import('@/integrations/supabase/client').then((m) =>
+      const { data: account } = await import(
+        "@/integrations/supabase/client"
+      ).then((m) =>
         m.supabase
-          .from('bank_accounts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('is_primary', true)
-          .single()
+          .from("bank_accounts")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("is_primary", true)
+          .single(),
       );
 
       // If no primary account, try any account
       let accountId = account?.id;
       if (!accountId) {
-        const { data: anyAccount } = await import('@/integrations/supabase/client').then((m) =>
-          m.supabase.from('bank_accounts').select('id').eq('user_id', user.id).limit(1).single()
+        const { data: anyAccount } = await import(
+          "@/integrations/supabase/client"
+        ).then((m) =>
+          m.supabase
+            .from("bank_accounts")
+            .select("id")
+            .eq("user_id", user.id)
+            .limit(1)
+            .single(),
         );
         accountId = anyAccount?.id;
       }
 
       if (!accountId) {
-        throw new Error('No bank account found');
+        throw new Error("No bank account found");
       }
 
-      await import('@/lib/banking/pixApi').then((m) =>
-        m.pixClient.sendPixPayment(accountId || '', pixKey, numericAmount, description)
+      await import("@/lib/banking/pixApi").then((m) =>
+        m.pixClient.sendPixPayment(
+          accountId || "",
+          pixKey,
+          numericAmount,
+          description,
+        ),
       );
 
-      setTransferStatus('success');
+      setTransferStatus("success");
       setIsProcessing(false);
 
       // Reset form after success
       setTimeout(() => {
-        setPixKey('');
-        setAmount('');
-        setDescription('');
-        setTransferStatus('idle');
+        setPixKey("");
+        setAmount("");
+        setDescription("");
+        setTransferStatus("idle");
       }, 3000);
     } catch (_error) {
-      setTransferStatus('error');
+      setTransferStatus("error");
       setIsProcessing(false);
     }
   }, [pixKey, amount, description, validatePixKey]);
@@ -128,11 +157,11 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
   // Memoize the getTransferTypeIcon function
   const getTransferTypeIcon = useCallback(() => {
     switch (transferType) {
-      case 'key':
+      case "key":
         return <CreditCard className="h-5 w-5" />;
-      case 'qr':
+      case "qr":
         return <QrCode className="h-5 w-5" />;
-      case 'phone':
+      case "phone":
         return <Smartphone className="h-5 w-5" />;
       default:
         return <User className="h-5 w-5" />;
@@ -142,44 +171,50 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
   // Memoize the getTransferTypePlaceholder function
   const getTransferTypePlaceholder = useCallback(() => {
     switch (transferType) {
-      case 'key':
-        return 'Email, CPF, CNPJ ou chave aleatória';
-      case 'qr':
-        return 'Escaneie o QR Code';
-      case 'phone':
-        return 'Telefone com DDD';
+      case "key":
+        return "Email, CPF, CNPJ ou chave aleatória";
+      case "qr":
+        return "Escaneie o QR Code";
+      case "phone":
+        return "Telefone com DDD";
       default:
-        return 'Digite a chave PIX';
+        return "Digite a chave PIX";
     }
   }, [transferType]);
 
   // Memoize transfer type options
   const transferTypeOptions = useMemo(
     () => [
-      { value: 'key', label: 'Chave PIX' },
-      { value: 'qr', label: 'QR Code' },
-      { value: 'phone', label: 'Telefone' },
+      { label: "Chave PIX", value: "key" },
+      { label: "QR Code", value: "qr" },
+      { label: "Telefone", value: "phone" },
     ],
-    []
+    [],
   );
 
   // Memoize success state component
   const SuccessState = useMemo(() => {
-    if (transferStatus !== 'success') return null;
+    if (transferStatus !== "success") {
+      return null;
+    }
 
     return (
-      <Card className={cn('border-success/20 bg-success/10', className)}>
+      <Card className={cn("border-success/20 bg-success/10", className)}>
         <CardContent className="p-6 text-center">
           <CheckCircle className="mx-auto mb-4 h-16 w-16 text-success" />
-          <h3 className="mb-2 font-semibold text-success text-xl">Transferência Realizada!</h3>
+          <h3 className="mb-2 font-semibold text-success text-xl">
+            Transferência Realizada!
+          </h3>
           <p className="mb-2 text-success">{formatCurrency(amount)}</p>
-          <p className="text-sm text-success">Transferência PIX processada instantaneamente</p>
+          <p className="text-sm text-success">
+            Transferência PIX processada instantaneamente
+          </p>
         </CardContent>
       </Card>
     );
   }, [transferStatus, className, amount, formatCurrency]);
 
-  if (transferStatus === 'success') {
+  if (transferStatus === "success") {
     return SuccessState;
   }
 
@@ -199,9 +234,11 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
           {transferTypeOptions.map((type) => (
             <Button
               key={type.value}
-              variant={transferType === type.value ? 'default' : 'outline'}
+              variant={transferType === type.value ? "default" : "outline"}
               size="sm"
-              onClick={() => setTransferType(type.value as 'key' | 'qr' | 'phone')}
+              onClick={() =>
+                setTransferType(type.value as "key" | "qr" | "phone")
+              }
               className="flex-1"
             >
               {type.label}
@@ -221,13 +258,17 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
             placeholder={getTransferTypePlaceholder()}
             value={pixKey}
             onChange={(e) => setPixKey(e.target.value)}
-            disabled={transferType === 'qr'}
+            disabled={transferType === "qr"}
             className={cn(
-              transferStatus === 'error' && !validatePixKey(pixKey) && 'border-destructive'
+              transferStatus === "error" &&
+                !validatePixKey(pixKey) &&
+                "border-destructive",
             )}
           />
-          {transferStatus === 'error' && !validatePixKey(pixKey) && (
-            <p className="text-destructive text-sm">Por favor, insira uma chave PIX válida</p>
+          {transferStatus === "error" && !validatePixKey(pixKey) && (
+            <p className="text-destructive text-sm">
+              Por favor, insira uma chave PIX válida
+            </p>
           )}
         </div>
 
@@ -240,10 +281,14 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
             placeholder="R$ 0,00"
             value={amount}
             onChange={handleAmountChange}
-            className={cn(transferStatus === 'error' && !amount && 'border-destructive')}
+            className={cn(
+              transferStatus === "error" && !amount && "border-destructive",
+            )}
           />
-          {transferStatus === 'error' && !amount && (
-            <p className="text-destructive text-sm">Por favor, insira um valor</p>
+          {transferStatus === "error" && !amount && (
+            <p className="text-destructive text-sm">
+              Por favor, insira um valor
+            </p>
           )}
         </div>
 
@@ -265,7 +310,9 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
             <Clock className="h-4 w-4" />
             <span>Transferências PIX são processadas instantaneamente</span>
           </div>
-          <div className="mt-1 text-info text-xs">Disponível 24/7, todos os dias</div>
+          <div className="mt-1 text-info text-xs">
+            Disponível 24/7, todos os dias
+          </div>
         </div>
 
         {/* Transfer Button */}

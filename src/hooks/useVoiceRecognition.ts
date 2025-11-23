@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createAudioProcessor } from '@/lib/stt/audioProcessor';
-import { createVAD, type VoiceActivityDetector } from '@/lib/stt/voiceActivityDetection';
+import type { VoiceActivityDetector } from '@/lib/stt/voiceActivityDetection';
+import { createVAD } from '@/lib/stt/voiceActivityDetection';
 
 // Voice recognition state interface
 interface VoiceState {
@@ -67,24 +68,24 @@ const VOICE_COMMANDS = {
   TRANSFER: ['transferir para', 'enviar para', 'pagar para'],
 } as const;
 
-type VoiceRecognitionOptions = {
+interface VoiceRecognitionOptions {
   onTranscript?: (transcript: string, confidence: number) => void;
   onCommand?: (command: VoiceCommand) => void;
   onError?: (error: string) => void;
   autoRestart?: boolean;
   maxDuration?: number;
   autoStopTimeoutMs?: number;
-};
+}
 
 export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
   const [state, setState] = useState<VoiceState>({
-    isListening: false,
-    isProcessing: false,
-    transcript: '',
     confidence: 0,
     error: null,
-    supported: false,
+    isListening: false,
+    isProcessing: false,
     recognizedCommand: null,
+    supported: false,
+    transcript: '',
   });
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -105,8 +106,8 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
           if (normalizedTranscript.includes(pattern)) {
             const command: VoiceCommand = {
               command: intent,
-              parameters: { transcript, originalTranscript: transcript },
               confidence,
+              parameters: { originalTranscript: transcript, transcript },
             };
 
             const processingTime = performance.now() - startTime;
@@ -133,7 +134,9 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 
   // Start listening with performance optimizations
   const startListening = useCallback(async () => {
-    if (state.isListening || state.isProcessing) return;
+    if (state.isListening || state.isProcessing) {
+      return;
+    }
 
     try {
       setState((prev) => ({
@@ -207,18 +210,18 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
       } else {
         // Fallback to mock for testing
         recognitionRef.current = {
-          stop: () => {},
-          start: () => {},
+          addEventListener: () => {},
           continuous: false,
+          dispatchEvent: () => false,
           interimResults: false,
           lang: '',
-          onstart: null,
-          onresult: null,
-          onerror: null,
           onend: null,
-          addEventListener: () => {},
+          onerror: null,
+          onresult: null,
+          onstart: null,
           removeEventListener: () => {},
-          dispatchEvent: () => false,
+          start: () => {},
+          stop: () => {},
         } as SpeechRecognition;
       }
 

@@ -46,7 +46,9 @@ export const AnimatedThemeToggler = ({
   }, [theme]);
 
   const toggleTheme = useCallback(async () => {
-    if (!buttonRef.current) return;
+    if (!buttonRef.current) {
+      return;
+    }
 
     // Determine new theme (toggle between light and dark only)
     const newTheme = isDark ? 'light' : 'dark';

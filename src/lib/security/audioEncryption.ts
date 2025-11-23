@@ -57,12 +57,12 @@ export class AudioEncryptionService {
       this.masterKey = await crypto.subtle.importKey(
         'raw',
         keyData,
-        { name: this.algorithm, length: this.keyLength },
+        { length: this.keyLength, name: this.algorithm },
         false, // not extractable
         ['encrypt', 'decrypt']
       );
     } catch (error) {
-      throw new Error(`Failed to initialize encryption: ${error}`);
+      throw new Error(`Failed to initialize encryption: ${error}`, { cause: error });
     }
   }
 
@@ -85,13 +85,16 @@ export class AudioEncryptionService {
       const iv = crypto.getRandomValues(new Uint8Array(12));
 
       // Encrypt data
+      if (!this.masterKey) {
+        throw new Error('Master key not initialized');
+      }
       const encryptedData = await crypto.subtle.encrypt(
         {
-          name: this.algorithm,
           iv: iv,
+          name: this.algorithm,
           tagLength: 128, // 128-bit authentication tag
         },
-        this.masterKey!,
+        this.masterKey,
         audioData
       );
 
@@ -100,14 +103,14 @@ export class AudioEncryptionService {
       const authTag = new Uint8Array(encryptedData.slice(-16));
 
       return {
+        algorithm: 'aes-256-gcm',
+        authTag: this.arrayBufferToBase64(authTag),
         ciphertext: this.arrayBufferToBase64(ciphertext),
         iv: this.arrayBufferToBase64(iv),
-        authTag: this.arrayBufferToBase64(authTag),
-        algorithm: 'aes-256-gcm',
         timestamp: new Date(),
       };
     } catch (error) {
-      throw new Error(`Encryption failed: ${error}`);
+      throw new Error(`Encryption failed: ${error}`, { cause: error });
     }
   }
 
@@ -134,20 +137,23 @@ export class AudioEncryptionService {
       encryptedBuffer.set(new Uint8Array(authTag), ciphertext.byteLength);
 
       // Decrypt data
+      if (!this.masterKey) {
+        throw new Error('Master key not initialized');
+      }
       const decryptedData = await crypto.subtle.decrypt(
         {
-          name: this.algorithm,
           iv: new Uint8Array(iv),
+          name: this.algorithm,
           tagLength: 128,
         },
-        this.masterKey!,
+        this.masterKey,
         encryptedBuffer
       );
 
       // Return as Blob
       return new Blob([decryptedData], { type: 'audio/webm' });
     } catch (error) {
-      throw new Error(`Decryption failed: ${error}`);
+      throw new Error(`Decryption failed: ${error}`, { cause: error });
     }
   }
 

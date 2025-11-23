@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { type SessionState, sessionManager } from '@/lib/session/sessionManager';
+import type { SessionState } from '@/lib/session/sessionManager';
+import { sessionManager } from '@/lib/session/sessionManager';
 
 export const useSessionManager = () => {
   const [sessionState, setSessionState] = useState<SessionState>(() => sessionManager.getState());
@@ -30,29 +31,31 @@ export const useSessionManager = () => {
     const state = sessionManager.getState();
     return {
       isActive: state.isActive,
+      lastActivity: state.lastActivity,
+      sessionId: state.sessionId,
       timeRemaining: state.timeRemaining,
       timeRemainingFormatted: formatTimeRemaining(state.timeRemaining),
       warningShown: state.warningShown,
-      sessionId: state.sessionId,
-      lastActivity: state.lastActivity,
     };
   }, []);
 
   return {
-    sessionState,
-    isInitialized,
+    extendSession,
+    getSessionInfo,
     isActive: sessionState.isActive,
+    isInitialized,
+    logout,
+    sessionState,
     timeRemaining: sessionState.timeRemaining,
     timeRemainingFormatted: formatTimeRemaining(sessionState.timeRemaining),
     warningShown: sessionState.warningShown,
-    extendSession,
-    logout,
-    getSessionInfo,
   };
 };
 
 function formatTimeRemaining(milliseconds: number): string {
-  if (milliseconds <= 0) return '00:00';
+  if (milliseconds <= 0) {
+    return '00:00';
+  }
 
   const totalSeconds = Math.floor(milliseconds / 1000);
   const hours = Math.floor(totalSeconds / 3600);

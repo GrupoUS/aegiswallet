@@ -32,7 +32,7 @@ export interface MultimodalResponse {
   speech: string;
   visual: {
     type: 'balance' | 'budget' | 'bills' | 'income' | 'projection' | 'transfer' | 'error';
-    data: any;
+    data: Record<string, unknown>;
   };
   accessibility: {
     ariaLabel: string;
@@ -42,7 +42,7 @@ export interface MultimodalResponse {
 }
 
 export interface TemplateData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // ============================================================================
@@ -62,19 +62,19 @@ export function generateBalanceResponse(data: {
   const speech = `Seu saldo em ${accountName} é de ${formatCurrencyForVoice(balance)}`;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'balance',
-      data: {
-        balance,
-        accountName,
-        formattedBalance: formatCurrency(balance),
-      },
-    },
     accessibility: {
       ariaLabel: `Saldo: ${formatCurrency(balance)}`,
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: {
+        accountName,
+        balance,
+        formattedBalance: formatCurrency(balance),
+      },
+      type: 'balance',
     },
   };
 }
@@ -95,25 +95,25 @@ export function generateBudgetResponse(data: {
   const speech = `Você pode gastar ${formatCurrencyForVoice(available)} este ${period}. Já gastou ${formatPercentage(percentage)} do orçamento.`;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'budget',
-      data: {
-        available,
-        total,
-        spent,
-        percentage,
-        period,
-        formattedAvailable: formatCurrency(available),
-        formattedTotal: formatCurrency(total),
-        formattedSpent: formatCurrency(spent),
-        formattedPercentage: formatPercentage(percentage),
-      },
-    },
     accessibility: {
       ariaLabel: `Orçamento disponível: ${formatCurrency(available)}`,
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: {
+        available,
+        formattedAvailable: formatCurrency(available),
+        formattedPercentage: formatPercentage(percentage),
+        formattedSpent: formatCurrency(spent),
+        formattedTotal: formatCurrency(total),
+        percentage,
+        period,
+        spent,
+        total,
+      },
+      type: 'budget',
     },
   };
 }
@@ -136,24 +136,24 @@ export function generatePayBillResponse(data: {
     const speech = `Confirmar pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} com vencimento ${relativeDue}?`;
 
     return {
-      text,
-      speech,
-      visual: {
-        type: 'bills',
-        data: {
-          billName,
-          amount,
-          dueDate,
-          formattedAmount: formatCurrency(amount),
-          formattedDueDate: formatDate(dueDate),
-          relativeDueDate: relativeDue,
-        },
-      },
       accessibility: {
         ariaLabel: `Confirmar pagamento: ${billName}, ${formatCurrency(amount)}`,
         screenReaderText: speech,
       },
       requiresConfirmation: true,
+      speech,
+      text,
+      visual: {
+        data: {
+          amount,
+          billName,
+          dueDate,
+          formattedAmount: formatCurrency(amount),
+          formattedDueDate: formatDate(dueDate),
+          relativeDueDate: relativeDue,
+        },
+        type: 'bills',
+      },
     };
   }
 
@@ -161,22 +161,22 @@ export function generatePayBillResponse(data: {
   const speech = `Pagamento de ${billName} no valor de ${formatCurrencyForVoice(amount)} confirmado!`;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'bills',
-      data: {
-        billName,
-        amount,
-        dueDate,
-        confirmed: true,
-        formattedAmount: formatCurrency(amount),
-        formattedDueDate: formatDate(dueDate),
-      },
-    },
     accessibility: {
       ariaLabel: `Pagamento confirmado: ${billName}`,
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: {
+        amount,
+        billName,
+        confirmed: true,
+        dueDate,
+        formattedAmount: formatCurrency(amount),
+        formattedDueDate: formatDate(dueDate),
+      },
+      type: 'bills',
     },
   };
 }
@@ -204,11 +204,15 @@ export function generateIncomeResponse(data: {
   }
 
   return {
-    text,
+    accessibility: {
+      ariaLabel: `Próximo recebimento: ${formatCurrency(nextIncome.amount)} ${relativeDate}`,
+      screenReaderText: speech,
+    },
     speech,
+    text,
     visual: {
-      type: 'income',
       data: {
+        formattedTotalMonth: totalMonth ? formatCurrency(totalMonth) : undefined,
         nextIncome: {
           ...nextIncome,
           formattedAmount: formatCurrency(nextIncome.amount),
@@ -216,12 +220,8 @@ export function generateIncomeResponse(data: {
           relativeDate,
         },
         totalMonth,
-        formattedTotalMonth: totalMonth ? formatCurrency(totalMonth) : undefined,
       },
-    },
-    accessibility: {
-      ariaLabel: `Próximo recebimento: ${formatCurrency(nextIncome.amount)} ${relativeDate}`,
-      screenReaderText: speech,
+      type: 'income',
     },
   };
 }
@@ -253,28 +253,28 @@ export function generateProjectionResponse(data: {
   }`;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'projection',
-      data: {
-        projectedBalance,
-        currentBalance,
-        period,
-        income,
-        expenses,
-        difference,
-        isPositive,
-        formattedProjectedBalance: formatCurrency(projectedBalance),
-        formattedCurrentBalance: formatCurrency(currentBalance),
-        formattedIncome: formatCurrency(income),
-        formattedExpenses: formatCurrency(expenses),
-        formattedDifference: formatCurrency(Math.abs(difference)),
-      },
-    },
     accessibility: {
       ariaLabel: `Projeção: ${formatCurrency(projectedBalance)}`,
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: {
+        currentBalance,
+        difference,
+        expenses,
+        formattedCurrentBalance: formatCurrency(currentBalance),
+        formattedDifference: formatCurrency(Math.abs(difference)),
+        formattedExpenses: formatCurrency(expenses),
+        formattedIncome: formatCurrency(income),
+        formattedProjectedBalance: formatCurrency(projectedBalance),
+        income,
+        isPositive,
+        period,
+        projectedBalance,
+      },
+      type: 'projection',
     },
   };
 }
@@ -294,21 +294,21 @@ export function generateTransferResponse(data: {
     const speech = `Confirmar transferência de ${formatCurrencyForVoice(amount)} para ${recipient}?`;
 
     return {
-      text,
-      speech,
-      visual: {
-        type: 'transfer',
-        data: {
-          recipient,
-          amount,
-          formattedAmount: formatCurrency(amount),
-        },
-      },
       accessibility: {
         ariaLabel: `Confirmar transferência: ${formatCurrency(amount)} para ${recipient}`,
         screenReaderText: speech,
       },
       requiresConfirmation: true,
+      speech,
+      text,
+      visual: {
+        data: {
+          amount,
+          formattedAmount: formatCurrency(amount),
+          recipient,
+        },
+        type: 'transfer',
+      },
     };
   }
 
@@ -316,20 +316,20 @@ export function generateTransferResponse(data: {
   const speech = `Transferência de ${formatCurrencyForVoice(amount)} para ${recipient} confirmada!`;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'transfer',
-      data: {
-        recipient,
-        amount,
-        confirmed: true,
-        formattedAmount: formatCurrency(amount),
-      },
-    },
     accessibility: {
       ariaLabel: `Transferência confirmada: ${formatCurrency(amount)}`,
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: {
+        amount,
+        confirmed: true,
+        formattedAmount: formatCurrency(amount),
+        recipient,
+      },
+      type: 'transfer',
     },
   };
 }
@@ -342,15 +342,15 @@ export function generateErrorResponse(error: string): MultimodalResponse {
   const speech = text;
 
   return {
-    text,
-    speech,
-    visual: {
-      type: 'error',
-      data: { error },
-    },
     accessibility: {
       ariaLabel: 'Erro',
       screenReaderText: speech,
+    },
+    speech,
+    text,
+    visual: {
+      data: { error },
+      type: 'error',
     },
   };
 }

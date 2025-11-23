@@ -185,7 +185,7 @@ export class DataRetentionManager {
         // First anonymize user references
         await supabase
           .from('voice_recordings')
-          .update({ user_id: null, transcription_anonymized: true })
+          .update({ transcription_anonymized: true, user_id: null })
           .lt('created_at', cutoffDate.toISOString())
           .is('user_id', 'not null');
       }
@@ -197,12 +197,14 @@ export class DataRetentionManager {
           .delete()
           .lt('created_at', cutoffDate.toISOString());
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         logger.info(`Cleaned up voice recordings older than ${cutoffDate.toISOString()}`);
       }
     } catch (error) {
-      logger.error('Failed to cleanup voice recordings', { error, cutoffDate });
+      logger.error('Failed to cleanup voice recordings', { cutoffDate, error });
     }
   }
 
@@ -218,7 +220,9 @@ export class DataRetentionManager {
           .select('id')
           .lt('last_activity', cutoffDate.toISOString());
 
-        if (userError) throw userError;
+        if (userError) {
+          throw userError;
+        }
 
         if (inactiveUsers && inactiveUsers.length > 0) {
           const userIds = inactiveUsers.map((user) => user.id);
@@ -238,14 +242,16 @@ export class DataRetentionManager {
               .delete()
               .in('user_id', userIds);
 
-            if (error) throw error;
+            if (error) {
+              throw error;
+            }
           }
 
           logger.info(`Cleaned up biometric patterns for ${inactiveUsers.length} inactive users`);
         }
       }
     } catch (error) {
-      logger.error('Failed to cleanup biometric patterns', { error, cutoffDate });
+      logger.error('Failed to cleanup biometric patterns', { cutoffDate, error });
     }
   }
 
@@ -258,10 +264,10 @@ export class DataRetentionManager {
     try {
       // Log the deletion request
       await supabase.from('audit_logs').insert({
-        user_id: userId,
         action: 'user_deletion_requested',
-        resource_type: 'user_account',
         details: { timestamp: new Date().toISOString() },
+        resource_type: 'user_account',
+        user_id: userId,
       });
 
       // Anonymize or delete user data according to policies
@@ -284,10 +290,10 @@ export class DataRetentionManager {
         await supabase.auth.admin.deleteUser(userId);
 
         await supabase.from('audit_logs').insert({
-          user_id: userId,
           action: 'user_account_deleted',
-          resource_type: 'user_account',
           details: { timestamp: new Date().toISOString() },
+          resource_type: 'user_account',
+          user_id: userId,
         });
       }
 
@@ -306,7 +312,9 @@ export class DataRetentionManager {
     dataType: string,
     policy: RetentionPolicy
   ): Promise<void> {
-    if (!policy.anonymize) return;
+    if (!policy.anonymize) {
+      return;
+    }
 
     try {
       switch (dataType) {
@@ -314,9 +322,9 @@ export class DataRetentionManager {
           await supabase
             .from('voice_recordings')
             .update({
-              user_id: null,
+              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
               transcription_anonymized: true,
-              metadata: { anonymized: true, anonymization_date: new Date().toISOString() },
+              user_id: null,
             })
             .eq('user_id', userId);
           break;
@@ -325,9 +333,9 @@ export class DataRetentionManager {
           await supabase
             .from('biometric_patterns')
             .update({
-              user_id: null,
+              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
               pattern_hash: null,
-              metadata: { anonymized: true, anonymization_date: new Date().toISOString() },
+              user_id: null,
             })
             .eq('user_id', userId);
           break;
@@ -337,8 +345,8 @@ export class DataRetentionManager {
           await supabase
             .from('transactions')
             .update({
+              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
               user_id: null,
-              metadata: { anonymized: true, anonymization_date: new Date().toISOString() },
             })
             .eq('user_id', userId);
           break;
@@ -351,7 +359,7 @@ export class DataRetentionManager {
   /**
    * Get retention statistics for compliance reporting
    */
-  async getRetentionStatistics(): Promise<any> {
+  async getRetentionStatistics(): Promise<unknown> {
     const stats = {};
 
     for (const [dataType, policy] of Object.entries(RETENTION_POLICIES)) {
@@ -381,8 +389,8 @@ export class DataRetentionManager {
         }
 
         stats[dataType] = {
-          eligibleForDeletion: count,
           cutoffDate: cutoffDate.toISOString(),
+          eligibleForDeletion: count,
           policy: policy,
         };
       } catch (error) {
@@ -405,30 +413,30 @@ export const handleConsentWithdrawal = async (
   userId: string,
   consentTypes: string[]
 ): Promise<void> => {
-  logger.info(`Processing consent withdrawal`, { userId, consentTypes });
+  logger.info(`Processing consent withdrawal`, { consentTypes, userId });
 
   try {
     // Update consent records
     for (const consentType of consentTypes) {
       await supabase.from('user_consent').upsert({
-        user_id: userId,
-        consent_type: consentType,
-        granted: false,
-        consent_version: '1.0.0',
         consent_date: new Date().toISOString(),
+        consent_type: consentType,
+        consent_version: '1.0.0',
+        granted: false,
+        user_id: userId,
         withdrawal_date: new Date().toISOString(),
       });
     }
 
     // Log consent withdrawal
     await supabase.from('audit_logs').insert({
-      user_id: userId,
       action: 'consent_withdrawn',
-      resource_type: 'user_consent',
       details: {
         consent_types: consentTypes,
         timestamp: new Date().toISOString(),
       },
+      resource_type: 'user_consent',
+      user_id: userId,
     });
 
     // If biometric consent withdrawn, immediately delete biometric data
@@ -436,7 +444,7 @@ export const handleConsentWithdrawal = async (
       await supabase.from('biometric_patterns').delete().eq('user_id', userId);
     }
 
-    logger.info(`Consent withdrawal completed`, { userId, consentTypes });
+    logger.info(`Consent withdrawal completed`, { consentTypes, userId });
   } catch (error) {
     logger.error('Failed to process consent withdrawal', { error, userId });
     throw error;

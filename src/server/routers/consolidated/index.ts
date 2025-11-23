@@ -9,8 +9,8 @@ import { usersRouter } from './users';
 
 export const consolidatedRouters = {
   auth: authRouter,
-  users: usersRouter,
   transactions: transactionsRouter,
+  users: usersRouter,
 };
 
 export default consolidatedRouters;

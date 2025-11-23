@@ -24,10 +24,10 @@ export interface SecurityMiddlewareOptions {
 
 // Default security options
 const DEFAULT_SECURITY_OPTIONS: Required<SecurityMiddlewareOptions> = {
-  enableRateLimit: true,
+  enableAuditLogging: true,
   enableAuthValidation: true,
   enableInputValidation: true,
-  enableAuditLogging: true,
+  enableRateLimit: true,
 };
 
 /**
@@ -36,7 +36,15 @@ const DEFAULT_SECURITY_OPTIONS: Required<SecurityMiddlewareOptions> = {
 export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}) => {
   const opts = { ...DEFAULT_SECURITY_OPTIONS, ...options };
 
-  return async ({ ctx, next, type }: { ctx: Context; next: any; type?: string }) => {
+  return async ({
+    ctx,
+    next,
+    type,
+  }: {
+    ctx: Context;
+    next: () => Promise<unknown>;
+    type?: string;
+  }) => {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
     const procedureType = type || 'unknown';
@@ -60,11 +68,11 @@ export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}
       // Log successful completion
       if (opts.enableAuditLogging) {
         logger.info('Request completed', {
-          requestId,
-          type: procedureType,
           duration: Date.now() - startTime,
-          userId: ctx.user?.id,
+          requestId,
           success: true,
+          type: procedureType,
+          userId: ctx.user?.id,
         });
       }
 
@@ -73,12 +81,12 @@ export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}
       // Log error
       if (opts.enableAuditLogging) {
         logger.error('Request failed', {
-          requestId,
-          type: procedureType,
           duration: Date.now() - startTime,
-          userId: ctx.user?.id,
           error: error instanceof Error ? error.message : 'Unknown error',
+          requestId,
           success: false,
+          type: procedureType,
+          userId: ctx.user?.id,
         });
       }
 
@@ -122,18 +130,23 @@ const applySecurityMeasures = async (
  * Apply rate limiting based on procedure type
  */
 const applyRateLimiting = async (ctx: Context, type: string): Promise<void> => {
-  // Map procedure types to rate limiters
-  const rateLimitMap: Record<string, any> = {
+  // Map procedure types to rate limiters with proper typing
+  type RateLimiterFunction = (options: {
+    ctx: Context;
+    next: () => Promise<unknown>;
+  }) => Promise<void>;
+
+  const rateLimitMap: Record<string, RateLimiterFunction> = {
     'auth.login': authRateLimit,
     'auth.register': authRateLimit,
     'auth.resetPassword': authRateLimit,
+    'data.export': dataExportRateLimit,
+    'transaction.create': transactionRateLimit,
+    'transaction.delete': transactionRateLimit,
+    'transaction.update': transactionRateLimit,
+    'user.deleteAccount': dataExportRateLimit,
     'voice.command': voiceCommandRateLimit,
     'voice.transcribe': voiceCommandRateLimit,
-    'transaction.create': transactionRateLimit,
-    'transaction.update': transactionRateLimit,
-    'transaction.delete': transactionRateLimit,
-    'data.export': dataExportRateLimit,
-    'user.deleteAccount': dataExportRateLimit,
   };
 
   const rateLimiter = rateLimitMap[type];
@@ -186,9 +199,12 @@ const validateAuthentication = async (ctx: Context, type: string): Promise<void>
  * Validate input for security
  */
 const validateInput = async (ctx: Context, type: string): Promise<void> => {
-  const input = (ctx as any).input;
+  // Type-safe input extraction with proper typing
+  const input = ctx.rawInput as unknown;
 
-  if (!input) return;
+  if (!input) {
+    return;
+  }
 
   // Check for common injection patterns
   const dangerousPatterns = [
@@ -203,15 +219,15 @@ const validateInput = async (ctx: Context, type: string): Promise<void> => {
     /delete\s+from/gi,
   ];
 
-  const checkValue = (value: any, path: string = ''): void => {
+  const checkValue = (value: unknown, path: string = ''): void => {
     if (typeof value === 'string') {
       for (const pattern of dangerousPatterns) {
         if (pattern.test(value)) {
           logger.warn('Potentially dangerous input detected', {
-            type,
             path,
-            value: value.substring(0, 100),
+            type,
             userId: ctx.user?.id,
+            value: value.substring(0, 100),
           });
 
           throw new TRPCError({
@@ -220,7 +236,7 @@ const validateInput = async (ctx: Context, type: string): Promise<void> => {
           });
         }
       }
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, val] of Object.entries(value)) {
         checkValue(val, path ? `${path}.${key}` : key);
       }
@@ -237,31 +253,57 @@ const validateInput = async (ctx: Context, type: string): Promise<void> => {
   await validateSpecificInput(ctx, type, input);
 };
 
+// Type-safe interfaces for validation inputs
+interface LoginInput {
+  email: string;
+  password: string;
+}
+
+interface RegisterInput extends LoginInput {
+  fullName: string;
+  cpf?: string;
+  phone?: string;
+}
+
+interface TransactionInput {
+  amount: number;
+  description: string;
+  category?: string;
+  date?: string;
+}
+
+interface VoiceCommandInput {
+  command?: string;
+  audioData?: Buffer | File;
+  sessionId?: string;
+  language?: string;
+}
+
 /**
  * Validate input for specific procedure types
  */
-const validateSpecificInput = async (ctx: Context, type: string, input: any): Promise<void> => {
+const validateSpecificInput = async (ctx: Context, type: string, input: unknown): Promise<void> => {
   switch (type) {
     case 'auth.login':
-      await validateLoginInput(ctx, input);
+      await validateLoginInput(ctx, input as LoginInput);
       break;
     case 'auth.register':
-      await validateRegisterInput(ctx, input);
+      await validateRegisterInput(ctx, input as RegisterInput);
       break;
     case 'transaction.create':
-      await validateTransactionInput(ctx, input);
+      await validateTransactionInput(ctx, input as TransactionInput);
       break;
     case 'voice.command':
-      await validateVoiceCommandInput(ctx, input);
+      await validateVoiceCommandInput(ctx, input as VoiceCommandInput);
       break;
   }
 };
 
-const validateLoginInput = async (_ctx: Context, input: any): Promise<void> => {
+const validateLoginInput = async (_ctx: Context, input: LoginInput): Promise<void> => {
   if (!input.email || !input.password) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Email and password are required',
+      message: 'Email e senha são obrigatórios',
     });
   }
 
@@ -270,7 +312,7 @@ const validateLoginInput = async (_ctx: Context, input: any): Promise<void> => {
   if (!emailRegex.test(input.email)) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Invalid email format',
+      message: 'Formato de e-mail inválido',
     });
   }
 
@@ -278,18 +320,18 @@ const validateLoginInput = async (_ctx: Context, input: any): Promise<void> => {
   if (input.password.length < 8) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Password must be at least 8 characters long',
+      message: 'A senha deve ter pelo menos 8 caracteres',
     });
   }
 };
 
-const validateRegisterInput = async (ctx: Context, input: any): Promise<void> => {
+const validateRegisterInput = async (ctx: Context, input: RegisterInput): Promise<void> => {
   await validateLoginInput(ctx, input);
 
   if (!input.fullName || input.fullName.trim().length < 2) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Full name must be at least 2 characters long',
+      message: 'O nome completo deve ter pelo menos 2 caracteres',
     });
   }
 
@@ -297,23 +339,23 @@ const validateRegisterInput = async (ctx: Context, input: any): Promise<void> =>
   if (input.cpf && !validateCPF(input.cpf)) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Invalid CPF format',
+      message: 'Formato de CPF inválido',
     });
   }
 };
 
-const validateTransactionInput = async (_ctx: Context, input: any): Promise<void> => {
+const validateTransactionInput = async (_ctx: Context, input: TransactionInput): Promise<void> => {
   if (!input.amount || input.amount <= 0) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Amount must be greater than 0',
+      message: 'O valor deve ser maior que 0',
     });
   }
 
   if (!input.description || input.description.trim().length < 3) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Description must be at least 3 characters long',
+      message: 'A descrição deve ter pelo menos 3 caracteres',
     });
   }
 
@@ -328,18 +370,21 @@ const validateTransactionInput = async (_ctx: Context, input: any): Promise<void
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(input.description)) {
       logger.warn('Suspicious transaction description detected', {
-        description: input.description,
         amount: input.amount,
+        description: input.description,
       });
     }
   }
 };
 
-const validateVoiceCommandInput = async (_ctx: Context, input: any): Promise<void> => {
+const validateVoiceCommandInput = async (
+  _ctx: Context,
+  input: VoiceCommandInput
+): Promise<void> => {
   if (!input.command && !input.audioData) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Command text or audio data is required',
+      message: 'Texto do comando ou dados de áudio são obrigatórios',
     });
   }
 
@@ -347,16 +392,16 @@ const validateVoiceCommandInput = async (_ctx: Context, input: any): Promise<voi
   if (input.command && input.command.length > 1000) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Command text too long',
+      message: 'Texto do comando muito longo',
     });
   }
 
   // Check audio file size
-  if (input.audioData && input.audioData.size > 10 * 1024 * 1024) {
+  if (input.audioData instanceof File && input.audioData.size > 10 * 1024 * 1024) {
     // 10MB
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Audio file too large',
+      message: 'Arquivo de áudio muito grande',
     });
   }
 };
@@ -377,8 +422,12 @@ const validateCPF = (cpf: string): boolean => {
   }
 
   let remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cleaned.substring(9, 10), 10)) return false;
+  if (remainder === 10 || remainder === 11) {
+    remainder = 0;
+  }
+  if (remainder !== parseInt(cleaned.substring(9, 10), 10)) {
+    return false;
+  }
 
   sum = 0;
   for (let i = 1; i <= 10; i++) {
@@ -386,41 +435,56 @@ const validateCPF = (cpf: string): boolean => {
   }
 
   remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder === 10 || remainder === 11) {
+    remainder = 0;
+  }
 
   return remainder === parseInt(cleaned.substring(10, 11), 10);
 };
 
 /**
- * Check if error is security-related
+ * Check if error is security-related with proper typing
  */
-const isSecurityError = (error: any): boolean => {
+const isSecurityError = (
+  error: unknown
+): error is TRPCError & { code: 'UNAUTHORIZED' | 'FORBIDDEN' | 'TOO_MANY_REQUESTS' } => {
   if (error instanceof TRPCError) {
-    return ['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'].includes(error.code);
+    return ['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'].includes(error.code as any);
   }
   return false;
 };
 
 /**
- * Log security events
+ * Log security events with type-safe database operations
  */
-const logSecurityEvent = async (ctx: Context, error: any, requestId: string): Promise<void> => {
+const logSecurityEvent = async (
+  ctx: Context,
+  error: TRPCError,
+  requestId: string
+): Promise<void> => {
   try {
     const { createServerClient } = await import('@/integrations/supabase/factory');
     const supabase = createServerClient();
 
-    await supabase.from('audit_logs').insert({
-      user_id: ctx.user?.id,
-      action: 'security_violation',
-      resource_type: 'api_security',
+    // Type-safe audit log insertion
+    const auditLogData = {
+      action: SecurityEventType.SUSPICIOUS_LOGIN,
       details: {
-        requestId,
         error_code: error.code,
         error_message: error.message,
+        ip_address: ctx.req?.headers.get('x-forwarded-for') || ctx.req?.headers.get('x-real-ip'),
+        requestId,
         timestamp: new Date().toISOString(),
+        user_agent: ctx.req?.headers.get('user-agent'),
       },
+      ip_address: ctx.req?.headers.get('x-forwarded-for') || ctx.req?.headers.get('x-real-ip'),
+      resource_type: 'api_security',
       success: false,
-    });
+      user_agent: ctx.req?.headers.get('user-agent'),
+      user_id: ctx.user?.id || null,
+    };
+
+    await supabase.from('audit_logs').insert(auditLogData);
   } catch (logError) {
     logger.error('Failed to log security event', { error: logError });
   }
@@ -429,15 +493,15 @@ const logSecurityEvent = async (ctx: Context, error: any, requestId: string): Pr
 // Export pre-configured middleware instances
 export const securityMiddleware = createSecurityMiddleware();
 export const strictSecurityMiddleware = createSecurityMiddleware({
-  enableRateLimit: true,
+  enableAuditLogging: true,
   enableAuthValidation: true,
   enableInputValidation: true,
-  enableAuditLogging: true,
+  enableRateLimit: true,
 });
 
 export const relaxedSecurityMiddleware = createSecurityMiddleware({
-  enableRateLimit: false,
+  enableAuditLogging: false,
   enableAuthValidation: true,
   enableInputValidation: true,
-  enableAuditLogging: false,
+  enableRateLimit: false,
 });

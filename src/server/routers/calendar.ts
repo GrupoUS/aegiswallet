@@ -3,36 +3,15 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  type BrazilianFinancialEvent,
-  createFinancialNotificationService,
-} from '@/lib/notifications/financial-notification-service';
+import type { BrazilianFinancialEvent } from '@/lib/notifications/financial-notification-service';
+import { createFinancialNotificationService } from '@/lib/notifications/financial-notification-service';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
 /**
  * Gera mensagem de lembrete padrão para eventos financeiros
  */
-function generateReminderMessage(event: any): string {
-  const eventDate = event.event_date ? new Date(event.event_date) : null;
-  const formattedDate = eventDate
-    ? format(eventDate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
-    : '';
-
-  if (event.amount) {
-    const formattedAmount = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(Math.abs(event.amount));
-
-    if (event.amount < 0) {
-      return `💰 Lembrete: Pagamento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
-    }
-    return `💳 Lembrete: Recebimento de "${event.title}" no valor de ${formattedAmount} em ${formattedDate}`;
-  }
-
-  return `📅 Lembrete: "${event.title}" em ${formattedDate}`;
-}
+function generateReminderMessage(event: CalendarEvent): string {
 
 /**
  * Calendar Router - Gerenciamento de eventos financeiros
@@ -48,8 +27,8 @@ export const calendarRouter = router({
 
       if (error) {
         logError('fetch_event_types', 'system', error, {
-          resource: 'event_types',
           operation: 'getEventTypes',
+          resource: 'event_types',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -60,8 +39,8 @@ export const calendarRouter = router({
       return data || [];
     } catch (error) {
       logError('fetch_event_types_unexpected', 'system', error as Error, {
-        resource: 'event_types',
         operation: 'getEventTypes',
+        resource: 'event_types',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -74,11 +53,11 @@ export const calendarRouter = router({
   getEvents: protectedProcedure
     .input(
       z.object({
-        startDate: z.string(),
-        endDate: z.string(),
-        typeId: z.string().uuid().optional(),
-        isCompleted: z.boolean().optional(),
         categoryId: z.string().uuid().optional(),
+        endDate: z.string(),
+        isCompleted: z.boolean().optional(),
+        startDate: z.string(),
+        typeId: z.string().uuid().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -110,13 +89,13 @@ export const calendarRouter = router({
 
         if (error) {
           logError('fetch_financial_events', ctx.user.id, error, {
-            resource: 'financial_events',
-            operation: 'getEvents',
-            startDate: input.startDate,
-            endDate: input.endDate,
-            typeId: input.typeId,
-            isCompleted: input.isCompleted,
             categoryId: input.categoryId,
+            endDate: input.endDate,
+            isCompleted: input.isCompleted,
+            operation: 'getEvents',
+            resource: 'financial_events',
+            startDate: input.startDate,
+            typeId: input.typeId,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -125,24 +104,24 @@ export const calendarRouter = router({
         }
 
         logOperation('fetch_financial_events_success', ctx.user.id, 'financial_events', undefined, {
-          startDate: input.startDate,
-          endDate: input.endDate,
-          typeId: input.typeId,
-          isCompleted: input.isCompleted,
           categoryId: input.categoryId,
+          endDate: input.endDate,
+          isCompleted: input.isCompleted,
           resultsCount: data?.length || 0,
+          startDate: input.startDate,
+          typeId: input.typeId,
         });
 
         return data || [];
       } catch (error) {
         logError('fetch_financial_events_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
-          operation: 'getEvents',
-          startDate: input.startDate,
-          endDate: input.endDate,
-          typeId: input.typeId,
-          isCompleted: input.isCompleted,
           categoryId: input.categoryId,
+          endDate: input.endDate,
+          isCompleted: input.isCompleted,
+          operation: 'getEvents',
+          resource: 'financial_events',
+          startDate: input.startDate,
+          typeId: input.typeId,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -185,9 +164,9 @@ export const calendarRouter = router({
             });
           }
           logError('fetch_financial_event_by_id', ctx.user.id, error, {
-            resource: 'financial_events',
-            operation: 'getEventById',
             eventId: input.id,
+            operation: 'getEventById',
+            resource: 'financial_events',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -198,9 +177,9 @@ export const calendarRouter = router({
         return data;
       } catch (error) {
         logError('fetch_financial_event_by_id_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
-          operation: 'getEventById',
           eventId: input.id,
+          operation: 'getEventById',
+          resource: 'financial_events',
         });
         throw error;
       }
@@ -210,20 +189,20 @@ export const calendarRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        typeId: z.string().uuid(),
-        title: z.string().min(1, 'Título é obrigatório'),
-        description: z.string().optional(),
-        amount: z.number().optional(),
-        isIncome: z.boolean().default(false),
         accountId: z.string().uuid().optional(),
-        categoryId: z.string().uuid().optional(),
-        eventDate: z.string(),
-        dueDate: z.string().optional(),
-        isRecurring: z.boolean().default(false),
-        recurrenceRule: z.string().optional(),
-        priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
-        tags: z.array(z.string()).default([]),
+        amount: z.number().optional(),
         attachments: z.array(z.string()).default([]),
+        categoryId: z.string().uuid().optional(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        eventDate: z.string(),
+        isIncome: z.boolean().default(false),
+        isRecurring: z.boolean().default(false),
+        priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+        recurrenceRule: z.string().optional(),
+        tags: z.array(z.string()).default([]),
+        title: z.string().min(1, 'Título é obrigatório'),
+        typeId: z.string().uuid(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -231,12 +210,12 @@ export const calendarRouter = router({
         const { data, error } = await supabase
           .from('financial_events')
           .insert({
+            amount: input.amount,
+            description: input.description,
+            event_date: input.eventDate,
             event_type_id: input.typeId,
             title: input.title,
-            description: input.description,
-            amount: input.amount,
             user_id: ctx.user.id,
-            event_date: input.eventDate,
           })
           .select(`
             *,
@@ -247,12 +226,12 @@ export const calendarRouter = router({
 
         if (error) {
           logError('create_financial_event', ctx.user.id, error, {
-            resource: 'financial_events',
-            operation: 'create',
-            eventTitle: input.title,
-            typeId: input.typeId,
-            eventDate: input.eventDate,
             amount: input.amount,
+            eventDate: input.eventDate,
+            eventTitle: input.title,
+            operation: 'create',
+            resource: 'financial_events',
+            typeId: input.typeId,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -261,22 +240,22 @@ export const calendarRouter = router({
         }
 
         logOperation('create_financial_event_success', ctx.user.id, 'financial_events', data?.id, {
-          eventTitle: input.title,
-          typeId: input.typeId,
-          eventDate: input.eventDate,
           amount: input.amount,
+          eventDate: input.eventDate,
+          eventTitle: input.title,
           hasDescription: !!input.description,
+          typeId: input.typeId,
         });
 
         return data;
       } catch (error) {
         logError('create_financial_event_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
-          operation: 'create',
-          eventTitle: input.title,
-          typeId: input.typeId,
-          eventDate: input.eventDate,
           amount: input.amount,
+          eventDate: input.eventDate,
+          eventTitle: input.title,
+          operation: 'create',
+          resource: 'financial_events',
+          typeId: input.typeId,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -289,19 +268,19 @@ export const calendarRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
-        typeId: z.string().uuid().optional(),
-        title: z.string().optional(),
-        description: z.string().optional(),
-        amount: z.number().optional(),
-        isIncome: z.boolean().optional(),
         accountId: z.string().uuid().optional(),
+        amount: z.number().optional(),
         categoryId: z.string().uuid().optional(),
-        eventDate: z.string().optional(),
+        description: z.string().optional(),
         dueDate: z.string().optional(),
+        eventDate: z.string().optional(),
+        id: z.string().uuid(),
         isCompleted: z.boolean().optional(),
+        isIncome: z.boolean().optional(),
         priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
         tags: z.array(z.string()).optional(),
+        title: z.string().optional(),
+        typeId: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -309,12 +288,22 @@ export const calendarRouter = router({
         const { id, ...updateData } = input;
 
         // Map the input to database column names (only use columns that exist)
-        const dbUpdateData: any = {};
-        if (updateData.typeId !== undefined) dbUpdateData.event_type_id = updateData.typeId;
-        if (updateData.title !== undefined) dbUpdateData.title = updateData.title;
-        if (updateData.description !== undefined) dbUpdateData.description = updateData.description;
-        if (updateData.amount !== undefined) dbUpdateData.amount = updateData.amount;
-        if (updateData.eventDate !== undefined) dbUpdateData.event_date = updateData.eventDate;
+        const const dbUpdateData: Record<string, unknown> = {};;
+        if (updateData.typeId !== undefined) {
+          dbUpdateData.event_type_id = updateData.typeId;
+        }
+        if (updateData.title !== undefined) {
+          dbUpdateData.title = updateData.title;
+        }
+        if (updateData.description !== undefined) {
+          dbUpdateData.description = updateData.description;
+        }
+        if (updateData.amount !== undefined) {
+          dbUpdateData.amount = updateData.amount;
+        }
+        if (updateData.eventDate !== undefined) {
+          dbUpdateData.event_date = updateData.eventDate;
+        }
         if (updateData.isCompleted !== undefined) {
           dbUpdateData.is_completed = updateData.isCompleted;
           // Note: completed_at column doesn't exist yet, so we can't set it
@@ -349,9 +338,9 @@ export const calendarRouter = router({
             });
           }
           logError('update_financial_event', ctx.user.id, error, {
-            resource: 'financial_events',
-            operation: 'update',
             eventId: input.id,
+            operation: 'update',
+            resource: 'financial_events',
             updateFields: Object.keys(updateData),
           });
           throw new TRPCError({
@@ -367,9 +356,9 @@ export const calendarRouter = router({
         return data;
       } catch (error) {
         logError('update_financial_event_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
-          operation: 'update',
           eventId: input.id,
+          operation: 'update',
+          resource: 'financial_events',
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
         });
         throw error;
@@ -406,9 +395,9 @@ export const calendarRouter = router({
             });
           }
           logError('delete_financial_event', ctx.user.id, error, {
-            resource: 'financial_events',
-            operation: 'delete',
             eventId: input.id,
+            operation: 'delete',
+            resource: 'financial_events',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -423,9 +412,9 @@ export const calendarRouter = router({
         return data;
       } catch (error) {
         logError('delete_financial_event_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
-          operation: 'delete',
           eventId: input.id,
+          operation: 'delete',
+          resource: 'financial_events',
         });
         throw error;
       }
@@ -454,8 +443,8 @@ export const calendarRouter = router({
 
       if (error) {
         logError('fetch_upcoming_events', ctx.user.id, error, {
-          resource: 'financial_events',
           operation: 'getUpcomingEvents',
+          resource: 'financial_events',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -464,15 +453,15 @@ export const calendarRouter = router({
       }
 
       logOperation('fetch_upcoming_events_success', ctx.user.id, 'financial_events', undefined, {
-        resultsCount: data?.length || 0,
         daysRange: 30,
+        resultsCount: data?.length || 0,
       });
 
       return data || [];
     } catch (error) {
       logError('fetch_upcoming_events_unexpected', ctx.user.id, error as Error, {
-        resource: 'financial_events',
         operation: 'getUpcomingEvents',
+        resource: 'financial_events',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -501,8 +490,8 @@ export const calendarRouter = router({
 
       if (error) {
         logError('fetch_overdue_events', ctx.user.id, error, {
-          resource: 'financial_events',
           operation: 'getOverdueEvents',
+          resource: 'financial_events',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -517,8 +506,8 @@ export const calendarRouter = router({
       return data || [];
     } catch (error) {
       logError('fetch_overdue_events_unexpected', ctx.user.id, error as Error, {
-        resource: 'financial_events',
         operation: 'getOverdueEvents',
+        resource: 'financial_events',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -532,9 +521,9 @@ export const calendarRouter = router({
     .input(
       z.object({
         eventId: z.string().uuid(),
+        message: z.string().optional(),
         remindAt: z.string(),
         reminderType: z.enum(['notification', 'email', 'sms', 'voice']).default('notification'),
-        message: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -562,20 +551,20 @@ export const calendarRouter = router({
           .from('event_reminders')
           .insert({
             event_id: input.eventId,
+            message: defaultMessage,
             remind_at: input.remindAt,
             reminder_type: input.reminderType,
-            message: defaultMessage,
           })
           .select()
           .single();
 
         if (error) {
           logError('create_event_reminder', ctx.user.id, error, {
-            resource: 'event_reminders',
-            operation: 'createReminder',
             eventId: input.eventId,
-            reminderType: input.reminderType,
+            operation: 'createReminder',
             remindAt: input.remindAt,
+            reminderType: input.reminderType,
+            resource: 'event_reminders',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -585,19 +574,19 @@ export const calendarRouter = router({
 
         logOperation('create_event_reminder_success', ctx.user.id, 'event_reminders', data?.id, {
           eventId: input.eventId,
-          reminderType: input.reminderType,
-          remindAt: input.remindAt,
           hasCustomMessage: !!input.message,
+          remindAt: input.remindAt,
+          reminderType: input.reminderType,
         });
 
         return data;
       } catch (error) {
         logError('create_event_reminder_unexpected', ctx.user.id, error as Error, {
-          resource: 'event_reminders',
-          operation: 'createReminder',
           eventId: input.eventId,
-          reminderType: input.reminderType,
+          operation: 'createReminder',
           remindAt: input.remindAt,
+          reminderType: input.reminderType,
+          resource: 'event_reminders',
         });
         throw error;
       }
@@ -646,9 +635,9 @@ export const calendarRouter = router({
 
         if (error) {
           logError('mark_reminder_sent', ctx.user.id, error, {
-            resource: 'event_reminders',
             operation: 'markReminderSent',
             reminderId: input.reminderId,
+            resource: 'event_reminders',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -670,9 +659,9 @@ export const calendarRouter = router({
         return data;
       } catch (error) {
         logError('mark_reminder_sent_unexpected', ctx.user.id, error as Error, {
-          resource: 'event_reminders',
           operation: 'markReminderSent',
           reminderId: input.reminderId,
+          resource: 'event_reminders',
         });
         throw error;
       }
@@ -682,8 +671,8 @@ export const calendarRouter = router({
   createAutomatedReminders: protectedProcedure
     .input(
       z.object({
-        eventId: z.string().uuid(),
-        customSchedule: z.array(z.number()).optional(), // dias antes do evento
+        customSchedule: z.array(z.number()).optional(),
+        eventId: z.string().uuid(), // dias antes do evento
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -709,25 +698,25 @@ export const calendarRouter = router({
 
         // Criar serviço de notificação financeira
         const notificationService = createFinancialNotificationService({
-          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
-          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
+          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
         });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
-          id: event.id,
-          title: event.title,
-          description: event.description,
           amount: event.amount,
-          eventDate: event.event_date,
-          dueDate: event.due_date,
-          eventTypeId: event.event_type_id,
           categoryName: event.transaction_categories?.name,
-          priority: event.priority || 'normal',
+          description: event.description,
+          dueDate: event.due_date,
+          eventDate: event.event_date,
+          eventTypeId: event.event_type_id,
+          id: event.id,
           isCompleted: event.is_completed || false,
+          priority: event.priority || 'normal',
+          title: event.title,
         };
 
         // Criar lembretes automáticos
@@ -746,14 +735,14 @@ export const calendarRouter = router({
         );
 
         return {
-          success: true,
           message: 'Lembretes automáticos criados com sucesso',
+          success: true,
         };
       } catch (error) {
         logError('create_automated_reminders', ctx.user.id, error as Error, {
-          resource: 'event_reminders',
-          operation: 'createAutomatedReminders',
           eventId: input.eventId,
+          operation: 'createAutomatedReminders',
+          resource: 'event_reminders',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -766,8 +755,8 @@ export const calendarRouter = router({
   sendFinancialNotification: protectedProcedure
     .input(
       z.object({
-        eventId: z.string().uuid(),
         customMessage: z.string().optional(),
+        eventId: z.string().uuid(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -793,25 +782,25 @@ export const calendarRouter = router({
 
         // Criar serviço de notificação financeira
         const notificationService = createFinancialNotificationService({
-          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
-          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
+          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
         });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
-          id: event.id,
-          title: event.title,
-          description: event.description,
           amount: event.amount,
-          eventDate: event.event_date,
-          dueDate: event.due_date,
-          eventTypeId: event.event_type_id,
           categoryName: event.transaction_categories?.name,
-          priority: event.priority || 'normal',
+          description: event.description,
+          dueDate: event.due_date,
+          eventDate: event.event_date,
+          eventTypeId: event.event_type_id,
+          id: event.id,
           isCompleted: event.is_completed || false,
+          priority: event.priority || 'normal',
+          title: event.title,
         };
 
         // Enviar notificação imediata
@@ -833,12 +822,12 @@ export const calendarRouter = router({
           }
         );
 
-        return { success: true, message: 'Notificação enviada com sucesso' };
+        return { message: 'Notificação enviada com sucesso', success: true };
       } catch (error) {
         logError('send_financial_notification', ctx.user.id, error as Error, {
-          resource: 'notifications',
-          operation: 'sendFinancialNotification',
           eventId: input.eventId,
+          operation: 'sendFinancialNotification',
+          resource: 'notifications',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -878,25 +867,25 @@ export const calendarRouter = router({
 
         // Criar serviço de notificação financeira
         const notificationService = createFinancialNotificationService({
-          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
-          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
           ttl: 3600,
           urgency: 'normal',
+          vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+          vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+          vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
         });
 
         // Converter para formato BrazilianFinancialEvent
         const brazilianEvent: BrazilianFinancialEvent = {
-          id: event.id,
-          title: event.title,
-          description: event.description,
           amount: event.amount,
-          eventDate: event.event_date,
-          dueDate: event.due_date,
-          eventTypeId: event.event_type_id,
           categoryName: event.transaction_categories?.name,
-          priority: event.priority || 'normal',
+          description: event.description,
+          dueDate: event.due_date,
+          eventDate: event.event_date,
+          eventTypeId: event.event_type_id,
+          id: event.id,
           isCompleted: event.is_completed || false,
+          priority: event.priority || 'normal',
+          title: event.title,
         };
 
         // Criar lembrete por voz
@@ -913,15 +902,15 @@ export const calendarRouter = router({
         });
 
         return {
-          success: true,
           message: 'Lembrete por voz criado com sucesso',
+          success: true,
         };
       } catch (error) {
         logError('create_voice_reminder', ctx.user.id, error as Error, {
-          resource: 'event_reminders',
-          operation: 'createVoiceReminder',
           eventId: input.eventId,
+          operation: 'createVoiceReminder',
           reminderTime: input.reminderTime,
+          resource: 'event_reminders',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -935,11 +924,11 @@ export const calendarRouter = router({
     try {
       // Criar serviço de notificação financeira
       const notificationService = createFinancialNotificationService({
-        vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
-        vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-        vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
         ttl: 3600,
         urgency: 'normal',
+        vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+        vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+        vapidSubject: `mailto:${ctx.user.email || 'user@aegiswallet.com'}`,
       });
 
       // Processar lembretes pendentes
@@ -950,13 +939,13 @@ export const calendarRouter = router({
       });
 
       return {
-        success: true,
         message: 'Lembretes pendentes processados com sucesso',
+        success: true,
       };
     } catch (error) {
       logError('process_pending_reminders', ctx.user.id, error as Error, {
-        resource: 'event_reminders',
         operation: 'processPendingReminders',
+        resource: 'event_reminders',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -969,12 +958,12 @@ export const calendarRouter = router({
   searchEvents: protectedProcedure
     .input(
       z.object({
+        categoryId: z.string().uuid().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().min(1).max(100).default(20),
         query: z.string().min(1, 'Termo de busca é obrigatório'),
         startDate: z.string().optional(),
-        endDate: z.string().optional(),
         typeId: z.string().uuid().optional(),
-        categoryId: z.string().uuid().optional(),
-        limit: z.number().min(1).max(100).default(20),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -1012,14 +1001,14 @@ export const calendarRouter = router({
 
         if (error) {
           logError('search_financial_events', ctx.user.id, error, {
-            resource: 'financial_events',
+            categoryId: input.categoryId,
+            endDate: input.endDate,
+            limit: input.limit,
             operation: 'searchEvents',
             query: input.query,
+            resource: 'financial_events',
             startDate: input.startDate,
-            endDate: input.endDate,
             typeId: input.typeId,
-            categoryId: input.categoryId,
-            limit: input.limit,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -1033,25 +1022,25 @@ export const calendarRouter = router({
           'financial_events',
           undefined,
           {
-            query: input.query,
-            resultsCount: data?.length || 0,
+            hasCategoryFilter: !!input.categoryId,
             hasDateFilter: !!(input.startDate || input.endDate),
             hasTypeFilter: !!input.typeId,
-            hasCategoryFilter: !!input.categoryId,
+            query: input.query,
+            resultsCount: data?.length || 0,
           }
         );
 
         return data || [];
       } catch (error) {
         logError('search_financial_events_unexpected', ctx.user.id, error as Error, {
-          resource: 'financial_events',
+          categoryId: input.categoryId,
+          endDate: input.endDate,
+          limit: input.limit,
           operation: 'searchEvents',
           query: input.query,
+          resource: 'financial_events',
           startDate: input.startDate,
-          endDate: input.endDate,
           typeId: input.typeId,
-          categoryId: input.categoryId,
-          limit: input.limit,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -1064,11 +1053,11 @@ export const calendarRouter = router({
   searchTransactions: protectedProcedure
     .input(
       z.object({
+        categoryId: z.string().uuid().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().min(1).max(100).default(20),
         query: z.string().min(1, 'Termo de busca é obrigatório'),
         startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        categoryId: z.string().uuid().optional(),
-        limit: z.number().min(1).max(100).default(20),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -1102,13 +1091,13 @@ export const calendarRouter = router({
 
         if (error) {
           logError('search_transactions', ctx.user.id, error, {
-            resource: 'transactions',
+            categoryId: input.categoryId,
+            endDate: input.endDate,
+            limit: input.limit,
             operation: 'searchTransactions',
             query: input.query,
+            resource: 'transactions',
             startDate: input.startDate,
-            endDate: input.endDate,
-            categoryId: input.categoryId,
-            limit: input.limit,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -1117,22 +1106,22 @@ export const calendarRouter = router({
         }
 
         logOperation('search_transactions_success', ctx.user.id, 'transactions', undefined, {
+          hasCategoryFilter: !!input.categoryId,
+          hasDateFilter: !!(input.startDate || input.endDate),
           query: input.query,
           resultsCount: data?.length || 0,
-          hasDateFilter: !!(input.startDate || input.endDate),
-          hasCategoryFilter: !!input.categoryId,
         });
 
         return data || [];
       } catch (error) {
         logError('search_transactions_unexpected', ctx.user.id, error as Error, {
-          resource: 'transactions',
+          categoryId: input.categoryId,
+          endDate: input.endDate,
+          limit: input.limit,
           operation: 'searchTransactions',
           query: input.query,
+          resource: 'transactions',
           startDate: input.startDate,
-          endDate: input.endDate,
-          categoryId: input.categoryId,
-          limit: input.limit,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

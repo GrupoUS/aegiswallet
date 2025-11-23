@@ -12,10 +12,10 @@ export const contactsRouter = router({
   getAll: protectedProcedure
     .input(
       z.object({
-        search: z.string().optional(),
         isFavorite: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().default(0),
+        search: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -38,12 +38,12 @@ export const contactsRouter = router({
 
         if (error) {
           logError('fetch_contacts', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'getAll',
-            search: input.search,
             isFavorite: input.isFavorite,
             limit: input.limit,
             offset: input.offset,
+            operation: 'getAll',
+            resource: 'contacts',
+            search: input.search,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -53,17 +53,17 @@ export const contactsRouter = router({
 
         return {
           contacts: data || [],
-          total: count || 0,
           hasMore: (count || 0) > input.offset + input.limit,
+          total: count || 0,
         };
       } catch (error) {
         logError('fetch_contacts_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'getAll',
-          search: input.search,
           isFavorite: input.isFavorite,
           limit: input.limit,
           offset: input.offset,
+          operation: 'getAll',
+          resource: 'contacts',
+          search: input.search,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -95,9 +95,9 @@ export const contactsRouter = router({
             });
           }
           logError('fetch_contact_by_id', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'getById',
             contactId: input.id,
+            operation: 'getById',
+            resource: 'contacts',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -108,9 +108,9 @@ export const contactsRouter = router({
         return data;
       } catch (error) {
         logError('fetch_contact_by_id_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'getById',
           contactId: input.id,
+          operation: 'getById',
+          resource: 'contacts',
         });
         throw error;
       }
@@ -120,12 +120,12 @@ export const contactsRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(1, 'Nome é obrigatório'),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
         cpf: z.string().optional(),
-        notes: z.string().optional(),
+        email: z.string().email().optional(),
         isFavorite: z.boolean().default(false),
+        name: z.string().min(1, 'Nome é obrigatório'),
+        notes: z.string().optional(),
+        phone: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -144,9 +144,9 @@ export const contactsRouter = router({
         if (error) {
           if (error.code === '23505') {
             logOperation('create_contact_conflict', ctx.user.id, 'contacts', undefined, {
-              reason: 'duplicate_email_or_phone',
               email: input.email,
               phone: input.phone,
+              reason: 'duplicate_email_or_phone',
             });
             throw new TRPCError({
               code: 'CONFLICT',
@@ -154,11 +154,11 @@ export const contactsRouter = router({
             });
           }
           logError('create_contact', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'create',
             contactName: input.name,
             hasEmail: !!input.email,
             hasPhone: !!input.phone,
+            operation: 'create',
+            resource: 'contacts',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -176,11 +176,11 @@ export const contactsRouter = router({
         return data;
       } catch (error) {
         logError('create_contact_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'create',
           contactName: input.name,
           hasEmail: !!input.email,
           hasPhone: !!input.phone,
+          operation: 'create',
+          resource: 'contacts',
         });
         throw error;
       }
@@ -190,13 +190,13 @@ export const contactsRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
-        name: z.string().optional(),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
         cpf: z.string().optional(),
-        notes: z.string().optional(),
+        email: z.string().email().optional(),
+        id: z.string().uuid(),
         isFavorite: z.boolean().optional(),
+        name: z.string().optional(),
+        notes: z.string().optional(),
+        phone: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -226,9 +226,9 @@ export const contactsRouter = router({
           }
           if (error.code === '23505') {
             logOperation('update_contact_conflict', ctx.user.id, 'contacts', input.id, {
-              reason: 'duplicate_email_or_phone',
               email: input.email,
               phone: input.phone,
+              reason: 'duplicate_email_or_phone',
             });
             throw new TRPCError({
               code: 'CONFLICT',
@@ -236,9 +236,9 @@ export const contactsRouter = router({
             });
           }
           logError('update_contact', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'update',
             contactId: input.id,
+            operation: 'update',
+            resource: 'contacts',
             updateFields: Object.keys(updateData),
           });
           throw new TRPCError({
@@ -254,9 +254,9 @@ export const contactsRouter = router({
         return data;
       } catch (error) {
         logError('update_contact_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'update',
           contactId: input.id,
+          operation: 'update',
+          resource: 'contacts',
           updateFields: Object.keys(input).filter((k) => k !== 'id'),
         });
         throw error;
@@ -287,9 +287,9 @@ export const contactsRouter = router({
             });
           }
           logError('delete_contact', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'delete',
             contactId: input.id,
+            operation: 'delete',
+            resource: 'contacts',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -304,9 +304,9 @@ export const contactsRouter = router({
         return data;
       } catch (error) {
         logError('delete_contact_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'delete',
           contactId: input.id,
+          operation: 'delete',
+          resource: 'contacts',
         });
         throw error;
       }
@@ -316,8 +316,8 @@ export const contactsRouter = router({
   search: protectedProcedure
     .input(
       z.object({
-        query: z.string().min(1, 'Query de busca é obrigatória'),
         limit: z.number().min(1).max(20).default(10),
+        query: z.string().min(1, 'Query de busca é obrigatória'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -335,10 +335,10 @@ export const contactsRouter = router({
 
         if (error) {
           logError('search_contacts', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'search',
-            searchQuery: input.query,
             limit: input.limit,
+            operation: 'search',
+            resource: 'contacts',
+            searchQuery: input.query,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -347,18 +347,18 @@ export const contactsRouter = router({
         }
 
         logOperation('search_contacts_success', ctx.user.id, 'contacts', undefined, {
-          searchQuery: input.query,
-          resultsCount: data?.length || 0,
           limit: input.limit,
+          resultsCount: data?.length || 0,
+          searchQuery: input.query,
         });
 
         return data || [];
       } catch (error) {
         logError('search_contacts_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'search',
-          searchQuery: input.query,
           limit: input.limit,
+          operation: 'search',
+          resource: 'contacts',
+          searchQuery: input.query,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -379,8 +379,8 @@ export const contactsRouter = router({
 
       if (error) {
         logError('fetch_favorite_contacts', ctx.user.id, error, {
-          resource: 'contacts',
           operation: 'getFavorites',
+          resource: 'contacts',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -395,8 +395,8 @@ export const contactsRouter = router({
       return data || [];
     } catch (error) {
       logError('fetch_favorite_contacts_unexpected', ctx.user.id, error as Error, {
-        resource: 'contacts',
         operation: 'getFavorites',
+        resource: 'contacts',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -439,10 +439,10 @@ export const contactsRouter = router({
 
         if (error) {
           logError('toggle_favorite_status', ctx.user.id, error, {
-            resource: 'contacts',
-            operation: 'toggleFavorite',
             contactId: input.id,
+            operation: 'toggleFavorite',
             previousStatus: currentContact.is_favorite,
+            resource: 'contacts',
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -451,16 +451,16 @@ export const contactsRouter = router({
         }
 
         logOperation('toggle_favorite_success', ctx.user.id, 'contacts', input.id, {
-          previousStatus: currentContact.is_favorite,
           newStatus: !currentContact.is_favorite,
+          previousStatus: currentContact.is_favorite,
         });
 
         return data;
       } catch (error) {
         logError('toggle_favorite_unexpected', ctx.user.id, error as Error, {
-          resource: 'contacts',
-          operation: 'toggleFavorite',
           contactId: input.id,
+          operation: 'toggleFavorite',
+          resource: 'contacts',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -479,8 +479,8 @@ export const contactsRouter = router({
 
       if (error) {
         logError('fetch_contact_stats', ctx.user.id, error, {
-          resource: 'contacts',
           operation: 'getStats',
+          resource: 'contacts',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -496,16 +496,16 @@ export const contactsRouter = router({
       const contactsWithPhone = contacts.filter((c) => c.phone).length;
 
       return {
-        totalContacts,
-        favoriteContacts,
         contactsWithEmail,
         contactsWithPhone,
+        favoriteContacts,
         favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
+        totalContacts,
       };
     } catch (error) {
       logError('fetch_contact_stats_unexpected', ctx.user.id, error as Error, {
-        resource: 'contacts',
         operation: 'getStats',
+        resource: 'contacts',
       });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',

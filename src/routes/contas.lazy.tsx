@@ -1,10 +1,13 @@
 import { FileText, Mic } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
+import { EditTransactionDialog } from '@/components/financial/EditTransactionDialog';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFinancialEvents } from '@/hooks/useFinancialEvents';
+import type { FinancialEvent } from '@/types/financial-events';
 
 // Lazy loading do componente BillsList
 const BillsList = lazy(() =>
@@ -51,80 +54,50 @@ function BillsListLoader() {
 
 export function Contas() {
   const [isListening, setIsListening] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
+  const [editingBill, setEditingBill] = useState<FinancialEvent | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const {
+    events: bills,
+    loading,
+    updateFilters,
+    filters,
+    statistics,
+    deleteEvent,
+  } = useFinancialEvents(
+    {
+      type: 'expense', // Busca apenas despesas (inclui contas)
+      status: 'all',
+    },
+    {
+      page: 1,
+      limit: 100, // Limite aumentado para listar a maioria das contas
+      sortBy: 'due_date',
+      sortOrder: 'asc',
+    }
+  );
 
   const handleVoiceCommand = () => {
     setIsListening(!isListening);
   };
 
-  // Mock bills data
-  const bills = [
-    {
-      id: 1,
-      name: 'Energia Elétrica',
-      amount: 245.67,
-      dueDate: '2024-01-15',
-      status: 'pending',
-      category: 'utilities',
-      recurring: true,
-      icon: '⚡',
-    },
-    {
-      id: 2,
-      name: 'Internet',
-      amount: 99.9,
-      dueDate: '2024-01-10',
-      status: 'paid',
-      category: 'utilities',
-      recurring: true,
-      icon: '🌐',
-    },
-    {
-      id: 3,
-      name: 'Aluguel',
-      amount: 1500.0,
-      dueDate: '2024-01-05',
-      status: 'paid',
-      category: 'housing',
-      recurring: true,
-      icon: '🏠',
-    },
-    {
-      id: 4,
-      name: 'Água',
-      amount: 85.3,
-      dueDate: '2024-01-20',
-      status: 'pending',
-      category: 'utilities',
-      recurring: true,
-      icon: '💧',
-    },
-    {
-      id: 5,
-      name: 'Cartão de Crédito',
-      amount: 1250.45,
-      dueDate: '2024-01-25',
-      status: 'pending',
-      category: 'credit',
-      recurring: true,
-      icon: '💳',
-    },
-    {
-      id: 6,
-      name: 'Academia',
-      amount: 150.0,
-      dueDate: '2024-01-12',
-      status: 'pending',
-      category: 'health',
-      recurring: true,
-      icon: '💪',
-    },
-  ];
+  const handleEdit = (bill: FinancialEvent) => {
+    setEditingBill(bill);
+    setIsEditModalOpen(true);
+  };
 
-  const pendingBills = bills.filter((b) => b.status === 'pending');
-  const paidBills = bills.filter((b) => b.status === 'paid');
-  const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
-  const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0);
+  // Calcular contagens baseadas nos eventos carregados
+  // Nota: statistics do hook é baseado na página atual, então calculamos manualmente para a lista carregada
+  const pendingBillsCount = bills.filter((b) => b.status === 'pending').length;
+  const paidBillsCount = bills.filter(
+    (b) => b.status === 'paid' || b.status === 'completed'
+  ).length;
+
+  // Usar estatísticas do hook para valores monetários (considerando que o limit 100 cobre o mês atual/relevante)
+  const totalPending = statistics.pendingExpenses;
+  const totalPaid = statistics.totalExpenses;
+
+  const currentFilter = filters.status || 'all';
 
   return (
     <div className="container mx-auto space-y-6 p-4">
@@ -156,9 +129,13 @@ export function Contas() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <FinancialAmount amount={-totalPending} size="lg" />
+              {loading ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <FinancialAmount amount={-totalPending} size="lg" />
+              )}
               <Badge variant="outline" className="border-warning text-warning">
-                {pendingBills.length} contas
+                {loading ? <Skeleton className="h-4 w-8" /> : pendingBillsCount} contas
               </Badge>
             </div>
           </CardContent>
@@ -170,9 +147,13 @@ export function Contas() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <FinancialAmount amount={-totalPaid} size="lg" />
+              {loading ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <FinancialAmount amount={-totalPaid} size="lg" />
+              )}
               <Badge variant="outline" className="border-success text-success">
-                {paidBills.length} contas
+                {loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount} contas
               </Badge>
             </div>
           </CardContent>
@@ -183,34 +164,51 @@ export function Contas() {
             <CardDescription>Total do Mês</CardDescription>
           </CardHeader>
           <CardContent>
-            <FinancialAmount amount={-(totalPending + totalPaid)} size="lg" />
+            {loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <FinancialAmount amount={-(totalPending + totalPaid)} size="lg" />
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Filter Buttons */}
       <div className="flex gap-2">
-        <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
-          Todas ({bills.length})
+        <Button
+          variant={currentFilter === 'all' ? 'default' : 'outline'}
+          onClick={() => updateFilters({ status: 'all' })}
+        >
+          Todas
         </Button>
         <Button
-          variant={filter === 'pending' ? 'default' : 'outline'}
-          onClick={() => setFilter('pending')}
+          variant={currentFilter === 'pending' ? 'default' : 'outline'}
+          onClick={() => updateFilters({ status: 'pending' })}
         >
-          Pendentes ({pendingBills.length})
+          Pendentes
         </Button>
         <Button
-          variant={filter === 'paid' ? 'default' : 'outline'}
-          onClick={() => setFilter('paid')}
+          variant={currentFilter === 'paid' ? 'default' : 'outline'}
+          onClick={() => updateFilters({ status: 'paid' })}
         >
-          Pagas ({paidBills.length})
+          Pagas
         </Button>
       </div>
 
       {/* Bills List */}
       <Suspense fallback={<BillsListLoader />}>
-        <BillsList bills={bills} filter={filter} />
+        {loading ? (
+          <BillsListLoader />
+        ) : (
+          <BillsList bills={bills} onEdit={handleEdit} onDelete={deleteEvent} />
+        )}
       </Suspense>
+
+      <EditTransactionDialog
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        transaction={editingBill}
+      />
 
       {/* Actions */}
       <div className="flex gap-4">

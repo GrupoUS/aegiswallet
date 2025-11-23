@@ -9,7 +9,8 @@
  * @module nlu/brazilianLearner
  */
 
-import { type ClassificationLog, IntentType } from './types';
+import type { ClassificationLog } from './types';
+import { IntentType } from './types';
 
 // ============================================================================
 // Brazilian Regional Variations
@@ -47,7 +48,8 @@ interface LearningMetrics {
 
 const BRAZILIAN_REGIONAL_PATTERNS: RegionalPattern[] = [
   {
-    region: 'SP',
+    commonPhrases: ['tipo assim', 'entendeu', 'né', 'maneiro'],
+    confidence: 0.85,
     patterns: [
       'qual tah o saldo',
       'quanto tah na conta',
@@ -55,18 +57,18 @@ const BRAZILIAN_REGIONAL_PATTERNS: RegionalPattern[] = [
       'posso sacar quanto',
       'tinha quanto lá',
     ],
+    region: 'SP',
     slangTerms: {
-      tah: 'tá',
       cê: 'você',
-      vaih: 'vai',
+      tah: 'tá',
       tinh: 'tinha',
       tô: 'estou',
+      vaih: 'vai',
     },
-    commonPhrases: ['tipo assim', 'entendeu', 'né', 'maneiro'],
-    confidence: 0.85,
   },
   {
-    region: 'RJ',
+    commonPhrases: ['você vai', 'cara', 'legal', 'massa'],
+    confidence: 0.82,
     patterns: [
       'qual é o meu saldão',
       'quanto de grana eu tenho',
@@ -74,18 +76,18 @@ const BRAZILIAN_REGIONAL_PATTERNS: RegionalPattern[] = [
       'da pra gastar quanto',
       'tem quilo na conta',
     ],
+    region: 'RJ',
     slangTerms: {
-      grana: 'dinheiro',
       conto: 'mil reais',
+      grana: 'dinheiro',
       quilo: 'dinheiro',
       saldão: 'saldo grande',
       véi: 'cara',
     },
-    commonPhrases: ['você vai', 'cara', 'legal', 'massa'],
-    confidence: 0.82,
   },
   {
-    region: 'Nordeste',
+    commonPhrases: ['oxente', 'pois é', 'meu filho', 'nóis'],
+    confidence: 0.78,
     patterns: [
       'quanto tá teno',
       'moiá no banco',
@@ -93,18 +95,18 @@ const BRAZILIAN_REGIONAL_PATTERNS: RegionalPattern[] = [
       'dá pra gastá bão',
       'tem dinheiro na poupança',
     ],
+    region: 'Nordeste',
     slangTerms: {
-      teno: 'tendo',
-      moiá: 'moeda/dinheiro',
-      chová: 'chover/cair (dinheiro)',
-      bão: 'bom',
       assim: 'assim mesmo',
+      bão: 'bom',
+      chová: 'chover/cair (dinheiro)',
+      moiá: 'moeda/dinheiro',
+      teno: 'tendo',
     },
-    commonPhrases: ['oxente', 'pois é', 'meu filho', 'nóis'],
-    confidence: 0.78,
   },
   {
-    region: 'Sul',
+    commonPhrases: ['bah', 'tchê', 'legal', 'então'],
+    confidence: 0.88,
     patterns: [
       'qual é o saldo lá',
       'quanto tem na conta',
@@ -112,14 +114,13 @@ const BRAZILIAN_REGIONAL_PATTERNS: RegionalPattern[] = [
       'posso usar quanto',
       'tem dinheiro disponível',
     ],
+    region: 'Sul',
     slangTerms: {
       bah: 'uau/surpresa',
-      tchê: 'cara/amigo',
       guri: 'menino/rapaz',
       guria: 'menina/moça',
+      tchê: 'cara/amigo',
     },
-    commonPhrases: ['bah', 'tchê', 'legal', 'então'],
-    confidence: 0.88,
   },
 ];
 
@@ -177,12 +178,12 @@ export class BrazilianLearner {
       }
 
       if (score > 0) {
-        regionScores[regionalPattern.region] = { score, indicators };
+        regionScores[regionalPattern.region] = { indicators, score };
       }
     }
 
     if (Object.keys(regionScores).length === 0) {
-      return { region: 'Unknown', confidence: 0, indicators: [] };
+      return { confidence: 0, indicators: [], region: 'Unknown' };
     }
 
     // Find region with highest score
@@ -194,9 +195,9 @@ export class BrazilianLearner {
     const confidence = (Math.min(maxScore / 10, 1.0) * bestRegion[1].score) / 10;
 
     return {
-      region: String(bestRegion[0]),
       confidence: Math.round(confidence * 100) / 100,
       indicators: bestRegion[1].indicators,
+      region: String(bestRegion[0]),
     };
   }
 
@@ -246,9 +247,9 @@ export class BrazilianLearner {
     const total = slangCount + formalCount + colloquialCount;
     if (total === 0) {
       return {
-        style: 'mixed',
         confidence: 0.5,
         features: ['no clear indicators'],
+        style: 'mixed',
       };
     }
 
@@ -257,15 +258,15 @@ export class BrazilianLearner {
     const colloquialRatio = colloquialCount / total;
 
     if (slangRatio > 0.6) {
-      return { style: 'slang', confidence: slangRatio, features };
+      return { confidence: slangRatio, features, style: 'slang' };
     }
     if (formalRatio > 0.6) {
-      return { style: 'formal', confidence: formalRatio, features };
+      return { confidence: formalRatio, features, style: 'formal' };
     }
     if (colloquialRatio > 0.6) {
-      return { style: 'colloquial', confidence: colloquialRatio, features };
+      return { confidence: colloquialRatio, features, style: 'colloquial' };
     }
-    return { style: 'mixed', confidence: 0.5, features };
+    return { confidence: 0.5, features, style: 'mixed' };
   }
 
   /**
@@ -292,18 +293,18 @@ export class BrazilianLearner {
   /**
    * Suggest pattern improvements based on learning data
    */
-  suggestPatternImprovements(intent: IntentType): Array<{
+  suggestPatternImprovements(intent: IntentType): {
     type: 'new_pattern' | 'regional_variant' | 'slang_inclusion' | 'entity_improvement';
     suggestion: string;
     confidence: number;
     supportingData: number;
-  }> {
-    const suggestions: Array<{
+  }[] {
+    const suggestions: {
       type: 'new_pattern' | 'regional_variant' | 'slang_inclusion' | 'entity_improvement';
       suggestion: string;
       confidence: number;
       supportingData: number;
-    }> = [];
+    }[] = [];
 
     // Analyze failed classifications for this intent
     const failedLogs = this.getFailedClassificationsForIntent(intent);
@@ -315,10 +316,10 @@ export class BrazilianLearner {
     for (const mistake of commonMistakes) {
       if (mistake.frequency >= 3 && mistake.accuracy < 0.6) {
         suggestions.push({
-          type: 'new_pattern',
-          suggestion: `Add pattern for: "${mistake.pattern}"`,
           confidence: mistake.frequency / 10,
+          suggestion: `Add pattern for: "${mistake.pattern}"`,
           supportingData: mistake.frequency,
+          type: 'new_pattern',
         });
       }
     }
@@ -328,10 +329,10 @@ export class BrazilianLearner {
       const regionalAccuracy = this.learningMetrics.regionalAccuracy[region];
       if (regionalAccuracy < 0.75) {
         suggestions.push({
-          type: 'regional_variant',
-          suggestion: `Add ${region} regional patterns for ${intent}`,
           confidence: 0.75 - regionalAccuracy,
+          suggestion: `Add ${region} regional patterns for ${intent}`,
           supportingData: Math.floor(regionalAccuracy * 100),
+          type: 'regional_variant',
         });
       }
     }
@@ -344,18 +345,18 @@ export class BrazilianLearner {
    */
   getLearningReport(): {
     summary: LearningMetrics;
-    topPerformingPatterns: Array<{
+    topPerformingPatterns: {
       pattern: string;
       successRate: number;
       frequency: number;
       region?: string;
-    }>;
-    improvementOpportunities: Array<{
+    }[];
+    improvementOpportunities: {
       intent: IntentType;
       issue: string;
       impact: number;
       suggestion: string;
-    }>;
+    }[];
     regionalInsights: Record<
       string,
       {
@@ -371,10 +372,10 @@ export class BrazilianLearner {
     const regionalInsights = this.getRegionalInsights();
 
     return {
-      summary,
-      topPerformingPatterns: topPatterns,
       improvementOpportunities: opportunities,
       regionalInsights,
+      summary,
+      topPerformingPatterns: topPatterns,
     };
   }
 
@@ -384,12 +385,12 @@ export class BrazilianLearner {
 
   private initializeMetrics(): LearningMetrics {
     return {
-      regionalAccuracy: {},
-      linguisticStyleAccuracy: {},
-      temporalPatterns: {},
-      vocabularyGrowth: 0,
       adaptationRate: 0,
+      linguisticStyleAccuracy: {},
+      regionalAccuracy: {},
+      temporalPatterns: {},
       userSatisfactionScore: 0,
+      vocabularyGrowth: 0,
     };
   }
 
@@ -406,12 +407,12 @@ export class BrazilianLearner {
 
     for (const pattern of knownPatterns) {
       this.patternEvolution.set(pattern, {
-        pattern,
-        frequency: 1,
-        successRate: 0.9,
-        lastSeen: new Date(),
-        trend: 'stable',
         contexts: ['general'],
+        frequency: 1,
+        lastSeen: new Date(),
+        pattern,
+        successRate: 0.9,
+        trend: 'stable',
       });
     }
   }
@@ -461,12 +462,12 @@ export class BrazilianLearner {
       }
     } else {
       this.patternEvolution.set(key, {
-        pattern: log.originalText,
-        frequency: 1,
-        successRate: log.feedback === 'correct' ? 1 : 0,
-        lastSeen: new Date(),
-        trend: 'stable',
         contexts: [log.predictedIntent],
+        frequency: 1,
+        lastSeen: new Date(),
+        pattern: log.originalText,
+        successRate: log.feedback === 'correct' ? 1 : 0,
+        trend: 'stable',
       });
     }
   }
@@ -481,12 +482,12 @@ export class BrazilianLearner {
 
     if (!profile) {
       profile = {
-        userId,
-        region: regional.region,
-        preferredStyle: style.style,
-        commonPhrases: [],
         accuracyRate: 0,
+        commonPhrases: [],
         lastActivity: new Date(),
+        preferredStyle: style.style,
+        region: regional.region,
+        userId,
       };
       this.userPatterns.set(userId, profile);
     }
@@ -531,17 +532,17 @@ export class BrazilianLearner {
     return [];
   }
 
-  private analyzeCommonMistakes(logs: ClassificationLog[]): Array<{
+  private analyzeCommonMistakes(logs: ClassificationLog[]): {
     pattern: string;
     frequency: number;
     accuracy: number;
-  }> {
+  }[] {
     const mistakes: Record<string, { count: number; correct: number }> = {};
 
     for (const log of logs) {
       const key = log.originalText.toLowerCase().substring(0, 30);
       if (!mistakes[key]) {
-        mistakes[key] = { count: 0, correct: 0 };
+        mistakes[key] = { correct: 0, count: 0 };
       }
       mistakes[key].count++;
       if (log.feedback === 'correct') {
@@ -551,50 +552,50 @@ export class BrazilianLearner {
 
     return Object.entries(mistakes)
       .map(([pattern, data]) => ({
-        pattern,
-        frequency: data.count,
         accuracy: data.correct / data.count,
+        frequency: data.count,
+        pattern,
       }))
       .filter((m) => m.accuracy < 0.6);
   }
 
-  private getTopPerformingPatterns(): Array<{
+  private getTopPerformingPatterns(): {
     pattern: string;
     successRate: number;
     frequency: number;
     region?: string;
-  }> {
+  }[] {
     return Array.from(this.patternEvolution.entries())
       .map(([_key, evolution]) => ({
-        pattern: evolution.pattern,
-        successRate: evolution.successRate,
         frequency: evolution.frequency,
-        region: evolution.contexts[0], // Simplified
+        pattern: evolution.pattern,
+        region: evolution.contexts[0],
+        successRate: evolution.successRate, // Simplified
       }))
       .sort((a, b) => b.successRate * b.frequency - a.successRate * a.frequency)
       .slice(0, 10);
   }
 
-  private getImprovementOpportunities(): Array<{
+  private getImprovementOpportunities(): {
     intent: IntentType;
     issue: string;
     impact: number;
     suggestion: string;
-  }> {
-    const opportunities: Array<{
+  }[] {
+    const opportunities: {
       intent: IntentType;
       issue: string;
       impact: number;
       suggestion: string;
-    }> = [];
+    }[] = [];
 
     // Analyze low-performing regions
     for (const [region, accuracy] of Object.entries(this.learningMetrics.regionalAccuracy)) {
       if (accuracy < 0.75) {
         opportunities.push({
+          impact: (0.75 - accuracy) * 100,
           intent: IntentType.UNKNOWN,
           issue: `Low accuracy in ${region} region`,
-          impact: (0.75 - accuracy) * 100,
           suggestion: `Add more ${region} regional patterns and slang terms`,
         });
       }

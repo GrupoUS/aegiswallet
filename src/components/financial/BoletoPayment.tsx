@@ -65,15 +65,15 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
         if (data) {
           setBoletos(
             data.map((b) => ({
+              amount: Number(b.amount),
+              barcode: b.barcode,
+              dueDate: new Date(b.due_date),
               id: b.id,
               name: b.payee_name,
-              amount: Number(b.amount),
-              dueDate: new Date(b.due_date),
               status:
                 b.status === 'pending' || b.status === 'overdue' || b.status === 'paid'
                   ? b.status
                   : 'pending',
-              barcode: b.barcode,
               type: 'utility', // Defaulting to utility as type isn't in current schema
             }))
           );
@@ -90,8 +90,8 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
   // Memoize the formatCurrency function
   const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
       currency: 'BRL',
+      style: 'currency',
     }).format(amount);
   }, []);
 
@@ -99,12 +99,18 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
   const formatBoletoCode = useCallback((value: string) => {
     // Remove non-digits and format as XXXXX.XXXXX XXXXX.XXXXX XXXXX.XXXXX XXXXX.XXXXXX
     const cleanValue = value.replace(/[^\d]/g, '');
-    if (cleanValue.length <= 5) return cleanValue;
-    if (cleanValue.length <= 10) return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5)}`;
-    if (cleanValue.length <= 15)
+    if (cleanValue.length <= 5) {
+      return cleanValue;
+    }
+    if (cleanValue.length <= 10) {
+      return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5)}`;
+    }
+    if (cleanValue.length <= 15) {
       return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10)}`;
-    if (cleanValue.length <= 20)
+    }
+    if (cleanValue.length <= 20) {
       return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15)}`;
+    }
     return `${cleanValue.slice(0, 5)}.${cleanValue.slice(5, 10)}.${cleanValue.slice(10, 15)}.${cleanValue.slice(15, 20)}.${cleanValue.slice(20, 25)}`;
   }, []);
 
@@ -176,7 +182,9 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
           description: `Código: ${boletoCode}`,
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
       }
 
       setPaymentStatus('success');
@@ -207,9 +215,9 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
   // Memoize payment method options
   const paymentMethodOptions = useMemo(
     () => [
-      { value: 'pix', label: 'PIX' },
-      { value: 'debit', label: 'Débito' },
-      { value: 'credit', label: 'Crédito' },
+      { label: 'PIX', value: 'pix' },
+      { label: 'Débito', value: 'debit' },
+      { label: 'Crédito', value: 'credit' },
     ],
     []
   );
@@ -237,7 +245,9 @@ export const BoletoPayment = React.memo(function BoletoPayment({ className }: Bo
 
   // Memoize success state component
   const SuccessState = useMemo(() => {
-    if (paymentStatus !== 'success') return null;
+    if (paymentStatus !== 'success') {
+      return null;
+    }
 
     return (
       <Card className={cn('border-success/20 bg-success/10', className)}>

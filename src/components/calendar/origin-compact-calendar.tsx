@@ -88,9 +88,6 @@ export function OriginCompactCalendar({
         hideNavigation
         showOutsideDays={showOutsideDays}
         components={{
-          DropdownNav: (props: DropdownNavProps) => {
-            return <div className="flex w-full items-center gap-2">{props.children}</div>;
-          },
           Dropdown: (props: DropdownProps) => {
             return (
               <Select
@@ -117,6 +114,9 @@ export function OriginCompactCalendar({
                 </SelectContent>
               </Select>
             );
+          },
+          DropdownNav: (props: DropdownNavProps) => {
+            return <div className="flex w-full items-center gap-2">{props.children}</div>;
           },
         }}
       />

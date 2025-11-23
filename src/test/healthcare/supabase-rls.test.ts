@@ -10,8 +10,8 @@ const createMockSupabaseClient = (jwtPayload?: any) => {
     'test-anon-key', // Test key
     {
       auth: {
-        persistSession: false,
         autoRefreshToken: false,
+        persistSession: false,
       },
       global: {
         headers: {
@@ -23,6 +23,30 @@ const createMockSupabaseClient = (jwtPayload?: any) => {
 
   // Mock database responses
   client.from = vi.fn().mockImplementation((table: string) => ({
+    delete: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        error: null,
+      }),
+    }),
+    insert: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: {
+            created_at: new Date().toISOString(),
+            id: 'new-record-id',
+          },
+          error: null,
+        }),
+      }),
+    }),
+    rpc: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: true,
+          error: null,
+        }),
+      }),
+    }),
     select: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
         single: vi.fn().mockResolvedValue({
@@ -41,17 +65,6 @@ const createMockSupabaseClient = (jwtPayload?: any) => {
         }),
       }),
     }),
-    insert: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: 'new-record-id',
-            created_at: new Date().toISOString(),
-          },
-          error: null,
-        }),
-      }),
-    }),
     update: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -62,19 +75,6 @@ const createMockSupabaseClient = (jwtPayload?: any) => {
             },
             error: null,
           }),
-        }),
-      }),
-    }),
-    delete: vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({
-        error: null,
-      }),
-    }),
-    rpc: vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: true,
-          error: null,
         }),
       }),
     }),
@@ -251,7 +251,7 @@ describe('Supabase RLS Policy Testing', () => {
     describe('Healthcare Professionals', () => {
       const doctorContext = {
         userId: 'doctor-001',
-        userMetadata: { role: 'doctor', department: 'cardiology' },
+        userMetadata: { department: 'cardiology', role: 'doctor' },
       };
 
       it('should allow doctors to read patient data for their department', async () => {
@@ -276,7 +276,7 @@ describe('Supabase RLS Policy Testing', () => {
     describe('Administrators', () => {
       const adminContext = {
         userId: 'admin-001',
-        userMetadata: { role: 'admin', permissions: ['full_access'] },
+        userMetadata: { permissions: ['full_access'], role: 'admin' },
       };
 
       it('should allow administrators full access to patient data', async () => {
@@ -370,7 +370,7 @@ describe('Supabase RLS Policy Testing', () => {
     describe('Billing Department Access', () => {
       const billingContext = {
         userId: 'billing-001',
-        userMetadata: { role: 'billing', department: 'finance' },
+        userMetadata: { department: 'finance', role: 'billing' },
       };
 
       it('should allow billing staff to read all payment records', async () => {
@@ -416,7 +416,7 @@ describe('Supabase RLS Policy Testing', () => {
     describe('System-Level Access', () => {
       const systemContext = {
         userId: 'system-001',
-        userMetadata: { role: 'system', permissions: ['audit_write'] },
+        userMetadata: { permissions: ['audit_write'], role: 'system' },
       };
 
       it('should allow system processes to write audit logs', async () => {
@@ -430,9 +430,9 @@ describe('Supabase RLS Policy Testing', () => {
   describe('Data Masking Compliance', () => {
     it('should mask sensitive data in database responses', async () => {
       const supabase = createMockSupabaseClient({
+        app_metadata: { role: 'patient' },
         role: 'authenticated',
         user_id: 'patient-001',
-        app_metadata: { role: 'patient' },
       });
 
       const { data: patient } = await supabase
@@ -452,9 +452,9 @@ describe('Supabase RLS Policy Testing', () => {
 
     it('should allow unmasked access for authorized roles', async () => {
       const supabase = createMockSupabaseClient({
+        app_metadata: { permissions: ['view_full_data'], role: 'admin' },
         role: 'authenticated',
         user_id: 'admin-001',
-        app_metadata: { role: 'admin', permissions: ['view_full_data'] },
       });
 
       // Mock would return unmasked data for admin
@@ -489,10 +489,10 @@ describe('Supabase RLS Policy Testing', () => {
 
     it('should accept valid JWT tokens with proper claims', () => {
       const validPayload = {
-        role: 'authenticated',
-        user_id: 'test-user-001',
         app_metadata: { role: 'patient' },
-        exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        role: 'authenticated',
+        user_id: 'test-user-001', // 1 hour from now
       };
 
       const validJWT = createMockJWT(validPayload);

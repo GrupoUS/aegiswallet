@@ -67,13 +67,6 @@ export interface SecurityConfig {
  */
 export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   cors: {
-    origin: [
-      'https://aegiswallet.com',
-      'https://www.aegiswallet.com',
-      'https://app.aegiswallet.com',
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -81,12 +74,39 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       'X-Client-Version',
       'X-Request-ID',
     ],
+    credentials: true,
     exposedHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    origin: [
+      'https://aegiswallet.com',
+      'https://www.aegiswallet.com',
+      'https://app.aegiswallet.com',
+    ], // 24 hours
   },
-
   csp: {
+    childSrc: ["'self'"],
+    connectSrc: [
+      "'self'",
+      'https://api.openai.com',
+      'https://api.anthropic.com',
+      'https://api.openrouter.ai',
+      'https://ownkoxryswokcdanrdgj.supabase.co', // Replace with env var in production
+      'wss://ownkoxryswokcdanrdgj.supabase.co', // WebSocket connections
+    ],
     defaultSrc: ["'self'"],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+    frameSrc: ["'none'"],
+    imgSrc: [
+      "'self'",
+      'data:',
+      'https:',
+      'https://avatars.githubusercontent.com',
+      'https://ui-avatars.com',
+    ],
+    manifestSrc: ["'self'"],
+    mediaSrc: ["'self'"],
+    objectSrc: ["'none'"],
     scriptSrc: [
       "'self'",
       "'unsafe-inline'", // Temporary for development, remove in production
@@ -100,31 +120,14 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       'https://fonts.googleapis.com',
       'https://cdn.jsdelivr.net',
     ],
-    imgSrc: [
-      "'self'",
-      'data:',
-      'https:',
-      'https://avatars.githubusercontent.com',
-      'https://ui-avatars.com',
-    ],
-    connectSrc: [
-      "'self'",
-      'https://api.openai.com',
-      'https://api.anthropic.com',
-      'https://api.openrouter.ai',
-      'https://ownkoxryswokcdanrdgj.supabase.co', // Replace with env var in production
-      'wss://ownkoxryswokcdanrdgj.supabase.co', // WebSocket connections
-    ],
-    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-    objectSrc: ["'none'"],
-    mediaSrc: ["'self'"],
-    frameSrc: ["'none'"],
-    childSrc: ["'self'"],
-    workerSrc: ["'self'", 'blob:'],
-    manifestSrc: ["'self'"],
     upgradeInsecureRequests: true,
+    workerSrc: ["'self'", 'blob:'],
   },
-
+  lgpd: {
+    cookieConsent: true,
+    dataProcessingDetails: 'Financial data processing for account management',
+    privacyPolicyUrl: 'https://aegiswallet.com/privacy-policy',
+  },
   security: {
     hsts: {
       enabled: true,
@@ -132,10 +135,6 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       includeSubDomains: true,
       preload: true,
     },
-    xFrameOptions: 'DENY',
-    xContentTypeOptions: true,
-    xXssProtection: true,
-    referrerPolicy: 'strict-origin-when-cross-origin',
     permissionsPolicy: {
       camera: ['self'],
       microphone: ['self'], // For voice commands
@@ -146,12 +145,10 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       gyroscope: ['none'],
       accelerometer: ['none'],
     },
-  },
-
-  lgpd: {
-    privacyPolicyUrl: 'https://aegiswallet.com/privacy-policy',
-    cookieConsent: true,
-    dataProcessingDetails: 'Financial data processing for account management',
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    xContentTypeOptions: true,
+    xFrameOptions: 'DENY',
+    xXssProtection: true,
   },
 };
 
@@ -294,11 +291,6 @@ export function generateSecurityHeaders(
 
 interface ResponseWithHeader {
   setHeader: (key: string, value: string) => void;
-}
-
-interface RequestWithHeader {
-  headers: Record<string, string | string[] | undefined>;
-  method: string;
 }
 
 /**
@@ -450,10 +442,10 @@ export function createHonoSecurityMiddleware(config?: SecurityConfig) {
 export default {
   DEFAULT_SECURITY_CONFIG,
   DEVELOPMENT_SECURITY_CONFIG,
-  generateSecurityHeaders,
-  securityHeadersMiddleware,
   corsMiddleware,
-  securityMiddleware,
   createHonoSecurityMiddleware,
   generateCSPHeader,
+  generateSecurityHeaders,
+  securityHeadersMiddleware,
+  securityMiddleware,
 };

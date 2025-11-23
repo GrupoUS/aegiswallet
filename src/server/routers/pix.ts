@@ -23,38 +23,38 @@ const transactionStatusSchema = z.enum([
 ]);
 
 const createPixKeySchema = z.object({
+  isFavorite: z.boolean().default(false),
   keyType: pixKeyTypeSchema,
   keyValue: z.string().min(1, 'Chave PIX é obrigatória'),
   label: z.string().optional(),
-  isFavorite: z.boolean().default(false),
 });
 
 const createPixTransactionSchema = z.object({
-  transactionType: transactionTypeSchema,
   amount: z.number().positive('Valor deve ser maior que zero'),
+  description: z.string().optional(),
   pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
   pixKeyType: pixKeyTypeSchema,
-  description: z.string().optional(),
-  recipientName: z.string().optional(),
   recipientDocument: z.string().optional(),
+  recipientName: z.string().optional(),
   scheduledDate: z.string().datetime().optional(),
+  transactionType: transactionTypeSchema,
 });
 
 const generateQRCodeSchema = z.object({
-  pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
   amount: z.number().positive().optional(),
   description: z.string().optional(),
   expiresInMinutes: z.number().positive().optional(),
   maxUses: z.number().positive().optional(),
+  pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
 });
 
 const getTransactionsSchema = z.object({
-  type: transactionTypeSchema.optional(),
-  status: transactionStatusSchema.optional(),
-  startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   limit: z.number().int().positive().max(100).default(50),
   offset: z.number().int().nonnegative().default(0),
+  startDate: z.string().datetime().optional(),
+  status: transactionStatusSchema.optional(),
+  type: transactionTypeSchema.optional(),
 });
 
 const getStatsSchema = z.object({
@@ -121,12 +121,12 @@ export const pixRouter = router({
     const { data, error } = await ctx.supabase
       .from('pix_keys')
       .insert({
-        user_id: ctx.user.id,
+        is_active: true,
+        is_favorite: input.isFavorite,
         key_type: input.keyType,
         key_value: input.keyValue,
         label: input.label,
-        is_favorite: input.isFavorite,
-        is_active: true,
+        user_id: ctx.user.id,
       })
       .select()
       .single();
@@ -151,43 +151,8 @@ export const pixRouter = router({
   /**
    * Update PIX key (toggle favorite, update label)
    */
-  updateKey: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        label: z.string().optional(),
-        isFavorite: z.boolean().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const updates: any = {};
-      if (input.label !== undefined) updates.label = input.label;
-      if (input.isFavorite !== undefined) updates.is_favorite = input.isFavorite;
-
-      const { data, error } = await ctx.supabase
-        .from('pix_keys')
-        .update(updates)
-        .eq('id', input.id)
-        .eq('user_id', ctx.user.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Erro ao atualizar chave PIX: ${error.message}`,
-        });
-      }
-
-      if (!data) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Chave PIX não encontrada',
-        });
-      }
-
-      return data as Database['public']['Tables']['pix_keys']['Row'];
-    }),
+  .mutation(async ({ ctx, input }) => {
+      const updates: Record<string, unknown> = {};,
 
   /**
    * Delete PIX key (soft delete)
@@ -221,7 +186,7 @@ export const pixRouter = router({
         });
       }
 
-      return { success: true, id: input.id };
+      return { id: input.id, success: true };
     }),
 
   // =====================================================
@@ -265,9 +230,9 @@ export const pixRouter = router({
     }
 
     return {
-      transactions: data as Database['public']['Tables']['pix_transactions']['Row'][],
-      total: count || 0,
       hasMore: (count || 0) > input.offset + input.limit,
+      total: count || 0,
+      transactions: data as Database['public']['Tables']['pix_transactions']['Row'][],
     };
   }),
 
@@ -357,8 +322,8 @@ export const pixRouter = router({
   getStats: protectedProcedure.input(getStatsSchema).query(async ({ ctx, input }) => {
     const { data, error } = await ctx.supabase
       .rpc('get_pix_stats', {
-        p_user_id: ctx.user.id,
         p_period: input.period,
+        p_user_id: ctx.user.id,
       })
       .single();
 
@@ -393,14 +358,14 @@ export const pixRouter = router({
       const { data, error } = await ctx.supabase
         .from('pix_qr_codes')
         .insert({
-          user_id: ctx.user.id,
-          pix_key: input.pixKey,
           amount: input.amount,
           description: input.description,
-          qr_code_data: qrCodeData,
-          is_active: true,
           expires_at: expiresAt,
+          is_active: true,
           max_uses: input.maxUses,
+          pix_key: input.pixKey,
+          qr_code_data: qrCodeData,
+          user_id: ctx.user.id,
         })
         .select()
         .single();
@@ -468,7 +433,7 @@ export const pixRouter = router({
         });
       }
 
-      return { success: true, id: input.id };
+      return { id: input.id, success: true };
     }),
 });
 

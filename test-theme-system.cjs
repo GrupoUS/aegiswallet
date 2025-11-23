@@ -43,9 +43,9 @@ async function testThemeSystem() {
 
       const currentTheme = await page.evaluate(() => {
         const root = document.documentElement;
-        if (root.classList.contains('dark')) return 'dark';
-        if (root.classList.contains('light')) return 'light';
-        if (root.classList.contains('tweakcn')) return 'tweakcn';
+        if (root.classList.contains('dark')) {return 'dark';}
+        if (root.classList.contains('light')) {return 'light';}
+        if (root.classList.contains('tweakcn')) {return 'tweakcn';}
         return 'unknown';
       });
       console.log(`   Current theme after switch ${i + 1}: ${currentTheme}`);
@@ -59,14 +59,7 @@ async function testThemeSystem() {
       const computedStyle = getComputedStyle(root);
 
       return {
-        background: computedStyle.getPropertyValue('--background'),
-        foreground: computedStyle.getPropertyValue('--foreground'),
-        primary: computedStyle.getPropertyValue('--primary'),
-        secondary: computedStyle.getPropertyValue('--secondary'),
-        financialPositive: computedStyle.getPropertyValue('--financial-positive'),
-        financialNegative: computedStyle.getPropertyValue('--financial-negative'),
-        sidebarBackground: computedStyle.getPropertyValue('--sidebar-background'),
-        sidebarPrimary: computedStyle.getPropertyValue('--sidebar-primary'),
+        background: computedStyle.getPropertyValue('--background'), financialNegative: computedStyle.getPropertyValue('--financial-negative'), financialPositive: computedStyle.getPropertyValue('--financial-positive'), foreground: computedStyle.getPropertyValue('--foreground'), primary: computedStyle.getPropertyValue('--primary'), secondary: computedStyle.getPropertyValue('--secondary'), sidebarBackground: computedStyle.getPropertyValue('--sidebar-background'), sidebarPrimary: computedStyle.getPropertyValue('--sidebar-primary'),
       };
     });
 
@@ -93,21 +86,21 @@ async function testThemeSystem() {
 
       const sidebarExpanded = await page.evaluate(() => {
         const sidebar = document.querySelector('.hidden.md\\:flex');
-        if (!sidebar) return false;
+        if (!sidebar) {return false;}
         return sidebar.style.width !== '60px';
       });
 
       console.log(`   Sidebar hover expansion: ${sidebarExpanded ? '✅' : '❌'}`);
 
       // Test mobile responsiveness
-      await page.setViewportSize({ width: 375, height: 667 }); // Mobile size
+      await page.setViewportSize({ height: 667, width: 375 }); // Mobile size
       await page.waitForTimeout(500);
 
       const mobileMenuVisible = await page.locator('[data-testid="mobile-menu"]').isVisible().catch(() => false);
       console.log(`   Mobile menu visible: ${mobileMenuVisible ? '✅' : '❌'}`);
 
       // Restore desktop size
-      await page.setViewportSize({ width: 1920, height: 1080 });
+      await page.setViewportSize({ height: 1080, width: 1920 });
       await page.waitForTimeout(500);
     }
 
@@ -194,10 +187,7 @@ async function testThemeSystem() {
             const textStyle = getComputedStyle(textElement);
 
             checks.push({
-              element: `Card ${index + 1}`,
-              background: cardStyle.backgroundColor,
-              foreground: textStyle.color,
-              hasContrast: cardStyle.backgroundColor !== textStyle.color,
+              background: cardStyle.backgroundColor, element: `Card ${index + 1}`, foreground: textStyle.color, hasContrast: cardStyle.backgroundColor !== textStyle.color,
             });
           }
         }
@@ -236,21 +226,13 @@ async function testThemeSystem() {
     return {
       success: true,
       tests: {
-        themeSwitching: true,
-        cssVariables: Object.values(cssVariables).every(v => v !== ''),
-        sidebarFunctionality: sidebarExists,
-        cardVariants: cards.length > 0,
-        glassmorphism: glassElements.length > 0,
-        animationPerformance: animationDuration < 500,
-        accessibility: !!themeToggleAria,
-        colorContrast: contrastChecks.every(c => c.hasContrast),
-        consoleErrors: consoleErrors.length === 0,
+        accessibility: !!themeToggleAria, animationPerformance: animationDuration < 500, cardVariants: cards.length > 0, colorContrast: contrastChecks.every(c => c.hasContrast), consoleErrors: consoleErrors.length === 0, cssVariables: Object.values(cssVariables).every(v => v !== ''), glassmorphism: glassElements.length > 0, sidebarFunctionality: sidebarExists, themeSwitching: true,
       }
     };
 
   } catch (error) {
     console.error('❌ Test failed:', error.message);
-    return { success: false, error: error.message };
+    return { error: error.message, success: false };
   } finally {
     await browser.close();
   }

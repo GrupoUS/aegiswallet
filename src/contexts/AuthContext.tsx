@@ -1,5 +1,6 @@
 import type { AuthError, Session, User } from '@supabase/supabase-js';
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
 
@@ -56,27 +57,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const redirectUrl = `${window.location.origin}/dashboard`;
     const { error } = await supabase.auth.signUp({
       email,
-      password,
       options: {
         emailRedirectTo: redirectUrl,
       },
+      password,
     });
     return { error };
   };
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
+      provider: 'google',
     });
 
     if (error) {
       logger.authEvent('google_sign_in_error', undefined, {
+        component: 'AuthProvider',
         error: error.message,
         errorType: error.status ? 'oauth_error' : 'unknown_error',
-        component: 'AuthProvider',
       });
     }
   };
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
       </div>
     );
   }
@@ -97,14 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        session,
-        isLoading,
         isAuthenticated,
+        isLoading,
+        session,
         signIn,
-        signUp,
         signInWithGoogle,
         signOut,
+        signUp,
+        user,
       }}
     >
       {children}

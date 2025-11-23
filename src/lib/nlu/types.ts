@@ -104,7 +104,7 @@ export interface NLUResult {
   };
   metadata?: {
     classificationMethod?: 'pattern' | 'tfidf' | 'ensemble';
-    alternativeIntents?: Array<{ intent: IntentType; confidence: number }>;
+    alternativeIntents?: { intent: IntentType; confidence: number }[];
     contextUsed?: boolean;
   };
 }
@@ -116,7 +116,7 @@ export interface IntentClassificationResult {
   intent: IntentType;
   confidence: number;
   method: 'pattern' | 'tfidf' | 'ensemble';
-  alternatives: Array<{ intent: IntentType; confidence: number }>;
+  alternatives: { intent: IntentType; confidence: number }[];
 }
 
 // ============================================================================
@@ -128,7 +128,7 @@ export interface IntentClassificationResult {
  */
 export interface DisambiguationRequest {
   originalText: string;
-  possibleIntents: Array<{ intent: IntentType; confidence: number }>;
+  possibleIntents: { intent: IntentType; confidence: number }[];
   question: string; // Question to ask user
   options: DisambiguationOption[];
   timeout: number; // Timeout in milliseconds
@@ -191,12 +191,12 @@ export interface NLUMetrics {
   colloquialCorrectness: number;
   temporalAccuracy: Record<string, number>; // Accuracy by time of day
   learningProgress: number; // Improvement rate over time
-  patternEvolution: Array<{
+  patternEvolution: {
     pattern: string;
     frequency: number;
     accuracy: number;
     lastSeen: Date;
-  }>;
+  }[];
 }
 
 /**
@@ -280,12 +280,12 @@ export interface NLUConfig {
 export interface TrainingUtterance {
   text: string;
   intent: IntentType;
-  entities?: Array<{
+  entities?: {
     type: EntityType;
     value: string;
     startIndex: number;
     endIndex: number;
-  }>;
+  }[];
   region?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
   metadata?: {
     slang?: boolean;

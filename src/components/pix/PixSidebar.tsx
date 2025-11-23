@@ -137,8 +137,12 @@ export const PixSidebar = React.memo(function PixSidebar({
 
   // Memoize the favorite keys list to prevent unnecessary re-renders
   const favoriteKeysList = React.useMemo(() => {
-    if (isLoading) return <LoadingState />;
-    if (favoriteKeys.length === 0) return <EmptyState isOpen={open} />;
+    if (isLoading) {
+      return <LoadingState />;
+    }
+    if (favoriteKeys.length === 0) {
+      return <EmptyState isOpen={open} />;
+    }
 
     return favoriteKeys.map((pixKey) => (
       <PixKeyItem key={pixKey.id} pixKey={pixKey} isOpen={open} />

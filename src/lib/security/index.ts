@@ -5,23 +5,16 @@
  * LGPD-compliant security infrastructure for AegisWallet
  */
 
-import {
-  type BiometricAuthService,
-  type BiometricConfig,
-  createBiometricAuthService,
-} from './biometricAuth';
-import {
-  createDeviceFingerprintingService,
-  type DeviceFingerprintingService,
-  type FingerprintConfig,
-} from './deviceFingerprinting';
-import {
-  createFraudDetectionService,
-  type FraudDetectionConfig,
-  type FraudDetectionService,
-} from './fraudDetection';
-import { createPushProvider, type PushConfig, type PushProvider } from './pushProvider';
-import { createSMSProvider, type SMSConfig, type SMSProvider } from './smsProvider';
+import type { BiometricAuthService, BiometricConfig } from './biometricAuth';
+import { createBiometricAuthService } from './biometricAuth';
+import type { DeviceFingerprintingService, FingerprintConfig } from './deviceFingerprinting';
+import { createDeviceFingerprintingService } from './deviceFingerprinting';
+import type { FraudDetectionConfig, FraudDetectionService } from './fraudDetection';
+import { createFraudDetectionService } from './fraudDetection';
+import type { PushConfig, PushProvider } from './pushProvider';
+import { createPushProvider } from './pushProvider';
+import type { SMSConfig, SMSProvider } from './smsProvider';
+import { createSMSProvider } from './smsProvider';
 
 export interface SecurityConfig {
   biometric: Partial<BiometricConfig>;
@@ -76,30 +69,29 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
     rateLimitWindow: 15 * 60 * 1000, // 15 minutes
     maxRateLimitAttempts: 10,
   },
-  sms: {
-    enabled: process.env.NODE_ENV === 'production',
+  deviceFingerprinting: {
     config: {
-      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-      authToken: process.env.TWILIO_AUTH_TOKEN || '',
-      fromNumber: process.env.TWILIO_PHONE_NUMBER || '',
-      maxRetries: 3,
-      timeoutMs: 10000,
+      enableAudio: true,
+      enableBattery: true,
+      enableCanvas: true,
+      enableConnection: true,
+      enableFonts: true,
+      enableWebGL: true,
+      riskThresholds: {
+        low: 0.3,
+        medium: 0.6,
+        high: 0.8,
+      },
+      salt: 'aegiswallet-brazil-security-salt',
     },
-  },
-  push: {
     enabled: true,
-    config: {
-      vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
-      vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-      vapidSubject: process.env.VAPID_SUBJECT || 'mailto:security@aegispay.com.br',
-      gcmApiKey: process.env.GCM_API_KEY,
-      ttl: 3600, // 1 hour
-      urgency: 'high',
-    },
   },
   fraudDetection: {
-    enabled: true,
     config: {
+      behaviorAnomalyThreshold: 0.6,
+      deviceAnomalyThreshold: 0.7,
+      locationAnomalyThreshold: 0.8,
+      maxFailedAttempts: 5,
       riskThresholds: {
         low: 0.3,
         medium: 0.7,
@@ -111,37 +103,38 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
         medium: 24 * 60 * 60 * 1000, // 24 hours
         long: 7 * 24 * 60 * 60 * 1000, // 7 days
       },
-      maxFailedAttempts: 5,
-      locationAnomalyThreshold: 0.8,
-      deviceAnomalyThreshold: 0.7,
-      behaviorAnomalyThreshold: 0.6,
     },
-  },
-  deviceFingerprinting: {
     enabled: true,
-    config: {
-      enableCanvas: true,
-      enableWebGL: true,
-      enableAudio: true,
-      enableFonts: true,
-      enableBattery: true,
-      enableConnection: true,
-      salt: 'aegiswallet-brazil-security-salt',
-      riskThresholds: {
-        low: 0.3,
-        medium: 0.6,
-        high: 0.8,
-      },
-    },
   },
   monitoring: {
-    enabled: true,
-    logLevel: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
     alertThresholds: {
+      accountLockoutThreshold: 3,
       failedAuthPerHour: 10,
       suspiciousActivityPerHour: 5,
-      accountLockoutThreshold: 3,
     },
+    enabled: true,
+    logLevel: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
+  },
+  push: {
+    config: {
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+      vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+      vapidSubject: process.env.VAPID_SUBJECT || 'mailto:security@aegispay.com.br',
+      gcmApiKey: process.env.GCM_API_KEY,
+      ttl: 3600, // 1 hour
+      urgency: 'high',
+    },
+    enabled: true,
+  },
+  sms: {
+    config: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      fromNumber: process.env.TWILIO_PHONE_NUMBER || '',
+      maxRetries: 3,
+      timeoutMs: 10000,
+    },
+    enabled: process.env.NODE_ENV === 'production',
   },
 };
 
@@ -156,15 +149,15 @@ export async function createSecuritySystem(
   validateSecurityConfig(finalConfig);
 
   const providers = await initializeSecurityProviders(finalConfig);
-  const biometricAuth = createBiometricAuthService(finalConfig.biometric, providers);
+  const biometricAuth = createBiometricAuthService(finalConfig.biometric);
 
   return {
     biometricAuth,
-    smsProvider: providers.sms,
-    pushProvider: providers.push,
-    fraudDetection: providers.fraudDetection,
-    deviceFingerprinting: providers.deviceFingerprinting,
     config: finalConfig,
+    deviceFingerprinting: providers.deviceFingerprinting,
+    fraudDetection: providers.fraudDetection,
+    pushProvider: providers.push,
+    smsProvider: providers.sms,
   };
 }
 
@@ -201,9 +194,9 @@ export async function createProductionSecuritySystem(
       enabled: true,
       logLevel: 'warn',
       alertThresholds: {
+        accountLockoutThreshold: 2,
         failedAuthPerHour: 5,
         suspiciousActivityPerHour: 3,
-        accountLockoutThreshold: 2,
       },
       ...configOverrides?.monitoring,
     },
@@ -213,9 +206,9 @@ export async function createProductionSecuritySystem(
 }
 
 export const SecuritySystemFactory = {
-  createSecuritySystem,
   createMinimalSecuritySystem,
   createProductionSecuritySystem,
+  createSecuritySystem,
 };
 
 function mergeSecurityConfig(
@@ -224,16 +217,6 @@ function mergeSecurityConfig(
 ): SecurityConfig {
   return {
     biometric: { ...defaults.biometric, ...overrides.biometric },
-    sms: { ...defaults.sms, ...overrides.sms },
-    push: { ...defaults.push, ...overrides.push },
-    fraudDetection: {
-      ...defaults.fraudDetection,
-      ...overrides.fraudDetection,
-      config: {
-        ...defaults.fraudDetection.config,
-        ...overrides.fraudDetection?.config,
-      },
-    },
     deviceFingerprinting: {
       ...defaults.deviceFingerprinting,
       ...overrides.deviceFingerprinting,
@@ -242,7 +225,17 @@ function mergeSecurityConfig(
         ...overrides.deviceFingerprinting?.config,
       },
     },
+    fraudDetection: {
+      ...defaults.fraudDetection,
+      ...overrides.fraudDetection,
+      config: {
+        ...defaults.fraudDetection.config,
+        ...overrides.fraudDetection?.config,
+      },
+    },
     monitoring: { ...defaults.monitoring, ...overrides.monitoring },
+    push: { ...defaults.push, ...overrides.push },
+    sms: { ...defaults.sms, ...overrides.sms },
   };
 }
 
@@ -273,10 +266,10 @@ function validateSecurityConfig(config: SecurityConfig): void {
     }
   }
 
-  if (config.biometric.maxPinAttempts < 3) {
+  if (config.biometric.maxPinAttempts && config.biometric.maxPinAttempts < 3) {
     errors.push('Max PIN attempts should be at least 3 for security');
   }
-  if (config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
+  if (config.biometric.pinLockoutDuration && config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
     errors.push('PIN lockout duration should be at least 5 minutes');
   }
 
@@ -338,7 +331,9 @@ export class SecurityMonitor {
    * Initialize security monitoring
    */
   private initializeMonitoring(): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     // Set up periodic monitoring
     setInterval(() => {
@@ -361,9 +356,11 @@ export class SecurityMonitor {
     userId: string;
     eventType: string;
     method: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     const eventKey = `${event.eventType}_${event.userId}`;
     const currentCount = this.alertCounts.get(eventKey) || 0;
@@ -380,7 +377,7 @@ export class SecurityMonitor {
     userId: string;
     eventType: string;
     method: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }): void {
     const eventKey = `${event.eventType}_${event.userId}`;
     const count = this.alertCounts.get(eventKey) || 0;
@@ -391,9 +388,9 @@ export class SecurityMonitor {
       count >= this.config.alertThresholds.failedAuthPerHour
     ) {
       this.triggerAlert('high_failed_auth_rate', {
-        userId: event.userId,
         count,
         threshold: this.config.alertThresholds.failedAuthPerHour,
+        userId: event.userId,
       });
     }
 
@@ -403,9 +400,9 @@ export class SecurityMonitor {
       count >= this.config.alertThresholds.suspiciousActivityPerHour
     ) {
       this.triggerAlert('high_suspicious_activity', {
-        userId: event.userId,
         count,
         threshold: this.config.alertThresholds.suspiciousActivityPerHour,
+        userId: event.userId,
       });
     }
 
@@ -415,9 +412,9 @@ export class SecurityMonitor {
       count >= this.config.alertThresholds.accountLockoutThreshold
     ) {
       this.triggerAlert('account_lockout_threshold', {
-        userId: event.userId,
         count,
         threshold: this.config.alertThresholds.accountLockoutThreshold,
+        userId: event.userId,
       });
     }
   }
@@ -425,7 +422,7 @@ export class SecurityMonitor {
   /**
    * Trigger security alert
    */
-  private triggerAlert(_alertType: string, _metadata: Record<string, any>): void {
+  private triggerAlert(_alertType: string, _metadata: Record<string, unknown>): void {
     // In production, this would send alerts to:
     // - Security team
     // - Admin dashboard
@@ -469,9 +466,9 @@ export class SecurityMonitor {
     const activeAlerts = this.alertCounts.size;
 
     return {
-      totalAlerts,
       activeAlerts,
       alertCounts: Object.fromEntries(this.alertCounts),
+      totalAlerts,
     };
   }
 }
@@ -496,9 +493,44 @@ export async function initializeProductionSecurity(
 }
 
 export * from './auditLogger';
-// Export all security components
-export * from './biometricAuth';
-export * from './deviceFingerprinting';
-export * from './fraudDetection';
-export * from './pushProvider';
-export * from './smsProvider';
+// Export all security components with explicit re-exports to avoid conflicts
+export {
+  type AuthSession,
+  type BiometricAuthService,
+  type BiometricConfig,
+  type BiometricResult,
+  type BiometricType,
+  createBiometricAuthService,
+  type SecurityEvent as BiometricSecurityEvent,
+  type SecurityEventLog,
+} from './biometricAuth';
+
+export {
+  createDeviceFingerprintingService,
+  type DeviceFingerprint,
+  type DeviceFingerprintingService,
+  type FingerprintConfig,
+} from './deviceFingerprinting';
+
+export {
+  createFraudDetectionService,
+  type FraudDetectionConfig,
+  type FraudDetectionService,
+  type SecurityEvent as FraudSecurityEvent,
+} from './fraudDetection';
+
+export {
+  createPushProvider,
+  type PushConfig,
+  type PushMessage,
+  type PushProvider,
+  type PushSubscription,
+} from './pushProvider';
+
+export {
+  createSMSProvider,
+  type SMSConfig,
+  type SMSMessage,
+  type SMSProvider,
+  type SMSTemplate,
+} from './smsProvider';

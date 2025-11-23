@@ -187,9 +187,9 @@ describe('Database Schema Type Safety', () => {
       }
 
       const filter: CalendarFilter = {
-        startDate: '2024-01-01',
-        endDate: '2024-01-31',
         categories: ['category1', 'category2'],
+        endDate: '2024-01-31',
+        startDate: '2024-01-01',
       };
 
       expect(filter.categories).toBeDefined();

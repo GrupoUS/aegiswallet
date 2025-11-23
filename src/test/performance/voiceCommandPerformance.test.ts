@@ -16,12 +16,12 @@ const mockSpeechRecognitionInstance = {
   continuous: false,
   interimResults: true,
   lang: 'pt-BR',
+  onend: null,
+  onerror: null,
+  onresult: null as ((event: unknown) => void) | null,
+  onstart: null,
   start: vi.fn(),
   stop: vi.fn(),
-  onstart: null,
-  onend: null,
-  onresult: null as ((event: unknown) => void) | null,
-  onerror: null,
 };
 
 mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance);
@@ -52,11 +52,11 @@ if (typeof window !== 'undefined') {
 
 // Mock MediaRecorder
 const mockMediaRecorder = {
-  start: vi.fn(),
-  stop: vi.fn(),
-  state: 'inactive',
   ondataavailable: null,
   onstop: null,
+  start: vi.fn(),
+  state: 'inactive',
+  stop: vi.fn(),
 };
 
 // Mock MediaRecorder constructor with isTypeSupported
@@ -93,14 +93,14 @@ if (typeof navigator !== 'undefined') {
     mediaDevices: {
       getUserMedia: vi.fn(() =>
         Promise.resolve({
-          getTracks: () => [{ stop: vi.fn() }],
           active: true,
+          addEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+          getTracks: () => [{ stop: vi.fn() }],
           id: 'mock-stream-id',
           onaddtrack: null,
           onremovetrack: null,
-          addEventListener: vi.fn(),
           removeEventListener: vi.fn(),
-          dispatchEvent: vi.fn(),
         })
       ),
     },
@@ -146,8 +146,8 @@ describe('Voice Command Performance', () => {
         results: [
           {
             0: {
-              transcript: 'qual é o meu saldo',
               confidence: 0.9,
+              transcript: 'qual é o meu saldo',
             },
             isFinal: true,
           },
@@ -232,22 +232,22 @@ describe('Voice Command Performance', () => {
         // Mock the fetch to avoid actual API call
         global.fetch = vi.fn(() =>
           Promise.resolve({
-            ok: true,
-            status: 200,
-            statusText: 'OK',
-            headers: new Headers(),
-            json: () => Promise.resolve({ text: 'test transcription' }),
-            text: () => Promise.resolve('test transcription'),
-            clone: vi.fn(),
-            body: null,
-            bodyUsed: false,
             arrayBuffer: vi.fn(),
             blob: vi.fn(),
+            body: null,
+            bodyUsed: false,
+            bytes: () => Promise.resolve(new Uint8Array()),
+            clone: vi.fn(),
             formData: vi.fn(),
+            headers: new Headers(),
+            json: () => Promise.resolve({ text: 'test transcription' }),
+            ok: true,
             redirected: false,
+            status: 200,
+            statusText: 'OK',
+            text: () => Promise.resolve('test transcription'),
             type: 'basic',
             url: '',
-            bytes: () => Promise.resolve(new Uint8Array()),
           } as Response)
         );
 
@@ -347,7 +347,7 @@ describe('Voice Command Performance', () => {
               resultIndex: 0,
               results: [
                 {
-                  0: { transcript: 'qual é o meu saldo', confidence: 0.9 },
+                  0: { confidence: 0.9, transcript: 'qual é o meu saldo' },
                   isFinal: true,
                 },
               ],

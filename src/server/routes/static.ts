@@ -29,9 +29,9 @@ export function setupStaticRoutes(app: Hono) {
     // Development mode - inform about frontend dev server
     app.get('/*', (c) => {
       return c.json({
-        message: 'Development mode - Frontend served by Vite dev server',
-        frontend: 'http://localhost:5173',
         api: `http://localhost:${environment.PORT}`,
+        frontend: 'http://localhost:5173',
+        message: 'Development mode - Frontend served by Vite dev server',
         mode: 'development',
       });
     });

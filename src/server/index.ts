@@ -24,10 +24,10 @@ setupApiRoutes(app);
 // tRPC endpoint
 app.use('/trpc/*', async (c) => {
   return fetchRequestHandler({
+    createContext: createContext,
     endpoint: '/trpc',
     req: c.req.raw,
     router: appRouter,
-    createContext: createContext,
   });
 });
 

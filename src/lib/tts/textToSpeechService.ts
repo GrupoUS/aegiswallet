@@ -75,7 +75,9 @@ class AudioCache {
     const key = this.getCacheKey(text, config);
     const entry = this.cache.get(key);
 
-    if (!entry) return null;
+    if (!entry) {
+      return null;
+    }
 
     // Check if expired
     if (Date.now() - entry.timestamp > this.cacheTTL) {
@@ -96,8 +98,8 @@ class AudioCache {
 
     this.cache.set(key, {
       audio,
-      timestamp: Date.now(),
       config,
+      timestamp: Date.now(),
     });
   }
 
@@ -122,8 +124,8 @@ class AudioCache {
 
   getStats(): { size: number; keys: string[] } {
     return {
-      size: this.cache.size,
       keys: Array.from(this.cache.keys()),
+      size: this.cache.size,
     };
   }
 }
@@ -157,11 +159,14 @@ export class TextToSpeechService {
 
     // Initialize Web Speech API if available (supports browser + test environments)
     if (!this.synth) {
-      const globalWindow =
-        typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
+      const globalRef = globalThis as typeof globalThis & {
+        window?: Window;
+        speechSynthesis?: SpeechSynthesis;
+      };
+      const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
       const speechSynthesisInstance =
-        globalWindow?.speechSynthesis || (globalThis as any).speechSynthesis || null;
+        globalWindow?.speechSynthesis || globalRef.speechSynthesis || null;
 
       if (speechSynthesisInstance) {
         this.synth = speechSynthesisInstance as SpeechSynthesis;
@@ -186,9 +191,9 @@ export class TextToSpeechService {
         if (cachedAudio) {
           await this.playAudio(cachedAudio);
           return {
-            success: true,
-            duration: Date.now() - startTime,
             cached: this.shouldReportCachePlayback(),
+            duration: Date.now() - startTime,
+            success: true,
           };
         }
       }
@@ -206,16 +211,16 @@ export class TextToSpeechService {
       const duration = Date.now() - startTime;
 
       return {
-        success: true,
-        duration,
         cached: false,
+        duration,
+        success: true,
       };
     } catch (error) {
       return {
-        success: false,
-        duration: Date.now() - startTime,
         cached: false,
+        duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
       };
     }
   }
@@ -245,10 +250,18 @@ export class TextToSpeechService {
       }
 
       // Configure utterance (guard properties for mock objects)
-      if ('lang' in utterance) utterance.lang = 'pt-BR';
-      if ('rate' in utterance) utterance.rate = this.config.rate;
-      if ('pitch' in utterance) utterance.pitch = this.config.pitch;
-      if ('volume' in utterance) utterance.volume = this.config.volume;
+      if ('lang' in utterance) {
+        utterance.lang = 'pt-BR';
+      }
+      if ('rate' in utterance) {
+        utterance.rate = this.config.rate;
+      }
+      if ('pitch' in utterance) {
+        utterance.pitch = this.config.pitch;
+      }
+      if ('volume' in utterance) {
+        utterance.volume = this.config.volume;
+      }
 
       // Try to find Brazilian Portuguese voice
       const voices = synth.getVoices();
@@ -303,11 +316,14 @@ export class TextToSpeechService {
       return new this.SpeechSynthesisUtteranceClass(text);
     }
 
-    const globalWindow =
-      typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
+    const globalRef = globalThis as typeof globalThis & {
+      window?: Window;
+      SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+    };
+    const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
     const SpeechSynthesisUtteranceConstructor =
-      globalWindow?.SpeechSynthesisUtterance || (globalThis as any).SpeechSynthesisUtterance;
+      globalWindow?.SpeechSynthesisUtterance || globalRef.SpeechSynthesisUtterance;
 
     if (SpeechSynthesisUtteranceConstructor) {
       return new SpeechSynthesisUtteranceConstructor(text);
@@ -315,19 +331,19 @@ export class TextToSpeechService {
 
     // Fallback mock for non-browser/test environments
     return {
-      text,
       lang: 'pt-BR',
-      voice: null,
-      volume: 1,
-      rate: 1,
-      pitch: 1,
-      onstart: null,
+      onboundary: null,
       onend: null,
       onerror: null,
       onmark: null,
-      onboundary: null,
       onpause: null,
       onresume: null,
+      onstart: null,
+      pitch: 1,
+      rate: 1,
+      text,
+      voice: null,
+      volume: 1,
     } as unknown as SpeechSynthesisUtterance;
   }
 
@@ -344,7 +360,9 @@ export class TextToSpeechService {
    * Wrap text with SSML tags
    */
   private wrapWithSSML(text: string, options?: SSMLOptions): string {
-    if (!options) return text;
+    if (!options) {
+      return text;
+    }
 
     let ssml = text;
 
@@ -363,9 +381,15 @@ export class TextToSpeechService {
       const { rate, pitch, volume } = options.prosody;
       let prosodyAttrs = '';
 
-      if (rate) prosodyAttrs += ` rate="${rate}"`;
-      if (pitch) prosodyAttrs += ` pitch="${pitch}"`;
-      if (volume) prosodyAttrs += ` volume="${volume}"`;
+      if (rate) {
+        prosodyAttrs += ` rate="${rate}"`;
+      }
+      if (pitch) {
+        prosodyAttrs += ` pitch="${pitch}"`;
+      }
+      if (volume) {
+        prosodyAttrs += ` volume="${volume}"`;
+      }
 
       if (prosodyAttrs) {
         ssml = `<prosody${prosodyAttrs}>${ssml}</prosody>`;
@@ -380,7 +404,9 @@ export class TextToSpeechService {
    */
   stop(): void {
     const synth = this.ensureSynth();
-    if (!synth) return;
+    if (!synth) {
+      return;
+    }
     synth.cancel();
     this.currentUtterance = null;
   }
@@ -390,7 +416,9 @@ export class TextToSpeechService {
    */
   pause(): void {
     const synth = this.ensureSynth();
-    if (!synth) return;
+    if (!synth) {
+      return;
+    }
     synth.pause();
   }
 
@@ -399,7 +427,9 @@ export class TextToSpeechService {
    */
   resume(): void {
     const synth = this.ensureSynth();
-    if (!synth) return;
+    if (!synth) {
+      return;
+    }
     synth.resume();
   }
 
@@ -422,7 +452,9 @@ export class TextToSpeechService {
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
     const synth = this.ensureSynth();
-    if (!synth) return [];
+    if (!synth) {
+      return [];
+    }
 
     const voices = synth.getVoices();
     const filtered = voices
@@ -472,10 +504,13 @@ export class TextToSpeechService {
       return this.synth;
     }
 
-    const globalWindow =
-      typeof window !== 'undefined' ? window : (globalThis as { window?: Window }).window;
+    const globalRef = globalThis as typeof globalThis & {
+      window?: Window;
+      speechSynthesis?: SpeechSynthesis;
+    };
+    const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
-    const instance = globalWindow?.speechSynthesis || (globalThis as any).speechSynthesis || null;
+    const instance = globalWindow?.speechSynthesis || globalRef.speechSynthesis || null;
 
     if (instance) {
       this.synth = instance as SpeechSynthesis;
@@ -506,8 +541,9 @@ export class TextToSpeechService {
       }
     }
 
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      const env = (import.meta as any).env;
+    const importMeta = import.meta as { env?: Record<string, unknown> };
+    if (typeof import.meta !== 'undefined' && importMeta.env) {
+      const env = importMeta.env;
       if (env.MODE === 'test' || env.VITEST || env.NODE_ENV === 'test') {
         return true;
       }
@@ -522,7 +558,7 @@ export class TextToSpeechService {
 
   private isMockEnvironment(): boolean {
     const synth = this.ensureSynth();
-    const speakFn = (synth as any)?.speak;
+    const speakFn = (synth as unknown as { speak: { mock?: boolean } })?.speak;
     const isMockedSpeak = Boolean(speakFn && typeof speakFn === 'function' && speakFn.mock);
     return isMockedSpeak || this.isTestEnvironment();
   }
@@ -532,7 +568,9 @@ export class TextToSpeechService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      if (!this.ensureSynth()) return false;
+      if (!this.ensureSynth()) {
+        return false;
+      }
 
       // Try to get voices
       const voices = this.getAvailableVoices();

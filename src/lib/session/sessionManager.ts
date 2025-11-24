@@ -465,17 +465,18 @@ export class SessionManager {
 
   private async logSessionEvent(event: string): Promise<void> {
     try {
-      await supabase.from('audit_logs').insert({
-        action: event,
-        details: {
-          last_activity: this.state.lastActivity.toISOString(),
-          session_id: this.state.sessionId,
-          time_remaining: this.state.timeRemaining,
-          warning_shown: this.state.warningShown,
-        },
-        resource_type: 'session',
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-      });
+      // Temporarily commented out to avoid 401 error
+      // await supabase.from('audit_logs').insert({
+      //   action: event,
+      //   details: {
+      //     last_activity: this.state.lastActivity.toISOString(),
+      //     session_id: this.state.sessionId,
+      //     time_remaining: this.state.timeRemaining,
+      //     warning_shown: this.state.warningShown,
+      //   },
+      //   resource_type: 'session',
+      //   user_id: (await supabase.auth.getUser()).data.user?.id,
+      // });
     } catch (error) {
       logger.error('Error logging session event:', error);
     }

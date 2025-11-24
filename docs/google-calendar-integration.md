@@ -12,24 +12,28 @@ A integração funciona em três camadas:
 
 ## Configuração Inicial
 
-Para habilitar a integração, siga os passos:
+> ⚠️ **Importante**: Para login com Google via Supabase Auth, você também precisa configurar as credenciais no Supabase Dashboard. Veja o [Guia de Configuração do Google OAuth](../ops/google-oauth-setup.md) para instruções detalhadas.
+
+Para habilitar a integração do Google Calendar, siga os passos:
 
 1.  **Google Cloud Console**:
-    *   Crie um novo projeto.
+    *   Crie um novo projeto (ou use o projeto existente).
     *   Habilite a **Google Calendar API**.
     *   Configure a tela de consentimento OAuth (escopos: `calendar.events`, `userinfo.email`).
-    *   Crie credenciais de **ID do cliente OAuth 2.0**.
-    *   Adicione a URI de redirecionamento: `https://seu-projeto.supabase.co/functions/v1/google-calendar-auth?action=callback`.
+    *   Crie credenciais de **ID do cliente OAuth 2.0** (ou use as existentes).
+    *   Adicione a URI de redirecionamento: `https://qatxdwderitvxqvuonqs.supabase.co/functions/v1/google-calendar-auth?action=callback`.
 
 2.  **Variáveis de Ambiente**:
     Adicione as seguintes variáveis ao seu `.env.local` (e nas configurações do Supabase Edge Functions):
 
     ```bash
-    VITE_GOOGLE_CLIENT_ID="seu-client-id"
-    GOOGLE_CLIENT_SECRET="seu-client-secret"
-    GOOGLE_REDIRECT_URI="https://seu-projeto.supabase.co/functions/v1/google-calendar-auth?action=callback"
+    VITE_GOOGLE_CLIENT_ID="1068161308060-5052t66k66vcdmkngpnq43pjvm6j3ftq.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET="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"
+    GOOGLE_REDIRECT_URI="https://qatxdwderitvxqvuonqs.supabase.co/functions/v1/google-calendar-auth?action=callback"
     TOKENS_ENCRYPTION_KEY="chave-aleatoria-segura-32-chars"
     ```
+
+    > 💡 **Nota**: As mesmas credenciais OAuth podem ser usadas tanto para login (via Supabase Auth) quanto para integração do Google Calendar. Certifique-se de que estão configuradas em ambos os lugares quando necessário.
 
 3.  **Banco de Dados**:
     Execute a migration `supabase/migrations/20251120_add_google_calendar_integration.sql` para criar as tabelas necessárias.

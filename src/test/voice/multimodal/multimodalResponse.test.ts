@@ -93,6 +93,7 @@ describe('Brazilian Formatters', () => {
 describe('Multimodal Response Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   describe('CHECK_BALANCE Intent', () => {
@@ -311,28 +312,23 @@ describe('Multimodal Response Hook', () => {
         })
       );
 
-      let loadingDuringGeneration = false;
-
+      let promise: Promise<void>;
       act(() => {
-        result.current
-          .generateAndSpeak(IntentType.CHECK_BALANCE, {
-            balance: 1000,
-          })
-          .then(() => {
-            // Check if loading was true during generation
-          });
+        promise = result.current.generateAndSpeak(IntentType.CHECK_BALANCE, {
+          balance: 1000,
+        });
       });
 
-      // Check immediately after calling
-      if (result.current.isLoading) {
-        loadingDuringGeneration = true;
-      }
+      // Check immediately after calling - should be loading
+      expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        await promise;
+      });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-
-      expect(loadingDuringGeneration).toBe(true);
     });
   });
 });

@@ -6,21 +6,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  SpeechRecognitionService,
   createSpeechRecognitionService,
+  SpeechRecognitionService,
 } from '../SpeechRecognitionService';
 
 // Mock Web Speech API
 const mockSpeechRecognition = vi.fn();
-
-// Mock global Web Speech API
-Object.defineProperty(global, 'window', {
-  value: {
-    SpeechRecognition: mockSpeechRecognition,
-    webkitSpeechRecognition: mockSpeechRecognition,
-  },
-  writable: true,
-});
 
 // Mock MediaDevices API
 Object.defineProperty(global.navigator, 'mediaDevices', {
@@ -40,6 +31,16 @@ describe('SpeechRecognitionService', () => {
     // Mock successful media access
     global.navigator.mediaDevices.getUserMedia = vi.fn().mockResolvedValue({
       getTracks: () => [{ stop: vi.fn() }],
+    });
+
+    // Mock global Web Speech API
+    Object.defineProperty(window, 'SpeechRecognition', {
+      writable: true,
+      value: mockSpeechRecognition,
+    });
+    Object.defineProperty(window, 'webkitSpeechRecognition', {
+      writable: true,
+      value: mockSpeechRecognition,
     });
 
     // Mock SpeechRecognition
@@ -86,8 +87,9 @@ describe('SpeechRecognitionService', () => {
       globalAny.window.SpeechRecognition = undefined;
       globalAny.window.webkitSpeechRecognition = undefined;
 
-      const unsupportedService = new SpeechRecognitionService();
-      expect(unsupportedService.isWebSpeechSupported()).toBe(false);
+      expect(() => new SpeechRecognitionService()).toThrow(
+        'Web Speech API not supported in this browser'
+      );
     });
   });
 

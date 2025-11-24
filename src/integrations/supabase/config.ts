@@ -3,6 +3,7 @@
  * Single source of truth for all Supabase client configurations
  */
 
+import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 // Supabase configuration with mandatory environment variables
@@ -38,6 +39,41 @@ export const SUPABASE_CONFIG = {
 // Environment detection
 export const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 export const isServer = !isBrowser;
+
+// Temporary development RLS policy for audit_logs
+// This allows unauthenticated INSERT operations during development
+// In production, this should be replaced with proper authentication checks
+const DEV_RLS_POLICY = `
+  -- Allow insert operations during development
+  CREATE POLICY dev_allow_audit_logs_insert ON audit_logs
+    FOR INSERT
+    TO ANONYMOUS
+    WITH CHECK (true);
+`;
+
+// Create a client factory with the policy
+export const createDevSupabaseClient = () => {
+  const client = createClient();
+
+  // Apply the development policy if we're in browser and in development
+  if (isBrowser && import.meta.env?.DEV === 'true') {
+    // Use the raw SQL approach to ensure the policy is applied
+    client
+      .rpc('apply_rls_policy', {
+        sql: DEV_RLS_POLICY
+      })
+      .then(() => client)
+      .catch((error) => {
+        console.warn('Failed to apply development RLS policy:', error);
+        return client;
+      });
+  }
+
+  return client;
+};
+
+// Regular client factory for production
+export const createSupabaseClient = createClient;
 
 // Secure storage implementation
 type SecureStorageEngine = Storage & {

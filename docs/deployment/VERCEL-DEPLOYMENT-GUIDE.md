@@ -66,14 +66,16 @@ vercel deploy --prod --prebuilt   # Production
 
 The following variables are required for the application to function correctly on Vercel. These should be configured via the `deploy:vercel:setup` script or the Vercel Dashboard.
 
-| Variable | Description |
-|----------|-------------|
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase public anonymous key |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret |
-| `GOOGLE_REDIRECT_URI` | OAuth callback URI |
-| `TOKENS_ENCRYPTION_KEY` | Key for encrypting sensitive tokens |
+| Variable | Description | Required For |
+|----------|-------------|--------------|
+| `VITE_SUPABASE_URL` | Supabase project URL | Core functionality |
+| `VITE_SUPABASE_ANON_KEY` | Supabase public anonymous key | Core functionality |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID | Google login & Calendar |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Google login & Calendar |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URI | Google Calendar integration |
+| `TOKENS_ENCRYPTION_KEY` | Key for encrypting sensitive tokens | Google Calendar integration |
+
+> ⚠️ **Important**: For Google OAuth login to work, credentials must also be configured in the Supabase Dashboard (Authentication > Providers > Google). See [Google OAuth Setup Guide](../ops/google-oauth-setup.md) for detailed instructions.
 
 ## 5. Troubleshooting
 

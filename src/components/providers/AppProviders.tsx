@@ -9,21 +9,27 @@ import { ErrorBoundary } from '@/components/error-boundaries/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LoggerProvider } from '@/contexts/LoggerContext';
+import { createDevSupabaseClient } from '@/integrations/supabase/config';
 
 export interface AppProvidersProps {
   children: ReactNode;
+  defaultConfig?: Partial<any>;
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export function AppProviders({ children, defaultConfig = {} }: AppProvidersProps) {
   return (
     <ThemeProvider defaultTheme="tweakcn" storageKey="aegiswallet-theme">
       <ErrorBoundary>
         <AccessibilityProvider>
           <LoggerProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </LoggerProvider>
         </AccessibilityProvider>
       </ErrorBoundary>
     </ThemeProvider>
   );
 }
+
+export default AppProviders;

@@ -50,6 +50,8 @@
     "setup:google-calendar": "bun scripts/setup-google-calendar-sync.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@remixicon/react": "^4.7.0",
     "@supabase/supabase-js": "^2.80.0",
@@ -71,8 +73,10 @@
     "react-day-picker": "^9.11.1",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.66.0",
+    "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
     "recharts": "^3.3.0",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "superjson": "^2.2.0",
     "tailwind-merge": "^3.3.1",

@@ -185,16 +185,71 @@ All code changes must pass:
 
 ## 🚢 Deployment
 
+### Local Build & Preview
+
 ```bash
 # Build for production
 bun build
 
-# Start production server
+# Start production server locally
 bun start:prod
 
 # Preview build
 bun preview
 ```
+
+### Vercel Deployment
+
+AegisWallet is optimized for Vercel deployment with native Hono and Vite support.
+
+#### Quick Deploy
+
+```bash
+# 1. Setup environment variables
+bun deploy:vercel:setup
+
+# 2. Deploy to preview
+bun deploy:vercel:preview
+
+# 3. Deploy to production
+bun deploy:vercel:prod
+```
+
+#### Manual Deployment
+
+```bash
+# Install Vercel CLI
+bun add -g vercel
+
+# Login to Vercel
+vercel login
+
+# Link project
+vercel link
+
+# Add environment variables
+vercel env add VITE_SUPABASE_URL production
+vercel env add VITE_SUPABASE_ANON_KEY production
+# ... (repeat for all variables)
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+#### Verify Deployment
+
+```bash
+# Check deployment status
+bun deploy:vercel:check
+
+# View logs
+vercel logs [deployment-url]
+```
+
+📖 **Full Documentation**: [Vercel Deployment Guide](docs/deployment/VERCEL-DEPLOYMENT-GUIDE.md)
 
 ---
 

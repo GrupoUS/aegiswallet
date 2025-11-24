@@ -166,6 +166,16 @@ export class VoiceActivityDetector {
     const currentTime = Date.now();
     const speechDuration = this.speechStartTime ? currentTime - this.speechStartTime : 0;
 
+    // Default result if not active
+    if (!this.analyser) {
+      return {
+        energy: 0,
+        isSpeaking: false,
+        speechDuration: 0,
+        speechStartTime: null,
+      };
+    }
+
     return {
       energy: this.calculateCurrentEnergy(),
       isSpeaking: this.speechStartTime !== null,

@@ -19,9 +19,11 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000, emptyOutDir: true, minify: isProduction ? 'terser' : false, outDir: 'dist', rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Core React libraries
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-core'
+            // Core React libraries - MUST BE KEPT TOGETHER
+            if (id.includes('node_modules/react/') ||
+                id.includes('node_modules/react-dom/') ||
+                id.includes('node_modules/scheduler/')) {
+              return 'react-vendor';
             }
 
             // TanStack libraries (router, query)
@@ -42,6 +44,11 @@ export default defineConfig(({ mode }) => {
             // UI libraries (radix, lucide)
             if (id.includes('@radix-ui') || id.includes('lucide-react')) {
               return 'ui-libraries'
+            }
+
+            // Motion libraries - Keep together to avoid issues
+            if (id.includes('motion') || id.includes('framer-motion')) {
+               return 'ui-motion'
             }
 
             // Forms and validation
@@ -83,7 +90,6 @@ export default defineConfig(({ mode }) => {
     }, optimizeDeps: {
       exclude: [
         // Exclude heavy dependencies from pre-bundling
-        'framer-motion',
         'speech-recognition-polyfill',
       ], include: [
         'react',

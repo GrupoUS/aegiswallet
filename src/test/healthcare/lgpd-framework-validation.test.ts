@@ -51,7 +51,7 @@ vi.mock('@/integrations/supabase/client', () => ({
           ),
           single: vi.fn(() =>
             Promise.resolve({
-              data: { id: 'test-user-001', created_at: '2024-01-01T00:00:00Z' },
+              data: { created_at: '2024-01-01T00:00:00Z', id: 'test-user-001' },
               error: null,
             })
           ),

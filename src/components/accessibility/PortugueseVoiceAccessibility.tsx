@@ -222,11 +222,10 @@ export function PortugueseVoiceAccessibility({
       setIsProcessing(false);
     },
     [
-      announceToScreenReader,
-      onVoiceCommand,
-      settings.voiceNavigation,
-      voicePatterns,
-    ],
+	announceToScreenReader,
+	onVoiceCommand,
+	settings.voiceNavigation
+],
   );
 
   // Initialize speech recognition for Brazilian Portuguese

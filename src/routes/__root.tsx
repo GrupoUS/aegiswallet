@@ -1,7 +1,7 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import {
-  createRootRoute,
   Outlet,
+  createRootRoute,
   useLocation,
   useNavigate,
 } from "@tanstack/react-router";

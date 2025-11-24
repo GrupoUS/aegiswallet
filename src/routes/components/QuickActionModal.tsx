@@ -104,7 +104,7 @@ export function QuickActionModal({
     }
 
     const sourceAccount = accounts.find((a: any) => a.id === accountId);
-    if (!sourceAccount) return;
+    if (!sourceAccount) {return;}
 
     const val = Number(amount);
 
@@ -127,69 +127,45 @@ export function QuickActionModal({
 
       if (actionType === 'transfer') {
         const targetAccount = accounts.find((a: any) => a.id === targetAccountId);
-        if (!targetAccount) throw new Error("Target account not found");
+        if (!targetAccount) {throw new Error("Target account not found");}
 
         // 1. Debit source
         await createTransaction({
-          account_id: accountId,
-          amount: -val,
-          type: 'transfer',
-          description: description || `Transferência para ${targetAccount.institution_name}`,
-          date,
-          status: 'posted'
+          account_id: accountId, amount: -val, date, description: description || `Transferência para ${targetAccount.institution_name}`, status: 'posted', type: 'transfer'
         });
 
         // 2. Credit target
         await createTransaction({
-          account_id: targetAccountId,
-          amount: val,
-          type: 'transfer',
-          description: description || `Transferência de ${sourceAccount.institution_name}`,
-          date,
-          status: 'posted'
+          account_id: targetAccountId, amount: val, date, description: description || `Transferência de ${sourceAccount.institution_name}`, status: 'posted', type: 'transfer'
         });
 
         // 3. Update balances
         await updateBalance({
-          id: accountId,
-          balance: Number(sourceAccount.balance) - val
+          balance: Number(sourceAccount.balance) - val, id: accountId
         });
 
         await updateBalance({
-          id: targetAccountId,
-          balance: Number(targetAccount.balance) + val
+          balance: Number(targetAccount.balance) + val, id: targetAccountId
         });
 
       } else if (actionType === 'deposit') {
         // Credit account
         await createTransaction({
-          account_id: accountId,
-          amount: val,
-          type: 'credit',
-          description: description || 'Depósito',
-          date,
-          status: 'posted'
+          account_id: accountId, amount: val, date, description: description || 'Depósito', status: 'posted', type: 'credit'
         });
 
         await updateBalance({
-            id: accountId,
-            balance: Number(sourceAccount.balance) + val
+            balance: Number(sourceAccount.balance) + val, id: accountId
         });
 
       } else if (actionType === 'withdraw') {
         // Debit account
         await createTransaction({
-          account_id: accountId,
-          amount: -val,
-          type: 'debit',
-          description: description || 'Saque',
-          date,
-          status: 'posted'
+          account_id: accountId, amount: -val, date, description: description || 'Saque', status: 'posted', type: 'debit'
         });
 
         await updateBalance({
-            id: accountId,
-            balance: Number(sourceAccount.balance) - val
+            balance: Number(sourceAccount.balance) - val, id: accountId
         });
       }
 

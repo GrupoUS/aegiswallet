@@ -4,45 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
 export const bankAccountsRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await supabase
-      .from('bank_accounts')
-      .select('*')
-      .eq('user_id', ctx.user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch bank accounts',
-        cause: error,
-      });
-    }
-
-    return data;
-  }),
-
-  getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { data, error } = await supabase
-        .from('bank_accounts')
-        .select('*')
-        .eq('id', input.id)
-        .eq('user_id', ctx.user.id)
-        .single();
-
-      if (error) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Bank account not found',
-          cause: error,
-        });
-      }
-
-      return data;
-    }),
-
   create: protectedProcedure
     .input(
       z.object({
@@ -87,9 +48,114 @@ export const bankAccountsRouter = router({
       }
 
       return data;
-    }),
+    }), delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await supabase
+        .from('bank_accounts')
+        .delete()
+        .eq('id', input.id)
+        .eq('user_id', ctx.user.id);
 
-  update: protectedProcedure
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete bank account',
+          cause: error,
+        });
+      }
+
+      return { success: true };
+    }), getAll: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await supabase
+      .from('bank_accounts')
+      .select('*')
+      .eq('user_id', ctx.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch bank accounts',
+        cause: error,
+      });
+    }
+
+    return data;
+  }), getBalanceHistory: protectedProcedure
+    .input(z.object({ accountId: z.string(), days: z.number().default(30) }))
+    .query(async ({ ctx, input }) => {
+      if (!input.accountId || input.accountId === 'all') {
+          return [];
+      }
+
+      const { data: account } = await supabase
+        .from('bank_accounts')
+        .select('balance')
+        .eq('id', input.accountId)
+        .eq('user_id', ctx.user.id)
+        .single();
+
+      if (!account) return [];
+
+      const currentBalance = Number(account.balance);
+      const history = [];
+
+      // Simple mock history: flat line
+      for (let i = 0; i < input.days; i++) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          history.push({
+              date: date.toISOString(),
+              balance: currentBalance
+          });
+      }
+
+      return history.reverse();
+    }), getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('id', input.id)
+        .eq('user_id', ctx.user.id)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Bank account not found',
+          cause: error,
+        });
+      }
+
+      return data;
+    }), getTotalBalance: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await supabase
+      .from('bank_accounts')
+      .select('balance, currency')
+      .eq('user_id', ctx.user.id)
+      .eq('is_active', true);
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch total balance',
+        cause: error,
+      });
+    }
+
+    const totals: Record<string, number> = {};
+    if (data) {
+      data.forEach((account) => {
+        const currency = account.currency || 'BRL';
+        totals[currency] = (totals[currency] || 0) + Number(account.balance);
+      });
+    }
+
+    return totals;
+  }), update: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -120,29 +186,7 @@ export const bankAccountsRouter = router({
       }
 
       return data;
-    }),
-
-  delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { error } = await supabase
-        .from('bank_accounts')
-        .delete()
-        .eq('id', input.id)
-        .eq('user_id', ctx.user.id);
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to delete bank account',
-          cause: error,
-        });
-      }
-
-      return { success: true };
-    }),
-
-  updateBalance: protectedProcedure
+    }), updateBalance: protectedProcedure
     .input(z.object({ id: z.string(), balance: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await supabase
@@ -162,63 +206,5 @@ export const bankAccountsRouter = router({
       }
 
       return data;
-    }),
-
-  getTotalBalance: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await supabase
-      .from('bank_accounts')
-      .select('balance, currency')
-      .eq('user_id', ctx.user.id)
-      .eq('is_active', true);
-
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch total balance',
-        cause: error,
-      });
-    }
-
-    const totals: Record<string, number> = {};
-    if (data) {
-      data.forEach((account) => {
-        const currency = account.currency || 'BRL';
-        totals[currency] = (totals[currency] || 0) + Number(account.balance);
-      });
-    }
-
-    return totals;
-  }),
-
-  getBalanceHistory: protectedProcedure
-    .input(z.object({ accountId: z.string(), days: z.number().default(30) }))
-    .query(async ({ ctx, input }) => {
-      if (!input.accountId || input.accountId === 'all') {
-          return [];
-      }
-
-      const { data: account } = await supabase
-        .from('bank_accounts')
-        .select('balance')
-        .eq('id', input.accountId)
-        .eq('user_id', ctx.user.id)
-        .single();
-
-      if (!account) return [];
-
-      const currentBalance = Number(account.balance);
-      const history = [];
-
-      // Simple mock history: flat line
-      for (let i = 0; i < input.days; i++) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          history.push({
-              date: date.toISOString(),
-              balance: currentBalance
-          });
-      }
-
-      return history.reverse();
     }),
 });

@@ -1,11 +1,49 @@
 {
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "installCommand": "bun install",
+  "framework": null,
   "rewrites": [
     {
-      "source": "/((?!api/|_next/|static/|favicon.ico).*)",
+      "source": "/dashboard",
+      "destination": "/dashboard"
+    },
+    {
+      "source": "/dashboard/(.*)",
+      "destination": "/dashboard"
+    },
+      {
+        "source": "/api/(.*)",
+        "destination": "/api/index"
+      },
+      {
+        "source": "/trpc/(.*)",
+        "destination": "/api/index"
+      },
+    {
+      "source": "/((?!api/|trpc/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

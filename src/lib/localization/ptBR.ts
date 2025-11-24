@@ -269,12 +269,7 @@ export const ptBR: Translation = {
     hints: {
       availableCommands: 'Comandos disponíveis:',
       commands: {
-        balance: 'Meu saldo',
-        budget: 'Orçamento',
-        bills: 'Contas a pagar',
-        incoming: 'Recebimentos',
-        projection: 'Projeção',
-        transfer: 'Transferência',
+        balance: 'Meu saldo', bills: 'Contas a pagar', budget: 'Orçamento', incoming: 'Recebimentos', projection: 'Projeção', transfer: 'Transferência',
       },
       tapToSpeak: 'Toque para falar',
     },

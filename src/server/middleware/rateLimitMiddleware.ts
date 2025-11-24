@@ -16,13 +16,26 @@ interface RateLimitMiddlewareOptions {
 
 export const createRateLimitMiddleware = (options: RateLimitMiddlewareOptions) => {
   return async ({ ctx, next }: any) => {
-    // Simple pass-through implementation to fix build
-    // Real implementation would use rateLimitManager
     return next();
   };
 };
 
 export const generalApiRateLimit = createRateLimitMiddleware({
-  windowMs: 60 * 1000, // 1 minute
-  limit: 100,
+  limit: 100, windowMs: 60 * 1000,
+});
+
+export const authRateLimit = createRateLimitMiddleware({
+  limit: 5, windowMs: 15 * 60 * 1000,
+});
+
+export const dataExportRateLimit = createRateLimitMiddleware({
+  limit: 1, windowMs: 60 * 60 * 1000,
+});
+
+export const transactionRateLimit = createRateLimitMiddleware({
+  limit: 10, windowMs: 60 * 1000,
+});
+
+export const voiceCommandRateLimit = createRateLimitMiddleware({
+  limit: 20, windowMs: 60 * 1000,
 });

@@ -7,7 +7,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { FinancialAmount } from "@/components/financial-amount";
 import { Button } from "@/components/ui/button";
 import {

@@ -1,12 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { Suspense, lazy, useEffect, useMemo } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTotalBalance, useBankAccounts } from '@/hooks/useBankAccounts';
+import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents, useFinancialSummary } from '@/hooks/useFinancialEvents';
 import { useTransactions } from '@/hooks/use-transactions';
 import type { FinancialTransaction } from '@/types/financial-transactions';
@@ -101,9 +101,7 @@ export function Dashboard() {
   // For now, let's use useTransactions with filters for today.
   const today = new Date().toISOString().split('T')[0];
   const { data: pixTransactions } = useTransactions({
-    type: 'pix',
-    startDate: today,
-    endDate: today
+    endDate: today, startDate: today, type: 'pix'
   });
 
   const pixSentToday = useMemo(() => {
@@ -115,20 +113,10 @@ export function Dashboard() {
   // Magic Cards com dados reais
   const magicCardsData = [
     {
-      change: 'Total',
-      color: 'text-green-600',
-      icon: Wallet,
-      title: 'Saldo em Conta',
-      value: totalBRL,
-      isCurrency: true,
+      change: 'Total', color: 'text-green-600', icon: Wallet, isCurrency: true, title: 'Saldo em Conta', value: totalBRL,
     },
     {
-      change: 'Total',
-      color: 'text-blue-600',
-      icon: TrendingUp,
-      title: 'Investimentos',
-      value: investmentsBalance,
-      isCurrency: true,
+      change: 'Total', color: 'text-blue-600', icon: TrendingUp, isCurrency: true, title: 'Investimentos', value: investmentsBalance,
     },
     {
       change: 'Este mês',
@@ -139,12 +127,7 @@ export function Dashboard() {
       isCurrency: true,
     },
     {
-      change: 'Hoje',
-      color: 'text-orange-600',
-      icon: CreditCard,
-      title: 'PIX Enviados',
-      value: pixSentToday,
-      isCurrency: true,
+      change: 'Hoje', color: 'text-orange-600', icon: CreditCard, isCurrency: true, title: 'PIX Enviados', value: pixSentToday,
     },
   ];
 
@@ -306,9 +289,7 @@ function MonthlySummaryContent() {
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
 
     const { statistics, loading } = useFinancialEvents({
-        startDate: startOfMonth,
-        endDate: endOfMonth,
-        status: 'all'
+        endDate: endOfMonth, startDate: startOfMonth, status: 'all'
     });
 
     if (loading) {

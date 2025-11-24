@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+api
+coverage
+bunx-temp
+**/*.min.js
+**/*.bundle.js
+

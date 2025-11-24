@@ -4,16 +4,16 @@ import {
   ArrowLeftRight,
   FileText,
   MoreVertical,
+  Trash2,
   TrendingDown,
-  TrendingUp,
-  Trash2
+  TrendingUp
 } from 'lucide-react';
 import { useState } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTransactions, useDeleteTransaction } from '@/hooks/use-transactions';
+import { useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ export default function TransactionsList() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async () => {
-    if (!deletingId) return;
+    if (!deletingId) {return;}
 
     // Find transaction to revert balance
     const transaction = transactions?.find((t: any) => t.id === deletingId);
@@ -47,8 +47,7 @@ export default function TransactionsList() {
                 // So: current - (-100) = current + 100.
                 // So: balance - transaction.amount
                 await updateBalance({
-                    id: transaction.account_id,
-                    balance: Number(account.balance) - Number(transaction.amount)
+                    balance: Number(account.balance) - Number(transaction.amount), id: transaction.account_id
                 });
             }
         }

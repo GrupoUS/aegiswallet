@@ -58,20 +58,14 @@ export default function TransactionForm({ onCancel, onSuccess }: TransactionForm
       }
 
       await createTransaction({
-        description,
-        amount: finalAmount,
-        type,
-        date: new Date(date).toISOString(),
-        account_id: accountId,
-        status: 'posted' // Assuming instant transaction
+        account_id: accountId, amount: finalAmount, date: new Date(date).toISOString(), description, status: 'posted', type // Assuming instant transaction
       });
 
       // Update account balance
       const account = accounts.find(a => a.id === accountId);
       if (account) {
          await updateBalance({
-             id: accountId,
-             balance: Number(account.balance) + finalAmount
+             balance: Number(account.balance) + finalAmount, id: accountId
          });
       }
 

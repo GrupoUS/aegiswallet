@@ -24,14 +24,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
 
 const formSchema = z.object({
-  institution_name: z.string().min(1, "Nome da instituição é obrigatório"),
   account_type: z.enum(["checking", "savings", "investment", "cash"], {
     required_error: "Selecione um tipo de conta",
-  }),
-  balance: z.coerce.number({ required_error: "Saldo é obrigatório" }),
-  currency: z.string().default("BRL"),
-  is_primary: z.boolean().default(false),
-  is_active: z.boolean().default(true),
+  }), balance: z.coerce.number({ required_error: "Saldo é obrigatório" }), currency: z.string().default("BRL"), institution_name: z.string().min(1, "Nome da instituição é obrigatório"), is_active: z.boolean().default(true), is_primary: z.boolean().default(false),
 });
 
 type BankAccountFormValues = z.infer<typeof formSchema>;
@@ -51,7 +46,6 @@ export function BankAccountForm({
     useBankAccounts();
 
   const form = useForm<BankAccountFormValues>({
-    resolver: zodResolver(formSchema),
     defaultValues: {
       institution_name: "",
       account_type: "checking",
@@ -59,18 +53,13 @@ export function BankAccountForm({
       currency: "BRL",
       is_primary: false,
       is_active: true,
-    },
+    }, resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
     if (account) {
       form.reset({
-        institution_name: account.institution_name,
-        account_type: account.account_type,
-        balance: Number(account.balance),
-        currency: account.currency,
-        is_primary: account.is_primary,
-        is_active: account.is_active,
+        account_type: account.account_type, balance: Number(account.balance), currency: account.currency, institution_name: account.institution_name, is_active: account.is_active, is_primary: account.is_primary,
       });
     }
   }, [account, form]);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { Plus, Pencil, Trash2, Building, Wallet, MoreVertical } from 'lucide-react';
+import { Building, MoreVertical, Pencil, Plus, Trash2, Wallet } from 'lucide-react';
 import { useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 import { BankAccountForm } from '@/components/bank-accounts/BankAccountForm';
 import { FinancialAmount } from '@/components/financial-amount';

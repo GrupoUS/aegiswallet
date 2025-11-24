@@ -169,7 +169,10 @@ beforeAll(() => {
     removeItem: vi.fn(),
     setItem: vi.fn(),
   };
-  globalObj.localStorage = localStorageMock;
+  Object.defineProperty(globalObj, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+  });
 
   // Mock Speech Synthesis API for voice service tests
   const mockSpeechSynthesis = {
@@ -404,7 +407,10 @@ afterEach(() => {
 // Clean up global stubs after all tests
 afterAll(() => {
   // Manual cleanup since vi.unstubAllGlobals() might not be available
-  globalObj.localStorage = undefined;
+  Object.defineProperty(globalObj, 'localStorage', {
+    value: undefined,
+    writable: true,
+  });
   globalObj.SpeechSynthesisUtterance = undefined;
   globalObj.speechSynthesis = undefined;
   globalObj.SpeechRecognition = undefined;

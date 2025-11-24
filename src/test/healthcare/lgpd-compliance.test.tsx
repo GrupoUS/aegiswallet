@@ -31,7 +31,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
   const [consent, setConsent] = React.useState(false);
 
   const handleSubmit = () => {
-    if (!consent) return;
+    if (!consent) {return;}
 
     // Simulate masking logic that would be in the real component/service
     // Input: 12345678900 -> Output: 123.***.789-**
@@ -41,17 +41,13 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
     const maskedPhone = phone === '11987654321' ? '119****4321' : phone;
 
     onSubmit({
-      name,
-      email,
-      phone: maskedPhone,
-      cpf: maskedCpf,
-      lgpdConsent: {
+      cpf: maskedCpf, email, lgpdConsent: {
         consentType: 'treatment',
         deviceId: 'test-device-id',
         ip: '127.0.0.1',
         timestamp: new Date().toISOString(),
         version: '1.0',
-      },
+      }, name, phone: maskedPhone,
     });
   };
 
@@ -114,6 +110,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
 
 describe('LGPD Compliance Testing', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     window.localStorage.clear();
   });

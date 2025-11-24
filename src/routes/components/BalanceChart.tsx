@@ -2,9 +2,9 @@ import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMemo, useState } from "react";
 import {
+  CartesianGrid,
   Line,
   LineChart,
-  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,9 +28,9 @@ export function BalanceChart() {
   const { accounts } = useBankAccounts();
 
   const days = useMemo(() => {
-    if (period === "week") return 7;
-    if (period === "month") return 30;
-    if (period === "quarter") return 90;
+    if (period === "week") {return 7;}
+    if (period === "month") {return 30;}
+    if (period === "quarter") {return 90;}
     return 30;
   }, [period]);
 
@@ -53,9 +53,7 @@ export function BalanceChart() {
     // History is expected to be [{ date: string, balance: number }, ...]
     // We need to format it for the chart
     return history.map((item: any) => ({
-        date: format(new Date(item.date), "dd/MM"),
-        fullDate: format(new Date(item.date), "dd 'de' MMMM", { locale: ptBR }),
-        balance: Number(item.balance)
+        balance: Number(item.balance), date: format(new Date(item.date), "dd/MM"), fullDate: format(new Date(item.date), "dd 'de' MMMM", { locale: ptBR })
     }));
   }, [history, isLoading]);
 

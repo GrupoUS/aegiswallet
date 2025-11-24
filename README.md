@@ -112,6 +112,68 @@ git commit -m "feat: add new feature"
 
 ---
 
+## 🔌 API Architecture
+
+### Hono + tRPC Hybrid Approach
+
+AegisWallet combines Hono and tRPC to provide edge performance with type-safe APIs.
+
+#### Hono (Edge-First HTTP Framework)
+- **Static File Serving**: Hosts the built SPA assets.
+- **Health Checks**: `/api/health` endpoint for observability.
+- **tRPC Endpoint**: Proxies requests from `/api/trpc/*` into the tRPC handler.
+- **Middleware**: Manages CORS, logging and request lifecycle plumbing.
+
+#### tRPC v11 (Type-Safe API Layer)
+- **End-to-End Type Safety**: Automatic inference from backend procedures to frontend hooks.
+- **React Query Integration**: TanStack Query handles caching, invalidation and optimistic UI.
+- **Input Validation**: Zod schemas validated at the procedure boundary.
+- **Middleware**: Authentication, rate limiting, fraud detection, and logging pipelines.
+
+### Router Organization
+
+#### Consolidated Routers
+- **auth**: Sign in/out, sign up, password reset with rate limiting + security logging.
+- **users**: Profiles, preferences, summaries, account deletion.
+- **transactions**: CRUD with fraud detection, statistics, projections.
+
+#### Specialized Routers
+- **pix**: PIX keys, transfers, QR codes, statistics.
+- **bankAccounts**: Manual accounts, balances, history.
+- **contacts**: Contact CRUD/search/favorites/statistics.
+- **calendar**: Financial events, reminders, notifications.
+- **google-calendar**: Sync settings/history, bidirectional sync actions.
+- **voice**: Voice command processing, feedback, analytics.
+
+### Key Features
+
+✅ **Type Safety** – Zero contract drift with shared TypeScript types
+✅ **Validation** – Zod schemas aligned with Supabase policies
+✅ **Security** – Rate limiting, authentication, fraud detection, structured logging
+✅ **React Query** – Automatic caching, optimistic updates, background refresh
+✅ **Superjson** – Serializes complex types seamlessly
+
+### Usage Example
+
+```typescript
+// Server (tRPC procedure)
+export const pixRouter = router({
+  getKeys: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.supabase
+      .from('pix_keys')
+      .select('*')
+      .eq('user_id', ctx.user.id)
+  }),
+})
+
+// Client (React hook)
+const { data: keys, isLoading } = trpc.pix.getKeys.useQuery()
+```
+
+📖 **Full Documentation**: [tRPC Architecture Guide](docs/architecture/trpc-architecture.md)
+
+---
+
 ## 📁 Project Structure
 
 ```

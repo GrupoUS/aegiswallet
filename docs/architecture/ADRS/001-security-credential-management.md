@@ -24,7 +24,7 @@ Implement a comprehensive secure credential management system following zero-tru
 - Supports multiple deployment environments (dev/staging/prod)
 - Enables audit trail for credential access
 
-### Negative  
+### Negative
 - Requires immediate migration effort
 - Adds complexity to local development setup
 - Requires DevOps infrastructure changes
@@ -38,7 +38,7 @@ Implement a comprehensive secure credential management system following zero-tru
 ### Phase 1: Immediate Security Fix (24 hours)
 1. **Remove hard-coded credentials** from all source files
 2. **Implement environment validation** at application startup
-3. **Add development environment setup** with `.env.example`
+3. **Add development environment setup** with `env.example`
 4. **Update all deployment scripts** to use environment variables
 
 ### Phase 2: Production-Ready Secret Management (1 week)
@@ -77,13 +77,13 @@ export interface AppConfig {
 export function validateEnvironmentConfig(): AppConfig {
   const requiredEnvVars = [
     'SUPABASE_URL',
-    'SUPABASE_ANON_KEY', 
+    'SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_KEY',
     'VITE_APP_VERSION',
   ]
 
   const missing = requiredEnvVars.filter(key => !process.env[key])
-  
+
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}\n` +
@@ -120,7 +120,7 @@ let supabaseClient: ReturnType<typeof createClient> | null = null
 export function getSupabaseClient() {
   if (!supabaseClient) {
     const config = validateEnvironmentConfig()
-    
+
     supabaseClient = createClient(config.supabase.url, config.supabase.anonKey, {
       auth: {
         flowType: 'pkce',
@@ -144,13 +144,13 @@ export function getSupabaseClient() {
       },
     })
   }
-  
+
   return supabaseClient
 }
 
 export function getServiceSupabaseClient() {
   const config = validateEnvironmentConfig()
-  
+
   return createClient(config.supabase.url, config.supabase.serviceKey, {
     auth: {
       persistSession: false,
@@ -225,13 +225,13 @@ export class VaultSecretManager implements SecretManager {
 ### 1. Immediate Actions (Required within 24 hours)
 ```bash
 # Step 1: Create environment template
-cat > .env.example << EOL
+cat > env.example << EOL
 # Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_KEY=your-service-key
 
-# Application Configuration  
+# Application Configuration
 VITE_APP_VERSION=1.0.0
 VITE_API_URL=http://localhost:3000
 
@@ -302,7 +302,7 @@ export class CredentialMonitor {
     ]
 
     const results = await Promise.allSettled(checks)
-    
+
     return {
       overall: results.every(r => r.status === 'fulfilled') ? 'healthy' : 'degraded',
       checks: results.map((r, i) => ({
@@ -331,7 +331,7 @@ export class CredentialMonitor {
 
 ---
 
-**Decision Date**: 2025-01-XX  
-**Review Date**: 2025-02-XX  
-**Implementation Owner**: Security Lead + DevOps Team  
+**Decision Date**: 2025-01-XX
+**Review Date**: 2025-02-XX
+**Implementation Owner**: Security Lead + DevOps Team
 **Compliance**: LGPD + BCB Security Requirements

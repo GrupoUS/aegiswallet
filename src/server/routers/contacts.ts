@@ -1,14 +1,40 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
+import { validateCPF } from '@/lib/security/financial-validator';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
+const brazilPhoneRegex = /^\d{10,11}$/;
+
+const normalizeDigits = (value: string | undefined | null) =>
+  value ? value.replace(/\D/g, '') : value ?? undefined;
+
+const sanitizeContactFields = <
+  T extends { cpf?: string | null; email?: string | null; phone?: string | null }
+>(
+  contact: T
+) => ({
+  ...contact,
+  cpf: contact.cpf ? normalizeDigits(contact.cpf) : contact.cpf,
+  email: contact.email?.trim().toLowerCase(),
+  phone: contact.phone ? normalizeDigits(contact.phone) : contact.phone,
+});
+
 /**
- * Contacts Router - Gerenciamento de contatos
+ * Contacts Router - Manages contact CRUD, favorites, and stats.
+ *
+ * @remarks
+ * Recommended indexes: `(user_id, name)`, `(user_id, email)`, `(user_id, phone)`,
+ * `(user_id, is_favorite)` to accelerate search/favorite filters.
  */
 export const contactsRouter = router({
-  // Listar todos os contatos
+  /**
+   * List contacts with pagination, search, and favorite filtering.
+   *
+   * @remarks
+   * Optimized by indexes on `(user_id, name)`, `(user_id, email)`, `(user_id, phone)`,
+   * and `(user_id, is_favorite)`.
+   */
   getAll: protectedProcedure
     .input(
       z.object({
@@ -19,6 +45,7 @@ export const contactsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         let query = supabase.from('contacts').select('*').eq('user_id', ctx.user.id);
 
@@ -72,10 +99,13 @@ export const contactsRouter = router({
       }
     }),
 
-  // Obter contato específico
+  /**
+   * Retrieve a single contact by ID scoped to the authenticated user.
+   */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('contacts')
@@ -116,24 +146,57 @@ export const contactsRouter = router({
       }
     }),
 
-  // Criar novo contato
+  /**
+   * Create a new contact with CPF/phone validation and duplicate protection.
+   */
   create: protectedProcedure
     .input(
       z.object({
-        cpf: z.string().optional(),
+        cpf: z
+          .string()
+          .optional()
+          .refine((cpf) => !cpf || validateCPF(normalizeDigits(cpf) ?? ''), 'CPF inválido'),
         email: z.string().email().optional(),
         isFavorite: z.boolean().default(false),
         name: z.string().min(1, 'Nome é obrigatório'),
         notes: z.string().optional(),
-        phone: z.string().optional(),
+        phone: z
+          .string()
+          .optional()
+          .refine(
+            (phone) => !phone || brazilPhoneRegex.test(normalizeDigits(phone) ?? ''),
+            'Telefone inválido'
+          ),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
+        const sanitizedInput = sanitizeContactFields(input);
+
+        if (sanitizedInput.cpf && !validateCPF(sanitizedInput.cpf)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'CPF inválido',
+          });
+        }
+
+        if (sanitizedInput.phone && !brazilPhoneRegex.test(sanitizedInput.phone)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Telefone inválido',
+          });
+        }
+
         const { data, error } = await supabase
           .from('contacts')
           .insert({
-            ...input,
+            cpf: sanitizedInput.cpf ?? null,
+            email: sanitizedInput.email ?? null,
+            is_favorite: sanitizedInput.isFavorite,
+            name: sanitizedInput.name,
+            notes: sanitizedInput.notes ?? null,
+            phone: sanitizedInput.phone ?? null,
             user_id: ctx.user.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -186,28 +249,77 @@ export const contactsRouter = router({
       }
     }),
 
-  // Atualizar contato
+  /**
+   * Update mutable contact fields (name, email, phone, notes, favorites).
+   */
   update: protectedProcedure
     .input(
       z.object({
-        cpf: z.string().optional(),
+        cpf: z
+          .string()
+          .optional()
+          .refine((cpf) => !cpf || validateCPF(normalizeDigits(cpf) ?? ''), 'CPF inválido'),
         email: z.string().email().optional(),
         id: z.string().uuid(),
         isFavorite: z.boolean().optional(),
         name: z.string().optional(),
         notes: z.string().optional(),
-        phone: z.string().optional(),
+        phone: z
+          .string()
+          .optional()
+          .refine(
+            (phone) => !phone || brazilPhoneRegex.test(normalizeDigits(phone) ?? ''),
+            'Telefone inválido'
+          ),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { id, ...updateData } = input;
+        const sanitizedData = sanitizeContactFields(updateData);
+
+        if (sanitizedData.cpf && !validateCPF(sanitizedData.cpf)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'CPF inválido',
+          });
+        }
+
+        if (sanitizedData.phone && !brazilPhoneRegex.test(sanitizedData.phone)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Telefone inválido',
+          });
+        }
+
+        const updatePayload: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
+        };
+
+        if (sanitizedData.name !== undefined) {
+          updatePayload.name = sanitizedData.name;
+        }
+        if (sanitizedData.email !== undefined) {
+          updatePayload.email = sanitizedData.email ?? null;
+        }
+        if (sanitizedData.phone !== undefined) {
+          updatePayload.phone = sanitizedData.phone ?? null;
+        }
+        if (sanitizedData.cpf !== undefined) {
+          updatePayload.cpf = sanitizedData.cpf ?? null;
+        }
+        if (sanitizedData.notes !== undefined) {
+          updatePayload.notes = sanitizedData.notes ?? null;
+        }
+        if (sanitizedData.isFavorite !== undefined) {
+          updatePayload.is_favorite = sanitizedData.isFavorite;
+        }
 
         const { data, error } = await supabase
           .from('contacts')
           .update({
-            ...updateData,
-            updated_at: new Date().toISOString(),
+            ...updatePayload,
           })
           .eq('id', id)
           .eq('user_id', ctx.user.id)
@@ -248,7 +360,7 @@ export const contactsRouter = router({
         }
 
         logOperation('update_contact_success', ctx.user.id, 'contacts', input.id, {
-          updateFields: Object.keys(updateData),
+          updateFields: Object.keys(updateData).filter((field) => field !== 'updated_at'),
         });
 
         return data;
@@ -257,16 +369,19 @@ export const contactsRouter = router({
           contactId: input.id,
           operation: 'update',
           resource: 'contacts',
-          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+          updateFields: Object.keys(updateData).filter((field) => field !== 'updated_at'),
         });
         throw error;
       }
     }),
 
-  // Deletar contato
+  /**
+   * Delete a contact owned by the authenticated user.
+   */
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('contacts')
@@ -312,7 +427,9 @@ export const contactsRouter = router({
       }
     }),
 
-  // Buscar contatos por nome ou email
+  /**
+   * Search contacts by name, email, or phone with limit controls.
+   */
   search: protectedProcedure
     .input(
       z.object({
@@ -321,6 +438,7 @@ export const contactsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('contacts')
@@ -367,8 +485,11 @@ export const contactsRouter = router({
       }
     }),
 
-  // Obter contatos favoritos
+  /**
+   * Retrieve favorite contacts ordered alphabetically.
+   */
   getFavorites: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -405,10 +526,13 @@ export const contactsRouter = router({
     }
   }),
 
-  // Alternar status de favorito
+  /**
+   * Toggle favorite status for a contact.
+   */
   toggleFavorite: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Primeiro buscar o contato atual para obter o status
         const { data: currentContact, error: fetchError } = await supabase
@@ -469,8 +593,11 @@ export const contactsRouter = router({
       }
     }),
 
-  // Obter estatísticas dos contatos
+  /**
+   * Compute contact statistics (favorites, emails, phones) for dashboards.
+   */
   getStats: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('contacts')

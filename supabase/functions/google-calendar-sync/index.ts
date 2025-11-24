@@ -151,14 +151,26 @@ Deno.serve(async (req) => {
         .single();
 
       // Prepare Google Event Resource
-      const googleEvent: any = {
-        description: settings.sync_financial_amounts
-          ? `${event.description || ''}\n\nValor: R$ ${event.amount}\nCategoria: ${event.category || 'Geral'}`.trim()
-          : event.description, end: { dateTime: new Date(event.end).toISOString() }, extendedProperties: {
+      const startDate = event.start_date || event.start || event.created_at || new Date().toISOString();
+      const endDate = event.end_date || event.end || startDate;
+      const details = settings.sync_financial_amounts
+        ? `${event.description || ''}\n\nValor: R$ ${event.amount ?? 0}\nCategoria: ${
+            event.category_id || 'Geral'
+          }`.trim()
+        : event.description;
+
+      const googleEvent: Record<string, unknown> = {
+        description: details,
+        end: { dateTime: new Date(endDate).toISOString() },
+        extendedProperties: {
           private: {
-            aegis_amount: settings.sync_financial_amounts ? String(event.amount) : 'HIDDEN', aegis_event_id: event.id, aegis_type: event.type,
-          }
-        }, start: { dateTime: new Date(event.start).toISOString() }, summary: event.title
+            aegis_amount: settings.sync_financial_amounts ? String(event.amount ?? 0) : 'HIDDEN',
+            aegis_event_id: event.id,
+            aegis_type_id: event.event_type_id || 'unknown',
+          },
+        },
+        start: { dateTime: new Date(startDate).toISOString() },
+        summary: event.title,
       };
 
       // Update or Insert
@@ -255,8 +267,12 @@ Deno.serve(async (req) => {
                  // Logic: compare timestamps? For now assume Google is truth for inbound sync
                  // Only update if direction allows
                  if (settings.sync_direction !== 'one_way_to_google') {
+                      const inboundStart = item.start?.dateTime || item.start?.date || new Date().toISOString();
+                      const inboundEnd = item.end?.dateTime || item.end?.date || inboundStart;
                       await supabase.from('financial_events').update({
-                          end: item.end.dateTime || item.end.date, start: item.start.dateTime || item.start.date, title: item.summary,
+                          end_date: inboundEnd,
+                          start_date: inboundStart,
+                          title: item.summary || 'Evento sincronizado',
                           // Description update? careful overwriting
                       }).eq('id', mapping.aegis_event_id);
 

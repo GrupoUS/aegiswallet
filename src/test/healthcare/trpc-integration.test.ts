@@ -75,7 +75,7 @@ const createTrpcMock = () => {
       }),
 
       list: msw.appointments.list.query((req, res, ctx) => {
-        const { patientId, dateRange } = req.input;
+        const { patientId } = req.input;
 
         // Mock appointment data
         const appointments = [

@@ -45,4 +45,4 @@ export interface Procedure<TInput = unknown, TOutput = unknown> {
 /**
  * Enhanced router builder type
  */
-export type RouterBuilder = any; // Simplified type to avoid complex tRPC type inference
+export type RouterBuilder = TRPCRouterRecord;

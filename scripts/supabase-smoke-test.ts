@@ -1,0 +1,139 @@
+#!/usr/bin/env bun
+
+/**
+ * Supabase smoke test.
+ *
+ * Inserts a temporary bank account + transaction using the service role and then
+ * cleans the records to keep the database pristine.
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import { randomUUID } from 'node:crypto';
+
+type CliOptions = {
+  userId: string;
+  keepData: boolean;
+};
+
+function parseArgs(): CliOptions {
+  const args = process.argv.slice(2);
+  let userId = '';
+  let keepData = false;
+
+  for (const arg of args) {
+    if (arg.startsWith('--user=')) {
+      userId = arg.replace('--user=', '').trim();
+    } else if (arg === '--keep-data') {
+      keepData = true;
+    }
+  }
+
+  if (!userId) {
+    console.error('❌ Missing required argument: --user=<uuid>');
+    process.exit(1);
+  }
+
+  return { userId, keepData };
+}
+
+async function main() {
+  const { userId, keepData } = parseArgs();
+
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) {
+    console.error('❌ SUPABASE_URL is not defined.');
+    process.exit(1);
+  }
+  if (!serviceRoleKey) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not defined.');
+    process.exit(1);
+  }
+
+  const client = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const smokeSuffix = randomUUID();
+  const belvoAccountId = `manual_smoke_${smokeSuffix}`;
+  const institutionName = 'QA Smoke Bank';
+
+  console.log('🚀 Starting Supabase smoke test...');
+  console.log(`• Using user_id: ${userId}`);
+
+  const accountPayload = {
+    user_id: userId,
+    belvo_account_id: belvoAccountId,
+    institution_id: 'qa_smoke_institution',
+    institution_name: institutionName,
+    account_type: 'checking',
+    account_mask: '**** 5678',
+    account_holder_name: 'QA Smoke User',
+    balance: 123.45,
+    available_balance: 123.45,
+    currency: 'BRL',
+    is_primary: false,
+    is_active: true,
+    sync_status: 'manual',
+  };
+
+  const { data: account, error: accountError } = await client
+    .from('bank_accounts')
+    .insert(accountPayload)
+    .select('id')
+    .single();
+
+  if (accountError || !account) {
+    console.error('❌ Failed to insert bank account:', accountError?.message);
+    process.exit(1);
+  }
+
+  console.log(`✅ Bank account inserted: ${account.id}`);
+
+  const transactionPayload = {
+    user_id: userId,
+    account_id: account.id,
+    amount: 42.5,
+    description: 'QA Smoke Transaction',
+    transaction_date: new Date().toISOString(),
+    transaction_type: 'debit',
+    status: 'posted',
+    currency: 'BRL',
+    is_manual_entry: true,
+  };
+
+  const { data: transaction, error: transactionError } = await client
+    .from('transactions')
+    .insert(transactionPayload)
+    .select('id')
+    .single();
+
+  if (transactionError || !transaction) {
+    console.error('❌ Failed to insert transaction:', transactionError?.message);
+    await client.from('bank_accounts').delete().eq('id', account.id);
+    process.exit(1);
+  }
+
+  console.log(`✅ Transaction inserted: ${transaction.id}`);
+
+  if (!keepData) {
+    console.log('🧹 Cleaning up smoke data...');
+    await client.from('transactions').delete().eq('id', transaction.id);
+    await client.from('bank_accounts').delete().eq('id', account.id);
+    console.log('✅ Smoke data cleaned up.');
+  } else {
+    console.log('⚠️ Keeping inserted data as requested (--keep-data).');
+  }
+
+  console.log('🎉 Smoke test completed successfully!');
+}
+
+main().catch((error) => {
+  console.error('❌ Smoke test failed with unexpected error:', error);
+  process.exit(1);
+});
+

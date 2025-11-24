@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
 export interface OAuthHandlerResult {
@@ -17,8 +18,93 @@ export function useOAuthHandler(): OAuthHandlerResult {
   const [isProcessing, setIsProcessing] = useState(true);
   const [oauthError, setOAuthError] = useState<string | null>(null);
 
+  const performPostAuthRedirect = () => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const storedRedirect =
+      sessionStorage.getItem('post_auth_redirect') || '/dashboard';
+
+    sessionStorage.removeItem('post_auth_redirect');
+
+    if (window.location.pathname !== storedRedirect) {
+      window.location.replace(storedRedirect);
+      return true;
+    }
+
+    return false;
+  };
+
   useEffect(() => {
-    const handleOAuthHash = () => {
+    const processOAuthQuery = async () => {
+      if (typeof window === 'undefined') {
+        return false;
+      }
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryError = queryParams.get('error') ?? queryParams.get('error_description');
+
+      if (queryError) {
+        secureLogger.security('OAuth query error detected', {
+          error: queryError,
+          pathname: window.location.pathname,
+        });
+        setOAuthError(queryError);
+        setIsProcessing(false);
+        return true;
+      }
+
+      const code = queryParams.get('code');
+      if (!code) {
+        return false;
+      }
+
+      try {
+        setIsProcessing(true);
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          secureLogger.error('Failed to exchange PKCE code for session', {
+            code,
+            error: exchangeError.message,
+            pathname: window.location.pathname,
+          });
+          setOAuthError(exchangeError.message);
+          setIsProcessing(false);
+          return true;
+        }
+
+        // Clean up query parameters after successful exchange
+        ['code', 'state', 'scope', 'auth_type'].forEach((param) => queryParams.delete(param));
+        const newQuery = queryParams.toString();
+        const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${
+          window.location.hash
+        }`;
+        window.history.replaceState({}, document.title, newUrl);
+
+        secureLogger.authEvent('pkce_code_exchanged', undefined, {
+          pathname: window.location.pathname,
+        });
+
+        if (performPostAuthRedirect()) {
+          return true;
+        }
+
+        setIsProcessing(false);
+        return true;
+      } catch (error) {
+        secureLogger.error('Unexpected error exchanging PKCE code', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          pathname: window.location.pathname,
+        });
+        setOAuthError('Não foi possível concluir o login com o Google.');
+        setIsProcessing(false);
+        return true;
+      }
+    };
+
+    const handleOAuthHash = async () => {
       try {
         if (typeof window === 'undefined') {
           setIsProcessing(false);
@@ -66,6 +152,8 @@ export function useOAuthHandler(): OAuthHandlerResult {
             hasAccessToken: hashParams.has('access_token'),
             pathname: window.location.pathname,
           });
+
+          performPostAuthRedirect();
         }
 
         setIsProcessing(false);
@@ -83,10 +171,17 @@ export function useOAuthHandler(): OAuthHandlerResult {
       }
     };
 
-    const redirecting = handleOAuthHash();
-    if (!redirecting) {
-      setIsRedirecting(false);
-    }
+    const orchestrateOAuthHandling = async () => {
+      const queryHandled = await processOAuthQuery();
+      if (!queryHandled) {
+        const redirecting = await handleOAuthHash();
+        if (!redirecting) {
+          setIsRedirecting(false);
+        }
+      }
+    };
+
+    orchestrateOAuthHandling();
   }, []);
 
   return {

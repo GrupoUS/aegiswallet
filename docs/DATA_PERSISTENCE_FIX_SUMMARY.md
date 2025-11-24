@@ -33,11 +33,12 @@
 
 - Entrada valida campos obrigatórios, evita duplicidades por `institution_id + account_mask` e define `sync_status` conforme tipo (manual vs Belvo).
 - Erros são lançados com mensagens em PT-BR e `TRPCError` adequado.
+- Validações agora são logadas com payload sanitizado (sem `account_number`) e a máscara é normalizada para o formato `**** 1234` quando necessário.
 
 ### 3.3 Financial Events Hook Fixes
 
 - `rowToEvent` e `eventToRow` agora mapeiam todos os campos (datas, metadata, JSONB, tags, icons, Brazilian types).
-- `createEvent`/`updateEvent` usam camada de validação e logging detalhado.
+- `createEvent`/`updateEvent` usam camada de validação e passaram a registrar erros com contexto (ID do evento, payload sanitizado e detalhes da validação).
 
 ### 3.4 Validation Layer
 

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Comprehensive LGPD Compliance Audit Report
  *
@@ -19,11 +20,16 @@
  * - Remediation Plan and Recommendations
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TestUtils } from '../healthcare-setup';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TestUtils } from './test-utils';
+import { ensureTestUtils } from './test-utils';
+
+let render: typeof import('@testing-library/react').render;
+let screen: typeof import('@testing-library/react').screen;
+let waitFor: typeof import('@testing-library/react').waitFor;
+let cleanup: typeof import('@testing-library/react').cleanup;
+let userEvent: typeof import('@testing-library/user-event').default;
+let React: typeof import('react');
 
 // Mock audit report generation
 vi.mock('@/lib/compliance/auditReportGenerator', () => ({
@@ -62,7 +68,37 @@ vi.mock('@/lib/compliance/complianceMetrics', () => ({
 }));
 
 // Comprehensive LGPD Audit Report Component
-const _LGPDComplianceAuditReport = () => {
+ensureTestUtils();
+
+let domReady = false;
+const ensureDom = async () => {
+  if (domReady) return;
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    const { JSDOM } = await import('jsdom');
+    const dom = new JSDOM('<!doctype html><html><body></body></html>');
+    global.window = dom.window as unknown as typeof globalThis.window;
+    global.document = dom.window.document;
+    global.navigator = dom.window.navigator;
+    global.HTMLCanvasElement = dom.window.HTMLCanvasElement;
+  } else if (typeof global.HTMLCanvasElement === 'undefined') {
+    global.HTMLCanvasElement = (window as typeof globalThis).HTMLCanvasElement;
+  }
+  await import('../setup-dom');
+  domReady = true;
+};
+
+await ensureDom();
+({ render, screen, waitFor, cleanup } = await import('@testing-library/react'));
+userEvent = (await import('@testing-library/user-event')).default;
+React = (await import('react')).default;
+afterEach(() => cleanup());
+
+beforeEach(async () => {
+  ensureTestUtils();
+  await ensureDom();
+});
+
+const LGDComplianceAuditReport = () => {
   const [reportData, setReportData] = React.useState({
     auditPeriod: {
       endDate: new Date().toISOString().split('T')[0],
@@ -130,9 +166,11 @@ const _LGPDComplianceAuditReport = () => {
     };
 
     // Calculate overall compliance
-    const metrics = Object.values(calculatedMetrics);
+    const metricValues = Object.entries(calculatedMetrics)
+      .filter(([key]) => key !== 'overallCompliance')
+      .map(([, value]) => value);
     calculatedMetrics.overallCompliance = Math.round(
-      metrics.reduce((sum, score) => sum + score, 0) / metrics.length
+      metricValues.reduce((sum, score) => sum + score, 0) / metricValues.length
     );
 
     setComplianceMetrics(calculatedMetrics);
@@ -216,7 +254,7 @@ const _LGPDComplianceAuditReport = () => {
   };
 
   // Export audit report
-  const exportAuditReport = (_format: 'pdf' | 'json' | 'csv') => {
+  const exportAuditReport = (format: 'pdf' | 'json' | 'csv') => {
     const reportContent = {
       auditTrail: 'Completo e digitalmente assinado',
       detailedMetrics: complianceMetrics,
@@ -239,6 +277,7 @@ const _LGPDComplianceAuditReport = () => {
       issuesAnalysis: criticalIssues,
       recommendations: recommendations,
     };
+    console.log(`Exporting audit report as ${format.toUpperCase()}`, reportContent);
     return reportContent;
   };
 
@@ -251,12 +290,12 @@ const _LGPDComplianceAuditReport = () => {
       React.createElement('div', { key: 'report-info' }, [
         React.createElement(
           'div',
-          { key: 'report-id' },
+          { key: 'report-id', 'data-testid': 'report-id' },
           `ID do Relatório: ${reportData.reportId || 'Não gerado'}`
         ),
         React.createElement(
           'div',
-          { key: 'generated-at' },
+          { key: 'generated-at', 'data-testid': 'generated-at' },
           `Gerado em: ${reportData.generatedAt || 'Não gerado'}`
         ),
         React.createElement('div', { key: 'version' }, `Versão: ${reportData.version}`),
@@ -450,6 +489,11 @@ const _LGPDComplianceAuditReport = () => {
                     React.createElement('strong', { key: 'deadline-label' }, 'Prazo: '),
                     new Date(issue.deadline).toLocaleDateString('pt-BR'),
                   ]),
+                  React.createElement(
+                    'div',
+                    { key: 'severity-footer' },
+                    `-${issue.severity.toUpperCase()}`
+                  ),
                 ]
               )
             )
@@ -494,7 +538,7 @@ const _LGPDComplianceAuditReport = () => {
                       textTransform: 'uppercase',
                     },
                   },
-                  `${rec.priority} - `
+                  `${rec.priority.toUpperCase()} - `
                 ),
                 rec.category,
               ]),
@@ -520,6 +564,7 @@ const _LGPDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
+            type: 'button',
             'data-testid': 'export-pdf',
             key: 'export-pdf',
             onClick: () => exportAuditReport('pdf'),
@@ -530,6 +575,7 @@ const _LGPDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
+            type: 'button',
             'data-testid': 'export-json',
             key: 'export-json',
             onClick: () => exportAuditReport('json'),
@@ -540,6 +586,7 @@ const _LGPDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
+            type: 'button',
             'data-testid': 'export-csv',
             key: 'export-csv',
             onClick: () => exportAuditReport('csv'),
@@ -555,6 +602,7 @@ const _LGPDComplianceAuditReport = () => {
       React.createElement(
         'button',
         {
+          type: 'button',
           'data-testid': 'generate-audit-report',
           key: 'generate-report',
           onClick: generateAuditReport,
@@ -576,6 +624,7 @@ const _LGPDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
+            type: 'button',
             'data-testid': 'schedule-next-audit',
             key: 'schedule-next-audit',
             style: {

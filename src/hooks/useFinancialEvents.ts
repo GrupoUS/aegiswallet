@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logging';
 import {
   type ValidationError as FinancialValidationError,
   type SanitizedFinancialEvent,
@@ -137,11 +138,7 @@ const logFinancialEventError = (
   error: unknown,
   context?: Record<string, unknown>
 ) => {
-  // eslint-disable-next-line no-console
-  console.error(`[useFinancialEvents] ${scope}`, {
-    error,
-    ...context,
-  });
+  logger.error(`[useFinancialEvents] ${scope}`, { error, ...context });
 };
 
 /**

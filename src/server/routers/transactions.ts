@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
@@ -24,6 +23,7 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         let query = supabase
           .from('transactions')
@@ -126,6 +126,7 @@ export const transactionsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('transactions')
@@ -192,6 +193,7 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('transactions')
@@ -268,6 +270,7 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { id, ...updateData } = input;
 
@@ -328,6 +331,7 @@ export const transactionsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('transactions')
@@ -383,6 +387,7 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Calcular data de início
         const now = new Date();
@@ -488,6 +493,7 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Calcular data de início
         const now = new Date();
@@ -563,7 +569,16 @@ export const transactionsRouter = router({
 
             return acc;
           },
-          {} as Record<string, any>
+          {} as Record<
+            string,
+            {
+              categoryName: string;
+              expenses: number;
+              income: number;
+              totalAmount: number;
+              transactionCount: number;
+            }
+          >
         );
 
         return Object.values(categoryStats);

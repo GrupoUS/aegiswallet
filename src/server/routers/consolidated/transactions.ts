@@ -3,15 +3,119 @@
  * Combines functionality from procedures/transactions.ts and routers/transactions.ts
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { financialSchemas, validateTransactionForFraud } from '@/lib/security/financial-validator';
 import { logError, logOperation, logSecurityEvent } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
+const assertPositiveAmount = (amount: number) => {
+  if (amount <= 0) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'O valor da transação deve ser positivo.',
+    });
+  }
+};
+
+const assertManualDateNotFuture = (transactionDate: string, isManualEntry: boolean | undefined) => {
+  if (isManualEntry === false) {
+    return;
+  }
+
+  const parsedDate = new Date(transactionDate);
+  if (parsedDate.getTime() > Date.now()) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'A data da transação não pode estar no futuro.',
+    });
+  }
+};
+
+const assertAccountBelongsToUser = async ({
+  supabase,
+  userId,
+  accountId,
+}: {
+  supabase: SupabaseClient;
+  userId: string;
+  accountId: string;
+}) => {
+  const { data, error } = await supabase
+    .from('bank_accounts')
+    .select('id')
+    .eq('id', accountId)
+    .eq('user_id', userId)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') {
+      logError('validate_transaction_account_failed', userId, error, {
+        accountId,
+      });
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao validar a conta bancária.',
+      });
+    }
+  }
+
+  if (!data) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Conta bancária inválida.',
+    });
+  }
+};
+
+const assertCategoryBelongsToUser = async ({
+  supabase,
+  userId,
+  categoryId,
+}: {
+  supabase: SupabaseClient;
+  userId: string;
+  categoryId?: string | null;
+}) => {
+  if (!categoryId) {
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('financial_categories')
+    .select('id')
+    .eq('id', categoryId)
+    .eq('user_id', userId)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') {
+      logError('validate_transaction_category_failed', userId, error, {
+        categoryId,
+      });
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Erro ao validar a categoria.',
+      });
+    }
+  }
+
+  if (!data) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Categoria financeira inválida.',
+    });
+  }
+};
+
 export const transactionsRouter = router({
   /**
-   * List transactions with pagination, filtering, and search
+   * List transactions with pagination, advanced filtering, and full-text search.
+   *
+   * Supports filtering by account, category, date range, status, type, and description/notes.
+   *
+   * @returns Paginated result with `transactions`, `totalCount`, and `hasMore`.
    */
   getAll: protectedProcedure
     .input(
@@ -103,7 +207,11 @@ export const transactionsRouter = router({
     }),
 
   /**
-   * Get transaction by ID with detailed information
+   * Fetch a single transaction with related bank account, category, and tags.
+   *
+   * @param input Transaction ID.
+   * @returns Transaction record with nested relations.
+   * @throws {TRPCError} NOT_FOUND when transaction doesn't belong to the user.
    */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
@@ -162,7 +270,12 @@ export const transactionsRouter = router({
     }),
 
   /**
-   * Create new transaction with fraud detection
+   * Create a transaction after validating ownership, amount, date, and fraud heuristics.
+   *
+   * Security:
+   * - Validates bank account + category ownership.
+   * - Blocks future-dated manual entries and non-positive amounts.
+   * - Runs `validateTransactionForFraud` and logs triggered rules.
    */
   create: protectedProcedure
     .input(financialSchemas.transaction)
@@ -170,6 +283,19 @@ export const transactionsRouter = router({
       const supabase = ctx.supabase;
       const userId = ctx.user.id;
       try {
+        assertPositiveAmount(input.amount);
+        assertManualDateNotFuture(input.transaction_date, input.is_manual_entry);
+        await assertAccountBelongsToUser({
+          accountId: input.account_id,
+          supabase,
+          userId,
+        });
+        await assertCategoryBelongsToUser({
+          categoryId: input.category_id,
+          supabase,
+          userId,
+        });
+
         // Get user's recent transactions for fraud detection
         const { data: recentTransactions } = await supabase
           .from('transactions')
@@ -191,14 +317,18 @@ export const transactionsRouter = router({
 
         if (!fraudValidation.isValid) {
           logSecurityEvent('suspicious_transaction_blocked', userId, {
-            reasons: fraudValidation.reasons,
-            riskScore: fraudValidation.riskScore,
-            transaction: input,
+            accountId: input.account_id,
+            amount: input.amount,
+            categoryId: input.category_id ?? null,
+            isManualEntry: input.is_manual_entry ?? true,
+            rulesTriggered: fraudValidation.warnings,
+            riskLevel: fraudValidation.riskLevel,
+            transactionType: input.transaction_type,
           });
 
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: `Transação bloqueada por segurança: ${fraudValidation.reasons.join(', ')}`,
+            message: `Transação bloqueada por segurança: ${fraudValidation.warnings.join(', ')}`,
           });
         }
 
@@ -262,7 +392,9 @@ export const transactionsRouter = router({
     }),
 
   /**
-   * Update transaction
+   * Update mutable transaction fields while preventing edits to posted entries.
+   *
+   * Only allows updates to description, notes, tags, amount, and category.
    */
   update: protectedProcedure
     .input(
@@ -301,6 +433,18 @@ export const transactionsRouter = router({
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Transações já postadas não podem ser alteradas',
+          });
+        }
+
+        if (typeof input.data.amount === 'number') {
+          assertPositiveAmount(input.data.amount);
+        }
+
+        if (input.data.category_id) {
+          await assertCategoryBelongsToUser({
+            categoryId: input.data.category_id,
+            supabase,
+            userId,
           });
         }
 
@@ -347,7 +491,9 @@ export const transactionsRouter = router({
     }),
 
   /**
-   * Delete transaction (only if pending)
+   * Delete a pending transaction owned by the current user.
+   *
+   * Posted transactions are immutable and cannot be deleted.
    */
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
@@ -415,7 +561,10 @@ export const transactionsRouter = router({
     }),
 
   /**
-   * Get transaction statistics
+   * Aggregate transaction statistics (income, expenses, balance) for a time window.
+   *
+   * @param input Period selector plus optional account filter.
+   * @returns Summary metrics used by dashboards.
    */
   getStatistics: protectedProcedure
     .input(

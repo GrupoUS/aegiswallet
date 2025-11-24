@@ -1,12 +1,11 @@
-import type { CheckedState } from '@radix-ui/react-checkbox';
-import { useState } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import type { CheckedState } from '@radix-ui/react-checkbox';
+import { useState } from 'react';
 
-export interface LGPDConsentState {
+interface LGPDConsentState {
   essential: boolean;
   analytics: boolean;
   marketing: boolean;
@@ -14,7 +13,7 @@ export interface LGPDConsentState {
   biometric_data: boolean;
 }
 
-export interface LGPDConsentFormProps {
+interface LGPDConsentFormProps {
   defaultValues?: Partial<LGPDConsentState>;
   onSubmit?: (values: LGPDConsentState) => Promise<void> | void;
   isSubmitting?: boolean;
@@ -25,7 +24,7 @@ export interface LGPDConsentFormProps {
   successMessage?: string;
 }
 
-export function LGPDConsentForm({
+const LGPDConsentForm = ({
   defaultValues,
   onSubmit,
   isSubmitting,
@@ -34,7 +33,7 @@ export function LGPDConsentForm({
   submitLabel = 'Registrar consentimento',
   errorMessage,
   successMessage = 'Consentimento registrado com sucesso.',
-}: LGPDConsentFormProps) {
+}: LGPDConsentFormProps) => {
   const [consentState, setConsentState] = useState<LGPDConsentState>({
     analytics: defaultValues?.analytics ?? false,
     biometric_data: defaultValues?.biometric_data ?? false,
@@ -78,7 +77,7 @@ export function LGPDConsentForm({
       return;
     }
 
-    if (isSubmitting === undefined) {
+    if (typeof isSubmitting === 'undefined') {
       setInternalSubmitting(true);
     }
 
@@ -93,7 +92,7 @@ export function LGPDConsentForm({
       setFormError(message);
       setStatus('error');
     } finally {
-      if (isSubmitting === undefined) {
+      if (typeof isSubmitting === 'undefined') {
         setInternalSubmitting(false);
       }
     }
@@ -256,6 +255,6 @@ export function LGPDConsentForm({
       </form>
     </div>
   );
-}
+};
 
 export default LGPDConsentForm;

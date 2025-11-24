@@ -31,10 +31,10 @@ interface PerformanceReport {
 
 // Configuration
 const CONFIG = {
-  // Target performance improvement (50x minimum)
-  targetImprovement: 50,
   // File patterns to benchmark
   patterns: ['src/**/*.{ts,tsx,js,jsx}', 'scripts/**/*.{ts,tsx,js,jsx}'],
+  // Target performance improvement (50x minimum)
+  targetImprovement: 50,
   // Benchmark tools
   tools: [
     {
@@ -73,19 +73,31 @@ function colorize(text: string, color: keyof typeof colors): string {
   return `${colors[color]}${text}${colors.reset}`;
 }
 
-function log(_message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-  const _timestamp = new Date().toISOString();
-  const _prefix =
-    type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️';
+function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
+  const timestamp = new Date().toISOString();
 
-  const _colorFn =
-    type === 'success'
-      ? colorize
-      : type === 'warning'
-        ? (t: string) => colorize(t, 'yellow')
-        : type === 'error'
-          ? (t: string) => colorize(t, 'red')
-          : (t: string) => colorize(t, 'blue');
+  let prefix = 'ℹ️';
+  if (type === 'success') {
+    prefix = '✅';
+  } else if (type === 'warning') {
+    prefix = '⚠️';
+  } else if (type === 'error') {
+    prefix = '❌';
+  }
+
+  let color: keyof typeof colors = 'blue';
+  if (type === 'success') {
+    color = 'green';
+  } else if (type === 'warning') {
+    color = 'yellow';
+  } else if (type === 'error') {
+    color = 'red';
+  }
+
+  const coloredTimestamp = colorize(`[${timestamp}]`, 'bright');
+  const coloredMessage = colorize(message, color);
+
+  console.log(`${coloredTimestamp} ${prefix} ${coloredMessage}`);
 }
 
 /**
@@ -181,6 +193,22 @@ function calculateImprovements(benchmarks: BenchmarkResult[]): {
   return improvements;
 }
 
+function classifyImprovement(value: number): 'exceptional' | 'excellent' | 'good' | 'moderate' | 'needs-optimization' {
+  if (value >= 100) {
+    return 'exceptional';
+  }
+  if (value >= 50) {
+    return 'excellent';
+  }
+  if (value >= 20) {
+    return 'good';
+  }
+  if (value >= 5) {
+    return 'moderate';
+  }
+  return 'needs-optimization';
+}
+
 /**
  * Generate performance report
  */
@@ -200,7 +228,7 @@ function generateReport(totalFiles: number, benchmarks: BenchmarkResult[]): Perf
 /**
  * Display benchmark results
  */
-function displayResults(report: PerformanceReport) {
+function displayResults(report: PerformanceReport): void {
   const fastest = Math.min(...report.benchmarks.map((b) => b.duration));
 
   report.benchmarks.forEach((benchmark) => {
@@ -242,16 +270,7 @@ function displayResults(report: PerformanceReport) {
 function generateJsonReport(report: PerformanceReport): void {
   const jsonReport = {
     benchmarks: report.benchmarks,
-    classification:
-      report.improvements.vsBiome >= 100
-        ? 'exceptional'
-        : report.improvements.vsBiome >= 50
-          ? 'excellent'
-          : report.improvements.vsBiome >= 20
-            ? 'good'
-            : report.improvements.vsBiome >= 5
-              ? 'moderate'
-              : 'needs-optimization',
+    classification: classifyImprovement(report.improvements.vsBiome),
     summary: {
       achieved: report.achieved,
       actualImprovement: report.improvements.vsBiome,
@@ -267,15 +286,17 @@ function generateJsonReport(report: PerformanceReport): void {
       JSON.stringify(jsonReport, null, 2)
     );
     log('JSON report saved to oxlint-performance-report.json', 'success');
-  } catch (_error) {
-    log('Failed to save JSON report', 'error');
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Unknown error while writing JSON report';
+    log(`Failed to save JSON report: ${message}`, 'error');
   }
 }
 
 /**
  * Main execution function
  */
-function main() {
+function main(): void {
   const args = process.argv.slice(2);
   const jsonOutput = args.includes('--json');
   const quiet = args.includes('--quiet');
@@ -319,12 +340,14 @@ function main() {
   }
 
   // Exit with appropriate code
-  process.exit(report.achieved ? 0 : 1);
+  if (report.achieved) {
+    process.exit(0);
+  } else {
+    process.exit(1);
+  }
 }
 
 // Execute if run directly
 if (import.meta.main) {
   main();
 }
-
-export { main, runBenchmark, generateReport };

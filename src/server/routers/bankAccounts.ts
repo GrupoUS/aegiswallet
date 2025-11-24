@@ -94,6 +94,18 @@ const ensureNoDuplicateAccount = async (
 };
 
 export const bankAccountsRouter = router({
+  /**
+   * Create a bank account entry (manual or Belvo-synced) with validation and duplicate checks.
+   *
+   * Validates payload via `bank-accounts-validator`, sanitizes PII before logging,
+   * and generates a manual Belvo ID when no integration is linked.
+   *
+   * @param input Bank account metadata provided by the client.
+   * @returns Newly created bank account row.
+   * @throws {TRPCError} BAD_REQUEST for validation errors.
+   * @throws {TRPCError} CONFLICT when a duplicate institution/mask exists.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for Supabase issues.
+   */
   create: protectedProcedure
     .input(
       z.object({
@@ -183,46 +195,97 @@ export const bankAccountsRouter = router({
 
       return data;
     }),
+  /**
+   * Delete a bank account owned by the current user.
+   *
+   * @param input Bank account identifier.
+   * @returns Success flag when deletion completes.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if Supabase deletion fails.
+   */
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
       const userId = ctx.user.id;
-      const { error } = await supabase
-        .from('bank_accounts')
-        .delete()
-        .eq('id', input.id)
-        .eq('user_id', userId);
+      try {
+        const { error } = await supabase
+          .from('bank_accounts')
+          .delete()
+          .eq('id', input.id)
+          .eq('user_id', userId);
 
-      if (error) {
+        if (error) {
+          logError('delete_bank_account_failed', userId, error, {
+            accountId: input.id,
+          });
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Não foi possível excluir a conta bancária.',
+            cause: error,
+          });
+        }
+
+        return { success: true };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        logError('delete_bank_account_unexpected', userId, error as Error, {
+          accountId: input.id,
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to delete bank account',
+          message: 'Não foi possível excluir a conta bancária.',
+        });
+      }
+    }),
+  /**
+   * Return all bank accounts for the authenticated user ordered by newest first.
+   *
+   * @returns Array of bank accounts.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if Supabase query fails.
+   */
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
+    const userId = ctx.user.id;
+
+    try {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logError('fetch_bank_accounts_failed', userId, error, {});
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Não foi possível carregar as contas bancárias.',
           cause: error,
         });
       }
 
-      return { success: true };
-    }),
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const supabase = ctx.supabase;
-    const userId = ctx.user.id;
-    const { data, error } = await supabase
-      .from('bank_accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      return data ?? [];
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
 
-    if (error) {
+      logError('fetch_bank_accounts_unexpected', userId, error as Error, {});
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch bank accounts',
-        cause: error,
+        message: 'Não foi possível carregar as contas bancárias.',
       });
     }
-
-    return data;
   }),
+  /**
+   * Generate a simple balance history for a specific account (currently mocked).
+   *
+   * @param input Account identifier and time horizon in days.
+   * @returns Array of `{ date, balance }` entries for charts.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR when fetching the account fails.
+   */
   getBalanceHistory: protectedProcedure
     .input(z.object({ accountId: z.string(), days: z.number().default(30) }))
     .query(async ({ ctx, input }) => {
@@ -232,77 +295,164 @@ export const bankAccountsRouter = router({
 
       const supabase = ctx.supabase;
       const userId = ctx.user.id;
-      const { data: account } = await supabase
-        .from('bank_accounts')
-        .select('balance')
-        .eq('id', input.accountId)
-        .eq('user_id', userId)
-        .single();
 
-      if (!account) return [];
+      try {
+        const { data: account, error } = await supabase
+          .from('bank_accounts')
+          .select('balance')
+          .eq('id', input.accountId)
+          .eq('user_id', userId)
+          .single();
 
-      const currentBalance = Number(account.balance);
-      const history = [];
+        if (error) {
+          logError('fetch_bank_account_balance_history_failed', userId, error, {
+            accountId: input.accountId,
+          });
+          throw new TRPCError({
+            code: error.code === 'PGRST116' ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
+            message:
+              error.code === 'PGRST116'
+                ? 'Conta bancária não encontrada.'
+                : 'Não foi possível carregar o histórico da conta.',
+            cause: error,
+          });
+        }
 
-      // Simple mock history: flat line
-      for (let i = 0; i < input.days; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        history.push({
-          date: date.toISOString(),
-          balance: currentBalance,
+        if (!account) {
+          return [];
+        }
+
+        const currentBalance = Number(account.balance);
+        const history = [];
+
+        for (let i = 0; i < input.days; i++) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          history.push({
+            date: date.toISOString(),
+            balance: currentBalance,
+          });
+        }
+
+        return history.reverse();
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        logError('fetch_bank_account_balance_history_unexpected', userId, error as Error, {
+          accountId: input.accountId,
+        });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Não foi possível carregar o histórico da conta.',
         });
       }
-
-      return history.reverse();
     }),
+  /**
+   * Fetch a single bank account by ID ensuring the user owns the resource.
+   *
+   * @param input Bank account identifier.
+   * @returns Bank account row if found.
+   * @throws {TRPCError} NOT_FOUND when the account does not exist.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for unexpected failures.
+   */
   getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     const supabase = ctx.supabase;
     const userId = ctx.user.id;
-    const { data, error } = await supabase
-      .from('bank_accounts')
-      .select('*')
-      .eq('id', input.id)
-      .eq('user_id', userId)
-      .single();
 
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('id', input.id)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        logError('fetch_bank_account_failed', userId, error, {
+          accountId: input.id,
+        });
+        throw new TRPCError({
+          code: error.code === 'PGRST116' ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
+          message:
+            error.code === 'PGRST116'
+              ? 'Conta bancária não encontrada.'
+              : 'Não foi possível carregar a conta bancária.',
+          cause: error,
+        });
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+
+      logError('fetch_bank_account_unexpected', userId, error as Error, {
+        accountId: input.id,
+      });
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Bank account not found',
-        cause: error,
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Não foi possível carregar a conta bancária.',
       });
     }
-
-    return data;
   }),
+  /**
+   * Aggregate balance totals per currency for the current user.
+   *
+   * @returns Record keyed by currency with summed balances.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for Supabase failures.
+   */
   getTotalBalance: protectedProcedure.query(async ({ ctx }) => {
     const supabase = ctx.supabase;
     const userId = ctx.user.id;
-    const { data, error } = await supabase
-      .from('bank_accounts')
-      .select('balance, currency')
-      .eq('user_id', userId)
-      .eq('is_active', true);
 
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch total balance',
-        cause: error,
-      });
-    }
+    try {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('balance, currency')
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
-    const totals: Record<string, number> = {};
-    if (data) {
-      data.forEach((account) => {
+      if (error) {
+        logError('fetch_total_balance_failed', userId, error, {});
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Não foi possível calcular o saldo total.',
+          cause: error,
+        });
+      }
+
+      const totals: Record<string, number> = {};
+      (data ?? []).forEach((account) => {
         const currency = account.currency || 'BRL';
         totals[currency] = (totals[currency] || 0) + Number(account.balance);
       });
-    }
 
-    return totals;
+      return totals;
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+
+      logError('fetch_total_balance_unexpected', userId, error as Error, {});
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Não foi possível calcular o saldo total.',
+      });
+    }
   }),
+  /**
+   * Update mutable bank account fields after validation and duplicate checks.
+   *
+   * @param input Account ID plus partial fields to update.
+   * @returns Updated bank account record.
+   * @throws {TRPCError} BAD_REQUEST for invalid payloads.
+   * @throws {TRPCError} CONFLICT when new institution/mask duplicates another account.
+   * @throws {TRPCError} NOT_FOUND when the account does not exist.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for Supabase failures.
+   */
   update: protectedProcedure
     .input(
       z.object({
@@ -396,27 +546,52 @@ export const bankAccountsRouter = router({
 
       return data;
     }),
+  /**
+   * Update the balance of a manual bank account.
+   *
+   * @param input Account ID and new balance value.
+   * @returns Updated bank account row.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if Supabase update fails.
+   */
   updateBalance: protectedProcedure
     .input(z.object({ id: z.string(), balance: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
       const userId = ctx.user.id;
-      const { data, error } = await supabase
-        .from('bank_accounts')
-        .update({ balance: input.balance })
-        .eq('id', input.id)
-        .eq('user_id', userId)
-        .select()
-        .single();
 
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from('bank_accounts')
+          .update({ balance: input.balance })
+          .eq('id', input.id)
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+        if (error) {
+          logError('update_bank_account_balance_failed', userId, error, {
+            accountId: input.id,
+          });
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Não foi possível atualizar o saldo.',
+            cause: error,
+          });
+        }
+
+        return data;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        logError('update_bank_account_balance_unexpected', userId, error as Error, {
+          accountId: input.id,
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to update balance',
-          cause: error,
+          message: 'Não foi possível atualizar o saldo.',
         });
       }
-
-      return data;
     }),
 });

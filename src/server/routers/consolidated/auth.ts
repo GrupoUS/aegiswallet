@@ -14,19 +14,42 @@ import {
 import { logError, logOperation, logSecurityEvent } from '@/server/lib/logger';
 import { protectedProcedure, publicProcedure, router } from '@/server/trpc-helpers';
 
+const toRateLimitRequest = (req?: Request | null) => {
+  if (!req) {
+    return { headers: {} as Record<string, string> };
+  }
+
+  const headers: Record<string, string> = {};
+  req.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
+
+  return { headers };
+};
+
 export const authRouter = router({
   /**
-   * Get current user session with enhanced logging
+   * Return the current Supabase session (if any) with contextual logging.
+   *
+   * Security:
+   * - Logs session checks with client IP and user agent for auditing.
+   * - Does not throw when session is missing to avoid enumeration.
    */
   getSession: publicProcedure.query(async ({ ctx }) => {
     try {
-      if (!ctx.session?.user) {
+      const clientIP = getClientIP(toRateLimitRequest(ctx.req));
+      const userAgent = ctx.req?.headers.get('user-agent') ?? 'unknown';
+      const hasSession = Boolean(ctx.session?.user);
+
+      logOperation('session_check', ctx.user?.id, 'auth', ctx.user?.id, {
+        clientIP,
+        hasActiveSession: hasSession,
+        userAgent,
+      });
+
+      if (!hasSession) {
         return { session: null, user: null };
       }
-
-      logOperation('session_check', ctx.user.id, 'auth', ctx.user.id, {
-        hasActiveSession: true,
-      });
 
       return {
         session: ctx.session,
@@ -41,7 +64,12 @@ export const authRouter = router({
   }),
 
   /**
-   * Enhanced sign in with rate limiting and comprehensive logging
+   * Sign in with email/password under layered security controls.
+   *
+   * Security Features:
+   * - Rate limiting per email and IP (`checkAuthenticationRateLimit`).
+   * - Security event logging with IP + user agent.
+   * - Generic error messaging to prevent user enumeration.
    */
   signIn: publicProcedure
     .input(
@@ -51,16 +79,19 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const clientIP = getClientIP(ctx.req || {});
+      const rateLimitRequest = toRateLimitRequest(ctx.req);
+      const clientIP = getClientIP(rateLimitRequest);
+      const userAgent = ctx.req?.headers.get('user-agent') ?? 'unknown';
 
       try {
-        // Check rate limits before attempting authentication
+        // Rate limiting: email (authentication limiter) + IP (general limiter)
         const rateLimitCheck = checkAuthenticationRateLimit(input.email, clientIP);
         if (!rateLimitCheck.allowed) {
           logSecurityEvent('rate_limit_blocked', clientIP, {
             email: input.email,
             reason: rateLimitCheck.reason,
             retryAfter: rateLimitCheck.retryAfter,
+            userAgent,
           });
 
           throw new TRPCError({
@@ -82,6 +113,7 @@ export const authRouter = router({
           logSecurityEvent('authentication_failed', clientIP, {
             email: input.email,
             error: error.message,
+            userAgent,
           });
 
           // Don't reveal specific error for security
@@ -98,6 +130,7 @@ export const authRouter = router({
           clientIP,
           email: input.email,
           timestamp: new Date().toISOString(),
+          userAgent,
         });
 
         return data;
@@ -110,6 +143,7 @@ export const authRouter = router({
           clientIP,
           email: input.email,
           operation: 'signIn',
+          userAgent,
         });
 
         throw new TRPCError({
@@ -120,7 +154,12 @@ export const authRouter = router({
     }),
 
   /**
-   * Enhanced sign up with password validation and security checks
+   * Register a new user with password policy enforcement and rate limiting.
+   *
+   * Security Features:
+   * - Password validation via `validatePassword` using DEFAULT_PASSWORD_POLICY.
+   * - Audit logging with client IP + user agent.
+   * - Generic error responses to avoid user enumeration.
    */
   signUp: publicProcedure
     .input(
@@ -132,7 +171,9 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const clientIP = getClientIP(ctx.req || {});
+      const rateLimitRequest = toRateLimitRequest(ctx.req);
+      const clientIP = getClientIP(rateLimitRequest);
+      const userAgent = ctx.req?.headers.get('user-agent') ?? 'unknown';
 
       try {
         // Validate password strength
@@ -146,6 +187,7 @@ export const authRouter = router({
             email: input.email,
             issues: passwordValidation.issues,
             score: passwordValidation.score,
+            userAgent,
           });
 
           throw new TRPCError({
@@ -170,11 +212,12 @@ export const authRouter = router({
           logSecurityEvent('registration_failed', clientIP, {
             email: input.email,
             error: error.message,
+            userAgent,
           });
 
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: error.message,
+            message: 'Não foi possível criar a conta. Tente novamente mais tarde.',
           });
         }
 
@@ -183,6 +226,7 @@ export const authRouter = router({
           email: input.email,
           name: input.name,
           timestamp: new Date().toISOString(),
+          userAgent,
         });
 
         return data;
@@ -195,6 +239,7 @@ export const authRouter = router({
           clientIP,
           email: input.email,
           operation: 'signUp',
+          userAgent,
         });
 
         throw new TRPCError({
@@ -205,15 +250,25 @@ export const authRouter = router({
     }),
 
   /**
-   * Sign out with session cleanup
+   * Sign out the current session and log the event for auditing.
+   *
+   * Security:
+   * - Logs sign-out attempts with client IP and user agent.
+   * - Returns generic errors on failure.
    */
   signOut: protectedProcedure.mutation(async ({ ctx }) => {
+    const rateLimitRequest = toRateLimitRequest(ctx.req);
+    const clientIP = getClientIP(rateLimitRequest);
+    const userAgent = ctx.req?.headers.get('user-agent') ?? 'unknown';
+
     try {
       const { error } = await ctx.supabase.auth.signOut();
 
       if (error) {
         logError('sign_out_error', ctx.user.id, error, {
+          clientIP,
           operation: 'signOut',
+          userAgent,
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -222,7 +277,9 @@ export const authRouter = router({
       }
 
       logOperation('sign_out_success', ctx.user.id, 'auth', ctx.user.id, {
+        clientIP,
         timestamp: new Date().toISOString(),
+        userAgent,
       });
 
       return { success: true };
@@ -232,7 +289,9 @@ export const authRouter = router({
       }
 
       logError('sign_out_unexpected_error', ctx.user.id, error as Error, {
+        clientIP,
         operation: 'signOut',
+        userAgent,
       });
 
       throw new TRPCError({
@@ -243,7 +302,12 @@ export const authRouter = router({
   }),
 
   /**
-   * Reset password request with rate limiting
+   * Initiate password reset email.
+   *
+   * Security:
+   * - Subject to general API rate limiting plus Supabase throttling.
+   * - Logs client IP and user agent for every request.
+   * - Returns generic messaging to avoid revealing account existence.
    */
   resetPassword: publicProcedure
     .input(
@@ -252,22 +316,29 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const clientIP = getClientIP(ctx.req || {});
+      const rateLimitRequest = toRateLimitRequest(ctx.req);
+      const clientIP = getClientIP(rateLimitRequest);
+      const userAgent = ctx.req?.headers.get('user-agent') ?? 'unknown';
+      const origin =
+        ctx.req?.headers.get('origin') ||
+        ctx.req?.headers.get('referer') ||
+        'https://app.aegiswallet.com';
 
       try {
         const { error } = await ctx.supabase.auth.resetPasswordForEmail(input.email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${origin}/reset-password`,
         });
 
         if (error) {
           logSecurityEvent('password_reset_failed', clientIP, {
             email: input.email,
             error: error.message,
+            userAgent,
           });
 
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Erro ao solicitar redefinição de senha',
+            message: 'Não foi possível iniciar a redefinição de senha.',
           });
         }
 
@@ -275,9 +346,13 @@ export const authRouter = router({
           clientIP,
           email: input.email,
           timestamp: new Date().toISOString(),
+          userAgent,
         });
 
-        return { success: true };
+        return {
+          message: 'Se este email estiver cadastrado, enviaremos as instruções.',
+          success: true,
+        };
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
@@ -287,11 +362,12 @@ export const authRouter = router({
           clientIP,
           email: input.email,
           operation: 'resetPassword',
+          userAgent,
         });
 
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Erro ao solicitar redefinição de senha',
+          message: 'Não foi possível iniciar a redefinição de senha.',
         });
       }
     }),

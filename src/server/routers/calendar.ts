@@ -1,10 +1,99 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import type { BrazilianFinancialEvent } from '@/lib/notifications/financial-notification-service';
 import { createFinancialNotificationService } from '@/lib/notifications/financial-notification-service';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
+import type { Tables, TablesInsert, TablesUpdate } from '@/types/database.types';
+
+const RECURRENCE_RULE_REGEX =
+  /^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;UNTIL=\d{8}T\d{6}Z)?(;INTERVAL=\d+)?(;BYDAY=(MO|TU|WE|TH|FR|SA|SU)(,(MO|TU|WE|TH|FR|SA|SU))*)?$/;
+
+const startOfToday = () => {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const isDateString = (value: string | undefined | null) => {
+  if (!value) {
+    return false;
+  }
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime());
+};
+
+const isPastDate = (value: string) => {
+  if (!isDateString(value)) {
+    return false;
+  }
+  return new Date(value).setHours(0, 0, 0, 0) < startOfToday().getTime();
+};
+
+const isBefore = (value: string, comparison: string) => {
+  if (!isDateString(value) || !isDateString(comparison)) {
+    return false;
+  }
+  return new Date(value).getTime() < new Date(comparison).getTime();
+};
+
+type FinancialEventRow = Tables<'financial_events'>;
+type FinancialEventInsert = TablesInsert<'financial_events'>;
+type FinancialEventUpdate = TablesUpdate<'financial_events'>;
+type FinancialEventWithRelations = FinancialEventRow & {
+  transaction_categories?: { name?: string | null } | null;
+};
+type EventReminderInsert = TablesInsert<'event_reminders'>;
+type EventReminderUpdate = TablesUpdate<'event_reminders'>;
+type TransactionRow = Tables<'transactions'>;
+type TransactionCategoryPreview = {
+  id: string;
+  name?: string | null;
+  color?: string | null;
+  icon?: string | null;
+};
+type BankAccountPreview = {
+  id: string;
+  institution_name?: string | null;
+  account_mask?: string | null;
+};
+type CalendarTransaction = Pick<
+  TransactionRow,
+  'id' | 'description' | 'amount' | 'status' | 'transaction_date'
+> & {
+  transaction_categories?: TransactionCategoryPreview | TransactionCategoryPreview[] | null;
+  bank_accounts?: BankAccountPreview | BankAccountPreview[] | null;
+};
+
+const PRIORITY_VALUES: ReadonlyArray<BrazilianFinancialEvent['priority']> = [
+  'low',
+  'normal',
+  'high',
+  'urgent',
+];
+
+const normalizePriority = (value?: string | null): BrazilianFinancialEvent['priority'] => {
+  if (!value) {
+    return 'normal';
+  }
+  const normalized = value.toLowerCase() as BrazilianFinancialEvent['priority'];
+  return PRIORITY_VALUES.includes(normalized) ? normalized : 'normal';
+};
+
+const mapToBrazilianFinancialEvent = (
+  event: FinancialEventWithRelations
+): BrazilianFinancialEvent => ({
+  amount: event.amount ?? undefined,
+  categoryName: event.transaction_categories?.name ?? undefined,
+  description: event.description ?? undefined,
+  dueDate: event.due_date ?? undefined,
+  eventDate: event.start_date,
+  eventTypeId: event.event_type_id ?? 'unknown',
+  id: event.id,
+  isCompleted: event.is_completed ?? false,
+  priority: normalizePriority(event.priority),
+  title: event.title,
+});
 
 /**
  * Gera mensagem de lembrete padrão para eventos financeiros
@@ -14,11 +103,21 @@ function generateReminderMessage(event: { title: string }): string {
 }
 
 /**
- * Calendar Router - Gerenciamento de eventos financeiros
+ * Calendar Router - Gerenciamento de eventos financeiros, notificações e lembretes.
+ *
+ * Recomendações de índice:
+ * - `financial_events (user_id, start_date)` para filtros por período
+ * - `financial_events (user_id, event_type_id)` e `(user_id, category_id)`
+ * - `financial_events (user_id, is_completed, due_date)` para eventos atrasados
  */
 export const calendarRouter = router({
-  // Listar tipos de eventos
-  getEventTypes: protectedProcedure.query(async () => {
+  /**
+   * List available financial event types for populating selectors.
+   *
+   * @returns Tipos de evento ordenados alfabeticamente.
+   */
+  getEventTypes: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('event_types')
@@ -49,7 +148,11 @@ export const calendarRouter = router({
     }
   }),
 
-  // Listar eventos financeiros
+  /**
+   * List paginated financial events with optional filters for type, category, status and date range.
+   *
+   * Recomendação: índices em `(user_id, start_date)`, `(user_id, event_type_id)` e `(user_id, category_id)` para otimizar esta consulta.
+   */
   getEvents: protectedProcedure
     .input(
       z.object({
@@ -61,6 +164,7 @@ export const calendarRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         let query = supabase
           .from('financial_events')
@@ -71,9 +175,9 @@ export const calendarRouter = router({
             transactions(id, amount, description, status)
           `)
           .eq('user_id', ctx.user.id)
-          .gte('event_date', input.startDate)
-          .lte('event_date', input.endDate)
-          .order('event_date', { ascending: true });
+          .gte('start_date', input.startDate)
+          .lte('start_date', input.endDate)
+          .order('start_date', { ascending: true });
 
         if (input.typeId) {
           query = query.eq('event_type_id', input.typeId);
@@ -130,10 +234,13 @@ export const calendarRouter = router({
       }
     }),
 
-  // Obter evento específico
+  /**
+   * Retrieve a single financial event with related type, category, and linked transactions.
+   */
   getEventById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('financial_events')
@@ -185,38 +292,96 @@ export const calendarRouter = router({
       }
     }),
 
-  // Criar novo evento financeiro
+  /**
+   * Create a financial event with validation for dates, recurrence, and optional automation metadata.
+   *
+   * - `eventDate` deve ser uma data futura/próxima.
+   * - `dueDate` (quando informado) não pode ser anterior ao `eventDate`.
+   * - `amount`, se presente, precisa ser positivo.
+   * - Eventos recorrentes exigem `recurrenceRule` no formato RFC5545 simplificado.
+   */
   create: protectedProcedure
     .input(
-      z.object({
-        accountId: z.string().uuid().optional(),
-        amount: z.number().optional(),
-        attachments: z.array(z.string()).default([]),
-        categoryId: z.string().uuid().optional(),
-        description: z.string().optional(),
-        dueDate: z.string().optional(),
-        eventDate: z.string(),
-        isIncome: z.boolean().default(false),
-        isRecurring: z.boolean().default(false),
-        priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
-        recurrenceRule: z.string().optional(),
-        tags: z.array(z.string()).default([]),
-        title: z.string().min(1, 'Título é obrigatório'),
-        typeId: z.string().uuid(),
-      })
+      z
+        .object({
+          accountId: z.string().uuid().optional(),
+          amount: z.number().positive('O valor deve ser positivo.').optional(),
+          attachments: z.array(z.string()).default([]),
+          categoryId: z.string().uuid().optional(),
+          description: z.string().optional(),
+          dueDate: z.string().datetime().optional(),
+          eventDate: z.string().datetime(),
+          isIncome: z.boolean().default(false),
+          isRecurring: z.boolean().default(false),
+          priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+          recurrenceRule: z.string().optional(),
+          tags: z.array(z.string()).default([]),
+          title: z.string().min(1, 'Título é obrigatório'),
+          typeId: z.string().uuid(),
+        })
+        .superRefine((data, ctx) => {
+          if (isPastDate(data.eventDate)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'A data do evento não pode estar no passado.',
+              path: ['eventDate'],
+            });
+          }
+          if (data.dueDate && isBefore(data.dueDate, data.eventDate)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'O vencimento deve ser igual ou posterior à data do evento.',
+              path: ['dueDate'],
+            });
+          }
+          if (data.isRecurring && !data.recurrenceRule) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Eventos recorrentes exigem uma regra de recorrência.',
+              path: ['recurrenceRule'],
+            });
+          }
+          if (data.recurrenceRule && !RECURRENCE_RULE_REGEX.test(data.recurrenceRule)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Regra de recorrência inválida. Use o padrão FREQ=...;INTERVAL=...',
+              path: ['recurrenceRule'],
+            });
+          }
+        })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
+        const startDate = input.eventDate;
+        const endDate = input.dueDate ?? input.eventDate;
+
+        const payload: FinancialEventInsert = {
+          account_id: input.accountId ?? null,
+          attachments: input.attachments,
+          category_id: input.categoryId ?? null,
+          description: input.description ?? null,
+          due_date: input.dueDate ?? null,
+          end_date: endDate,
+          event_type_id: input.typeId,
+          is_income: input.isIncome,
+          is_recurring: input.isRecurring,
+          priority: input.priority,
+          recurrence_rule: input.recurrenceRule ?? null,
+          start_date: startDate,
+          status: 'pending',
+          tags: input.tags,
+          title: input.title,
+          user_id: ctx.user.id,
+        };
+
+        if (input.amount !== undefined) {
+          payload.amount = input.amount;
+        }
+
         const { data, error } = await supabase
           .from('financial_events')
-          .insert({
-            amount: input.amount,
-            description: input.description,
-            event_date: input.eventDate,
-            event_type_id: input.typeId,
-            title: input.title,
-            user_id: ctx.user.id,
-          })
+          .insert(payload)
           .select(`
             *,
             event_types(id, name, color, icon),
@@ -264,31 +429,72 @@ export const calendarRouter = router({
       }
     }),
 
-  // Atualizar evento financeiro
+  /**
+   * Update mutable fields of a financial event while preventing historical or inconsistent data.
+   *
+   * Validations replicam as mesmas regras de criação (datas futuras, recorrência válida, valores positivos).
+   */
   update: protectedProcedure
     .input(
-      z.object({
-        accountId: z.string().uuid().optional(),
-        amount: z.number().optional(),
-        categoryId: z.string().uuid().optional(),
-        description: z.string().optional(),
-        dueDate: z.string().optional(),
-        eventDate: z.string().optional(),
-        id: z.string().uuid(),
-        isCompleted: z.boolean().optional(),
-        isIncome: z.boolean().optional(),
-        priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
-        tags: z.array(z.string()).optional(),
-        title: z.string().optional(),
-        typeId: z.string().uuid().optional(),
-      })
+      z
+        .object({
+          accountId: z.string().uuid().optional(),
+          amount: z.number().positive('O valor deve ser positivo.').optional(),
+          attachments: z.array(z.string()).optional(),
+          categoryId: z.string().uuid().optional(),
+          description: z.string().optional(),
+          dueDate: z.string().datetime().optional(),
+          eventDate: z.string().datetime().optional(),
+          id: z.string().uuid(),
+          isCompleted: z.boolean().optional(),
+          isIncome: z.boolean().optional(),
+          isRecurring: z.boolean().optional(),
+          priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+          recurrenceRule: z.string().optional(),
+          tags: z.array(z.string()).optional(),
+          title: z.string().optional(),
+          typeId: z.string().uuid().optional(),
+        })
+        .superRefine((data, ctx) => {
+          if (data.eventDate && isPastDate(data.eventDate)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'A nova data do evento não pode estar no passado.',
+              path: ['eventDate'],
+            });
+          }
+          if (data.dueDate && data.eventDate && isBefore(data.dueDate, data.eventDate)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'O vencimento deve ser igual ou posterior à data do evento.',
+              path: ['dueDate'],
+            });
+          }
+          if (data.isRecurring && !data.recurrenceRule) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Eventos recorrentes exigem uma regra de recorrência.',
+              path: ['recurrenceRule'],
+            });
+          }
+          if (data.recurrenceRule && !RECURRENCE_RULE_REGEX.test(data.recurrenceRule)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Regra de recorrência inválida. Use o padrão FREQ=...;INTERVAL=...',
+              path: ['recurrenceRule'],
+            });
+          }
+        })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const { id, ...updateData } = input;
+      const supabase = ctx.supabase;
+      const { id, ...updateData } = input;
+      const dbUpdateData: Partial<FinancialEventUpdate> = {};
 
-        // Map the input to database column names (only use columns that exist)
-        const dbUpdateData: Record<string, unknown> = {};
+      try {
+        if (updateData.accountId !== undefined) {
+          dbUpdateData.account_id = updateData.accountId ?? null;
+        }
         if (updateData.typeId !== undefined) {
           dbUpdateData.event_type_id = updateData.typeId;
         }
@@ -302,11 +508,40 @@ export const calendarRouter = router({
           dbUpdateData.amount = updateData.amount;
         }
         if (updateData.eventDate !== undefined) {
-          dbUpdateData.event_date = updateData.eventDate;
+          dbUpdateData.start_date = updateData.eventDate;
+          if (!updateData.dueDate) {
+            dbUpdateData.end_date = updateData.eventDate;
+          }
+        }
+        if (updateData.dueDate !== undefined) {
+          dbUpdateData.due_date = updateData.dueDate ?? null;
+          if (updateData.dueDate) {
+            dbUpdateData.end_date = updateData.dueDate;
+          }
         }
         if (updateData.isCompleted !== undefined) {
           dbUpdateData.is_completed = updateData.isCompleted;
-          // Note: completed_at column doesn't exist yet, so we can't set it
+        }
+        if (updateData.categoryId !== undefined) {
+          dbUpdateData.category_id = updateData.categoryId ?? null;
+        }
+        if (updateData.priority !== undefined) {
+          dbUpdateData.priority = updateData.priority;
+        }
+        if (updateData.tags !== undefined) {
+          dbUpdateData.tags = updateData.tags ?? [];
+        }
+        if (updateData.attachments !== undefined) {
+          dbUpdateData.attachments = updateData.attachments ?? [];
+        }
+        if (updateData.isIncome !== undefined) {
+          dbUpdateData.is_income = updateData.isIncome;
+        }
+        if (updateData.isRecurring !== undefined) {
+          dbUpdateData.is_recurring = updateData.isRecurring;
+        }
+        if (updateData.recurrenceRule !== undefined) {
+          dbUpdateData.recurrence_rule = updateData.recurrenceRule ?? null;
         }
 
         const { data, error } = await supabase
@@ -341,7 +576,7 @@ export const calendarRouter = router({
             eventId: input.id,
             operation: 'update',
             resource: 'financial_events',
-            updateFields: Object.keys(updateData),
+            updateFields: Object.keys(dbUpdateData),
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -350,7 +585,7 @@ export const calendarRouter = router({
         }
 
         logOperation('update_financial_event_success', ctx.user.id, 'financial_events', input.id, {
-          updateFields: Object.keys(updateData),
+          updateFields: Object.keys(dbUpdateData),
         });
 
         return data;
@@ -359,16 +594,19 @@ export const calendarRouter = router({
           eventId: input.id,
           operation: 'update',
           resource: 'financial_events',
-          updateFields: Object.keys(input).filter((k) => k !== 'id'),
+          updateFields: Object.keys(dbUpdateData),
         });
         throw error;
       }
     }),
 
-  // Deletar evento financeiro
+  /**
+   * Delete a financial event owned by the authenticated user.
+   */
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('financial_events')
@@ -420,8 +658,11 @@ export const calendarRouter = router({
       }
     }),
 
-  // Obter eventos próximos (próximos 30 dias)
+  /**
+   * Fetch the next 30 days of pending events for proactive reminders.
+   */
   getUpcomingEvents: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const today = new Date();
       const thirtyDaysFromNow = new Date();
@@ -436,9 +677,9 @@ export const calendarRouter = router({
           `)
         .eq('user_id', ctx.user.id)
         .eq('is_completed', false)
-        .gte('event_date', today.toISOString().split('T')[0])
-        .lte('event_date', thirtyDaysFromNow.toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
+        .gte('start_date', today.toISOString().split('T')[0])
+        .lte('start_date', thirtyDaysFromNow.toISOString().split('T')[0])
+        .order('start_date', { ascending: true })
         .limit(10);
 
       if (error) {
@@ -470,8 +711,11 @@ export const calendarRouter = router({
     }
   }),
 
-  // Obter eventos atrasados
+  /**
+   * Fetch overdue events (dueDate anterior a hoje) para alertas críticos.
+   */
   getOverdueEvents: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const today = new Date();
 
@@ -516,7 +760,11 @@ export const calendarRouter = router({
     }
   }),
 
-  // Criar lembrete para evento
+  /**
+   * Create a manual reminder for a financial event (notification/email/SMS/voice).
+   *
+   * Integração: os lembretes podem ser posteriormente enviados pelo `financial-notification-service`.
+   */
   createReminder: protectedProcedure
     .input(
       z.object({
@@ -527,11 +775,12 @@ export const calendarRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Verificar se o evento pertence ao usuário
         const { data: event, error: eventError } = await supabase
           .from('financial_events')
-          .select('id, title, event_date, amount')
+          .select('id, title, start_date, amount')
           .eq('id', input.eventId)
           .eq('user_id', ctx.user.id)
           .single();
@@ -547,14 +796,18 @@ export const calendarRouter = router({
         const defaultMessage = input.message || generateReminderMessage(event);
 
         // Inserir lembrete no banco de dados
+        const reminderPayload: EventReminderInsert = {
+          event_id: input.eventId,
+          is_sent: false,
+          message: defaultMessage,
+          remind_at: input.remindAt,
+          reminder_type: input.reminderType,
+          user_id: ctx.user.id,
+        };
+
         const { data, error } = await supabase
           .from('event_reminders')
-          .insert({
-            event_id: input.eventId,
-            message: defaultMessage,
-            remind_at: input.remindAt,
-            reminder_type: input.reminderType,
-          })
+          .insert(reminderPayload)
           .select()
           .single();
 
@@ -592,18 +845,18 @@ export const calendarRouter = router({
       }
     }),
 
-  // Marcar lembrete como enviado
+  /**
+   * Mark a reminder as sent (used pelo job de notificações para auditoria).
+   */
   markReminderSent: protectedProcedure
     .input(z.object({ reminderId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Verificar se o lembrete existe e pertence a um evento do usuário
         const { data: reminder, error: reminderError } = await supabase
           .from('event_reminders')
-          .select(`
-            *,
-            financial_events(user_id)
-          `)
+          .select('id, user_id, event_id')
           .eq('id', input.reminderId)
           .single();
 
@@ -615,21 +868,26 @@ export const calendarRouter = router({
         }
 
         // Verificar se o evento pertence ao usuário
-        if (reminder.financial_events?.user_id !== ctx.user.id) {
+        if (reminder.user_id !== ctx.user.id) {
           throw new TRPCError({
             code: 'FORBIDDEN',
             message: 'Acesso negado ao lembrete',
           });
         }
 
+        const now = new Date().toISOString();
+        const reminderUpdate: EventReminderUpdate = {
+          is_sent: true,
+          sent_at: now,
+          updated_at: now,
+        };
+
         // Atualizar lembrete como enviado
         const { data, error } = await supabase
           .from('event_reminders')
-          .update({
-            is_sent: true,
-            sent_at: new Date().toISOString(),
-          })
+          .update(reminderUpdate)
           .eq('id', input.reminderId)
+          .eq('user_id', ctx.user.id)
           .select()
           .single();
 
@@ -667,7 +925,12 @@ export const calendarRouter = router({
       }
     }),
 
-  // Criar lembretes automáticos para evento financeiro brasileiro
+  /**
+   * Generate automated reminders for a Brazilian financial event using the notification service.
+   *
+   * O `financial-notification-service` cria lembretes (push/email/voz) respeitando TTL, urgência e limites.
+   * Quando `customSchedule` não é informado, aplica o cronograma padrão (3d/1d/mesmo dia).
+   */
   createAutomatedReminders: protectedProcedure
     .input(
       z.object({
@@ -676,6 +939,7 @@ export const calendarRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Buscar evento completo
         const { data: event, error: eventError } = await supabase
@@ -706,18 +970,7 @@ export const calendarRouter = router({
         });
 
         // Converter para formato BrazilianFinancialEvent
-        const brazilianEvent: BrazilianFinancialEvent = {
-          amount: event.amount,
-          categoryName: event.transaction_categories?.name,
-          description: event.description,
-          dueDate: event.due_date,
-          eventDate: event.event_date,
-          eventTypeId: event.event_type_id,
-          id: event.id,
-          isCompleted: event.is_completed || false,
-          priority: event.priority || 'normal',
-          title: event.title,
-        };
+        const brazilianEvent = mapToBrazilianFinancialEvent(event as FinancialEventWithRelations);
 
         // Criar lembretes automáticos
         await notificationService.createAutomatedReminders(brazilianEvent, ctx.user.id);
@@ -751,7 +1004,11 @@ export const calendarRouter = router({
       }
     }),
 
-  // Enviar notificação financeira imediata
+  /**
+   * Send an immediate financial notification (push/email) via the notification service.
+   *
+   * Aplica rate limiting interno do serviço e exige token VAPID configurado.
+   */
   sendFinancialNotification: protectedProcedure
     .input(
       z.object({
@@ -760,6 +1017,7 @@ export const calendarRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Buscar evento completo
         const { data: event, error: eventError } = await supabase
@@ -790,18 +1048,7 @@ export const calendarRouter = router({
         });
 
         // Converter para formato BrazilianFinancialEvent
-        const brazilianEvent: BrazilianFinancialEvent = {
-          amount: event.amount,
-          categoryName: event.transaction_categories?.name,
-          description: event.description,
-          dueDate: event.due_date,
-          eventDate: event.event_date,
-          eventTypeId: event.event_type_id,
-          id: event.id,
-          isCompleted: event.is_completed || false,
-          priority: event.priority || 'normal',
-          title: event.title,
-        };
+        const brazilianEvent = mapToBrazilianFinancialEvent(event as FinancialEventWithRelations);
 
         // Enviar notificação imediata
         await notificationService.sendFinancialNotification(
@@ -836,7 +1083,11 @@ export const calendarRouter = router({
       }
     }),
 
-  // Criar lembrete por voz para evento financeiro
+  /**
+   * Schedule a voice reminder (TTS) for a financial event.
+   *
+   * Integração: delega ao `financial-notification-service` a criação do áudio/tts com segurança LGPD.
+   */
   createVoiceReminder: protectedProcedure
     .input(
       z.object({
@@ -845,6 +1096,7 @@ export const calendarRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Buscar evento completo
         const { data: event, error: eventError } = await supabase
@@ -875,18 +1127,7 @@ export const calendarRouter = router({
         });
 
         // Converter para formato BrazilianFinancialEvent
-        const brazilianEvent: BrazilianFinancialEvent = {
-          amount: event.amount,
-          categoryName: event.transaction_categories?.name,
-          description: event.description,
-          dueDate: event.due_date,
-          eventDate: event.event_date,
-          eventTypeId: event.event_type_id,
-          id: event.id,
-          isCompleted: event.is_completed || false,
-          priority: event.priority || 'normal',
-          title: event.title,
-        };
+        const brazilianEvent = mapToBrazilianFinancialEvent(event as FinancialEventWithRelations);
 
         // Criar lembrete por voz
         await notificationService.createVoiceReminder(
@@ -919,7 +1160,11 @@ export const calendarRouter = router({
       }
     }),
 
-  // Processar lembretes pendentes (background job)
+  /**
+   * Process pending reminders (background job trigger).
+   *
+   * Utilizado por CRON/Queue e respeita o rate limiting configurado no notification service.
+   */
   processPendingReminders: protectedProcedure.mutation(async ({ ctx }) => {
     try {
       // Criar serviço de notificação financeira
@@ -954,7 +1199,9 @@ export const calendarRouter = router({
     }
   }),
 
-  // Buscar eventos financeiros
+  /**
+   * Search events by title/description with optional filters and pagination.
+   */
   searchEvents: protectedProcedure
     .input(
       z.object({
@@ -967,6 +1214,7 @@ export const calendarRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         let query = supabase
           .from('financial_events')
@@ -978,15 +1226,15 @@ export const calendarRouter = router({
           `)
           .eq('user_id', ctx.user.id)
           .or(`title.ilike.%${input.query}%,description.ilike.%${input.query}%`)
-          .order('event_date', { ascending: false })
+          .order('start_date', { ascending: false })
           .limit(input.limit);
 
         // Aplicar filtros de data se fornecidos
         if (input.startDate) {
-          query = query.gte('event_date', input.startDate);
+          query = query.gte('start_date', input.startDate);
         }
         if (input.endDate) {
-          query = query.lte('event_date', input.endDate);
+          query = query.lte('start_date', input.endDate);
         }
 
         // Aplicar filtros adicionais
@@ -1049,7 +1297,9 @@ export const calendarRouter = router({
       }
     }),
 
-  // Buscar transações relacionadas a eventos
+  /**
+   * Search transactions (PIX/boletos/etc.) related to events for contextual insights.
+   */
   searchTransactions: protectedProcedure
     .input(
       z.object({
@@ -1061,11 +1311,16 @@ export const calendarRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         let query = supabase
           .from('transactions')
           .select(`
-            *,
+            id,
+            description,
+            amount,
+            status,
+            transaction_date,
             transaction_categories(id, name, color, icon),
             bank_accounts(id, institution_name, account_mask)
           `)
@@ -1105,14 +1360,16 @@ export const calendarRouter = router({
           });
         }
 
+        const typedData = (data ?? []) as unknown as CalendarTransaction[];
+
         logOperation('search_transactions_success', ctx.user.id, 'transactions', undefined, {
           hasCategoryFilter: !!input.categoryId,
           hasDateFilter: !!(input.startDate || input.endDate),
           query: input.query,
-          resultsCount: data?.length || 0,
+          resultsCount: typedData.length,
         });
 
-        return data || [];
+        return typedData;
       } catch (error) {
         logError('search_transactions_unexpected', ctx.user.id, error as Error, {
           categoryId: input.categoryId,

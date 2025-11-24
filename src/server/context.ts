@@ -3,6 +3,7 @@ import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import { createRequestScopedClient } from '@/integrations/supabase/factory';
 
 export interface CreateContextOptions {
+  req: FetchCreateContextFnOptions['req'];
   session: Session | null;
   user: User | null;
   supabase: SupabaseClient;
@@ -45,6 +46,7 @@ export const createContext = async (
   }
 
   return {
+    req: opts.req,
     session,
     supabase,
     user,

@@ -6,12 +6,16 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
+import { validateCPF } from '@/lib/security/financial-validator';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
 export const usersRouter = router({
   /**
-   * Get user profile with preferences
+   * Retrieve the authenticated user's profile with the nested `user_preferences` record.
+   *
+   * @returns Profile row enriched with `user_preferences`.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR when Supabase query fails.
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
     try {
@@ -53,7 +57,16 @@ export const usersRouter = router({
   }),
 
   /**
-   * Update user profile with validation
+   * Update the user's profile fields while validating CPF/phone formats and autonomy limits.
+   *
+   * - Validates CPF via `validateCPF`.
+   * - Restricts autonomy level to 50-95%.
+   * - Persists updates in the `users` table.
+   *
+   * @param input Partial profile fields to update.
+   * @returns Updated profile row.
+   * @throws {TRPCError} BAD_REQUEST for invalid CPF.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for persistence failures.
    */
   updateProfile: protectedProcedure
     .input(
@@ -134,7 +147,11 @@ export const usersRouter = router({
     }),
 
   /**
-   * Update user preferences
+   * Upsert user preferences (notifications, theme, autonomy) with sane defaults.
+   *
+   * @param input Optional preference flags/settings.
+   * @returns Updated preference row.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if Supabase upsert fails.
    */
   updatePreferences: protectedProcedure
     .input(
@@ -180,6 +197,10 @@ export const usersRouter = router({
 
         return data;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         logError('update_user_preferences_unexpected', ctx.user.id, error as Error, {
           operation: 'updatePreferences',
           resource: 'user_preferences',
@@ -192,7 +213,17 @@ export const usersRouter = router({
     }),
 
   /**
-   * Delete user account with confirmation
+   * Delete the user's account when the destructive confirmation and password are provided.
+   *
+   * - Requires typing `EXCLUIR`.
+   * - Re-authenticates with Supabase Auth before calling `delete_user_account` RPC.
+   * - Logs the cascade deletion for auditing.
+   *
+   * @param input Confirmation string and password.
+   * @returns Success boolean when deletion completes.
+   * @throws {TRPCError} BAD_REQUEST when confirmation mismatches.
+   * @throws {TRPCError} UNAUTHORIZED when password is invalid.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR for RPC failures.
    */
   deleteAccount: protectedProcedure
     .input(
@@ -346,7 +377,11 @@ export const usersRouter = router({
   }),
 
   /**
-   * Get user's financial summary
+   * Call the `get_financial_summary` Postgres function for a given period.
+   *
+   * @param input Period start/end ISO strings.
+   * @returns Aggregated financial metrics from Supabase RPC.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR when the RPC fails.
    */
   getFinancialSummary: protectedProcedure
     .input(
@@ -397,7 +432,10 @@ export const usersRouter = router({
     }),
 
   /**
-   * Check if user is active
+   * Check whether the user is active and retrieve the last login timestamp.
+   *
+   * @returns `{ is_active, last_login }` derived from the `users` table.
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR when Supabase query fails.
    */
   checkUserStatus: protectedProcedure.query(async ({ ctx }) => {
     try {

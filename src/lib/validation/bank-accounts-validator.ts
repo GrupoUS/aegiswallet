@@ -114,6 +114,13 @@ export const validateAccountMask = (mask?: string | null) => {
   return /^\*{4}\s\d{4}$/.test(mask);
 };
 
+const normalizeAccountMask = (mask: string) => {
+  if (/^\*{4}\d{4}$/.test(mask)) {
+    return `**** ${mask.slice(-4)}`;
+  }
+  return mask;
+};
+
 const collectZodErrors = (issues: z.ZodIssue[]): ValidationError[] =>
   issues.map((issue) => ({
     field: issue.path.join('.') || 'root',
@@ -144,7 +151,7 @@ export const sanitizeBankAccountData = (
           sanitized.account_number = trimmed.replace(/\s+/g, '');
           break;
         case 'account_mask':
-          sanitized.account_mask = trimmed;
+          sanitized.account_mask = normalizeAccountMask(trimmed);
           break;
         default:
           sanitized[key as keyof SanitizedBankAccountInput] = trimmed;

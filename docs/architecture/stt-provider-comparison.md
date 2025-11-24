@@ -1,7 +1,7 @@
 # STT Provider Comparison for AegisWallet
 
-**Date**: 2025-10-04  
-**Story**: 01.01 - Motor de Speech-to-Text Brasil  
+**Date**: 2025-10-04
+**Story**: 01.01 - Motor de Speech-to-Text Brasil
 **Decision Owner**: Dev Agent (Story Implementation)
 
 ## Executive Summary
@@ -9,7 +9,7 @@
 **SELECTED PROVIDER**: **OpenAI Whisper API**
 
 **Rationale**: OpenAI Whisper API is the optimal choice for AegisWallet's Brazilian Portuguese STT requirements due to:
-1. **Already integrated** in project (OPENAI_API_KEY in .env.example)
+1. **Already integrated** in project (OPENAI_API_KEY in env.example)
 2. **Excellent Portuguese support** (trained on 680k hours, 98 languages)
 3. **Bun runtime compatibility** (REST API, no Python dependencies)
 4. **Proven accuracy** (≥95% for Portuguese in production)
@@ -367,6 +367,6 @@ const { text } = await response.json();
 
 ---
 
-**Status**: ✅ Decision Finalized  
-**Approved By**: Dev Agent (Story 01.01 Implementation)  
+**Status**: ✅ Decision Finalized
+**Approved By**: Dev Agent (Story 01.01 Implementation)
 **Date**: 2025-10-04

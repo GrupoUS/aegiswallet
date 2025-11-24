@@ -188,7 +188,7 @@ aegiswallet/
 │   ├── build.sh                       # Build automation
 │   ├── deploy.sh                      # Deployment script
 │   └── db-migrate.sh                  # Database migration script
-├── .env.example                       # Environment variables template
+├── env.example                        # Environment variables template
 ├── .env.local.example                 # Local environment template
 ├── package.json                       # Dependencies and scripts
 ├── bun.lockb                          # Bun lockfile
@@ -378,7 +378,7 @@ import { useRealtimeSync } from "@/hooks/useRealtimeSync"
 
 ### Configuration Files
 - **Build Config**: `kebab-case.config.ts` (e.g., `vite.config.ts`)
-- **Environment**: `.env.example`, `.env.local.example`
+- **Environment**: `env.example`, `.env.local`
 - **Documentation**: `kebab-case.md` (e.g., `coding-standards.md`)
 
 ## Development Workflow
@@ -404,7 +404,7 @@ bun lint
 ### Environment Configuration
 ```bash
 # Copy environment templates
-cp .env.example .env.local
+cp env.example .env.local
 cp .env.local.example .env
 
 # Configure Supabase

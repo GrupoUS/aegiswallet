@@ -15,7 +15,7 @@ function getRequiredEnvVar(key: string): string {
     throw new Error(
       `❌ SECURITY ERROR: Missing required environment variable: ${key}\n` +
         `Please configure your .env file with the ${key} value.\n` +
-        `See .env.example for required variables.`
+        `See env.example for the up-to-date list of variables.`
     );
   }
 

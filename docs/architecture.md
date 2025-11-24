@@ -6,10 +6,10 @@ Revolutionary voice-first financial assistant for the Brazilian market, achievin
 
 ## Executive Summary
 
-**Technology Stack**: Bun + Hono + tRPC + Supabase + React 19  
-**Architecture Pattern**: Simplified monolith with real-time subscriptions  
-**Target Market**: Brazilian financial system with PIX, boletos, and voice interface  
-**Automation Level**: 95% financial operations with progressive trust building  
+**Technology Stack**: Bun + Hono + tRPC + Supabase + React 19
+**Architecture Pattern**: Simplified monolith with real-time subscriptions
+**Target Market**: Brazilian financial system with PIX, boletos, and voice interface
+**Automation Level**: 95% financial operations with progressive trust building
 **Last Architecture Update**: January 6, 2025 - See `docs/architecture/ARCHITECTURE_UPDATE_2025-10-06.md`
 
 ### Current Implementation Status
@@ -34,19 +34,19 @@ graph TB
         C[Mobile App] --> B
         B --> D[tRPC Client]
     end
-    
+
     subgraph "Backend (Hono)"
         D --> E[tRPC Router]
         E --> F[Auth Middleware]
         E --> G[Procedures]
     end
-    
+
     subgraph "Data Layer (Supabase)"
         G --> H[PostgreSQL]
         G --> I[Real-time Subscriptions]
         G --> J[Storage]
     end
-    
+
     subgraph "External APIs"
         G --> K[Belvo - Open Banking]
         G --> L[PIX API]
@@ -170,7 +170,7 @@ interface VoiceCommand {
 // 6 Essential Voice Commands
 const ESSENTIAL_COMMANDS = [
   "Como está meu saldo?",
-  "Quanto posso gastar esse mês?", 
+  "Quanto posso gastar esse mês?",
   "Tem algum boleto programado para pagar?",
   "Tem algum recebimento programado para entrar?",
   "Como ficará meu saldo no final do mês?",
@@ -277,7 +277,7 @@ export const appRouter = router({
     signIn: publicProcedure
       .input(z.object({ email: z.string().email(), password: z.string() }))
       .mutation(authController.signIn),
-    
+
     getProfile: protectedProcedure
       .query(authController.getProfile),
   }),
@@ -286,7 +286,7 @@ export const appRouter = router({
   transactions: router({
     getAll: protectedProcedure
       .query(transactionsController.getAll),
-    
+
     categorize: protectedProcedure
       .input(z.object({ description: z.string() }))
       .mutation(aiController.categorizeTransaction),
@@ -304,7 +304,7 @@ export const appRouter = router({
     linkAccount: protectedProcedure
       .input(z.object({ institutionId: z.string() }))
       .mutation(bankingController.linkAccount),
-    
+
     syncTransactions: protectedProcedure
       .input(z.object({ accountId: z.string() }))
       .mutation(bankingController.syncTransactions),
@@ -334,13 +334,13 @@ export const appRouter = router({
 const subscriptions = {
   // Transaction updates
   transactions: realtime.subscribeToTable('transactions', `user_id=eq.${userId}`),
-  
+
   // Balance changes
   balances: realtime.subscribeToTable('bank_accounts', `user_id=eq.${userId}`),
-  
+
   // Voice command responses
   voiceCommands: realtime.subscribeToTable('voice_commands', `user_id=eq.${userId}`),
-  
+
   // PIX status updates
   pixTransactions: realtime.subscribeToTable('pix_transactions', `user_id=eq.${userId}`)
 };
@@ -353,19 +353,19 @@ const subscriptions = {
 async function processVoiceCommand(audio: Blob): Promise<VoiceResponse> {
   // 1. Speech-to-text
   const transcript = await speechToText(audio);
-  
+
   // 2. Intent classification
   const intent = classifyCommand(transcript);
-  
+
   // 3. Execute action
   const result = await executeFinancialAction(intent);
-  
+
   // 4. Save command history
   await saveVoiceCommand(user.id, transcript, intent, result);
-  
+
   // 5. Real-time notification (automatic)
   // Supabase triggers subscription update
-  
+
   return result;
 }
 ```
@@ -394,7 +394,7 @@ CREATE POLICY "Users own data" ON users
   FOR ALL USING (auth.uid() = id);
 
 -- Transaction access control
-CREATE POLICY "Transaction access" ON transactions  
+CREATE POLICY "Transaction access" ON transactions
   FOR ALL USING (auth.uid() = user_id);
 
 -- Voice command privacy
@@ -411,12 +411,12 @@ interface DataProtection {
     atRest: 'AES-256';     // Supabase managed
     inTransit: 'TLS 1.3';  // Enforced
   };
-  
+
   retention: {
     financialData: '7 years';  // Legal requirement
     voiceCommands: '1 year';
   };
-  
+
   userRights: {
     access: true;          // Data access requests
     deletion: true;        // Right to be forgotten
@@ -434,10 +434,10 @@ interface DataProtection {
 ```sql
 -- Optimized queries for financial data
 EXPLAIN ANALYZE
-SELECT * FROM transactions 
-WHERE user_id = $1 
-  AND transaction_date >= '2024-01-01' 
-ORDER BY transaction_date DESC 
+SELECT * FROM transactions
+WHERE user_id = $1
+  AND transaction_date >= '2024-01-01'
+ORDER BY transaction_date DESC
 LIMIT 100;
 
 -- Connection pooling configuration
@@ -456,13 +456,13 @@ const performanceConfig = {
     target: 500,
     max: 1000
   },
-  
-  // Transaction sync <3 seconds  
+
+  // Transaction sync <3 seconds
   transactionSync: {
     target: 2000,
     max: 5000
   },
-  
+
   // PIX processing <10 seconds
   pixProcessing: {
     target: 5000,
@@ -480,12 +480,12 @@ const cache = {
     ttl: 5 * 60 * 1000, // 5 minutes
     max: 100
   },
-  
+
   transactionSummary: {
     ttl: 60 * 1000, // 1 minute
     max: 50
   },
-  
+
   exchangeRates: {
     ttl: 24 * 60 * 60 * 1000, // 24 hours
     max: 10
@@ -554,7 +554,7 @@ services:
       memory: "512Mi"
     ports:
       - "3000:3000"
-  
+
   database:
     managed: supabase
     backup: daily
@@ -577,7 +577,7 @@ cd aegiswallet
 bun install
 
 # 2. Environment setup
-cp .env.example .env.local
+cp env.example .env.local
 # Configure Supabase keys
 
 # 3. Start development
@@ -601,11 +601,11 @@ export function BalanceCard({ balance }: { balance: number }) {
 // Hook pattern (YAGNI)
 export function useBalance() {
   const [balance, setBalance] = useState(0);
-  
+
   useEffect(() => {
     fetchBalance().then(setBalance);
   }, []);
-  
+
   return { balance };
 }
 ```

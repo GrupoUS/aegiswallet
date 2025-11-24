@@ -6,6 +6,8 @@ import { voiceCommandRateLimit } from '@/server/middleware/rateLimitMiddleware';
 import { securityMiddleware } from '@/server/middleware/securityMiddleware';
 import type { ProcessVoiceCommandInputType } from '@/types/server.types';
 
+const MIN_AUTOMATION_CONFIDENCE = 0.8;
+
 // Type-safe tRPC router builder interface
 interface TRPCRouterBuilder {
   procedure: {
@@ -20,7 +22,15 @@ interface TRPCRouterBuilder {
 
 export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
   /**
-   * Process voice command
+   * Process voice commands through the NLU pipeline (STT → intenção → entidades → ação).
+   *
+   * Segurança:
+   * - Rate limiting dedicado (`voiceCommandRateLimit`) + `securityMiddleware`.
+   * - Sanitiza áudio/texto antes de persistir.
+   * - Requer autenticação e registra auditoria no `secureLogger`.
+   *
+   * Observação: até que o NLU definitivo esteja integrado, os resultados são simulados,
+   * mas já aplicamos o limiar mínimo de confiança (`MIN_AUTOMATION_CONFIDENCE`) para exigir confirmação.
    */
   processCommand: t.procedure
     .use(voiceCommandRateLimit)
@@ -84,6 +94,8 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
           intent: 'transaction',
           processed_at: new Date().toISOString(),
         };
+        const requiresManualConfirmation =
+          input.requireConfirmation || processingResult.confidence < MIN_AUTOMATION_CONFIDENCE;
 
         // Update command status
         await ctx.supabase
@@ -107,7 +119,10 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
 
         return {
           commandId: commandData.id,
-          result: processingResult,
+          result: {
+            ...processingResult,
+            requiresConfirmation: requiresManualConfirmation,
+          },
           success: true,
         };
       } catch (error) {
@@ -126,7 +141,9 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
     }),
 
   /**
-   * Submit voice feedback
+   * Submit structured feedback after a voice command (rating + correções).
+   *
+   * Os registros alimentam o treinamento do NLU e ajudam a mensurar acurácia.
    */
   submitFeedback: t.procedure
     .use(securityMiddleware)
@@ -216,7 +233,9 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
     }),
 
   /**
-   * Get voice command history
+   * Paginated history of voice commands (texto, intenção, confiança, status).
+   *
+   * Útil para o usuário revisar automações e para auditoria LGPD.
    */
   getHistory: t.procedure
     .use(securityMiddleware)
@@ -271,7 +290,9 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
     }),
 
   /**
-   * Get voice analytics for user
+   * Aggregate analytics for the voice assistant (taxa de sucesso, confiança média, distribuição de intenções).
+   *
+   * Também calcula métricas de feedback (rating médio, accuracy subjetiva) para dashboards internos.
    */
   getAnalytics: t.procedure.use(securityMiddleware).query(async ({ ctx }: { ctx: Context }) => {
     if (!ctx.session?.user) {

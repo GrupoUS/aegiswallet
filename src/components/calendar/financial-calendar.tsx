@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-filename-extension */
 /**
  * Financial Calendar Component
  * Calendário semanal com eventos financeiros
@@ -43,7 +44,7 @@ function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEven
   };
 }
 
-export function FinancialCalendar() {
+export function FinancialCalendar(): JSX.Element {
   const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -127,7 +128,7 @@ export function FinancialCalendar() {
     });
   }, [filteredEvents, categories, isConnected, syncSettings]);
 
-  const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>) => {
+  const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>): Promise<void> => {
     try {
       // Converter CalendarEvent para FinancialEvent
       const financialEvent: Partial<FinancialEvent> = {
@@ -155,7 +156,7 @@ export function FinancialCalendar() {
     }
   };
 
-  const handleEventUpdate = async (calendarEvent: CalendarEvent) => {
+  const handleEventUpdate = async (calendarEvent: CalendarEvent): Promise<void> => {
     try {
       // Encontrar o evento financeiro original e atualizar
       const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
@@ -181,7 +182,7 @@ export function FinancialCalendar() {
     }
   };
 
-  const handleEventEdit = (calendarEvent: CalendarEvent) => {
+  const handleEventEdit = (calendarEvent: CalendarEvent): void => {
     // Encontrar o evento financeiro original para mostrar detalhes completos
     const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
     if (financialEvent) {
@@ -305,3 +306,5 @@ export function FinancialCalendar() {
     </div>
   );
 }
+
+export default FinancialCalendar;

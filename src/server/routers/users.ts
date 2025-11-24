@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { logError, logOperation } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
 
@@ -10,6 +9,7 @@ import { protectedProcedure, router } from '@/server/trpc-helpers';
 export const usersRouter = router({
   // Obter perfil do usuário
   getProfile: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('users')
@@ -64,6 +64,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('users')
@@ -123,6 +124,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         const { data, error } = await supabase
           .from('user_preferences')
@@ -173,6 +175,7 @@ export const usersRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
       try {
         // Chamar a função do banco de dados
         const { data, error } = await supabase.rpc('get_financial_summary', {
@@ -216,6 +219,7 @@ export const usersRouter = router({
 
   // Atualizar último login
   updateLastLogin: protectedProcedure.mutation(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('users')
@@ -257,6 +261,7 @@ export const usersRouter = router({
 
   // Verificar se o usuário está ativo
   checkUserStatus: protectedProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
     try {
       const { data, error } = await supabase
         .from('users')

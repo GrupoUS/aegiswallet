@@ -3,26 +3,47 @@
  * Application service for User business logic and workflows
  */
 
-import type {
-  IUserRepository,
-  UserCreationData,
-  UserPreferences,
-  UserUpdateData,
-} from '@/domain/models/User';
-import { User } from '@/domain/models/User';
+import type { User as DomainUser } from '@/domain/models/User';
+import * as UserModel from '@/domain/models/User';
 import { logger } from '@/lib/logging/logger';
+import userValidation from './userValidation';
+
+const { User } = UserModel;
+const {
+  applyBusinessRules,
+  validateUserCreationData,
+  validateUserPreferences,
+  validateUserUpdateData,
+} = userValidation;
+
+type IUserRepository = UserModel.IUserRepository;
+type UserCreationData = UserModel.UserCreationData;
+type UserPreferences = UserModel.UserPreferences;
+type UserUpdateData = UserModel.UserUpdateData;
 
 export interface UserServiceDependencies {
   userRepository: IUserRepository;
 }
 
-export class UserService {
+interface SelfOperationGuardParams {
+  errorMessage: string;
+  event: string;
+  operation: string;
+  requestorId: string;
+  targetUserId: string;
+}
+
+class UserService {
   constructor(private dependencies: UserServiceDependencies) {}
+
+  static create(dependencies: UserServiceDependencies): UserService {
+    return new UserService(dependencies);
+  }
 
   /**
    * Get user by ID with security logging
    */
-  async getUserById(id: string, requestorId?: string): Promise<User | null> {
+  async getUserById(id: string, requestorId?: string): Promise<DomainUser | null> {
     try {
       // Security check: users can only access their own data
       if (requestorId && requestorId !== id) {
@@ -61,7 +82,7 @@ export class UserService {
   /**
    * Get user by email (for authentication purposes)
    */
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<DomainUser | null> {
     try {
       const user = await this.dependencies.userRepository.findByEmail(email);
       return user;
@@ -78,7 +99,7 @@ export class UserService {
   /**
    * Create a new user with validation and business rules
    */
-  async createUser(userData: UserCreationData, requestorId?: string): Promise<User> {
+  async createUser(userData: UserCreationData, requestorId?: string): Promise<DomainUser> {
     try {
       // Validate email uniqueness
       const existingUser = await this.dependencies.userRepository.findByEmail(userData.email);
@@ -93,7 +114,7 @@ export class UserService {
       }
 
       // Validate user data
-      this.validateUserCreationData(userData);
+      validateUserCreationData(userData);
 
       // Create user
       const user = User.create(userData);
@@ -130,32 +151,20 @@ export class UserService {
     userId: string,
     updateData: UserUpdateData,
     requestorId: string
-  ): Promise<User> {
+  ): Promise<DomainUser> {
     try {
-      // Security check: users can only update their own profile
-      if (requestorId !== userId) {
-        logger.warn('Unauthorized user update attempt', {
-          event: 'unauthorized_user_update_attempt',
-          operation: 'updateUserProfile',
-          targetUserId: userId,
-          userId: requestorId,
-        });
-        throw new Error('Unauthorized: Cannot update other user profile');
-      }
+      ensureSelfOperation({
+        errorMessage: 'Unauthorized: Cannot update other user profile',
+        event: 'unauthorized_user_update_attempt',
+        operation: 'updateUserProfile',
+        requestorId,
+        targetUserId: userId,
+      });
 
-      // Get existing user
-      const existingUser = await this.dependencies.userRepository.findById(userId);
-      if (!existingUser) {
-        throw new Error('User not found');
-      }
+      const existingUser = await this.getUserOrThrow(userId);
+      validateUserUpdateData(updateData);
 
-      // Validate update data
-      this.validateUserUpdateData(updateData);
-
-      // Apply business rules
-      const validatedUpdateData = this.applyBusinessRules(updateData, existingUser);
-
-      // Update user
+      const validatedUpdateData = applyBusinessRules(updateData, existingUser);
       const updatedUser = existingUser.update(validatedUpdateData);
       const savedUser = await this.dependencies.userRepository.update(updatedUser);
 
@@ -185,21 +194,18 @@ export class UserService {
     userId: string,
     preferences: Partial<UserPreferences>,
     requestorId: string
-  ): Promise<User> {
+  ): Promise<DomainUser> {
     try {
-      // Security check: users can only update their own preferences
-      if (requestorId !== userId) {
-        logger.warn('Unauthorized preferences update attempt', {
-          event: 'unauthorized_preferences_update_attempt',
-          operation: 'updateUserPreferences',
-          targetUserId: userId,
-          userId: requestorId,
-        });
-        throw new Error('Unauthorized: Cannot update other user preferences');
-      }
+      ensureSelfOperation({
+        errorMessage: 'Unauthorized: Cannot update other user preferences',
+        event: 'unauthorized_preferences_update_attempt',
+        operation: 'updateUserPreferences',
+        requestorId,
+        targetUserId: userId,
+      });
 
       // Validate preferences
-      this.validateUserPreferences(preferences);
+      validateUserPreferences(preferences);
 
       // Update preferences
       const updatedUser = await this.dependencies.userRepository.updatePreferences(
@@ -231,16 +237,13 @@ export class UserService {
    */
   async deleteUser(userId: string, confirmation: string, requestorId: string): Promise<void> {
     try {
-      // Security check: users can only delete their own account
-      if (requestorId !== userId) {
-        logger.warn('Unauthorized user deletion attempt', {
-          event: 'unauthorized_user_deletion_attempt',
-          operation: 'deleteUser',
-          targetUserId: userId,
-          userId: requestorId,
-        });
-        throw new Error('Unauthorized: Cannot delete other user account');
-      }
+      ensureSelfOperation({
+        errorMessage: 'Unauthorized: Cannot delete other user account',
+        event: 'unauthorized_user_deletion_attempt',
+        operation: 'deleteUser',
+        requestorId,
+        targetUserId: userId,
+      });
 
       // Validate confirmation
       if (confirmation !== 'EXCLUIR') {
@@ -248,10 +251,7 @@ export class UserService {
       }
 
       // Get user for logging
-      const user = await this.dependencies.userRepository.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
+      const user = await this.getUserOrThrow(userId);
 
       // Delete user
       await this.dependencies.userRepository.delete(userId);
@@ -274,139 +274,31 @@ export class UserService {
     }
   }
 
-  /**
-   * Validate user creation data
-   */
-  private validateUserCreationData(userData: UserCreationData): void {
-    if (!userData.email || !userData.email.includes('@')) {
-      throw new Error('Valid email is required');
+  private async getUserOrThrow(userId: string): Promise<DomainUser> {
+    const existingUser = await this.dependencies.userRepository.findById(userId);
+    if (!existingUser) {
+      throw new Error('User not found');
     }
-
-    if (!userData.fullName || userData.fullName.trim().length < 2) {
-      throw new Error('Full name must be at least 2 characters long');
-    }
-
-    if (!userData.password || userData.password.length < 8) {
-      throw new Error('Password must be at least 8 characters long');
-    }
-
-    if (userData.phone && !this.validatePhone(userData.phone)) {
-      throw new Error('Invalid phone number format');
-    }
-  }
-
-  /**
-   * Validate user update data
-   */
-  private validateUserUpdateData(updateData: UserUpdateData): void {
-    if (updateData.fullName && updateData.fullName.trim().length < 2) {
-      throw new Error('Full name must be at least 2 characters long');
-    }
-
-    if (updateData.cpf && !this.validateCPF(updateData.cpf)) {
-      throw new Error('Invalid CPF format');
-    }
-
-    if (updateData.phone && !this.validatePhone(updateData.phone)) {
-      throw new Error('Invalid phone number format');
-    }
-  }
-
-  /**
-   * Validate user preferences
-   */
-  private validateUserPreferences(preferences: Partial<UserPreferences>): void {
-    if (preferences.autonomyLevel !== undefined) {
-      if (preferences.autonomyLevel < 50 || preferences.autonomyLevel > 95) {
-        throw new Error('Autonomy level must be between 50 and 95');
-      }
-    }
-
-    if (preferences.language && preferences.language.length < 2) {
-      throw new Error('Invalid language code');
-    }
-
-    if (preferences.currency && preferences.currency.length !== 3) {
-      throw new Error('Invalid currency code');
-    }
-  }
-
-  /**
-   * Apply business rules to user updates
-   */
-  private applyBusinessRules(updateData: UserUpdateData, existingUser: User): UserUpdateData {
-    const validatedData = { ...updateData };
-
-    // Business rule: CPF can only be set once
-    if (updateData.cpf && existingUser.cpf && updateData.cpf !== existingUser.cpf) {
-      throw new Error('CPF cannot be changed once set');
-    }
-
-    // Business rule: Email updates are not allowed through this method
-    // Email is not included in UserUpdateData interface, so no validation needed
-
-    return validatedData;
-  }
-
-  /**
-   * Validate CPF (Brazilian tax ID)
-   */
-  private validateCPF(cpf: string): boolean {
-    // Remove non-digits
-    cpf = cpf.replace(/\D/g, '');
-
-    // Check if all digits are the same
-    if (/^(\d)\1{10}$/.test(cpf)) {
-      return false;
-    }
-
-    // Check length
-    if (cpf.length !== 11) {
-      return false;
-    }
-
-    // Calculate first digit
-    let sum = 0;
-    for (let i = 0; i < 9; i++) {
-      sum += parseInt(cpf[i], 10) * (10 - i);
-    }
-    let digit = 11 - (sum % 11);
-    if (digit > 9) {
-      digit = 0;
-    }
-    if (digit !== parseInt(cpf[9], 10)) {
-      return false;
-    }
-
-    // Calculate second digit
-    sum = 0;
-    for (let i = 0; i < 10; i++) {
-      sum += parseInt(cpf[i], 10) * (11 - i);
-    }
-    digit = 11 - (sum % 11);
-    if (digit > 9) {
-      digit = 0;
-    }
-    if (digit !== parseInt(cpf[10], 10)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Validate phone number
-   */
-  private validatePhone(phone: string): boolean {
-    // Brazilian phone format validation
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(phone.replace(/\D/g, ''));
+    return existingUser;
   }
 }
 
-/**
- * User Service Factory
- */
-export function createUserService(dependencies: UserServiceDependencies): UserService {
-  return new UserService(dependencies);
-}
+const ensureSelfOperation = ({
+  errorMessage,
+  event,
+  operation,
+  requestorId,
+  targetUserId,
+}: SelfOperationGuardParams): void => {
+  if (requestorId !== targetUserId) {
+    logger.warn('Unauthorized user operation attempt', {
+      event,
+      operation,
+      targetUserId,
+      userId: requestorId,
+    });
+    throw new Error(errorMessage);
+  }
+};
+
+export { UserService };

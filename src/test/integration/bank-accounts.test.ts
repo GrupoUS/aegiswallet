@@ -88,6 +88,22 @@ describe('Bank Accounts Router Integration', () => {
     expect(account.belvo_account_id.startsWith('manual_')).toBe(true);
   });
 
+  it('normaliza máscara sem espaço em contas válidas', async () => {
+    const account = await caller.create.mutate({
+      institution_name: 'Banco Máscara',
+      institution_id: 'MASK_BANK',
+      account_type: 'SAVINGS',
+      account_mask: '****1234',
+      balance: 250,
+      currency: 'BRL',
+      is_active: true,
+      is_primary: false,
+    });
+
+    createdAccountIds.push(account.id);
+    expect(account.account_mask).toBe('**** 1234');
+  });
+
   it('cria conta Belvo com sync_status pending', async () => {
     const belvoId = 'belvo-account-123';
     const account = await caller.create.mutate({

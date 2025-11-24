@@ -12,15 +12,15 @@ related:
 
 # AegisWallet Frontend Architecture
 
-**Voice-first autonomous financial assistant for Brazilian market**  
-**React 19 + Vite + TanStack Router v5 + TanStack Query v5 + Tailwind CSS**  
+**Voice-first autonomous financial assistant for Brazilian market**
+**React 19 + Vite + TanStack Router v5 + TanStack Query v5 + Tailwind CSS**
 **Performance Targets**: <500ms voice response, <3s app startup, Lighthouse ≥90
 
 ## 1. Frontend Technology Stack
 
-**Core Stack**: React 19.2.0 + Vite 7.1.9 + TanStack Router 1.114.3 + TanStack Query 5.90.2 + Tailwind CSS 4.1.14  
-**Development**: Bun + TypeScript 5.9.3 + Vitest 3.2.4 + Playwright + OXLint 1.19.0  
-**State**: Zustand 5.0.2 + React Hook Form 7.55.0 + Zod 4.1.11  
+**Core Stack**: React 19.2.0 + Vite 7.1.9 + TanStack Router 1.114.3 + TanStack Query 5.90.2 + Tailwind CSS 4.1.14
+**Development**: Bun + TypeScript 5.9.3 + Vitest 3.2.4 + Playwright + OXLint 1.19.0
+**State**: Zustand 5.0.2 + React Hook Form 7.55.0 + Zod 4.1.11
 **Components**: shadcn/ui + WCAG 2.1 AA+ compliance
 
 **Dependencies**:
@@ -28,7 +28,7 @@ related:
 {
   "dependencies": {
     "@tanstack/react-query": "^5.90.2",
-    "@tanstack/react-router": "^1.114.3", 
+    "@tanstack/react-router": "^1.114.3",
     "@trpc/client": "^11.6.0",
     "@trpc/react-query": "^11.6.0",
     "react": "^19.2.0",
@@ -260,7 +260,7 @@ export default {
     extend: {
       colors: {
         primary: { DEFAULT: '#0066CC', dark: '#0052A3' },      // Trust blue
-        success: { DEFAULT: '#00A650', dark: '#008140' },      // PIX green  
+        success: { DEFAULT: '#00A650', dark: '#008140' },      // PIX green
         warning: { DEFAULT: '#FF6B00', dark: '#E55A00' },      // Alert orange
       },
       fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
@@ -338,7 +338,7 @@ export const testAccessibility = async (container: HTMLElement) => {
 ### Coverage Requirements
 
 - **Critical**: 95%+ coverage (voice, financial, auth, accessibility)
-- **Non-Critical**: 80%+ coverage (UI, utilities, types) 
+- **Non-Critical**: 80%+ coverage (UI, utilities, types)
 - **E2E**: Playwright for complete voice workflows
 
 ## 8. Environment Configuration
@@ -346,7 +346,7 @@ export const testAccessibility = async (container: HTMLElement) => {
 ### Environment Variables + Validation
 
 ```bash
-# .env.example
+# env.example
 VITE_SUPABASE_URL=your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_OPENAI_API_KEY=your-openai-key
@@ -414,6 +414,6 @@ import { Button } from "@/components/ui/button"
 
 ---
 
-**Status**: ✅ Optimized Architecture Document (< 400 lines)  
+**Status**: ✅ Optimized Architecture Document (< 400 lines)
 **Ownership**: Frontend Development Team
 

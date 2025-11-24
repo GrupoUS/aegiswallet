@@ -140,7 +140,7 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
       ...errors.map((error) => `  • ${error}`),
       '',
       'To fix this issue:',
-      '1. Copy .env.example to .env',
+      '1. Copy env.example to .env.local',
       '2. Fill in the required environment variables',
       '3. Restart the application',
       '',

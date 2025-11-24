@@ -194,7 +194,6 @@ CREATE TABLE IF NOT EXISTS transaction_schedules (
 -- 4. FINANCIAL CALENDAR & EVENTS
 -- ========================================
 
--- Event types for calendar
 CREATE TABLE IF NOT EXISTS event_types (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL UNIQUE,
@@ -203,21 +202,19 @@ CREATE TABLE IF NOT EXISTS event_types (
     icon TEXT DEFAULT 'calendar',
     is_system BOOLEAN DEFAULT true,
     default_reminder_hours INTEGER DEFAULT 24,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Financial events table
--- Last updated: 2025-11-25
--- Reflects migrations: 20251006115133, 20251007210500, 20251125
 CREATE TABLE IF NOT EXISTS financial_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     account_id UUID REFERENCES bank_accounts(id) ON DELETE SET NULL,
     category_id UUID REFERENCES transaction_categories(id) ON DELETE SET NULL,
+    event_type_id UUID REFERENCES event_types(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
     description TEXT,
     amount DECIMAL(15,2) NOT NULL,
-    event_type TEXT NOT NULL CHECK (event_type IN ('income', 'expense', 'bill', 'scheduled', 'transfer')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'scheduled', 'cancelled', 'completed')),
     start_date TIMESTAMP WITH TIME ZONE NOT NULL,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -225,6 +222,7 @@ CREATE TABLE IF NOT EXISTS financial_events (
     color TEXT NOT NULL DEFAULT 'blue',
     icon TEXT,
     is_income BOOLEAN DEFAULT false,
+    is_completed BOOLEAN DEFAULT false,
     is_recurring BOOLEAN DEFAULT false,
     recurrence_rule TEXT,
     parent_event_id UUID REFERENCES financial_events(id) ON DELETE CASCADE,
@@ -244,16 +242,17 @@ CREATE TABLE IF NOT EXISTS financial_events (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Event reminders
 CREATE TABLE IF NOT EXISTS event_reminders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     event_id UUID REFERENCES financial_events(id) ON DELETE CASCADE,
     remind_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    is_sent BOOLEAN DEFAULT false,
-    sent_at TIMESTAMP WITH TIME ZONE,
     reminder_type TEXT DEFAULT 'notification', -- notification, email, sms, voice
     message TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    is_sent BOOLEAN DEFAULT false,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- ========================================

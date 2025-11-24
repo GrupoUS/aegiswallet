@@ -1,197 +1,390 @@
-import { Loader2 } from 'lucide-react';
-import type React from 'react';
+/* eslint-disable react/jsx-filename-extension, max-lines, max-lines-per-function, import/no-default-export, no-duplicate-imports, sort-imports */
+
+import type { FormEvent, ReactElement } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useCreateTransaction } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
-import type { Tables } from '@/types/database.types';
 
 type TransactionType = 'credit' | 'debit' | 'pix' | 'boleto' | 'transfer';
-type AccountRow = Tables<'bank_accounts'>['Row'];
-
 interface TransactionFormProps {
   onCancel: () => void;
   onSuccess?: () => void;
 }
+interface BankAccount {
+  balance: number | null;
+  id: string;
+  institution_name: string;
+}
+interface FormState {
+  accountId: string;
+  amount: string;
+  date: string;
+  description: string;
+  type: TransactionType;
+}
+type ValidationResult =
+  | { account: BankAccount; numericAmount: number; transactionDate: Date }
+  | { error: string };
+type SubmitTransaction = (input: {
+  account_id: string;
+  amount: number;
+  description: string;
+  is_manual_entry: boolean;
+  status: 'posted';
+  transaction_date: string;
+  transaction_type: TransactionType;
+}) => Promise<unknown>;
+interface SubmitDeps {
+  accountList: BankAccount[];
+  formState: FormState;
+  onSuccess?: () => void;
+  setFormState: (state: FormState) => void;
+  setIsLoading: (value: boolean) => void;
+  submitTransaction: SubmitTransaction;
+  updateBalance: (input: { balance: number; id: string }) => Promise<void>;
+}
 
-export default function TransactionForm({ onCancel, onSuccess }: TransactionFormProps) {
-  const { mutateAsync: createTransaction } = useCreateTransaction();
-  const { accounts, updateBalance } = useBankAccounts();
-  const accountList: AccountRow[] = accounts ?? [];
+const debitTypes = new Set<TransactionType>(['debit', 'pix', 'boleto', 'transfer']);
+const typeOptions: { label: string; value: TransactionType }[] = [
+  { label: 'Débito', value: 'debit' },
+  { label: 'Crédito', value: 'credit' },
+  { label: 'PIX', value: 'pix' },
+  { label: 'Boleto', value: 'boleto' },
+  { label: 'Transferência', value: 'transfer' },
+];
+const initialState: FormState = {
+  accountId: '',
+  amount: '',
+  date: new Date().toISOString().split('T')[0],
+  description: '',
+  type: 'debit',
+};
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>('debit');
-  const [accountId, setAccountId] = useState<string>('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+const computeFinalAmount = (transactionType: TransactionType, numericAmount: number): number => {
+  if (debitTypes.has(transactionType) && numericAmount > 0) {
+    return -Math.abs(numericAmount);
+  }
+  return Math.abs(numericAmount);
+};
 
-  const handleSubmit = async (event: React.FormEvent) => {
+const validateForm = (state: FormState, accounts: BankAccount[]): ValidationResult => {
+  if (!state.amount || !state.date || !state.accountId || !state.type) {
+    return { error: 'Preencha os campos obrigatórios' };
+  }
+  const numericAmount = Number(state.amount);
+  if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+    return { error: 'Valor inválido' };
+  }
+  const transactionDate = new Date(state.date);
+  if (Number.isNaN(transactionDate.getTime())) {
+    return { error: 'Data inválida' };
+  }
+  const account = accounts.find((accountItem) => accountItem.id === state.accountId);
+  if (!account) {
+    return { error: 'Conta bancária inválida' };
+  }
+  return { account, numericAmount, transactionDate };
+};
+
+const FormActions = ({
+  isLoading,
+  onCancel,
+}: {
+  isLoading: boolean;
+  onCancel: () => void;
+}): ReactElement => {
+  const renderLabel = (): string => {
+    if (isLoading) {
+      return 'Salvando...';
+    }
+    return 'Salvar';
+  };
+  return (
+    <div className="mt-4 flex justify-end gap-2">
+      <button
+        className="rounded border border-gray-300 px-4 py-2 text-sm transition hover:bg-muted"
+        disabled={isLoading}
+        type="button"
+        onClick={onCancel}
+      >
+        Cancelar
+      </button>
+      <button
+        className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground transition hover:bg-primary/90"
+        disabled={isLoading}
+        type="submit"
+      >
+        {renderLabel()}
+      </button>
+    </div>
+  );
+};
+
+const TypeSelect = ({
+  onChange,
+  selectedType,
+}: {
+  onChange: (value: TransactionType) => void;
+  selectedType: TransactionType;
+}): ReactElement => (
+  <label className="space-y-2">
+    <span className="block text-sm font-medium">Tipo</span>
+    <select
+      className="w-full rounded border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+      id="type"
+      onChange={(event) => onChange(event.target.value as TransactionType)}
+      value={selectedType}
+    >
+      <option value="">Selecione o tipo</option>
+      {typeOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </label>
+);
+
+const AccountSelect = ({
+  accountId,
+  accounts,
+  onChange,
+}: {
+  accountId: string;
+  accounts: BankAccount[];
+  onChange: (value: string) => void;
+}): ReactElement => (
+  <label className="space-y-2 md:col-span-2">
+    <span className="block text-sm font-medium">Conta Bancária</span>
+    <select
+      className="w-full rounded border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+      id="account"
+      onChange={(event) => onChange(event.target.value)}
+      value={accountId}
+    >
+      <option value="">Selecione a conta</option>
+      {accounts.map((account) => (
+        <option key={account.id} value={account.id}>
+          {account.institution_name}
+        </option>
+      ))}
+    </select>
+  </label>
+);
+
+const TextField = ({
+  id,
+  label,
+  onChange,
+  placeholder,
+  type,
+  value,
+}: {
+  id: string;
+  label: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type: string;
+  value: string;
+}): ReactElement => (
+  <label className="space-y-2">
+    <span className="block text-sm font-medium">{label}</span>
+    <input
+      className="w-full rounded border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+      id={id}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      required
+      type={type}
+      value={value}
+    />
+  </label>
+);
+
+const FormFields = ({
+  accountList,
+  formState,
+  onAccountChange,
+  onDateChange,
+  onDescriptionChange,
+  onTypeChange,
+  onValueChange,
+}: {
+  accountList: BankAccount[];
+  formState: FormState;
+  onAccountChange: (value: string) => void;
+  onDateChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
+  onTypeChange: (value: TransactionType) => void;
+  onValueChange: (value: string) => void;
+}): ReactElement => (
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <TextField
+      id="description"
+      label="Descrição"
+      onChange={onDescriptionChange}
+      placeholder="Ex: Supermercado"
+      type="text"
+      value={formState.description}
+    />
+    <TextField
+      id="amount"
+      label="Valor"
+      onChange={onValueChange}
+      placeholder="0.00"
+      type="number"
+      value={formState.amount}
+    />
+    <TypeSelect onChange={onTypeChange} selectedType={formState.type} />
+    <TextField id="date" label="Data" onChange={onDateChange} type="date" value={formState.date} />
+    <AccountSelect
+      accountId={formState.accountId}
+      accounts={accountList}
+      onChange={onAccountChange}
+    />
+  </div>
+);
+
+const TransactionFormLayout = ({
+  accountList,
+  formState,
+  isLoading,
+  onAccountChange,
+  onCancel,
+  onDateChange,
+  onDescriptionChange,
+  onSubmit,
+  onTypeChange,
+  onValueChange,
+}: {
+  accountList: BankAccount[];
+  formState: FormState;
+  isLoading: boolean;
+  onAccountChange: (value: string) => void;
+  onCancel: () => void;
+  onDateChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onTypeChange: (value: TransactionType) => void;
+  onValueChange: (value: string) => void;
+}): ReactElement => (
+  <section
+    aria-labelledby="transaction-form-title"
+    className="rounded-lg border border-primary/20 bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg"
+  >
+    <header className="mb-4 space-y-2">
+      <h2 className="text-lg font-semibold" id="transaction-form-title">
+        Nova Transação
+      </h2>
+      <p className="text-sm text-muted-foreground">Adicione uma nova transação ao seu histórico</p>
+    </header>
+    <form className="grid gap-4" noValidate onSubmit={onSubmit}>
+      <FormFields
+        accountList={accountList}
+        formState={formState}
+        onAccountChange={onAccountChange}
+        onDateChange={onDateChange}
+        onDescriptionChange={onDescriptionChange}
+        onTypeChange={onTypeChange}
+        onValueChange={onValueChange}
+      />
+      <FormActions isLoading={isLoading} onCancel={onCancel} />
+    </form>
+  </section>
+);
+
+const createSubmitHandler =
+  ({
+    accountList,
+    formState,
+    onSuccess,
+    setFormState,
+    setIsLoading,
+    submitTransaction,
+    updateBalance,
+  }: SubmitDeps) =>
+  async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    if (isLoading) return;
-
-    if (!amount || !date || !accountId || !type) {
-      toast.error('Preencha os campos obrigatórios');
+    const validation = validateForm(formState, accountList);
+    if ('error' in validation) {
+      toast.error(validation.error);
       return;
     }
-
-    const numericAmount = Number(amount);
-    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
-      toast.error('Valor inválido');
-      return;
-    }
-
-    const transactionDate = new Date(date);
-    if (Number.isNaN(transactionDate.getTime())) {
-      toast.error('Data inválida');
-      return;
-    }
-
-    const account = accountList.find((a) => a.id === accountId);
-    if (!account) {
-      toast.error('Conta bancária inválida');
-      return;
-    }
-
+    const { account, numericAmount, transactionDate } = validation;
     setIsLoading(true);
-
     try {
-      const finalAmount =
-        ['debit', 'pix', 'boleto', 'transfer'].includes(type) && numericAmount > 0
-          ? -Math.abs(numericAmount)
-          : Math.abs(numericAmount);
-
-      await createTransaction({
-        account_id: accountId,
+      const finalAmount = computeFinalAmount(formState.type, numericAmount);
+      await submitTransaction({
+        account_id: account.id,
         amount: finalAmount,
-        description,
-        transaction_date: transactionDate.toISOString(),
-        transaction_type: type,
-        status: 'posted',
+        description: formState.description,
         is_manual_entry: true,
+        status: 'posted',
+        transaction_date: transactionDate.toISOString(),
+        transaction_type: formState.type,
       });
-
       await updateBalance({
         balance: Number(account.balance ?? 0) + finalAmount,
-        id: accountId,
+        id: account.id,
       });
-
       toast.success('Transação criada com sucesso!');
       onSuccess?.();
-
-      setDescription('');
-      setAmount('');
-      setType('debit');
+      setFormState(initialState);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Erro ao criar transação: ${message}`);
+      if (error instanceof Error) {
+        const { message: errorMessage } = error;
+        toast.error(`Erro ao criar transação: ${errorMessage}`);
+      } else {
+        toast.error('Erro ao criar transação: Erro desconhecido');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+const TransactionForm = ({ onCancel, onSuccess }: TransactionFormProps): ReactElement => {
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const { accounts, updateBalance } = useBankAccounts();
+  const [formState, setFormState] = useState<FormState>(initialState);
+  const [isLoading, setIsLoading] = useState(false);
+  const accountList = accounts ?? [];
+
+  const updateField = <Key extends keyof FormState>(key: Key, value: FormState[Key]): void => {
+    setFormState((previous) => ({ ...previous, [key]: value }));
+  };
+
+  const handleSubmit = createSubmitHandler({
+    accountList,
+    formState,
+    onSuccess,
+    setFormState,
+    setIsLoading,
+    submitTransaction: createTransaction,
+    updateBalance,
+  });
+
+  const guardedSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    if (isLoading) {
+      return;
+    }
+    await handleSubmit(event);
+  };
+
   return (
-    <Card
-      className="border-primary/20 transition-all duration-300 hover:shadow-lg"
-      role="form"
-      aria-labelledby="transaction-form-title"
-    >
-      <CardHeader>
-        <CardTitle id="transaction-form-title">Nova Transação</CardTitle>
-        <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: Supermercado"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amount">Valor</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo</Label>
-              <Select value={type} onValueChange={(value) => setType(value as TransactionType)}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="debit">Débito</SelectItem>
-                  <SelectItem value="credit">Crédito</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="boleto">Boleto</SelectItem>
-                  <SelectItem value="transfer">Transferência</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="account">Conta Bancária</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger id="account">
-                  <SelectValue placeholder="Selecione a conta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountList.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.institution_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar'}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <TransactionFormLayout
+      accountList={accountList}
+      formState={formState}
+      isLoading={isLoading}
+      onAccountChange={(value) => updateField('accountId', value)}
+      onCancel={onCancel}
+      onDateChange={(value) => updateField('date', value)}
+      onDescriptionChange={(value) => updateField('description', value)}
+      onSubmit={guardedSubmit}
+      onTypeChange={(value) => updateField('type', value)}
+      onValueChange={(value) => updateField('amount', value)}
+    />
   );
-}
+};
+
+export default TransactionForm;

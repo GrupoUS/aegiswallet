@@ -5,6 +5,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { logger } from '@/lib/logging';
+import { SecurityEventType } from '@/types/server.types';
 import type { Context } from '../context';
 import {
   authRateLimit,

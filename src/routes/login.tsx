@@ -38,7 +38,7 @@ function LoginComponent() {
   };
 
   const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
+    await signInWithGoogle(redirectPath);
     // Navigation will be handled by AuthContext after successful sign in
   };
 

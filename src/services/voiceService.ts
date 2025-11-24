@@ -314,12 +314,11 @@ class VoiceService {
       utterance.volume = options?.volume ?? 1.0;
 
       utterance.onend = () => resolve();
-      utterance.onerror = (event: any) => {
-        const speechError = event as SpeechSynthesisErrorEvent;
-        reject(new Error(`Speech synthesis error: ${speechError.error}`));
+      utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+        reject(new Error(`Speech synthesis error: ${event.error}`));
       };
 
-      this.synthesis.speak(utterance as any);
+      this.synthesis.speak(utterance);
     });
   }
 

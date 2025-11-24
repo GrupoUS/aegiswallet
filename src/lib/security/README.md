@@ -45,7 +45,7 @@ This security system provides:
 bun install
 
 # Copy environment template
-cp .env.example .env.local
+cp env.example .env.local
 
 # Configure environment variables
 # See Configuration section below

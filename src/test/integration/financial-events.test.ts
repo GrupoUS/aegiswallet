@@ -48,37 +48,9 @@ describe('Financial Events Integration', () => {
     }
 
     const row = {
-      user_id: testUser.id,
-      title: sanitized.title,
-      description: sanitized.description || null,
-      amount: sanitized.amount,
-      start_date: sanitized.start.toISOString(),
-      end_date: (sanitized.end || sanitized.start).toISOString(),
-      event_type: sanitized.type,
-      is_income: sanitized.type === 'income',
-      category: (sanitized.category as string) || null,
-      location: sanitized.location || null,
-      is_recurring: sanitized.isRecurring || false,
-      all_day: sanitized.allDay || false,
-      status: sanitized.status || 'pending',
-      color: sanitized.color || 'blue',
-      priority: sanitized.priority || 'NORMAL',
-      recurrence_rule: sanitized.recurrenceRule || null,
-      parent_event_id: (sanitized as { parentEventId?: string }).parentEventId || null,
-      due_date: sanitized.dueDate ? sanitized.dueDate.toISOString().split('T')[0] : null,
-      completed_at: sanitized.completedAt ? sanitized.completedAt.toISOString() : null,
-      notes: sanitized.notes || null,
-      tags: sanitized.tags || null,
-      icon: sanitized.icon || null,
-      attachments: sanitized.attachments || null,
-      brazilian_event_type: sanitized.brazilianEventType || null,
-      installment_info: sanitized.installmentInfo
+      all_day: sanitized.allDay || false, amount: sanitized.amount, attachments: sanitized.attachments || null, brazilian_event_type: sanitized.brazilianEventType || null, category: (sanitized.category as string) || null, color: sanitized.color || 'blue', completed_at: sanitized.completedAt ? sanitized.completedAt.toISOString() : null, created_at: new Date().toISOString(), description: sanitized.description || null, due_date: sanitized.dueDate ? sanitized.dueDate.toISOString().split('T')[0] : null, end_date: (sanitized.end || sanitized.start).toISOString(), event_type: sanitized.type, icon: sanitized.icon || null, installment_info: sanitized.installmentInfo
         ? JSON.stringify(sanitized.installmentInfo)
-        : null,
-      metadata: sanitized.metadata ? JSON.stringify(sanitized.metadata) : null,
-      merchant_category: sanitized.metadata?.merchantCategory || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+        : null, is_income: sanitized.type === 'income', is_recurring: sanitized.isRecurring || false, location: sanitized.location || null, merchant_category: sanitized.metadata?.merchantCategory || null, metadata: sanitized.metadata ? JSON.stringify(sanitized.metadata) : null, notes: sanitized.notes || null, parent_event_id: (sanitized as { parentEventId?: string }).parentEventId || null, priority: sanitized.priority || 'NORMAL', recurrence_rule: sanitized.recurrenceRule || null, start_date: sanitized.start.toISOString(), status: sanitized.status || 'pending', tags: sanitized.tags || null, title: sanitized.title, updated_at: new Date().toISOString(), user_id: testUser.id,
     };
 
     const { data, error } = await supabase.from('financial_events').insert(row).select().single();
@@ -93,15 +65,7 @@ describe('Financial Events Integration', () => {
   it('cria um evento de receita e persiste todos os campos essenciais', async () => {
     const start = new Date('2025-01-05T12:00:00Z');
     const eventRow = await createEventRecord({
-      title: 'Salário Janeiro',
-      amount: 9500.5,
-      start,
-      end: new Date('2025-01-05T12:30:00Z'),
-      type: 'income',
-      status: 'paid',
-      category: 'RECEITA',
-      color: 'emerald',
-      allDay: false,
+      allDay: false, amount: 9500.5, category: 'RECEITA', color: 'emerald', end: new Date('2025-01-05T12:30:00Z'), start, status: 'paid', title: 'Salário Janeiro', type: 'income',
     });
 
     expect(eventRow.is_income).toBe(true);
@@ -112,14 +76,7 @@ describe('Financial Events Integration', () => {
 
   it('cria um evento de despesa e marca is_income como false', async () => {
     const eventRow = await createEventRecord({
-      title: 'Aluguel',
-      amount: -3200,
-      start: new Date('2025-01-01T08:00:00Z'),
-      end: new Date('2025-01-01T08:30:00Z'),
-      type: 'expense',
-      status: 'pending',
-      priority: 'ALTA',
-      notes: 'Vencimento dia 1',
+      amount: -3200, end: new Date('2025-01-01T08:30:00Z'), notes: 'Vencimento dia 1', priority: 'ALTA', start: new Date('2025-01-01T08:00:00Z'), status: 'pending', title: 'Aluguel', type: 'expense',
     });
 
     expect(eventRow.is_income).toBe(false);
@@ -129,12 +86,7 @@ describe('Financial Events Integration', () => {
 
   it('persiste o campo brazilian_event_type', async () => {
     const eventRow = await createEventRecord({
-      title: 'Pagamento 13º',
-      amount: 1500,
-      start: new Date('2025-01-10T15:00:00Z'),
-      end: new Date('2025-01-10T15:30:00Z'),
-      type: 'income',
-      brazilianEventType: 'DECIMO_TERCEIRO',
+      amount: 1500, brazilianEventType: 'DECIMO_TERCEIRO', end: new Date('2025-01-10T15:30:00Z'), start: new Date('2025-01-10T15:00:00Z'), title: 'Pagamento 13º', type: 'income',
     });
 
     expect(eventRow.brazilian_event_type).toBe('DECIMO_TERCEIRO');
@@ -142,18 +94,13 @@ describe('Financial Events Integration', () => {
 
   it('armazena installment_info corretamente em JSONB', async () => {
     const eventRow = await createEventRecord({
-      title: 'Compra parcelada',
-      amount: -900,
-      start: new Date('2025-02-01T12:00:00Z'),
-      end: new Date('2025-02-01T12:30:00Z'),
-      type: 'expense',
-      installmentInfo: {
+      amount: -900, end: new Date('2025-02-01T12:30:00Z'), installmentInfo: {
         totalInstallments: 6,
         currentInstallment: 1,
         installmentAmount: 150,
         remainingAmount: 750,
         nextInstallmentDate: new Date('2025-03-01T12:00:00Z').toISOString(),
-      },
+      }, start: new Date('2025-02-01T12:00:00Z'), title: 'Compra parcelada', type: 'expense',
     });
 
     expect(eventRow.installment_info).not.toBeNull();
@@ -166,16 +113,11 @@ describe('Financial Events Integration', () => {
 
   it('armazena metadata com merchantCategory', async () => {
     const eventRow = await createEventRecord({
-      title: 'Restaurante',
-      amount: -120.75,
-      start: new Date('2025-02-12T19:30:00Z'),
-      end: new Date('2025-02-12T20:30:00Z'),
-      type: 'expense',
-      metadata: {
+      amount: -120.75, end: new Date('2025-02-12T20:30:00Z'), metadata: {
         merchantCategory: 'RESTAURANTE',
         confidence: 0.92,
         dataSource: 'VOICE',
-      },
+      }, start: new Date('2025-02-12T19:30:00Z'), title: 'Restaurante', type: 'expense',
     });
 
     expect(eventRow.merchant_category).toBe('RESTAURANTE');
@@ -188,18 +130,11 @@ describe('Financial Events Integration', () => {
 
   it('atualiza campos avançados e atualiza updated_at', async () => {
     const created = await createEventRecord({
-      title: 'Conta de Luz',
-      amount: -230,
-      start: new Date('2025-01-20T10:00:00Z'),
-      end: new Date('2025-01-20T10:15:00Z'),
-      type: 'bill',
-      status: 'pending',
+      amount: -230, end: new Date('2025-01-20T10:15:00Z'), start: new Date('2025-01-20T10:00:00Z'), status: 'pending', title: 'Conta de Luz', type: 'bill',
     });
 
     const sanitized = sanitizeFinancialEventData({
-      dueDate: new Date('2025-01-25T03:00:00Z'),
-      status: 'paid',
-      metadata: { merchantCategory: 'LUZ', confidence: 0.8 },
+      dueDate: new Date('2025-01-25T03:00:00Z'), metadata: { merchantCategory: 'LUZ', confidence: 0.8 }, status: 'paid',
     });
     const validation = validateFinancialEventForUpdate(sanitized);
     expect(validation.valid).toBe(true);
@@ -207,10 +142,7 @@ describe('Financial Events Integration', () => {
     const { data, error } = await supabase
       .from('financial_events')
       .update({
-        due_date: sanitized.dueDate ? sanitized.dueDate.toISOString().split('T')[0] : null,
-        status: sanitized.status,
-        metadata: sanitized.metadata ? JSON.stringify(sanitized.metadata) : null,
-        merchant_category: sanitized.metadata?.merchantCategory || null,
+        due_date: sanitized.dueDate ? sanitized.dueDate.toISOString().split('T')[0] : null, merchant_category: sanitized.metadata?.merchantCategory || null, metadata: sanitized.metadata ? JSON.stringify(sanitized.metadata) : null, status: sanitized.status,
       })
       .eq('id', created.id)
       .select()
@@ -226,11 +158,7 @@ describe('Financial Events Integration', () => {
 
   it('exclui um evento financeiro e garante remoção', async () => {
     const created = await createEventRecord({
-      title: 'Evento temporário',
-      amount: -50,
-      start: new Date('2025-04-01T09:00:00Z'),
-      end: new Date('2025-04-01T09:30:00Z'),
-      type: 'expense',
+      amount: -50, end: new Date('2025-04-01T09:30:00Z'), start: new Date('2025-04-01T09:00:00Z'), title: 'Evento temporário', type: 'expense',
     });
 
     const { error } = await supabase.from('financial_events').delete().eq('id', created.id);
@@ -254,12 +182,7 @@ describe('Financial Events Integration', () => {
 
   it('reprova eventos com data final anterior à inicial', () => {
     const sanitized = sanitizeFinancialEventData({
-      title: 'Evento inválido',
-      amount: 100,
-      start: new Date('2025-05-10T10:00:00Z'),
-      end: new Date('2025-05-09T10:00:00Z'),
-      type: 'income',
-      userId: testUser.id,
+      amount: 100, end: new Date('2025-05-09T10:00:00Z'), start: new Date('2025-05-10T10:00:00Z'), title: 'Evento inválido', type: 'income', userId: testUser.id,
     });
     const validation = validateFinancialEventForInsert(sanitized);
     expect(validation.valid).toBe(false);
@@ -274,11 +197,7 @@ describe('Financial Events Integration', () => {
     ];
     for (const date of dates) {
       await createEventRecord({
-        title: `Evento ${date.toISOString()}`,
-        amount: -100,
-        start: date,
-        end: new Date(date.getTime() + 15 * 60 * 1000),
-        type: 'expense',
+        amount: -100, end: new Date(date.getTime() + 15 * 60 * 1000), start: date, title: `Evento ${date.toISOString()}`, type: 'expense',
       });
     }
 
@@ -295,20 +214,10 @@ describe('Financial Events Integration', () => {
 
   it('filtra eventos por status', async () => {
     await createEventRecord({
-      title: 'Conta paga',
-      amount: -80,
-      start: new Date('2025-07-05T08:00:00Z'),
-      end: new Date('2025-07-05T08:15:00Z'),
-      type: 'bill',
-      status: 'paid',
+      amount: -80, end: new Date('2025-07-05T08:15:00Z'), start: new Date('2025-07-05T08:00:00Z'), status: 'paid', title: 'Conta paga', type: 'bill',
     });
     await createEventRecord({
-      title: 'Conta pendente',
-      amount: -60,
-      start: new Date('2025-07-06T08:00:00Z'),
-      end: new Date('2025-07-06T08:15:00Z'),
-      type: 'bill',
-      status: 'pending',
+      amount: -60, end: new Date('2025-07-06T08:15:00Z'), start: new Date('2025-07-06T08:00:00Z'), status: 'pending', title: 'Conta pendente', type: 'bill',
     });
 
     const { data, error } = await supabase

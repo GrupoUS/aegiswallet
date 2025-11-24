@@ -11,8 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
-import type { ExtractedEntity, NLUResult } from '@/lib/nlu/types';
-import { EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
+import type { ExtractedEntity, NLUResult, ConversationContext, RecoveryContext } from '@/lib/nlu/contextProcessor';
+import type { NLUEntity, PatternEvolution, UserAdaptation } from '@/lib/nlu/types';
+import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
 
 // ============================================================================
 // Error Recovery Configuration
@@ -1070,28 +1071,29 @@ export class ErrorRecoverySystem {
     strategy.successRate += learningRate * (targetValue - strategy.successRate);
   }
 
-  private storeLearningData(
-    context: RecoveryContext,
-    _errorClassification: ErrorClassification,
-    _strategy: RecoveryStrategy,
-    result: RecoveryResult
-  ): void {
-    const learningData: LearningData = {
-      confidenceImprovement: result.confidenceImprovement,
-      correctionApplied: result.correctedIntent || result.appliedStrategy,
-      errorPattern: context.originalText,
-      linguisticStyle: context.brazilianContext.linguisticStyle,
-      regionalVariation: context.brazilianContext.region,
-      success: result.success,
-      timestamp: new Date(),
-      userId: context.userId,
-    };
+  // TODO: Implement nlu_learning_data table in database with proper schema
+  // Schema should include: learning_id (UUID), user_id (UUID), original_text (text), error_pattern (text),
+  // correction_applied (text), success (boolean), confidence_improvement (number), original_confidence (number),
+  // timestamp (timestamp), linguistic_style (text), regional_variation (text), user_feedback (text)
+  private async persistLearningData(learningData: LearningData): Promise<void> {
+    try {
+      const { error } = await supabase.from('nlu_learning_data').insert({
+        confidence_improvement: learningData.confidenceImprovement,
+        correction_applied: learningData.correctionApplied,
+        error_pattern: learningData.errorPattern,
+        linguistic_style: learningData.linguisticStyle,
+        regional_variation: learningData.regionalVariation,
+        success: learningData.success,
+        timestamp: learningData.timestamp.toISOString(),
+        user_id: learningData.userId,
+        user_feedback: learningData.userFeedback,
+      });
 
-    this.learningData.push(learningData);
-
-    // Keep only recent learning data
-    if (this.learningData.length > 5000) {
-      this.learningData = this.learningData.slice(-4000);
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      logger.error('Failed to persist learning data', { error });
     }
   }
 
@@ -1111,23 +1113,12 @@ export class ErrorRecoverySystem {
     });
   }
 
+  // TODO: Implement nlu_learning_data table in database
   private async persistLearningData(learningData: LearningData): Promise<void> {
     try {
-      const { error } = await supabase.from('nlu_learning_data').insert({
-        confidence_improvement: learningData.confidenceImprovement,
-        correction_applied: learningData.correctionApplied,
-        error_pattern: learningData.errorPattern,
-        linguistic_style: learningData.linguisticStyle,
-        regional_variation: learningData.regionalVariation,
-        success: learningData.success,
-        timestamp: learningData.timestamp.toISOString(),
-        user_feedback: learningData.userFeedback,
-        user_id: learningData.userId,
-      });
-
-      if (error) {
-        throw error;
-      }
+      // Temporarily store learning data locally until database table is created
+      // TODO: Replace with database insert when nlu_learning_data table is implemented
+      console.log('Learning data persistence disabled - nlu_learning_data table not implemented', learningData);
     } catch (error) {
       logger.error('Failed to persist learning data', { error });
     }

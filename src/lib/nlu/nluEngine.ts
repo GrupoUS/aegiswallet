@@ -22,6 +22,7 @@ import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
 import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';
 import { createTextNormalizer } from '@/lib/nlu/textNormalizer';
 import type {
+  IntentClassificationResult,
   NLUConfig,
   NLUEntity,
   NLUResult,
@@ -29,7 +30,7 @@ import type {
   UserAdaptation,
 } from '@/lib/nlu/types';
 import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
-import type { NLUIntent } from '@/types/nlu.types';
+import { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 
 // ============================================================================
 // Default Configuration
@@ -459,7 +460,7 @@ export class NLUEngine {
    */
   private extractLearningSignals(
     _text: string,
-    classification: NLUIntent
+    classification: IntentClassificationResult
   ): {
     patternNovelty: number;
     confidenceTrend: string;
@@ -476,7 +477,10 @@ export class NLUEngine {
   /**
    * Boost confidence for essential intents based on deterministic signals
    */
-  private enhanceClassificationConfidence(text: string, classification: NLUIntent): NLUIntent {
+  private enhanceClassificationConfidence(
+    text: string,
+    classification: IntentClassificationResult
+  ): IntentClassificationResult {
     const definition = INTENT_DEFINITIONS[classification.intent];
     if (!definition) {
       return classification;
@@ -497,23 +501,25 @@ export class NLUEngine {
     const requiredConfidence = Math.max(definition.confidence_threshold ?? 0.7, 0.7);
 
     let boostedConfidence = classification.confidence;
+    let method = classification.method;
 
     if (patternMatched) {
       boostedConfidence = Math.max(boostedConfidence, Math.min(0.95, requiredConfidence + 0.2));
-      classification = { ...classification, method: classification.method ?? 'pattern' };
+      method = 'pattern';
     } else if (keywordMatches.length >= 2) {
       boostedConfidence = Math.max(boostedConfidence, Math.min(0.9, requiredConfidence + 0.15));
     } else if (keywordMatches.length === 1) {
       boostedConfidence = Math.max(boostedConfidence, requiredConfidence);
     }
 
-    if (boostedConfidence === classification.confidence) {
+    if (boostedConfidence === classification.confidence && method === classification.method) {
       return classification;
     }
 
     return {
       ...classification,
       confidence: boostedConfidence,
+      method: method ?? classification.method,
     };
   }
 

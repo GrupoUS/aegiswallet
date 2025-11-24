@@ -1,12 +1,12 @@
 # AegisWallet Quality Control Error Catalog
-**Generated**: 2025-11-11T03:12:44Z  
+**Generated**: 2025-11-11T03:12:44Z
 **Status**: CRITICAL ISSUES IDENTIFIED
 
 ## Executive Summary
 
-**CRITICAL FINDINGS**: 
+**CRITICAL FINDINGS**:
 - **TypeScript**: 200+ compilation errors (strict mode violations)
-- **Linting**: 76 errors, 37 warnings (Biome/OXLint)  
+- **Linting**: 76 errors, 37 warnings (Biome/OXLint)
 - **Testing**: 68 failed tests, 314 passed, 4 skipped
 - **Component Exports**: Multiple missing UI components
 - **Test Framework**: React.act function not found, missing @types/jsdom
@@ -20,9 +20,9 @@
    - **Impact**: Complete build failure
    - **Root Cause**: Database schema mismatches, type safety violations
    - **Healthcare Impact**: Financial data integrity compromised
-   
-2. **Database Schema Mismatches** 
-   - **Files**: `src/server/routers/pix.ts`, `src/server/routers/transactions.ts`
+
+2. **Database Schema Mismatches**
+   - **Files**: `src/server/routers/pix.ts`, `src/server/routers/consolidated/transactions.ts`
    - **Impact**: API failures, data inconsistency
    - **Tables Missing**: `pix_transactions`, `pix_qr_codes`, `financial_events` schema mismatches
    - **LGPD Compliance**: Data processing violations possible
@@ -48,7 +48,7 @@
    - **Impact**: Authentication bypasses possible
    - **Root Cause**: Private method accessibility issues
 
-### MEDIUM (P2) - Performance & Maintainability  
+### MEDIUM (P2) - Performance & Maintainability
 1. **CSS Class Ordering Issues** (76+ fixable errors)
    - **Files**: Multiple UI components, voice response components
    - **Impact**: Performance degradation, maintainability issues
@@ -79,7 +79,7 @@
 ### LGPD (Lei Geral de Proteção de Dados)
 **CRITICAL VIOLATIONS IDENTIFIED**:
 - ❌ Missing data retention policies in test suite
-- ❌ Incomplete consent mechanism validation  
+- ❌ Incomplete consent mechanism validation
 - ❌ Audit trail gaps in financial transaction handling
 - ❌ No data minimization principle enforcement
 
@@ -109,7 +109,7 @@
 2. **Repair React testing**: Install @types/jsdom, fix imports
 3. **Database schema sync**: Add missing tables, fix type mismatches
 
-### SHORT-TERM (Within 1 week)  
+### SHORT-TERM (Within 1 week)
 1. **LGPD compliance audit**: Data handling, retention, consent
 2. **Component export fixes**: Missing UI components
 3. **CSS class ordering**: Auto-fix with Biome
@@ -139,7 +139,7 @@
 ## Quality Metrics Baseline
 - **Code Quality**: 0/10 (Multiple critical violations)
 - **Test Coverage**: 314/382 passing (82% basic, but critical failures)
-- **Type Safety**: 0/10 (200+ compilation errors)  
+- **Type Safety**: 0/10 (200+ compilation errors)
 - **Security**: 2/10 (Major LGPD and authentication issues)
 - **Performance**: 4/10 (Bundle and runtime issues)
 - **Accessibility**: 3/10 (Missing ARIA, semantic issues)

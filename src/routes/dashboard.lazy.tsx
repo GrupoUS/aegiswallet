@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { Suspense, lazy, useEffect, useMemo } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

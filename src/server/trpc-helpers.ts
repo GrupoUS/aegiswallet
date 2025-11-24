@@ -1,4 +1,4 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from '@/server/context';
 import { generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
@@ -24,3 +24,5 @@ export const protectedProcedure = t.procedure.use(generalApiRateLimit).use(({ ct
     },
   });
 });
+
+export { t };

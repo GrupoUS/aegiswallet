@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -479,6 +479,7 @@ export type Database = {
           is_active: boolean | null
           last_used_at: string | null
           model_version: string | null
+          pattern_hash: string | null
           pattern_data: Json
           updated_at: string | null
           user_id: string
@@ -492,6 +493,7 @@ export type Database = {
           is_active?: boolean | null
           last_used_at?: string | null
           model_version?: string | null
+          pattern_hash?: string | null
           pattern_data: Json
           updated_at?: string | null
           user_id: string
@@ -505,6 +507,7 @@ export type Database = {
           is_active?: boolean | null
           last_used_at?: string | null
           model_version?: string | null
+          pattern_hash?: string | null
           pattern_data?: Json
           updated_at?: string | null
           user_id?: string
@@ -1065,6 +1068,65 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      fraud_detection_logs: {
+        Row: {
+          created_at: string | null
+          detected_anomalies: Json | null
+          device_fingerprint: string | null
+          event_type: string | null
+          id: string
+          ip_address: string | null
+          location: Json | null
+          metadata: Json | null
+          requires_review: boolean | null
+          risk_level: string | null
+          risk_score: number | null
+          should_block: boolean | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detected_anomalies?: Json | null
+          device_fingerprint?: string | null
+          event_type?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: Json | null
+          metadata?: Json | null
+          requires_review?: boolean | null
+          risk_level?: string | null
+          risk_score?: number | null
+          should_block?: boolean | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detected_anomalies?: Json | null
+          device_fingerprint?: string | null
+          event_type?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: Json | null
+          metadata?: Json | null
+          requires_review?: boolean | null
+          risk_level?: string | null
+          risk_score?: number | null
+          should_block?: boolean | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_detection_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       google_calendar_tokens: {
         Row: {
@@ -1753,6 +1815,38 @@ export type Database = {
           },
         ]
       }
+      user_behavior_profiles: {
+        Row: {
+          known_devices: Json | null
+          known_locations: Json | null
+          last_updated: string | null
+          typical_behavior: Json | null
+          user_id: string
+        }
+        Insert: {
+          known_devices?: Json | null
+          known_locations?: Json | null
+          last_updated?: string | null
+          typical_behavior?: Json | null
+          user_id: string
+        }
+        Update: {
+          known_devices?: Json | null
+          known_locations?: Json | null
+          last_updated?: string | null
+          typical_behavior?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_behavior_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_alerts: {
         Row: {
           alert_type: string
@@ -2079,6 +2173,38 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          session_token: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          session_token?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          session_token?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_security_preferences: {
         Row: {
           created_at: string | null
@@ -2293,10 +2419,12 @@ export type Database = {
           file_size: number | null
           format: string | null
           id: string
+          metadata: Json | null
           processed: boolean | null
           retention_expires_at: string | null
           sample_rate: number | null
           session_id: string | null
+          transcription_anonymized: boolean | null
           transcription_id: string | null
           user_id: string
         }
@@ -2309,10 +2437,12 @@ export type Database = {
           file_size?: number | null
           format?: string | null
           id?: string
+          metadata?: Json | null
           processed?: boolean | null
           retention_expires_at?: string | null
           sample_rate?: number | null
           session_id?: string | null
+          transcription_anonymized?: boolean | null
           transcription_id?: string | null
           user_id: string
         }
@@ -2325,10 +2455,12 @@ export type Database = {
           file_size?: number | null
           format?: string | null
           id?: string
+          metadata?: Json | null
           processed?: boolean | null
           retention_expires_at?: string | null
           sample_rate?: number | null
           session_id?: string | null
+          transcription_anonymized?: boolean | null
           transcription_id?: string | null
           user_id?: string
         }

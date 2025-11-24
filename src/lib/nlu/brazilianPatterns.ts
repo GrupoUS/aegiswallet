@@ -111,7 +111,7 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
     },
     pattern: /R?\$\s*(\d+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s*(reais|r\$|real|reis)/gi,
     type: EntityType.AMOUNT,
-    validator: (value: number) => value > 0 && value <= 1000000,
+    validator: (value: unknown) => typeof value === 'number' && value > 0 && value <= 1000000,
   },
 
   // Brazilian bill types

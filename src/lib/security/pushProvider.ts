@@ -7,6 +7,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+interface JsonObject { [key: string]: JsonValue }
+
 export interface PushConfig {
   vapidPublicKey: string;
   vapidPrivateKey: string;
@@ -16,7 +19,7 @@ export interface PushConfig {
   urgency: 'very-low' | 'low' | 'normal' | 'high';
 }
 
-export interface PushSubscription {
+interface StoredPushSubscription {
   endpoint: string;
   keys: {
     p256dh: string;
@@ -65,7 +68,7 @@ export interface AuthPushRequest {
  */
 export class PushProvider {
   private config: PushConfig;
-  private subscriptions: Map<string, PushSubscription> = new Map();
+  private subscriptions: Map<string, StoredPushSubscription> = new Map();
 
   constructor(config: PushConfig) {
     this.config = config;
@@ -76,12 +79,12 @@ export class PushProvider {
    * Initialize service worker for push notifications
    */
   private async initializeServiceWorker(): Promise<void> {
-    if (!('serviceWorker' in navigator)) {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       return;
     }
 
     try {
-      const _registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.register('/sw.js');
     } catch (_error) {}
   }
 
@@ -102,29 +105,45 @@ export class PushProvider {
   /**
    * Subscribe to push notifications
    */
-  async subscribe(userId: string): Promise<PushSubscription | null> {
-    if (!('serviceWorker' in navigator)) {
+  async subscribe(userId: string): Promise<StoredPushSubscription | null> {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       throw new Error('Service Worker not supported');
     }
     const registration = await navigator.serviceWorker.ready;
+    const serverKey = this.base64UrlToUint8Array(this.config.vapidPublicKey);
+    const normalizedServerKey =
+      serverKey.buffer instanceof ArrayBuffer ? serverKey.buffer : serverKey.slice().buffer;
     const subscription = await registration.pushManager.subscribe({
-      applicationServerKey: this.base64UrlToUint8Array(this.config.vapidPublicKey),
+      applicationServerKey: normalizedServerKey,
       userVisibleOnly: true,
     });
 
+    const subscriptionJson = subscription.toJSON();
+    if (!subscriptionJson.keys?.auth || !subscriptionJson.keys?.p256dh) {
+      throw new Error('Push subscription keys are missing');
+    }
+
     // Store subscription in database
     await supabase.from('push_subscriptions').upsert({
-      auth_key: subscription.keys.auth,
+      auth_key: subscriptionJson.keys.auth,
       created_at: new Date().toISOString(),
       endpoint: subscription.endpoint,
       is_active: true,
-      p256dh_key: subscription.keys.p256dh,
+      p256dh_key: subscriptionJson.keys.p256dh,
       updated_at: new Date().toISOString(),
       user_id: userId,
     });
 
-    this.subscriptions.set(userId, subscription);
-    return subscription;
+    const stored: StoredPushSubscription = {
+      endpoint: subscription.endpoint,
+      keys: {
+        auth: subscriptionJson.keys.auth,
+        p256dh: subscriptionJson.keys.p256dh,
+      },
+    };
+
+    this.subscriptions.set(userId, stored);
+    return stored;
   }
 
   /**
@@ -132,11 +151,7 @@ export class PushProvider {
    */
   async unsubscribe(userId: string): Promise<boolean> {
     try {
-      const subscription = this.subscriptions.get(userId);
-      if (subscription) {
-        await subscription.unsubscribe();
         this.subscriptions.delete(userId);
-      }
 
       // Deactivate in database
       await supabase.from('push_subscriptions').update({ is_active: false }).eq('user_id', userId);
@@ -150,10 +165,10 @@ export class PushProvider {
   /**
    * Get user's subscription
    */
-  async getUserSubscription(userId: string): Promise<PushSubscription | null> {
+  async getUserSubscription(userId: string): Promise<StoredPushSubscription | null> {
     // Check in-memory cache first
     if (this.subscriptions.has(userId)) {
-      return this.subscriptions.get(userId) as PushSubscription;
+      return this.subscriptions.get(userId) as StoredPushSubscription;
     }
 
     // Fetch from database
@@ -165,7 +180,7 @@ export class PushProvider {
       .single();
 
     if (data) {
-      const subscription: PushSubscription = {
+      const subscription: StoredPushSubscription = {
         endpoint: data.endpoint,
         keys: {
           auth: data.auth_key,
@@ -195,13 +210,15 @@ export class PushProvider {
         };
       }
 
+      const sanitizedData = this.sanitizeData(message.data) ?? {};
+
       // Prepare payload
       const payload = JSON.stringify({
         actions: message.actions,
         badge: message.badge || '/badge-72x72.png',
         body: message.body,
         data: {
-          ...message.data,
+          ...sanitizedData,
           url: message.url || '/',
           timestamp: Date.now(),
         },
@@ -274,9 +291,11 @@ export class PushProvider {
     error?: string
   ): Promise<void> {
     try {
+      const serializedData = this.sanitizeData(message.data);
+
       await supabase.from('push_logs').insert({
         created_at: new Date().toISOString(),
-        data: message.data,
+        data: serializedData,
         error,
         message_body: message.body,
         message_id: messageId,
@@ -386,6 +405,56 @@ export class PushProvider {
         'delivered'
       );
     } catch (_error) {}
+  }
+
+  private sanitizeData(data?: Record<string, unknown>): JsonObject | null {
+    if (!data) {
+      return null;
+    }
+
+    const result: JsonObject = {};
+    for (const [key, value] of Object.entries(data)) {
+      const jsonValue = this.toJsonValue(value);
+      if (jsonValue !== undefined) {
+        result[key] = jsonValue;
+      }
+    }
+    return result;
+  }
+
+  private toJsonValue(value: unknown): JsonValue | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (
+      value === null ||
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      const arrayValues = value
+        .map((item) => this.toJsonValue(item))
+        .filter((item): item is JsonValue => item !== undefined);
+      return arrayValues;
+    }
+
+    if (typeof value === 'object') {
+      const record: JsonObject = {};
+      for (const [nestedKey, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+        const jsonValue = this.toJsonValue(nestedValue);
+        if (jsonValue !== undefined) {
+          record[nestedKey] = jsonValue;
+        }
+      }
+      return record;
+    }
+
+    return String(value);
   }
 
   /**

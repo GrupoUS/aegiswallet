@@ -129,7 +129,7 @@ Object.defineProperty(global, 'localStorage', {
 ensureTestUtils();
 let domReady = false;
 const ensureDom = async () => {
-  if (domReady) return;
+  if (domReady) {return;}
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     const { JSDOM } = await import('jsdom');
     const dom = new JSDOM('<!doctype html><html><body></body></html>');

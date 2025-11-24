@@ -297,6 +297,7 @@ export class ContextProcessor {
       question: string;
       contextualRationale: string;
       confidenceAdjustment: number;
+      confidence: number;
     }[];
     recommendedNextAction: string;
   }> {
@@ -321,6 +322,7 @@ export class ContextProcessor {
         );
 
         return {
+          confidence: option.confidence,
           confidenceAdjustment,
           contextualRationale,
           intent: option.intent,
@@ -350,6 +352,7 @@ export class ContextProcessor {
       return {
         recommendedNextAction: 'Por favor, clarifique sua intenção',
         suggestions: possibleIntents.map((option) => ({
+          confidence: option.confidence,
           confidenceAdjustment: 0,
           contextualRationale: 'Baseado no texto fornecido',
           intent: option.intent,
@@ -436,20 +439,21 @@ export class ContextProcessor {
     const contextKey = `${userId}_${sessionId}`;
     let context = this.activeContexts.get(contextKey);
 
-    if (!context || this.isContextExpired(context)) {
-      // Try to load from persistence
-      if (this.config.persistenceEnabled) {
-        context = await this.loadContextFromPersistence(userId, sessionId);
+      if (!context || this.isContextExpired(context)) {
+        // Try to load from persistence
+        if (this.config.persistenceEnabled) {
+          const loadedContext = await this.loadContextFromPersistence(userId, sessionId);
+          context = loadedContext ?? undefined;
+        }
+
+        if (!context) {
+          context = this.createNewContext(userId, sessionId);
+        }
+
+        this.activeContexts.set(contextKey, context);
       }
 
-      if (!context) {
-        context = this.createNewContext(userId, sessionId);
-      }
-
-      this.activeContexts.set(contextKey, context);
-    }
-
-    return context;
+      return context;
   }
 
   private createNewContext(userId: string, sessionId: string): ConversationContext {
@@ -999,13 +1003,15 @@ export class ContextProcessor {
         });
       }
 
-      const transactionsList = transactionData ?? [];
+      const transactionsList: TransactionEntity[] = (transactionData ?? []).map((t) => ({
+        amount: Number(t.amount) || 0, category: t.category || '', created_at: t.created_at || new Date().toISOString(), date: t.transaction_date || t.created_at || new Date().toISOString(), description: t.description || '', id: t.id, type: (t.transaction_type === 'income' ? 'income' : 'expense') as 'income' | 'expense', user_id: t.user_id,
+      }));
 
       // Build financial context from data
       const financialContext: FinancialContext = {
         accountSummary: {
           availableBalance: accountData?.available_balance || 0,
-          pendingTransactions: transactionsList.filter((t) => t.status === 'pending').length || 0,
+          pendingTransactions: transactionsList.filter((t) => t.type === 'expense').length || 0,
           scheduledPayments: 0,
           totalBalance: accountData?.balance || 0, // TODO: Load from scheduled payments table
         },
@@ -1192,13 +1198,14 @@ export class ContextProcessor {
   }
 
   private generateDisambiguationQuestion(intent: IntentType, rationale: string): string {
-    const questions = {
+    const questions: Record<IntentType, string> = {
       [IntentType.CHECK_BALANCE]: `Você quer verificar seu saldo? ${rationale}`,
       [IntentType.PAY_BILL]: `Você quer pagar uma conta? ${rationale}`,
       [IntentType.TRANSFER_MONEY]: `Você quer fazer uma transferência? ${rationale}`,
       [IntentType.CHECK_BUDGET]: `Você quer analisar seu orçamento? ${rationale}`,
       [IntentType.CHECK_INCOME]: `Você quer consultar seus rendimentos? ${rationale}`,
       [IntentType.FINANCIAL_PROJECTION]: `Você quer ver uma projeção financeira? ${rationale}`,
+      [IntentType.UNKNOWN]: `Você quis dizer ${this.getIntentDescription(intent)}?`,
     };
 
     return questions[intent] || `Você quis dizer ${this.getIntentDescription(intent)}?`;
@@ -1222,13 +1229,14 @@ export class ContextProcessor {
   }
 
   private getIntentDescription(intent: IntentType): string {
-    const descriptions = {
+    const descriptions: Record<IntentType, string> = {
       [IntentType.CHECK_BALANCE]: 'verificar saldo',
       [IntentType.PAY_BILL]: 'pagar conta',
       [IntentType.TRANSFER_MONEY]: 'transferir dinheiro',
       [IntentType.CHECK_BUDGET]: 'analisar orçamento',
       [IntentType.CHECK_INCOME]: 'consultar rendimentos',
       [IntentType.FINANCIAL_PROJECTION]: 'ver projeção financeira',
+      [IntentType.UNKNOWN]: 'comando desconhecido',
     };
 
     return descriptions[intent] || 'comando financeiro';
@@ -1463,6 +1471,7 @@ export class ContextProcessor {
     }
   }
 
+  // TODO: Implement conversation_contexts table in database
   private async loadContextFromPersistence(
     userId: string,
     sessionId: string
@@ -1488,7 +1497,7 @@ export class ContextProcessor {
         userId: data.user_id,
       };
     } catch (error) {
-      logger.error('Failed to load context from persistence', { error });
+      logger.error('Failed to load conversation context from persistence', { error });
       return null;
     }
   }
@@ -1507,4 +1516,3 @@ export function createContextProcessor(config?: Partial<ContextConfig>): Context
 // ============================================================================
 
 export { DEFAULT_CONTEXT_CONFIG };
-export type { ContextConfig, UserPreferences, FinancialContext, BrazilianContext };

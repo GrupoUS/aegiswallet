@@ -1,5 +1,5 @@
 // Satisfies: Section 3: tRPC Integration Testing of .claude/skills/webapp-testing/SKILL.md
-import { setupServer } from 'msw/node';
+import { setupServer } from 'msw-trpc/node';
 import { createTRPCMsw } from 'msw-trpc';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppRouter } from '@/server/router';

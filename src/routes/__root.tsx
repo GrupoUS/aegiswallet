@@ -1,5 +1,5 @@
 import type { ErrorComponentProps } from '@tanstack/react-router';
-import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
+import { Outlet, createRootRoute, useLocation, useNavigate } from '@tanstack/react-router';
 import { Building, Calendar, FileText, Home, LogOut, Mic, Wallet } from 'lucide-react';
 import { useState } from 'react';
 

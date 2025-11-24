@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-export type TestUtils = {
+export interface TestUtils {
   checkMockRateLimit: ReturnType<typeof vi.fn>;
   createMockAuditLog: ReturnType<typeof vi.fn>;
   encryptMockClientData: ReturnType<typeof vi.fn>;
@@ -10,11 +10,11 @@ export type TestUtils = {
   validateMockAuthentication: ReturnType<typeof vi.fn>;
   validateMockCSRFToken: ReturnType<typeof vi.fn>;
   validateMockInput: ReturnType<typeof vi.fn>;
-};
+}
 
 export const ensureTestUtils = (): TestUtils => {
   const existing = (global as Record<string, unknown>).testUtils as TestUtils | undefined;
-  if (existing) return existing;
+  if (existing) {return existing;}
 
   const testUtils: TestUtils = {
     checkMockRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 9 }),

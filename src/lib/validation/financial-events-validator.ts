@@ -79,7 +79,7 @@ export interface SanitizedFinancialEvent extends Record<string, unknown> {
 }
 
 const ensureDate = (value?: Date | string | null): Date | undefined => {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? undefined : value;
   }
@@ -89,13 +89,10 @@ const ensureDate = (value?: Date | string | null): Date | undefined => {
 };
 
 const sanitizeInstallmentInfo = (info?: InstallmentInfo | null): InstallmentInfo | undefined => {
-  if (!info) return undefined;
+  if (!info) {return undefined;}
 
   const sanitized: InstallmentInfo = {
-    totalInstallments: Number(info.totalInstallments ?? 0),
-    currentInstallment: Number(info.currentInstallment ?? 0),
-    installmentAmount: Number(info.installmentAmount ?? 0),
-    remainingAmount: Number(info.remainingAmount ?? 0),
+    currentInstallment: Number(info.currentInstallment ?? 0), installmentAmount: Number(info.installmentAmount ?? 0), remainingAmount: Number(info.remainingAmount ?? 0), totalInstallments: Number(info.totalInstallments ?? 0),
   };
 
   if (info.nextInstallmentDate) {
@@ -111,7 +108,7 @@ const sanitizeInstallmentInfo = (info?: InstallmentInfo | null): InstallmentInfo
 const sanitizeMetadata = (
   metadata?: FinancialEventMetadata | null
 ): FinancialEventMetadata | undefined => {
-  if (!metadata) return undefined;
+  if (!metadata) {return undefined;}
   const sanitized: FinancialEventMetadata = { ...metadata };
 
   if (
@@ -132,42 +129,23 @@ const sanitizeMetadata = (
 };
 
 const baseEventSchema = z.object({
-  userId: z.string().optional(),
-  title: z.string().min(1, 'Título é obrigatório.').optional(),
-  amount: z.number().finite('Valor inválido.').optional(),
-  start: z.date().optional(),
-  end: z.date().optional(),
-  type: z.enum(EVENT_TYPES).optional(),
-  status: z.enum(EVENT_STATUSES).optional(),
-  priority: z.enum(PRIORITIES).optional(),
-  dueDate: z.date().optional(),
-  completedAt: z.date().optional(),
-  tags: z.array(z.string()).optional(),
-  notes: z.string().optional(),
-  icon: z.string().optional(),
-  color: z.string().optional(),
-  category: z.string().optional(),
-  location: z.string().optional(),
-  recurrenceRule: z.string().optional(),
-  metadata: z.any().optional(),
-  installmentInfo: z.any().optional(),
-  brazilianEventType: z.string().optional(),
+  amount: z.number().finite('Valor inválido.').optional(), brazilianEventType: z.string().optional(), category: z.string().optional(), color: z.string().optional(), completedAt: z.date().optional(), dueDate: z.date().optional(), end: z.date().optional(), icon: z.string().optional(), installmentInfo: z.any().optional(), location: z.string().optional(), metadata: z.any().optional(), notes: z.string().optional(), priority: z.enum(PRIORITIES).optional(), recurrenceRule: z.string().optional(), start: z.date().optional(), status: z.enum(EVENT_STATUSES).optional(), tags: z.array(z.string()).optional(), title: z.string().min(1, 'Título é obrigatório.').optional(), type: z.enum(EVENT_TYPES).optional(), userId: z.string().optional(),
 });
 
 const normalizeBrazilianEventType = (value?: string | null) => {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const normalized = value.trim().toUpperCase() as BrazilianEventType;
   return BRAZILIAN_EVENT_TYPES.includes(normalized) ? normalized : undefined;
 };
 
 const normalizePriority = (value?: string) => {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const normalized = value.trim().toUpperCase();
   return PRIORITIES.includes(normalized as (typeof PRIORITIES)[number]) ? normalized : undefined;
 };
 
 const normalizeStatus = (value?: string) => {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const normalized = value.trim().toLowerCase();
   return EVENT_STATUSES.includes(normalized as (typeof EVENT_STATUSES)[number])
     ? (normalized as (typeof EVENT_STATUSES)[number])
@@ -175,7 +153,7 @@ const normalizeStatus = (value?: string) => {
 };
 
 const normalizeType = (value?: string) => {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const normalized = value.trim().toLowerCase();
   return EVENT_TYPES.includes(normalized as (typeof EVENT_TYPES)[number])
     ? (normalized as (typeof EVENT_TYPES)[number])
@@ -183,7 +161,7 @@ const normalizeType = (value?: string) => {
 };
 
 const sanitizeTags = (tags?: string[] | null) => {
-  if (!tags || !Array.isArray(tags)) return undefined;
+  if (!tags || !Array.isArray(tags)) {return undefined;}
   const sanitized = tags.map((tag) => tag?.trim()).filter((tag): tag is string => Boolean(tag));
 
   return sanitized.length ? Array.from(new Set(sanitized)) : [];
@@ -328,7 +306,7 @@ const collectValidationErrors = (issues: z.ZodIssue[]): ValidationError[] =>
   }));
 
 const validateInstallmentInfo = (info?: InstallmentInfo): ValidationError[] => {
-  if (!info) return [];
+  if (!info) {return [];}
 
   const errors: ValidationError[] = [];
 
@@ -357,7 +335,7 @@ const validateInstallmentInfo = (info?: InstallmentInfo): ValidationError[] => {
 };
 
 export const validateBrazilianEventType = (type?: string | null) => {
-  if (!type) return false;
+  if (!type) {return false;}
   return BRAZILIAN_EVENT_TYPES.includes(type as BrazilianEventType);
 };
 
@@ -433,8 +411,7 @@ export const validateFinancialEventForInsert = (
   errors.push(...validateInstallmentInfo(event.installmentInfo));
 
   return {
-    valid: errors.length === 0,
-    errors,
+    errors, valid: errors.length === 0,
   };
 };
 
@@ -445,8 +422,7 @@ export const validateFinancialEventForUpdate = (
 
   if (!Object.keys(updates).length) {
     return {
-      valid: false,
-      errors: [{ field: 'root', message: 'Nenhum campo para atualizar.' }],
+      errors: [{ field: 'root', message: 'Nenhum campo para atualizar.' }], valid: false,
     };
   }
 
@@ -483,7 +459,6 @@ export const validateFinancialEventForUpdate = (
   errors.push(...validateInstallmentInfo(updates.installmentInfo));
 
   return {
-    valid: errors.length === 0,
-    errors,
+    errors, valid: errors.length === 0,
   };
 };

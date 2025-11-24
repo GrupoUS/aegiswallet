@@ -5,11 +5,8 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 
 const rawAliases = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'aliases.json'), 'utf-8'));
-const esToolkitAliases = Object.keys(rawAliases).reduce((acc, key) => {
-  const name = key.replace('es-toolkit/compat/', '').replace('.js', '');
-  acc[key] = path.resolve(__dirname, 'src/lib/es-toolkit-compat', `${name}.ts`);
-  return acc;
-}, {} as Record<string, string>);
+// Remove es-toolkit aliases since directory has been deleted
+const esToolkitAliases = {};
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
@@ -108,7 +105,6 @@ export default defineConfig(({ mode }) => {
         '@hookform/resolvers',
         'zod',
         'date-fns',
-        'es-toolkit/compat',
         'react-is',
         'use-sync-external-store',
         'eventemitter3',

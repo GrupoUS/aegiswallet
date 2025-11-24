@@ -524,7 +524,6 @@ export {
   type PushConfig,
   type PushMessage,
   type PushProvider,
-  type PushSubscription,
 } from './pushProvider';
 
 export {

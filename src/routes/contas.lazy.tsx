@@ -1,5 +1,5 @@
 import { FileText, Mic } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { EditTransactionDialog } from '@/components/financial/EditTransactionDialog';
 import { FinancialEventForm } from '@/components/financial/FinancialEventForm';
 import { FinancialAmount } from '@/components/financial-amount';

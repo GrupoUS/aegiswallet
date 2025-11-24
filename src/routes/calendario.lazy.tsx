@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const Route = createLazyFileRoute('/calendario')({

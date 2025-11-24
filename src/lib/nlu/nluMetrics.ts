@@ -21,12 +21,19 @@ class MetricsStore {
     accuracyByIntent: {} as Record<IntentType, number>,
     averageConfidence: 0,
     averageProcessingTime: 0,
+    colloquialCorrectness: 0,
     disambiguationRate: 0,
     failedClassifications: 0,
     falseNegatives: 0,
     falsePositives: 0,
+    formalCorrectness: 0,
     intentDistribution: {} as Record<IntentType, number>,
+    learningProgress: 0,
+    patternEvolution: [],
+    regionalAccuracy: {},
+    slangCorrectness: 0,
     successfulClassifications: 0,
+    temporalAccuracy: {},
     totalProcessed: 0,
   };
 
@@ -130,11 +137,13 @@ class MetricsStore {
       }
 
       if (filters.startDate) {
-        filtered = filtered.filter((log) => log.timestamp >= filters.startDate);
+        const startDate = filters.startDate;
+        filtered = filtered.filter((log) => log.timestamp >= startDate);
       }
 
       if (filters.endDate) {
-        filtered = filtered.filter((log) => log.timestamp <= filters.endDate);
+        const endDate = filters.endDate;
+        filtered = filtered.filter((log) => log.timestamp <= endDate);
       }
 
       if (filters.userId) {
@@ -231,12 +240,19 @@ class MetricsStore {
       accuracyByIntent: {} as Record<IntentType, number>,
       averageConfidence: 0,
       averageProcessingTime: 0,
+      colloquialCorrectness: 0,
       disambiguationRate: 0,
       failedClassifications: 0,
       falseNegatives: 0,
       falsePositives: 0,
+      formalCorrectness: 0,
       intentDistribution: {} as Record<IntentType, number>,
+      learningProgress: 0,
+      patternEvolution: [],
+      regionalAccuracy: {},
+      slangCorrectness: 0,
       successfulClassifications: 0,
+      temporalAccuracy: {},
       totalProcessed: 0,
     };
 

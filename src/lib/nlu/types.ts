@@ -360,3 +360,42 @@ export interface ConfidenceScore {
   explanation: string;
   factors: Record<string, number>; // Contributing factors
 }
+
+// ============================================================================
+// NLU Learning Types
+// ============================================================================
+
+/**
+ * NLU Entity for learning and pattern evolution
+ */
+export interface NLUEntity {
+  type: EntityType;
+  value: string;
+  normalizedValue: unknown;
+  confidence: number;
+  startIndex: number;
+  endIndex: number;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Pattern evolution for NLU improvement
+ */
+export interface PatternEvolution {
+  pattern: string;
+  confidence: number;
+  usage: number;
+  successRate: number;
+  lastUpdated: Date;
+}
+
+/**
+ * User adaptation for personalized NLU
+ */
+export interface UserAdaptation {
+  userId: string;
+  patterns: Record<string, PatternEvolution>;
+  preferences: Record<string, number>;
+  adaptationLevel: number;
+  lastAdapted: Date;
+}

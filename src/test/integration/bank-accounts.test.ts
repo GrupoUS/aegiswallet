@@ -2,7 +2,8 @@ import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { bankAccountsRouter } from '@/server/routers/bankAccounts';
 import type { Database } from '@/types/database.types';
-import { cleanupUserData, createTestUser, getSupabaseAdminClient, type TestUser } from './helpers';
+import { cleanupUserData, createTestUser, getSupabaseAdminClient } from './helpers';
+import type { TestUser } from './helpers';
 
 const supabase = getSupabaseAdminClient();
 
@@ -15,28 +16,11 @@ describe('Bank Accounts Router Integration', () => {
 
   const buildCaller = (client: SupabaseClient<Database>, user: TestUser) => {
     const fakeUser: User = {
-      id: user.id,
-      aud: 'authenticated',
-      email: user.email,
-      app_metadata: {},
-      user_metadata: {},
-      created_at: new Date().toISOString(),
-      factors: [],
-      identities: [],
-      last_sign_in_at: new Date().toISOString(),
-      phone: '',
-      role: 'authenticated',
+      app_metadata: {}, aud: 'authenticated', created_at: new Date().toISOString(), email: user.email, factors: [], id: user.id, identities: [], last_sign_in_at: new Date().toISOString(), phone: '', role: 'authenticated', user_metadata: {},
     };
 
     const session: Session = {
-      access_token: 'test-token',
-      token_type: 'bearer',
-      user: fakeUser,
-      expires_at: null,
-      expires_in: 3600,
-      refresh_token: null,
-      provider_token: null,
-      provider_refresh_token: null,
+      access_token: 'test-token', expires_at: null, expires_in: 3600, provider_refresh_token: null, provider_token: null, refresh_token: null, token_type: 'bearer', user: fakeUser,
     };
 
     return bankAccountsRouter.createCaller({
@@ -73,14 +57,7 @@ describe('Bank Accounts Router Integration', () => {
 
   it('cria conta manual com sync_status manual', async () => {
     const account = await caller.create.mutate({
-      institution_name: 'Banco Manual',
-      institution_id: 'MANUAL_BANK',
-      account_type: 'CHECKING',
-      account_mask: '**** 4321',
-      balance: 1500,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 4321', account_type: 'CHECKING', balance: 1500, currency: 'BRL', institution_id: 'MANUAL_BANK', institution_name: 'Banco Manual', is_active: true, is_primary: false,
     });
 
     createdAccountIds.push(account.id);
@@ -90,14 +67,7 @@ describe('Bank Accounts Router Integration', () => {
 
   it('normaliza máscara sem espaço em contas válidas', async () => {
     const account = await caller.create.mutate({
-      institution_name: 'Banco Máscara',
-      institution_id: 'MASK_BANK',
-      account_type: 'SAVINGS',
-      account_mask: '****1234',
-      balance: 250,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '****1234', account_type: 'SAVINGS', balance: 250, currency: 'BRL', institution_id: 'MASK_BANK', institution_name: 'Banco Máscara', is_active: true, is_primary: false,
     });
 
     createdAccountIds.push(account.id);
@@ -107,15 +77,7 @@ describe('Bank Accounts Router Integration', () => {
   it('cria conta Belvo com sync_status pending', async () => {
     const belvoId = 'belvo-account-123';
     const account = await caller.create.mutate({
-      institution_name: 'Banco Digital',
-      institution_id: 'DIGITAL_BANK',
-      account_type: 'SAVINGS',
-      account_mask: '**** 9876',
-      belvo_account_id: belvoId,
-      balance: 3200,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: true,
+      account_mask: '**** 9876', account_type: 'SAVINGS', balance: 3200, belvo_account_id: belvoId, currency: 'BRL', institution_id: 'DIGITAL_BANK', institution_name: 'Banco Digital', is_active: true, is_primary: true,
     });
 
     createdAccountIds.push(account.id);
@@ -126,28 +88,14 @@ describe('Bank Accounts Router Integration', () => {
   it('rejeita criação com máscara inválida', async () => {
     await expect(
       caller.create.mutate({
-        institution_name: 'Banco Teste',
-        institution_id: 'TESTE',
-        account_type: 'CHECKING',
-        account_mask: '1234',
-        balance: 0,
-        currency: 'BRL',
-        is_active: true,
-        is_primary: false,
+        account_mask: '1234', account_type: 'CHECKING', balance: 0, currency: 'BRL', institution_id: 'TESTE', institution_name: 'Banco Teste', is_active: true, is_primary: false,
       })
     ).rejects.toThrow(/Dados inválidos/);
   });
 
   it('impede duplicidade por institution_id + account_mask', async () => {
     const payload = {
-      institution_name: 'Banco Duplicado',
-      institution_id: 'DUPLICADO',
-      account_type: 'CHECKING',
-      account_mask: '**** 1111',
-      balance: 100,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 1111', account_type: 'CHECKING', balance: 100, currency: 'BRL', institution_id: 'DUPLICADO', institution_name: 'Banco Duplicado', is_active: true, is_primary: false,
     };
 
     const created = await caller.create.mutate(payload);
@@ -158,22 +106,12 @@ describe('Bank Accounts Router Integration', () => {
 
   it('atualiza informações principais da conta', async () => {
     const created = await caller.create.mutate({
-      institution_name: 'Banco Atualização',
-      institution_id: 'UPDATE_BANK',
-      account_type: 'CHECKING',
-      account_mask: '**** 2222',
-      balance: 500,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 2222', account_type: 'CHECKING', balance: 500, currency: 'BRL', institution_id: 'UPDATE_BANK', institution_name: 'Banco Atualização', is_active: true, is_primary: false,
     });
     createdAccountIds.push(created.id);
 
     const updated = await caller.update.mutate({
-      id: created.id,
-      balance: 800,
-      institution_name: 'Banco Atualizado',
-      is_primary: true,
+      balance: 800, id: created.id, institution_name: 'Banco Atualizado', is_primary: true,
     });
 
     expect(updated.balance).toBe(800);
@@ -183,20 +121,12 @@ describe('Bank Accounts Router Integration', () => {
 
   it('ignora tentativa de atualizar belvo_account_id', async () => {
     const created = await caller.create.mutate({
-      institution_name: 'Banco Imutável',
-      institution_id: 'IMMUTABLE',
-      account_type: 'SAVINGS',
-      account_mask: '**** 3333',
-      balance: 200,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 3333', account_type: 'SAVINGS', balance: 200, currency: 'BRL', institution_id: 'IMMUTABLE', institution_name: 'Banco Imutável', is_active: true, is_primary: false,
     });
     createdAccountIds.push(created.id);
 
     const updated = await caller.update.mutate({
-      id: created.id,
-      belvo_account_id: 'novo-id',
+      belvo_account_id: 'novo-id', id: created.id,
     });
 
     expect(updated.belvo_account_id).toBe(created.belvo_account_id);
@@ -204,14 +134,7 @@ describe('Bank Accounts Router Integration', () => {
 
   it('remove conta e garante remoção', async () => {
     const created = await caller.create.mutate({
-      institution_name: 'Banco Remoção',
-      institution_id: 'REMOVE',
-      account_type: 'SALARY',
-      account_mask: '**** 4444',
-      balance: 50,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 4444', account_type: 'SALARY', balance: 50, currency: 'BRL', institution_id: 'REMOVE', institution_name: 'Banco Remoção', is_active: true, is_primary: false,
     });
 
     await caller.delete.mutate({ id: created.id });
@@ -221,24 +144,10 @@ describe('Bank Accounts Router Integration', () => {
 
   it('retorna todas as contas do usuário', async () => {
     const acc1 = await caller.create.mutate({
-      institution_name: 'Banco Lista 1',
-      institution_id: 'LISTA1',
-      account_type: 'CHECKING',
-      account_mask: '**** 5555',
-      balance: 1000,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 5555', account_type: 'CHECKING', balance: 1000, currency: 'BRL', institution_id: 'LISTA1', institution_name: 'Banco Lista 1', is_active: true, is_primary: false,
     });
     const acc2 = await caller.create.mutate({
-      institution_name: 'Banco Lista 2',
-      institution_id: 'LISTA2',
-      account_type: 'CHECKING',
-      account_mask: '**** 6666',
-      balance: 2000,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 6666', account_type: 'CHECKING', balance: 2000, currency: 'BRL', institution_id: 'LISTA2', institution_name: 'Banco Lista 2', is_active: true, is_primary: false,
     });
     createdAccountIds.push(acc1.id, acc2.id);
 
@@ -248,14 +157,7 @@ describe('Bank Accounts Router Integration', () => {
 
   it('busca conta por ID', async () => {
     const account = await caller.create.mutate({
-      institution_name: 'Banco Busca',
-      institution_id: 'SEARCH',
-      account_type: 'CHECKING',
-      account_mask: '**** 7777',
-      balance: 700,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: true,
+      account_mask: '**** 7777', account_type: 'CHECKING', balance: 700, currency: 'BRL', institution_id: 'SEARCH', institution_name: 'Banco Busca', is_active: true, is_primary: true,
     });
     createdAccountIds.push(account.id);
 
@@ -265,24 +167,10 @@ describe('Bank Accounts Router Integration', () => {
 
   it('calcula saldo total agregado', async () => {
     const accountA = await caller.create.mutate({
-      institution_name: 'Banco Soma A',
-      institution_id: 'SUMA',
-      account_type: 'CHECKING',
-      account_mask: '**** 8888',
-      balance: 100,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 8888', account_type: 'CHECKING', balance: 100, currency: 'BRL', institution_id: 'SUMA', institution_name: 'Banco Soma A', is_active: true, is_primary: false,
     });
     const accountB = await caller.create.mutate({
-      institution_name: 'Banco Soma B',
-      institution_id: 'SUMB',
-      account_type: 'CHECKING',
-      account_mask: '**** 9999',
-      balance: 300,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 9999', account_type: 'CHECKING', balance: 300, currency: 'BRL', institution_id: 'SUMB', institution_name: 'Banco Soma B', is_active: true, is_primary: false,
     });
     createdAccountIds.push(accountA.id, accountB.id);
 
@@ -292,31 +180,17 @@ describe('Bank Accounts Router Integration', () => {
 
   it('atualiza saldo diretamente pela mutation updateBalance', async () => {
     const created = await caller.create.mutate({
-      institution_name: 'Banco Saldo',
-      institution_id: 'BALANCE_BANK',
-      account_type: 'CHECKING',
-      account_mask: '**** 1234',
-      balance: 10,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 1234', account_type: 'CHECKING', balance: 10, currency: 'BRL', institution_id: 'BALANCE_BANK', institution_name: 'Banco Saldo', is_active: true, is_primary: false,
     });
     createdAccountIds.push(created.id);
 
-    const updated = await caller.updateBalance.mutate({ id: created.id, balance: 999 });
+    const updated = await caller.updateBalance.mutate({ balance: 999, id: created.id });
     expect(updated.balance).toBe(999);
   });
 
   it('retorna histórico de saldo (mock) para conta específica', async () => {
     const created = await caller.create.mutate({
-      institution_name: 'Banco Histórico',
-      institution_id: 'HISTORY_BANK',
-      account_type: 'CHECKING',
-      account_mask: '**** 2468',
-      balance: 500,
-      currency: 'BRL',
-      is_active: true,
-      is_primary: false,
+      account_mask: '**** 2468', account_type: 'CHECKING', balance: 500, currency: 'BRL', institution_id: 'HISTORY_BANK', institution_name: 'Banco Histórico', is_active: true, is_primary: false,
     });
     createdAccountIds.push(created.id);
 

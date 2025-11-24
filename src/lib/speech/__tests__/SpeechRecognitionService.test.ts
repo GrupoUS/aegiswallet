@@ -6,8 +6,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createSpeechRecognitionService,
   SpeechRecognitionService,
+  createSpeechRecognitionService,
 } from '../SpeechRecognitionService';
 
 // Mock Web Speech API

@@ -49,12 +49,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 
   const form = useForm<BankAccountFormValues>({
     defaultValues: {
-      institution_name: '',
-      account_type: 'checking',
-      balance: 0,
-      currency: 'BRL',
-      is_primary: false,
-      is_active: true,
+      account_type: 'checking', balance: 0, currency: 'BRL', institution_name: '', is_active: true, is_primary: false,
     },
     resolver: zodResolver(formSchema),
   });

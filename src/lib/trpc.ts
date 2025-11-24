@@ -10,8 +10,6 @@ export const trpc = createTRPCReact<AppRouter>();
 export const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      transformer: superjson,
-      url: '/api/trpc',
       async headers() {
         const {
           data: { session },
@@ -24,7 +22,7 @@ export const trpcClient = trpc.createClient({
         }
 
         return {};
-      },
+      }, transformer: superjson, url: '/api/trpc',
     }),
   ],
 });

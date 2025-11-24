@@ -126,6 +126,7 @@ export interface PerformanceMetrics {
     accuracyByHour: Record<number, number>;
     requestVolumeByHour: Record<number, number>;
     accuracyByDayOfWeek: Record<number, number>;
+    requestVolumeByDayOfWeek: Record<number, number>;
   };
 }
 
@@ -583,6 +584,7 @@ export class NLUPerformanceTracker {
       temporal: {
         accuracyByDayOfWeek: {},
         accuracyByHour: {},
+        requestVolumeByDayOfWeek: {},
         requestVolumeByHour: {},
       },
       timestamp: now,
@@ -935,6 +937,14 @@ export class NLUPerformanceTracker {
       return;
     }
 
+    // KISS/YAGNI: Persistence tables not yet created in Supabase
+    // Metrics are kept in-memory for now. To enable persistence:
+    // 1. Create nlu_performance_metrics and nlu_performance_alerts tables
+    // 2. Uncomment the code below
+    logger.debug('Performance metrics tracking (persistence disabled - tables not created)');
+
+    // TODO: Enable when tables are created
+    /*
     try {
       // Persist current metrics to Supabase
       const { error } = await supabase.from('nlu_performance_metrics').insert({
@@ -980,6 +990,7 @@ export class NLUPerformanceTracker {
     } catch (error) {
       logger.error('Failed to persist performance metrics', { error });
     }
+    */
   }
 
   private calculateProcessingScore(): number {
@@ -1142,4 +1153,4 @@ export function createNLUPerformanceTracker(
 // ============================================================================
 
 export { DEFAULT_PERFORMANCE_CONFIG };
-export type { PerformanceConfig, PerformanceMetrics, PerformanceAlert, PerformanceSnapshot };
+// Types are already exported above via interface declarations

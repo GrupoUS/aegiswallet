@@ -65,11 +65,7 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
-        type: 'button',
-        'data-testid': 'start-listening',
-        disabled: isListening,
-        key: 'start-btn',
-        onClick: startListening,
+        'data-testid': 'start-listening', disabled: isListening, key: 'start-btn', onClick: startListening, type: 'button',
       },
       isListening ? 'Ouvindo...' : 'Iniciar Assistente de Voz'
     ),
@@ -77,11 +73,7 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
-        type: 'button',
-        'data-testid': 'stop-listening',
-        disabled: !isListening,
-        key: 'stop-btn',
-        onClick: stopListening,
+        'data-testid': 'stop-listening', disabled: !isListening, key: 'stop-btn', onClick: stopListening, type: 'button',
       },
       'Parar'
     ),

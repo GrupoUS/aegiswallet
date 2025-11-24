@@ -105,9 +105,10 @@ export const PixTransfer = React.memo(function PixTransfer({ className }: PixTra
         throw new Error('No bank account found');
       }
 
-      await import('@/lib/banking/pixApi').then((m) =>
-        m.pixClient.sendPixPayment(accountId || '', pixKey, numericAmount, description)
-      );
+      // Use tRPC router for PIX payments instead of deleted pixApi
+      await pixClient.sendPixPayment.mutate({
+        accountId: accountId || '', amount: numericAmount, description, pixKey
+      });
 
       setTransferStatus('success');
       setIsProcessing(false);

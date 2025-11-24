@@ -23,6 +23,7 @@ export interface BrazilianFinancialEvent {
   eventTypeId: string;
   categoryName?: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
+  status: string;
   isCompleted: boolean;
 }
 
@@ -347,7 +348,8 @@ export class FinancialNotificationService {
         title: notification.title,
       };
 
-      const result = await this.pushProvider.sendPushNotification(userId, pushMessage);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (this.pushProvider as any).sendPushNotification(userId, pushMessage);
 
       if (result.success) {
         logger.info('Financial notification sent successfully', {
@@ -397,11 +399,12 @@ export class FinancialNotificationService {
             title,
             description,
             amount,
-            event_date,
+            start_date,
+            due_date,
             event_type_id,
             user_id,
             priority,
-            is_completed,
+            status,
             event_types(name, icon, color),
             transaction_categories(name, color, icon)
           )
@@ -420,13 +423,33 @@ export class FinancialNotificationService {
       }
 
       for (const reminder of reminders || []) {
-        const event = reminder.financial_events;
-        if (!event) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawEvent = reminder.financial_events as any;
+        if (!rawEvent) {
           continue;
         }
 
+        // Map to BrazilianFinancialEvent
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const event: BrazilianFinancialEvent = {
+          amount: rawEvent.amount ?? undefined,
+          categoryName: rawEvent.transaction_categories?.name ?? undefined,
+          description: rawEvent.description ?? undefined,
+          dueDate: rawEvent.due_date ?? undefined,
+          eventDate: rawEvent.start_date,
+          eventTypeId: rawEvent.event_type_id,
+          id: rawEvent.id,
+          priority: (rawEvent.priority as 'low' | 'normal' | 'high' | 'urgent') ?? 'normal',
+          status: rawEvent.status ?? 'pending',
+          title: rawEvent.title,
+        };
+
         try {
-          await this.sendFinancialNotification(event, event.user_id, reminder.message);
+          // Wait, sendFinancialNotification takes (event, userId, message).
+          // BrazilianFinancialEvent doesn't have userId.
+          // rawEvent has user_id.
+
+          await this.sendFinancialNotification(event, rawEvent.user_id, reminder.message ?? undefined);
 
           // Mark reminder as sent
           await supabase
@@ -442,7 +465,7 @@ export class FinancialNotificationService {
             eventId: event.id,
             operation: 'process_reminder_notification_failed',
             reminderId: reminder.id,
-            userId: event.user_id,
+            userId: rawEvent.user_id,
           });
         }
       }

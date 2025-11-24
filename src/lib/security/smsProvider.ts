@@ -17,7 +17,7 @@ export interface SMSConfig {
 
 export interface SMSMessage {
   to: string;
-  body: string;
+  body?: string;
   template?: string;
   variables?: Record<string, string>;
 }
@@ -183,12 +183,19 @@ export class SMSProvider {
       const formattedPhone = this.formatPhoneNumber(message.to);
 
       // Process template if provided
-      let finalBody = message.body;
+    let finalBody = message.body ?? '';
       if (message.template && this.templates.has(message.template)) {
         const template = this.templates.get(message.template);
         if (template) {
           finalBody = this.replaceTemplateVariables(template.body, message.variables || {});
         }
+      }
+
+    if (!finalBody) {
+      finalBody =
+        message.body ||
+        this.templates.get(message.template ?? '')?.body ||
+        'Mensagem AegisWallet.';
       }
 
       // Prepare Twilio request

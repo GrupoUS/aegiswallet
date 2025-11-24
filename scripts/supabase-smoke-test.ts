@@ -10,10 +10,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
 
-type CliOptions = {
+interface CliOptions {
   userId: string;
   keepData: boolean;
-};
+}
 
 function parseArgs(): CliOptions {
   const args = process.argv.slice(2);
@@ -36,7 +36,7 @@ function parseArgs(): CliOptions {
     process.exit(1);
   }
 
-  return { userId, keepData };
+  return { keepData, userId };
 }
 
 function printHelp() {
@@ -84,19 +84,7 @@ async function main() {
   console.log(`• Using user_id: ${userId}${process.env.SUPABASE_QA_USER_ID ? ' (from env)' : ''}`);
 
   const accountPayload = {
-    user_id: userId,
-    belvo_account_id: belvoAccountId,
-    institution_id: 'qa_smoke_institution',
-    institution_name: institutionName,
-    account_type: 'checking',
-    account_mask: '**** 5678',
-    account_holder_name: 'QA Smoke User',
-    balance: 123.45,
-    available_balance: 123.45,
-    currency: 'BRL',
-    is_primary: false,
-    is_active: true,
-    sync_status: 'manual',
+    account_holder_name: 'QA Smoke User', account_mask: '**** 5678', account_type: 'checking', available_balance: 123.45, balance: 123.45, belvo_account_id: belvoAccountId, currency: 'BRL', institution_id: 'qa_smoke_institution', institution_name: institutionName, is_active: true, is_primary: false, sync_status: 'manual', user_id: userId,
   };
 
   const { data: account, error: accountError } = await client
@@ -113,15 +101,7 @@ async function main() {
   console.log(`✅ Bank account inserted: ${account.id}`);
 
   const transactionPayload = {
-    user_id: userId,
-    account_id: account.id,
-    amount: 42.5,
-    description: 'QA Smoke Transaction',
-    transaction_date: new Date().toISOString(),
-    transaction_type: 'debit',
-    status: 'posted',
-    currency: 'BRL',
-    is_manual_entry: true,
+    account_id: account.id, amount: 42.5, currency: 'BRL', description: 'QA Smoke Transaction', is_manual_entry: true, status: 'posted', transaction_date: new Date().toISOString(), transaction_type: 'debit', user_id: userId,
   };
 
   const { data: transaction, error: transactionError } = await client

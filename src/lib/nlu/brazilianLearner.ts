@@ -144,7 +144,7 @@ export class BrazilianLearner {
   detectRegionalVariation(text: string): {
     region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
     confidence: number;
-    indicators: string[];
+    indicators: Record<string, number>;
   } {
     const normalizedText = text.toLowerCase();
     const regionScores: Record<string, { score: number; indicators: string[] }> = {};
@@ -183,7 +183,7 @@ export class BrazilianLearner {
     }
 
     if (Object.keys(regionScores).length === 0) {
-      return { confidence: 0, indicators: [], region: 'Unknown' };
+      return { confidence: 0, indicators: {}, region: 'Unknown' };
     }
 
     // Find region with highest score
@@ -194,10 +194,23 @@ export class BrazilianLearner {
     const maxScore = Math.max(...Object.values(regionScores).map((r) => r.score));
     const confidence = (Math.min(maxScore / 10, 1.0) * bestRegion[1].score) / 10;
 
+    const regionKey = bestRegion[0] as
+      | 'SP'
+      | 'RJ'
+      | 'Nordeste'
+      | 'Sul'
+      | 'Norte'
+      | 'Centro-Oeste'
+      | 'Unknown';
+    // Convert indicators array to Record<string, number>
+    const indicatorsRecord: Record<string, number> = {};
+    for (const indicator of bestRegion[1].indicators) {
+      indicatorsRecord[indicator] = 1;
+    }
     return {
       confidence: Math.round(confidence * 100) / 100,
-      indicators: bestRegion[1].indicators,
-      region: String(bestRegion[0]),
+      indicators: indicatorsRecord,
+      region: regionKey === 'Unknown' ? 'Unknown' : regionKey,
     };
   }
 
@@ -419,8 +432,16 @@ export class BrazilianLearner {
 
   private updateLearningMetrics(
     log: ClassificationLog,
-    regional: { region: string; confidence: number; indicators: Record<string, number> },
-    style: { tone?: string; confidence?: number; indicators?: Record<string, number> }
+    regional: {
+      region: 'Unknown' | 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
+      confidence: number;
+      indicators: Record<string, number>;
+    },
+    style: {
+      style: 'slang' | 'formal' | 'colloquial' | 'mixed';
+      confidence: number;
+      features: string[];
+    }
   ): void {
     // Update regional accuracy
     if (regional.region !== 'Unknown') {
@@ -474,8 +495,15 @@ export class BrazilianLearner {
 
   private updateUserProfile(
     log: ClassificationLog,
-    regional: { region: string; indicators: Record<string, number> },
-    style: { tone?: string; confidence?: number; indicators?: Record<string, number> }
+    regional: {
+      region: 'Unknown' | 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
+      indicators: Record<string, number>;
+    },
+    style: {
+      style: 'slang' | 'formal' | 'colloquial' | 'mixed';
+      confidence: number;
+      features: string[];
+    }
   ): void {
     const userId = log.userId;
     let profile = this.userPatterns.get(userId);
@@ -625,7 +653,14 @@ export class BrazilianLearner {
       };
     }
 
-    return insights;
+    return insights as Record<
+      string,
+      {
+        accuracy: number;
+        commonPatterns: string[];
+        recommendations: string[];
+      }
+    >;
   }
 
   private generateRegionalRecommendations(_region: string, accuracy: number): string[] {

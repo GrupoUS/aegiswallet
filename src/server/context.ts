@@ -5,19 +5,12 @@ import { createRequestScopedClient } from '@/integrations/supabase/factory';
 export interface CreateContextOptions {
   req: FetchCreateContextFnOptions['req'];
   session: Session | null;
-  user: User | null;
+  user: User | null; // Can be null initially, but non-null after protectedProcedure
   supabase: SupabaseClient;
 }
 
 const buildSession = (token: string, user: User): Session => ({
-  access_token: token,
-  token_type: 'bearer',
-  expires_in: 0,
-  expires_at: null,
-  refresh_token: null,
-  provider_token: null,
-  provider_refresh_token: null,
-  user,
+  access_token: token, expires_at: null, expires_in: 0, provider_refresh_token: null, provider_token: null, refresh_token: null, token_type: 'bearer', user,
 });
 
 /**

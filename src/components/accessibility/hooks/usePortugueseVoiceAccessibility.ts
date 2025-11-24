@@ -14,7 +14,7 @@ export interface VoiceCommand {
 
 const VOICE_PATTERNS: Record<
   string,
-  Array<{ category: VoiceCategory; pattern: RegExp; response: string }>
+  { category: VoiceCategory; pattern: RegExp; response: string }[]
 > = {
   acoes: [
     { category: 'ajuda', pattern: /ajuda/i, response: 'Modo de ajuda ativado' },

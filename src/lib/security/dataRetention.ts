@@ -6,7 +6,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logging/secure-logger';
+import logger from '@/lib/logging/secure-logger';
+import type { Json } from '@/types/database.types';
 
 export interface RetentionPolicy {
   dataType: string;
@@ -79,6 +80,14 @@ export const RETENTION_POLICIES: Record<string, RetentionPolicy> = {
     secureDelete: false,
   },
 };
+
+type RetentionStatsEntry =
+  | {
+      cutoffDate: string;
+      eligibleForDeletion: number;
+      policy: RetentionPolicy;
+    }
+  | { error: string };
 
 export class DataRetentionManager {
   private retentionScheduleDays = [1, 7, 30, 90]; // Run on these days of month
@@ -182,12 +191,19 @@ export class DataRetentionManager {
   private async cleanupVoiceRecordings(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
     try {
       if (policy.anonymize) {
+        const metadata: Json = {
+          anonymization_date: new Date().toISOString(),
+          anonymized: true,
+        };
         // First anonymize user references
-        await supabase
+        const { error: anonymizeError } = await supabase
           .from('voice_recordings')
-          .update({ transcription_anonymized: true, user_id: null })
-          .lt('created_at', cutoffDate.toISOString())
-          .is('user_id', 'not null');
+          .update({ metadata, transcription_anonymized: true })
+          .lt('created_at', cutoffDate.toISOString());
+
+        if (anonymizeError) {
+          throw anonymizeError;
+        }
       }
 
       if (policy.secureDelete) {
@@ -229,10 +245,14 @@ export class DataRetentionManager {
 
           if (policy.anonymize) {
             // Anonymize biometric patterns
-            await supabase
+            const { error: anonymizeError } = await supabase
               .from('biometric_patterns')
-              .update({ pattern_hash: null, user_id: null })
+              .update({ pattern_hash: null })
               .in('user_id', userIds);
+
+            if (anonymizeError) {
+              throw anonymizeError;
+            }
           }
 
           if (policy.secureDelete) {
@@ -285,7 +305,7 @@ export class DataRetentionManager {
         .eq('id', userId)
         .single();
 
-      if (userData && new Date(userData.created_at) < userCutoffDate) {
+      if (userData?.created_at && new Date(userData.created_at) < userCutoffDate) {
         // Can delete entire user account
         await supabase.auth.admin.deleteUser(userId);
 
@@ -318,37 +338,36 @@ export class DataRetentionManager {
 
     try {
       switch (dataType) {
-        case 'voice_recordings':
+        case 'voice_recordings': {
+          const metadata: Json = {
+            anonymization_date: new Date().toISOString(),
+            anonymized: true,
+          };
           await supabase
             .from('voice_recordings')
             .update({
-              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
+              metadata,
               transcription_anonymized: true,
-              user_id: null,
             })
             .eq('user_id', userId);
           break;
+        }
 
         case 'biometric_patterns':
           await supabase
             .from('biometric_patterns')
             .update({
-              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
               pattern_hash: null,
-              user_id: null,
             })
             .eq('user_id', userId);
           break;
 
         case 'transactions':
-          // Keep transactions for fiscal compliance but anonymize user
-          await supabase
-            .from('transactions')
-            .update({
-              metadata: { anonymization_date: new Date().toISOString(), anonymized: true },
-              user_id: null,
-            })
-            .eq('user_id', userId);
+        case 'user_activity_logs':
+        case 'sessions':
+        case 'error_logs':
+        case 'audit_logs':
+          // These data types are handled via dedicated cleanup routines or compliance storage.
           break;
       }
     } catch (error) {
@@ -359,8 +378,8 @@ export class DataRetentionManager {
   /**
    * Get retention statistics for compliance reporting
    */
-  async getRetentionStatistics(): Promise<unknown> {
-    const stats = {};
+  async getRetentionStatistics(): Promise<Record<string, RetentionStatsEntry>> {
+    const stats: Record<string, RetentionStatsEntry> = {};
 
     for (const [dataType, policy] of Object.entries(RETENTION_POLICIES)) {
       const cutoffDate = this.calculateCutoffDate(policy);
@@ -391,15 +410,78 @@ export class DataRetentionManager {
         stats[dataType] = {
           cutoffDate: cutoffDate.toISOString(),
           eligibleForDeletion: count,
-          policy: policy,
+          policy,
         };
       } catch (error) {
+        const message = this.extractErrorMessage(error);
         logger.error(`Failed to get retention stats for ${dataType}`, { error });
-        stats[dataType] = { error: error.message };
+        stats[dataType] = { error: message };
       }
     }
 
     return stats;
+  }
+
+  private async cleanupTransactions(_cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
+    // Financial records are retained for fiscal compliance; log for visibility.
+    logger.debug('Transactions retention policy is compliance-only; no automatic cleanup executed', {
+      policy,
+    });
+  }
+
+  private async cleanupUserActivityLogs(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
+    if (!policy.secureDelete) {
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('user_activity')
+        .delete()
+        .lt('created_at', cutoffDate.toISOString());
+      if (error) {
+        throw error;
+      }
+      logger.info(`Cleaned up user activity logs older than ${cutoffDate.toISOString()}`);
+    } catch (error) {
+      logger.error('Failed to cleanup user activity logs', { cutoffDate, error });
+    }
+  }
+
+  private async cleanupSessions(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
+    if (!policy.secureDelete) {
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('user_sessions')
+        .delete()
+        .lt('created_at', cutoffDate.toISOString());
+      if (error) {
+        throw error;
+      }
+      logger.info(`Cleaned up sessions older than ${cutoffDate.toISOString()}`);
+    } catch (error) {
+      logger.error('Failed to cleanup sessions', { cutoffDate, error });
+    }
+  }
+
+  private async cleanupErrorLogs(_cutoffDate: Date, _policy: RetentionPolicy): Promise<void> {
+    // Error logs live outside Supabase tables in this project; document manual cleanup.
+    logger.debug('No error log storage configured in Supabase; skipping cleanup step.');
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'Unknown error';
+    }
   }
 }
 

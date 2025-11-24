@@ -5,8 +5,8 @@
 
 import { TRPCError } from '@trpc/server';
 import { logger } from '@/lib/logging';
-import { SecurityEventType } from '@/types/server.types';
-import type { Context } from '../context';
+import type { SecurityEventType } from '@/types/server.types';
+import type { Context } from '@/server/context';
 import {
   authRateLimit,
   dataExportRateLimit,
@@ -14,6 +14,7 @@ import {
   transactionRateLimit,
   voiceCommandRateLimit,
 } from './rateLimitMiddleware';
+import { experimental_standaloneMiddleware } from '@trpc/server';
 
 // Security middleware options
 export interface SecurityMiddlewareOptions {
@@ -37,18 +38,14 @@ const DEFAULT_SECURITY_OPTIONS: Required<SecurityMiddlewareOptions> = {
 export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}) => {
   const opts = { ...DEFAULT_SECURITY_OPTIONS, ...options };
 
-  return async ({
-    ctx,
-    next,
-    type,
-  }: {
+  return experimental_standaloneMiddleware<{
     ctx: Context;
-    next: () => Promise<unknown>;
-    type?: string;
-  }) => {
+    input: undefined;
+    // 'meta', not defined here, defaults to 'object | undefined'
+  }>().create((opts) => {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
-    const procedureType = type || 'unknown';
+    const procedureType = opts.type || 'unknown';
 
     try {
       // Log request start
@@ -63,42 +60,27 @@ export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}
       // Apply security measures
       await applySecurityMeasures(ctx, procedureType, opts);
 
-      // Execute the procedure
-      const result = await next();
-
-      // Log successful completion
-      if (opts.enableAuditLogging) {
-        logger.info('Request completed', {
-          duration: Date.now() - startTime,
-          requestId,
-          success: true,
-          type: procedureType,
-          userId: ctx.user?.id,
-        });
-      }
-
+      // Continue with next
+      const result = await opts.next();
       return result;
     } catch (error) {
       // Log error
       if (opts.enableAuditLogging) {
         logger.error('Request failed', {
-          duration: Date.now() - startTime,
-          error: error instanceof Error ? error.message : 'Unknown error',
           requestId,
-          success: false,
           type: procedureType,
+          error: error instanceof Error ? error.message : 'Unknown error',
           userId: ctx.user?.id,
         });
       }
 
-      // Log security events
-      if (isSecurityError(error)) {
-        await logSecurityEvent(ctx, error, requestId);
-      }
-
-      throw error;
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Security middleware error',
+        cause: error,
+      });
     }
-  };
+  });
 };
 
 /**

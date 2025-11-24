@@ -9,13 +9,12 @@ import {
   useCalendarStats,
   useOverdueEvents,
   useUpcomingEvents,
-} from '@/hooks/useFinancialCalendar';
+} from '@/hooks/useFinancialEvents';
 import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
 import {
-  useFinancialTransactions,
   useRecentTransactions,
   useTransactionStats,
-} from '@/hooks/useFinancialTransactions';
+} from '@/hooks/use-transactions';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
 
 /**
@@ -29,7 +28,7 @@ export function useDashboard() {
   // Dados financeiros
   const { accounts, isLoading: accountsLoading } = useBankAccounts();
   const { balances, isLoading: balancesLoading } = useTotalBalance();
-  const { transactions, isLoading: transactionsLoading } = useFinancialTransactions({ limit: 10 });
+  const { transactions, isLoading: transactionsLoading } = useRecentTransactions({ limit: 10 });
   const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('month');
 
   // Dados do calendário
@@ -221,7 +220,7 @@ export function useDashboardSettings() {
  * Hook para ações rápidas do Dashboard
  */
 export function useDashboardActions() {
-  const { createTransaction } = useFinancialTransactions();
+  const { createTransaction } = useFinancialEventMutations();
   const { addEvent } = useFinancialEventMutations();
   const { createContact } = useContacts();
   const { createAccount } = useBankAccounts();

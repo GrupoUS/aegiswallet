@@ -1,4 +1,5 @@
 import type { Context } from '@/server/context';
+import { experimental_standaloneMiddleware } from '@trpc/server';
 
 interface RateLimitMiddlewareOptions {
   windowMs: number;
@@ -8,7 +9,13 @@ interface RateLimitMiddlewareOptions {
 }
 
 export const createRateLimitMiddleware = (_options: RateLimitMiddlewareOptions) => {
-  return async ({ next }: { ctx: Context; next: () => Promise<unknown> }) => next();
+  return experimental_standaloneMiddleware<{
+    ctx: Context;
+  input: undefined;
+  // 'meta', not defined here, defaults to 'object | undefined'
+  }>().create((opts) => {
+    await opts.next();
+  });
 };
 
 export const generalApiRateLimit = createRateLimitMiddleware({

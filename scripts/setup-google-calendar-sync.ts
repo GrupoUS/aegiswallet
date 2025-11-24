@@ -11,11 +11,11 @@ import path from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
 import { createInterface } from 'node:readline/promises';
 
-type Question = {
+interface Question {
   key: 'GOOGLE_OAUTH_CLIENT_ID' | 'GOOGLE_OAUTH_CLIENT_SECRET' | 'GOOGLE_OAUTH_REDIRECT_URI';
   prompt: string;
   default?: string;
-};
+}
 
 const QUESTIONS: Question[] = [
   {
@@ -27,9 +27,7 @@ const QUESTIONS: Question[] = [
     prompt: 'Google OAuth Client Secret',
   },
   {
-    key: 'GOOGLE_OAUTH_REDIRECT_URI',
-    prompt: 'OAuth Redirect URI',
-    default: 'https://aegiswallet.vercel.app/api/google-calendar/callback',
+    default: 'https://aegiswallet.vercel.app/api/google-calendar/callback', key: 'GOOGLE_OAUTH_REDIRECT_URI', prompt: 'OAuth Redirect URI',
   },
 ];
 
@@ -97,10 +95,7 @@ async function main() {
   rl.close();
 
   const envUpdates = {
-    VITE_GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
-    GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: answers.GOOGLE_OAUTH_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI: answers.GOOGLE_OAUTH_REDIRECT_URI,
+    GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID, GOOGLE_CLIENT_SECRET: answers.GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_REDIRECT_URI: answers.GOOGLE_OAUTH_REDIRECT_URI, VITE_GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
   };
 
   const envPath = path.resolve(process.cwd(), '.env.local');

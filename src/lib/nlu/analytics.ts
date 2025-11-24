@@ -179,7 +179,14 @@ export class NLUAnalytics {
         'low (<0.6)': 0,
         'medium (0.6-0.8)': 0,
       },
-      entityAccuracy: {} as Record<EntityType, number>,
+      entityAccuracy: {} as Record<
+        EntityType,
+        {
+          total: number;
+          correct: number;
+          accuracy: number;
+        }
+      >,
       errorAnalysis: {
         entityExtractionFailures: 0,
         intentConfusion: 0,
@@ -189,7 +196,14 @@ export class NLUAnalytics {
       },
       failedClassifications: 0,
       hitRate: 0,
-      intentAccuracy: {} as Record<IntentType, number>,
+      intentAccuracy: {} as Record<
+        IntentType,
+        {
+          total: number;
+          correct: number;
+          accuracy: number;
+        }
+      >,
       learningProgress: {
         adaptationRate: 0,
         monthlyImprovement: 0,
@@ -451,7 +465,9 @@ export class NLUAnalytics {
     return `nlu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private detectRegionalVariation(text: string): string {
+  private detectRegionalVariation(
+    text: string
+  ): 'Unknown' | 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' {
     const lowerText = text.toLowerCase();
 
     // São Paulo variations
@@ -519,7 +535,7 @@ export class NLUAnalytics {
     metrics.totalCommands++;
 
     // Update success/failure
-    const isSuccessful = log.confidence >= 0.7 && log.intent !== IntentType.UNKNOWN;
+    const isSuccessful = log.confidence >= 0.7 && log.predictedIntent !== IntentType.UNKNOWN;
     if (isSuccessful) {
       metrics.successfulClassifications++;
     } else {

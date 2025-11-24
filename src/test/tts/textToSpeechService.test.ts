@@ -42,6 +42,7 @@ describe('TextToSpeechService', () => {
     addEventListener: ReturnType<typeof vi.fn>;
     removeEventListener: ReturnType<typeof vi.fn>;
     dispatchEvent: ReturnType<typeof vi.fn>;
+    onvoiceschanged: ((this: SpeechSynthesis, ev: Event) => any) | null;
   };
   let tts: TextToSpeechService;
 
@@ -77,13 +78,14 @@ describe('TextToSpeechService', () => {
         }, 10);
       }),
       speaking: false,
+      onvoiceschanged: null,
     };
 
     // Inject dependencies
     tts = createTTSService(undefined, {
       SpeechSynthesisUtterance:
         MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
-      speechSynthesis: mockSpeechSynthesis,
+      speechSynthesis: mockSpeechSynthesis as unknown as SpeechSynthesis,
     });
   });
 

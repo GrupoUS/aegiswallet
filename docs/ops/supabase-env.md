@@ -11,13 +11,14 @@
 | Backend / Server | `SUPABASE_URL` | Mesmo valor do frontend |
 | Backend / Server | `SUPABASE_ANON_KEY` | Usado apenas como fallback; operações privilegiadas não devem depender dele |
 | Backend / Server | `SUPABASE_SERVICE_ROLE_KEY` | **Obrigatório** para Hono/tRPC processarem mutações legado. Configure no gerenciador de segredos da Vercel e em `.env` local (não commitado) |
+| Ops / QA | `SUPABASE_QA_USER_ID` | UUID do usuário QA usado nos smoke tests automatizados |
 | Ops / CLI | `SUPABASE_ACCESS_TOKEN` (opcional) | Token usado pelo MCP/CLI para migrations |
 
 ## Boas práticas
 
 1. **Nunca** exponha `SUPABASE_SERVICE_ROLE_KEY` ao bundle do cliente. Ele deve existir apenas em `process.env` no runtime servidor.
 2. Use `.env.local` para credenciais reais e deixe `docs/ops/supabase-env.md` como referência comprometida.
-3. Automatize a checagem: scripts/CI devem falhar se `SUPABASE_SERVICE_ROLE_KEY` não estiver definido quando `NODE_ENV=production`.
+3. Automatize a checagem: scripts/CI devem falhar se `SUPABASE_SERVICE_ROLE_KEY` não estiver definido quando `NODE_ENV=production`. Rode `bun run env:check` localmente para validar o `.env.local`.
 4. Gere um `TOKENS_ENCRYPTION_KEY` (32 bytes) para Google Calendar/secret storage.
 
 ### Template oficial (`env.example`)
@@ -25,6 +26,7 @@
 - Copie `env.example` para `.env.local` assim que clonar o repo: `cp env.example .env.local`.
 - O arquivo já inclui placeholders para **todas** as variáveis críticas (frontend + backend). Complete cada valor seguindo a tabela abaixo e nunca commite o `.env.local`.
 - O script `scripts/setup-vercel-env.sh` lê o `.env.local` gerado a partir do template para replicar as variáveis no Vercel.
+- Use `bun run env:check` sempre que editar as variáveis; o script verifica `SUPABASE_URL`, `VITE_SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_QA_USER_ID`.
 
 ## Site URL e Redirect URLs oficiais
 
@@ -46,7 +48,8 @@ select raw_base_config from auth.instances where id = '00000000-0000-0000-0000-0
 ## Usuário/Service Role de QA
 
 - **Service role**: crie um token dedicado via `Settings ▸ API ▸ Service role`, nomeando-o `qa-smoke-tests`. Salve no 1Password do time e injete em `SUPABASE_SERVICE_ROLE_KEY`.
-- **Usuário QA**: utilize o painel `Authentication ▸ Users` para criar `qa+smoke@aegiswallet.com`. Defina uma senha temporária e confirme o e-mail manualmente para evitar depender de templates.
+- **Usuário QA**: utilize o painel `Authentication ▸ Users` para criar `qa+smoke@aegiswallet.com`. Defina uma senha temporária, confirme o e-mail manualmente e copie o `id` UUID para o 1Password.
+- Exponha o `id` em `SUPABASE_QA_USER_ID` (local + Vercel). Tanto `bun run env:check` quanto `bun run smoke:supabase` usam esse valor automaticamente (pode ser sobrescrito com `--user=<uuid>`).
 - Após criar o usuário, execute o smoke test SQL (abaixo) substituindo `<USER_ID>` pelo `id` do usuário QA.
 - Não compartilhe essas credenciais fora do time de engenharia. Rotacione a senha sempre que rodar smoke tests em ambientes compartilhados.
 
@@ -88,8 +91,8 @@ Finalize removendo o registro para manter o banco limpo.
 
 ### Script automatizado
 
-- Rode `bun run smoke:supabase --user <UUID_DO_USUARIO>` para executar o fluxo acima de forma automatizada.
-- O script valida as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`, cria conta + transação e remove tudo ao final (use `--keep-data` para inspecionar manualmente).
+- Rode `bun run smoke:supabase` para executar o fluxo acima. O script usa `SUPABASE_QA_USER_ID` por padrão; passe `--user=<UUID>` para sobrescrever e `--keep-data` para pular o cleanup.
+- As variáveis `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_QA_USER_ID` são validadas antes de qualquer operação (o comando falha se alguma estiver ausente).
 - Saída do script é pensada para CI: status `0` indica que inserts/deletes estão funcionando com as credenciais atuais.
 
 ## Status atual (2025-11-24)

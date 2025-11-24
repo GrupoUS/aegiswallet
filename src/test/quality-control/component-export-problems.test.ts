@@ -30,7 +30,7 @@ describe('Component Export Problems', () => {
       expect(BentoGrid).toBeDefined();
       const isReactComponent =
         typeof BentoGrid === 'function' ||
-        (typeof BentoGrid === 'object' && BentoGrid.$$typeof !== undefined);
+        (typeof BentoGrid === 'object' && (BentoGrid as any).$$typeof !== undefined);
       expect(isReactComponent).toBe(true);
     });
 
@@ -38,7 +38,7 @@ describe('Component Export Problems', () => {
       expect(PopoverAnchor).toBeDefined();
       const isReactComponent =
         typeof PopoverAnchor === 'function' ||
-        (typeof PopoverAnchor === 'object' && PopoverAnchor.$$typeof !== undefined);
+        (typeof PopoverAnchor === 'object' && (PopoverAnchor as any).$$typeof !== undefined);
       expect(isReactComponent).toBe(true);
     });
 
@@ -47,12 +47,12 @@ describe('Component Export Problems', () => {
       expect(SheetPortal).toBeDefined();
       const isSheetOverlayComponent =
         typeof SheetOverlay === 'function' ||
-        (typeof SheetOverlay === 'object' && SheetOverlay.$$typeof !== undefined);
+        (typeof SheetOverlay === 'object' && (SheetOverlay as any).$$typeof !== undefined);
       expect(isSheetOverlayComponent).toBe(true);
 
       const isSheetPortalComponent =
         typeof SheetPortal === 'function' ||
-        (typeof SheetPortal === 'object' && SheetPortal.$$typeof !== undefined);
+        (typeof SheetPortal === 'object' && (SheetPortal as any).$$typeof !== undefined);
       expect(isSheetPortalComponent).toBe(true);
     });
   });
@@ -129,7 +129,7 @@ describe('Component Export Problems', () => {
       expect(Button).toBeDefined();
       expect(
         typeof Button === 'function' ||
-          (typeof Button === 'object' && Button !== null && Button.$$typeof !== undefined)
+          (typeof Button === 'object' && Button !== null && (Button as any).$$typeof !== undefined)
       ).toBe(true);
     });
   });

@@ -1,36 +1,76 @@
 {
   "servers": {
+    "desktop-commander": {
+      "command": "bunx",
+      "args": [
+        "@wonderwhy-er/desktop-commander@latest"
+      ],
+      "env": {
+        "MAX_MCP_OUTPUT_TOKENS": "20000"
+      },
+      "type": "stdio",
+      "alwaysAllow": [
+        "start_process",
+        "read_file",
+        "read_multiple_files",
+        "write_file",
+        "create_directory",
+        "list_directory",
+        "move_file",
+        "start_search",
+        "get_more_search_results",
+        "stop_search",
+        "list_searches",
+        "read_process_output",
+        "interact_with_process",
+        "force_terminate",
+        "list_processes",
+        "kill_process",
+        "search_files"
+      ],
+      "disabledTools": [
+        "give_feedback_to_desktop_commander",
+        "get_usage_stats",
+        "get_config",
+        "set_config_value",
+        "get_file_info",
+        "list_sessions"
+      ],
+      "disabled": true
+    },
+    "context7": {
+      "command": "bunx",
+      "args": [
+        "@upstash/context7-mcp@latest"
+      ],
+      "env": {
+        "CONTEXT7_MAX_TOKENS": "10000",
+        "CONTEXT7_TIMEOUT": "15000",
+        "CONTEXT7_API_KEY": "ctx7sk-a19d606d-cbff-4dbf-a37a-c088118805a4"
+      },
+      "type": "stdio",
+      "fromGalleryId": "upstash.context7",
+      "alwaysAllow": [
+        "resolve-library-id",
+        "get-library-docs"
+      ]
+    },
     "sequential-thinking": {
       "command": "bunx",
-      "args": ["@modelcontextprotocol/server-sequential-thinking@latest"],
+      "args": [
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
       "env": {
         "DISABLE_THOUGHT_LOGGING": "false",
         "SEQUENTIAL_THINKING_MAX_TOKENS": "16000",
         "SEQUENTIAL_THINKING_THOUGHTS_TO_KEEP": "10",
         "SEQUENTIAL_THINKING_TIMEOUT": "15000"
       },
-      "type": "stdio"
-    },
-    "context7": {
-      "command": "bunx",
-      "args": ["@upstash/context7-mcp@latest"],
-      "env": {
-        "UPSTASH_CONTEXT7_API_KEY": "ctx7_fzqcQNgU3AChDBMjNIVYg4zLQp4LgBjZnbA",
-        "CONTEXT7_MAX_TOKENS": "10000",
-        "CONTEXT7_TIMEOUT": "15000"
-      },
-      "type": "stdio"
-    },
-    "desktop-commander": {
-      "command": "bunx",
-      "args": ["@wonderwhy-er/desktop-commander@latest"],
-      "env": {
-        "MAX_MCP_OUTPUT_TOKENS": "20000"
-      }
-    },
-    "archon": {
-      "command": "bunx",
-      "args": ["mcp-remote", "http://31.97.170.4:8051/mcp", "--allow-http"]
+      "type": "stdio",
+      "fromGalleryId": "modelcontextprotocol.servers_sequentialthinking",
+      "alwaysAllow": [
+        "sequentialthinking"
+      ]
     },
     "serena": {
       "command": "uvx",
@@ -42,17 +82,95 @@
         "--context",
         "ide-assistant",
         "--project",
-        "/home/vibecode/neonpro"
+        "D:\\\\Coders\\\\aegiswallet"
       ],
-      "env": {}
+      "type": "stdio",
+      "alwaysAllow": [
+        "list_dir",
+        "find_file",
+        "search_for_pattern",
+        "get_symbols_overview",
+        "find_symbol",
+        "find_referencing_symbols",
+        "replace_symbol_body",
+        "insert_after_symbol",
+        "insert_before_symbol",
+        "write_memory",
+        "read_memory",
+        "list_memories",
+        "think_about_collected_information",
+        "think_about_task_adherence",
+        "think_about_whether_you_are_done",
+        "edit_memory",
+        "check_onboarding_performed",
+        "onboarding",
+        "delete_memory",
+        "initial_instructions"
+      ],
+      "disabledTools": [
+        "replace_symbol_body",
+        "insert_after_symbol",
+        "insert_before_symbol",
+        "rename_symbol",
+        "delete_memory",
+        "check_onboarding_performed",
+        "onboarding",
+        "initial_instructions"
+      ]
     },
-    "chrome-devtools": {
-      "command": "bunx",
-      "args": ["chrome-devtools-mcp@latest"]
+    "tavily": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "bunx",
+        "@mcptools/mcp-tavily@latest"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "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",
+        "TAVILY_MAX_RESULTS": "10",
+        "TAVILY_SEARCH_DEPTH": "advanced",
+        "TAVILY_TIMEOUT": "30000",
+        "TAVILY_INCLUDE_IMAGES": "false",
+        "TAVILY_INCLUDE_RAW_CONTENT": "true"
+      },
+      "type": "stdio",
+      "alwaysAllow": [
+        "search",
+        "searchContext",
+        "searchQNA",
+        "extract"
+      ],
+      "disabled": true
+    },
+    "supabase": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "bunx",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_505503d21e6bd415395dcaeed239e1bbf039f6cc"
+      ],
+      "type": "stdio",
+      "disabled": true,
+      "alwaysAllow": []
     },
     "shadcn": {
-      "command": "bunx",
-      "args": ["shadcn@latest", "mcp"]
+      "command": "cmd",
+      "args": [
+        "/c",
+        "bunx",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "type": "stdio",
+      "disabled": true,
+      "alwaysAllow": [
+        "get_project_registries",
+        "list_items_in_registries",
+        "get_audit_checklist",
+        "view_items_in_registries"
+      ]
     }
   }
 }

@@ -540,27 +540,98 @@ export const responseBuilders = {
 /**
  * Build multimodal response based on intent
  */
+interface MultimodalData {
+  // Common
+  intent?: IntentType;
+
+  // Balance
+  balance?: number;
+  currentBalance?: number;
+  income?: number;
+  expenses?: number;
+  accountType?: string;
+
+  // Budget
+  available?: number;
+  total?: number;
+  spent?: number;
+  spentPercentage?: number;
+  category?: string;
+
+  // Bills
+  billName?: string;
+  amount?: number;
+  dueDate?: string;
+  bills?: {
+    name: string;
+    amount: number;
+    dueDate: string;
+    isPastDue?: boolean;
+  }[];
+  totalAmount?: number;
+  confirmed?: boolean;
+
+  // Income
+  incoming?: {
+    source: string;
+    amount: number;
+    expectedDate: string;
+    confirmed?: boolean;
+  }[];
+  totalExpected?: number;
+  nextIncome?: {
+    source?: string;
+    amount?: number;
+    date?: string | { toISOString: () => string };
+    description?: string;
+    confirmed?: boolean;
+  };
+
+  // Projection
+  projectedBalance?: number;
+  expectedIncome?: number;
+  expectedExpenses?: number;
+  variation?: number;
+  period?: string;
+
+  // Transfer
+  recipient?: string;
+  method?: string;
+  estimatedTime?: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+
+  // Error
+  message?: string;
+  code?: string;
+  details?: string;
+
+  // Confirmation
+  action?: string;
+  requiresConfirmation?: boolean;
+}
+
 export function buildMultimodalResponse(
   intent: IntentType | 'error' | 'confirmation',
   data: Record<string, unknown>
 ): MultimodalResponse {
+  const safeData = data as unknown as MultimodalData;
   const intentKey = intent === IntentType.UNKNOWN ? 'unknown' : intent;
 
   // Special handling for PAY_BILL confirmation
-  if (intent === IntentType.PAY_BILL && data.confirmed === false) {
+  if (intent === IntentType.PAY_BILL && safeData.confirmed === false) {
     return buildConfirmationResponse({
       action: 'Confirmar pagamento',
-      details: `${data.billName || 'Conta'} de ${formatCurrency(data.amount || 0)}`,
+      details: `${safeData.billName || 'Conta'} de ${formatCurrency(safeData.amount || 0)}`,
       requiresConfirmation: true,
     });
   }
 
-  if (intent === IntentType.PAY_BILL && data.confirmed === true) {
-    const billName = data.billName || data.bills?.[0]?.name || 'Conta';
+  if (intent === IntentType.PAY_BILL && safeData.confirmed === true) {
+    const billName = safeData.billName || safeData.bills?.[0]?.name || 'Conta';
     const amount =
-      data.amount ??
-      data.totalAmount ??
-      (Array.isArray(data.bills) && data.bills[0]?.amount ? data.bills[0].amount : 0);
+      safeData.amount ??
+      safeData.totalAmount ??
+      (Array.isArray(safeData.bills) && safeData.bills[0]?.amount ? safeData.bills[0].amount : 0);
 
     return {
       accessibility: {
@@ -572,11 +643,11 @@ export function buildMultimodalResponse(
       text: `Pagamento confirmado: ${formatCurrency(amount)}`,
       visual: {
         data: {
-          ...data,
-          bills: data.bills ?? [
+          ...safeData,
+          bills: safeData.bills ?? [
             {
               amount,
-              dueDate: data.dueDate,
+              dueDate: safeData.dueDate,
               isPastDue: false,
               name: billName,
             },
@@ -601,58 +672,67 @@ export function buildMultimodalResponse(
 
   // Map common prop names to expected names
   const mappedData =
-    intent === IntentType.CHECK_BALANCE && data.balance !== undefined
-      ? { ...data, currentBalance: data.balance }
-      : intent === IntentType.PAY_BILL && data.billName && data.amount
+    intent === IntentType.CHECK_BALANCE && safeData.balance !== undefined
+      ? { ...safeData, currentBalance: safeData.balance }
+      : intent === IntentType.PAY_BILL && safeData.billName && safeData.amount
         ? {
-            ...data,
+            ...safeData,
             bills: [
               {
-                amount: data.amount,
-                dueDate: data.dueDate,
+                amount: safeData.amount,
+                dueDate: safeData.dueDate,
                 isPastDue: false,
-                name: data.billName,
+                name: safeData.billName,
               },
             ],
-            totalAmount: data.amount,
+            totalAmount: safeData.amount,
           }
-        : intent === IntentType.CHECK_BUDGET && data.available !== undefined
+        : intent === IntentType.CHECK_BUDGET && safeData.available !== undefined
           ? {
-              ...data,
+              ...safeData,
               spentPercentage:
-                data.total && data.spent !== undefined ? (data.spent / data.total) * 100 : 0,
+                safeData.total && safeData.spent !== undefined
+                  ? (safeData.spent / safeData.total) * 100
+                  : 0,
             }
-          : intent === IntentType.FINANCIAL_PROJECTION && data.projectedBalance !== undefined
+          : intent === IntentType.FINANCIAL_PROJECTION && safeData.projectedBalance !== undefined
             ? {
-                ...data,
-                expectedIncome: data.income ?? data.expectedIncome ?? data.currentBalance ?? 0,
-                expectedExpenses: data.expenses ?? data.expectedExpenses ?? 0,
+                ...safeData,
+                expectedIncome:
+                  safeData.income ?? safeData.expectedIncome ?? safeData.currentBalance ?? 0,
+                expectedExpenses: safeData.expenses ?? safeData.expectedExpenses ?? 0,
                 variation:
-                  data.variation ??
-                  (data.projectedBalance !== undefined && data.currentBalance !== undefined
-                    ? data.projectedBalance - data.currentBalance
+                  safeData.variation ??
+                  (safeData.projectedBalance !== undefined && safeData.currentBalance !== undefined
+                    ? safeData.projectedBalance - safeData.currentBalance
                     : 0),
               }
-            : intent === IntentType.CHECK_INCOME && data.nextIncome
+            : intent === IntentType.CHECK_INCOME && safeData.nextIncome
               ? {
-                  ...data,
-                  incoming: data.incoming ?? [
+                  ...safeData,
+                  incoming: safeData.incoming ?? [
                     {
-                      amount: data.nextIncome.amount ?? 0,
-                      confirmed: data.nextIncome.confirmed ?? false,
+                      amount: safeData.nextIncome.amount ?? 0,
+                      confirmed: safeData.nextIncome.confirmed ?? false,
                       expectedDate:
-                        typeof data.nextIncome.date === 'string'
-                          ? data.nextIncome.date
-                          : (data.nextIncome.date?.toISOString?.() ?? ''),
-                      source: data.nextIncome.description || data.nextIncome.source || 'Receita',
+                        typeof safeData.nextIncome.date === 'string'
+                          ? safeData.nextIncome.date
+                          : (safeData.nextIncome.date?.toISOString?.() ?? ''),
+                      source:
+                        safeData.nextIncome.description || safeData.nextIncome.source || 'Receita',
                     },
                   ],
                   totalExpected:
-                    data.totalExpected ?? data.nextIncome.amount ?? data.incoming?.[0]?.amount ?? 0,
+                    safeData.totalExpected ??
+                    safeData.nextIncome.amount ??
+                    safeData.incoming?.[0]?.amount ??
+                    0,
                 }
-              : data;
+              : safeData;
 
-  const response = builder(mappedData);
+  const response = (builder as unknown as (data: typeof mappedData) => MultimodalResponse)(
+    mappedData
+  );
 
   if (!response.accessibility) {
     return {

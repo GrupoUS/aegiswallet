@@ -39,6 +39,7 @@
     "test": "bun run test:unit",
     "test:healthcare-full": "bun scripts/run-healthcare-tests.ts",
     "smoke:supabase": "bun scripts/supabase-smoke-test.ts",
+    "env:check": "bun scripts/check-env.ts",
     "quality": "bun run lint:oxlint && bun run check && bun run test:coverage",
     "quality:ci": "bun run lint:oxlint:types && bun run check && bun run test:coverage",
     "quality:security": "bun run lint:oxlint:security && bun run lint:healthcare",

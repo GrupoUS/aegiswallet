@@ -53,6 +53,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Verify Supabase environment variables
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_QA_USER_ID: ${{ secrets.SUPABASE_QA_USER_ID }}
+        run: bun scripts/check-env.ts
+        
+      - name: Supabase smoke test
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_QA_USER_ID: ${{ secrets.SUPABASE_QA_USER_ID }}
+        run: bun scripts/supabase-smoke-test.ts
+        
       # Run checks in parallel for better performance
       - name: Run Quality Checks in Parallel
         run: |

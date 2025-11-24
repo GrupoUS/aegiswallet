@@ -1300,6 +1300,133 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_qr_codes: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          pix_key: string
+          qr_code_data: string
+          qr_code_image: string | null
+          times_used: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          pix_key: string
+          qr_code_data: string
+          qr_code_image?: string | null
+          times_used?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          pix_key?: string
+          qr_code_data?: string
+          qr_code_image?: string | null
+          times_used?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_qr_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pix_transactions: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          end_to_end_id: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          pix_key: string
+          pix_key_type: string
+          recipient_document: string | null
+          recipient_name: string | null
+          scheduled_date: string | null
+          status: string
+          transaction_id: string | null
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_to_end_id?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          pix_key: string
+          pix_key_type: string
+          recipient_document?: string | null
+          recipient_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          transaction_id?: string | null
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_to_end_id?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          pix_key?: string
+          pix_key_type?: string
+          recipient_document?: string | null
+          recipient_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          transaction_id?: string | null
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pix_transfers: {
         Row: {
           amount: number
@@ -1399,6 +1526,94 @@ export type Database = {
         }
         Relationships: []
       }
+      push_logs: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          error: string | null
+          id: string
+          message_body: string | null
+          message_id: string | null
+          message_title: string | null
+          status: string | null
+          tag: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          error?: string | null
+          id?: string
+          message_body?: string | null
+          message_id?: string | null
+          message_title?: string | null
+          status?: string | null
+          tag?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          error?: string | null
+          id?: string
+          message_body?: string | null
+          message_id?: string | null
+          message_title?: string | null
+          status?: string | null
+          tag?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_payments: {
         Row: {
           amount: number
@@ -1484,6 +1699,56 @@ export type Database = {
             columns: ["rule_id"]
             isOneToOne: false
             referencedRelation: "payment_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_logs: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          error: string | null
+          id: string
+          message_id: string | null
+          processing_time: number | null
+          status: string | null
+          template: string | null
+          to: string | null
+          user_id: string | null
+          variables: Json | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          message_id?: string | null
+          processing_time?: number | null
+          status?: string | null
+          template?: string | null
+          to?: string | null
+          user_id?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          message_id?: string | null
+          processing_time?: number | null
+          status?: string | null
+          template?: string | null
+          to?: string | null
+          user_id?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

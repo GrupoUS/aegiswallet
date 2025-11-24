@@ -1,27 +1,30 @@
 # Active Context (2025-11-24)
 
 ## Current Focus
-- Correções de persistência concluídas: RLS restaurado em `bank_accounts`/`transactions` e `user_id` NOT NULL; migrations recentes (`20251124_*` + `20251128_align_transactions_columns.sql`) alinham schema com o código (`transaction_date/transaction_type`).
-- Supabase client por request continua ativo (`ctx.supabase`) e os routers legacy (`calendar`, `contacts`, `users`, `transactions`) finalmente abandonaram o import global para respeitar o JWT do usuário.
-- `docs/ops/supabase-env.md` agora referencia o template `env.example` e o script `scripts/setup-vercel-env.sh` sincroniza também o `SUPABASE_SERVICE_ROLE_KEY`; falta apenas garantir que cada ambiente copiou o template.
-- O smoke test manual virou script (`bun run smoke:supabase --user <UUID>`) com cleanup automático; pensado para CI e para validar se o service role realmente consegue realizar inserts/deletes.
-- `auth.instances.raw_base_config` segue versionado e a leitura via MCP confirma `SITE_URL=https://aegiswallet.vercel.app`, `HIBP_ENABLED=true` e redirects cobrindo `app.aegiswallet.com`, localhost e curingas `aegiswallet-*.vercel.app`.
-- Rodamos `bun run type-check` para obter a baseline dos erros legados (voz, segurança, testes) e limpamos as regressões introduzidas pelo refactor (`calendar`/`contacts`).
+- Correções de persistência continuam estáveis: migrations `20251124_*` + `20251128_align_transactions_columns.sql` alinharam o schema (`transaction_date/transaction_type`) e o Supabase Advisors está sem alertas críticos.
+- Todos os routers (`calendar`, `contacts`, `users`, `transactions`) agora usam `ctx.supabase`, respeitando o JWT por requisição.
+- O onboarding de secrets ganhou o template `env.example`, o script `scripts/check-env.ts` (`bun run env:check`) e o update do `scripts/setup-vercel-env.sh` que replica também o `SUPABASE_SERVICE_ROLE_KEY`.
+- O smoke test virou comando oficial (`bun run smoke:supabase`) com suporte ao env `SUPABASE_QA_USER_ID`/`--user` e cleanup automático; a doc de ops descreve o fluxo.
+- `src/types/database.types.ts` foi atualizado com `pix_transactions`, `pix_qr_codes`, `push_subscriptions`, `push_logs` e `sms_logs`, reduzindo erros do tsc; ainda faltam tabelas como `user_behavior_profiles` e `fraud_detection_logs`.
+- Continuamos rodando `bun run type-check` para inspecionar a dívida (voz, segurança, PIX, testes) e garantir que nenhuma regressão nova foi introduzida.
 
 ## Known Issues / Follow-ups
-1. `bun run type-check` ainda retorna dezenas de erros antigos (voz, segurança, pix, testes) — precisamos priorizar a conversão gradual e gerar tipos Supabase atualizados (tabelas como `push_subscriptions`, `sms_logs`, `pix_transactions` não existem no `src/types/database.types.ts`).
-2. `SUPABASE_SERVICE_ROLE_KEY` precisa estar definido no `.env.local` de todos (o template existe, mas ainda falta validar o rollout real e atualizar secrets na Vercel).
-3. A suíte automatizada para criação/atualização de contas e transações ainda inexiste; o script de smoke test precisa entrar no CI e usar um usuário de QA fixo/documentado.
-4. `auth.config` segue ausente como view oficial no schema `auth` — se o dashboard quebrar novamente, teremos de acionar o suporte Supabase para restaurar os objetos protegidos.
-5. Advisories continuam listando tabelas legadas com RLS habilitado porém sem policies/índices; antes de abrir políticas novas, precisamos mapear quais tabelas realmente fazem parte do MVP.
-6. Se novos domínios personalizados forem adicionados, lembrar de expandir `ADDITIONAL_REDIRECT_URLS`, já que Supabase não aceita curingas parciais (usamos `aegiswallet-*.vercel.app` / `aegiswallet-git-*.vercel.app` provisoriamente para cobrir os subdomínios gerados pela Vercel).
+1. `bun run type-check` segue apontando dezenas de erros (voz, segurança, PIX, testes). Alguns são falta de tipos Supabase (`user_behavior_profiles`, `fraud_detection_logs`, etc.), outros são bugs reais (uso incorreto de Web APIs no ambiente SSR/teste).
+2. Ainda precisamos validar o rollout real do `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_QA_USER_ID` nas Vercel envs; o script `env:check` existe, mas não está integrado à CI.
+3. O smoke test automatizado precisa entrar na pipeline (GitHub/Vercel) usando o QA user dedicado para evitar regressões silenciosas no RLS.
+4. `auth.config` continua ausente como view oficial; se o dashboard quebrar novamente teremos de abrir ticket com o suporte Supabase.
+5. O Supabase Advisor ainda lista tabelas fora do MVP com RLS habilitado porém sem policies/índices — falta decidir se serão removidas ou atualizadas.
+6. Novos domínios personalizados continuam exigindo atualização manual em `auth.instances.raw_base_config`; o time precisa manter a planilha de deploys em dia para evitar bloqueios em OAuth.
 
 ## Immediate Tasks
-1. Validar rollout do `SUPABASE_SERVICE_ROLE_KEY` (local + Vercel) usando o template `env.example` e o script `scripts/setup-vercel-env.sh`.
-2. Regenerar `src/types/database.types.ts` (ou adicionar tipos manuais) para incluir `push_subscriptions`, `push_logs`, `sms_logs`, `pix_transactions`, `pix_qr_codes` e demais tabelas que o tRPC usa — requisito para reduzir os erros do type-check.
-3. Integrar `bun run smoke:supabase --user <QA_UUID>` ao pipeline (CI/manual) e documentar o usuário padrão que deve ser usado no script.
-4. Priorizar o mutirão de `bun run type-check` (voz + segurança + testes) assim que os tipos estiverem alinhados; objetivo é zerar erros antes da próxima release.
-5. Revalidar periodicamente `auth.instances.raw_base_config` via MCP após cada alteração de redirect/site, já que o dashboard do Supabase costuma cachear valores antigos.
+1. Integrar `bun run env:check` e `bun run smoke:supabase` nas pipelines (falhando o deploy se `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_QA_USER_ID` estiverem ausentes ou se o smoke test quebrar).
+2. Completar `src/types/database.types.ts` com as tabelas restantes usadas pelo backend (`user_behavior_profiles`, `fraud_detection_logs`, `transaction_alerts`, etc.) e regenerar via Supabase CLI quando possível.
+3. Atacar o lote crítico de erros do `type-check`:
+   - `pushProvider`/`smsProvider` usam APIs de browser em arquivos compartilhados — precisamos extrair tipos/abstrações para SSR.
+   - `fraudDetection` assume campos em `event.metadata` sem checar null e consome tabelas sem tipo.
+   - `SpeechRecognitionService` precisa de shims para ambientes Node/Vitest.
+4. Anexar o QA user (id + secrets) no 1Password e verificar se `SUPABASE_QA_USER_ID` já está populado nos ambientes (rodar `bun run env:check` em cada workspace).
+5. Continuar auditando `auth.instances.raw_base_config` com MCP após qualquer alteração de redirect/site para garantir que o Supabase Dashboard reflita o JSON versionado.
 
 ## Risks / Unknowns
 - Service role exposta no bundle client quebraria RLS; garantir que bundler nunca tenha acesso à variável.

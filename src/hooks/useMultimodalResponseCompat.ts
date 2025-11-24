@@ -8,12 +8,9 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+import type { MultimodalResponse } from '@/lib/multimodal/responseTemplates';
 import type { IntentType } from '@/lib/nlu/types';
-import type {
-  MultimodalResponse,
-  ResponseFeedback,
-  UseMultimodalResponseReturn,
-} from './useMultimodalResponse';
+import type { ResponseFeedback, UseMultimodalResponseReturn } from './useMultimodalResponse';
 import { useMultimodalResponse as useNewMultimodalResponse } from './useMultimodalResponse';
 
 export interface UseMultimodalResponseCompatOptions {

@@ -17,7 +17,7 @@ type CliOptions = {
 
 function parseArgs(): CliOptions {
   const args = process.argv.slice(2);
-  let userId = '';
+  let userId = process.env.SUPABASE_QA_USER_ID?.trim() ?? '';
   let keepData = false;
 
   for (const arg of args) {
@@ -25,15 +25,33 @@ function parseArgs(): CliOptions {
       userId = arg.replace('--user=', '').trim();
     } else if (arg === '--keep-data') {
       keepData = true;
+    } else if (arg === '--help') {
+      printHelp();
+      process.exit(0);
     }
   }
 
   if (!userId) {
-    console.error('❌ Missing required argument: --user=<uuid>');
+    console.error('❌ Missing QA user id. Pass --user=<uuid> or set SUPABASE_QA_USER_ID.');
     process.exit(1);
   }
 
   return { userId, keepData };
+}
+
+function printHelp() {
+  console.log(`Supabase Smoke Test
+
+Options:
+  --user=<uuid>     Override the QA user id (defaults to SUPABASE_QA_USER_ID)
+  --keep-data       Skip cleanup to inspect created rows
+  --help            Show this message
+
+Environment variables:
+  SUPABASE_URL
+  SUPABASE_SERVICE_ROLE_KEY
+  SUPABASE_QA_USER_ID (optional fallback for --user)
+`);
 }
 
 async function main() {
@@ -63,7 +81,7 @@ async function main() {
   const institutionName = 'QA Smoke Bank';
 
   console.log('🚀 Starting Supabase smoke test...');
-  console.log(`• Using user_id: ${userId}`);
+  console.log(`• Using user_id: ${userId}${process.env.SUPABASE_QA_USER_ID ? ' (from env)' : ''}`);
 
   const accountPayload = {
     user_id: userId,

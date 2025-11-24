@@ -3,11 +3,13 @@
  * Implementa CRUD, filtragem, ordenação, real-time subscriptions e cache local
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeObject } from '@/lib/security/sanitization';
 import type { Database } from '@/types/database.types';
+import type { FinancialEventCategory, FinancialEventPriority } from '@/types/financial.interfaces';
 import type {
   EventColor,
   EventStatus,
@@ -77,6 +79,7 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
 
   return {
     id: row.id,
+    userId: row.user_id,
     title: row.title,
     description: row.description || undefined,
     start: startDate,
@@ -86,11 +89,15 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
     color: (row.color as EventColor) || ((type === 'income' ? 'emerald' : 'rose') as EventColor),
     icon: row.icon || undefined,
     status,
-    category: row.category || undefined,
+    category: (row.category as FinancialEventCategory) || 'OUTROS',
     account: undefined, // Não existe na tabela diretamente mas poderia vir de join
     location: row.location || undefined,
-    recurring: row.is_recurring || false,
+    isRecurring: row.is_recurring || false,
     allDay: row.all_day || false,
+    isIncome: row.is_income || false,
+    priority: (row.priority as FinancialEventPriority) || 'NORMAL',
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || new Date().toISOString(),
   };
 }
 
@@ -110,13 +117,14 @@ function eventToRow(event: Omit<FinancialEvent, 'id'>, userId: string): Financia
     end_date: (event.end || startDate).toISOString(),
     event_type: type,
     is_income: type === 'income',
-    category: event.category || null,
+    category: (event.category as string) || null,
     location: event.location || null,
-    is_recurring: event.recurring || false,
+    is_recurring: event.isRecurring || false,
     all_day: event.allDay || false,
     status: (event.status as EventStatus) || 'pending',
     updated_at: new Date().toISOString(),
     color: event.color || 'blue',
+    priority: event.priority || 'NORMAL',
   };
 }
 
@@ -140,7 +148,7 @@ export function useFinancialEvents(
   const [filters, setFilters] = useState<FinancialEventsFilters>(initialFilters);
   const [pagination, setPagination] = useState<PaginationOptions>(initialPagination);
   const [totalCount, setTotalCount] = useState(0);
-  const [cache, setCache] = useState<Map<string, CacheEntry>>(new Map());
+  const cache = useRef<Map<string, CacheEntry>>(new Map());
 
   // Gerar chave de cache baseada nos filtros e paginação e usuário
   const cacheKey = useMemo(() => {
@@ -149,7 +157,7 @@ export function useFinancialEvents(
 
   // Limpar cache público
   const clearCache = useCallback(() => {
-    setCache(new Map());
+    cache.current = new Map();
   }, []);
 
   // Clear cache when user changes
@@ -159,37 +167,35 @@ export function useFinancialEvents(
 
   // Verificar se há cache válido
   const getCachedData = useCallback((): { data: FinancialEvent[]; count: number } | null => {
-    const cached = cache.get(cacheKey);
+    const cached = cache.current.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       return { count: cached.totalCount, data: cached.data };
     }
     return null;
-  }, [cache, cacheKey]);
+  }, [cacheKey]);
 
   // Salvar dados no cache
   const setCachedData = useCallback(
     (data: FinancialEvent[], count: number) => {
-      const newCache = new Map(cache);
+      const currentCache = cache.current;
 
       // Limitar tamanho do cache
-      if (newCache.size >= MAX_CACHE_SIZE) {
-        const oldestKey = newCache.keys().next().value;
+      if (currentCache.size >= MAX_CACHE_SIZE) {
+        const oldestKey = currentCache.keys().next().value;
         if (oldestKey) {
-          newCache.delete(oldestKey);
+          currentCache.delete(oldestKey);
         }
       }
 
-      newCache.set(cacheKey, {
+      currentCache.set(cacheKey, {
         data,
         filters,
         pagination,
         timestamp: Date.now(),
         totalCount: count,
       });
-
-      setCache(newCache);
     },
-    [cache, cacheKey, filters, pagination]
+    [cacheKey, filters, pagination]
   );
 
   // Construir query com filtros e paginação
@@ -366,7 +372,8 @@ export function useFinancialEvents(
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
 
-        const baseRow = eventToRow(event, user.id);
+        const sanitizedEvent = sanitizeObject(event);
+        const baseRow = eventToRow(sanitizedEvent, user.id);
         // Ensure we don't send undefined/null for required fields if any logic missed it
         const eventData: FinancialEventInsert = {
           ...baseRow,
@@ -422,47 +429,49 @@ export function useFinancialEvents(
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
 
+        const sanitizedUpdates = sanitizeObject(updates);
+
         // Mapear updates para colunas do DB
         const updatePayload: Partial<FinancialEventInsert> = {
           updated_at: new Date().toISOString(),
         };
 
-        if (updates.title !== undefined) {
-          updatePayload.title = updates.title;
+        if (sanitizedUpdates.title !== undefined) {
+          updatePayload.title = sanitizedUpdates.title;
         }
-        if (updates.description !== undefined) {
-          updatePayload.description = updates.description;
+        if (sanitizedUpdates.description !== undefined) {
+          updatePayload.description = sanitizedUpdates.description;
         }
-        if (updates.amount !== undefined) {
-          updatePayload.amount = updates.amount;
+        if (sanitizedUpdates.amount !== undefined) {
+          updatePayload.amount = sanitizedUpdates.amount;
         }
-        if (updates.start !== undefined) {
-          updatePayload.start_date = updates.start.toISOString();
+        if (sanitizedUpdates.start !== undefined) {
+          updatePayload.start_date = sanitizedUpdates.start.toISOString();
         }
-        if (updates.end !== undefined) {
-          updatePayload.end_date = updates.end.toISOString();
+        if (sanitizedUpdates.end !== undefined) {
+          updatePayload.end_date = sanitizedUpdates.end.toISOString();
         }
-        if (updates.type !== undefined) {
-          updatePayload.event_type = updates.type;
-          updatePayload.is_income = updates.type === 'income';
+        if (sanitizedUpdates.type !== undefined) {
+          updatePayload.event_type = sanitizedUpdates.type;
+          updatePayload.is_income = sanitizedUpdates.type === 'income';
         }
-        if (updates.category !== undefined) {
-          updatePayload.category = updates.category;
+        if (sanitizedUpdates.category !== undefined) {
+          updatePayload.category = sanitizedUpdates.category;
         }
-        if (updates.recurring !== undefined) {
-          updatePayload.is_recurring = updates.recurring;
+        if (sanitizedUpdates.isRecurring !== undefined) {
+          updatePayload.is_recurring = sanitizedUpdates.isRecurring;
         }
-        if (updates.status !== undefined) {
-          updatePayload.status = updates.status;
+        if (sanitizedUpdates.status !== undefined) {
+          updatePayload.status = sanitizedUpdates.status;
         }
-        if (updates.color !== undefined) {
-          updatePayload.color = updates.color;
+        if (sanitizedUpdates.color !== undefined) {
+          updatePayload.color = sanitizedUpdates.color;
         }
-        if (updates.icon !== undefined) {
-          updatePayload.icon = updates.icon;
+        if (sanitizedUpdates.icon !== undefined) {
+          updatePayload.icon = sanitizedUpdates.icon;
         }
-        if (updates.location !== undefined) {
-          updatePayload.location = updates.location;
+        if (sanitizedUpdates.location !== undefined) {
+          updatePayload.location = sanitizedUpdates.location;
         }
 
         const { data, error } = await supabase
@@ -935,8 +944,8 @@ export function useFinancialEventMutations() {
         if (updates.category !== undefined) {
           updatePayload.category = updates.category;
         }
-        if (updates.recurring !== undefined) {
-          updatePayload.is_recurring = updates.recurring;
+        if (updates.isRecurring !== undefined) {
+          updatePayload.is_recurring = updates.isRecurring;
         }
         if (updates.status !== undefined) {
           updatePayload.status = updates.status;

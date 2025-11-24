@@ -1,9 +1,9 @@
-import { eachDayOfInterval, format, isSameDay, subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
+  Line,
+  LineChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -12,79 +12,88 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFinancialEvents } from "@/hooks/useFinancialEvents";
+import { useBalanceHistory, useBankAccounts } from "@/hooks/useBankAccounts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function BalanceChart() {
   const [period, setPeriod] = useState<"week" | "month" | "quarter">("month");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
 
-  const dateRange = useMemo(() => {
-    const end = new Date();
-    let start = new Date();
-    if (period === "week") {
-      start = subDays(end, 7);
-    }
-    if (period === "month") {
-      start = subDays(end, 30);
-    }
-    if (period === "quarter") {
-      start = subDays(end, 90);
-    }
-    return { end, start };
+  const { accounts } = useBankAccounts();
+
+  const days = useMemo(() => {
+    if (period === "week") return 7;
+    if (period === "month") return 30;
+    if (period === "quarter") return 90;
+    return 30;
   }, [period]);
 
-  const { events, loading } = useFinancialEvents(
-    {
-      endDate: dateRange.end.toISOString(),
-      startDate: dateRange.start.toISOString(),
-      status: "all",
-    },
-    {
-      page: 1,
-      limit: 1000, // Fetch enough events for the chart
-      sortBy: "due_date",
-      sortOrder: "asc",
-    },
-  );
+  // Determine which account ID to use. If 'all', we might pick the primary one or handle aggregation.
+  // Since useBalanceHistory requires an accountId, we'll default to the primary account if 'all' is selected,
+  // or the first available account. Aggregating history for all accounts is complex without a backend endpoint.
+  // We'll show "Conta Principal" when 'all' is selected for now, or handle it if backend supported it.
+  // The plan says "Receber accountId como prop ou usar conta primária por padrão".
+
+  const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
+  const targetAccountId = selectedAccountId === "all" ? primaryAccount?.id : selectedAccountId;
+
+  const { history, isLoading } = useBalanceHistory(targetAccountId || "", days);
 
   const data = useMemo(() => {
-    if (loading) {
+    if (isLoading || !history) {
       return [];
     }
 
-    const days = eachDayOfInterval({
-      end: dateRange.end,
-      start: dateRange.start,
-    });
+    // History is expected to be [{ date: string, balance: number }, ...]
+    // We need to format it for the chart
+    return history.map((item: any) => ({
+        date: format(new Date(item.date), "dd/MM"),
+        fullDate: format(new Date(item.date), "dd 'de' MMMM", { locale: ptBR }),
+        balance: Number(item.balance)
+    }));
+  }, [history, isLoading]);
 
-    return days.map((day) => {
-      const dayEvents = events.filter((e) => isSameDay(new Date(e.start), day));
+  if (isLoading && accounts.length > 0) {
+    return <Card className="col-span-4 h-[400px] animate-pulse bg-muted" />;
+  }
 
-      const income = dayEvents
-        .filter((e) => e.type === "income")
-        .reduce((sum, e) => sum + e.amount, 0);
-
-      const expense = dayEvents
-        .filter((e) => e.type !== "income")
-        .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-
-      return {
-        balance: income - expense,
-        date: format(day, "dd/MM"),
-        expense,
-        fullDate: format(day, "dd 'de' MMMM", { locale: ptBR }),
-        income,
-      };
-    });
-  }, [events, loading, dateRange]);
-
-  if (loading) {
-    return <Card className="h-[400px] animate-pulse bg-muted" />;
+  if (accounts.length === 0) {
+     return (
+        <Card className="col-span-4">
+            <CardHeader>
+                <CardTitle className="text-base font-normal">Evolução do Saldo</CardTitle>
+            </CardHeader>
+            <CardContent className="flex h-[300px] items-center justify-center text-muted-foreground">
+                Nenhuma conta conectada
+            </CardContent>
+        </Card>
+     );
   }
 
   return (
     <Card className="col-span-4">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base font-normal">Fluxo de Caixa</CardTitle>
+      <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-2">
+        <div className="flex items-center gap-4">
+            <CardTitle className="text-base font-normal">Evolução do Saldo</CardTitle>
+            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                <SelectTrigger className="w-[180px] h-8">
+                    <SelectValue placeholder="Selecione a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Principal</SelectItem>
+                    {accounts.map(acc => (
+                        <SelectItem key={acc.id} value={acc.id}>{acc.institution_name}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+
         <Tabs
           value={period}
           onValueChange={(v) => setPeriod(v as "week" | "month" | "quarter")}
@@ -100,17 +109,7 @@ export function BalanceChart() {
       <CardContent className="pl-2">
         <div className="h-[300px] w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                </linearGradient>
-              </defs>
+            <LineChart data={data}>
               <XAxis
                 dataKey="date"
                 stroke="#888888"
@@ -131,23 +130,13 @@ export function BalanceChart() {
                   if (active && payload && payload.length) {
                     return (
                       <div className="rounded-lg border bg-background p-2 shadow-sm">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex flex-col">
+                        <div className="flex flex-col">
                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Receitas
+                              Saldo
                             </span>
-                            <span className="font-bold text-emerald-500">
+                            <span className="font-bold text-primary">
                               R$ {payload[0].value}
                             </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Despesas
-                            </span>
-                            <span className="font-bold text-rose-500">
-                              R$ {payload[1].value}
-                            </span>
-                          </div>
                         </div>
                         <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
                           {payload[0].payload.fullDate}
@@ -158,21 +147,15 @@ export function BalanceChart() {
                   return null;
                 }}
               />
-              <Area
+              <Line
                 type="monotone"
-                dataKey="income"
-                stroke="#10b981"
-                fillOpacity={1}
-                fill="url(#colorIncome)"
+                dataKey="balance"
+                stroke="#2563eb"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4 }}
               />
-              <Area
-                type="monotone"
-                dataKey="expense"
-                stroke="#f43f5e"
-                fillOpacity={1}
-                fill="url(#colorExpense)"
-              />
-            </AreaChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

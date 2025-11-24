@@ -125,3 +125,5 @@ android/app/release/
 # ?? Windows Special Files
 # =============================================================================
 nul
+
+.vercel

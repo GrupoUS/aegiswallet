@@ -7,7 +7,7 @@ import type { Hono } from 'hono';
 import { environment } from '@/server/config/environment';
 
 export function setupHealthRoute(app: Hono) {
-  app.get('/health', (c) => {
+  app.get('/api/health', (c) => {
     return c.json({
       environment: environment.NODE_ENV,
       memory: process.memoryUsage?.() || {},

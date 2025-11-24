@@ -30,42 +30,74 @@
       "suspicious": {
         "noExplicitAny": "warn",
         "noDebugger": "error",
-        "noDocumentCookie": "warn",
+        "noDocumentCookie": "error",
         "noArrayIndexKey": "warn",
-        "noConsole": "warn"
+        "noConsole": "warn",
+        "noDoubleEquals": "error",
+        "noRedeclare": "error",
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateParameters": "error",
+        "noEmptyBlock": "warn",
+        "useIsArray": "error"
       },
       "correctness": {
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "error",
-        "useHookAtTopLevel": "error"
-      },
-      "nursery": {
-        "useSortedClasses": "off"
+        "useHookAtTopLevel": "error",
+        "noUnusedImports": "error",
+        "noConstAssign": "error",
+        "noGlobalObjectCalls": "error",
+        "noInvalidConstructorSuper": "error",
+        "noSetterReturn": "error",
+        "noUndeclaredVariables": "error",
+        "noUnreachable": "error",
+        "noUnsafeFinally": "error"
       },
       "security": {
-        "noDangerouslySetInnerHtml": "warn"
+        "noDangerouslySetInnerHtml": "error"
       },
       "a11y": {
         "noLabelWithoutControl": "warn",
         "noStaticElementInteractions": "warn",
         "useKeyWithClickEvents": "warn",
         "useButtonType": "warn",
-        "noSvgWithoutTitle": "warn"
+        "noSvgWithoutTitle": "warn",
+        "useAltText": "warn",
+        "useValidAnchor": "warn"
       },
       "complexity": {
         "noForEach": "off",
-        "useLiteralKeys": "off"
+        "useLiteralKeys": "off",
+        "useArrowFunction": "off"
       },
       "performance": {
-        "noAccumulatingSpread": "warn"
+        "noAccumulatingSpread": "error",
+        "noDelete": "error"
       },
       "style": {
         "useConst": "error",
         "noNonNullAssertion": "warn",
-        "noUselessElse": "error"
+        "noUselessElse": "error",
+        "useTemplate": "error",
+        "useSelfClosingElements": "warn"
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "correctness": {
+            "useHookAtTopLevel": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single",

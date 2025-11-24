@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -34,10 +34,9 @@ import { cn } from '@/lib/utils';
 import type {
   BrazilianEventType,
   FinancialEventCategory,
-  FinancialEventFormData,
   FinancialEventPriority,
 } from '@/types/financial.interfaces';
-import type { EventColor, FinancialEvent } from '@/types/financial-events';
+import type { EventColor, FinancialEvent, FinancialEventType } from '@/types/financial-events';
 
 // Schema de validação com tipos específicos para o mercado brasileiro
 const financialEventSchema = z.object({
@@ -131,7 +130,11 @@ const COLORS: { value: EventColor; label: string; class: string }[] = [
   { class: 'bg-cyan-500', label: 'Azul claro', value: 'cyan' },
 ];
 
-export function FinancialEventForm({ initialData, onSuccess, onCancel }: FinancialEventFormProps) {
+function FinancialEventFormComponent({
+  initialData,
+  onSuccess,
+  onCancel,
+}: FinancialEventFormProps) {
   const { createEvent, updateEvent } = useFinancialEvents();
   const { accounts } = useBankAccounts();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,16 +170,16 @@ export function FinancialEventForm({ initialData, onSuccess, onCancel }: Financi
   useEffect(() => {
     if (initialData) {
       form.reset({
-        accountId: initialData.metadata?.accountId || '',
+        accountId: '', // metadata not directly available on CalendarFinancialEvent unless casted
         allDay: initialData.allDay || true,
         amount: Math.abs(initialData.amount).toString(),
         attachments: initialData.attachments || [],
         brazilianEventType: initialData.brazilianEventType || '',
-        category: initialData.category || '',
+        category: (initialData.category as string) || '',
         color: initialData.color || 'blue',
         description: initialData.description || '',
         dueDate: initialData.dueDate ? new Date(initialData.dueDate) : undefined,
-        endDate: initialData.endDate ? new Date(initialData.endDate) : undefined,
+        endDate: initialData.end,
         icon: initialData.icon || '',
         isIncome: initialData.isIncome || false,
         isRecurring: initialData.isRecurring || false,
@@ -184,7 +187,7 @@ export function FinancialEventForm({ initialData, onSuccess, onCancel }: Financi
         notes: initialData.notes || '',
         priority: initialData.priority || 'NORMAL',
         recurrenceRule: initialData.recurrenceRule || '',
-        startDate: new Date(initialData.startDate),
+        startDate: initialData.start,
         tags: initialData.tags || [],
         title: initialData.title,
       });
@@ -198,16 +201,16 @@ export function FinancialEventForm({ initialData, onSuccess, onCancel }: Financi
       // Ajustar sinal baseado no tipo (despesa/conta = negativo, receita = positivo)
       const finalAmount = values.isIncome ? Math.abs(numericAmount) : -Math.abs(numericAmount);
 
-      const eventData: FinancialEventFormData = {
+      const eventData: Omit<FinancialEvent, 'id'> = {
         allDay: values.allDay,
         amount: finalAmount,
         attachments: values.attachments,
         brazilianEventType: values.brazilianEventType as BrazilianEventType | undefined,
         category: values.category as FinancialEventCategory,
-        color: values.color,
+        color: values.color as EventColor,
         description: values.description,
         dueDate: values.dueDate?.toISOString(),
-        endDate: values.endDate?.toISOString(),
+        end: values.endDate || values.startDate,
         icon: values.icon,
         isIncome: values.isIncome,
         isRecurring: values.isRecurring,
@@ -215,9 +218,14 @@ export function FinancialEventForm({ initialData, onSuccess, onCancel }: Financi
         notes: values.notes,
         priority: values.priority as FinancialEventPriority,
         recurrenceRule: values.recurrenceRule,
-        startDate: values.startDate.toISOString(),
+        start: values.startDate,
         tags: values.tags,
         title: values.title,
+        type: (values.isIncome ? 'income' : 'expense') as FinancialEventType,
+        status: 'pending', // Default status
+        userId: '', // Will be set by hook
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       if (initialData) {
@@ -601,3 +609,5 @@ export function FinancialEventForm({ initialData, onSuccess, onCancel }: Financi
     </Form>
   );
 }
+
+export const FinancialEventForm = memo(FinancialEventFormComponent);

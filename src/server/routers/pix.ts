@@ -151,8 +151,33 @@ export const pixRouter = router({
   /**
    * Update PIX key (toggle favorite, update label)
    */
-  .mutation(async ({ ctx, input }) => {
-      const updates: Record<string, unknown> = {};,
+  updateKey: protectedProcedure
+    .input(z.object({
+        id: z.string().uuid(),
+        isFavorite: z.boolean().optional(),
+        label: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const updates: Record<string, unknown> = {};
+      if (input.isFavorite !== undefined) updates.is_favorite = input.isFavorite;
+      if (input.label !== undefined) updates.label = input.label;
+
+      const { data, error } = await ctx.supabase
+        .from('pix_keys')
+        .update(updates)
+        .eq('id', input.id)
+        .eq('user_id', ctx.user.id)
+        .select()
+        .single();
+        
+      if (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Erro ao atualizar chave PIX: ${error.message}`,
+          });
+      }
+      return data;
+    }),
 
   /**
    * Delete PIX key (soft delete)

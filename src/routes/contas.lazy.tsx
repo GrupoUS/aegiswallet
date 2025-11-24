@@ -1,10 +1,18 @@
 import { FileText, Mic } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { EditTransactionDialog } from '@/components/financial/EditTransactionDialog';
+import { FinancialEventForm } from '@/components/financial/FinancialEventForm';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
 import type { FinancialEvent } from '@/types/financial-events';
@@ -56,6 +64,7 @@ export function Contas() {
   const [isListening, setIsListening] = useState(false);
   const [editingBill, setEditingBill] = useState<FinancialEvent | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
     events: bills,
@@ -64,6 +73,7 @@ export function Contas() {
     filters,
     statistics,
     deleteEvent,
+    refetch,
   } = useFinancialEvents(
     {
       type: 'expense', // Busca apenas despesas (inclui contas)
@@ -210,12 +220,35 @@ export function Contas() {
         transaction={editingBill}
       />
 
+      {/* Create Bill Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Nova Conta a Pagar</DialogTitle>
+            <DialogDescription>Adicione uma nova conta ou despesa.</DialogDescription>
+          </DialogHeader>
+          <FinancialEventForm
+            onSuccess={() => {
+              setIsCreateModalOpen(false);
+              refetch();
+            }}
+            onCancel={() => setIsCreateModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Actions */}
       <div className="flex gap-4">
-        <Button size="lg" className="flex-1" withGradient>
+        <Button
+          size="lg"
+          className="flex-1"
+          withGradient
+          onClick={() => setIsCreateModalOpen(true)}
+        >
           <FileText className="mr-2 h-5 w-5" />
           Adicionar Nova Conta
         </Button>
+        {/* TODO: Implementar Gerenciar Recorrentes */}
         <Button variant="outline" size="lg" className="flex-1">
           Gerenciar Recorrentes
         </Button>

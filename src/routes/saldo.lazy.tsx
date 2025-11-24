@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   LineChart,
   Mic,
@@ -22,6 +23,7 @@ import { useFinancialEvents } from "@/hooks/useFinancialEvents";
 import { BalanceChart } from "./components/BalanceChart";
 import { QuickActionModal } from "./components/QuickActionModal";
 import { StatisticsCards } from "./components/StatisticsCards";
+import type { Database } from "@/types/database.types";
 
 const TransactionForm = lazy(() => import("./components/TransactionForm"));
 const TransactionsList = lazy(() => import("./components/TransactionsList"));
@@ -124,7 +126,12 @@ export function Saldo() {
 
       {/* Accounts Breakdown */}
       <div>
-        <h2 className="mb-4 font-semibold text-2xl">Contas</h2>
+        <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-2xl">Contas</h2>
+            <Link to="/contas-bancarias">
+                <Button variant="ghost" size="sm">Gerenciar Contas</Button>
+            </Link>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {accountsLoading
             ? [1, 2, 3].map((i) => (

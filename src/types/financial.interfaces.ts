@@ -721,18 +721,21 @@ export const FinancialEventSchema = z.object({
     'LAZER',
     'OUTROS',
   ]),
-  description: z.string().optional(),
-  dueDate: z.string().optional(),
-  endDate: z.string().optional(),
+  description: z.string().trim().max(500, 'Descrição muito longa').optional(),
+  dueDate: z.string().datetime({ message: 'Data de vencimento inválida' }).optional(),
+  endDate: z.string().datetime({ message: 'Data de término inválida' }).optional(),
   isIncome: z.boolean(),
   isRecurring: z.boolean(),
-  location: z.string().optional(),
-  notes: z.string().optional(),
+  location: z.string().trim().max(200, 'Localização muito longa').optional(),
+  notes: z.string().trim().max(1000, 'Notas muito longas').optional(),
   priority: z.enum(['BAIXA', 'NORMAL', 'ALTA', 'URGENTE']),
-  recurrenceRule: z.string().optional(),
-  startDate: z.string().min(1, 'Data de início é obrigatória'),
-  tags: z.array(z.string()).optional(),
-  title: z.string().min(1, 'Título é obrigatório'),
+  recurrenceRule: z
+    .string()
+    .regex(/^FREQ=/, 'Regra de recorrência inválida')
+    .optional(),
+  startDate: z.string().datetime({ message: 'Data de início inválida' }),
+  tags: z.array(z.string().trim().max(50, 'Tag muito longa')).optional(),
+  title: z.string().trim().min(1, 'Título é obrigatório').max(100, 'Título muito longo'),
 });
 
 /**
@@ -740,12 +743,16 @@ export const FinancialEventSchema = z.object({
  */
 export const PIXTransferSchema = z.object({
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
-  description: z.string().optional(),
-  pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
+  description: z.string().trim().max(200, 'Descrição muito longa').optional(),
+  pixKey: z.string().trim().min(1, 'Chave PIX é obrigatória').max(100, 'Chave PIX muito longa'),
   pixKeyType: z.enum(['CPF', 'CNPJ', 'EMAIL', 'TELEFONE', 'CHAVE_ALEATORIA']),
-  recipientName: z.string().min(1, 'Nome do beneficiário é obrigatório'),
+  recipientName: z
+    .string()
+    .trim()
+    .min(1, 'Nome do beneficiário é obrigatório')
+    .max(100, 'Nome muito longo'),
   requiresConfirmation: z.boolean(),
-  scheduledDate: z.string().optional(),
+  scheduledDate: z.string().datetime({ message: 'Data agendada inválida' }).optional(),
 });
 
 /**
@@ -755,11 +762,23 @@ export const BoletoSchema = z
   .object({
     amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
     autoSchedulePayment: z.boolean().optional(),
-    barcode: z.string().optional(),
-    description: z.string().optional(),
-    digitableLine: z.string().optional(),
-    dueDate: z.string().min(1, 'Data de vencimento é obrigatória'),
-    payeeName: z.string().min(1, 'Nome do beneficiário é obrigatório'),
+    barcode: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, 'Código de barras deve conter apenas números')
+      .optional(),
+    description: z.string().trim().max(200, 'Descrição muito longa').optional(),
+    digitableLine: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, 'Linha digitável deve conter apenas números')
+      .optional(),
+    dueDate: z.string().datetime({ message: 'Data de vencimento inválida' }),
+    payeeName: z
+      .string()
+      .trim()
+      .min(1, 'Nome do beneficiário é obrigatório')
+      .max(100, 'Nome muito longo'),
   })
   .refine((data) => data.barcode || data.digitableLine, {
     message: 'Código de barras ou linha digitável é obrigatório',

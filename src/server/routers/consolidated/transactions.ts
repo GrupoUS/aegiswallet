@@ -35,7 +35,7 @@ export const transactionsRouter = router({
           .select(`
             *,
             bank_accounts(id, institution_name, account_mask),
-            transaction_categories(id, name, color)
+            financial_categories(id, name, color)
           `)
           .eq('user_id', ctx.user.id);
 

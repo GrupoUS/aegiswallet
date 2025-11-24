@@ -6,12 +6,12 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import {
+  Building,
   Calendar,
   FileText,
   Home,
   LogOut,
   Mic,
-  Send,
   Wallet,
 } from "lucide-react";
 import { useState } from "react";
@@ -77,9 +77,9 @@ function RootComponent() {
       label: "Contas",
     },
     {
-      href: "/pix",
-      icon: <Send className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-      label: "PIX",
+      href: "/contas-bancarias",
+      icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+      label: "Contas Bancárias",
     },
   ];
 

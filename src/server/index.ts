@@ -22,10 +22,10 @@ setupHealthRoute(app);
 setupApiRoutes(app);
 
 // tRPC endpoint
-app.use('/trpc/*', async (c) => {
+app.use('/api/trpc/*', async (c) => {
   return fetchRequestHandler({
     createContext: createContext,
-    endpoint: '/trpc',
+    endpoint: '/api/trpc',
     req: c.req.raw,
     router: appRouter,
   });

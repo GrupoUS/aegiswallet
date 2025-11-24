@@ -24,6 +24,18 @@ export default defineConfig({
         runScripts: 'dangerously',
       },
     },
+    // Type checking enabled
+    typecheck: {
+      enabled: true,
+      checker: 'tsc',
+    },
+    // Pool options for performance
+    poolOptions: {
+      threads: {
+        singleThread: false,
+        useAtomics: true,
+      },
+    },
     // Ensure setup runs before any tests
     sequence: {
       concurrent: false,
@@ -32,7 +44,7 @@ export default defineConfig({
     // Enhanced coverage configuration for 90%+ target
     coverage: {
       provider: 'v8', // Faster and more accurate for TypeScript
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['text', 'json', 'html', 'lcov', 'text-summary'],
       exclude: [
         'node_modules/',
         'src/test/',
@@ -43,6 +55,10 @@ export default defineConfig({
         'src/mocks/', // Mock files
         'docs/',
         'scripts/',
+        'src/routeTree.gen.ts',
+        'dist/',
+        'coverage/',
+        '**/*.gen.ts', // Generated files
       ],
       thresholds: {
         global: {
@@ -67,9 +83,10 @@ export default defineConfig({
     // Enhanced timeout for async operations
     testTimeout: 10000,
     // Better error reporting
-    reporters: ['default'],
-    // Sequential testing for debugging (can be enabled for troubleshooting)
-    // fileParallelism: false,
+    reporters: ['default', 'verbose', 'junit'],
+    outputFile: {
+      junit: './coverage/junit.xml',
+    },
     // Better isolate tests
     isolate: true,
     // Hook timeout

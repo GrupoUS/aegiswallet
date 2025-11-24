@@ -11,7 +11,9 @@ import { protectedProcedure, router } from '@/server/trpc-helpers';
 /**
  * Gera mensagem de lembrete padrão para eventos financeiros
  */
-function generateReminderMessage(event: CalendarEvent): string {
+function generateReminderMessage(event: { title: string }): string {
+  return `Lembrete: ${event.title}`;
+}
 
 /**
  * Calendar Router - Gerenciamento de eventos financeiros
@@ -288,7 +290,7 @@ export const calendarRouter = router({
         const { id, ...updateData } = input;
 
         // Map the input to database column names (only use columns that exist)
-        const const dbUpdateData: Record<string, unknown> = {};;
+        const dbUpdateData: Record<string, unknown> = {};
         if (updateData.typeId !== undefined) {
           dbUpdateData.event_type_id = updateData.typeId;
         }

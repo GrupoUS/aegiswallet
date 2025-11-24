@@ -12,13 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SaldoRouteImport } from './routes/saldo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias'
 import { Route as ContasRouteImport } from './routes/contas'
 import { Route as CalendarioRouteImport } from './routes/calendario'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PixIndexRouteImport } from './routes/pix/index'
-import { Route as PixTransferirRouteImport } from './routes/pix/transferir'
-import { Route as PixReceberRouteImport } from './routes/pix/receber'
-import { Route as PixHistoricoRouteImport } from './routes/pix/historico'
 
 const SaldoRoute = SaldoRouteImport.update({
   id: '/saldo',
@@ -35,6 +32,13 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContasBancariasRoute = ContasBancariasRouteImport.update({
+  id: '/contas-bancarias',
+  path: '/contas-bancarias',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/contas-bancarias.lazy').then((d) => d.Route),
+)
 const ContasRoute = ContasRouteImport.update({
   id: '/contas',
   path: '/contas',
@@ -50,63 +54,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PixIndexRoute = PixIndexRouteImport.update({
-  id: '/pix/',
-  path: '/pix/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PixTransferirRoute = PixTransferirRouteImport.update({
-  id: '/pix/transferir',
-  path: '/pix/transferir',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PixReceberRoute = PixReceberRouteImport.update({
-  id: '/pix/receber',
-  path: '/pix/receber',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PixHistoricoRoute = PixHistoricoRouteImport.update({
-  id: '/pix/historico',
-  path: '/pix/historico',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/pix/historico': typeof PixHistoricoRoute
-  '/pix/receber': typeof PixReceberRoute
-  '/pix/transferir': typeof PixTransferirRoute
-  '/pix': typeof PixIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/pix/historico': typeof PixHistoricoRoute
-  '/pix/receber': typeof PixReceberRoute
-  '/pix/transferir': typeof PixTransferirRoute
-  '/pix': typeof PixIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendario': typeof CalendarioRoute
   '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/saldo': typeof SaldoRoute
-  '/pix/historico': typeof PixHistoricoRoute
-  '/pix/receber': typeof PixReceberRoute
-  '/pix/transferir': typeof PixTransferirRoute
-  '/pix/': typeof PixIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,50 +89,38 @@ export interface FileRouteTypes {
     | '/'
     | '/calendario'
     | '/contas'
+    | '/contas-bancarias'
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/pix/historico'
-    | '/pix/receber'
-    | '/pix/transferir'
-    | '/pix'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/calendario'
     | '/contas'
+    | '/contas-bancarias'
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/pix/historico'
-    | '/pix/receber'
-    | '/pix/transferir'
-    | '/pix'
   id:
     | '__root__'
     | '/'
     | '/calendario'
     | '/contas'
+    | '/contas-bancarias'
     | '/dashboard'
     | '/login'
     | '/saldo'
-    | '/pix/historico'
-    | '/pix/receber'
-    | '/pix/transferir'
-    | '/pix/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarioRoute: typeof CalendarioRoute
   ContasRoute: typeof ContasRoute
+  ContasBancariasRoute: typeof ContasBancariasRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SaldoRoute: typeof SaldoRoute
-  PixHistoricoRoute: typeof PixHistoricoRoute
-  PixReceberRoute: typeof PixReceberRoute
-  PixTransferirRoute: typeof PixTransferirRoute
-  PixIndexRoute: typeof PixIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -183,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contas-bancarias': {
+      id: '/contas-bancarias'
+      path: '/contas-bancarias'
+      fullPath: '/contas-bancarias'
+      preLoaderRoute: typeof ContasBancariasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contas': {
       id: '/contas'
       path: '/contas'
@@ -204,34 +174,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pix/': {
-      id: '/pix/'
-      path: '/pix'
-      fullPath: '/pix'
-      preLoaderRoute: typeof PixIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pix/transferir': {
-      id: '/pix/transferir'
-      path: '/pix/transferir'
-      fullPath: '/pix/transferir'
-      preLoaderRoute: typeof PixTransferirRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pix/receber': {
-      id: '/pix/receber'
-      path: '/pix/receber'
-      fullPath: '/pix/receber'
-      preLoaderRoute: typeof PixReceberRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pix/historico': {
-      id: '/pix/historico'
-      path: '/pix/historico'
-      fullPath: '/pix/historico'
-      preLoaderRoute: typeof PixHistoricoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -239,13 +181,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarioRoute: CalendarioRoute,
   ContasRoute: ContasRoute,
+  ContasBancariasRoute: ContasBancariasRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SaldoRoute: SaldoRoute,
-  PixHistoricoRoute: PixHistoricoRoute,
-  PixReceberRoute: PixReceberRoute,
-  PixTransferirRoute: PixTransferirRoute,
-  PixIndexRoute: PixIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

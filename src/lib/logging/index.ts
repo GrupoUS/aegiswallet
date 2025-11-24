@@ -55,3 +55,11 @@ export const logError = (
     ...context,
   });
 };
+
+export const logSecurityEvent = (
+  event: string,
+  userId: string,
+  context?: Record<string, unknown>
+): void => {
+  logger.securityEvent(event, { userId, ...context });
+};

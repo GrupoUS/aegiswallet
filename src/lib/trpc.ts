@@ -10,7 +10,7 @@ export const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       transformer: superjson,
-      url: '/trpc',
+      url: '/api/trpc',
     }),
   ],
 });

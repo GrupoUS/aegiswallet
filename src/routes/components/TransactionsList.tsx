@@ -2,58 +2,73 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ArrowLeftRight,
-  Calendar,
   FileText,
   MoreVertical,
   TrendingDown,
   TrendingUp,
+  Trash2
 } from 'lucide-react';
 import { useState } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { FinancialEventsFilters } from '@/hooks/useFinancialEvents';
-import { useFinancialEvents } from '@/hooks/useFinancialEvents';
-import type { FinancialEventType } from '@/types/financial-events';
-import { FilterBar } from './FilterBar';
-import { PaginationControls } from './PaginationControls';
-import { TransactionDetailsModal } from './TransactionDetailsModal';
+import { useTransactions, useDeleteTransaction } from '@/hooks/use-transactions';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
 
-interface TransactionsListProps {
-  initialFilters?: FinancialEventsFilters;
-  showFilters?: boolean;
-  showPagination?: boolean;
-  className?: string;
-}
+export default function TransactionsList() {
+  const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
+  const { mutate: deleteTransaction } = useDeleteTransaction();
+  const { updateBalance, accounts } = useBankAccounts();
 
-export default function TransactionsList({
-  initialFilters = {},
-  showFilters = true,
-  showPagination = true,
-  className,
-}: TransactionsListProps) {
-  const { events, loading, totalCount, pagination, filters, updateFilters, updatePagination } =
-    useFinancialEvents(initialFilters);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const handleDelete = async () => {
+    if (!deletingId) return;
 
-  const handleTransactionClick = (id: string) => {
-    setSelectedTransactionId(id);
-    setIsDetailsOpen(true);
+    // Find transaction to revert balance
+    const transaction = transactions?.find((t: any) => t.id === deletingId);
+
+    deleteTransaction({ id: deletingId }, {
+      onSuccess: async () => {
+        // Revert balance if possible
+        if (transaction) {
+            const account = accounts.find(a => a.id === transaction.account_id);
+            if (account) {
+                // Inverse amount: subtract transaction amount (which is signed)
+                // If transaction was -100 (debit), we need to add 100.
+                // So: current - (-100) = current + 100.
+                // So: balance - transaction.amount
+                await updateBalance({
+                    id: transaction.account_id,
+                    balance: Number(account.balance) - Number(transaction.amount)
+                });
+            }
+        }
+
+        setDeletingId(null);
+        refetch();
+      }
+    });
   };
 
-  const getIcon = (type: FinancialEventType) => {
+  const getIcon = (type: string) => {
     switch (type) {
-      case 'income':
+      case 'credit':
         return <TrendingUp className="h-5 w-5 text-emerald-500" />;
-      case 'expense':
+      case 'debit':
         return <TrendingDown className="h-5 w-5 text-rose-500" />;
-      case 'bill':
+      case 'boleto':
         return <FileText className="h-5 w-5 text-orange-500" />;
-      case 'scheduled':
-        return <Calendar className="h-5 w-5 text-blue-500" />;
+      case 'pix':
+        return <ArrowLeftRight className="h-5 w-5 text-blue-500" />;
       case 'transfer':
         return <ArrowLeftRight className="h-5 w-5 text-violet-500" />;
       default:
@@ -63,20 +78,16 @@ export default function TransactionsList({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'paid':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Pago</Badge>;
+      case 'posted':
+        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Concluído</Badge>;
       case 'pending':
         return (
           <Badge variant="outline" className="text-yellow-600 border-yellow-600">
             Pendente
           </Badge>
         );
-      case 'scheduled':
-        return (
-          <Badge variant="outline" className="text-blue-600 border-blue-600">
-            Agendado
-          </Badge>
-        );
+      case 'failed':
+        return <Badge variant="destructive">Falhou</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Cancelado</Badge>;
       default:
@@ -85,7 +96,7 @@ export default function TransactionsList({
   };
 
   return (
-    <Card className={`transition-all duration-300 ${className}`}>
+    <Card className="transition-all duration-300">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -93,54 +104,42 @@ export default function TransactionsList({
             <CardDescription>Gerencie suas movimentações</CardDescription>
           </div>
         </div>
-        {showFilters && (
-          <FilterBar filters={filters} onFiltersChange={updateFilters} className="mt-4" />
-        )}
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
-        ) : events.length === 0 ? (
+        ) : !transactions || transactions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <p>Nenhuma transação encontrada</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {events.map((event) => (
+            {transactions.map((transaction: any) => (
               <div
-                key={event.id}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer group"
-                onClick={() => handleTransactionClick(event.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleTransactionClick(event.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
+                key={transaction.id}
+                className="w-full text-left flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-full bg-background border shadow-sm">
-                    {getIcon(event.type)}
+                    {getIcon(transaction.type)}
                   </div>
                   <div>
-                    <p className="font-medium leading-none">{event.title}</p>
+                    <p className="font-medium leading-none">{transaction.description}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>
-                        {format(new Date(event.start), 'dd/MM/yyyy', {
+                        {format(new Date(transaction.date), 'dd/MM/yyyy', {
                           locale: ptBR,
                         })}
                       </span>
-                      {event.category && (
+                      {transaction.type && (
                         <>
                           <span>•</span>
-                          <span className="capitalize">{event.category}</span>
+                          <span className="capitalize">{transaction.type}</span>
                         </>
                       )}
                     </div>
@@ -150,41 +149,43 @@ export default function TransactionsList({
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <FinancialAmount
-                      amount={event.type === 'expense' ? -event.amount : event.amount}
-                      className={event.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}
+                      amount={Number(transaction.amount)}
+                      className={Number(transaction.amount) > 0 ? 'text-emerald-600' : 'text-rose-600'}
                     />
-                    <div className="flex justify-end mt-1">{getStatusBadge(event.status)}</div>
+                    <div className="flex justify-end mt-1">{getStatusBadge(transaction.status)}</div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreVertical className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                            onClick={() => setDeletingId(transaction.id)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {showPagination && totalCount > 0 && (
-          <PaginationControls
-            pagination={pagination}
-            totalItems={totalCount}
-            onPaginationChange={updatePagination}
-          />
-        )}
+        <ConfirmDialog
+            open={!!deletingId}
+            onOpenChange={(open) => !open && setDeletingId(null)}
+            title="Excluir Transação"
+            description="Tem certeza que deseja excluir esta transação? O saldo da conta será revertido."
+            onConfirm={handleDelete}
+            variant="destructive"
+        />
       </CardContent>
-
-      <TransactionDetailsModal
-        transactionId={selectedTransactionId}
-        isOpen={isDetailsOpen}
-        onClose={() => {
-          setIsDetailsOpen(false);
-          setSelectedTransactionId(null);
-        }}
-      />
     </Card>
   );
 }

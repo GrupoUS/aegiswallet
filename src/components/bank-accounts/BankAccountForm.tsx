@@ -1,0 +1,252 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect } from "react";
+
+const formSchema = z.object({
+  institution_name: z.string().min(1, "Nome da instituição é obrigatório"),
+  account_type: z.enum(["checking", "savings", "investment", "cash"], {
+    required_error: "Selecione um tipo de conta",
+  }),
+  balance: z.coerce.number({ required_error: "Saldo é obrigatório" }),
+  currency: z.string().default("BRL"),
+  is_primary: z.boolean().default(false),
+  is_active: z.boolean().default(true),
+});
+
+type BankAccountFormValues = z.infer<typeof formSchema>;
+
+interface BankAccountFormProps {
+  account?: any; // Using any here as I don't have the exact type imported, but it should match the schema
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export function BankAccountForm({
+  account,
+  onSuccess,
+  onCancel,
+}: BankAccountFormProps) {
+  const { createAccount, updateAccount, isCreating, isUpdating } =
+    useBankAccounts();
+
+  const form = useForm<BankAccountFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      institution_name: "",
+      account_type: "checking",
+      balance: 0,
+      currency: "BRL",
+      is_primary: false,
+      is_active: true,
+    },
+  });
+
+  useEffect(() => {
+    if (account) {
+      form.reset({
+        institution_name: account.institution_name,
+        account_type: account.account_type,
+        balance: Number(account.balance),
+        currency: account.currency,
+        is_primary: account.is_primary,
+        is_active: account.is_active,
+      });
+    }
+  }, [account, form]);
+
+  const onSubmit = (values: BankAccountFormValues) => {
+    if (account) {
+      updateAccount(
+        { id: account.id, ...values },
+        {
+          onSuccess: () => {
+            onSuccess?.();
+          },
+        },
+      );
+    } else {
+      createAccount(values, {
+        onSuccess: () => {
+          onSuccess?.();
+        },
+      });
+    }
+  };
+
+  const isLoading = isCreating || isUpdating;
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="institution_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instituição Financeira</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Nubank, Itaú" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="account_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Conta</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="checking">Conta Corrente</SelectItem>
+                    <SelectItem value="savings">Poupança</SelectItem>
+                    <SelectItem value="investment">Investimento</SelectItem>
+                    <SelectItem value="cash">Dinheiro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Moeda</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="BRL">Real (BRL)</SelectItem>
+                    <SelectItem value="USD">Dólar (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="balance"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Saldo Inicial</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-4">
+          <FormField
+            control={form.control}
+            name="is_active"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Ativa</FormLabel>
+                  <FormDescription>
+                    A conta aparecerá nas listas
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="is_primary"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Principal</FormLabel>
+                  <FormDescription>
+                    Conta padrão para operações
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading
+              ? "Salvando..."
+              : account
+                ? "Atualizar Conta"
+                : "Criar Conta"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+

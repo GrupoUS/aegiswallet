@@ -1,61 +1,42 @@
-import { Loader2 } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Loader2 } from 'lucide-react';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useBankAccounts } from "@/hooks/useBankAccounts";
-import { useFinancialEvents } from "@/hooks/useFinancialEvents";
-import type {
-  FinancialEventCategory,
-  FinancialEventStatus,
-} from "@/types/financial.interfaces";
-import type { FinancialEvent, EventStatus } from "@/types/financial-events";
+} from '@/components/ui/select';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
+import { useCreateTransaction } from '@/hooks/use-transactions';
 
 interface TransactionFormProps {
   onCancel: () => void;
   onSuccess?: () => void;
 }
 
-// Use the actual BankAccount type from financial.interfaces.ts
-
-export default function TransactionForm({
-  onCancel,
-  onSuccess,
-}: TransactionFormProps) {
-  const { createEvent } = useFinancialEvents();
-  const { accounts } = useBankAccounts();
+export default function TransactionForm({ onCancel, onSuccess }: TransactionFormProps) {
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const { accounts, updateBalance } = useBankAccounts();
   const [isLoading, setIsLoading] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [isIncome, setIsIncome] = useState(false);
-  const [category, setCategory] = useState<FinancialEventCategory>("OUTROS");
-
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [status, setStatus] = useState<FinancialEventStatus>("PENDENTE");
-  const [accountId, setAccountId] = useState<string>("");
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState<'credit' | 'debit' | 'pix' | 'boleto' | 'transfer'>('debit');
+  const [accountId, setAccountId] = useState<string>('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !amount || !date) {
-      toast.error("Preencha os campos obrigatórios");
+    if (!description || !amount || !date || !accountId || !type) {
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
 
@@ -63,35 +44,49 @@ export default function TransactionForm({
 
     try {
       const numericAmount = parseFloat(amount);
-      const finalAmount = isIncome
-        ? Math.abs(numericAmount)
-        : -Math.abs(numericAmount);
+      // For debit/transfer/pix/boleto, amount in DB usually negative for expenses or handled by type.
+      // The plan says: "account_id, amount, type, description, date".
+      // Typically amount is signed based on type? Or backend handles it?
+      // QuickActionModal logic:
+      // credit -> amount positive
+      // debit -> amount negative
+      // Let's assume we send signed amount.
 
-      const eventData: Omit<FinancialEvent, "id"> = {
-        title,
+      let finalAmount = Math.abs(numericAmount);
+      if (['debit', 'pix', 'boleto', 'transfer'].includes(type)) {
+        finalAmount = -finalAmount;
+      }
+
+      await createTransaction({
+        description,
         amount: finalAmount,
-        category,
-        start: new Date(date),
-        end: new Date(date),
-        allDay: true,
-        recurring: false,
-        color: isIncome ? "emerald" : "rose",
-        status: "pending" as EventStatus,
-        type: isIncome ? "income" : "expense",
-      };
+        type,
+        date: new Date(date).toISOString(),
+        account_id: accountId,
+        status: 'posted' // Assuming instant transaction
+      });
 
-      await createEvent(eventData);
+      // Update account balance
+      const account = accounts.find(a => a.id === accountId);
+      if (account) {
+         await updateBalance({
+             id: accountId,
+             balance: Number(account.balance) + finalAmount
+         });
+      }
+
+      toast.success('Transação criada com sucesso!');
 
       if (onSuccess) {
         onSuccess();
       }
 
       // Reset
-      setTitle("");
-      setAmount("");
-      setCategory("OUTROS");
-      setIsIncome(false);
-    } catch (_error) {
+      setDescription('');
+      setAmount('');
+      setType('debit');
+    } catch (error: any) {
+      toast.error('Erro ao criar transação: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setIsLoading(false);
     }
@@ -105,27 +100,20 @@ export default function TransactionForm({
     >
       <CardHeader>
         <CardTitle id="transaction-form-title">Nova Transação</CardTitle>
-        <CardDescription>
-          Adicione uma nova transação ao seu histórico
-        </CardDescription>
+        <CardDescription>Adicione uma nova transação ao seu histórico</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Descrição</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ex: Supermercado"
                 required
-                aria-required="true"
-                aria-describedby="title-description"
               />
-              <span id="title-description" className="sr-only">
-                Descrição obrigatória da transação financeira
-              </span>
             </div>
 
             <div className="space-y-2">
@@ -138,45 +126,21 @@ export default function TransactionForm({
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 required
-                aria-required="true"
-                aria-describedby="amount-description"
-                inputMode="decimal"
               />
-              <span id="amount-description" className="sr-only">
-                Valor monetário da transação em reais
-              </span>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
-              <Select
-                value={isIncome.toString()}
-                onValueChange={(v) => setIsIncome(v === "true")}
-              >
+              <Select value={type} onValueChange={(v: any) => setType(v)}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="false">Despesa</SelectItem>
-                  <SelectItem value="true">Receita</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={status}
-                onValueChange={(v) => setStatus(v as FinancialEventStatus)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PENDENTE">Pendente</SelectItem>
-                  <SelectItem value="CONFIRMADO">Confirmado</SelectItem>
-                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
-                  <SelectItem value="AGENDADO">Agendado</SelectItem>
+                  <SelectItem value="debit">Débito</SelectItem>
+                  <SelectItem value="credit">Crédito</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="transfer">Transferência</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -192,42 +156,16 @@ export default function TransactionForm({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select
-                value={category}
-                onValueChange={(v) => setCategory(v as FinancialEventCategory)}
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="RECEITA">Receita</SelectItem>
-                  <SelectItem value="DESPESA_FIXA">Despesa Fixa</SelectItem>
-                  <SelectItem value="DESPESA_VARIAVEL">
-                    Despesa Variável
-                  </SelectItem>
-                  <SelectItem value="TRANSPORTE">Transporte</SelectItem>
-                  <SelectItem value="ALIMENTACAO">Alimentação</SelectItem>
-                  <SelectItem value="MORADIA">Moradia</SelectItem>
-                  <SelectItem value="SAUDE">Saúde</SelectItem>
-                  <SelectItem value="EDUCACAO">Educação</SelectItem>
-                  <SelectItem value="LAZER">Lazer</SelectItem>
-                  <SelectItem value="OUTROS">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="account">Conta Bancária (Opcional)</Label>
+              <Label htmlFor="account">Conta Bancária</Label>
               <Select value={accountId} onValueChange={setAccountId}>
                 <SelectTrigger id="account">
                   <SelectValue placeholder="Selecione a conta" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account) => (
+                  {accounts.map((account: any) => (
                     <SelectItem key={account.id} value={account.id}>
-                      {account.institution_name} ({account.account_mask})
+                      {account.institution_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,23 +179,14 @@ export default function TransactionForm({
               variant="outline"
               onClick={onCancel}
               disabled={isLoading}
-              aria-label="Cancelar formulário de transação"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              aria-label={
-                isLoading ? "Salvando transação" : "Salvar nova transação"
-              }
-              aria-busy={isLoading}
             >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                "Salvar"
-              )}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar'}
             </Button>
           </div>
         </form>

@@ -1,15 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/dashboard",
-      "destination": "/dashboard"
-    },
-    {
-      "source": "/dashboard/(.*)",
-      "destination": "/dashboard"
-    },
-    {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|_next/|static/|favicon.ico).*)",
       "destination": "/index.html"
     }
   ],

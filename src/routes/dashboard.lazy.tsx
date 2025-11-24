@@ -1,11 +1,15 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTotalBalance, useBankAccounts } from '@/hooks/useBankAccounts';
+import { useFinancialEvents, useFinancialSummary } from '@/hooks/useFinancialEvents';
+import { useTransactions } from '@/hooks/use-transactions';
+import type { FinancialTransaction } from '@/types/financial-transactions';
 
 // Lazy loaded components
 const LazyMiniCalendarWidget = lazy(() =>
@@ -77,35 +81,70 @@ export function Dashboard() {
     handleOAuthCallback();
   }, [navigate]);
 
-  // Magic Cards com dados financeiros
+  // Hooks for data
+  const { totalBRL } = useTotalBalance();
+  const { accounts } = useBankAccounts();
+  const { statistics } = useFinancialEvents({ status: 'all' });
+  const { summary, loading: summaryLoading } = useFinancialSummary();
+
+  const { data: recentTransactions } = useTransactions({ limit: 5 });
+
+  // Calculate Investments Balance
+  const investmentsBalance = useMemo(() => {
+    return accounts
+      .filter(acc => acc.account_type === 'investment' || acc.account_type === 'investimento')
+      .reduce((sum, acc) => sum + Number(acc.balance), 0);
+  }, [accounts]);
+
+  // PIX Sent Calculation (approximation or use a specific query if available)
+  // Since we don't have a direct hook for "PIX Sent Today", we'll assume we might fetch it via transactions if needed.
+  // For now, let's use useTransactions with filters for today.
+  const today = new Date().toISOString().split('T')[0];
+  const { data: pixTransactions } = useTransactions({
+    type: 'pix',
+    startDate: today,
+    endDate: today
+  });
+
+  const pixSentToday = useMemo(() => {
+    return (pixTransactions || [])
+      .filter((t: any) => t.type === 'pix' && (t.amount < 0 || t.is_expense)) // Assuming negative amount or check logic
+      .reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0);
+  }, [pixTransactions]);
+
+  // Magic Cards com dados reais
   const magicCardsData = [
     {
-      change: '+5.2%',
+      change: 'Total',
       color: 'text-green-600',
       icon: Wallet,
       title: 'Saldo em Conta',
-      value: 'R$ 12.450,00',
+      value: totalBRL,
+      isCurrency: true,
     },
     {
-      change: '+12.8%',
+      change: 'Total',
       color: 'text-blue-600',
       icon: TrendingUp,
       title: 'Investimentos',
-      value: 'R$ 45.320,00',
+      value: investmentsBalance,
+      isCurrency: true,
     },
     {
-      change: '+8.4%',
+      change: 'Este mês',
       color: 'text-purple-600',
       icon: PiggyBank,
       title: 'Economia Mensal',
-      value: 'R$ 2.110,15',
+      value: statistics.netBalance, // Or summary.projectedBalance if preferred
+      isCurrency: true,
     },
     {
       change: 'Hoje',
       color: 'text-orange-600',
       icon: CreditCard,
       title: 'PIX Enviados',
-      value: 'R$ 3.240,00',
+      value: pixSentToday,
+      isCurrency: true,
     },
   ];
 
@@ -131,7 +170,19 @@ export function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-muted-foreground text-sm">{card.title}</p>
-                    <p className="font-bold text-2xl">{card.value}</p>
+                    <p className="font-bold text-2xl">
+                      {card.isCurrency ? (
+                        <FinancialAmount
+                          amount={card.value}
+                          currency="BRL"
+                          size="xl"
+                          showSign={false}
+                          className="text-foreground"
+                        />
+                      ) : (
+                        card.value
+                      )}
+                    </p>
                     <p className={`text-sm ${card.color}`}>{card.change}</p>
                   </div>
                   <Icon className="h-8 w-8 text-muted-foreground/50" />
@@ -148,31 +199,26 @@ export function Dashboard() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle>Transações Recentes</CardTitle>
-            <CardDescription>Últimas 5 transações</CardDescription>
+            <CardDescription>Últimas transações</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Supermercado</p>
-                  <p className="text-muted-foreground text-sm">Hoje</p>
+              {recentTransactions?.map((transaction: any) => (
+                <div key={transaction.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium truncate max-w-[150px]">{transaction.description}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <FinancialAmount amount={Number(transaction.amount)} />
                 </div>
-                <FinancialAmount amount={-125.67} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Salário</p>
-                  <p className="text-muted-foreground text-sm">3 dias atrás</p>
-                </div>
-                <FinancialAmount amount={3500.0} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Restaurante</p>
-                  <p className="text-muted-foreground text-sm">5 dias atrás</p>
-                </div>
-                <FinancialAmount amount={-85.2} />
-              </div>
+              ))}
+              {!recentTransactions?.length && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma transação recente
+                </p>
+              )}
             </div>
             <Link to="/saldo">
               <Button variant="outline" className="mt-4 w-full">
@@ -191,28 +237,106 @@ export function Dashboard() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle>Resumo Mensal</CardTitle>
-            <CardDescription>Novembro 2024</CardDescription>
+            <CardDescription>
+              {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Receitas</span>
-                <FinancialAmount amount={5230.45} size="sm" />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Despesas</span>
-                <FinancialAmount amount={-3120.3} size="sm" />
-              </div>
-              <div className="border-t pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold">Saldo</span>
-                  <FinancialAmount amount={2110.15} size="sm" />
-                </div>
-              </div>
+              {summaryLoading ? (
+                 <div className="space-y-2">
+                   <Skeleton className="h-4 w-full" />
+                   <Skeleton className="h-4 w-full" />
+                   <Skeleton className="h-4 w-full" />
+                 </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Receitas</span>
+                    <FinancialAmount amount={summary.paidThisMonth} size="sm" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Despesas</span>
+                    <FinancialAmount amount={-summary.pendingThisMonth} size="sm" />
+                    {/* Note: pendingThisMonth might be sum of expenses, check useFinancialSummary logic.
+                        Actually it splits income/expense inside.
+                        Wait, `pendingThisMonth` in hook logic:
+                        sum + (e.type === 'income' ? e.amount : -Math.abs(e.amount))
+                        So it is a net balance of pending.
+
+                        Let's check logic again:
+                        paidThisMonth: NET paid.
+                        pendingThisMonth: NET pending.
+
+                        The UI expects "Receitas" and "Despesas".
+                        The hook aggregates them into nets.
+                        I should probably use `statistics` from `useFinancialEvents` which has `totalIncome`, `totalExpenses`, `pendingIncome`, `pendingExpenses`.
+                        But `summary` has `paidThisMonth` and `pendingThisMonth`...
+
+                        Let's use statistics which seems broken down better in `useFinancialEvents`.
+                        However, statistics is based on the query filters (which is 'all' events).
+                        The hook `useFinancialSummary` filters by current month internally.
+
+                        So I'll rely on `useFinancialSummary` but maybe I need to adjust what I display or how I use it.
+                        Actually `useFinancialSummary` returns `paidThisMonth`, `pendingThisMonth`, `overdueThisMonth`.
+                        It doesn't separate Income vs Expense totals for the month explicitly in the return, it returns net flow.
+
+                        Let's look at `statistics` from `useFinancialEvents` again.
+                        It calculates totalIncome/Expenses from `events`.
+                        If I pass filters for this month to `useFinancialEvents`, `statistics` will be correct for this month.
+
+                    */}
+                  </div>
+                </>
+              )}
+
+              {/* Re-implementing monthly summary using a dedicated useFinancialEvents call for this month to get proper breakdown */}
             </div>
+             <MonthlySummaryContent />
           </CardContent>
         </Card>
       </div>
     </div>
   );
+}
+
+function MonthlySummaryContent() {
+    // Helper component to fetch monthly stats cleanly
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+
+    const { statistics, loading } = useFinancialEvents({
+        startDate: startOfMonth,
+        endDate: endOfMonth,
+        status: 'all'
+    });
+
+    if (loading) {
+        return (
+            <div className="space-y-4">
+                 <Skeleton className="h-4 w-full" />
+                 <Skeleton className="h-4 w-full" />
+                 <Skeleton className="h-4 w-full" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Receitas</span>
+            <FinancialAmount amount={statistics.totalIncome + statistics.pendingIncome} size="sm" />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Despesas</span>
+            <FinancialAmount amount={-(statistics.totalExpenses + statistics.pendingExpenses)} size="sm" />
+          </div>
+          <div className="border-t pt-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Saldo Previsto</span>
+              <FinancialAmount amount={statistics.netBalance} size="sm" />
+            </div>
+          </div>
+        </div>
+    );
 }

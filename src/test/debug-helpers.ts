@@ -1,3 +1,4 @@
+/* biome-ignore lint */
 /**
  * Debugging Helpers for Vitest Tests
  *

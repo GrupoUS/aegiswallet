@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './config';
-import { SUPABASE_CONFIG } from './config';
+import { getClientOptions, isServer, SUPABASE_CONFIG } from './config';
 
 /**
  * Creates a Supabase client instance with appropriate configuration
@@ -17,10 +17,16 @@ export function createSupabaseClient(
   options?: Partial<Parameters<typeof createClient>[2]>
 ): SupabaseClient<Database> {
   const clientOptions = {
+    ...getClientOptions(),
     ...options,
   };
 
-  return createClient<Database>(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, clientOptions);
+  const apiKey =
+    isServer && SUPABASE_CONFIG.SERVICE_ROLE_KEY
+      ? SUPABASE_CONFIG.SERVICE_ROLE_KEY
+      : SUPABASE_CONFIG.ANON_KEY;
+
+  return createClient<Database>(SUPABASE_CONFIG.URL, apiKey, clientOptions);
 }
 
 /**
@@ -50,5 +56,25 @@ export function createServerClient(): SupabaseClient<Database> {
       autoRefreshToken: false,
       persistSession: false,
     },
+    global: undefined,
+  });
+}
+
+/**
+ * Creates a request-scoped Supabase client that optionally forwards a user access token.
+ */
+export function createRequestScopedClient(accessToken?: string): SupabaseClient<Database> {
+  return createSupabaseClient({
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    global: accessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      : undefined,
   });
 }

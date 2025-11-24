@@ -1,8 +1,5 @@
-import { expect, vi } from 'vitest';
-import {
-  mockSpeechRecognition,
-  mockSpeechSynthesis,
-} from '../setup-dom';
+import { expect } from 'vitest';
+import { mockSpeechRecognition, mockSpeechSynthesis } from '../setup-dom';
 
 // Healthcare-specific test utilities
 export const mockHealthcareData = {
@@ -149,4 +146,3 @@ export const healthcareTestUtils = {
     transcript_confidence: confidence,
   }),
 };
-

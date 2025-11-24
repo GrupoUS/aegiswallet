@@ -246,8 +246,7 @@ describe('Response Templates', () => {
     });
 
     it('should return error for unknown intent', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: Test mock
-      const response = buildMultimodalResponse('unknown_intent' as any, {});
+      const response = buildMultimodalResponse('unknown_intent', {});
 
       expect(response.visual.data.error).toBe(true);
       expect(response.voice).toContain('não reconhecido');

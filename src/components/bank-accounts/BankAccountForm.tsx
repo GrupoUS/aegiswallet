@@ -1,7 +1,9 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -10,56 +12,62 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect } from "react";
+} from '@/components/ui/select';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
+import type { Tables } from '@/types/database.types';
 
 const formSchema = z.object({
-  account_type: z.enum(["checking", "savings", "investment", "cash"], {
-    required_error: "Selecione um tipo de conta",
-  }), balance: z.coerce.number({ required_error: "Saldo é obrigatório" }), currency: z.string().default("BRL"), institution_name: z.string().min(1, "Nome da instituição é obrigatório"), is_active: z.boolean().default(true), is_primary: z.boolean().default(false),
+  account_type: z.enum(['checking', 'savings', 'investment', 'cash'], {
+    required_error: 'Selecione um tipo de conta',
+  }),
+  balance: z.coerce.number({ required_error: 'Saldo é obrigatório' }),
+  currency: z.string().default('BRL'),
+  institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
+  is_active: z.boolean().default(true),
+  is_primary: z.boolean().default(false),
 });
 
 type BankAccountFormValues = z.infer<typeof formSchema>;
+type BankAccountRow = Tables<'bank_accounts'>;
 
 interface BankAccountFormProps {
-  account?: any; // Using any here as I don't have the exact type imported, but it should match the schema
+  account?: BankAccountRow;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function BankAccountForm({
-  account,
-  onSuccess,
-  onCancel,
-}: BankAccountFormProps) {
-  const { createAccount, updateAccount, isCreating, isUpdating } =
-    useBankAccounts();
+export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFormProps) {
+  const { createAccount, updateAccount, isCreating, isUpdating } = useBankAccounts();
 
   const form = useForm<BankAccountFormValues>({
     defaultValues: {
-      institution_name: "",
-      account_type: "checking",
+      institution_name: '',
+      account_type: 'checking',
       balance: 0,
-      currency: "BRL",
+      currency: 'BRL',
       is_primary: false,
       is_active: true,
-    }, resolver: zodResolver(formSchema),
+    },
+    resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
     if (account) {
       form.reset({
-        account_type: account.account_type, balance: Number(account.balance), currency: account.currency, institution_name: account.institution_name, is_active: account.is_active, is_primary: account.is_primary,
+        account_type: account.account_type,
+        balance: Number(account.balance ?? 0),
+        currency: account.currency ?? 'BRL',
+        institution_name: account.institution_name ?? '',
+        is_active: account.is_active ?? true,
+        is_primary: account.is_primary ?? false,
       });
     }
   }, [account, form]);
@@ -72,7 +80,7 @@ export function BankAccountForm({
           onSuccess: () => {
             onSuccess?.();
           },
-        },
+        }
       );
     } else {
       createAccount(values, {
@@ -166,12 +174,7 @@ export function BankAccountForm({
             <FormItem>
               <FormLabel>Saldo Inicial</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  {...field}
-                />
+                <Input type="number" step="0.01" placeholder="0.00" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -185,16 +188,11 @@ export function BankAccountForm({
             render={({ field }) => (
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>Ativa</FormLabel>
-                  <FormDescription>
-                    A conta aparecerá nas listas
-                  </FormDescription>
+                  <FormDescription>A conta aparecerá nas listas</FormDescription>
                 </div>
               </FormItem>
             )}
@@ -206,16 +204,11 @@ export function BankAccountForm({
             render={({ field }) => (
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>Principal</FormLabel>
-                  <FormDescription>
-                    Conta padrão para operações
-                  </FormDescription>
+                  <FormDescription>Conta padrão para operações</FormDescription>
                 </div>
               </FormItem>
             )}
@@ -227,15 +220,10 @@ export function BankAccountForm({
             Cancelar
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading
-              ? "Salvando..."
-              : account
-                ? "Atualizar Conta"
-                : "Criar Conta"}
+            {isLoading ? 'Salvando...' : account ? 'Atualizar Conta' : 'Criar Conta'}
           </Button>
         </div>
       </form>
     </Form>
   );
 }
-

@@ -206,27 +206,40 @@ CREATE TABLE IF NOT EXISTS event_types (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Financial events (bills, payments, income)
+-- Financial events table
+-- Last updated: 2025-11-25
+-- Reflects migrations: 20251006115133, 20251007210500, 20251125
 CREATE TABLE IF NOT EXISTS financial_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    event_type_id UUID REFERENCES event_types(id),
-    title TEXT NOT NULL,
-    description TEXT,
-    amount DECIMAL(15,2),
-    is_income BOOLEAN DEFAULT false,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     account_id UUID REFERENCES bank_accounts(id) ON DELETE SET NULL,
     category_id UUID REFERENCES transaction_categories(id) ON DELETE SET NULL,
-    event_date DATE NOT NULL,
-    due_date DATE,
+    title TEXT NOT NULL,
+    description TEXT,
+    amount DECIMAL(15,2) NOT NULL,
+    event_type TEXT NOT NULL CHECK (event_type IN ('income', 'expense', 'bill', 'scheduled', 'transfer')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'scheduled', 'cancelled', 'completed')),
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    all_day BOOLEAN DEFAULT false,
+    color TEXT NOT NULL DEFAULT 'blue',
+    icon TEXT,
+    is_income BOOLEAN DEFAULT false,
     is_recurring BOOLEAN DEFAULT false,
-    recurrence_rule TEXT, -- RRULE format
-    is_completed BOOLEAN DEFAULT false,
+    recurrence_rule TEXT,
+    parent_event_id UUID REFERENCES financial_events(id) ON DELETE CASCADE,
+    location TEXT,
+    notes TEXT,
+    due_date DATE,
     completed_at TIMESTAMP WITH TIME ZONE,
-    transaction_id UUID REFERENCES transactions(id),
-    priority TEXT DEFAULT 'normal', -- low, normal, high, urgent
+    priority TEXT DEFAULT 'normal',
     tags TEXT[],
     attachments TEXT[],
+    brazilian_event_type TEXT,
+    installment_info JSONB,
+    merchant_category TEXT,
+    metadata JSONB,
+    transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -593,9 +606,13 @@ CREATE INDEX IF NOT EXISTS idx_pix_transactions_status ON pix_transactions(statu
 CREATE INDEX IF NOT EXISTS idx_pix_transactions_date ON pix_transactions(transaction_date DESC);
 
 -- Financial events indexes
-CREATE INDEX IF NOT EXISTS idx_financial_events_user_date ON financial_events(user_id, event_date);
-CREATE INDEX IF NOT EXISTS idx_financial_events_type ON financial_events(event_type_id);
-CREATE INDEX IF NOT EXISTS idx_financial_events_completed ON financial_events(is_completed);
+CREATE INDEX IF NOT EXISTS idx_financial_events_user_dates ON financial_events(user_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_financial_events_type ON financial_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_financial_events_status ON financial_events(status);
+CREATE INDEX IF NOT EXISTS idx_financial_events_recurring ON financial_events(is_recurring, parent_event_id) WHERE is_recurring = true;
+CREATE INDEX IF NOT EXISTS idx_financial_events_brazilian_event_type ON financial_events(brazilian_event_type);
+CREATE INDEX IF NOT EXISTS idx_financial_events_merchant_category ON financial_events(merchant_category);
+CREATE INDEX IF NOT EXISTS idx_financial_events_transaction ON financial_events(transaction_id) WHERE transaction_id IS NOT NULL;
 
 -- Voice commands indexes
 CREATE INDEX IF NOT EXISTS idx_voice_commands_user ON voice_commands(user_id);
@@ -869,9 +886,9 @@ BEGIN
         'upcoming_events', COALESCE((SELECT COUNT(*) FROM financial_events WHERE user_id = p_user_id AND event_date BETWEEN CURRENT_DATE AND p_period_end AND is_completed = false), 0)
     ) INTO v_summary
     FROM transactions
-    WHERE user_id = p_user_id 
+    WHERE user_id = p_user_id
     AND transaction_date BETWEEN p_period_start AND p_period_end;
-    
+
     RETURN v_summary;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -882,29 +899,29 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Update account balance when transaction is posted
     IF TG_OP = 'INSERT' AND NEW.status = 'posted' AND NEW.account_id IS NOT NULL THEN
-        UPDATE bank_accounts 
+        UPDATE bank_accounts
         SET balance = balance + NEW.amount,
             updated_at = now()
         WHERE id = NEW.account_id;
     END IF;
-    
+
     -- If transaction status changes, adjust balance
     IF TG_OP = 'UPDATE' AND OLD.status != NEW.status THEN
         IF OLD.status = 'posted' AND NEW.status != 'posted' AND NEW.account_id IS NOT NULL THEN
             -- Remove from balance
-            UPDATE bank_accounts 
+            UPDATE bank_accounts
             SET balance = balance - OLD.amount,
                 updated_at = now()
             WHERE id = NEW.account_id;
         ELSIF OLD.status != 'posted' AND NEW.status = 'posted' AND NEW.account_id IS NOT NULL THEN
             -- Add to balance
-            UPDATE bank_accounts 
+            UPDATE bank_accounts
             SET balance = balance + NEW.amount,
                 updated_at = now()
             WHERE id = NEW.account_id;
         END IF;
     END IF;
-    
+
     RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql;
@@ -920,7 +937,7 @@ RETURNS TABLE(category_id UUID, category_name TEXT, total_spent DECIMAL, transac
 BEGIN
     RETURN QUERY
     WITH current_period AS (
-        SELECT 
+        SELECT
             tc.id as category_id,
             tc.name as category_name,
             COALESCE(SUM(ABS(t.amount)), 0) as total_spent,
@@ -934,7 +951,7 @@ BEGIN
         GROUP BY tc.id, tc.name
     ),
     previous_period AS (
-        SELECT 
+        SELECT
             tc.id as category_id,
             COALESCE(SUM(ABS(t.amount)), 0) as total_spent
         FROM transactions t
@@ -945,12 +962,12 @@ BEGIN
         AND t.status = 'posted'
         GROUP BY tc.id
     )
-    SELECT 
+    SELECT
         cp.category_id,
         cp.category_name,
         cp.total_spent,
         cp.transaction_count,
-        CASE 
+        CASE
             WHEN pp.total_spent = 0 THEN 0
             ELSE ROUND(((cp.total_spent - pp.total_spent) / pp.total_spent) * 100, 2)
         END as percentage_change
@@ -966,7 +983,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- View for user's financial dashboard
 CREATE OR REPLACE VIEW user_financial_dashboard AS
-SELECT 
+SELECT
     u.id as user_id,
     u.full_name,
     u.email,
@@ -979,38 +996,38 @@ SELECT
     u.last_login
 FROM users u
 LEFT JOIN (
-    SELECT 
+    SELECT
         user_id,
         SUM(balance) as total_balance,
         COUNT(*) as account_count
-    FROM bank_accounts 
+    FROM bank_accounts
     WHERE is_active = true
     GROUP BY user_id
 ) account_summary ON u.id = account_summary.user_id
 LEFT JOIN (
-    SELECT 
+    SELECT
         user_id,
         SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as monthly_income,
         SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as monthly_expenses
-    FROM transactions 
+    FROM transactions
     WHERE transaction_date >= date_trunc('month', CURRENT_DATE)
     AND status = 'posted'
     GROUP BY user_id
 ) transaction_summary ON u.id = transaction_summary.user_id
 LEFT JOIN (
-    SELECT 
+    SELECT
         user_id,
         COUNT(*) as count
-    FROM boletos 
-    WHERE status = 'pending' 
+    FROM boletos
+    WHERE status = 'pending'
     AND due_date >= CURRENT_DATE
     GROUP BY user_id
 ) pending_bills ON u.id = pending_bills.user_id
 LEFT JOIN (
-    SELECT 
+    SELECT
         user_id,
         COUNT(*) as count
-    FROM financial_events 
+    FROM financial_events
     WHERE event_date BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')
     AND is_completed = false
     GROUP BY user_id
@@ -1019,7 +1036,7 @@ WHERE u.is_active = true;
 
 -- View for transaction analytics
 CREATE OR REPLACE VIEW transaction_analytics AS
-SELECT 
+SELECT
     t.user_id,
     tc.name as category_name,
     DATE_TRUNC('month', t.transaction_date) as month,

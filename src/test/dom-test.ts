@@ -11,12 +11,13 @@ describe('DOM Environment Test', () => {
         url: 'http://localhost:3000',
       });
 
-      global.window = dom.window as any;
-      global.document = dom.window.document;
-      global.navigator = dom.window.navigator;
-      globalThis.window = dom.window as any;
-      globalThis.document = dom.window.document;
-      globalThis.navigator = dom.window.navigator;
+      const jsdomWindow = dom.window as unknown as typeof globalThis.window;
+      global.window = jsdomWindow;
+      global.document = jsdomWindow.document;
+      global.navigator = jsdomWindow.navigator;
+      globalThis.window = jsdomWindow;
+      globalThis.document = jsdomWindow.document;
+      globalThis.navigator = jsdomWindow.navigator;
     }
   });
 

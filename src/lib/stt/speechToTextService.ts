@@ -577,7 +577,7 @@ export class SpeechToTextService {
       const errorName = error instanceof Error ? error.name : '';
 
       // Check for STT network error code
-      const isSTTNetworkError = (error as any)?.code === 'NETWORK_ERROR';
+      const isSTTNetworkError = (error as { code?: unknown } | null)?.code === 'NETWORK_ERROR';
 
       // Check for original network error or wrapped network error
       const isNetworkError =

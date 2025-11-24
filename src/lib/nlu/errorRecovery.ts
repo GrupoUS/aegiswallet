@@ -237,7 +237,7 @@ export class ErrorRecoverySystem {
 
       // Sort by priority and success rate
       applicableStrategies.sort((a, b) => {
-        const _priorityScore = b.priority * 0.6 + b.successRate * 0.4;
+        const bPriorityScore = b.priority * 0.6 + b.successRate * 0.4;
         const aPriorityScore = a.priority * 0.6 + a.successRate * 0.4;
         return bPriorityScore - aPriorityScore;
       });

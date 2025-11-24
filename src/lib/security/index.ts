@@ -78,7 +78,9 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       enableFonts: true,
       enableWebGL: true,
       riskThresholds: {
-        high: 0.8, low: 0.3, medium: 0.6,
+        high: 0.8,
+        low: 0.3,
+        medium: 0.6,
       },
       salt: 'aegiswallet-brazil-security-salt',
     },
@@ -91,7 +93,10 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       locationAnomalyThreshold: 0.8,
       maxFailedAttempts: 5,
       riskThresholds: {
-        critical: 1.0, high: 0.9, low: 0.3, medium: 0.7,
+        critical: 1.0,
+        high: 0.9,
+        low: 0.3,
+        medium: 0.7,
       },
       timeWindows: {
         short: 1 * 60 * 60 * 1000, // 1 hour

@@ -22,8 +22,16 @@ function getRequiredEnvVar(key: string): string {
   return value;
 }
 
+const getServerEnvVar = (key: string): string | undefined => {
+  if (typeof process === 'undefined') {
+    return undefined;
+  }
+  return process.env?.[key];
+};
+
 export const SUPABASE_CONFIG = {
   ANON_KEY: getRequiredEnvVar('SUPABASE_ANON_KEY'),
+  SERVICE_ROLE_KEY: getServerEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
   URL: getRequiredEnvVar('SUPABASE_URL'),
 } as const;
 

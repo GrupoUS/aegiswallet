@@ -74,7 +74,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 // Comprehensive LGPD Compliance Component for testing
-const _LGPDComplianceFramework = () => {
+const LGPDComplianceFramework = () => {
   const [userConsent, setUserConsent] = React.useState({
     biometricData: false,
     dataProcessing: false,
@@ -455,7 +455,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Legal Basis Validation', () => {
     it('should validate consent as legal basis for data processing', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       const validateButton = screen.getByTestId('validate-compliance');
       await userEvent.click(validateButton);
@@ -479,7 +479,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
       const testUtils = global.testUtils as TestUtils;
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
       await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
@@ -503,7 +503,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Purpose Limitation', () => {
     it('should limit data processing to specified purposes', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Validate without consent
       await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -542,7 +542,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Data Minimization', () => {
     it('should only collect necessary data for specified purposes', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Fill required fields only
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
@@ -558,7 +558,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should flag excessive data collection', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Fill all optional fields
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
@@ -580,7 +580,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Accuracy and Data Quality', () => {
     it('should validate email format accuracy', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.type(screen.getByTestId('user-email'), 'invalid-email');
       await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -602,7 +602,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should validate CPF format accuracy', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.type(screen.getByTestId('user-cpf'), '123.456.789-00');
       await userEvent.type(screen.getByTestId('user-name'), 'Test User');
@@ -621,7 +621,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     it('should implement data masking for sensitive information', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
       await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
@@ -644,7 +644,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should validate security implementation status', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -657,7 +657,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Transparency and Accountability', () => {
     it('should provide clear privacy information', () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Check for consent transparency
       const consentSection = screen.getByTestId('lgpd-consent-section');
@@ -680,7 +680,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
       const testUtils = global.testUtils as TestUtils;
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -736,7 +736,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should validate data subject rights implementation', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -749,7 +749,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('International Data Transfer', () => {
     it('should require explicit consent for international transfers', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Should be compliant without international transfer consent
       await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -772,7 +772,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Brazilian Financial Compliance', () => {
     it('should validate BACEN compliance requirements', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -816,7 +816,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Healthcare Data Protection', () => {
     it('should handle health data with enhanced protection', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Enable health data consent
       await userEvent.click(screen.getByTestId('consent-health-data'));
@@ -846,7 +846,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Voice Interface Privacy', () => {
     it('should validate voice recording consent', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Should be compliant without voice recording consent
       await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -886,7 +886,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
   describe('Integration Testing', () => {
     it('should validate complete LGPD compliance workflow', async () => {
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       // Fill required fields
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
@@ -918,7 +918,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
       const testUtils = global.testUtils as TestUtils;
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
-      render(React.createElement(LGDComplianceFramework));
+      render(React.createElement(LGPDComplianceFramework));
 
       await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
       await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');

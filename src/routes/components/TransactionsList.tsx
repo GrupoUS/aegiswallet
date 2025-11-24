@@ -6,22 +6,23 @@ import {
   MoreVertical,
   Trash2,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
+import type { FinancialEvent } from '@/types/financial-events';
 
 export default function TransactionsList() {
   const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
@@ -31,31 +32,39 @@ export default function TransactionsList() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async () => {
-    if (!deletingId) {return;}
+    if (!deletingId) {
+      return;
+    }
 
     // Find transaction to revert balance
-    const transaction = transactions?.find((t: any) => t.id === deletingId);
+    const transaction = (transactions as FinancialEvent[] | undefined)?.find(
+      (t) => t.id === deletingId
+    );
 
-    deleteTransaction({ id: deletingId }, {
-      onSuccess: async () => {
-        // Revert balance if possible
-        if (transaction) {
-            const account = accounts.find(a => a.id === transaction.account_id);
+    deleteTransaction(
+      { id: deletingId },
+      {
+        onSuccess: async () => {
+          // Revert balance if possible
+          if (transaction) {
+            const account = accounts.find((a) => a.id === transaction.account_id);
             if (account) {
-                // Inverse amount: subtract transaction amount (which is signed)
-                // If transaction was -100 (debit), we need to add 100.
-                // So: current - (-100) = current + 100.
-                // So: balance - transaction.amount
-                await updateBalance({
-                    balance: Number(account.balance) - Number(transaction.amount), id: transaction.account_id
-                });
+              // Inverse amount: subtract transaction amount (which is signed)
+              // If transaction was -100 (debit), we need to add 100.
+              // So: current - (-100) = current + 100.
+              // So: balance - transaction.amount
+              await updateBalance({
+                balance: Number(account.balance) - Number(transaction.amount),
+                id: transaction.account_id,
+              });
             }
-        }
+          }
 
-        setDeletingId(null);
-        refetch();
+          setDeletingId(null);
+          refetch();
+        },
       }
-    });
+    );
   };
 
   const getIcon = (type: string) => {
@@ -118,7 +127,7 @@ export default function TransactionsList() {
           </div>
         ) : (
           <div className="space-y-2">
-            {transactions.map((transaction: any) => (
+            {(transactions as FinancialEvent[]).map((transaction) => (
               <div
                 key={transaction.id}
                 className="w-full text-left flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
@@ -149,25 +158,33 @@ export default function TransactionsList() {
                   <div className="text-right">
                     <FinancialAmount
                       amount={Number(transaction.amount)}
-                      className={Number(transaction.amount) > 0 ? 'text-emerald-600' : 'text-rose-600'}
+                      className={
+                        Number(transaction.amount) > 0 ? 'text-emerald-600' : 'text-rose-600'
+                      }
                     />
-                    <div className="flex justify-end mt-1">{getStatusBadge(transaction.status)}</div>
+                    <div className="flex justify-end mt-1">
+                      {getStatusBadge(transaction.status)}
+                    </div>
                   </div>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreVertical className="h-4 w-4" />
-                        </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            className="text-destructive focus:text-destructive cursor-pointer"
-                            onClick={() => setDeletingId(transaction.id)}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                        </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onClick={() => setDeletingId(transaction.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -177,12 +194,12 @@ export default function TransactionsList() {
         )}
 
         <ConfirmDialog
-            open={!!deletingId}
-            onOpenChange={(open) => !open && setDeletingId(null)}
-            title="Excluir Transação"
-            description="Tem certeza que deseja excluir esta transação? O saldo da conta será revertido."
-            onConfirm={handleDelete}
-            variant="destructive"
+          open={!!deletingId}
+          onOpenChange={(open) => !open && setDeletingId(null)}
+          title="Excluir Transação"
+          description="Tem certeza que deseja excluir esta transação? O saldo da conta será revertido."
+          onConfirm={handleDelete}
+          variant="destructive"
         />
       </CardContent>
     </Card>

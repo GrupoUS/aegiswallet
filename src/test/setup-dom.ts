@@ -186,13 +186,13 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   stroke: vi.fn(),
   transform: vi.fn(),
   translate: vi.fn(),
-})) as any;
+})) as unknown as CanvasRenderingContext2D;
 
 // Mock getComputedStyle for healthcare styling
 global.getComputedStyle = vi.fn(() => ({
   getPropertyValue: vi.fn(),
   setProperty: vi.fn(),
-})) as any;
+})) as unknown as CSSStyleDeclaration;
 
 // Mock scrollTo for healthcare navigation
 window.scrollTo = vi.fn();
@@ -240,4 +240,3 @@ afterEach(() => {
 afterAll(() => {
   vi.restoreAllMocks();
 });
-

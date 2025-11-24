@@ -276,7 +276,7 @@ export class DataRetentionManager {
       }
 
       // Delete user account if allowed by policy
-      const userPolicy = RETENTION_POLICYs.transactions; // Use longest retention period
+      const userPolicy = RETENTION_POLICIES.transactions; // Use longest retention period
       const userCutoffDate = this.calculateCutoffDate(userPolicy);
 
       const { data: userData } = await supabase

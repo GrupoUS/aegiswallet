@@ -7,9 +7,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { sanitizeObject } from '@/lib/security/sanitization';
+import {
+  type ValidationError as FinancialValidationError,
+  type SanitizedFinancialEvent,
+  sanitizeFinancialEventData,
+  validateFinancialEventForInsert,
+  validateFinancialEventForUpdate,
+} from '@/lib/validation/financial-events-validator';
 import type { Database } from '@/types/database.types';
-import type { FinancialEventCategory, FinancialEventPriority } from '@/types/financial.interfaces';
+import type {
+  BrazilianEventType,
+  FinancialEventCategory,
+  FinancialEventMetadata,
+  FinancialEventPriority,
+  InstallmentInfo,
+} from '@/types/financial.interfaces';
 import type {
   EventColor,
   EventStatus,
@@ -66,6 +78,72 @@ interface CacheEntry {
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 const MAX_CACHE_SIZE = 50; // Máximo de entradas no cache
 
+const formatValidationErrors = (errors: FinancialValidationError[]) =>
+  errors.map((error) => `${error.field}: ${error.message}`).join(', ');
+
+const normalizeDateInput = (value?: Date | string | null) => {
+  if (!value) return undefined;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const toDateOnly = (value?: Date | string | null) => {
+  const date = normalizeDateInput(value);
+  return date ? date.toISOString().split('T')[0] : null;
+};
+
+const toDateTimeString = (value?: Date | string | null) => {
+  const date = normalizeDateInput(value);
+  return date ? date.toISOString() : null;
+};
+
+const serializeJsonField = (value?: unknown) => {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  try {
+    return JSON.stringify(value);
+  } catch (_error) {
+    return null;
+  }
+};
+
+const _safeEventLogPayload = (event?: SanitizedFinancialEvent | null) => {
+  if (!event) return null;
+  const payload: Record<string, unknown> = { ...event };
+
+  if (event.start) {
+    payload.start = event.start.toISOString();
+  }
+  if (event.end) {
+    payload.end = event.end.toISOString();
+  }
+  if (event.dueDate) {
+    payload.dueDate = event.dueDate instanceof Date ? event.dueDate.toISOString() : event.dueDate;
+  }
+  if (event.completedAt) {
+    payload.completedAt =
+      event.completedAt instanceof Date ? event.completedAt.toISOString() : event.completedAt;
+  }
+
+  return payload;
+};
+
+const logFinancialEventError = (
+  scope: string,
+  error: unknown,
+  context?: Record<string, unknown>
+) => {
+  // eslint-disable-next-line no-console
+  console.error(`[useFinancialEvents] ${scope}`, {
+    error,
+    ...context,
+  });
+};
+
 /**
  * Converte linha do banco para FinancialEvent
  */
@@ -77,6 +155,33 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
     (row.event_type as FinancialEventType) || (row.is_income ? 'income' : 'expense');
   const status: EventStatus = (row.status as EventStatus) || 'pending';
 
+  let metadata: FinancialEventMetadata | undefined;
+  if (row.metadata) {
+    try {
+      metadata =
+        typeof row.metadata === 'string'
+          ? (JSON.parse(row.metadata) as FinancialEventMetadata)
+          : (row.metadata as FinancialEventMetadata);
+    } catch (_error) {}
+  }
+
+  if (row.merchant_category) {
+    metadata = {
+      ...(metadata || {}),
+      merchantCategory: row.merchant_category,
+    };
+  }
+
+  let installmentInfo: InstallmentInfo | undefined;
+  if (row.installment_info) {
+    try {
+      installmentInfo =
+        typeof row.installment_info === 'string'
+          ? (JSON.parse(row.installment_info) as InstallmentInfo)
+          : (row.installment_info as InstallmentInfo);
+    } catch (_error) {}
+  }
+
   return {
     id: row.id,
     userId: row.user_id,
@@ -87,7 +192,6 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
     type,
     amount: row.amount,
     color: (row.color as EventColor) || ((type === 'income' ? 'emerald' : 'rose') as EventColor),
-    icon: row.icon || undefined,
     status,
     category: (row.category as FinancialEventCategory) || 'OUTROS',
     account: undefined, // Não existe na tabela diretamente mas poderia vir de join
@@ -98,6 +202,14 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
     priority: (row.priority as FinancialEventPriority) || 'NORMAL',
     createdAt: row.created_at || new Date().toISOString(),
     updatedAt: row.updated_at || new Date().toISOString(),
+    dueDate: row.due_date || undefined,
+    completedAt: row.completed_at || undefined,
+    notes: row.notes || undefined,
+    tags: row.tags || undefined,
+    icon: row.icon || undefined,
+    metadata,
+    installmentInfo,
+    brazilianEventType: (row.brazilian_event_type as BrazilianEventType) || undefined,
   };
 }
 
@@ -106,7 +218,10 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
  */
 function eventToRow(event: Omit<FinancialEvent, 'id'>, userId: string): FinancialEventInsert {
   const startDate = event.start || new Date();
+  const endDate = event.end || startDate;
   const type = event.type === 'income' ? 'income' : event.type || 'expense';
+  const dueDate = normalizeDateInput(event.dueDate);
+  const completedAt = normalizeDateInput(event.completedAt);
 
   return {
     user_id: userId,
@@ -114,7 +229,7 @@ function eventToRow(event: Omit<FinancialEvent, 'id'>, userId: string): Financia
     description: event.description || null,
     amount: event.amount ?? 0,
     start_date: startDate.toISOString(), // Supabase handles timestamp with TZ
-    end_date: (event.end || startDate).toISOString(),
+    end_date: endDate.toISOString(),
     event_type: type,
     is_income: type === 'income',
     category: (event.category as string) || null,
@@ -125,8 +240,217 @@ function eventToRow(event: Omit<FinancialEvent, 'id'>, userId: string): Financia
     updated_at: new Date().toISOString(),
     color: event.color || 'blue',
     priority: event.priority || 'NORMAL',
+    recurrence_rule: event.recurrenceRule || null,
+    parent_event_id: (event as { parentEventId?: string }).parentEventId || null,
+    due_date: dueDate ? dueDate.toISOString().split('T')[0] : null,
+    completed_at: completedAt ? completedAt.toISOString() : null,
+    notes: event.notes || null,
+    tags: event.tags?.length ? event.tags : null,
+    icon: event.icon || null,
+    attachments: event.attachments?.length ? event.attachments : null,
+    brazilian_event_type: event.brazilianEventType || null,
+    installment_info: serializeJsonField(event.installmentInfo),
+    metadata: serializeJsonField(event.metadata),
+    merchant_category: event.metadata?.merchantCategory || null,
   };
 }
+
+const buildUpdatePayload = (updates: SanitizedFinancialEvent): Partial<FinancialEventInsert> => {
+  const payload: Partial<FinancialEventInsert> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.title !== undefined) {
+    payload.title = updates.title;
+  }
+  if (updates.description !== undefined) {
+    payload.description = updates.description || null;
+  }
+  if (updates.amount !== undefined) {
+    payload.amount = updates.amount;
+  }
+  if (updates.start) {
+    payload.start_date = updates.start.toISOString();
+  }
+  if (updates.end) {
+    payload.end_date = updates.end.toISOString();
+  }
+  if (updates.type) {
+    payload.event_type = updates.type;
+    payload.is_income = updates.type === 'income';
+  } else if (updates.isIncome !== undefined) {
+    payload.is_income = updates.isIncome;
+  }
+
+  if (updates.category !== undefined) {
+    payload.category = (updates.category as string) || null;
+  }
+
+  if (updates.location !== undefined) {
+    payload.location = updates.location || null;
+  }
+
+  if (updates.isRecurring !== undefined) {
+    payload.is_recurring = updates.isRecurring;
+  }
+
+  if (updates.allDay !== undefined) {
+    payload.all_day = updates.allDay;
+  }
+
+  if (updates.status !== undefined) {
+    payload.status = updates.status as EventStatus;
+  }
+
+  if (updates.color !== undefined) {
+    payload.color = updates.color || 'blue';
+  }
+
+  if (updates.priority !== undefined) {
+    payload.priority = updates.priority as FinancialEventPriority;
+  }
+
+  if (updates.recurrenceRule !== undefined) {
+    payload.recurrence_rule = updates.recurrenceRule || null;
+  }
+
+  if ((updates as { parentEventId?: string }).parentEventId !== undefined) {
+    payload.parent_event_id = (updates as { parentEventId?: string }).parentEventId || null;
+  }
+
+  if (updates.dueDate !== undefined) {
+    payload.due_date = updates.dueDate ? toDateOnly(updates.dueDate) : null;
+  }
+
+  if (updates.completedAt !== undefined) {
+    payload.completed_at = updates.completedAt ? toDateTimeString(updates.completedAt) : null;
+  }
+
+  if (updates.notes !== undefined) {
+    payload.notes = updates.notes || null;
+  }
+
+  if (updates.tags !== undefined) {
+    payload.tags = updates.tags ?? null;
+  }
+
+  if (updates.icon !== undefined) {
+    payload.icon = updates.icon || null;
+  }
+
+  if (updates.attachments !== undefined) {
+    payload.attachments = updates.attachments ?? null;
+  }
+
+  if (updates.installmentInfo !== undefined) {
+    payload.installment_info = serializeJsonField(updates.installmentInfo);
+  }
+
+  if (updates.metadata !== undefined) {
+    payload.metadata = serializeJsonField(updates.metadata);
+    payload.merchant_category = updates.metadata?.merchantCategory || null;
+  }
+
+  if (updates.brazilianEventType !== undefined) {
+    payload.brazilian_event_type = updates.brazilianEventType || null;
+  }
+
+  return payload;
+};
+
+type EventWithoutId = Omit<FinancialEvent, 'id'>;
+
+export const insertFinancialEventRecord = async (userId: string, event: EventWithoutId) => {
+  let sanitizedEvent: SanitizedFinancialEvent | null = null;
+  sanitizedEvent = sanitizeFinancialEventData({ ...event, userId });
+  const validationResult = validateFinancialEventForInsert(sanitizedEvent);
+
+  if (!validationResult.valid) {
+    logFinancialEventError('insert_validation_failed', new Error('validation_error'), {
+      userId,
+      errors: validationResult.errors,
+      payload: _safeEventLogPayload(sanitizedEvent),
+    });
+    throw new FinancialError(
+      `Dados inválidos: ${formatValidationErrors(validationResult.errors)}`,
+      'VALIDATION'
+    );
+  }
+
+  const baseRow = eventToRow(sanitizedEvent as EventWithoutId, userId);
+  const eventData: FinancialEventInsert = {
+    ...baseRow,
+    user_id: userId,
+    created_at: new Date().toISOString(),
+    amount: sanitizedEvent.amount ?? baseRow.amount,
+    title: sanitizedEvent.title || baseRow.title || 'Novo Evento',
+  };
+
+  const { data, error } = await supabase
+    .from('financial_events')
+    .insert(eventData)
+    .select()
+    .single();
+
+  if (error) {
+    logFinancialEventError('insert_supabase_failed', error, {
+      userId,
+      payload: _safeEventLogPayload(sanitizedEvent),
+    });
+    throw new FinancialError(error.message, 'NETWORK');
+  }
+
+  return rowToEvent(data as FinancialEventRow);
+};
+
+export const updateFinancialEventRecord = async (
+  userId: string,
+  id: string,
+  updates: Partial<FinancialEvent>
+) => {
+  let sanitizedUpdates: SanitizedFinancialEvent | null = null;
+  sanitizedUpdates = sanitizeFinancialEventData({ ...updates, userId });
+  const validationResult = validateFinancialEventForUpdate(sanitizedUpdates);
+
+  if (!validationResult.valid) {
+    logFinancialEventError('update_validation_failed', new Error('validation_error'), {
+      userId,
+      eventId: id,
+      errors: validationResult.errors,
+      payload: _safeEventLogPayload(sanitizedUpdates),
+    });
+    throw new FinancialError(
+      `Dados inválidos: ${formatValidationErrors(validationResult.errors)}`,
+      'VALIDATION'
+    );
+  }
+
+  const updatePayload = buildUpdatePayload(sanitizedUpdates);
+  const hasChanges = Object.keys(updatePayload).some((key) => key !== 'updated_at');
+
+  if (!hasChanges) {
+    throw new FinancialError('Nenhum campo para atualizar.', 'VALIDATION');
+  }
+
+  const { data, error } = await supabase
+    .from('financial_events')
+    .update(updatePayload)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    logFinancialEventError('update_supabase_failed', error, {
+      userId,
+      eventId: id,
+      payload: _safeEventLogPayload(sanitizedUpdates),
+    });
+    throw new FinancialError(error.message, 'NETWORK');
+  }
+
+  return rowToEvent(data as FinancialEventRow);
+};
 
 /**
  * Hook principal para gerenciamento de eventos financeiros
@@ -371,35 +695,9 @@ export function useFinancialEvents(
         if (!user) {
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
-
-        const sanitizedEvent = sanitizeObject(event);
-        const baseRow = eventToRow(sanitizedEvent, user.id);
-        // Ensure we don't send undefined/null for required fields if any logic missed it
-        const eventData: FinancialEventInsert = {
-          ...baseRow,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          amount: event.amount ?? baseRow.amount,
-          title: event.title || baseRow.title || 'Novo Evento',
-        };
-
-        const { data, error } = await supabase
-          .from('financial_events')
-          .insert(eventData)
-          .select()
-          .single();
-
-        if (error) {
-          const errorMessage =
-            typeof error === 'object' && error.message ? error.message : 'Erro ao criar evento';
-          throw new FinancialError(errorMessage, 'NETWORK');
-        }
-
-        // Invalidar cache
+        const newEvent = await insertFinancialEventRecord(user.id, event);
         clearCache();
         fetchEvents();
-
-        const newEvent = rowToEvent(data as FinancialEventRow);
         toast.success('Evento financeiro criado com sucesso!', {
           description: `${newEvent.title} - R$ ${Math.abs(newEvent.amount).toFixed(2)}`,
         });
@@ -428,68 +726,9 @@ export function useFinancialEvents(
         if (!user) {
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
-
-        const sanitizedUpdates = sanitizeObject(updates);
-
-        // Mapear updates para colunas do DB
-        const updatePayload: Partial<FinancialEventInsert> = {
-          updated_at: new Date().toISOString(),
-        };
-
-        if (sanitizedUpdates.title !== undefined) {
-          updatePayload.title = sanitizedUpdates.title;
-        }
-        if (sanitizedUpdates.description !== undefined) {
-          updatePayload.description = sanitizedUpdates.description;
-        }
-        if (sanitizedUpdates.amount !== undefined) {
-          updatePayload.amount = sanitizedUpdates.amount;
-        }
-        if (sanitizedUpdates.start !== undefined) {
-          updatePayload.start_date = sanitizedUpdates.start.toISOString();
-        }
-        if (sanitizedUpdates.end !== undefined) {
-          updatePayload.end_date = sanitizedUpdates.end.toISOString();
-        }
-        if (sanitizedUpdates.type !== undefined) {
-          updatePayload.event_type = sanitizedUpdates.type;
-          updatePayload.is_income = sanitizedUpdates.type === 'income';
-        }
-        if (sanitizedUpdates.category !== undefined) {
-          updatePayload.category = sanitizedUpdates.category;
-        }
-        if (sanitizedUpdates.isRecurring !== undefined) {
-          updatePayload.is_recurring = sanitizedUpdates.isRecurring;
-        }
-        if (sanitizedUpdates.status !== undefined) {
-          updatePayload.status = sanitizedUpdates.status;
-        }
-        if (sanitizedUpdates.color !== undefined) {
-          updatePayload.color = sanitizedUpdates.color;
-        }
-        if (sanitizedUpdates.icon !== undefined) {
-          updatePayload.icon = sanitizedUpdates.icon;
-        }
-        if (sanitizedUpdates.location !== undefined) {
-          updatePayload.location = sanitizedUpdates.location;
-        }
-
-        const { data, error } = await supabase
-          .from('financial_events')
-          .update(updatePayload)
-          .eq('id', id)
-          .select()
-          .single();
-
-        if (error) {
-          throw new FinancialError(error.message, 'NETWORK');
-        }
-
-        // Invalidar cache
+        const updatedEvent = await updateFinancialEventRecord(user.id, id, updates);
         clearCache();
         fetchEvents();
-
-        const updatedEvent = rowToEvent(data as FinancialEventRow);
         toast.success('Evento atualizado com sucesso!');
 
         return updatedEvent;
@@ -866,29 +1105,7 @@ export function useFinancialEventMutations() {
         if (!user) {
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
-
-        const baseRow = eventToRow(event, user.id);
-        const eventData: FinancialEventInsert = {
-          ...baseRow,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          amount: event.amount ?? baseRow.amount,
-          title: event.title || baseRow.title || 'Novo Evento',
-        };
-
-        const { data, error } = await supabase
-          .from('financial_events')
-          .insert(eventData)
-          .select()
-          .single();
-
-        if (error) {
-          const errorMessage =
-            typeof error === 'object' && error.message ? error.message : 'Erro ao criar evento';
-          throw new FinancialError(errorMessage, 'NETWORK');
-        }
-
-        const newEvent = rowToEvent(data as FinancialEventRow);
+        const newEvent = await insertFinancialEventRecord(user.id, event);
         toast.success('Evento financeiro criado com sucesso!', {
           description: `${newEvent.title} - R$ ${Math.abs(newEvent.amount).toFixed(2)}`,
         });
@@ -917,61 +1134,7 @@ export function useFinancialEventMutations() {
         if (!user) {
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
-
-        const updatePayload: Partial<FinancialEventInsert> = {
-          updated_at: new Date().toISOString(),
-        };
-
-        if (updates.title !== undefined) {
-          updatePayload.title = updates.title;
-        }
-        if (updates.description !== undefined) {
-          updatePayload.description = updates.description;
-        }
-        if (updates.amount !== undefined) {
-          updatePayload.amount = updates.amount;
-        }
-        if (updates.start !== undefined) {
-          updatePayload.start_date = updates.start.toISOString();
-        }
-        if (updates.end !== undefined) {
-          updatePayload.end_date = updates.end.toISOString();
-        }
-        if (updates.type !== undefined) {
-          updatePayload.event_type = updates.type;
-          updatePayload.is_income = updates.type === 'income';
-        }
-        if (updates.category !== undefined) {
-          updatePayload.category = updates.category;
-        }
-        if (updates.isRecurring !== undefined) {
-          updatePayload.is_recurring = updates.isRecurring;
-        }
-        if (updates.status !== undefined) {
-          updatePayload.status = updates.status;
-        }
-        if (updates.color !== undefined) {
-          updatePayload.color = updates.color;
-        }
-        if (updates.icon !== undefined) {
-          updatePayload.icon = updates.icon;
-        }
-        if (updates.location !== undefined) {
-          updatePayload.location = updates.location;
-        }
-
-        const { data, error } = await supabase
-          .from('financial_events')
-          .update(updatePayload)
-          .eq('id', id)
-          .select()
-          .single();
-
-        if (error) {
-          throw new FinancialError(error.message, 'NETWORK');
-        }
-
-        const updatedEvent = rowToEvent(data as FinancialEventRow);
+        const updatedEvent = await updateFinancialEventRecord(user.id, id, updates);
         toast.success('Evento atualizado com sucesso!');
 
         return updatedEvent;

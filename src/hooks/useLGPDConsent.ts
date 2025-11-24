@@ -25,7 +25,8 @@ export function useLGPDConsent() {
           // Check version compatibility if needed
           setConsent(parsed);
         }
-      } catch (error) {
+      } catch (_error) {
+        toast.error('Não foi possível carregar preferências de privacidade');
       } finally {
         setIsLoading(false);
       }
@@ -47,8 +48,8 @@ export function useLGPDConsent() {
       localStorage.setItem(CONSENT_KEY, JSON.stringify(newConsent));
       setConsent(newConsent);
       toast.success('Preferências de privacidade salvas');
-    } catch (error) {
-      console.error('
+    } catch (_error) {
+      toast.error('Não foi possível salvar preferências de privacidade');
     }
   }, []);
 
@@ -57,9 +58,10 @@ export function useLGPDConsent() {
       localStorage.removeItem(CONSENT_KEY);
       setConsent(null);
       toast.info('Consentimento revogado');
-    } catch (error) {
-      console.error('Failed to revoke LGPD consent', error);
+    } catch (_error) {
+      toast.error('Não foi possível revogar o consentimento');
     }
+  }, []);
 
   return {
     consent,

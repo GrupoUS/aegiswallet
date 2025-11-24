@@ -1,7 +1,6 @@
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
-import { createServerClient } from '@/integrations/supabase/factory';
-
-const supabase = createServerClient();
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import { createRequestScopedClient } from '@/integrations/supabase/factory';
 
 export interface CreateContextOptions {
   session: Session | null;
@@ -9,19 +8,46 @@ export interface CreateContextOptions {
   supabase: SupabaseClient;
 }
 
+const buildSession = (token: string, user: User): Session => ({
+  access_token: token,
+  token_type: 'bearer',
+  expires_in: 0,
+  expires_at: null,
+  refresh_token: null,
+  provider_token: null,
+  provider_refresh_token: null,
+  user,
+});
+
 /**
  * Creates context for an incoming request
  * @link https://trpc.io/docs/v11/context
  */
-export const createContext = async (): Promise<CreateContextOptions> => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+export const createContext = async (
+  opts: FetchCreateContextFnOptions
+): Promise<CreateContextOptions> => {
+  const authHeader = opts.req.headers.get('Authorization');
+  const accessToken = authHeader?.startsWith('Bearer ')
+    ? authHeader.replace('Bearer ', '').trim()
+    : undefined;
+
+  const supabase = createRequestScopedClient(accessToken);
+
+  let session: Session | null = null;
+  let user: User | null = null;
+
+  if (accessToken) {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error && data.user) {
+      user = data.user;
+      session = buildSession(accessToken, data.user);
+    }
+  }
 
   return {
     session,
     supabase,
-    user: session?.user ?? null,
+    user,
   };
 };
 

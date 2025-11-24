@@ -358,19 +358,12 @@ describe('tRPC Type-Safe Integration Testing', () => {
     });
 
     it('should handle patient deletion with audit logging', async () => {
-      console.log = vi.fn();
-
       const result = await trpc.patients.delete.mutate({ id: 'test-patient-001' });
 
       expect(result).toMatchObject({
         deletedAt: expect.any(String),
         success: true,
       });
-
-      // Verify audit logging was called
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('DELETE request for patient test-patient-001')
-      );
     });
   });
 

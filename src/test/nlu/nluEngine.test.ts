@@ -9,7 +9,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { NLUEngine, createNLUEngine, processUtterance } from '@/lib/nlu/nluEngine';
+import { createNLUEngine, NLUEngine, processUtterance } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
 
 describe('NLU Engine', () => {

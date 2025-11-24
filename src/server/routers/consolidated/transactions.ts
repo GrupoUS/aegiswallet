@@ -5,7 +5,6 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { financialSchemas, validateTransactionForFraud } from '@/lib/security/financial-validator';
 import { logError, logOperation, logSecurityEvent } from '@/server/lib/logger';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
@@ -29,6 +28,8 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         let query = supabase
           .from('transactions')
@@ -37,7 +38,7 @@ export const transactionsRouter = router({
             bank_accounts(id, institution_name, account_mask),
             financial_categories(id, name, color)
           `)
-          .eq('user_id', ctx.user.id);
+          .eq('user_id', userId);
 
         // Apply filters
         if (input.categoryId) {
@@ -69,7 +70,7 @@ export const transactionsRouter = router({
           .range(input.offset, input.offset + input.limit - 1);
 
         if (error) {
-          logError('fetch_transactions', ctx.user.id, error, {
+          logError('fetch_transactions', userId, error, {
             filters: input,
             operation: 'getAll',
           });
@@ -79,7 +80,7 @@ export const transactionsRouter = router({
           });
         }
 
-        logOperation('fetch_transactions_success', ctx.user.id, 'transactions', null, {
+        logOperation('fetch_transactions_success', userId, 'transactions', null, {
           count: data?.length || 0,
           filters: input,
         });
@@ -90,7 +91,7 @@ export const transactionsRouter = router({
           transactions: data || [],
         };
       } catch (error) {
-        logError('fetch_transactions_unexpected', ctx.user.id, error as Error, {
+        logError('fetch_transactions_unexpected', userId, error as Error, {
           input,
           operation: 'getAll',
         });
@@ -107,6 +108,8 @@ export const transactionsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         const { data, error } = await supabase
           .from('transactions')
@@ -117,7 +120,7 @@ export const transactionsRouter = router({
             transaction_tags(*)
           `)
           .eq('id', input.id)
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .single();
 
         if (error) {
@@ -127,7 +130,7 @@ export const transactionsRouter = router({
               message: 'Transação não encontrada',
             });
           }
-          logError('fetch_transaction', ctx.user.id, error, {
+          logError('fetch_transaction', userId, error, {
             operation: 'getById',
             transactionId: input.id,
           });
@@ -137,7 +140,7 @@ export const transactionsRouter = router({
           });
         }
 
-        logOperation('fetch_transaction_success', ctx.user.id, 'transactions', input.id, {
+        logOperation('fetch_transaction_success', userId, 'transactions', input.id, {
           amount: data.amount,
           type: data.transaction_type,
         });
@@ -147,7 +150,7 @@ export const transactionsRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        logError('fetch_transaction_unexpected', ctx.user.id, error as Error, {
+        logError('fetch_transaction_unexpected', userId, error as Error, {
           operation: 'getById',
           transactionId: input.id,
         });
@@ -164,24 +167,30 @@ export const transactionsRouter = router({
   create: protectedProcedure
     .input(financialSchemas.transaction)
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         // Get user's recent transactions for fraud detection
         const { data: recentTransactions } = await supabase
           .from('transactions')
           .select('amount, created_at, transaction_type')
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(20);
 
         // Validate transaction for fraud
-        const fraudValidation = await validateTransactionForFraud(
-          input,
-          recentTransactions || [],
-          ctx.user.id
-        );
+        const fraudValidation = validateTransactionForFraud({
+          amount: input.amount,
+          description: input.description,
+          userId,
+          previousTransactions: (recentTransactions || []).map((tx) => ({
+            amount: Number(tx.amount),
+            timestamp: new Date(tx.created_at).getTime(),
+          })),
+        });
 
         if (!fraudValidation.isValid) {
-          logSecurityEvent('suspicious_transaction_blocked', ctx.user.id, {
+          logSecurityEvent('suspicious_transaction_blocked', userId, {
             reasons: fraudValidation.reasons,
             riskScore: fraudValidation.riskScore,
             transaction: input,
@@ -194,22 +203,35 @@ export const transactionsRouter = router({
         }
 
         // Create transaction
+        const transactionRecord = {
+          account_id: input.account_id,
+          amount: input.amount,
+          category_id: input.category_id ?? null,
+          description: input.description,
+          transaction_date: new Date(input.transaction_date).toISOString(),
+          transaction_type: input.transaction_type,
+          status: input.status ?? 'posted',
+          merchant_name: input.merchant_name ?? null,
+          notes: input.notes ?? null,
+          payment_method: input.payment_method ?? null,
+          tags: input.tags ?? [],
+          is_manual_entry: input.is_manual_entry ?? true,
+          user_id: userId,
+          currency: 'BRL',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
         const { data, error } = await supabase
           .from('transactions')
-          .insert({
-            ...input,
-            user_id: ctx.user.id,
-            status: 'pending',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
+          .insert(transactionRecord)
           .select()
           .single();
 
         if (error) {
-          logError('create_transaction', ctx.user.id, error, {
+          logError('create_transaction', userId, error, {
             operation: 'create',
-            transaction: input,
+            transaction: transactionRecord,
           });
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
@@ -217,7 +239,7 @@ export const transactionsRouter = router({
           });
         }
 
-        logOperation('create_transaction_success', ctx.user.id, 'transactions', data.id, {
+        logOperation('create_transaction_success', userId, 'transactions', data.id, {
           amount: input.amount,
           category: input.category_id,
           type: input.transaction_type,
@@ -228,7 +250,7 @@ export const transactionsRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        logError('create_transaction_unexpected', ctx.user.id, error as Error, {
+        logError('create_transaction_unexpected', userId, error as Error, {
           operation: 'create',
           transaction: input,
         });
@@ -256,13 +278,15 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         // Verify transaction belongs to user
         const { data: existing } = await supabase
           .from('transactions')
           .select('id, status, user_id')
           .eq('id', input.id)
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .single();
 
         if (!existing) {
@@ -287,12 +311,12 @@ export const transactionsRouter = router({
             updated_at: new Date().toISOString(),
           })
           .eq('id', input.id)
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .select()
           .single();
 
         if (error) {
-          logError('update_transaction', ctx.user.id, error, {
+          logError('update_transaction', userId, error, {
             operation: 'update',
             transactionId: input.id,
           });
@@ -302,7 +326,7 @@ export const transactionsRouter = router({
           });
         }
 
-        logOperation('update_transaction_success', ctx.user.id, 'transactions', input.id, {
+        logOperation('update_transaction_success', userId, 'transactions', input.id, {
           updatedFields: Object.keys(input.data),
         });
 
@@ -311,7 +335,7 @@ export const transactionsRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        logError('update_transaction_unexpected', ctx.user.id, error as Error, {
+        logError('update_transaction_unexpected', userId, error as Error, {
           operation: 'update',
           transactionId: input.id,
         });
@@ -328,13 +352,15 @@ export const transactionsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         // Verify transaction belongs to user and is pending
         const { data: existing } = await supabase
           .from('transactions')
           .select('id, status, user_id, amount')
           .eq('id', input.id)
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .single();
 
         if (!existing) {
@@ -355,10 +381,10 @@ export const transactionsRouter = router({
           .from('transactions')
           .delete()
           .eq('id', input.id)
-          .eq('user_id', ctx.user.id);
+          .eq('user_id', userId);
 
         if (error) {
-          logError('delete_transaction', ctx.user.id, error, {
+          logError('delete_transaction', userId, error, {
             operation: 'delete',
             transactionId: input.id,
           });
@@ -368,7 +394,7 @@ export const transactionsRouter = router({
           });
         }
 
-        logOperation('delete_transaction_success', ctx.user.id, 'transactions', input.id, {
+        logOperation('delete_transaction_success', userId, 'transactions', input.id, {
           amount: existing.amount,
         });
 
@@ -377,7 +403,7 @@ export const transactionsRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        logError('delete_transaction_unexpected', ctx.user.id, error as Error, {
+        logError('delete_transaction_unexpected', userId, error as Error, {
           operation: 'delete',
           transactionId: input.id,
         });
@@ -399,6 +425,8 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const userId = ctx.user.id;
       try {
         // Calculate date range based on period
         const endDate = new Date();
@@ -422,7 +450,7 @@ export const transactionsRouter = router({
         let query = supabase
           .from('transactions')
           .select('amount, transaction_type, status, transaction_date')
-          .eq('user_id', ctx.user.id)
+          .eq('user_id', userId)
           .gte('transaction_date', startDate.toISOString())
           .lte('transaction_date', endDate.toISOString())
           .eq('status', 'posted');
@@ -434,7 +462,7 @@ export const transactionsRouter = router({
         const { data, error } = await query;
 
         if (error) {
-          logError('fetch_transaction_statistics', ctx.user.id, error, {
+          logError('fetch_transaction_statistics', userId, error, {
             operation: 'getStatistics',
             period: input.period,
           });
@@ -469,7 +497,7 @@ export const transactionsRouter = router({
           transactionCount: transactions.length,
         };
 
-        logOperation('fetch_transaction_statistics_success', ctx.user.id, 'transactions', null, {
+        logOperation('fetch_transaction_statistics_success', userId, 'transactions', null, {
           balance,
           period: input.period,
           transactionCount: transactions.length,
@@ -480,7 +508,7 @@ export const transactionsRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        logError('fetch_transaction_statistics_unexpected', ctx.user.id, error as Error, {
+        logError('fetch_transaction_statistics_unexpected', userId, error as Error, {
           operation: 'getStatistics',
           period: input.period,
         });

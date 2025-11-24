@@ -449,7 +449,7 @@ const isSecurityError = (
   error: unknown
 ): error is TRPCError & { code: 'UNAUTHORIZED' | 'FORBIDDEN' | 'TOO_MANY_REQUESTS' } => {
   if (error instanceof TRPCError) {
-    return ['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'].includes(error.code as any);
+    return (['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'] as const).includes(error.code);
   }
   return false;
 };

@@ -228,7 +228,6 @@ export class BiometricAuthService {
   private pushProvider?: PushProvider;
   private fraudDetectionService?: FraudDetectionService;
   private deviceFingerprintingService?: DeviceFingerprintingService;
-  private fraudRules: FraudDetectionRule[] = [];
 
   constructor(
     config: Partial<BiometricConfig> = {},
@@ -389,15 +388,15 @@ export class BiometricAuthService {
   ): Promise<void> {
     try {
       // Get user's contact information
-      const { data: userData, error: fetchError } = await supabase
+      const { data: userData } = await supabase
         .from('users')
         .select('phone')
         .eq('id', userId)
         .single();
 
       // Send SMS alert if available
-      if (user?.phone_number && this.smsProvider) {
-        await this.smsProvider.sendSecurityAlert(userId, user.phone_number, alertType);
+      if (userData?.phone && this.smsProvider) {
+        await this.smsProvider.sendSecurityAlert(userId, userData.phone, alertType);
       }
 
       // Send push notification if available
@@ -643,8 +642,8 @@ export class BiometricAuthService {
       const credential = await navigator.credentials.get({
         publicKey: {
           authenticatorSelection: {
-            authenticatorAttachment: config.authenticatorAttachment,
-            userVerification: config.userVerification,
+            authenticatorAttachment: this.config.authenticatorAttachment,
+            userVerification: this.config.userVerification,
           },
           challenge,
           timeout: this.config.timeout,
@@ -1093,10 +1092,10 @@ export class BiometricAuthService {
       if ((storedOTP?.attempts || 0) >= this.config.maxOtpAttempts) {
         return {
           error: 'Maximum OTP attempts exceeded',
-            method: 'otp',
-            processingTime: Date.now() - startTime,
-            success: false,
-          };
+          method: 'otp',
+          processingTime: Date.now() - startTime,
+          success: false,
+        };
       }
 
       // Verify OTP
@@ -1115,12 +1114,12 @@ export class BiometricAuthService {
         // Log success
         await this.logSecurityEvent({
           event: 'otp_verified',
-            ipAddress: getClientIP(),
-            metadata: { phone_number: phoneNumber },
-            method: 'otp',
-            userAgent: getUserAgent(),
-            userId,
-          });
+          ipAddress: getClientIP(),
+          metadata: { phone_number: phoneNumber },
+          method: 'otp',
+          userAgent: getUserAgent(),
+          userId,
+        });
 
         return {
           method: 'otp',
@@ -1170,8 +1169,7 @@ export class BiometricAuthService {
 
     try {
       // Get user's phone number for fallback SMS
-      const { data: user } = await supabase;
-      const { data: userData, error: fetchError } = await supabase
+      const { data: userData } = await supabase
         .from('users')
         .select('phone')
         .eq('id', userId)
@@ -1239,6 +1237,7 @@ export class BiometricAuthService {
         success: false,
       };
     }
+  }
 
   /**
    * Verify push response

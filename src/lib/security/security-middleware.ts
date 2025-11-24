@@ -283,7 +283,7 @@ export function generateSecurityHeaders(
 
   // Remove some headers for development
   if (process.env.NODE_ENV === 'development') {
-    delete headers['Strict-Transport-Security'];
+    headers['Strict-Transport-Security'] = undefined;
   }
 
   return headers;

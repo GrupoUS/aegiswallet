@@ -65,6 +65,7 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
+        type: 'button',
         'data-testid': 'start-listening',
         disabled: isListening,
         key: 'start-btn',
@@ -76,6 +77,7 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
     React.createElement(
       'button',
       {
+        type: 'button',
         'data-testid': 'stop-listening',
         disabled: !isListening,
         key: 'stop-btn',

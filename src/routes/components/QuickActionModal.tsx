@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { useCreateTransaction } from '@/hooks/use-transactions';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
+import type { Tables } from '@/types/database.types';
 
 // Type-safe action types for Brazilian financial operations
 type QuickActionType = 'transfer' | 'deposit' | 'withdraw';
@@ -35,16 +36,7 @@ interface QuickActionModalProps {
 }
 
 // Type-safe account interface for component usage
-interface BankAccountDisplay {
-  id: string;
-  institution_name: string;
-  account_type: string;
-  balance: number;
-  is_active: boolean;
-  is_primary: boolean;
-  account_mask: string; // Assuming this exists or we handle missing
-  currency: string;
-}
+type BankAccountDisplay = Tables<'bank_accounts'>['Row'];
 
 export function QuickActionModal({
   isOpen,
@@ -54,6 +46,7 @@ export function QuickActionModal({
 }: QuickActionModalProps) {
   const { accounts, updateBalance } = useBankAccounts();
   const { mutateAsync: createTransaction } = useCreateTransaction();
+  const accountList: BankAccountDisplay[] = accounts ?? [];
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -103,21 +96,23 @@ export function QuickActionModal({
       return;
     }
 
-    const sourceAccount = accounts.find((a: any) => a.id === accountId);
-    if (!sourceAccount) {return;}
+    const sourceAccount = accountList.find((a) => a.id === accountId);
+    if (!sourceAccount) {
+      return;
+    }
 
     const val = Number(amount);
 
     if (actionType === 'withdraw' && Number(sourceAccount.balance) < val) {
-       toast.error('Saldo insuficiente');
-       return;
+      toast.error('Saldo insuficiente');
+      return;
     }
 
     if (actionType === 'transfer') {
-        if (Number(sourceAccount.balance) < val) {
-            toast.error('Saldo insuficiente na conta de origem');
-            return;
-        }
+      if (Number(sourceAccount.balance) < val) {
+        toast.error('Saldo insuficiente na conta de origem');
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -126,46 +121,74 @@ export function QuickActionModal({
       const date = new Date().toISOString();
 
       if (actionType === 'transfer') {
-        const targetAccount = accounts.find((a: any) => a.id === targetAccountId);
-        if (!targetAccount) {throw new Error("Target account not found");}
+        const targetAccount = accountList.find((a) => a.id === targetAccountId);
+        if (!targetAccount) {
+          throw new Error('Target account not found');
+        }
 
         // 1. Debit source
         await createTransaction({
-          account_id: accountId, amount: -val, date, description: description || `Transferência para ${targetAccount.institution_name}`, status: 'posted', type: 'transfer'
+          account_id: accountId,
+          amount: -val,
+          description: description || `Transferência para ${targetAccount.institution_name}`,
+          transaction_date: date,
+          transaction_type: 'transfer',
+          status: 'posted',
+          is_manual_entry: true,
         });
 
         // 2. Credit target
         await createTransaction({
-          account_id: targetAccountId, amount: val, date, description: description || `Transferência de ${sourceAccount.institution_name}`, status: 'posted', type: 'transfer'
+          account_id: targetAccountId,
+          amount: val,
+          description: description || `Transferência de ${sourceAccount.institution_name}`,
+          transaction_date: date,
+          transaction_type: 'transfer',
+          status: 'posted',
+          is_manual_entry: true,
         });
 
         // 3. Update balances
         await updateBalance({
-          balance: Number(sourceAccount.balance) - val, id: accountId
+          balance: Number(sourceAccount.balance) - val,
+          id: accountId,
         });
 
         await updateBalance({
-          balance: Number(targetAccount.balance) + val, id: targetAccountId
+          balance: Number(targetAccount.balance) + val,
+          id: targetAccountId,
         });
-
       } else if (actionType === 'deposit') {
         // Credit account
         await createTransaction({
-          account_id: accountId, amount: val, date, description: description || 'Depósito', status: 'posted', type: 'credit'
+          account_id: accountId,
+          amount: val,
+          description: description || 'Depósito',
+          transaction_date: date,
+          transaction_type: 'credit',
+          status: 'posted',
+          is_manual_entry: true,
         });
 
         await updateBalance({
-            balance: Number(sourceAccount.balance) + val, id: accountId
+          balance: Number(sourceAccount.balance) + val,
+          id: accountId,
         });
-
       } else if (actionType === 'withdraw') {
         // Debit account
         await createTransaction({
-          account_id: accountId, amount: -val, date, description: description || 'Saque', status: 'posted', type: 'debit'
+          account_id: accountId,
+          amount: -val,
+          description: description || 'Saque',
+          transaction_date: date,
+          transaction_type: 'debit',
+          status: 'posted',
+          is_manual_entry: true,
         });
 
         await updateBalance({
-            balance: Number(sourceAccount.balance) - val, id: accountId
+          balance: Number(sourceAccount.balance) - val,
+          id: accountId,
         });
       }
 
@@ -179,7 +202,6 @@ export function QuickActionModal({
       setAccountId('');
       setTargetAccountId('');
     } catch (_error) {
-      console.error(_error);
       toast.error('Erro ao realizar operação');
     } finally {
       setIsLoading(false);
@@ -230,7 +252,7 @@ export function QuickActionModal({
                 <SelectValue placeholder="Selecione a conta" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((account: any) => (
+                {accountList.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.institution_name}
                     {account.account_mask ? ` (${account.account_mask})` : ''} -{' '}
@@ -249,9 +271,9 @@ export function QuickActionModal({
                   <SelectValue placeholder="Selecione a conta" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts
-                    .filter((a: any) => a.id !== accountId)
-                    .map((account: any) => (
+                  {accountList
+                    .filter((a) => a.id !== accountId)
+                    .map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.institution_name}
                         {account.account_mask ? ` (${account.account_mask})` : ''}

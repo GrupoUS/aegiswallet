@@ -384,22 +384,9 @@ export const financialSchemas = {
       return pattern.regex.test(data.key.replace(/\D/g, ''));
     }, 'Invalid PIX key format for the specified type'),
   transaction: z.object({
+    account_id: z.string().uuid('Conta bancária inválida'),
     amount: z.number(),
-    category: z
-      .string()
-      .refine(
-        (cat) =>
-          [...TRANSACTION_CATEGORIES.INCOME, ...TRANSACTION_CATEGORIES.EXPENSE].includes(cat),
-        'Invalid transaction category'
-      ),
-    date: z.string().refine((date) => {
-      const parsed = new Date(date);
-      return (
-        !Number.isNaN(parsed.getTime()) &&
-        parsed >= new Date('2020-01-01') &&
-        parsed <= new Date(Date.now() + 24 * 60 * 60 * 1000)
-      ); // Allow tomorrow
-    }, 'Invalid date. Must be a valid date between 2020-01-01 and tomorrow'),
+    category_id: z.string().uuid().optional(),
     description: z
       .string()
       .min(3, 'Description must be at least 3 characters')
@@ -411,6 +398,25 @@ export const financialSchemas = {
           ),
         'Description contains suspicious content'
       ),
+    transaction_date: z.string().refine((date) => {
+      const parsed = new Date(date);
+      return (
+        !Number.isNaN(parsed.getTime()) &&
+        parsed >= new Date('2020-01-01') &&
+        parsed <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+      );
+    }, 'Invalid date. Must be a valid date between 2020-01-01 and tomorrow'),
+    transaction_type: z.enum(['debit', 'credit', 'transfer', 'pix', 'boleto']),
+    status: z.enum(['pending', 'posted', 'failed', 'cancelled']).default('posted'),
+    merchant_name: z.string().max(120).optional(),
+    notes: z.string().max(500).optional(),
+    payment_method: z
+      .enum(['cash', 'debit_card', 'credit_card', 'pix', 'boleto', 'transfer'], {
+        invalid_type_error: 'Payment method is invalid',
+      })
+      .optional(),
+    tags: z.array(z.string()).max(10).optional(),
+    is_manual_entry: z.boolean().default(true),
   }),
 };
 

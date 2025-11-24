@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useVoiceLogger } from '@/hooks/useLogger';
 import type { VoiceRecognitionResult } from '@/services/voiceService';
-import { VOICE_FEEDBACK, getVoiceService } from '@/services/voiceService';
+import { getVoiceService, VOICE_FEEDBACK } from '@/services/voiceService';
 
 export interface UseVoiceCommandOptions {
   autoNavigate?: boolean;

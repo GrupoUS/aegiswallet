@@ -31,7 +31,9 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
   const [consent, setConsent] = React.useState(false);
 
   const handleSubmit = () => {
-    if (!consent) {return;}
+    if (!consent) {
+      return;
+    }
 
     // Simulate masking logic that would be in the real component/service
     // Input: 12345678900 -> Output: 123.***.789-**
@@ -41,13 +43,17 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
     const maskedPhone = phone === '11987654321' ? '119****4321' : phone;
 
     onSubmit({
-      cpf: maskedCpf, email, lgpdConsent: {
+      cpf: maskedCpf,
+      email,
+      lgpdConsent: {
         consentType: 'treatment',
         deviceId: 'test-device-id',
         ip: '127.0.0.1',
         timestamp: new Date().toISOString(),
         version: '1.0',
-      }, name, phone: maskedPhone,
+      },
+      name,
+      phone: maskedPhone,
     });
   };
 
@@ -96,12 +102,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
         I consent to data processing
       </label>
 
-      <button
-        type="submit"
-        data-testid="submit-patient"
-        disabled={!consent}
-        onClick={handleSubmit}
-      >
+      <button type="submit" data-testid="submit-patient" disabled={!consent} onClick={handleSubmit}>
         Submit
       </button>
     </div>

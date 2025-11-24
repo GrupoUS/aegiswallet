@@ -114,13 +114,14 @@ export function MonthView({
                 const isCurrentMonth = isSameMonth(date, currentDate);
                 const isToday = isSameDay(date, new Date());
                 const isSelected = selectedDate !== null && isSameDay(date, selectedDate);
-                const dayLabel = format(date, "d 'de' MMMM yyyy", { locale: ptBR });
+                const dayLabel = format(date, "d 'de' MMMM yyyy", {
+                  locale: ptBR,
+                });
 
                 return (
                   <td key={date.toISOString()} className="p-1 align-top">
                     {/* biome-ignore lint/a11y/noStaticElementInteractions: Calendar cell interaction */}
                     <div
-                      tabIndex={0}
                       onDoubleClick={() => onEventAdd?.(date)}
                       className={cn(
                         'min-h-[100px] rounded bg-background p-1 text-left focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background',

@@ -1,17 +1,12 @@
-import { useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { Building, MoreVertical, Pencil, Plus, Trash2, Wallet } from 'lucide-react';
-import { useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
+import { Building, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { BankAccountForm } from '@/components/bank-accounts/BankAccountForm';
 import { FinancialAmount } from '@/components/financial-amount';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -25,32 +20,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
+import type { Tables } from '@/types/database.types';
+
+type AccountRow = Tables<'bank_accounts'>['Row'];
 
 export const ContasBancarias = () => {
   const { accounts, deleteAccount, isDeleting } = useBankAccounts();
   const stats = useBankAccountsStats();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<any>(null);
-  const [deletingAccount, setDeletingAccount] = useState<any>(null);
+  const [editingAccount, setEditingAccount] = useState<AccountRow | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState<AccountRow | null>(null);
 
-  const handleEdit = (account: any) => {
+  const handleEdit = (account: AccountRow) => {
     setEditingAccount(account);
   };
 
-  const handleDelete = (account: any) => {
+  const handleDelete = (account: AccountRow) => {
     setDeletingAccount(account);
   };
 
   const confirmDelete = () => {
     if (deletingAccount) {
-      deleteAccount({ id: deletingAccount.id }, {
-        onSuccess: () => {
-          setDeletingAccount(null);
+      deleteAccount(
+        { id: deletingAccount.id },
+        {
+          onSuccess: () => {
+            setDeletingAccount(null);
+          },
         }
-      });
+      );
     }
   };
 
@@ -61,9 +61,7 @@ export const ContasBancarias = () => {
           <h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text text-3xl font-bold text-transparent">
             Contas Bancárias
           </h1>
-          <p className="text-muted-foreground">
-            Gerencie suas contas e saldos
-          </p>
+          <p className="text-muted-foreground">Gerencie suas contas e saldos</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -75,9 +73,7 @@ export const ContasBancarias = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Saldo Total
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -89,9 +85,7 @@ export const ContasBancarias = () => {
                 className="text-foreground"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Soma de todas as contas
-            </p>
+            <p className="text-xs text-muted-foreground">Soma de todas as contas</p>
           </CardContent>
         </Card>
         <Card>
@@ -102,9 +96,7 @@ export const ContasBancarias = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeAccounts}</div>
-            <p className="text-xs text-muted-foreground">
-              De um total de {stats.totalAccounts}
-            </p>
+            <p className="text-xs text-muted-foreground">De um total de {stats.totalAccounts}</p>
           </CardContent>
         </Card>
         <Card>
@@ -115,9 +107,7 @@ export const ContasBancarias = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.primaryAccounts}</div>
-            <p className="text-xs text-muted-foreground">
-              Definidas como principal
-            </p>
+            <p className="text-xs text-muted-foreground">Definidas como principal</p>
           </CardContent>
         </Card>
       </div>
@@ -171,13 +161,11 @@ export const ContasBancarias = () => {
                 />
               </div>
               <div className="flex gap-2">
-                {account.is_primary && (
-                  <Badge variant="default">Principal</Badge>
-                )}
-                {!account.is_active && (
-                  <Badge variant="secondary">Inativa</Badge>
-                )}
-                <Badge variant="outline" className="uppercase">{account.currency || 'BRL'}</Badge>
+                {account.is_primary && <Badge variant="default">Principal</Badge>}
+                {!account.is_active && <Badge variant="secondary">Inativa</Badge>}
+                <Badge variant="outline" className="uppercase">
+                  {account.currency || 'BRL'}
+                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -205,9 +193,7 @@ export const ContasBancarias = () => {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Editar Conta</DialogTitle>
-            <DialogDescription>
-              Atualize os dados da conta bancária.
-            </DialogDescription>
+            <DialogDescription>Atualize os dados da conta bancária.</DialogDescription>
           </DialogHeader>
           {editingAccount && (
             <BankAccountForm
@@ -237,4 +223,3 @@ export const ContasBancarias = () => {
 export const Route = createLazyFileRoute('/contas-bancarias')({
   component: ContasBancarias,
 });
-

@@ -8,19 +8,14 @@ export default setup(async () => {
   process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
 
   // Mock global objects that need to be available before tests run
-  global.TextEncoder = require('node:util').TextEncoder;
-  global.TextDecoder = require('node:util').TextDecoder as any;
+  const { TextEncoder, TextDecoder } = require('node:util');
+  global.TextEncoder = TextEncoder as typeof globalThis.TextEncoder;
+  global.TextDecoder = TextDecoder as typeof globalThis.TextDecoder;
 
   // Setup healthcare-specific global mocks
-  const mockFetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({}),
-      ok: true,
-      status: 200,
-      text: () => Promise.resolve(''),
-    });
+  const mockFetch: typeof fetch = async () => new Response('', { status: 200 });
 
-  global.fetch = mockFetch as any;
+  global.fetch = mockFetch;
 
   return async () => {
     // Global cleanup logic here if needed

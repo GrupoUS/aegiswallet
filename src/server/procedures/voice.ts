@@ -139,7 +139,7 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
         wasCorrect: z.boolean().optional(),
       })
     )
-    .mutation(async ({ ctx, input }: { ctx: Context; input: any }) => {
+    .mutation(async ({ ctx, input }) => {
       if (!ctx.session?.user) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -226,7 +226,7 @@ export const createVoiceRouter = (t: TRPCRouterBuilder) => ({
         offset: z.number().min(0).default(0),
       })
     )
-    .query(async ({ ctx, input }: { ctx: Context; input: any }) => {
+    .query(async ({ ctx, input }) => {
       if (!ctx.session?.user) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',

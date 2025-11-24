@@ -1,6 +1,4 @@
 import { TRPCError } from '@trpc/server';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import type { BrazilianFinancialEvent } from '@/lib/notifications/financial-notification-service';

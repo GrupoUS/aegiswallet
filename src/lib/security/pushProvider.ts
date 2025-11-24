@@ -220,7 +220,9 @@ export class PushProvider {
             ttl: this.config.ttl,
             urgency: this.config.urgency,
             vapidDetails: {
-              privateKey: this.config.vapidPrivateKey, publicKey: this.config.vapidPublicKey, subject: this.config.vapidSubject,
+              privateKey: this.config.vapidPrivateKey,
+              publicKey: this.config.vapidPublicKey,
+              subject: this.config.vapidSubject,
             },
           },
           payload,

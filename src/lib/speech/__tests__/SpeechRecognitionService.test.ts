@@ -6,8 +6,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  SpeechRecognitionService,
   createSpeechRecognitionService,
+  SpeechRecognitionService,
 } from '../SpeechRecognitionService';
 
 // Mock Web Speech API
@@ -83,8 +83,8 @@ describe('SpeechRecognitionService', () => {
       const globalAny = global as unknown as {
         window: { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
       };
-      delete globalAny.window.SpeechRecognition;
-      delete globalAny.window.webkitSpeechRecognition;
+      globalAny.window.SpeechRecognition = undefined;
+      globalAny.window.webkitSpeechRecognition = undefined;
 
       const unsupportedService = new SpeechRecognitionService();
       expect(unsupportedService.isWebSpeechSupported()).toBe(false);

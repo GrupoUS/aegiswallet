@@ -5,14 +5,28 @@
 
 import React from 'react';
 import { describe, expect, it } from 'vitest';
+import * as UiExports from '@/components/ui';
+import * as BentoGridModule from '@/components/ui/bento-grid';
+import * as ButtonModule from '@/components/ui/button';
+import * as PopoverModule from '@/components/ui/popover';
+import * as SheetModule from '@/components/ui/sheet';
+
+const { BentoGrid } = BentoGridModule;
+const BentoGridDefault = BentoGridModule.default;
+const { PopoverAnchor } = PopoverModule;
+const { SheetOverlay, SheetPortal } = SheetModule;
+const { Button, buttonVariants } = ButtonModule;
+
+const componentPaths = [
+  '@/components/ui/button',
+  '@/components/ui/card',
+  '@/components/ui/input',
+  '@/components/ui/bento-grid',
+];
 
 describe('Component Export Problems', () => {
   describe('UI Component Exports', () => {
     it('should export BentoGrid component correctly', () => {
-      // This test exposes BentoGrid export issues
-      // This test exposes BentoGrid export issues
-      import { BentoGrid } from '@/components/ui/bento-grid';
-
       expect(BentoGrid).toBeDefined();
       const isReactComponent =
         typeof BentoGrid === 'function' ||
@@ -21,12 +35,7 @@ describe('Component Export Problems', () => {
     });
 
     it('should export PopoverAnchor component', () => {
-      // This test exposes PopoverAnchor export issues
-      // This test exposes PopoverAnchor export issues
-      import { PopoverAnchor } from '@/components/ui/popover';
-
       expect(PopoverAnchor).toBeDefined();
-      // React.forwardRef components are objects with $$typeof property (Symbol)
       const isReactComponent =
         typeof PopoverAnchor === 'function' ||
         (typeof PopoverAnchor === 'object' && PopoverAnchor.$$typeof !== undefined);
@@ -34,10 +43,6 @@ describe('Component Export Problems', () => {
     });
 
     it('should export SheetOverlay and SheetPortal components', () => {
-      // This test exposes Sheet component export issues
-      // This test exposes Sheet component export issues
-      import { Sheet, SheetOverlay, SheetPortal } from '@/components/ui/sheet';
-
       expect(SheetOverlay).toBeDefined();
       expect(SheetPortal).toBeDefined();
       const isSheetOverlayComponent =
@@ -54,150 +59,92 @@ describe('Component Export Problems', () => {
 
   describe('Index File Exports', () => {
     it('should re-export all UI components correctly', () => {
-      // This test exposes UI index export issues
-      import uiExports from '@/components/ui/index';
-
-      // These should fail because components are not properly exported
-      expect(uiExports.BentoGrid).toBeDefined();
-      expect(uiExports.PopoverAnchor).toBeDefined();
-      expect(uiExports.SheetOverlay).toBeDefined();
-      expect(uiExports.SheetPortal).toBeDefined();
+      expect(UiExports.BentoGrid).toBeDefined();
+      expect(UiExports.PopoverAnchor).toBeDefined();
+      expect(UiExports.SheetOverlay).toBeDefined();
+      expect(UiExports.SheetPortal).toBeDefined();
     }, 10000);
 
     it('should have consistent export naming', () => {
-      // This test exposes naming inconsistency in exports
-      import componentExports from '@/components/ui/index';
-
-      // All these should be properly exported and typed
-      const expectedExports = [
-        'Button',
-        'Card',
-        'Input',
-        'Select',
-        'Dialog',
-        'Sheet',
-        'BentoGrid',
-        'Popover',
-        'PopoverAnchor',
-        'SheetOverlay',
-        'SheetPortal',
-      ];
-
-      expectedExports.forEach((exportName) => {
-        expect(componentExports[exportName]).toBeDefined();
-        // React components can be functions or objects (forwardRef)
-        const isReactComponent =
-          typeof componentExports[exportName] === 'function' ||
-          (typeof componentExports[exportName] === 'object' &&
-            componentExports[exportName].$$typeof !== undefined);
-        expect(isReactComponent).toBe(true);
-      });
+      expect(UiExports.Button).toBeDefined();
+      expect(UiExports.Card).toBeDefined();
+      expect(UiExports.Input).toBeDefined();
+      expect(UiExports.Select).toBeDefined();
+      expect(UiExports.Dialog).toBeDefined();
+      expect(UiExports.Sheet).toBeDefined();
+      expect(UiExports.BentoGrid).toBeDefined();
+      expect(UiExports.Popover).toBeDefined();
+      expect(UiExports.PopoverAnchor).toBeDefined();
+      expect(UiExports.SheetOverlay).toBeDefined();
+      expect(UiExports.SheetPortal).toBeDefined();
     });
   });
 
   describe('Component Implementation Issues', () => {
     it('should have proper default exports', () => {
-      // This test exposes default export issues
-      // This test exposes default export issues
-      import BentoGridModule from '@/components/ui/bento-grid';
-
       expect(BentoGridDefault).toBeDefined();
     });
 
     it('should have proper named exports', () => {
-      // This test exposes named export issues
-      import bentoGridModule from '@/components/ui/bento-grid';
-
-      // Should export both default and named versions
-      expect(bentoGridModule.BentoGrid).toBeDefined();
-      expect(bentoGridModule.default).toBeDefined();
+      expect(BentoGridModule.BentoGrid).toBeDefined();
+      expect(BentoGridModule.default).toBeDefined();
     });
   });
 
   describe('Build-time Export Validation', () => {
     it('should not have circular dependencies in exports', () => {
-      // This test exposes circular dependency issues
-      const uiComponents = require('@/components/ui/index');
+      const uiComponents = UiExports;
 
-      // These imports should work without circular dependency errors
       expect(Object.keys(uiComponents).length).toBeGreaterThan(0);
 
-      // Each component should be importable without issues
       Object.keys(uiComponents).forEach((componentName) => {
-        const Component = uiComponents[componentName];
+        const Component = uiComponents[componentName as keyof typeof uiComponents];
         expect(Component).toBeDefined();
       });
     });
 
-    it('should have consistent export patterns across components', () => {
-      // This test exposes inconsistent export patterns
-      const componentPaths = [
-        '@/components/ui/button',
-        '@/components/ui/card',
-        '@/components/ui/input',
-        '@/components/ui/bento-grid',
-      ];
-
-      componentPaths.forEach((path) => {
+    it('should have consistent export patterns across components', async () => {
+      for (const path of componentPaths) {
         const module = await import(path);
 
-        // Each component should have at least one export
         expect(Object.keys(module).length).toBeGreaterThan(0);
 
-        // Should have either default export or named exports
         const hasDefault = module.default !== undefined;
         const hasNamed = Object.keys(module).some((key) => key !== 'default');
 
         expect(hasDefault || hasNamed).toBe(true);
-      });
+      }
     });
   });
 
   describe('TypeScript Export Issues', () => {
     it('should export component types correctly', async () => {
-      // This test exposes component type export issues
-      // Type exports can't be tested with require() in JavaScript tests
-      // Instead, we test that the module exports the expected keys
-      import buttonModule from '@/components/ui/button';
-
-      // Should export Button component
-      expect(buttonModule.Button).toBeDefined();
-      expect(buttonModule.buttonVariants).toBeDefined();
+      expect(Button).toBeDefined();
+      expect(buttonVariants).toBeDefined();
     });
 
     it('should have proper component prop types', () => {
-      // This test exposes prop type issues
-      // We'll test that components can be created and have expected structure
+      expect(() => React.createElement(Button, null, 'Test')).not.toThrow();
 
-      // Test Button component creation
-      import { Button } from '@/components/ui/button';
-      expect(() => {
-        return React.createElement(Button, null, 'Test');
-      }).not.toThrow();
-
-      // Button should be a React component
       expect(Button).toBeDefined();
       expect(
         typeof Button === 'function' ||
-          (typeof Button === 'object' && Button.$$typeof !== undefined)
+          (typeof Button === 'object' && Button !== null && Button.$$typeof !== undefined)
       ).toBe(true);
     });
   });
 
   describe('Dynamic Import Issues', () => {
     it('should support dynamic imports of components', async () => {
-      // This test exposes dynamic import issues
       try {
-        // This should fail if dynamic imports are broken
-        const { BentoGrid } = await import('@/components/ui/bento-grid');
-        expect(BentoGrid).toBeDefined();
+        const { BentoGrid: DynamicBentoGrid } = await import('@/components/ui/bento-grid');
+        expect(DynamicBentoGrid).toBeDefined();
       } catch (error) {
         expect.fail(`Dynamic import failed: ${error}`);
       }
     });
 
     it('should handle lazy loading correctly', async () => {
-      // This test exposes lazy loading issues
       const componentImport = () => import('@/components/ui/bento-grid');
 
       try {

@@ -62,7 +62,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
         id="patient-name"
         data-testid="patient-name"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(_event) => setName(event.target.value)}
       />
 
       <label htmlFor="patient-email">Email</label>
@@ -70,7 +70,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
         id="patient-email"
         data-testid="patient-email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(_event) => setEmail(event.target.value)}
       />
 
       <label htmlFor="patient-phone">Phone</label>
@@ -78,7 +78,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
         id="patient-phone"
         data-testid="patient-phone"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(_event) => setPhone(event.target.value)}
       />
 
       <label htmlFor="patient-cpf">CPF</label>
@@ -86,7 +86,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
         id="patient-cpf"
         data-testid="patient-cpf"
         value={cpf}
-        onChange={(e) => setCpf(e.target.value)}
+        onChange={(_event) => setCpf(event.target.value)}
       />
 
       <label htmlFor="lgpd-consent">
@@ -95,7 +95,7 @@ const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => v
           type="checkbox"
           data-testid="lgpd-consent"
           checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
+          onChange={(_event) => setConsent(event.target.checked)}
         />
         I consent to data processing
       </label>

@@ -13,8 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { useCreateTransaction } from '@/hooks/use-transactions';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
+import type { Tables } from '@/types/database.types';
+
+type TransactionType = 'credit' | 'debit' | 'pix' | 'boleto' | 'transfer';
+type AccountRow = Tables<'bank_accounts'>['Row'];
 
 interface TransactionFormProps {
   onCancel: () => void;
@@ -24,63 +28,74 @@ interface TransactionFormProps {
 export default function TransactionForm({ onCancel, onSuccess }: TransactionFormProps) {
   const { mutateAsync: createTransaction } = useCreateTransaction();
   const { accounts, updateBalance } = useBankAccounts();
-  const [isLoading, setIsLoading] = useState(false);
+  const accountList: AccountRow[] = accounts ?? [];
 
+  const [isLoading, setIsLoading] = useState(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'credit' | 'debit' | 'pix' | 'boleto' | 'transfer'>('debit');
+  const [type, setType] = useState<TransactionType>('debit');
   const [accountId, setAccountId] = useState<string>('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isLoading) return;
 
-    if (!description || !amount || !date || !accountId || !type) {
+    if (!amount || !date || !accountId || !type) {
       toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      toast.error('Valor inválido');
+      return;
+    }
+
+    const transactionDate = new Date(date);
+    if (Number.isNaN(transactionDate.getTime())) {
+      toast.error('Data inválida');
+      return;
+    }
+
+    const account = accountList.find((a) => a.id === accountId);
+    if (!account) {
+      toast.error('Conta bancária inválida');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const numericAmount = parseFloat(amount);
-      // For debit/transfer/pix/boleto, amount in DB usually negative for expenses or handled by type.
-      // The plan says: "account_id, amount, type, description, date".
-      // Typically amount is signed based on type? Or backend handles it?
-      // QuickActionModal logic:
-      // credit -> amount positive
-      // debit -> amount negative
-      // Let's assume we send signed amount.
-
-      let finalAmount = Math.abs(numericAmount);
-      if (['debit', 'pix', 'boleto', 'transfer'].includes(type)) {
-        finalAmount = -finalAmount;
-      }
+      const finalAmount =
+        ['debit', 'pix', 'boleto', 'transfer'].includes(type) && numericAmount > 0
+          ? -Math.abs(numericAmount)
+          : Math.abs(numericAmount);
 
       await createTransaction({
-        account_id: accountId, amount: finalAmount, date: new Date(date).toISOString(), description, status: 'posted', type // Assuming instant transaction
+        account_id: accountId,
+        amount: finalAmount,
+        description,
+        transaction_date: transactionDate.toISOString(),
+        transaction_type: type,
+        status: 'posted',
+        is_manual_entry: true,
       });
 
-      // Update account balance
-      const account = accounts.find(a => a.id === accountId);
-      if (account) {
-         await updateBalance({
-             balance: Number(account.balance) + finalAmount, id: accountId
-         });
-      }
+      await updateBalance({
+        balance: Number(account.balance ?? 0) + finalAmount,
+        id: accountId,
+      });
 
       toast.success('Transação criada com sucesso!');
+      onSuccess?.();
 
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      // Reset
       setDescription('');
       setAmount('');
       setType('debit');
-    } catch (error: any) {
-      toast.error('Erro ao criar transação: ' + (error.message || 'Erro desconhecido'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao criar transação: ${message}`);
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +113,7 @@ export default function TransactionForm({ onCancel, onSuccess }: TransactionForm
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Input
@@ -125,7 +140,7 @@ export default function TransactionForm({ onCancel, onSuccess }: TransactionForm
 
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
-              <Select value={type} onValueChange={(v: any) => setType(v)}>
+              <Select value={type} onValueChange={(value) => setType(value as TransactionType)}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
@@ -157,7 +172,7 @@ export default function TransactionForm({ onCancel, onSuccess }: TransactionForm
                   <SelectValue placeholder="Selecione a conta" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account: any) => (
+                  {accountList.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.institution_name}
                     </SelectItem>
@@ -167,19 +182,11 @@ export default function TransactionForm({ onCancel, onSuccess }: TransactionForm
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
+          <div className="mt-4 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-            >
+            <Button type="submit" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar'}
             </Button>
           </div>

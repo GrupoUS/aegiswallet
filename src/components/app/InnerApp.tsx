@@ -4,8 +4,13 @@
  */
 
 import { RouterProvider } from '@tanstack/react-router';
+import { AppProviders } from '@/components/providers/AppProviders';
 import { router } from '@/router/config';
 
 export function InnerApp() {
-  return <RouterProvider router={router} />;
+  return (
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  );
 }

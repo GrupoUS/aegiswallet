@@ -40,40 +40,14 @@ export const SUPABASE_CONFIG = {
 export const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 export const isServer = !isBrowser;
 
-// Temporary development RLS policy for audit_logs
-// This allows unauthenticated INSERT operations during development
-// In production, this should be replaced with proper authentication checks
-const DEV_RLS_POLICY = `
-  -- Allow insert operations during development
-  CREATE POLICY dev_allow_audit_logs_insert ON audit_logs
-    FOR INSERT
-    TO ANONYMOUS
-    WITH CHECK (true);
-`;
+// Import the factory to create clients properly
+import { createSupabaseClient as createClientFromFactory } from './factory';
 
-// Create a client factory with the policy
+// Create a development client that uses the factory
+// This ensures proper configuration with URL and API keys
 export const createDevSupabaseClient = () => {
-  const client = createClient();
-
-  // Apply the development policy if we're in browser and in development
-  if (isBrowser && import.meta.env?.DEV === 'true') {
-    // Use the raw SQL approach to ensure the policy is applied
-    client
-      .rpc('apply_rls_policy', {
-        sql: DEV_RLS_POLICY
-      })
-      .then(() => client)
-      .catch((error) => {
-        console.warn('Failed to apply development RLS policy:', error);
-        return client;
-      });
-  }
-
-  return client;
+  return createClientFromFactory();
 };
-
-// Regular client factory for production
-export const createSupabaseClient = createClient;
 
 // Secure storage implementation
 type SecureStorageEngine = Storage & {
@@ -106,6 +80,14 @@ class SecureStorageAdapter {
   }
 
   async getItem(key: string): Promise<string | null> {
+    // For PKCE flow, read from localStorage directly
+    if (key.includes('code-verifier') || key.includes('pkce')) {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(key);
+      }
+      return null;
+    }
+
     const storage = this.getSecureStorage();
     if (!storage) {
       return null;
@@ -129,6 +111,16 @@ class SecureStorageAdapter {
     }
 
     try {
+      // For PKCE flow, we need to store code_verifier in localStorage
+      // Don't use secure storage for PKCE-related keys to ensure they persist
+      if (key.includes('code-verifier') || key.includes('pkce')) {
+        // Use localStorage directly for PKCE keys to ensure they persist across redirects
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(key, value);
+          return;
+        }
+      }
+
       if (storage.secureSession && key.includes('supabase.auth')) {
         const sessionData = JSON.parse(value);
         await storage.secureSession.store(sessionData.session, sessionData.user);
@@ -141,6 +133,14 @@ class SecureStorageAdapter {
   }
 
   async removeItem(key: string): Promise<void> {
+    // For PKCE flow, remove from localStorage directly
+    if (key.includes('code-verifier') || key.includes('pkce')) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key);
+        return;
+      }
+    }
+
     const storage = this.getSecureStorage();
     if (!storage) {
       return;
@@ -162,14 +162,24 @@ class SecureStorageAdapter {
 const secureStorageAdapter = new SecureStorageAdapter();
 
 // Client configuration options
-export const getClientOptions = () => ({
-  auth: {
-    autoRefreshToken: isBrowser,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    persistSession: isBrowser,
-    storage: isBrowser ? secureStorageAdapter : undefined,
-  },
-});
+export const getClientOptions = () => {
+  // For PKCE flow to work correctly, we MUST use localStorage directly
+  // The secure storage adapter interferes with PKCE code_verifier persistence
+  // Supabase needs direct access to localStorage for PKCE keys
+  // We'll use secure storage only for sensitive session data in the future if needed
+  const storage = isBrowser && typeof localStorage !== 'undefined'
+    ? localStorage
+    : undefined;
+
+  return {
+    auth: {
+      autoRefreshToken: isBrowser,
+      detectSessionInUrl: true,
+      flowType: 'pkce' as const,
+      persistSession: isBrowser,
+      storage,
+    },
+  };
+};
 
 export type { Database };

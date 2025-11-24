@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { InnerApp } from '@/components/app/InnerApp';
-import { AppProviders } from '@/components/providers/AppProviders';
 import { useOAuthHandler } from '@/hooks/useOAuthHandler';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { sessionManager } from '@/lib/session/sessionManager';
@@ -50,11 +49,7 @@ function App() {
     );
   }
 
-  return (
-    <AppProviders>
-      <InnerApp />
-    </AppProviders>
-  );
+  return <InnerApp />;
 }
 
 export default App;

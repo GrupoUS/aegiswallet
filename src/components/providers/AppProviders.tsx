@@ -9,7 +9,6 @@ import { ErrorBoundary } from '@/components/error-boundaries/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LoggerProvider } from '@/contexts/LoggerContext';
-import { createDevSupabaseClient } from '@/integrations/supabase/config';
 
 export interface AppProvidersProps {
   children: ReactNode;
@@ -17,6 +16,8 @@ export interface AppProvidersProps {
 }
 
 export function AppProviders({ children, defaultConfig = {} }: AppProvidersProps) {
+  // Use the singleton client from client.ts to avoid multiple instances
+  // The AuthProvider will use the singleton client internally
   return (
     <ThemeProvider defaultTheme="tweakcn" storageKey="aegiswallet-theme">
       <ErrorBoundary>

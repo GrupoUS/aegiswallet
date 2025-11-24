@@ -70,9 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem('post_auth_redirect', redirectPath);
     }
 
+    // For PKCE flow, redirectTo must match the exact URL where the callback will be processed
+    // Using the current origin ensures the code verifier is preserved
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+
     const { error } = await supabase.auth.signInWithOAuth({
       options: {
-        redirectTo: `${window.location.origin}`,
+        redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
       provider: 'google',
     });

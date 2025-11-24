@@ -69,6 +69,7 @@ export function useOAuthHandler(): OAuthHandlerResult {
             code,
             error: exchangeError.message,
             pathname: window.location.pathname,
+            hasCodeVerifier: !!codeVerifier,
           });
           setOAuthError(exchangeError.message);
           setIsProcessing(false);

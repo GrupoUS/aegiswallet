@@ -51,7 +51,11 @@ export class ContextFormatter {
   /**
    * Format account balances
    */
-  private static formatAccounts(accounts: any[]): string {
+  private static formatAccounts(accounts: Array<{
+    accountName: string;
+    balance: number;
+    currency: string;
+  }>): string {
     const accountList = accounts
       .map(
         (acc) =>
@@ -69,7 +73,7 @@ ${accountList}
   /**
    * Format transactions
    */
-  private static formatTransactions(transactions: any[]): string {
+  private static formatTransactions(transactions: Transaction[]): string {
     // Group by category
     const byCategory = transactions.reduce(
       (acc, t) => {
@@ -111,7 +115,12 @@ ${recentList}
   /**
    * Format financial events
    */
-  private static formatEvents(events: any[]): string {
+  private static formatEvents(events: Array<{
+    title: string;
+    amount: number;
+    date: string;
+    status: string;
+  }>): string {
     const eventList = events
       .slice(0, 10)
       .map((e) => {

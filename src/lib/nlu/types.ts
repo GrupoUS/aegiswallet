@@ -106,6 +106,8 @@ export interface NLUResult {
     classificationMethod?: 'pattern' | 'tfidf' | 'ensemble';
     alternativeIntents?: { intent: IntentType; confidence: number }[];
     contextUsed?: boolean;
+    brazilianContext?: Record<string, unknown>;
+    learningSignals?: Record<string, unknown>;
   };
 }
 

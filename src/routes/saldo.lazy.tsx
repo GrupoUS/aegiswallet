@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
-import type { Database } from '@/types/database.types';
 import { BalanceChart } from './components/BalanceChart';
 import { QuickActionModal } from './components/QuickActionModal';
 import { StatisticsCards } from './components/StatisticsCards';
@@ -121,7 +120,7 @@ export function Saldo() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {accountsLoading
             ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)
-            : accounts.map((account: Database['public']['Tables']['bank_accounts']['Row']) => {
+            : accounts.map((account) => {
                 let Icon = Wallet;
                 let color = 'text-primary';
                 if (account.account_type === 'poupanca' || account.account_type === 'savings') {
@@ -150,7 +149,7 @@ export function Saldo() {
                     </CardHeader>
                     <CardContent>
                       <FinancialAmount
-                        amount={account.balance}
+                        amount={account.balance ?? 0}
                         currency={account.currency || 'BRL'}
                         size="lg"
                       />

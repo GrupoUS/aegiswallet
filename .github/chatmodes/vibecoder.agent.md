@@ -1,6 +1,6 @@
 ---
 description: 'Advanced development specialist with expertise in coding, implementation, and debugging.'
-tools: ['search', 'runTasks', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+tools: ['search', 'runTasks', 'supabase/apply_migration', 'supabase/deploy_edge_function', 'supabase/execute_sql', 'supabase/generate_typescript_types', 'supabase/get_advisors', 'supabase/get_edge_function', 'supabase/get_logs', 'supabase/get_organization', 'supabase/get_project', 'supabase/get_project_url', 'supabase/get_publishable_keys', 'supabase/list_edge_functions', 'supabase/list_extensions', 'supabase/list_migrations', 'supabase/list_organizations', 'supabase/list_projects', 'supabase/list_tables', 'supabase/rebase_branch', 'supabase/search_docs', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT

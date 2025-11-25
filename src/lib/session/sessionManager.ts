@@ -401,7 +401,7 @@ export class SessionManager {
     this.showToast('Sessão estendida com sucesso!', 'success');
   }
 
-  private async expireSession(): void {
+  private async expireSession(): Promise<void> {
     if (!this.state.isActive) {
       return;
     }
@@ -428,7 +428,7 @@ export class SessionManager {
       await supabase.auth.signOut();
       await this.logSessionEvent('session_logout');
     } catch (error) {
-      logger.error('Error during logout:', error);
+      logger.error('Error during logout:', { error: String(error) });
     }
 
     this.cleanup();
@@ -483,7 +483,7 @@ export class SessionManager {
     return crypto.randomUUID();
   }
 
-  private showToast(message: string, type: 'success' | 'warning' | 'error' = 'info'): void {
+  private showToast(message: string, type: 'success' | 'warning' | 'error' = 'success'): void {
     // Create toast notification
     const toast = document.createElement('div');
     toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm transform transition-all duration-300 translate-x-full`;
@@ -540,7 +540,7 @@ export class SessionManager {
       //   user_id: (await supabase.auth.getUser()).data.user?.id,
       // });
     } catch (error) {
-      logger.error('Error logging session event:', error);
+      logger.error('Error logging session event:', { error: String(error) });
     }
   }
 

@@ -215,19 +215,6 @@ interface QuickActionsProps {
   onPixTransfer?: () => void;
   onPayBill?: () => void;
   onViewBalance?: () => void;
-  className?: string;
-}
-
-interface QuickActionsProps {
-  onPayBill?: () => void;
-  onViewBalance?: () => void;
-  onTransfer?: () => void;
-  className?: string;
-}
-
-interface QuickActionsProps {
-  onPayBill?: () => void;
-  onViewBalance?: () => void;
   onTransfer?: () => void;
   className?: string;
 }

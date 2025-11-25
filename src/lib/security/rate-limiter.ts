@@ -260,7 +260,7 @@ class RateLimiter {
   private logSecurityEvent(
     type: SecurityEvent['type'],
     identifier: string,
-    details?: unknown
+    details?: Record<string, unknown>
   ): void {
     const event: SecurityEvent = {
       details,

@@ -20,6 +20,7 @@ describe('Logger Core Functionality', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     testLogger = new Logger();
+    testLogger.clearLogs(); // Clear any existing logs
     testLogger.updateConfig({
       enableConsole: true,
       enableRemote: false,
@@ -43,6 +44,7 @@ describe('Logger Core Functionality', () => {
   });
 
   it('should respect log level configuration', () => {
+    testLogger.clearLogs();
     testLogger.updateConfig({ level: LogLevel.WARN });
 
     testLogger.debug('Debug message');

@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,7 +42,7 @@ export function useTransactions(filters?: {
 
   const { mutate: createTransaction, isPending: isCreating } = trpc.transactions.create.useMutation(
     {
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Erro ao criar transação');
       },
       onSuccess: () => {
@@ -55,7 +54,7 @@ export function useTransactions(filters?: {
 
   const { mutate: updateTransaction, isPending: isUpdating } = trpc.transactions.update.useMutation(
     {
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Erro ao atualizar transação');
       },
       onSuccess: () => {
@@ -67,7 +66,7 @@ export function useTransactions(filters?: {
 
   const { mutate: deleteTransaction, isPending: isDeleting } = trpc.transactions.delete.useMutation(
     {
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Erro ao remover transação');
       },
       onSuccess: () => {
@@ -135,8 +134,8 @@ export function useTransactionsStats(
 }
 
 export function useCreateTransaction() {
-  const { mutate: createTransaction, isPending } = trpc.transactions.create.useMutation({
-    onError: (error: any) => {
+  const { mutate: createTransaction, mutateAsync, isPending } = trpc.transactions.create.useMutation({
+    onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao criar transação');
     },
     onSuccess: () => {
@@ -147,12 +146,13 @@ export function useCreateTransaction() {
   return {
     createTransaction,
     isPending,
+    mutateAsync,
   };
 }
 
 export function useDeleteTransaction() {
   const { mutate: deleteTransaction, isPending } = trpc.transactions.delete.useMutation({
-    onError: (error: any) => {
+    onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao remover transação');
     },
     onSuccess: () => {

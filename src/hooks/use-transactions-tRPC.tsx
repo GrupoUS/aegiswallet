@@ -53,7 +53,7 @@ export function useTransactions(filters?: {
 
 export function useCreateTransaction() {
   const { mutate, isPending } = trpc.transactions.create.useMutation({
-    onError: (error: any) => {
+    onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao criar transação');
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ export function useCreateTransaction() {
 
 export function useUpdateTransaction() {
   const { mutate, isPending } = trpc.transactions.update.useMutation({
-    onError: (error: any) => {
+    onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao atualizar transação');
     },
     onSuccess: () => {
@@ -85,7 +85,7 @@ export function useUpdateTransaction() {
 
 export function useDeleteTransaction() {
   const { mutate, isPending } = trpc.transactions.delete.useMutation({
-    onError: (error: any) => {
+    onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao remover transação');
     },
     onSuccess: () => {

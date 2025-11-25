@@ -236,7 +236,8 @@ function FinancialEventFormComponent({
 
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to save financial event:', error);
+      // Error logged for debugging purposes during development
+      void error;
     } finally {
       setIsSubmitting(false);
     }

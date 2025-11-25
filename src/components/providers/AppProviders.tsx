@@ -12,10 +12,10 @@ import { LoggerProvider } from '@/contexts/LoggerContext';
 
 export interface AppProvidersProps {
   children: ReactNode;
-  defaultConfig?: Partial<any>;
+  defaultConfig?: Partial<Record<string, unknown>>;
 }
 
-export function AppProviders({ children, defaultConfig = {} }: AppProvidersProps) {
+export function AppProviders({ children, defaultConfig: _defaultConfig = {} }: AppProvidersProps) {
   // Use the singleton client from client.ts to avoid multiple instances
   // The AuthProvider will use the singleton client internally
   return (

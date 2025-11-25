@@ -365,22 +365,22 @@ export function generateErrorResponse(error: string): MultimodalResponse {
 export function generateResponse(intent: IntentType, data: TemplateData): MultimodalResponse {
   switch (intent) {
     case IntentType.CHECK_BALANCE:
-      return generateBalanceResponse(data);
+      return generateBalanceResponse(data as { balance: number; accountName?: string });
 
     case IntentType.CHECK_BUDGET:
-      return generateBudgetResponse(data);
+      return generateBudgetResponse(data as { available: number; total: number; spent: number; period?: string });
 
     case IntentType.PAY_BILL:
-      return generatePayBillResponse(data);
+      return generatePayBillResponse(data as { billName: string; amount: number; dueDate: Date; confirmed?: boolean });
 
     case IntentType.CHECK_INCOME:
-      return generateIncomeResponse(data);
+      return generateIncomeResponse(data as { nextIncome: { description: string; amount: number; date: Date }; totalMonth?: number });
 
     case IntentType.FINANCIAL_PROJECTION:
-      return generateProjectionResponse(data);
+      return generateProjectionResponse(data as { projectedBalance: number; currentBalance: number; period: string; income: number; expenses: number });
 
     case IntentType.TRANSFER_MONEY:
-      return generateTransferResponse(data);
+      return generateTransferResponse(data as { recipient: string; amount: number; confirmed?: boolean });
 
     default:
       return generateErrorResponse('comando não reconhecido');

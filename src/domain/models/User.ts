@@ -232,25 +232,63 @@ export class User {
     id: string;
     email: string;
     full_name: string | null;
-    phone?: string | null;
-    cpf?: string | null;
-    birth_date?: string | Date | null;
-    avatar_url?: string | null;
-    created_at: string | Date;
-    updated_at: string | Date;
-    preferences?: UserPreferences;
+    phone: string | null;
+    cpf: string | null;
+    birth_date: string | null;
+    profile_image_url?: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    user_preferences?: {
+      theme?: string | null;
+      language?: string | null;
+      timezone?: string | null;
+      currency?: string | null;
+      notifications_enabled?: boolean | null;
+      email_notifications?: boolean | null;
+      push_notifications?: boolean | null;
+      voice_command_enabled?: boolean | null;
+      autonomy_level?: number | null;
+      // Additional fields from actual database schema
+      accessibility_high_contrast?: boolean | null;
+      accessibility_large_text?: boolean | null;
+      accessibility_screen_reader?: boolean | null;
+      auto_categorize?: boolean | null;
+      budget_alerts?: boolean | null;
+      weekly_summary?: boolean | null;
+      voice_feedback?: boolean | null;
+      analytics_consent?: boolean | null;
+      marketing_consent?: boolean | null;
+      data_retention_months?: number | null;
+      [key: string]: unknown; // Allow additional fields
+    } | null;
   }): User {
+    // Transform database user_preferences to domain UserPreferences
+    let preferences: UserPreferences | undefined;
+    if (data.user_preferences) {
+      preferences = {
+        theme: (data.user_preferences.theme as 'light' | 'dark' | 'system') || 'system',
+        language: data.user_preferences.language || 'pt-BR',
+        timezone: data.user_preferences.timezone || 'America/Sao_Paulo',
+        currency: data.user_preferences.currency || 'BRL',
+        notificationsEnabled: data.user_preferences.notifications_enabled ?? true,
+        emailNotifications: data.user_preferences.email_notifications ?? true,
+        pushNotifications: data.user_preferences.push_notifications ?? true,
+        voiceCommandsEnabled: data.user_preferences.voice_command_enabled ?? true,
+        autonomyLevel: data.user_preferences.autonomy_level ?? 50,
+      };
+    }
+
     return new User({
-      avatarUrl: data.avatar_url ?? undefined,
+      avatarUrl: data.profile_image_url ?? undefined,
       birthDate: data.birth_date ? new Date(data.birth_date) : undefined,
       cpf: data.cpf ?? undefined,
-      createdAt: new Date(data.created_at),
+      createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       email: data.email,
       fullName: data.full_name || '',
       id: data.id,
       phone: data.phone ?? undefined,
-      preferences: data.preferences,
-      updatedAt: new Date(data.updated_at),
+      preferences,
+      updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
     });
   }
 

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccessibility } from '../AccessibilityProvider';
 
+// Web Speech API type - use InstanceType for proper browser compatibility
+type SpeechRecognitionInstance = InstanceType<typeof SpeechRecognition>;
+
 type VoiceCategory = 'financeiro' | 'navegacao' | 'acao' | 'ajuda';
 
 export interface VoiceCommand {
@@ -73,7 +76,7 @@ export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: Hoo
   const [transcript, setTranscript] = useState('');
   const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [lastResponse, setLastResponse] = useState('');
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
   const getErrorMessage = useCallback((error: string): string => {

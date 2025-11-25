@@ -29,7 +29,7 @@ import type {
   PatternEvolution,
   UserAdaptation,
 } from '@/lib/nlu/types';
-import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
+import { EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
 
 // ============================================================================
 // Default Configuration
@@ -273,14 +273,14 @@ export class NLUEngine {
   /**
    * Get missing required slots for intent
    */
-  private getMissingSlots(intent: IntentType, entities: NLUEntity[]): string[] {
+  private getMissingSlots(intent: IntentType, entities: NLUEntity[]): EntityType[] {
     const definition = INTENT_DEFINITIONS[intent];
     if (!definition) {
       return [];
     }
 
     const extractedTypes = new Set(entities.map((e) => e.type));
-    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot));
+    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot)) as EntityType[];
 
     return missingSlots;
   }

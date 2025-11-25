@@ -48,7 +48,7 @@ interface UserPreferences {
 export class ContextRetriever {
   private supabase: SupabaseClient<Database>;
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, { data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences; timestamp: number }> = new Map();
 
   constructor(supabase: SupabaseClient<Database>) {
     this.supabase = supabase;
@@ -256,9 +256,9 @@ export class ContextRetriever {
   /**
    * Get from cache if not expired
    */
-  private getFromCache(key: string): any | null {
+  private getFromCache<T extends FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences>(key: string): T | null {
     const cached = this.cache.get(key);
-    if (!cached) return null;
+    if (!cached || cached.data === undefined) return null;
 
     const isExpired = Date.now() - cached.timestamp > this.cacheTimeout;
     if (isExpired) {
@@ -266,13 +266,13 @@ export class ContextRetriever {
       return null;
     }
 
-    return cached.data;
+    return cached.data as T;
   }
 
   /**
    * Set cache
    */
-  private setCache(key: string, data: any) {
+  private setCache(key: string, data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences) {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 }

@@ -344,10 +344,10 @@ usersRouter.get(
 
       const summary = (transactions || []).reduce(
         (acc, t) => {
-          if (['debit', 'pix', 'boleto'].includes(t.type)) {
+          if (['debit', 'pix', 'boleto'].includes(t.event_type)) {
             acc.expenses += t.amount;
             acc.balance -= t.amount;
-          } else if (['credit', 'transfer'].includes(t.type)) {
+          } else if (['credit', 'transfer'].includes(t.event_type)) {
             acc.income += t.amount;
             acc.balance += t.amount;
           }

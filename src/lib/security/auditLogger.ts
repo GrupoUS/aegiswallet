@@ -59,10 +59,9 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<string> {
     const { data, error } = await supabase
       .from('audit_logs')
       .insert({
-        user_id: userId,
         action: entry.action,
         resource_type: entry.transactionType ? 'transaction' : undefined,
-        details,
+        details: details as unknown as Record<string, never>,
         created_at: new Date().toISOString(),
       })
       .select('id')

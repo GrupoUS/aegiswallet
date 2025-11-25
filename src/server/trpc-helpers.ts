@@ -15,6 +15,11 @@ export type AegisContext = Context & {
       };
       supabase: any;
     };
+    user: {
+      id: string;
+      email: string;
+      role?: string;
+    };
   };
 };
 

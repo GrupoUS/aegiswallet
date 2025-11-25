@@ -29,11 +29,10 @@ type ValidationResult =
 type SubmitTransaction = (input: {
   account_id: string;
   amount: number;
-  description: string;
-  is_manual_entry: boolean;
-  status: 'posted';
-  transaction_date: string;
-  transaction_type: TransactionType;
+  description?: string;
+  event_type: string;
+  status?: string;
+  metadata?: Record<string, unknown>;
 }) => Promise<unknown>;
 interface SubmitDeps {
   accountList: BankAccount[];
@@ -42,7 +41,7 @@ interface SubmitDeps {
   setFormState: (state: FormState) => void;
   setIsLoading: (value: boolean) => void;
   submitTransaction: SubmitTransaction;
-  updateBalance: (input: { balance: number; id: string }) => Promise<void>;
+  updateBalance: (input: { balance: number; id: string }) => void;
 }
 
 const debitTypes = new Set<TransactionType>(['debit', 'pix', 'boleto', 'transfer']);
@@ -319,12 +318,10 @@ const createSubmitHandler =
         account_id: account.id,
         amount: finalAmount,
         description: formState.description,
-        is_manual_entry: true,
+        event_type: formState.type,
         status: 'posted',
-        transaction_date: transactionDate.toISOString(),
-        transaction_type: formState.type,
       });
-      await updateBalance({
+      updateBalance({
         balance: Number(account.balance ?? 0) + finalAmount,
         id: account.id,
       });

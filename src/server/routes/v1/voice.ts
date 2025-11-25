@@ -64,8 +64,11 @@ voiceRouter.post(
     const input = c.req.valid('json');
     const requestId = c.get('requestId');
 
-    const { commandText: command, sessionId, audioData, language, requireConfirmation } = input;
+    const { commandText, sessionId, audioData, language, requireConfirmation } = input;
 
+    // Command text is required for non-audio processing
+    const command = commandText ?? '';
+    
     try {
       // Log incoming voice command for audit
       secureLogger.audit('Voice command processing started', {
@@ -78,7 +81,7 @@ voiceRouter.post(
       // Process voice command through NLU pipeline
       const result = await processVoiceCommand({
         audioData,
-        command,
+        commandText: command,
         context: { user, supabase },
         language,
         requireConfirmation,
@@ -212,12 +215,14 @@ interface VoiceCommandResult {
   requiresConfirmation: boolean;
   sessionId: string;
   language: string;
+  processedAt: string;
 }
 
 async function processVoiceCommand(
-  input: ProcessVoiceCommandInputType
+  input: ProcessVoiceCommandInputType & { userId: string; context: unknown }
 ): Promise<VoiceCommandResult> {
-  const { command, sessionId, language, requireConfirmation } = input;
+  const { commandText, sessionId, language, requireConfirmation } = input;
+  const command = commandText ?? '';
 
   // Placeholder implementation - in real scenario, this would:
   // 1. Convert audio to text if audioData is provided
@@ -253,15 +258,16 @@ async function processVoiceCommand(
   }
 
   // Determine if confirmation is required
-  const requiresConfirmation = confidence < MIN_AUTOMATION_CONFIDENCE || requireConfirmation;
+  const requiresConfirmation = confidence < MIN_AUTOMATION_CONFIDENCE || (requireConfirmation ?? false);
 
   return {
     confidence,
     entities,
     intent,
-    language,
+    language: language ?? 'pt-BR',
     processedAt: new Date().toISOString(),
     requiresConfirmation,
+    response: intent === 'unknown' ? 'Não entendi o comando' : `Comando ${intent} reconhecido`,
     sessionId,
   };
 }

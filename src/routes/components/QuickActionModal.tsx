@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/select';
 import { useCreateTransaction } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
-import type { Tables } from '@/types/database.types';
 
 // Type-safe action types for Brazilian financial operations
 type QuickActionType = 'transfer' | 'deposit' | 'withdraw';
@@ -35,9 +34,6 @@ interface QuickActionModalProps {
   onSuccess?: () => void;
 }
 
-// Type-safe account interface for component usage
-type BankAccountDisplay = Tables<'bank_accounts'>;
-
 export function QuickActionModal({
   isOpen,
   onClose,
@@ -46,7 +42,7 @@ export function QuickActionModal({
 }: QuickActionModalProps) {
   const { accounts, updateBalance } = useBankAccounts();
   const { createTransaction } = useCreateTransaction();
-  const accountList: BankAccountDisplay[] = accounts ?? [];
+  const accountList = accounts ?? [];
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -131,10 +127,8 @@ export function QuickActionModal({
           account_id: accountId,
           amount: -val,
           description: description || `Transferência para ${targetAccount.institution_name}`,
-          is_manual_entry: true,
+          event_type: 'transfer',
           status: 'posted',
-          transaction_date: date,
-          transaction_type: 'transfer',
         });
 
         // 2. Credit target
@@ -142,10 +136,8 @@ export function QuickActionModal({
           account_id: targetAccountId,
           amount: val,
           description: description || `Transferência de ${sourceAccount.institution_name}`,
-          is_manual_entry: true,
+          event_type: 'transfer',
           status: 'posted',
-          transaction_date: date,
-          transaction_type: 'transfer',
         });
 
         // 3. Update balances
@@ -164,10 +156,8 @@ export function QuickActionModal({
           account_id: accountId,
           amount: val,
           description: description || 'Depósito',
-          is_manual_entry: true,
+          event_type: 'credit',
           status: 'posted',
-          transaction_date: date,
-          transaction_type: 'credit',
         });
 
         await updateBalance({
@@ -180,10 +170,8 @@ export function QuickActionModal({
           account_id: accountId,
           amount: -val,
           description: description || 'Saque',
-          is_manual_entry: true,
+          event_type: 'debit',
           status: 'posted',
-          transaction_date: date,
-          transaction_type: 'debit',
         });
 
         await updateBalance({

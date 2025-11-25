@@ -548,7 +548,7 @@ export class DeviceFingerprintingService {
           fingerprint.webgl.renderer !== 'unknown'
         );
       case 'canvas':
-        return (
+        return Boolean(
           fingerprint.canvas &&
           fingerprint.canvas !== 'canvas-not-supported' &&
           fingerprint.canvas !== 'canvas-error'

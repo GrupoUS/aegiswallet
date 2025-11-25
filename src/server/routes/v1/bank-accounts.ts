@@ -26,7 +26,7 @@ import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/aut
 const createBankAccountSchema = z.object({
   institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
   account_type: z.enum(['checking', 'savings', 'investment', 'cash'], {
-    required_error: 'Tipo de conta é obrigatório',
+    error: 'Tipo de conta é obrigatório',
   }),
   balance: z.number().default(0),
   currency: z.string().default('BRL'),

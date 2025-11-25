@@ -39,7 +39,7 @@ export class Logger {
   private sessionId: string;
 
   constructor(config?: Partial<LoggerConfig>) {
-    this.sessionId = `session_${Date.now()}`;
+    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     this.config = {
       level: LogLevel.DEBUG,
       enableConsole: true,
@@ -62,7 +62,8 @@ export class Logger {
     if (level) {
       return this.logs.filter((log) => log.level === level);
     }
-    return [...this.logs];
+    // Filter by configured minimum level when no specific level requested
+    return this.logs.filter((log) => log.level >= this.config.level);
   }
 
   clearLogs(): void {
@@ -79,7 +80,29 @@ export class Logger {
     }
 
     const msg = `[${entry.timestamp}] [${LogLevel[entry.level]}] ${entry.message}`;
-    const context = entry.context ? JSON.stringify(entry.context) : '';
+    let context = '';
+    
+    if (entry.context) {
+      try {
+        context = JSON.stringify(entry.context);
+      } catch (error) {
+        // Handle circular references or other JSON.stringify issues
+        context = JSON.stringify(entry.context, (key, value) => {
+          if (typeof value === 'object' && value !== null) {
+            if (value.constructor && value.constructor.name === 'Object') {
+              try {
+                JSON.stringify(value);
+                return value;
+              } catch {
+                return '[Circular Reference]';
+              }
+            }
+            return '[Circular Reference]';
+          }
+          return value;
+        });
+      }
+    }
 
     switch (entry.level) {
       case LogLevel.DEBUG:
@@ -100,8 +123,10 @@ export class Logger {
   }
 
   private log(level: LogLevel, message: string, context?: LogContext): void {
+    const sanitizedContext = this.config.sanitizeData ? this.sanitizeContext(context) : context;
+    
     const entry: LogEntry = {
-      context,
+      context: sanitizedContext,
       level,
       message,
       sessionId: this.sessionId,
@@ -114,6 +139,55 @@ export class Logger {
     }
 
     this.logToConsole(entry);
+  }
+
+  /**
+   * Sanitize sensitive data from context
+   */
+  private sanitizeContext(context?: LogContext): LogContext | undefined {
+    if (!context) return context;
+
+    const sensitiveFields = [
+      'password', 'token', 'cpf', 'email', 'balance', 'secret', 'key',
+      'creditCard', 'ssn', 'accountNumber', 'routingNumber'
+    ];
+
+    const sanitized = { ...context };
+
+    const sanitizeValue = (value: unknown, seen = new WeakSet()): unknown => {
+      if (typeof value === 'string') {
+        // Check if the value looks like sensitive data
+        if (sensitiveFields.some(field => value.toLowerCase().includes(field))) {
+          return '[REDACTED]';
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        // Handle circular references
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+        
+        if (Array.isArray(value)) {
+          const result = value.map(item => sanitizeValue(item, seen));
+          seen.delete(value);
+          return result;
+        } else {
+          const sanitizedObj: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(value)) {
+            if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+              sanitizedObj[key] = '[REDACTED]';
+            } else {
+              sanitizedObj[key] = sanitizeValue(val, seen);
+            }
+          }
+          seen.delete(value);
+          return sanitizedObj;
+        }
+      }
+      return value;
+    };
+
+    return sanitizeValue(sanitized) as LogContext;
   }
 
   debug(message: string, context?: LogContext): void {
@@ -142,7 +216,9 @@ export class Logger {
   }
 
   authEvent(event: string, userId?: string, context?: LogContext): void {
-    this.info('Authentication event', { ...context, event, userId });
+    // Truncate userId for privacy
+    const sanitizedUserId = userId ? `${userId.slice(0, 8)}...` : undefined;
+    this.info('Authentication event', { ...context, event, userId: sanitizedUserId });
   }
 
   securityEvent(event: string, context?: LogContext): void {

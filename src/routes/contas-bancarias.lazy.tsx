@@ -23,7 +23,7 @@ import {
 import { useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 import type { Tables } from '@/types/database.types';
 
-type AccountRow = Tables<'bank_accounts'>['Row'];
+type AccountRow = Tables<'bank_accounts'>;
 
 export const ContasBancarias = () => {
   const { accounts, deleteAccount, isDeleting } = useBankAccounts();

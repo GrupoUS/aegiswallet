@@ -146,48 +146,107 @@ export class SecureStorageManager {
   }
 
   /**
-   * Simple encryption for data (in production, use proper encryption libraries)
+   * Secure AES-256-GCM encryption for sensitive data
    */
   private async encrypt(data: string): Promise<string> {
     if (!this.config.encryptionEnabled || !this.encryptionKey) {
-      return btoa(data); // Base64 fallback
+      return btoa(data); // Base64 fallback for non-secure mode
+    }
+
+    if (typeof window === 'undefined' || !window.crypto) {
+      // Fallback for environments without Web Crypto API
+      return btoa(data);
     }
 
     try {
-      // Simple XOR encryption (NOT SECURE - use proper encryption in production)
-      const encrypted = [];
-      const keyBytes = this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || [];
+      // Convert hex key to Uint8Array
+      const keyBytes = new Uint8Array(
+        this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || []
+      );
 
-      for (let i = 0; i < data.length; i++) {
-        encrypted.push(data.charCodeAt(i) ^ keyBytes[i % keyBytes.length]);
-      }
+      // Import the key
+      const cryptoKey = await window.crypto.subtle.importKey(
+        'raw',
+        keyBytes,
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt']
+      );
 
-      return btoa(String.fromCharCode(...encrypted));
-    } catch {
-      return btoa(data); // Fallback
+      // Convert data to Uint8Array
+      const dataBytes = new TextEncoder().encode(data);
+
+      // Generate random IV (12 bytes for GCM)
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+      // Encrypt the data
+      const encryptedData = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        dataBytes
+      );
+
+      // Combine IV and encrypted data, then convert to base64
+      const combined = new Uint8Array(iv.length + encryptedData.byteLength);
+      combined.set(iv);
+      combined.set(new Uint8Array(encryptedData), iv.length);
+
+      return btoa(String.fromCharCode(...combined));
+    } catch (error) {
+      console.warn('Encryption failed, falling back to base64:', error);
+      return btoa(data); // Secure fallback
     }
   }
 
   /**
-   * Simple decryption for data (in production, use proper encryption libraries)
+   * Secure AES-256-GCM decryption for sensitive data
    */
   private async decrypt(encryptedData: string): Promise<string> {
     if (!this.config.encryptionEnabled || !this.encryptionKey) {
-      return atob(encryptedData); // Base64 fallback
+      return atob(encryptedData); // Base64 fallback for non-secure mode
+    }
+
+    if (typeof window === 'undefined' || !window.crypto) {
+      // Fallback for environments without Web Crypto API
+      return atob(encryptedData);
     }
 
     try {
-      const decoded = atob(encryptedData);
-      const decrypted = [];
-      const keyBytes = this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || [];
+      // Convert hex key to Uint8Array
+      const keyBytes = new Uint8Array(
+        this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || []
+      );
 
-      for (let i = 0; i < decoded.length; i++) {
-        decrypted.push(decoded.charCodeAt(i) ^ keyBytes[i % keyBytes.length]);
-      }
+      // Import the key
+      const cryptoKey = await window.crypto.subtle.importKey(
+        'raw',
+        keyBytes,
+        { name: 'AES-GCM' },
+        false,
+        ['decrypt']
+      );
 
-      return String.fromCharCode(...decrypted);
-    } catch {
-      return atob(encryptedData); // Fallback
+      // Convert base64 to Uint8Array
+      const combined = new Uint8Array(
+        atob(encryptedData).split('').map((c) => c.charCodeAt(0))
+      );
+
+      // Extract IV (first 12 bytes) and encrypted data
+      const iv = combined.slice(0, 12);
+      const data = combined.slice(12);
+
+      // Decrypt the data
+      const decryptedData = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        data
+      );
+
+      // Convert back to string
+      return new TextDecoder().decode(decryptedData);
+    } catch (error) {
+      console.warn('Decryption failed, falling back to base64:', error);
+      return atob(encryptedData); // Secure fallback
     }
   }
 

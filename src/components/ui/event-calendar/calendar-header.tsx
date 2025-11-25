@@ -26,11 +26,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
-import type { FinancialEvent as CalendarFinancialEvent } from '@/types/financial-events';
 import type { Database } from '@/types/database.types';
+import type { FinancialEvent as CalendarFinancialEvent } from '@/types/financial-events';
 
 // Type for financial events from database (snake_case from Supabase)
 type DatabaseFinancialEvent = Database['public']['Tables']['financial_events']['Row'];
+
 import type { CalendarView } from './types';
 
 interface CalendarHeaderProps {
@@ -72,41 +73,47 @@ export function CalendarHeader({
   // Transform database results to CalendarFinancialEvent format
   const transformedResults = useMemo(() => {
     if (searchType === 'events') {
-      return (results as DatabaseFinancialEvent[]).map((event): CalendarFinancialEvent => ({
-        id: event.id,
-        userId: event.user_id,
-        title: event.title,
-        description: event.description || undefined,
-        amount: event.amount,
-        isIncome: event.is_income ?? false, // Handle null case
-        category: event.category as any, // Type conversion for now
-        brazilianEventType: event.brazilian_event_type as any,
-        status: event.status as any,
-        priority: event.priority as any,
-        start: new Date(event.start_date),
-        end: new Date(event.end_date),
-        dueDate: event.due_date || undefined, // Keep as string since that's what CoreFinancialEvent expects
-        allDay: event.all_day ?? false,
-        isRecurring: event.is_recurring ?? false,
-        recurrenceRule: event.recurrence_rule || undefined,
-        color: event.color as any,
-        icon: event.icon || undefined,
-        attachments: event.attachments || [],
-        tags: event.tags || [],
-        metadata: event.metadata as any,
-        installmentInfo: event.installment_info as any,
-        parentEventId: event.parent_event_id || undefined,
-        createdAt: event.created_at || '',
-        updatedAt: event.updated_at || '',
-        completedAt: event.completed_at || undefined,
-        location: event.location || undefined,
-        notes: event.notes || undefined,
-        // Calendar-specific fields
-        type: event.is_income ? 'income' : 'expense',
-        date: new Date(event.start_date),
-        account: undefined, // No account_id field in database
-        is_expense: !event.is_income,
-      }));
+      return (results as DatabaseFinancialEvent[]).map(
+        (event): CalendarFinancialEvent => ({
+          id: event.id,
+          userId: event.user_id,
+          title: event.title,
+          description: event.description || undefined,
+          amount: event.amount,
+          isIncome: event.is_income ?? false, // Handle null case
+          category: event.category as string | undefined, // Type conversion from DB
+          brazilianEventType: event.brazilian_event_type as string | undefined,
+          status: (event.status as 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed') || 'pending',
+          priority: (event.priority as 'low' | 'medium' | 'high') || 'medium',
+          start: new Date(event.start_date),
+          end: new Date(event.end_date),
+          dueDate: event.due_date || undefined, // Keep as string since that's what CoreFinancialEvent expects
+          allDay: event.all_day ?? false,
+          isRecurring: event.is_recurring ?? false,
+          recurrenceRule: event.recurrence_rule || undefined,
+          color: (event.color as 'emerald' | 'rose' | 'orange' | 'blue' | 'violet' | 'indigo' | 'amber' | 'red' | 'green' | 'yellow' | 'purple' | 'pink' | 'teal' | 'cyan') || 'blue',
+          icon: event.icon || undefined,
+          attachments: event.attachments || [],
+          tags: event.tags || [],
+          metadata: event.metadata as Record<string, unknown> | undefined,
+          installmentInfo: event.installment_info as {
+            total?: number;
+            current?: number;
+            frequency?: string;
+          } | undefined,
+          parentEventId: event.parent_event_id || undefined,
+          createdAt: event.created_at || '',
+          updatedAt: event.updated_at || '',
+          completedAt: event.completed_at || undefined,
+          location: event.location || undefined,
+          notes: event.notes || undefined,
+          // Calendar-specific fields
+          type: event.is_income ? 'income' : 'expense',
+          date: new Date(event.start_date),
+          account: undefined, // No account_id field in database
+          is_expense: !event.is_income,
+        })
+      );
     }
     // For transactions, return empty array for now since the callback expects CalendarFinancialEvent[]
     return [];

@@ -241,7 +241,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             <VoiceResponse
               type={currentResponse.type}
               message={currentResponse.message}
-              data={currentResponse.data as any}
+              data={currentResponse.data}
             />
 
             {currentResponse.requiresConfirmation && (

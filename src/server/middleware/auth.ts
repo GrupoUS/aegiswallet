@@ -326,9 +326,12 @@ async function handleRateLimit(
   }
 
   // Add rate limit headers
-  c.header('X-RateLimit-Limit', max.toString());
-  c.header('X-RateLimit-Remaining', Math.max(0, max - userRequests.count).toString());
-  c.header('X-RateLimit-Reset', new Date(userRequests.resetTime).toISOString());
+  const currentRequests = requests.get(identifier);
+  if (currentRequests) {
+    c.header('X-RateLimit-Limit', max.toString());
+    c.header('X-RateLimit-Remaining', Math.max(0, max - currentRequests.count).toString());
+    c.header('X-RateLimit-Reset', new Date(currentRequests.resetTime).toISOString());
+  }
 
   await next();
 }

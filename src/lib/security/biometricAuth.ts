@@ -239,7 +239,6 @@ export class BiometricAuthService {
   private rateLimitStore: Map<string, { attempts: number; resetTime: number }> = new Map();
 
   // Fraud detection rules (used internally for validation)
-  // @ts-expect-error - Used in initializeFraudDetection but TypeScript doesn't see the assignment
   private fraudRules: Array<{ type: string; threshold: number; enabled: boolean }> = [];
 
   // Enhanced security providers

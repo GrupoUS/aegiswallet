@@ -145,6 +145,8 @@ export class SMSProvider {
     result: SMSResult
   ): Promise<void> {
     try {
+      // TODO: Create sms_logs table in database
+      // @ts-expect-error - Table not yet in schema
       await supabase.from('sms_logs').insert({
         body: message.body,
         created_at: new Date().toISOString(),

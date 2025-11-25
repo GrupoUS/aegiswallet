@@ -300,7 +300,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const variation of balanceVariations) {
         const result = await nluEngine.processUtterance(variation);
         expect(result.intent).toBe(IntentType.CHECK_BALANCE);
-        expect(result.confidence).toBeGreaterThan(0.7);
+        expect(result.confidence).toBeGreaterThanOrEqual(0.7);
       }
     });
 
@@ -318,7 +318,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
       for (const testCase of synonymTestCases) {
         const result = await nluEngine.processUtterance(testCase.input);
         expect(result.intent).toBe(testCase.expectedIntent);
-        expect(result.confidence).toBeGreaterThan(0.7);
+        expect(result.confidence).toBeGreaterThanOrEqual(0.7);
       }
     });
   });

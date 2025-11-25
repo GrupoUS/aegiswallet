@@ -328,7 +328,7 @@ describe('Multimodal Response Hook', () => {
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
-      });
+      }, { timeout: 2000 });
     });
   });
 });

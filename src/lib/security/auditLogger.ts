@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import logger from '@/lib/logging/secure-logger';
 
 export interface AuditLogEntry {
   userId: string;
@@ -22,33 +23,71 @@ export interface AuditLogEntry {
  * Create digitally signed audit log
  */
 export async function createAuditLog(entry: AuditLogEntry): Promise<string> {
-  // Create signature (simplified - would use proper crypto in production)
-  const signature = await generateSignature(entry);
+  try {
+    // Verify user is authenticated before inserting
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  // Store in Supabase
-  const { data, error } = await supabase
-    .from('audit_logs')
-    .insert({
-      user_id: entry.userId,
-      action: entry.action,
-      transaction_type: entry.transactionType,
+    // Use authenticated user ID if available, otherwise use provided userId
+    const userId = user?.id || entry.userId;
+
+    if (!userId) {
+      // Silently fail if no user ID available (user not authenticated)
+      logger.warn('Cannot create audit log: user not authenticated', {
+        component: 'auditLogger',
+        action: 'createAuditLog',
+      });
+      return '';
+    }
+
+    // Create signature (simplified - would use proper crypto in production)
+    const signature = await generateSignature(entry);
+
+    // Store in Supabase
+    // Use details JSONB field to store additional metadata
+    const details: Record<string, unknown> = {
+      ...entry.metadata,
+      transactionType: entry.transactionType,
       amount: entry.amount,
-      confirmation_method: entry.method,
-      confidence_score: entry.confidence,
-      transcription_hash: entry.transcription ? await hashText(entry.transcription) : null,
-      metadata: entry.metadata,
+      method: entry.method,
+      confidence: entry.confidence,
+      transcriptionHash: entry.transcription ? await hashText(entry.transcription) : null,
       signature,
-      retention_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 12 months
-      created_at: new Date().toISOString(),
-    })
-    .select('id')
-    .single();
+    };
 
-  if (error) {
-    throw error;
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .insert({
+        user_id: userId,
+        action: entry.action,
+        resource_type: entry.transactionType ? 'transaction' : undefined,
+        details,
+        created_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      // Log error but don't throw to avoid breaking the application
+      logger.error('Failed to create audit log', {
+        component: 'auditLogger',
+        action: 'createAuditLog',
+        error: error.message,
+      });
+      return '';
+    }
+
+    return data?.id || '';
+  } catch (error) {
+    // Silently handle errors to avoid breaking the application
+    logger.error('Error creating audit log', {
+      component: 'auditLogger',
+      action: 'createAuditLog',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return '';
   }
-
-  return data.id;
 }
 
 /**

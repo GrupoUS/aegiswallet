@@ -76,21 +76,40 @@ export const bankAccountsRouter = router({
    * Get all bank accounts for the authenticated user
    */
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase
-      .from('bank_accounts')
-      .select('*')
-      .eq('user_id', ctx.user.id)
-      .order('created_at', { ascending: false });
+    try {
+      // Verify user is authenticated
+      if (!ctx.user?.id) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Usuário não autenticado',
+        });
+      }
 
-    if (error) {
+      const { data, error } = await ctx.supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Erro ao buscar contas bancárias',
+          cause: error,
+        });
+      }
+
+      return data || [];
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro ao buscar contas bancárias',
         cause: error,
       });
     }
-
-    return data || [];
   }),
 
   /**
@@ -147,98 +166,117 @@ export const bankAccountsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Normalize account type
-      const normalizedAccountType = normalizeAccountType(input.account_type);
+      try {
+        // Verify user is authenticated
+        if (!ctx.user?.id) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Usuário não autenticado',
+          });
+        }
 
-      // Generate account_mask if not provided
-      const accountMask = input.account_mask
-        ? normalizeAccountMask(input.account_mask)
-        : generateAccountMask();
+        // Normalize account type
+        const normalizedAccountType = normalizeAccountType(input.account_type);
 
-      // Validate account mask format
-      if (!validateAccountMask(accountMask)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'A máscara da conta deve seguir o formato **** 1234',
+        // Generate account_mask if not provided
+        const accountMask = input.account_mask
+          ? normalizeAccountMask(input.account_mask)
+          : generateAccountMask();
+
+        // Validate account mask format
+        if (!validateAccountMask(accountMask)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'A máscara da conta deve seguir o formato **** 1234',
+          });
+        }
+
+        // Generate institution_id if not provided
+        const institutionId = input.institution_id || randomUUID();
+
+        // Always generate manual belvo_account_id (Belvo/Open Banking paused)
+        const belvoAccountId = generateManualAccountId();
+
+        // Always set sync_status as manual (no external sync)
+        const syncStatus = 'manual';
+
+        // Prepare account data
+        const accountData = sanitizeBankAccountData({
+          user_id: ctx.user.id,
+          institution_name: input.institution_name,
+          institution_id: institutionId,
+          account_type: normalizedAccountType,
+          account_mask: accountMask,
+          balance: input.balance,
+          currency: input.currency.toUpperCase(),
+          is_primary: input.is_primary,
+          is_active: input.is_active,
+          belvo_account_id: belvoAccountId,
+          sync_status: syncStatus,
         });
-      }
 
-      // Generate institution_id if not provided
-      const institutionId = input.institution_id || randomUUID();
+        // Validate using the validator
+        const validation = validateBankAccountForInsert(accountData);
+        if (!validation.valid) {
+          const errorMessage =
+            validation.errors.length > 0
+              ? validation.errors.map((e) => e.message).join(', ')
+              : 'Dados inválidos';
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: errorMessage,
+          });
+        }
 
-      // Always generate manual belvo_account_id (Belvo/Open Banking paused)
-      const belvoAccountId = generateManualAccountId();
+        // Check for duplicates
+        const isDuplicate = await checkDuplicate(
+          ctx.supabase,
+          ctx.user.id,
+          institutionId,
+          accountMask
+        );
 
-      // Always set sync_status as manual (no external sync)
-      const syncStatus = 'manual';
-
-      // Prepare account data
-      const accountData = sanitizeBankAccountData({
-        user_id: ctx.user.id,
-        institution_name: input.institution_name,
-        institution_id: institutionId,
-        account_type: normalizedAccountType,
-        account_mask: accountMask,
-        balance: input.balance,
-        currency: input.currency.toUpperCase(),
-        is_primary: input.is_primary,
-        is_active: input.is_active,
-        belvo_account_id: belvoAccountId,
-        sync_status: syncStatus,
-      });
-
-      // Validate using the validator
-      const validation = validateBankAccountForInsert(accountData);
-      if (!validation.valid) {
-        const errorMessage =
-          validation.errors.length > 0
-            ? validation.errors.map((e) => e.message).join(', ')
-            : 'Dados inválidos';
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: errorMessage,
-        });
-      }
-
-      // Check for duplicates
-      const isDuplicate = await checkDuplicate(
-        ctx.supabase,
-        ctx.user.id,
-        institutionId,
-        accountMask
-      );
-
-      if (isDuplicate) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Já existe uma conta com a mesma instituição e final',
-        });
-      }
-
-      // Insert into database
-      const { data, error } = await ctx.supabase
-        .from('bank_accounts')
-        .insert(accountData)
-        .select()
-        .single();
-
-      if (error) {
-        // Check for duplicate key error
-        if (error.code === '23505') {
+        if (isDuplicate) {
           throw new TRPCError({
             code: 'CONFLICT',
             message: 'Já existe uma conta com a mesma instituição e final',
           });
         }
 
+        // Insert into database
+        const { data, error } = await ctx.supabase
+          .from('bank_accounts')
+          .insert(accountData)
+          .select()
+          .single();
+
+        if (error) {
+          // Check for duplicate key error
+          if (error.code === '23505') {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Já existe uma conta com a mesma instituição e final',
+            });
+          }
+
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao criar conta bancária',
+            cause: error,
+          });
+        }
+
+        return data;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao criar conta bancária',
           cause: error,
         });
       }
-
-      return data;
     }),
 
   /**

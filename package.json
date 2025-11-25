@@ -52,6 +52,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@remixicon/react": "^4.7.0",
     "@supabase/supabase-js": "^2.80.0",

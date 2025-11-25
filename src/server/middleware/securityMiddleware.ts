@@ -3,10 +3,10 @@
  * Provides comprehensive security measures including rate limiting, authentication, and input validation
  */
 
-import { TRPCError } from '@trpc/server';
+import { experimental_standaloneMiddleware, TRPCError } from '@trpc/server';
 import { logger } from '@/lib/logging';
-import type { SecurityEventType } from '@/types/server.types';
 import type { Context } from '@/server/context';
+import { SecurityEventType } from '@/types/server.types';
 import {
   authRateLimit,
   dataExportRateLimit,
@@ -14,7 +14,6 @@ import {
   transactionRateLimit,
   voiceCommandRateLimit,
 } from './rateLimitMiddleware';
-import { experimental_standaloneMiddleware } from '@trpc/server';
 
 // Security middleware options
 export interface SecurityMiddlewareOptions {
@@ -36,20 +35,20 @@ const DEFAULT_SECURITY_OPTIONS: Required<SecurityMiddlewareOptions> = {
  * Create security middleware with configurable options
  */
 export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}) => {
-  const opts = { ...DEFAULT_SECURITY_OPTIONS, ...options };
+  const securityOpts = { ...DEFAULT_SECURITY_OPTIONS, ...options };
 
   return experimental_standaloneMiddleware<{
     ctx: Context;
     input: undefined;
     // 'meta', not defined here, defaults to 'object | undefined'
-  }>().create((opts) => {
-    const startTime = Date.now();
+  }>().create(async (opts) => {
     const requestId = crypto.randomUUID();
     const procedureType = opts.type || 'unknown';
+    const ctx = opts.ctx;
 
     try {
       // Log request start
-      if (opts.enableAuditLogging) {
+      if (securityOpts.enableAuditLogging) {
         logger.info('Request started', {
           requestId,
           type: procedureType,
@@ -58,20 +57,28 @@ export const createSecurityMiddleware = (options: SecurityMiddlewareOptions = {}
       }
 
       // Apply security measures
-      await applySecurityMeasures(ctx, procedureType, opts);
+      await applySecurityMeasures(ctx, procedureType, securityOpts);
 
       // Continue with next
       const result = await opts.next();
       return result;
     } catch (error) {
       // Log error
-      if (opts.enableAuditLogging) {
+      if (securityOpts.enableAuditLogging) {
         logger.error('Request failed', {
           requestId,
           type: procedureType,
           error: error instanceof Error ? error.message : 'Unknown error',
           userId: ctx.user?.id,
         });
+
+        // Log security events for security-related errors
+        if (
+          error instanceof TRPCError &&
+          ['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'].includes(error.code)
+        ) {
+          void logSecurityEvent(ctx, error, requestId);
+        }
       }
 
       throw new TRPCError({
@@ -426,18 +433,6 @@ const validateCPF = (cpf: string): boolean => {
 };
 
 /**
- * Check if error is security-related with proper typing
- */
-const isSecurityError = (
-  error: unknown
-): error is TRPCError & { code: 'UNAUTHORIZED' | 'FORBIDDEN' | 'TOO_MANY_REQUESTS' } => {
-  if (error instanceof TRPCError) {
-    return (['UNAUTHORIZED', 'FORBIDDEN', 'TOO_MANY_REQUESTS'] as const).includes(error.code);
-  }
-  return false;
-};
-
-/**
  * Log security events with type-safe database operations
  */
 const logSecurityEvent = async (
@@ -467,7 +462,12 @@ const logSecurityEvent = async (
       user_id: ctx.user?.id || null,
     };
 
-    await supabase.from('audit_logs').insert(auditLogData);
+    // Use try-catch to handle RLS errors gracefully
+    const { error: insertError } = await supabase.from('audit_logs').insert(auditLogData);
+    if (insertError) {
+      // Log error but don't throw to avoid breaking the request
+      logger.error('Failed to insert audit log', { error: insertError });
+    }
   } catch (logError) {
     logger.error('Failed to log security event', { error: logError });
   }

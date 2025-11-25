@@ -25,6 +25,13 @@ CREATE POLICY "Users can view their own audit logs"
     TO authenticated
     USING ((SELECT auth.uid()) = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own audit logs" ON public.audit_logs;
+CREATE POLICY "Users can insert their own audit logs"
+    ON public.audit_logs
+    FOR INSERT
+    TO authenticated
+    WITH CHECK ((SELECT auth.uid()) = user_id);
+
 -- USER CONSENT ----------------------------------------------------------------
 ALTER TABLE public.user_consent ENABLE ROW LEVEL SECURITY;
 

@@ -283,7 +283,8 @@ export class DataRetentionManager {
 
     try {
       // Log the deletion request
-      await supabase.from('audit_logs').insert({
+      const { safeInsertAuditLog } = await import('./safeAuditLog');
+      void safeInsertAuditLog({
         action: 'user_deletion_requested',
         details: { timestamp: new Date().toISOString() },
         resource_type: 'user_account',
@@ -309,7 +310,8 @@ export class DataRetentionManager {
         // Can delete entire user account
         await supabase.auth.admin.deleteUser(userId);
 
-        await supabase.from('audit_logs').insert({
+        const { safeInsertAuditLog } = await import('./safeAuditLog');
+        void safeInsertAuditLog({
           action: 'user_account_deleted',
           details: { timestamp: new Date().toISOString() },
           resource_type: 'user_account',
@@ -511,7 +513,8 @@ export const handleConsentWithdrawal = async (
     }
 
     // Log consent withdrawal
-    await supabase.from('audit_logs').insert({
+    const { safeInsertAuditLog } = await import('./safeAuditLog');
+    void safeInsertAuditLog({
       action: 'consent_withdrawn',
       details: {
         consent_types: consentTypes,

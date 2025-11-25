@@ -128,7 +128,8 @@ export class LGPDDataRetentionManager {
           await this.deleteDataByType(userId, dataType, policy);
 
           // Log the deletion for audit purposes
-          await supabase.from('audit_logs').insert({
+          const { safeInsertAuditLog } = await import('../security/safeAuditLog');
+          void safeInsertAuditLog({
             action: 'automatic_data_deletion',
             details: {
               data_type: dataType,
@@ -180,7 +181,8 @@ export class LGPDDataRetentionManager {
       });
 
       // Log the request for audit
-      await supabase.from('audit_logs').insert({
+      const { safeInsertAuditLog } = await import('../security/safeAuditLog');
+      void safeInsertAuditLog({
         action: 'data_subject_request_created',
         details: {
           request_id: requestId,
@@ -246,7 +248,8 @@ export class LGPDDataRetentionManager {
         .eq('id', requestId);
 
       // Final audit log
-      await supabase.from('audit_logs').insert({
+      const { safeInsertAuditLog } = await import('../security/safeAuditLog');
+      void safeInsertAuditLog({
         action: 'data_deletion_completed',
         details: {
           completed_at: new Date().toISOString(),

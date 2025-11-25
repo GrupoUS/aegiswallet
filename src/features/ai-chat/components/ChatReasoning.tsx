@@ -49,6 +49,7 @@ export function ChatReasoning({ reasoning, isStreaming }: ChatReasoningProps) {
         <div className="px-3 pb-3 pt-0 space-y-2">
           {reasoning.map((chunk, index) => (
             <div
+              // eslint-disable-next-line react/no-array-index-key
               key={index}
               className="text-xs font-mono text-muted-foreground/80 pl-6 border-l-2 border-muted relative"
             >

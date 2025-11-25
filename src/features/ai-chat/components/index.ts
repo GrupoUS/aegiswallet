@@ -1,3 +1,4 @@
+export * from './ChatContainer';
 export * from './ChatContext';
 export * from './ChatConversation';
 export * from './ChatImage';
@@ -9,3 +10,4 @@ export * from './ChatReasoning';
 export * from './ChatResponse';
 export * from './ChatSuggestions';
 export * from './ChatTasks';
+export * from './ChatWidget';

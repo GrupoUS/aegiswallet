@@ -242,13 +242,21 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     type: EntityType.DATE,
   },
   {
-    normalizer: (_match, day) => setDayOfMonth(Number(day)),
+    normalizer: (match) => {
+      const day = match.replace(/dia\s+/i, '');
+      return setDayOfMonth(Number(day));
+    },
     pattern: /\bdia\s+(\d{1,2})\b/gi,
     type: EntityType.DATE,
   },
   {
     normalizer: () => setMonthOffset(-1),
     pattern: /\b(m[\u00ea\u00e9e]s\s+passado)\b/gi,
+    type: EntityType.DATE,
+  },
+  {
+    normalizer: () => setMonthOffset(1),
+    pattern: /\b(pr[\u00f3o]ximo\s+m[\u00ea\u00e9e]s|m[\u00ea\u00e9e]s\s+que\s+vem)\b/gi,
     type: EntityType.DATE,
   },
   // Bill types / Categories

@@ -18,13 +18,13 @@ export interface ChatMessage {
     name?: string;
     toolCallId?: string;
     reasoning?: ChatReasoningChunk[];
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 export interface ChatStructuredContent {
   type: 'structured';
-  data: any;
+  data: unknown;
 }
 
 export enum ChatStreamEventType {
@@ -41,9 +41,9 @@ export enum ChatStreamEventType {
 
 export interface ChatStreamChunk {
   type: ChatStreamEventType;
-  content?: string | any;
+  content?: string | unknown;
   messageId?: string;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface ChatReasoningChunk {
@@ -80,8 +80,8 @@ export interface ChatToolCall {
   type: 'tool_call';
   id: string;
   name: string;
-  arguments: any;
-  result?: any;
+  arguments: Record<string, unknown>;
+  result?: unknown;
 }
 
 export interface ChatRequestOptions {
@@ -89,15 +89,15 @@ export interface ChatRequestOptions {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
-  tools?: any[]; // Define specific tool types if needed
+  tools?: unknown[]; // Define specific tool types if needed
   systemPrompt?: string;
 }
 
 export class ChatError extends Error {
   code: string;
-  details?: any;
+  details?: unknown;
 
-  constructor(message: string, code: string = 'UNKNOWN_ERROR', details?: any) {
+  constructor(message: string, code: string = 'UNKNOWN_ERROR', details?: unknown) {
     super(message);
     this.name = 'ChatError';
     this.code = code;

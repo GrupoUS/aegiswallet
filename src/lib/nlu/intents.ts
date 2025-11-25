@@ -32,7 +32,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Saldo',
     optionalSlots: [EntityType.ACCOUNT, EntityType.DATE],
     patterns: [
-      /\b(qual|quanto|ver|mostrar|consultar|checar)\s+(é|eh|e|o|meu)?\s*(saldo|dinheiro|grana|bufunfa)\b/i,
+      /\b(qual|quanto|ver|mostrar|consultar|checar)\s+(é|eh|e|o|meu)?\s*(de\s+)?(saldo|dinheiro|grana|bufunfa)\b/i,
       /\b(saldo|dinheiro|grana)\s+(disponivel|atual|hoje|agora)\b/i,
       /\b(tenho|tem|restou)\s+quanto\b/i,
       /\b(sobrou)\s+quanto(\s+de)?\s*(dinheiro|grana)?\b/i,
@@ -41,7 +41,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       /\bquanto\s+(t[áÁ]|est[áÁ])\s+na\s+conta\b/i,
       /\b(saldo)\s+(da|na)\s+conta\b/i,
       // More specific pattern - avoid overlap with other intents
-      /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo)\b/i,
+      /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo|bufunfa)\b/i,
       /\bquanto\s+(de\s+)?(grana|dinheiro)\s+(eu\s+)?tenho\b/i,
       // Enhanced pattern for "qual é meu saldo?"
       /\bqual\s+é\s+(meu|o)?\s*saldo\?*$/i,

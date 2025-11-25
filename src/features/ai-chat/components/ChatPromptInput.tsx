@@ -25,7 +25,7 @@ export function ChatPromptInput({
 }: ChatPromptInputProps) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { isListening, startListening, stopListening, transcript } = useVoiceCommand();
+  const { isListening, startListening, stopListening, lastTranscript } = useVoiceCommand();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -37,13 +37,13 @@ export function ChatPromptInput({
 
   // Update input with voice transcript
   useEffect(() => {
-    if (transcript) {
+    if (lastTranscript) {
       setInput((prev) => {
         const separator = prev ? ' ' : '';
-        return prev + separator + transcript;
+        return prev + separator + lastTranscript;
       });
     }
-  }, [transcript]);
+  }, [lastTranscript]);
 
   const handleSend = () => {
     if (!input.trim()) return;

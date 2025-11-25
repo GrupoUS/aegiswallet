@@ -8,175 +8,205 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as CalendarioRouteImport } from './routes/calendario';
-import { Route as ContasRouteImport } from './routes/contas';
-import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias';
-import { Route as DashboardRouteImport } from './routes/dashboard';
-import { Route as IndexRouteImport } from './routes/index';
-import { Route as LoginRouteImport } from './routes/login';
-import { Route as SaldoRouteImport } from './routes/saldo';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SaldoRouteImport } from './routes/saldo'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias'
+import { Route as ContasRouteImport } from './routes/contas'
+import { Route as CalendarioRouteImport } from './routes/calendario'
+import { Route as AiChatRouteImport } from './routes/ai-chat'
+import { Route as IndexRouteImport } from './routes/index'
 
 const SaldoRoute = SaldoRouteImport.update({
   id: '/saldo',
   path: '/saldo',
   getParentRoute: () => rootRouteImport,
-} as const);
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as const);
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as const);
+} as any)
 const ContasBancariasRoute = ContasBancariasRouteImport.update({
   id: '/contas-bancarias',
   path: '/contas-bancarias',
   getParentRoute: () => rootRouteImport,
-} as const).lazy(() => import('./routes/contas-bancarias.lazy').then((d) => d.Route));
+} as any).lazy(() =>
+  import('./routes/contas-bancarias.lazy').then((d) => d.Route),
+)
 const ContasRoute = ContasRouteImport.update({
   id: '/contas',
   path: '/contas',
   getParentRoute: () => rootRouteImport,
-} as const);
+} as any)
 const CalendarioRoute = CalendarioRouteImport.update({
   id: '/calendario',
   path: '/calendario',
   getParentRoute: () => rootRouteImport,
-} as const).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route));
+} as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route))
+const AiChatRoute = AiChatRouteImport.update({
+  id: '/ai-chat',
+  path: '/ai-chat',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route))
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as const);
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute;
-  '/calendario': typeof CalendarioRoute;
-  '/contas': typeof ContasRoute;
-  '/contas-bancarias': typeof ContasBancariasRoute;
-  '/dashboard': typeof DashboardRoute;
-  '/login': typeof LoginRoute;
-  '/saldo': typeof SaldoRoute;
+  '/': typeof IndexRoute
+  '/ai-chat': typeof AiChatRoute
+  '/calendario': typeof CalendarioRoute
+  '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute;
-  '/calendario': typeof CalendarioRoute;
-  '/contas': typeof ContasRoute;
-  '/contas-bancarias': typeof ContasBancariasRoute;
-  '/dashboard': typeof DashboardRoute;
-  '/login': typeof LoginRoute;
-  '/saldo': typeof SaldoRoute;
+  '/': typeof IndexRoute
+  '/ai-chat': typeof AiChatRoute
+  '/calendario': typeof CalendarioRoute
+  '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/': typeof IndexRoute;
-  '/calendario': typeof CalendarioRoute;
-  '/contas': typeof ContasRoute;
-  '/contas-bancarias': typeof ContasBancariasRoute;
-  '/dashboard': typeof DashboardRoute;
-  '/login': typeof LoginRoute;
-  '/saldo': typeof SaldoRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/ai-chat': typeof AiChatRoute
+  '/calendario': typeof CalendarioRoute
+  '/contas': typeof ContasRoute
+  '/contas-bancarias': typeof ContasBancariasRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/saldo': typeof SaldoRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-chat'
     | '/calendario'
     | '/contas'
     | '/contas-bancarias'
     | '/dashboard'
     | '/login'
-    | '/saldo';
-  fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/calendario' | '/contas' | '/contas-bancarias' | '/dashboard' | '/login' | '/saldo';
+    | '/saldo'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/ai-chat'
+    | '/calendario'
+    | '/contas'
+    | '/contas-bancarias'
+    | '/dashboard'
+    | '/login'
+    | '/saldo'
   id:
     | '__root__'
     | '/'
+    | '/ai-chat'
     | '/calendario'
     | '/contas'
     | '/contas-bancarias'
     | '/dashboard'
     | '/login'
-    | '/saldo';
-  fileRoutesById: FileRoutesById;
+    | '/saldo'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  CalendarioRoute: typeof CalendarioRoute;
-  ContasRoute: typeof ContasRoute;
-  ContasBancariasRoute: typeof ContasBancariasRoute;
-  DashboardRoute: typeof DashboardRoute;
-  LoginRoute: typeof LoginRoute;
-  SaldoRoute: typeof SaldoRoute;
+  IndexRoute: typeof IndexRoute
+  AiChatRoute: typeof AiChatRoute
+  CalendarioRoute: typeof CalendarioRoute
+  ContasRoute: typeof ContasRoute
+  ContasBancariasRoute: typeof ContasBancariasRoute
+  DashboardRoute: typeof DashboardRoute
+  LoginRoute: typeof LoginRoute
+  SaldoRoute: typeof SaldoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/saldo': {
-      id: '/saldo';
-      path: '/saldo';
-      fullPath: '/saldo';
-      preLoaderRoute: typeof SaldoRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/saldo'
+      path: '/saldo'
+      fullPath: '/saldo'
+      preLoaderRoute: typeof SaldoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
-      id: '/login';
-      path: '/login';
-      fullPath: '/login';
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
-      id: '/dashboard';
-      path: '/dashboard';
-      fullPath: '/dashboard';
-      preLoaderRoute: typeof DashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contas-bancarias': {
-      id: '/contas-bancarias';
-      path: '/contas-bancarias';
-      fullPath: '/contas-bancarias';
-      preLoaderRoute: typeof ContasBancariasRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/contas-bancarias'
+      path: '/contas-bancarias'
+      fullPath: '/contas-bancarias'
+      preLoaderRoute: typeof ContasBancariasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contas': {
-      id: '/contas';
-      path: '/contas';
-      fullPath: '/contas';
-      preLoaderRoute: typeof ContasRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/contas'
+      path: '/contas'
+      fullPath: '/contas'
+      preLoaderRoute: typeof ContasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendario': {
-      id: '/calendario';
-      path: '/calendario';
-      fullPath: '/calendario';
-      preLoaderRoute: typeof CalendarioRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof CalendarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-chat': {
+      id: '/ai-chat'
+      path: '/ai-chat'
+      fullPath: '/ai-chat'
+      preLoaderRoute: typeof AiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
-      id: '/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiChatRoute: AiChatRoute,
   CalendarioRoute: CalendarioRoute,
   ContasRoute: ContasRoute,
   ContasBancariasRoute: ContasBancariasRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SaldoRoute: SaldoRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

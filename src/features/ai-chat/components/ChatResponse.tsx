@@ -30,6 +30,7 @@ export function ChatResponse({ message, isStreaming }: ChatResponseProps) {
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
+            // biome-ignore lint/suspicious/noExplicitAny: React Markdown components type
             code({ node, inline, className, children, ...props }: any) {
               const match = /language-(\w+)/.exec(className || '');
               return !inline && match ? (

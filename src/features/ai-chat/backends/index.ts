@@ -1,5 +1,5 @@
 import { AgUiBackend, type AgUiBackendConfig } from './AgUiBackend';
-import { type ChatBackend } from './ChatBackend';
+import type { ChatBackend } from './ChatBackend';
 import { CopilotKitBackend, type CopilotKitBackendConfig } from './CopilotKitBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
 import { OttomatorBackend, type OttomatorBackendConfig } from './OttomatorBackend';
@@ -23,7 +23,7 @@ export function createChatBackend(config: BackendConfig): ChatBackend {
     case 'ottomator':
       return new OttomatorBackend(config);
     default:
-      throw new Error(`Unknown backend type: ${(config as any).type}`);
+      throw new Error(`Unknown backend type: ${(config as { type: string }).type}`);
   }
 }
 

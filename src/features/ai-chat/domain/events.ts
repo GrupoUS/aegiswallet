@@ -5,9 +5,9 @@ import { ChatError, type ChatStreamChunk, ChatStreamEventType } from './types';
  */
 export function createStreamChunk(
   type: ChatStreamEventType,
-  content?: any,
+  content?: unknown,
   messageId?: string,
-  metadata?: any
+  metadata?: unknown
 ): ChatStreamChunk {
   return {
     type,
@@ -69,10 +69,10 @@ export function createErrorEvent(error: Error | ChatError, messageId?: string): 
  * Parse a raw event (e.g. from SSE) into a ChatStreamChunk
  * This is a placeholder for backend-specific parsing logic if needed genericly
  */
-export function parseStreamEvent(event: any): ChatStreamChunk | null {
+export function parseStreamEvent(event: unknown): ChatStreamChunk | null {
   // Implementation would depend on the specific wire format
   // For internal use, we assume events are already structured or parsed by the backend adapter
-  if (typeof event === 'object' && 'type' in event) {
+  if (event && typeof event === 'object' && 'type' in event) {
     return event as ChatStreamChunk;
   }
   return null;

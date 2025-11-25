@@ -1,14 +1,16 @@
-import { MessageSquare, Settings } from 'lucide-react';
+import { MessageSquare, Settings, X } from 'lucide-react';
 import type React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface ChatLayoutProps {
   title?: string;
   showModelSelector?: boolean;
   className?: string;
   children: React.ReactNode;
+  isWidget?: boolean;
+  onClose?: () => void;
 }
 
 export function ChatLayout({
@@ -16,37 +18,50 @@ export function ChatLayout({
   showModelSelector = true,
   className,
   children,
+  isWidget = false,
+  onClose,
 }: ChatLayoutProps) {
   return (
     <Card
       className={cn(
-        'flex flex-col h-[calc(100vh-2rem)] w-full max-w-5xl mx-auto overflow-hidden shadow-xl',
+        'flex flex-col w-full overflow-hidden shadow-xl bg-background',
+        isWidget
+          ? 'h-full border-0 rounded-none sm:rounded-lg shadow-none'
+          : 'h-[calc(100vh-2rem)] max-w-5xl mx-auto',
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-background border-b">
+      <div className="flex items-center justify-between px-4 py-3 bg-background border-b shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg">
             <MessageSquare className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-            <p className="text-xs text-muted-foreground">Powered by Aegis AI</p>
+            <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+            <p className="text-[10px] text-muted-foreground">Powered by Aegis AI</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {showModelSelector && (
+        <div className="flex items-center gap-1">
+          {showModelSelector && !isWidget && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md text-xs font-medium">
               <span className="text-muted-foreground">Model:</span>
               <span>Gemini Pro</span>
             </div>
           )}
+
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Settings className="w-4 h-4" />
             <span className="sr-only">Settings</span>
           </Button>
+
+          {isWidget && onClose && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+              <X className="w-4 h-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          )}
         </div>
       </div>
 

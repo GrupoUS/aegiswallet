@@ -10,12 +10,12 @@ export interface CopilotKitBackendConfig extends ChatBackendConfig {
  * Future integration point for CopilotKit SDK
  */
 export class CopilotKitBackend implements ChatBackend {
-  constructor(_config: CopilotKitBackendConfig) {}
-
   async *send(
     _messages: ChatMessage[],
     _options?: ChatRequestOptions
   ): AsyncIterableIterator<ChatStreamChunk> {
+    // biome-ignore lint/correctness/noConstantCondition: Stub implementation
+    if (false) yield {} as any;
     throw new Error('CopilotKit backend not yet implemented');
   }
 

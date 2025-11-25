@@ -421,6 +421,7 @@ async function handleTransferCommand(
 
   if (!recipient) {
     return {
+      confidence,
       message: 'Para quem você gostaria de transferir?',
       type: 'error',
     };
@@ -428,6 +429,7 @@ async function handleTransferCommand(
 
   if (!amount) {
     return {
+      confidence,
       message: 'Qual valor você gostaria de transferir?',
       type: 'error',
     };
@@ -438,6 +440,7 @@ async function handleTransferCommand(
 
   if (amount > currentBalance) {
     return {
+      confidence,
       message: 'Saldo insuficiente para esta transferência.',
       type: 'error',
     };

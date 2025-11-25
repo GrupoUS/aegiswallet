@@ -11,12 +11,12 @@ export interface AgUiBackendConfig extends ChatBackendConfig {
  * Future integration point for generic AG-UI servers
  */
 export class AgUiBackend implements ChatBackend {
-  constructor(_config: AgUiBackendConfig) {}
-
   async *send(
     _messages: ChatMessage[],
     _options?: ChatRequestOptions
   ): AsyncIterableIterator<ChatStreamChunk> {
+    // biome-ignore lint/correctness/noConstantCondition: Stub implementation
+    if (false) yield {} as any;
     throw new Error('AG-UI backend not yet implemented');
   }
 

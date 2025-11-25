@@ -11,12 +11,12 @@ export interface OttomatorBackendConfig extends ChatBackendConfig {
  * Future integration point for Ottomator platform
  */
 export class OttomatorBackend implements ChatBackend {
-  constructor(_config: OttomatorBackendConfig) {}
-
   async *send(
     _messages: ChatMessage[],
     _options?: ChatRequestOptions
   ): AsyncIterableIterator<ChatStreamChunk> {
+    // biome-ignore lint/correctness/noConstantCondition: Stub implementation
+    if (false) yield {} as any;
     throw new Error('Ottomator backend not yet implemented');
   }
 

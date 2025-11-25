@@ -1,5 +1,5 @@
 import type { ErrorComponentProps } from '@tanstack/react-router';
-import { Outlet, createRootRoute, useLocation, useNavigate } from '@tanstack/react-router';
+import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import { Building, Calendar, FileText, Home, LogOut, Mic, Wallet } from 'lucide-react';
 import { useState } from 'react';
 
@@ -8,6 +8,7 @@ import { TRPCProvider } from '@/components/providers/TRPCProvider';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { ChatWidget } from '@/features/ai-chat/components';
 import { cn } from '@/lib/utils';
 
 function ErrorBoundary({ error }: ErrorComponentProps) {
@@ -116,7 +117,7 @@ function RootComponent() {
               <div className="flex flex-col gap-2">
                 <SidebarLink
                   link={{
-                    href: '/',
+                    href: '/ai-chat', // Updated to point to the page, but widget is also available
                     icon: <Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
                     label: 'Assistente',
                   }}
@@ -146,6 +147,7 @@ function RootComponent() {
               <Outlet />
             </div>
           </div>
+          <ChatWidget />
         </div>
       </CalendarProvider>
     </TRPCProvider>

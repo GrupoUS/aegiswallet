@@ -81,9 +81,10 @@ export class GeminiBackend implements ChatBackend {
 
       // Yield message end event
       yield createMessageEndEvent(messageId);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       yield createErrorEvent(
-        new ChatError(error.message || 'Unknown Gemini error', 'BACKEND_ERROR', error),
+        new ChatError(errorMessage || 'Unknown Gemini error', 'BACKEND_ERROR', error),
         messageId
       );
     } finally {

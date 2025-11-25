@@ -30,7 +30,8 @@ export function ChatConversation({
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, reasoning, isStreaming]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollRef}>

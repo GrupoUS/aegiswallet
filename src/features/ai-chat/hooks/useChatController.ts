@@ -98,9 +98,9 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
                 role: 'assistant',
                 content: '',
                 timestamp: Date.now(),
-                metadata: chunk.metadata,
+                metadata: chunk.metadata as ChatMessage['metadata'],
               };
-              setMessages((prev) => [...prev, currentAssistantMessage!]);
+              setMessages((prev) => [...prev, currentAssistantMessage as ChatMessage]);
               break;
 
             case ChatStreamEventType.CONTENT_CHUNK:
@@ -124,7 +124,7 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
                 const reasoningChunk: ChatReasoningChunk = {
                   content: chunk.content,
                   timestamp: Date.now(),
-                  ...chunk.metadata,
+                  ...(chunk.metadata as object),
                 };
                 setReasoning((prev) => [...prev, reasoningChunk]);
               }
@@ -143,7 +143,11 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
               break;
 
             case ChatStreamEventType.ERROR:
-              throw new ChatError(chunk.content || 'Stream error', 'STREAM_ERROR', chunk.metadata);
+              throw new ChatError(
+                String(chunk.content) || 'Stream error',
+                'STREAM_ERROR',
+                chunk.metadata
+              );
           }
         }
 
@@ -161,10 +165,12 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
           // For now, passing it as a simple text response
           sendResponse('confirmation', { text: accumulatedContent });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('Chat error:', { error: err });
         const chatError =
-          err instanceof ChatError ? err : new ChatError(err.message, 'UNKNOWN_ERROR', err);
+          err instanceof ChatError
+            ? err
+            : new ChatError(err instanceof Error ? err.message : String(err), 'UNKNOWN_ERROR', err);
         setError(chatError);
         options.onError?.(chatError);
       } finally {

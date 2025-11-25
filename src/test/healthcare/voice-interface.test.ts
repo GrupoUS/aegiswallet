@@ -104,18 +104,25 @@ describe('Voice Interface Testing (Portuguese)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset SpeechRecognition mock to default implementation
-    global.SpeechRecognition.mockImplementation(() => ({
+    const mockSpeechRecognition = {
       abort: vi.fn(),
       continuous: false,
       interimResults: false,
       lang: 'pt-BR',
       onend: null,
       onerror: null,
+      onnomatch: null,
       onresult: null,
-      onstart: null,
+      onsoundend: null,
+      onsoundstart: null,
+      onspeechend: null,
+      onspeechstart: null,
       start: vi.fn(),
       stop: vi.fn(),
-    }));
+    };
+
+    global.SpeechRecognition = vi.fn(() => mockSpeechRecognition);
+    global.webkitSpeechRecognition = vi.fn(() => mockSpeechRecognition);
   });
 
   afterEach(() => {

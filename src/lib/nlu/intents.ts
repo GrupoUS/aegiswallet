@@ -142,10 +142,11 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     patterns: [
       // High confidence patterns for income queries
       /\b(quando|qual)\s+(vou|vai)\s+(receber|cair|entrar)\b/i,
-      /\b(recebimento|entrada|credito|sal[áa]rio)\s+(do\s+mes|mensal|proximo|pendente)\b/i,
+      /\b(recebimento|recebimentos|entrada|entradas|credito|sal[áa]rio)\s+(do\s+m[êe]s|mensal|pr[óo]ximo|pr[óo]xima|pendente|previstas?)\b/i,
       /\b(vai|vou)\s+(ter|receber|entrar)\s+quanto\b/i,
-      /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber)\b/i,
+      /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber|entrar)\b/i,
       /\b(sal[áa]rio)\s+(cai|entra)\s+quando\b/i,
+      /\b(vai|vou)\s+receber\s+quanto\b/i,
     ],
     requiredSlots: [],
     type: IntentType.CHECK_INCOME,
@@ -177,11 +178,11 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     optionalSlots: [EntityType.CATEGORY],
     patterns: [
       // High confidence patterns for projection queries
-      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+mes|mensal|anual)\b/i,
-      /\b(como|qual)\s+(vai|fica|esta|est[áÁ])\s+(meu|o)?\s*(mes|ano|semana)\b/i,
+      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+m[êe]s|mensal|anual)\b/i,
+      /\b(como|qual)\s+(vai|fica|ficar|esta|est[áÁ])\s+(o\s+)?(meu\s+)?m[êe]s\??\b/i,
       /\b(vou|vai)\s+(sobrar|faltar|ter)\s+quanto\b/i,
-      /\b(quanto|qual)\s+(sobra|falta|resta)\s+(no\s+fim|final)\s+(do\s+mes|mes)\b/i,
-      /\b(balan[çc]o|resultado)\s+(do\s+mes|mensal|previsto)\b/i,
+      /\b(quanto|qual)\s+(vai|vou)?\s*(sobrar|faltar|resta)\b/i,
+      /\b(balan[çc]o|resultado)\s+(do\s+m[êe]s|mensal|previsto)\b/i,
     ],
     requiredSlots: [EntityType.PERIOD],
     type: IntentType.FINANCIAL_PROJECTION,

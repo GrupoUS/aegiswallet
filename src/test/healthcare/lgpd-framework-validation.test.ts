@@ -22,6 +22,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestUtils } from '../healthcare-setup';
+import { ensureTestUtils } from './test-utils';
 
 // Import healthcare setup to configure test environment
 import '../healthcare-setup';
@@ -75,6 +76,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 // Comprehensive LGPD Compliance Component for testing
 const LGPDComplianceFramework = () => {
+  const testUtils = ensureTestUtils();
   const [userConsent, setUserConsent] = React.useState({
     biometricData: false,
     dataProcessing: false,
@@ -166,7 +168,6 @@ const LGPDComplianceFramework = () => {
   };
 
   const runComplianceValidation = async () => {
-    const testUtils = global.testUtils as TestUtils;
 
     setComplianceStatus({
       accountability: validateAccountability(),
@@ -476,7 +477,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should record consent with all required metadata', async () => {
-      const testUtils = global.testUtils as TestUtils;
+      const testUtils = ensureTestUtils();
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
       render(React.createElement(LGPDComplianceFramework));
@@ -664,11 +665,11 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
       expect(consentSection).toBeVisible();
 
       const consentLabels = [
-        'Consentimento para processamento de dados',
+        'Consentimento para processamento de dados (gestão financeira)',
         'Consentimento para gravação e processamento de voz',
-        'Consentimento para dados biométricos',
-        'Consentimento para dados financeiros',
-        'Consentimento para dados de saúde',
+        'Consentimento para dados biométricos (autenticação)',
+        'Consentimento para dados financeiros (transações, PIX)',
+        'Consentimento para dados de saúde (consulta médica)',
       ];
 
       consentLabels.forEach((label) => {
@@ -677,7 +678,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should maintain audit trail compliance', async () => {
-      const testUtils = global.testUtils as TestUtils;
+      const testUtils = ensureTestUtils();
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
       render(React.createElement(LGPDComplianceFramework));
@@ -915,7 +916,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should generate comprehensive compliance report', async () => {
-      const testUtils = global.testUtils as TestUtils;
+      const testUtils = ensureTestUtils();
       const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
       render(React.createElement(LGPDComplianceFramework));

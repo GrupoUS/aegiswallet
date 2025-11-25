@@ -11,9 +11,9 @@ interface RateLimitMiddlewareOptions {
 export const createRateLimitMiddleware = (_options: RateLimitMiddlewareOptions) => {
   return experimental_standaloneMiddleware<{
     ctx: Context;
-  input: undefined;
-  // 'meta', not defined here, defaults to 'object | undefined'
-  }>().create((opts) => {
+    input: undefined;
+    // 'meta', not defined here, defaults to 'object | undefined'
+  }>().create(async (opts) => {
     await opts.next();
   });
 };

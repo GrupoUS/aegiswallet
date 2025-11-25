@@ -329,7 +329,7 @@ export interface SecurityReport {
 }
 
 // Export all types for convenience
-export type {
+export {
   // Database types
   UserPin,
   AuthAttempt,
@@ -367,7 +367,6 @@ export type {
   PINValidation,
   PhoneNumberValidation,
   OtpValidation,
-  // Analytics types
   SecurityMetrics,
   SecurityReport,
 };

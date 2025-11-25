@@ -8,7 +8,7 @@ import { ChatWidget } from '../../features/ai-chat/components/ChatWidget';
 vi.mock('../../features/ai-chat/components/ChatContainer', () => ({
   ChatContainer: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="chat-container">
-      <button onClick={onClose} data-testid="close-chat">
+      <button type="button" onClick={onClose} data-testid="close-chat">
         Close
       </button>
     </div>

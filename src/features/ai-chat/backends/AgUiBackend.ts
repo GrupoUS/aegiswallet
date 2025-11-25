@@ -1,4 +1,9 @@
-import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
+import {
+  type ChatMessage,
+  type ChatRequestOptions,
+  type ChatStreamChunk,
+  ChatStreamEventType,
+} from '../domain/types';
 import type { ChatBackend, ChatBackendConfig, ModelInfo } from './ChatBackend';
 
 export interface AgUiBackendConfig extends ChatBackendConfig {
@@ -16,7 +21,7 @@ export class AgUiBackend implements ChatBackend {
     _options?: ChatRequestOptions
   ): AsyncIterableIterator<ChatStreamChunk> {
     // biome-ignore lint/correctness/noConstantCondition: Stub implementation
-    if (false) yield {} as any;
+    if (false) yield { type: ChatStreamEventType.CONTENT_CHUNK, content: '' };
     throw new Error('AG-UI backend not yet implemented');
   }
 

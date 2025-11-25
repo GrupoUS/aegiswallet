@@ -67,7 +67,7 @@ transactionsRouter.get(
 
     try {
       let query = supabase
-        .from('transactions')
+        .from('financial_events')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -173,8 +173,8 @@ transactionsRouter.get(
 
       // Build query
       let query = supabase
-        .from('transactions')
-        .select('amount, type, status')
+        .from('financial_events')
+        .select('amount, event_type, status, is_income')
         .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', now.toISOString());
@@ -193,10 +193,10 @@ transactionsRouter.get(
       const transactions = data || [];
       const balance = transactions.reduce((sum, t) => sum + t.amount, 0);
       const expenses = transactions
-        .filter((t) => ['debit', 'pix', 'boleto'].includes(t.type))
+        .filter((t) => ['debit', 'pix', 'boleto'].includes(t.event_type))
         .reduce((sum, t) => sum + t.amount, 0);
       const income = transactions
-        .filter((t) => ['credit', 'transfer'].includes(t.type))
+        .filter((t) => ['credit', 'transfer'].includes(t.event_type))
         .reduce((sum, t) => sum + t.amount, 0);
 
       return c.json({
@@ -249,7 +249,7 @@ transactionsRouter.post(
 
     try {
       const { data, error } = await supabase
-        .from('transactions')
+        .from('financial_events')
         .insert({
           ...input,
           user_id: user.id,
@@ -318,7 +318,7 @@ transactionsRouter.delete(
 
     try {
       const { error } = await supabase
-        .from('transactions')
+        .from('financial_events')
         .delete()
         .eq('id', transactionId)
         .eq('user_id', user.id);
@@ -360,4 +360,3 @@ transactionsRouter.delete(
 );
 
 export default transactionsRouter;
-

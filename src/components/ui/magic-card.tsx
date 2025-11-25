@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { motion } from "motion/react";
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { motion } from 'motion/react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 interface MagicCardProps {
   children: React.ReactNode;
@@ -20,27 +20,24 @@ export const MagicCard = React.forwardRef<HTMLButtonElement, MagicCardProps>(
       children,
       className,
       gradientSize = 200,
-      gradientColor = "#AC9469", // AegisWallet gold color
+      gradientColor = '#AC9469', // AegisWallet gold color
       gradientOpacity = 0.8,
-      gradientFrom = "#AC9469", // AegisWallet gold
-      gradientTo = "#112031", // AegisWallet deep blue
+      gradientFrom = '#AC9469', // AegisWallet gold
+      gradientTo = '#112031', // AegisWallet deep blue
       ...props
     },
-    ref,
+    ref
   ) => {
     const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
     const [isHovering, setIsHovering] = React.useState(false);
 
-    const handleMouseMove = React.useCallback(
-      (e: React.MouseEvent<HTMLButtonElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setMousePosition({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
-      },
-      [],
-    );
+    const handleMouseMove = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }, []);
 
     const handleMouseEnter = () => setIsHovering(true);
     const handleMouseLeave = () => setIsHovering(false);
@@ -50,8 +47,8 @@ export const MagicCard = React.forwardRef<HTMLButtonElement, MagicCardProps>(
         type="button"
         ref={ref}
         className={cn(
-          "relative overflow-hidden rounded-lg border border-border bg-background p-6 text-left transition-all duration-300 hover:border-primary/50",
-          className,
+          'relative overflow-hidden rounded-lg border border-border bg-background p-6 text-left transition-all duration-300 hover:border-primary/50',
+          className
         )}
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
@@ -88,7 +85,7 @@ export const MagicCard = React.forwardRef<HTMLButtonElement, MagicCardProps>(
         <div className="relative z-10">{children}</div>
       </button>
     );
-  },
+  }
 );
 
-MagicCard.displayName = "MagicCard";
+MagicCard.displayName = 'MagicCard';

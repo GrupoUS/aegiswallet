@@ -118,7 +118,9 @@ export function useContacts(filters?: {
 
   const toggleFavorite = async (contactId: string) => {
     try {
-      const response = await apiClient.post<ContactApiResponse>(`/v1/contacts/${contactId}/favorite`);
+      const response = await apiClient.post<ContactApiResponse>(
+        `/v1/contacts/${contactId}/favorite`
+      );
       toast.success('Favorito atualizado com sucesso!');
       await refetch(); // Refresh contacts
       return response.data;
@@ -129,17 +131,16 @@ export function useContacts(filters?: {
   };
 
   const refetch = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return [];
 
     setIsLoading(true);
     setError(null);
 
     try {
-      let query = supabase
-        .from('contacts')
-        .select('*')
-        .eq('user_id', user.id);
+      let query = supabase.from('contacts').select('*').eq('user_id', user.id);
 
       if (defaultFilters.search) {
         query = query.or(
@@ -154,7 +155,10 @@ export function useContacts(filters?: {
       const { data, error } = await query
         .order('is_favorite', { ascending: false })
         .order('name', { ascending: true })
-        .range(defaultFilters.offset || 0, (defaultFilters.offset || 0) + (defaultFilters.limit || 50) - 1);
+        .range(
+          defaultFilters.offset || 0,
+          (defaultFilters.offset || 0) + (defaultFilters.limit || 50) - 1
+        );
 
       if (error) {
         throw error;
@@ -242,7 +246,9 @@ export function useFavoriteContacts() {
     setError(null);
 
     try {
-      const response = await apiClient.get<{ data: Contact[]; meta: any }>('/v1/contacts/favorites');
+      const response = await apiClient.get<{ data: Contact[]; meta: any }>(
+        '/v1/contacts/favorites'
+      );
       setFavoriteContacts(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar favoritos');
@@ -281,7 +287,9 @@ export function useContactSearch(query: string, limit: number = 10) {
       setError(null);
 
       try {
-        const response = await apiClient.get<{ data: Contact[]; meta: any }>(`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`);
+        const response = await apiClient.get<{ data: Contact[]; meta: any }>(
+          `/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`
+        );
         setSearchResults(response.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro na busca');

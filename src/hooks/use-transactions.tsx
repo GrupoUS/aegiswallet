@@ -1,15 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { trpc } from "@/lib/trpc";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { trpc } from '@/lib/trpc';
 
 interface Transaction {
   id: string;
   user_id: string;
   amount: number;
-  type: "transfer" | "debit" | "credit" | "pix" | "boleto";
-  status: "cancelled" | "failed" | "pending" | "posted";
+  type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status: 'cancelled' | 'failed' | 'pending' | 'posted';
   description?: string;
   category_id?: string;
   account_id?: string;
@@ -30,51 +30,52 @@ export function useTransactions(filters?: {
   offset?: number;
   categoryId?: string;
   accountId?: string;
-  type?: "transfer" | "debit" | "credit" | "pix" | "boleto";
-  status?: "cancelled" | "failed" | "pending" | "posted";
+  type?: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status?: 'cancelled' | 'failed' | 'pending' | 'posted';
   startDate?: string;
   endDate?: string;
   search?: string;
 }) {
-  const { data, isLoading, error, refetch } = trpc.transactions.list.useQuery(
-    filters || {},
-  );
+  const { data, isLoading, error, refetch } = trpc.transactions.list.useQuery(filters || {});
 
   const transactions = data || [];
   const total = transactions.length;
 
-  const { mutate: createTransaction, isPending: isCreating } =
-    trpc.transactions.create.useMutation({
+  const { mutate: createTransaction, isPending: isCreating } = trpc.transactions.create.useMutation(
+    {
       onError: (error: any) => {
-        toast.error(error.message || "Erro ao criar transação");
+        toast.error(error.message || 'Erro ao criar transação');
       },
       onSuccess: () => {
-        toast.success("Transação criada com sucesso!");
+        toast.success('Transação criada com sucesso!');
         refetch();
       },
-    });
+    }
+  );
 
-  const { mutate: updateTransaction, isPending: isUpdating } =
-    trpc.transactions.update.useMutation({
+  const { mutate: updateTransaction, isPending: isUpdating } = trpc.transactions.update.useMutation(
+    {
       onError: (error: any) => {
-        toast.error(error.message || "Erro ao atualizar transação");
+        toast.error(error.message || 'Erro ao atualizar transação');
       },
       onSuccess: () => {
-        toast.success("Transação atualizada com sucesso!");
+        toast.success('Transação atualizada com sucesso!');
         refetch();
       },
-    });
+    }
+  );
 
-  const { mutate: deleteTransaction, isPending: isDeleting } =
-    trpc.transactions.delete.useMutation({
+  const { mutate: deleteTransaction, isPending: isDeleting } = trpc.transactions.delete.useMutation(
+    {
       onError: (error: any) => {
-        toast.error(error.message || "Erro ao remover transação");
+        toast.error(error.message || 'Erro ao remover transação');
       },
       onSuccess: () => {
-        toast.success("Transação removida com sucesso!");
+        toast.success('Transação removida com sucesso!');
         refetch();
       },
-    });
+    }
+  );
 
   // Real-time subscription for transactions
   useEffect(() => {
@@ -83,17 +84,17 @@ export function useTransactions(filters?: {
     }
 
     const channel = supabase
-      .channel("transactions_changes")
+      .channel('transactions_changes')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "*",
-          schema: "public",
-          table: "transactions",
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
         },
         (_payload) => {
           refetch();
-        },
+        }
       )
       .subscribe();
 
@@ -118,11 +119,11 @@ export function useTransactions(filters?: {
 }
 
 export function useTransactionsStats(
-  period?: "week" | "month" | "quarter" | "year",
-  accountId?: string,
+  period?: 'week' | 'month' | 'quarter' | 'year',
+  accountId?: string
 ) {
   const { data, isLoading, error } = trpc.transactions.getStatistics.useQuery({
-    period: period || "month",
+    period: period || 'month',
     accountId,
   });
 
@@ -134,15 +135,14 @@ export function useTransactionsStats(
 }
 
 export function useCreateTransaction() {
-  const { mutate: createTransaction, isPending } =
-    trpc.transactions.create.useMutation({
-      onError: (error: any) => {
-        toast.error(error.message || "Erro ao criar transação");
-      },
-      onSuccess: () => {
-        toast.success("Transação criada com sucesso!");
-      },
-    });
+  const { mutate: createTransaction, isPending } = trpc.transactions.create.useMutation({
+    onError: (error: any) => {
+      toast.error(error.message || 'Erro ao criar transação');
+    },
+    onSuccess: () => {
+      toast.success('Transação criada com sucesso!');
+    },
+  });
 
   return {
     createTransaction,
@@ -151,15 +151,14 @@ export function useCreateTransaction() {
 }
 
 export function useDeleteTransaction() {
-  const { mutate: deleteTransaction, isPending } =
-    trpc.transactions.delete.useMutation({
-      onError: (error: any) => {
-        toast.error(error.message || "Erro ao remover transação");
-      },
-      onSuccess: () => {
-        toast.success("Transação removida com sucesso!");
-      },
-    });
+  const { mutate: deleteTransaction, isPending } = trpc.transactions.delete.useMutation({
+    onError: (error: any) => {
+      toast.error(error.message || 'Erro ao remover transação');
+    },
+    onSuccess: () => {
+      toast.success('Transação removida com sucesso!');
+    },
+  });
 
   return {
     deleteTransaction,

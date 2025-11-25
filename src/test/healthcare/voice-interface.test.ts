@@ -5,6 +5,14 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestUtils } from '../healthcare-setup';
 
+// Type declarations for global Speech API
+declare global {
+  // eslint-disable-next-line no-var
+  var SpeechRecognition: any;
+  // eslint-disable-next-line no-var
+  var webkitSpeechRecognition: any;
+}
+
 // Mock voice interface component
 const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) => {
   const [isListening, setIsListening] = React.useState(false);

@@ -756,4 +756,3 @@ bankAccountsRouter.delete(
 );
 
 export default bankAccountsRouter;
-

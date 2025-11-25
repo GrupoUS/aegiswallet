@@ -20,6 +20,7 @@ import type { Database } from '@/types/database.types';
 
 // Database row types for type-safe queries
 type SecurityEventInsert = Database['public']['Tables']['security_events']['Insert'];
+
 import { createAuditLog } from '@/lib/security/auditLogger';
 import type { DeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
 import { createDeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';

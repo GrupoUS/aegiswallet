@@ -15,13 +15,18 @@ const MIN_AUTOMATION_CONFIDENCE = 0.8;
 const voiceRouter = new Hono<AppEnv>();
 
 // Input validation schemas
-const processCommandSchema = z.object({
-  command: z.string().min(1).max(1000),
-  sessionId: z.string().uuid().optional(),
-  audioData: z.instanceof(Buffer).optional(), // Typed audio data support
-  language: z.string().default('pt-BR'),
-  requireConfirmation: z.boolean().default(false),
-});
+const processCommandSchema = z
+  .object({
+    commandText: z.string().min(1).max(1000).optional(),
+    sessionId: z.string().uuid(),
+    audioData: z.string().optional(), // Base64 encoded audio data
+    language: z.string().default('pt-BR'),
+    requireConfirmation: z.boolean().default(false),
+  })
+  .refine((data) => data.audioData || data.commandText, {
+    message: 'Dados de áudio ou texto do comando são obrigatórios',
+    path: ['audioData'],
+  });
 
 export const availableCommandsResponseSchema = z.object({
   commands: z.array(
@@ -59,7 +64,7 @@ voiceRouter.post(
     const input = c.req.valid('json');
     const requestId = c.get('requestId');
 
-    const { command, sessionId, audioData, language, requireConfirmation } = input;
+    const { commandText: command, sessionId, audioData, language, requireConfirmation } = input;
 
     try {
       // Log incoming voice command for audit

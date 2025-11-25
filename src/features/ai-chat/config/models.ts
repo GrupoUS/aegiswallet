@@ -6,7 +6,7 @@ export const GEMINI_MODELS = {
   PRO_EXPERIMENTAL: 'gemini-exp-1206',
 } as const;
 
-export type GeminiModel = typeof GEMINI_MODELS[keyof typeof GEMINI_MODELS];
+export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS];
 
 export interface ModelOption {
   id: GeminiModel;

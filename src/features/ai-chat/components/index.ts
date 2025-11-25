@@ -11,5 +11,5 @@ export * from './ChatResponse';
 export * from './ChatSearchBar';
 export * from './ChatSuggestions';
 export * from './ChatTasks';
-export * from './ModelSelector';
 export * from './ChatWidget';
+export * from './ModelSelector';

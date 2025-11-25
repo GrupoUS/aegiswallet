@@ -202,4 +202,3 @@ calendarRouter.get(
 );
 
 export default calendarRouter;
-

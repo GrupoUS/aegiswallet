@@ -12,6 +12,7 @@ export interface VoiceFeedback {
   rating: number; // 1-5
   feedbackText?: string;
   feedbackType: 'accuracy' | 'speed' | 'understanding' | 'general';
+  command?: string;
 }
 
 export class FeedbackCollectorService {
@@ -19,10 +20,10 @@ export class FeedbackCollectorService {
     try {
       const { error } = await supabase.from('voice_feedback').insert({
         user_id: feedback.userId,
-        command: 'feedback', // Generic command for feedback entries
+        command_text: feedback.command || 'feedback', // Use command_text column
         rating: feedback.rating,
         feedback_text: feedback.feedbackText,
-        response: feedback.feedbackType, // Use response field for feedback type
+        feedback_type: feedback.feedbackType, // Use feedback_type column
       });
 
       if (error) {

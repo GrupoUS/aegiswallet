@@ -239,7 +239,8 @@ export function ensureSecureConfiguration(): void {
 
       const message = document.createElement('p');
       message.style.cssText = 'color: #6c757d; line-height: 1.6;';
-      message.textContent = 'The application cannot start due to missing security configuration. Please check your environment variables and try again.';
+      message.textContent =
+        'The application cannot start due to missing security configuration. Please check your environment variables and try again.';
 
       const details = document.createElement('details');
       details.style.cssText = 'text-align: left; margin-top: 20px;';

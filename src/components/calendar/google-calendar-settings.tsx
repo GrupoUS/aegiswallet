@@ -1,37 +1,18 @@
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Calendar, Loader2, Lock, RefreshCw, Settings } from "lucide-react";
-import { useGoogleCalendarSync } from "../../hooks/use-google-calendar-sync";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Checkbox } from "../ui/checkbox";
-import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Switch } from "../ui/switch";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar, Loader2, Lock, RefreshCw, Settings } from 'lucide-react';
+import { useGoogleCalendarSync } from '../../hooks/use-google-calendar-sync';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Switch } from '../ui/switch';
 
 export function GoogleCalendarSettings() {
-  const {
-    syncStatus,
-    settings,
-    isLoading,
-    isSyncing,
-    startOAuthFlow,
-    updateSettings,
-    syncNow,
-  } = useGoogleCalendarSync();
+  const { syncStatus, settings, isLoading, isSyncing, startOAuthFlow, updateSettings, syncNow } =
+    useGoogleCalendarSync();
 
   if (isLoading) {
     return (
@@ -53,10 +34,7 @@ export function GoogleCalendarSettings() {
               Integração Google Calendar
             </div>
             {isConnected ? (
-              <Badge
-                variant="secondary"
-                className="bg-green-100 text-green-800 hover:bg-green-200"
-              >
+              <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200">
                 Conectado
               </Badge>
             ) : (
@@ -72,15 +50,9 @@ export function GoogleCalendarSettings() {
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex flex-col">
                 <span className="text-sm font-medium">Conta conectada</span>
-                <span className="text-sm text-muted-foreground">
-                  {syncStatus?.googleEmail}
-                </span>
+                <span className="text-sm text-muted-foreground">{syncStatus?.googleEmail}</span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => startOAuthFlow()}
-              >
+              <Button variant="outline" size="sm" onClick={() => startOAuthFlow()}>
                 Reconectar
               </Button>
             </div>
@@ -89,14 +61,10 @@ export function GoogleCalendarSettings() {
               <div className="text-center space-y-2">
                 <h3 className="text-lg font-medium">Conecte sua conta</h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  Permita que o AegisWallet acesse seu calendário para
-                  sincronizar eventos.
+                  Permita que o AegisWallet acesse seu calendário para sincronizar eventos.
                 </p>
               </div>
-              <Button
-                onClick={() => startOAuthFlow()}
-                className="w-full max-w-xs"
-              >
+              <Button onClick={() => startOAuthFlow()} className="w-full max-w-xs">
                 Conectar Google Calendar
               </Button>
             </div>
@@ -116,9 +84,7 @@ export function GoogleCalendarSettings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Sincronização Automática</Label>
-                <p className="text-sm text-muted-foreground">
-                  Sincronizar eventos periodicamente
-                </p>
+                <p className="text-sm text-muted-foreground">Sincronizar eventos periodicamente</p>
               </div>
               <Switch
                 checked={settings.sync_enabled}
@@ -130,26 +96,17 @@ export function GoogleCalendarSettings() {
               <Label>Direção da Sincronização</Label>
               <Select
                 value={settings.sync_direction}
-                onValueChange={(
-                  v:
-                    | "bidirectional"
-                    | "one_way_to_google"
-                    | "one_way_from_google",
-                ) => updateSettings({ sync_direction: v })}
+                onValueChange={(v: 'bidirectional' | 'one_way_to_google' | 'one_way_from_google') =>
+                  updateSettings({ sync_direction: v })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bidirectional">
-                    Bidirecional (Ambos os sentidos)
-                  </SelectItem>
-                  <SelectItem value="one_way_to_google">
-                    Apenas Aegis → Google
-                  </SelectItem>
-                  <SelectItem value="one_way_from_google">
-                    Apenas Google → Aegis
-                  </SelectItem>
+                  <SelectItem value="bidirectional">Bidirecional (Ambos os sentidos)</SelectItem>
+                  <SelectItem value="one_way_to_google">Apenas Aegis → Google</SelectItem>
+                  <SelectItem value="one_way_from_google">Apenas Google → Aegis</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -166,9 +123,7 @@ export function GoogleCalendarSettings() {
                 <Checkbox
                   id="sync_amounts"
                   checked={settings.sync_financial_amounts}
-                  onCheckedChange={(c) =>
-                    updateSettings({ sync_financial_amounts: c as boolean })
-                  }
+                  onCheckedChange={(c) => updateSettings({ sync_financial_amounts: c as boolean })}
                 />
                 <div className="grid gap-1.5 leading-none">
                   <label
@@ -178,8 +133,8 @@ export function GoogleCalendarSettings() {
                     Sincronizar valores financeiros
                   </label>
                   <p className="text-sm text-muted-foreground">
-                    Se desmarcado, os valores monetários não serão enviados para
-                    o Google Calendar. Apenas título e data serão sincronizados.
+                    Se desmarcado, os valores monetários não serão enviados para o Google Calendar.
+                    Apenas título e data serão sincronizados.
                   </p>
                 </div>
               </div>
@@ -187,24 +142,14 @@ export function GoogleCalendarSettings() {
 
             <div className="flex items-center justify-between pt-4 border-t">
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">
-                  Última sincronização completa
-                </span>
+                <span className="text-sm text-muted-foreground">Última sincronização completa</span>
                 <span className="text-sm font-medium">
                   {syncStatus?.lastSyncAt
-                    ? format(
-                        new Date(syncStatus.lastSyncAt),
-                        "dd/MM/yyyy HH:mm",
-                        { locale: ptBR },
-                      )
-                    : "Nunca"}
+                    ? format(new Date(syncStatus.lastSyncAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                    : 'Nunca'}
                 </span>
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => syncNow()}
-                disabled={isSyncing}
-              >
+              <Button variant="secondary" onClick={() => syncNow()} disabled={isSyncing}>
                 {isSyncing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

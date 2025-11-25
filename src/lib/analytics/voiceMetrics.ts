@@ -14,10 +14,6 @@
 
 import type { DatabaseStubs } from '@/types/database-stubs';
 
-// Database row type for voice_metrics table
-type VoiceMetricsRow = DatabaseStubs['voice_metrics']['Row'];
-type VoiceMetricsInsert = DatabaseStubs['voice_metrics']['Insert'];
-
 // ============================================================================
 // Types
 // ============================================================================

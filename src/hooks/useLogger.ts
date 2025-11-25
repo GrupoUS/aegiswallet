@@ -31,7 +31,7 @@ interface UseLoggerReturn {
   // Utility methods
   setContext: (context: LoggerContext) => void;
   clearContext: () => void;
-  getLogs: (level?: LogLevel) => LogEntry[];
+  getLogs: () => LogEntry[];
 }
 
 export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
@@ -136,9 +136,9 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
     contextRef.current = defaultContext;
   }, [defaultContext]);
 
-  const getLogs = useCallback((level?: LogLevel) => {
-    return logger.getLogs(level);
-  }, []);
+  const getLogs = useCallback(() => {
+    return logger.getLogs();
+  }, []);;
 
   return {
     authEvent,

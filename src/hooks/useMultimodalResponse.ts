@@ -121,7 +121,7 @@ export function useMultimodalResponse(
 
       try {
         // Build response from template
-        const response = buildMultimodalResponse(intent, data);
+        const response = buildMultimodalResponse(intent, data as Record<string, unknown>);
 
         // Generate response ID
         const responseId = `response_${Date.now()}`;

@@ -526,4 +526,3 @@ googleCalendarRouter.post(
 );
 
 export default googleCalendarRouter;
-

@@ -31,11 +31,11 @@ describe('Bank Accounts Router Integration', () => {
 
     const session: Session = {
       access_token: 'test-token',
-      expires_at: null,
+      expires_at: undefined,
       expires_in: 3600,
       provider_refresh_token: null,
       provider_token: null,
-      refresh_token: null,
+      refresh_token: '',
       token_type: 'bearer',
       user: fakeUser,
     };

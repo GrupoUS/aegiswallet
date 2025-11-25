@@ -1,3 +1,4 @@
+import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
 import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts';
 import {
   useContacts,
@@ -5,9 +6,8 @@ import {
   useContactsStats,
   useFavoriteContacts,
 } from '@/hooks/useContacts';
-import { useFinancialEvents, useFinancialEventMutations } from '@/hooks/useFinancialEvents';
+import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
-import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
@@ -20,11 +20,11 @@ export function useDashboard() {
   // Dados financeiros
   const { accounts, isLoading: accountsLoading } = useBankAccounts();
   const { balances, isLoading: balancesLoading } = useTotalBalance();
-  const { data: transactions, isLoading: transactionsLoading } = useTransactions();
-  const { data: stats, isLoading: statsLoading } = useTransactionsStats('month');
+  const { transactions } = useTransactions();
+  const { stats } = useTransactionsStats('month');
 
   // Dados do calendário
-  const { events, loading: eventsLoading } = useFinancialEvents();
+  const { events } = useFinancialEvents();
 
   // Dados dos contatos
   const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts();
@@ -43,11 +43,11 @@ export function useDashboard() {
     // Resumo financeiro
     financial: {
       accounts,
-      recentTransactions: transactions.data?.slice(0, 5) || [],
-      stats: stats.data,
+      recentTransactions: transactions.slice(0, 5) || [],
+      stats,
       totalAccounts: accounts.length,
       totalBalance: balances.BRL || 0,
-      totalTransactions: transactions.data?.length || 0,
+      totalTransactions: transactions.length || 0,
     },
 
     // Eventos e lembretes
@@ -60,7 +60,7 @@ export function useDashboard() {
     contacts: {
       favoriteContacts: favoriteContacts.slice(0, 5),
       favorites: favoriteContacts.length,
-      total: contactStats.data?.totalContacts || 0,
+      total: contactStats?.totalContacts || 0,
       transferableContacts: transferContacts.slice(0, 5),
     },
 
@@ -75,11 +75,7 @@ export function useDashboard() {
     profileLoading ||
     accountsLoading ||
     balancesLoading ||
-    transactions.isLoading ||
-    stats.isLoading ||
-    events.isLoading ||
     contactsLoading ||
-    stats.isLoading ||
     contactStatsLoading;
 
   return {
@@ -176,7 +172,23 @@ export function useDashboardMetrics() {
 export function useDashboardSettings() {
   const { profile } = useProfile();
 
-  const preferences = profile?.user_preferences?.[0] ?? null;
+  // profile is ProfileApiResponse<UserProfile>, access data.user_preferences
+  const preferences = (profile as { data?: { user_preferences?: unknown[] } })?.data
+    ?.user_preferences?.[0] as {
+    accessibility_high_contrast?: boolean;
+    accessibility_large_text?: boolean;
+    accessibility_screen_reader?: boolean;
+    autonomy_level?: number;
+    currency?: string;
+    language?: string;
+    email_notifications?: boolean;
+    notifications_enabled?: boolean;
+    push_notifications?: boolean;
+    theme?: string;
+    timezone?: string;
+    voice_commands_enabled?: boolean;
+    voice_feedback?: boolean;
+  } | undefined;
 
   const settings = {
     accessibility: {

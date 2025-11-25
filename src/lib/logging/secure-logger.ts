@@ -228,7 +228,7 @@ export class SecureLogger {
     if (this.isDevelopment) {
       // In development, write to console with appropriate level
       const _formattedMessage = this.formatForConsole(entry);
-      const _logContext = entry.sanitizedContext || {};
+      const _logContext = entry.context || {};
 
       switch (entry.level) {
         case SecureLogLevel.DEBUG:
@@ -349,7 +349,7 @@ export class SecureLogger {
     this.info('Performance metric', {
       ...context,
       operation,
-      duration: `${duration}ms`,
+      duration,
     });
   }
 

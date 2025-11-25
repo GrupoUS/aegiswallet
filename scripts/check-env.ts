@@ -69,7 +69,9 @@ if (missing.length > 0) {
   for (const key of missing) {
     process.stderr.write(`  • ${key}\n`);
   }
-  process.stderr.write('\nRefer to env.example and docs/ops/supabase-env.md for the authoritative list.\n');
+  process.stderr.write(
+    '\nRefer to env.example and docs/ops/supabase-env.md for the authoritative list.\n'
+  );
   process.exit(1);
 }
 

@@ -14,6 +14,83 @@
  */
 
 // ============================================================================
+// Web Speech API Type Definitions
+// ============================================================================
+
+// Define Web Speech API types that may not be available in all TypeScript configs
+interface SpeechRecognitionEventType {
+  audioend: Event;
+  audiostart: Event;
+  end: Event;
+  error: SpeechRecognitionErrorEventType;
+  nomatch: SpeechRecognitionEventType;
+  result: SpeechRecognitionEventType;
+  soundend: Event;
+  soundstart: Event;
+  speechend: Event;
+  speechstart: Event;
+  start: Event;
+}
+
+interface SpeechRecognitionEventType extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEventType extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  readonly confidence: number;
+  readonly transcript: string;
+}
+
+interface SpeechGrammarListType {
+  readonly length: number;
+  addFromString(string: string, weight?: number): void;
+  addFromURI(src: string, weight?: number): void;
+  item(index: number): unknown;
+  [index: number]: unknown;
+}
+
+interface SpeechRecognitionType extends EventTarget {
+  continuous: boolean;
+  grammars: SpeechGrammarListType;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onaudioend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onaudiostart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onerror: ((this: SpeechRecognitionType, ev: SpeechRecognitionErrorEventType) => void) | null;
+  onnomatch: ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void) | null;
+  onresult: ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void) | null;
+  onsoundend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onsoundstart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onspeechend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onspeechstart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  onstart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
+  abort(): void;
+  start(): void;
+  stop(): void;
+}
+
+// ============================================================================
 // Types & Interfaces
 // ============================================================================
 
@@ -23,7 +100,7 @@ export interface SpeechRecognitionConfig {
   maxAlternatives: number;
   continuous: boolean;
   interimResults: boolean;
-  grammars?: SpeechGrammarList;
+  grammars?: SpeechGrammarListType;
 }
 
 export interface RecognitionResult {
@@ -61,7 +138,7 @@ export interface AudioPreprocessingConfig {
 // ============================================================================
 
 export class SpeechRecognitionService {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: SpeechRecognitionType | null = null;
   private config: SpeechRecognitionConfig;
   private audioConfig: AudioPreprocessingConfig;
   private isSupported: boolean = false;
@@ -116,7 +193,7 @@ export class SpeechRecognitionService {
    * Initialize Web Speech API
    */
   private initializeSpeechRecognition(): void {
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionClass = getSpeechRecognitionConstructor();
 
     if (!SpeechRecognitionClass) {
       throw new Error('Web Speech API not supported in this browser');
@@ -125,14 +202,16 @@ export class SpeechRecognitionService {
     this.recognition = new SpeechRecognitionClass();
 
     // Configure recognition
-    this.recognition.lang = this.config.language;
-    this.recognition.maxAlternatives = this.config.maxAlternatives;
-    this.recognition.continuous = this.config.continuous;
-    this.recognition.interimResults = this.config.interimResults;
+    if (this.recognition) {
+      this.recognition.lang = this.config.language;
+      this.recognition.maxAlternatives = this.config.maxAlternatives;
+      this.recognition.continuous = this.config.continuous;
+      this.recognition.interimResults = this.config.interimResults;
 
-    // Configure grammars for financial commands if provided
-    if (this.config.grammars) {
-      this.recognition.grammars = this.config.grammars;
+      // Configure grammars for financial commands if provided
+      if (this.config.grammars) {
+        this.recognition.grammars = this.config.grammars;
+      }
     }
   }
 
@@ -176,8 +255,8 @@ export class SpeechRecognitionService {
       }, timeout);
 
       // Handle results
-      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const result = this.processSpeechRecognitionEvent(event, startTime);
+      this.recognition.onresult = (event: SpeechRecognitionEventType) => {
+        const result = this.processSpeechRecognitionEventType(event, startTime);
 
         if (result) {
           onResult?.(result);
@@ -192,7 +271,7 @@ export class SpeechRecognitionService {
       };
 
       // Handle errors
-      this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      this.recognition.onerror = (event: SpeechRecognitionErrorEventType) => {
         clearTimeout(timeoutId);
         const error = this.processSpeechRecognitionError(event);
 
@@ -239,8 +318,8 @@ export class SpeechRecognitionService {
   /**
    * Process speech recognition event
    */
-  private processSpeechRecognitionEvent(
-    event: SpeechRecognitionEvent,
+  private processSpeechRecognitionEventType(
+    event: SpeechRecognitionEventType,
     startTime: number
   ): RecognitionResult | null {
     if (!event.results || event.results.length === 0) {
@@ -278,7 +357,7 @@ export class SpeechRecognitionService {
    * Process speech recognition error
    */
   private processSpeechRecognitionError(
-    event: SpeechRecognitionErrorEvent
+    event: SpeechRecognitionErrorEventType
   ): SpeechRecognitionError {
     const errorMap: Record<string, { isRetryable: boolean; message: string }> = {
       aborted: { isRetryable: true, message: 'Recognition was aborted.' },
@@ -304,7 +383,7 @@ export class SpeechRecognitionService {
     };
 
     return {
-      code: event.errorCode,
+      code: undefined,
       error: event.error,
       isRetryable: errorInfo.isRetryable,
       message: errorInfo.message,
@@ -531,8 +610,11 @@ export class SpeechRecognitionService {
       <help> = ajuda | o que posso fazer | comandos;
     `;
 
-    const SpeechGrammarList = window.SpeechGrammarList;
-    const speechGrammarList = new SpeechGrammarList();
+    const SpeechGrammarListClass = getSpeechGrammarListConstructor();
+    if (!SpeechGrammarListClass || !this.recognition) {
+      return; // Grammar list not supported
+    }
+    const speechGrammarList = new SpeechGrammarListClass();
     speechGrammarList.addFromString(grammar, 1);
 
     this.recognition.grammars = speechGrammarList;
@@ -581,15 +663,27 @@ export class SpeechRecognitionService {
 }
 
 // ============================================================================
-// Type declarations for Web Speech API
+// Web Speech API Access Helper
 // ============================================================================
 
-declare global {
-  interface Window {
-    SpeechRecognition: unknown;
-    webkitSpeechRecognition: unknown;
-    SpeechGrammarList: unknown;
-  }
+/**
+ * Get the SpeechRecognition constructor from the browser
+ * Works with both standard and webkit-prefixed versions
+ */
+function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as any;
+  return win.SpeechRecognition || win.webkitSpeechRecognition;
+}
+
+/**
+ * Get the SpeechGrammarList constructor from the browser
+ * Works with both standard and webkit-prefixed versions
+ */
+function getSpeechGrammarListConstructor(): (new () => SpeechGrammarListType) | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as any;
+  return win.SpeechGrammarList || win.webkitSpeechGrammarList;
 }
 
 // ============================================================================

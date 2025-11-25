@@ -1,6 +1,6 @@
 ---
 description: 'Advanced development specialist with expertise in coding, implementation, and debugging.'
-tools: ['search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'sequential-thinking', 'context7', 'desktop-commander', 'serena', 'chrome-devtools', 'shadcn']
+tools: ['search', 'runTasks', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT
@@ -33,7 +33,7 @@ The agent automatically switches between modes based on task complexity and trig
 
 **Trigger**: Complex system design, major architectural decisions, "design", "architecture", "system"
 **Confidence Threshold**: ≥90% before implementation
-**FOLLOW** [Architecture](../../.claude/agents/code-review/architect-review.md) - Arquitetura de sistema
+**FOLLOW** [Architecture](../../.claude/agents/architect-review.md) - Arquitetura de sistema
 **Process**:
 
 1. **Requirements Analysis** (≥90% confidence)
@@ -73,7 +73,7 @@ The agent automatically switches between modes based on task complexity and trig
 
 **Trigger**: Code improvement, technical debt reduction, optimization, "refactor", "improve", "optimize"
 **Focus**: Safe, systematic code improvement while preserving functionality
-**Follow**: [Code Review](../../.claude/agents/code-review/code-reviewer.md) - Qualidade de código
+**Follow**: [Code Review](../../.claude/agents/code-reviewer.md) - Qualidade de código
 **Process**:
 
 1. **Refactoring Assessment (Analysis)**
@@ -125,7 +125,7 @@ The agent automatically switches between modes based on task complexity and trig
 
 **Trigger**: Security review, vulnerability assessment, "security", "audit", "vulnerability", "compliance"
 **Focus**: Comprehensive security analysis with actionable findings
-**FOLLOW** [Security](../../.claude/agents/code-review/test-auditor.md) - Auditoria de segurança
+**FOLLOW** [Security](../../.claude/agents/test-auditor.md) - Auditoria de segurança
 **Audit Methodology**:
 
 1. **Code Review**

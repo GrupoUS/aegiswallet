@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 export interface FinancialContext {
@@ -14,7 +14,7 @@ export interface FinancialContext {
   };
 }
 
-interface Transaction {
+export interface Transaction {
   id: string;
   amount: number;
   description: string;
@@ -93,8 +93,8 @@ export class ContextRetriever {
     startDate.setDate(startDate.getDate() - days);
 
     const { data, error } = await this.supabase
-      .from('transactions')
-      .select('id, amount, description, category, created_at, type')
+      .from('financial_events')
+      .select('id, amount, description, category, created_at, event_type, is_income')
       .eq('user_id', userId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
@@ -110,8 +110,8 @@ export class ContextRetriever {
       amount: t.amount,
       description: t.description || '',
       category: t.category || 'other',
-      date: t.created_at,
-      type: t.type as 'income' | 'expense',
+      date: t.created_at ?? new Date().toISOString(),
+      type: (t.is_income ? 'income' : 'expense') as 'income' | 'expense',
     }));
 
     this.setCache(cacheKey, transactions);
@@ -128,7 +128,7 @@ export class ContextRetriever {
 
     const { data, error } = await this.supabase
       .from('bank_accounts')
-      .select('id, name, balance, currency')
+      .select('id, institution_name, balance, currency')
       .eq('user_id', userId)
       .eq('is_active', true);
 
@@ -139,7 +139,7 @@ export class ContextRetriever {
 
     const balances: AccountBalance[] = (data || []).map((a) => ({
       accountId: a.id,
-      accountName: a.name || 'Unnamed Account',
+      accountName: a.institution_name || 'Unnamed Account',
       balance: a.balance || 0,
       currency: a.currency || 'BRL',
     }));
@@ -176,7 +176,7 @@ export class ContextRetriever {
       id: e.id,
       title: e.title,
       amount: e.amount || 0,
-      date: e.due_date,
+      date: e.due_date || new Date().toISOString(),
       type: e.event_type_id || 'other',
       status: e.status || 'pending',
     }));
@@ -194,7 +194,7 @@ export class ContextRetriever {
     if (cached) return cached;
 
     const { data, error } = await this.supabase
-      .from('profiles')
+      .from('users')
       .select('language, currency, timezone')
       .eq('id', userId)
       .single();

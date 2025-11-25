@@ -48,11 +48,7 @@ usersRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
 
       if (error) {
         throw new Error(`Erro ao buscar perfil: ${error.message}`);
@@ -336,8 +332,8 @@ usersRouter.get(
 
     try {
       const { data: transactions, error } = await supabase
-        .from('transactions')
-        .select('amount, type')
+        .from('financial_events')
+        .select('amount, event_type, is_income')
         .eq('user_id', user.id)
         .gte('created_at', period_start)
         .lte('created_at', period_end);
@@ -386,4 +382,3 @@ usersRouter.get(
 );
 
 export default usersRouter;
-

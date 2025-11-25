@@ -36,7 +36,7 @@ interface QuickActionModalProps {
 }
 
 // Type-safe account interface for component usage
-type BankAccountDisplay = Tables<'bank_accounts'>['Row'];
+type BankAccountDisplay = Tables<'bank_accounts'>;
 
 export function QuickActionModal({
   isOpen,
@@ -45,7 +45,7 @@ export function QuickActionModal({
   onSuccess,
 }: QuickActionModalProps) {
   const { accounts, updateBalance } = useBankAccounts();
-  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const { createTransaction } = useCreateTransaction();
   const accountList: BankAccountDisplay[] = accounts ?? [];
 
   const [amount, setAmount] = useState('');

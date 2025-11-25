@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Zap, DollarSign } from 'lucide-react';
+import { Check, ChevronDown, DollarSign, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { MODEL_OPTIONS, type GeminiModel } from '../config/models';
+import { type GeminiModel, MODEL_OPTIONS } from '../config/models';
 
 interface ModelSelectorProps {
   selectedModel: GeminiModel;

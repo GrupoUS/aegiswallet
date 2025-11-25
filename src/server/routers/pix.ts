@@ -20,20 +20,6 @@ interface PixTransaction {
   updated_at?: string;
 }
 
-/**
- * PIX QR Code type
- */
-interface PixQRCode {
-  id: string;
-  user_id: string;
-  pix_key: string;
-  amount?: number;
-  description?: string;
-  qr_code_url: string;
-  expires_at: string;
-  created_at: string;
-}
-
 export const pixRouter = createTRPCRouter({
   // List PIX keys
   listKeys: protectedProcedure.query(async ({ ctx }) => {

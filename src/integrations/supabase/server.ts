@@ -16,4 +16,3 @@ export const createClient = supabaseCreateClient<Database>;
  * Re-export for convenience
  */
 export { supabaseCreateClient };
-

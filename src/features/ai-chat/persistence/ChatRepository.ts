@@ -1,7 +1,10 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
-import type { ChatMessage } from '../domain/types';
 import type { FinancialContext } from '../context';
+import type { ChatMessage } from '../domain/types';
+
+// Extract the Json type from Database for convenience
+type Json = Database['public']['Tables']['chat_messages']['Insert']['metadata'];
 
 export interface Conversation {
   id: string;
@@ -104,19 +107,21 @@ export class ChatRepository {
   /**
    * Save a message to a conversation
    */
-  async saveMessage(
-    conversationId: string,
-    message: ChatMessage
-  ): Promise<void> {
-    const { error } = await this.supabase
-      .from('chat_messages')
-      .insert({
-        conversation_id: conversationId,
-        role: message.role,
-        content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
-        metadata: message.metadata || {},
-        reasoning: message.reasoning || null,
-      });
+  async saveMessage(conversationId: string, message: ChatMessage): Promise<void> {
+    // Prepare metadata without reasoning since it has its own field
+    const metadataWithoutReasoning = message.metadata ? {
+      ...message.metadata,
+      reasoning: undefined, // Remove reasoning from metadata as it has its own field
+    } : {};
+
+    const { error } = await this.supabase.from('chat_messages').insert({
+      conversation_id: conversationId,
+      role: message.role,
+      content:
+        typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
+      metadata: Object.keys(metadataWithoutReasoning).length > 0 ? metadataWithoutReasoning as Json : null,
+      reasoning: message.metadata?.reasoning ? JSON.stringify(message.metadata.reasoning) : null,
+    });
 
     if (error) {
       console.error('Error saving message:', error);
@@ -158,19 +163,14 @@ export class ChatRepository {
   /**
    * Save context snapshot for a conversation
    */
-  async saveContextSnapshot(
-    conversationId: string,
-    context: FinancialContext
-  ): Promise<void> {
-    const { error } = await this.supabase
-      .from('chat_context_snapshots')
-      .insert({
-        conversation_id: conversationId,
-        recent_transactions: context.recentTransactions as any,
-        account_balances: context.accountBalances as any,
-        upcoming_events: context.upcomingEvents as any,
-        user_preferences: context.userPreferences as any,
-      });
+  async saveContextSnapshot(conversationId: string, context: FinancialContext): Promise<void> {
+    const { error } = await this.supabase.from('chat_context_snapshots').insert({
+      conversation_id: conversationId,
+      recent_transactions: context.recentTransactions as any,
+      account_balances: context.accountBalances as any,
+      upcoming_events: context.upcomingEvents as any,
+      user_preferences: context.userPreferences as any,
+    });
 
     if (error) {
       console.error('Error saving context snapshot:', error);
@@ -260,13 +260,16 @@ export class ChatRepository {
    * Map database message to domain model
    */
   private mapMessage(data: any): ChatMessage {
+    const parsedReasoning = data.reasoning ? JSON.parse(data.reasoning) : undefined;
     return {
       id: data.id,
       role: data.role,
       content: data.content,
       timestamp: data.created_at,
-      metadata: data.metadata || {},
-      reasoning: data.reasoning || undefined,
+      metadata: {
+        ...(data.metadata || {}),
+        reasoning: parsedReasoning,
+      },
     };
   }
 }

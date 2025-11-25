@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   sanitizeFinancialEventData,
+  type ValidationError,
   validateFinancialEventForInsert,
   validateFinancialEventForUpdate,
 } from '@/lib/validation/financial-events-validator';
@@ -35,7 +36,9 @@ describe('Financial Events Integration', () => {
     const sanitized = sanitizeFinancialEventData({ ...event, userId: testUser.id });
     const validation = validateFinancialEventForInsert(sanitized);
     if (!validation.valid) {
-      throw new Error(validation.errors.map((err) => `${err.field}: ${err.message}`).join(', '));
+      throw new Error(
+        validation.errors.map((err: ValidationError) => `${err.field}: ${err.message}`).join(', ')
+      );
     }
 
     if (
@@ -249,7 +252,7 @@ describe('Financial Events Integration', () => {
     const sanitized = sanitizeFinancialEventData({ amount: 100 });
     const validation = validateFinancialEventForInsert(sanitized);
     expect(validation.valid).toBe(false);
-    expect(validation.errors.some((err) => err.field === 'title')).toBe(true);
+    expect(validation.errors.some((err: ValidationError) => err.field === 'title')).toBe(true);
   });
 
   it('reprova eventos com data final anterior à inicial', () => {
@@ -263,7 +266,7 @@ describe('Financial Events Integration', () => {
     });
     const validation = validateFinancialEventForInsert(sanitized);
     expect(validation.valid).toBe(false);
-    expect(validation.errors.some((err) => err.field === 'end')).toBe(true);
+    expect(validation.errors.some((err: ValidationError) => err.field === 'end')).toBe(true);
   });
 
   it('filtra eventos por intervalo de datas', async () => {

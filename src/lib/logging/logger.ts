@@ -58,7 +58,10 @@ export class Logger {
     this.config = { ...this.config, ...config };
   }
 
-  getLogs(): LogEntry[] {
+  getLogs(level?: LogLevel): LogEntry[] {
+    if (level) {
+      return this.logs.filter((log) => log.level === level);
+    }
     return [...this.logs];
   }
 

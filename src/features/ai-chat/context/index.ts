@@ -1,2 +1,2 @@
-export * from './ContextRetriever';
 export * from './ContextFormatter';
+export * from './ContextRetriever';

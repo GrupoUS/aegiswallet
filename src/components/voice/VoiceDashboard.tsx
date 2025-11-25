@@ -1,20 +1,14 @@
-import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, History, Settings, Volume2 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useAccessibility } from "@/components/accessibility/AccessibilityProvider";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VoiceIndicator } from "@/components/voice/VoiceIndicator";
-import { VoiceResponse } from "@/components/voice/VoiceResponse";
-import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
-import type { ProcessedCommand } from "@/lib/voiceCommandProcessor";
-import { processVoiceCommand } from "@/lib/voiceCommandProcessor";
+import { useNavigate } from '@tanstack/react-router';
+import { ChevronRight, History, Settings, Volume2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { VoiceIndicator } from '@/components/voice/VoiceIndicator';
+import { VoiceResponse } from '@/components/voice/VoiceResponse';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import type { ProcessedCommand } from '@/lib/voiceCommandProcessor';
+import { processVoiceCommand } from '@/lib/voiceCommandProcessor';
 
 interface VoiceDashboardProps {
   className?: string;
@@ -36,8 +30,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     stopListening,
   } = useVoiceRecognition({});
 
-  const [currentResponse, setCurrentResponse] =
-    useState<ProcessedCommand | null>(null);
+  const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
   const [commandHistory, setCommandHistory] = useState<
     {
       id: string;
@@ -112,9 +105,9 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
   // Otimizar funções com useCallback
   const speakResponse = useCallback((text: string) => {
-    if ("speechSynthesis" in window) {
+    if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "pt-BR";
+      utterance.lang = 'pt-BR';
       utterance.rate = 0.9;
       speechSynthesis.speak(utterance);
     }
@@ -132,12 +125,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) {
-      return "Bom dia";
+      return 'Bom dia';
     }
     if (hour < 18) {
-      return "Boa tarde";
+      return 'Boa tarde';
     }
-    return "Boa noite";
+    return 'Boa noite';
   }, []);
 
   // Otimizar ações rápidas com useMemo
@@ -145,42 +138,42 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     () => [
       {
         action: () => {
-          navigate({ to: "/saldo" });
-          announceToScreenReader("Navegando para página de saldo");
+          navigate({ to: '/saldo' });
+          announceToScreenReader('Navegando para página de saldo');
         },
-        description: "Ver seu saldo e transações",
-        icon: "💰",
-        title: "Saldo",
+        description: 'Ver seu saldo e transações',
+        icon: '💰',
+        title: 'Saldo',
       },
       {
         action: () => {
-          navigate({ to: "/dashboard" });
-          announceToScreenReader("Navegando para dashboard com orçamentos");
+          navigate({ to: '/dashboard' });
+          announceToScreenReader('Navegando para dashboard com orçamentos');
         },
-        description: "Analisar seu orçamento mensal",
-        icon: "📊",
-        title: "Orçamento",
+        description: 'Analisar seu orçamento mensal',
+        icon: '📊',
+        title: 'Orçamento',
       },
       {
         action: () => {
-          navigate({ to: "/contas" });
-          announceToScreenReader("Navegando para página de contas");
+          navigate({ to: '/contas' });
+          announceToScreenReader('Navegando para página de contas');
         },
-        description: "Gerenciar suas contas e pagamentos",
-        icon: "📄",
-        title: "Contas",
+        description: 'Gerenciar suas contas e pagamentos',
+        icon: '📄',
+        title: 'Contas',
       },
       {
         action: () => {
-          navigate({ to: "/dashboard" });
-          announceToScreenReader("Navegando para página principal");
+          navigate({ to: '/dashboard' });
+          announceToScreenReader('Navegando para página principal');
         },
-        description: "Fazer transferências PIX",
-        icon: "🚀",
-        title: "PIX",
+        description: 'Fazer transferências PIX',
+        icon: '🚀',
+        title: 'PIX',
       },
     ],
-    [navigate, announceToScreenReader],
+    [navigate, announceToScreenReader]
   );
 
   // Otimizar histórico de comandos com useMemo
@@ -194,9 +187,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         {/* Header */}
         <div className="space-y-2 text-center">
           <h1 className="font-bold text-3xl text-foreground">{greeting}! 👋</h1>
-          <p className="text-lg text-muted-foreground">
-            Como posso ajudar com suas finanças hoje?
-          </p>
+          <p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
         </div>
 
         {/* Main Voice Interface */}
@@ -229,10 +220,10 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
                         confidence > 0.8
-                          ? "bg-success"
+                          ? 'bg-success'
                           : confidence > 0.6
-                            ? "bg-warning"
-                            : "bg-destructive"
+                            ? 'bg-warning'
+                            : 'bg-destructive'
                       }`}
                       style={{ width: `${confidence * 100}%` }}
                     />
@@ -309,16 +300,12 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
                   >
                     <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-info" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 text-sm">
-                        "{item.command}"
-                      </p>
-                      <p className="mt-1 text-gray-600 text-sm">
-                        {item.response.message}
-                      </p>
+                      <p className="font-medium text-gray-900 text-sm">"{item.command}"</p>
+                      <p className="mt-1 text-gray-600 text-sm">{item.response.message}</p>
                       <p className="mt-1 text-gray-400 text-xs">
-                        {item.timestamp.toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        {item.timestamp.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </p>
                     </div>
@@ -336,7 +323,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             className="h-14 w-14 rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Configurações de acessibilidade"
             onClick={() => {
-              announceToScreenReader("Abrindo configurações de acessibilidade");
+              announceToScreenReader('Abrindo configurações de acessibilidade');
               // Implementar navegação para configurações quando disponível
             }}
             title="Configurações de acessibilidade"
@@ -350,10 +337,10 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
           type="button"
           className="skip-link"
           onClick={() => {
-            const mainContent = document.querySelector("main");
+            const mainContent = document.querySelector('main');
             if (mainContent) {
               mainContent.focus();
-              announceToScreenReader("Pulado para conteúdo principal");
+              announceToScreenReader('Pulado para conteúdo principal');
             }
           }}
         >

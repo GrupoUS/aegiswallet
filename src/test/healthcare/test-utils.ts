@@ -4,6 +4,7 @@ export interface TestUtils {
   checkMockRateLimit: ReturnType<typeof vi.fn>;
   createMockAuditLog: ReturnType<typeof vi.fn>;
   createMockLGPDConsent: ReturnType<typeof vi.fn>;
+  createMockVoiceCommand: ReturnType<typeof vi.fn>;
   encryptMockClientData: ReturnType<typeof vi.fn>;
   encryptMockData: ReturnType<typeof vi.fn>;
   generateMockCSRFToken: ReturnType<typeof vi.fn>;
@@ -33,6 +34,11 @@ export const ensureTestUtils = (): TestUtils => {
       ip: '127.0.0.1',
       timestamp: new Date().toISOString(),
       version: '1.0',
+    }),
+    createMockVoiceCommand: vi.fn().mockReturnValue({
+      command: 'test command',
+      confidence: 0.95,
+      timestamp: new Date().toISOString(),
     }),
     encryptMockClientData: vi.fn().mockResolvedValue('encrypted-client-data'),
     encryptMockData: vi.fn().mockResolvedValue('encrypted-payload'),

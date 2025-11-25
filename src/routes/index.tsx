@@ -13,7 +13,7 @@ function Index() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ search: { redirect: '/' }, to: '/login' });
+      navigate({ search: { error: undefined, redirect: '/' }, to: '/login' });
     }
   }, [isAuthenticated, isLoading, navigate]);
 

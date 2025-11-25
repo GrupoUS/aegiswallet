@@ -83,8 +83,8 @@ export class BelvoApiClient {
       id: account.id,
       institution: account.institution_name || 'Unknown',
       lastUpdated: account.updated_at || new Date().toISOString(),
-      name: account.name,
-      type: (account.type as 'checking' | 'savings' | 'credit') || 'checking',
+      name: account.account_holder_name || account.institution_name || 'Unknown',
+      type: (account.account_type as 'checking' | 'savings' | 'credit') || 'checking',
     }));
   }
 

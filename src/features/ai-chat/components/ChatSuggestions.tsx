@@ -1,8 +1,8 @@
-import { ArrowRight, Sparkles } from "lucide-react";
-import { Suggestion } from "@/components/ai-elements";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import type { ChatSuggestion } from "../domain/types";
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { Suggestion } from '@/components/ai-elements';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { ChatSuggestion } from '../domain/types';
 
 interface ChatSuggestionsProps {
   suggestions: ChatSuggestion[];
@@ -10,11 +10,7 @@ interface ChatSuggestionsProps {
   className?: string;
 }
 
-export function ChatSuggestions({
-  suggestions,
-  onSelect,
-  className,
-}: ChatSuggestionsProps) {
+export function ChatSuggestions({ suggestions, onSelect, className }: ChatSuggestionsProps) {
   if (suggestions.length === 0) return null;
 
   return (

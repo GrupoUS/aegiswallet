@@ -33,17 +33,18 @@ export class DataIngestionPipeline {
   }
 
   async syncAllAccounts(): Promise<void> {
-    const { data: users } = await supabase.from('user_bank_links').select('*');
-    if (!users) {
+    const { data: connections } = await supabase.from('bank_connections').select('*');
+    if (!connections) {
       return;
     }
 
     const connector = getOpenBankingConnector();
 
-    for (const user of users) {
-      const accounts = await connector.listAccounts(user.link_id);
+    for (const connection of connections) {
+      if (!connection.belvo_link_id || !connection.user_id) continue;
+      const accounts = await connector.listAccounts(connection.belvo_link_id);
       for (const account of accounts) {
-        await this.syncTransactions(account.id, user.user_id);
+        await this.syncTransactions(account.id, connection.user_id);
       }
     }
   }

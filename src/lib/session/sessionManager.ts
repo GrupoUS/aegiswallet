@@ -302,7 +302,10 @@ export class SessionManager {
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     path.setAttribute('stroke-width', '2');
-    path.setAttribute('d', 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z');
+    path.setAttribute(
+      'd',
+      'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
+    );
     icon.appendChild(path);
 
     const title = document.createElement('h3');
@@ -330,12 +333,14 @@ export class SessionManager {
 
     const extendBtn = document.createElement('button');
     extendBtn.id = 'session-extend-btn';
-    extendBtn.className = 'flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    extendBtn.className =
+      'flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500';
     extendBtn.textContent = 'Continuar Sessão';
 
     const logoutBtn = document.createElement('button');
     logoutBtn.id = 'session-logout-btn';
-    logoutBtn.className = 'flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500';
+    logoutBtn.className =
+      'flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500';
     logoutBtn.textContent = 'Sair Agora';
 
     buttonsContainer.appendChild(extendBtn);

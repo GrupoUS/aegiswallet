@@ -690,13 +690,15 @@ export class FraudDetectionService {
     // Update cache and database
     this.userProfiles.set(event.userId, profile);
 
-    await supabase.from('user_behavior_profiles').upsert({
-      known_devices: this.serializeKnownDevices(profile.knownDevices),
-      known_locations: this.serializeKnownLocations(profile.knownLocations),
-      last_updated: profile.lastUpdated.toISOString(),
-      typical_behavior: this.serializeTypicalBehavior(profile.typicalBehavior),
-      user_id: profile.userId,
-    });
+    await (supabase as unknown as { from: (table: string) => unknown })
+      .from('user_behavior_profiles')
+      .upsert({
+        known_devices: this.serializeKnownDevices(profile.knownDevices),
+        known_locations: this.serializeKnownLocations(profile.knownLocations),
+        last_updated: profile.lastUpdated.toISOString(),
+        typical_behavior: this.serializeTypicalBehavior(profile.typicalBehavior),
+        user_id: profile.userId,
+      });
   }
 
   /**
@@ -865,18 +867,20 @@ export class FraudDetectionService {
     }
   ): Promise<void> {
     try {
-      await supabase.from('fraud_detection_logs').insert({
-        created_at: new Date().toISOString(),
-        ip_address: event.ipAddress,
-        location: this.toJsonValue(event.location),
-        metadata: this.toJsonValue(event.metadata),
-        requires_review: result.requiresReview,
-        risk_level: result.riskLevel,
-        risk_score: result.riskScore,
-        should_block: result.shouldBlock,
-        user_agent: event.userAgent,
-        user_id: event.userId,
-      });
+      await (supabase as unknown as { from: (table: string) => unknown })
+        .from('fraud_detection_logs')
+        .insert({
+          created_at: new Date().toISOString(),
+          ip_address: _event.ipAddress,
+          location: this.toJsonValue(_event.location),
+          metadata: this.toJsonValue(_event.metadata),
+          requires_review: _result.requiresReview,
+          risk_level: _result.riskLevel,
+          risk_score: _result.riskScore,
+          should_block: _result.shouldBlock,
+          user_agent: _event.userAgent,
+          user_id: _event.userId,
+        });
     } catch (_error) {}
   }
 

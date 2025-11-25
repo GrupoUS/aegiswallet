@@ -117,11 +117,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
       'https://unpkg.com',
       'https://js.stripe.com', // For future payment integration
     ],
-    styleSrc: [
-      "'self'",
-      'https://fonts.googleapis.com',
-      'https://cdn.jsdelivr.net',
-    ],
+    styleSrc: ["'self'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
     upgradeInsecureRequests: true,
     workerSrc: ["'self'", 'blob:'],
   },

@@ -25,8 +25,8 @@ import { useBankAccounts } from '@/hooks/useBankAccounts';
 import type { FinancialEvent } from '@/types/financial-events';
 
 export default function TransactionsList() {
-  const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
-  const { mutate: deleteTransaction } = useDeleteTransaction();
+  const { transactions, isLoading, refetch } = useTransactions({ limit: 20 });
+  const { deleteTransaction } = useDeleteTransaction();
   const { updateBalance, accounts } = useBankAccounts();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export default function TransactionsList() {
       {
         onSuccess: async () => {
           // Revert balance if possible
-          if (transaction) {
+          if (transaction?.account_id) {
             const account = accounts.find((a) => a.id === transaction.account_id);
             if (account) {
               // Inverse amount: subtract transaction amount (which is signed)
@@ -140,7 +140,7 @@ export default function TransactionsList() {
                     <p className="font-medium leading-none">{transaction.description}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>
-                        {format(new Date(transaction.date), 'dd/MM/yyyy', {
+                        {format(new Date(transaction.date ?? transaction.start), 'dd/MM/yyyy', {
                           locale: ptBR,
                         })}
                       </span>

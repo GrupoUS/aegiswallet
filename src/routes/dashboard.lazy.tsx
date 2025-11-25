@@ -87,7 +87,7 @@ export function Dashboard() {
   const { statistics } = useFinancialEvents({ status: 'all' });
   const { summary, loading: summaryLoading } = useFinancialSummary();
 
-  const { data: recentTransactions } = useTransactions({ limit: 5 });
+  const { transactions: recentTransactions } = useTransactions({ limit: 5 });
 
   // Calculate Investments Balance
   const investmentsBalance = useMemo(() => {
@@ -100,18 +100,18 @@ export function Dashboard() {
   // Since we don't have a direct hook for "PIX Sent Today", we'll assume we might fetch it via transactions if needed.
   // For now, let's use useTransactions with filters for today.
   const today = new Date().toISOString().split('T')[0];
-  const { data: pixTransactions } = useTransactions({
+  const { transactions: pixTransactions } = useTransactions({
     endDate: today,
     startDate: today,
     type: 'pix',
   });
 
   const pixSentToday = useMemo(() => {
-    const list = (pixTransactions as FinancialEvent[] | undefined) ?? [];
+    const list = pixTransactions ?? [];
+    // Already filtered by type: 'pix' in query, just check if it's an expense
     return list
       .filter(
-        (transaction) =>
-          transaction.type === 'pix' && (transaction.amount < 0 || transaction.is_expense)
+        (transaction) => transaction.amount < 0 || (transaction as FinancialEvent).is_expense
       )
       .reduce((sum, transaction) => sum + Math.abs(Number(transaction.amount)), 0);
   }, [pixTransactions]);
@@ -212,7 +212,7 @@ export function Dashboard() {
                   <div>
                     <p className="font-medium truncate max-w-[150px]">{transaction.description}</p>
                     <p className="text-muted-foreground text-sm">
-                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                      {new Date(transaction.date ?? transaction.start).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <FinancialAmount amount={Number(transaction.amount)} />

@@ -11,10 +11,24 @@ interface UserProfile {
   last_login?: string;
   created_at: string;
   updated_at?: string;
+  user_preferences?: UserPreferences[];
 }
 
 interface UserPreferences {
   user_id: string;
+  accessibility_high_contrast?: boolean;
+  accessibility_large_text?: boolean;
+  accessibility_screen_reader?: boolean;
+  autonomy_level?: number;
+  currency?: string;
+  language?: string;
+  email_notifications?: boolean;
+  notifications_enabled?: boolean;
+  push_notifications?: boolean;
+  theme?: string;
+  timezone?: string;
+  voice_commands_enabled?: boolean;
+  voice_feedback?: boolean;
   [key: string]: unknown;
 }
 

@@ -232,8 +232,8 @@ export class User {
     id: string;
     email: string;
     full_name: string | null;
-    phone?: string;
-    cpf?: string;
+    phone?: string | null;
+    cpf?: string | null;
     birth_date?: string | Date | null;
     avatar_url?: string | null;
     created_at: string | Date;

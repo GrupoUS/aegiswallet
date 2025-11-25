@@ -17,7 +17,6 @@
  * @module nlu/nluEngine
  */
 
-import { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { createEntityExtractor } from '@/lib/nlu/entityExtractor';
 import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
 import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';

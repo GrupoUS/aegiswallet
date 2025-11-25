@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { FinancialContext } from './ContextRetriever';
+import type { FinancialContext, Transaction } from './ContextRetriever';
 
 export class ContextFormatter {
   /**
@@ -10,21 +10,21 @@ export class ContextFormatter {
     const sections: string[] = [];
 
     // Summary section
-    sections.push(this.formatSummary(context));
+    sections.push(ContextFormatter.formatSummary(context));
 
     // Accounts section
     if (context.accountBalances.length > 0) {
-      sections.push(this.formatAccounts(context.accountBalances));
+      sections.push(ContextFormatter.formatAccounts(context.accountBalances));
     }
 
     // Transactions section
     if (context.recentTransactions.length > 0) {
-      sections.push(this.formatTransactions(context.recentTransactions));
+      sections.push(ContextFormatter.formatTransactions(context.recentTransactions));
     }
 
     // Events section
     if (context.upcomingEvents.length > 0) {
-      sections.push(this.formatEvents(context.upcomingEvents));
+      sections.push(ContextFormatter.formatEvents(context.upcomingEvents));
     }
 
     return sections.join('\n\n');
@@ -40,10 +40,10 @@ export class ContextFormatter {
     return `
 ## Resumo Financeiro do Usuário
 
-- Saldo Total: ${this.formatCurrency(summary.totalBalance, currency)}
-- Receita Mensal: ${this.formatCurrency(summary.monthlyIncome, currency)}
-- Despesas Mensais: ${this.formatCurrency(summary.monthlyExpenses, currency)}
-- Saldo Líquido: ${this.formatCurrency(summary.monthlyIncome - summary.monthlyExpenses, currency)}
+- Saldo Total: ${ContextFormatter.formatCurrency(summary.totalBalance, currency)}
+- Receita Mensal: ${ContextFormatter.formatCurrency(summary.monthlyIncome, currency)}
+- Despesas Mensais: ${ContextFormatter.formatCurrency(summary.monthlyExpenses, currency)}
+- Saldo Líquido: ${ContextFormatter.formatCurrency(summary.monthlyIncome - summary.monthlyExpenses, currency)}
 - Contas Pendentes: ${summary.upcomingBillsCount} conta(s)
 `.trim();
   }
@@ -53,7 +53,10 @@ export class ContextFormatter {
    */
   private static formatAccounts(accounts: any[]): string {
     const accountList = accounts
-      .map((acc) => `  - ${acc.accountName}: ${this.formatCurrency(acc.balance, acc.currency)}`)
+      .map(
+        (acc) =>
+          `  - ${acc.accountName}: ${ContextFormatter.formatCurrency(acc.balance, acc.currency)}`
+      )
       .join('\n');
 
     return `
@@ -68,16 +71,19 @@ ${accountList}
    */
   private static formatTransactions(transactions: any[]): string {
     // Group by category
-    const byCategory = transactions.reduce((acc, t) => {
-      if (!acc[t.category]) acc[t.category] = [];
-      acc[t.category].push(t);
-      return acc;
-    }, {} as Record<string, any[]>);
+    const byCategory = transactions.reduce(
+      (acc, t) => {
+        if (!acc[t.category]) acc[t.category] = [];
+        acc[t.category].push(t);
+        return acc;
+      },
+      {} as Record<string, Transaction[]>
+    );
 
-    const categoryStats = Object.entries(byCategory)
+    const categoryStats = (Object.entries(byCategory) as [string, Transaction[]][])
       .map(([category, txs]) => {
-        const total = txs.reduce((sum, t) => sum + t.amount, 0);
-        return `  - ${this.getCategoryName(category)}: ${txs.length} transações, total de ${this.formatCurrency(total, 'BRL')}`;
+        const total = txs.reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+        return `  - ${ContextFormatter.getCategoryName(category)}: ${txs.length} transações, total de ${ContextFormatter.formatCurrency(total, 'BRL')}`;
       })
       .join('\n');
 
@@ -87,7 +93,7 @@ ${accountList}
       .map((t) => {
         const date = format(new Date(t.date), 'dd/MM', { locale: ptBR });
         const type = t.type === 'income' ? '+' : '-';
-        return `  - ${date}: ${type}${this.formatCurrency(Math.abs(t.amount), 'BRL')} - ${t.description}`;
+        return `  - ${date}: ${type}${ContextFormatter.formatCurrency(Math.abs(t.amount), 'BRL')} - ${t.description}`;
       })
       .join('\n');
 
@@ -111,7 +117,7 @@ ${recentList}
       .map((e) => {
         const date = format(new Date(e.date), 'dd/MM/yyyy', { locale: ptBR });
         const status = e.status === 'pending' ? '⏳' : '✅';
-        return `  - ${status} ${date}: ${e.title} - ${this.formatCurrency(e.amount, 'BRL')}`;
+        return `  - ${status} ${date}: ${e.title} - ${ContextFormatter.formatCurrency(e.amount, 'BRL')}`;
       })
       .join('\n');
 

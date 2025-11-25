@@ -1,14 +1,11 @@
 import { z } from 'zod';
 import type {
   BrazilianEventType,
+  FinancialEventCategory,
   FinancialEventMetadata,
   InstallmentInfo,
 } from '@/types/financial.interfaces';
-import type {
-  FinancialEvent,
-  FinancialEventCategory,
-  FinancialEventType,
-} from '@/types/financial-events';
+import type { FinancialEvent, FinancialEventType } from '@/types/financial-events';
 
 export type { FinancialEventCategory };
 

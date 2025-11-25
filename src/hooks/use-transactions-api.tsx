@@ -1,12 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
 
 interface Transaction {
   id: string;
   user_id: string;
   amount: number;
-  type: "transfer" | "debit" | "credit" | "pix" | "boleto";
-  status: "cancelled" | "failed" | "pending" | "posted";
+  type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status: 'cancelled' | 'failed' | 'pending' | 'posted';
   description?: string;
   category_id?: string;
   account_id?: string;
@@ -38,20 +38,21 @@ export function useTransactions(filters?: {
   offset?: number;
   categoryId?: string;
   accountId?: string;
-  type?: "transfer" | "debit" | "credit" | "pix" | "boleto";
-  status?: "cancelled" | "failed" | "pending" | "posted";
+  type?: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status?: 'cancelled' | 'failed' | 'pending' | 'posted';
   startDate?: string;
   endDate?: string;
   search?: string;
 }) {
   return useQuery({
-    queryKey: ["transactions", filters],
+    queryKey: ['transactions', filters],
     queryFn: async () => {
-      const response = await apiClient.get<
-        TransactionApiResponse<Transaction[]>
-      >("/v1/transactions", {
-        params: filters,
-      });
+      const response = await apiClient.get<TransactionApiResponse<Transaction[]>>(
+        '/v1/transactions',
+        {
+          params: filters,
+        }
+      );
       return response.data;
     },
   });
@@ -67,17 +68,18 @@ export function useCreateTransaction() {
       description?: string;
       fromAccountId: string;
       toAccountId?: string;
-      type: "transfer" | "debit" | "credit" | "pix" | "boleto";
-      status?: "cancelled" | "failed" | "pending" | "posted";
+      type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+      status?: 'cancelled' | 'failed' | 'pending' | 'posted';
       metadata?: Record<string, unknown>;
     }) => {
-      const response = await apiClient.post<
-        TransactionApiResponse<Transaction>
-      >("/v1/transactions", input);
+      const response = await apiClient.post<TransactionApiResponse<Transaction>>(
+        '/v1/transactions',
+        input
+      );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
 }
@@ -91,26 +93,27 @@ export function useDeleteTransaction() {
       return input.id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
 }
 
 export function useTransactionsStats(
-  period?: "week" | "month" | "quarter" | "year",
-  accountId?: string,
+  period?: 'week' | 'month' | 'quarter' | 'year',
+  accountId?: string
 ) {
   return useQuery({
-    queryKey: ["transactions", "stats", period, accountId],
+    queryKey: ['transactions', 'stats', period, accountId],
     queryFn: async () => {
-      const response = await apiClient.get<
-        TransactionApiResponse<TransactionStats>
-      >("/v1/transactions/statistics", {
-        params: {
-          period: period || "month",
-          accountId,
-        },
-      });
+      const response = await apiClient.get<TransactionApiResponse<TransactionStats>>(
+        '/v1/transactions/statistics',
+        {
+          params: {
+            period: period || 'month',
+            accountId,
+          },
+        }
+      );
       return response.data;
     },
   });

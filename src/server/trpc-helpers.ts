@@ -1,14 +1,20 @@
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { Context } from '@/server/context';
-import { generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
 
 // Hono-based RPC helpers for AegisWallet
 export type AegisContext = Context & {
   Variables: {
-    user?: Context['session']['user'];
+    auth: {
+      user: {
+        id: string;
+        email: string;
+        role?: string;
+      };
+      supabase: any;
+    };
   };
 };
 
@@ -28,11 +34,11 @@ const rateLimitMiddleware = createMiddleware(async (c, next) => {
 
 // Authentication middleware for Hono
 export const authMiddleware = createMiddleware<AegisContext>(async (c, next) => {
-  const session = c.get('session');
-  if (!session?.user) {
+  const auth = c.get('auth');
+  if (!auth?.user) {
     return c.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401);
   }
-  c.set('user', session.user);
+  c.set('user', auth.user);
   await next();
 });
 

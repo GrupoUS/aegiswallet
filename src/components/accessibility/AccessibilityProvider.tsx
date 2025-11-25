@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 interface AccessibilitySettings {
   highContrast: boolean;
@@ -15,28 +15,21 @@ interface AccessibilityContextType {
   settings: AccessibilitySettings;
   updateSetting: <K extends keyof AccessibilitySettings>(
     key: K,
-    value: AccessibilitySettings[K],
+    value: AccessibilitySettings[K]
   ) => void;
-  announceToScreenReader: (
-    message: string,
-    priority?: "polite" | "assertive",
-  ) => void;
+  announceToScreenReader: (message: string, priority?: 'polite' | 'assertive') => void;
   isKeyboardUser: boolean;
   showSettings: boolean;
   setShowSettings: (value: boolean) => void;
 }
 
-const AccessibilityContext = createContext<AccessibilityContextType | null>(
-  null,
-);
+const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
 
 interface AccessibilityProviderProps {
   children: ReactNode;
 }
 
-export function AccessibilityProvider({
-  children,
-}: AccessibilityProviderProps) {
+export function AccessibilityProvider({ children }: AccessibilityProviderProps) {
   const [settings, setSettings] = useState<AccessibilitySettings>({
     announceChanges: true,
     highContrast: false,
@@ -52,18 +45,14 @@ export function AccessibilityProvider({
   // Detect user's accessibility preferences from system
   useEffect(() => {
     // Detect high contrast mode
-    const highContrastMediaQuery = window.matchMedia(
-      "(prefers-contrast: high)",
-    );
+    const highContrastMediaQuery = window.matchMedia('(prefers-contrast: high)');
     setSettings((prev) => ({
       ...prev,
       highContrast: highContrastMediaQuery.matches,
     }));
 
     // Detect reduced motion preference
-    const reducedMotionMediaQuery = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    );
+    const reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setSettings((prev) => ({
       ...prev,
       reducedMotion: reducedMotionMediaQuery.matches,
@@ -72,17 +61,9 @@ export function AccessibilityProvider({
     // Detect if screen reader is being used
     const detectScreenReader = () => {
       const userAgent = navigator.userAgent.toLowerCase();
-      const screenReaderPatterns = [
-        /nvda/,
-        /jaws/,
-        /voiceover/,
-        /talkback/,
-        /chromevox/,
-      ];
+      const screenReaderPatterns = [/nvda/, /jaws/, /voiceover/, /talkback/, /chromevox/];
 
-      const hasScreenReader = screenReaderPatterns.some((pattern) =>
-        pattern.test(userAgent),
-      );
+      const hasScreenReader = screenReaderPatterns.some((pattern) => pattern.test(userAgent));
       setSettings((prev) => ({ ...prev, screenReaderMode: hasScreenReader }));
     };
 
@@ -97,21 +78,12 @@ export function AccessibilityProvider({
       setSettings((prev) => ({ ...prev, reducedMotion: e.matches }));
     };
 
-    highContrastMediaQuery.addEventListener("change", handleHighContrastChange);
-    reducedMotionMediaQuery.addEventListener(
-      "change",
-      handleReducedMotionChange,
-    );
+    highContrastMediaQuery.addEventListener('change', handleHighContrastChange);
+    reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange);
 
     return () => {
-      highContrastMediaQuery.removeEventListener(
-        "change",
-        handleHighContrastChange,
-      );
-      reducedMotionMediaQuery.removeEventListener(
-        "change",
-        handleReducedMotionChange,
-      );
+      highContrastMediaQuery.removeEventListener('change', handleHighContrastChange);
+      reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange);
     };
   }, []);
 
@@ -120,14 +92,14 @@ export function AccessibilityProvider({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only detect keyboard usage for actual navigation keys
       const navigationKeys = [
-        "Tab",
-        "Enter",
-        "Space",
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        "Escape",
+        'Tab',
+        'Enter',
+        'Space',
+        'ArrowUp',
+        'ArrowDown',
+        'ArrowLeft',
+        'ArrowRight',
+        'Escape',
       ];
       if (navigationKeys.includes(e.key)) {
         setIsKeyboardUser(true);
@@ -139,12 +111,12 @@ export function AccessibilityProvider({
       setIsKeyboardUser(false);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleMouseDown);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleMouseDown);
     };
   }, []);
 
@@ -153,61 +125,55 @@ export function AccessibilityProvider({
     const html = document.documentElement;
 
     // Apply CSS classes for accessibility settings
-    html.classList.toggle("high-contrast", settings.highContrast);
-    html.classList.toggle("large-text", settings.largeText);
-    html.classList.toggle("reduce-motion", settings.reducedMotion);
-    html.classList.toggle("keyboard-navigation", settings.keyboardMode);
-    html.classList.toggle("voice-navigation", settings.voiceNavigation);
+    html.classList.toggle('high-contrast', settings.highContrast);
+    html.classList.toggle('large-text', settings.largeText);
+    html.classList.toggle('reduce-motion', settings.reducedMotion);
+    html.classList.toggle('keyboard-navigation', settings.keyboardMode);
+    html.classList.toggle('voice-navigation', settings.voiceNavigation);
 
     // Add Brazilian accessibility attributes
-    html.setAttribute("lang", "pt-BR");
-    html.setAttribute("xml:lang", "pt-BR");
+    html.setAttribute('lang', 'pt-BR');
+    html.setAttribute('xml:lang', 'pt-BR');
 
     // Add accessibility metadata for Brazilian e-MAG compliance
     const existingMeta = document.querySelector('meta[name="eMAG-compliance"]');
     if (!existingMeta) {
-      const meta = document.createElement("meta");
-      meta.name = "eMAG-compliance";
-      meta.content =
-        "Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1";
+      const meta = document.createElement('meta');
+      meta.name = 'eMAG-compliance';
+      meta.content = 'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
       document.head.appendChild(meta);
     }
 
     // Add WCAG compliance meta
     const wcagMeta = document.querySelector('meta[name="wcag-compliance"]');
     if (!wcagMeta) {
-      const meta = document.createElement("meta");
-      meta.name = "wcag-compliance";
-      meta.content = "WCAG 2.1 AA";
+      const meta = document.createElement('meta');
+      meta.name = 'wcag-compliance';
+      meta.content = 'WCAG 2.1 AA';
       document.head.appendChild(meta);
     }
   }, [settings]);
 
   const updateSetting = <K extends keyof AccessibilitySettings>(
     key: K,
-    value: AccessibilitySettings[K],
+    value: AccessibilitySettings[K]
   ) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
 
     // Save to localStorage for persistence
     try {
       const savedSettings = JSON.parse(
-        localStorage.getItem("aegis-accessibility-settings") || "{}",
+        localStorage.getItem('aegis-accessibility-settings') || '{}'
       );
       savedSettings[key] = value;
-      localStorage.setItem(
-        "aegis-accessibility-settings",
-        JSON.stringify(savedSettings),
-      );
+      localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
     } catch (_error) {}
   };
 
   // Load saved settings from localStorage
   useEffect(() => {
     try {
-      const savedSettings = localStorage.getItem(
-        "aegis-accessibility-settings",
-      );
+      const savedSettings = localStorage.getItem('aegis-accessibility-settings');
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         setSettings((prev) => ({ ...prev, ...parsed }));
@@ -216,24 +182,19 @@ export function AccessibilityProvider({
   }, []);
 
   // Screen reader announcements
-  const announceToScreenReader = (
-    message: string,
-    priority: "polite" | "assertive" = "polite",
-  ) => {
+  const announceToScreenReader = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
     if (!settings.announceChanges || !settings.screenReaderMode) {
       return;
     }
 
     // Create or get announcement element
-    let announcementElement = document.getElementById(
-      "screen-reader-announcements",
-    );
+    let announcementElement = document.getElementById('screen-reader-announcements');
     if (!announcementElement) {
-      announcementElement = document.createElement("div");
-      announcementElement.id = "screen-reader-announcements";
-      announcementElement.setAttribute("aria-live", priority);
-      announcementElement.setAttribute("aria-atomic", "true");
-      announcementElement.className = "sr-only";
+      announcementElement = document.createElement('div');
+      announcementElement.id = 'screen-reader-announcements';
+      announcementElement.setAttribute('aria-live', priority);
+      announcementElement.setAttribute('aria-atomic', 'true');
+      announcementElement.className = 'sr-only';
       document.body.appendChild(announcementElement);
     }
 
@@ -243,7 +204,7 @@ export function AccessibilityProvider({
     // Clear after announcement
     setTimeout(() => {
       if (announcementElement) {
-        announcementElement.textContent = "";
+        announcementElement.textContent = '';
       }
     }, 1000);
   };
@@ -259,19 +220,13 @@ export function AccessibilityProvider({
     updateSetting,
   };
 
-  return (
-    <AccessibilityContext.Provider value={value}>
-      {children}
-    </AccessibilityContext.Provider>
-  );
+  return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
 }
 
 export function useAccessibility() {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error(
-      "useAccessibility must be used within an AccessibilityProvider",
-    );
+    throw new Error('useAccessibility must be used within an AccessibilityProvider');
   }
   return context;
 }
@@ -279,12 +234,12 @@ export function useAccessibility() {
 // Utility component for accessibility announcements
 interface ScreenReaderAnnouncementProps {
   message: string;
-  priority?: "polite" | "assertive";
+  priority?: 'polite' | 'assertive';
 }
 
 export function ScreenReaderAnnouncement({
   message,
-  priority = "polite",
+  priority = 'polite',
 }: ScreenReaderAnnouncementProps) {
   const { announceToScreenReader } = useAccessibility();
 
@@ -301,10 +256,10 @@ export function SkipToMainContent() {
     <button
       type="button"
       onClick={() => {
-        const mainContent = document.getElementById("main-content");
+        const mainContent = document.getElementById('main-content');
         if (mainContent) {
           mainContent.focus();
-          mainContent.scrollIntoView({ behavior: "smooth" });
+          mainContent.scrollIntoView({ behavior: 'smooth' });
         }
       }}
       aria-label="Pular para o conteúdo principal"

@@ -204,10 +204,21 @@ const transactionsRouter = createTRPCRouter({
   // List user financial events (transactions)
   list: protectedProcedure
     .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50),
-        offset: z.number().min(0).default(0),
-      })
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50).optional(),
+          offset: z.number().min(0).default(0).optional(),
+          categoryId: z.string().optional(),
+          accountId: z.string().optional(),
+          type: z
+            .enum(['transfer', 'debit', 'credit', 'pix', 'boleto', 'income', 'expense'])
+            .optional(),
+          status: z.enum(['cancelled', 'failed', 'pending', 'posted']).optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+          search: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.id;
@@ -215,12 +226,50 @@ const transactionsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      const { data, error } = await ctx.supabase
-        .from('financial_events')
-        .select('*')
-        .eq('user_id', userId)
+      const filters = input || {};
+      const limit = filters.limit || 50;
+      const offset = filters.offset || 0;
+
+      let query = ctx.supabase.from('financial_events').select('*').eq('user_id', userId);
+
+      // Apply filters
+      if (filters.categoryId) {
+        query = query.eq('category', filters.categoryId);
+      }
+
+      if (filters.accountId) {
+        query = query.eq('account_id', filters.accountId);
+      }
+
+      if (filters.type) {
+        if (filters.type === 'income') {
+          query = query.eq('is_income', true);
+        } else if (filters.type === 'expense') {
+          query = query.eq('is_income', false);
+        } else {
+          query = query.eq('event_type', filters.type);
+        }
+      }
+
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      if (filters.startDate) {
+        query = query.gte('created_at', filters.startDate);
+      }
+
+      if (filters.endDate) {
+        query = query.lte('created_at', filters.endDate);
+      }
+
+      if (filters.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
-        .range(input.offset, input.offset + input.limit - 1);
+        .range(offset, offset + limit - 1);
 
       if (error) {
         throw new TRPCError({
@@ -265,6 +314,46 @@ const transactionsRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create transaction',
+        });
+      }
+
+      return data;
+    }),
+
+  // Update a financial event (transaction)
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        amount: z.number().optional(),
+        category_id: z.string().optional(),
+        description: z.string().optional(),
+        account_id: z.string().optional(),
+        event_type: z.string().optional(),
+        status: z.string().optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const { id, ...updates } = input;
+
+      const { data, error } = await ctx.supabase
+        .from('financial_events')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update transaction',
         });
       }
 

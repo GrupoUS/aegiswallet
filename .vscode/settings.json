@@ -1,4 +1,35 @@
 {
+  "json.schemas": [
+    {
+      "fileMatch": [".vscode/mcp.json"],
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "servers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "command": { "type": "string" },
+                "args": { "type": "array", "items": { "type": "string" } },
+                "env": { "type": "object", "additionalProperties": { "type": "string" } },
+                "type": { "type": "string", "enum": ["stdio", "sse"] },
+                "alwaysAllow": { "type": "array", "items": { "type": "string" } },
+                "disabledTools": { "type": "array", "items": { "type": "string" } },
+                "disabled": { "type": "boolean" },
+                "fromGalleryId": { "type": "string" },
+                "url": { "type": "string" }
+              },
+              "required": ["command"],
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  ],
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "biomejs.biome",

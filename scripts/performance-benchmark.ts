@@ -92,6 +92,8 @@ function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = '
 
   const coloredTimestamp = colorize(`[${timestamp}]`, 'bright');
   const coloredMessage = colorize(message, color);
+  // biome-ignore lint/suspicious/noConsole: CLI script requires console output
+  console.log(`${coloredTimestamp} ${prefix} ${coloredMessage}`);
 }
 /**
  * Count total files that will be processed

@@ -20,10 +20,11 @@ export class MockBackend implements ChatBackend {
 
     yield createMessageStartEvent(messageId, 'assistant');
 
-    const text = "⚠️ **API Key Missing**\n\nPlease configure `VITE_GEMINI_API_KEY` in your `.env` file to enable the AI Chat feature.\n\nSee `env.example` for details.";
+    const text =
+      '⚠️ **API Key Missing**\n\nPlease configure `VITE_GEMINI_API_KEY` in your `.env` file to enable the AI Chat feature.\n\nSee `env.example` for details.';
 
     // Simulate typing delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     yield createStreamChunk(ChatStreamEventType.CONTENT_CHUNK, text, messageId);
     yield createMessageEndEvent(messageId);

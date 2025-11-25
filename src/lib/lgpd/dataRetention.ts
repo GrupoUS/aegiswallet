@@ -109,7 +109,7 @@ export class LGPDDataRetentionManager {
 
       return results;
     } catch (error) {
-      logger.error('Error checking retention eligibility:', error);
+      logger.error('Error checking retention eligibility:', { error: String(error) });
       throw error;
     }
   }
@@ -119,7 +119,7 @@ export class LGPDDataRetentionManager {
    */
   async processRetentionPolicy(userId: string): Promise<void> {
     try {
-      logger.info('Starting retention policy processing for user:', userId);
+      logger.info('Starting retention policy processing for user:', { userId });
 
       const eligibleData = await this.checkRetentionEligibility(userId);
 
@@ -148,9 +148,9 @@ export class LGPDDataRetentionManager {
         }
       }
 
-      logger.info('Retention policy processing completed for user:', userId);
+      logger.info('Retention policy processing completed for user:', { userId });
     } catch (error) {
-      logger.error('Error processing retention policy:', error);
+      logger.error('Error processing retention policy:', { error: String(error) });
       throw error;
     }
   }
@@ -177,7 +177,7 @@ export class LGPDDataRetentionManager {
       await supabase.from('data_subject_requests').insert({
         created_at: new Date().toISOString(),
         id: requestId,
-        request_data: requestData as Json | null,
+        request_data: requestData as unknown,
         request_type: requestType,
         status: 'pending',
         user_id: userId,
@@ -203,7 +203,7 @@ export class LGPDDataRetentionManager {
       });
       return requestId;
     } catch (error) {
-      logger.error('Error creating data subject request:', error);
+      logger.error('Error creating data subject request:', { error: String(error) });
       throw error;
     }
   }
@@ -316,7 +316,7 @@ export class LGPDDataRetentionManager {
 
       return userData;
     } catch (error) {
-      logger.error('Error retrieving user data:', error);
+      logger.error('Error retrieving user data:', { error: String(error) });
       throw error;
     }
   }
@@ -384,7 +384,7 @@ export class LGPDDataRetentionManager {
           logger.warn(`Unknown data type for deletion: ${dataType}`);
       }
     } catch (error) {
-      logger.error(`Error deleting ${dataType} for user ${userId}:`, error);
+      logger.error(`Error deleting ${dataType} for user ${userId}:`, { error: String(error) });
       throw error;
     }
   }
@@ -410,7 +410,7 @@ export class LGPDDataRetentionManager {
 
       return !!data;
     } catch (error) {
-      logger.error('Error checking legal holds:', error);
+      logger.error('Error checking legal holds:', { error: String(error) });
       return false;
     }
   }

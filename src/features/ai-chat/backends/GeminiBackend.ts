@@ -31,6 +31,12 @@ export class GeminiBackend implements ChatBackend {
   private abortController: AbortController | null = null;
 
   constructor(config: GeminiBackendConfig) {
+    if (!config.apiKey || config.apiKey.trim() === '') {
+      throw new Error(
+        'GeminiBackend requires a non-empty API key. Please provide a valid VITE_GEMINI_API_KEY.'
+      );
+    }
+
     this.config = config;
     this.client = new GoogleGenerativeAI(config.apiKey);
     this.model = this.client.getGenerativeModel({

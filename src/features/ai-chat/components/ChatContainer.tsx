@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { toast } from 'sonner';
-import { GeminiBackend } from '@/features/ai-chat/backends';
+import { type BackendType, createChatBackend } from '@/features/ai-chat/backends';
 import {
   ChatConversation,
   ChatLayout,
@@ -14,22 +14,30 @@ import { useChatController } from '@/features/ai-chat/hooks/useChatController';
 interface ChatContainerProps {
   isWidget?: boolean;
   onClose?: () => void;
+  /** Backend type to use for AI chat */
+  backendType?: BackendType;
 }
 
-export function ChatContainer({ isWidget = false, onClose }: ChatContainerProps) {
-  // Initialize backend
+export function ChatContainer({
+  isWidget = false,
+  onClose,
+  backendType = 'gemini',
+}: ChatContainerProps) {
+  // Initialize backend using factory
   const backend = useMemo(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
+    if (backendType === 'gemini' && !apiKey) {
       toast.error('API Key not found', {
         description: 'Please set VITE_GEMINI_API_KEY in your environment variables.',
       });
+      throw new Error('VITE_GEMINI_API_KEY is required for Gemini backend');
     }
-    return new GeminiBackend({
+    return createChatBackend({
+      type: backendType,
       apiKey: apiKey || '',
       model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'gemini-pro',
     });
-  }, []);
+  }, [backendType]);
 
   // Initialize controller
   const {
@@ -38,6 +46,7 @@ export function ChatContainer({ isWidget = false, onClose }: ChatContainerProps)
     suggestions,
     tasks,
     reasoning,
+    enableReasoningView,
     sendMessage,
     stopStreaming,
     applySuggestion,
@@ -76,7 +85,7 @@ export function ChatContainer({ isWidget = false, onClose }: ChatContainerProps)
             messages={messages}
             reasoning={reasoning}
             isStreaming={isStreaming}
-            showReasoning={true}
+            showReasoning={enableReasoningView}
           />
 
           {/* Suggestions Overlay */}

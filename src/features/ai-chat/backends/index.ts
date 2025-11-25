@@ -1,45 +1,63 @@
-import { AgUiBackend, type AgUiBackendConfig } from './AgUiBackend';
 import type { ChatBackend } from './ChatBackend';
-import { CopilotKitBackend, type CopilotKitBackendConfig } from './CopilotKitBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
-import { OttomatorBackend, type OttomatorBackendConfig } from './OttomatorBackend';
 
-export type BackendType = 'gemini' | 'copilotkit' | 'ag-ui' | 'ottomator';
+/**
+ * Backend factory and exports
+ *
+ * Currently only GeminiBackend is implemented. Additional backends (CopilotKit, AG-UI, Ottomator)
+ * will be added when needed. See docs/ai-chat-architecture.md for integration notes.
+ */
 
-export type BackendConfig =
-  | ({ type: 'gemini' } & GeminiBackendConfig)
-  | ({ type: 'copilotkit' } & CopilotKitBackendConfig)
-  | ({ type: 'ag-ui' } & AgUiBackendConfig)
-  | ({ type: 'ottomator' } & OttomatorBackendConfig);
+/**
+ * Supported backend types
+ */
+export type BackendType = 'gemini';
 
+/**
+ * Backend configuration union type
+ */
+export type BackendConfig = { type: 'gemini' } & GeminiBackendConfig;
+
+/**
+ * Create a chat backend based on the specified configuration
+ * @param config - Backend configuration with type discriminator
+ * @returns ChatBackend instance
+ * @throws {Error} When configuration is invalid or required values are missing
+ */
 export function createChatBackend(config: BackendConfig): ChatBackend {
   switch (config.type) {
-    case 'gemini':
+    case 'gemini': {
+      if (!config.apiKey || config.apiKey.trim() === '') {
+        throw new Error(
+          'VITE_GEMINI_API_KEY is not configured. Please set this environment variable in your .env file.'
+        );
+      }
       return new GeminiBackend(config);
-    case 'copilotkit':
-      return new CopilotKitBackend(config);
-    case 'ag-ui':
-      return new AgUiBackend(config);
-    case 'ottomator':
-      return new OttomatorBackend(config);
+    }
     default:
       throw new Error(`Unknown backend type: ${(config as { type: string }).type}`);
   }
 }
 
+/**
+ * Get default backend using environment configuration
+ * @throws {Error} When VITE_GEMINI_API_KEY is not configured
+ */
 export function getDefaultBackend(): ChatBackend {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
+
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error(
+      'VITE_GEMINI_API_KEY is not configured. Please set this environment variable in your .env file. ' +
+        'Example: VITE_GEMINI_API_KEY=your-api-key-here'
+    );
   }
 
   return new GeminiBackend({
-    apiKey: apiKey || '',
+    apiKey,
     model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'gemini-pro',
   });
 }
 
-export * from './AgUiBackend';
 export * from './ChatBackend';
-export * from './CopilotKitBackend';
 export * from './GeminiBackend';
-export * from './OttomatorBackend';

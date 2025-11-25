@@ -230,6 +230,8 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
     suggestions,
     tasks,
     reasoning,
+    enableReasoningView:
+      options.enableReasoningView ?? import.meta.env.VITE_ENABLE_AI_REASONING === 'true',
     sendMessage,
     regenerateLastMessage,
     stopStreaming,

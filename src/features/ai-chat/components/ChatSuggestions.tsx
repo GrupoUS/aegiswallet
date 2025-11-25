@@ -1,4 +1,5 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { Suggestion } from '@/components/ai-elements';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import type { ChatSuggestion } from '../domain/types';
@@ -13,7 +14,7 @@ export function ChatSuggestions({ suggestions, onSelect, className }: ChatSugges
   if (suggestions.length === 0) return null;
 
   return (
-    <div className={className}>
+    <Suggestion suggestions={suggestions} onSelect={onSelect} className={className}>
       <ScrollArea className="w-full whitespace-nowrap pb-2">
         <div className="flex w-max space-x-2 px-4">
           {suggestions.map((suggestion) => (
@@ -32,6 +33,6 @@ export function ChatSuggestions({ suggestions, onSelect, className }: ChatSugges
         </div>
         <ScrollBar orientation="horizontal" className="invisible" />
       </ScrollArea>
-    </div>
+    </Suggestion>
   );
 }

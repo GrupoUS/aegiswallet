@@ -223,7 +223,7 @@ beforeAll(() => {
   }));
 
   // Mock Speech Recognition API
-  vi.fn().mockImplementation(() => ({
+  const mockSpeechRecognition = vi.fn().mockImplementation(() => ({
     abort: vi.fn(),
     continuous: false,
     interimResults: false,
@@ -244,7 +244,7 @@ beforeAll(() => {
     stop: vi.fn(),
   }));
 
-  // Set up global Speech API mocks (avoid redefinition) - only TTS, not Speech Recognition
+  // Set up global Speech API mocks (avoid redefinition)
   if (!globalObj.SpeechSynthesisUtterance) {
     globalObj.SpeechSynthesisUtterance =
       mockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance;
@@ -252,11 +252,19 @@ beforeAll(() => {
   if (!globalObj.speechSynthesis) {
     globalObj.speechSynthesis = mockSpeechSynthesis as unknown as SpeechSynthesis;
   }
+  if (!globalObj.SpeechRecognition) {
+    globalObj.SpeechRecognition = mockSpeechRecognition;
+  }
+  if (!globalObj.webkitSpeechRecognition) {
+    globalObj.webkitSpeechRecognition = mockSpeechRecognition;
+  }
 
-  // Ensure window object has Speech API (only TTS, not Speech Recognition)
+  // Ensure window object has Speech API
   if (typeof window !== 'undefined') {
     window.speechSynthesis = mockSpeechSynthesis;
     window.SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
+    window.SpeechRecognition = mockSpeechRecognition;
+    window.webkitSpeechRecognition = mockSpeechRecognition;
   }
 
   // Mock navigator for tests
@@ -281,10 +289,15 @@ beforeAll(() => {
     orientation: {
       angle: 0,
       type: 'landscape-primary',
-    },
+      onchange: null,
+      unlock: () => Promise.resolve(),
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true,
+    } as ScreenOrientation,
     pixelDepth: 24,
     width: 1920,
-  };
+  } as Screen;
 
   // Mock window.screen to ensure it's available
   if (typeof window !== 'undefined' && globalObj.screen) {
@@ -407,18 +420,15 @@ afterEach(() => {
 // Clean up global stubs after all tests
 afterAll(() => {
   // Manual cleanup since vi.unstubAllGlobals() might not be available
-  Object.defineProperty(globalObj, 'localStorage', {
-    value: undefined,
-    writable: true,
-  });
-  globalObj.SpeechSynthesisUtterance = undefined;
-  globalObj.speechSynthesis = undefined;
-  globalObj.SpeechRecognition = undefined;
-  globalObj.webkitSpeechRecognition = undefined;
-  globalObj.AudioContext = undefined;
-  globalObj.webkitAudioContext = undefined;
-  globalObj.requestAnimationFrame = undefined;
-  globalObj.cancelAnimationFrame = undefined;
+  (globalObj as Record<string, unknown>).localStorage = undefined;
+  (globalObj as Record<string, unknown>).SpeechSynthesisUtterance = undefined;
+  (globalObj as Record<string, unknown>).speechSynthesis = undefined;
+  (globalObj as Record<string, unknown>).SpeechRecognition = undefined;
+  (globalObj as Record<string, unknown>).webkitSpeechRecognition = undefined;
+  (globalObj as Record<string, unknown>).AudioContext = undefined;
+  (globalObj as Record<string, unknown>).webkitAudioContext = undefined;
+  (globalObj as Record<string, unknown>).requestAnimationFrame = undefined;
+  (globalObj as Record<string, unknown>).cancelAnimationFrame = undefined;
 });
 
 // Export mock helpers for tests

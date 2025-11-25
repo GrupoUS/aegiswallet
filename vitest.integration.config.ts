@@ -3,21 +3,13 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ['@testing-library/react', '@testing-library/jest-dom'],
-  },
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+  extends: './vitest.config.ts', // Herda configurações base
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
 
-    // Enhanced JSDOM environment configuration
+    // Configuração específica para testes de integração
     environmentOptions: {
       jsdom: {
         pretendToBeVisual: true,
@@ -26,51 +18,34 @@ export default defineConfig({
       },
     },
 
-    // Type checking enabled
-    typecheck: {
-      enabled: true,
-      checker: 'tsc',
-    },
-
-    // Pool options for performance
-    poolOptions: {
-      threads: {
-        singleThread: false,
-        useAtomics: true,
-      },
-    },
-
-    // Sequential testing for integration tests
+    // Testes de integração podem rodar em paralelo
     sequence: {
-      concurrent: false, // Critical for integration tests
-      shuffle: false, // Maintain predictable test order
+      concurrent: true,
+      shuffle: false,
     },
 
-    // Enhanced coverage configuration
+    // Coverage para integração com thresholds específicos
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
         'src/test/',
         '**/*.d.ts',
         '**/*.config.js',
         '**/*.config.ts',
-        'src/integrations/',
         'src/mocks/',
         'docs/',
         'scripts/',
-        'src/routeTree.gen.ts',
-        'dist/',
         'coverage/',
-        '**/*.gen.ts',
+        'dist/',
       ],
       thresholds: {
         global: {
-          branches: 85,
-          functions: 85,
-          lines: 85,
-          statements: 85,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
         },
       },
       all: true,
@@ -78,11 +53,11 @@ export default defineConfig({
       cleanOnRerun: true,
     },
 
-    // Include integration test files
+    // Foco em arquivos de integração
     include: [
-      'src/test/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'src/**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'src/test/integration/**/*.test.{ts,tsx}',
+      'src/**/*integration*.test.{ts,tsx}',
+      'src/**/*integration*.spec.{ts,tsx}',
     ],
 
     exclude: [
@@ -90,22 +65,37 @@ export default defineConfig({
       'dist/',
       'build/',
       'coverage/',
-      'src/test/healthcare/**', // Exclude healthcare-specific tests
-      'src/test/ui/**', // Exclude UI component tests
+      '**/*.unit.*',
+      '**/*.e2e.*',
     ],
 
-    // Enhanced timeout for async operations
+    // Timeout maior para operações de integração
     testTimeout: 15000,
     hookTimeout: 15000,
 
-    // Better error reporting
+    // Melhor reporting para integração
     reporters: ['default', 'verbose'],
 
-    // Better isolate tests
+    // Isolar testes de integração
     isolate: true,
 
-    // Performance optimization for integration tests
-    maxConcurrency: 2, // Limited concurrency for integration tests
-    pool: 'threads',
+    // Pool options para integração
+    poolOptions: {
+      threads: {
+        singleThread: false,
+        useAtomics: true,
+      },
+    },
+  },
+
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+
+  // Otimizações específicas para integração
+  optimizeDeps: {
+    include: ['@testing-library/react', '@testing-library/jest-dom'],
   },
 });

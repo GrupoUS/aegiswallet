@@ -21,8 +21,19 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TestUtils } from '../healthcare-setup';
 import { ensureTestUtils } from './test-utils';
+
+type UserConsentState = {
+  biometricData: boolean;
+  dataProcessing: boolean;
+  financialData: boolean;
+  healthData: boolean;
+  internationalTransfer: boolean;
+  voiceRecording: boolean;
+};
+
+type UserDataKey = 'address' | 'birthDate' | 'cpf' | 'email' | 'name' | 'phone' | 'rg';
+type UserDataState = Record<UserDataKey, string>;
 
 // Import healthcare setup to configure test environment
 import '../healthcare-setup';
@@ -77,7 +88,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 // Comprehensive LGPD Compliance Component for testing
 const LGPDComplianceFramework = () => {
   const testUtils = ensureTestUtils();
-  const [userConsent, setUserConsent] = React.useState({
+  const [userConsent, setUserConsent] = React.useState<UserConsentState>({
     biometricData: false,
     dataProcessing: false,
     financialData: false,
@@ -86,7 +97,7 @@ const LGPDComplianceFramework = () => {
     voiceRecording: false,
   });
 
-  const [userData, setUserData] = React.useState({
+  const [userData, setUserData] = React.useState<UserDataState>({
     address: '',
     birthDate: '',
     cpf: '',
@@ -115,17 +126,26 @@ const LGPDComplianceFramework = () => {
   };
 
   const validatePurposeLimitation = () => {
-    const _requiredPurposes = ['financial_management', 'voice_assistance', 'security'];
-    const consentPurposes = Object.entries(userConsent)
-      .filter(([_, consent]) => consent)
-      .map(([purpose]) => purpose);
+    const requiredPurposes: (keyof UserConsentState)[] = [
+      'dataProcessing',
+      'voiceRecording',
+      'financialData',
+      'biometricData',
+      'healthData',
+    ];
+    const consentPurposes = requiredPurposes.filter((purpose) => userConsent[purpose]);
 
     return consentPurposes.length > 0 ? 'compliant' : 'non-compliant';
   };
 
   const validateDataMinimization = () => {
-    const _requiredFields = ['name', 'email'];
-    const optionalFields = ['phone', 'cpf', 'rg', 'birthDate', 'address'];
+    const requiredFields: UserDataKey[] = ['name', 'email'];
+    const optionalFields: UserDataKey[] = ['phone', 'cpf', 'rg', 'birthDate', 'address'];
+    const hasRequired = requiredFields.every((field) => Boolean(userData[field]));
+    if (!hasRequired) {
+      return 'non-compliant';
+    }
+
     const filledOptional = optionalFields.filter((field) => userData[field]);
 
     return filledOptional.length <= 3 ? 'compliant' : 'review-needed';
@@ -168,8 +188,7 @@ const LGPDComplianceFramework = () => {
   };
 
   const runComplianceValidation = async () => {
-
-    setComplianceStatus({
+    const nextStatus = {
       accountability: validateAccountability(),
       accuracy: validateAccuracy(),
       brazilianCompliance: validateBrazilianCompliance(),
@@ -180,12 +199,13 @@ const LGPDComplianceFramework = () => {
       purposeLimitation: validatePurposeLimitation(),
       security: validateSecurity(),
       transparency: validateTransparency(),
-    });
+    };
 
-    // Create audit log
+    setComplianceStatus(nextStatus);
+
     await testUtils.createMockAuditLog({
       action: 'lgpd_compliance_validation',
-      complianceStatus: complianceStatus,
+      complianceStatus: nextStatus,
       timestamp: new Date().toISOString(),
       userId: 'test-user-001',
     });
@@ -208,7 +228,7 @@ const LGPDComplianceFramework = () => {
     };
 
     // Create LGPD-compliant submission
-    const _submission = {
+    const submission = {
       ...maskedData,
       lgpdConsent: {
         consentType: 'treatment',
@@ -232,6 +252,13 @@ const LGPDComplianceFramework = () => {
 
     // Log submission for audit trail
     await runComplianceValidation();
+    await testUtils.createMockAuditLog({
+      action: 'lgpd_form_submission',
+      complianceStatus,
+      payload: submission,
+      timestamp: new Date().toISOString(),
+      userId: 'test-user-001',
+    });
   };
 
   return React.createElement('div', { 'data-testid': 'lgpd-framework' }, [
@@ -525,6 +552,8 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     });
 
     it('should document all processing purposes clearly', () => {
+      render(React.createElement(LGPDComplianceFramework));
+
       const expectedPurposes = [
         'dataProcessing',
         'voiceRecording',

@@ -1,4 +1,5 @@
 import { Copy, ExternalLink, Share2 } from 'lucide-react';
+import { OpenInChat } from '@/components/ai-elements';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,22 +23,24 @@ export function ChatOpenInChatLink({ message, className }: ChatOpenInChatLinkPro
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className={className}>
-          <Share2 className="w-4 h-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleCopyLink}>
-          <Copy className="w-4 h-4 mr-2" />
-          Copiar conteúdo
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Abrir no ChatGPT (Em breve)
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <OpenInChat message={message} className={className}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleCopyLink}>
+            <Copy className="w-4 h-4 mr-2" />
+            Copiar conteúdo
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Abrir no ChatGPT (Em breve)
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </OpenInChat>
   );
 }

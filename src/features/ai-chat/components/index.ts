@@ -8,6 +8,7 @@ export * from './ChatOpenInChatLink';
 export * from './ChatPromptInput';
 export * from './ChatReasoning';
 export * from './ChatResponse';
+export * from './ChatSearchBar';
 export * from './ChatSuggestions';
 export * from './ChatTasks';
 export * from './ChatWidget';

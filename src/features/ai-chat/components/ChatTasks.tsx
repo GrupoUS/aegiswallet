@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, Clock, XCircle } from 'lucide-react';
+import { Task } from '@/components/ai-elements';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -40,52 +41,54 @@ export function ChatTasks({ tasks, className }: ChatTasksProps) {
   };
 
   return (
-    <div className={cn('space-y-4', className)}>
-      {tasks.map((task) => (
-        <Card key={task.id} className="overflow-hidden border-l-4 border-l-primary">
-          <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              {getStatusIcon(task.status)}
-              {task.title}
-            </CardTitle>
-            <Badge
-              variant="secondary"
-              className={cn('capitalize text-[10px]', getStatusColor(task.status))}
-            >
-              {task.status}
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-4 pt-2 space-y-3">
-            {typeof task.progress === 'number' && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>Progresso</span>
-                  <span>{task.progress}%</span>
-                </div>
-                <Progress value={task.progress} className="h-1.5" />
-              </div>
-            )}
-
-            {task.subtasks && task.subtasks.length > 0 && (
-              <div className="space-y-2 mt-2 pl-2 border-l">
-                {task.subtasks.map((subtask) => (
-                  <div
-                    key={subtask.id}
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                  >
-                    {getStatusIcon(subtask.status)}
-                    <span
-                      className={cn(subtask.status === 'completed' && 'line-through opacity-70')}
-                    >
-                      {subtask.title}
-                    </span>
+    <Task tasks={tasks} className={className}>
+      <div className={cn('space-y-4')}>
+        {tasks.map((task) => (
+          <Card key={task.id} className="overflow-hidden border-l-4 border-l-primary">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                {getStatusIcon(task.status)}
+                {task.title}
+              </CardTitle>
+              <Badge
+                variant="secondary"
+                className={cn('capitalize text-[10px]', getStatusColor(task.status))}
+              >
+                {task.status}
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-4 pt-2 space-y-3">
+              {typeof task.progress === 'number' && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>Progresso</span>
+                    <span>{task.progress}%</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                  <Progress value={task.progress} className="h-1.5" />
+                </div>
+              )}
+
+              {task.subtasks && task.subtasks.length > 0 && (
+                <div className="space-y-2 mt-2 pl-2 border-l">
+                  {task.subtasks.map((subtask) => (
+                    <div
+                      key={subtask.id}
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      {getStatusIcon(subtask.status)}
+                      <span
+                        className={cn(subtask.status === 'completed' && 'line-through opacity-70')}
+                      >
+                        {subtask.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </Task>
   );
 }

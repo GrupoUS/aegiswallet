@@ -1,5 +1,6 @@
 import { Brain, ChevronDown, ChevronUp } from 'lucide-react';
 import React from 'react';
+import { Reasoning } from '@/components/ai-elements';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ChatReasoningChunk } from '../domain/types';
@@ -22,11 +23,12 @@ export function ChatReasoning({ reasoning, isStreaming }: ChatReasoningProps) {
   if (reasoning.length === 0) return null;
 
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className="w-full border rounded-lg bg-muted/30"
-    >
+    <Reasoning reasoning={reasoning} isStreaming={isStreaming} defaultExpanded={isStreaming}>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full border rounded-lg bg-muted/30"
+      >
       <CollapsibleTrigger asChild>
         <Button
           variant="ghost"
@@ -59,5 +61,6 @@ export function ChatReasoning({ reasoning, isStreaming }: ChatReasoningProps) {
         </div>
       </CollapsibleContent>
     </Collapsible>
+    </Reasoning>
   );
 }

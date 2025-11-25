@@ -1,5 +1,5 @@
-import { useAccessibility } from '../AccessibilityProvider';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAccessibility } from '../AccessibilityProvider';
 
 type VoiceCategory = 'financeiro' | 'navegacao' | 'acao' | 'ajuda';
 
@@ -28,16 +28,36 @@ const VOICE_PATTERNS: Record<
     { category: 'financeiro', pattern: /transferir.*reais?/i, response: 'Iniciando transferência' },
     { category: 'financeiro', pattern: /pagar conta/i, response: 'Abrindo opções de pagamento' },
     { category: 'financeiro', pattern: /ver saldo/i, response: 'Verificando saldo da conta' },
-    { category: 'financeiro', pattern: /consultar.*extrato/i, response: 'Buscando extrato bancário' },
-    { category: 'financeiro', pattern: /gerar.*pix/i, response: 'Preparando geração de código PIX' },
-    { category: 'financeiro', pattern: /agendar.*pagamento/i, response: 'Abrindo agenda de pagamentos' },
+    {
+      category: 'financeiro',
+      pattern: /consultar.*extrato/i,
+      response: 'Buscando extrato bancário',
+    },
+    {
+      category: 'financeiro',
+      pattern: /gerar.*pix/i,
+      response: 'Preparando geração de código PIX',
+    },
+    {
+      category: 'financeiro',
+      pattern: /agendar.*pagamento/i,
+      response: 'Abrindo agenda de pagamentos',
+    },
   ],
   navegacao: [
-    { category: 'navegacao', pattern: /ir para.*inicio/i, response: 'Navegando para página inicial' },
+    {
+      category: 'navegacao',
+      pattern: /ir para.*inicio/i,
+      response: 'Navegando para página inicial',
+    },
     { category: 'navegacao', pattern: /abrir.*menu/i, response: 'Abrindo menu de navegação' },
     { category: 'navegacao', pattern: /fechar.*menu/i, response: 'Fechando menu de navegação' },
     { category: 'navegacao', pattern: /voltar/i, response: 'Voltando para página anterior' },
-    { category: 'navegacao', pattern: /próximo|proximo/i, response: 'Avançando para próxima página' },
+    {
+      category: 'navegacao',
+      pattern: /próximo|proximo/i,
+      response: 'Avançando para próxima página',
+    },
   ],
 };
 
@@ -46,17 +66,14 @@ interface HookParams {
   onVoiceCommand?: (command: string, confidence: number) => void;
 }
 
-export const usePortugueseVoiceAccessibility = ({
-  enabled,
-  onVoiceCommand,
-}: HookParams) => {
+export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: HookParams) => {
   const { announceToScreenReader, settings } = useAccessibility();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [lastResponse, setLastResponse] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
   const getErrorMessage = useCallback((error: string): string => {
@@ -141,8 +158,7 @@ export const usePortugueseVoiceAccessibility = ({
       return;
     }
 
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
     if (!SpeechRecognition) {
       return;
     }
@@ -213,7 +229,13 @@ export const usePortugueseVoiceAccessibility = ({
   }, [announceToScreenReader]);
 
   const suggestions = useMemo(
-    () => ['Transferir R$ 100 para João', 'Pagar conta de luz', 'Ver meu saldo', 'Ir para página inicial', 'Ajuda'],
+    () => [
+      'Transferir R$ 100 para João',
+      'Pagar conta de luz',
+      'Ver meu saldo',
+      'Ir para página inicial',
+      'Ajuda',
+    ],
     []
   );
 
@@ -230,4 +252,3 @@ export const usePortugueseVoiceAccessibility = ({
     voiceCommands,
   };
 };
-

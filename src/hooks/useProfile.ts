@@ -1,54 +1,105 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { trpc } from '@/lib/trpc';
+import { apiClient } from '@/lib/api-client';
+
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  is_active?: boolean;
+  last_login?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+interface UserPreferences {
+  user_id: string;
+  [key: string]: unknown;
+}
+
+interface ProfileApiResponse<T> {
+  data: T;
+  meta: {
+    requestId: string;
+    retrievedAt?: string;
+    updatedAt?: string;
+  };
+}
 
 /**
  * Hook para gerenciar perfil do usuário
  */
 export function useProfile() {
-  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
-  const { data: profile, isLoading, error } = trpc.profiles.getProfile.useQuery();
+  const {
+    data: profileResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['users', 'me'],
+    queryFn: async () => {
+      const response = await apiClient.get<ProfileApiResponse<UserProfile>>('/v1/users/me');
+      return response.data;
+    },
+  });
 
-  const { mutate: updateProfile, isPending: isUpdatingProfile } =
-    trpc.profiles.updateProfile.useMutation({
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar perfil');
-      },
-      onSuccess: () => {
-        utils.profiles.getProfile.invalidate();
-        toast.success('Perfil atualizado com sucesso!');
-      },
-    });
+  const { mutate: updateProfile, isPending: isUpdatingProfile } = useMutation({
+    mutationFn: async (input: { full_name?: string; phone?: string }) => {
+      const response = await apiClient.put<ProfileApiResponse<UserProfile>>('/v1/users/me', input);
+      return response.data;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao atualizar perfil');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
+      toast.success('Perfil atualizado com sucesso!');
+    },
+  });
 
-  const { mutate: updatePreferences, isPending: isUpdatingPreferences } =
-    trpc.profiles.updatePreferences.useMutation({
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar preferências');
-      },
-      onSuccess: (data) => {
-        utils.profiles.getProfile.setData(undefined, (old) => {
-          if (!old) {
-            return old;
-          }
+  const { mutate: updatePreferences, isPending: isUpdatingPreferences } = useMutation({
+    mutationFn: async (input: Record<string, unknown>) => {
+      const response = await apiClient.put<ProfileApiResponse<UserPreferences>>(
+        '/v1/users/me/preferences',
+        input
+      );
+      return response.data;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao atualizar preferências');
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['users', 'me'], (old: UserProfile | undefined) => {
+        if (!old) {
+          return old;
+        }
 
-          return {
-            ...old,
-            user_preferences: data ? [data] : [],
-          };
-        });
+        return {
+          ...old,
+          user_preferences: data ? [data] : [],
+        };
+      });
 
-        toast.success('Preferências atualizadas com sucesso!');
-      },
-    });
+      toast.success('Preferências atualizadas com sucesso!');
+    },
+  });
 
-  const { mutate: updateLastLogin } = trpc.profiles.updateLastLogin.useMutation();
+  const { mutate: updateLastLogin } = useMutation({
+    mutationFn: async () => {
+      const response =
+        await apiClient.post<ProfileApiResponse<{ success: boolean }>>('/v1/users/me/last-login');
+      return response.data;
+    },
+  });
 
   return {
     error,
     isLoading,
     isUpdatingPreferences,
     isUpdatingProfile,
-    profile,
+    profile: profileResponse,
     updateLastLogin,
     updatePreferences,
     updateProfile,
@@ -59,20 +110,30 @@ export function useProfile() {
  * Hook para obter resumo financeiro do usuário
  */
 export function useFinancialSummary(startDate: string, endDate: string) {
-  const { data, isLoading, error } = trpc.profiles.getFinancialSummary.useQuery(
-    {
-      period_end: endDate,
-      period_start: startDate,
+  const {
+    data: summaryResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['users', 'financial-summary', startDate, endDate],
+    queryFn: async () => {
+      const response = await apiClient.get<
+        ProfileApiResponse<{ income: number; expenses: number; balance: number }>
+      >('/v1/users/me/financial-summary', {
+        params: {
+          period_start: startDate,
+          period_end: endDate,
+        },
+      });
+      return response.data;
     },
-    {
-      enabled: !!startDate && !!endDate,
-    }
-  );
+    enabled: !!startDate && !!endDate,
+  });
 
   return {
     error,
     isLoading,
-    summary: data,
+    summary: summaryResponse,
   };
 }
 
@@ -80,13 +141,26 @@ export function useFinancialSummary(startDate: string, endDate: string) {
  * Hook para verificar status do usuário
  */
 export function useUserStatus() {
-  const { data, isLoading, error } = trpc.profiles.checkUserStatus.useQuery();
+  const {
+    data: statusResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['users', 'status'],
+    queryFn: async () => {
+      const response =
+        await apiClient.get<ProfileApiResponse<{ is_active: boolean; last_login: string | null }>>(
+          '/v1/users/me/status'
+        );
+      return response.data;
+    },
+  });
 
   return {
     error,
-    isActive: data?.is_active ?? false,
+    isActive: statusResponse?.is_active ?? false,
     isLoading,
-    lastLogin: data?.last_login,
-    status: data,
+    lastLogin: statusResponse?.last_login,
+    status: statusResponse,
   };
 }

@@ -52,7 +52,10 @@ describe('TextToSpeechService', () => {
 
     // Setup fresh mock for each test
     mockSpeechSynthesis = {
-      addEventListener: vi.fn(), cancel: vi.fn(), dispatchEvent: vi.fn(), getVoices: vi.fn(() => [
+      addEventListener: vi.fn(),
+      cancel: vi.fn(),
+      dispatchEvent: vi.fn(),
+      getVoices: vi.fn(() => [
         {
           default: false,
           lang: 'pt-BR',
@@ -60,14 +63,22 @@ describe('TextToSpeechService', () => {
           name: 'Google português do Brasil',
           voiceURI: 'Google português do Brasil',
         },
-      ]), onvoiceschanged: null, pause: vi.fn(), paused: false, pending: false, removeEventListener: vi.fn(), resume: vi.fn(), speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
+      ]),
+      onvoiceschanged: null,
+      pause: vi.fn(),
+      paused: false,
+      pending: false,
+      removeEventListener: vi.fn(),
+      resume: vi.fn(),
+      speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
         // Automatically trigger onend for success tests
         setTimeout(() => {
           if (utterance.onend) {
             utterance.onend();
           }
         }, 10);
-      }), speaking: false,
+      }),
+      speaking: false,
     };
 
     // Inject dependencies

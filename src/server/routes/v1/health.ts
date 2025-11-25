@@ -4,71 +4,85 @@
  */
 
 import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
 const healthRouter = new Hono();
 
-// Health check response schema
-const healthResponseSchema = z.object({
+// Health check response schema (exported for type inference)
+export const healthResponseSchema = z.object({
   services: z.object({
     database: z.enum(['connected', 'disconnected', 'error']),
     api: z.enum(['operational', 'degraded', 'down']),
     auth: z.enum(['operational', 'degraded', 'down']),
-  }), status: z.enum(['ok', 'error']), timestamp: z.string(), uptime: z.number(), version: z.string(),
+  }),
+  status: z.enum(['ok', 'error']),
+  timestamp: z.string(),
+  uptime: z.number(),
+  version: z.string(),
 });
 
 // Detailed health check with authentication
-healthRouter.get(
-  '/',
-  async (c) => {
-    const startTime = Date.now();
+healthRouter.get('/', async (c) => {
+  const startTime = Date.now();
 
+  try {
+    // Check database connection
+    let databaseStatus: 'connected' | 'disconnected' | 'error' = 'error';
     try {
-      // Check database connection
-      let databaseStatus: 'connected' | 'disconnected' | 'error' = 'error';
-      try {
-        // Simple health check - in a real implementation,
-        // you might check actual database connectivity
-        databaseStatus = 'connected';
-      } catch (error) {
-        secureLogger.error('Database health check failed', { error });
-        databaseStatus = 'error';
-      }
-
-      // Determine overall status
-      const isHealthy = databaseStatus === 'connected';
-
-      const response = {
-        services: {
-          database: databaseStatus,
-          api: isHealthy ? 'operational' : 'down',
-          auth: isHealthy ? 'operational' : 'down',
-        }, status: isHealthy ? 'ok' : 'error', timestamp: new Date().toISOString(), uptime: process.uptime(), version: '1.0.0',
-      };
-
-      // Log health check
-      secureLogger.info('Health check completed', {
-        databaseStatus, duration: Date.now() - startTime, status: response.status,
-      });
-
-      return c.json(response);
+      // Simple health check - in a real implementation,
+      // you might check actual database connectivity
+      databaseStatus = 'connected';
     } catch (error) {
-      secureLogger.error('Health check error', {
-        duration: Date.now() - startTime, error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      secureLogger.error('Database health check failed', { error });
+      databaseStatus = 'error';
+    }
 
-      return c.json({
+    // Determine overall status
+    const isHealthy = databaseStatus === 'connected';
+
+    const response = {
+      services: {
+        database: databaseStatus,
+        api: isHealthy ? 'operational' : 'down',
+        auth: isHealthy ? 'operational' : 'down',
+      },
+      status: isHealthy ? 'ok' : 'error',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: '1.0.0',
+    };
+
+    // Log health check
+    secureLogger.info('Health check completed', {
+      databaseStatus,
+      duration: Date.now() - startTime,
+      status: response.status,
+    });
+
+    return c.json(response);
+  } catch (error) {
+    secureLogger.error('Health check error', {
+      duration: Date.now() - startTime,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    return c.json(
+      {
         services: {
           database: 'error',
           api: 'down',
           auth: 'down',
-        }, status: 'error', timestamp: new Date().toISOString(), uptime: process.uptime(), version: '1.0.0',
-      }, 500);
-    }
+        },
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: '1.0.0',
+      },
+      500
+    );
   }
-);
+});
 
 // Simple ping endpoint
 healthRouter.get('/ping', (c) => {
@@ -87,14 +101,21 @@ healthRouter.get(
     const auth = c.get('auth');
 
     return c.json({
-      authenticated: !!auth, services: {
+      authenticated: !!auth,
+      services: {
         database: 'connected',
         api: 'operational',
         auth: 'operational',
-      }, status: 'ok', timestamp: new Date().toISOString(), user: auth ? {
-        id: auth.user.id,
-        email: auth.user.email,
-      } : null, version: '1.0.0',
+      },
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      user: auth
+        ? {
+            id: auth.user.id,
+            email: auth.user.email,
+          }
+        : null,
+      version: '1.0.0',
     });
   }
 );

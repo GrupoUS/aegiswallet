@@ -1,22 +1,78 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+
 import { supabase } from '@/integrations/supabase/client';
-import { trpc } from '@/lib/trpc';
+import { apiClient } from '@/lib/api-client';
+
+interface BankAccount {
+  id: string;
+  user_id: string;
+  institution_name: string;
+  institution_id: string;
+  account_type: string;
+  account_mask: string;
+  balance: number;
+  currency: string;
+  is_primary: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+interface BankAccountApiResponse<T> {
+  data: T;
+  meta: {
+    requestId: string;
+    retrievedAt?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string;
+  };
+}
 
 /**
  * Hook para gerenciar contas bancárias
  */
 export function useBankAccounts() {
-  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
-  const { data: accounts, isLoading, error, refetch } = trpc.bankAccounts.getAll.useQuery();
+  const {
+    data: accountsResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['bank-accounts'],
+    queryFn: async () => {
+      const response =
+        await apiClient.get<BankAccountApiResponse<BankAccount[]>>('/v1/bank-accounts');
+      return response.data;
+    },
+  });
 
-  const { mutate: createAccount, isPending: isCreating } = trpc.bankAccounts.create.useMutation({
-    onError: (error) => {
+  const { mutate: createAccount, isPending: isCreating } = useMutation({
+    mutationFn: async (input: {
+      institution_name: string;
+      account_type: 'checking' | 'savings' | 'investment' | 'cash';
+      balance?: number;
+      currency?: string;
+      is_primary?: boolean;
+      is_active?: boolean;
+      account_mask?: string;
+      institution_id?: string;
+    }) => {
+      const response = await apiClient.post<BankAccountApiResponse<BankAccount>>(
+        '/v1/bank-accounts',
+        input
+      );
+      return response.data;
+    },
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao criar conta bancária');
     },
     onSuccess: (data) => {
-      utils.bankAccounts.getAll.setData(undefined, (old) => {
+      queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
         if (!old) {
           return [data];
         }
@@ -26,12 +82,29 @@ export function useBankAccounts() {
     },
   });
 
-  const { mutate: updateAccount, isPending: isUpdating } = trpc.bankAccounts.update.useMutation({
-    onError: (error) => {
+  const { mutate: updateAccount, isPending: isUpdating } = useMutation({
+    mutationFn: async (input: {
+      id: string;
+      institution_name?: string;
+      account_type?: 'checking' | 'savings' | 'investment' | 'cash';
+      balance?: number;
+      currency?: string;
+      is_primary?: boolean;
+      is_active?: boolean;
+      account_mask?: string;
+    }) => {
+      const { id, ...data } = input;
+      const response = await apiClient.put<BankAccountApiResponse<BankAccount>>(
+        `/v1/bank-accounts/${id}`,
+        data
+      );
+      return response.data;
+    },
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao atualizar conta bancária');
     },
     onSuccess: (data) => {
-      utils.bankAccounts.getAll.setData(undefined, (old) => {
+      queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
         if (!old) {
           return old;
         }
@@ -41,36 +114,46 @@ export function useBankAccounts() {
     },
   });
 
-  const { mutate: deleteAccount, isPending: isDeleting } = trpc.bankAccounts.delete.useMutation({
-    onError: (error) => {
+  const { mutate: deleteAccount, isPending: isDeleting } = useMutation({
+    mutationFn: async (input: { id: string }) => {
+      await apiClient.delete(`/v1/bank-accounts/${input.id}`);
+      return input.id;
+    },
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao remover conta bancária');
     },
     onSuccess: () => {
-      utils.bankAccounts.getAll.invalidate();
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
       toast.success('Conta bancária removida com sucesso!');
     },
   });
 
-  const { mutate: updateBalance, isPending: isUpdatingBalance } =
-    trpc.bankAccounts.updateBalance.useMutation({
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar saldo');
-      },
-      onSuccess: (data) => {
-        utils.bankAccounts.getAll.setData(undefined, (old) => {
-          if (!old) {
-            return old;
-          }
-          return old.map((account) => (account.id === data.id ? data : account));
-        });
-        utils.bankAccounts.getTotalBalance.invalidate();
-        toast.success('Saldo atualizado com sucesso!');
-      },
-    });
+  const { mutate: updateBalance, isPending: isUpdatingBalance } = useMutation({
+    mutationFn: async (input: { id: string; balance: number }) => {
+      const response = await apiClient.patch<BankAccountApiResponse<BankAccount>>(
+        `/v1/bank-accounts/${input.id}/balance`,
+        { balance: input.balance }
+      );
+      return response.data;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao atualizar saldo');
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
+        if (!old) {
+          return old;
+        }
+        return old.map((account) => (account.id === data.id ? data : account));
+      });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', 'total-balance'] });
+      toast.success('Saldo atualizado com sucesso!');
+    },
+  });
 
   // Real-time subscription para contas bancárias
   useEffect(() => {
-    if (!accounts) {
+    if (!accountsResponse) {
       return;
     }
 
@@ -83,9 +166,9 @@ export function useBankAccounts() {
           schema: 'public',
           table: 'bank_accounts',
         },
-        (_payload) => {
-          utils.bankAccounts.getAll.invalidate();
-          utils.bankAccounts.getTotalBalance.invalidate();
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
+          queryClient.invalidateQueries({ queryKey: ['bank-accounts', 'total-balance'] });
         }
       )
       .subscribe();
@@ -93,10 +176,10 @@ export function useBankAccounts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [accounts, utils]);
+  }, [accountsResponse, queryClient]);
 
   return {
-    accounts: accounts || [],
+    accounts: accountsResponse || [],
     createAccount,
     deleteAccount,
     error,
@@ -115,13 +198,27 @@ export function useBankAccounts() {
  * Hook para obter saldo total
  */
 export function useTotalBalance() {
-  const { data: balances, isLoading, error } = trpc.bankAccounts.getTotalBalance.useQuery();
+  const {
+    data: balancesResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['bank-accounts', 'total-balance'],
+    queryFn: async () => {
+      const response = await apiClient.get<BankAccountApiResponse<Record<string, number>>>(
+        '/v1/bank-accounts/total-balance'
+      );
+      return response.data;
+    },
+  });
+
+  const balances = balancesResponse || {};
 
   return {
-    balances: balances || {},
+    balances,
     error,
     isLoading,
-    totalBRL: balances?.BRL || 0,
+    totalBRL: balances.BRL || 0,
   };
 }
 
@@ -130,13 +227,22 @@ export function useTotalBalance() {
  */
 export function useBankAccount(accountId: string) {
   const {
-    data: account,
+    data: accountResponse,
     isLoading,
     error,
-  } = trpc.bankAccounts.getById.useQuery({ id: accountId }, { enabled: !!accountId });
+  } = useQuery({
+    queryKey: ['bank-accounts', accountId],
+    queryFn: async () => {
+      const response = await apiClient.get<BankAccountApiResponse<BankAccount>>(
+        `/v1/bank-accounts/${accountId}`
+      );
+      return response.data;
+    },
+    enabled: !!accountId,
+  });
 
   return {
-    account,
+    account: accountResponse,
     error,
     isLoading,
   };
@@ -147,14 +253,25 @@ export function useBankAccount(accountId: string) {
  */
 export function useBalanceHistory(accountId: string, days: number = 30) {
   const {
-    data: history,
+    data: historyResponse,
     isLoading,
     error,
-  } = trpc.bankAccounts.getBalanceHistory.useQuery({ accountId, days }, { enabled: !!accountId });
+  } = useQuery({
+    queryKey: ['bank-accounts', accountId, 'history', days],
+    queryFn: async () => {
+      const response = await apiClient.get<
+        BankAccountApiResponse<Array<{ date: string; balance: number }>>
+      >(`/v1/bank-accounts/${accountId}/balance-history`, {
+        params: { days },
+      });
+      return response.data;
+    },
+    enabled: !!accountId,
+  });
 
   return {
     error,
-    history: history || [],
+    history: historyResponse || [],
     isLoading,
   };
 }

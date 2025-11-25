@@ -1,8 +1,8 @@
 ---
 title: "AegisWallet Technology Stack"
-last_updated: 2025-10-06
+last_updated: 2025-11-25
 form: reference
-tags: [tech-stack, bun, react, typescript, supabase, trpc, hono]
+tags: [tech-stack, bun, react, typescript, supabase, hono-rpc, hono]
 related:
   - ../architecture/source-tree.md
   - ../architecture/coding-standards.md
@@ -69,12 +69,12 @@ This document defines the **DEFINITIVE** technology selection for the entire Aeg
 
 | Technology | Version | Purpose | Rationale |
 |------------|---------|---------|-----------|
-| **Hono** | 4.9.10 | Edge-first API framework | Sub-150ms response times, lightweight, modern |
+| **Hono** | 4.10.4 | Edge-first API framework | Sub-150ms response times, lightweight, modern |
 | **@hono/node-server** | 1.19.5 | Node.js adapter | Runs Hono on Node.js/Bun runtime |
-| **tRPC Server** | 11.6.0 | Type-safe API procedures | End-to-end type safety, automatic client generation |
-| **tRPC Client** | 11.6.0 | Type-safe API client | Automatic TypeScript types from server procedures |
-| **tRPC React Query** | 11.6.0 | React integration | Seamless integration with TanStack Query |
-| **SuperJSON** | 2.2.2 | Data serialization | Handles Date, Map, Set, and other complex types in tRPC |
+| **@hono/zod-validator** | 0.5.0 | Request validation middleware | Type-safe input validation with Zod schemas |
+| **Hono RPC** | (via Hono) | Type-safe HTTP endpoints | Simpler than tRPC, ~50KB bundle reduction, clearer stack traces |
+
+> **Note**: The project migrated from tRPC to Hono RPC. See `docs/architecture/hono-rpc-architecture.md` for details.
 
 ### Database & Infrastructure
 
@@ -177,7 +177,7 @@ This document defines the **DEFINITIVE** technology selection for the entire Aeg
 
 ### Type Safety End-to-End
 - **TypeScript Strict Mode**: Prevents entire classes of runtime errors
-- **tRPC Contracts**: Type-safe API between frontend and backend
+- **Hono RPC + Zod**: Type-safe API endpoints with shared validation schemas
 - **Zod Validation**: Runtime validation for all external inputs
 - **Generated Database Types**: Direct mapping from Postgres schema to TypeScript
 - **React Hook Form + Zod**: Type-safe form validation and submission
@@ -303,15 +303,36 @@ const { data, error } = await supabase
   .eq('user_id', userId)
 ```
 
-### tRPC
+### Hono RPC API Client
 ```typescript
-import { router, publicProcedure, protectedProcedure } from "@/server/trpc"
+import { apiClient } from "@/lib/api-client"
+import { useQuery, useMutation } from "@tanstack/react-query"
 
-// Example procedure
-export const transactionRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.supabase.from('transactions').select('*')
-  }),
+// Query example
+const { data, isLoading } = useQuery({
+  queryKey: ['transactions'],
+  queryFn: () => apiClient.get('/api/v1/transactions'),
+})
+
+// Mutation example
+const { mutate } = useMutation({
+  mutationFn: (input) => apiClient.post('/api/v1/transactions', input),
+})
+```
+
+### Hono RPC Server Endpoint
+```typescript
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { authMiddleware } from '@/server/middleware/auth'
+
+const router = new Hono()
+
+router.get('/transactions', authMiddleware, async (c) => {
+  const { supabase } = c.get('auth')
+  const { data, error } = await supabase.from('transactions').select('*')
+  if (error) return c.json({ error: 'Failed to fetch' }, 500)
+  return c.json({ data })
 })
 ```
 
@@ -394,10 +415,12 @@ graph TB
     React --> Query[TanStack Query]
     React --> Form[React Hook Form]
 
-    Hono --> tRPC[tRPC Procedures]
-    Query --> tRPC
+    Hono --> HonoRPC[Hono RPC Endpoints]
+    Query --> ApiClient[API Client]
+    ApiClient --> HonoRPC
 
-    tRPC --> Supabase[Supabase Client]
+    HonoRPC --> Supabase[Supabase Client]
+    HonoRPC --> ZodValidator[@hono/zod-validator]
 
     Supabase --> Postgres[(PostgreSQL + RLS)]
     Supabase --> Auth[Supabase Auth]
@@ -410,7 +433,7 @@ graph TB
     React --> Motion[Motion/Framer Motion]
 
     Form --> Zod[Zod Validation]
-    tRPC --> Zod
+    ZodValidator --> Zod
 
     subgraph "Development Tools"
         Vitest[Vitest Testing]
@@ -439,13 +462,14 @@ graph TB
 - **Frontend Stack**: React 19 + TypeScript 5.9.3 + Vite 7.1.9
 - **Routing**: TanStack Router v1 with file-based routing
 - **State Management**: TanStack Query v5 + Zustand v5
-- **UI Components**: shadcn/ui + Radix UI + Tailwind CSS 3.4.17
-- **Backend**: Hono 4.9.10 + tRPC v11
+- **UI Components**: shadcn/ui + Radix UI + Tailwind CSS 4.1.14
+- **Backend**: Hono 4.10.4 + Hono RPC (migrated from tRPC)
+- **API Client**: Custom apiClient with TanStack Query integration
 - **Database**: Supabase with PostgreSQL, Auth, Realtime, Storage
 - **Forms**: React Hook Form + Zod validation
 - **Testing**: Vitest 3.2.4 with coverage
 - **Code Quality**: OXLint + Biome formatter
-- **Animation**: Motion (Framer Motion) 11.18.2
+- **Animation**: Motion (Framer Motion) 12.23.22
 - **Icons**: Lucide, Tabler, Remixicon
 - **Charts**: Recharts for data visualization
 
@@ -472,8 +496,8 @@ graph TB
 
 #### Backend & API
 - **Hono over Express**: Lightweight, edge-optimized, modern API, better performance
-- **tRPC over REST**: End-to-end type safety, automatic client generation, better DX
-- **tRPC over GraphQL**: Simpler setup, no schema language, better TypeScript integration
+- **Hono RPC over tRPC**: Simpler stack, ~50KB bundle reduction, clearer debugging, direct HTTP semantics
+- **Hono RPC over GraphQL**: Simpler setup, no schema language, direct endpoint mapping
 
 #### Database & Infrastructure
 - **Supabase over AWS RDS**: Faster development, built-in auth/realtime/storage, cost-effective
@@ -532,8 +556,8 @@ graph TB
 | TypeScript | 5.0.0 | 5.9.3 | 5.9.x |
 | React | 19.0.0 | 19.2.0 | 19.x |
 | Vite | 7.0.0 | 7.1.9 | 7.x |
-| Hono | 4.0.0 | 4.9.10 | 4.x |
-| tRPC | 11.0.0 | 11.6.0 | 11.x |
+| Hono | 4.0.0 | 4.10.4 | 4.x |
+| @hono/zod-validator | 0.4.0 | 0.5.0 | 0.x |
 | TanStack Query | 5.0.0 | 5.90.2 | 5.x |
 | TanStack Router | 1.0.0 | 1.132.41 | 1.x |
 | Supabase JS | 2.0.0 | 2.74.0 | 2.x |
@@ -542,6 +566,8 @@ graph TB
 | Zod | 4.0.0 | 4.1.12 | 4.x |
 | Motion | 11.0.0 | 12.23.22 | 12.x |
 | Recharts | 2.0.0 | 3.2.1 | 3.x |
+
+> **Migration Note**: tRPC has been replaced by Hono RPC. See `docs/architecture/hono-rpc-architecture.md` for migration details.
 
 ## Dependency Update Policy
 

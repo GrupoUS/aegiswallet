@@ -19,7 +19,7 @@ Refactor the entire application architecture to follow Clean Architecture princi
 
 ### Positive
 - Clear separation of concerns across domains
-- Improved testability and maintainability  
+- Improved testability and maintainability
 - Better scalability and independent deployment
 - Consistent API patterns and error handling
 - Compliance with financial software architecture standards
@@ -58,7 +58,7 @@ export interface Money {
 
 export enum TransactionStatus {
   PENDING = 'pending',
-  COMPLETED = 'completed', 
+  COMPLETED = 'completed',
   FAILED = 'failed',
   CANCELLED = 'cancelled'
 }
@@ -185,7 +185,7 @@ export class CreateTransactionUseCase {
         error: error.message,
         metadata: { request },
       })
-      
+
       throw error
     }
   }
@@ -226,7 +226,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
 
   async save(transaction: Transaction): Promise<Transaction> {
     const data = this.mapToDatabaseRecord(transaction)
-    
+
     const { data: saved, error } = await this.supabase
       .from('transactions')
       .insert(data)
@@ -327,7 +327,7 @@ export class TransactionController {
   async createTransaction(request: CreateTransactionRequest): Promise<APIResponse<Transaction>> {
     try {
       const result = await this.createTransactionUseCase.execute(request)
-      
+
       if (!result.success) {
         return {
           success: false,
@@ -351,7 +351,7 @@ export class TransactionController {
   async getTransactions(userId: string, options: GetTransactionsOptions): Promise<APIResponse<Transaction[]>> {
     try {
       const transactions = await this.getTransactionsUseCase.execute(userId, options)
-      
+
       return {
         success: true,
         data: transactions,
@@ -668,7 +668,7 @@ export const container = new DIContainer()
 1. **Migrate financial domain services**
 2. **Implement transaction use cases**
 3. **Create financial controllers**
-4. **Update tRPC routers to use controllers**
+4. **Update Hono RPC routes to use controllers**
 
 ### Phase 3: PIX Domain Migration (Week 3-4)
 1. **Migrate PIX domain services**
@@ -701,7 +701,7 @@ describe('CreateTransactionUseCase', () => {
   beforeEach(() => {
     mockRepository = createMockTransactionRepository()
     mockEventDispatcher = createMockEventDispatcher()
-    
+
     useCase = new CreateTransactionUseCase(
       mockRepository,
       mockAccountRepository,
@@ -791,7 +791,7 @@ describe('TransactionController Integration', () => {
 - [ ] Implement repository pattern with Supabase
 - [ ] Create use case classes for business logic
 - [ ] Implement controller pattern for API layer
-- [ ] Refactor tRPC routers to use controllers
+- [ ] Refactor Hono RPC routes to use controllers
 - [ ] Update component hooks to use new API patterns
 - [ ] Create comprehensive test suite
 - [ ] Update documentation and API specs
@@ -800,7 +800,7 @@ describe('TransactionController Integration', () => {
 
 ---
 
-**Decision Date**: 2025-01-XX  
-**Review Date**: 2025-02-XX  
-**Implementation Owner**: Architecture Team + Development Team  
+**Decision Date**: 2025-01-XX
+**Review Date**: 2025-02-XX
+**Implementation Owner**: Architecture Team + Development Team
 **Compliance**: Clean Architecture Principles + DDD Patterns

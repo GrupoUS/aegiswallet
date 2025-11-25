@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './config';
-import { SUPABASE_CONFIG, getClientOptions, isServer } from './config';
+import { getClientOptions, isServer, SUPABASE_CONFIG } from './config';
 
 /**
  * Creates a Supabase client instance with appropriate configuration

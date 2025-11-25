@@ -54,7 +54,7 @@ const AiChatRoute = AiChatRouteImport.update({
   id: '/ai-chat',
   path: '/ai-chat',
   getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route))
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',

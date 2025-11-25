@@ -16,6 +16,10 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/types/database.types';
+
+// Database row types for type-safe queries
+type SecurityEventInsert = Database['public']['Tables']['security_events']['Insert'];
 import { createAuditLog } from '@/lib/security/auditLogger';
 import type { DeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
 import { createDeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
@@ -30,7 +34,14 @@ import { createSMSProvider } from '@/lib/security/smsProvider';
 // Types
 // ============================================================================
 
-export type BiometricType = 'platform' | 'cross-platform' | 'pin' | 'sms' | 'push' | 'otp';
+export type BiometricType =
+  | 'platform'
+  | 'cross-platform'
+  | 'pin'
+  | 'sms'
+  | 'push'
+  | 'otp'
+  | 'system';
 export type SecurityEvent =
   | 'auth_success'
   | 'auth_failure'
@@ -44,7 +55,10 @@ export type SecurityEvent =
   | 'push_sent'
   | 'pin_sent'
   | 'pin_verified'
-  | 'biometric_enrolled';
+  | 'biometric_enrolled'
+  | 'security_alert_sent'
+  | 'sms_sent'
+  | 'sms_verified';
 
 export interface BiometricConfig {
   timeout: number; // milliseconds
@@ -64,7 +78,7 @@ export interface BiometricResult {
   method: BiometricType;
   error?: string;
   processingTime: number;
-  requiresAction?: 'otp' | 'push' | 'pin';
+  requiresAction?: 'otp' | 'push' | 'pin' | 'sms';
   sessionToken?: string;
   lockoutRemaining?: number;
 }
@@ -223,6 +237,10 @@ export class BiometricAuthService {
   private activeSessions: Map<string, AuthSession> = new Map();
   private rateLimitStore: Map<string, { attempts: number; resetTime: number }> = new Map();
 
+  // Fraud detection rules (used internally for validation)
+  // @ts-expect-error - Used in initializeFraudDetection but TypeScript doesn't see the assignment
+  private fraudRules: Array<{ type: string; threshold: number; enabled: boolean }> = [];
+
   // Enhanced security providers
   private smsProvider?: SMSProvider;
   private pushProvider?: PushProvider;
@@ -234,8 +252,8 @@ export class BiometricAuthService {
     securityProviders?: {
       sms?: { config: SMSConfig };
       push?: { config: PushConfig };
-      fraudDetection?: { config?: unknown };
-      deviceFingerprinting?: { config?: unknown };
+      fraudDetection?: { config?: Record<string, unknown> };
+      deviceFingerprinting?: { config?: Record<string, unknown> };
     }
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -316,16 +334,18 @@ export class BiometricAuthService {
       // Try to store in database for detailed security monitoring
       // If table doesn't exist, we'll still have the audit log
       try {
-        await supabase.from('security_events').insert({
+        const insertData: SecurityEventInsert = {
           created_at: new Date().toISOString(),
           event_type: event.event,
-          ip_address: event.ipAddress,
-          metadata: event.metadata,
+          ip_address: event.ipAddress ?? null,
+          metadata:
+            event.metadata as Database['public']['Tables']['security_events']['Insert']['metadata'],
           method: event.method,
-          risk_score: event.riskScore || 0,
-          user_agent: event.userAgent,
+          risk_score: event.riskScore ?? 0,
           user_id: event.userId,
-        });
+          user_agent: event.userAgent ?? null,
+        };
+        await supabase.from('security_events').insert(insertData);
       } catch (_dbError) {}
     } catch (_error) {}
   }
@@ -494,10 +514,12 @@ export class BiometricAuthService {
       // Try to fetch from database
       const { data } = await supabase
         .from('auth_sessions')
-        .select('*')
+        .select(
+          'id, user_id, session_token, expires_at, is_active, created_at, last_activity, method'
+        )
         .eq('session_token', sessionToken)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (data && new Date(data.expires_at || '') > new Date()) {
         const dbSession: AuthSession = {
@@ -641,10 +663,7 @@ export class BiometricAuthService {
       // Request authentication
       const credential = await navigator.credentials.get({
         publicKey: {
-          authenticatorSelection: {
-            authenticatorAttachment: this.config.authenticatorAttachment,
-            userVerification: this.config.userVerification,
-          },
+          userVerification: this.config.userVerification,
           challenge,
           timeout: this.config.timeout,
         },
@@ -756,13 +775,13 @@ export class BiometricAuthService {
       // Check if user is locked out
       const { data: lockout } = await supabase
         .from('auth_attempts')
-        .select('*')
+        .select('is_locked, lockout_until, failed_attempts')
         .eq('user_id', userId)
         .eq('method', 'pin')
         .eq('is_locked', true)
-        .single();
+        .maybeSingle();
 
-      if (lockout && new Date(lockout.lockout_until) > new Date()) {
+      if (lockout && lockout.lockout_until && new Date(lockout.lockout_until) > new Date()) {
         const remainingTime = new Date(lockout.lockout_until).getTime() - Date.now();
 
         return {
@@ -779,11 +798,11 @@ export class BiometricAuthService {
         .from('user_pins')
         .select('pin_hash, salt')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (!storedPin) {
         return {
-          error: 'PIN not set up',
+          error: 'PIN not configured',
           method: 'pin',
           processingTime: Date.now() - startTime,
           success: false,
@@ -862,7 +881,7 @@ export class BiometricAuthService {
       .single();
 
     if (attemptRecord) {
-      const newAttempts = attemptRecord.failed_attempts + 1;
+      const newAttempts = (attemptRecord.failed_attempts ?? 0) + 1;
 
       // Progressive lockout: increase lockout duration based on attempts
       let lockoutDuration = this.config.pinLockoutDuration;
@@ -951,9 +970,9 @@ export class BiometricAuthService {
     // Check if PIN already exists
     const { data: existingPin } = await supabase
       .from('user_pins')
-      .select('*')
+      .select('pin_hash, created_at')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (existingPin) {
       // Update existing PIN
@@ -1131,7 +1150,7 @@ export class BiometricAuthService {
       // Increment attempts
       await supabase
         .from('otp_codes')
-        .update({ attempts: storedOTP.attempts + 1 })
+        .update({ attempts: (storedOTP.attempts ?? 0) + 1 })
         .eq('id', storedOTP.id);
 
       return {
@@ -1178,7 +1197,7 @@ export class BiometricAuthService {
       const phoneNumber = userData?.phone;
 
       // Send push notification using push provider if available
-      let pushResult: { success: boolean; error?: string } | null = null;
+      let pushResult: { success: boolean; error?: string; requiresAction?: string } | null = null;
       if (this.pushProvider) {
         pushResult = await this.pushProvider.sendAuthPush(userId, phoneNumber || '');
       } else {
@@ -1204,7 +1223,7 @@ export class BiometricAuthService {
         ipAddress: getClientIP(),
         metadata: {
           phone_number: phoneNumber,
-          push_result: pushResult.success,
+          push_result: pushResult?.success ?? false,
         },
         method: 'push',
         userAgent: getUserAgent(),
@@ -1221,7 +1240,7 @@ export class BiometricAuthService {
         };
       }
       return {
-        error: pushResult.error || 'Failed to send push notification',
+        error: pushResult?.error || 'Failed to send push notification',
         method: 'push',
         processingTime: Date.now() - startTime,
         requiresAction: 'sms',
@@ -1396,16 +1415,18 @@ export class BiometricAuthService {
       // Check lockout status
       const { data: lockout } = await supabase
         .from('auth_attempts')
-        .select('*')
+        .select('is_locked, lockout_until')
         .eq('user_id', userId)
         .eq('method', 'pin')
         .eq('is_locked', true)
-        .single();
+        .maybeSingle();
 
-      const isLocked = lockout && new Date(lockout.lockout_until) > new Date();
-      const lockoutRemaining = isLocked
-        ? new Date(lockout.lockout_until).getTime() - Date.now()
-        : undefined;
+      const isLocked =
+        lockout && lockout.lockout_until && new Date(lockout.lockout_until) > new Date();
+      const lockoutRemaining =
+        isLocked && lockout.lockout_until
+          ? new Date(lockout.lockout_until).getTime() - Date.now()
+          : undefined;
 
       return {
         hasBiometric: !!biometric,

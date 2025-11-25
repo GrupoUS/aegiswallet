@@ -4,7 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LogLevel, Logger } from '../lib/logging/logger';
+import { Logger, LogLevel } from '../lib/logging/logger';
 
 // Removed unused imports - LoggerProvider and ReactNode not used in current tests
 

@@ -231,7 +231,7 @@ export class User {
   static fromDatabase(data: {
     id: string;
     email: string;
-    full_name: string;
+    full_name: string | null;
     phone?: string;
     cpf?: string;
     birth_date?: string | Date | null;
@@ -246,7 +246,7 @@ export class User {
       cpf: data.cpf ?? undefined,
       createdAt: new Date(data.created_at),
       email: data.email,
-      fullName: data.full_name,
+      fullName: data.full_name || '',
       id: data.id,
       phone: data.phone ?? undefined,
       preferences: data.preferences,

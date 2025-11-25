@@ -141,7 +141,10 @@ export class LGPDDataRetentionManager {
             user_id: userId,
           });
 
-          logger.info(`Automatically deleted ${dataType} for user ${userId}`);
+          logger.info(`Automatically deleted ${dataType} for user ${userId}`, {
+            resource_type: 'data_retention',
+            user_id: userId,
+          });
         }
       }
 
@@ -174,7 +177,7 @@ export class LGPDDataRetentionManager {
       await supabase.from('data_subject_requests').insert({
         created_at: new Date().toISOString(),
         id: requestId,
-        request_data: requestData,
+        request_data: requestData as Json | null,
         request_type: requestType,
         status: 'pending',
         user_id: userId,
@@ -193,7 +196,11 @@ export class LGPDDataRetentionManager {
         user_id: userId,
       });
 
-      logger.info(`Data subject request created: ${requestId} for user ${userId}`);
+      logger.info(`Data subject request created: ${requestId} for user ${userId}`, {
+        request_id: requestId,
+        resource_type: 'lgpd_rights',
+        user_id: userId,
+      });
       return requestId;
     } catch (error) {
       logger.error('Error creating data subject request:', error);
@@ -206,7 +213,11 @@ export class LGPDDataRetentionManager {
    */
   async processDeletionRequest(userId: string, requestId: string): Promise<void> {
     try {
-      logger.info(`Processing deletion request ${requestId} for user ${userId}`);
+      logger.info(`Processing deletion request ${requestId} for user ${userId}`, {
+        request_id: requestId,
+        resource_type: 'lgpd_rights',
+        user_id: userId,
+      });
 
       // Update request status
       await supabase
@@ -262,7 +273,12 @@ export class LGPDDataRetentionManager {
 
       logger.info(`Deletion request ${requestId} completed for user ${userId}`);
     } catch (error) {
-      logger.error('Error processing deletion request:', error);
+      logger.error('Error processing data deletion request:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        request_id: requestId,
+        resource_type: 'lgpd_rights',
+        user_id: userId,
+      });
 
       // Update request status to failed
       await supabase

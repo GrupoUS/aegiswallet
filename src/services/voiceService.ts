@@ -50,6 +50,11 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 
+interface SpeechSynthesisErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+
 interface SpeechRecognitionErrorEvent extends Event {
   error: string;
   message: string;

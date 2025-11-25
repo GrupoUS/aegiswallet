@@ -1,8 +1,11 @@
 # Router Consolidation Verification
 
-> **Status**: ✅ Complete
+> **Status**: ⚠️ SUPERSEDED - Historical Document
 > **Date**: 2025-11-24
 > **Purpose**: Document and verify the successful consolidation of duplicate tRPC routers
+> **Superseded By**: [Hono RPC Architecture](./hono-rpc-architecture.md)
+
+> **Note**: This document is kept for historical reference. The project has since migrated from tRPC to Hono RPC. See `hono-rpc-architecture.md` for current architecture.
 
 ## Executive Summary
 

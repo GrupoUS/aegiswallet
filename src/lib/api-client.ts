@@ -5,17 +5,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface ApiError extends Error {
   status?: number;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 class ApiClient {
@@ -23,15 +23,18 @@ class ApiClient {
 
   constructor() {
     // Use environment variable or default to current origin
-    this.baseUrl = import.meta.env.VITE_API_URL ||
-                 (typeof window !== 'undefined' ? window.location.origin : '') + '/api';
+    this.baseUrl =
+      import.meta.env.VITE_API_URL ||
+      `${typeof window !== 'undefined' ? window.location.origin : ''}/api`;
   }
 
   /**
    * Get authentication headers for API requests
    */
   private async getHeaders(): Promise<Record<string, string>> {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -53,7 +56,7 @@ class ApiClient {
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
-      let errorDetails: Record<string, any> = {};
+      let errorDetails: Record<string, unknown> = {};
       let errorCode: string | undefined;
 
       if (isJson) {
@@ -67,7 +70,7 @@ class ApiClient {
           errorMessage = response.statusText || errorMessage;
         }
       } else {
-        errorMessage = await response.text() || errorMessage;
+        errorMessage = (await response.text()) || errorMessage;
       }
 
       const error: ApiError = new Error(errorMessage);
@@ -87,14 +90,31 @@ class ApiClient {
   }
 
   /**
-   * Make a GET request
+   * Make a GET request with optional query parameters
    */
-  async get<T = any>(url: string): Promise<T> {
-    const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+  async get<T = unknown>(url: string, options?: { params?: Record<string, unknown> }): Promise<T> {
+    const baseFullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+
+    // Build query string from params, filtering out undefined/null values
+    let finalUrl = baseFullUrl;
+    if (options?.params) {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      }
+      const queryString = searchParams.toString();
+      if (queryString) {
+        finalUrl = `${baseFullUrl}${baseFullUrl.includes('?') ? '&' : '?'}${queryString}`;
+      }
+    }
+
     const headers = await this.getHeaders();
 
-    const response = await fetch(fullUrl, {
-      headers, method: 'GET',
+    const response = await fetch(finalUrl, {
+      headers,
+      method: 'GET',
     });
 
     return this.handleResponse<T>(response);
@@ -103,12 +123,14 @@ class ApiClient {
   /**
    * Make a POST request
    */
-  async post<T = any>(url: string, data?: unknown): Promise<T> {
+  async post<T = unknown>(url: string, data?: unknown): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const headers = await this.getHeaders();
 
     const response = await fetch(fullUrl, {
-      body: data ? JSON.stringify(data) : undefined, headers, method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+      headers,
+      method: 'POST',
     });
 
     return this.handleResponse<T>(response);
@@ -117,12 +139,14 @@ class ApiClient {
   /**
    * Make a PUT request
    */
-  async put<T = any>(url: string, data?: unknown): Promise<T> {
+  async put<T = unknown>(url: string, data?: unknown): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const headers = await this.getHeaders();
 
     const response = await fetch(fullUrl, {
-      body: data ? JSON.stringify(data) : undefined, headers, method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+      headers,
+      method: 'PUT',
     });
 
     return this.handleResponse<T>(response);
@@ -131,12 +155,14 @@ class ApiClient {
   /**
    * Make a PATCH request
    */
-  async patch<T = any>(url: string, data?: unknown): Promise<T> {
+  async patch<T = unknown>(url: string, data?: unknown): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const headers = await this.getHeaders();
 
     const response = await fetch(fullUrl, {
-      body: data ? JSON.stringify(data) : undefined, headers, method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+      headers,
+      method: 'PATCH',
     });
 
     return this.handleResponse<T>(response);
@@ -145,12 +171,13 @@ class ApiClient {
   /**
    * Make a DELETE request
    */
-  async delete<T = any>(url: string): Promise<T> {
+  async delete<T = unknown>(url: string): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const headers = await this.getHeaders();
 
     const response = await fetch(fullUrl, {
-      headers, method: 'DELETE',
+      headers,
+      method: 'DELETE',
     });
 
     return this.handleResponse<T>(response);
@@ -159,9 +186,15 @@ class ApiClient {
   /**
    * Upload a file
    */
-  async upload<T = any>(url: string, file: File, additionalData?: Record<string, any>): Promise<T> {
+  async upload<T = unknown>(
+    url: string,
+    file: File,
+    additionalData?: Record<string, unknown>
+  ): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     const formData = new FormData();
     formData.append('file', file);
@@ -178,7 +211,9 @@ class ApiClient {
     }
 
     const response = await fetch(fullUrl, {
-      body: formData, headers, method: 'POST',
+      body: formData,
+      headers,
+      method: 'POST',
     });
 
     return this.handleResponse<T>(response);
@@ -192,7 +227,8 @@ class ApiClient {
     const headers = await this.getHeaders();
 
     const response = await fetch(fullUrl, {
-      headers, method: 'GET',
+      headers,
+      method: 'GET',
     });
 
     if (!response.ok) {

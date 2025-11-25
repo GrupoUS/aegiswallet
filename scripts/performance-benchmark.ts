@@ -193,7 +193,9 @@ function calculateImprovements(benchmarks: BenchmarkResult[]): {
   return improvements;
 }
 
-function classifyImprovement(value: number): 'exceptional' | 'excellent' | 'good' | 'moderate' | 'needs-optimization' {
+function classifyImprovement(
+  value: number
+): 'exceptional' | 'excellent' | 'good' | 'moderate' | 'needs-optimization' {
   if (value >= 100) {
     return 'exceptional';
   }

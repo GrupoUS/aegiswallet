@@ -4,15 +4,15 @@
  * Calendário semanal com eventos financeiros
  */
 
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { useCalendar } from '@/components/calendar/calendar-context';
-import { GoogleCalendarSettings } from '@/components/calendar/google-calendar-settings';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Calendar as CalendarIcon, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useCalendar } from "@/components/calendar/calendar-context";
+import { GoogleCalendarSettings } from "@/components/calendar/google-calendar-settings";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,17 +20,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import type { CalendarEvent } from '@/components/ui/event-calendar';
-import { EventCalendar } from '@/components/ui/event-calendar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
-import { cn } from '@/lib/utils';
-import type { FinancialEvent } from '@/types/financial-events';
-import { formatEventAmount } from '@/types/financial-events';
+} from "@/components/ui/dialog";
+import type { CalendarEvent } from "@/components/ui/event-calendar";
+import { EventCalendar } from "@/components/ui/event-calendar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useGoogleCalendarSync } from "@/hooks/use-google-calendar-sync";
+import { cn } from "@/lib/utils";
+import type { FinancialEvent } from "@/types/financial-events";
+import { formatEventAmount } from "@/types/financial-events";
 
 // Converter FinancialEvent para CalendarEvent
-function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEvent {
+function toCalendarEvent(
+  event: FinancialEvent,
+  isSynced: boolean,
+): CalendarEvent {
   return {
     id: event.id,
     title: event.title,
@@ -44,9 +52,17 @@ function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEven
   };
 }
 
-export function FinancialCalendar(): JSX.Element {
-  const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar();
-  const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null);
+export function FinancialCalendar() {
+  const {
+    events: financialEvents,
+    addEvent,
+    updateEvent,
+    categories,
+    filters,
+  } = useCalendar();
+  const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(
+    null,
+  );
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -69,7 +85,9 @@ export function FinancialCalendar(): JSX.Element {
 
     // Aplicar filtros do contexto
     if (filters.categories && filters.categories.length > 0) {
-      filtered = filtered.filter((event) => filters.categories?.includes(event.category || ''));
+      filtered = filtered.filter((event) =>
+        filters.categories?.includes(event.category || ""),
+      );
     }
 
     if (filters.dateRange) {
@@ -85,7 +103,7 @@ export function FinancialCalendar(): JSX.Element {
       filtered = filtered.filter(
         (event) =>
           event.title.toLowerCase().includes(searchLower) ||
-          event.description?.toLowerCase().includes(searchLower)
+          event.description?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -108,58 +126,65 @@ export function FinancialCalendar(): JSX.Element {
       }
 
       // Adicionar informações adicionais
-      const statusMap: Record<string, 'confirmed' | 'tentative' | 'cancelled'> = {
-        cancelled: 'cancelled',
-        completed: 'confirmed',
-        paid: 'confirmed',
-        pending: 'tentative',
-        scheduled: 'confirmed',
-      };
-      calendarEvent.status = statusMap[event.status] || 'confirmed';
+      const statusMap: Record<string, "confirmed" | "tentative" | "cancelled"> =
+        {
+          cancelled: "cancelled",
+          completed: "confirmed",
+          paid: "confirmed",
+          pending: "tentative",
+          scheduled: "confirmed",
+        };
+      calendarEvent.status = statusMap[event.status] || "confirmed";
       calendarEvent.priority =
         event.amount && Math.abs(event.amount) > 1000
-          ? 'high'
+          ? "high"
           : event.amount && Math.abs(event.amount) > 500
-            ? 'medium'
-            : 'low';
-      calendarEvent.recurring = event.recurring;
+            ? "medium"
+            : "low";
+      calendarEvent.isRecurring = event.isRecurring;
 
       return calendarEvent;
     });
   }, [filteredEvents, categories, isConnected, syncSettings]);
 
-  const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>): Promise<void> => {
+  const handleEventAdd = async (
+    calendarEvent: Partial<CalendarEvent>,
+  ): Promise<void> => {
     try {
       // Converter CalendarEvent para FinancialEvent
       const financialEvent: Partial<FinancialEvent> = {
-        title: calendarEvent.title || 'Novo Evento',
+        title: calendarEvent.title || "Novo Evento",
         description: calendarEvent.description,
         start: calendarEvent.start || new Date(),
         end: calendarEvent.end || new Date(),
-        color: calendarEvent.color || 'blue',
+        color: calendarEvent.color || "blue",
         allDay: calendarEvent.allDay,
-        type: 'scheduled', // Default type
+        type: "scheduled", // Default type
         amount: 0, // Default amount
-        status: 'scheduled',
-        icon: '📅',
+        status: "scheduled",
+        icon: "📅",
       };
 
       const newEvent = await addEvent(financialEvent as FinancialEvent);
 
       // Sync if enabled
       if (isConnected && syncSettings?.sync_enabled && newEvent?.id) {
-        toast.info('Sincronizando com Google Calendar...');
-        await syncSingleEvent(newEvent.id, 'to_google');
+        toast.info("Sincronizando com Google Calendar...");
+        await syncSingleEvent(newEvent.id, "to_google");
       }
     } catch (_error) {
-      toast.error('Erro ao criar evento');
+      toast.error("Erro ao criar evento");
     }
   };
 
-  const handleEventUpdate = async (calendarEvent: CalendarEvent): Promise<void> => {
+  const handleEventUpdate = async (
+    calendarEvent: CalendarEvent,
+  ): Promise<void> => {
     try {
       // Encontrar o evento financeiro original e atualizar
-      const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
+      const financialEvent = financialEvents.find(
+        (e) => e.id === calendarEvent.id,
+      );
       if (financialEvent) {
         const updatedEvent = await updateEvent({
           ...financialEvent,
@@ -174,17 +199,19 @@ export function FinancialCalendar(): JSX.Element {
         // Sync if enabled
         if (isConnected && syncSettings?.sync_enabled && updatedEvent?.id) {
           // Debounce could be useful here to avoid too many API calls on drag
-          syncSingleEvent(updatedEvent.id, 'to_google');
+          syncSingleEvent(updatedEvent.id, "to_google");
         }
       }
     } catch (_error) {
-      toast.error('Erro ao atualizar evento');
+      toast.error("Erro ao atualizar evento");
     }
   };
 
   const handleEventEdit = (calendarEvent: CalendarEvent): void => {
     // Encontrar o evento financeiro original para mostrar detalhes completos
-    const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
+    const financialEvent = financialEvents.find(
+      (e) => e.id === calendarEvent.id,
+    );
     if (financialEvent) {
       setSelectedEvent(financialEvent);
       setIsEventDialogOpen(true);
@@ -199,7 +226,7 @@ export function FinancialCalendar(): JSX.Element {
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
               <CalendarIcon className="h-4 w-4" />
-              {isConnected ? 'Google Conectado' : 'Conectar Google'}
+              {isConnected ? "Google Conectado" : "Conectar Google"}
               {isSyncing && <RefreshCw className="h-3 w-3 animate-spin ml-1" />}
             </Button>
           </DialogTrigger>
@@ -248,16 +275,22 @@ export function FinancialCalendar(): JSX.Element {
             </DialogTitle>
             <DialogDescription>
               {selectedEvent &&
-                format(new Date(selectedEvent.start), "d 'de' MMMM 'às' HH:mm", {
-                  locale: ptBR,
-                })}
+                format(
+                  new Date(selectedEvent.start),
+                  "d 'de' MMMM 'às' HH:mm",
+                  {
+                    locale: ptBR,
+                  },
+                )}
             </DialogDescription>
           </DialogHeader>
           {selectedEvent && (
             <div className="space-y-4">
               <div>
                 <p className="text-muted-foreground text-sm">Valor</p>
-                <p className="font-bold text-2xl">{formatEventAmount(selectedEvent.amount)}</p>
+                <p className="font-bold text-2xl">
+                  {formatEventAmount(selectedEvent.amount)}
+                </p>
               </div>
               {selectedEvent.description && (
                 <div>
@@ -269,15 +302,15 @@ export function FinancialCalendar(): JSX.Element {
                 <p className="text-muted-foreground text-sm">Status</p>
                 <Badge
                   className={cn(
-                    'mt-1',
-                    selectedEvent.status === 'paid' && 'bg-success',
-                    selectedEvent.status === 'pending' && 'bg-warning',
-                    selectedEvent.status === 'scheduled' && 'bg-info'
+                    "mt-1",
+                    selectedEvent.status === "paid" && "bg-success",
+                    selectedEvent.status === "pending" && "bg-warning",
+                    selectedEvent.status === "scheduled" && "bg-info",
                   )}
                 >
-                  {selectedEvent.status === 'paid' && 'Pago'}
-                  {selectedEvent.status === 'pending' && 'Pendente'}
-                  {selectedEvent.status === 'scheduled' && 'Agendado'}
+                  {selectedEvent.status === "paid" && "Pago"}
+                  {selectedEvent.status === "pending" && "Pendente"}
+                  {selectedEvent.status === "scheduled" && "Agendado"}
                 </Badge>
               </div>
               {selectedEvent.category && (
@@ -286,7 +319,7 @@ export function FinancialCalendar(): JSX.Element {
                   <p className="capitalize">{selectedEvent.category}</p>
                 </div>
               )}
-              {selectedEvent.recurring && (
+              {selectedEvent.isRecurring && (
                 <div>
                   <Badge variant="outline">Recorrente</Badge>
                 </div>
@@ -295,7 +328,7 @@ export function FinancialCalendar(): JSX.Element {
                 <Button variant="outline" className="flex-1">
                   Editar
                 </Button>
-                {selectedEvent.status === 'pending' && (
+                {selectedEvent.status === "pending" && (
                   <Button className="flex-1">Marcar como Pago</Button>
                 )}
               </div>

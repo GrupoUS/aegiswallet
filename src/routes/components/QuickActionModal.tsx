@@ -128,12 +128,24 @@ export function QuickActionModal({
 
         // 1. Debit source
         await createTransaction({
-          account_id: accountId, amount: -val, description: description || `Transferência para ${targetAccount.institution_name}`, is_manual_entry: true, status: 'posted', transaction_date: date, transaction_type: 'transfer',
+          account_id: accountId,
+          amount: -val,
+          description: description || `Transferência para ${targetAccount.institution_name}`,
+          is_manual_entry: true,
+          status: 'posted',
+          transaction_date: date,
+          transaction_type: 'transfer',
         });
 
         // 2. Credit target
         await createTransaction({
-          account_id: targetAccountId, amount: val, description: description || `Transferência de ${sourceAccount.institution_name}`, is_manual_entry: true, status: 'posted', transaction_date: date, transaction_type: 'transfer',
+          account_id: targetAccountId,
+          amount: val,
+          description: description || `Transferência de ${sourceAccount.institution_name}`,
+          is_manual_entry: true,
+          status: 'posted',
+          transaction_date: date,
+          transaction_type: 'transfer',
         });
 
         // 3. Update balances
@@ -149,7 +161,13 @@ export function QuickActionModal({
       } else if (actionType === 'deposit') {
         // Credit account
         await createTransaction({
-          account_id: accountId, amount: val, description: description || 'Depósito', is_manual_entry: true, status: 'posted', transaction_date: date, transaction_type: 'credit',
+          account_id: accountId,
+          amount: val,
+          description: description || 'Depósito',
+          is_manual_entry: true,
+          status: 'posted',
+          transaction_date: date,
+          transaction_type: 'credit',
         });
 
         await updateBalance({
@@ -159,7 +177,13 @@ export function QuickActionModal({
       } else if (actionType === 'withdraw') {
         // Debit account
         await createTransaction({
-          account_id: accountId, amount: -val, description: description || 'Saque', is_manual_entry: true, status: 'posted', transaction_date: date, transaction_type: 'debit',
+          account_id: accountId,
+          amount: -val,
+          description: description || 'Saque',
+          is_manual_entry: true,
+          status: 'posted',
+          transaction_date: date,
+          transaction_type: 'debit',
         });
 
         await updateBalance({

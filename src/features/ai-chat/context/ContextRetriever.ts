@@ -1,0 +1,278 @@
+import { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
+
+export interface FinancialContext {
+  recentTransactions: Transaction[];
+  accountBalances: AccountBalance[];
+  upcomingEvents: FinancialEvent[];
+  userPreferences: UserPreferences;
+  summary: {
+    totalBalance: number;
+    monthlyIncome: number;
+    monthlyExpenses: number;
+    upcomingBillsCount: number;
+  };
+}
+
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  category: string;
+  date: string;
+  type: 'income' | 'expense';
+}
+
+interface AccountBalance {
+  accountId: string;
+  accountName: string;
+  balance: number;
+  currency: string;
+}
+
+interface FinancialEvent {
+  id: string;
+  title: string;
+  amount: number;
+  date: string;
+  type: string;
+  status: string;
+}
+
+interface UserPreferences {
+  language: string;
+  currency: string;
+  timezone: string;
+}
+
+export class ContextRetriever {
+  private supabase: SupabaseClient<Database>;
+  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+
+  constructor(supabase: SupabaseClient<Database>) {
+    this.supabase = supabase;
+  }
+
+  /**
+   * Fetch complete financial context for the user
+   */
+  async getFinancialContext(userId: string): Promise<FinancialContext> {
+    const cacheKey = `context:${userId}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const [transactions, balances, events, preferences] = await Promise.all([
+      this.getRecentTransactions(userId),
+      this.getAccountBalances(userId),
+      this.getUpcomingEvents(userId),
+      this.getUserPreferences(userId),
+    ]);
+
+    const context: FinancialContext = {
+      recentTransactions: transactions,
+      accountBalances: balances,
+      upcomingEvents: events,
+      userPreferences: preferences,
+      summary: this.calculateSummary(transactions, balances, events),
+    };
+
+    this.setCache(cacheKey, context);
+    return context;
+  }
+
+  /**
+   * Get recent transactions (last 30 days)
+   */
+  async getRecentTransactions(userId: string, days = 30): Promise<Transaction[]> {
+    const cacheKey = `transactions:${userId}:${days}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await this.supabase
+      .from('transactions')
+      .select('id, amount, description, category, created_at, type')
+      .eq('user_id', userId)
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      return [];
+    }
+
+    const transactions: Transaction[] = (data || []).map((t) => ({
+      id: t.id,
+      amount: t.amount,
+      description: t.description || '',
+      category: t.category || 'other',
+      date: t.created_at,
+      type: t.type as 'income' | 'expense',
+    }));
+
+    this.setCache(cacheKey, transactions);
+    return transactions;
+  }
+
+  /**
+   * Get account balances
+   */
+  async getAccountBalances(userId: string): Promise<AccountBalance[]> {
+    const cacheKey = `balances:${userId}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const { data, error } = await this.supabase
+      .from('bank_accounts')
+      .select('id, name, balance, currency')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching balances:', error);
+      return [];
+    }
+
+    const balances: AccountBalance[] = (data || []).map((a) => ({
+      accountId: a.id,
+      accountName: a.name || 'Unnamed Account',
+      balance: a.balance || 0,
+      currency: a.currency || 'BRL',
+    }));
+
+    this.setCache(cacheKey, balances);
+    return balances;
+  }
+
+  /**
+   * Get upcoming financial events (next 30 days)
+   */
+  async getUpcomingEvents(userId: string, days = 30): Promise<FinancialEvent[]> {
+    const cacheKey = `events:${userId}:${days}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+
+    const { data, error } = await this.supabase
+      .from('financial_events')
+      .select('id, title, amount, due_date, event_type_id, status')
+      .eq('user_id', userId)
+      .lte('due_date', endDate.toISOString())
+      .order('due_date', { ascending: true })
+      .limit(20);
+
+    if (error) {
+      console.error('Error fetching events:', error);
+      return [];
+    }
+
+    const events: FinancialEvent[] = (data || []).map((e) => ({
+      id: e.id,
+      title: e.title,
+      amount: e.amount || 0,
+      date: e.due_date,
+      type: e.event_type_id || 'other',
+      status: e.status || 'pending',
+    }));
+
+    this.setCache(cacheKey, events);
+    return events;
+  }
+
+  /**
+   * Get user preferences
+   */
+  async getUserPreferences(userId: string): Promise<UserPreferences> {
+    const cacheKey = `preferences:${userId}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('language, currency, timezone')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching preferences:', error);
+      return {
+        language: 'pt-BR',
+        currency: 'BRL',
+        timezone: 'America/Sao_Paulo',
+      };
+    }
+
+    const preferences: UserPreferences = {
+      language: data?.language || 'pt-BR',
+      currency: data?.currency || 'BRL',
+      timezone: data?.timezone || 'America/Sao_Paulo',
+    };
+
+    this.setCache(cacheKey, preferences);
+    return preferences;
+  }
+
+  /**
+   * Calculate summary statistics
+   */
+  private calculateSummary(
+    transactions: Transaction[],
+    balances: AccountBalance[],
+    events: FinancialEvent[]
+  ) {
+    const totalBalance = balances.reduce((sum, acc) => sum + acc.balance, 0);
+
+    const monthlyIncome = transactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const monthlyExpenses = transactions
+      .filter((t) => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const upcomingBillsCount = events.filter((e) => e.status === 'pending').length;
+
+    return {
+      totalBalance,
+      monthlyIncome,
+      monthlyExpenses,
+      upcomingBillsCount,
+    };
+  }
+
+  /**
+   * Clear cache (useful for testing or when data changes)
+   */
+  clearCache() {
+    this.cache.clear();
+  }
+
+  /**
+   * Get from cache if not expired
+   */
+  private getFromCache(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    const isExpired = Date.now() - cached.timestamp > this.cacheTimeout;
+    if (isExpired) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  /**
+   * Set cache
+   */
+  private setCache(key: string, data: any) {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+}

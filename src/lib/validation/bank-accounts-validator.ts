@@ -40,11 +40,34 @@ export interface SanitizedBankAccountInput extends Record<string, unknown> {
 }
 
 const baseInsertSchema = z.object({
-  account_holder_name: z.string().optional(), account_mask: z.string().min(7, 'Máscara da conta é obrigatória.'), account_number: z.string().optional(), account_type: z.enum(BANK_ACCOUNT_TYPES), balance: z.number(), belvo_account_id: z.string().optional(), currency: z.string().default('BRL'), institution_id: z.string().min(1, 'ID da instituição é obrigatório.'), institution_name: z.string().min(1, 'Nome da instituição é obrigatório.'), is_active: z.boolean().optional(), is_primary: z.boolean().optional(), user_id: z.string().min(1, 'Usuário é obrigatório.'),
+  account_holder_name: z.string().optional(),
+  account_mask: z.string().min(7, 'Máscara da conta é obrigatória.'),
+  account_number: z.string().optional(),
+  account_type: z.enum(BANK_ACCOUNT_TYPES),
+  balance: z.number(),
+  belvo_account_id: z.string().optional(),
+  currency: z.string().default('BRL'),
+  institution_id: z.string().min(1, 'ID da instituição é obrigatório.'),
+  institution_name: z.string().min(1, 'Nome da instituição é obrigatório.'),
+  is_active: z.boolean().optional(),
+  is_primary: z.boolean().optional(),
+  user_id: z.string().min(1, 'Usuário é obrigatório.'),
 });
 
 const baseUpdateSchema = z.object({
-  account_holder_name: z.string().optional(), account_mask: z.string().optional(), account_number: z.string().optional(), account_type: z.enum(BANK_ACCOUNT_TYPES).optional(), balance: z.number().optional(), belvo_account_id: z.string().optional(), currency: z.string().optional(), institution_id: z.string().optional(), institution_name: z.string().optional(), is_active: z.boolean().optional(), is_primary: z.boolean().optional(), sync_error_message: z.string().optional(), sync_status: z.enum(SYNC_STATUSES).optional(),
+  account_holder_name: z.string().optional(),
+  account_mask: z.string().optional(),
+  account_number: z.string().optional(),
+  account_type: z.enum(BANK_ACCOUNT_TYPES).optional(),
+  balance: z.number().optional(),
+  belvo_account_id: z.string().optional(),
+  currency: z.string().optional(),
+  institution_id: z.string().optional(),
+  institution_name: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_primary: z.boolean().optional(),
+  sync_error_message: z.string().optional(),
+  sync_status: z.enum(SYNC_STATUSES).optional(),
 });
 
 const allowedKeys = new Set<keyof SanitizedBankAccountInput>([
@@ -67,7 +90,9 @@ const allowedKeys = new Set<keyof SanitizedBankAccountInput>([
 const MANUAL_PREFIX = 'manual_';
 
 const isValidInstitutionId = (institutionId?: string) => {
-  if (!institutionId) {return false;}
+  if (!institutionId) {
+    return false;
+  }
   const trimmed = institutionId.trim();
   if (BRAZILIAN_BANKS.has(trimmed)) {
     return true;
@@ -79,7 +104,9 @@ const isValidInstitutionId = (institutionId?: string) => {
 const isValidCurrency = (currency?: string) => !currency || currency.toUpperCase() === 'BRL';
 
 const isValidBelvoId = (belvoId?: string | null) => {
-  if (!belvoId) {return true;}
+  if (!belvoId) {
+    return true;
+  }
   if (belvoId.startsWith(MANUAL_PREFIX)) {
     return true;
   }
@@ -87,7 +114,9 @@ const isValidBelvoId = (belvoId?: string | null) => {
 };
 
 export const validateAccountMask = (mask?: string | null) => {
-  if (!mask) {return false;}
+  if (!mask) {
+    return false;
+  }
   return /^\*{4}\s\d{4}$/.test(mask);
 };
 
@@ -199,7 +228,8 @@ export const validateBankAccountForInsert = (
   }
 
   return {
-    errors, valid: errors.length === 0,
+    errors,
+    valid: errors.length === 0,
   };
 };
 
@@ -253,6 +283,7 @@ export const validateBankAccountForUpdate = (
   }
 
   return {
-    errors, valid: errors.length === 0,
+    errors,
+    valid: errors.length === 0,
   };
 };

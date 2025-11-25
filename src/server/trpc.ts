@@ -23,9 +23,9 @@ import { calendarRouter } from '@/server/routers/calendar';
  * have also been removed. All functionality is now consolidated in the routers below.
  */
 import { consolidatedRouters } from '@/server/routers/consolidated';
-import { contactsRouter } from '@/server/routers/contacts';
+// contactsRouter removed - using Hono API instead at /api/v1/contacts
 import { googleCalendarRouter } from '@/server/routers/google-calendar';
-import { pixRouter } from '@/server/routers/pix';
+// PIX router removed - PIX functionality discontinued
 
 /**
  * Main router with consolidated architecture
@@ -49,8 +49,8 @@ export const appRouter = router({
   financialTransactions: consolidatedRouters.transactions, // Alias for backward compatibility
   calendar: calendarRouter,
   googleCalendar: googleCalendarRouter,
-  contacts: contactsRouter,
-  pix: pixRouter,
+  // contacts: using Hono API at /api/v1/contacts instead
+  // pix: PIX functionality removed
 
   // Procedures without router equivalents
   banking: createBankingRouter(t),

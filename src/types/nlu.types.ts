@@ -47,7 +47,7 @@ export interface TransactionEntity {
   date: string;
   created_at: string;
   user_id: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'transfer';
 }
 
 export interface NLUContext {

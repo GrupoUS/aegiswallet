@@ -5,17 +5,9 @@ import {
   useContactsStats,
   useFavoriteContacts,
 } from '@/hooks/useContacts';
-import {
-  useCalendarStats,
-  useOverdueEvents,
-  useUpcomingEvents,
-} from '@/hooks/useFinancialEvents';
-import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
-import {
-  useRecentTransactions,
-  useTransactionStats,
-} from '@/hooks/use-transactions';
+import { useFinancialEvents, useFinancialEventMutations } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
+import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
@@ -28,12 +20,11 @@ export function useDashboard() {
   // Dados financeiros
   const { accounts, isLoading: accountsLoading } = useBankAccounts();
   const { balances, isLoading: balancesLoading } = useTotalBalance();
-  const { transactions, isLoading: transactionsLoading } = useRecentTransactions({ limit: 10 });
-  const { stats: transactionStats, isLoading: statsLoading } = useTransactionStats('month');
+  const { data: transactions, isLoading: transactionsLoading } = useTransactions();
+  const { data: stats, isLoading: statsLoading } = useTransactionsStats('month');
 
   // Dados do calendário
-  const { upcomingEvents, isLoading: upcomingLoading } = useUpcomingEvents();
-  const { overdueEvents, isLoading: overdueLoading } = useOverdueEvents();
+  const { events, loading: eventsLoading } = useFinancialEvents();
 
   // Dados dos contatos
   const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts();
@@ -52,33 +43,30 @@ export function useDashboard() {
     // Resumo financeiro
     financial: {
       accounts,
-      recentTransactions: transactions.slice(0, 5),
-      stats: transactionStats,
+      recentTransactions: transactions.data?.slice(0, 5) || [],
+      stats: stats.data,
       totalAccounts: accounts.length,
       totalBalance: balances.BRL || 0,
-      totalTransactions: transactions.length,
+      totalTransactions: transactions.data?.length || 0,
     },
 
     // Eventos e lembretes
     events: {
-      overdue: overdueEvents.length,
-      overdueEvents: overdueEvents.slice(0, 3),
-      upcoming: upcomingEvents.length,
-      upcomingEvents: upcomingEvents.slice(0, 3),
+      total: events.length,
+      recentEvents: events.slice(0, 5),
     },
 
     // Contatos
     contacts: {
       favoriteContacts: favoriteContacts.slice(0, 5),
       favorites: favoriteContacts.length,
-      total: contactStats?.totalContacts || 0,
+      total: contactStats.data?.totalContacts || 0,
       transferableContacts: transferContacts.slice(0, 5),
     },
 
     // Estatísticas combinadas
     stats: {
       bankStats: useBankAccountsStats(),
-      calendarStats: useCalendarStats(),
       contactStats,
     },
   };
@@ -87,11 +75,11 @@ export function useDashboard() {
     profileLoading ||
     accountsLoading ||
     balancesLoading ||
-    transactionsLoading ||
-    statsLoading ||
-    upcomingLoading ||
-    overdueLoading ||
+    transactions.isLoading ||
+    stats.isLoading ||
+    events.isLoading ||
     contactsLoading ||
+    stats.isLoading ||
     contactStatsLoading;
 
   return {
@@ -110,16 +98,16 @@ export function useDashboard() {
 export function useDashboardWidgets() {
   // Widget 1: Resumo Financeiro
   const { balances } = useTotalBalance();
-  const { stats } = useTransactionStats('month');
+  const { stats } = useTransactionsStats('month');
 
   // Widget 2: Próximos Eventos
-  const { upcomingEvents } = useUpcomingEvents();
+  const { events } = useFinancialEvents();
 
   // Widget 3: Contatos Favoritos
   const { favoriteContacts } = useFavoriteContacts();
 
   // Widget 4: Transações Recentes
-  const { transactions } = useRecentTransactions(5);
+  const { transactions } = useTransactions();
 
   const widgets = {
     favoriteContacts: {
@@ -137,9 +125,9 @@ export function useDashboardWidgets() {
       count: transactions.length,
       transactions: transactions.slice(0, 4),
     },
-    upcomingEvents: {
-      count: upcomingEvents.length,
-      events: upcomingEvents.slice(0, 3),
+    recentEvents: {
+      count: events.length,
+      events: events.slice(0, 3),
     },
   };
 
@@ -220,7 +208,6 @@ export function useDashboardSettings() {
  * Hook para ações rápidas do Dashboard
  */
 export function useDashboardActions() {
-  const { createTransaction } = useFinancialEventMutations();
   const { addEvent } = useFinancialEventMutations();
   const { createContact } = useContacts();
   const { createAccount } = useBankAccounts();
@@ -239,8 +226,8 @@ export function useDashboardActions() {
       return addEvent(data as Parameters<typeof addEvent>[0]);
     },
     quickTransaction: (data: unknown) => {
-      // Implementar lógica para transação rápida
-      return createTransaction(data as Parameters<typeof createTransaction>[0]);
+      // Usar addEvent para criar transações (events financeiros)
+      return addEvent(data as Parameters<typeof addEvent>[0]);
     },
   };
 

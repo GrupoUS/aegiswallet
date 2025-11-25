@@ -33,21 +33,24 @@ function loadEnvFiles(): EnvMap {
       continue;
     }
     const content = readFileSync(fullPath, 'utf-8');
-    content.split(/\r?\n/).forEach((line) => {
+    for (const line of content.split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) {
-        return;
+        continue;
       }
       const [key, ...rest] = trimmed.split('=');
       if (!key) {
-        return;
+        continue;
       }
-      const value = rest.join('=').trim().replace(/^['"]|['"]$/g, '');
+      const value = rest
+        .join('=')
+        .trim()
+        .replace(/^['"]|['"]$/g, '');
       if (value.length === 0) {
-        return;
+        continue;
       }
       map[key.trim()] = value;
-    });
+    }
   }
   return map;
 }
@@ -62,18 +65,19 @@ const missing = REQUIRED_VARS.filter((key) => !resolveEnv(key));
 const warnings = OPTIONAL_VARS.filter((key) => !resolveEnv(key));
 
 if (missing.length > 0) {
-  console.error('❌ Missing required environment variables:');
-  missing.forEach((key) => {
-    console.error(`  • ${key}`);
-  });
-  console.error('\nRefer to env.example and docs/ops/supabase-env.md for the authoritative list.');
+  process.stderr.write('❌ Missing required environment variables:\n');
+  for (const key of missing) {
+    process.stderr.write(`  • ${key}\n`);
+  }
+  process.stderr.write('\nRefer to env.example and docs/ops/supabase-env.md for the authoritative list.\n');
   process.exit(1);
 }
 
 if (warnings.length > 0) {
-  console.warn('⚠️ Optional variables not found (recommended to set):');
-  warnings.forEach((key) => console.warn(`  • ${key}`));
+  process.stdout.write('⚠️ Optional variables not found (recommended to set):\n');
+  for (const key of warnings) {
+    process.stdout.write(`  • ${key}\n`);
+  }
 }
 
-console.log('✅ Supabase environment validated successfully.');
-
+process.stdout.write('✅ Supabase environment validated successfully.\n');

@@ -3,28 +3,27 @@
  * Imports and exports all v1 route modules
  */
 
-import healthRouter from './health';
-import voiceRouter from './voice';
+import bankAccountsRouter from './bank-accounts';
 import bankingRouter from './banking';
-import pixRouter from './pix';
+import calendarRouter from './calendar';
 import contactsRouter from './contacts';
-// Import other v1 routers as they are created
-// import bankAccountsRouter from './bank-accounts';
-// import calendarRouter from './calendar';
-// import googleCalendarRouter from './google-calendar';
-// import usersRouter from './users';
-// import transactionsRouter from './transactions';
+import googleCalendarRouter from './google-calendar';
+import healthRouter from './health';
+// PIX functionality removed
+import transactionsRouter from './transactions';
+import usersRouter from './users';
+import voiceRouter from './voice';
 
 // Export all routers for use in main server
 export {
   healthRouter,
   voiceRouter,
   bankingRouter,
-  pixRouter,
+  // pixRouter removed - PIX functionality discontinued
   contactsRouter,
-  // bankAccountsRouter,
-  // calendarRouter,
-  // googleCalendarRouter,
-  // usersRouter,
-  // transactionsRouter,
+  bankAccountsRouter,
+  usersRouter,
+  transactionsRouter,
+  calendarRouter,
+  googleCalendarRouter,
 };

@@ -3,8 +3,7 @@
  * Standardized caching strategies for different content types
  */
 
-import type { MiddlewareHandler } from 'hono';
-import type { Context, Next } from 'hono';
+import type { Context, MiddlewareHandler, Next } from 'hono';
 import { cacheConfig } from '@/server/config/environment';
 
 /**

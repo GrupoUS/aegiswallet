@@ -1,17 +1,33 @@
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { trpc } from '@/lib/trpc';
+import { apiClient } from '@/lib/api-client';
+import type { Database } from '@/types/database.types';
+
+// Type for financial events from database
+type FinancialEvent = Database['public']['Tables']['financial_events']['Row'];
+// Type for transactions from database
+type Transaction = Database['public']['Tables']['transactions']['Row'];
 
 interface SearchFilters {
   startDate?: string;
   endDate?: string;
   typeId?: string;
   categoryId?: string;
+  accountId?: string;
 }
 
 interface UseCalendarSearchProps {
   initialQuery?: string;
   initialFilters?: SearchFilters;
   enabled?: boolean;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  meta: {
+    requestId: string;
+    retrievedAt: string;
+  };
 }
 
 export function useCalendarSearch({
@@ -24,30 +40,49 @@ export function useCalendarSearch({
   const [searchType, setSearchType] = useState<'events' | 'transactions'>('events');
 
   // Buscar eventos financeiros
-  const eventsQuery = trpc.calendar.searchEvents.useQuery(
-    {
-      query: query.trim(),
-      ...filters,
-      limit: 20,
+  const eventsQuery = useQuery({
+    queryKey: ['calendar', 'events', 'search', query.trim(), filters],
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<FinancialEvent[]>>(
+        '/v1/calendar/events/search',
+        {
+          params: {
+            categoryId: filters.categoryId,
+            endDate: filters.endDate,
+            limit: 20,
+            query: query.trim(),
+            startDate: filters.startDate,
+          },
+        }
+      );
+      return response.data;
     },
-    {
-      enabled: enabled && searchType === 'events' && query.trim().length > 0,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+    enabled: enabled && searchType === 'events' && query.trim().length > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   // Buscar transações
-  const transactionsQuery = trpc.calendar.searchTransactions.useQuery(
-    {
-      query: query.trim(),
-      ...filters,
-      limit: 20,
+  const transactionsQuery = useQuery({
+    queryKey: ['calendar', 'transactions', 'search', query.trim(), filters],
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<Transaction[]>>(
+        '/v1/calendar/transactions/search',
+        {
+          params: {
+            accountId: filters.accountId,
+            categoryId: filters.categoryId,
+            endDate: filters.endDate,
+            limit: 20,
+            query: query.trim(),
+            startDate: filters.startDate,
+          },
+        }
+      );
+      return response.data;
     },
-    {
-      enabled: enabled && searchType === 'transactions' && query.trim().length > 0,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+    enabled: enabled && searchType === 'transactions' && query.trim().length > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   // Computed results
   const results = useMemo(() => {

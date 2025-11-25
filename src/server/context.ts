@@ -10,7 +10,14 @@ export interface CreateContextOptions {
 }
 
 const buildSession = (token: string, user: User): Session => ({
-  access_token: token, expires_at: null, expires_in: 0, provider_refresh_token: null, provider_token: null, refresh_token: null, token_type: 'bearer', user,
+  access_token: token,
+  expires_at: undefined,
+  expires_in: 0,
+  provider_refresh_token: null,
+  provider_token: null,
+  refresh_token: '',
+  token_type: 'bearer',
+  user,
 });
 
 /**

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "bun run build",
+  "buildCommand": "bun run routes:generate && bun run build",
   "outputDirectory": "dist",
   "installCommand": "bun install",
   "framework": null,

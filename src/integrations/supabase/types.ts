@@ -1586,6 +1586,81 @@ export interface Database {
         };
         Relationships: [];
       };
+      voice_metrics: {
+        Row: {
+          id: string;
+          user_id: string;
+          command: string;
+          confidence_score: number | null;
+          processing_time_ms: number;
+          success: boolean;
+          error_type: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          command: string;
+          confidence_score?: number | null;
+          processing_time_ms: number;
+          success: boolean;
+          error_type?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          command?: string;
+          confidence_score?: number | null;
+          processing_time_ms?: number;
+          success?: boolean;
+          error_type?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      contacts: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          email: string | null;
+          phone: string | null;
+          pix_key: string | null;
+          pix_key_type: string | null;
+          is_favorite: boolean;
+          notes: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          email?: string | null;
+          phone?: string | null;
+          pix_key?: string | null;
+          pix_key_type?: string | null;
+          is_favorite?: boolean;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          email?: string | null;
+          phone?: string | null;
+          pix_key?: string | null;
+          pix_key_type?: string | null;
+          is_favorite?: boolean;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       voice_feedback: {
         Row: {
           audio_file_path: string | null;

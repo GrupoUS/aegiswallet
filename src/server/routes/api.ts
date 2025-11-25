@@ -5,7 +5,13 @@
 
 import type { Hono } from 'hono';
 
-export function setupApiRoutes(app: Hono) {
+interface AppEnv {
+  Variables: {
+    requestId: string;
+  };
+}
+
+export function setupApiRoutes(app: Hono<AppEnv>) {
   // API ping endpoint for connectivity testing
   app.get('/api/ping', (c) => {
     return c.json({

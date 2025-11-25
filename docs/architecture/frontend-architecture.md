@@ -1,8 +1,8 @@
 ---
 title: "AegisWallet Frontend Architecture"
-last_updated: 2025-10-04
+last_updated: 2025-11-25
 form: specification
-tags: [frontend, react, typescript, voice-interface, brazilian-market]
+tags: [frontend, react, typescript, voice-interface, brazilian-market, hono-rpc]
 related:
   - ../architecture/tech-stack.md
   - ../architecture/source-tree.md
@@ -28,17 +28,15 @@ related:
 {
   "dependencies": {
     "@tanstack/react-query": "^5.90.2",
-    "@tanstack/react-router": "^1.114.3",
-    "@trpc/client": "^11.6.0",
-    "@trpc/react-query": "^11.6.0",
+    "@tanstack/react-router": "^1.132.41",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-hook-form": "^7.55.0",
+    "react-hook-form": "^7.64.0",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
-    "zod": "^4.1.11",
-    "zustand": "^5.0.2"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
@@ -49,6 +47,9 @@ related:
     "biome": "^2.2.5"
   }
 }
+```
+
+> **Note**: The project uses Hono RPC instead of tRPC. API calls use `apiClient` from `@/lib/api-client` with TanStack Query.
 
 ## 2. Project Structure
 
@@ -66,7 +67,7 @@ src/
 │   │   ├── BoletoPayment.tsx
 │   │   └── PixTransfer.tsx
 │   ├── providers/         # React context providers
-│   │   ├── TRPCProvider.tsx
+│   │   ├── QueryProvider.tsx
 │   │   └── VoiceProvider.tsx
 │   ├── ui/                # Base UI components (shadcn/ui)
 │   │   ├── button.tsx
@@ -101,13 +102,16 @@ src/
 │   ├── index.tsx
 │   ├── dashboard.tsx
 │   └── transactions.tsx
-├── server/                 # tRPC procedures
+├── server/                 # Hono RPC backend
 │   ├── context.ts
 │   ├── index.ts
-│   └── procedures/
-│       ├── auth.ts
-│       ├── transactions.ts
-│       └── users.ts
+│   ├── middleware/
+│   │   └── auth.ts
+│   └── routes/
+│       └── v1/
+│           ├── auth.ts
+│           ├── transactions.ts
+│           └── users.ts
 ├── styles/
 │   ├── accessibility.css
 │   └── globals.css
@@ -155,14 +159,23 @@ export const VoiceComponent: React.FC<VoiceComponentProps> = ({ className, onVoi
 ### TanStack Query + Zustand Configuration
 
 ```typescript
-// TanStack Query - server state
-import { createTRPCReact } from '@trpc/react-query'
-export const trpc = createTRPCReact<AppRouter>()
+// TanStack Query - server state with Hono RPC
+import { QueryClient } from '@tanstack/react-query'
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false },
     mutations: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }) },
   },
+})
+
+// API Client for Hono RPC endpoints
+import { apiClient } from '@/lib/api-client'
+
+// Usage with TanStack Query
+const { data } = useQuery({
+  queryKey: ['transactions'],
+  queryFn: () => apiClient.get('/api/v1/transactions'),
 })
 
 // Zustand - voice state
@@ -189,43 +202,66 @@ export const useVoiceStore = create<VoiceState>((set) => ({
 
 ## 5. API Integration & Routing
 
-### tRPC + Router Configuration
+### Hono RPC + Router Configuration
 
 ```typescript
-// TRPC Provider
+// Query Provider with API Client
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { httpBatchLink } from '@trpc/client'
-import { trpc } from '@/lib/trpc'
 
-const TRPCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const QueryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queryClient] = React.useState(() => new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   }))
-  const [trpcClient] = React.useState(() => trpc.createClient({
-    links: [httpBatchLink({ url: '/trpc', headers: () => {
-      const token = localStorage.getItem('supabase_token')
-      return token ? { authorization: `Bearer ${token}` } : {}
-    }})],
-  }))
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
 }
 
+// API Client (src/lib/api-client.ts)
+import { supabase } from '@/integrations/supabase/client'
+
+class ApiClient {
+  private async getHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return {
+      'Content-Type': 'application/json',
+      ...(session?.access_token && {
+        Authorization: `Bearer ${session.access_token}`,
+      }),
+    }
+  }
+
+  async get(url: string) {
+    const res = await fetch(url, { headers: await this.getHeaders() })
+    if (!res.ok) throw new Error(await res.text())
+    return res.json()
+  }
+
+  async post(url: string, body: unknown) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: await this.getHeaders(),
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) throw new Error(await res.text())
+    return res.json()
+  }
+}
+
+export const apiClient = new ApiClient()
+
 // Root Route
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TRPCProvider } from '@/components/providers/TRPCProvider'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider'
 export const Route = createRootRoute({ component: RootComponent })
 function RootComponent() {
   return (
     <AccessibilityProvider>
-      <TRPCProvider>
+      <QueryProvider>
         <div className="min-h-screen bg-background font-sans"><Outlet /></div>
-      </TRPCProvider>
+      </QueryProvider>
     </AccessibilityProvider>
   )
 }
@@ -392,8 +428,8 @@ bun preview                 # Preview build
 
 ```typescript
 import { supabase } from "@/integrations/supabase/client"
-import { trpc } from "@/lib/trpc"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { apiClient } from "@/lib/api-client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { VoiceDashboard } from "@/components/voice/VoiceDashboard"
 import { Button } from "@/components/ui/button"
 ```

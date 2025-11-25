@@ -9,8 +9,8 @@ import type {
   BoletoFormData,
   FinancialEventFormData,
   LGPDUserProfile,
-  PIXTransferFormData,
   PaymentRuleFormData,
+  PIXTransferFormData,
 } from './financial.interfaces';
 
 // =============================================================================

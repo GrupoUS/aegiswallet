@@ -14,8 +14,8 @@
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ensureTestUtils } from './test-utils';
 import type { TestUtils } from './test-utils';
+import { ensureTestUtils } from './test-utils';
 
 let render: typeof import('@testing-library/react').render;
 let screen: typeof import('@testing-library/react').screen;
@@ -129,7 +129,9 @@ Object.defineProperty(global, 'localStorage', {
 ensureTestUtils();
 let domReady = false;
 const ensureDom = async () => {
-  if (domReady) {return;}
+  if (domReady) {
+    return;
+  }
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     const { JSDOM } = await import('jsdom');
     const dom = new JSDOM('<!doctype html><html><body></body></html>');

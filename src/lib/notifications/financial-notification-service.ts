@@ -66,7 +66,7 @@ export class FinancialNotificationService {
   private getDefaultConfig(): FinancialReminderConfig {
     return {
       billPaymentReminders: [7, 3, 1], // Contas (boletos)
-      pixTransferReminders: [2, 1], // PIX transfers
+      pixTransferReminders: [], // PIX transfers removed
       creditCardReminders: [5, 3, 1], // Credit card bills
       investmentReminders: [3, 1], // Investment maturities
       taxPaymentReminders: [30, 15, 7, 3, 1], // Tax payments
@@ -99,7 +99,7 @@ export class FinancialNotificationService {
       if (isPayment) {
         return {
           actions: [
-            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
+            { action: 'pay', icon: '/icons/payment.png', title: 'Pagar Agora' },
             {
               action: 'remind',
               icon: '/icons/clock.png',
@@ -133,7 +133,7 @@ export class FinancialNotificationService {
       if (isPayment) {
         return {
           actions: [
-            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
+            { action: 'pay', icon: '/icons/payment.png', title: 'Pagar Agora' },
             {
               action: 'schedule',
               icon: '/icons/calendar.png',
@@ -166,7 +166,7 @@ export class FinancialNotificationService {
       if (isPayment) {
         return {
           actions: [
-            { action: 'pay', icon: '/icons/pix.png', title: 'Pagar Agora' },
+            { action: 'pay', icon: '/icons/payment.png', title: 'Pagar Agora' },
             {
               action: 'schedule',
               icon: '/icons/calendar.png',
@@ -238,8 +238,7 @@ export class FinancialNotificationService {
       'rent-payment': [15, 7, 3, 1],
       condominium: [10, 5, 1],
 
-      // PIX e transferências
-      'pix-transfer': this.config.pixTransferReminders,
+      // Transferências (PIX removido)
       'ted-transfer': [2, 1],
       'doc-transfer': [3, 1],
 
@@ -449,7 +448,11 @@ export class FinancialNotificationService {
           // BrazilianFinancialEvent doesn't have userId.
           // rawEvent has user_id.
 
-          await this.sendFinancialNotification(event, rawEvent.user_id, reminder.message ?? undefined);
+          await this.sendFinancialNotification(
+            event,
+            rawEvent.user_id,
+            reminder.message ?? undefined
+          );
 
           // Mark reminder as sent
           await supabase
@@ -581,7 +584,7 @@ export async function sendBillPaymentReminder(
   await service.sendFinancialNotification(event, userId);
 }
 
-export async function sendPixTransferReminder(
+export async function sendTransferReminder(
   event: BrazilianFinancialEvent,
   userId: string,
   service: FinancialNotificationService

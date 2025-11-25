@@ -1,7 +1,48 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { trpc } from '@/lib/trpc';
+import { apiClient } from '@/lib/api-client';
+import type { Database } from '@/types/database.types';
+
+// Contact type from database
+type Contact = Database['public']['Tables']['contacts']['Row'];
+
+// Contact list response type
+interface ContactsListResponse {
+  contacts: Contact[];
+  total: number;
+  hasMore: boolean;
+}
+
+interface ContactsApiResponse {
+  data: ContactsListResponse;
+  meta: {
+    requestId: string;
+    retrievedAt: string;
+  };
+}
+
+interface ContactApiResponse {
+  data: Contact;
+  meta: {
+    requestId: string;
+    retrievedAt: string;
+  };
+}
+
+interface StatsResponse {
+  data: {
+    totalContacts: number;
+    favoriteContacts: number;
+    contactsWithEmail: number;
+    contactsWithPhone: number;
+    favoritePercentage: number;
+  };
+  meta: {
+    requestId: string;
+    retrievedAt: string;
+  };
+}
 
 /**
  * Hook para gerenciar contatos
@@ -12,129 +53,140 @@ export function useContacts(filters?: {
   limit?: number;
   offset?: number;
 }) {
-  const utils = trpc.useUtils();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, isLoading, error, refetch } = trpc.contacts.getAll.useQuery(filters || {});
+  // Default filters
+  const defaultFilters = {
+    limit: 50,
+    offset: 0,
+    ...filters,
+  };
 
-  const contacts = useMemo(() => {
-    return data?.contacts || [];
-  }, [data]);
+  const total = contacts.length;
 
-  const total = useMemo(() => {
-    return data?.total || 0;
-  }, [data]);
-
-  const { mutate: createContact, isPending: isCreating } = trpc.contacts.create.useMutation({
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao criar contato');
-    },
-    onSuccess: (data) => {
-      utils.contacts.getAll.setData(filters || {}, (old) => {
-        if (!old) {
-          return { contacts: [data], hasMore: false, total: 1 };
-        }
-        return {
-          ...old,
-          contacts: [data, ...old.contacts],
-          total: old.total + 1,
-        };
+  const createContact = async (contactData: Partial<Contact>) => {
+    try {
+      const response = await apiClient.post<ContactApiResponse>('/v1/contacts', {
+        name: contactData.name!,
+        email: contactData.email || undefined,
+        phone: contactData.phone || undefined,
+        notes: contactData.notes || undefined,
+        isFavorite: contactData.is_favorite || false,
       });
-      utils.contacts.getStats.invalidate();
+
       toast.success('Contato criado com sucesso!');
-    },
-  });
-
-  const { mutate: updateContact, isPending: isUpdating } = trpc.contacts.update.useMutation({
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao atualizar contato');
-    },
-    onSuccess: (data) => {
-      utils.contacts.getAll.setData(filters || {}, (old) => {
-        if (!old) {
-          return old;
-        }
-        return {
-          ...old,
-          contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
-        };
-      });
-      utils.contacts.getStats.invalidate();
-      toast.success('Contato atualizado com sucesso!');
-    },
-  });
-
-  const { mutate: deleteContact, isPending: isDeleting } = trpc.contacts.delete.useMutation({
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao remover contato');
-    },
-    onSuccess: () => {
-      utils.contacts.getAll.invalidate();
-      utils.contacts.getStats.invalidate();
-      toast.success('Contato removido com sucesso!');
-    },
-  });
-
-  const { mutate: toggleFavorite, isPending: isTogglingFavorite } =
-    trpc.contacts.toggleFavorite.useMutation({
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao alternar favorito');
-      },
-      onSuccess: (data) => {
-        utils.contacts.getAll.setData(filters || {}, (old) => {
-          if (!old) {
-            return old;
-          }
-          return {
-            ...old,
-            contacts: old.contacts.map((c) => (c.id === data.id ? data : c)),
-          };
-        });
-        utils.contacts.getFavorites.invalidate();
-        utils.contacts.getStats.invalidate();
-        toast.success(
-          data.is_favorite ? 'Contato adicionado aos favoritos!' : 'Contato removido dos favoritos!'
-        );
-      },
-    });
-
-  // Real-time subscription para contatos
-  useEffect(() => {
-    if (!contacts.length) {
-      return;
+      await refetch(); // Refresh contacts
+      return response.data;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao criar contato');
+      throw error;
     }
+  };
 
-    const channel = supabase
-      .channel('contacts_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contacts',
-        },
-        (_payload) => {
-          utils.contacts.getAll.invalidate();
-          utils.contacts.getFavorites.invalidate();
-          utils.contacts.getStats.invalidate();
-        }
-      )
-      .subscribe();
+  const updateContact = async (contactData: Partial<Contact> & { id: string }) => {
+    try {
+      const response = await apiClient.put<ContactApiResponse>(`/v1/contacts/${contactData.id}`, {
+        id: contactData.id,
+        name: contactData.name,
+        email: contactData.email,
+        phone: contactData.phone,
+        notes: contactData.notes,
+        isFavorite: contactData.is_favorite,
+      });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [contacts.length, utils]);
+      toast.success('Contato atualizado com sucesso!');
+      await refetch(); // Refresh contacts
+      return response.data;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar contato');
+      throw error;
+    }
+  };
+
+  const deleteContact = async (contactId: string) => {
+    try {
+      await apiClient.delete(`/v1/contacts/${contactId}`);
+      toast.success('Contato removido com sucesso!');
+      await refetch(); // Refresh contacts
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao remover contato');
+      throw error;
+    }
+  };
+
+  const toggleFavorite = async (contactId: string) => {
+    try {
+      const response = await apiClient.post<ContactApiResponse>(`/v1/contacts/${contactId}/favorite`);
+      toast.success('Favorito atualizado com sucesso!');
+      await refetch(); // Refresh contacts
+      return response.data;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao alternar favorito');
+      throw error;
+    }
+  };
+
+  const refetch = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let query = supabase
+        .from('contacts')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (defaultFilters.search) {
+        query = query.or(
+          `name.ilike.%${defaultFilters.search}%,email.ilike.%${defaultFilters.search}%,phone.ilike.%${defaultFilters.search}%`
+        );
+      }
+
+      if (defaultFilters.isFavorite !== undefined) {
+        query = query.eq('is_favorite', defaultFilters.isFavorite);
+      }
+
+      const { data, error } = await query
+        .order('is_favorite', { ascending: false })
+        .order('name', { ascending: true })
+        .range(defaultFilters.offset || 0, (defaultFilters.offset || 0) + (defaultFilters.limit || 50) - 1);
+
+      if (error) {
+        throw error;
+      }
+
+      setContacts(data || []);
+      return data || [];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar contatos';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load contacts on mount and when filters change
+  useEffect(() => {
+    refetch();
+  }, [JSON.stringify(defaultFilters)]);
 
   return {
     contacts,
     createContact,
     deleteContact,
     error,
-    isCreating,
-    isDeleting,
+    isCreating: false,
+    isDeleting: false,
     isLoading,
-    isTogglingFavorite,
-    isUpdating,
+    isTogglingFavorite: false,
+    isUpdating: false,
     refetch,
     toggleFavorite,
     total,
@@ -146,11 +198,29 @@ export function useContacts(filters?: {
  * Hook para obter contato específico
  */
 export function useContact(contactId: string) {
-  const {
-    data: contact,
-    isLoading,
-    error,
-  } = trpc.contacts.getById.useQuery({ id: contactId }, { enabled: !!contactId });
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!contactId) return;
+
+    const fetchContact = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiClient.get<ContactApiResponse>(`/v1/contacts/${contactId}`);
+        setContact(response.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar contato');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContact();
+  }, [contactId]);
 
   return {
     contact,
@@ -163,11 +233,31 @@ export function useContact(contactId: string) {
  * Hook para contatos favoritos
  */
 export function useFavoriteContacts() {
-  const { data: favoriteContacts, isLoading, error } = trpc.contacts.getFavorites.useQuery();
+  const [favoriteContacts, setFavoriteContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFavoriteContacts = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.get<{ data: Contact[]; meta: any }>('/v1/contacts/favorites');
+      setFavoriteContacts(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar favoritos');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavoriteContacts();
+  }, []);
 
   return {
     error,
-    favoriteContacts: favoriteContacts || [],
+    favoriteContacts,
     isLoading,
   };
 }
@@ -176,16 +266,37 @@ export function useFavoriteContacts() {
  * Hook para busca de contatos
  */
 export function useContactSearch(query: string, limit: number = 10) {
-  const {
-    data: searchResults,
-    isLoading,
-    error,
-  } = trpc.contacts.search.useQuery({ limit, query }, { enabled: !!query && query.length >= 2 });
+  const [searchResults, setSearchResults] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const searchContacts = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiClient.get<{ data: Contact[]; meta: any }>(`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`);
+        setSearchResults(response.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro na busca');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    searchContacts();
+  }, [query, limit]);
 
   return {
     error,
     isLoading,
-    searchResults: searchResults || [],
+    searchResults,
   };
 }
 
@@ -193,7 +304,27 @@ export function useContactSearch(query: string, limit: number = 10) {
  * Hook para estatísticas dos contatos
  */
 export function useContactsStats() {
-  const { data: stats, isLoading, error } = trpc.contacts.getStats.useQuery();
+  const [stats, setStats] = useState<StatsResponse['data'] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.get<StatsResponse>('/v1/contacts/stats');
+      setStats(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar estatísticas');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return {
     error,
@@ -206,13 +337,10 @@ export function useContactsStats() {
  * Hook para contatos recentes
  */
 export function useRecentContacts(limit: number = 5) {
-  const { data, isLoading, error } = trpc.contacts.getAll.useQuery(
-    { limit },
-    { staleTime: 1000 * 60 } // 1 minuto
-  );
+  const { contacts, error, isLoading } = useContacts({ limit });
 
   return {
-    contacts: data?.contacts || [],
+    contacts: contacts || [],
     error,
     isLoading,
   };
@@ -227,8 +355,8 @@ export function useContactsForTransfer() {
   // Filtrar contatos que têm informações para transferência
   const transferableContacts = useMemo(() => {
     return contacts
-      .filter((contact) => contact.email || contact.phone)
-      .map((contact) => ({
+      .filter((contact: Contact) => contact.email || contact.phone)
+      .map((contact: Contact) => ({
         id: contact.id,
         name: contact.name,
         email: contact.email,
@@ -256,8 +384,8 @@ export function useContactsForPix() {
   // Filtrar contatos que têm informações para PIX
   const pixContacts = useMemo(() => {
     return contacts
-      .filter((contact) => contact.email || contact.phone)
-      .map((contact) => ({
+      .filter((contact: Contact) => contact.email || contact.phone)
+      .map((contact: Contact) => ({
         id: contact.id,
         name: contact.name,
         email: contact.email,

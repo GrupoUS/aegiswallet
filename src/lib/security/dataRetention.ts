@@ -426,9 +426,12 @@ export class DataRetentionManager {
 
   private async cleanupTransactions(_cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
     // Financial records are retained for fiscal compliance; log for visibility.
-    logger.debug('Transactions retention policy is compliance-only; no automatic cleanup executed', {
-      policy,
-    });
+    logger.debug(
+      'Transactions retention policy is compliance-only; no automatic cleanup executed',
+      {
+        policy,
+      }
+    );
   }
 
   private async cleanupUserActivityLogs(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {

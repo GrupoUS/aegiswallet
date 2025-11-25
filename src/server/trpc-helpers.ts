@@ -1,4 +1,4 @@
-import { TRPCError, initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from '@/server/context';
 import { generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';

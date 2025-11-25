@@ -7,13 +7,44 @@
  * @module nlu/errorRecovery
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
-import type { ExtractedEntity, NLUResult, ConversationContext, RecoveryContext } from '@/lib/nlu/contextProcessor';
-import type { NLUEntity, PatternEvolution, UserAdaptation } from '@/lib/nlu/types';
-import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
+import type { ExtractedEntity, NLUResult } from '@/lib/nlu/types';
+import { EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
+
+// Recovery context for error handling
+export interface RecoveryContext {
+  lastIntent?: IntentType;
+  lastEntities?: ExtractedEntity[];
+  errorHistory: Array<{ code: NLUErrorCode; timestamp: Date }>;
+  recoveryAttempts: number;
+  userFeedback?: string;
+}
+
+// Financial context for recovery
+export interface FinancialContext {
+  recentTransactions?: Array<{ type: string; amount: number; date: Date }>;
+  frequentRecipients?: string[];
+  commonCategories?: string[];
+  averageSpending?: number;
+  accountSummary?: {
+    totalBalance: number;
+    availableBalance: number;
+    pendingTransactions: number;
+    scheduledPayments: number;
+  };
+  billPatterns?: {
+    upcomingBills: Array<{
+      type: string;
+      amount: number;
+      dueDate: Date;
+      status: 'pending' | 'overdue' | 'paid';
+    }>;
+    averageBillAmount: number;
+    mostCommonBills: string[];
+  };
+}
 
 // ============================================================================
 // Error Recovery Configuration
@@ -106,6 +137,7 @@ export interface RecoveryResult {
   reasoning: string;
   requiresUserConfirmation: boolean;
   suggestedUserResponse?: string;
+  suggestedCorrection?: string;
   alternativeOptions?: RecoveryResult[];
 }
 
@@ -127,15 +159,19 @@ export interface RecoveryContext {
 }
 
 export interface LearningData {
-  errorPattern: string;
-  correctionApplied: string;
+  originalText: string;
+  correctedText: string;
+  errorType: string;
+  strategy: string;
+  errorPattern?: string;
+  correctionApplied?: string;
   success: boolean;
   confidenceImprovement: number;
   userFeedback?: 'positive' | 'negative' | 'neutral';
-  regionalVariation: string;
-  linguisticStyle: string;
+  regionalVariation?: string;
+  linguisticStyle?: string;
   timestamp: Date;
-  userId: string;
+  userId?: string;
 }
 
 // ============================================================================
@@ -261,7 +297,17 @@ export class ErrorRecoverySystem {
 
             // Store learning data
             if (this.config.learningEnabled) {
-              this.storeLearningData(context, errorClassification, strategy, result);
+              const learningDataEntry: LearningData = {
+                originalText: context.originalText,
+                correctedText: result.suggestedCorrection || context.originalText,
+                errorType: errorClassification.type,
+                strategy: strategy.name,
+                success: result.confidenceImprovement > 0,
+                confidenceImprovement: result.confidenceImprovement,
+                timestamp: new Date(),
+              };
+              this.learningData.push(learningDataEntry);
+              this.persistLearningData(learningDataEntry);
             }
 
             return result;
@@ -409,6 +455,10 @@ export class ErrorRecoverySystem {
 
     try {
       const learningData: LearningData = {
+        originalText,
+        correctedText,
+        errorType: 'user_correction',
+        strategy: 'feedback_learning',
         confidenceImprovement: correctedResult.confidence - (originalResult?.confidence || 0),
         correctionApplied: correctedText,
         errorPattern: originalText,
@@ -424,10 +474,8 @@ export class ErrorRecoverySystem {
       this.learningData.push(learningData);
 
       // Update patterns based on feedback
-      if (feedback === 'positive') {
-        await this.updatePatternsFromPositiveFeedback(learningData);
-      } else if (feedback === 'negative') {
-        await this.updatePatternsFromNegativeFeedback(learningData);
+      if (feedback === 'positive' || feedback === 'negative') {
+        await this.updatePatternsFromFeedback(learningData, feedback === 'positive');
       }
 
       // Persist learning data
@@ -456,7 +504,8 @@ export class ErrorRecoverySystem {
     originalResult: NLUResult | null,
     context: Partial<RecoveryContext>
   ): Promise<ErrorClassification> {
-    const _lowerText = originalText.toLowerCase();
+    // Text is already processed by caller - use originalText instead
+    void originalText;
 
     // Analyze error characteristics
     let errorType: ErrorClassification['type'] = 'processing_error';
@@ -824,16 +873,16 @@ export class ErrorRecoverySystem {
     }
 
     // Use financial context
+    const upcomingBills = context.financialContext?.billPatterns?.upcomingBills ?? [];
     if (
-      (context.financialContext?.billPatterns?.upcomingBills?.length > 0 &&
-        text.includes('pagar')) ||
+      (upcomingBills && upcomingBills.length > 0 && text.includes('pagar')) ||
       text.includes('conta')
     ) {
       return {
         appliedStrategy: 'contextual_inference',
         confidenceImprovement: 0.3,
         correctedIntent: IntentType.PAY_BILL,
-        reasoning: `Inferred bill payment - ${context.financialContext.billPatterns.upcomingBills.length} bills pending`,
+        reasoning: `Inferred bill payment - ${upcomingBills?.length ?? 0} bills pending`,
         requiresUserConfirmation: true,
         success: true,
         suggestedUserResponse: 'Você quer pagar suas contas pendentes?',
@@ -855,7 +904,7 @@ export class ErrorRecoverySystem {
   ): Promise<RecoveryResult> {
     // Analyze user's historical patterns
     const userHistory = context.conversationHistory;
-    const _text = context.originalText.toLowerCase();
+    // Note: context.originalText available if needed for future pattern matching
 
     // Find most frequent intent
     const intentFrequency = userHistory.reduce(
@@ -983,7 +1032,7 @@ export class ErrorRecoverySystem {
       [IntentType.CHECK_BUDGET]: 'analisar seu orçamento',
       [IntentType.CHECK_INCOME]: 'consultar seus rendimentos',
       [IntentType.FINANCIAL_PROJECTION]: 'ver uma projeção financeira',
-    };
+    } as Record<IntentType, string>;
 
     return descriptions[intent] || 'realizar uma operação financeira';
   }
@@ -1012,11 +1061,15 @@ export class ErrorRecoverySystem {
   ): string[] {
     const hints = [];
 
-    if (context.financialContext?.accountSummary?.availableBalance > 0) {
+    if (
+      context.financialContext?.accountSummary &&
+      context.financialContext.accountSummary.availableBalance > 0
+    ) {
       hints.push('Você pode consultar seu saldo disponível');
     }
 
-    if (context.financialContext?.billPatterns?.upcomingBills?.length > 0) {
+    const pendingBills = context.financialContext?.billPatterns?.upcomingBills;
+    if (pendingBills && pendingBills.length > 0) {
       hints.push('Você tem contas para pagar este mês');
     }
 
@@ -1071,57 +1124,31 @@ export class ErrorRecoverySystem {
     strategy.successRate += learningRate * (targetValue - strategy.successRate);
   }
 
-  // TODO: Implement nlu_learning_data table in database with proper schema
+  // TODO: Implement nlu_learning_data table in database
   // Schema should include: learning_id (UUID), user_id (UUID), original_text (text), error_pattern (text),
   // correction_applied (text), success (boolean), confidence_improvement (number), original_confidence (number),
   // timestamp (timestamp), linguistic_style (text), regional_variation (text), user_feedback (text)
   private async persistLearningData(learningData: LearningData): Promise<void> {
     try {
-      const { error } = await supabase.from('nlu_learning_data').insert({
-        confidence_improvement: learningData.confidenceImprovement,
-        correction_applied: learningData.correctionApplied,
-        error_pattern: learningData.errorPattern,
-        linguistic_style: learningData.linguisticStyle,
-        regional_variation: learningData.regionalVariation,
-        success: learningData.success,
-        timestamp: learningData.timestamp.toISOString(),
-        user_id: learningData.userId,
-        user_feedback: learningData.userFeedback,
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      logger.error('Failed to persist learning data', { error });
-    }
-  }
-
-  private async updatePatternsFromPositiveFeedback(learningData: LearningData): Promise<void> {
-    // Update patterns based on positive feedback
-    logger.debug('Updating patterns from positive feedback', {
-      correction: learningData.correctionApplied.substring(0, 50),
-      pattern: learningData.errorPattern.substring(0, 50),
-    });
-  }
-
-  private async updatePatternsFromNegativeFeedback(learningData: LearningData): Promise<void> {
-    // Update patterns based on negative feedback
-    logger.debug('Updating patterns from negative feedback', {
-      correction: learningData.correctionApplied.substring(0, 50),
-      pattern: learningData.errorPattern.substring(0, 50),
-    });
-  }
-
-  // TODO: Implement nlu_learning_data table in database
-  private async persistLearningData(learningData: LearningData): Promise<void> {
-    try {
       // Temporarily store learning data locally until database table is created
       // TODO: Replace with database insert when nlu_learning_data table is implemented
-      console.log('Learning data persistence disabled - nlu_learning_data table not implemented', learningData);
+      logger.debug('Learning data persistence disabled - nlu_learning_data table not implemented', {
+        learningData,
+      });
     } catch (error) {
       logger.error('Failed to persist learning data', { error });
     }
+  }
+
+  private async updatePatternsFromFeedback(
+    learningData: LearningData,
+    isPositive: boolean
+  ): Promise<void> {
+    // Update patterns based on feedback
+    logger.debug(`Updating patterns from ${isPositive ? 'positive' : 'negative'} feedback`, {
+      originalText: learningData.originalText.substring(0, 50),
+      strategy: learningData.strategy,
+    });
   }
 
   // ============================================================================
@@ -1150,7 +1177,7 @@ export class ErrorRecoverySystem {
 
     const strategyPerformance: Record<
       string,
-      { attempts: number; successes: number; failures: number }
+      { usage: number; successRate: number; averageConfidenceImprovement: number }
     > = {};
     for (const [id, strategy] of this.recoveryStrategies) {
       strategyPerformance[id] = {
@@ -1162,12 +1189,13 @@ export class ErrorRecoverySystem {
 
     const regionalAccuracy = this.learningData.reduce(
       (acc, data) => {
-        if (!acc[data.regionalVariation]) {
-          acc[data.regionalVariation] = { success: 0, total: 0 };
+        const region = data.regionalVariation ?? 'unknown';
+        if (!acc[region]) {
+          acc[region] = { success: 0, total: 0 };
         }
-        acc[data.regionalVariation].total++;
+        acc[region].total++;
         if (data.success) {
-          acc[data.regionalVariation].success++;
+          acc[region].success++;
           successfulRecoveries++;
         }
         return acc;
@@ -1222,11 +1250,3 @@ export function createErrorRecoverySystem(
 // ============================================================================
 
 export { DEFAULT_ERROR_RECOVERY_CONFIG };
-export type {
-  ErrorRecoveryConfig,
-  ErrorClassification,
-  RecoveryStrategy,
-  RecoveryResult,
-  RecoveryContext,
-  LearningData,
-};

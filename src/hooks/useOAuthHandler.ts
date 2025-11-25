@@ -23,8 +23,7 @@ export function useOAuthHandler(): OAuthHandlerResult {
       return false;
     }
 
-    const storedRedirect =
-      sessionStorage.getItem('post_auth_redirect') || '/dashboard';
+    const storedRedirect = sessionStorage.getItem('post_auth_redirect') || '/dashboard';
 
     sessionStorage.removeItem('post_auth_redirect');
 

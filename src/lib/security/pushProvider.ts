@@ -8,7 +8,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-interface JsonObject { [key: string]: JsonValue }
+interface JsonObject {
+  [key: string]: JsonValue;
+}
 
 export interface PushConfig {
   vapidPublicKey: string;
@@ -151,7 +153,7 @@ export class PushProvider {
    */
   async unsubscribe(userId: string): Promise<boolean> {
     try {
-        this.subscriptions.delete(userId);
+      this.subscriptions.delete(userId);
 
       // Deactivate in database
       await supabase.from('push_subscriptions').update({ is_active: false }).eq('user_id', userId);

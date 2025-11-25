@@ -17,8 +17,7 @@ export type { FinancialEvent } from './financial-events';
 // Financial types
 export * from './financial-events';
 export * from './nlu.types';
-export type { PixKey, PixTransaction } from './pix';
-export * from './pix';
+// PIX types removed - functionality discontinued
 // Security types
 export * from './security.types';
 export type { VoiceCommand } from './voice';

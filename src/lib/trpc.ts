@@ -22,7 +22,9 @@ export const trpcClient = trpc.createClient({
         }
 
         return {};
-      }, transformer: superjson, url: '/api/trpc',
+      },
+      transformer: superjson,
+      url: '/api/trpc',
     }),
   ],
 });

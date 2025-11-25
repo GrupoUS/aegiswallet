@@ -1,5 +1,5 @@
-import type { Context } from '@/server/context';
 import { experimental_standaloneMiddleware } from '@trpc/server';
+import type { Context } from '@/server/context';
 
 interface RateLimitMiddlewareOptions {
   windowMs: number;

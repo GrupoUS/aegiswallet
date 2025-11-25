@@ -183,7 +183,7 @@ export class SMSProvider {
       const formattedPhone = this.formatPhoneNumber(message.to);
 
       // Process template if provided
-    let finalBody = message.body ?? '';
+      let finalBody = message.body ?? '';
       if (message.template && this.templates.has(message.template)) {
         const template = this.templates.get(message.template);
         if (template) {
@@ -191,11 +191,11 @@ export class SMSProvider {
         }
       }
 
-    if (!finalBody) {
-      finalBody =
-        message.body ||
-        this.templates.get(message.template ?? '')?.body ||
-        'Mensagem AegisWallet.';
+      if (!finalBody) {
+        finalBody =
+          message.body ||
+          this.templates.get(message.template ?? '')?.body ||
+          'Mensagem AegisWallet.';
       }
 
       // Prepare Twilio request

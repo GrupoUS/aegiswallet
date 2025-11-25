@@ -61,3 +61,5 @@ export function getDefaultBackend(): ChatBackend {
 
 export * from './ChatBackend';
 export * from './GeminiBackend';
+export * from './MockBackend';
+

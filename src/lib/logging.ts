@@ -123,5 +123,26 @@ if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
   logger.setLogLevel(LogLevel.INFO);
 }
 
+/**
+ * Convenience function for logging errors
+ */
+export function logError(message: string, context?: LogContext): void {
+  logger.error(message, context);
+}
+
+/**
+ * Convenience function for logging operations
+ */
+export function logOperation(message: string, context?: LogContext): void {
+  logger.info(`[OPERATION] ${message}`, context);
+}
+
+/**
+ * Convenience function for logging security events
+ */
+export function logSecurityEvent(message: string, context?: LogContext): void {
+  logger.security(message, context);
+}
+
 // Export types for external use
 export type { LogContext as LogContextType };

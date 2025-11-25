@@ -13,6 +13,11 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+// Database row type for voice_metrics table
+type VoiceMetricsRow = Database['public']['Tables']['voice_metrics']['Row'];
+type VoiceMetricsInsert = Database['public']['Tables']['voice_metrics']['Insert'];
 
 // ============================================================================
 // Types
@@ -64,18 +69,22 @@ export class VoiceMetricsService {
    */
   async trackMetric(metric: VoiceMetric): Promise<void> {
     try {
-      const { error } = await supabase.from('voice_metrics').insert({
+      const insertData: VoiceMetricsInsert = {
         user_id: metric.userId,
-        command: metric.transcript, // Use transcript as command since that's what the schema expects
+        command: metric.transcript,
         confidence_score: metric.confidenceScore,
         processing_time_ms: metric.processingTimeMs,
         success: metric.success,
         error_type: metric.errorType,
-      });
+      };
+      const { error } = await supabase.from('voice_metrics').insert(insertData);
 
       if (error) {
+        console.error('Failed to track voice metric:', error);
       }
-    } catch (_error) {}
+    } catch (_error) {
+      // Silent fail for metrics
+    }
   }
 
   /**
@@ -86,18 +95,20 @@ export class VoiceMetricsService {
       const { data, error } = await supabase
         .from('voice_metrics')
         .select('*')
-        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
+        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+        .returns<VoiceMetricsRow[]>();
 
       if (error) {
         throw error;
       }
 
-      const totalCommands = data.length;
-      const successfulCommands = data.filter((m) => m.success).length;
+      const metrics = data ?? [];
+      const totalCommands = metrics.length;
+      const successfulCommands = metrics.filter((m) => m.success).length;
       const failedCommands = totalCommands - successfulCommands;
       const accuracyPercent = totalCommands > 0 ? (successfulCommands / totalCommands) * 100 : 0;
 
-      const latencies = data
+      const latencies = metrics
         .filter((m) => m.success && m.processing_time_ms)
         .map((m) => m.processing_time_ms)
         .sort((a, b) => a - b);
@@ -108,7 +119,7 @@ export class VoiceMetricsService {
       const p95Index = Math.floor(latencies.length * 0.95);
       const p95LatencyMs = latencies.length > 0 ? latencies[p95Index] : 0;
 
-      const confidences = data
+      const confidences = metrics
         .filter((m) => m.confidence_score !== null)
         .map((m) => m.confidence_score as number);
 
@@ -145,15 +156,20 @@ export class VoiceMetricsService {
   async getAccuracyByCommand(_days: number = 7): Promise<Record<string, number>> {
     try {
       // Since we don't have the complex view tables, calculate from voice_metrics
-      const { data, error } = await supabase.from('voice_metrics').select('command, success');
+      const { data, error } = await supabase
+        .from('voice_metrics')
+        .select('command, success')
+        .returns<Pick<VoiceMetricsRow, 'command' | 'success'>[]>();
 
       if (error) {
         throw error;
       }
 
+      const metrics = data ?? [];
+
       // Group by command and calculate accuracy
       const commandStats: Record<string, { success: number; total: number }> = {};
-      data.forEach((row) => {
+      metrics.forEach((row) => {
         if (!commandStats[row.command]) {
           commandStats[row.command] = { success: 0, total: 0 };
         }
@@ -189,13 +205,15 @@ export class VoiceMetricsService {
       const { data, error } = await supabase
         .from('voice_metrics')
         .select('processing_time_ms')
-        .eq('success', true);
+        .eq('success', true)
+        .returns<Pick<VoiceMetricsRow, 'processing_time_ms'>[]>();
 
       if (error) {
         throw error;
       }
 
-      const latencies = data.map((row) => row.processing_time_ms).sort((a, b) => a - b);
+      const metrics = data ?? [];
+      const latencies = metrics.map((row) => row.processing_time_ms).sort((a, b) => a - b);
 
       if (latencies.length === 0) {
         return { avg: 0, max: 0, p50: 0, p95: 0, p99: 0 };
@@ -223,15 +241,20 @@ export class VoiceMetricsService {
   async getErrorRateByType(): Promise<Record<string, number>> {
     try {
       // Calculate error rates from voice_metrics table
-      const { data, error } = await supabase.from('voice_metrics').select('error_type, success');
+      const { data, error } = await supabase
+        .from('voice_metrics')
+        .select('error_type, success')
+        .returns<Pick<VoiceMetricsRow, 'error_type' | 'success'>[]>();
 
       if (error) {
         throw error;
       }
 
+      const metrics = data ?? [];
+
       // Group by error_type and calculate error rates
       const errorStats: Record<string, { errors: number; total: number }> = {};
-      data.forEach((row) => {
+      metrics.forEach((row) => {
         const errorType = row.error_type || 'unknown';
         if (!errorStats[errorType]) {
           errorStats[errorType] = { errors: 0, total: 0 };

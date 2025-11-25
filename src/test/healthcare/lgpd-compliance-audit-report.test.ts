@@ -72,7 +72,9 @@ ensureTestUtils();
 
 let domReady = false;
 const ensureDom = async () => {
-  if (domReady) {return;}
+  if (domReady) {
+    return;
+  }
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     const { JSDOM } = await import('jsdom');
     const dom = new JSDOM('<!doctype html><html><body></body></html>');
@@ -564,21 +566,33 @@ const LGDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
-            'data-testid': 'export-pdf', key: 'export-pdf', onClick: () => exportAuditReport('pdf'), style: { margin: '5px', padding: '10px 20px' }, type: 'button',
+            'data-testid': 'export-pdf',
+            key: 'export-pdf',
+            onClick: () => exportAuditReport('pdf'),
+            style: { margin: '5px', padding: '10px 20px' },
+            type: 'button',
           },
           'Exportar como PDF'
         ),
         React.createElement(
           'button',
           {
-            'data-testid': 'export-json', key: 'export-json', onClick: () => exportAuditReport('json'), style: { margin: '5px', padding: '10px 20px' }, type: 'button',
+            'data-testid': 'export-json',
+            key: 'export-json',
+            onClick: () => exportAuditReport('json'),
+            style: { margin: '5px', padding: '10px 20px' },
+            type: 'button',
           },
           'Exportar como JSON'
         ),
         React.createElement(
           'button',
           {
-            'data-testid': 'export-csv', key: 'export-csv', onClick: () => exportAuditReport('csv'), style: { margin: '5px', padding: '10px 20px' }, type: 'button',
+            'data-testid': 'export-csv',
+            key: 'export-csv',
+            onClick: () => exportAuditReport('csv'),
+            style: { margin: '5px', padding: '10px 20px' },
+            type: 'button',
           },
           'Exportar como CSV'
         ),
@@ -590,7 +604,10 @@ const LGDComplianceAuditReport = () => {
       React.createElement(
         'button',
         {
-          'data-testid': 'generate-audit-report', key: 'generate-report', onClick: generateAuditReport, style: {
+          'data-testid': 'generate-audit-report',
+          key: 'generate-report',
+          onClick: generateAuditReport,
+          style: {
             backgroundColor: '#007bff',
             border: 'none',
             borderRadius: '5px',
@@ -599,7 +616,8 @@ const LGDComplianceAuditReport = () => {
             fontSize: '16px',
             margin: '10px 0',
             padding: '15px 30px',
-          }, type: 'button',
+          },
+          type: 'button',
         },
         'Gerar Relatório de Auditoria Completo'
       ),
@@ -608,7 +626,9 @@ const LGDComplianceAuditReport = () => {
         React.createElement(
           'button',
           {
-            'data-testid': 'schedule-next-audit', key: 'schedule-next-audit', style: {
+            'data-testid': 'schedule-next-audit',
+            key: 'schedule-next-audit',
+            style: {
               backgroundColor: '#28a745',
               border: 'none',
               borderRadius: '5px',
@@ -617,7 +637,8 @@ const LGDComplianceAuditReport = () => {
               fontSize: '16px',
               margin: '10px',
               padding: '15px 30px',
-            }, type: 'button',
+            },
+            type: 'button',
           },
           'Agendar Próxima Auditoria'
         ),

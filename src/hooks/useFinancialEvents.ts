@@ -8,8 +8,15 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging';
-import { sanitizeFinancialEventData, validateFinancialEventForInsert, validateFinancialEventForUpdate } from '@/lib/validation/financial-events-validator';
-import type { ValidationError as FinancialValidationError, SanitizedFinancialEvent } from '@/lib/validation/financial-events-validator';
+import type {
+  ValidationError as FinancialValidationError,
+  SanitizedFinancialEvent,
+} from '@/lib/validation/financial-events-validator';
+import {
+  sanitizeFinancialEventData,
+  validateFinancialEventForInsert,
+  validateFinancialEventForUpdate,
+} from '@/lib/validation/financial-events-validator';
 import type { Database } from '@/types/database.types';
 import type {
   BrazilianEventType,
@@ -78,7 +85,9 @@ const formatValidationErrors = (errors: FinancialValidationError[]) =>
   errors.map((error) => `${error.field}: ${error.message}`).join(', ');
 
 const normalizeDateInput = (value?: Date | string | null) => {
-  if (!value) {return undefined;}
+  if (!value) {
+    return undefined;
+  }
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? undefined : value;
   }
@@ -108,7 +117,9 @@ const serializeJsonField = (value?: unknown) => {
 };
 
 const _safeEventLogPayload = (event?: SanitizedFinancialEvent | null) => {
-  if (!event) {return null;}
+  if (!event) {
+    return null;
+  }
   const payload: Record<string, unknown> = { ...event };
 
   if (event.start) {
@@ -159,7 +170,7 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
 
   if (row.merchant_category) {
     metadata = {
-      ...(metadata || {}),
+      ...metadata,
       merchantCategory: row.merchant_category,
     };
   }
@@ -359,7 +370,9 @@ export const insertFinancialEventRecord = async (userId: string, event: EventWit
 
   if (!validationResult.valid) {
     logFinancialEventError('insert_validation_failed', new Error('validation_error'), {
-      errors: validationResult.errors, payload: _safeEventLogPayload(sanitizedEvent), userId,
+      errors: validationResult.errors,
+      payload: _safeEventLogPayload(sanitizedEvent),
+      userId,
     });
     throw new FinancialError(
       `Dados inválidos: ${formatValidationErrors(validationResult.errors)}`,
@@ -384,7 +397,8 @@ export const insertFinancialEventRecord = async (userId: string, event: EventWit
 
   if (error) {
     logFinancialEventError('insert_supabase_failed', error, {
-      payload: _safeEventLogPayload(sanitizedEvent), userId,
+      payload: _safeEventLogPayload(sanitizedEvent),
+      userId,
     });
     throw new FinancialError(error.message, 'NETWORK');
   }
@@ -403,7 +417,10 @@ export const updateFinancialEventRecord = async (
 
   if (!validationResult.valid) {
     logFinancialEventError('update_validation_failed', new Error('validation_error'), {
-      errors: validationResult.errors, eventId: id, payload: _safeEventLogPayload(sanitizedUpdates), userId,
+      errors: validationResult.errors,
+      eventId: id,
+      payload: _safeEventLogPayload(sanitizedUpdates),
+      userId,
     });
     throw new FinancialError(
       `Dados inválidos: ${formatValidationErrors(validationResult.errors)}`,
@@ -428,7 +445,9 @@ export const updateFinancialEventRecord = async (
 
   if (error) {
     logFinancialEventError('update_supabase_failed', error, {
-      eventId: id, payload: _safeEventLogPayload(sanitizedUpdates), userId,
+      eventId: id,
+      payload: _safeEventLogPayload(sanitizedUpdates),
+      userId,
     });
     throw new FinancialError(error.message, 'NETWORK');
   }

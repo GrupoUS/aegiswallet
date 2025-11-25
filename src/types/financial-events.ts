@@ -45,7 +45,7 @@ export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'comp
 export interface CalendarFinancialEvent
   extends Omit<
     CoreFinancialEvent,
-    'startDate' | 'endDate' | 'status' | 'color' | 'category' | 'allDay'
+    'startDate' | 'endDate' | 'status' | 'color' | 'category' | 'allDay' | 'isRecurring'
   > {
   // Calendar specific overrides (Date objects instead of ISO strings)
   start: Date;
@@ -60,6 +60,15 @@ export interface CalendarFinancialEvent
   category?: FinancialEventCategory | string; // Allow string for flexibility or strict category
   account?: string; // Not in Core yet, but used in Calendar
   allDay?: boolean;
+
+  // Recurring and compatibility fields
+  isRecurring?: boolean;
+  recurring?: boolean; // Alias for isRecurring for backward compatibility
+
+  // Additional fields used in dashboard/list views
+  date?: Date; // Alias for start date in some views
+  account_id?: string; // Account ID reference
+  is_expense?: boolean; // Whether this is an expense (type === 'expense' || type === 'bill')
 }
 
 // Re-export as FinancialEvent for backward compatibility during refactor

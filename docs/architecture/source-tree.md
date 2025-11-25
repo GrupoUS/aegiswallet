@@ -1,8 +1,8 @@
 ---
 title: "AegisWallet Project Structure"
-last_updated: 2025-10-06
+last_updated: 2025-11-25
 form: reference
-tags: [project-structure, single-repo, file-organization]
+tags: [project-structure, single-repo, file-organization, hono-rpc]
 related:
   - ../architecture/tech-stack.md
   - ../architecture/coding-standards.md
@@ -75,7 +75,7 @@ aegiswallet/
 │   │   ├── layout/                    # Layout components
 │   │   │   └── AppLayout.tsx          # Application layout wrapper
 │   │   ├── providers/                 # React context providers
-│   │   │   └── TRPCProvider.tsx       # tRPC client provider
+│   │   │   └── QueryProvider.tsx      # TanStack Query provider
 │   │   ├── examples/                  # Component examples
 │   │   │   └── hover-border-gradient-example.tsx
 │   │   └── ui/                        # Base UI components (shadcn/ui)
@@ -122,14 +122,17 @@ aegiswallet/
 │   │   │   └── SpeechRecognitionService.ts # Speech-to-text
 │   │   ├── utils.ts                   # General utilities
 │   │   └── validation/                # Zod schema definitions (if exists)
-│   ├── server/                        # Backend API (Hono + tRPC)
-│   │   ├── routers/                   # tRPC router definitions
-│   │   │   ├── _app.ts                # Main tRPC router
-│   │   │   ├── index.ts               # Router exports
-│   │   │   ├── pix.ts                 # PIX transaction procedures
-│   │   │   ├── transactions.ts        # Transaction procedures
-│   │   │   └── [additional routers]   # Other domain routers
-│   │   └── [server config files]      # Server setup files
+│   ├── server/                        # Backend API (Hono RPC)
+│   │   ├── middleware/                # Server middleware
+│   │   │   └── auth.ts                # JWT authentication middleware
+│   │   ├── routes/                    # Hono RPC route definitions
+│   │   │   └── v1/                    # API v1 endpoints
+│   │   │       ├── index.ts           # Router exports
+│   │   │       ├── pix.ts             # PIX transaction endpoints
+│   │   │       ├── transactions.ts    # Transaction endpoints
+│   │   │       └── [additional routes]# Other domain routes
+│   │   ├── index.ts                   # Server entry point
+│   │   └── server.ts                  # Hono server setup
 │   ├── hooks/                         # Custom React hooks
 │   │   ├── use-mobile.ts              # Mobile device detection
 │   │   ├── use-transactions.tsx       # Transaction management
@@ -283,17 +286,20 @@ aegiswallet/
 
 ### **`src/server/`** - Backend API Layer
 
-**tRPC Routers**: Type-safe API procedures
-- Authentication and authorization procedures
+**Hono RPC Routes**: Type-safe HTTP API endpoints
+- RESTful endpoints at `/api/v1/{domain}/{action}`
+- Authentication via JWT middleware
 - Financial transaction processing with audit trails
 - Voice command processing and response generation
 - Open Banking API integration with Brazilian banks
 
 **Middleware**: Cross-cutting concerns
-- Authentication and session validation
-- Request validation with Zod schemas
+- JWT authentication and session validation (`authMiddleware`)
+- Request validation with `@hono/zod-validator`
 - Rate limiting for voice command processing
-- Error handling with proper logging
+- Error handling with structured JSON responses
+
+> **Reference**: See `docs/architecture/hono-rpc-patterns.md` for implementation patterns
 
 ## Import Patterns and Conventions
 
@@ -471,7 +477,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 ### Code Organization for Growth
 - **Domain Separation**: Clear boundaries between voice, financial, and UI components
 - **Shared Libraries**: Reusable utilities and types in `src/lib/`
-- **API Structure**: Organized tRPC routers by business domain
+- **API Structure**: Organized Hono RPC routes by business domain (e.g., `/api/v1/pix/`, `/api/v1/transactions/`)
 - **Testing Strategy**: Comprehensive coverage at all levels
 
 ### Performance Optimization

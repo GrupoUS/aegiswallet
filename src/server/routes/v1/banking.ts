@@ -3,21 +3,29 @@
  * Placeholder for Belvo/Open Banking integration
  */
 
-import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { AppEnv } from '@/server/hono-types';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
-const bankingRouter = new Hono();
+const bankingRouter = new Hono<AppEnv>();
 
 // Response schemas
 const accountSchema = z.object({
-  accountType: z.string(), balance: z.number(), bankName: z.string(), currency: z.string(), id: z.string(), lastSync: z.string().datetime().optional(),
+  accountType: z.string(),
+  balance: z.number(),
+  bankName: z.string(),
+  currency: z.string(),
+  id: z.string(),
+  lastSync: z.string().datetime().optional(),
 });
 
-const accountsResponseSchema = z.object({
-  accounts: z.array(accountSchema), currency: z.string(), total: z.number(),
+export const accountsResponseSchema = z.object({
+  accounts: z.array(accountSchema),
+  currency: z.string(),
+  total: z.number(),
 });
 
 /**
@@ -53,23 +61,30 @@ bankingRouter.get(
       // 3. Return account details with current balances
 
       const response = {
-        accounts: [], currency: 'BRL', total: 0,
+        accounts: [],
+        currency: 'BRL',
+        total: 0,
       };
 
       return c.json({
         data: response,
         meta: {
-          note: 'Placeholder implementation - Belvo integration pending', requestId, retrievedAt: new Date().toISOString(),
+          note: 'Placeholder implementation - Belvo integration pending',
+          requestId,
+          retrievedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
       secureLogger.error('Failed to get bank accounts', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'BANK_ACCOUNTS_ERROR', error: 'Failed to retrieve bank accounts',
+          code: 'BANK_ACCOUNTS_ERROR',
+          error: 'Failed to retrieve bank accounts',
         },
         500
       );
@@ -90,10 +105,13 @@ bankingRouter.post(
     max: 5, // 5 link attempts per minute per user
     message: 'Too many link attempts, please try again later',
   }),
-  zValidator('json', z.object({
-    bankCode: z.string(),
-    credentials: z.record(z.any()),
-  })),
+  zValidator(
+    'json',
+    z.object({
+      bankCode: z.string(),
+      credentials: z.record(z.any()),
+    })
+  ),
   async (c) => {
     const { user } = c.get('auth');
     const input = c.req.valid('json');
@@ -102,7 +120,9 @@ bankingRouter.post(
     try {
       // Log link attempt
       secureLogger.info('Bank account link attempt', {
-        bankCode: input.bankCode, requestId, userId: user.id,
+        bankCode: input.bankCode,
+        requestId,
+        userId: user.id,
       });
 
       // Placeholder implementation - would:
@@ -113,21 +133,27 @@ bankingRouter.post(
 
       return c.json(
         {
-          code: 'NOT_IMPLEMENTED', details: {
+          code: 'NOT_IMPLEMENTED',
+          details: {
             bankCode: input.bankCode,
             note: 'Belvo integration is pending implementation',
-          }, error: 'Bank account linking not yet implemented',
+          },
+          error: 'Bank account linking not yet implemented',
         },
         501
       );
     } catch (error) {
       secureLogger.error('Failed to link bank account', {
-        bankCode: input.bankCode, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        bankCode: input.bankCode,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'BANK_LINK_ERROR', error: 'Failed to link bank account',
+          code: 'BANK_LINK_ERROR',
+          error: 'Failed to link bank account',
         },
         500
       );
@@ -167,20 +193,25 @@ bankingRouter.post(
 
       return c.json(
         {
-          code: 'NOT_IMPLEMENTED', details: {
+          code: 'NOT_IMPLEMENTED',
+          details: {
             note: 'Belvo integration is pending implementation',
-          }, error: 'Bank account synchronization not yet implemented',
+          },
+          error: 'Bank account synchronization not yet implemented',
         },
         501
       );
     } catch (error) {
       secureLogger.error('Failed to sync bank accounts', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'BANK_SYNC_ERROR', error: 'Failed to sync bank accounts',
+          code: 'BANK_SYNC_ERROR',
+          error: 'Failed to sync bank accounts',
         },
         500
       );

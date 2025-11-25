@@ -218,18 +218,32 @@ interface QuickActionsProps {
   className?: string;
 }
 
+interface QuickActionsProps {
+  onPayBill?: () => void;
+  onViewBalance?: () => void;
+  onTransfer?: () => void;
+  className?: string;
+}
+
+interface QuickActionsProps {
+  onPayBill?: () => void;
+  onViewBalance?: () => void;
+  onTransfer?: () => void;
+  className?: string;
+}
+
 export function QuickActions({
-  onPixTransfer,
   onPayBill,
   onViewBalance,
+  onTransfer,
   className,
 }: QuickActionsProps) {
   const actions = [
     {
       icon: <TrendingUp className="h-5 w-5" />,
-      id: 'pix-transfer',
-      label: 'Transferir PIX',
-      onClick: onPixTransfer,
+      id: 'transfer',
+      label: 'Transferência',
+      onClick: onTransfer,
       primary: true,
     },
     {

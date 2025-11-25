@@ -89,6 +89,7 @@ function RootComponent() {
           <div className="min-h-screen bg-background">
             <Outlet />
           </div>
+          <ChatWidget />
         </CalendarProvider>
       </TRPCProvider>
     );

@@ -13,73 +13,31 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
-      chunkSizeWarningLimit: 1000, emptyOutDir: true, minify: isProduction ? 'terser' : false, outDir: 'dist', rollupOptions: {
+      chunkSizeWarningLimit: 1000,
+      emptyOutDir: true,
+      minify: isProduction ? 'terser' : false,
+      outDir: 'dist',
+      rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Core React libraries - MUST BE KEPT TOGETHER
-            if (id.includes('node_modules/react/') ||
-                id.includes('node_modules/react-dom/') ||
-                id.includes('node_modules/scheduler/')) {
-              return 'react-vendor';
-            }
-
-            // TanStack libraries (router, query)
-            if (id.includes('@tanstack')) {
-              return 'tanstack'
-            }
-
-            // tRPC libraries
-            if (id.includes('@trpc')) {
-              return 'trpc'
-            }
-
-            // Supabase libraries
-            if (id.includes('@supabase')) {
-              return 'supabase'
-            }
-
-            // UI libraries (radix, lucide)
-            if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-              return 'ui-libraries'
-            }
-
-            // Motion libraries - Keep together to avoid issues
-            if (id.includes('motion') || id.includes('framer-motion')) {
-               return 'ui-motion'
-            }
-
-            // Forms and validation
-            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
-              return 'forms'
-            }
-
-            // Voice and speech features
-            if (id.includes('speech') || id.includes('voice') || id.includes('audio')) {
-              return 'voice-features'
-            }
-
-            // Charts and visualization
-            if (id.includes('recharts') || id.includes('d3')) {
-              return 'charts'
-            }
-
-            // Date and time utilities
-            if (id.includes('date-fns') || id.includes('dayjs')) {
-              return 'date-utils'
-            }
-
-            // Animation and motion
-            if (id.includes('motion') || id.includes('framer-motion')) {
-              return 'animation'
-            }
-
-            // Everything else from node_modules
-            if (id.includes('node_modules')) {
-              return 'vendor'
-            }
+          manualChunks: {
+            // Core React libraries - keep together to avoid initialization issues
+            'react-vendor': ['react', 'react-dom', 'scheduler', 'react-is'],
+            // TanStack libraries
+            'tanstack': ['@tanstack/react-router', '@tanstack/react-query'],
+            // Supabase
+            'supabase': ['@supabase/supabase-js'],
+            // UI libraries
+            'ui-libraries': ['@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+            // Forms
+            'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+            // Date utilities
+            'date-utils': ['date-fns'],
+            // Charts
+            'charts': ['recharts'],
           },
         },
-      }, sourcemap: !isProduction,
+      },
+      sourcemap: !isProduction,
     }, define: {
       ...(!isProduction && {
         __DEV__: true,

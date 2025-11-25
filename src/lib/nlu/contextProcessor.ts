@@ -439,21 +439,21 @@ export class ContextProcessor {
     const contextKey = `${userId}_${sessionId}`;
     let context = this.activeContexts.get(contextKey);
 
-      if (!context || this.isContextExpired(context)) {
-        // Try to load from persistence
-        if (this.config.persistenceEnabled) {
-          const loadedContext = await this.loadContextFromPersistence(userId, sessionId);
-          context = loadedContext ?? undefined;
-        }
-
-        if (!context) {
-          context = this.createNewContext(userId, sessionId);
-        }
-
-        this.activeContexts.set(contextKey, context);
+    if (!context || this.isContextExpired(context)) {
+      // Try to load from persistence
+      if (this.config.persistenceEnabled) {
+        const loadedContext = await this.loadContextFromPersistence(userId, sessionId);
+        context = loadedContext ?? undefined;
       }
 
-      return context;
+      if (!context) {
+        context = this.createNewContext(userId, sessionId);
+      }
+
+      this.activeContexts.set(contextKey, context);
+    }
+
+    return context;
   }
 
   private createNewContext(userId: string, sessionId: string): ConversationContext {
@@ -913,10 +913,28 @@ export class ContextProcessor {
         preferredLanguage: 'pt-BR', // Default for Brazilian users
         regionalVariation: 'Unknown', // Will be detected
         linguisticStyle: 'formal', // Default
-        financialHabits: {}, // Empty for now
-        interactionPreferences: {}, // Empty for now
-        temporalPatterns: {}, // Empty for now
-        learningProfile: {}, // Empty for now
+        financialHabits: {
+          commonBills: [],
+          preferredPaymentMethods: [],
+          typicalTransferRecipients: [],
+          spendingCategories: [],
+        },
+        interactionPreferences: {
+          confirmationLevel: 'medium',
+          verbosityLevel: 'concise',
+          feedbackFrequency: 'on_error',
+        },
+        temporalPatterns: {
+          mostActiveHours: [],
+          preferredDays: [],
+          typicalSessionDuration: 0,
+        },
+        learningProfile: {
+          adaptabilityScore: 0.5,
+          errorCorrectionRate: 0,
+          patternRecognitionScore: 0.5,
+          confidenceLevel: 0.5,
+        },
         createdAt: data.created_at ? new Date(data.created_at) : new Date(),
         updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
       };
@@ -1004,7 +1022,14 @@ export class ContextProcessor {
       }
 
       const transactionsList: TransactionEntity[] = (transactionData ?? []).map((t) => ({
-        amount: Number(t.amount) || 0, category: t.category || '', created_at: t.created_at || new Date().toISOString(), date: t.transaction_date || t.created_at || new Date().toISOString(), description: t.description || '', id: t.id, type: (t.transaction_type === 'income' ? 'income' : 'expense') as 'income' | 'expense', user_id: t.user_id,
+        amount: Number(t.amount) || 0,
+        category: t.category_id || '',
+        created_at: t.created_at || new Date().toISOString(),
+        date: t.transaction_date || t.created_at || new Date().toISOString(),
+        description: t.description || '',
+        id: t.id,
+        type: (t.transaction_type === 'income' ? 'income' : 'expense') as 'income' | 'expense',
+        user_id: t.user_id,
       }));
 
       // Build financial context from data
@@ -1489,11 +1514,11 @@ export class ContextProcessor {
       }
 
       return {
-        history: data.history || [],
-        lastEntities: data.last_entities || [],
-        lastIntent: data.last_intent,
+        history: (data.history as unknown as ConversationTurn[]) || [],
+        lastEntities: (data.last_entities as unknown as ExtractedEntity[]) || [],
+        lastIntent: data.last_intent as IntentType | undefined,
         sessionId: data.session_id,
-        timestamp: new Date(data.timestamp),
+        timestamp: new Date(data.timestamp || Date.now()),
         userId: data.user_id,
       };
     } catch (error) {

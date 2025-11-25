@@ -8,7 +8,13 @@ import { serveStatic } from 'hono/bun';
 import { environment } from '@/server/config/environment';
 import { htmlCache, staticAssetsCache } from '@/server/middleware/cache';
 
-export function setupStaticRoutes(app: Hono) {
+interface AppEnv {
+  Variables: {
+    requestId: string;
+  };
+}
+
+export function setupStaticRoutes(app: Hono<AppEnv>) {
   if (environment.IS_PRODUCTION) {
     // Serve static assets with aggressive caching
     app.use('/assets/*', staticAssetsCache(), serveStatic({ root: './dist' }));

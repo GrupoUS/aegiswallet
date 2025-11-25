@@ -17,6 +17,7 @@
  * @module nlu/nluEngine
  */
 
+import { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { createEntityExtractor } from '@/lib/nlu/entityExtractor';
 import { createIntentClassifier } from '@/lib/nlu/intentClassifier';
 import { INTENT_DEFINITIONS } from '@/lib/nlu/intents';
@@ -30,7 +31,6 @@ import type {
   UserAdaptation,
 } from '@/lib/nlu/types';
 import { IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
-import { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 
 // ============================================================================
 // Default Configuration

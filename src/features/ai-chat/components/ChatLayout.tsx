@@ -11,6 +11,7 @@ interface ChatLayoutProps {
   children: React.ReactNode;
   isWidget?: boolean;
   onClose?: () => void;
+  modelSelector?: React.ReactNode;
 }
 
 export function ChatLayout({
@@ -20,6 +21,7 @@ export function ChatLayout({
   children,
   isWidget = false,
   onClose,
+  modelSelector,
 }: ChatLayoutProps) {
   return (
     <Card
@@ -44,12 +46,7 @@ export function ChatLayout({
         </div>
 
         <div className="flex items-center gap-1">
-          {showModelSelector && !isWidget && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md text-xs font-medium">
-              <span className="text-muted-foreground">Model:</span>
-              <span>Gemini Pro</span>
-            </div>
-          )}
+          {modelSelector}
 
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Settings className="w-4 h-4" />

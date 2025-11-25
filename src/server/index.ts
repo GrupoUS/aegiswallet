@@ -6,10 +6,15 @@ import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
 import { setupStaticRoutes } from '@/server/routes/static';
 import {
+  bankAccountsRouter,
   bankingRouter,
+  calendarRouter,
   contactsRouter,
+  googleCalendarRouter,
   healthRouter,
-  pixRouter,
+  // pixRouter removed - PIX functionality discontinued
+  transactionsRouter,
+  usersRouter,
   voiceRouter,
 } from '@/server/routes/v1';
 
@@ -42,8 +47,13 @@ setupApiRoutes(app);
 app.route('/api/v1', healthRouter);
 app.route('/api/v1/voice', voiceRouter);
 app.route('/api/v1/banking', bankingRouter);
-app.route('/api/v1/pix', pixRouter);
+// app.route('/api/v1/pix', pixRouter); - PIX functionality removed
 app.route('/api/v1/contacts', contactsRouter);
+app.route('/api/v1/bank-accounts', bankAccountsRouter);
+app.route('/api/v1/users', usersRouter);
+app.route('/api/v1/transactions', transactionsRouter);
+app.route('/api/v1/calendar', calendarRouter);
+app.route('/api/v1/google-calendar', googleCalendarRouter);
 
 // Apply auth middleware to authenticated v1 routes
 // Note: Individual routes will apply auth as needed

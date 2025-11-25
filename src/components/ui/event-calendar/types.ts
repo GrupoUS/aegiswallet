@@ -106,10 +106,12 @@ export interface CalendarEvent {
   category?: CalendarCategory;
   calendar?: string;
   location?: string;
+  // Recurring properties
+  isRecurring?: boolean;
+  recurring?: boolean; // Alias for isRecurring for backward compatibility
   attendees?: string[];
   priority?: 'low' | 'medium' | 'high';
   status?: 'confirmed' | 'tentative' | 'cancelled';
-  recurring?: boolean;
   recurrenceRule?: string;
   externalSource?: 'google' | 'other';
   syncStatus?: 'synced' | 'pending' | 'error' | 'conflict';

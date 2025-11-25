@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { type BackendType, createChatBackend } from '@/features/ai-chat/backends';
+import { type BackendType, createChatBackend, MockBackend } from '@/features/ai-chat/backends';
 import {
   ChatConversation,
   ChatLayout,
   ChatPromptInput,
   ChatSuggestions,
   ChatTasks,
+  ModelSelector,
 } from '@/features/ai-chat/components';
+import { DEFAULT_MODEL, type GeminiModel } from '@/features/ai-chat/config/models';
 import type { ChatSuggestion } from '@/features/ai-chat/domain/types';
 import { useChatController } from '@/features/ai-chat/hooks/useChatController';
 
@@ -23,21 +25,31 @@ export function ChatContainer({
   onClose,
   backendType = 'gemini',
 }: ChatContainerProps) {
+  const [selectedModel, setSelectedModel] = useState<GeminiModel>(
+    (import.meta.env.VITE_DEFAULT_AI_MODEL as GeminiModel) || DEFAULT_MODEL
+  );
   // Initialize backend using factory
   const backend = useMemo(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+    // Fallback to MockBackend if key is missing for Gemini
     if (backendType === 'gemini' && !apiKey) {
       toast.error('API Key not found', {
-        description: 'Please set VITE_GEMINI_API_KEY in your environment variables.',
+        description: 'Using Mock Backend. Please set VITE_GEMINI_API_KEY.',
       });
-      throw new Error('VITE_GEMINI_API_KEY is required for Gemini backend');
+      // Dynamically import or use the class directly if imported
+      // Since we are inside the component, we can just return a new MockBackend
+      // We need to import it first. For now, let's assume it's available via the index export we just updated.
+      // But wait, we need to update imports in this file too.
+      return new MockBackend();
     }
+
     return createChatBackend({
       type: backendType,
       apiKey: apiKey || '',
-      model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'gemini-pro',
+      model: selectedModel,
     });
-  }, [backendType]);
+  }, [backendType, selectedModel]);
 
   // Initialize controller
   const {
@@ -77,6 +89,11 @@ export function ChatContainer({
       isWidget={isWidget}
       onClose={onClose}
       className="flex-1"
+      modelSelector={
+        !isWidget ? (
+          <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
+        ) : undefined
+      }
     >
       <div className="flex flex-1 overflow-hidden">
         {/* Main Chat Area */}

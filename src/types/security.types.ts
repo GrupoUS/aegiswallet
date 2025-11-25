@@ -5,6 +5,8 @@
  * with PIN, OTP, session management and fraud detection
  */
 
+import type { Database } from './database.types';
+
 export interface UserPin {
   id: string;
   user_id: string;
@@ -328,45 +330,6 @@ export interface SecurityReport {
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
 }
 
-// Export all types for convenience
-export {
-  // Database types
-  UserPin,
-  AuthAttempt,
-  OtpCode,
-  PushAuthRequest as PushRequest,
-  AuthSession,
-  BiometricCredential,
-  SecurityEvent,
-  FraudDetectionRule,
-  UserSecurityPreferences,
-  SecurityAlert,
-  UserSecuritySummary,
-  // UI state types
-  AuthenticationState,
-  PinSetupState,
-  OtpState,
-  BiometricState,
-  SecurityDashboardState,
-  // API types
-  PinSetupRequest,
-  PinSetupResponse,
-  OtpSendRequest,
-  OtpSendResponse,
-  OtpVerifyRequest,
-  OtpVerifyResponse,
-  BiometricEnrollRequest,
-  BiometricEnrollResponse,
-  PushVerifyRequest,
-  PushVerifyResponse,
-  AuthStatusResponse,
-  // Configuration types
-  SecurityConfig,
-  FraudDetectionConfig,
-  // Validation types
-  PINValidation,
-  PhoneNumberValidation,
-  OtpValidation,
-  SecurityMetrics,
-  SecurityReport,
-};
+// Re-export alias for backward compatibility
+export type PushRequest = PushAuthRequest;
+export type PINValidation = PinValidation;

@@ -1,8 +1,8 @@
 ---
 title: "AegisWallet Coding Standards — Voice-first, Financial AI, Brazilian Market"
-last_updated: 2025-10-04
+last_updated: 2025-11-25
 form: reference
-tags: [coding-standards, typescript, react, bun, hono, trpc, supabase, voice-ai, financial, lgpd]
+tags: [coding-standards, typescript, react, bun, hono, hono-rpc, supabase, voice-ai, financial, lgpd]
 related:
   - ../architecture/tech-stack.md
   - ../architecture/source-tree.md
@@ -13,7 +13,7 @@ related:
 
 ## Overview
 
-Authoritative rules and patterns for writing **reliable, secure, and fast** code in AegisWallet, the Brazilian autonomous financial assistant. Aligned with our **simplified monolith architecture** (Bun + React 19 + Hono + tRPC + Supabase) and **Brazilian financial compliance** (LGPD, Open Banking, PIX).
+Authoritative rules and patterns for writing **reliable, secure, and fast** code in AegisWallet, the Brazilian autonomous financial assistant. Aligned with our **simplified monolith architecture** (Bun + React 19 + Hono RPC + Supabase) and **Brazilian financial compliance** (LGPD, Open Banking, PIX).
 
 **Outcomes**: **Voice response ≤ 500ms**, **Bank sync ≤ 5s**, **95% automation rate**, **≥ 9.5/10 code quality**.
 
@@ -24,9 +24,9 @@ Authoritative rules and patterns for writing **reliable, secure, and fast** code
 ## Core Principles
 
 - **Voice-First Development**: Primary interaction through 6 essential voice commands
-- **KISS**: Simple, direct implementation without over-engineering 
+- **KISS**: Simple, direct implementation without over-engineering
 - **YAGNI**: Only essential features from PRD implemented
-- **Type Safety**: End-to-end TypeScript with tRPC
+- **Type Safety**: End-to-end TypeScript with Hono RPC + Zod
 - **Real-Time**: Instant updates via Supabase subscriptions
 - **Simplified Monolith**: Single repository with clear domain separation
 - **Edge-First**: Sub-150ms voice response, Brazilian region deployment
@@ -37,15 +37,15 @@ Authoritative rules and patterns for writing **reliable, secure, and fast** code
 
 **Non-negotiable Stack**:
 - **Runtime**: **Bun** (Latest) - Maximum performance
-- **Backend**: **Hono** (4.9.9) - Edge-first API framework  
-- **API**: **tRPC** (11.6.0) - Type-safe API
-- **Database**: **Supabase** (2.58.0) - Managed PostgreSQL
+- **Backend**: **Hono** (4.10.4) - Edge-first API framework
+- **API**: **Hono RPC** + **@hono/zod-validator** - Type-safe HTTP endpoints
+- **Database**: **Supabase** (2.74.0) - Managed PostgreSQL
 - **Frontend**: **React** (19.2.0) - UI framework
-- **Router**: **TanStack Router** (1.114.3) - File-based routing
+- **Router**: **TanStack Router** (1.132.41) - File-based routing
 - **State**: **TanStack Query** (5.90.2) - Server state
 - **UI**: **Tailwind CSS** (4.1.14) - Styling
-- **Forms**: **React Hook Form** (7.55.0) - Form handling
-- **Validation**: **Zod** (4.1.11) - Schema validation
+- **Forms**: **React Hook Form** (7.64.0) - Form handling
+- **Validation**: **Zod** (4.1.12) - Schema validation
 
 ---
 
@@ -80,17 +80,20 @@ src/
 │   ├── useTransactions.ts        # Transaction data
 │   └── useBanking.ts             # Bank account management
 ├── lib/                           # Core utilities
-│   ├── trpc.ts                   # tRPC setup
+│   ├── api-client.ts             # Hono RPC API client
 │   ├── supabase.ts               # Supabase client
 │   ├── utils.ts                  # Utility functions
 │   └── validations.ts            # Zod schemas
 └── server/                        # Backend server
-    ├── trpc/                     # tRPC procedures
-    │   ├── auth.ts
-    │   ├── transactions.ts
-    │   ├── voice.ts
-    │   ├── banking.ts
-    │   └── pix.ts
+    ├── middleware/               # Server middleware
+    │   └── auth.ts               # JWT authentication
+    ├── routes/                   # Hono RPC endpoints
+    │   └── v1/                   # API v1 routes
+    │       ├── auth.ts
+    │       ├── transactions.ts
+    │       ├── voice.ts
+    │       ├── banking.ts
+    │       └── pix.ts
     └── index.ts                  # Server setup
 ```
 
@@ -108,8 +111,11 @@ src/
 
 ### Import Patterns (Current Implementation)
 ```typescript
-// tRPC setup
-import { trpc } from "@/lib/trpc"
+// Hono RPC API client
+import { apiClient } from "@/lib/api-client"
+
+// TanStack Query for data fetching
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 // Supabase client (direct SDK - no ORM)
 import { supabase } from "@/lib/supabase"
@@ -126,32 +132,41 @@ import { useTransactions } from "@/hooks/useTransactions"
 
 ---
 
-## React 19 + tRPC Patterns
+## React 19 + Hono RPC Patterns
 
 ### Voice Command Components
 ```tsx
-// Voice interaction hook pattern
+// Voice interaction hook pattern with Hono RPC
 export function useVoiceCommand() {
   const [processing, setProcessing] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { mutateAsync } = useMutation({
+    mutationFn: (command: string) =>
+      apiClient.post('/api/v1/voice/process', { command }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 
   const processCommand = useCallback(async (command: string) => {
     setProcessing(true);
-    
+
     try {
-      const result = await trpc.voice.processCommand.mutateAsync({ command });
-      setResponse(result.text);
-      
+      const result = await mutateAsync(command);
+      setResponse(result.data.text);
+
       // Optimistic UI update for financial actions
-      if (result.action) {
-        await executeFinancialAction(result.action);
+      if (result.data.action) {
+        await executeFinancialAction(result.data.action);
       }
     } catch (err) {
       console.error('Voice command failed:', err);
     } finally {
       setProcessing(false);
     }
-  }, []);
+  }, [mutateAsync]);
 
   return { processCommand, processing, response };
 }
@@ -159,16 +174,19 @@ export function useVoiceCommand() {
 
 ### Financial Data Components
 ```tsx
-// Real-time transaction list with tRPC
+// Real-time transaction list with Hono RPC + TanStack Query
 export function TransactionList() {
-  const { data: transactions, isLoading, error } = trpc.transactions.getAll.useQuery();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => apiClient.get('/api/v1/transactions'),
+  });
 
   if (isLoading) return <TransactionSkeleton />;
   if (error) return <ErrorMessage error={error.message} />;
 
   return (
     <div className="space-y-2" role="region" aria-live="polite">
-      {transactions?.map(transaction => (
+      {data?.data?.map(transaction => (
         <TransactionCard key={transaction.id} transaction={transaction} />
       ))}
     </div>
@@ -178,20 +196,24 @@ export function TransactionList() {
 
 ### Optimistic Updates with TanStack Query
 ```tsx
-// Payment automation with rollback
-const paymentMutation = trpc.transactions.create.useMutation({
+// Payment automation with rollback using Hono RPC
+const queryClient = useQueryClient();
+
+const paymentMutation = useMutation({
+  mutationFn: (input: TransactionInput) =>
+    apiClient.post('/api/v1/transactions', input),
   onMutate: async (input) => {
     await queryClient.cancelQueries({ queryKey: ['transactions'] });
     const prev = queryClient.getQueryData<TransactionList>(['transactions']);
-    
+
     // Optimistic update
-    queryClient.setQueryData(['transactions'], draft => 
+    queryClient.setQueryData(['transactions'], draft =>
       addTransaction(draft, input)
     );
-    
+
     return { prev };
   },
-  onError: (_err, input, ctx) => {
+  onError: (_err, _input, ctx) => {
     if (ctx?.prev) {
       queryClient.setQueryData(['transactions'], ctx.prev);
     }
@@ -206,110 +228,145 @@ const paymentMutation = trpc.transactions.create.useMutation({
 
 ---
 
-## Backend: Hono + tRPC + Voice Processing
+## Backend: Hono RPC + Voice Processing
 
-### Voice Command Processing Procedure
+### Voice Command Processing Endpoint
 ```typescript
-// src/server/trpc/voice.ts
-export const voiceRouter = t.router({
-  processCommand: t.procedure
-    .input(z.object({
-      command: z.string(),
-      audioData: z.string().optional(),
-    }))
-    .mutation(async ({ input, ctx }) => {
-      // 1. Speech-to-text if audio provided
-      const text = input.audioData 
-        ? await speechToText(input.audioData)
-        : input.command;
+// src/server/routes/v1/voice.ts
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import { authMiddleware } from '@/server/middleware/auth'
 
-      // 2. Intent classification
-      const intent = classifyIntent(text);
-      
-      // 3. Execute financial action
-      const result = await executeFinancialAction(intent, ctx.user.id);
-      
-      // 4. Generate voice response
-      const response = generateVoiceResponse(result);
-      
-      // 5. Audit trail
-      await ctx.db.from('voice_commands').insert({
-        user_id: ctx.user.id,
-        command: text,
-        intent: intent.type,
-        response: response.text,
-        processing_time_ms: Date.now(),
-      });
+const voiceRouter = new Hono()
 
-      return {
+const processCommandSchema = z.object({
+  command: z.string(),
+  audioData: z.string().optional(),
+})
+
+voiceRouter.post(
+  '/process',
+  authMiddleware,
+  zValidator('json', processCommandSchema),
+  async (c) => {
+    const { user, supabase } = c.get('auth')
+    const input = c.req.valid('json')
+
+    // 1. Speech-to-text if audio provided
+    const text = input.audioData
+      ? await speechToText(input.audioData)
+      : input.command;
+
+    // 2. Intent classification
+    const intent = classifyIntent(text);
+
+    // 3. Execute financial action
+    const result = await executeFinancialAction(intent, user.id);
+
+    // 4. Generate voice response
+    const response = generateVoiceResponse(result);
+
+    // 5. Audit trail
+    await supabase.from('voice_commands').insert({
+      user_id: user.id,
+      command: text,
+      intent: intent.type,
+      response: response.text,
+      processing_time_ms: Date.now(),
+    });
+
+    return c.json({
+      data: {
         text: response.text,
         action: result.action,
         audioUrl: response.audioUrl,
-      };
-    }),
-});
+      }
+    });
+  }
+)
+
+export { voiceRouter }
 ```
 
 ### Financial Transaction Processing
 ```typescript
-// src/server/trpc/transactions.ts
-export const transactionsRouter = t.router({
-  create: t.procedure
-    .input(z.object({
-      amount: z.number().positive(),
-      description: z.string().min(1),
-      category: z.string().optional(),
-      date: z.string().datetime(),
-    }))
-    .mutation(async ({ input, ctx }) => {
-      // Validation with Brazilian financial rules
-      const validatedInput = validateTransactionInput(input);
-      
-      // Database insert with direct Supabase SDK
-      const { data, error } = await ctx.supabase
-        .from('transactions')
-        .insert({
-          ...validatedInput,
-          user_id: ctx.user.id,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+// src/server/routes/v1/transactions.ts
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import { authMiddleware } from '@/server/middleware/auth'
 
-      if (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `Transaction failed: ${error.message}`,
-        });
-      }
+const transactionsRouter = new Hono()
 
-      // Real-time notification
-      await notifyVoiceUpdate(ctx.user.id, {
-        type: 'transaction_created',
-        data: data,
-      });
+const createTransactionSchema = z.object({
+  amount: z.number().positive(),
+  description: z.string().min(1),
+  category: z.string().optional(),
+  date: z.string().datetime(),
+})
 
-      return data;
-    }),
+// POST /api/v1/transactions
+transactionsRouter.post(
+  '/',
+  authMiddleware,
+  zValidator('json', createTransactionSchema),
+  async (c) => {
+    const { user, supabase } = c.get('auth')
+    const input = c.req.valid('json')
 
-  getAll: t.procedure
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', ctx.user.id)
-        .order('created_at', { ascending: false });
+    // Validation with Brazilian financial rules
+    const validatedInput = validateTransactionInput(input);
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch transactions',
-        });
-      }
+    // Database insert with direct Supabase SDK
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        ...validatedInput,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-      return data;
-    }),
-});
+    if (error) {
+      return c.json({
+        error: 'Transaction failed',
+        code: 'TRANSACTION_FAILED'
+      }, 400);
+    }
+
+    // Real-time notification
+    await notifyVoiceUpdate(user.id, {
+      type: 'transaction_created',
+      data: data,
+    });
+
+    return c.json({ data }, 201);
+  }
+)
+
+// GET /api/v1/transactions
+transactionsRouter.get('/', authMiddleware, async (c) => {
+  const { user, supabase } = c.get('auth')
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return c.json({
+      error: 'Failed to fetch transactions',
+      code: 'FETCH_FAILED'
+    }, 500);
+  }
+
+  return c.json({ data });
+})
+
+export { transactionsRouter }
 ```
 
 ---
@@ -404,27 +461,42 @@ LOG_LEVEL=debug
 
 ### Voice Command Testing
 ```typescript
-// Voice command workflow testing
+// Voice command workflow testing with Hono RPC
 describe('Voice Command Processing', () => {
   it('processes balance query correctly', async () => {
-    const result = await trpc.voice.processCommand.mutateAsync({
-      command: "Como está meu saldo?"
+    const res = await app.request('/api/v1/voice/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${testToken}`,
+      },
+      body: JSON.stringify({ command: "Como está meu saldo?" }),
     });
-    
-    expect(result.intent).toBe('balance_query');
-    expect(result.response).toContain('saldo');
+
+    expect(res.status).toBe(200);
+    const { data } = await res.json();
+    expect(data.intent).toBe('balance_query');
+    expect(data.text).toContain('saldo');
   });
 
   it('handles Brazilian Portuguese variations', async () => {
     const commands = [
       "Qual meu saldo?",
-      "Mostra meu saldo por favor", 
+      "Mostra meu saldo por favor",
       "Quanto dinheiro eu tenho?"
     ];
 
     for (const command of commands) {
-      const result = await trpc.voice.processCommand.mutateAsync({ command });
-      expect(result.intent).toBe('balance_query');
+      const res = await app.request('/api/v1/voice/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${testToken}`,
+        },
+        body: JSON.stringify({ command }),
+      });
+      const { data } = await res.json();
+      expect(data.intent).toBe('balance_query');
     }
   });
 });
@@ -432,19 +504,28 @@ describe('Voice Command Processing', () => {
 
 ### Financial Transaction Testing
 ```typescript
-// Financial operation testing with tRPC
+// Financial operation testing with Hono RPC
 describe('Transaction Processing', () => {
   it('creates PIX payment with audit trail', async () => {
-    const result = await trpc.transactions.create.mutateAsync({
-      amount: 100.50,
-      description: "Test PIX payment",
-      date: new Date().toISOString(),
-      payment_method: "pix"
+    const res = await app.request('/api/v1/transactions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${testToken}`,
+      },
+      body: JSON.stringify({
+        amount: 100.50,
+        description: "Test PIX payment",
+        date: new Date().toISOString(),
+        payment_method: "pix"
+      }),
     });
 
-    expect(result.amount).toBe(100.50);
-    expect(result.payment_method).toBe('pix');
-    expect(result.user_id).toBeDefined();
+    expect(res.status).toBe(201);
+    const { data } = await res.json();
+    expect(data.amount).toBe(100.50);
+    expect(data.payment_method).toBe('pix');
+    expect(data.user_id).toBeDefined();
   });
 });
 ```
@@ -455,11 +536,16 @@ describe('Transaction Processing', () => {
 describe('Voice Performance', () => {
   it('responds within 1 second target', async () => {
     const startTime = Date.now();
-    
-    await trpc.voice.processCommand.mutateAsync({
-      command: "Como está meu saldo?"
+
+    await app.request('/api/v1/voice/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${testToken}`,
+      },
+      body: JSON.stringify({ command: "Como está meu saldo?" }),
     });
-    
+
     const responseTime = Date.now() - startTime;
     expect(responseTime).toBeLessThan(1000); // 1 second max
   });
@@ -484,8 +570,8 @@ describe('Voice Performance', () => {
 
 ### Code Quality Standards
 - [ ] TypeScript strict mode - no errors
-- [ ] Zod validation schemas for all tRPC inputs
-- [ ] tRPC procedures type-safe and tested
+- [ ] Zod validation schemas for all Hono RPC inputs
+- [ ] Hono RPC endpoints type-safe and tested
 - [ ] Bun package manager used consistently
 - [ ] Performance benchmarks met (voice response <1s)
 
@@ -509,14 +595,16 @@ describe('Voice Performance', () => {
 
 - **Voice Command Hook** → `src/hooks/useVoice.ts`
 - **Transaction Component** → `src/components/TransactionList.tsx`
-- **tRPC Router** → `src/server/trpc/transactions.ts`
+- **Hono RPC Routes** → `src/server/routes/v1/transactions.ts`
+- **API Client** → `src/lib/api-client.ts`
 - **Zod Schemas** → `src/lib/validations.ts`
 - **Supabase Client** → `src/lib/supabase.ts`
 - **Voice Processing** → `src/features/voice/VoiceProcessor.tsx`
+- **Architecture Reference** → `docs/architecture/hono-rpc-patterns.md`
 
 ---
 
-**Status**: ✅ Active  
-**Ownership**: AegisWallet Development Team  
-**Review cadence**: Monthly or as Brazilian financial regulations evolve  
-**Last Updated**: 2025-10-04
+**Status**: ✅ Active
+**Ownership**: AegisWallet Development Team
+**Review cadence**: Monthly or as Brazilian financial regulations evolve
+**Last Updated**: 2025-11-25

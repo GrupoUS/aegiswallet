@@ -1,12 +1,37 @@
 # tRPC Architecture
 
-> **Status**: ✅ Complete Architecture Documentation
-> **Last Updated**: 2025-11-24
+> **Status**: ⚠️ DEPRECATED - Kept for Historical Reference Only
+> **Last Updated**: 2025-11-25
 > **Ownership**: Backend Development Team
+> **Superseded By**: [Hono RPC Architecture](./hono-rpc-architecture.md)
 
 ---
 
-## 1. Why We Use tRPC
+## ⚠️ DEPRECATION NOTICE
+
+**This document is DEPRECATED and kept for historical reference only.**
+
+The AegisWallet project has migrated from tRPC to Hono RPC. For current architecture documentation, please refer to:
+
+- **[Hono RPC Architecture](./hono-rpc-architecture.md)** - Current architecture documentation
+- **[Hono RPC Patterns](./hono-rpc-patterns.md)** - Implementation patterns and best practices
+- **[Migration Plan](./trpc-to-hono-migration-plan.md)** - Migration rationale and process
+
+### Migration Summary
+- **Bundle Size Reduction**: ~50KB from removing tRPC dependencies
+- **Simplified Stack**: Fewer abstractions, clearer error traces
+- **API Pattern**: `/api/v1/{domain}/{action}` with HTTP method semantics
+- **Client**: `apiClient` from `@/lib/api-client` + TanStack Query
+
+---
+
+## Historical Documentation (Below)
+
+The following content documents the previous tRPC implementation for reference purposes only. **Do not use these patterns for new development.**
+
+---
+
+## 1. Why We Used tRPC (Historical)
 
 - **End-to-End Type Safety** – Automatic TypeScript inference from server to client without code generation.
 - **React Query Integration** – First-class integration with TanStack Query (caching, optimistic updates, background refetch).

@@ -27,7 +27,9 @@ const QUESTIONS: Question[] = [
     prompt: 'Google OAuth Client Secret',
   },
   {
-    default: 'https://aegiswallet.vercel.app/api/google-calendar/callback', key: 'GOOGLE_OAUTH_REDIRECT_URI', prompt: 'OAuth Redirect URI',
+    default: 'https://aegiswallet.vercel.app/api/google-calendar/callback',
+    key: 'GOOGLE_OAUTH_REDIRECT_URI',
+    prompt: 'OAuth Redirect URI',
   },
 ];
 
@@ -38,7 +40,9 @@ async function promptForValue(question: Question): Promise<string> {
   if (envValue?.trim()) {
     return envValue.trim();
   }
-  const answer = (await rl.question(`${question.prompt}${question.default ? ` (${question.default})` : ''}: `)).trim();
+  const answer = (
+    await rl.question(`${question.prompt}${question.default ? ` (${question.default})` : ''}: `)
+  ).trim();
   if (answer) {
     return answer;
   }
@@ -95,7 +99,10 @@ async function main() {
   rl.close();
 
   const envUpdates = {
-    GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID, GOOGLE_CLIENT_SECRET: answers.GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_REDIRECT_URI: answers.GOOGLE_OAUTH_REDIRECT_URI, VITE_GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: answers.GOOGLE_OAUTH_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI: answers.GOOGLE_OAUTH_REDIRECT_URI,
+    VITE_GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
   };
 
   const envPath = path.resolve(process.cwd(), '.env.local');
@@ -150,4 +157,3 @@ main().catch((error) => {
   console.error('Erro durante a configuração do Google Calendar:', error);
   process.exit(1);
 });
-

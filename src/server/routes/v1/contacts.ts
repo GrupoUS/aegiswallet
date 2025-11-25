@@ -3,20 +3,21 @@
  * Manages contact CRUD, favorites, and stats
  */
 
-import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { validateCPF } from '@/lib/security/financial-validator';
+import type { AppEnv } from '@/server/hono-types';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 const brazilPhoneRegex = /^\d{10,11}$/;
 
 const normalizeDigits = (value: string | undefined | null) =>
-  value ? value.replace(/\D/g, '') : value ?? undefined;
+  value ? value.replace(/\D/g, '') : (value ?? undefined);
 
 const sanitizeContactFields = <
-  T extends { cpf?: string | null; email?: string | null; phone?: string | null }
+  T extends { cpf?: string | null; email?: string | null; phone?: string | null },
 >(
   contact: T
 ) => ({
@@ -26,7 +27,7 @@ const sanitizeContactFields = <
   phone: contact.phone ? normalizeDigits(contact.phone) : contact.phone,
 });
 
-const contactsRouter = new Hono();
+const contactsRouter = new Hono<AppEnv>();
 
 // =====================================================
 // Validation Schemas
@@ -94,10 +95,7 @@ contactsRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      let query = supabase
-        .from('contacts')
-        .select('*')
-        .eq('user_id', user.id);
+      let query = supabase.from('contacts').select('*').eq('user_id', user.id);
 
       if (input.search) {
         query = query.or(
@@ -131,12 +129,15 @@ contactsRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to get contacts', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACTS_ERROR', error: 'Failed to retrieve contacts',
+          code: 'CONTACTS_ERROR',
+          error: 'Failed to retrieve contacts',
         },
         500
       );
@@ -172,7 +173,8 @@ contactsRouter.get(
         if (error.code === 'PGRST116') {
           return c.json(
             {
-              code: 'NOT_FOUND', error: 'Contato não encontrado',
+              code: 'NOT_FOUND',
+              error: 'Contato não encontrado',
             },
             404
           );
@@ -189,12 +191,16 @@ contactsRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to get contact', {
-        contactId, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        contactId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_ERROR', error: 'Failed to retrieve contact',
+          code: 'CONTACT_ERROR',
+          error: 'Failed to retrieve contact',
         },
         500
       );
@@ -225,7 +231,15 @@ contactsRouter.post(
       const { data, error } = await supabase
         .from('contacts')
         .insert({
-          cpf: sanitizedInput.cpf ?? null, created_at: new Date().toISOString(), email: sanitizedInput.email ?? null, is_favorite: sanitizedInput.isFavorite, name: sanitizedInput.name, notes: sanitizedInput.notes ?? null, phone: sanitizedInput.phone ?? null, updated_at: new Date().toISOString(), user_id: user.id,
+          cpf: sanitizedInput.cpf ?? null,
+          created_at: new Date().toISOString(),
+          email: sanitizedInput.email ?? null,
+          is_favorite: sanitizedInput.isFavorite,
+          name: sanitizedInput.name,
+          notes: sanitizedInput.notes ?? null,
+          phone: sanitizedInput.phone ?? null,
+          updated_at: new Date().toISOString(),
+          user_id: user.id,
         })
         .select()
         .single();
@@ -234,7 +248,8 @@ contactsRouter.post(
         if (error.code === '23505') {
           return c.json(
             {
-              code: 'CONFLICT', error: 'Email ou telefone já cadastrado para este usuário',
+              code: 'CONFLICT',
+              error: 'Email ou telefone já cadastrado para este usuário',
             },
             409
           );
@@ -243,23 +258,34 @@ contactsRouter.post(
       }
 
       secureLogger.info('Contact created', {
-        contactId: data.id, contactName: input.name, requestId, userId: user.id,
-      });
-
-      return c.json({
-        data,
-        meta: {
-          createdAt: new Date().toISOString(), requestId,
-        },
-      }, 201);
-    } catch (error) {
-      secureLogger.error('Failed to create contact', {
-        contactName: input.name, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        contactId: data.id,
+        contactName: input.name,
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_CREATE_ERROR', error: 'Failed to create contact',
+          data,
+          meta: {
+            createdAt: new Date().toISOString(),
+            requestId,
+          },
+        },
+        201
+      );
+    } catch (error) {
+      secureLogger.error('Failed to create contact', {
+        contactName: input.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
+      });
+
+      return c.json(
+        {
+          code: 'CONTACT_CREATE_ERROR',
+          error: 'Failed to create contact',
         },
         500
       );
@@ -286,7 +312,7 @@ contactsRouter.put(
     const requestId = c.get('requestId');
 
     try {
-      const { id, ...updateData } = input;
+      const { id: _inputId, ...updateData } = input;
       const sanitizedData = sanitizeContactFields(updateData);
 
       const updatePayload: Record<string, unknown> = {
@@ -324,7 +350,8 @@ contactsRouter.put(
         if (error.code === 'PGRST116') {
           return c.json(
             {
-              code: 'NOT_FOUND', error: 'Contato não encontrado',
+              code: 'NOT_FOUND',
+              error: 'Contato não encontrado',
             },
             404
           );
@@ -333,7 +360,10 @@ contactsRouter.put(
       }
 
       secureLogger.info('Contact updated', {
-        contactId, requestId, updatedFields: Object.keys(updateData).filter((field) => field !== 'updated_at'), userId: user.id,
+        contactId,
+        requestId,
+        updatedFields: Object.keys(updateData).filter((field) => field !== 'updated_at'),
+        userId: user.id,
       });
 
       return c.json({
@@ -345,12 +375,16 @@ contactsRouter.put(
       });
     } catch (error) {
       secureLogger.error('Failed to update contact', {
-        contactId, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        contactId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_UPDATE_ERROR', error: 'Failed to update contact',
+          code: 'CONTACT_UPDATE_ERROR',
+          error: 'Failed to update contact',
         },
         500
       );
@@ -387,7 +421,8 @@ contactsRouter.delete(
         if (error.code === 'PGRST116') {
           return c.json(
             {
-              code: 'NOT_FOUND', error: 'Contato não encontrado',
+              code: 'NOT_FOUND',
+              error: 'Contato não encontrado',
             },
             404
           );
@@ -398,30 +433,38 @@ contactsRouter.delete(
       if (!data) {
         return c.json(
           {
-            code: 'NOT_FOUND', error: 'Contato não encontrado',
+            code: 'NOT_FOUND',
+            error: 'Contato não encontrado',
           },
           404
         );
       }
 
       secureLogger.info('Contact deleted', {
-        contactId, requestId, userId: user.id,
+        contactId,
+        requestId,
+        userId: user.id,
       });
 
       return c.json({
         data: { id: contactId, success: true },
         meta: {
-          deletedAt: new Date().toISOString(), requestId,
+          deletedAt: new Date().toISOString(),
+          requestId,
         },
       });
     } catch (error) {
       secureLogger.error('Failed to delete contact', {
-        contactId, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        contactId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_DELETE_ERROR', error: 'Failed to delete contact',
+          code: 'CONTACT_DELETE_ERROR',
+          error: 'Failed to delete contact',
         },
         500
       );
@@ -455,9 +498,7 @@ contactsRouter.get(
         .from('contacts')
         .select('id, name, email, phone, is_favorite')
         .eq('user_id', user.id)
-        .or(
-          `name.ilike.%${input.query}%,email.ilike.%${input.query}%,phone.ilike.%${input.query}%`
-        )
+        .or(`name.ilike.%${input.query}%,email.ilike.%${input.query}%,phone.ilike.%${input.query}%`)
         .order('is_favorite', { ascending: false })
         .order('name', { ascending: true })
         .limit(input.limit);
@@ -467,7 +508,10 @@ contactsRouter.get(
       }
 
       secureLogger.info('Contacts searched', {
-        requestId, resultsCount: data?.length || 0, searchQuery: input.query, userId: user.id,
+        requestId,
+        resultsCount: data?.length || 0,
+        searchQuery: input.query,
+        userId: user.id,
       });
 
       return c.json({
@@ -479,12 +523,16 @@ contactsRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to search contacts', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, searchQuery: input.query, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        searchQuery: input.query,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_SEARCH_ERROR', error: 'Failed to search contacts',
+          code: 'CONTACT_SEARCH_ERROR',
+          error: 'Failed to search contacts',
         },
         500
       );
@@ -520,7 +568,9 @@ contactsRouter.get(
       }
 
       secureLogger.info('Favorite contacts retrieved', {
-        favoritesCount: data?.length || 0, requestId, userId: user.id,
+        favoritesCount: data?.length || 0,
+        requestId,
+        userId: user.id,
       });
 
       return c.json({
@@ -532,12 +582,15 @@ contactsRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to get favorite contacts', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'FAVORITES_ERROR', error: 'Failed to retrieve favorite contacts',
+          code: 'FAVORITES_ERROR',
+          error: 'Failed to retrieve favorite contacts',
         },
         500
       );
@@ -573,7 +626,8 @@ contactsRouter.post(
       if (fetchError || !currentContact) {
         return c.json(
           {
-            code: 'NOT_FOUND', error: 'Contato não encontrado',
+            code: 'NOT_FOUND',
+            error: 'Contato não encontrado',
           },
           404
         );
@@ -596,7 +650,11 @@ contactsRouter.post(
       }
 
       secureLogger.info('Contact favorite status toggled', {
-        contactId, newStatus: !currentContact.is_favorite, previousStatus: currentContact.is_favorite, requestId, userId: user.id,
+        contactId,
+        newStatus: !currentContact.is_favorite,
+        previousStatus: currentContact.is_favorite,
+        requestId,
+        userId: user.id,
       });
 
       return c.json({
@@ -608,12 +666,16 @@ contactsRouter.post(
       });
     } catch (error) {
       secureLogger.error('Failed to toggle favorite status', {
-        contactId, error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        contactId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'FAVORITE_TOGGLE_ERROR', error: 'Failed to toggle favorite status',
+          code: 'FAVORITE_TOGGLE_ERROR',
+          error: 'Failed to toggle favorite status',
         },
         500
       );
@@ -672,12 +734,15 @@ contactsRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to get contact statistics', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'CONTACT_STATS_ERROR', error: 'Failed to retrieve contact statistics',
+          code: 'CONTACT_STATS_ERROR',
+          error: 'Failed to retrieve contact statistics',
         },
         500
       );

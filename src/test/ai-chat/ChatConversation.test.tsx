@@ -1,4 +1,9 @@
 // @vitest-environment jsdom
+import React from 'react';
+
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = () => {};
+
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ChatConversation } from '../../features/ai-chat/components/ChatConversation';

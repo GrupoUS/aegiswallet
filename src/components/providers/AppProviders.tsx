@@ -23,9 +23,7 @@ export function AppProviders({ children, defaultConfig = {} }: AppProvidersProps
       <ErrorBoundary>
         <AccessibilityProvider>
           <LoggerProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </LoggerProvider>
         </AccessibilityProvider>
       </ErrorBoundary>

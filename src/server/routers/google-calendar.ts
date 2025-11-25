@@ -5,8 +5,8 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { CalendarSyncSettings } from '@/types/google-calendar';
 import { protectedProcedure, router } from '@/server/trpc-helpers';
+import type { CalendarSyncSettings } from '@/types/google-calendar';
 
 export const googleCalendarRouter = router({
   /**
@@ -69,49 +69,52 @@ export const googleCalendarRouter = router({
    * Get sync settings for the authenticated user
    * Returns user's Google Calendar sync preferences
    */
-  getSyncSettings: protectedProcedure.query(async ({ ctx }): Promise<CalendarSyncSettings | null> => {
-    try {
-      const { data, error } = await ctx.supabase
-        .from('calendar_sync_settings')
-        .select('*')
-        .eq('user_id', ctx.user.id)
-        .maybeSingle();
+  getSyncSettings: protectedProcedure.query(
+    async ({ ctx }): Promise<CalendarSyncSettings | null> => {
+      try {
+        const { data, error } = await ctx.supabase
+          .from('calendar_sync_settings')
+          .select('*')
+          .eq('user_id', ctx.user.id)
+          .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+        if (error && error.code !== 'PGRST116') {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao buscar configurações de sincronização',
+            cause: error,
+          });
+        }
+
+        if (!data) {
+          return null;
+        }
+
+        return {
+          user_id: data.user_id,
+          sync_enabled: data.sync_enabled ?? false,
+          sync_direction:
+            (data.sync_direction as CalendarSyncSettings['sync_direction']) ?? 'one_way_to_google',
+          sync_financial_amounts: data.sync_financial_amounts ?? false,
+          sync_categories: data.sync_categories,
+          last_full_sync_at: data.last_full_sync_at,
+          sync_token: data.sync_token,
+          auto_sync_interval_minutes: data.auto_sync_interval_minutes ?? 15,
+          created_at: data.created_at ?? new Date().toISOString(),
+          updated_at: data.updated_at ?? new Date().toISOString(),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Erro ao buscar configurações de sincronização',
           cause: error,
         });
       }
-
-      if (!data) {
-        return null;
-      }
-
-      return {
-        user_id: data.user_id,
-        sync_enabled: data.sync_enabled ?? false,
-        sync_direction: (data.sync_direction as CalendarSyncSettings['sync_direction']) ?? 'one_way_to_google',
-        sync_financial_amounts: data.sync_financial_amounts ?? false,
-        sync_categories: data.sync_categories,
-        last_full_sync_at: data.last_full_sync_at,
-        sync_token: data.sync_token,
-        auto_sync_interval_minutes: data.auto_sync_interval_minutes ?? 15,
-        created_at: data.created_at ?? new Date().toISOString(),
-        updated_at: data.updated_at ?? new Date().toISOString(),
-      };
-    } catch (error) {
-      if (error instanceof TRPCError) {
-        throw error;
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Erro ao buscar configurações de sincronização',
-        cause: error,
-      });
     }
-  }),
+  ),
 
   /**
    * Update sync settings for the authenticated user
@@ -120,7 +123,9 @@ export const googleCalendarRouter = router({
     .input(
       z.object({
         sync_enabled: z.boolean().optional(),
-        sync_direction: z.enum(['one_way_to_google', 'one_way_from_google', 'bidirectional']).optional(),
+        sync_direction: z
+          .enum(['one_way_to_google', 'one_way_from_google', 'bidirectional'])
+          .optional(),
         sync_financial_amounts: z.boolean().optional(),
         sync_categories: z.array(z.string()).nullable().optional(),
         auto_sync_interval_minutes: z.number().min(1).max(1440).optional(),
@@ -155,7 +160,7 @@ export const googleCalendarRouter = router({
           .eq('user_id', ctx.user.id)
           .maybeSingle();
 
-        let result;
+        let result: typeof existing;
         if (existing) {
           // Update existing
           const { data, error } = await ctx.supabase
@@ -215,7 +220,7 @@ export const googleCalendarRouter = router({
   /**
    * Request a full sync with Google Calendar
    */
-  requestFullSync: protectedProcedure.mutation(async ({ ctx }) => {
+  requestFullSync: protectedProcedure.mutation(async () => {
     try {
       // This would typically trigger an Edge Function or background job
       // For now, we'll just return a success response
@@ -237,7 +242,7 @@ export const googleCalendarRouter = router({
   /**
    * Request an incremental sync with Google Calendar
    */
-  requestIncrementalSync: protectedProcedure.mutation(async ({ ctx }) => {
+  requestIncrementalSync: protectedProcedure.mutation(async () => {
     try {
       // This would typically trigger an Edge Function or background job
       // For now, we'll just return a success response
@@ -264,7 +269,7 @@ export const googleCalendarRouter = router({
         direction: z.enum(['to_google', 'from_google']).default('to_google'),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       try {
         // This would typically sync a single event
         // For now, we'll just return a success response
@@ -324,4 +329,3 @@ export const googleCalendarRouter = router({
       }
     }),
 });
-

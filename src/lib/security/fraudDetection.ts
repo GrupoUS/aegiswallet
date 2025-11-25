@@ -922,10 +922,8 @@ export class FraudDetectionService {
       metadata.location = {
         city: typeof locationRecord.city === 'string' ? locationRecord.city : null,
         country: typeof locationRecord.country === 'string' ? locationRecord.country : null,
-        latitude:
-          typeof locationRecord.latitude === 'number' ? locationRecord.latitude : null,
-        longitude:
-          typeof locationRecord.longitude === 'number' ? locationRecord.longitude : null,
+        latitude: typeof locationRecord.latitude === 'number' ? locationRecord.latitude : null,
+        longitude: typeof locationRecord.longitude === 'number' ? locationRecord.longitude : null,
       };
     }
 
@@ -1036,9 +1034,7 @@ export class FraudDetectionService {
     };
   }
 
-  private serializeKnownLocations(
-    locations: UserBehaviorProfile['knownLocations']
-  ): Json {
+  private serializeKnownLocations(locations: UserBehaviorProfile['knownLocations']): Json {
     return locations.map((location) => ({
       city: location.city,
       country: location.country,
@@ -1056,9 +1052,7 @@ export class FraudDetectionService {
     }));
   }
 
-  private serializeTypicalBehavior(
-    behavior: UserBehaviorProfile['typicalBehavior']
-  ): Json {
+  private serializeTypicalBehavior(behavior: UserBehaviorProfile['typicalBehavior']): Json {
     return {
       activeHours: behavior.activeHours,
       averageSessionDuration: behavior.averageSessionDuration,

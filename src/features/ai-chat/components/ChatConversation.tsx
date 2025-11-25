@@ -34,7 +34,11 @@ export function ChatConversation({
   }, []);
 
   return (
-    <Conversation messages={messages as unknown as ConversationMessage[]} isStreaming={isStreaming} className="flex-1">
+    <Conversation
+      messages={messages as unknown as ConversationMessage[]}
+      isStreaming={isStreaming}
+      className="flex-1"
+    >
       <ScrollArea className="h-full p-4 sm:p-6" ref={scrollRef}>
         <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-4">
           {messages.length === 0 && (

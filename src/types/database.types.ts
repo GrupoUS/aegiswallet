@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -479,7 +479,6 @@ export interface Database {
           is_active: boolean | null
           last_used_at: string | null
           model_version: string | null
-          pattern_hash: string | null
           pattern_data: Json
           updated_at: string | null
           user_id: string
@@ -493,7 +492,6 @@ export interface Database {
           is_active?: boolean | null
           last_used_at?: string | null
           model_version?: string | null
-          pattern_hash?: string | null
           pattern_data: Json
           updated_at?: string | null
           user_id: string
@@ -507,7 +505,6 @@ export interface Database {
           is_active?: boolean | null
           last_used_at?: string | null
           model_version?: string | null
-          pattern_hash?: string | null
           pattern_data?: Json
           updated_at?: string | null
           user_id?: string
@@ -699,6 +696,81 @@ export interface Database {
           sync_enabled?: boolean | null
           sync_financial_amounts?: boolean | null
           sync_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_favorite: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversation_contexts: {
+        Row: {
+          created_at: string | null
+          history: Json | null
+          id: string
+          last_entities: Json | null
+          last_intent: string | null
+          session_id: string
+          timestamp: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          history?: Json | null
+          id?: string
+          last_entities?: Json | null
+          last_intent?: string | null
+          session_id: string
+          timestamp?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          history?: Json | null
+          id?: string
+          last_entities?: Json | null
+          last_intent?: string | null
+          session_id?: string
+          timestamp?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1069,65 +1141,6 @@ export interface Database {
         }
         Relationships: []
       }
-      fraud_detection_logs: {
-        Row: {
-          created_at: string | null
-          detected_anomalies: Json | null
-          device_fingerprint: string | null
-          event_type: string | null
-          id: string
-          ip_address: string | null
-          location: Json | null
-          metadata: Json | null
-          requires_review: boolean | null
-          risk_level: string | null
-          risk_score: number | null
-          should_block: boolean | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          detected_anomalies?: Json | null
-          device_fingerprint?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          location?: Json | null
-          metadata?: Json | null
-          requires_review?: boolean | null
-          risk_level?: string | null
-          risk_score?: number | null
-          should_block?: boolean | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          detected_anomalies?: Json | null
-          device_fingerprint?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          location?: Json | null
-          metadata?: Json | null
-          requires_review?: boolean | null
-          risk_level?: string | null
-          risk_score?: number | null
-          should_block?: boolean | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fraud_detection_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       google_calendar_tokens: {
         Row: {
           access_token: string
@@ -1202,6 +1215,57 @@ export interface Database {
           reason?: string
           released_at?: string | null
           released_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nlu_learning_data: {
+        Row: {
+          confidence_improvement: number
+          correction_applied: string
+          created_at: string | null
+          error_pattern: string
+          id: string
+          linguistic_style: string | null
+          original_confidence: number
+          original_text: string
+          regional_variation: string | null
+          success: boolean
+          timestamp: string | null
+          updated_at: string | null
+          user_feedback: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_improvement: number
+          correction_applied: string
+          created_at?: string | null
+          error_pattern: string
+          id?: string
+          linguistic_style?: string | null
+          original_confidence: number
+          original_text: string
+          regional_variation?: string | null
+          success: boolean
+          timestamp?: string | null
+          updated_at?: string | null
+          user_feedback?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_improvement?: number
+          correction_applied?: string
+          created_at?: string | null
+          error_pattern?: string
+          id?: string
+          linguistic_style?: string | null
+          original_confidence?: number
+          original_text?: string
+          regional_variation?: string | null
+          success?: boolean
+          timestamp?: string | null
+          updated_at?: string | null
+          user_feedback?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1362,133 +1426,6 @@ export interface Database {
         }
         Relationships: []
       }
-      pix_qr_codes: {
-        Row: {
-          amount: number | null
-          created_at: string | null
-          description: string | null
-          expires_at: string | null
-          id: string
-          is_active: boolean | null
-          max_uses: number | null
-          pix_key: string
-          qr_code_data: string
-          qr_code_image: string | null
-          times_used: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          amount?: number | null
-          created_at?: string | null
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          max_uses?: number | null
-          pix_key: string
-          qr_code_data: string
-          qr_code_image?: string | null
-          times_used?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number | null
-          created_at?: string | null
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          max_uses?: number | null
-          pix_key?: string
-          qr_code_data?: string
-          qr_code_image?: string | null
-          times_used?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pix_qr_codes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pix_transactions: {
-        Row: {
-          amount: number
-          completed_at: string | null
-          created_at: string | null
-          description: string | null
-          end_to_end_id: string | null
-          error_message: string | null
-          id: string
-          metadata: Json | null
-          pix_key: string
-          pix_key_type: string
-          recipient_document: string | null
-          recipient_name: string | null
-          scheduled_date: string | null
-          status: string
-          transaction_id: string | null
-          transaction_type: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          end_to_end_id?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          pix_key: string
-          pix_key_type: string
-          recipient_document?: string | null
-          recipient_name?: string | null
-          scheduled_date?: string | null
-          status?: string
-          transaction_id?: string | null
-          transaction_type: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          end_to_end_id?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          pix_key?: string
-          pix_key_type?: string
-          recipient_document?: string | null
-          recipient_name?: string | null
-          scheduled_date?: string | null
-          status?: string
-          transaction_id?: string | null
-          transaction_type?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pix_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pix_transfers: {
         Row: {
           amount: number
@@ -1588,94 +1525,6 @@ export interface Database {
         }
         Relationships: []
       }
-      push_logs: {
-        Row: {
-          created_at: string | null
-          data: Json | null
-          error: string | null
-          id: string
-          message_body: string | null
-          message_id: string | null
-          message_title: string | null
-          status: string | null
-          tag: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data?: Json | null
-          error?: string | null
-          id?: string
-          message_body?: string | null
-          message_id?: string | null
-          message_title?: string | null
-          status?: string | null
-          tag?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data?: Json | null
-          error?: string | null
-          id?: string
-          message_body?: string | null
-          message_id?: string | null
-          message_title?: string | null
-          status?: string | null
-          tag?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      push_subscriptions: {
-        Row: {
-          auth_key: string
-          created_at: string | null
-          endpoint: string
-          id: string
-          is_active: boolean | null
-          p256dh_key: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          auth_key: string
-          created_at?: string | null
-          endpoint: string
-          id?: string
-          is_active?: boolean | null
-          p256dh_key: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          auth_key?: string
-          created_at?: string | null
-          endpoint?: string
-          id?: string
-          is_active?: boolean | null
-          p256dh_key?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       scheduled_payments: {
         Row: {
           amount: number
@@ -1761,88 +1610,6 @@ export interface Database {
             columns: ["rule_id"]
             isOneToOne: false
             referencedRelation: "payment_rules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sms_logs: {
-        Row: {
-          body: string | null
-          created_at: string | null
-          error: string | null
-          id: string
-          message_id: string | null
-          processing_time: number | null
-          status: string | null
-          template: string | null
-          to: string | null
-          user_id: string | null
-          variables: Json | null
-        }
-        Insert: {
-          body?: string | null
-          created_at?: string | null
-          error?: string | null
-          id?: string
-          message_id?: string | null
-          processing_time?: number | null
-          status?: string | null
-          template?: string | null
-          to?: string | null
-          user_id?: string | null
-          variables?: Json | null
-        }
-        Update: {
-          body?: string | null
-          created_at?: string | null
-          error?: string | null
-          id?: string
-          message_id?: string | null
-          processing_time?: number | null
-          status?: string | null
-          template?: string | null
-          to?: string | null
-          user_id?: string | null
-          variables?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sms_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_behavior_profiles: {
-        Row: {
-          known_devices: Json | null
-          known_locations: Json | null
-          last_updated: string | null
-          typical_behavior: Json | null
-          user_id: string
-        }
-        Insert: {
-          known_devices?: Json | null
-          known_locations?: Json | null
-          last_updated?: string | null
-          typical_behavior?: Json | null
-          user_id: string
-        }
-        Update: {
-          known_devices?: Json | null
-          known_locations?: Json | null
-          last_updated?: string | null
-          typical_behavior?: Json | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_behavior_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -2173,38 +1940,6 @@ export interface Database {
           },
         ]
       }
-      user_sessions: {
-        Row: {
-          created_at: string | null
-          id: string
-          last_activity: string | null
-          session_token: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          last_activity?: string | null
-          session_token?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          last_activity?: string | null
-          session_token?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_security_preferences: {
         Row: {
           created_at: string | null
@@ -2419,12 +2154,10 @@ export interface Database {
           file_size: number | null
           format: string | null
           id: string
-          metadata: Json | null
           processed: boolean | null
           retention_expires_at: string | null
           sample_rate: number | null
           session_id: string | null
-          transcription_anonymized: boolean | null
           transcription_id: string | null
           user_id: string
         }
@@ -2437,12 +2170,10 @@ export interface Database {
           file_size?: number | null
           format?: string | null
           id?: string
-          metadata?: Json | null
           processed?: boolean | null
           retention_expires_at?: string | null
           sample_rate?: number | null
           session_id?: string | null
-          transcription_anonymized?: boolean | null
           transcription_id?: string | null
           user_id: string
         }
@@ -2455,12 +2186,10 @@ export interface Database {
           file_size?: number | null
           format?: string | null
           id?: string
-          metadata?: Json | null
           processed?: boolean | null
           retention_expires_at?: string | null
           sample_rate?: number | null
           session_id?: string | null
-          transcription_anonymized?: boolean | null
           transcription_id?: string | null
           user_id?: string
         }

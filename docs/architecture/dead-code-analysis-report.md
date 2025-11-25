@@ -27,7 +27,7 @@
 
 - `tokenManager.ts` - OAuth token encryption (never integrated)
 - `securityCompliance.ts` - Security stub (handled by `src/lib/security/`)
-- `pixApi.ts` - PIX client (replaced by tRPC router)
+- `pixApi.ts` - PIX client (replaced by Hono RPC routes)
 - `monitoringService.ts` - Monitoring stub (handled by logger)
 - `dataNormalization.ts` - Data enrichment (handled by AI categorizer)
 

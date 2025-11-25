@@ -3,8 +3,8 @@
  * Handles JWT extraction, user validation, and Supabase client creation
  */
 
-import { createMiddleware } from 'hono/factory';
 import type { Context, Next } from 'hono';
+import { createMiddleware } from 'hono/factory';
 import { createClient } from '@/integrations/supabase/server';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
@@ -21,17 +21,15 @@ interface AuthContext {
  * Create a request-scoped Supabase client with user token
  */
 function createRequestScopedClient(token: string) {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+  const supabaseUrl = process.env.SUPABASE_URL ?? '';
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    }
-  );
+    },
+  });
 }
 
 /**
@@ -54,18 +52,21 @@ export const authMiddleware = createMiddleware(async (c: Context, next: Next) =>
 
   // Log authentication attempt
   const requestId = c.get('requestId') || 'unknown';
-  const clientIP = c.req.header('X-Forwarded-For') ||
-                  c.req.header('X-Real-IP') ||
-                  'unknown';
+  const clientIP = c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
 
   if (!token) {
     secureLogger.warn('Authentication failed: No token provided', {
-      ip: clientIP, method: c.req.method, path: c.req.path, requestId, userAgent: c.req.header('User-Agent'),
+      ip: clientIP,
+      method: c.req.method,
+      path: c.req.path,
+      requestId,
+      userAgent: c.req.header('User-Agent'),
     });
 
     return c.json(
       {
-        code: 'AUTH_REQUIRED', error: 'Authentication required',
+        code: 'AUTH_REQUIRED',
+        error: 'Authentication required',
       },
       401
     );
@@ -76,16 +77,25 @@ export const authMiddleware = createMiddleware(async (c: Context, next: Next) =>
     const supabase = createRequestScopedClient(token);
 
     // Validate token and get user
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       secureLogger.warn('Authentication failed: Invalid token', {
-        error: error?.message, ip: clientIP, method: c.req.method, path: c.req.path, requestId, userAgent: c.req.header('User-Agent'),
+        error: error?.message,
+        ip: clientIP,
+        method: c.req.method,
+        path: c.req.path,
+        requestId,
+        userAgent: c.req.header('User-Agent'),
       });
 
       return c.json(
         {
-          code: 'INVALID_TOKEN', error: 'Invalid authentication token',
+          code: 'INVALID_TOKEN',
+          error: 'Invalid authentication token',
         },
         401
       );
@@ -93,7 +103,8 @@ export const authMiddleware = createMiddleware(async (c: Context, next: Next) =>
 
     // Attach auth context to request
     const authContext: AuthContext = {
-      supabase, user: {
+      supabase,
+      user: {
         id: user.id,
         email: user.email || '',
         role: user.user_metadata?.role,
@@ -104,18 +115,28 @@ export const authMiddleware = createMiddleware(async (c: Context, next: Next) =>
 
     // Log successful authentication
     secureLogger.info('Authentication successful', {
-      ip: clientIP, method: c.req.method, path: c.req.path, requestId, userId: user.id,
+      ip: clientIP,
+      method: c.req.method,
+      path: c.req.path,
+      requestId,
+      userId: user.id,
     });
 
     await next();
   } catch (error) {
     secureLogger.error('Authentication error', {
-      error: error instanceof Error ? error.message : 'Unknown error', ip: clientIP, method: c.req.method, path: c.req.path, requestId, userAgent: c.req.header('User-Agent'),
+      error: error instanceof Error ? error.message : 'Unknown error',
+      ip: clientIP,
+      method: c.req.method,
+      path: c.req.path,
+      requestId,
+      userAgent: c.req.header('User-Agent'),
     });
 
     return c.json(
       {
-        code: 'AUTH_ERROR', error: 'Authentication failed',
+        code: 'AUTH_ERROR',
+        error: 'Authentication failed',
       },
       500
     );
@@ -143,7 +164,10 @@ export const optionalAuthMiddleware = createMiddleware(async (c: Context, next: 
     const supabase = createRequestScopedClient(token);
 
     // Validate token and get user
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       // Invalid token, but don't return error for optional auth
@@ -153,7 +177,8 @@ export const optionalAuthMiddleware = createMiddleware(async (c: Context, next: 
 
     // Attach auth context to request
     const authContext: AuthContext = {
-      supabase, user: {
+      supabase,
+      user: {
         id: user.id,
         email: user.email || '',
         role: user.user_metadata?.role,
@@ -162,7 +187,7 @@ export const optionalAuthMiddleware = createMiddleware(async (c: Context, next: 
 
     c.set('auth', authContext);
     await next();
-  } catch (error) {
+  } catch {
     // Error validating token, but don't return error for optional auth
     await next();
   }
@@ -186,7 +211,8 @@ export function roleMiddleware(allowedRoles: string[]) {
     if (!auth) {
       return c.json(
         {
-          code: 'AUTH_REQUIRED', error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          error: 'Authentication required',
         },
         401
       );
@@ -196,15 +222,21 @@ export function roleMiddleware(allowedRoles: string[]) {
 
     if (!userRole || !allowedRoles.includes(userRole)) {
       secureLogger.warn('Authorization failed: Insufficient role', {
-        method: c.req.method, path: c.req.path, requiredRoles: allowedRoles, userId: auth.user.id, userRole,
+        method: c.req.method,
+        path: c.req.path,
+        requiredRoles: allowedRoles,
+        userId: auth.user.id,
+        userRole,
       });
 
       return c.json(
         {
-          code: 'INSUFFICIENT_PERMISSIONS', details: {
+          code: 'INSUFFICIENT_PERMISSIONS',
+          details: {
             required: allowedRoles,
             current: userRole,
-          }, error: 'Insufficient permissions',
+          },
+          error: 'Insufficient permissions',
         },
         403
       );
@@ -241,9 +273,7 @@ export function userRateLimitMiddleware(options: {
 
     if (!auth) {
       // If no auth context, use IP-based limiting
-      const clientIP = c.req.header('X-Forwarded-For') ||
-                      c.req.header('X-Real-IP') ||
-                      'unknown';
+      const clientIP = c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
       return handleRateLimit(clientIP, requests, windowMs, max, message, c, next);
     }
 
@@ -282,11 +312,13 @@ async function handleRateLimit(
 
       return c.json(
         {
-          code: 'RATE_LIMIT_EXCEEDED', details: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          details: {
             limit: max,
             windowMs,
             retryAfter: resetTime,
-          }, error: message,
+          },
+          error: message,
         },
         429
       );

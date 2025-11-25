@@ -3,15 +3,16 @@
  * Handles voice command processing and available commands
  */
 
-import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { AppEnv } from '@/server/hono-types';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import type { ProcessVoiceCommandInputType } from '@/types/server.types';
 
 const MIN_AUTOMATION_CONFIDENCE = 0.8;
-const voiceRouter = new Hono();
+const voiceRouter = new Hono<AppEnv>();
 
 // Input validation schemas
 const processCommandSchema = z.object({
@@ -22,10 +23,14 @@ const processCommandSchema = z.object({
   requireConfirmation: z.boolean().default(false),
 });
 
-const availableCommandsResponseSchema = z.object({
-  commands: z.array(z.object({
-    description: z.string(), examples: z.array(z.string()), name: z.string(),
-  })),
+export const availableCommandsResponseSchema = z.object({
+  commands: z.array(
+    z.object({
+      description: z.string(),
+      examples: z.array(z.string()),
+      name: z.string(),
+    })
+  ),
   language: z.string(),
 });
 
@@ -59,35 +64,57 @@ voiceRouter.post(
     try {
       // Log incoming voice command for audit
       secureLogger.audit('Voice command processing started', {
-        commandLength: command.length, component: 'voice.processCommand', requestId, userId: user.id,
+        commandLength: command.length,
+        component: 'voice.processCommand',
+        requestId,
+        userId: user.id,
       });
 
       // Process voice command through NLU pipeline
       const result = await processVoiceCommand({
-        audioData, command, context: { user, supabase }, language, requireConfirmation, sessionId, userId: user.id,
+        audioData,
+        command,
+        context: { user, supabase },
+        language,
+        requireConfirmation,
+        sessionId,
+        userId: user.id,
       });
 
       // Log processing result
       secureLogger.audit('Voice command processing completed', {
-        command, requestId, result, sessionId, timestamp: new Date().toISOString(), userId: user.id,
+        command,
+        requestId,
+        result,
+        sessionId,
+        timestamp: new Date().toISOString(),
+        userId: user.id,
       });
 
       return c.json({
         data: result,
         meta: {
-          processedAt: new Date().toISOString(), requestId,
+          processedAt: new Date().toISOString(),
+          requestId,
         },
       });
     } catch (error) {
       secureLogger.audit('Voice command processing failed', {
-        command, error: error instanceof Error ? error.message : 'Unknown error', requestId, sessionId, timestamp: new Date().toISOString(), userId: user.id,
+        command,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        sessionId,
+        timestamp: new Date().toISOString(),
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'VOICE_PROCESSING_ERROR', details: {
+          code: 'VOICE_PROCESSING_ERROR',
+          details: {
             command: command.substring(0, 50), // Limit command length in error
-          }, error: 'Failed to process voice command',
+          },
+          error: 'Failed to process voice command',
         },
         500
       );
@@ -114,16 +141,24 @@ voiceRouter.get(
       const response = {
         commands: [
           {
-            description: 'Verificar saldo da conta', examples: ['Qual é o meu saldo?', 'Quanto dinheiro eu tenho?'], name: 'check_balance',
+            description: 'Verificar saldo da conta',
+            examples: ['Qual é o meu saldo?', 'Quanto dinheiro eu tenho?'],
+            name: 'check_balance',
           },
           {
-            description: 'Transferir dinheiro para outra conta', examples: ['Transferir R$ 100 para João', 'Pagar 50 reais para Maria'], name: 'transfer_money',
+            description: 'Transferir dinheiro para outra conta',
+            examples: ['Transferir R$ 100 para João', 'Pagar 50 reais para Maria'],
+            name: 'transfer_money',
           },
           {
-            description: 'Pagar contas e boletos', examples: ['Pagar conta de luz', 'Pagar boleto do cartão'], name: 'pay_bill',
+            description: 'Pagar contas e boletos',
+            examples: ['Pagar conta de luz', 'Pagar boleto do cartão'],
+            name: 'pay_bill',
           },
           {
-            description: 'Ver histórico de transações', examples: ['Mostrar minhas transações', 'Ver extrato do mês'], name: 'transaction_history',
+            description: 'Ver histórico de transações',
+            examples: ['Mostrar minhas transações', 'Ver extrato do mês'],
+            name: 'transaction_history',
           },
         ],
         language: 'pt-BR',
@@ -144,12 +179,15 @@ voiceRouter.get(
       });
     } catch (error) {
       secureLogger.error('Failed to get voice commands', {
-        error: error instanceof Error ? error.message : 'Unknown error', requestId, userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
       });
 
       return c.json(
         {
-          code: 'COMMANDS_RETRIEVAL_ERROR', error: 'Failed to retrieve voice commands',
+          code: 'COMMANDS_RETRIEVAL_ERROR',
+          error: 'Failed to retrieve voice commands',
         },
         500
       );
@@ -161,8 +199,20 @@ voiceRouter.get(
  * Process voice command function (placeholder for NLU integration)
  * This would be replaced with actual NLU processing
  */
-async function processVoiceCommand(input: ProcessVoiceCommandInputType): Promise<any> {
-  const { command, userId, sessionId, audioData, language, requireConfirmation, context } = input;
+interface VoiceCommandResult {
+  intent: string | null;
+  entities: Record<string, unknown>;
+  confidence: number;
+  response: string;
+  requiresConfirmation: boolean;
+  sessionId: string;
+  language: string;
+}
+
+async function processVoiceCommand(
+  input: ProcessVoiceCommandInputType
+): Promise<VoiceCommandResult> {
+  const { command, sessionId, language, requireConfirmation } = input;
 
   // Placeholder implementation - in real scenario, this would:
   // 1. Convert audio to text if audioData is provided
@@ -171,7 +221,7 @@ async function processVoiceCommand(input: ProcessVoiceCommandInputType): Promise
   // 4. Return result with confidence score
 
   // Simulate processing delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Simple command detection for demo
   const lowerCommand = command.toLowerCase();
@@ -201,7 +251,13 @@ async function processVoiceCommand(input: ProcessVoiceCommandInputType): Promise
   const requiresConfirmation = confidence < MIN_AUTOMATION_CONFIDENCE || requireConfirmation;
 
   return {
-    confidence, entities, intent, language, processedAt: new Date().toISOString(), requiresConfirmation, sessionId,
+    confidence,
+    entities,
+    intent,
+    language,
+    processedAt: new Date().toISOString(),
+    requiresConfirmation,
+    sessionId,
   };
 }
 

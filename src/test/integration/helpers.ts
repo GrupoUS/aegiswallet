@@ -39,7 +39,10 @@ export const createTestUser = async (client: ReturnType<typeof getSupabaseAdminC
   }
 
   await client.from('users').insert({
-    autonomy_level: 50, email, full_name: 'Integration Tester', id: data.user.id,
+    autonomy_level: 50,
+    email,
+    full_name: 'Integration Tester',
+    id: data.user.id,
   });
 
   return { email, id: data.user.id };

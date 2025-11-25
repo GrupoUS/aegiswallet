@@ -7,8 +7,8 @@
  * cleans the records to keep the database pristine.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
 
 interface CliOptions {
   userId: string;
@@ -84,7 +84,19 @@ async function main() {
   console.log(`• Using user_id: ${userId}${process.env.SUPABASE_QA_USER_ID ? ' (from env)' : ''}`);
 
   const accountPayload = {
-    account_holder_name: 'QA Smoke User', account_mask: '**** 5678', account_type: 'checking', available_balance: 123.45, balance: 123.45, belvo_account_id: belvoAccountId, currency: 'BRL', institution_id: 'qa_smoke_institution', institution_name: institutionName, is_active: true, is_primary: false, sync_status: 'manual', user_id: userId,
+    account_holder_name: 'QA Smoke User',
+    account_mask: '**** 5678',
+    account_type: 'checking',
+    available_balance: 123.45,
+    balance: 123.45,
+    belvo_account_id: belvoAccountId,
+    currency: 'BRL',
+    institution_id: 'qa_smoke_institution',
+    institution_name: institutionName,
+    is_active: true,
+    is_primary: false,
+    sync_status: 'manual',
+    user_id: userId,
   };
 
   const { data: account, error: accountError } = await client
@@ -101,7 +113,15 @@ async function main() {
   console.log(`✅ Bank account inserted: ${account.id}`);
 
   const transactionPayload = {
-    account_id: account.id, amount: 42.5, currency: 'BRL', description: 'QA Smoke Transaction', is_manual_entry: true, status: 'posted', transaction_date: new Date().toISOString(), transaction_type: 'debit', user_id: userId,
+    account_id: account.id,
+    amount: 42.5,
+    currency: 'BRL',
+    description: 'QA Smoke Transaction',
+    is_manual_entry: true,
+    status: 'posted',
+    transaction_date: new Date().toISOString(),
+    transaction_type: 'debit',
+    user_id: userId,
   };
 
   const { data: transaction, error: transactionError } = await client
@@ -134,4 +154,3 @@ main().catch((error) => {
   console.error('❌ Smoke test failed with unexpected error:', error);
   process.exit(1);
 });
-

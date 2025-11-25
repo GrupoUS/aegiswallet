@@ -27,8 +27,8 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
   const [tasks, setTasks] = useState<ChatTask[]>([]);
   const [reasoning, setReasoning] = useState<ChatReasoningChunk[]>([]);
 
-  const logger = useLogger('ChatController');
-  const { speak } = useMultimodalResponse();
+  const logger = useLogger({ component: 'ChatController' });
+  const { sendResponse } = useMultimodalResponse();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const stopStreaming = useCallback(() => {
@@ -156,10 +156,13 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
 
         // Voice feedback
         if (options.enableVoiceFeedback && accumulatedContent) {
-          speak(accumulatedContent);
+          // Use sendResponse instead of speak
+          // We use 'confirmation' intent as a generic fallback for now, or we could add a 'chat_response' intent type
+          // For now, passing it as a simple text response
+          sendResponse('confirmation', { text: accumulatedContent });
         }
       } catch (err: any) {
-        logger.error('Chat error:', err);
+        logger.error('Chat error:', { error: err });
         const chatError =
           err instanceof ChatError ? err : new ChatError(err.message, 'UNKNOWN_ERROR', err);
         setError(chatError);
@@ -169,14 +172,21 @@ export function useChatController(backend: ChatBackend, options: ChatControllerO
         setIsLoading(false);
       }
     },
-    [messages, backend, logger, options, speak]
+    [messages, backend, logger, options, sendResponse]
   );
 
   const regenerateLastMessage = useCallback(() => {
     if (messages.length === 0) return;
 
-    // Find last user message
-    const lastUserIndex = messages.findLastIndex((m) => m.role === 'user');
+    // Find last user message (manual implementation to avoid ES2023 findLastIndex issue)
+    let lastUserIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        lastUserIndex = i;
+        break;
+      }
+    }
+
     if (lastUserIndex === -1) return;
 
     // Truncate history to last user message

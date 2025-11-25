@@ -1,11 +1,3 @@
-import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
-import type { ChatBackend } from '../../features/ai-chat/backends/ChatBackend';
-import { createStreamChunk } from '../../features/ai-chat/domain/events';
-import { type ChatMessage, ChatStreamEventType } from '../../features/ai-chat/domain/types';
-import { useChatController } from '../../features/ai-chat/hooks/useChatController';
-
-// Mock Backend
 class MockBackend implements ChatBackend {
   async *send(_messages: ChatMessage[], _optionss?: any) {
     yield createStreamChunk(ChatStreamEventType.MESSAGE_START, null, 'msg-1', {

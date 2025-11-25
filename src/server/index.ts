@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureLogger } from '@/lib/logging/secure-logger';
-import { authMiddleware } from '@/server/middleware/auth';
 import { corsMiddleware } from '@/server/middleware/cors';
 import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
@@ -18,7 +17,11 @@ import {
  * Create and configure Hono application with edge-first architecture
  * Now using Hono RPC endpoints exclusively
  */
-const app = new Hono();
+const app = new Hono<{
+  Variables: {
+    requestId: string;
+  };
+}>();
 
 // Global middleware
 app.use('*', logger());
@@ -51,15 +54,22 @@ setupStaticRoutes(app);
 
 // 404 handler
 app.notFound((c) => {
-  const requestId = c.get('requestId');
+  const requestId = c.get('requestId') || 'unknown';
 
   secureLogger.warn('Route not found', {
-    ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'), method: c.req.method, path: c.req.path, requestId, userAgent: c.req.header('User-Agent'),
+    ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
+    method: c.req.method,
+    path: c.req.path,
+    requestId,
+    userAgent: c.req.header('User-Agent') || 'unknown',
   });
 
   return c.json(
     {
-      error: 'Not Found', message: `Route ${c.req.method} ${c.req.path} not found`, requestId, timestamp: new Date().toISOString(),
+      error: 'Not Found',
+      message: `Route ${c.req.method} ${c.req.path} not found`,
+      requestId,
+      timestamp: new Date().toISOString(),
     },
     404
   );
@@ -67,15 +77,21 @@ app.notFound((c) => {
 
 // Global error handler
 app.onError((err, c) => {
-  const requestId = c.get('requestId');
+  const requestId = c.get('requestId') || 'unknown';
 
   secureLogger.error('Unhandled error', {
-    error: err.message, method: c.req.method, path: c.req.path, requestId, stack: err.stack,
+    error: err.message,
+    method: c.req.method,
+    path: c.req.path,
+    requestId,
+    stack: err.stack,
   });
 
   return c.json(
     {
-      error: 'Internal server error', requestId, timestamp: new Date().toISOString(),
+      error: 'Internal server error',
+      requestId,
+      timestamp: new Date().toISOString(),
     },
     500
   );

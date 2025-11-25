@@ -18,7 +18,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
   className,
 }: VoiceDashboardProps) {
   const navigate = useNavigate();
-  const { speak, announce } = useAccessibility();
+  const { announceToScreenReader } = useAccessibility();
   const {
     isListening,
     isProcessing,
@@ -64,8 +64,8 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
         setCurrentResponse(response);
 
         // Announce response for accessibility
-        announce(response.message);
-        speak(response.message);
+        announceToScreenReader(response.message);
+        speakResponse(response.message);
 
         // Add to history
         setCommandHistory((prev) => [
@@ -101,7 +101,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
       handleCommand();
     }
-  }, [transcript, confidence, announce, speak]);
+  }, [transcript, confidence, announceToScreenReader]);
 
   // Otimizar funções com useCallback
   const speakResponse = useCallback((text: string) => {
@@ -139,7 +139,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       {
         action: () => {
           navigate({ to: '/saldo' });
-          announce('Navegando para página de saldo');
+          announceToScreenReader('Navegando para página de saldo');
         },
         description: 'Ver seu saldo e transações',
         icon: '💰',
@@ -148,7 +148,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       {
         action: () => {
           navigate({ to: '/dashboard' });
-          announce('Navegando para dashboard com orçamentos');
+          announceToScreenReader('Navegando para dashboard com orçamentos');
         },
         description: 'Analisar seu orçamento mensal',
         icon: '📊',
@@ -157,7 +157,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       {
         action: () => {
           navigate({ to: '/contas' });
-          announce('Navegando para página de contas');
+          announceToScreenReader('Navegando para página de contas');
         },
         description: 'Gerenciar suas contas e pagamentos',
         icon: '📄',
@@ -166,14 +166,14 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
       {
         action: () => {
           navigate({ to: '/pix' });
-          announce('Navegando para página de PIX');
+          announceToScreenReader('Navegando para página de PIX');
         },
         description: 'Fazer transferências PIX',
         icon: '🚀',
         title: 'PIX',
       },
     ],
-    [navigate, announce]
+    [navigate, announceToScreenReader]
   );
 
   // Otimizar histórico de comandos com useMemo
@@ -323,7 +323,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             className="h-14 w-14 rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Configurações de acessibilidade"
             onClick={() => {
-              announce('Abrindo configurações de acessibilidade');
+              announceToScreenReader('Abrindo configurações de acessibilidade');
               // Implementar navegação para configurações quando disponível
             }}
             title="Configurações de acessibilidade"
@@ -340,7 +340,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             const mainContent = document.querySelector('main');
             if (mainContent) {
               mainContent.focus();
-              announce('Pulado para conteúdo principal');
+              announceToScreenReader('Pulado para conteúdo principal');
             }
           }}
         >

@@ -77,29 +77,22 @@ function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = '
   const timestamp = new Date().toISOString();
 
   let prefix = 'ℹ️';
+  let color: keyof typeof colors = 'blue';
+
   if (type === 'success') {
     prefix = '✅';
-  } else if (type === 'warning') {
-    prefix = '⚠️';
-  } else if (type === 'error') {
-    prefix = '❌';
-  }
-
-  let color: keyof typeof colors = 'blue';
-  if (type === 'success') {
     color = 'green';
   } else if (type === 'warning') {
+    prefix = '⚠️';
     color = 'yellow';
   } else if (type === 'error') {
+    prefix = '❌';
     color = 'red';
   }
 
   const coloredTimestamp = colorize(`[${timestamp}]`, 'bright');
   const coloredMessage = colorize(message, color);
-
-  console.log(`${coloredTimestamp} ${prefix} ${coloredMessage}`);
 }
-
 /**
  * Count total files that will be processed
  */
@@ -158,7 +151,7 @@ function runBenchmark(tool: (typeof CONFIG.tools)[0]): BenchmarkResult {
       exitCode: 0,
       tool: tool.name,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     const endTime = process.hrtime.bigint();
     const duration = Number(endTime - startTime) / 1000000;
 
@@ -166,7 +159,7 @@ function runBenchmark(tool: (typeof CONFIG.tools)[0]): BenchmarkResult {
 
     return {
       duration,
-      exitCode: error.status || 1,
+      exitCode: (error as { status?: number }).status || 1,
       tool: tool.name,
     };
   }

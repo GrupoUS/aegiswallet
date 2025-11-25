@@ -10,6 +10,8 @@ import type {
   FinancialEventType,
 } from '@/types/financial-events';
 
+export type { FinancialEventCategory };
+
 const EVENT_TYPES = ['income', 'expense', 'bill', 'scheduled', 'transfer'] as const;
 const EVENT_STATUSES = ['pending', 'paid', 'scheduled', 'cancelled', 'completed'] as const;
 const PRIORITIES = ['BAIXA', 'NORMAL', 'ALTA', 'URGENTE'] as const;

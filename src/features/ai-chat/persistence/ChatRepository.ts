@@ -152,7 +152,7 @@ export class ChatRepository {
    * Get messages with context window (last N messages)
    */
   async getMessagesInContextWindow(conversationId: string): Promise<ChatMessage[]> {
-    return this.get Messages(conversationId, this.contextWindowSize);
+    return this.getMessages(conversationId, this.contextWindowSize);
   }
 
   /**

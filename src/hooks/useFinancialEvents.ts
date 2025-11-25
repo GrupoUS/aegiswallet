@@ -181,7 +181,7 @@ function rowToEvent(row: FinancialEventRow): FinancialEvent {
       installmentInfo =
         typeof row.installment_info === 'string'
           ? (JSON.parse(row.installment_info) as InstallmentInfo)
-          : (row.installment_info as InstallmentInfo);
+          : (row.installment_info as unknown as InstallmentInfo);
     } catch (_error) {}
   }
 

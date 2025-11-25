@@ -1,12 +1,12 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
-import { protectedProcedure, publicProcedure, router } from '@/server/trpc-helpers';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/trpc';
 
 /**
  * Calendar router for financial event management
  */
-export const calendarRouter = router({
+export const calendarRouter = createTRPCRouter({
   // Health check
   health: publicProcedure.query(() => ({
     status: 'ok',

@@ -33,9 +33,11 @@ export interface SecurityConfig {
     objectSrc: string[];
     mediaSrc: string[];
     frameSrc: string[];
+    frameAncestors: string[];
     childSrc: string[];
     workerSrc: string[];
     manifestSrc: string[];
+    formAction: string[];
     upgradeInsecureRequests: boolean;
   };
 
@@ -96,6 +98,8 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
     ],
     defaultSrc: ["'self'"],
     fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+    formAction: ["'self'"],
+    frameAncestors: ["'none'"],
     frameSrc: ["'none'"],
     imgSrc: [
       "'self'",
@@ -109,14 +113,12 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
     objectSrc: ["'none'"],
     scriptSrc: [
       "'self'",
-      "'unsafe-inline'", // Temporary for development, remove in production
       'https://cdn.jsdelivr.net',
       'https://unpkg.com',
       'https://js.stripe.com', // For future payment integration
     ],
     styleSrc: [
       "'self'",
-      "'unsafe-inline'",
       'https://fonts.googleapis.com',
       'https://cdn.jsdelivr.net',
     ],
@@ -214,9 +216,11 @@ export function generateCSPHeader(config: SecurityConfig['csp']): string {
   addDirective('object-src', config.objectSrc);
   addDirective('media-src', config.mediaSrc);
   addDirective('frame-src', config.frameSrc);
+  addDirective('frame-ancestors', config.frameAncestors);
   addDirective('child-src', config.childSrc);
   addDirective('worker-src', config.workerSrc);
   addDirective('manifest-src', config.manifestSrc);
+  addDirective('form-action', config.formAction);
 
   if (config.upgradeInsecureRequests) {
     directives.push('upgrade-insecure-requests');
@@ -281,10 +285,7 @@ export function generateSecurityHeaders(
     headers['X-Cookie-Consent'] = 'required';
   }
 
-  // Remove some headers for development
-  if (process.env.NODE_ENV === 'development') {
-    headers['Strict-Transport-Security'] = undefined;
-  }
+  // Headers are conditionally added based on config, no need to remove in development
 
   return headers;
 }

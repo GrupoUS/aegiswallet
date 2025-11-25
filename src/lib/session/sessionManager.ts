@@ -284,42 +284,88 @@ export class SessionManager {
     modal.id = this.WARNING_MODAL_ID;
     modal.className =
       'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-    modal.innerHTML = `
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <div class="flex items-center mb-4">
-          <svg class="w-6 h-6 text-yellow-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-          </svg>
-          <h3 class="text-lg font-semibold text-gray-900">Sessão Expirando</h3>
-        </div>
 
-        <p class="text-gray-600 mb-6">
-          Sua sessão expirará em <strong>${this.config.warningMinutes}</strong> minutos por inatividade.
-          Deseja continuar?
-        </p>
+    // Create modal content using safe DOM methods
+    const modalContent = document.createElement('div');
+    modalContent.className = 'bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl';
 
-        <div class="flex space-x-3">
-          <button id="session-extend-btn" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            Continuar Sessão
-          </button>
-          <button id="session-logout-btn" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
-            Sair Agora
-          </button>
-        </div>
+    // Header with icon and title
+    const header = document.createElement('div');
+    header.className = 'flex items-center mb-4';
 
-        <div class="mt-4 text-center">
-          <p class="text-xs text-gray-500">
-            Tempo restante: <span id="session-countdown">${this.formatTime(this.state.timeRemaining)}</span>
-          </p>
-        </div>
-      </div>
-    `;
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'w-6 h-6 text-yellow-500 mr-3');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('d', 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z');
+    icon.appendChild(path);
+
+    const title = document.createElement('h3');
+    title.className = 'text-lg font-semibold text-gray-900';
+    title.textContent = 'Sessão Expirando';
+
+    header.appendChild(icon);
+    header.appendChild(title);
+
+    // Message
+    const message = document.createElement('p');
+    message.className = 'text-gray-600 mb-6';
+    const messageText = document.createElement('span');
+    messageText.textContent = 'Sua sessão expirará em ';
+    const strong = document.createElement('strong');
+    strong.textContent = this.config.warningMinutes.toString();
+    const restText = document.createTextNode(' minutos por inatividade. Deseja continuar?');
+    message.appendChild(messageText);
+    message.appendChild(strong);
+    message.appendChild(restText);
+
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'flex space-x-3';
+
+    const extendBtn = document.createElement('button');
+    extendBtn.id = 'session-extend-btn';
+    extendBtn.className = 'flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    extendBtn.textContent = 'Continuar Sessão';
+
+    const logoutBtn = document.createElement('button');
+    logoutBtn.id = 'session-logout-btn';
+    logoutBtn.className = 'flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500';
+    logoutBtn.textContent = 'Sair Agora';
+
+    buttonsContainer.appendChild(extendBtn);
+    buttonsContainer.appendChild(logoutBtn);
+
+    // Countdown
+    const countdownContainer = document.createElement('div');
+    countdownContainer.className = 'mt-4 text-center';
+
+    const countdownText = document.createElement('p');
+    countdownText.className = 'text-xs text-gray-500';
+    countdownText.textContent = 'Tempo restante: ';
+
+    const countdownSpan = document.createElement('span');
+    countdownSpan.id = 'session-countdown';
+    countdownSpan.textContent = this.formatTime(this.state.timeRemaining);
+
+    countdownText.appendChild(countdownSpan);
+    countdownContainer.appendChild(countdownText);
+
+    // Assemble modal
+    modalContent.appendChild(header);
+    modalContent.appendChild(message);
+    modalContent.appendChild(buttonsContainer);
+    modalContent.appendChild(countdownContainer);
+    modal.appendChild(modalContent);
 
     document.body.appendChild(modal);
 
     // Setup event handlers
-    const extendBtn = modal.querySelector('#session-extend-btn') as HTMLButtonElement;
-    const logoutBtn = modal.querySelector('#session-logout-btn') as HTMLButtonElement;
     const countdown = modal.querySelector('#session-countdown') as HTMLSpanElement;
 
     extendBtn?.addEventListener('click', () => {
@@ -441,12 +487,23 @@ export class SessionManager {
       type === 'success' ? 'bg-green-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
     toast.classList.add(bgColor, 'text-white');
 
-    toast.innerHTML = `
-      <div class="flex items-center">
-        <span class="mr-2">${type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕'}</span>
-        <span>${message}</span>
-      </div>
-    `;
+    // Clear existing content
+    toast.innerHTML = '';
+
+    // Create toast content using safe DOM methods
+    const content = document.createElement('div');
+    content.className = 'flex items-center';
+
+    const icon = document.createElement('span');
+    icon.className = 'mr-2';
+    icon.textContent = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕';
+
+    const text = document.createElement('span');
+    text.textContent = message;
+
+    content.appendChild(icon);
+    content.appendChild(text);
+    toast.appendChild(content);
 
     document.body.appendChild(toast);
 

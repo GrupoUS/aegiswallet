@@ -91,6 +91,13 @@ export interface ChatRequestOptions {
   stream?: boolean;
   tools?: unknown[]; // Define specific tool types if needed
   systemPrompt?: string;
+  topP?: number;
+  topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+  stopSequences?: string[];
+  /** Formatted financial context for the AI */
+  context?: string;
 }
 
 export class ChatError extends Error {

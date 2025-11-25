@@ -207,44 +207,66 @@ export function ensureSecureConfiguration(): void {
   } catch (error) {
     // console.error('Environment validation failed:', error);
     if (typeof window !== 'undefined') {
-      document.body.innerHTML = `
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          font-family: system-ui, -apple-system, sans-serif;
-          background: #f8f9fa;
-          margin: 0;
-          padding: 20px;
-        ">
-          <div style="
-            max-width: 600px;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-          ">
-            <h2 style="color: #dc3545; margin-top: 0;">🔒 Configuration Error</h2>
-            <p style="color: #6c757d; line-height: 1.6;">
-              The application cannot start due to missing security configuration.
-              Please check your environment variables and try again.
-            </p>
-            <details style="text-align: left; margin-top: 20px;">
-              <summary style="cursor: pointer; color: #007bff;">Technical Details</summary>
-              <pre style="
-                background: #f8f9fa;
-                padding: 15px;
-                border-radius: 4px;
-                overflow-x: auto;
-                font-size: 12px;
-                margin-top: 10px;
-              ">${error}</pre>
-            </details>
-          </div>
-        </div>
+      // Clear existing content
+      document.body.innerHTML = '';
+
+      // Create error display using safe DOM methods
+      const container = document.createElement('div');
+      container.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 20px;
       `;
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        max-width: 600px;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+      `;
+
+      const title = document.createElement('h2');
+      title.style.cssText = 'color: #dc3545; margin-top: 0;';
+      title.textContent = '🔒 Configuration Error';
+
+      const message = document.createElement('p');
+      message.style.cssText = 'color: #6c757d; line-height: 1.6;';
+      message.textContent = 'The application cannot start due to missing security configuration. Please check your environment variables and try again.';
+
+      const details = document.createElement('details');
+      details.style.cssText = 'text-align: left; margin-top: 20px;';
+
+      const summary = document.createElement('summary');
+      summary.style.cssText = 'cursor: pointer; color: #007bff;';
+      summary.textContent = 'Technical Details';
+
+      const pre = document.createElement('pre');
+      pre.style.cssText = `
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+        margin-top: 10px;
+      `;
+      pre.textContent = String(error);
+
+      // Assemble the DOM structure
+      details.appendChild(summary);
+      details.appendChild(pre);
+      card.appendChild(title);
+      card.appendChild(message);
+      card.appendChild(details);
+      container.appendChild(card);
+      document.body.appendChild(container);
     }
     throw error;
   }

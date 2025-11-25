@@ -3,7 +3,7 @@
  * Extracts and centralizes OAuth hash fragment handling logic
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
@@ -18,7 +18,7 @@ export function useOAuthHandler(): OAuthHandlerResult {
   const [isProcessing, setIsProcessing] = useState(true);
   const [oauthError, setOAuthError] = useState<string | null>(null);
 
-  const performPostAuthRedirect = () => {
+  const performPostAuthRedirect = useCallback(() => {
     if (typeof window === 'undefined') {
       return false;
     }
@@ -33,7 +33,7 @@ export function useOAuthHandler(): OAuthHandlerResult {
     }
 
     return false;
-  };
+  }, []);
 
   useEffect(() => {
     const processOAuthQuery = async () => {
@@ -68,7 +68,6 @@ export function useOAuthHandler(): OAuthHandlerResult {
             code,
             error: exchangeError.message,
             pathname: window.location.pathname,
-            hasCodeVerifier: !!codeVerifier,
           });
           setOAuthError(exchangeError.message);
           setIsProcessing(false);
@@ -76,7 +75,9 @@ export function useOAuthHandler(): OAuthHandlerResult {
         }
 
         // Clean up query parameters after successful exchange
-        ['code', 'state', 'scope', 'auth_type'].forEach((param) => queryParams.delete(param));
+        for (const param of ['code', 'state', 'scope', 'auth_type']) {
+          queryParams.delete(param);
+        }
         const newQuery = queryParams.toString();
         const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${
           window.location.hash
@@ -182,7 +183,7 @@ export function useOAuthHandler(): OAuthHandlerResult {
     };
 
     orchestrateOAuthHandling();
-  }, []);
+  }, [performPostAuthRedirect]);
 
   return {
     isProcessing,

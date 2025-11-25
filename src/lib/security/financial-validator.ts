@@ -402,9 +402,7 @@ export const financialSchemas = {
     merchant_name: z.string().max(120).optional(),
     notes: z.string().max(500).optional(),
     payment_method: z
-      .enum(['cash', 'debit_card', 'credit_card', 'pix', 'boleto', 'transfer'], {
-        invalid_type_error: 'Payment method is invalid',
-      })
+      .enum(['cash', 'debit_card', 'credit_card', 'pix', 'boleto', 'transfer'])
       .optional(),
     status: z.enum(['pending', 'posted', 'failed', 'cancelled']).default('posted'),
     tags: z.array(z.string()).max(10).optional(),

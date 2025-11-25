@@ -55,8 +55,20 @@ export class GeminiBackend implements ChatBackend {
       // Yield message start event
       yield createMessageStartEvent(messageId, 'assistant');
 
+      // Build context-aware system prompt if context is provided
+      let messagesWithContext = [...messages];
+      if (options?.context) {
+        const systemMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'system',
+          content: `Você é o assistente financeiro da AegisWallet. Use as seguintes informações do usuário para responder de forma personalizada:\n\n${options.context}`,
+          timestamp: Date.now(),
+        };
+        messagesWithContext = [systemMessage, ...messages];
+      }
+
       // Convert messages to Gemini format
-      const history = this.convertToGeminiHistory(messages);
+      const history = this.convertToGeminiHistory(messagesWithContext);
       const lastMessage = messages[messages.length - 1];
       const prompt =
         typeof lastMessage.content === 'string'

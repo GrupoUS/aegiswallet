@@ -5,10 +5,10 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router } from '@/server/trpc-helpers';
+import { createTRPCRouter, protectedProcedure } from '@/server/trpc';
 import type { CalendarSyncSettings } from '@/types/google-calendar';
 
-export const googleCalendarRouter = router({
+export const googleCalendarRouter = createTRPCRouter({
   /**
    * Get sync status for the authenticated user
    * Returns whether Google Calendar is connected and last sync information

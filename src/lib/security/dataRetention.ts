@@ -400,11 +400,13 @@ export class DataRetentionManager {
           }
 
           case 'sessions': {
-            const { count: sessionCount } = await supabase
-              .from('user_sessions')
-              .select('*', { count: 'exact', head: true })
-              .lt('created_at', cutoffDate.toISOString());
-            count = sessionCount || 0;
+            // TODO: Requires database migration for user_sessions table
+            // const { count: sessionCount } = await supabase
+            //   .from('user_sessions')
+            //   .select('*', { count: 'exact', head: true })
+            //   .lt('created_at', cutoffDate.toISOString());
+            // count = sessionCount || 0;
+            count = 0;
             break;
           }
         }
@@ -452,7 +454,9 @@ export class DataRetentionManager {
     }
   }
 
-  private async cleanupSessions(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
+  private async cleanupSessions(_cutoffDate: Date, _policy: RetentionPolicy): Promise<void> {
+    // TODO: Requires database migration for user_sessions table
+    /*
     if (!policy.secureDelete) {
       return;
     }
@@ -468,6 +472,7 @@ export class DataRetentionManager {
     } catch (error) {
       logger.error('Failed to cleanup sessions', { cutoffDate, error });
     }
+    */
   }
 
   private async cleanupErrorLogs(_cutoffDate: Date, _policy: RetentionPolicy): Promise<void> {

@@ -1,31 +1,67 @@
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from '@/server/context';
-import type { Meta } from '@/server/trpc-helpers';
-import { router } from '@/server/trpc-helpers';
+
+/**
+ * tRPC initialization and primitives
+ * This is the single source of truth for tRPC configuration
+ */
+
+export interface Meta {
+  [key: string]: unknown;
+}
 
 const t = initTRPC.context<Context>().meta<Meta>().create({
   transformer: superjson,
 });
 
+/**
+ * Export tRPC primitives
+ */
+export const createTRPCRouter = t.router;
+export const middleware = t.middleware;
+export const mergeRouters = t.mergeRouters;
+
+/**
+ * Public procedure - no authentication required
+ */
+export const publicProcedure = t.procedure;
+
+/**
+ * Authentication middleware
+ */
+const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.session.user,
+    },
+  });
+});
+
+/**
+ * Protected procedure - requires authentication
+ */
+export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+/**
+ * Legacy alias for createTRPCRouter
+ * @deprecated Use createTRPCRouter instead
+ */
+export const router = createTRPCRouter;
+
+/**
+ * Import specialized routers
+ */
 import { createBankingRouter } from '@/server/procedures/banking';
 import { createVoiceRouter } from '@/server/procedures/voice';
-/**
- * Import remaining specialized routers that don't have duplicates
- */
 import { bankAccountsRouter } from '@/server/routers/bankAccounts';
 import { calendarRouter } from '@/server/routers/calendar';
-/**
- * Import consolidated routers (single source of truth)
- *
- * NOTE: Legacy routers at src/server/routers/users.ts and src/server/routers/transactions.ts
- * have been permanently removed. Their procedures counterparts in src/server/procedures/
- * have also been removed. All functionality is now consolidated in the routers below.
- */
 import { consolidatedRouters } from '@/server/routers/consolidated';
-// contactsRouter removed - using Hono API instead at /api/v1/contacts
 import { googleCalendarRouter } from '@/server/routers/google-calendar';
-// PIX router removed - PIX functionality discontinued
 
 /**
  * Main router with consolidated architecture
@@ -37,7 +73,7 @@ import { googleCalendarRouter } from '@/server/routers/google-calendar';
  * - users: Profile management, preferences, and account operations
  * - transactions: Financial transactions with fraud detection and analytics
  */
-export const appRouter = router({
+export const appRouter = createTRPCRouter({
   // Consolidated routers (unified implementations)
   auth: consolidatedRouters.auth,
   users: consolidatedRouters.users,
@@ -58,3 +94,8 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+/**
+ * Export the tRPC instance for creating additional routers
+ */
+export { t };

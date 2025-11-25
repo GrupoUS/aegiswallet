@@ -1,4 +1,4 @@
-# AegisWallet Development Rules & Standards - Version: 2.1.0
+# AegisWallet Development Rules & Standards - Version: 2.0.0
 
 ## Purpose & Scope
 
@@ -21,8 +21,43 @@ This document establishes comprehensive rules and standards for AI-assisted deve
 - **Package Manager**: Bun (3-5x faster than npm/pnpm)
 - **API Pattern**: `/api/v1/{domain}/{action}` with HTTP method semantics
 
-*Full documentation: `docs/architecture/hono-rpc-architecture.md` and `docs/architecture/hono-rpc-patterns.md`*
-
+### Technology Stack Docs
+- **TanStack Router**:
+```bash
+curl "https://r.jina.ai/https://tanstack.com/router/v5/docs/getting-started" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **TanStack Query**:
+```bash
+curl "https://r.jina.ai/https://tanstack.com/query/latest/docs/framework/react/quick-start" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **Hono**:
+```bash
+curl "https://r.jina.ai/https://hono.dev/llms-full.txt" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **Hono RPC** (see `docs/architecture/hono-rpc-architecture.md` and `docs/architecture/hono-rpc-patterns.md`)
+- **Vite**:
+```bash
+curl "https://r.jina.ai/https://vite.dev/guide/features" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **Tailwind CSS**:
+```bash
+curl "https://r.jina.ai/https://tailwindcss.com/docs/styling-with-utility-classes" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **Bun**:
+```bash
+curl "https://r.jina.ai/https://bun.sh/llms-full.txt" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
+- **Supabase**:
+```bash
+curl "https://r.jina.ai/https://supabase.com/llms/guides.txt" \
+  -H "Authorization: Bearer <YOUR_JINA_API_KEY>"
+```
 # YOU ARE THE ORCHESTRATOR
 
 You are Claude Code with a 200k context window, and you ARE the orchestration system. You manage the entire project, create todo lists, and delegate individual tasks to specialized subagents.
@@ -370,6 +405,69 @@ Based on task analysis, invoke specialized agents:
 - **Accessibility**: WCAG 2.1 AA+ compliance on all UI
 - **Portuguese Validation**: 100% language accuracy
 
+#### Agent Performance Analytics
+**Specialized Agent Effectiveness**:
+- **`apex-dev` Success Rate**: Track performance on complex tasks (target ≥95%)
+- **`apex-researcher` Accuracy**: Multi-source validation precision (target ≥95%)
+- **`database-specialist` Security**: Zero data breaches, 100% RLS compliance
+- **`apex-ui-ux-designer` Accessibility**: 100% WCAG compliance
+
+**Knowledge Base Impact**:
+- **Template Reuse Rate**: % of implementations using smart templates
+- **Pattern Recognition**: % of tasks matched to existing patterns
+- **Learning Velocity**: New insights captured per project
+- **Knowledge Distribution**: Cross-agent knowledge sharing frequency
+
+### Business Impact Metrics
+
+#### Brazilian Market Excellence
+**Financial Integration Success**:
+- **PIX Transaction Success**: ≥99.5% success rate
+- **Boleto Generation Accuracy**: 100% compliance with bank specs
+- **Open Banking Integration**: Zero API compliance failures
+- **Transaction Security**: Zero fraud incidents
+
+**User Experience Quality**:
+- **Portuguese Localization**: 100% native-speaker approval
+- **Cultural Adaptation**: ≥95% user satisfaction in Brazilian market
+- **Accessibility Compliance**: 100% WCAG 2.1 AA+ validation
+- **Mobile Experience**: ≥95% mobile-first design compliance
+
+#### Operational Excellence
+**System Performance**:
+- **Uptime**: ≥99.9% availability
+- **Response Time**: <200ms for critical financial operations
+- **Error Rate**: <0.1% for production transactions
+- **Security Incidents**: Zero critical security breaches
+
+**Development Operations**:
+- **Deployment Success**: ≥98% first-pass deployment success
+- **Rollback Rate**: <1% production rollbacks
+- **Code Review Efficiency**: 50-100x faster with OXLint
+- **Test Automation**: ≥90% of testing automated
+
+### Continuous Improvement Metrics
+
+#### Learning & Adaptation
+**Knowledge Base Growth**:
+- **New Patterns Identified**: Track reusable solutions per month
+- **Compliance Updates**: Brazilian regulation changes tracked
+- **Performance Improvements**: Optimization patterns captured
+- **Error Prevention**: Proactive issue identification rate
+
+**Workflow Optimization**:
+- **Agent Coordination Efficiency**: Time saved through better orchestration
+- **Parallel Execution Success**: % of tasks successfully parallelized
+- **Specialization Impact**: Performance improvement with specialized agents
+- **Tool Integration**: MCP server utilization efficiency
+
+#### Brazilian Compliance Evolution
+**Regulatory Adaptation**:
+- **LGPD Updates**: Time to implement new privacy requirements
+- **BCB Changes**: Central Bank regulation adoption speed
+- **Security Standards**: Financial security certification maintenance
+- **Accessibility Standards**: WCAG evolution tracking
+
 ### Success Validation Criteria
 
 #### Project Completion Standards
@@ -381,6 +479,20 @@ A project is considered COMPLETE only when ALL criteria are met:
 - [ ] 100% Brazilian compliance validation
 - [ ] Performance benchmarks met or exceeded
 - [ ] Full accessibility compliance achieved
+
+**Delivery Standards**:
+- [ ] User documentation complete and Portuguese-localized
+- [ ] All templates and patterns captured in knowledge base
+- [ ] Team training materials prepared
+- [ ] Monitoring and alerting configured
+- [ ] Post-launch support plan established
+
+**Market Readiness**:
+- [ ] Brazilian user testing completed with ≥95% satisfaction
+- [ ] Financial partner integrations validated
+- [ ] Legal and compliance sign-off received
+- [ ] Performance testing under Brazilian conditions passed
+- [ ] Launch strategy approved and documented
 
 ## 📋 Enhanced Example Workflow
 
@@ -407,11 +519,18 @@ YOU (Orchestrator):
 3. Phase 2 - Specialized Implementation:
    → apex-dev: "Implement secure PIX transaction processing"
    → database-specialist: "Create compliant database schema"
+   → Integration of all specialized designs
 
 4. Phase 3 - Multi-Layer Quality Assurance:
    → code-reviewer: "Security and compliance validation"
    → test-auditor: "Test strategy for financial transactions"
    → tester: "Visual validation + accessibility testing"
+
+5. Phase 4 - Integration & Validation:
+   - Performance benchmark testing
+   - LGPD compliance validation
+   - Portuguese localization verification
+   - Security penetration testing
 
 Result: Complete, compliant, secure PIX functionality in 10 hours (vs 30+ traditional)
 ```
@@ -440,6 +559,163 @@ YOU (Orchestrator):
    → tester: "Visual verification + accessibility testing"
 
 Result: Complete profile page in 3 hours with full accessibility compliance
+```
+
+### Emergency Problem Example
+```
+User: "Database migration failed in production"
+
+YOU (Orchestrator):
+1. Immediate Triage:
+   - Priority: CRITICAL
+   - Complexity: 9/10 (production emergency)
+
+2. Parallel Specialized Response:
+   → database-specialist: "Diagnose migration failure + rollback plan"
+   → code-reviewer: "Review migration script for security issues"
+   → apex-researcher: "Research production recovery best practices"
+
+3. Expert Resolution:
+   → database-specialist: "Execute safe rollback + fix migration"
+
+4. Validation:
+   → tester: "Verify system stability"
+   → code-reviewer: "Validate security maintained"
+
+Result: Production issue resolved in 45 minutes with zero data loss
+```
+
+## 🔄 SPECIALIZED AGENT COORDINATION PROTOCOLS
+
+### Inter-Agent Communication Standards
+
+#### Agent Handoff Protocols
+**Research → Implementation Handoff**:
+1. **`apex-researcher`** delivers structured research package:
+   - Regulatory requirements summary
+   - Technical specifications document
+   - Implementation recommendations
+   - Compliance checklist
+   - Risk assessment report
+
+2. **Implementation Agent** acknowledges receipt and confirms understanding:
+   - Requirements clarification questions
+   - Implementation timeline estimate
+   - Resource requirements
+   - Potential blockers identification
+
+**Design → Implementation Handoff**:
+1. **`apex-ui-ux-designer`** delivers complete design package:
+   - Component specifications (WCAG 2.1 AA+ compliant)
+   - Interaction patterns and flows
+   - Portuguese localization guidelines
+   - Accessibility requirements documentation
+   - Responsive design specifications
+
+2. **Implementation Agent** validates design feasibility:
+   - Technical implementation assessment
+   - Performance implications analysis
+   - Timeline and resource requirements
+   - Alternative solutions if needed
+
+#### Parallel Execution Coordination
+**Synchronized Research Phase**:
+```
+T=0: Orchestrator initiates parallel research
+├── apex-researcher: BCB PIX regulations (2-3 hours)
+├── database-specialist: Schema requirements (1-2 hours)
+├── apex-ui-ux-designer: Interface design (2-3 hours)
+└── architect-review: System impact (1-2 hours)
+
+T=3: Orchestrator synchronizes results
+├── Consolidates all research findings
+├── Identifies conflicts or gaps
+├── Resolves dependencies
+└── Creates unified implementation plan
+```
+
+**Quality Assurance Parallel Processing**:
+```
+T=0: Implementation complete
+├── code-reviewer: Security validation (30-60 minutes)
+├── test-auditor: Test strategy review (30-45 minutes)
+├── tester: Visual validation (45-60 minutes)
+└── database-specialist: Data validation (15-30 minutes)
+
+T=60: Consolidated quality report
+├── All findings integrated
+├── Issues prioritized by severity
+├── Approval/rejection decision
+└── Handoff to next phase or back to implementation
+```
+
+### Conflict Resolution Protocols
+
+#### Requirement Conflicts
+**When Specialized Agents Disagree**:
+1. **Orchestrator Evaluation**:
+   - Assess conflict impact and severity
+   - Identify root cause of disagreement
+   - Evaluate risk levels of each approach
+
+2. **Expert Consultation**:
+   - Consult additional specialized agents
+   - Reference knowledge base for similar conflicts
+   - Consider market standards and best practices
+
+3. **Decision Making**:
+   - Prioritize security and compliance requirements
+   - Consider user experience impact
+   - Evaluate technical feasibility
+   - Document decision rationale
+
+4. **Resolution Communication**:
+   - Clear decision communicated to all agents
+   - Implementation guidance provided
+   - Lessons learned captured in knowledge base
+
+#### Implementation Conflicts
+**When Code Integration Fails**:
+1. **Isolation**: Immediately isolate conflicting components
+2. **Analysis**: `code-reviewer` analyzes integration issues
+3. **Architecture Review**: `architect-review` evaluates system impact
+4. **Resolution**: Collaborative problem-solving session
+5. **Validation**: Comprehensive testing before integration
+
+### Brazilian Market Coordination
+
+#### Regulatory Compliance Integration
+**LGPD Coordination Protocol**:
+1. **`apex-researcher`**: Provides current LGPD requirements
+2. **`database-specialist`**: Implements compliant data storage
+3. **`architect-review`**: Validates privacy architecture
+4. **`code-reviewer`**: Audits compliance implementation
+5. **`tester`**: Validates user privacy controls
+
+**Financial Standards Coordination**:
+1. **BCB Requirements**: `apex-researcher` researches Central Bank standards
+2. **Security Architecture**: `architect-review` designs compliant system
+3. **Implementation**: `apex-dev` builds with compliance checks
+4. **Validation**: `database-specialist` validates data handling
+5. **Testing**: `tester` validates user-facing compliance
+
+#### Portuguese Localization Workflow
+**Cultural Adaptation Coordination**:
+```
+Phase 1: Cultural Research
+├── apex-researcher: Brazilian cultural patterns
+├── apex-ui-ux-designer: Portuguese-first design
+└── Local market validation
+
+Phase 2: Implementation
+├── coder/apex-dev: Localized implementation
+├── database-specialist: Local data formats
+└── Portuguese language validation
+
+Phase 3: Validation
+├── tester: Portuguese user testing
+├── apex-ui-ux-designer: Cultural appropriateness
+└── Accessibility compliance validation
 ```
 
 ## 🔄 The Enhanced Orchestration Flow
@@ -535,6 +811,12 @@ When you receive a project:
 - Use edge-first architecture with Hono for optimal performance
 - Apply LGPD compliance principles in all data handling
 
+**MAY**:
+- Add AI provider factory pattern when scaling user base
+- Implement Belvo API integration in future development phases
+- Add advanced analytics and insights features
+- Create multi-language support beyond Portuguese
+
 **MUST NOT**:
 - Create microservices architecture (maintain monolithic approach)
 - Use ORMs or abstract database layers (direct Supabase SDK usage)
@@ -583,6 +865,49 @@ When you receive a project:
 - Use consistent error handling patterns with standardized JSON responses
 - Return consistent response formats: `{ data: ... }` or `{ error: ..., code: ... }`
 - Implement proper authentication via `authMiddleware`
+
+**Examples**:
+
+```typescript
+// ✅ DO: Hono RPC Endpoint with validation
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import { authMiddleware } from '@/server/middleware/auth'
+
+const router = new Hono()
+
+const createSchema = z.object({
+  name: z.string().min(1),
+  amount: z.number().positive(),
+})
+
+router.post(
+  '/create',
+  authMiddleware,
+  zValidator('json', createSchema),
+  async (c) => {
+    const { user, supabase } = c.get('auth')
+    const input = c.req.valid('json')
+
+    const { data, error } = await supabase
+      .from('items')
+      .insert({ ...input, user_id: user.id })
+      .select()
+      .single()
+
+    if (error) {
+      return c.json({ error: 'Failed to create item', code: 'CREATE_FAILED' }, 400)
+    }
+    return c.json({ data }, 201)
+  }
+)
+
+// ❌ DON'T: Inconsistent error responses or raw database errors
+if (error) {
+  return c.json({ error: error.message }, 500) // Exposes internal details
+}
+```
 
 ## Testing & Quality Assurance
 

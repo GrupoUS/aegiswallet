@@ -120,7 +120,7 @@ export const validateAccountMask = (mask?: string | null) => {
   return /^\*{4}\s\d{4}$/.test(mask);
 };
 
-const normalizeAccountMask = (mask: string) => {
+export const normalizeAccountMask = (mask: string) => {
   if (/^\*{4}\d{4}$/.test(mask)) {
     return `**** ${mask.slice(-4)}`;
   }

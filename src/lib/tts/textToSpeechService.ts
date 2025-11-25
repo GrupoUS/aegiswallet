@@ -138,6 +138,7 @@ export class TextToSpeechService {
   private config: TTSConfig;
   private cache: AudioCache;
   private synth: SpeechSynthesis | null = null;
+  private currentUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor(
     config?: Partial<TTSConfig>,
@@ -558,7 +559,7 @@ export class TextToSpeechService {
 
   private isMockEnvironment(): boolean {
     const synth = this.ensureSynth();
-    const speakFn = (synth as unknown as { speak: { mock?: boolean } })?.speak;
+    const speakFn = (synth as unknown as { speak?: { mock?: boolean } })?.speak;
     const isMockedSpeak = Boolean(speakFn && typeof speakFn === 'function' && speakFn.mock);
     return isMockedSpeak || this.isTestEnvironment();
   }

@@ -1,4 +1,4 @@
-import { experimental_standaloneMiddleware } from '@trpc/server';
+import { initTRPC } from '@trpc/server';
 import type { Context } from '@/server/context';
 
 interface RateLimitMiddlewareOptions {
@@ -8,13 +8,14 @@ interface RateLimitMiddlewareOptions {
   customResponse?: (limitInfo: { limit: number; remaining: number; resetTime: Date }) => string;
 }
 
+// Create a temporary tRPC instance for middleware creation
+const t = initTRPC.context<Context>().create();
+
 export const createRateLimitMiddleware = (_options: RateLimitMiddlewareOptions) => {
-  return experimental_standaloneMiddleware<{
-    ctx: Context;
-    input: undefined;
-    // 'meta', not defined here, defaults to 'object | undefined'
-  }>().create(async (opts) => {
-    await opts.next();
+  return t.middleware(async (opts) => {
+    // TODO: Implement actual rate limiting logic
+    // For now, just pass through
+    return opts.next();
   });
 };
 

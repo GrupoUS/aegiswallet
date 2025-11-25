@@ -438,6 +438,7 @@ export class FinancialNotificationService {
           eventDate: rawEvent.start_date,
           eventTypeId: rawEvent.event_type_id,
           id: rawEvent.id,
+          isCompleted: rawEvent.status === 'completed' || rawEvent.status === 'paid',
           priority: (rawEvent.priority as 'low' | 'normal' | 'high' | 'urgent') ?? 'normal',
           status: rawEvent.status ?? 'pending',
           title: rawEvent.title,

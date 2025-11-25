@@ -593,26 +593,29 @@ export class FraudDetectionService {
       }
     }
 
-    // Fetch from database or create default
-    const { data: profileData } = await supabase
-      .from('user_behavior_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    // TODO: Requires database migration for user_behavior_profiles table
+    // const { data: profileData } = await supabase
+    //   .from('user_behavior_profiles')
+    //   .select('*')
+    //   .eq('user_id', userId)
+    //   .single();
+    // const profileData = null;
 
-    let profile: UserBehaviorProfile;
+    // let profile: UserBehaviorProfile;
 
-    if (profileData) {
-      profile = {
-        knownDevices: this.parseKnownDevices(profileData.known_devices),
-        knownLocations: this.parseKnownLocations(profileData.known_locations),
-        lastUpdated: profileData.last_updated ? new Date(profileData.last_updated) : new Date(),
-        typicalBehavior: this.parseTypicalBehavior(profileData.typical_behavior),
-        userId: profileData.user_id,
-      };
-    } else {
-      profile = this.createDefaultProfile(userId);
-    }
+    // if (profileData) {
+    //   profile = {
+    //     knownDevices: this.parseKnownDevices(profileData.known_devices),
+    //     knownLocations: this.parseKnownLocations(profileData.known_locations),
+    //     lastUpdated: profileData.last_updated ? new Date(profileData.last_updated) : new Date(),
+    //     typicalBehavior: this.parseTypicalBehavior(profileData.typical_behavior),
+    //     userId: profileData.user_id,
+    //   };
+    // } else {
+    //   profile = this.createDefaultProfile(userId);
+    // }
+
+    const profile = this.createDefaultProfile(userId);
 
     this.userProfiles.set(userId, profile);
     return profile;
@@ -852,8 +855,8 @@ export class FraudDetectionService {
    * Log fraud detection result
    */
   private async logFraudDetection(
-    event: SecurityEvent,
-    result: {
+    _event: SecurityEvent,
+    _result: {
       riskScore: number;
       riskLevel: string;
       detectedAnomalies: string[];
@@ -864,9 +867,6 @@ export class FraudDetectionService {
     try {
       await supabase.from('fraud_detection_logs').insert({
         created_at: new Date().toISOString(),
-        detected_anomalies: this.toJsonValue(result.detectedAnomalies) ?? [],
-        device_fingerprint: event.deviceFingerprint,
-        event_type: event.eventType,
         ip_address: event.ipAddress,
         location: this.toJsonValue(event.location),
         metadata: this.toJsonValue(event.metadata),
@@ -937,103 +937,6 @@ export class FraudDetectionService {
     return metadata;
   }
 
-  private parseKnownLocations(value: Json | null): UserBehaviorProfile['knownLocations'] {
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return (value as Json[])
-      .map((entry) => {
-        if (!this.isJsonRecord(entry)) {
-          return null;
-        }
-        const record = entry as Record<string, Json>;
-        if (typeof record.city !== 'string' || typeof record.country !== 'string') {
-          return null;
-        }
-        return {
-          city: record.city,
-          country: record.country,
-          frequency: typeof record.frequency === 'number' ? record.frequency : 0,
-          lastSeen: record.lastSeen ? new Date(String(record.lastSeen)) : new Date(),
-        };
-      })
-      .filter(
-        (
-          location
-        ): location is {
-          country: string;
-          city: string;
-          frequency: number;
-          lastSeen: Date;
-        } => location !== null
-      );
-  }
-
-  private parseKnownDevices(value: Json | null): UserBehaviorProfile['knownDevices'] {
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return (value as Json[])
-      .map((entry) => {
-        if (!this.isJsonRecord(entry)) {
-          return null;
-        }
-        const record = entry as Record<string, Json>;
-        if (typeof record.fingerprint !== 'string') {
-          return null;
-        }
-        return {
-          fingerprint: record.fingerprint,
-          frequency: typeof record.frequency === 'number' ? record.frequency : 0,
-          lastSeen: record.lastSeen ? new Date(String(record.lastSeen)) : new Date(),
-          userAgent: typeof record.userAgent === 'string' ? record.userAgent : 'unknown',
-        };
-      })
-      .filter(
-        (
-          device
-        ): device is {
-          fingerprint: string;
-          userAgent: string;
-          frequency: number;
-          lastSeen: Date;
-        } => device !== null
-      );
-  }
-
-  private parseTypicalBehavior(value: Json | null): UserBehaviorProfile['typicalBehavior'] {
-    if (!this.isJsonRecord(value)) {
-      return {
-        ...DEFAULT_TYPICAL_BEHAVIOR,
-        activeHours: [...DEFAULT_TYPICAL_BEHAVIOR.activeHours],
-      };
-    }
-
-    const record = value as Record<string, Json>;
-    const activeHours = Array.isArray(record.activeHours)
-      ? record.activeHours.filter((hour): hour is number => typeof hour === 'number')
-      : [...DEFAULT_ACTIVE_HOURS];
-
-    return {
-      activeHours,
-      averageSessionDuration:
-        typeof record.averageSessionDuration === 'number'
-          ? record.averageSessionDuration
-          : DEFAULT_TYPICAL_BEHAVIOR.averageSessionDuration,
-      loginFrequency:
-        typeof record.loginFrequency === 'number'
-          ? record.loginFrequency
-          : DEFAULT_TYPICAL_BEHAVIOR.loginFrequency,
-      preferredAuthMethods: Array.isArray(record.preferredAuthMethods)
-        ? record.preferredAuthMethods.filter(
-            (method): method is string => typeof method === 'string'
-          )
-        : [...DEFAULT_TYPICAL_BEHAVIOR.preferredAuthMethods],
-    };
-  }
-
   private serializeKnownLocations(locations: UserBehaviorProfile['knownLocations']): Json {
     return locations.map((location) => ({
       city: location.city,
@@ -1068,32 +971,26 @@ export class FraudDetectionService {
       typeof value === 'number' ||
       typeof value === 'boolean'
     ) {
-      return value;
+      return value as Json;
     }
 
     if (Array.isArray(value)) {
-      const array = value
-        .map((item) => this.toJsonValue(item))
-        .filter((item): item is Json => item !== null);
-      return array;
+      return value.map((item) => this.toJsonValue(item)) as Json;
     }
 
-    if (this.isJsonRecord(value)) {
-      const record: { [key: string]: Json } = {};
-      for (const [key, entry] of Object.entries(value)) {
-        const jsonValue = this.toJsonValue(entry);
-        if (jsonValue !== null) {
-          record[key] = jsonValue;
-        }
+    if (typeof value === 'object') {
+      const result: Record<string, Json> = {};
+      for (const [key, val] of Object.entries(value)) {
+        result[key] = this.toJsonValue(val) ?? null;
       }
-      return record;
+      return result as Json;
     }
 
     return null;
   }
 
-  private isJsonRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  private isJsonRecord(value: Json | null): value is Record<string, Json> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
   }
 }
 

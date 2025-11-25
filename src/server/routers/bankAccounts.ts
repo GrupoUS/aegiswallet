@@ -17,7 +17,7 @@ import {
   validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
 import type { Context } from '@/server/context';
-import { protectedProcedure, router } from '@/server/trpc-helpers';
+import { createTRPCRouter, protectedProcedure } from '@/server/trpc';
 
 // Account type mapping from form values to database values
 const ACCOUNT_TYPE_MAP: Record<string, string> = {
@@ -71,7 +71,7 @@ const checkDuplicate = async (
   return !!data;
 };
 
-export const bankAccountsRouter = router({
+export const bankAccountsRouter = createTRPCRouter({
   /**
    * Get all bank accounts for the authenticated user
    */
@@ -154,9 +154,7 @@ export const bankAccountsRouter = router({
     .input(
       z.object({
         institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
-        account_type: z.enum(['checking', 'savings', 'investment', 'cash'], {
-          required_error: 'Tipo de conta é obrigatório',
-        }),
+        account_type: z.enum(['checking', 'savings', 'investment', 'cash']),
         balance: z.number().default(0),
         currency: z.string().default('BRL'),
         is_primary: z.boolean().default(false),

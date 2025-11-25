@@ -2,18 +2,18 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
-import { protectedProcedure, publicProcedure, router } from '@/server/trpc-helpers';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/trpc';
 
 /**
  * Consolidated routers combining auth, users, and transactions
  * Single source of truth for core functionality
  */
 
-const authRouter = router({
+const authRouter = createTRPCRouter({
   // Get current session
   getSession: publicProcedure.query(({ ctx }) => {
     return {
-      user: ctx.user,
+      user: ctx.session?.user ?? null,
       session: ctx.session,
     };
   }),
@@ -25,7 +25,7 @@ const authRouter = router({
   }),
 });
 
-const usersRouter = router({
+const usersRouter = createTRPCRouter({
   // Get current user profile
   me: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user?.id;
@@ -78,7 +78,7 @@ const usersRouter = router({
 
   // Update user preferences
   updatePreferences: protectedProcedure
-    .input(z.record(z.string(), z.any()))
+    .input(z.record(z.string(), z.unknown()))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.id;
       if (!userId) {
@@ -160,10 +160,10 @@ const usersRouter = router({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
       }
 
-      // Calculate summary from transactions
-      const { data: transactions, error } = await ctx.supabase
-        .from('transactions')
-        .select('amount, type')
+      // Calculate summary from financial_events
+      const { data: events, error } = await ctx.supabase
+        .from('financial_events')
+        .select('amount, event_type')
         .eq('user_id', userId)
         .gte('created_at', input.period_start)
         .lte('created_at', input.period_end);
@@ -175,14 +175,21 @@ const usersRouter = router({
         });
       }
 
-      const summary = (transactions || []).reduce(
-        (acc, t) => {
-          if (['debit', 'pix', 'boleto'].includes(t.type)) {
-            acc.expenses += t.amount;
-            acc.balance -= t.amount;
-          } else if (['credit', 'transfer'].includes(t.type)) {
-            acc.income += t.amount;
-            acc.balance += t.amount;
+      interface FinancialSummary {
+        income: number;
+        expenses: number;
+        balance: number;
+      }
+
+      const summary = (events || []).reduce<FinancialSummary>(
+        (acc, event) => {
+          const eventType = event.event_type?.toLowerCase() ?? '';
+          if (['expense', 'debit', 'pix', 'boleto'].includes(eventType)) {
+            acc.expenses += event.amount ?? 0;
+            acc.balance -= event.amount ?? 0;
+          } else if (['income', 'credit', 'transfer'].includes(eventType)) {
+            acc.income += event.amount ?? 0;
+            acc.balance += event.amount ?? 0;
           }
           return acc;
         },
@@ -193,8 +200,8 @@ const usersRouter = router({
     }),
 });
 
-const transactionsRouter = router({
-  // List user transactions
+const transactionsRouter = createTRPCRouter({
+  // List user financial events (transactions)
   list: protectedProcedure
     .input(
       z.object({
@@ -209,7 +216,7 @@ const transactionsRouter = router({
       }
 
       const { data, error } = await ctx.supabase
-        .from('transactions')
+        .from('financial_events')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -225,17 +232,16 @@ const transactionsRouter = router({
       return data ?? [];
     }),
 
-  // Create a new transaction
+  // Create a new financial event (transaction)
   create: protectedProcedure
     .input(
       z.object({
         amount: z.number(),
-        categoryId: z.string().optional(),
+        category_id: z.string().optional(),
         description: z.string().optional(),
-        fromAccountId: z.string(),
-        toAccountId: z.string().optional(),
-        type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']),
-        status: z.enum(['cancelled', 'failed', 'pending', 'posted']).default('pending'),
+        account_id: z.string(),
+        event_type: z.string(),
+        status: z.string().default('pending'),
         metadata: z.record(z.string(), z.unknown()).optional(),
       })
     )
@@ -246,7 +252,7 @@ const transactionsRouter = router({
       }
 
       const { data, error } = await ctx.supabase
-        .from('transactions')
+        .from('financial_events')
         .insert({
           ...input,
           user_id: userId,
@@ -265,7 +271,7 @@ const transactionsRouter = router({
       return data;
     }),
 
-  // Delete a transaction
+  // Delete a financial event (transaction)
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
@@ -275,7 +281,7 @@ const transactionsRouter = router({
       }
 
       const { error } = await ctx.supabase
-        .from('transactions')
+        .from('financial_events')
         .delete()
         .eq('id', input.id)
         .eq('user_id', userId);
@@ -323,14 +329,19 @@ const transactionsRouter = router({
           break;
       }
 
-      // Get transactions within date range
-      const { data, error } = await ctx.supabase
-        .from('transactions')
-        .select('amount, type, status')
+      // Build query for financial events
+      let query = ctx.supabase
+        .from('financial_events')
+        .select('amount, event_type, status')
         .eq('user_id', userId)
-        .eq('account_id', input.accountId || '')
         .gte('created_at', startDate.toISOString())
         .lte('created_at', now.toISOString());
+
+      if (input.accountId) {
+        query = query.eq('account_id', input.accountId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw new TRPCError({
@@ -340,21 +351,30 @@ const transactionsRouter = router({
       }
 
       // Calculate statistics
-      const transactions = data || [];
-      const balance = transactions.reduce((sum, t) => sum + t.amount, 0);
-      const expenses = transactions
-        .filter((t) => ['debit', 'pix', 'boleto'].includes(t.type))
-        .reduce((sum, t) => sum + t.amount, 0);
-      const income = transactions
-        .filter((t) => ['credit', 'transfer'].includes(t.type))
-        .reduce((sum, t) => sum + t.amount, 0);
+      const events = data || [];
+      let balance = 0;
+      let expenses = 0;
+      let income = 0;
+
+      for (const event of events) {
+        const amount = event.amount ?? 0;
+        const eventType = event.event_type?.toLowerCase() ?? '';
+
+        if (['expense', 'debit', 'pix', 'boleto'].includes(eventType)) {
+          expenses += amount;
+          balance -= amount;
+        } else if (['income', 'credit', 'transfer'].includes(eventType)) {
+          income += amount;
+          balance += amount;
+        }
+      }
 
       return {
         balance,
         expenses,
         income,
         period: input.period,
-        transactionsCount: transactions.length,
+        transactionsCount: events.length,
       };
     }),
 });

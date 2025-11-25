@@ -12,6 +12,8 @@ import type {
   FinancialEventCategory,
 } from './financial.interfaces';
 
+export type { FinancialEventCategory };
+
 export type FinancialEventType =
   | 'income' // Entrada/Receita
   | 'expense' // Saída/Despesa

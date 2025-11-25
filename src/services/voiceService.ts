@@ -161,23 +161,28 @@ class VoiceService {
   }
 
   private initializeRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      logger.warn('Speech Recognition API not supported in this browser', {
-        feature: 'webkitSpeechRecognition|SpeechRecognition',
+    try {
+      this.recognition = this.getSpeechRecognition();
+      if (this.recognition) {
+        this.recognition.lang = this.config.language || 'pt-BR';
+        this.recognition.continuous = this.config.continuous || false;
+        this.recognition.interimResults = this.config.interimResults || false;
+        this.recognition.maxAlternatives = this.config.maxAlternatives || 1;
+      }
+    } catch (error) {
+      logger.warn('Failed to initialize Speech Recognition', {
+        error: error instanceof Error ? error.message : String(error),
         userAgent: navigator.userAgent,
       });
-      return;
     }
+  }
 
+  private getSpeechRecognition(): SpeechRecognition | null {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    this.recognition = new SpeechRecognition();
-
-    if (this.recognition) {
-      this.recognition.lang = this.config.language || 'pt-BR';
-      this.recognition.continuous = this.config.continuous || false;
-      this.recognition.interimResults = this.config.interimResults || false;
-      this.recognition.maxAlternatives = this.config.maxAlternatives || 1;
+    if (!SpeechRecognition) {
+      throw new Error('Speech recognition not supported in this browser');
     }
+    return new SpeechRecognition();
   }
 
   private initializeSynthesis() {

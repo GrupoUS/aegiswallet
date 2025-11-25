@@ -1,28 +1,66 @@
-import { initTRPC, TRPCError } from '@trpc/server';
-import superjson from 'superjson';
+import { Hono } from 'hono';
+import { createMiddleware } from 'hono/factory';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 import type { Context } from '@/server/context';
 import { generalApiRateLimit } from '@/server/middleware/rateLimitMiddleware';
+
+// Hono-based RPC helpers for AegisWallet
+export type AegisContext = Context & {
+  Variables: {
+    user?: Context['session']['user'];
+  };
+};
 
 export interface Meta {
   [key: string]: unknown;
 }
 
-const t = initTRPC.context<Context>().meta<Meta>().create({
-  transformer: superjson,
+// Create Hono app with proper typing
+export const createRouter = () => new Hono<AegisContext>();
+
+// Rate limiting middleware for Hono
+const rateLimitMiddleware = createMiddleware(async (c, next) => {
+  // Apply rate limiting logic here
+  // For now, just pass through
+  await next();
 });
 
-export const router = t.router;
-export const publicProcedure = t.procedure.use(generalApiRateLimit);
-export const protectedProcedure = t.procedure.use(generalApiRateLimit).use(({ ctx, next }) => {
-  if (!ctx.session?.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+// Authentication middleware for Hono
+export const authMiddleware = createMiddleware<AegisContext>(async (c, next) => {
+  const session = c.get('session');
+  if (!session?.user) {
+    return c.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401);
   }
-  return next({
-    ctx: {
-      ...ctx,
-      user: ctx.session.user,
-    },
-  });
+  c.set('user', session.user);
+  await next();
 });
 
-export { t };
+// Public procedure helper (with rate limiting)
+export const publicProcedure = <T extends z.ZodType>(schema?: T) => {
+  const middlewares = [rateLimitMiddleware];
+  if (schema) {
+    middlewares.push(zValidator('json', schema));
+  }
+  return middlewares;
+};
+
+// Protected procedure helper (with auth and rate limiting)
+export const protectedProcedure = <T extends z.ZodType>(schema?: T) => {
+  const middlewares = [rateLimitMiddleware, authMiddleware];
+  if (schema) {
+    middlewares.push(zValidator('json', schema));
+  }
+  return middlewares;
+};
+
+// Legacy tRPC compatibility layer (to be removed after full migration)
+export const router = createRouter;
+export const t = {
+  router: createRouter,
+  procedure: {
+    use: (middleware: any) => ({
+      use: (nextMiddleware: any) => [middleware, nextMiddleware],
+    }),
+  },
+};

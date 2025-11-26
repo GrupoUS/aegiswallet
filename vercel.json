@@ -3,6 +3,12 @@
   "outputDirectory": "dist",
   "installCommand": "bun install",
   "framework": null,
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@5.1.0",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/dashboard",

@@ -80,7 +80,11 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
         await createAccount(values);
       }
       onSuccess?.();
-    } catch (_error) {}
+    } catch (error) {
+      // Error is already handled by the hook (toast notification)
+      // But we can add console logging for debugging
+      console.error('Failed to save bank account:', error);
+    }
   };
 
   const isLoading = isCreating || isUpdating;

@@ -8,6 +8,20 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/calendar-channel-renewal",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/sync-queue-processor",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-sync-queue",
+      "schedule": "0 3 * * 0"
+    }
+  ],
   "rewrites": [
     {
       "source": "/dashboard",
@@ -17,10 +31,10 @@
       "source": "/dashboard/(.*)",
       "destination": "/dashboard"
     },
-      {
-        "source": "/api/(.*)",
-        "destination": "/api/index"
-      },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"

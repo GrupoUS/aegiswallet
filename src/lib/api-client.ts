@@ -73,6 +73,10 @@ class ApiClient {
         errorMessage = (await response.text()) || errorMessage;
       }
 
+      if (import.meta.env.DEV) {
+        console.error(`[API] Error ${response.status}:`, errorMessage, errorDetails);
+      }
+
       const error: ApiError = new Error(errorMessage);
       error.status = response.status;
       error.code = errorCode;
@@ -126,6 +130,10 @@ class ApiClient {
   async post<T = unknown>(url: string, data?: unknown): Promise<T> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const headers = await this.getHeaders();
+
+    if (import.meta.env.DEV) {
+      console.log(`[API] POST ${fullUrl}`, { data });
+    }
 
     const response = await fetch(fullUrl, {
       body: data ? JSON.stringify(data) : undefined,

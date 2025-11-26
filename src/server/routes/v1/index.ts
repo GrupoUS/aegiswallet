@@ -6,6 +6,7 @@
 import bankAccountsRouter from './bank-accounts';
 import bankingRouter from './banking';
 import calendarRouter from './calendar';
+import complianceRouter from './compliance';
 import contactsRouter from './contacts';
 import googleCalendarRouter from './google-calendar';
 import healthRouter from './health';
@@ -26,4 +27,5 @@ export {
   transactionsRouter,
   calendarRouter,
   googleCalendarRouter,
+  complianceRouter,
 };

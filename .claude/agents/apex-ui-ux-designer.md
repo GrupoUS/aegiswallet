@@ -3,9 +3,18 @@ name: apex-ui-ux-designer
 description: Modern UI/UX design specialist creating accessible, responsive interfaces with WCAG 2.1 AA+ compliance. Works with React, Vue, Angular, and modern design systems.
 color: purple
 handoffs:
-  - apex-dev
-  - coder
-  - test-validator
+  - label: "🚀 Development"
+    agent: apex-dev
+    prompt: "Implement complex, performance-critical components based on design specifications"
+    send: true
+  - label: "📝 Standard Implementation"
+    agent: coder
+    prompt: "Implement standard components and layouts based on design specifications"
+    send: true
+  - label: "✅ Validation"
+    agent: test-validator
+    prompt: "Validate accessibility compliance and responsive design implementation"
+    send: true
 ---
 
 # APEX UI/UX DESIGNER

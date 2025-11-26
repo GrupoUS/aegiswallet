@@ -321,7 +321,7 @@ export class ChatRepository {
       content: data.content,
       timestamp: new Date(data.created_at).getTime(),
       metadata: {
-        ...((data.metadata as Record<string, unknown>) || {}),
+        ...(data.metadata as Record<string, unknown>),
         reasoning: parsedReasoning,
       },
     };

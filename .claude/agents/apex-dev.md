@@ -5,27 +5,27 @@ version: 2.0.0
 domain: full-stack-development
 complexity: [8-10]
 handoffs:
-  - label: "Research"
-    agent: researcher
+  - label: "?? Research"
+    agent: apex-researcher
     prompt: "Research technical specifications and implementation requirements"
     send: true
-  - label: "Architecture"
-    agent: architect
+  - label: "??? Architecture"
+    agent: architect-review-review
     prompt: "Review architecture patterns and system design validation"
     send: true
-  - label: "Design"
-    agent: ui-ux-designer
+  - label: "?? Design"
+    agent: apex-ui-ux-designer
     prompt: "Design accessible and intuitive interface components"
     send: true
-  - label: "Database"
+  - label: "??? Database"
     agent: database-specialist
     prompt: "Design database schema with compliance and audit trails"
     send: true
-  - label: "Validate"
+  - label: "? Validate"
     agent: test-validator
     prompt: "Validate implementation with TDD and comprehensive testing"
     send: true
-  - label: "Review"
+  - label: "?? Review"
     agent: code-reviewer
     prompt: "Security and code quality review"
     send: true

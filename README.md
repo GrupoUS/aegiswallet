@@ -89,7 +89,7 @@ git commit -m "feat: add new feature"
 ### Core
 - **Runtime**: Bun (3-5x faster than npm/pnpm)
 - **Frontend**: React 19 + Vite + TypeScript
-- **Backend**: Hono (Edge-first) + tRPC v11
+- **Backend**: Hono (Edge-first) + Drizzle ORM
 - **Database**: Supabase (Postgres + Auth + Realtime + RLS)
 
 ### Frontend
@@ -99,7 +99,8 @@ git commit -m "feat: add new feature"
 - **Forms**: React Hook Form + Zod
 
 ### Backend
-- **API**: tRPC v11 (type-safe)
+- **API**: Hono RPC (edge-optimized)
+- **ORM**: Drizzle (type-safe, TCP connection)
 - **Server**: Hono (edge-optimized)
 - **Auth**: Supabase Auth
 - **Database**: Supabase (RLS enabled)
@@ -114,63 +115,70 @@ git commit -m "feat: add new feature"
 
 ## 🔌 API Architecture
 
-### Hono + tRPC Hybrid Approach
+### Hono RPC + Drizzle Architecture
 
-AegisWallet combines Hono and tRPC to provide edge performance with type-safe APIs.
+AegisWallet uses Hono for edge-optimized HTTP handling and Drizzle ORM for type-safe database access.
 
 #### Hono (Edge-First HTTP Framework)
-- **Static File Serving**: Hosts the built SPA assets.
-- **Health Checks**: `/api/health` endpoint for observability.
-- **tRPC Endpoint**: Proxies requests from `/api/trpc/*` into the tRPC handler.
-- **Middleware**: Manages CORS, logging and request lifecycle plumbing.
+- **Static File Serving**: Hosts the built SPA assets
+- **Health Checks**: `/api/health` endpoint for observability
+- **API Routes**: RESTful endpoints under `/api/v1/*`
+- **Middleware**: CORS, authentication, rate limiting, logging
 
-#### tRPC v11 (Type-Safe API Layer)
-- **End-to-End Type Safety**: Automatic inference from backend procedures to frontend hooks.
-- **React Query Integration**: TanStack Query handles caching, invalidation and optimistic UI.
-- **Input Validation**: Zod schemas validated at the procedure boundary.
-- **Middleware**: Authentication, rate limiting, fraud detection, and logging pipelines.
+#### Drizzle ORM (Type-Safe Database Layer)
+- **Direct TCP Connection**: Connects to Supabase PostgreSQL via TCP (faster than REST)
+- **Type Safety**: Automatic TypeScript types from database schema
+- **Query Builder**: Composable, type-safe query building
+- **Schema Introspection**: Auto-generates schema from existing database
 
 ### Router Organization
 
-#### Consolidated Routers
-- **auth**: Sign in/out, sign up, password reset with rate limiting + security logging.
-- **users**: Profiles, preferences, summaries, account deletion.
-- **transactions**: CRUD with fraud detection, statistics, projections.
+#### Core Routers
+- **users**: Profiles, preferences, financial summaries
+- **transactions**: CRUD with fraud detection, statistics
+- **bank-accounts**: Manual accounts, balances, history
 
 #### Specialized Routers
-- **pix**: PIX keys, transfers, QR codes, statistics.
-- **bankAccounts**: Manual accounts, balances, history.
-- **contacts**: Contact CRUD/search/favorites/statistics.
-- **calendar**: Financial events, reminders, notifications.
-- **google-calendar**: Sync settings/history, bidirectional sync actions.
-- **voice**: Voice command processing, feedback, analytics.
+- **contacts**: Contact management with favorites
+- **calendar**: Financial events and reminders
+- **google-calendar**: Bidirectional sync with Google Calendar
+- **voice**: Voice command processing and analytics
+- **banking**: Open Finance integration
 
 ### Key Features
 
-✅ **Type Safety** – Zero contract drift with shared TypeScript types
-✅ **Validation** – Zod schemas aligned with Supabase policies
-✅ **Security** – Rate limiting, authentication, fraud detection, structured logging
-✅ **React Query** – Automatic caching, optimistic updates, background refresh
-✅ **Superjson** – Serializes complex types seamlessly
+✅ **Type Safety** – End-to-end TypeScript types from database to frontend
+✅ **Performance** – Direct TCP connection eliminates HTTP overhead
+✅ **Validation** – Zod schemas with `@hono/zod-validator`
+✅ **Security** – JWT authentication, rate limiting, RLS policies
+✅ **Edge-Ready** – Optimized for Vercel Edge Functions
 
 ### Usage Example
 
 ```typescript
-// Server (tRPC procedure)
-export const pixRouter = router({
-  getKeys: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.supabase
-      .from('pix_keys')
-      .select('*')
-      .eq('user_id', ctx.user.id)
-  }),
-})
+// Server (Hono route with Drizzle)
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
-// Client (React hook)
-const { data: keys, isLoading } = trpc.pix.getKeys.useQuery()
+usersRouter.get('/me', authMiddleware, async (c) => {
+  const { user } = c.get('auth');
+  const userData = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+  return c.json({ data: userData[0] });
+});
+
+// Client (HTTP fetch)
+const response = await fetch('/api/v1/users/me', {
+  headers: { Authorization: `Bearer ${token}` }
+});
+const { data } = await response.json();
 ```
 
-📖 **Full Documentation**: [tRPC Architecture Guide](docs/architecture/trpc-architecture.md)
+📖 **Full Documentation**: [API Architecture Guide](docs/architecture/api-architecture.md)
 
 ---
 
@@ -184,10 +192,13 @@ src/
 │   ├── pix/            # PIX components
 │   └── voice/          # Voice interaction components
 ├── routes/             # TanStack Router pages
-├── server/             # Backend Hono + tRPC server
-│   ├── routers/        # tRPC routers
-│   ├── procedures/     # tRPC procedures
-│   └── middleware/     # Server middleware
+├── server/             # Backend Hono RPC server
+│   ├── routes/         # API route handlers
+│   ├── middleware/     # Server middleware
+│   └── services/       # Business logic services
+├── db/                 # Drizzle ORM database layer
+│   ├── schema/         # Table schemas by domain
+│   └── migrations/     # Database migrations
 ├── hooks/              # Custom React hooks
 ├── lib/                # Utility libraries
 ├── services/           # Business logic services
@@ -357,7 +368,7 @@ Built with:
 - [Bun](https://bun.sh/) - Fast JavaScript runtime
 - [React](https://react.dev/) - UI library
 - [Hono](https://hono.dev/) - Edge-first web framework
-- [tRPC](https://trpc.io/) - Type-safe APIs
+- [Drizzle ORM](https://orm.drizzle.team/) - Type-safe database ORM
 - [Supabase](https://supabase.com/) - Backend platform
 - [TanStack](https://tanstack.com/) - Router & Query
 - [Tailwind CSS](https://tailwindcss.com/) - Styling

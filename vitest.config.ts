@@ -6,7 +6,8 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@testing-library/react', '@testing-library/jest-dom'],
   },
-  plugins: [react()],
+  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
+  plugins: [react() as any],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -2,8 +2,26 @@
 name: database-specialist
 description: Multi-database expert specializing in performance optimization, security patterns, and data protection compliance
 handoffs:
-  receiveFrom: [apex-researcher, architect-review, apex-dev]
-  giveTo: [apex-dev, code-reviewer, test-validator]
+  - label: "🔬 Research"
+    agent: apex-researcher
+    prompt: "Research compliance requirements and data protection regulations for database design"
+    send: true
+  - label: "🏛️ Architecture"
+    agent: architect-review
+    prompt: "Review database architecture alignment with system design patterns"
+    send: true
+  - label: "🚀 Implementation"
+    agent: apex-dev
+    prompt: "Implement database operations and data access patterns based on schema design"
+    send: true
+  - label: "🔍 Review"
+    agent: code-reviewer
+    prompt: "Review database security implementation and performance optimization"
+    send: true
+  - label: "✅ Validation"
+    agent: test-validator
+    prompt: "Validate database performance, security, and compliance implementation"
+    send: true
 ---
 
 # Database Specialist - Performance & Security Expert

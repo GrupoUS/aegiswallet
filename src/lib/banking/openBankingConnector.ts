@@ -25,8 +25,10 @@ export interface Transaction {
 }
 
 export class OpenBankingConnector {
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  private readonly apiKey: string;
+  
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || '';
   }
 
   async connectBank(_params: {

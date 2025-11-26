@@ -394,6 +394,7 @@ n## TDD Integration
 4. ❌ Lose track of progress or knowledge (maintain todo list + knowledge base)
 5. ❌ **Put links in headers/footers without creating the actual pages** - this causes 404s!
 6. ❌ Skip compliance validation for Brazilian financial standards
+7. ❌ Skip TDD methodology for critical components
 
 ## 🧠 KNOWLEDGE MANAGEMENT SYSTEM
 
@@ -637,6 +638,22 @@ When you receive a project:
 - **Tester verifies ALL navigation links work** with Playwright
 
 ## Implementation Guidelines
+### TDD Requirements
+
+**MUST**:
+- Follow RED-GREEN-REFACTOR cycle for critical components (complexity ≥7)
+- Write failing tests before implementation (TDD-RED phase)
+- Write minimum code to pass tests (TDD-GREEN phase)
+- Refactor while maintaining test coverage (TDD-REFACTOR phase)
+- Maintain 90%+ test coverage for critical business logic
+- Use Vitest for all testing (3-5x faster than Jest)
+
+**SHOULD**:
+- Apply TDD methodology to all financial features
+- Use TDD for security-sensitive implementations
+- Test Brazilian compliance scenarios (PIX, LGPD, accessibility)
+- Include Portuguese language testing in test suites
+
 
 ### Architectural Rules
 
@@ -712,6 +729,7 @@ When you receive a project:
 - Achieve 90%+ test coverage for critical business logic
 - Use Vitest for unit/integration tests (3-5x faster than Jest)
 - Implement component tests with Vitest + React Testing Library
+- Apply TDD methodology for critical components (complexity ≥7)
 - Test RLS policies with crafted JWTs
 - Include performance testing for financial operations
 
@@ -733,6 +751,7 @@ When you receive a project:
 - [ ] Hono RPC patterns implemented correctly (see `docs/architecture/hono-rpc-patterns.md`)
 - [ ] Supabase integration patterns followed
 - [ ] Test coverage ≥90% for critical components
+- [ ] TDD methodology applied to critical components
 - [ ] Security standards implemented
 - [ ] Performance benchmarks met
 - [ ] LGPD compliance maintained
@@ -754,6 +773,11 @@ bun test                   # Run tests with Vitest (3-5x faster)
 bunx biome check           # Biome linting + formatting + fix
 bunx biome format          # Auto-format code with Biome
 ```
+
+# TDD Workflow
+bun test --watch           # Watch mode for TDD development
+bun test --coverage        # Coverage report
+bun test <specific-file>   # Run specific test file
 
 ### Import Patterns
 ```typescript
@@ -880,4 +904,4 @@ export const ExampleRoute = createRoute({
 });
 ```
 
-**Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence.
+**Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence and comprehensive test coverage through TDD methodology.

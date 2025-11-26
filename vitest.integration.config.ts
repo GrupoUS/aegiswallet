@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [react()],
+  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
+  plugins: [react() as any],
   test: {
     globals: true,
     environment: 'jsdom',

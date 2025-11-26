@@ -5,12 +5,7 @@
 
 import type { Hono } from 'hono';
 import { createServerSupabaseClient } from '@/integrations/supabase/server';
-
-interface AppEnv {
-  Variables: {
-    requestId: string;
-  };
-}
+import type { AppEnv } from '@/server/hono-types';
 
 /**
  * Check Supabase database connectivity

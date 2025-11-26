@@ -40,30 +40,29 @@ export default function TransactionsList() {
       (t) => t.id === deletingId
     );
 
-    deleteMutation.mutate(
-      { id: deletingId },
-      {
-        onSuccess: async () => {
-          // Revert balance if possible
-          if (transaction?.account_id) {
-            const account = accounts.find((a) => a.id === transaction.account_id);
-            if (account) {
-              // Inverse amount: subtract transaction amount (which is signed)
-              // If transaction was -100 (debit), we need to add 100.
-              // So: current - (-100) = current + 100.
-              // So: balance - transaction.amount
-              await updateBalance({
-                balance: Number(account.balance) - Number(transaction.amount),
-                id: transaction.account_id,
-              });
-            }
-          }
-
-          setDeletingId(null);
-          refetch();
-        },
+    try {
+      await deleteMutation.mutateAsync({ id: deletingId });
+      
+      // Revert balance if possible
+      if (transaction?.account_id) {
+        const account = accounts.find((a) => a.id === transaction.account_id);
+        if (account) {
+          // Inverse amount: subtract transaction amount (which is signed)
+          // If transaction was -100 (debit), we need to add 100.
+          // So: current - (-100) = current + 100.
+          // So: balance - transaction.amount
+          await updateBalance({
+            balance: Number(account.balance) - Number(transaction.amount),
+            id: transaction.account_id,
+          });
+        }
       }
-    );
+
+      setDeletingId(null);
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+    }
   };
 
   const getIcon = (type: string) => {

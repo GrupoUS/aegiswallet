@@ -23,7 +23,7 @@ import {
 import { type BankAccount, useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 
 export const ContasBancarias = () => {
-  const { accounts, deleteAccount, isDeleting } = useBankAccounts();
+  const { accounts, deleteAccountAsync, isDeleting } = useBankAccounts();
   const stats = useBankAccountsStats();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -38,16 +38,14 @@ export const ContasBancarias = () => {
     setDeletingAccount(account);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deletingAccount) {
-      deleteAccount(
-        { id: deletingAccount.id },
-        {
-          onSuccess: () => {
-            setDeletingAccount(null);
-          },
-        }
-      );
+      try {
+        await deleteAccountAsync({ id: deletingAccount.id });
+        setDeletingAccount(null);
+      } catch (error) {
+        console.error('Failed to delete account:', error);
+      }
     }
   };
 

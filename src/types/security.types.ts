@@ -147,7 +147,7 @@ export interface UserSecuritySummary {
 // UI State Types
 export interface AuthenticationState {
   isAuthenticated: boolean;
-  user: Database['public']['Tables']['profiles']['Row'] | null;
+  user: Database['public']['Tables']['users']['Row'] | null;
   sessionToken: string | null;
   authMethod: 'platform' | 'pin' | 'sms' | 'push' | null;
   lastActivity: Date | null;

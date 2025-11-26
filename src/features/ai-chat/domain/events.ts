@@ -1,6 +1,16 @@
-import type { ChatStreamChunk, ChatStreamEventType } from './types';
+import type {
+  ChatError,
+  ChatStreamChunk,
+  ChatStreamEventType,
+  ChatStreamPayload,
+  ChatSuggestion,
+  ChatToolCall,
+} from './types';
 
-export const createChunk = (type: ChatStreamEventType, payload: any): ChatStreamChunk => ({
+export const createChunk = (
+  type: ChatStreamEventType,
+  payload: ChatStreamPayload
+): ChatStreamChunk => ({
   type,
   payload,
 });
@@ -36,8 +46,8 @@ export const createStreamChunk = (
 export const ChatEvents = {
   textDelta: (text: string) => createChunk('text-delta', text),
   reasoningDelta: (text: string) => createChunk('reasoning-delta', text),
-  toolCall: (toolCall: any) => createChunk('tool-call', toolCall),
-  suggestion: (suggestion: any) => createChunk('suggestion', suggestion),
-  error: (error: any) => createChunk('error', error),
+  toolCall: (toolCall: ChatToolCall) => createChunk('tool-call', toolCall),
+  suggestion: (suggestion: ChatSuggestion) => createChunk('suggestion', suggestion),
+  error: (error: ChatError) => createChunk('error', error),
   done: () => createChunk('done', null),
 };

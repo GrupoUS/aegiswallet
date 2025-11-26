@@ -9,7 +9,7 @@ import { addDays, differenceInDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
-import type { PushConfig, PushMessage } from '@/lib/security/pushProvider';
+import type { PushConfig, PushMessage, PushProvider } from '@/lib/security/pushProvider';
 import { createPushProvider } from '@/lib/security/pushProvider';
 
 // Brazilian financial event types
@@ -18,13 +18,13 @@ export interface BrazilianFinancialEvent {
   title: string;
   description?: string;
   amount?: number;
-  eventDate: string;
-  dueDate?: string;
-  eventTypeId: string;
-  categoryName?: string;
+  start_date: string; // Database field name
+  due_date?: string; // Database field name
+  event_type_id: string; // Database field name
+  category_name?: string; // For transaction_categories.name
   priority: 'low' | 'normal' | 'high' | 'urgent';
   status: string;
-  isCompleted: boolean;
+  is_completed: boolean; // Computed field from status
 }
 
 export interface FinancialReminderConfig {
@@ -52,7 +52,7 @@ export interface NotificationTemplate {
  * Brazilian Financial Notification Service
  */
 export class FinancialNotificationService {
-  private pushProvider: unknown;
+  private pushProvider: PushProvider;
   private config: FinancialReminderConfig;
 
   constructor(pushConfig: PushConfig) {
@@ -81,7 +81,7 @@ export class FinancialNotificationService {
     event: BrazilianFinancialEvent,
     daysUntil: number
   ): NotificationTemplate {
-    const eventDate = parseISO(event.eventDate);
+    const eventDate = parseISO(event.start_date);
     const formattedDate = format(eventDate, "dd 'de' MMMM", { locale: ptBR });
     const formattedAmount = event.amount
       ? new Intl.NumberFormat('pt-BR', {
@@ -273,8 +273,8 @@ export class FinancialNotificationService {
    */
   async createAutomatedReminders(event: BrazilianFinancialEvent, userId: string): Promise<void> {
     try {
-      const reminderSchedule = this.getReminderSchedule(event.eventTypeId);
-      const eventDate = parseISO(event.eventDate);
+      const reminderSchedule = this.getReminderSchedule(event.event_type_id);
+      const eventDate = parseISO(event.start_date);
 
       for (const daysBefore of reminderSchedule) {
         const reminderDate = addDays(eventDate, -daysBefore);
@@ -326,7 +326,7 @@ export class FinancialNotificationService {
     customMessage?: string
   ): Promise<void> {
     try {
-      const daysUntil = differenceInDays(parseISO(event.eventDate), new Date());
+      const daysUntil = differenceInDays(parseISO(event.start_date), new Date());
       const notification = customMessage
         ? { body: customMessage, title: '📅 Lembrete Financeiro' }
         : this.generateNotificationMessage(event, daysUntil);
@@ -347,8 +347,7 @@ export class FinancialNotificationService {
         title: notification.title,
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (this.pushProvider as any).sendPushNotification(userId, pushMessage);
+      const result = await this.pushProvider.sendPushNotification(userId, pushMessage);
 
       if (result.success) {
         logger.info('Financial notification sent successfully', {
@@ -422,23 +421,21 @@ export class FinancialNotificationService {
       }
 
       for (const reminder of reminders || []) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawEvent = reminder.financial_events as any;
         if (!rawEvent) {
           continue;
         }
 
         // Map to BrazilianFinancialEvent
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const event: BrazilianFinancialEvent = {
           amount: rawEvent.amount ?? undefined,
-          categoryName: rawEvent.transaction_categories?.name ?? undefined,
+          category_name: rawEvent.transaction_categories?.name ?? undefined,
           description: rawEvent.description ?? undefined,
-          dueDate: rawEvent.due_date ?? undefined,
-          eventDate: rawEvent.start_date,
-          eventTypeId: rawEvent.event_type_id,
+          due_date: rawEvent.due_date ?? undefined,
+          start_date: rawEvent.start_date,
+          event_type_id: rawEvent.event_type_id,
           id: rawEvent.id,
-          isCompleted: rawEvent.status === 'completed' || rawEvent.status === 'paid',
+          is_completed: rawEvent.status === 'completed' || rawEvent.status === 'paid',
           priority: (rawEvent.priority as 'low' | 'normal' | 'high' | 'urgent') ?? 'normal',
           status: rawEvent.status ?? 'pending',
           title: rawEvent.title,
@@ -498,7 +495,7 @@ export class FinancialNotificationService {
     reminderTime: string
   ): Promise<void> {
     try {
-      const eventDate = parseISO(event.eventDate);
+      const eventDate = parseISO(event.start_date);
       const formattedDate = format(eventDate, "dd 'de' MMMM 'de' yyyy", {
         locale: ptBR,
       });

@@ -16,12 +16,8 @@
         "source": "/api/(.*)",
         "destination": "/api/index"
       },
-      {
-        "source": "/trpc/(.*)",
-        "destination": "/api/index"
-      },
     {
-      "source": "/((?!api/|trpc/).*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],

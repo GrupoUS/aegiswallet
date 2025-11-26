@@ -5,21 +5,25 @@ handoffs:
   - label: "🏛️ Design Architecture"
     agent: architect-review
     prompt: "Design the architecture based on my research findings. Key insights:"
+    send: true
   - label: "🚀 Implement"
-    agent: apex-dev
+        agent: apex-dev
     prompt: "Implement the feature based on my research findings. Key requirements:"
+    send: true
   - label: "🗄️ Database Design"
     agent: database-specialist
     prompt: "Design the database schema based on my research findings on compliance requirements."
+    send: true
   - label: "🎨 Design UI"
     agent: apex-ui-ux-designer
     prompt: "Design the user interface based on my research findings on user requirements."
+    send: true
   - label: "📋 Create Plan"
-    agent: vibecoder
-    prompt: Create detailed implementation plan based on my research findings.
+        agent: coder
+    prompt: "Create detailed implementation plan based on my research findings"
   - label: "Open in Editor"
-    agent: vibecoder
-    prompt: '#createFile the research findings as is into an untitled file (untitled:research-${camelCaseName}.prompt.md without frontmatter) for further refinement.'
+        agent: coder
+    prompt: "Create implementation file based on research findings"
     send: true
 tools:
   ['context7/*', 'tavily/*', 'sequential-thinking/*', 'search', 'runTasks', 'runSubagent', 'serena/*', 'desktop-commander/*', 'shadcn/*', 'supabase/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos']

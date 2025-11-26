@@ -6,13 +6,7 @@
 import type { Hono } from 'hono';
 import { environment } from '@/server/config/environment';
 
-interface AppEnv {
-  Variables: {
-    requestId: string;
-  };
-}
-
-export function setupHealthRoute(app: Hono<AppEnv>) {
+export function setupHealthRoute(app: Hono<any>) {
   app.get('/api/health', (c) => {
     return c.json({
       environment: environment.NODE_ENV,

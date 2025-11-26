@@ -5,7 +5,7 @@ export interface ChatMessage {
   role: ChatRole;
   content: string;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   reasoning?: string; // For "thinking" models
 }
 
@@ -17,16 +17,15 @@ export type ChatStreamEventType =
   | 'error'
   | 'done';
 
-export interface ChatStreamChunk {
-  type: ChatStreamEventType;
-  payload: any; // string for text/reasoning, object for tool/suggestion
-}
-
-export interface ChatRequestOptions {
-  model?: string;
-  temperature?: number;
-  tools?: any[]; // To be defined more strictly later
-  signal?: AbortSignal;
+/**
+ * Tool call information for chat events
+ */
+export interface ChatToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  status?: 'pending' | 'executing' | 'completed' | 'failed';
+  result?: unknown;
 }
 
 /**
@@ -36,6 +35,44 @@ export interface ChatSuggestion {
   id: string;
   text: string;
   icon?: string;
+  action?: {
+    type: string;
+    payload?: Record<string, unknown>;
+  };
+}
+
+/**
+ * Error information for chat events
+ */
+export interface ChatError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * Payload types for different chat stream events
+ */
+export type ChatStreamPayload =
+  | { messageId: string; role: string; event: 'start' } // Message start
+  | { messageId: string; event: 'end' } // Message end
+  | { content: string; messageId: string } // Text/reasoning delta
+  | string // Simple text content
+  | ChatToolCall // Tool call
+  | ChatSuggestion // Suggestion
+  | ChatError // Error
+  | null; // Done event
+
+export interface ChatStreamChunk {
+  type: ChatStreamEventType;
+  payload: ChatStreamPayload;
+}
+
+export interface ChatRequestOptions {
+  model?: string;
+  temperature?: number;
+  tools?: ChatToolCall[];
+  signal?: AbortSignal;
 }
 
 /**

@@ -60,7 +60,11 @@ export class GeminiBackend implements ChatBackend {
       yield ChatEvents.done();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      yield ChatEvents.error(errorMessage);
+      yield ChatEvents.error({
+        code: 'GEMINI_ERROR',
+        message: errorMessage,
+        details: { originalError: error }
+      });
     } finally {
       this.abortController = null;
     }

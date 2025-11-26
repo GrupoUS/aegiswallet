@@ -194,7 +194,7 @@ function FinancialEventFormComponent({
     }
   }, [initialData, form]);
 
-  const onSubmit = async (values: FinancialEventFormValues) => {
+  const onSubmit: SubmitHandler<FinancialEventFormValues> = async (values) => {
     setIsSubmitting(true);
     try {
       const numericAmount = parseFloat(values.amount.replace(/[^0-9.-]+/g, ''));

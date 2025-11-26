@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [react()],
+  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
+  plugins: [react() as any],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -156,16 +157,5 @@ export default defineConfig({
     'process.env.VITE_ENVIRONMENT': '"test"',
     'process.env.VITE_SUPABASE_ANON_KEY': '"test-anon-key"',
     'process.env.VITE_SUPABASE_URL': '"http://localhost:54321"', // Enable mocking for healthcare tests
-  },
-
-  // Server configuration for healthcare testing
-  server: {
-    deps: {
-      inline: [
-        // Inline critical healthcare dependencies
-        /@testing-library/,
-        /vitest/,
-      ],
-    },
   },
 });

@@ -37,6 +37,7 @@ interface UseTransactionsReturn {
   data: Transaction[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => void;
 }
 
 export function useTransactions(filters?: {
@@ -50,7 +51,7 @@ export function useTransactions(filters?: {
   endDate?: string;
   search?: string;
 }): UseTransactionsReturn {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['transactions', filters],
     queryFn: async () => {
       const response = await apiClient.get<TransactionApiResponse<Transaction[]>>(
@@ -62,19 +63,29 @@ export function useTransactions(filters?: {
       return response.data;
     },
   });
+
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
 }
 
+type CreateTransactionInput = {
+  amount: number;
+  categoryId?: string;
+  description?: string;
+  fromAccountId: string;
+  toAccountId?: string;
+  type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status?: 'cancelled' | 'failed' | 'pending' | 'posted';
+  metadata?: Record<string, unknown>;
+};
+
 interface UseCreateTransactionReturn {
-  mutate: (input: {
-    amount: number;
-    categoryId?: string;
-    description?: string;
-    fromAccountId: string;
-    toAccountId?: string;
-    type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
-    status?: 'cancelled' | 'failed' | 'pending' | 'posted';
-    metadata?: Record<string, unknown>;
-  }) => void;
+  mutate: (input: CreateTransactionInput) => void;
+  mutateAsync: (input: CreateTransactionInput) => Promise<Transaction>;
   isPending: boolean;
   error: Error | null;
 }
@@ -82,17 +93,8 @@ interface UseCreateTransactionReturn {
 export function useCreateTransaction(): UseCreateTransactionReturn {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (input: {
-      amount: number;
-      categoryId?: string;
-      description?: string;
-      fromAccountId: string;
-      toAccountId?: string;
-      type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
-      status?: 'cancelled' | 'failed' | 'pending' | 'posted';
-      metadata?: Record<string, unknown>;
-    }) => {
+  const mutation = useMutation({
+    mutationFn: async (input: CreateTransactionInput) => {
       const response = await apiClient.post<TransactionApiResponse<Transaction>>(
         '/v1/transactions',
         input
@@ -103,10 +105,18 @@ export function useCreateTransaction(): UseCreateTransactionReturn {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
+
+  return {
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    error: mutation.error,
+  };
 }
 
 interface UseDeleteTransactionReturn {
-  mutate: (input: { id: string }) => void;
+  mutate: (input: { id: string }, options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => void;
+  mutateAsync: (input: { id: string }) => Promise<string>;
   isPending: boolean;
   error: Error | null;
 }
@@ -114,7 +124,7 @@ interface UseDeleteTransactionReturn {
 export function useDeleteTransaction(): UseDeleteTransactionReturn {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (input: { id: string }) => {
       await apiClient.delete(`/v1/transactions/${input.id}`);
       return input.id;
@@ -123,6 +133,13 @@ export function useDeleteTransaction(): UseDeleteTransactionReturn {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
+
+  return {
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    error: mutation.error,
+  };
 }
 
 interface UseTransactionsStatsReturn {

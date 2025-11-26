@@ -5,60 +5,8 @@
 
 import { logger } from '../lib/logging/logger';
 
-// TypeScript interfaces for Web Speech API (not available globally)
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  maxAlternatives: number;
-  onstart: ((event: Event) => void) | null;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: ((event: Event) => void) | null;
-  onaudiostart: ((event: Event) => void) | null;
-  onsoundstart: ((event: Event) => void) | null;
-  onspeechstart: ((event: Event) => void) | null;
-  onspeechend: ((event: Event) => void) | null;
-  onsoundend: ((event: Event) => void) | null;
-  onaudioend: ((event: Event) => void) | null;
-  onnomatch: ((event: SpeechRecognitionEvent) => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechSynthesisErrorEvent extends Event {
-  error: string;
-  message?: string;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
+// Web Speech API types - these are available in TypeScript's lib.dom.d.ts
+// Using type assertions to access Web Speech API when available
 
 interface SpeechSynthesis extends EventTarget {
   pending: boolean;
@@ -104,14 +52,7 @@ interface SpeechSynthesisVoice {
   voiceURI: string;
 }
 
-// Extend Window interface
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-    SpeechSynthesisUtterance: new (text: string) => SpeechSynthesisUtterance;
-  }
-}
+// Web Speech API global types are declared in @/types/speech-recognition.d.ts
 
 // Voice command patterns in Portuguese
 export const VOICE_COMMANDS = {
@@ -140,8 +81,8 @@ export interface VoiceServiceConfig {
 }
 
 class VoiceService {
-  private recognition: SpeechRecognition | null = null;
-  private synthesis: SpeechSynthesis | null = null;
+  private recognition: any = null;
+  private synthesis: any = null;
   private isListening = false;
   private config: VoiceServiceConfig;
 
@@ -175,7 +116,7 @@ class VoiceService {
     }
   }
 
-  private getSpeechRecognition(): SpeechRecognition | null {
+  private getSpeechRecognition(): any {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       throw new Error('Speech recognition not supported in this browser');
@@ -214,7 +155,7 @@ class VoiceService {
       return;
     }
 
-    this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+    this.recognition.onresult = (event: any) => {
       const result = event.results[event.results.length - 1];
       const transcript = result[0].transcript.toLowerCase().trim();
       const confidence = result[0].confidence;
@@ -229,7 +170,7 @@ class VoiceService {
       });
     };
 
-    this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    this.recognition.onerror = (event: any) => {
       logger.voiceError(`Speech recognition error: ${event.error}`, {
         action: 'recognition',
         component: 'VoiceService',

@@ -48,18 +48,22 @@ export function useChatController(backend: ChatBackend, options?: UseChatControl
         for await (const chunk of stream) {
           switch (chunk.type) {
             case 'text-delta':
-              fullContent += chunk.payload;
-              setStreamingContent((prev) => prev + chunk.payload);
+              const textContent = typeof chunk.payload === 'string' ? chunk.payload : 
+                                 (chunk.payload && 'content' in chunk.payload) ? chunk.payload.content : '';
+              fullContent += textContent;
+              setStreamingContent((prev) => prev + textContent);
               break;
             case 'reasoning-delta':
-              fullReasoning += chunk.payload;
-              setStreamingReasoning((prev) => prev + chunk.payload);
+              const reasoningText = typeof chunk.payload === 'string' ? chunk.payload : 
+                                   (chunk.payload && 'content' in chunk.payload) ? chunk.payload.content : '';
+              fullReasoning += reasoningText;
+              setStreamingReasoning((prev) => prev + reasoningText);
               if (options?.enableReasoningView) {
                 setReasoning((prev) => [
                   ...prev,
                   {
                     id: crypto.randomUUID(),
-                    content: chunk.payload,
+                    content: reasoningText,
                     timestamp: Date.now(),
                   },
                 ]);

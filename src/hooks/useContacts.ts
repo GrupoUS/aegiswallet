@@ -442,14 +442,14 @@ export function useContactsForTransfer(): UseContactsForTransferReturn {
       .map((contact: Contact) => ({
         id: contact.id,
         name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        isFavorite: contact.is_favorite,
+        email: contact.email || undefined,
+        phone: contact.phone || undefined,
+        isFavorite: Boolean(contact.is_favorite),
         // Determinar métodos de pagamento disponíveis
         availableMethods: [
           ...(contact.email ? ['EMAIL'] : []),
           ...(contact.phone ? ['PHONE'] : []),
-        ],
+        ] as Array<'EMAIL' | 'PHONE'>,
       }));
   }, [contacts]);
 
@@ -471,13 +471,13 @@ export function useContactsForPix(): UseContactsForPixReturn {
       .map((contact: Contact) => ({
         id: contact.id,
         name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        isFavorite: contact.is_favorite,
+        email: contact.email || undefined,
+        phone: contact.phone || undefined,
+        isFavorite: Boolean(contact.is_favorite),
         // Determinar chaves PIX disponíveis
         pixKeys: [
-          ...(contact.email ? [{ type: 'EMAIL', value: contact.email }] : []),
-          ...(contact.phone ? [{ type: 'PHONE', value: contact.phone }] : []),
+          ...(contact.email ? [{ type: 'EMAIL' as const, value: contact.email }] : []),
+          ...(contact.phone ? [{ type: 'PHONE' as const, value: contact.phone }] : []),
         ],
       }));
   }, [contacts]);

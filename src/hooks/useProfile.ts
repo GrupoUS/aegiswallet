@@ -199,7 +199,7 @@ export function useUserStatus(): UseUserStatusReturn {
     error,
     isActive: statusResponse?.is_active ?? false,
     isLoading,
-    lastLogin: statusResponse?.last_login,
+    lastLogin: statusResponse?.last_login ?? null,
     status: statusResponse,
   };
 }

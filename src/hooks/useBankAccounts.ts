@@ -59,7 +59,8 @@ interface UseBankAccountsReturn {
     is_active?: boolean;
     account_mask?: string;
   }) => void;
-  deleteAccount: (input: { id: string }) => void;
+  deleteAccount: (input: { id: string }, options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => void;
+  deleteAccountAsync: (input: { id: string }) => Promise<string>;
   updateBalance: (input: { id: string; balance: number }) => void;
   refetch: () => void;
 }
@@ -174,7 +175,7 @@ export function useBankAccounts(): UseBankAccountsReturn {
     },
   });
 
-  const { mutate: deleteAccount, isPending: isDeleting } = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: async (input: { id: string }) => {
       await apiClient.delete(`/v1/bank-accounts/${input.id}`);
       return input.id;
@@ -241,10 +242,11 @@ export function useBankAccounts(): UseBankAccountsReturn {
   return {
     accounts: accountsResponse || [],
     createAccount,
-    deleteAccount,
+    deleteAccount: deleteMutation.mutate,
+    deleteAccountAsync: deleteMutation.mutateAsync,
     error,
     isCreating,
-    isDeleting,
+    isDeleting: deleteMutation.isPending,
     isLoading,
     isUpdating,
     isUpdatingBalance,

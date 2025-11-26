@@ -149,7 +149,7 @@ export function FinancialCalendar() {
       // Sync if enabled
       if (isConnected && syncSettings?.sync_enabled && newEvent?.id) {
         toast.info('Sincronizando com Google Calendar...');
-        await syncSingleEvent(newEvent.id, 'to_google');
+        await syncSingleEvent({ eventId: newEvent.id, direction: 'to_google' });
       }
     } catch (_error) {
       toast.error('Erro ao criar evento');
@@ -174,7 +174,7 @@ export function FinancialCalendar() {
         // Sync if enabled
         if (isConnected && syncSettings?.sync_enabled && updatedEvent?.id) {
           // Debounce could be useful here to avoid too many API calls on drag
-          syncSingleEvent(updatedEvent.id, 'to_google');
+          syncSingleEvent({ eventId: updatedEvent.id, direction: 'to_google' });
         }
       }
     } catch (_error) {

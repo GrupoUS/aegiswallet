@@ -1,19 +1,8 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Suspense } from 'react';
+import { FinancialCalendar } from '../components/calendar/financial-calendar';
+import { Skeleton } from '../components/ui/skeleton';
 
-export const Route = createLazyFileRoute('/calendario')({
-  component: CalendarioPage,
-});
-
-// Lazy loading do componente FinancialCalendar
-const FinancialCalendar = lazy(() =>
-  import('@/components/calendar/financial-calendar').then((module) => ({
-    default: module.FinancialCalendar,
-  }))
-);
-
-// Componente de loading para o calendário
 function CalendarLoader() {
   return (
     <div className="flex h-full flex-col space-y-4 p-6">
@@ -41,6 +30,10 @@ function CalendarLoader() {
     </div>
   );
 }
+
+export const Route = createLazyFileRoute('/calendario')({
+  component: CalendarioPage,
+});
 
 export function CalendarioPage() {
   return (

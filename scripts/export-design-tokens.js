@@ -10,6 +10,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 // Read index.css
 const cssPath = resolve(process.cwd(), 'src/index.css');
 const cssContent = readFileSync(cssPath, 'utf-8');

@@ -45,7 +45,6 @@ interface BrowserSpeechRecognition {
 }
 
 // Alias for compatibility - using BrowserSpeechRecognition directly
-type SpeechRecognitionInstance = BrowserSpeechRecognition;
 
 type VoiceCategory = 'financeiro' | 'navegacao' | 'acao' | 'ajuda';
 

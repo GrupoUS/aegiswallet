@@ -7,6 +7,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+
 function parseArgs() {
   const args = process.argv.slice(2);
   let userId = process.env.SUPABASE_QA_USER_ID?.trim() ?? '';

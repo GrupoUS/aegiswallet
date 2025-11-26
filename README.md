@@ -80,21 +80,6 @@ bun run validate:colors
 git commit -m "feat: add new feature"
 ```
 
-📖 **Full Documentation**: [Color System Guide](docs/design-specs/COLOR-SYSTEM-GUIDE.md)
-
----
-
-## 🏗️ Technology Stack
-
-### Core
-- **Runtime**: Bun (3-5x faster than npm/pnpm)
-- **Frontend**: React 19 + Vite + TypeScript
-- **Backend**: Hono (Edge-first) + Drizzle ORM
-- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
-
-### Frontend
-- **Routing**: TanStack Router v5
-- **State**: TanStack Query v5
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Forms**: React Hook Form + Zod
 

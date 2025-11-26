@@ -67,6 +67,15 @@
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "*/node_modules/*": true,
+    "**/node_modules/**": true
+  },
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "typescript.maxNodeModuleJsDepth": 0,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "oxlint.enable": true,
   "oxlint.configFile": ".oxlintrc.json",
   "oxlint.healthcareConfig": ".oxlintrc.healthcare.json",

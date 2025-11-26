@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 const compatDir = 'node_modules/es-toolkit/compat';
 const outputDir = 'src/lib/es-toolkit-compat';
 const aliases = {};

@@ -14,6 +14,7 @@
  * @module scripts/quality-gates
  */
 import { execSync } from 'node:child_process';
+
 const QUALITY_GATES = [
   {
     name: 'Syntax/Style',

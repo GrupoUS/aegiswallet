@@ -8,6 +8,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+
 const REQUIRED_VARS = [
   'SUPABASE_URL',
   'VITE_SUPABASE_URL',

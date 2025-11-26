@@ -48,6 +48,7 @@ export interface EventCalendarProps {
   onEventUpdate?: (event: CalendarEvent) => void;
   onEventEdit?: (event: CalendarEvent) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  syncWithGoogle?: boolean;
 }
 
 export function EventCalendar({
@@ -58,6 +59,7 @@ export function EventCalendar({
   onEventUpdate,
   onEventEdit,
   onEventClick,
+  syncWithGoogle,
 }: EventCalendarProps) {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [view, setView] = useState<CalendarView>(initialView);

@@ -10,6 +10,7 @@
  */
 import { sql } from 'drizzle-orm';
 import { db, pgClient, schema } from '../src/db';
+
 async function testDrizzleConnection() {
   console.log('🔄 Starting Drizzle ORM connection test...\n');
   try {

@@ -13,6 +13,7 @@
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 // Hardcoded color patterns to detect
 const HARDCODED_COLOR_PATTERNS = [
   // Tailwind color utilities with numeric shades

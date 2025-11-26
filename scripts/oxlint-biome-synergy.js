@@ -12,6 +12,7 @@
  */
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+
 // Script configuration
 const CONFIG = {
   // File patterns for linting

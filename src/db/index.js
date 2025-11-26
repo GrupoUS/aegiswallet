@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error(
@@ -24,10 +25,4 @@ export { client as pgClient };
 export { schema };
 // Simple validation query on initialization
 // This runs once when the module is imported
-client`SELECT 1`
-  .then(() => {
-    console.log('✅ Database connection established via Drizzle + Postgres.js');
-  })
-  .catch((err) => {
-    console.error('❌ Database connection failed:', err.message);
-  });
+client`SELECT 1`.then(() => {}).catch((err) => {});

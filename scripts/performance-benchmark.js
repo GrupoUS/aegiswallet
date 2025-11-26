@@ -7,6 +7,7 @@
  * and validates performance improvements for the AegisWallet project.
  */
 import { execSync } from 'node:child_process';
+
 // Configuration
 const CONFIG = {
   // File patterns to benchmark

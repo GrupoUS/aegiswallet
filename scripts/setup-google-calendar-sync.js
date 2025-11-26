@@ -10,6 +10,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
 import { createInterface } from 'node:readline/promises';
+
 const QUESTIONS = [
   {
     key: 'GOOGLE_OAUTH_CLIENT_ID',

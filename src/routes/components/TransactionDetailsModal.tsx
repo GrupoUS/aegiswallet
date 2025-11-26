@@ -178,7 +178,7 @@ export function TransactionDetailsModal({
                   <div className="text-sm">{event.category}</div>
                 </div>
               )}
-              {event.recurring && (
+              {event.isRecurring && (
                 <div className="space-y-1">
                   <span className="text-xs text-muted-foreground">Recorrência</span>
                   <div className="text-sm">Sim</div>

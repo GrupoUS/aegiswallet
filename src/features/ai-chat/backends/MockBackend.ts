@@ -8,13 +8,13 @@ import type {
   ChatRequestOptions,
   ChatStreamChunk,
 } from '../domain/types';
-import type { ChatBackend, ModelInfo } from './ChatBackend';
+import type { ChatBackend, ModelInfo } from '../domain/ChatBackend';
 
 export class MockBackend implements ChatBackend {
   async *send(
     _messages: ChatMessage[],
     _options?: ChatRequestOptions
-  ): AsyncIterableIterator<ChatStreamChunk> {
+  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
     const messageId = crypto.randomUUID();
 
     yield createMessageStartEvent(messageId, 'assistant');

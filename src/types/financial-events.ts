@@ -63,9 +63,8 @@ export interface CalendarFinancialEvent
   account?: string; // Not in Core yet, but used in Calendar
   allDay?: boolean;
 
-  // Recurring and compatibility fields
+  // Recurring field - standardized to isRecurring
   isRecurring?: boolean;
-  recurring?: boolean; // Alias for isRecurring for backward compatibility
 
   // Additional fields used in dashboard/list views
   date?: Date; // Alias for start date in some views

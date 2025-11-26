@@ -27,9 +27,9 @@ export interface ChatBackend {
   send(messages: ChatMessage[], options?: ChatRequestOptions): AsyncGenerator<ChatStreamChunk, void, unknown>;
 
   /**
-   * Optional: Abort the current generation.
+   * Abort the current generation.
    */
-  abort?(): void;
+  abort(): void;
 
   /**
    * Get information about the model.

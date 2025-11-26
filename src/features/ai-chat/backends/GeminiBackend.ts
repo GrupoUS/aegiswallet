@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { ChatBackend, ModelInfo } from './ChatBackend';
+import type { ChatBackend, ModelInfo } from '../domain/ChatBackend';
 import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 import { ChatEvents } from '../domain/events';
 
@@ -20,7 +20,7 @@ export class GeminiBackend implements ChatBackend {
 
   async *send(messages: ChatMessage[], options?: ChatRequestOptions): AsyncGenerator<ChatStreamChunk, void, unknown> {
     this.abortController = new AbortController();
-    
+
     try {
       const model = this.client.getGenerativeModel({
         model: options?.model || this.modelName

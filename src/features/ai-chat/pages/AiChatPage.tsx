@@ -20,7 +20,7 @@ export default function AiChatPage() {
     streamingContent,
     streamingReasoning,
     sendMessage
-  } = useChatController({ backend });
+  } = useChatController(backend);
 
   const suggestions = [
     "Explain how this wallet works",

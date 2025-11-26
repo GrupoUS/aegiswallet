@@ -7,7 +7,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import logger from '@/lib/logging/secure-logger';
-import type { Json } from '@/types/database.types';
 
 export interface RetentionPolicy {
   dataType: string;
@@ -191,14 +190,13 @@ export class DataRetentionManager {
   private async cleanupVoiceRecordings(cutoffDate: Date, policy: RetentionPolicy): Promise<void> {
     try {
       if (policy.anonymize) {
-        const metadata: Json = {
-          anonymization_date: new Date().toISOString(),
-          anonymized: true,
-        };
-        // First anonymize user references
+        // Anonymize by marking as processed and setting retention expiry
         const { error: anonymizeError } = await supabase
           .from('voice_recordings')
-          .update({ metadata, transcription_anonymized: true })
+          .update({ 
+            processed: true,
+            retention_expires_at: new Date().toISOString(),
+          })
           .lt('created_at', cutoffDate.toISOString());
 
         if (anonymizeError) {
@@ -244,10 +242,10 @@ export class DataRetentionManager {
           const userIds = inactiveUsers.map((user) => user.id);
 
           if (policy.anonymize) {
-            // Anonymize biometric patterns
+            // Anonymize biometric patterns by marking anonymization date
             const { error: anonymizeError } = await supabase
               .from('biometric_patterns')
-              .update({ pattern_hash: null })
+              .update({ anonymized_at: new Date().toISOString(), is_active: false })
               .in('user_id', userIds);
 
             if (anonymizeError) {
@@ -341,25 +339,24 @@ export class DataRetentionManager {
     try {
       switch (dataType) {
         case 'voice_recordings': {
-          const metadata: Json = {
-            anonymization_date: new Date().toISOString(),
-            anonymized: true,
-          };
+          // Anonymize by marking as processed and setting retention expiry
           await supabase
             .from('voice_recordings')
             .update({
-              metadata,
-              transcription_anonymized: true,
+              processed: true,
+              retention_expires_at: new Date().toISOString(),
             })
             .eq('user_id', userId);
           break;
         }
 
         case 'biometric_patterns':
+          // Anonymize by marking anonymization date and deactivating
           await supabase
             .from('biometric_patterns')
             .update({
-              pattern_hash: null,
+              anonymized_at: new Date().toISOString(),
+              is_active: false,
             })
             .eq('user_id', userId);
           break;

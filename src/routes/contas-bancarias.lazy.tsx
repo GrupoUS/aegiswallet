@@ -20,24 +20,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
-import type { Tables } from '@/types/database.types';
-
-type AccountRow = Tables<'bank_accounts'>;
+import { type BankAccount, useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 
 export const ContasBancarias = () => {
   const { accounts, deleteAccount, isDeleting } = useBankAccounts();
   const stats = useBankAccountsStats();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<AccountRow | null>(null);
-  const [deletingAccount, setDeletingAccount] = useState<AccountRow | null>(null);
+  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState<BankAccount | null>(null);
 
-  const handleEdit = (account: AccountRow) => {
+  const handleEdit = (account: BankAccount) => {
     setEditingAccount(account);
   };
 
-  const handleDelete = (account: AccountRow) => {
+  const handleDelete = (account: BankAccount) => {
     setDeletingAccount(account);
   };
 

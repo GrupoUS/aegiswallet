@@ -27,12 +27,62 @@ import {
 } from '@/components/ui/select';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
 import type { Database } from '@/types/database.types';
+import type {
+  BrazilianEventType,
+  FinancialEventPriority,
+  InstallmentInfo,
+} from '@/types/financial.interfaces';
 import type { FinancialEvent as CalendarFinancialEvent } from '@/types/financial-events';
 
 // Type for financial events from database (snake_case from Supabase)
 type DatabaseFinancialEvent = Database['public']['Tables']['financial_events']['Row'];
 
 import type { CalendarView } from './types';
+
+// Helper to map database priority to domain priority
+const mapPriority = (dbPriority: string | null): FinancialEventPriority => {
+  const priorityMap: Record<string, FinancialEventPriority> = {
+    low: 'BAIXA',
+    medium: 'NORMAL', 
+    high: 'ALTA',
+    urgent: 'URGENTE',
+    // Also handle Portuguese values from DB
+    BAIXA: 'BAIXA',
+    NORMAL: 'NORMAL',
+    ALTA: 'ALTA',
+    URGENTE: 'URGENTE',
+  };
+  return priorityMap[dbPriority || 'medium'] || 'NORMAL';
+};
+
+// Helper to map database installment info to domain type
+const mapBrazilianEventType = (dbType: string | null): BrazilianEventType | undefined => {
+  if (!dbType) return undefined;
+  
+  // Valid BrazilianEventType values from the interface
+  const validTypes: BrazilianEventType[] = [
+    'SALARIO', 'DECIMO_TERCEIRO', 'FERIAS', 'ALUGUEL', 'CONDOMINIO',
+    'LUZ', 'AGUA', 'INTERNET', 'CELULAR', 'SUPERMERCADO', 'RESTAURANTE',
+    'TRANSPORTE_PUBLICO', 'UBER_99', 'COMBUSTIVEL', 'PIX_TRANSFER',
+    'TED_DOC', 'BOLETO_PAGAMENTO', 'CARTAO_CREDITO', 'INVESTIMENTO_CDB',
+    'INVESTIMENTO_TESOURO', 'PREVIDENCIA', 'PLANO_SAUDE'
+  ];
+  
+  return validTypes.includes(dbType as BrazilianEventType) ? dbType as BrazilianEventType : undefined;
+};
+
+// Helper to map database installment info to domain type
+const mapInstallmentInfo = (dbInstallmentInfo: unknown): InstallmentInfo | undefined => {
+  if (!dbInstallmentInfo || typeof dbInstallmentInfo !== 'object') return undefined;
+  const info = dbInstallmentInfo as Record<string, unknown>;
+  return {
+    totalInstallments: (info.totalInstallments as number) || 0,
+    currentInstallment: (info.currentInstallment as number) || 0,
+    installmentAmount: (info.installmentAmount as number) || 0,
+    remainingAmount: (info.remainingAmount as number) || 0,
+    nextInstallmentDate: info.nextInstallmentDate as string | undefined,
+  };
+};;
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -82,9 +132,9 @@ export function CalendarHeader({
           amount: event.amount,
           isIncome: event.is_income ?? false, // Handle null case
           category: event.category as string | undefined, // Type conversion from DB
-          brazilianEventType: event.brazilian_event_type as string | undefined,
+          brazilianEventType: mapBrazilianEventType(event.brazilian_event_type),
           status: (event.status as 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed') || 'pending',
-          priority: (event.priority as 'low' | 'medium' | 'high') || 'medium',
+          priority: mapPriority(event.priority),
           start: new Date(event.start_date),
           end: new Date(event.end_date),
           dueDate: event.due_date || undefined, // Keep as string since that's what CoreFinancialEvent expects
@@ -96,11 +146,7 @@ export function CalendarHeader({
           attachments: event.attachments || [],
           tags: event.tags || [],
           metadata: event.metadata as Record<string, unknown> | undefined,
-          installmentInfo: event.installment_info as {
-            total?: number;
-            current?: number;
-            frequency?: string;
-          } | undefined,
+          installmentInfo: mapInstallmentInfo(event.installment_info),
           parentEventId: event.parent_event_id || undefined,
           createdAt: event.created_at || '',
           updatedAt: event.updated_at || '',

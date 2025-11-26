@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { z } from 'zod';
 import type { Context } from '@/server/context';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 // Hono-based RPC helpers for AegisWallet
 export type AegisContext = Context & {
@@ -13,7 +15,7 @@ export type AegisContext = Context & {
         email: string;
         role?: string;
       };
-      supabase: any;
+      supabase: SupabaseClient<Database>;
     };
     user: {
       id: string;
@@ -31,7 +33,7 @@ export interface Meta {
 export const createRouter = () => new Hono<AegisContext>();
 
 // Rate limiting middleware for Hono
-const rateLimitMiddleware = createMiddleware(async (c, next) => {
+const rateLimitMiddleware = createMiddleware(async (_c, next) => {
   // Apply rate limiting logic here
   // For now, just pass through
   await next();
@@ -67,11 +69,15 @@ export const protectedProcedure = <T extends z.ZodType>(schema?: T) => {
 
 // Legacy tRPC compatibility layer (to be removed after full migration)
 export const router = createRouter;
+
+// biome-ignore lint/suspicious/noExplicitAny: Legacy tRPC compatibility - middleware types are complex
+type AnyMiddleware = (opts: unknown) => Promise<unknown>;
+
 export const t = {
   router: createRouter,
   procedure: {
-    use: (middleware: any) => ({
-      use: (nextMiddleware: any) => [middleware, nextMiddleware],
+    use: (middleware: AnyMiddleware) => ({
+      use: (nextMiddleware: AnyMiddleware) => [middleware, nextMiddleware],
     }),
   },
 };

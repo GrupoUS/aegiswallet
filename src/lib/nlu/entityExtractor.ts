@@ -185,7 +185,7 @@ function setMonthOffset(offset: number): Date {
 // ============================================================================
 
 const ENTITY_PATTERNS: EntityPattern[] = [
-  // Money amounts
+  // Money amounts - Enhanced Brazilian Portuguese patterns
   {
     normalizer: (match) => parseMonetaryValue(match),
     pattern: /R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/gi,
@@ -206,7 +206,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     pattern: PLAIN_NUMBER_PATTERN,
     type: EntityType.AMOUNT,
   },
-  // Dates
+  // Dates - Enhanced Brazilian Portuguese patterns
   {
     normalizer: () => new Date(),
     pattern: /\b(hoje|agora)\b/gi,
@@ -224,21 +224,24 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => daysFromToday(1),
-    pattern: /amanha|amanh[ãÃ]/gi,
+    // Enhanced pattern for "amanhã" with all diacritic variations
+    pattern: /\b(amanha|amanh[ãÃ])\b/gi,
     type: EntityType.DATE,
   },
   {
     normalizer: (match) => {
-      const weekday = match.replace(/^(?:proxima|pr[\u00f3o]xima)\s+/i, '').replace(/-feira$/i, '');
+      const weekday = match.replace(/^(?:proxima|pr[óóo]xima)\s+/i, '').replace(/-feira$/i, '');
       return getUpcomingWeekday(weekday, false);
     },
+    // Enhanced pattern for "próxima semana" with all diacritic variations
     pattern:
-      /\b(?:proxima|pr[\u00f3o]xima)\s+(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado|domingo)(?:-feira)?\b/gi,
+      /\b(?:proxima|pr[óóo]xima)\s+(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(?:-feira)?\b/gi,
     type: EntityType.DATE,
   },
   {
     normalizer: (match) => getUpcomingWeekday(match, true),
-    pattern: /\b(segunda|ter[\u00e7c]a|quarta|quinta|sexta|s[\u00e1a]bado)(?:-feira)?\b/gi,
+    // Enhanced pattern for weekdays with diacritic support
+    pattern: /\b(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(?:-feira)?\b/gi,
     type: EntityType.DATE,
   },
   {
@@ -251,15 +254,17 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => setMonthOffset(-1),
-    pattern: /\b(m[\u00ea\u00e9e]s\s+passado)\b/gi,
+    // Enhanced pattern for "mês passado" with diacritic support
+    pattern: /\b(m[eê]s\s+passado)\b/gi,
     type: EntityType.DATE,
   },
   {
     normalizer: () => setMonthOffset(1),
-    pattern: /\b(pr[\u00f3o]ximo\s+m[\u00ea\u00e9e]s|m[\u00ea\u00e9e]s\s+que\s+vem)\b/gi,
+    // Enhanced pattern for "próximo mês" with diacritic support
+    pattern: /\b(pr[óóo]ximo\s+m[eê]s|m[eê]s\s+que\s+vem)\b/gi,
     type: EntityType.DATE,
   },
-  // Bill types / Categories
+  // Bill types / Categories - Enhanced Brazilian Portuguese patterns
   {
     normalizer: () => 'energia',
     pattern: /\b(energia|luz|eletrica|elétrica)\b/gi,
@@ -267,7 +272,8 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => 'agua',
-    pattern: /agua|[áÁ]gua/gi,
+    // Enhanced pattern for "água" with all diacritic variations
+    pattern: /[áÁ]gua|agua/gi,
     type: EntityType.BILL_TYPE,
   },
   {
@@ -282,7 +288,8 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => 'gas',
-    pattern: /\b(gas|gás)\b/gi,
+    // Enhanced pattern for "gás" with diacritic support
+    pattern: /\b(gas|g[áÁ]s)\b/gi,
     type: EntityType.BILL_TYPE,
   },
   {
@@ -290,7 +297,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     pattern: /\b(aluguel|aluguer)\b/gi,
     type: EntityType.BILL_TYPE,
   },
-  // Categories
+  // Categories - Enhanced patterns
   {
     normalizer: () => 'mercado',
     pattern: /\b(mercado|supermercado|compras)\b/gi,
@@ -298,23 +305,26 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => 'transporte',
-    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combust[\u00edi]vel)\b/gi,
+    pattern: /\b(transporte|uber|taxi|gasolina|combustivel|combust[íi]vel)\b/gi,
     type: EntityType.CATEGORY,
   },
   {
     normalizer: () => 'saude',
-    pattern: /\b(saude|sa[\u00fade]|medico|m[\u00e9e]dico|farmacia|farm[\u00e1a]cia)\b/gi,
+    // Enhanced pattern for "saúde" with diacritic support
+    pattern: /\b(saude|sa[úú]de|medico|m[ée]dico|farmacia|farm[áa]cia)\b/gi,
     type: EntityType.CATEGORY,
   },
   {
     normalizer: () => 'lazer',
-    pattern: /\b(lazer|entretenimento|diversao|divers[\u00e3a]o)\b/gi,
+    // Enhanced pattern for "lazer" with diacritic support  
+    pattern: /\b(lazer|entretenimento|diversao|divers[ãa]o)\b/gi,
     type: EntityType.CATEGORY,
   },
   // Periods
   {
     normalizer: () => 'month',
-    pattern: /\b(mes|mês|mensal)\b/gi,
+    // Enhanced pattern for "mês" with diacritic support
+    pattern: /\b(mes|m[eê]s|mensal)\b/gi,
     type: EntityType.PERIOD,
   },
   {
@@ -329,11 +339,11 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => 'day',
-    pattern: /\b(dia|diario|diário)\b/gi,
+    pattern: /\b(dia|diario|di[áa]rio)\b/gi,
     type: EntityType.PERIOD,
   },
 
-  // Recipient (specific context "para ...")
+  // Recipient (specific context "para ...") - Enhanced Brazilian patterns
   {
     normalizer: (match) => match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
     pattern:
@@ -341,14 +351,14 @@ const ENTITY_PATTERNS: EntityPattern[] = [
     type: EntityType.RECIPIENT,
   },
 
-  // Person names (simple pattern - capitalized words)
+  // Person names (simple pattern - capitalized words) - Enhanced for Brazilian names
   {
     normalizer: (match) => match.trim(),
     pattern:
       /\b([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+(?:\s+[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+)*)\b/g,
     type: EntityType.PERSON,
   },
-];
+];;;;;
 
 // ============================================================================
 // Entity Extractor Class
@@ -373,6 +383,9 @@ export class EntityExtractor {
   /**
    * Extract entities using a specific pattern
    */
+  /**
+   * Extract entities using a specific pattern
+   */
   private extractWithPattern(text: string, pattern: EntityPattern): ExtractedEntity[] {
     const entities: ExtractedEntity[] = [];
     const regex = pattern.pattern instanceof RegExp ? pattern.pattern : new RegExp(pattern.pattern);
@@ -386,9 +399,12 @@ export class EntityExtractor {
       try {
         const value = match[0];
         const normalizedValue = pattern.normalizer(value);
+        
+        // Enhanced validation with Brazilian Portuguese context
         if (normalizedValue === undefined || normalizedValue === null) {
           continue;
         }
+        
         if (typeof normalizedValue === 'number' && Number.isNaN(normalizedValue)) {
           continue;
         }
@@ -398,19 +414,89 @@ export class EntityExtractor {
           continue;
         }
 
+        // Calculate confidence based on pattern specificity and Brazilian context
+        let confidence = 0.9; // Base high confidence for pattern-based extraction
+        
+        // Boost confidence for Brazilian-specific patterns
+        if (this.isBrazilianSpecificPattern(value, pattern.type)) {
+          confidence = Math.min(confidence + 0.05, 0.95);
+        }
+
+        // Adjust confidence based on context
+        const contextConfidence = this.calculateContextConfidence(text, value, pattern.type);
+        confidence = Math.max(confidence, contextConfidence);
+
         entities.push({
           type: pattern.type,
           value,
           normalizedValue,
-          confidence: 0.9, // High confidence for pattern-based extraction
+          confidence,
           startIndex: match.index,
           endIndex: match.index + value.length,
         });
-      } catch (_error) {}
+      } catch (_error) {
+        // Continue processing other matches
+      }
       match = regex.exec(text);
     }
 
     return entities;
+  }
+
+  /**
+   * Check if this is a Brazilian-specific pattern
+   */
+  private isBrazilianSpecificPattern(value: string, type: EntityType): boolean {
+    const lowerValue = value.toLowerCase();
+    
+    switch (type) {
+      case EntityType.DATE:
+        return /amanha|ontem|hoje|proxima|pr[óo]xima/.test(lowerValue);
+      case EntityType.AMOUNT:
+        return /reais?|real|r\$/.test(lowerValue);
+      case EntityType.BILL_TYPE:
+        return /[áÁ]gua|energia|luz|internet/.test(lowerValue);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Calculate confidence based on surrounding context
+   */
+  private calculateContextConfidence(text: string, value: string, type: EntityType): number {
+    const lowerText = text.toLowerCase();
+    
+    // Get surrounding context (5 words before and after)
+    const words = lowerText.split(/\s+/);
+    const valueWordIndex = words.findIndex(word => value.toLowerCase().includes(word));
+    
+    if (valueWordIndex === -1) return 0.8;
+    
+    const contextStart = Math.max(0, valueWordIndex - 5);
+    const contextEnd = Math.min(words.length - 1, valueWordIndex + 5);
+    const contextWords = words.slice(contextStart, contextEnd + 1).join(' ');
+    
+    // Brazilian context indicators
+    switch (type) {
+      case EntityType.DATE:
+        if (/pagar|receber|proje[cç][aã]o|saldo|quando/.test(contextWords)) {
+          return 0.92;
+        }
+        break;
+      case EntityType.AMOUNT:
+        if (/r\$|reais?|transferir|pagar|gastar/.test(contextWords)) {
+          return 0.94;
+        }
+        break;
+      case EntityType.BILL_TYPE:
+        if (/conta|fatura|boleto|pagar|energia|luz|[áÁ]gua/.test(contextWords)) {
+          return 0.93;
+        }
+        break;
+    }
+    
+    return 0.85;
   }
 
   /**

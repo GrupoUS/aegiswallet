@@ -476,6 +476,9 @@ export class NLUEngine {
   /**
    * Boost confidence for essential intents based on deterministic signals
    */
+  /**
+   * Boost confidence for essential intents based on deterministic signals
+   */
   private enhanceClassificationConfidence(
     text: string,
     classification: IntentClassificationResult
@@ -502,24 +505,56 @@ export class NLUEngine {
     let boostedConfidence = classification.confidence;
     let method = classification.method;
 
+    // Enhanced confidence boosting for Brazilian Portuguese
     if (patternMatched) {
-      boostedConfidence = Math.max(boostedConfidence, Math.min(0.95, requiredConfidence + 0.2));
+      // Strong boost for pattern matches
+      const boostAmount = 0.25 + (keywordMatches.length * 0.05);
+      boostedConfidence = Math.max(boostedConfidence, Math.min(0.98, requiredConfidence + boostAmount));
       method = 'pattern';
     } else if (keywordMatches.length >= 2) {
-      boostedConfidence = Math.max(boostedConfidence, Math.min(0.9, requiredConfidence + 0.15));
+      // Moderate boost for multiple keyword matches
+      const boostAmount = 0.15 + (keywordMatches.length * 0.03);
+      boostedConfidence = Math.max(boostedConfidence, Math.min(0.92, requiredConfidence + boostAmount));
     } else if (keywordMatches.length === 1) {
+      // Small boost for single keyword match
       boostedConfidence = Math.max(boostedConfidence, requiredConfidence);
     }
 
-    if (boostedConfidence === classification.confidence && method === classification.method) {
-      return classification;
+    // Additional Brazilian Portuguese context boosting
+    if (this.isBrazilianContextual(text, classification.intent)) {
+      boostedConfidence = Math.min(boostedConfidence + 0.1, 0.95);
     }
 
-    return {
-      ...classification,
-      confidence: boostedConfidence,
-      method: method ?? classification.method,
+    // Return updated classification if confidence changed
+    if (boostedConfidence !== classification.confidence) {
+      return {
+        ...classification,
+        confidence: boostedConfidence,
+        method: method ?? classification.method,
+      };
+    }
+
+    return classification;
+  }
+
+  /**
+   * Check if text has Brazilian contextual clues for the intent
+   */
+  private isBrazilianContextual(text: string, intent: IntentType): boolean {
+    const lowerText = text.toLowerCase();
+    
+    // Brazilian financial slang and expressions
+    const brazilianContext: Record<string, string[]> = {
+      [IntentType.CHECK_BALANCE]: ['grana', 'dinheiro', 'bufunfa', 'tá quanto', 'quanto tá'],
+      [IntentType.TRANSFER_MONEY]: ['pix', 'mandar', 'transferência', 'ted', 'doc'],
+      [IntentType.PAY_BILL]: ['conta', 'boleto', 'fatura', 'quitar', 'débito'],
+      [IntentType.CHECK_INCOME]: ['cair', 'entrar', 'recebimento', 'salário'],
+      [IntentType.FINANCIAL_PROJECTION]: ['projeção', 'previsão', 'balanço', 'vai ficar'],
+      [IntentType.CHECK_BUDGET]: ['orçamento', 'gastar', 'limite', 'teto']
     };
+
+    const contextTerms = brazilianContext[intent] || [];
+    return contextTerms.some(term => lowerText.includes(term));
   }
 
   /**

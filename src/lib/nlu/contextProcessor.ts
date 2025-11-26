@@ -19,6 +19,7 @@ import type {
 } from '@/lib/nlu/types';
 import { EntityType, IntentType } from '@/lib/nlu/types';
 import type { TransactionEntity } from '@/types/nlu.types';
+import type { Json } from '@/types/database.types';
 
 // ============================================================================
 // Context Processing Configuration
@@ -1482,11 +1483,10 @@ export class ContextProcessor {
 
   private async persistContext(context: ConversationContext): Promise<void> {
     try {
-      // TODO: Create conversation_contexts table with proper schema
-      // @ts-expect-error - Table schema mismatch, needs migration
+      // Persist conversation context to database
       const { error } = await supabase.from('conversation_contexts').upsert({
-        history: context.history,
-        last_entities: context.lastEntities,
+        history: context.history as unknown as Json,
+        last_entities: (context.lastEntities ?? null) as unknown as Json,
         last_intent: context.lastIntent,
         session_id: context.sessionId,
         timestamp: context.timestamp.toISOString(),

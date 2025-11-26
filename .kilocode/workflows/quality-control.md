@@ -2,12 +2,12 @@
 title: "AegisWallet Code Quality Control"
 last_updated: 2025-11-25
 form: reference
-tags: [quality, healthcare, bun, oxlint, lgpd, compliance]
+tags: [quality, bun, oxlint, compliance]
 ---
 
 # 🔍 AegisWallet Code Quality Control
 
-**Research-driven quality control with 4-phase workflow and healthcare compliance**
+**Research-driven quality control with 4-phase workflow**
 
 ## 🎯 Core Philosophy
 
@@ -28,18 +28,18 @@ QUALITY_CONTROL_PHASES:
 
   phase_2_research:
     name: "Research-Driven Solution Planning"
-    tools: ["Context7 MCP", "Tavily MCP", "Archon MCP"]
+    tools: ["Context7 MCP", "Tavily MCP"]
     output: "Research intelligence report with authoritative solutions"
 
   phase_3_planning:
     name: "Atomic Task Decomposition"
-    tools: ["Sequential Thinking", "Archon Task Management"]
+    tools: ["Sequential Thinking"]
     output: "Detailed atomic subtasks with implementation roadmap"
 
   phase_4_execution:
     name: "Systematic Implementation"
     tools: ["Desktop Commander", "Serena MCP", "Quality Gates"]
-    output: "Validated fixes with healthcare compliance verification"
+    output: "Validated fixes with compliance verification"
 ```
 
 ## 🔍 Phase 1: Error Detection & Analysis
@@ -51,7 +51,7 @@ QUALITY_CONTROL_PHASES:
 ```yaml
 PRIMARY_DETECTION_TOOLS:
   oxlint:
-    purpose: "Primary linter with 570+ rules and healthcare compliance"
+    purpose: "Primary linter with 570+ rules and compliance"
     performance: "50-100x faster than ESLint"
     usage: "bun lint"
     coverage: "90% of quality issues"
@@ -95,7 +95,7 @@ ERROR_CATALOG_ENTRY:
   timestamp: "Detection timestamp"
 
   error_details:
-    type: "TypeScript | React | Import | Security | Performance | LGPD"
+    type: "TypeScript | React | Import | Security | Performance"
     severity: "Critical | High | Medium | Low"
     error_code: "Specific error code from tool (e.g., TS2345)"
     message: "Full error message from tool"
@@ -107,19 +107,19 @@ ERROR_CATALOG_ENTRY:
 
   context:
     component_name: "Affected component/module"
-    feature_area: "Feature domain (e.g., patient-management, appointments)"
+    feature_area: "Feature domain (e.g., financial-management, transactions)"
     dependencies: "Related files or modules affected"
 
   impact_assessment:
     functionality_impact: "Does it break functionality?"
     security_impact: "Does it introduce security risks?"
-    compliance_impact: "Does it violate LGPD/ANVISA/CFM?"
+    compliance_impact: "Does it violate compliance requirements?"
     performance_impact: "Does it affect performance?"
 
   classification:
     category: "Code Quality | Security | Compliance | Performance | Testing"
     priority: "P0 (Critical) | P1 (High) | P2 (Medium) | P3 (Low)"
-    healthcare_related: "Boolean - affects patient data or clinical workflows"
+    financial_related: "Boolean - affects financial data or transactions"
 ```
 
 ### Error Categories & Severity
@@ -129,28 +129,28 @@ ERROR_CATEGORIES:
   code_quality_type_safety:
     severity_critical:
       - "TypeScript strict mode violations with any types"
-      - "Missing type definitions for patient data"
-      - "Unsafe type assertions in healthcare contexts"
+      - "Missing type definitions for financial data"
+      - "Unsafe type assertions in financial contexts"
     severity_high:
       - "Type mismatches in API contracts"
       - "Missing null checks for critical data"
       - "Incorrect generic type usage"
 
-  security_lgpd_compliance:
+  security_compliance:
     severity_critical:
-      - "Patient data exposure without encryption"
-      - "Missing LGPD consent validation"
+      - "Financial data exposure without encryption"
+      - "Missing consent validation"
       - "SQL injection vulnerabilities"
       - "Authentication bypass possibilities"
     severity_high:
       - "Insecure data handling patterns"
       - "Missing input sanitization"
       - "Weak session management"
-      - "Audit logging gaps for patient data"
+      - "Audit logging gaps for financial data"
 
   performance_bundle_issues:
     severity_critical:
-      - "Memory leaks in patient data handling"
+      - "Memory leaks in financial data handling"
       - "Blocking operations in critical paths"
       - "Excessive bundle size (>500KB)"
     severity_high:
@@ -160,7 +160,7 @@ ERROR_CATEGORIES:
 
   testing_coverage:
     severity_critical:
-      - "Zero test coverage for patient data handling"
+      - "Zero test coverage for financial data handling"
       - "Missing security tests for authentication"
       - "No E2E tests for critical workflows"
     severity_high:
@@ -193,8 +193,8 @@ RESEARCH_WORKFLOW:
     output: "Validated solution approaches with confidence levels"
 
   step_4_compliance_review:
-    action: "Ensure compliance with project standards and healthcare regulations"
-    tools: ["LGPD Validation", "Security Standards"]
+    action: "Ensure compliance with project standards and regulations"
+    tools: ["Compliance Validation", "Security Standards"]
     output: "Compliance-validated solution recommendations"
 ```
 
@@ -217,13 +217,12 @@ RESEARCH_SOURCES:
       - "TanStack Router v5 Documentation"
     search_strategy: "Context7 → React docs → TanStack ecosystem"
 
-  security_lgpd:
+  security_compliance:
     primary_sources:
       - "OWASP Top 10 and Security Guidelines"
-      - "LGPD Official Documentation (ANPD)"
       - "Supabase Security Best Practices"
-      - "ANVISA Aesthetic Clinic Regulations"
-    search_strategy: "Context7 → Security standards → Brazilian regulations"
+      - "Financial Regulations Documentation"
+    search_strategy: "Context7 → Security standards → Financial regulations"
 
   performance_optimization:
     primary_sources:
@@ -281,9 +280,9 @@ ATOMIC_TASK_TEMPLATE:
       - "No new warnings introduced"
 
     compliance_validation:
-      - "LGPD compliance maintained (if applicable)"
+      - "Compliance requirements maintained"
       - "Security standards upheld"
-      - "Healthcare regulations followed"
+      - "Financial regulations followed"
 
   risk_assessment:
     implementation_risks:
@@ -330,7 +329,7 @@ DECOMPOSITION_PRINCIPLES:
 
 ## ⚡ Phase 4: Systematic Execution
 
-**Objective**: Implement fixes systematically with continuous validation and healthcare compliance verification.
+**Objective**: Implement fixes systematically with continuous validation and compliance verification.
 
 ### Execution Workflow
 
@@ -361,7 +360,7 @@ EXECUTION_WORKFLOW:
     phase_4c_validation:
       - "Run validation criteria for each task"
       - "Execute quality gates after each task"
-      - "Verify healthcare compliance"
+      - "Verify compliance requirements"
       - "Document any deviations or issues"
 
     phase_4d_integration:
@@ -430,9 +429,9 @@ QUALITY_GATES:
     blocking: true
 
   gate_4_compliance_validation:
-    tools: ["LGPD Validator", "ANVISA Checker"]
+    tools: ["Compliance Validator"]
     threshold: "Full compliance"
-    command: "bun validate:lgpd && bun validate:anvisa"
+    command: "bun validate:compliance"
     blocking: true
 
   gate_5_performance_validation:
@@ -507,7 +506,7 @@ ARCHON_MCP:
   key_functions:
     perform_rag_query:
       usage: "Search project knowledge base"
-      example: "archon.perform_rag_query(query='LGPD compliance patterns')"
+      example: "archon.perform_rag_query(query='compliance patterns')"
     create_document:
       usage: "Create knowledge base articles"
       example: "archon.create_document(title='QC-101 Solution', content='...')"
@@ -550,49 +549,33 @@ bun analyze:bundle      # Analyze bundle size
 bun test:performance    # Performance benchmarks
 
 # Validation Commands
-bun validate:lgpd       # LGPD compliance check
-bun validate:anvisa     # ANVISA compliance check
+bun validate:compliance  # Compliance check
 bunx audit              # Dependency vulnerability scan
 ```
 
-## 🏥 Healthcare Compliance
+## 🏛️ Compliance Requirements
 
-### LGPD Compliance Requirements
+### Data Protection & Security
 
 ```yaml
-LGPD_COMPLIANCE:
-  patient_data_handling:
-    - "Always encrypt patient data at rest and in transit"
-    - "Validate LGPD consent before data processing"
-    - "Log all access to patient data for audit trail"
-    - "Implement right to erasure for patient requests"
+COMPLIANCE_REQUIREMENTS:
+  data_handling:
+    - "Always encrypt sensitive data at rest and in transit"
+    - "Validate consent before data processing"
+    - "Log all access to sensitive data for audit trail"
+    - "Implement right to erasure for user requests"
 
   type_safety_requirements:
-    - "Use explicit types for all patient data fields"
-    - "Document LGPD-sensitive fields with JSDoc"
+    - "Use explicit types for all sensitive data fields"
+    - "Document sensitive fields with JSDoc"
     - "Enforce encryption requirements at type level"
     - "Validate consent types with TypeScript unions"
 
   audit_requirements:
-    - "Log all quality control changes affecting patient data"
+    - "Log all quality control changes affecting sensitive data"
     - "Track who made changes and when"
     - "Document rationale for security-related fixes"
     - "Maintain compliance audit trail"
-```
-
-### ANVISA Compliance
-
-```yaml
-ANVISA_COMPLIANCE:
-  equipment_tracking:
-    - "Validate equipment IDs in type definitions"
-    - "Ensure equipment safety compliance in code"
-    - "Track equipment usage in audit logs"
-
-  quality_control:
-    - "Document quality control procedures in code"
-    - "Validate regulatory reporting requirements"
-    - "Ensure audit trail generation for equipment"
 ```
 
 ## 📋 Quick Reference
@@ -633,7 +616,7 @@ PRIORITY_MATRIX:
   P0_Critical:
     - "TypeScript compilation errors"
     - "Security vulnerabilities"
-    - "LGPD compliance violations"
+    - "Compliance violations"
     - "Broken functionality"
 
   P1_High:
@@ -674,10 +657,10 @@ COMMON_PATTERNS:
     solution: "Follow OWASP guidelines, use parameterized queries"
     validation: "bun lint:security && bunx audit"
 
-  lgpd_compliance:
-    detection: "Manual review of patient data handling"
+  compliance_validation:
+    detection: "Manual review of sensitive data handling"
     solution: "Add encryption, consent validation, audit logging"
-    validation: "bun validate:lgpd"
+    validation: "bun validate:compliance"
 ```
 
 ### Quality Standards Checklist
@@ -711,7 +694,7 @@ QUALITY_STANDARDS:
 
 ---
 
-**🎯 Mission**: Deliver research-driven, healthcare-compliant code quality improvements.
+**🎯 Mission**: Deliver research-driven, compliant code quality improvements.
 
 **⚡ Key Advantage**: Planning-first approach with research-driven solutions ensures all quality improvements are based on authoritative sources and best practices.
 

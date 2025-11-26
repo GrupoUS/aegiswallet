@@ -109,7 +109,7 @@ bankingRouter.post(
     'json',
     z.object({
       bankCode: z.string(),
-      credentials: z.record(z.any()),
+      credentials: z.record(z.string(), z.any()),
     })
   ),
   async (c) => {

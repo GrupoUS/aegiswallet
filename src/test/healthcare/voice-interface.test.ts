@@ -48,8 +48,10 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
       setIsListening(false);
     };
 
-    // Mock successful recognition after delay
-    setTimeout(() => {
+    // Mock successful recognition after delay using async utility
+    (async () => {
+      const { waitForMs } = await import('@/test/utils/async-test-utils');
+      await waitForMs(1000);
       recognition.onresult({
         results: [
           [
@@ -60,7 +62,7 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
           ],
         ],
       });
-    }, 1000);
+    })();
 
     recognition.start();
   };

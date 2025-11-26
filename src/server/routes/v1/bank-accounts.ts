@@ -439,10 +439,27 @@ bankAccountsRouter.post(
         );
       }
 
-      // Insert into database
+      // Insert into database - assert required fields are present after validation
+      const insertData = {
+        ...accountData,
+        account_mask: accountData.account_mask ?? accountMask, // Ensure account_mask is present
+        account_type: accountData.account_type ?? normalizedAccountType,
+        user_id: user.id,
+        institution_name: accountData.institution_name ?? input.institution_name,
+        institution_id: accountData.institution_id ?? institutionId,
+        belvo_account_id: belvoAccountId,
+      } as typeof accountData & {
+        account_mask: string;
+        account_type: string;
+        user_id: string;
+        institution_name: string;
+        institution_id: string;
+        belvo_account_id: string;
+      };
+
       const { data, error } = await supabase
         .from('bank_accounts')
-        .insert(accountData)
+        .insert(insertData)
         .select()
         .single();
 
@@ -591,10 +608,15 @@ bankAccountsRouter.put(
         );
       }
 
+      // Convert null values to undefined for Supabase compatibility
+      const updatePayload = Object.fromEntries(
+        Object.entries(sanitized).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+
       // Update in database
       const { data, error } = await supabase
         .from('bank_accounts')
-        .update(sanitized)
+        .update(updatePayload)
         .eq('id', accountId)
         .eq('user_id', user.id)
         .select()

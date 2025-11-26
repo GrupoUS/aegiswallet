@@ -1,8 +1,48 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccessibility } from '../AccessibilityProvider';
 
-// Web Speech API type - use InstanceType for proper browser compatibility
-type SpeechRecognitionInstance = InstanceType<typeof SpeechRecognition>;
+// Web Speech API types for browser compatibility
+interface SpeechRecognitionResult {
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  readonly isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  readonly confidence: number;
+  readonly transcript: string;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface BrowserSpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface BrowserSpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+
+// Web Speech API type - use a more permissive interface for browser compatibility
+interface BrowserSpeechRecognition {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onstart: ((event: Event) => void) | null;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
 
 type VoiceCategory = 'financeiro' | 'navegacao' | 'acao' | 'ajuda';
 
@@ -76,7 +116,7 @@ export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: Hoo
   const [transcript, setTranscript] = useState('');
   const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [lastResponse, setLastResponse] = useState('');
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
   const getErrorMessage = useCallback((error: string): string => {
@@ -205,7 +245,7 @@ export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: Hoo
       setIsProcessing(false);
     };
 
-    recognitionRef.current = recognition;
+    recognitionRef.current = recognition as unknown as BrowserSpeechRecognition;
     synthesisRef.current = window.speechSynthesis;
 
     return () => {

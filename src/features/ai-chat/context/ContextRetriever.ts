@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
+import logger from '@/lib/logging/logger';
 
 export interface FinancialContext {
   recentTransactions: Transaction[];
@@ -59,8 +60,8 @@ export class ContextRetriever {
    */
   async getFinancialContext(userId: string): Promise<FinancialContext> {
     const cacheKey = `context:${userId}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    const cached = this.getFromCache<FinancialContext>(cacheKey);
+    if (cached) return cached as FinancialContext;
 
     const [transactions, balances, events, preferences] = await Promise.all([
       this.getRecentTransactions(userId),
@@ -86,8 +87,8 @@ export class ContextRetriever {
    */
   async getRecentTransactions(userId: string, days = 30): Promise<Transaction[]> {
     const cacheKey = `transactions:${userId}:${days}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    const cached = this.getFromCache<Transaction[]>(cacheKey);
+    if (cached) return cached as Transaction[];
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -101,7 +102,7 @@ export class ContextRetriever {
       .limit(50);
 
     if (error) {
-      console.error('Error fetching transactions:', error);
+      logger.error('Error fetching transactions', { component: 'ContextRetriever', action: 'getRecentTransactions', error: String(error) });
       return [];
     }
 
@@ -123,8 +124,8 @@ export class ContextRetriever {
    */
   async getAccountBalances(userId: string): Promise<AccountBalance[]> {
     const cacheKey = `balances:${userId}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    const cached = this.getFromCache<AccountBalance[]>(cacheKey);
+    if (cached) return cached as AccountBalance[];
 
     const { data, error } = await this.supabase
       .from('bank_accounts')
@@ -153,8 +154,8 @@ export class ContextRetriever {
    */
   async getUpcomingEvents(userId: string, days = 30): Promise<FinancialEvent[]> {
     const cacheKey = `events:${userId}:${days}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    const cached = this.getFromCache<FinancialEvent[]>(cacheKey);
+    if (cached) return cached as FinancialEvent[];
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
@@ -168,7 +169,7 @@ export class ContextRetriever {
       .limit(20);
 
     if (error) {
-      console.error('Error fetching events:', error);
+      logger.error('Error fetching events', { component: 'ContextRetriever', action: 'getUpcomingEvents', error: String(error) });
       return [];
     }
 
@@ -190,8 +191,8 @@ export class ContextRetriever {
    */
   async getUserPreferences(userId: string): Promise<UserPreferences> {
     const cacheKey = `preferences:${userId}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    const cached = this.getFromCache<UserPreferences>(cacheKey);
+    if (cached) return cached as UserPreferences;
 
     const { data, error } = await this.supabase
       .from('users')
@@ -276,3 +277,4 @@ export class ContextRetriever {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 }
+

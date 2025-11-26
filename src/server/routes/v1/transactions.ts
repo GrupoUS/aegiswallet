@@ -248,13 +248,25 @@ transactionsRouter.post(
     const requestId = c.get('requestId');
 
     try {
+      // Map transaction input to financial_events table schema
+      const now = new Date().toISOString();
+      const eventData = {
+        user_id: user.id,
+        title: input.description || `Transaction ${input.type}`,
+        amount: input.amount,
+        event_type: input.type,
+        status: input.status,
+        start_date: now,
+        end_date: now,
+        created_at: now,
+        description: input.description,
+        metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+        category: input.categoryId,
+      };
+
       const { data, error } = await supabase
         .from('financial_events')
-        .insert({
-          ...input,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-        })
+        .insert(eventData)
         .select()
         .single();
 

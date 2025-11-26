@@ -48,7 +48,7 @@ function createRequestScopedClient(token: string) {
  */
 export const authMiddleware = createMiddleware(async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
-  const token = authHeader?.replace('Bearer ', '');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '').trim() : null;
 
   // Log authentication attempt
   const requestId = c.get('requestId') || 'unknown';

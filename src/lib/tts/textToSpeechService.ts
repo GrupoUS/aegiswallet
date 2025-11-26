@@ -138,6 +138,8 @@ export class TextToSpeechService {
   private config: TTSConfig;
   private cache: AudioCache;
   private synth: SpeechSynthesis | null = null;
+  /** @internal Tracks current utterance for state management (written during speech operations) */
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: Used for tracking current utterance state during speech operations
   private currentUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor(
@@ -327,7 +329,7 @@ export class TextToSpeechService {
       globalWindow?.SpeechSynthesisUtterance || globalRef.SpeechSynthesisUtterance;
 
     if (SpeechSynthesisUtteranceConstructor) {
-      return new SpeechSynthesisUtteranceConstructor(text);
+      return new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance;
     }
 
     // Fallback mock for non-browser/test environments
@@ -559,8 +561,8 @@ export class TextToSpeechService {
 
   private isMockEnvironment(): boolean {
     const synth = this.ensureSynth();
-    const speakFn = (synth as unknown as { speak?: { mock?: boolean } })?.speak;
-    const isMockedSpeak = Boolean(speakFn && typeof speakFn === 'function' && speakFn.mock);
+    const speakMethod = synth?.speak as ((...args: unknown[]) => void) & { mock?: boolean } | undefined;
+    const isMockedSpeak = Boolean(speakMethod && typeof speakMethod === 'function' && speakMethod.mock);
     return isMockedSpeak || this.isTestEnvironment();
   }
 

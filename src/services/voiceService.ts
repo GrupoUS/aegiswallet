@@ -79,23 +79,21 @@ interface SpeechSynthesisUtterance extends EventTarget {
   volume: number;
   rate: number;
   pitch: number;
-  onstart: ((event: Event) => void) | null;
-  onend: ((event: Event) => void) | null;
+  onstart: ((event: SpeechSynthesisEvent) => void) | null;
+  onend: ((event: SpeechSynthesisEvent) => void) | null;
   onerror: ((event: SpeechSynthesisErrorEvent) => void) | null;
-  onpause: ((event: Event) => void) | null;
-  onresume: ((event: Event) => void) | null;
+  onpause: ((event: SpeechSynthesisEvent) => void) | null;
+  onresume: ((event: SpeechSynthesisEvent) => void) | null;
   onmark: ((event: SpeechSynthesisEvent) => void) | null;
   onboundary: ((event: SpeechSynthesisEvent) => void) | null;
 }
 
 interface SpeechSynthesisEvent extends Event {
+  utterance: SpeechSynthesisUtterance;
   name: string;
   charIndex: number;
+  charLength: number;
   elapsedTime: number;
-}
-
-interface SpeechSynthesisErrorEvent extends SpeechSynthesisEvent {
-  error: string;
 }
 
 interface SpeechSynthesisVoice {
@@ -187,7 +185,7 @@ class VoiceService {
 
   private initializeSynthesis() {
     if ('speechSynthesis' in window) {
-      this.synthesis = window.speechSynthesis;
+      this.synthesis = window.speechSynthesis as unknown as SpeechSynthesis;
     } else {
       logger.warn('Speech Synthesis API not supported in this browser', {
         feature: 'speechSynthesis',
@@ -317,18 +315,20 @@ class VoiceService {
       // Cancel any ongoing speech
       this.synthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      // Use the global SpeechSynthesisUtterance to avoid type conflicts
+      const utterance = new (globalThis.SpeechSynthesisUtterance as typeof SpeechSynthesisUtterance)(text);
       utterance.lang = this.config.language || 'pt-BR';
       utterance.rate = options?.rate ?? 1.0;
       utterance.pitch = options?.pitch ?? 1.0;
       utterance.volume = options?.volume ?? 1.0;
 
       utterance.onend = () => resolve();
-      utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
-        reject(new Error(`Speech synthesis error: ${event.error}`));
+      utterance.onerror = (event) => {
+        const errorEvent = event as unknown as { error: string };
+        reject(new Error(`Speech synthesis error: ${errorEvent.error}`));
       };
 
-      this.synthesis.speak(utterance);
+      (this.synthesis as unknown as globalThis.SpeechSynthesis).speak(utterance as globalThis.SpeechSynthesisUtterance);
     });
   }
 

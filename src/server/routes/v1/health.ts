@@ -6,8 +6,9 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { AppEnv } from '@/server/hono-types';
 
-const healthRouter = new Hono();
+const healthRouter = new Hono<AppEnv>();
 
 // Health check response schema (exported for type inference)
 export const healthResponseSchema = z.object({

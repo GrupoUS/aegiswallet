@@ -1,3 +1,101 @@
+// CRITICAL: Setup DOM APIs immediately at module load time
+// This prevents "Element is not defined" errors in test files
+
+// Declare SpeechRecognition interface for test environment
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+// Extend Window interface for Speech API polyfills
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
+
+if (typeof globalThis.Element === "undefined") {
+  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM Element
+  (globalThis as any).Element = class Element {
+    scrollIntoView() {}
+    getBoundingClientRect() {
+      return { bottom: 0, height: 0, left: 0, right: 0, top: 0, width: 0, x: 0, y: 0 };
+    }
+  };
+}
+
+if (typeof globalThis.HTMLElement === "undefined") {
+  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM HTMLElement
+  const GlobalElement = (globalThis as any).Element;
+  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM HTMLElement
+  (globalThis as any).HTMLElement = class HTMLElement extends GlobalElement {
+    style: Record<string, unknown>;
+    constructor() {
+      super();
+      this.style = {};
+    }
+  };
+}
+
+// Create comprehensive document mock if not available
+if (typeof globalThis.document === "undefined") {
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM(
+    '<!DOCTYPE html><html><head><title>Test</title></head><body><div id="root"></div></body></html>',
+    {
+      pretendToBeVisual: true,
+      resources: 'usable',
+      url: 'http://localhost:3000',
+    }
+  );
+
+  // Set up global DOM objects
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.navigator = dom.window.navigator;
+  globalThis.HTMLElement = dom.window.HTMLElement;
+  globalThis.Element = dom.window.Element;
+  
+  // Set global document for Testing Library
+  global.document = dom.window.document;
+  global.window = dom.window;
+}
+
 import '@testing-library/jest-dom';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
@@ -461,3 +559,12 @@ export const createMockSpeechSynthesisEvent = (name: string, charIndex: number =
 if (typeof globalObj.vi === 'undefined') {
   globalObj.vi = vi;
 }
+
+
+// Mock Supabase with typed configuration using our comprehensive mock
+vi.mock('@/integrations/supabase/client', async () => {
+  const { supabaseMock } = await import('./mocks/supabase-mock');
+  return {
+    supabase: supabaseMock,
+  };
+});

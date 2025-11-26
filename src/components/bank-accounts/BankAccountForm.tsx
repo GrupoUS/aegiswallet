@@ -21,8 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useBankAccounts } from '@/hooks/useBankAccounts';
-import type { Tables } from '@/types/database.types';
+import { type BankAccount, useBankAccounts } from '@/hooks/useBankAccounts';
 
 const accountTypeEnum = z.enum(['checking', 'savings', 'investment', 'cash']);
 type AccountType = z.infer<typeof accountTypeEnum>;
@@ -37,10 +36,9 @@ const formSchema = z.object({
 });
 
 type BankAccountFormValues = z.infer<typeof formSchema>;
-type BankAccountRow = Tables<'bank_accounts'>;
 
 interface BankAccountFormProps {
-  account?: BankAccountRow;
+  account?: BankAccount;
   onSuccess?: () => void;
   onCancel?: () => void;
 }

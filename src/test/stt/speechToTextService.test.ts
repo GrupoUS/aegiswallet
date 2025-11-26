@@ -170,10 +170,12 @@ describe('SpeechToTextService', () => {
               reject(err);
             });
           }
-          // Simulate response slower than timeout
-          setTimeout(() => {
+          // Simulate response slower than timeout using async utility
+          (async () => {
+            const { waitForMs } = await import('@/test/utils/async-test-utils');
+            await waitForMs(200);
             resolve({ json: async () => ({}), ok: true });
-          }, 200);
+          })();
         });
       });
 

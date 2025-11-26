@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
-import type { FinancialContext } from '../context';
+import logger from '@/lib/logging/logger';
+import type { FinancialContext, Transaction } from '../context';
 import type { ChatMessage } from '../domain/types';
 
 // Extract the Json type from Database for convenience
@@ -39,6 +40,10 @@ type ChatContextSnapshot = {
   created_at: string;
 };
 
+// Helper function for accessing pending migration tables
+// biome-ignore lint/suspicious/noExplicitAny: Temporary escape hatch until chat tables migration is applied to Supabase types
+const getUntypedClient = (supabase: SupabaseClient<Database>) => supabase as any;
+
 export interface Conversation {
   id: string;
   userId: string;
@@ -53,13 +58,10 @@ export interface ConversationWithMessages extends Conversation {
   messages: ChatMessage[];
 }
 
+
 export class ChatRepository {
   private supabase: SupabaseClient<Database>;
   private contextWindowSize = 20; // Last N messages to keep in context
-  // Temporary in-memory storage until chat tables migration is applied
-  private conversations = new Map<string, Conversation>();
-  private messages = new Map<string, ChatMessage[]>();
-  private contextSnapshots = new Map<string, FinancialContext>();
 
   constructor(supabase: SupabaseClient<Database>) {
     this.supabase = supabase;
@@ -80,26 +82,28 @@ export class ChatRepository {
       .single();
 
     if (error) {
-      console.error('Error creating conversation:', error);
+      logger.error('Error creating conversation', { component: 'ChatRepository', action: 'createConversation', error: String(error) });
       throw new Error('Failed to create conversation');
     }
 
     return this.mapConversation(data);
   }
 
+
   /**
    * Get a conversation by ID
    */
   async getConversation(conversationId: string): Promise<Conversation | null> {
-    // Using type assertion as chat_conversations table is pending migration
-    const { data, error } = await (this.supabase as any)
+    // Using untyped client as chat_conversations table is pending migration
+    const client = getUntypedClient(this.supabase);
+    const { data, error } = await client
       .from('chat_conversations')
       .select()
       .eq('id', conversationId)
       .single();
 
     if (error) {
-      console.error('Error fetching conversation:', error);
+      logger.error('Error fetching conversation', { component: 'ChatRepository', action: 'getConversation', error: String(error) });
       return null;
     }
 
@@ -124,12 +128,14 @@ export class ChatRepository {
     };
   }
 
+
   /**
    * List all conversations for a user
    */
   async listConversations(userId: string, limit = 50): Promise<Conversation[]> {
     // Using type assertion as chat_conversations table is pending migration
-    const { data, error } = await (this.supabase as any)
+    const untypedClient = getUntypedClient(this.supabase);
+    const { data, error } = await untypedClient
       .from('chat_conversations')
       .select()
       .eq('user_id', userId)
@@ -137,11 +143,11 @@ export class ChatRepository {
       .limit(limit);
 
     if (error) {
-      console.error('Error listing conversations:', error);
+      logger.error('Error listing conversations', { component: 'ChatRepository', action: 'listConversations', error: String(error) });
       return [];
     }
 
-    return (data || []).map((d: ChatConversation) => this.mapConversation(d));
+    return (data || []).map((d: unknown) => this.mapConversation(d as ChatConversation));
   }
 
   /**
@@ -155,7 +161,8 @@ export class ChatRepository {
     } : {};
 
     // Using type assertion as chat_messages table is pending migration
-    const { error } = await (this.supabase as any).from('chat_messages').insert({
+    const untypedClient = getUntypedClient(this.supabase);
+    const { error } = await untypedClient.from('chat_messages').insert({
       conversation_id: conversationId,
       role: message.role,
       content:
@@ -165,17 +172,19 @@ export class ChatRepository {
     });
 
     if (error) {
-      console.error('Error saving message:', error);
+      logger.error('Error saving message', { component: 'ChatRepository', action: 'saveMessage', error: String(error) });
       throw new Error('Failed to save message');
     }
   }
+
 
   /**
    * Get messages from a conversation
    */
   async getMessages(conversationId: string, limit?: number): Promise<ChatMessage[]> {
     // Using type assertion as chat_messages table is pending migration
-    let query = (this.supabase as any)
+    const untypedClient = getUntypedClient(this.supabase);
+    let query = untypedClient
       .from('chat_messages')
       .select()
       .eq('conversation_id', conversationId)
@@ -188,11 +197,11 @@ export class ChatRepository {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages', { component: 'ChatRepository', action: 'getMessages', error: String(error) });
       return [];
     }
 
-    return (data || []).map((d: ChatMessageRow) => this.mapMessage(d));
+    return (data || []).map((d: unknown) => this.mapMessage(d as ChatMessageRow));
   }
 
   /**
@@ -206,8 +215,9 @@ export class ChatRepository {
    * Save context snapshot for a conversation
    */
   async saveContextSnapshot(conversationId: string, context: FinancialContext): Promise<void> {
-    // Using type assertion as chat_context_snapshots table is pending migration
-    const { error } = await (this.supabase as any).from('chat_context_snapshots').insert({
+    // Using untyped client as chat_context_snapshots table is pending migration
+    const client = getUntypedClient(this.supabase);
+    const { error } = await client.from('chat_context_snapshots').insert({
       conversation_id: conversationId,
       recent_transactions: JSON.stringify(context.recentTransactions),
       account_balances: JSON.stringify(context.accountBalances),
@@ -216,17 +226,19 @@ export class ChatRepository {
     });
 
     if (error) {
-      console.error('Error saving context snapshot:', error);
+      logger.error('Error saving context snapshot', { component: 'ChatRepository', action: 'saveContextSnapshot', error: String(error) });
       throw new Error('Failed to save context snapshot');
     }
   }
+
 
   /**
    * Get latest context snapshot for a conversation
    */
   async getLatestContextSnapshot(conversationId: string): Promise<FinancialContext | null> {
     // Using type assertion as chat_context_snapshots table is pending migration
-    const { data, error } = await (this.supabase as any)
+    const untypedClient = getUntypedClient(this.supabase);
+    const { data, error } = await untypedClient
       .from('chat_context_snapshots')
       .select()
       .eq('conversation_id', conversationId)
@@ -235,7 +247,7 @@ export class ChatRepository {
       .single();
 
     if (error) {
-      console.error('Error fetching context snapshot:', error);
+      logger.error('Error fetching context snapshot', { component: 'ChatRepository', action: 'getLatestContextSnapshot', error: String(error) });
       return null;
     }
 
@@ -243,10 +255,10 @@ export class ChatRepository {
 
     const snapshot = data as ChatContextSnapshot;
     return {
-      recentTransactions: (snapshot.recent_transactions as unknown as any[]) || [],
-      accountBalances: (snapshot.account_balances as unknown as any[]) || [],
-      upcomingEvents: (snapshot.upcoming_events as unknown as any[]) || [],
-      userPreferences: (snapshot.user_preferences as unknown as any) || {},
+      recentTransactions: (snapshot.recent_transactions as unknown as Transaction[]) || [],
+      accountBalances: (snapshot.account_balances as unknown as FinancialContext['accountBalances']) || [],
+      upcomingEvents: (snapshot.upcoming_events as unknown as FinancialContext['upcomingEvents']) || [],
+      userPreferences: (snapshot.user_preferences as unknown as FinancialContext['userPreferences']) || {},
       summary: {
         totalBalance: 0,
         monthlyIncome: 0,
@@ -261,29 +273,32 @@ export class ChatRepository {
    */
   async updateConversationTitle(conversationId: string, title: string): Promise<void> {
     // Using type assertion as chat_conversations table is pending migration
-    const { error } = await (this.supabase as any)
+    const untypedClient = getUntypedClient(this.supabase);
+    const { error } = await untypedClient
       .from('chat_conversations')
       .update({ title })
       .eq('id', conversationId);
 
     if (error) {
-      console.error('Error updating conversation title:', error);
+      logger.error('Error updating conversation title', { component: 'ChatRepository', action: 'updateConversationTitle', error: String(error) });
       throw new Error('Failed to update conversation title');
     }
   }
+
 
   /**
    * Delete a conversation
    */
   async deleteConversation(conversationId: string): Promise<void> {
     // Using type assertion as chat_conversations table is pending migration
-    const { error } = await (this.supabase as any)
+    const untypedClient = getUntypedClient(this.supabase);
+    const { error } = await untypedClient
       .from('chat_conversations')
       .delete()
       .eq('id', conversationId);
 
     if (error) {
-      console.error('Error deleting conversation:', error);
+      logger.error('Error deleting conversation', { component: 'ChatRepository', action: 'deleteConversation', error: String(error) });
       throw new Error('Failed to delete conversation');
     }
   }
@@ -291,30 +306,31 @@ export class ChatRepository {
   /**
    * Map database conversation to domain model
    */
-  private mapConversation(data: any): Conversation {
+  private mapConversation(data: ChatConversation | Record<string, unknown>): Conversation {
+    const d = data as ChatConversation;
     return {
-      id: data.id,
-      userId: data.user_id,
-      title: data.title,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      lastMessageAt: data.last_message_at,
-      messageCount: data.message_count,
+      id: d.id,
+      userId: d.user_id,
+      title: d.title || 'Nova Conversa',
+      createdAt: d.created_at,
+      updatedAt: d.updated_at,
+      lastMessageAt: d.last_message_at || d.updated_at,
+      messageCount: d.message_count || 0,
     };
   }
 
   /**
    * Map database message to domain model
    */
-  private mapMessage(data: any): ChatMessage {
+  private mapMessage(data: ChatMessageRow): ChatMessage {
     const parsedReasoning = data.reasoning ? JSON.parse(data.reasoning) : undefined;
     return {
       id: data.id,
-      role: data.role,
+      role: data.role as 'user' | 'assistant' | 'system',
       content: data.content,
-      timestamp: data.created_at,
+      timestamp: new Date(data.created_at).getTime(),
       metadata: {
-        ...data.metadata,
+        ...(data.metadata as Record<string, unknown> || {}),
         reasoning: parsedReasoning,
       },
     };

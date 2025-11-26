@@ -56,6 +56,16 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
     };
   }, []);
 
+  // Otimizar funções com useCallback - defined before useEffect that uses it
+  const speakResponse = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+  }, []);
+
   // Process voice commands when recognized
   useEffect(() => {
     if (transcript && confidence > 0.5) {
@@ -101,17 +111,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
       handleCommand();
     }
-  }, [transcript, confidence, announceToScreenReader]);
-
-  // Otimizar funções com useCallback
-  const speakResponse = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'pt-BR';
-      utterance.rate = 0.9;
-      speechSynthesis.speak(utterance);
-    }
-  }, []);
+  }, [transcript, confidence, announceToScreenReader, speakResponse]);
 
   const handleCloseResponse = useCallback(() => {
     setCurrentResponse(null);
@@ -241,7 +241,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
             <VoiceResponse
               type={currentResponse.type}
               message={currentResponse.message}
-              data={currentResponse.data}
+              data={currentResponse.data as Parameters<typeof VoiceResponse>[0]['data']}
             />
 
             {currentResponse.requiresConfirmation && (

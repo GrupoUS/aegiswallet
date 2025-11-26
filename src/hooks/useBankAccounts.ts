@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
 
-interface BankAccount {
+export interface BankAccount {
   id: string;
   user_id: string;
   institution_name: string;

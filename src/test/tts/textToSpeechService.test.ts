@@ -70,13 +70,13 @@ describe('TextToSpeechService', () => {
       pending: false,
       removeEventListener: vi.fn(),
       resume: vi.fn(),
-      speak: vi.fn().mockImplementation((utterance: { onend?: () => void }) => {
-        // Automatically trigger onend for success tests
-        setTimeout(() => {
-          if (utterance.onend) {
-            utterance.onend();
-          }
-        }, 10);
+      speak: vi.fn().mockImplementation(async (utterance: { onend?: () => void }) => {
+        // Automatically trigger onend for success tests using async utility
+        const { waitForMs } = await import('@/test/utils/async-test-utils');
+        await waitForMs(10);
+        if (utterance.onend) {
+          utterance.onend();
+        }
       }),
       speaking: false,
     };
@@ -133,12 +133,12 @@ describe('TextToSpeechService', () => {
 
     it('should handle speech errors', async () => {
       mockSpeechSynthesis.speak.mockImplementation(
-        (utterance: { onerror?: (event?: unknown) => void }) => {
-          setTimeout(() => {
-            if (utterance.onerror) {
-              utterance.onerror({ error: 'audio-busy' });
-            }
-          }, 10);
+        async (utterance: { onerror?: (event?: unknown) => void }) => {
+          const { waitForMs } = await import('@/test/utils/async-test-utils');
+          await waitForMs(10);
+          if (utterance.onerror) {
+            utterance.onerror({ error: 'audio-busy' });
+          }
         }
       );
 

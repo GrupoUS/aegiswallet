@@ -339,9 +339,12 @@ describe('Voice Command Performance', () => {
         result.current.startListening();
       });
 
-      // 3. Simulate speech recognition (<100ms)
-      setTimeout(() => {
-        act(() => {
+      // 3. Simulate speech recognition (<100ms) using async utility
+      const { waitForMs, actAsync } = await import('@/test/utils/async-test-utils');
+      
+      (async () => {
+        await waitForMs(100);
+        await actAsync(() => {
           if (mockSpeechRecognitionInstance.onresult) {
             mockSpeechRecognitionInstance.onresult({
               resultIndex: 0,
@@ -354,10 +357,10 @@ describe('Voice Command Performance', () => {
             });
           }
         });
-      }, 100);
+      })();
 
       // Allow recognition + processing cycle to finish
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await waitForMs(600);
 
       await waitFor(
         () => {

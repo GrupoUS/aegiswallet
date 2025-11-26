@@ -84,9 +84,9 @@ Based on task analysis, invoke specialized agents:
 ### Phase 3: MULTI-LAYER QUALITY ASSURANCE
 **Parallel quality checks when applicable:**
 
-- **`code-reviewer`**: Automated code review with security focus
-- **`test-auditor`**: Test strategy validation and coverage analysis
-- **`tester`**: Visual verification with Playwright MCP (REQUIRED for all UI changes)
+- **`code-reviewer`**: Automated code review with Biome security focus
+- **`test-auditor`**: Test strategy validation and coverage analysis using Vitest (3-5x faster)
+- **`test-validator`**: Test execution validation using Vitest + Biome (no Playwright MCP)
 
 ### Phase 4: INTEGRATION & VALIDATION
 1. **Review all specialized agent outputs**
@@ -135,12 +135,13 @@ Based on task analysis, invoke specialized agents:
 - **Returns**: Secure, compliant, optimized database solutions
 
 ### Quality Assurance Agents
-#### tester
-**Purpose**: Visual verification specialist with Playwright MCP
+#### test-validator
+**Purpose**: Test execution validation specialist using Vitest + Biome
 - **When to invoke**: After EVERY implementation (UI or backend)
-- **What to pass**: What was implemented and specific verification requirements
-- **Brazilian Testing**: PIX form flows, Portuguese UI validation, accessibility
-- **Returns**: Detailed screenshots + pass/fail report
+- **What to pass**: What was implemented and specific test execution requirements
+- **Brazilian Testing**: PIX form flows, Portuguese UI validation, accessibility tests
+- **Tools**: Vitest (3-5x faster), Biome (linting + formatting), component testing
+- **Returns**: Test coverage reports + validation metrics + pass/fail analysis
 - **On failure**: Will invoke stuck agent automatically
 
 #### code-reviewer 🔍
@@ -549,7 +550,7 @@ When you receive a project:
 - Implement comprehensive Zod validation for all API inputs
 - Write meaningful commit messages following conventional commits
 - Maintain 90%+ test coverage for critical components
-- Use OXLint for code quality validation (50-100x faster than ESLint)
+- Use Biome for code quality validation (linting + formatting + auto-fix)
 
 **SHOULD**:
 - Follow existing naming conventions and code patterns
@@ -591,7 +592,7 @@ When you receive a project:
 **MUST**:
 - Achieve 90%+ test coverage for critical business logic
 - Use Vitest for unit/integration tests (3-5x faster than Jest)
-- Implement E2E tests with Playwright for user workflows
+- Implement component tests with Vitest + React Testing Library
 - Test RLS policies with crafted JWTs
 - Include performance testing for financial operations
 
@@ -599,7 +600,8 @@ When you receive a project:
 - Test error scenarios and edge cases
 - Mock external dependencies appropriately
 - Use property-based testing for complex logic
-- Implement visual regression testing for UI components
+- Use Biome for linting and formatting validation
+- Implement accessibility testing with Brazilian compliance
 
 ## Validation Criteria
 
@@ -626,11 +628,12 @@ When you receive a project:
 bun dev                    # Start development servers
 bun build                  # Build all apps and packages
 
-# Quality Assurance
-bun lint                   # Lint with OXLint (50-100x faster)
+# Quality Assurance (PARALLEL EXECUTION)
+bun lint                   # Lint with Biome (primary validation)
 bun type-check             # TypeScript strict mode validation
-bun test                   # Run unit and integration tests
-bunx biome check           # Alternative quality validation
+bun test                   # Run tests with Vitest (3-5x faster)
+bunx biome check           # Biome linting + formatting + fix
+bunx biome format          # Auto-format code with Biome
 ```
 
 ### Import Patterns

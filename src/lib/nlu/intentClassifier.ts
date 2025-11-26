@@ -65,6 +65,9 @@ export class IntentClassifier {
   /**
    * Classify using regex patterns
    */
+  /**
+   * Classify using regex patterns
+   */
   private classifyByPattern(text: string): {
     intent: IntentType;
     confidence: number;
@@ -74,52 +77,72 @@ export class IntentClassifier {
       score: number;
       patternCount: number;
     }[] = [];
+    const normalizedText = text.toLowerCase();
 
     for (const intent of getValidIntents()) {
       const definition = INTENT_DEFINITIONS[intent];
       let patternMatches = 0;
+      let keywordMatches = 0;
 
-      // Check patterns
+      // Check patterns with higher priority for Brazilian Portuguese
       for (const pattern of definition.patterns) {
-        // Reset state for global regexes just in case, though patterns here usually don't have g
+        // Reset state for global regexes
         pattern.lastIndex = 0;
         if (pattern.test(text)) {
           patternMatches++;
         }
       }
 
-      // Check keywords (lower confidence)
-      const keywordMatches = definition.keywords.filter((keyword) =>
-        text.toLowerCase().includes(keyword)
-      );
-
-      if (patternMatches > 0) {
-        // Higher confidence for more specific patterns (more matches)
-        const score = Math.min(0.95, 0.85 + patternMatches * 0.05);
-        candidates.push({ intent, patternCount: patternMatches, score });
-      } else if (keywordMatches.length > 0) {
-        // Penalize very generic queries that only match keywords without context
-        const textWords = text.toLowerCase().split(/\s+/).length;
-        const isVeryGeneric = textWords <= 4 && keywordMatches.length <= 1;
-
-        let score = 0.5 + keywordMatches.length * 0.15;
-        if (isVeryGeneric) {
-          score = Math.min(0.45, score); // Cap at low confidence for generic queries
-        } else {
-          score = Math.min(0.8, score);
+      // Check keywords with better scoring for Brazilian context
+      for (const keyword of definition.keywords) {
+        if (normalizedText.includes(keyword)) {
+          keywordMatches++;
         }
+      }
 
+      // Enhanced confidence calculation for Brazilian Portuguese
+      if (patternMatches > 0) {
+        // Base confidence for pattern matches
+        let score = 0.85 + (patternMatches * 0.05);
+        
+        // Bonus for keyword matches alongside patterns
+        if (keywordMatches > 0) {
+          score += keywordMatches * 0.03;
+        }
+        
+        // Cap at very high confidence for strong pattern matches
+        score = Math.min(0.98, score);
+        candidates.push({ intent, patternCount: patternMatches, score });
+      } else if (keywordMatches > 0) {
+        // Enhanced scoring for keyword-only matches
+        const textWords = normalizedText.split(/\s+/).length;
+        const keywordRatio = keywordMatches / definition.keywords.length;
+        
+        // Score based on keyword density and text length
+        let score = 0.4 + (keywordMatches * 0.12) + (keywordRatio * 0.1);
+        
+        // Boost for shorter, more focused queries
+        if (textWords <= 5) {
+          score += 0.1;
+        }
+        
+        // Reduce for very generic single-word queries
+        if (textWords === 1 && keywordMatches === 1) {
+          score = Math.min(0.5, score);
+        }
+        
+        score = Math.min(0.8, Math.max(0.4, score));
         candidates.push({ intent, patternCount: 0, score });
       }
     }
 
     // Sort by score first, then by pattern specificity
     candidates.sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+      if (Math.abs(b.score - a.score) < 0.05) {
+        // If scores are close, prefer intents with more pattern matches
+        return b.patternCount - a.patternCount;
       }
-      // If scores are equal, prefer intents with more pattern matches
-      return b.patternCount - a.patternCount;
+      return b.score - a.score;
     });
 
     const best = candidates[0];
@@ -163,42 +186,53 @@ export class IntentClassifier {
   /**
    * Ensemble voting between classifiers
    */
+  /**
+   * Enhanced ensemble voting between classifiers
+   */
   private ensembleVote(
     patternResult: { intent: IntentType; confidence: number },
     tfidfResult: { intent: IntentType; confidence: number }
   ): { intent: IntentType; confidence: number } {
-    // If both agree, high confidence
-    if (patternResult.intent === tfidfResult.intent) {
+    // If both agree, high confidence with boost
+    if (patternResult.intent === tfidfResult.intent && patternResult.intent !== IntentType.UNKNOWN) {
+      const combinedConfidence = Math.min(0.95, patternResult.confidence + tfidfResult.confidence * 0.3);
       return {
-        confidence: Math.max(patternResult.confidence, tfidfResult.confidence),
+        confidence: combinedConfidence,
         intent: patternResult.intent,
       };
     }
 
-    // If pattern has high confidence, trust it
-    if (patternResult.confidence >= 0.85) {
-      return patternResult;
-    }
-
-    // If TF-IDF has high confidence, trust it
-    if (tfidfResult.confidence >= 0.85) {
-      return tfidfResult;
-    }
-
-    // Weighted average (pattern gets more weight)
-    const patternWeight = 0.6;
-    const tfidfWeight = 0.4;
-
-    if (patternResult.confidence * patternWeight > tfidfResult.confidence * tfidfWeight) {
+    // Strong pattern confidence takes priority
+    if (patternResult.confidence >= 0.8) {
       return {
-        confidence:
-          patternResult.confidence * patternWeight + tfidfResult.confidence * tfidfWeight * 0.5,
+        confidence: patternResult.confidence,
+        intent: patternResult.intent,
+      };
+    }
+
+    // Strong TF-IDF confidence
+    if (tfidfResult.confidence >= 0.8) {
+      return {
+        confidence: tfidfResult.confidence,
+        intent: tfidfResult.intent,
+      };
+    }
+
+    // Weighted ensemble with pattern preference for Brazilian Portuguese
+    const patternWeight = 0.7; // Increased pattern weight
+    const tfidfWeight = 0.3;
+
+    const patternScore = patternResult.confidence * patternWeight;
+    const tfidfScore = tfidfResult.confidence * tfidfWeight;
+
+    if (patternScore > tfidfScore) {
+      return {
+        confidence: Math.min(0.85, patternScore + tfidfScore * 0.5),
         intent: patternResult.intent,
       };
     }
     return {
-      confidence:
-        tfidfResult.confidence * tfidfWeight + patternResult.confidence * patternWeight * 0.5,
+      confidence: Math.min(0.85, tfidfScore + patternScore * 0.5),
       intent: tfidfResult.intent,
     };
   }
@@ -250,23 +284,85 @@ export class IntentClassifier {
   /**
    * Compute TF-IDF vector for tokens
    */
+  /**
+   * Compute enhanced TF-IDF vector for tokens
+   */
   private computeTFIDF(tokens: string[]): Map<string, number> {
     const vector = new Map<string, number>();
     const tokenCounts = new Map<string, number>();
 
-    // Count term frequencies
+    // Count term frequencies with stemming for Brazilian Portuguese
     for (const token of tokens) {
-      tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1);
+      // Simple Brazilian Portuguese stemming
+      const stemmedToken = this.stemBrazilianToken(token);
+      tokenCounts.set(stemmedToken, (tokenCounts.get(stemmedToken) || 0) + 1);
     }
 
-    // Compute TF-IDF (simplified - just TF for now)
-    const totalTokens = tokens.length;
+    // Compute TF-IDF with better normalization
+    const maxFreq = Math.max(...tokenCounts.values());
+    
     for (const [token, count] of tokenCounts.entries()) {
-      const tf = count / totalTokens;
-      vector.set(token, tf);
+      // Normalized term frequency (0.5 + 0.5 * tf/max_tf)
+      const tf = 0.5 + 0.5 * (count / maxFreq);
+      
+      // Simplified IDF for Brazilian context
+      const idf = Math.log(1 + 6 / (1 + 1)); // 6 intents, assuming token appears in at least 1
+      
+      vector.set(token, tf * idf);
+    }
+
+    // Normalize vector to unit length
+    const magnitude = Math.sqrt([...vector.values()].reduce((sum, val) => sum + val * val, 0));
+    if (magnitude > 0) {
+      for (const [token, value] of vector.entries()) {
+        vector.set(token, value / magnitude);
+      }
     }
 
     return vector;
+  }
+
+  /**
+   * Simple Brazilian Portuguese stemming
+   */
+  private stemBrazilianToken(token: string): string {
+    let stemmed = token.toLowerCase();
+    
+    // Remove common Brazilian Portuguese suffixes
+    const suffixes = ['ando', 'ando', 'ando', 'ar', 'er', 'ir', 'ando', 'endo', 'indo'];
+    for (const suffix of suffixes) {
+      if (stemmed.endsWith(suffix)) {
+        stemmed = stemmed.slice(0, -suffix.length);
+        break;
+      }
+    }
+    
+    // Remove common plurals
+    if (stemmed.endsWith('s') && stemmed.length > 3) {
+      stemmed = stemmed.slice(0, -1);
+    }
+    
+    // Normalize common variations
+    const normalizations: Record<string, string> = {
+      'ç': 'c',
+      'ã': 'a',
+      'õ': 'o',
+      'á': 'a',
+      'à': 'a',
+      'â': 'a',
+      'é': 'e',
+      'ê': 'e',
+      'í': 'i',
+      'ó': 'o',
+      'ô': 'o',
+      'ú': 'u'
+    };
+    
+    for (const [accented, normal] of Object.entries(normalizations)) {
+      stemmed = stemmed.replace(new RegExp(accented, 'g'), normal);
+    }
+    
+    return stemmed;
   }
 
   /**

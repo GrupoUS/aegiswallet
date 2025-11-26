@@ -66,9 +66,13 @@ export const mockSpeechSynthesis = {
   resume: vi.fn(),
   speak: vi.fn(),
   speaking: false,
+  onvoiceschanged: null,
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(() => true),
 };
 
-global.speechSynthesis = mockSpeechSynthesis;
+global.speechSynthesis = mockSpeechSynthesis as unknown as SpeechSynthesis;
 global.SpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
   lang: 'pt-BR',
   onboundary: null,
@@ -115,7 +119,7 @@ Object.defineProperty(window, 'navigator', {
 });
 
 // Mock WebSocket for real-time healthcare updates
-global.WebSocket = vi.fn().mockImplementation(() => ({
+const MockWebSocket = vi.fn().mockImplementation(() => ({
   close: vi.fn(),
   send: vi.fn(),
   addEventListener: vi.fn(),
@@ -126,6 +130,14 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
   CLOSING: 2,
   CLOSED: 3,
 }));
+// Add static constants to the constructor
+Object.assign(MockWebSocket, {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+});
+global.WebSocket = MockWebSocket as unknown as typeof WebSocket;
 
 // Mock localStorage for healthcare data persistence
 export const localStorageMock = {
@@ -186,13 +198,13 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   stroke: vi.fn(),
   transform: vi.fn(),
   translate: vi.fn(),
-})) as unknown as CanvasRenderingContext2D;
+})) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
 // Mock getComputedStyle for healthcare styling
 global.getComputedStyle = vi.fn(() => ({
   getPropertyValue: vi.fn(),
   setProperty: vi.fn(),
-})) as unknown as CSSStyleDeclaration;
+})) as unknown as typeof global.getComputedStyle;
 
 // Mock scrollTo for healthcare navigation
 window.scrollTo = vi.fn();

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging';
+import type { Json } from '@/types/database.types';
 
 export interface RetentionPolicy {
   dataType: string;
@@ -177,7 +178,7 @@ export class LGPDDataRetentionManager {
       await supabase.from('data_subject_requests').insert({
         created_at: new Date().toISOString(),
         id: requestId,
-        request_data: requestData as unknown,
+        request_data: (requestData ?? null) as Json,
         request_type: requestType,
         status: 'pending',
         user_id: userId,

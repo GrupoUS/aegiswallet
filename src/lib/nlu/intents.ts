@@ -32,6 +32,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Saldo',
     optionalSlots: [EntityType.ACCOUNT, EntityType.DATE],
     patterns: [
+      // Enhanced patterns for Brazilian Portuguese balance queries
       /\b(qual|quanto|ver|mostrar|consultar|checar)\s+(é|eh|e|o|meu)?\s*(de\s+)?(saldo|dinheiro|grana|bufunfa)\b/i,
       /\b(saldo|dinheiro|grana)\s+(disponivel|atual|hoje|agora)\b/i,
       /\b(tenho|tem|restou)\s+quanto\b/i,
@@ -43,8 +44,12 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
       // More specific pattern - avoid overlap with other intents
       /\b(quanto|qual)\s+(tenho|tem|sobrou|ta|esta|est[áÁ])\s+(de\s+)?(dinheiro|grana|saldo|bufunfa)\b/i,
       /\bquanto\s+(de\s+)?(grana|dinheiro)\s+(eu\s+)?tenho\b/i,
-      // Enhanced pattern for "qual é meu saldo?"
-      /\bqual\s+é\s+(meu|o)?\s*saldo\?*$/i,
+      // Enhanced pattern for "qual é meu saldo?" - Exact match priority
+      /^qual\s+é\s+(meu|o)?\s*saldo\?*$/i,
+      // Additional Brazilian variants
+      /^quanto\s+tenho\??$/i,
+      /^meu\s+saldo\??$/i,
+      /\bmeu\s+saldo\s+(disponivel|atual)\??\b/i,
     ],
     requiredSlots: [],
     type: IntentType.CHECK_BALANCE,
@@ -66,14 +71,18 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Orçamento',
     optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
     patterns: [
-      // High confidence patterns for budget queries
+      // Enhanced high confidence patterns for budget queries
       /\b(quanto|qual)\s+(posso|consigo|dá|da|pode)\s+(gastar|usar|pegar)\b/i,
-      /\b(orcamento|limite|teto)\s+(disponivel|restante|do\s+mes|mensal)\b/i,
+      /\b(orcamento|orçamento|limite|teto)\s+(disponivel|restante|do\s+mes|mensal)\b/i,
       /\b(gastar|usar)\s+quanto\b/i,
       /\b(sobrou|restou|tem)\s+quanto\s+(pra|para)\s+gastar\b/i,
       /\b(quanto|qual)\s+(falta|resta)\s+(do|no)?\s*(orcamento|or[cç]amento)\b/i,
       /\b(quanto|qual)\s+(sobrou|restou)\s+(do|no)?\s*(orcamento|or[cç]amento)\b/i,
       /\b(t[áÁ]|est[áÁ])\s+quanto\s+(no|na)?\s*(orcamento|or[cç]amento)\b/i,
+      // Enhanced Brazilian variants
+      /^quanto\s+posso\s+gastar\??$/i,
+      /^qual\s+meu\s+orçamento\??$/i,
+      /\borçamento\s+(disponivel|restante|do\s+m[êê]s)\b/i,
     ],
     requiredSlots: [],
     type: IntentType.CHECK_BUDGET,
@@ -105,11 +114,15 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Pagar Conta',
     optionalSlots: [EntityType.AMOUNT, EntityType.DATE],
     patterns: [
+      // Enhanced patterns for payment commands
       /\b(pagar|paga|quitar|quita)\s+(o|a|meu|minha)?\s*(conta|boleto|fatura)\b/i,
-      /\b(pagar|paga)\s+(energia|luz|agua|internet|telefone|gas|aluguel)\b/i,
-      /\b(conta|boleto|fatura)\s+(da|de|do)\s+(energia|luz|agua|internet|telefone)\b/i,
+      /\b(pagar|paga)\s+(energia|luz|agua|[áÁ]gua|internet|telefone|gas|aluguel)\b/i,
+      /\b(conta|boleto|fatura)\s+(da|de|do)\s+(energia|luz|agua|[áÁ]gua|internet|telefone)\b/i,
       /\b(quitar|quita)\s+(divida|debito|pendencia)\b/i,
       /\b(fazer|faz)\s+pagamento\b/i,
+      // More specific Brazilian variants
+      /^pagar\s+(conta|boleto|fatura)/i,
+      /\bpaga\s+(a|o)?\s*(conta|luz|energia|[áÁ]gua)\b/i,
     ],
     requiredSlots: [EntityType.BILL_TYPE],
     type: IntentType.PAY_BILL,
@@ -140,13 +153,17 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Consultar Recebimentos',
     optionalSlots: [EntityType.PERIOD, EntityType.DATE],
     patterns: [
-      // High confidence patterns for income queries
+      // Enhanced high confidence patterns for income queries
       /\b(quando|qual)\s+(vou|vai)\s+(receber|cair|entrar)\b/i,
-      /\b(recebimento|recebimentos|entrada|entradas|credito|sal[áa]rio)\s+(do\s+m[êe]s|mensal|pr[óo]ximo|pr[óo]xima|pendente|previstas?)\b/i,
+      /\b(recebimento|recebimentos|entrada|entradas|credito|sal[áa]rio|salario)\s+(do\s+m[êeê]s|mensal|pr[óo]ximo|pr[óo]xima|pendente|previstas?)\b/i,
       /\b(vai|vou)\s+(ter|receber|entrar)\s+quanto\b/i,
       /\b(quanto|qual)\s+(vou|vai)\s+(ganhar|receber|entrar)\b/i,
-      /\b(sal[áa]rio)\s+(cai|entra)\s+quando\b/i,
+      /\b(sal[áa]rio|salario)\s+(cai|entra)\s+quando\b/i,
       /\b(vai|vou)\s+receber\s+quanto\b/i,
+      // More specific Brazilian variants
+      /^quando\s+(vou|vai)\s+receber\??$/i,
+      /\bpr[óo]ximos?\s+(recebimentos?|entradas?)\b/i,
+      /\bentradas?\s+previstas?\b/i,
     ],
     requiredSlots: [],
     type: IntentType.CHECK_INCOME,
@@ -177,12 +194,17 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Projeção Financeira',
     optionalSlots: [EntityType.CATEGORY],
     patterns: [
-      // High confidence patterns for projection queries
-      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+m[êe]s|mensal|anual)\b/i,
-      /\b(como|qual)\s+(vai|fica|ficar|esta|est[áÁ])\s+(o\s+)?(meu\s+)?m[êe]s\??\b/i,
+      // Enhanced high confidence patterns for projection queries - Fixed regex
+      /\b(projec[ãa]o|previs[ãa]o|estimativa)\s+(financeira|do\s+m[eê]s|mensal|anual)\b/i,
+      /\b(como|qual)\s+(vai|fica|ficar|esta|est[áÁ])\s+(o\s+)?(meu\s+)?m[eê]s\??\b/i,
       /\b(vou|vai)\s+(sobrar|faltar|ter)\s+quanto\b/i,
       /\b(quanto|qual)\s+(vai|vou)?\s*(sobrar|faltar|resta)\b/i,
-      /\b(balan[çc]o|resultado)\s+(do\s+m[êe]s|mensal|previsto)\b/i,
+      /\b(balan[çc]o|balanco)\s+(do\s+m[eê]s|mensal|previsto)\b/i,
+      // More specific Brazilian variants
+      /^proje[cç][ãa]o\s+(do\s+)?m[eê]s\??$/i,
+      /\bcomo\s+(vai|fica)\s+o\s+m[eê]s\??\b/i,
+      /\bvai\s+sobrar\s+quanto\??$/i,
+      /\bquanto\s+vai\s+faltar\??$/i,
     ],
     requiredSlots: [EntityType.PERIOD],
     type: IntentType.FINANCIAL_PROJECTION,
@@ -213,13 +235,17 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     name: 'Transferir Dinheiro',
     optionalSlots: [EntityType.DATE],
     patterns: [
+      // Enhanced patterns for transfer commands
       /\b(transferir|transfere|enviar|envia|mandar|manda)\s+(dinheiro|grana|real|reais)\b/i,
-      /\b(fazer|faz)\s+(pix|ted|transfer[êe]ncia)\b/i,
+      /\b(fazer|faz)\s+(pix|ted|transfer[êe]ncia|transferencia)\b/i,
       /\b(pix|ted)\s+(para|pra|pro)\b/i,
       /\b(transferir|transfere)\s+(para|pra|pro)\b/i,
       /\b(enviar|envia|mandar|manda)\s+\d+\s*(reais|real|r\$)\b/i,
       /\b(pix|ted)\s+(de|para)\s+\d+/i,
-      /\b(transfer[êe]ncia|pix)\s+(imediata|urgente)\b/i,
+      /\b(transfer[êe]ncia|transferencia|pix)\s+(imediata|urgente)\b/i,
+      // More specific Brazilian variants
+      /^fazer\s+(pix|ted)/i,
+      /\b(pix|ted)\s+para\s+[a-zàáâãéêíóôõúç]+/i,
     ],
     requiredSlots: [EntityType.RECIPIENT, EntityType.AMOUNT],
     type: IntentType.TRANSFER_MONEY,
@@ -236,7 +262,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     requiredSlots: [],
     type: IntentType.UNKNOWN,
   },
-};
+};;;
 
 // ============================================================================
 // Intent Utilities

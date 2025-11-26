@@ -45,6 +45,10 @@
     "quality:ci": "bun run lint:oxlint:types && bun run check && bun run test:coverage",
     "quality:security": "bun run lint:oxlint:security && bun run lint:healthcare",
     "quality:performance": "bun run lint:oxlint && bun run lint:performance && bun run test:unit",
+    "quality:parallel": "bunx concurrently \"bun run check\" \"bun run type-check\" \"bun run test\" \"bun run lint:oxlint:security\" \"bun run validate:lgpd\" --names=\"biome,ts,vitest,security,lgpd\"",
+    "quality:gates": "bun run quality:parallel && bun run test:coverage",
+    "quality:full": "bun scripts/quality-gates.ts",
+    "quality:ci": "bun run quality:full",
     "validate:colors": "bun scripts/validate-colors.ts",
     "export:tokens": "bun scripts/export-design-tokens.ts",
     "setup:google-calendar": "bun scripts/setup-google-calendar-sync.ts"
@@ -70,6 +74,7 @@
     "hono": "^4.10.4",
     "lovable-tagger": "^1.1.11",
     "lucide-react": "^0.544.0",
+    "puppeteer": "^24.31.0",
     "react": "^19.2.0",
     "react-aria-components": "^1.13.0",
     "react-day-picker": "^9.11.1",

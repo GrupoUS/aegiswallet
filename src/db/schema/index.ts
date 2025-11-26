@@ -16,142 +16,132 @@
  * - contacts: User contacts and payment methods
  */
 
-// User domain
+// AI and chat
 export {
-  authUsers,
-  users,
-  userPreferences,
-  userActivity,
-  userConsent,
-  userPins,
-  userSecurityPreferences,
-  type User,
-  type NewUser,
-  type UserPreferences,
-  type UserConsent,
-} from './users'
+  type AiInsight,
+  aiInsights,
+  type ChatConversation,
+  type ChatMessage,
+  type ConversationContext,
+  chatContextSnapshots,
+  chatConversations,
+  chatMessages,
+  conversationContexts,
+  type NluLearningData,
+  nluLearningData,
+} from './ai';
 
 // Authentication and security
 export {
+  type AuthAttempt,
+  type AuthSession,
   authAttempts,
   authSessions,
   biometricCredentials,
+  fraudDetectionRules,
   otpCodes,
   pushAuthRequests,
-  securityEvents,
-  securityAlerts,
-  fraudDetectionRules,
-  type AuthAttempt,
-  type AuthSession,
-  type SecurityEvent,
   type SecurityAlert,
-} from './auth'
-
-
-// Financial transactions
-export {
-  financialCategories,
-  eventTypes,
-  financialEvents,
-  eventReminders,
-  transactions,
-  financialAccounts,
-  budgetCategories,
-  spendingPatterns,
-  financialSnapshots,
-  type FinancialCategory,
-  type FinancialEvent,
-  type Transaction,
-  type NewTransaction,
-  type BudgetCategory,
-  type SpendingPattern,
-} from './transactions'
-
+  type SecurityEvent,
+  securityAlerts,
+  securityEvents,
+} from './auth';
 // Banking and Open Banking
 export {
-  bankConnections,
-  bankAccounts,
-  bankTokens,
-  bankConsent,
-  bankAuditLogs,
-  type BankConnection,
   type BankAccount,
-  type BankToken,
+  type BankConnection,
   type BankConsent,
-} from './banking'
-
+  type BankToken,
+  bankAccounts,
+  bankAuditLogs,
+  bankConnections,
+  bankConsent,
+  bankTokens,
+} from './banking';
+// Calendar sync
+export {
+  type CalendarSyncAudit,
+  type CalendarSyncMapping,
+  type CalendarSyncSetting,
+  calendarSyncAudit,
+  calendarSyncMapping,
+  calendarSyncSettings,
+  type GoogleCalendarToken,
+  googleCalendarTokens,
+} from './calendar';
+// Contacts
+export {
+  type Contact,
+  type ContactPaymentMethod,
+  contactPaymentMethods,
+  contacts,
+  type NewContact,
+} from './contacts';
+// LGPD compliance
+export {
+  type AuditLog,
+  auditLogs,
+  type DataSubjectRequest,
+  dataSubjectRequests,
+  type LegalHold,
+  legalHolds,
+} from './lgpd';
 // Payments (PIX, boletos, scheduled)
 export {
-  pixKeys,
-  paymentRules,
-  scheduledPayments,
-  pixTransfers,
-  boletos,
-  type PixKey,
-  type PaymentRule,
-  type ScheduledPayment,
-  type PixTransfer,
   type Boleto,
-} from './payments'
-
+  boletos,
+  type PaymentRule,
+  type PixKey,
+  type PixTransfer,
+  paymentRules,
+  pixKeys,
+  pixTransfers,
+  type ScheduledPayment,
+  scheduledPayments,
+} from './payments';
+// Financial transactions
+export {
+  type BudgetCategory,
+  budgetCategories,
+  eventReminders,
+  eventTypes,
+  type FinancialCategory,
+  type FinancialEvent,
+  financialAccounts,
+  financialCategories,
+  financialEvents,
+  financialSnapshots,
+  type NewTransaction,
+  type SpendingPattern,
+  spendingPatterns,
+  type Transaction,
+  transactions,
+} from './transactions';
+// User domain
+export {
+  authUsers,
+  type NewUser,
+  type User,
+  type UserConsent,
+  type UserPreferences,
+  userActivity,
+  userConsent,
+  userPins,
+  userPreferences,
+  userSecurityPreferences,
+  users,
+} from './users';
 // Voice assistant and biometrics
 export {
-  voiceConsent,
-  voiceFeedback,
-  voiceRecordings,
-  voiceTranscriptions,
-  voiceAuditLogs,
+  type BiometricPattern,
   biometricPatterns,
   type VoiceConsent,
   type VoiceFeedback,
   type VoiceRecording,
   type VoiceTranscription,
-  type BiometricPattern,
-} from './voice'
-
-
-// AI and chat
-export {
-  aiInsights,
-  chatConversations,
-  chatMessages,
-  chatContextSnapshots,
-  conversationContexts,
-  nluLearningData,
-  type AiInsight,
-  type ChatConversation,
-  type ChatMessage,
-  type ConversationContext,
-  type NluLearningData,
-} from './ai'
-
-// LGPD compliance
-export {
-  auditLogs,
-  dataSubjectRequests,
-  legalHolds,
-  type AuditLog,
-  type DataSubjectRequest,
-  type LegalHold,
-} from './lgpd'
-
-// Calendar sync
-export {
-  googleCalendarTokens,
-  calendarSyncSettings,
-  calendarSyncMapping,
-  calendarSyncAudit,
-  type GoogleCalendarToken,
-  type CalendarSyncSetting,
-  type CalendarSyncMapping,
-  type CalendarSyncAudit,
-} from './calendar'
-
-// Contacts
-export {
-  contacts,
-  contactPaymentMethods,
-  type Contact,
-  type NewContact,
-  type ContactPaymentMethod,
-} from './contacts'
+  voiceAuditLogs,
+  voiceConsent,
+  voiceFeedback,
+  voiceRecordings,
+  voiceTranscriptions,
+} from './voice';

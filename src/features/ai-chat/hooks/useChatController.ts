@@ -47,15 +47,24 @@ export function useChatController(backend: ChatBackend, options?: UseChatControl
 
         for await (const chunk of stream) {
           switch (chunk.type) {
-            case 'text-delta':
-              const textContent = typeof chunk.payload === 'string' ? chunk.payload : 
-                                 (chunk.payload && 'content' in chunk.payload) ? chunk.payload.content : '';
+            case 'text-delta': {
+              const textContent =
+                typeof chunk.payload === 'string'
+                  ? chunk.payload
+                  : chunk.payload && 'content' in chunk.payload
+                    ? chunk.payload.content
+                    : '';
               fullContent += textContent;
               setStreamingContent((prev) => prev + textContent);
               break;
-            case 'reasoning-delta':
-              const reasoningText = typeof chunk.payload === 'string' ? chunk.payload : 
-                                   (chunk.payload && 'content' in chunk.payload) ? chunk.payload.content : '';
+            }
+            case 'reasoning-delta': {
+              const reasoningText =
+                typeof chunk.payload === 'string'
+                  ? chunk.payload
+                  : chunk.payload && 'content' in chunk.payload
+                    ? chunk.payload.content
+                    : '';
               fullReasoning += reasoningText;
               setStreamingReasoning((prev) => prev + reasoningText);
               if (options?.enableReasoningView) {
@@ -69,6 +78,7 @@ export function useChatController(backend: ChatBackend, options?: UseChatControl
                 ]);
               }
               break;
+            }
             case 'suggestion':
               setSuggestions((prev) => [...prev, chunk.payload as ChatSuggestion]);
               break;

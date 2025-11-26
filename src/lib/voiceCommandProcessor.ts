@@ -2,10 +2,38 @@
 // Enhanced with NLU Engine (Story 01.02)
 
 import { supabase } from '@/integrations/supabase/client';
-import { belvoClient } from '@/lib/banking/belvoApi';
 import { logger } from '@/lib/logging/logger';
 import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
+
+// Simple account type for voice commands
+interface VoiceAccount {
+  id: string;
+  name: string;
+  type: 'checking' | 'savings' | 'credit';
+  balance: number;
+}
+
+// Helper function to get user accounts from Supabase directly
+async function getUserAccounts(userId: string): Promise<VoiceAccount[]> {
+  const { data, error } = await supabase.from('bank_accounts').select('*').eq('user_id', userId);
+
+  if (error) {
+    logger.error('Failed to fetch accounts', {
+      error: error.message,
+      operation: 'get_user_accounts',
+      userId,
+    });
+    throw error;
+  }
+
+  return (data || []).map((account) => ({
+    id: account.id,
+    name: account.account_holder_name || account.institution_name || 'Conta',
+    type: (account.account_type as 'checking' | 'savings' | 'credit') || 'checking',
+    balance: account.balance || 0,
+  }));
+}
 
 export interface ProcessedCommand {
   type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
@@ -178,7 +206,7 @@ function matchCommand(transcript: string): string | null {
 
 async function handleBalanceCommand(userId: string, confidence: number): Promise<ProcessedCommand> {
   try {
-    const accounts = await belvoClient.getAccounts(userId);
+    const accounts = await getUserAccounts(userId);
     const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
     return {
@@ -359,7 +387,7 @@ async function handleProjectionCommand(
   confidence: number
 ): Promise<ProcessedCommand> {
   // Fetch current balance
-  const accounts = await belvoClient.getAccounts(userId);
+  const accounts = await getUserAccounts(userId);
   const currentBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   // Fetch pending bills
@@ -435,7 +463,7 @@ async function handleTransferCommand(
     };
   }
 
-  const accounts = await belvoClient.getAccounts(userId);
+  const accounts = await getUserAccounts(userId);
   const currentBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   if (amount > currentBalance) {

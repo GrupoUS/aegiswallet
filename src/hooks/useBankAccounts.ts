@@ -59,7 +59,10 @@ interface UseBankAccountsReturn {
     is_active?: boolean;
     account_mask?: string;
   }) => void;
-  deleteAccount: (input: { id: string }, options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => void;
+  deleteAccount: (
+    input: { id: string },
+    options?: { onSuccess?: () => void; onError?: (error: Error) => void }
+  ) => void;
   deleteAccountAsync: (input: { id: string }) => Promise<string>;
   updateBalance: (input: { id: string; balance: number }) => void;
   refetch: () => void;

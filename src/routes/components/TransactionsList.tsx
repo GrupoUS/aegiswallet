@@ -42,7 +42,7 @@ export default function TransactionsList() {
 
     try {
       await deleteMutation.mutateAsync({ id: deletingId });
-      
+
       // Revert balance if possible
       if (transaction?.account_id) {
         const account = accounts.find((a) => a.id === transaction.account_id);

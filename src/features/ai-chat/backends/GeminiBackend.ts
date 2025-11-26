@@ -63,7 +63,7 @@ export class GeminiBackend implements ChatBackend {
       yield ChatEvents.error({
         code: 'GEMINI_ERROR',
         message: errorMessage,
-        details: { originalError: error }
+        details: { originalError: error },
       });
     } finally {
       this.abortController = null;

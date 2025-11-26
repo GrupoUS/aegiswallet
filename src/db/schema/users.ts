@@ -3,7 +3,7 @@
  * @module db/schema/users
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -15,23 +15,29 @@ import {
   timestamp,
   uuid,
   varchar,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 // Reference to auth.users (Supabase managed)
-export const authUsers = pgTable('users', {
-  id: uuid('id').primaryKey(),
-  email: varchar('email', { length: 255 }),
-  phone: text('phone'),
-  createdAt: timestamp('created_at', { withTimezone: true }),
-  updatedAt: timestamp('updated_at', { withTimezone: true }),
-}, () => [])
+export const authUsers = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey(),
+    email: varchar('email', { length: 255 }),
+    phone: text('phone'),
+    createdAt: timestamp('created_at', { withTimezone: true }),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
+  },
+  () => []
+);
 
 /**
  * Public users table - Extended user profile data
  * References auth.users via id FK
  */
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().references(() => authUsers.id),
+  id: uuid('id')
+    .primaryKey()
+    .references(() => authUsers.id),
   email: text('email').unique().notNull(),
   fullName: text('full_name'),
   phone: text('phone'),
@@ -47,14 +53,16 @@ export const users = pgTable('users', {
   lastLogin: timestamp('last_login', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * User preferences - Theme, notifications, accessibility
  */
 export const userPreferences = pgTable('user_preferences', {
   id: uuid('id').primaryKey().default(sql`extensions.uuid_generate_v4()`),
-  userId: uuid('user_id').unique().references(() => users.id),
+  userId: uuid('user_id')
+    .unique()
+    .references(() => users.id),
   theme: text('theme').default('system'),
   notificationsEmail: boolean('notifications_email').default(true),
   notificationsPush: boolean('notifications_push').default(true),
@@ -67,27 +75,30 @@ export const userPreferences = pgTable('user_preferences', {
   accessibilityScreenReader: boolean('accessibility_screen_reader').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * User activity tracking for retention policy calculations
  */
 export const userActivity = pgTable('user_activity', {
   id: uuid('id').primaryKey().default(sql`extensions.uuid_generate_v4()`),
-  userId: uuid('user_id').notNull().references(() => authUsers.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => authUsers.id),
   activityType: varchar('activity_type', { length: 100 }).notNull(),
   activityData: jsonb('activity_data'),
   lastActivity: timestamp('last_activity', { withTimezone: true }).default(sql`now()`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * LGPD consent records with version tracking
  */
 export const userConsent = pgTable('user_consent', {
   id: uuid('id').primaryKey().default(sql`extensions.uuid_generate_v4()`),
-  userId: uuid('user_id').notNull().references(() => authUsers.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => authUsers.id),
   consentType: varchar('consent_type', { length: 100 }).notNull(),
   granted: boolean('granted').default(false).notNull(),
   consentVersion: varchar('consent_version', { length: 20 }).default('1.0.0'),
@@ -96,26 +107,32 @@ export const userConsent = pgTable('user_consent', {
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * User PIN storage for additional authentication
  */
 export const userPins = pgTable('user_pins', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid('user_id').unique().notNull().references(() => authUsers.id),
+  userId: uuid('user_id')
+    .unique()
+    .notNull()
+    .references(() => authUsers.id),
   pinHash: text('pin_hash').notNull(),
   salt: text('salt').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * User security preferences for authentication
  */
 export const userSecurityPreferences = pgTable('user_security_preferences', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid('user_id').unique().notNull().references(() => authUsers.id),
+  userId: uuid('user_id')
+    .unique()
+    .notNull()
+    .references(() => authUsers.id),
   requireBiometric: boolean('require_biometric').default(false),
   requireOtpForSensitiveOperations: boolean('require_otp_for_sensitive_operations').default(true),
   sessionTimeoutMinutes: integer('session_timeout_minutes').default(30),
@@ -125,10 +142,10 @@ export const userSecurityPreferences = pgTable('user_security_preferences', {
   phoneNumber: text('phone_number'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type User = typeof users.$inferSelect
-export type NewUser = typeof users.$inferInsert
-export type UserPreferences = typeof userPreferences.$inferSelect
-export type UserConsent = typeof userConsent.$inferSelect
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type UserConsent = typeof userConsent.$inferSelect;

@@ -6,8 +6,8 @@
 import type { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import { environment } from '@/server/config/environment';
-import { htmlCache, staticAssetsCache } from '@/server/middleware/cache';
 import type { AppEnv } from '@/server/hono-types';
+import { htmlCache, staticAssetsCache } from '@/server/middleware/cache';
 
 export function setupStaticRoutes(app: Hono<AppEnv>) {
   if (environment.IS_PRODUCTION) {

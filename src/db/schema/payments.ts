@@ -3,7 +3,7 @@
  * @module db/schema/payments
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -15,7 +15,7 @@ import {
   time,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 /**
  * PIX keys registered by users
@@ -30,7 +30,7 @@ export const pixKeys = pgTable('pix_keys', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Payment rules for autonomous payments
@@ -51,8 +51,7 @@ export const paymentRules = pgTable('payment_rules', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Scheduled payments for autonomous execution
@@ -82,7 +81,7 @@ export const scheduledPayments = pgTable('scheduled_payments', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * PIX transfers initiated by user
@@ -108,8 +107,7 @@ export const pixTransfers = pgTable('pix_transfers', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Boletos - Brazilian bank slips
@@ -134,11 +132,11 @@ export const boletos = pgTable('boletos', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type PixKey = typeof pixKeys.$inferSelect
-export type PaymentRule = typeof paymentRules.$inferSelect
-export type ScheduledPayment = typeof scheduledPayments.$inferSelect
-export type PixTransfer = typeof pixTransfers.$inferSelect
-export type Boleto = typeof boletos.$inferSelect
+export type PixKey = typeof pixKeys.$inferSelect;
+export type PaymentRule = typeof paymentRules.$inferSelect;
+export type ScheduledPayment = typeof scheduledPayments.$inferSelect;
+export type PixTransfer = typeof pixTransfers.$inferSelect;
+export type Boleto = typeof boletos.$inferSelect;

@@ -4,8 +4,12 @@
  */
 
 import { zValidator } from '@hono/zod-validator';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { db } from '@/db';
+import { financialEvents } from '@/db/schema/transactions';
+import { userPreferences, users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
@@ -44,18 +48,14 @@ usersRouter.get(
     message: 'Too many requests, please try again later',
   }),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const requestId = c.get('requestId');
 
     try {
-      const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
-
-      if (error) {
-        throw new Error(`Erro ao buscar perfil: ${error.message}`);
-      }
+      const [profile] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
 
       return c.json({
-        data,
+        data: profile || null,
         meta: {
           requestId,
           retrievedAt: new Date().toISOString(),
@@ -92,21 +92,20 @@ usersRouter.put(
   }),
   zValidator('json', updateProfileSchema),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const input = c.req.valid('json');
     const requestId = c.get('requestId');
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .update(input)
-        .eq('id', user.id)
-        .select()
-        .single();
+      const updateData: Partial<typeof users.$inferInsert> = {};
+      if (input.full_name) updateData.fullName = input.full_name;
+      if (input.phone) updateData.phone = input.phone;
 
-      if (error) {
-        throw new Error(`Erro ao atualizar perfil: ${error.message}`);
-      }
+      const [updatedProfile] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, user.id))
+        .returning();
 
       secureLogger.info('User profile updated', {
         requestId,
@@ -114,7 +113,7 @@ usersRouter.put(
       });
 
       return c.json({
-        data,
+        data: updatedProfile,
         meta: {
           requestId,
           updatedAt: new Date().toISOString(),
@@ -151,24 +150,35 @@ usersRouter.put(
   }),
   zValidator('json', updatePreferencesSchema),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const input = c.req.valid('json');
     const requestId = c.get('requestId');
 
     try {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          ...input,
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+      const prefData: any = {
+        userId: user.id,
+        updatedAt: new Date(),
+      };
 
-      if (error) {
-        throw new Error(`Erro ao atualizar preferências: ${error.message}`);
-      }
+      if (input.theme) prefData.theme = input.theme;
+      if (input.notifications_email !== undefined)
+        prefData.notificationsEmail = input.notifications_email;
+      if (input.notifications_push !== undefined)
+        prefData.notificationsPush = input.notifications_push;
+      if (input.notifications_sms !== undefined)
+        prefData.notificationsSms = input.notifications_sms;
+      if (input.auto_categorize !== undefined) prefData.autoCategorize = input.auto_categorize;
+      if (input.budget_alerts !== undefined) prefData.budgetAlerts = input.budget_alerts;
+      if (input.voice_feedback !== undefined) prefData.voiceFeedback = input.voice_feedback;
+
+      const [updatedPrefs] = await db
+        .insert(userPreferences)
+        .values(prefData)
+        .onConflictDoUpdate({
+          target: userPreferences.userId,
+          set: prefData,
+        })
+        .returning();
 
       secureLogger.info('User preferences updated', {
         requestId,
@@ -176,7 +186,7 @@ usersRouter.put(
       });
 
       return c.json({
-        data,
+        data: updatedPrefs,
         meta: {
           requestId,
           updatedAt: new Date().toISOString(),
@@ -212,23 +222,11 @@ usersRouter.post(
     message: 'Too many requests, please try again later',
   }),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const requestId = c.get('requestId');
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id);
-
-      if (error) {
-        // Don't throw error for this non-critical operation, just log warning
-        secureLogger.warn('Failed to update last login', {
-          error: error.message,
-          requestId,
-          userId: user.id,
-        });
-      }
+      await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id));
 
       return c.json({
         data: { success: true },
@@ -244,7 +242,6 @@ usersRouter.post(
         userId: user.id,
       });
 
-      // Still return success - this is a non-critical operation
       return c.json({
         data: { success: true },
         meta: {
@@ -268,17 +265,20 @@ usersRouter.get(
     message: 'Too many requests, please try again later',
   }),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const requestId = c.get('requestId');
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('is_active, last_login')
-        .eq('id', user.id)
-        .single();
+      const [status] = await db
+        .select({
+          isActive: users.isActive,
+          lastLogin: users.lastLogin,
+        })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
 
-      if (error) {
+      if (!status) {
         return c.json({
           data: { is_active: false, last_login: null },
           meta: {
@@ -289,7 +289,10 @@ usersRouter.get(
       }
 
       return c.json({
-        data,
+        data: {
+          is_active: status.isActive,
+          last_login: status.lastLogin,
+        },
         meta: {
           requestId,
           retrievedAt: new Date().toISOString(),
@@ -326,30 +329,35 @@ usersRouter.get(
   }),
   zValidator('query', getFinancialSummarySchema),
   async (c) => {
-    const { user, supabase } = c.get('auth');
+    const { user } = c.get('auth');
     const { period_start, period_end } = c.req.valid('query');
     const requestId = c.get('requestId');
 
     try {
-      const { data: transactions, error } = await supabase
-        .from('financial_events')
-        .select('amount, event_type, is_income')
-        .eq('user_id', user.id)
-        .gte('created_at', period_start)
-        .lte('created_at', period_end);
+      const transactions = await db
+        .select({
+          amount: financialEvents.amount,
+          eventType: financialEvents.eventType,
+          isIncome: financialEvents.isIncome,
+        })
+        .from(financialEvents)
+        .where(
+          and(
+            eq(financialEvents.userId, user.id),
+            gte(financialEvents.createdAt, new Date(period_start)),
+            lte(financialEvents.createdAt, new Date(period_end))
+          )
+        );
 
-      if (error) {
-        throw new Error(`Erro ao buscar resumo financeiro: ${error.message}`);
-      }
-
-      const summary = (transactions || []).reduce(
-        (acc, t) => {
-          if (['debit', 'pix', 'boleto'].includes(t.event_type)) {
-            acc.expenses += t.amount;
-            acc.balance -= t.amount;
-          } else if (['credit', 'transfer'].includes(t.event_type)) {
-            acc.income += t.amount;
-            acc.balance += t.amount;
+      const summary = transactions.reduce(
+        (acc: { income: number; expenses: number; balance: number }, t: any) => {
+          const amount = Number(t.amount);
+          if (['debit', 'pix', 'boleto'].includes(t.eventType)) {
+            acc.expenses += amount;
+            acc.balance -= amount;
+          } else if (['credit', 'transfer'].includes(t.eventType)) {
+            acc.income += amount;
+            acc.balance += amount;
           }
           return acc;
         },

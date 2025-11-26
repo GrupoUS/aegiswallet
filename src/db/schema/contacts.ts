@@ -3,16 +3,8 @@
  * @module db/schema/contacts
  */
 
-import { sql } from 'drizzle-orm'
-import {
-  boolean,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm';
+import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Contacts - User contact list
@@ -28,7 +20,7 @@ export const contacts = pgTable('contacts', {
   isFavorite: boolean('is_favorite').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Contact payment methods - PIX, TED, DOC associated with contacts
@@ -36,7 +28,9 @@ export const contacts = pgTable('contacts', {
 export const contactPaymentMethods = pgTable('contact_payment_methods', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid('user_id').notNull(),
-  contactId: uuid('contact_id').notNull().references(() => contacts.id),
+  contactId: uuid('contact_id')
+    .notNull()
+    .references(() => contacts.id),
   paymentType: text('payment_type').notNull(), // pix, ted, doc, boleto
   pixKeyType: text('pix_key_type'), // cpf, cnpj, email, phone, random
   pixKeyValue: text('pix_key_value'),
@@ -53,9 +47,9 @@ export const contactPaymentMethods = pgTable('contact_payment_methods', {
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type Contact = typeof contacts.$inferSelect
-export type NewContact = typeof contacts.$inferInsert
-export type ContactPaymentMethod = typeof contactPaymentMethods.$inferSelect
+export type Contact = typeof contacts.$inferSelect;
+export type NewContact = typeof contacts.$inferInsert;
+export type ContactPaymentMethod = typeof contactPaymentMethods.$inferSelect;

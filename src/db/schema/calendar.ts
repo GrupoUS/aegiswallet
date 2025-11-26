@@ -3,17 +3,9 @@
  * @module db/schema/calendar
  */
 
-import { sql } from 'drizzle-orm'
-import {
-  boolean,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core'
-import { financialEvents } from './transactions'
+import { sql } from 'drizzle-orm';
+import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { financialEvents } from './transactions';
 
 /**
  * Google Calendar OAuth tokens
@@ -28,7 +20,7 @@ export const googleCalendarTokens = pgTable('google_calendar_tokens', {
   googleUserEmail: text('google_user_email').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Calendar sync settings per user
@@ -44,8 +36,7 @@ export const calendarSyncSettings = pgTable('calendar_sync_settings', {
   autoSyncIntervalMinutes: integer('auto_sync_interval_minutes').default(15),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Calendar sync mapping - Links between Aegis events and Google events
@@ -53,7 +44,9 @@ export const calendarSyncSettings = pgTable('calendar_sync_settings', {
 export const calendarSyncMapping = pgTable('calendar_sync_mapping', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid('user_id').notNull(),
-  aegisEventId: uuid('aegis_event_id').notNull().references(() => financialEvents.id),
+  aegisEventId: uuid('aegis_event_id')
+    .notNull()
+    .references(() => financialEvents.id),
   googleEventId: text('google_event_id').notNull(),
   googleCalendarId: text('google_calendar_id').default('primary'),
   lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).default(sql`now()`),
@@ -62,7 +55,7 @@ export const calendarSyncMapping = pgTable('calendar_sync_mapping', {
   errorMessage: text('error_message'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Calendar sync audit - Sync operation logs
@@ -74,10 +67,10 @@ export const calendarSyncAudit = pgTable('calendar_sync_audit', {
   eventId: uuid('event_id'),
   details: jsonb('details'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type GoogleCalendarToken = typeof googleCalendarTokens.$inferSelect
-export type CalendarSyncSetting = typeof calendarSyncSettings.$inferSelect
-export type CalendarSyncMapping = typeof calendarSyncMapping.$inferSelect
-export type CalendarSyncAudit = typeof calendarSyncAudit.$inferSelect
+export type GoogleCalendarToken = typeof googleCalendarTokens.$inferSelect;
+export type CalendarSyncSetting = typeof calendarSyncSettings.$inferSelect;
+export type CalendarSyncMapping = typeof calendarSyncMapping.$inferSelect;
+export type CalendarSyncAudit = typeof calendarSyncAudit.$inferSelect;

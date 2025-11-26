@@ -1,16 +1,16 @@
 /**
  * Drizzle ORM Connection Test Script
- * 
+ *
  * Validates that the Drizzle setup is working correctly by:
  * 1. Testing database connectivity
  * 2. Running simple queries on generated schemas
  * 3. Verifying type inference
- * 
+ *
  * Usage: bun scripts/test-drizzle-connection.ts
  */
 
-import { db, pgClient, schema } from '../src/db';
 import { sql } from 'drizzle-orm';
+import { db, pgClient, schema } from '../src/db';
 
 async function testDrizzleConnection() {
   console.log('🔄 Starting Drizzle ORM connection test...\n');
@@ -28,9 +28,7 @@ async function testDrizzleConnection() {
 
     // Test 3: Count users (schema validation)
     console.log('\n📡 Test 3: Schema validation - users table');
-    const userCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(schema.users);
+    const userCount = await db.select({ count: sql<number>`count(*)` }).from(schema.users);
     console.log('   ✅ Users count:', userCount[0]?.count);
 
     // Test 4: Count financial_categories
@@ -42,9 +40,7 @@ async function testDrizzleConnection() {
 
     // Test 5: Count audit_logs (LGPD)
     console.log('\n📡 Test 5: Schema validation - audit_logs (LGPD)');
-    const auditCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(schema.auditLogs);
+    const auditCount = await db.select({ count: sql<number>`count(*)` }).from(schema.auditLogs);
     console.log('   ✅ Audit logs count:', auditCount[0]?.count);
 
     // Test 6: List table names in public schema
@@ -56,7 +52,7 @@ async function testDrizzleConnection() {
       ORDER BY table_name
     `);
     console.log('   ✅ Public schema tables:', tablesResult.length);
-    tablesResult.slice(0, 5).forEach((row: any) => {
+    tablesResult.slice(0, 5).forEach((row: { table_name: string }) => {
       console.log(`      - ${row.table_name}`);
     });
     if (tablesResult.length > 5) {
@@ -69,7 +65,6 @@ async function testDrizzleConnection() {
     console.log('  - Schema inference: ✅');
     console.log('  - Query execution: ✅');
     console.log('  - Type safety: ✅');
-
   } catch (error) {
     console.error('\n❌ Drizzle ORM connection test FAILED!');
     console.error('Error:', error);

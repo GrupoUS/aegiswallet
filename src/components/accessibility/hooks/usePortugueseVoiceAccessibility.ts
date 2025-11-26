@@ -44,8 +44,8 @@ interface BrowserSpeechRecognition {
   stop(): void;
 }
 
-// Alias for compatibility
-interface SpeechRecognitionInstance extends BrowserSpeechRecognition {}
+// Alias for compatibility - using BrowserSpeechRecognition directly
+type SpeechRecognitionInstance = BrowserSpeechRecognition;
 
 type VoiceCategory = 'financeiro' | 'navegacao' | 'acao' | 'ajuda';
 
@@ -111,12 +111,6 @@ interface HookParams {
   enabled: boolean;
   onVoiceCommand?: (command: string, confidence: number) => void;
 }
-
-// Import Web Speech API types from centralized declaration
-import type {
-  SpeechRecognition,
-  SpeechRecognitionConstructor,
-} from '@/types/speech-recognition';
 
 export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: HookParams) => {
   const { announceToScreenReader, settings } = useAccessibility();

@@ -3,7 +3,7 @@
  * @module db/schema/banking
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   inet,
@@ -14,8 +14,8 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { users } from './users'
+} from 'drizzle-orm/pg-core';
+import { users } from './users';
 
 /**
  * Bank connections - Open Banking links
@@ -38,14 +38,16 @@ export const bankConnections = pgTable('bank_connections', {
   connectedAt: timestamp('connected_at', { withTimezone: true }).default(sql`now()`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Bank accounts - Accounts from Open Banking
  */
 export const bankAccounts = pgTable('bank_accounts', {
   id: uuid('id').primaryKey().default(sql`extensions.uuid_generate_v4()`),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   belvoAccountId: text('belvo_account_id').unique().notNull(),
   institutionId: text('institution_id').notNull(),
   institutionName: text('institution_name').notNull(),
@@ -63,8 +65,7 @@ export const bankAccounts = pgTable('bank_accounts', {
   syncErrorMessage: text('sync_error_message'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Bank tokens - Encrypted OAuth tokens
@@ -83,7 +84,7 @@ export const bankTokens = pgTable('bank_tokens', {
   scopes: text('scopes').array().default(sql`ARRAY['accounts:read', 'transactions:read']`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Bank consent - Open Banking consent records
@@ -104,7 +105,7 @@ export const bankConsent = pgTable('bank_consent', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Bank audit logs - Compliance audit trail
@@ -122,12 +123,14 @@ export const bankAuditLogs = pgTable('bank_audit_logs', {
   ipAddress: inet('ip_address'),
   userAgent: text('user_agent'),
   metadata: jsonb('metadata'),
-  retentionUntil: timestamp('retention_until', { withTimezone: true }).default(sql`now() + interval '1 year'`),
+  retentionUntil: timestamp('retention_until', { withTimezone: true }).default(
+    sql`now() + interval '1 year'`
+  ),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type BankConnection = typeof bankConnections.$inferSelect
-export type BankAccount = typeof bankAccounts.$inferSelect
-export type BankToken = typeof bankTokens.$inferSelect
-export type BankConsent = typeof bankConsent.$inferSelect
+export type BankConnection = typeof bankConnections.$inferSelect;
+export type BankAccount = typeof bankAccounts.$inferSelect;
+export type BankToken = typeof bankTokens.$inferSelect;
+export type BankConsent = typeof bankConsent.$inferSelect;

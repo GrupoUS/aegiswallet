@@ -3,7 +3,7 @@
  * @module db/schema/voice
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   boolean,
@@ -15,7 +15,7 @@ import {
   timestamp,
   uuid,
   varchar,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 /**
  * Voice consent - LGPD consent for voice data processing
@@ -27,7 +27,7 @@ export const voiceConsent = pgTable('voice_consent', {
   consentDate: timestamp('consent_date', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Voice feedback - User feedback on voice recognition
@@ -47,7 +47,7 @@ export const voiceFeedback = pgTable('voice_feedback', {
   wasCorrect: boolean('was_correct'),
   correctionMade: text('correction_made'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Voice recordings - Temporary storage with retention policies
@@ -67,8 +67,7 @@ export const voiceRecordings = pgTable('voice_recordings', {
   retentionExpiresAt: timestamp('retention_expires_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-})
-
+});
 
 /**
  * Voice transcriptions - STT results
@@ -84,7 +83,7 @@ export const voiceTranscriptions = pgTable('voice_transcriptions', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Voice audit logs - LGPD compliance
@@ -96,7 +95,7 @@ export const voiceAuditLogs = pgTable('voice_audit_logs', {
   audioId: uuid('audio_id').notNull(),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   timestamp: timestamp('timestamp', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Biometric patterns - Encrypted voice biometric data
@@ -113,11 +112,11 @@ export const biometricPatterns = pgTable('biometric_patterns', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
-})
+});
 
 // Type exports
-export type VoiceConsent = typeof voiceConsent.$inferSelect
-export type VoiceFeedback = typeof voiceFeedback.$inferSelect
-export type VoiceRecording = typeof voiceRecordings.$inferSelect
-export type VoiceTranscription = typeof voiceTranscriptions.$inferSelect
-export type BiometricPattern = typeof biometricPatterns.$inferSelect
+export type VoiceConsent = typeof voiceConsent.$inferSelect;
+export type VoiceFeedback = typeof voiceFeedback.$inferSelect;
+export type VoiceRecording = typeof voiceRecordings.$inferSelect;
+export type VoiceTranscription = typeof voiceTranscriptions.$inferSelect;
+export type BiometricPattern = typeof biometricPatterns.$inferSelect;

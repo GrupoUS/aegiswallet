@@ -115,7 +115,10 @@ export function useCreateTransaction(): UseCreateTransactionReturn {
 }
 
 interface UseDeleteTransactionReturn {
-  mutate: (input: { id: string }, options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => void;
+  mutate: (
+    input: { id: string },
+    options?: { onSuccess?: () => void; onError?: (error: Error) => void }
+  ) => void;
   mutateAsync: (input: { id: string }) => Promise<string>;
   isPending: boolean;
   error: Error | null;

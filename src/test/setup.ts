@@ -472,6 +472,7 @@ beforeAll(() => {
         select: () => queryBuilder,
         update: () => queryBuilder,
         delete: () => queryBuilder,
+        // eslint-disable-next-line unicorn/no-thenable
         then: (resolve: (value: { data: unknown[]; error: null }) => void) => {
           resolve({ data: queryBuilder.data, error: queryBuilder.error });
         },

@@ -326,6 +326,7 @@ class MockQueryBuilder<T extends TableName> {
       order: () => this,
       limit: () => this,
       single: () => ({ data: insertedRecord, error: null }),
+      // eslint-disable-next-line unicorn/no-thenable
       then: (resolve: any) => resolve({ data: [insertedRecord], error: null }),
     } as any;
   }
@@ -392,6 +393,7 @@ class MockQueryBuilder<T extends TableName> {
   }
 
   // Supabase query builder is thenable
+  // eslint-disable-next-line unicorn/no-thenable
   then<TResult1 = { data: Row<T>[]; error: null }, TResult2 = never>(
     onfulfilled?:
       | ((value: { data: Row<T>[]; error: null }) => TResult1 | PromiseLike<TResult1>)

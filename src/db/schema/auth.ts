@@ -3,10 +3,9 @@
  * @module db/schema/auth
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   boolean,
-  inet,
   integer,
   jsonb,
   numeric,
@@ -14,10 +13,10 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 // Forward reference to auth.users
-const authUsersRef = () => import('./users').then(m => m.authUsers)
+const _authUsersRef = () => import('./users').then((m) => m.authUsers);
 
 /**
  * Authentication attempts tracking for rate limiting
@@ -31,7 +30,7 @@ export const authAttempts = pgTable('auth_attempts', {
   lockoutUntil: timestamp('lockout_until', { withTimezone: true }),
   lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }).default(sql`now()`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * User authentication sessions
@@ -45,8 +44,7 @@ export const authSessions = pgTable('auth_sessions', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   lastActivity: timestamp('last_activity', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Biometric credentials for WebAuthn
@@ -58,7 +56,7 @@ export const biometricCredentials = pgTable('biometric_credentials', {
   credentialType: text('credential_type').default('public-key'),
   publicKey: text('public_key'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * OTP codes for SMS verification
@@ -73,7 +71,7 @@ export const otpCodes = pgTable('otp_codes', {
   usedAt: timestamp('used_at', { withTimezone: true }),
   attempts: integer('attempts').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Push authentication requests
@@ -86,7 +84,7 @@ export const pushAuthRequests = pgTable('push_auth_requests', {
   status: text('status').default('pending'), // pending, approved, denied, expired
   respondedAt: timestamp('responded_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Security events log
@@ -101,7 +99,7 @@ export const securityEvents = pgTable('security_events', {
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   riskScore: numeric('risk_score').default(sql`0`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Security alerts for users
@@ -119,7 +117,7 @@ export const securityAlerts = pgTable('security_alerts', {
   resolvedBy: uuid('resolved_by'),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Fraud detection rules
@@ -132,10 +130,10 @@ export const fraudDetectionRules = pgTable('fraud_detection_rules', {
   description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type AuthAttempt = typeof authAttempts.$inferSelect
-export type AuthSession = typeof authSessions.$inferSelect
-export type SecurityEvent = typeof securityEvents.$inferSelect
-export type SecurityAlert = typeof securityAlerts.$inferSelect
+export type AuthAttempt = typeof authAttempts.$inferSelect;
+export type AuthSession = typeof authSessions.$inferSelect;
+export type SecurityEvent = typeof securityEvents.$inferSelect;
+export type SecurityAlert = typeof securityAlerts.$inferSelect;

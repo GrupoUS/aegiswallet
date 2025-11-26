@@ -7,7 +7,7 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error(
     'DATABASE_URL is not defined. Set it in your .env file.\n' +
-    'Format: postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres'
+      'Format: postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres'
   );
 }
 
@@ -34,10 +34,14 @@ export { schema };
 
 // Simple validation query on initialization
 // This runs once when the module is imported
+// Note: Silent connection test for production
 client`SELECT 1`
   .then(() => {
-    console.log('✅ Database connection established via Drizzle + Postgres.js');
+    // Connection successful - silent in production
   })
   .catch((err) => {
-    console.error('❌ Database connection failed:', err.message);
+    // Error only shown in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Database connection failed:', err.message);
+    }
   });

@@ -17,6 +17,7 @@
     "vitest.config.ts",
     "vitest.*.config.ts",
     "scripts/**/*.ts",
-    "src/db/**/*.ts"
+    "src/db/index.ts",
+    "src/db/schema/**/*.ts"
   ]
 }

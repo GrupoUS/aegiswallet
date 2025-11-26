@@ -3,7 +3,7 @@
  * @module db/schema/ai
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
@@ -13,7 +13,7 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 /**
  * AI insights - AI-generated financial recommendations
@@ -42,7 +42,7 @@ export const aiInsights = pgTable('ai_insights', {
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Chat conversations - AI chat sessions
@@ -56,29 +56,32 @@ export const chatConversations = pgTable('chat_conversations', {
   lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
   messageCount: integer('message_count').default(0),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
-})
-
+});
 
 /**
  * Chat messages - Individual messages in conversations
  */
 export const chatMessages = pgTable('chat_messages', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  conversationId: uuid('conversation_id').notNull().references(() => chatConversations.id),
+  conversationId: uuid('conversation_id')
+    .notNull()
+    .references(() => chatConversations.id),
   role: text('role').notNull(), // user, assistant, system
   content: text('content').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   attachments: jsonb('attachments').default(sql`'[]'::jsonb`),
   reasoning: text('reasoning'),
-})
+});
 
 /**
  * Chat context snapshots - Financial context for AI
  */
 export const chatContextSnapshots = pgTable('chat_context_snapshots', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  conversationId: uuid('conversation_id').notNull().references(() => chatConversations.id),
+  conversationId: uuid('conversation_id')
+    .notNull()
+    .references(() => chatConversations.id),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   recentTransactions: jsonb('recent_transactions').default(sql`'[]'::jsonb`),
   accountBalances: jsonb('account_balances').default(sql`'[]'::jsonb`),
@@ -86,7 +89,7 @@ export const chatContextSnapshots = pgTable('chat_context_snapshots', {
   userPreferences: jsonb('user_preferences').default(sql`'{}'::jsonb`),
   contextVersion: integer('context_version').default(1),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
-})
+});
 
 /**
  * Conversation contexts - NLU context tracking
@@ -101,7 +104,7 @@ export const conversationContexts = pgTable('conversation_contexts', {
   timestamp: timestamp('timestamp', { withTimezone: true }).default(sql`now()`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * NLU learning data - Continuous improvement data
@@ -121,11 +124,11 @@ export const nluLearningData = pgTable('nlu_learning_data', {
   userFeedback: text('user_feedback'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 // Type exports
-export type AiInsight = typeof aiInsights.$inferSelect
-export type ChatConversation = typeof chatConversations.$inferSelect
-export type ChatMessage = typeof chatMessages.$inferSelect
-export type ConversationContext = typeof conversationContexts.$inferSelect
-export type NluLearningData = typeof nluLearningData.$inferSelect
+export type AiInsight = typeof aiInsights.$inferSelect;
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type ConversationContext = typeof conversationContexts.$inferSelect;
+export type NluLearningData = typeof nluLearningData.$inferSelect;

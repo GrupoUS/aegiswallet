@@ -3,8 +3,8 @@
  * Organizes and manages all application-level providers in a clean hierarchy
  */
 
-import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { ErrorBoundary } from '@/components/error-boundaries/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';

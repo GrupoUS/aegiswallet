@@ -3,17 +3,8 @@
  * @module db/schema/lgpd
  */
 
-import { sql } from 'drizzle-orm'
-import {
-  boolean,
-  inet,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm';
+import { boolean, inet, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 /**
  * Audit logs - Comprehensive compliance audit trail
@@ -33,7 +24,7 @@ export const auditLogs = pgTable('audit_logs', {
   errorMessage: text('error_message'),
   details: jsonb('details'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Data subject requests - LGPD rights requests
@@ -49,7 +40,7 @@ export const dataSubjectRequests = pgTable('data_subject_requests', {
   processedBy: uuid('processed_by'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   processedAt: timestamp('processed_at', { withTimezone: true }),
-})
+});
 
 /**
  * Legal holds - Prevent data deletion for legal reasons
@@ -66,9 +57,9 @@ export const legalHolds = pgTable('legal_holds', {
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   releasedAt: timestamp('released_at', { withTimezone: true }),
   releasedBy: uuid('released_by'),
-})
+});
 
 // Type exports
-export type AuditLog = typeof auditLogs.$inferSelect
-export type DataSubjectRequest = typeof dataSubjectRequests.$inferSelect
-export type LegalHold = typeof legalHolds.$inferSelect
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type DataSubjectRequest = typeof dataSubjectRequests.$inferSelect;
+export type LegalHold = typeof legalHolds.$inferSelect;

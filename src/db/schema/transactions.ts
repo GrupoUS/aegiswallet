@@ -3,8 +3,9 @@
  * @module db/schema/transactions
  */
 
-import { sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   date,
   integer,
@@ -15,8 +16,7 @@ import {
   timestamp,
   uuid,
   varchar,
-  type AnyPgColumn,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 /**
  * Financial categories for transaction classification
@@ -33,7 +33,7 @@ export const financialCategories = pgTable('financial_categories', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Event types for financial calendar
@@ -48,8 +48,7 @@ export const eventTypes = pgTable('event_types', {
   defaultReminderHours: integer('default_reminder_hours').default(24),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Financial events - Calendar items for income, expenses, bills
@@ -86,7 +85,7 @@ export const financialEvents = pgTable('financial_events', {
   merchantCategory: text('merchant_category'),
   installmentInfo: jsonb('installment_info').default(sql`'{}'::jsonb`),
   eventTypeId: uuid('event_type_id').references(() => eventTypes.id),
-})
+});
 
 /**
  * Event reminders for notifications
@@ -102,8 +101,7 @@ export const eventReminders = pgTable('event_reminders', {
   sentAt: timestamp('sent_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Transactions - Normalized list of user transactions
@@ -123,7 +121,7 @@ export const transactions = pgTable('transactions', {
   currency: text('currency').default('BRL'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Financial accounts - User bank accounts
@@ -139,7 +137,7 @@ export const financialAccounts = pgTable('financial_accounts', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Budget categories with spending limits
@@ -165,8 +163,7 @@ export const budgetCategories = pgTable('budget_categories', {
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
-
+});
 
 /**
  * Spending patterns - Cached analytics for AI context
@@ -192,7 +189,7 @@ export const spendingPatterns = pgTable('spending_patterns', {
   lastCalculatedAt: timestamp('last_calculated_at', { withTimezone: true }).default(sql`now()`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
-})
+});
 
 /**
  * Financial snapshots - Historical data for AI chat and reporting
@@ -219,12 +216,12 @@ export const financialSnapshots = pgTable('financial_snapshots', {
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   expiresAt: timestamp('expires_at', { withTimezone: true }),
-})
+});
 
 // Type exports
-export type FinancialCategory = typeof financialCategories.$inferSelect
-export type FinancialEvent = typeof financialEvents.$inferSelect
-export type Transaction = typeof transactions.$inferSelect
-export type NewTransaction = typeof transactions.$inferInsert
-export type BudgetCategory = typeof budgetCategories.$inferSelect
-export type SpendingPattern = typeof spendingPatterns.$inferSelect
+export type FinancialCategory = typeof financialCategories.$inferSelect;
+export type FinancialEvent = typeof financialEvents.$inferSelect;
+export type Transaction = typeof transactions.$inferSelect;
+export type NewTransaction = typeof transactions.$inferInsert;
+export type BudgetCategory = typeof budgetCategories.$inferSelect;
+export type SpendingPattern = typeof spendingPatterns.$inferSelect;

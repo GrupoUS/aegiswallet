@@ -18,7 +18,7 @@
 // ============================================================================
 
 // Define Web Speech API types that may not be available in all TypeScript configs
-interface SpeechRecognitionEventType {
+interface SpeechRecognitionEventMap {
   audioend: Event;
   audiostart: Event;
   end: Event;
@@ -671,8 +671,11 @@ export class SpeechRecognitionService {
  * Works with both standard and webkit-prefixed versions
  */
 function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | undefined {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const win = window as any;
+  // Type assertion needed for browser APIs
+  const win = window as typeof window & {
+    SpeechRecognition?: (new () => SpeechRecognitionType) | undefined;
+    webkitSpeechRecognition?: (new () => SpeechRecognitionType) | undefined;
+  };
   return win.SpeechRecognition || win.webkitSpeechRecognition;
 }
 
@@ -681,8 +684,11 @@ function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | 
  * Works with both standard and webkit-prefixed versions
  */
 function getSpeechGrammarListConstructor(): (new () => SpeechGrammarListType) | undefined {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const win = window as any;
+  // Type assertion needed for browser APIs
+  const win = window as typeof window & {
+    SpeechGrammarList?: (new () => SpeechGrammarListType) | undefined;
+    webkitSpeechGrammarList?: (new () => SpeechGrammarListType) | undefined;
+  };
   return win.SpeechGrammarList || win.webkitSpeechGrammarList;
 }
 

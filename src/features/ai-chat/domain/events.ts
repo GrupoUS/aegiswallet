@@ -66,10 +66,7 @@ export const createErrorEvent = (
 /**
  * Create a tool call start event
  */
-export const createToolCallStartEvent = (
-  toolCallId: string,
-  name: string
-): ChatStreamChunk => ({
+export const createToolCallStartEvent = (toolCallId: string, name: string): ChatStreamChunk => ({
   type: 'tool-call-start',
   payload: { id: toolCallId, name, arguments: {}, status: 'pending' },
 });
@@ -105,34 +102,28 @@ export const isReasoningChunk = (chunk: ChatStreamChunk): boolean =>
 /**
  * Check if chunk is a text delta chunk
  */
-export const isTextDeltaChunk = (chunk: ChatStreamChunk): boolean =>
-  chunk.type === 'text-delta';
+export const isTextDeltaChunk = (chunk: ChatStreamChunk): boolean => chunk.type === 'text-delta';
 
 /**
  * Check if chunk is a tool call chunk
  */
 export const isToolCallChunk = (chunk: ChatStreamChunk): boolean =>
-  chunk.type === 'tool-call' ||
-  chunk.type === 'tool-call-start' ||
-  chunk.type === 'tool-call-end';
+  chunk.type === 'tool-call' || chunk.type === 'tool-call-start' || chunk.type === 'tool-call-end';
 
 /**
  * Check if chunk is a suggestion chunk
  */
-export const isSuggestionChunk = (chunk: ChatStreamChunk): boolean =>
-  chunk.type === 'suggestion';
+export const isSuggestionChunk = (chunk: ChatStreamChunk): boolean => chunk.type === 'suggestion';
 
 /**
  * Check if chunk is a task chunk
  */
-export const isTaskChunk = (chunk: ChatStreamChunk): boolean =>
-  chunk.type === 'task';
+export const isTaskChunk = (chunk: ChatStreamChunk): boolean => chunk.type === 'task';
 
 /**
  * Check if chunk is an error chunk
  */
-export const isErrorChunk = (chunk: ChatStreamChunk): boolean =>
-  chunk.type === 'error';
+export const isErrorChunk = (chunk: ChatStreamChunk): boolean => chunk.type === 'error';
 
 /**
  * Check if chunk is a done/end chunk

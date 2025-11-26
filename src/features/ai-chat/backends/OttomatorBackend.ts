@@ -180,4 +180,3 @@ export class OttomatorBackend implements ChatBackend {
     return { ...this._config };
   }
 }
-

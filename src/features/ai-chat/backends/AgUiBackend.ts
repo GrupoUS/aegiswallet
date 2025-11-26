@@ -149,4 +149,3 @@ export class AgUiBackend implements ChatBackend {
     return { ...this._config };
   }
 }
-

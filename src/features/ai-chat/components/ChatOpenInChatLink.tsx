@@ -1,5 +1,6 @@
 import { ExternalLink, Share2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import { OpenInChat } from '@/components/ai-elements';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 type ChatProvider = 'chatgpt' | 'claude' | 'gemini';
@@ -146,4 +146,3 @@ export function ChatOpenInChatLink({
     </OpenInChat>
   );
 }
-

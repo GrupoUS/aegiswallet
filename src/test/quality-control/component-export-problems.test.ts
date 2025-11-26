@@ -14,11 +14,7 @@ const { PopoverAnchor } = PopoverModule;
 const { SheetOverlay, SheetPortal } = SheetModule;
 const { Button, buttonVariants } = ButtonModule;
 
-const componentPaths = [
-  '@/components/ui/button',
-  '@/components/ui/card',
-  '@/components/ui/input',
-];
+const componentPaths = ['@/components/ui/button', '@/components/ui/card', '@/components/ui/input'];
 
 describe('Component Export Problems', () => {
   describe('UI Component Exports', () => {

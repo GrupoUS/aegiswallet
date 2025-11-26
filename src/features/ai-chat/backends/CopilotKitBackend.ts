@@ -131,4 +131,3 @@ export class CopilotKitBackend implements ChatBackend {
     return { ...this._config };
   }
 }
-

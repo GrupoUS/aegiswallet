@@ -143,4 +143,3 @@ export function ChatImage({ image, className }: ChatImageProps) {
     </Dialog>
   );
 }
-

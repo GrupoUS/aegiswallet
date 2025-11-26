@@ -85,7 +85,6 @@ export function ChatContainer({
   return (
     <ChatLayout
       title="Assistente Financeiro Aegis"
-      showModelSelector={!isWidget}
       isWidget={isWidget}
       onClose={onClose}
       className="flex-1"

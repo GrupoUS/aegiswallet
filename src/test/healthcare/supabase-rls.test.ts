@@ -1,7 +1,7 @@
 // Satisfies: Section 4: Supabase RLS Testing of .claude/skills/webapp-testing/SKILL.md
 import { createClient } from '@supabase/supabase-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 // Mock Supabase client for testing
 const createMockSupabaseClient = (jwtPayload?: any) => {

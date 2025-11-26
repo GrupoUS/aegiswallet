@@ -44,7 +44,7 @@ function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEven
   };
 }
 
-export function FinancialCalendar(): JSX.Element {
+export function FinancialCalendar() {
   const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);

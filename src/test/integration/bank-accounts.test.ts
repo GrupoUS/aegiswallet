@@ -1,7 +1,7 @@
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { bankAccountsRouter } from '@/server/routers/bankAccounts';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 import type { TestUser } from './helpers';
 import { cleanupUserData, createTestUser, getSupabaseAdminClient } from './helpers';
 

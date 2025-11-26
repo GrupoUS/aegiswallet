@@ -6,7 +6,7 @@
  */
 
 import { faker } from '@faker-js/faker';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 import 'faker-br';
 
 // Type aliases for easier use

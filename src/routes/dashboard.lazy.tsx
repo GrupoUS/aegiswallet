@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Transaction, useTransactions } from '@/hooks/use-transactions';
+import { type Transaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents, useFinancialSummary } from '@/hooks/useFinancialEvents';
-import type { FinancialEvent } from '@/types/financial-events';
 
 // Lazy loaded components
 const LazyMiniCalendarWidget = lazy(() =>
@@ -113,7 +112,10 @@ export function Dashboard() {
     // Already filtered by type: 'pix' in query, just check if it's an expense
     return list
       .filter((transaction: Transaction) => transaction.amount < 0)
-      .reduce((sum: number, transaction: Transaction) => sum + Math.abs(Number(transaction.amount)), 0);
+      .reduce(
+        (sum: number, transaction: Transaction) => sum + Math.abs(Number(transaction.amount)),
+        0
+      );
   }, [pixTransactions]);
 
   // Magic Cards com dados reais

@@ -1,7 +1,7 @@
-import React, { useState, KeyboardEvent } from 'react';
+import { Send, StopCircle } from 'lucide-react';
+import { type KeyboardEvent, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, StopCircle } from 'lucide-react';
 
 interface ChatPromptInputProps {
   onSend: (message: string) => void;
@@ -10,7 +10,12 @@ interface ChatPromptInputProps {
   placeholder?: string;
 }
 
-export function ChatPromptInput({ onSend, isLoading, onStop, placeholder = "Ask anything..." }: ChatPromptInputProps) {
+export function ChatPromptInput({
+  onSend,
+  isLoading,
+  onStop,
+  placeholder = 'Ask anything...',
+}: ChatPromptInputProps) {
   const [input, setInput] = useState('');
 
   const handleSend = () => {
@@ -40,7 +45,7 @@ export function ChatPromptInput({ onSend, isLoading, onStop, placeholder = "Ask 
         size="icon"
         onClick={isLoading ? onStop : handleSend}
         disabled={!input.trim() && !isLoading}
-        className={isLoading ? "bg-destructive hover:bg-destructive/90" : ""}
+        className={isLoading ? 'bg-destructive hover:bg-destructive/90' : ''}
       >
         {isLoading ? <StopCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
       </Button>

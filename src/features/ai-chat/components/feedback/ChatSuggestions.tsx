@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 
 interface ChatSuggestionsProps {
@@ -12,9 +11,9 @@ export function ChatSuggestions({ suggestions, onSelect, disabled }: ChatSuggest
 
   return (
     <div className="flex flex-wrap gap-2 mt-2">
-      {suggestions.map((suggestion, index) => (
+      {suggestions.map((suggestion) => (
         <Button
-          key={index}
+          key={suggestion}
           variant="outline"
           size="sm"
           className="h-7 text-xs rounded-full bg-background hover:bg-accent/50"

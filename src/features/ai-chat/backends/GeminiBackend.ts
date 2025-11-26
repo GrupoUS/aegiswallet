@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { ChatBackend, ModelInfo } from '../domain/ChatBackend';
-import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 import { ChatEvents } from '../domain/events';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 
 export interface GeminiBackendConfig {
   apiKey: string;
@@ -18,16 +18,19 @@ export class GeminiBackend implements ChatBackend {
     this.modelName = config.model || 'gemini-1.5-flash';
   }
 
-  async *send(messages: ChatMessage[], options?: ChatRequestOptions): AsyncGenerator<ChatStreamChunk, void, unknown> {
+  async *send(
+    messages: ChatMessage[],
+    options?: ChatRequestOptions
+  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
     this.abortController = new AbortController();
 
     try {
       const model = this.client.getGenerativeModel({
-        model: options?.model || this.modelName
+        model: options?.model || this.modelName,
       });
 
       // Convert internal messages to Gemini format
-      const history = messages.slice(0, -1).map(m => ({
+      const history = messages.slice(0, -1).map((m) => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
       }));
@@ -39,7 +42,7 @@ export class GeminiBackend implements ChatBackend {
         history: history,
         generationConfig: {
           temperature: options?.temperature,
-        }
+        },
       });
 
       const result = await chat.sendMessageStream(lastMessage.content);
@@ -55,10 +58,8 @@ export class GeminiBackend implements ChatBackend {
       }
 
       yield ChatEvents.done();
-
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('GeminiBackend Error:', error);
       yield ChatEvents.error(errorMessage);
     } finally {
       this.abortController = null;

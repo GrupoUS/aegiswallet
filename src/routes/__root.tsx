@@ -85,69 +85,69 @@ function RootComponent() {
   if (!showSidebar) {
     return (
       <CalendarProvider>
-          <div className="min-h-screen bg-background">
-            <Outlet />
-          </div>
-          <ChatWidget />
-        </CalendarProvider>
+        <div className="min-h-screen bg-background">
+          <Outlet />
+        </div>
+        <ChatWidget />
+      </CalendarProvider>
     );
   }
 
   // Render with sidebar for authenticated pages
   return (
     <CalendarProvider>
-        <div
-          className={cn(
-            'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
-            'h-screen' // Use h-screen to take full height
-          )}
-        >
-          <Sidebar open={open} setOpen={setOpen}>
-            <SidebarBody className="justify-between gap-10">
-              <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-                <div className="flex flex-col gap-4">
-                  <Logo />
-                  {navigationItems.map((item) => (
-                    <SidebarLink key={item.href} link={item} />
-                  ))}
-                </div>
+      <div
+        className={cn(
+          'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
+          'h-screen' // Use h-screen to take full height
+        )}
+      >
+        <Sidebar open={open} setOpen={setOpen}>
+          <SidebarBody className="justify-between gap-10">
+            <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+              <div className="flex flex-col gap-4">
+                <Logo />
+                {navigationItems.map((item) => (
+                  <SidebarLink key={item.href} link={item} />
+                ))}
               </div>
-              <div className="flex flex-col gap-2">
+            </div>
+            <div className="flex flex-col gap-2">
+              <SidebarLink
+                link={{
+                  href: '/ai-chat', // Updated to point to the page, but widget is also available
+                  icon: <Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+                  label: 'Assistente',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full cursor-pointer"
+                aria-label="Sair"
+              >
                 <SidebarLink
                   link={{
-                    href: '/ai-chat', // Updated to point to the page, but widget is also available
-                    icon: <Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-                    label: 'Assistente',
+                    href: '#',
+                    icon: <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+                    label: 'Sair',
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full cursor-pointer"
-                  aria-label="Sair"
-                >
-                  <SidebarLink
-                    link={{
-                      href: '#',
-                      icon: <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-                      label: 'Sair',
-                      }}
-                  />
-                </button>
-                <div className="mt-2 pl-1">
-                  <AnimatedThemeToggler />
-                </div>
+              </button>
+              <div className="mt-2 pl-1">
+                <AnimatedThemeToggler />
               </div>
-            </SidebarBody>
-          </Sidebar>
-          <div className="flex flex-1">
-            <div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
-              <Outlet />
             </div>
+          </SidebarBody>
+        </Sidebar>
+        <div className="flex flex-1">
+          <div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
+            <Outlet />
           </div>
-          <ChatWidget />
         </div>
-      </CalendarProvider>
+        <ChatWidget />
+      </div>
+    </CalendarProvider>
   );
 }
 

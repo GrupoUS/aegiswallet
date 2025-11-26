@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import type React from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
@@ -15,25 +15,19 @@ export function ChatLayout({ children, header, footer, className }: ChatLayoutPr
     <Card className={`w-full h-[600px] flex flex-col ${className}`}>
       {header && (
         <>
-          <CardHeader className="py-3">
-            {header}
-          </CardHeader>
+          <CardHeader className="py-3">{header}</CardHeader>
           <Separator />
         </>
       )}
 
       <CardContent className="flex-1 p-0 overflow-hidden relative">
-        <ScrollArea className="h-full w-full p-4">
-          {children}
-        </ScrollArea>
+        <ScrollArea className="h-full w-full p-4">{children}</ScrollArea>
       </CardContent>
 
       {footer && (
         <>
           <Separator />
-          <CardFooter className="p-3 bg-muted/20">
-            {footer}
-          </CardFooter>
+          <CardFooter className="p-3 bg-muted/20">{footer}</CardFooter>
         </>
       )}
     </Card>

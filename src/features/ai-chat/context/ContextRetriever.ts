@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
 import logger from '@/lib/logging/logger';
+import type { Database } from '@/types/database.types';
 
 export interface FinancialContext {
   recentTransactions: Transaction[];

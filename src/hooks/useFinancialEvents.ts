@@ -17,7 +17,7 @@ import {
   validateFinancialEventForInsert,
   validateFinancialEventForUpdate,
 } from '@/lib/validation/financial-events-validator';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 import type {
   BrazilianEventType,
   FinancialEventCategory,

@@ -7,7 +7,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { vi } from 'vitest';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 // Factory function types
 interface BankAccountOverrides {

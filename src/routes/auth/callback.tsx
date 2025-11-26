@@ -64,7 +64,9 @@ function AuthCallbackComponent() {
         }
 
         // No code or error - check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
           setStatus('success');
           navigate({ to: '/dashboard' });
@@ -96,9 +98,20 @@ function AuthCallbackComponent() {
       {status === 'success' && (
         <>
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Sucesso">
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-label="Sucesso"
+            >
               <title>Sucesso</title>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
           <p className="text-foreground">Login realizado com sucesso!</p>
@@ -109,16 +122,29 @@ function AuthCallbackComponent() {
       {status === 'error' && (
         <div className="max-w-md text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Erro">
+            <svg
+              className="h-6 w-6 text-red-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-label="Erro"
+            >
               <title>Erro</title>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </div>
           <h2 className="mb-2 font-semibold text-foreground text-lg">Erro de Autenticação</h2>
           <p className="mb-4 text-muted-foreground text-sm">{errorMessage}</p>
           <button
             type="button"
-            onClick={() => navigate({ to: '/login', search: { error: undefined, redirect: '/dashboard' } })}
+            onClick={() =>
+              navigate({ to: '/login', search: { error: undefined, redirect: '/dashboard' } })
+            }
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground text-sm hover:bg-primary/90"
           >
             Voltar para Login

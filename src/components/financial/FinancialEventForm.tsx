@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { memo, useEffect, useState } from 'react';
-import { type Resolver, useForm } from 'react-hook-form';
+import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -140,7 +140,7 @@ function FinancialEventFormComponent({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Type-safe React Hook Form integration with proper TypeScript interfaces
-  const form = useForm<FinancialEventFormValues, unknown, FinancialEventFormValues>({
+  const form = useForm<FinancialEventFormValues>({
     defaultValues: {
       accountId: '',
       allDay: true,

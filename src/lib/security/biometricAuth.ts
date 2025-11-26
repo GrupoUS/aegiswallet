@@ -16,7 +16,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 // Database row types for type-safe queries
 type SecurityEventInsert = Database['public']['Tables']['security_events']['Insert'];
@@ -1394,8 +1394,7 @@ export class BiometricAuthService {
         .eq('is_locked', true)
         .maybeSingle();
 
-      const isLocked =
-        lockout?.lockout_until && new Date(lockout.lockout_until) > new Date();
+      const isLocked = lockout?.lockout_until && new Date(lockout.lockout_until) > new Date();
       const lockoutRemaining =
         isLocked && lockout.lockout_until
           ? new Date(lockout.lockout_until).getTime() - Date.now()

@@ -86,14 +86,9 @@ interface SpeechRecognitionConstructor {
 
 declare global {
   interface Window {
-    SpeechRecognition: SpeechRecognitionConstructor;
-    webkitSpeechRecognition: SpeechRecognitionConstructor;
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
   }
-
-  // eslint-disable-next-line no-var
-  var SpeechRecognition: SpeechRecognitionConstructor;
-  // eslint-disable-next-line no-var
-  var webkitSpeechRecognition: SpeechRecognitionConstructor;
 }
 
 export type {

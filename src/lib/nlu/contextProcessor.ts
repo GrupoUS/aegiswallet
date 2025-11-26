@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { logger } from '@/lib/logging/logger';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
@@ -18,7 +19,6 @@ import type {
   NLUResult,
 } from '@/lib/nlu/types';
 import { EntityType, IntentType } from '@/lib/nlu/types';
-import type { Json } from '@/integrations/supabase/types';
 import type { TransactionEntity } from '@/types/nlu.types';
 
 // ============================================================================

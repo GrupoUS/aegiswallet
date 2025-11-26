@@ -41,10 +41,35 @@ interface ProfileApiResponse<T> {
   };
 }
 
+interface UseProfileReturn {
+  profile: UserProfile | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  isUpdatingProfile: boolean;
+  isUpdatingPreferences: boolean;
+  updateProfile: (input: { full_name?: string; phone?: string }) => void;
+  updatePreferences: (input: Record<string, unknown>) => void;
+  updateLastLogin: () => void;
+}
+
+interface UseFinancialSummaryReturn {
+  summary: { income: number; expenses: number; balance: number } | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+interface UseUserStatusReturn {
+  status: { is_active: boolean; last_login: string | null } | undefined;
+  isActive: boolean;
+  lastLogin: string | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
 /**
  * Hook para gerenciar perfil do usuário
  */
-export function useProfile() {
+export function useProfile(): UseProfileReturn {
   const queryClient = useQueryClient();
 
   const {
@@ -123,7 +148,7 @@ export function useProfile() {
 /**
  * Hook para obter resumo financeiro do usuário
  */
-export function useFinancialSummary(startDate: string, endDate: string) {
+export function useFinancialSummary(startDate: string, endDate: string): UseFinancialSummaryReturn {
   const {
     data: summaryResponse,
     isLoading,
@@ -154,7 +179,7 @@ export function useFinancialSummary(startDate: string, endDate: string) {
 /**
  * Hook para verificar status do usuário
  */
-export function useUserStatus() {
+export function useUserStatus(): UseUserStatusReturn {
   const {
     data: statusResponse,
     isLoading,

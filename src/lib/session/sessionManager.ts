@@ -525,7 +525,7 @@ export class SessionManager {
     }, 3000);
   }
 
-  private async logSessionEvent(event: string): Promise<void> {
+  private async logSessionEvent(_event: string): Promise<void> {
     try {
       // Temporarily commented out to avoid 401 error
       // await supabase.from('audit_logs').insert({

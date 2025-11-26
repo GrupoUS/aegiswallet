@@ -3,19 +3,23 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChatBackend } from '../../features/ai-chat/backends/ChatBackend';
 import { createStreamChunk } from '../../features/ai-chat/domain/events';
-import { type ChatMessage, ChatStreamEventType } from '../../features/ai-chat/domain/types';
+import type { ChatMessage, ChatStreamEventType } from '../../features/ai-chat/domain/types';
 import { useChatController } from '../../features/ai-chat/hooks/useChatController';
 
 // Mock Backend
 class MockBackend implements ChatBackend {
   async *send(_messages: ChatMessage[], _optionss?: any) {
-    yield createStreamChunk(ChatStreamEventType.MESSAGE_START, null, 'msg-1', {
-      role: 'assistant',
-    });
-    yield createStreamChunk(ChatStreamEventType.CONTENT_CHUNK, 'Hello', 'msg-1');
-    yield createStreamChunk(ChatStreamEventType.CONTENT_CHUNK, ' World', 'msg-1');
-    yield createStreamChunk(ChatStreamEventType.REASONING_CHUNK, 'Thinking...', 'msg-1');
-    yield createStreamChunk(ChatStreamEventType.MESSAGE_END, null, 'msg-1');
+    yield {
+      type: 'text-delta' as ChatStreamEventType,
+      payload: { messageId: 'msg-1', role: 'assistant', event: 'start' },
+    };
+    yield createStreamChunk('text-delta' as ChatStreamEventType, 'Hello', 'msg-1');
+    yield createStreamChunk('text-delta' as ChatStreamEventType, ' World', 'msg-1');
+    yield createStreamChunk('reasoning-delta' as ChatStreamEventType, 'Thinking...', 'msg-1');
+    yield {
+      type: 'done' as ChatStreamEventType,
+      payload: { messageId: 'msg-1', event: 'end' },
+    };
   }
 
   abort() {}

@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { AppEnv } from '@/server/hono-types';
 import { corsMiddleware } from '@/server/middleware/cors';
+
 import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
 import { setupStaticRoutes } from '@/server/routes/static';
@@ -22,11 +24,7 @@ import {
  * Create and configure Hono application with edge-first architecture
  * Now using Hono RPC endpoints exclusively
  */
-const app = new Hono<{
-  Variables: {
-    requestId: string;
-  };
-}>();
+const app = new Hono<AppEnv>();
 
 // Global middleware
 app.use('*', logger());
@@ -64,7 +62,7 @@ setupStaticRoutes(app);
 
 // 404 handler
 app.notFound((c) => {
-  const requestId = c.get('requestId') || 'unknown';
+  const requestId = c.get('requestId');
 
   secureLogger.warn('Route not found', {
     ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
@@ -87,7 +85,7 @@ app.notFound((c) => {
 
 // Global error handler
 app.onError((err, c) => {
-  const requestId = c.get('requestId') || 'unknown';
+  const requestId = c.get('requestId');
 
   secureLogger.error('Unhandled error', {
     error: err.message,

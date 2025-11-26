@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Json } from '@/integrations/supabase/types';
 import logger from '@/lib/logging/logger';
+import type { Database, Json } from '@/types/database.types';
 import type { FinancialContext, Transaction } from '../context';
 import type { ChatMessage } from '../domain/types';
 

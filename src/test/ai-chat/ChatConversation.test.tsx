@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 // Setup enhanced DOM environment for React Testing Library
 import { setupTestDOM } from '../utils/test-dom-setup';
 

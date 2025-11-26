@@ -96,10 +96,7 @@ function formatAccounts(
   }>
 ): string {
   const accountList = accounts
-    .map(
-      (acc) =>
-        `  - ${acc.accountName}: ${formatCurrency(acc.balance, acc.currency)}`
-    )
+    .map((acc) => `  - ${acc.accountName}: ${formatCurrency(acc.balance, acc.currency)}`)
     .join('\n');
 
   return `

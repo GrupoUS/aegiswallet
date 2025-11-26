@@ -1,6 +1,5 @@
 import type { ChatBackend } from '../domain/ChatBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
-import { MockBackend } from './MockBackend';
 
 /**
  * Backend factory and exports

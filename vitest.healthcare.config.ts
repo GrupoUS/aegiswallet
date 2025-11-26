@@ -139,7 +139,6 @@ export default defineConfig({
       '@supabase/supabase-js',
       '@tanstack/react-query',
       '@tanstack/react-router',
-
     ],
     include: [
       '@testing-library/react',

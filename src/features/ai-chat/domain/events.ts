@@ -1,4 +1,4 @@
-import { ChatStreamChunk, ChatStreamEventType } from './types';
+import type { ChatStreamChunk, ChatStreamEventType } from './types';
 
 export const createChunk = (type: ChatStreamEventType, payload: any): ChatStreamChunk => ({
   type,

@@ -25,8 +25,6 @@ export interface Transaction {
 }
 
 export class OpenBankingConnector {
-  private apiKey: string;
-
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }

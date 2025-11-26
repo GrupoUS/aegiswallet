@@ -33,6 +33,12 @@ interface TransactionStats {
   transactionsCount: number;
 }
 
+interface UseTransactionsReturn {
+  data: Transaction[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
 export function useTransactions(filters?: {
   limit?: number;
   offset?: number;
@@ -43,7 +49,7 @@ export function useTransactions(filters?: {
   startDate?: string;
   endDate?: string;
   search?: string;
-}) {
+}): UseTransactionsReturn {
   return useQuery({
     queryKey: ['transactions', filters],
     queryFn: async () => {
@@ -58,7 +64,22 @@ export function useTransactions(filters?: {
   });
 }
 
-export function useCreateTransaction() {
+interface UseCreateTransactionReturn {
+  mutate: (input: {
+    amount: number;
+    categoryId?: string;
+    description?: string;
+    fromAccountId: string;
+    toAccountId?: string;
+    type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+    status?: 'cancelled' | 'failed' | 'pending' | 'posted';
+    metadata?: Record<string, unknown>;
+  }) => void;
+  isPending: boolean;
+  error: Error | null;
+}
+
+export function useCreateTransaction(): UseCreateTransactionReturn {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -84,7 +105,13 @@ export function useCreateTransaction() {
   });
 }
 
-export function useDeleteTransaction() {
+interface UseDeleteTransactionReturn {
+  mutate: (input: { id: string }) => void;
+  isPending: boolean;
+  error: Error | null;
+}
+
+export function useDeleteTransaction(): UseDeleteTransactionReturn {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -98,10 +125,16 @@ export function useDeleteTransaction() {
   });
 }
 
+interface UseTransactionsStatsReturn {
+  data: TransactionStats | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
 export function useTransactionsStats(
   period?: 'week' | 'month' | 'quarter' | 'year',
   accountId?: string
-) {
+): UseTransactionsStatsReturn {
   return useQuery({
     queryKey: ['transactions', 'stats', period, accountId],
     queryFn: async () => {

@@ -1,6 +1,8 @@
 // CRITICAL: Setup DOM APIs immediately at module load time
 // This prevents "Element is not defined" errors in test files
 
+import { JSDOM } from 'jsdom';
+
 // Declare SpeechRecognition interface for test environment
 interface SpeechRecognitionEvent extends Event {
   resultIndex: number;
@@ -71,7 +73,6 @@ if (typeof globalThis.HTMLElement === 'undefined') {
 
 // Create comprehensive document mock if not available
 if (typeof globalThis.document === 'undefined') {
-  const { JSDOM } = require('jsdom');
   const dom = new JSDOM(
     '<!DOCTYPE html><html><head><title>Test</title></head><body><div id="root"></div></body></html>',
     {
@@ -555,6 +556,25 @@ export const createMockSpeechSynthesisEvent = (name: string, charIndex: number =
 if (typeof globalObj.vi === 'undefined') {
   globalObj.vi = vi;
 }
+
+// Import MSW server setup
+import { resetHandlers, startServer, stopServer } from './mocks/server';
+
+// Setup MSW server before all tests
+beforeAll(() => {
+  startServer();
+});
+
+// Reset handlers between tests
+afterEach(() => {
+  resetHandlers();
+  vi.clearAllMocks();
+});
+
+// Stop MSW server after all tests
+afterAll(() => {
+  stopServer();
+});
 
 // Mock Supabase with typed configuration using our comprehensive mock
 vi.mock('@/integrations/supabase/client', async () => {

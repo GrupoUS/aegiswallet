@@ -7,7 +7,6 @@
  * @module nlu/performance
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging/logger';
 import type { EntityType, IntentType, NLUResult } from './types';
 

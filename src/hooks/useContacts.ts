@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 // Contact type from database
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -11,6 +11,84 @@ type Contact = Database['public']['Tables']['contacts']['Row'];
 interface ResponseMeta {
   requestId: string;
   retrievedAt: string;
+}
+
+interface UseContactsReturn {
+  contacts: Contact[];
+  isLoading: boolean;
+  error: string | null;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  isTogglingFavorite: boolean;
+  total: number;
+  createContact: (contactData: Partial<Contact>) => Promise<Contact>;
+  updateContact: (contactData: Partial<Contact> & { id: string }) => Promise<Contact>;
+  deleteContact: (contactId: string) => Promise<void>;
+  toggleFavorite: (contactId: string) => Promise<Contact>;
+  refetch: () => Promise<Contact[]>;
+}
+
+interface UseContactReturn {
+  contact: Contact | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface UseFavoriteContactsReturn {
+  favoriteContacts: Contact[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface UseContactSearchReturn {
+  searchResults: Contact[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface UseContactsStatsReturn {
+  stats: StatsResponse['data'] | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface UseRecentContactsReturn {
+  contacts: Contact[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface UseContactsForTransferReturn {
+  contacts: Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    isFavorite: boolean;
+    availableMethods: Array<'EMAIL' | 'PHONE'>;
+  }>;
+}
+
+interface UseContactsForPixReturn {
+  contacts: Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    isFavorite: boolean;
+    pixKeys: Array<{ type: 'EMAIL' | 'PHONE'; value: string }>;
+  }>;
+}
+
+interface UseContactSuggestionsReturn {
+  suggestions: Contact[];
+}
+
+interface UseContactValidationReturn {
+  validateEmail: (email: string) => boolean;
+  validatePhone: (phone: string) => boolean;
+  validateCPF: (cpf: string) => boolean;
 }
 
 interface ContactApiResponse {
@@ -43,17 +121,20 @@ export function useContacts(filters?: {
   isFavorite?: boolean;
   limit?: number;
   offset?: number;
-}) {
+}): UseContactsReturn {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Memoize filters to avoid unnecessary re-renders
-  const defaultFilters = useMemo(() => ({
-    limit: 50,
-    offset: 0,
-    ...filters,
-  }), [filters]);
+  const defaultFilters = useMemo(
+    () => ({
+      limit: 50,
+      offset: 0,
+      ...filters,
+    }),
+    [filters]
+  );
 
   const total = contacts.length;
 
@@ -195,7 +276,7 @@ export function useContacts(filters?: {
 /**
  * Hook para obter contato específico
  */
-export function useContact(contactId: string) {
+export function useContact(contactId: string): UseContactReturn {
   const [contact, setContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +311,7 @@ export function useContact(contactId: string) {
 /**
  * Hook para contatos favoritos
  */
-export function useFavoriteContacts() {
+export function useFavoriteContacts(): UseFavoriteContactsReturn {
   const [favoriteContacts, setFavoriteContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -265,7 +346,7 @@ export function useFavoriteContacts() {
 /**
  * Hook para busca de contatos
  */
-export function useContactSearch(query: string, limit: number = 10) {
+export function useContactSearch(query: string, limit: number = 10): UseContactSearchReturn {
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -305,7 +386,7 @@ export function useContactSearch(query: string, limit: number = 10) {
 /**
  * Hook para estatísticas dos contatos
  */
-export function useContactsStats() {
+export function useContactsStats(): UseContactsStatsReturn {
   const [stats, setStats] = useState<StatsResponse['data'] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -338,7 +419,7 @@ export function useContactsStats() {
 /**
  * Hook para contatos recentes
  */
-export function useRecentContacts(limit: number = 5) {
+export function useRecentContacts(limit: number = 5): UseRecentContactsReturn {
   const { contacts, error, isLoading } = useContacts({ limit });
 
   return {
@@ -351,7 +432,7 @@ export function useRecentContacts(limit: number = 5) {
 /**
  * Hook para contatos para transferências
  */
-export function useContactsForTransfer() {
+export function useContactsForTransfer(): UseContactsForTransferReturn {
   const { contacts } = useContacts({ limit: 50 });
 
   // Filtrar contatos que têm informações para transferência
@@ -380,7 +461,7 @@ export function useContactsForTransfer() {
 /**
  * Hook para contatos com PIX
  */
-export function useContactsForPix() {
+export function useContactsForPix(): UseContactsForPixReturn {
   const { contacts } = useContacts({ limit: 50 });
 
   // Filtrar contatos que têm informações para PIX
@@ -409,7 +490,7 @@ export function useContactsForPix() {
 /**
  * Hook para sugestões de contatos baseado no histórico
  */
-export function useContactSuggestions(limit: number = 3) {
+export function useContactSuggestions(limit: number = 3): UseContactSuggestionsReturn {
   const { favoriteContacts } = useFavoriteContacts();
   const { contacts } = useRecentContacts(limit);
 
@@ -430,7 +511,7 @@ export function useContactSuggestions(limit: number = 3) {
 /**
  * Hook para validação de contatos
  */
-export function useContactValidation() {
+export function useContactValidation(): UseContactValidationReturn {
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

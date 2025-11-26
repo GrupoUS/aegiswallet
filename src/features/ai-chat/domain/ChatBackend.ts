@@ -1,4 +1,4 @@
-import { ChatMessage, ChatRequestOptions, ChatStreamChunk } from './types';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from './types';
 
 export interface ChatBackendConfig {
   apiKey?: string;
@@ -24,7 +24,10 @@ export interface ChatBackend {
   /**
    * Sends messages to the LLM and returns a stream of events.
    */
-  send(messages: ChatMessage[], options?: ChatRequestOptions): AsyncGenerator<ChatStreamChunk, void, unknown>;
+  send(
+    messages: ChatMessage[],
+    options?: ChatRequestOptions
+  ): AsyncGenerator<ChatStreamChunk, void, unknown>;
 
   /**
    * Abort the current generation.

@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 import type {
   BrazilianEventType,
   FinancialEventPriority,

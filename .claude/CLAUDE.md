@@ -1,4 +1,4 @@
-# AegisWallet Development Rules & Standards - Version: 2.1.0
+# AegisWallet Development Rules & Standards - Version: 2.2.0
 
 ## Purpose & Scope
 
@@ -108,15 +108,132 @@ Based on task analysis, invoke specialized agents:
 3. Move to next todo item
 4. Repeat phases 0-5 until ALL todos are complete
 
+## TDD Integration
+
+### TDD-Driven Development Workflow
+
+**RED-GREEN-REFACTOR Cycle Integration:**
+1. **RED Phase** (Test-First): Write failing tests before implementation
+2. **GREEN Phase**: Write minimum code to pass tests
+3. **REFACTOR Phase**: Improve code while maintaining test coverage
+
+**TDD Implementation Phases:**
+
+**Before Implementation (TDD-RED):**
+- test-auditor: Design test strategy with TDD methodology
+- Implementation agents: Write comprehensive failing tests
+- Quality Gate: 100% test-first compliance for critical features
+
+**During Implementation (TDD-GREEN):**
+- Implementation agents: Write minimal code to pass tests
+- test-validator: Continuous validation of TDD cycle
+- Quality Gate: All tests passing, 0 regressions
+
+**After Implementation (TDD-REFACTOR):**
+- code-reviewer: Code quality review with TDD compliance
+- test-validator: Refactoring validation (tests still pass)
+- Quality Gate: Code quality ≥9.5/10, 100% test coverage maintained
+
+### TDD Quality Gates
+
+**Mandatory TDD Requirements:**
+- **Critical Components** (Complexity ≥7): 100% TDD compliance required
+- **Financial Features**: Test-first with Brazilian compliance validation
+- **Security Components**: Security-focused TDD with threat modeling
+- **Standard Features**: TDD recommended but not mandatory
+
+**TDD Success Metrics:**
+- Test coverage ≥90% for critical business logic
+- 100% test passing rate before deployment
+- Zero regressions in refactoring cycles
+- TDD cycle time <30 minutes for standard features
+
+### Multi-Agent TDD Coordination
+
+**TDD Test Strategy Flow:**
+1. test-auditor: Define TDD test strategy and acceptance criteria
+2. Implementation agent: Write failing tests (RED phase)
+3. test-validator: Validate test quality and coverage
+4. Implementation agent: Implement code to pass tests (GREEN phase)
+5. test-validator: Verify all tests pass
+6. code-reviewer: Review code quality and suggest refactoring
+7. Implementation agent: Refactor code (REFACTOR phase)
+8. test-validator: Ensure tests still pass after refactoring
+
+**Brazilian Compliance TDD:**
+- PIX Integration: Test Brazilian financial flows with real BCB patterns
+- LGPD Compliance: Test data protection and consent management
+- Portuguese Interface: Test Portuguese-first UI/UX patterns
+- Accessibility: Test WCAG 2.1 AA+ compliance in test suite
+
+
+n## TDD Integration
+
+### TDD-Driven Development Workflow
+
+**RED-GREEN-REFACTOR Cycle Integration:**
+1. **RED Phase** (Test-First): Write failing tests before implementation
+2. **GREEN Phase**: Write minimum code to pass tests
+3. **REFACTOR Phase**: Improve code while maintaining test coverage
+
+**TDD Implementation Phases:**
+
+**Before Implementation (TDD-RED):**
+- : Design test strategy with TDD methodology
+- Implementation agents: Write comprehensive failing tests
+- Quality Gate: 100% test-first compliance for critical features
+
+**During Implementation (TDD-GREEN):**
+- Implementation agents: Write minimal code to pass tests
+- : Continuous validation of TDD cycle
+- Quality Gate: All tests passing, 0 regressions
+
+**After Implementation (TDD-REFACTOR):**
+- : Code quality review with TDD compliance
+- : Refactoring validation (tests still pass)
+- Quality Gate: Code quality ≥9.5/10, 100% test coverage maintained
+
+### TDD Quality Gates
+
+**Mandatory TDD Requirements:**
+- **Critical Components** (Complexity ≥7): 100% TDD compliance required
+- **Financial Features**: Test-first with Brazilian compliance validation
+- **Security Components**: Security-focused TDD with threat modeling
+- **Standard Features**: TDD recommended but not mandatory
+
+**TDD Success Metrics:**
+- Test coverage ≥90% for critical business logic
+- 100% test passing rate before deployment
+- Zero regressions in refactoring cycles
+- TDD cycle time <30 minutes for standard features
+
+### Multi-Agent TDD Coordination
+
+**TDD Test Strategy Flow:**
+1. : Define TDD test strategy and acceptance criteria
+2. Implementation agent: Write failing tests (RED phase)
+3. : Validate test quality and coverage
+4. Implementation agent: Implement code to pass tests (GREEN phase)
+5. : Verify all tests pass
+6. : Review code quality and suggest refactoring
+7. Implementation agent: Refactor code (REFACTOR phase)
+8. : Ensure tests still pass after refactoring
+
+**Brazilian Compliance TDD:**
+- PIX Integration: Test Brazilian financial flows with real BCB patterns
+- LGPD Compliance: Test data protection and consent management
+- Portuguese Interface: Test Portuguese-first UI/UX patterns
+- Accessibility: Test WCAG 2.1 AA+ compliance in test suite
+
 ## 🛠️ Available Specialized Subagents
 
 ### Core Implementation Agents
 #### apex-dev ⚡
 **Purpose**: Advanced development specialist for complex, critical implementations
-- **Specializes**: OXLint (50-100x faster), security, performance optimization
+- **Specializes**: OXLint (50-100x faster), security, performance optimization, TDD
 - **When to invoke**: Complexity ≥7, performance-critical, security-sensitive code
 - **Brazilian Focus**: PIX integrations, financial validations, LGPD compliance
-- **Returns**: Production-ready, validated, secure code
+- **Returns**: Production-ready, validated, secure code with full test coverage
 - **Quality**: ≥9.5/10 rating on all implementations
 
 #### coder
@@ -124,15 +241,15 @@ Based on task analysis, invoke specialized agents:
 - **When to invoke**: Complexity <7, standard features, simple components
 - **What to pass**: ONE specific todo item with clear requirements
 - **Context**: Gets its own clean context window
-- **Returns**: Functional implementation
+- **Returns**: Functional implementation with basic test coverage
 - **On error**: Will invoke stuck agent automatically
 
 #### database-specialist 🗄️
 **Purpose**: Supabase/PostgreSQL expert with Brazilian fintech expertise
-- **Specializes**: Schema design, RLS policies, migrations, LGPD data protection
+- **Specializes**: Schema design, RLS policies, migrations, LGPD data protection, TDD
 - **Brazilian Compliance**: Financial data storage, audit trails, retention policies
 - **When to invoke**: ANY database operation, schema changes, RLS implementation
-- **Returns**: Secure, compliant, optimized database solutions
+- **Returns**: Secure, compliant, optimized database solutions with full test coverage
 
 ### Quality Assurance Agents
 #### test-validator
@@ -142,11 +259,12 @@ Based on task analysis, invoke specialized agents:
 - **Brazilian Testing**: PIX form flows, Portuguese UI validation, accessibility tests
 - **Tools**: Vitest (3-5x faster), Biome (linting + formatting), component testing
 - **Returns**: Test coverage reports + validation metrics + pass/fail analysis
+- **TDD Focus**: Validates RED-GREEN-REFACTOR cycle compliance
 - **On failure**: Will invoke stuck agent automatically
 
 #### code-reviewer 🔍
 **Purpose**: Automated code quality and security review
-- **Specializes**: Security vulnerabilities, performance patterns, best practices
+- **Specializes**: Security vulnerabilities, performance patterns, best practices, TDD compliance
 - **Brazilian Standards**: Financial security, LGPD compliance validation
 - **When to invoke**: After complex implementations, before deployment
 - **Returns**: Comprehensive security and quality report
@@ -155,8 +273,8 @@ Based on task analysis, invoke specialized agents:
 **Purpose**: Test strategy and coverage validation
 - **Specializes**: TDD methodology, test architecture, coverage analysis
 - **Financial Testing**: Transaction flows, security testing, compliance validation
-- **When to invoke**: Before major feature releases, test strategy planning
-- **Returns**: Test strategy recommendations and coverage metrics
+- **When to invoke**: Before major feature releases, test strategy planning, TDD design
+- **Returns**: Test strategy recommendations and coverage metrics with TDD compliance
 
 ### Design and Architecture Agents
 #### apex-ui-ux-designer 🎨
@@ -168,7 +286,7 @@ Based on task analysis, invoke specialized agents:
 
 #### architect-review 🏛️
 **Purpose**: Software architecture review and design validation
-- **Specializes**: Clean architecture, scalability, microservices patterns
+- **Specializes**: Clean architecture, scalability, microservices patterns, TDD architecture
 - **Brazilian Fintech**: Financial system integration, compliance architecture
 - **When to invoke**: Major architecture decisions, system design reviews
 - **Returns**: Architecture recommendations with risk assessment
@@ -263,6 +381,7 @@ Based on task analysis, invoke specialized agents:
 3. ✅ Use parallel execution when possible for maximum efficiency
 4. ✅ Run appropriate quality gates for each specialized implementation
 5. ✅ Test EVERY implementation with proper specialized validation
+6. ✅ **Enforce TDD methodology for critical components** (complexity ≥7)
 6. ✅ Track progress, knowledge capture, and lessons learned
 7. ✅ Maintain the big picture and strategic vision across 200k context
 8. ✅ **ALWAYS create pages for EVERY link in headers/footers** - NO 404s allowed!

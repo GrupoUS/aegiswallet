@@ -31,10 +31,70 @@ interface BankAccountApiResponse<T> {
   };
 }
 
+interface UseBankAccountsReturn {
+  accounts: BankAccount[];
+  isLoading: boolean;
+  error: Error | null;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  isUpdatingBalance: boolean;
+  createAccount: (input: {
+    institution_name: string;
+    account_type: 'checking' | 'savings' | 'investment' | 'cash';
+    balance?: number;
+    currency?: string;
+    is_primary?: boolean;
+    is_active?: boolean;
+    account_mask?: string;
+    institution_id?: string;
+  }) => void;
+  updateAccount: (input: {
+    id: string;
+    institution_name?: string;
+    account_type?: 'checking' | 'savings' | 'investment' | 'cash';
+    balance?: number;
+    currency?: string;
+    is_primary?: boolean;
+    is_active?: boolean;
+    account_mask?: string;
+  }) => void;
+  deleteAccount: (input: { id: string }) => void;
+  updateBalance: (input: { id: string; balance: number }) => void;
+  refetch: () => void;
+}
+
+interface UseTotalBalanceReturn {
+  balances: Record<string, number>;
+  totalBRL: number;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+interface UseBankAccountReturn {
+  account: BankAccount | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+interface UseBalanceHistoryReturn {
+  history: Array<{ date: string; balance: number }>;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+interface UseBankAccountsStatsReturn {
+  accountsByCurrency: Record<string, number>;
+  activeAccounts: number;
+  primaryAccounts: number;
+  totalAccounts: number;
+  totalBalance: number;
+}
+
 /**
  * Hook para gerenciar contas bancárias
  */
-export function useBankAccounts() {
+export function useBankAccounts(): UseBankAccountsReturn {
   const queryClient = useQueryClient();
 
   const {
@@ -197,7 +257,7 @@ export function useBankAccounts() {
 /**
  * Hook para obter saldo total
  */
-export function useTotalBalance() {
+export function useTotalBalance(): UseTotalBalanceReturn {
   const {
     data: balancesResponse,
     isLoading,
@@ -225,7 +285,7 @@ export function useTotalBalance() {
 /**
  * Hook para obter conta específica
  */
-export function useBankAccount(accountId: string) {
+export function useBankAccount(accountId: string): UseBankAccountReturn {
   const {
     data: accountResponse,
     isLoading,
@@ -251,7 +311,7 @@ export function useBankAccount(accountId: string) {
 /**
  * Hook para obter histórico de saldos
  */
-export function useBalanceHistory(accountId: string, days: number = 30) {
+export function useBalanceHistory(accountId: string, days: number = 30): UseBalanceHistoryReturn {
   const {
     data: historyResponse,
     isLoading,
@@ -279,7 +339,7 @@ export function useBalanceHistory(accountId: string, days: number = 30) {
 /**
  * Hook para estatísticas das contas
  */
-export function useBankAccountsStats() {
+export function useBankAccountsStats(): UseBankAccountsStatsReturn {
   const { accounts } = useBankAccounts();
 
   const stats = {

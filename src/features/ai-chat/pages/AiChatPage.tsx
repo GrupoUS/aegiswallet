@@ -1,12 +1,12 @@
-import React, { useMemo } from 'react';
-import { ChatLayout } from '../components/layout/ChatLayout';
-import { ChatConversation } from '../components/conversation/ChatConversation';
-import { ChatPromptInput } from '../components/input/ChatPromptInput';
-import { ChatSuggestions } from '../components/feedback/ChatSuggestions';
-import { useChatController } from '../hooks/useChatController';
-import { GeminiBackend } from '../backends/GeminiBackend';
-import { CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
+import { useMemo } from 'react';
+import { CardTitle } from '@/components/ui/card';
+import { GeminiBackend } from '../backends/GeminiBackend';
+import { ChatConversation } from '../components/conversation/ChatConversation';
+import { ChatSuggestions } from '../components/feedback/ChatSuggestions';
+import { ChatPromptInput } from '../components/input/ChatPromptInput';
+import { ChatLayout } from '../components/layout/ChatLayout';
+import { useChatController } from '../hooks/useChatController';
 
 // In a real app, this would come from env or config
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
@@ -14,19 +14,14 @@ const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 export default function AiChatPage() {
   const backend = useMemo(() => new GeminiBackend({ apiKey: GEMINI_API_KEY }), []);
 
-  const {
-    messages,
-    isLoading,
-    streamingContent,
-    streamingReasoning,
-    sendMessage
-  } = useChatController(backend);
+  const { messages, isLoading, streamingContent, streamingReasoning, sendMessage } =
+    useChatController(backend);
 
   const suggestions = [
-    "Explain how this wallet works",
-    "Analyze my recent transactions",
-    "What is the current exchange rate?",
-    "Help me set a budget"
+    'Explain how this wallet works',
+    'Analyze my recent transactions',
+    'What is the current exchange rate?',
+    'Help me set a budget',
   ];
 
   return (
@@ -47,10 +42,7 @@ export default function AiChatPage() {
                 disabled={isLoading}
               />
             )}
-            <ChatPromptInput
-              onSend={sendMessage}
-              isLoading={isLoading}
-            />
+            <ChatPromptInput onSend={sendMessage} isLoading={isLoading} />
             <div className="text-[10px] text-center text-muted-foreground mt-1">
               AI can make mistakes. Please verify important financial information.
             </div>
@@ -61,7 +53,6 @@ export default function AiChatPage() {
           messages={messages}
           streamingContent={streamingContent}
           streamingReasoning={streamingReasoning}
-          isLoading={isLoading}
         />
       </ChatLayout>
     </div>

@@ -28,11 +28,11 @@ type AccountType = z.infer<typeof accountTypeEnum>;
 
 const formSchema = z.object({
   account_type: accountTypeEnum,
-  balance: z.coerce.number(),
-  currency: z.string().default('BRL'),
+  balance: z.number(),
+  currency: z.string(),
   institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
-  is_active: z.boolean().default(true),
-  is_primary: z.boolean().default(false),
+  is_active: z.boolean(),
+  is_primary: z.boolean(),
 });
 
 type BankAccountFormValues = z.infer<typeof formSchema>;
@@ -46,9 +46,9 @@ interface BankAccountFormProps {
 export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFormProps) {
   const { createAccount, updateAccount, isCreating, isUpdating } = useBankAccounts();
 
-  const form = useForm<BankAccountFormValues, unknown, BankAccountFormValues>({
+  const form = useForm<BankAccountFormValues>({
     defaultValues: {
-      account_type: 'checking' as AccountType,
+      account_type: 'checking',
       balance: 0,
       currency: 'BRL',
       institution_name: '',
@@ -56,6 +56,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
       is_primary: false,
     },
     resolver: zodResolver(formSchema) as Resolver<BankAccountFormValues>,
+    mode: 'onSubmit',
   });
 
   useEffect(() => {
@@ -71,23 +72,15 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
     }
   }, [account, form]);
 
-  const onSubmit: SubmitHandler<BankAccountFormValues> = (values) => {
-    if (account) {
-      updateAccount(
-        { id: account.id, ...values },
-        {
-          onSuccess: () => {
-            onSuccess?.();
-          },
-        }
-      );
-    } else {
-      createAccount(values, {
-        onSuccess: () => {
-          onSuccess?.();
-        },
-      });
-    }
+  const onSubmit: SubmitHandler<BankAccountFormValues> = async (values) => {
+    try {
+      if (account) {
+        await updateAccount({ id: account.id, ...values });
+      } else {
+        await createAccount(values);
+      }
+      onSuccess?.();
+    } catch (_error) {}
   };
 
   const isLoading = isCreating || isUpdating;

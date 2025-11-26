@@ -3,10 +3,8 @@
  * These tests will fail initially and drive the implementation of fixes
  */
 
-// Satisfies: Section 3: tRPC Integration Testing of .claude/skills/webapp-testing/SKILL.md
-import { setupServer } from 'msw/node';
 import { createTRPCMsw } from 'msw-trpc';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { AppRouter } from '@/server/router';
 
 describe('tRPC Type Safety Violations', () => {

@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 
 interface ChatLayoutProps {
   title?: string;
-  showModelSelector?: boolean;
   className?: string;
   children: React.ReactNode;
   isWidget?: boolean;
@@ -16,7 +15,6 @@ interface ChatLayoutProps {
 
 export function ChatLayout({
   title = 'Assistente IA',
-  showModelSelector = true,
   className,
   children,
   isWidget = false,

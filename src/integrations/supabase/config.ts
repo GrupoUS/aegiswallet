@@ -4,7 +4,7 @@
  * Enhanced with validation and diagnostics
  */
 
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 const getServerEnvVar = (key: string): string | undefined => {
   if (typeof process === 'undefined') {

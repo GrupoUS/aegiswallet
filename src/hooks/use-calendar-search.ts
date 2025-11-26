@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/types/database.types';
 
 // Type for financial events from database
 type FinancialEvent = Database['public']['Tables']['financial_events']['Row'];
@@ -30,11 +30,35 @@ interface ApiResponse<T> {
   };
 }
 
+interface UseCalendarSearchReturn {
+  // State
+  query: string;
+  filters: SearchFilters;
+  searchType: 'events' | 'transactions';
+
+  // Results
+  results: FinancialEvent[] | Transaction[];
+  isLoading: boolean;
+  error: Error | null;
+
+  // Handlers
+  handleQueryChange: (newQuery: string) => void;
+  handleFiltersChange: (newFilters: SearchFilters) => void;
+  handleSearchTypeChange: (newType: 'events' | 'transactions') => void;
+  clearSearch: () => void;
+  resetQuery: () => void;
+
+  // Computed
+  hasResults: boolean;
+  isEmpty: boolean;
+  canSearch: boolean;
+}
+
 export function useCalendarSearch({
   initialQuery = '',
   initialFilters = {},
   enabled = true,
-}: UseCalendarSearchProps = {}) {
+}: UseCalendarSearchProps = {}): UseCalendarSearchReturn {
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
   const [searchType, setSearchType] = useState<'events' | 'transactions'>('events');

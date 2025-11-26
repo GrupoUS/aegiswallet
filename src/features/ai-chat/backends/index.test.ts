@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GeminiBackend } from './GeminiBackend';
 import { createChatBackend, getDefaultBackend } from './index';
 
-// Note: vi.hoisted requires Vitest 0.31+, using simpler approach
-vi.stubEnv('VITE_GEMINI_API_KEY', 'test-api-key');
-vi.stubEnv('VITE_DEFAULT_AI_MODEL', 'gemini-pro');
+// Mock environment variables for tests
+vi.mock('@/lib/envConfig', () => ({
+  env: {
+    VITE_GEMINI_API_KEY: 'test-api-key',
+    VITE_DEFAULT_AI_MODEL: 'gemini-pro',
+  },
+}));
 
 describe('Backend Factory', () => {
   beforeEach(() => {

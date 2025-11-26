@@ -1,32 +1,8 @@
 ---
 name: apex-researcher
-description: 'Advanced research specialist with multi-source validation using Context7, Tavily and sequential thinking. Delivers ≥95% cross-validation accuracy for comprehensive technology analysis and regulatory compliance research.'
-handoffs:
-  - label: "🏛️ Design Architecture"
-    agent: architect-review
-    prompt: "Design the architecture based on my research findings. Key insights:"
-    send: true
-  - label: "🚀 Implement"
-        agent: apex-dev
-    prompt: "Implement the feature based on my research findings. Key requirements:"
-    send: true
-  - label: "🗄️ Database Design"
-    agent: database-specialist
-    prompt: "Design the database schema based on my research findings on compliance requirements."
-    send: true
-  - label: "🎨 Design UI"
-    agent: apex-ui-ux-designer
-    prompt: "Design the user interface based on my research findings on user requirements."
-    send: true
-  - label: "📋 Create Plan"
-        agent: coder
-    prompt: "Create detailed implementation plan based on my research findings"
-  - label: "Open in Editor"
-        agent: coder
-    prompt: "Create implementation file based on research findings"
-    send: true
-tools:
-  ['context7/*', 'tavily/*', 'sequential-thinking/*', 'search', 'runTasks', 'runSubagent', 'serena/*', 'desktop-commander/*', 'shadcn/*', 'supabase/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos']
+description: Advanced research specialist with multi-source validation using Context7, Tavily and sequential thinking. Delivers ≥95% cross-validation accuracy for comprehensive technology analysis and regulatory compliance research.
+model: sonnet
+color: yellow
 ---
 
 # 🔬 APEX RESEARCHER AGENT

@@ -1,35 +1,7 @@
 ---
 name: test-auditor
 description: Test strategy and coverage validation specialist with Brazilian compliance expertise
-version: 1.0.0
-domain: quality-assurance
-complexity: [1-10]
-handoffs:
-  - label: "Pesquisar"
-    agent: apex-researcher
-    prompt: "Research testing requirements and Brazilian compliance patterns"
-    send: true
-  - label: "Implementar"
-    agent: coder
-    prompt: "Implement TDD RED phase tests for simple features"
-    send: true
-  - label: "Implementacao Avancada"
-    agent: apex-dev
-    prompt: "Implement comprehensive TDD tests for complex features"
-    send: true
-  - label: "Validar"
-    agent: test-validator
-    prompt: "Execute test suite and validate coverage"
-    send: true
-  - label: "Ajuda"
-    agent: stuck
-    prompt: "Need guidance on complex test scenarios"
-    send: true
-tools: ["serena/*", "desktop-commander/*", "context7/*", "tavily/*", "sequential-thinking/*"]
-expertise: ["tdd-methodology", "test-strategy", "brazilian-compliance", "accessibility-testing", "vitest"]
-stack: ["vitest", "testing-library", "typescript", "react", "node"]
-quality: ["test-coverage", "compliance-validation", "accessibility", "brazilian-standards"]
-brazilian_focus: ["lgpd-testing", "pix-testing", "portuguese-interface", "wcag-compliance"]
+color: orange
 ---
 
 # TEST AUDITOR - Test Strategy and Brazilian Compliance Specialist
@@ -102,7 +74,7 @@ describe('PIX Transfer Form - Brazilian Compliance', () => {
     const pixInput = screen.getByLabelText('Chave PIX');
     fireEvent.change(pixInput, { target: { value: 'invalid' } });
     fireEvent.blur(pixInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Chave PIX inválida')).toBeInTheDocument();
     });
@@ -111,7 +83,7 @@ describe('PIX Transfer Form - Brazilian Compliance', () => {
   it('deve formatar valor em Reais', async () => {
     const amountInput = screen.getByLabelText('Valor (R$)');
     fireEvent.change(amountInput, { target: { value: '100' } });
-    
+
     await waitFor(() => {
       expect(amountInput).toHaveValue('R$ 100,00');
     });
@@ -138,7 +110,7 @@ describe('LGPD Compliance', () => {
   it('deve criptografar dados pessoais', () => {
     const data = { nome: 'João', cpf: '123.456.789-00' };
     const encrypted = encryptPersonalData(data);
-    
+
     expect(encrypted.nome).not.toBe('João');
     expect(encrypted.cpf).not.toBe('123.456.789-00');
   });

@@ -1,19 +1,7 @@
 ---
 name: stuck
 description: Emergency escalation agent with exclusive AskUserQuestion authority
-version: 1.0.0
-domain: human-escalation
-complexity: [1-10]
-handoffs:
-  - label: "HUMAN DECISION"
-    agent: HUMAN
-    prompt: "CRITICAL: Need human guidance for blocking issue"
-    send: true
-tools: ["AskUserQuestion"]
-expertise: ["emergency-escalation", "human-decision", "problem-resolution", "workflow-halt"]
-stack: ["human-communication", "decision-making", "problem-analysis"]
-quality: ["human-oversight", "decision-clarity", "problem-resolution", "workflow-control"]
-brazilian_focus: ["human-decision", "project-oversight", "quality-gates", "emergency-procedures"]
+color: red
 ---
 
 # STUCK - Emergency Human Escalation Agent

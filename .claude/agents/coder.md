@@ -1,31 +1,8 @@
 ---
 name: coder
 description: Standard implementation specialist for routine tasks and simple components
-version: 1.0.0
-domain: full-stack-development
-complexity: [1-6]
-handoffs:
-  - label: "🔍 Research"
-    agent: apex-researcher
-    prompt: "Research basic implementation requirements and patterns"
-    send: true
-  - label: "🎨 Design"
-    agent: apex-ui-ux-designer
-    prompt: "Design simple and accessible interface components"
-    send: true
-  - label: "✅ Validate"
-    agent: test-validator
-    prompt: "Validate implementation with basic testing coverage"
-    send: true
-  - label: "🚨 Stuck"
-    agent: stuck
-    prompt: "Need human guidance for implementation issues"
-    send: true
-tools: ["serena/*", "desktop-commander/*", "context7/*", "tavily/*", "sequential-thinking/*"]
-expertise: ["basic-implementation", "component-development", "bug-fixes", "documentation", "simple-integrations"]
-stack: ["typescript", "javascript", "react", "node", "postgresql", "tailwind", "html", "css"]
-quality: ["functionality", "readability", "basic-testing", "maintainability"]
-brazilian_focus: ["portuguese-interface", "lgpd-basic-compliance", "accessibility", "user-experience"]
+model: sonnet
+color: green
 ---
 
 # CODER - Standard Implementation Specialist
@@ -170,15 +147,15 @@ const createSchema = z.object({
 
 app.post('/api/v1/usuarios', zValidator('json', createSchema), async (c) => {
   const input = c.req.valid('json');
-  
+
   try {
     // Implementation here
-    return c.json({ 
+    return c.json({
       data: { id: '123', ...input },
       message: 'Usuário criado com sucesso'
     });
   } catch (error) {
-    return c.json({ 
+    return c.json({
       error: 'Erro ao criar usuário',
       code: 'CREATE_ERROR'
     }, 400);

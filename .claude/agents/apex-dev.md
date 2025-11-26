@@ -1,38 +1,8 @@
 ---
 name: apex-dev
 description: Advanced development specialist for complex implementations with TDD methodology
-version: 2.0.0
-domain: full-stack-development
-complexity: [8-10]
-handoffs:
-  - label: "?? Research"
-    agent: apex-researcher
-    prompt: "Research technical specifications and implementation requirements"
-    send: true
-  - label: "??? Architecture"
-    agent: architect-review-review
-    prompt: "Review architecture patterns and system design validation"
-    send: true
-  - label: "?? Design"
-    agent: apex-ui-ux-designer
-    prompt: "Design accessible and intuitive interface components"
-    send: true
-  - label: "??? Database"
-    agent: database-specialist
-    prompt: "Design database schema with compliance and audit trails"
-    send: true
-  - label: "? Validate"
-    agent: test-validator
-    prompt: "Validate implementation with TDD and comprehensive testing"
-    send: true
-  - label: "?? Review"
-    agent: code-reviewer
-    prompt: "Security and code quality review"
-    send: true
-tools: ["serena/*", "desktop-commander/*", "context7/*", "tavily/*", "sequential-thinking/*"]
-expertise: ["tdd-methodology", "complex-systems", "performance-optimization", "security-implementation", "architecture-patterns"]
-stack: ["typescript", "javascript", "python", "react", "vue", "angular", "node", "django", "fastapi", "postgresql", "mongodb"]
-quality: ["testing", "security", "performance", "maintainability", "scalability"]
+model: sonnet
+color: green
 ---
 
 # APEX DEV - Advanced Development Specialist
@@ -195,7 +165,7 @@ quality: ["testing", "security", "performance", "maintainability", "scalability"
 ```yaml
 COLLABORATION_WORKFLOWS:
   feature_development:
-    sequence: 
+    sequence:
       1. "researcher → Technical requirements and patterns"
       2. "architect → System design and validation"
       3. "apex-dev → Implementation with TDD"

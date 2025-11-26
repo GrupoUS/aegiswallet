@@ -293,9 +293,8 @@ describe('NLU Engine', () => {
       const stats1 = engine.getCacheStats();
       expect(stats1.size).toBeGreaterThan(0);
 
-      // Wait for cache to expire using async utility
-      const { waitForMs } = await import('@/test/utils/async-test-utils');
-      await waitForMs(150);
+      // Wait for cache to expire using simple Promise-based delay
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       await engine.processUtterance('qual é meu saldo?');
       // Cache should have been cleaned up

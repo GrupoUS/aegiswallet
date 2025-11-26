@@ -224,8 +224,8 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => daysFromToday(1),
-    // Enhanced pattern for "amanhã" with all diacritic variations
-    pattern: /\b(amanha|amanh[ãÃ])\b/gi,
+    // Enhanced pattern for "amanhã" - using character class without word boundary for accents
+    pattern: /(?:^|\s)(amanh[ãâáàa]|amanha)(?:\s|$|[.,!?])/gi,
     type: EntityType.DATE,
   },
   {
@@ -260,8 +260,8 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => setMonthOffset(1),
-    // Enhanced pattern for "próximo mês" with diacritic support
-    pattern: /\b(pr[óóo]ximo\s+m[eê]s|m[eê]s\s+que\s+vem)\b/gi,
+    // Enhanced pattern for "próximo mês" with diacritic support - simpler, handles end of string
+    pattern: /(pr[oóòôõ]ximo\s+m[eêéèë]s|m[eêéèë]s\s+que\s+vem|proximo\s+mes)/gi,
     type: EntityType.DATE,
   },
   // Bill types / Categories - Enhanced Brazilian Portuguese patterns
@@ -344,10 +344,11 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
 
   // Recipient (specific context "para ...") - Enhanced Brazilian patterns
+  // Excludes date expressions like "para o próximo mês"
   {
     normalizer: (match) => match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
     pattern:
-      /\b(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+([a-zàáâãéêíóôõúç]+(?:\s+[a-zàáâãéêíóôõúç]+)*)\b/gi,
+      /\b(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+(?!pr[oó]ximo\s+m[eê]s|m[eê]s\s+que\s+vem|amanh[ãa]|hoje|ontem)([a-zàáâãéêíóôõúç]+(?:\s+[a-zàáâãéêíóôõúç]+)*)\b/gi,
     type: EntityType.RECIPIENT,
   },
 
@@ -501,10 +502,28 @@ export class EntityExtractor {
 
   /**
    * Remove duplicate and overlapping entities
+   * Priority: DATE > AMOUNT > BILL_TYPE > RECIPIENT > PERSON
    */
   private deduplicateEntities(entities: ExtractedEntity[]): ExtractedEntity[] {
-    // Sort by start index
-    const sorted = entities.sort((a, b) => a.startIndex - b.startIndex);
+    // Define entity type priorities (higher = more important)
+    const typePriority: Record<string, number> = {
+      [EntityType.DATE]: 5,
+      [EntityType.AMOUNT]: 4,
+      [EntityType.BILL_TYPE]: 3,
+      [EntityType.CATEGORY]: 2,
+      [EntityType.PERIOD]: 2,
+      [EntityType.RECIPIENT]: 1,
+      [EntityType.PERSON]: 0,
+      [EntityType.ACCOUNT]: 2,
+    };
+
+    // Sort by priority (highest first), then by start index
+    const sorted = entities.sort((a, b) => {
+      const priorityDiff = (typePriority[b.type] ?? 0) - (typePriority[a.type] ?? 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return a.startIndex - b.startIndex;
+    });
+
     const deduplicated: ExtractedEntity[] = [];
 
     for (const entity of sorted) {
@@ -512,7 +531,9 @@ export class EntityExtractor {
       const overlaps = deduplicated.some(
         (existing) =>
           (entity.startIndex >= existing.startIndex && entity.startIndex < existing.endIndex) ||
-          (entity.endIndex > existing.startIndex && entity.endIndex <= existing.endIndex)
+          (entity.endIndex > existing.startIndex && entity.endIndex <= existing.endIndex) ||
+          (existing.startIndex >= entity.startIndex && existing.startIndex < entity.endIndex) ||
+          (existing.endIndex > entity.startIndex && existing.endIndex <= entity.endIndex)
       );
 
       if (!overlaps) {
@@ -520,7 +541,8 @@ export class EntityExtractor {
       }
     }
 
-    return deduplicated;
+    // Re-sort by startIndex for output consistency
+    return deduplicated.sort((a, b) => a.startIndex - b.startIndex);
   }
 
   /**

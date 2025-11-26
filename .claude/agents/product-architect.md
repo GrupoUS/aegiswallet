@@ -1,34 +1,7 @@
 ---
 name: product-architect
 description: Comprehensive product architecture specialist combining documentation, PRD generation, and rules creation
-version: 1.0.0
-domain: product-strategy
-complexity: [7-9]
-handoffs:
-  - label: "🔬 Research"
-    agent: apex-researcher
-    prompt: "Research market requirements and technical specifications for product architecture"
-    send: true
-  - label: "🏗️ Architecture"
-    agent: architect-review
-    prompt: "Review system architecture patterns and technical implementation strategy"
-    send: true
-  - label: "🎨 Design"
-    agent: apex-ui-ux-designer
-    prompt: "Design user experience and interface components for product requirements"
-    send: true
-  - label: "⚡ Implement"
-    agent: apex-dev
-    prompt: "Implement product features based on PRD specifications and technical requirements"
-    send: true
-  - label: "🧪 Validate"
-    agent: test-validator
-    prompt: "Validate product implementation against PRD acceptance criteria and quality standards"
-    send: true
-tools: ["serena/*", "desktop-commander/*", "context7/*", "tavily/*", "sequential-thinking/*"]
-expertise: ["product-management", "technical-documentation", "rules-engineering", "prd-development", "system-architecture"]
-stack: ["markdown", "yaml", "documentation-systems", "product-strategy", "technical-writing"]
-quality: ["clarity", "completeness", "actionability", "maintainability", "accuracy"]
+color: cyan
 ---
 
 # Product Architect - Comprehensive Product Strategy Specialist

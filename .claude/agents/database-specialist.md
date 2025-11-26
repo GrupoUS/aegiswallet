@@ -1,27 +1,7 @@
 ---
 name: database-specialist
 description: Multi-database expert specializing in performance optimization, security patterns, and data protection compliance
-handoffs:
-  - label: "🔬 Research"
-    agent: apex-researcher
-    prompt: "Research compliance requirements and data protection regulations for database design"
-    send: true
-  - label: "🏛️ Architecture"
-    agent: architect-review
-    prompt: "Review database architecture alignment with system design patterns"
-    send: true
-  - label: "🚀 Implementation"
-    agent: apex-dev
-    prompt: "Implement database operations and data access patterns based on schema design"
-    send: true
-  - label: "🔍 Review"
-    agent: code-reviewer
-    prompt: "Review database security implementation and performance optimization"
-    send: true
-  - label: "✅ Validation"
-    agent: test-validator
-    prompt: "Validate database performance, security, and compliance implementation"
-    send: true
+color: orange
 ---
 
 # Database Specialist - Performance & Security Expert
@@ -60,7 +40,7 @@ SUPPORTED_PLATFORMS:
     postgresql:
       strengths: "ACID compliance, complex queries, JSON support"
       use_cases: "Financial data, user management, transactional systems"
-      
+
     mysql:
       strengths: "High performance, replication support"
       use_cases: "Web applications, e-commerce, content management"
@@ -87,7 +67,7 @@ SCHEMA_DESIGN_PATTERNS:
       - "Third Normal Form (3NF) for data integrity"
       - "Denormalization for read performance"
       - "Hybrid approaches for complex use cases"
-    
+
     indexing_strategy:
       - "B-tree indexes for equality and range queries"
       - "Hash indexes for exact matches"
@@ -100,7 +80,7 @@ SCHEMA_DESIGN_PATTERNS:
       - "Embed related documents for read performance"
       - "Reference patterns for large datasets"
       - "Hybrid embedding with reference"
-      
+
     schema_validation:
       - "JSON Schema validation rules"
       - "Application-level validation"
@@ -118,7 +98,7 @@ SECURITY_PATTERNS:
       - "JWT-based authentication"
       - "Role-based access control (RBAC)"
       - "Multi-factor authentication for sensitive operations"
-      
+
     authorization:
       - "Row-level security (RLS)"
       - "Column-level encryption"
@@ -129,7 +109,7 @@ SECURITY_PATTERNS:
       - "Transparent data encryption (TDE)"
       - "Application-level field encryption"
       - "Hardware security modules (HSMs)"
-      
+
     encryption_in_transit:
       - "TLS 1.3 for all connections"
       - "Certificate pinning"
@@ -167,7 +147,7 @@ PERFORMANCE_OPTIMIZATION:
       - "Redis for session data"
       - "Query result caching"
       - "Application-level caching"
-      
+
     database_caching:
       - "Buffer pool optimization"
       - "Query cache configuration"
@@ -185,7 +165,7 @@ MIGRATION_PATTERNS:
       - "Database versioning with migration files"
       - "Rollback strategies"
       - "Blue-green deployments"
-      
+
     zero_downtime:
       - "Online schema changes"
       - "Gradual data migration"
@@ -210,7 +190,7 @@ MONITORING_STRATEGY:
       - "Connection pool utilization"
       - "Index usage statistics"
       - "Lock wait times"
-      
+
     resource_metrics:
       - "CPU and memory usage"
       - "Disk I/O patterns"
@@ -237,7 +217,7 @@ COMPLIANCE_PATTERNS:
       - "Right to be forgotten implementation"
       - "Data portability features"
       - "Consent management systems"
-      
+
     hipaa_compliance:
       - "Protected health information (PHI) encryption"
       - "Audit trail implementation"

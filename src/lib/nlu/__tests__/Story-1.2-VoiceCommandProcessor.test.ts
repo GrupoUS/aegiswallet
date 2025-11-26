@@ -5,7 +5,51 @@
  * Tests NLP engine, intent classification, parameter extraction, and context management
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Create a chainable query builder mock
+const createQueryBuilder = () => {
+  const queryBuilder = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
+    like: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    contains: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    // Make the builder thenable for awaits
+    then: (resolve: (value: { data: []; error: null }) => void) => {
+      resolve({ data: [], error: null });
+    },
+  };
+  return queryBuilder;
+};
+
+// Mock Supabase before any imports that use it
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'test-user-id' } },
+        error: null,
+      }),
+    },
+    from: vi.fn(() => createQueryBuilder()),
+  },
+}));
+
 import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
 import { processVoiceCommandWithNLU } from '@/lib/voiceCommandProcessor';

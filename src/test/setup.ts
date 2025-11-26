@@ -445,67 +445,7 @@ beforeAll(() => {
   // Mock fetch for remote logging tests
   global.fetch = vi.fn();
 
-  // Mock Supabase configuration for tests
-  vi.mock('@/integrations/supabase/client', () => {
-    // Helper function to create chainable query builders
-    const createQueryBuilder = () => {
-      const queryBuilder = {
-        data: [],
-        error: null,
-        single: () => ({
-          data: null,
-          error: null,
-        }),
-        eq: () => queryBuilder,
-        neq: () => queryBuilder,
-        gt: () => queryBuilder,
-        gte: () => queryBuilder,
-        lt: () => queryBuilder,
-        lte: () => queryBuilder,
-        like: () => queryBuilder,
-        ilike: () => queryBuilder,
-        in: () => queryBuilder,
-        contains: () => queryBuilder,
-        order: () => queryBuilder,
-        limit: () => queryBuilder,
-        range: () => queryBuilder,
-        select: () => queryBuilder,
-        update: () => queryBuilder,
-        delete: () => queryBuilder,
-        // eslint-disable-next-line unicorn/no-thenable
-        then: (resolve: (value: { data: unknown[]; error: null }) => void) => {
-          resolve({ data: queryBuilder.data, error: queryBuilder.error });
-        },
-      };
-      return queryBuilder;
-    };
-
-    return {
-      supabase: {
-        auth: {
-          getUser: vi.fn(() => ({
-            data: { user: { id: 'test-user' } },
-            error: null,
-          })),
-          signInWithOAuth: vi.fn(),
-          signInWithPassword: vi.fn(),
-          signOut: vi.fn(),
-          signUp: vi.fn(),
-        },
-        from: vi.fn(() => createQueryBuilder()),
-        realtime: {
-          subscribe: vi.fn(),
-          unsubscribe: vi.fn(),
-        },
-        storage: {
-          from: vi.fn(() => ({
-            getPublicUrl: vi.fn(() => ({ data: { publicUrl: '' } })),
-            upload: vi.fn(),
-          })),
-        },
-      },
-    };
-  });
+  // Note: Supabase mock is configured at module level below using the comprehensive typed mock
 });
 
 // Clean up mocks after each test

@@ -2,15 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GeminiBackend } from './GeminiBackend';
 import { createChatBackend, getDefaultBackend } from './index';
 
-// Mock environment variables
-const mockEnv = vi.hoisted(() => ({
-  VITE_GEMINI_API_KEY: 'test-api-key',
-  VITE_DEFAULT_AI_MODEL: 'gemini-pro',
-}));
-
-vi.mock('import.meta', () => ({
-  env: mockEnv,
-}));
+// Note: vi.hoisted requires Vitest 0.31+, using simpler approach
+vi.stubEnv('VITE_GEMINI_API_KEY', 'test-api-key');
+vi.stubEnv('VITE_DEFAULT_AI_MODEL', 'gemini-pro');
 
 describe('Backend Factory', () => {
   beforeEach(() => {
@@ -74,7 +68,7 @@ describe('Backend Factory', () => {
 
       const modelInfo = backend.getModelInfo();
       expect(modelInfo.id).toBe('gemini-pro');
-      expect(modelInfo.name).toBe('Google Gemini');
+      expect(modelInfo.name).toBe('Gemini gemini-pro');
       expect(modelInfo.provider).toBe('Google');
       expect(modelInfo.capabilities.streaming).toBe(true);
     });

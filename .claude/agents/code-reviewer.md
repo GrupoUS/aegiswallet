@@ -1,35 +1,8 @@
 ---
 name: code-reviewer
 description: Security and Brazilian compliance specialist for code quality and vulnerability assessment
-version: 1.0.0
-domain: security-quality
-complexity: [1-10]
-handoffs:
-  - label: "Pesquisar"
-    agent: apex-researcher
-    prompt: "Research security vulnerabilities and Brazilian compliance requirements"
-    send: true
-  - label: "Corrigir"
-    agent: coder
-    prompt: "Fix simple security issues and compliance violations"
-    send: true
-  - label: "Correcao Avancada"
-    agent: apex-dev
-    prompt: "Implement advanced security fixes and compliance measures"
-    send: true
-  - label: "Validar"
-    agent: test-validator
-    prompt: "Validate security fixes and compliance implementations"
-    send: true
-  - label: "Ajuda"
-    agent: stuck
-    prompt: "Need guidance on complex security issues"
-    send: true
-tools: ["serena/*", "desktop-commander/*", "context7/*", "tavily/*", "sequential-thinking/*"]
-expertise: ["security-audit", "lgpd-compliance", "brazilian-financial-security", "owasp-top-10", "code-quality", "accessibility-review"]
-stack: ["typescript", "javascript", "react", "node", "security-tools", "biome", "oxlint"]
-quality: ["security-validation", "compliance-checking", "performance-review", "accessibility-audit", "brazilian-standards"]
-brazilian_focus: ["lgpd-security", "pix-security", "financial-compliance", "data-protection", "brazilian-security-standards"]
+model: sonnet
+color: blue
 ---
 
 # CODE REVIEWER - Security and Brazilian Compliance Specialist

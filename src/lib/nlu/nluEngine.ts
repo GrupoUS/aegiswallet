@@ -477,9 +477,7 @@ export class NLUEngine {
 
   /**
    * Boost confidence for essential intents based on deterministic signals
-   */
-  /**
-   * Boost confidence for essential intents based on deterministic signals
+   * Enhanced for Brazilian Portuguese voice commands with better pattern matching
    */
   private enhanceClassificationConfidence(
     text: string,
@@ -524,13 +522,23 @@ export class NLUEngine {
         Math.min(0.92, requiredConfidence + boostAmount)
       );
     } else if (keywordMatches.length === 1) {
-      // Small boost for single keyword match
+      // Small boost for single keyword match - ensure at least 0.7 confidence
       boostedConfidence = Math.max(boostedConfidence, requiredConfidence);
     }
 
     // Additional Brazilian Portuguese context boosting
     if (this.isBrazilianContextual(text, classification.intent)) {
       boostedConfidence = Math.min(boostedConfidence + 0.1, 0.95);
+    }
+
+    // FALLBACK: If no pattern matched but we have a valid intent, try to reclassify
+    // This handles cases where the classifier picked an intent but with low confidence
+    if (!patternMatched && keywordMatches.length === 0 && boostedConfidence < 0.7) {
+      // Try all intents to find a better match based on keywords
+      const betterMatch = this.findBetterIntentMatch(text, classification.intent);
+      if (betterMatch) {
+        return betterMatch;
+      }
     }
 
     // Return updated classification if confidence changed
@@ -543,6 +551,62 @@ export class NLUEngine {
     }
 
     return classification;
+  }
+
+  /**
+   * Find a better intent match by checking all intents for keyword/pattern matches
+   */
+  private findBetterIntentMatch(
+    text: string,
+    currentIntent: IntentType
+  ): IntentClassificationResult | null {
+    const lowerText = text.toLowerCase();
+    let bestIntent: IntentType = currentIntent;
+    let bestScore = 0;
+    let bestMethod: 'pattern' | 'keyword' = 'keyword';
+
+    for (const [intentStr, definition] of Object.entries(INTENT_DEFINITIONS)) {
+      const intent = intentStr as IntentType;
+      if (intent === IntentType.UNKNOWN) continue;
+
+      // Check patterns
+      const patternMatched = definition.patterns.some((pattern) => {
+        pattern.lastIndex = 0;
+        return pattern.test(text);
+      });
+
+      if (patternMatched) {
+        const score = 0.85;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIntent = intent;
+          bestMethod = 'pattern';
+        }
+        continue;
+      }
+
+      // Check keywords
+      const keywordMatches = definition.keywords.filter((keyword) => lowerText.includes(keyword));
+      if (keywordMatches.length > 0) {
+        const score = 0.7 + keywordMatches.length * 0.05;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIntent = intent;
+          bestMethod = 'keyword';
+        }
+      }
+    }
+
+    if (bestScore >= 0.7 && bestIntent !== currentIntent) {
+      return {
+        alternatives: [],
+        confidence: bestScore,
+        intent: bestIntent,
+        method: bestMethod,
+      };
+    }
+
+    return null;
   }
 
   /**

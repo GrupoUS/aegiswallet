@@ -27,11 +27,13 @@ type ValidationResult =
   | { account: BankAccount; numericAmount: number; transactionDate: Date }
   | { error: string };
 type SubmitTransaction = (input: {
-  account_id: string;
   amount: number;
+  categoryId?: string;
   description?: string;
-  event_type: string;
-  status?: string;
+  fromAccountId: string;
+  toAccountId?: string;
+  type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+  status?: 'cancelled' | 'failed' | 'pending' | 'posted';
   metadata?: Record<string, unknown>;
 }) => Promise<unknown>;
 interface SubmitDeps {
@@ -315,10 +317,10 @@ const createSubmitHandler =
     try {
       const finalAmount = computeFinalAmount(formState.type, numericAmount);
       await submitTransaction({
-        account_id: account.id,
+        fromAccountId: account.id,
         amount: finalAmount,
         description: formState.description,
-        event_type: formState.type,
+        type: formState.type,
         status: 'posted',
       });
       updateBalance({

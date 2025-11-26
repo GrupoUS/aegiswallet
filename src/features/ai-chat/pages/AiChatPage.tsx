@@ -12,7 +12,7 @@ import { Sparkles } from 'lucide-react';
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
 export default function AiChatPage() {
-  const backend = useMemo(() => new GeminiBackend(GEMINI_API_KEY), []);
+  const backend = useMemo(() => new GeminiBackend({ apiKey: GEMINI_API_KEY }), []);
 
   const {
     messages,

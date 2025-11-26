@@ -9,7 +9,7 @@ handoffs:
     agent: database-specialist
     prompt: "Implement the database schema based on the architecture design I created."
   - label: "📝 Review Implementation"
-    agent: code-reviewer
+    agent: tester
     prompt: "Review the implementation against the architectural requirements I defined."
     send: true
 tools:

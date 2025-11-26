@@ -1,10 +1,7 @@
-import { useEffect } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { trpc } from '@/lib/trpc';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
 
-// Transaction type for internal use
-type Transaction = {
+export interface Transaction {
   id: string;
   user_id: string;
   amount: number;
@@ -15,19 +12,26 @@ type Transaction = {
   account_id?: string;
   created_at: string;
   metadata?: Record<string, unknown>;
-};
+}
 
-// Statistics type for transaction summaries
-type TransactionStats = {
+interface TransactionApiResponse<T> {
+  data: T;
+  meta: {
+    requestId: string;
+    retrievedAt?: string;
+    createdAt?: string;
+    deletedAt?: string;
+    total?: number;
+  };
+}
+
+interface TransactionStats {
   balance: number;
   expenses: number;
   income: number;
   period: string;
   transactionsCount: number;
-};
-
-// Export types for external use
-export type { Transaction, TransactionStats };
+}
 
 export function useTransactions(filters?: {
   limit?: number;
@@ -40,137 +44,77 @@ export function useTransactions(filters?: {
   endDate?: string;
   search?: string;
 }) {
-  const { data, isLoading, error, refetch } = trpc.transactions.list.useQuery(filters || {});
-
-  const transactions = data || [];
-  const total = transactions.length;
-
-  const { mutate: createTransaction, isPending: isCreating } = trpc.transactions.create.useMutation(
-    {
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao criar transação');
-      },
-      onSuccess: () => {
-        toast.success('Transação criada com sucesso!');
-        refetch();
-      },
-    }
-  );
-
-  const { mutate: updateTransaction, isPending: isUpdating } = trpc.transactions.update.useMutation(
-    {
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao atualizar transação');
-      },
-      onSuccess: () => {
-        toast.success('Transação atualizada com sucesso!');
-        refetch();
-      },
-    }
-  );
-
-  const { mutate: deleteTransaction, isPending: isDeleting } = trpc.transactions.delete.useMutation(
-    {
-      onError: (error) => {
-        toast.error(error.message || 'Erro ao remover transação');
-      },
-      onSuccess: () => {
-        toast.success('Transação removida com sucesso!');
-        refetch();
-      },
-    }
-  );
-
-  // Real-time subscription for transactions
-  useEffect(() => {
-    if (!transactions.length) {
-      return;
-    }
-
-    const channel = supabase
-      .channel('transactions_changes')
-      .on(
-        'postgres_changes',
+  return useQuery({
+    queryKey: ['transactions', filters],
+    queryFn: async () => {
+      const response = await apiClient.get<TransactionApiResponse<Transaction[]>>(
+        '/v1/transactions',
         {
-          event: '*',
-          schema: 'public',
-          table: 'transactions',
-        },
-        (_payload) => {
-          refetch();
+          params: filters,
         }
-      )
-      .subscribe();
+      );
+      return response.data;
+    },
+  });
+}
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [transactions.length, refetch]);
+export function useCreateTransaction() {
+  const queryClient = useQueryClient();
 
-  return {
-    transactions,
-    total,
-    error,
-    isLoading,
-    isCreating,
-    isUpdating,
-    isDeleting,
-    createTransaction,
-    updateTransaction,
-    deleteTransaction,
-    refetch,
-  };
+  return useMutation({
+    mutationFn: async (input: {
+      amount: number;
+      categoryId?: string;
+      description?: string;
+      fromAccountId: string;
+      toAccountId?: string;
+      type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+      status?: 'cancelled' | 'failed' | 'pending' | 'posted';
+      metadata?: Record<string, unknown>;
+    }) => {
+      const response = await apiClient.post<TransactionApiResponse<Transaction>>(
+        '/v1/transactions',
+        input
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
+}
+
+export function useDeleteTransaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { id: string }) => {
+      await apiClient.delete(`/v1/transactions/${input.id}`);
+      return input.id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 }
 
 export function useTransactionsStats(
   period?: 'week' | 'month' | 'quarter' | 'year',
   accountId?: string
 ) {
-  const { data, isLoading, error } = trpc.transactions.getStatistics.useQuery({
-    period: period || 'month',
-    accountId,
-  });
-
-  return {
-    stats: data,
-    error,
-    isLoading,
-  };
-}
-
-export function useCreateTransaction() {
-  const {
-    mutate: createTransaction,
-    mutateAsync,
-    isPending,
-  } = trpc.transactions.create.useMutation({
-    onError: (error: { message?: string; code?: string }) => {
-      toast.error(error.message || 'Erro ao criar transação');
-    },
-    onSuccess: () => {
-      toast.success('Transação criada com sucesso!');
+  return useQuery({
+    queryKey: ['transactions', 'stats', period, accountId],
+    queryFn: async () => {
+      const response = await apiClient.get<TransactionApiResponse<TransactionStats>>(
+        '/v1/transactions/statistics',
+        {
+          params: {
+            period: period || 'month',
+            accountId,
+          },
+        }
+      );
+      return response.data;
     },
   });
-
-  return {
-    createTransaction,
-    isPending,
-    mutateAsync,
-  };
-}
-
-export function useDeleteTransaction() {
-  const { mutate: deleteTransaction, isPending } = trpc.transactions.delete.useMutation({
-    onError: (error: { message?: string; code?: string }) => {
-      toast.error(error.message || 'Erro ao remover transação');
-    },
-    onSuccess: () => {
-      toast.success('Transação removida com sucesso!');
-    },
-  });
-
-  return {
-    deleteTransaction,
-    isPending,
-  };
 }

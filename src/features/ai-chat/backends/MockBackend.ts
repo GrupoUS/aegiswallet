@@ -3,11 +3,10 @@ import {
   createMessageStartEvent,
   createStreamChunk,
 } from '../domain/events';
-import {
-  type ChatMessage,
-  type ChatRequestOptions,
-  type ChatStreamChunk,
-  ChatStreamEventType,
+import type {
+  ChatMessage,
+  ChatRequestOptions,
+  ChatStreamChunk,
 } from '../domain/types';
 import type { ChatBackend, ModelInfo } from './ChatBackend';
 
@@ -26,7 +25,7 @@ export class MockBackend implements ChatBackend {
     // Simulate typing delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    yield createStreamChunk(ChatStreamEventType.CONTENT_CHUNK, text, messageId);
+    yield createStreamChunk('text-delta', text, messageId);
     yield createMessageEndEvent(messageId);
   }
 

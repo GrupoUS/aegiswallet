@@ -1,17 +1,22 @@
 import { useState, useCallback, useRef } from 'react';
-import { ChatBackend } from '../domain/ChatBackend';
-import { ChatMessage, ChatRole } from '../domain/types';
+import type { ChatBackend } from '../domain/ChatBackend';
+import type { ChatMessage, ChatReasoningChunk, ChatSuggestion, ChatTask } from '../domain/types';
 
-interface UseChatControllerProps {
-  backend: ChatBackend;
-  initialMessages?: ChatMessage[];
+interface UseChatControllerOptions {
+  enableVoiceFeedback?: boolean;
+  enableReasoningView?: boolean;
+  onError?: (error: Error) => void;
 }
 
-export function useChatController({ backend, initialMessages = [] }: UseChatControllerProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+export function useChatController(backend: ChatBackend, options?: UseChatControllerOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingReasoning, setStreamingReasoning] = useState('');
+  const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([]);
+  const [tasks, setTasks] = useState<ChatTask[]>([]);
+  const [reasoning, setReasoning] = useState<ChatReasoningChunk[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -28,15 +33,12 @@ export function useChatController({ backend, initialMessages = [] }: UseChatCont
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setIsLoading(true);
+    setIsStreaming(true);
     setStreamingContent('');
     setStreamingReasoning('');
 
     try {
-      // Create a placeholder for the assistant response
-      // We won't add it to 'messages' until it's done or we might want to show it streaming
-      // For this implementation, let's stream into a separate state variable 'streamingContent'
-      // and then commit it to messages when done.
-
+      abortControllerRef.current = new AbortController();
       const stream = backend.send(newMessages);
 
       let fullContent = '';
@@ -51,10 +53,20 @@ export function useChatController({ backend, initialMessages = [] }: UseChatCont
           case 'reasoning-delta':
             fullReasoning += chunk.payload;
             setStreamingReasoning(prev => prev + chunk.payload);
+            if (options?.enableReasoningView) {
+              setReasoning(prev => [...prev, {
+                id: crypto.randomUUID(),
+                content: chunk.payload,
+                timestamp: Date.now(),
+              }]);
+            }
+            break;
+          case 'suggestion':
+            setSuggestions(prev => [...prev, chunk.payload as ChatSuggestion]);
             break;
           case 'error':
             console.error('Stream error:', chunk.payload);
-            // Handle error visually?
+            options?.onError?.(new Error(String(chunk.payload)));
             break;
           case 'done':
             // Commit the message
@@ -73,18 +85,42 @@ export function useChatController({ backend, initialMessages = [] }: UseChatCont
       }
     } catch (err) {
       console.error('SendMessage failed:', err);
+      options?.onError?.(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
       setStreamingContent('');
       setStreamingReasoning('');
+      abortControllerRef.current = null;
     }
-  }, [backend, messages]);
+  }, [backend, messages, options]);
+
+  const stopStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    backend.abort?.();
+    setIsStreaming(false);
+  }, [backend]);
+
+  const applySuggestion = useCallback((suggestion: ChatSuggestion) => {
+    sendMessage(suggestion.text);
+  }, [sendMessage]);
+
+  const enableReasoningView = options?.enableReasoningView ?? false;
 
   return {
     messages,
     isLoading,
+    isStreaming,
     streamingContent,
     streamingReasoning,
+    suggestions,
+    tasks,
+    reasoning,
+    enableReasoningView,
     sendMessage,
+    stopStreaming,
+    applySuggestion,
   };
 }

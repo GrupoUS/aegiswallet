@@ -13,7 +13,7 @@ handoffs:
     prompt: "Document the test results, coverage metrics, code review findings, and any known limitations discovered."
     send: true
 tools:
-  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'chrome-devtools/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
+  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'tavily/search', 'chrome-devtools/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🧪 TESTER AGENT
@@ -158,33 +158,33 @@ workflow:
   1_navigate:
     tool: "chrome-devtools/navigate"
     action: "Open the page URL to test"
-    example: "navigate to http://localhost:5173/dashboard"
-  
+    example: "navigate to http://localhost:8080/dashboard"
+
   2_screenshot:
     tool: "chrome-devtools/screenshot"
     action: "Capture visual proof of current state"
     example: "Take full page screenshot for documentation"
-  
+
   3_inspect_dom:
     tool: "chrome-devtools/evaluate"
     action: "Check DOM structure and element presence"
     example: "document.querySelector('.btn-primary')?.textContent"
-  
+
   4_test_clicks:
     tool: "chrome-devtools/click"
     action: "Click buttons and verify responses"
     example: "Click submit button and verify form submission"
-  
+
   5_test_forms:
     tool: "chrome-devtools/fill"
     action: "Fill form fields and test validation"
     example: "Fill email field with test@example.com"
-  
+
   6_check_console:
     tool: "chrome-devtools/console_logs"
     action: "Verify no JavaScript errors"
     example: "Check for React errors or warnings"
-  
+
   7_monitor_network:
     tool: "chrome-devtools/network"
     action: "Verify API calls are successful"

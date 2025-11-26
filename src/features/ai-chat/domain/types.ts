@@ -28,3 +28,55 @@ export interface ChatRequestOptions {
   tools?: any[]; // To be defined more strictly later
   signal?: AbortSignal;
 }
+
+/**
+ * Chat suggestion for quick user actions
+ */
+export interface ChatSuggestion {
+  id: string;
+  text: string;
+  icon?: string;
+}
+
+/**
+ * Reasoning chunk for "thinking" models
+ */
+export interface ChatReasoningChunk {
+  id: string;
+  content: string;
+  timestamp: number;
+}
+
+/**
+ * Image payload for multimodal chat
+ */
+export interface ChatImagePayload {
+  id: string;
+  url: string;
+  alt?: string;
+  mimeType?: string;
+  generatedBy?: string;
+}
+
+/**
+ * Subtask within a ChatTask
+ */
+export interface ChatSubtask {
+  id: string;
+  title: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'failed';
+}
+
+/**
+ * Task representation for AI-driven workflows
+ */
+export interface ChatTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'failed';
+  progress?: number;
+  subtasks: ChatSubtask[];
+  createdAt: number;
+  updatedAt?: number;
+}

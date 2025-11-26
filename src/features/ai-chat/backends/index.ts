@@ -1,5 +1,6 @@
-import type { ChatBackend } from './ChatBackend';
+import type { ChatBackend } from '../domain/ChatBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
+import { MockBackend } from './MockBackend';
 
 /**
  * Backend factory and exports
@@ -32,7 +33,7 @@ export function createChatBackend(config: BackendConfig): ChatBackend {
           'VITE_GEMINI_API_KEY is not configured. Please set this environment variable in your .env file.'
         );
       }
-      return new GeminiBackend(config);
+      return new GeminiBackend({ apiKey: config.apiKey, model: config.model });
     }
     default:
       throw new Error(`Unknown backend type: ${(config as { type: string }).type}`);
@@ -59,6 +60,6 @@ export function getDefaultBackend(): ChatBackend {
   });
 }
 
-export * from './ChatBackend';
+export * from '../domain/ChatBackend';
 export * from './GeminiBackend';
-export * from './MockBackend';
+export { MockBackend } from './MockBackend';

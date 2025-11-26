@@ -51,9 +51,7 @@ export default defineConfig(({ mode }) => {
         'react-dom',
         '@tanstack/react-router',
         '@tanstack/react-query',
-        '@trpc/server',
-        '@trpc/client',
-        '@trpc/react-query',
+
         '@supabase/supabase-js',
         '@radix-ui/react-dialog',
         '@radix-ui/react-dropdown-menu',

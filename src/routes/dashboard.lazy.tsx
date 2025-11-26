@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTransactions } from '@/hooks/use-transactions';
+import { Transaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents, useFinancialSummary } from '@/hooks/useFinancialEvents';
 import type { FinancialEvent } from '@/types/financial-events';
@@ -87,7 +87,8 @@ export function Dashboard() {
   const { statistics } = useFinancialEvents({ status: 'all' });
   const { summary, loading: summaryLoading } = useFinancialSummary();
 
-  const { transactions: recentTransactions } = useTransactions({ limit: 5 });
+  const recentTransactionsQuery = useTransactions({ limit: 5 });
+  const recentTransactions = recentTransactionsQuery.data ?? [];
 
   // Calculate Investments Balance
   const investmentsBalance = useMemo(() => {
@@ -100,18 +101,19 @@ export function Dashboard() {
   // Since we don't have a direct hook for "PIX Sent Today", we'll assume we might fetch it via transactions if needed.
   // For now, let's use useTransactions with filters for today.
   const today = new Date().toISOString().split('T')[0];
-  const { transactions: pixTransactions } = useTransactions({
+  const pixTransactionsQuery = useTransactions({
     endDate: today,
     startDate: today,
     type: 'pix',
   });
+  const pixTransactions = pixTransactionsQuery.data ?? [];
 
   const pixSentToday = useMemo(() => {
-    const list = pixTransactions ?? [];
+    const list = pixTransactions;
     // Already filtered by type: 'pix' in query, just check if it's an expense
     return list
-      .filter((transaction) => transaction.amount < 0 || (transaction as FinancialEvent).is_expense)
-      .reduce((sum, transaction) => sum + Math.abs(Number(transaction.amount)), 0);
+      .filter((transaction: Transaction) => transaction.amount < 0)
+      .reduce((sum: number, transaction: Transaction) => sum + Math.abs(Number(transaction.amount)), 0);
   }, [pixTransactions]);
 
   // Magic Cards com dados reais
@@ -205,12 +207,12 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {((recentTransactions as FinancialEvent[] | undefined) ?? []).map((transaction) => (
+              {((recentTransactions as Transaction[] | undefined) ?? []).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium truncate max-w-[150px]">{transaction.description}</p>
                     <p className="text-muted-foreground text-sm">
-                      {new Date(transaction.date ?? transaction.start).toLocaleDateString('pt-BR')}
+                      {new Date(transaction.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <FinancialAmount amount={Number(transaction.amount)} />

@@ -4,7 +4,7 @@ import { Building, Calendar, FileText, Home, LogOut, Mic, Wallet } from 'lucide-
 import { useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
-import { TRPCProvider } from '@/components/providers/TRPCProvider';
+
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -84,21 +84,18 @@ function RootComponent() {
   // Render without sidebar for login page
   if (!showSidebar) {
     return (
-      <TRPCProvider>
-        <CalendarProvider>
+      <CalendarProvider>
           <div className="min-h-screen bg-background">
             <Outlet />
           </div>
           <ChatWidget />
         </CalendarProvider>
-      </TRPCProvider>
     );
   }
 
   // Render with sidebar for authenticated pages
   return (
-    <TRPCProvider>
-      <CalendarProvider>
+    <CalendarProvider>
         <div
           className={cn(
             'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
@@ -134,7 +131,7 @@ function RootComponent() {
                       href: '#',
                       icon: <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
                       label: 'Sair',
-                    }}
+                      }}
                   />
                 </button>
                 <div className="mt-2 pl-1">
@@ -151,7 +148,6 @@ function RootComponent() {
           <ChatWidget />
         </div>
       </CalendarProvider>
-    </TRPCProvider>
   );
 }
 

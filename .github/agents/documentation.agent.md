@@ -5,9 +5,6 @@ handoffs:
   - label: "🔬 Research Topic"
     agent: apex-researcher
     prompt: "Research the topic I need to document. Gather technical details and best practices."
-  - label: "📝 Review Docs"
-    agent: code-reviewer
-    prompt: "Review the documentation I created for accuracy and completeness."
   - label: "🚀 Implement Examples"
     agent: vibecoder
     prompt: "Implement the code examples I documented to verify they work correctly."

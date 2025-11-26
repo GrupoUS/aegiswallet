@@ -20,8 +20,10 @@ export function useDashboard() {
   // Dados financeiros
   const { accounts, isLoading: accountsLoading } = useBankAccounts();
   const { balances, isLoading: balancesLoading } = useTotalBalance();
-  const { transactions } = useTransactions();
-  const { stats } = useTransactionsStats('month');
+  const transactionsQuery = useTransactions();
+  const statsQuery = useTransactionsStats('month');
+  const transactions = transactionsQuery.data ?? [];
+  const stats = statsQuery.data;
 
   // Dados do calendário
   const { events } = useFinancialEvents();
@@ -90,7 +92,8 @@ export function useDashboard() {
 export function useDashboardWidgets() {
   // Widget 1: Resumo Financeiro
   const { balances } = useTotalBalance();
-  const { stats } = useTransactionsStats('month');
+  const statsQuery = useTransactionsStats('month');
+  const stats = statsQuery.data;
 
   // Widget 2: Próximos Eventos
   const { events } = useFinancialEvents();
@@ -99,7 +102,8 @@ export function useDashboardWidgets() {
   const { favoriteContacts } = useFavoriteContacts();
 
   // Widget 4: Transações Recentes
-  const { transactions } = useTransactions();
+  const transactionsQuery = useTransactions();
+  const transactions = transactionsQuery.data ?? [];
 
   const widgets = {
     favoriteContacts: {

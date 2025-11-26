@@ -41,7 +41,7 @@ export function QuickActionModal({
   onSuccess,
 }: QuickActionModalProps) {
   const { accounts, updateBalance } = useBankAccounts();
-  const { createTransaction } = useCreateTransaction();
+  const createTransactionMutation = useCreateTransaction();
   const accountList = accounts ?? [];
 
   const [amount, setAmount] = useState('');
@@ -123,20 +123,20 @@ export function QuickActionModal({
         }
 
         // 1. Debit source
-        await createTransaction({
-          account_id: accountId,
+        await createTransactionMutation.mutateAsync({
+          fromAccountId: accountId,
           amount: -val,
           description: description || `Transferência para ${targetAccount.institution_name}`,
-          event_type: 'transfer',
+          type: 'transfer',
           status: 'posted',
         });
 
         // 2. Credit target
-        await createTransaction({
-          account_id: targetAccountId,
+        await createTransactionMutation.mutateAsync({
+          fromAccountId: targetAccountId,
           amount: val,
           description: description || `Transferência de ${sourceAccount.institution_name}`,
-          event_type: 'transfer',
+          type: 'transfer',
           status: 'posted',
         });
 
@@ -152,11 +152,11 @@ export function QuickActionModal({
         });
       } else if (actionType === 'deposit') {
         // Credit account
-        await createTransaction({
-          account_id: accountId,
+        await createTransactionMutation.mutateAsync({
+          fromAccountId: accountId,
           amount: val,
           description: description || 'Depósito',
-          event_type: 'credit',
+          type: 'credit',
           status: 'posted',
         });
 
@@ -166,11 +166,11 @@ export function QuickActionModal({
         });
       } else if (actionType === 'withdraw') {
         // Debit account
-        await createTransaction({
-          account_id: accountId,
+        await createTransactionMutation.mutateAsync({
+          fromAccountId: accountId,
           amount: -val,
           description: description || 'Saque',
-          event_type: 'debit',
+          type: 'debit',
           status: 'posted',
         });
 

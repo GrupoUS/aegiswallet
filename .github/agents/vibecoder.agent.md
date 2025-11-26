@@ -14,15 +14,12 @@ handoffs:
   - label: "🗄️ Database Work"
     agent: database-specialist
     prompt: "Handle the database schema and migrations for this feature."
-  - label: "📝 Code Review"
-    agent: code-reviewer
-    prompt: "Review the implementation for quality and security."
   - label: "🧪 Run Tests"
     agent: tester
     prompt: "Test the implementation visually and functionally."
     send: true
 tools:
-  ['search', 'runTasks', 'supabase/*', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'shadcn/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT

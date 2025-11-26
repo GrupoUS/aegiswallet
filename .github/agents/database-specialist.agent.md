@@ -2,9 +2,6 @@
 name: database-specialist
 description: 'Database Architecture & Compliance Specialist for Supabase PostgreSQL with LGPD compliance, RLS policies, and performance optimization.'
 handoffs:
-  - label: "📝 Review Schema"
-    agent: code-reviewer
-    prompt: "Review the database schema and RLS policies I created for security and compliance."
   - label: "🚀 Implement Backend"
     agent: vibecoder
     prompt: "Implement the backend logic that will use the database schema I created."

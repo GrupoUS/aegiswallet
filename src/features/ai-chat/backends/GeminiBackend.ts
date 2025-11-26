@@ -1,28 +1,32 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ChatBackend } from '../domain/ChatBackend';
-import { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
+import type { ChatBackend, ModelInfo } from './ChatBackend';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 import { ChatEvents } from '../domain/events';
+
+export interface GeminiBackendConfig {
+  apiKey: string;
+  model?: string;
+}
 
 export class GeminiBackend implements ChatBackend {
   private client: GoogleGenerativeAI;
   private modelName: string;
+  private abortController: AbortController | null = null;
 
-  constructor(apiKey: string, modelName: string = 'gemini-1.5-flash') {
-    this.client = new GoogleGenerativeAI(apiKey);
-    this.modelName = modelName;
+  constructor(config: GeminiBackendConfig) {
+    this.client = new GoogleGenerativeAI(config.apiKey);
+    this.modelName = config.model || 'gemini-1.5-flash';
   }
 
   async *send(messages: ChatMessage[], options?: ChatRequestOptions): AsyncGenerator<ChatStreamChunk, void, unknown> {
+    this.abortController = new AbortController();
+    
     try {
       const model = this.client.getGenerativeModel({
         model: options?.model || this.modelName
       });
 
       // Convert internal messages to Gemini format
-      // Note: Gemini expects a specific history format.
-      // We'll take all but the last message as history, and the last one as the new prompt.
-      // This is a simplification; for a robust implementation we should map roles carefully.
-
       const history = messages.slice(0, -1).map(m => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
@@ -41,6 +45,9 @@ export class GeminiBackend implements ChatBackend {
       const result = await chat.sendMessageStream(lastMessage.content);
 
       for await (const chunk of result.stream) {
+        if (this.abortController?.signal.aborted) {
+          break;
+        }
         const text = chunk.text();
         if (text) {
           yield ChatEvents.textDelta(text);
@@ -49,9 +56,32 @@ export class GeminiBackend implements ChatBackend {
 
       yield ChatEvents.done();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('GeminiBackend Error:', error);
-      yield ChatEvents.error(error.message || 'Unknown error occurred');
+      yield ChatEvents.error(errorMessage);
+    } finally {
+      this.abortController = null;
     }
+  }
+
+  abort(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+  }
+
+  getModelInfo(): ModelInfo {
+    return {
+      id: this.modelName,
+      name: `Gemini ${this.modelName}`,
+      provider: 'Google',
+      capabilities: {
+        streaming: true,
+        multimodal: true,
+        tools: true,
+        reasoning: false,
+      },
+    };
   }
 }

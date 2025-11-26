@@ -20,13 +20,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
+import { Transaction, useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
-import type { FinancialEvent } from '@/types/financial-events';
 
 export default function TransactionsList() {
-  const { transactions, isLoading, refetch } = useTransactions({ limit: 20 });
-  const { deleteTransaction } = useDeleteTransaction();
+  const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
+  const deleteMutation = useDeleteTransaction();
   const { updateBalance, accounts } = useBankAccounts();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -37,11 +36,11 @@ export default function TransactionsList() {
     }
 
     // Find transaction to revert balance
-    const transaction = (transactions as FinancialEvent[] | undefined)?.find(
+    const transaction = (transactions as Transaction[] | undefined)?.find(
       (t) => t.id === deletingId
     );
 
-    deleteTransaction(
+    deleteMutation.mutate(
       { id: deletingId },
       {
         onSuccess: async () => {
@@ -127,7 +126,7 @@ export default function TransactionsList() {
           </div>
         ) : (
           <div className="space-y-2">
-            {(transactions as FinancialEvent[]).map((transaction) => (
+            {(transactions as Transaction[]).map((transaction) => (
               <div
                 key={transaction.id}
                 className="w-full text-left flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
@@ -140,7 +139,7 @@ export default function TransactionsList() {
                     <p className="font-medium leading-none">{transaction.description}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>
-                        {format(new Date(transaction.date ?? transaction.start), 'dd/MM/yyyy', {
+                        {format(new Date(transaction.created_at), 'dd/MM/yyyy', {
                           locale: ptBR,
                         })}
                       </span>

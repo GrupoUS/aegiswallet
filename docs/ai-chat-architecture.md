@@ -40,12 +40,11 @@ interface ChatBackend {
 ```
 
 **Implementations**:
-- **GeminiBackend**: Google Gemini API integration (currently implemented)
-
-**Future Backends** (documented below, not yet implemented):
-- **CopilotKit**: CopilotKit SDK wrapper for conversational AI
-- **AG-UI Protocol**: Direct AG-UI protocol implementation
-- **Ottomator**: Ottomator RAG agents for knowledge-augmented chat
+- **GeminiBackend**: Google Gemini API integration (fully implemented)
+- **CopilotKitBackend**: Stub with comprehensive documentation for future CopilotKit integration
+- **AgUiBackend**: Stub for direct AG-UI Protocol implementation
+- **OttomatorBackend**: Stub for Ottomator RAG agents
+- **MockBackend**: Development/testing backend for offline development
 
 **Design Pattern**: Adapter pattern mapping provider-specific formats to AG-UI protocol
 
@@ -64,16 +63,17 @@ interface ChatBackend {
 ### 4. UI Component Layer
 **Purpose**: Render chat interface with shadcn/ui and ai-sdk.dev Elements
 
-**Components** (built with shadcn/ui):
+**Components** (built with shadcn/ui + ai-elements + KokonutUI):
 - `ChatLayout`: Structural layout (header, main, footer)
-- `ChatConversation`: Message list with auto-scroll (triggers on new messages)
-- `ChatResponse`: Assistant message display with markdown rendering
-- `ChatReasoning`: Collapsible reasoning view (controlled by env var)
-- `ChatPromptInput`: Input with voice integration
-- `ChatSuggestions`: Suggestion chips
-- `ChatTasks`: Task tracking panel
-- `ChatLoading`: Loading states (KokonutUI-compatible)
-- `ChatSearchBar`: Search input for chat queries (KokonutUI-compatible)
+- `ChatConversation`: Message list with auto-scroll (wraps `Conversation` ai-element, triggers on `messages.length` change)
+- `ChatResponse`: Assistant message display with markdown rendering (wraps `Response` ai-element)
+- `ChatReasoning`: Collapsible reasoning view (wraps `Reasoning` ai-element, controlled by `VITE_ENABLE_AI_REASONING`)
+- `ChatPromptInput`: Input with voice integration (wraps `PromptInput` ai-element + `AiPrompt` KokonutUI)
+- `ChatSuggestions`: Suggestion chips (wraps `Suggestion` ai-element)
+- `ChatTasks`: Task tracking panel (wraps `Task` ai-element)
+- `ChatLoading`: Loading states (wraps `AiLoading` KokonutUI)
+- `ChatSearchBar`: Search input for chat queries (wraps `AiInputSearch` KokonutUI)
+- `ChatOpenInChatLink`: Share to external chat providers (wraps `OpenInChat` ai-element)
 
 **Design System**: shadcn/ui New York style, consistent with existing AegisWallet UI
 
@@ -253,6 +253,26 @@ Components in `src/components/kokonutui/` provide AI-specific UI patterns:
 
 ### ChatSearchBar Component
 The `ChatSearchBar` component (`src/features/ai-chat/components/ChatSearchBar.tsx`) provides a search-oriented interface that wraps KokonutUI's `AiInputSearch`. Use it when you need search-driven chat flows instead of the standard prompt input.
+
+### ChatOpenInChatLink Component
+The `ChatOpenInChatLink` component (`src/features/ai-chat/components/ChatOpenInChatLink.tsx`) wraps the `OpenInChat` ai-element to provide sharing functionality to external AI providers (ChatGPT, Claude, Gemini). Usage:
+
+```tsx
+// Single provider
+<ChatOpenInChatLink content={message.content} provider="chatgpt" />
+
+// Provider dropdown menu
+<ChatOpenInChatLink content={message.content} showProviderMenu />
+```
+
+### Reasoning Toggle Configuration
+The reasoning panel visibility is controlled through the environment and component props:
+
+1. **Environment Variable**: Set `VITE_ENABLE_AI_REASONING=true` to enable reasoning collection
+2. **Hook Option**: Pass `enableReasoningView: true` to `useChatController`
+3. **UI Display**: The hook exposes `enableReasoningView` which is passed to `ChatConversation` via `showReasoning` prop
+
+Flow: `env var` → `useChatController(options)` → `enableReasoningView` → `ChatConversation(showReasoning)` → `ChatReasoning`
 
 ## Future Backend Integrations
 

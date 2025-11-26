@@ -1,14 +1,13 @@
 /**
  * Transactions API - Hono RPC Implementation
  * Handles transaction CRUD operations and statistics
+ * Refactored to use Supabase directly (KISS/YAGNI)
  */
 
 import { zValidator } from '@hono/zod-validator';
-import { and, desc, eq, gte, ilike, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { db } from '@/db';
-import { financialEvents } from '@/db/schema/transactions';
+import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
@@ -22,8 +21,8 @@ const listTransactionsSchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
   categoryId: z.string().optional(),
   accountId: z.string().optional(),
-  type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']).optional(),
-  status: z.enum(['cancelled', 'failed', 'pending', 'posted']).optional(),
+  type: z.enum(['transfer', 'debit', 'credit', 'expense', 'income']).optional(),
+  status: z.enum(['cancelled', 'failed', 'pending', 'posted', 'completed']).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   search: z.string().optional(),
@@ -33,10 +32,9 @@ const createTransactionSchema = z.object({
   amount: z.number(),
   categoryId: z.string().optional(),
   description: z.string().optional(),
-  fromAccountId: z.string(),
-  toAccountId: z.string().optional(),
-  type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']),
-  status: z.enum(['cancelled', 'failed', 'pending', 'posted']).default('pending'),
+  title: z.string().optional(),
+  type: z.enum(['transfer', 'debit', 'credit', 'expense', 'income']),
+  status: z.enum(['cancelled', 'failed', 'pending', 'posted', 'completed']).default('pending'),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -69,44 +67,40 @@ transactionsRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      const conditions = [eq(financialEvents.userId, user.id)];
+      let query = supabase
+        .from('financial_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(filters.offset, filters.offset + filters.limit - 1);
 
       if (filters.categoryId) {
-        conditions.push(eq(financialEvents.category, filters.categoryId));
-      }
-
-      if (filters.accountId) {
-        // Note: Using sql for account_id as it might be missing from Drizzle schema but present in DB
-        // conditions.push(sql`account_id = ${filters.accountId}`);
+        query = query.eq('category', filters.categoryId);
       }
 
       if (filters.type) {
-        conditions.push(eq(financialEvents.eventType, filters.type));
+        query = query.eq('event_type', filters.type);
       }
 
       if (filters.status) {
-        conditions.push(eq(financialEvents.status, filters.status));
+        query = query.eq('status', filters.status);
       }
 
       if (filters.startDate) {
-        conditions.push(gte(financialEvents.createdAt, new Date(filters.startDate)));
+        query = query.gte('created_at', filters.startDate);
       }
 
       if (filters.endDate) {
-        conditions.push(lte(financialEvents.createdAt, new Date(filters.endDate)));
+        query = query.lte('created_at', filters.endDate);
       }
 
       if (filters.search) {
-        conditions.push(ilike(financialEvents.description, `%${filters.search}%`));
+        query = query.ilike('description', `%${filters.search}%`);
       }
 
-      const data = await db
-        .select()
-        .from(financialEvents)
-        .where(and(...conditions))
-        .orderBy(desc(financialEvents.createdAt))
-        .limit(filters.limit)
-        .offset(filters.offset);
+      const { data, error } = await query;
+
+      if (error) throw error;
 
       return c.json({
         data: data || [],
@@ -148,7 +142,7 @@ transactionsRouter.get(
   zValidator('query', getStatisticsSchema),
   async (c) => {
     const { user } = c.get('auth');
-    const { period, accountId } = c.req.valid('query');
+    const { period } = c.req.valid('query');
     const requestId = c.get('requestId');
 
     try {
@@ -170,33 +164,22 @@ transactionsRouter.get(
           break;
       }
 
-      const conditions = [
-        eq(financialEvents.userId, user.id),
-        gte(financialEvents.createdAt, startDate),
-        lte(financialEvents.createdAt, now),
-      ];
+      const { data: transactions, error } = await supabase
+        .from('financial_events')
+        .select('amount, event_type, status, is_income')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', now.toISOString());
 
-      if (accountId) {
-        // conditions.push(sql`account_id = ${accountId}`);
-      }
+      if (error) throw error;
 
-      const transactions = await db
-        .select({
-          amount: financialEvents.amount,
-          eventType: financialEvents.eventType,
-          status: financialEvents.status,
-          isIncome: financialEvents.isIncome,
-        })
-        .from(financialEvents)
-        .where(and(...conditions));
-
-      const balance = transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-      const expenses = transactions
-        .filter((t: any) => ['debit', 'pix', 'boleto'].includes(t.eventType))
-        .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-      const income = transactions
-        .filter((t: any) => ['credit', 'transfer'].includes(t.eventType))
-        .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+      const balance = (transactions || []).reduce((sum, t) => sum + Number(t.amount), 0);
+      const expenses = (transactions || [])
+        .filter((t) => !t.is_income)
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const income = (transactions || [])
+        .filter((t) => t.is_income)
+        .reduce((sum, t) => sum + Number(t.amount), 0);
 
       return c.json({
         data: {
@@ -204,7 +187,7 @@ transactionsRouter.get(
           expenses,
           income,
           period,
-          transactionsCount: transactions.length,
+          transactionsCount: transactions?.length || 0,
         },
         meta: {
           requestId,
@@ -247,24 +230,26 @@ transactionsRouter.post(
     const requestId = c.get('requestId');
 
     try {
-      const now = new Date();
+      const now = new Date().toISOString();
 
-      const [newTransaction] = await db
-        .insert(financialEvents)
-        .values({
-          userId: user.id,
-          title: input.description || `Transaction ${input.type}`,
-          amount: input.amount.toString(),
-          eventType: input.type,
+      const { data: newTransaction, error } = await supabase
+        .from('financial_events')
+        .insert({
+          user_id: user.id,
+          title: input.title || input.description || `Transaction ${input.type}`,
+          amount: input.amount,
+          event_type: input.type,
           status: input.status,
-          startDate: now,
-          endDate: now,
-          createdAt: now,
+          start_date: now,
+          end_date: now,
           description: input.description,
-          metadata: input.metadata,
           category: input.categoryId,
+          is_income: input.type === 'income' || input.type === 'credit',
         })
-        .returning();
+        .select()
+        .single();
+
+      if (error) throw error;
 
       secureLogger.info('Transaction created', {
         amount: input.amount,
@@ -321,13 +306,23 @@ transactionsRouter.delete(
     const requestId = c.get('requestId');
 
     try {
-      const deleted = await db
-        .delete(financialEvents)
-        .where(and(eq(financialEvents.id, transactionId), eq(financialEvents.userId, user.id)))
-        .returning();
+      const { data: deleted, error } = await supabase
+        .from('financial_events')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', user.id)
+        .select();
 
-      if (!deleted.length) {
-        throw new Error('Transação não encontrada ou permissão negada');
+      if (error) throw error;
+
+      if (!deleted || deleted.length === 0) {
+        return c.json(
+          {
+            code: 'NOT_FOUND',
+            error: 'Transação não encontrada ou permissão negada',
+          },
+          404
+        );
       }
 
       secureLogger.info('Transaction deleted', {

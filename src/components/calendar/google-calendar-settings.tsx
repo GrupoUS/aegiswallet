@@ -67,7 +67,7 @@ export function GoogleCalendarSettings() {
                 <Select
                   value={syncSettings?.sync_direction}
                   onValueChange={(
-                    value: '\one_way_to_google' | '\one_way_from_google' | '\bidirectional'
+                    value: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional'
                   ) => updateSettings({ sync_direction: value })}
                 >
                   <SelectTrigger>

@@ -5,7 +5,7 @@
  * This allows for cleaner imports throughout the application.
  *
  * @example
- * import { Button, GradientButton, Card } from "@/components/ui"
+ * import { Button, Card, Badge } from "@/components/ui"
  */
 
 // Authentication Components
@@ -14,13 +14,6 @@ export { LoginForm, type LoginFormProps } from '../login-form';
 export { Alert, AlertDescription, AlertTitle } from './alert';
 export { AnimatedThemeToggler } from './animated-theme-toggler';
 export { Badge, badgeVariants } from './badge';
-// Layout Components
-export {
-  BentoCard,
-  BentoGrid,
-  type BentoGridProps,
-  type BentoItem,
-} from './bento-grid';
 export type { ButtonProps } from './button';
 // Core Components
 export { Button, buttonVariants } from './button';
@@ -107,15 +100,12 @@ export {
   FormLabel,
   FormMessage,
 } from './form';
-// Gradient Components (New)
-export { GradientButton, gradientButtonVariants } from './gradient-button';
+// Gradient Components
 export { HoverBorderGradient } from './hover-border-gradient';
 export { Input } from './input';
 export { Label } from './label';
 // Theme Components
 export { ModeToggle } from './mode-toggle';
-// Neumorphic Components
-export { default as NeumorphButton } from './neumorph-button';
 export {
   Popover,
   PopoverAnchor,

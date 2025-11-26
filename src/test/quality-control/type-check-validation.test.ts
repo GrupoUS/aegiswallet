@@ -115,11 +115,11 @@ describe('Type Check Validation', () => {
         typeof component === 'function' ||
         (typeof component === 'object' && component.$$typeof !== undefined);
 
-      expect(isReactComponent(uiModule.BentoGrid)).toBe(true);
-      expect(isReactComponent(uiModule.BentoCard)).toBe(true);
       expect(isReactComponent(uiModule.PopoverAnchor)).toBe(true);
       expect(isReactComponent(uiModule.SheetOverlay)).toBe(true);
       expect(isReactComponent(uiModule.SheetPortal)).toBe(true);
+      expect(isReactComponent(uiModule.Button)).toBe(true);
+      expect(isReactComponent(uiModule.Card)).toBe(true);
     });
   });
 

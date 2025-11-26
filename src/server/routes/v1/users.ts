@@ -1,15 +1,13 @@
 /**
  * Users API - Hono RPC Implementation
  * Handles user profile and preferences management
+ * Refactored to use Supabase directly (KISS/YAGNI)
  */
 
 import { zValidator } from '@hono/zod-validator';
-import { and, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { db } from '@/db';
-import { financialEvents } from '@/db/schema/transactions';
-import { userPreferences, users } from '@/db/schema/users';
+import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
@@ -52,7 +50,13 @@ usersRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      const [profile] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
 
       return c.json({
         data: profile || null,
@@ -97,15 +101,18 @@ usersRouter.put(
     const requestId = c.get('requestId');
 
     try {
-      const updateData: Partial<typeof users.$inferInsert> = {};
-      if (input.full_name) updateData.fullName = input.full_name;
+      const updateData: Record<string, unknown> = {};
+      if (input.full_name) updateData.full_name = input.full_name;
       if (input.phone) updateData.phone = input.phone;
 
-      const [updatedProfile] = await db
-        .update(users)
-        .set(updateData)
-        .where(eq(users.id, user.id))
-        .returning();
+      const { data: updatedProfile, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
 
       secureLogger.info('User profile updated', {
         requestId,
@@ -155,30 +162,29 @@ usersRouter.put(
     const requestId = c.get('requestId');
 
     try {
-      const prefData: any = {
-        userId: user.id,
-        updatedAt: new Date(),
+      const prefData: Record<string, unknown> = {
+        user_id: user.id,
+        updated_at: new Date().toISOString(),
       };
 
       if (input.theme) prefData.theme = input.theme;
       if (input.notifications_email !== undefined)
-        prefData.notificationsEmail = input.notifications_email;
+        prefData.notifications_email = input.notifications_email;
       if (input.notifications_push !== undefined)
-        prefData.notificationsPush = input.notifications_push;
+        prefData.notifications_push = input.notifications_push;
       if (input.notifications_sms !== undefined)
-        prefData.notificationsSms = input.notifications_sms;
-      if (input.auto_categorize !== undefined) prefData.autoCategorize = input.auto_categorize;
-      if (input.budget_alerts !== undefined) prefData.budgetAlerts = input.budget_alerts;
-      if (input.voice_feedback !== undefined) prefData.voiceFeedback = input.voice_feedback;
+        prefData.notifications_sms = input.notifications_sms;
+      if (input.auto_categorize !== undefined) prefData.auto_categorize = input.auto_categorize;
+      if (input.budget_alerts !== undefined) prefData.budget_alerts = input.budget_alerts;
+      if (input.voice_feedback !== undefined) prefData.voice_feedback = input.voice_feedback;
 
-      const [updatedPrefs] = await db
-        .insert(userPreferences)
-        .values(prefData)
-        .onConflictDoUpdate({
-          target: userPreferences.userId,
-          set: prefData,
-        })
-        .returning();
+      const { data: updatedPrefs, error } = await supabase
+        .from('user_preferences')
+        .upsert(prefData)
+        .select()
+        .single();
+
+      if (error) throw error;
 
       secureLogger.info('User preferences updated', {
         requestId,
@@ -226,7 +232,10 @@ usersRouter.post(
     const requestId = c.get('requestId');
 
     try {
-      await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id));
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', user.id);
 
       return c.json({
         data: { success: true },
@@ -269,14 +278,13 @@ usersRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      const [status] = await db
-        .select({
-          isActive: users.isActive,
-          lastLogin: users.lastLogin,
-        })
-        .from(users)
-        .where(eq(users.id, user.id))
-        .limit(1);
+      const { data: status, error } = await supabase
+        .from('users')
+        .select('is_active, last_login')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (!status) {
         return c.json({
@@ -290,8 +298,8 @@ usersRouter.get(
 
       return c.json({
         data: {
-          is_active: status.isActive,
-          last_login: status.lastLogin,
+          is_active: status.is_active,
+          last_login: status.last_login,
         },
         meta: {
           requestId,
@@ -334,30 +342,24 @@ usersRouter.get(
     const requestId = c.get('requestId');
 
     try {
-      const transactions = await db
-        .select({
-          amount: financialEvents.amount,
-          eventType: financialEvents.eventType,
-          isIncome: financialEvents.isIncome,
-        })
-        .from(financialEvents)
-        .where(
-          and(
-            eq(financialEvents.userId, user.id),
-            gte(financialEvents.createdAt, new Date(period_start)),
-            lte(financialEvents.createdAt, new Date(period_end))
-          )
-        );
+      const { data: transactions, error } = await supabase
+        .from('financial_events')
+        .select('amount, event_type, is_income')
+        .eq('user_id', user.id)
+        .gte('created_at', period_start)
+        .lte('created_at', period_end);
 
-      const summary = transactions.reduce(
-        (acc: { income: number; expenses: number; balance: number }, t: any) => {
+      if (error) throw error;
+
+      const summary = (transactions || []).reduce(
+        (acc: { income: number; expenses: number; balance: number }, t) => {
           const amount = Number(t.amount);
-          if (['debit', 'pix', 'boleto'].includes(t.eventType)) {
-            acc.expenses += amount;
-            acc.balance -= amount;
-          } else if (['credit', 'transfer'].includes(t.eventType)) {
+          if (t.is_income) {
             acc.income += amount;
             acc.balance += amount;
+          } else {
+            acc.expenses += amount;
+            acc.balance -= amount;
           }
           return acc;
         },

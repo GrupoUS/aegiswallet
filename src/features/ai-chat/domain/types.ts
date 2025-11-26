@@ -1,113 +1,30 @@
-/**
- * AG-UI Protocol Compatible Domain Types
- *
- * These types define the core domain model for the AI Chat feature,
- * following the AG-UI Protocol specification for universal compatibility.
- */
-
-export type ChatRole = 'system' | 'user' | 'assistant' | 'tool' | 'developer';
-
-export type ChatMessageContent = string | ChatImagePayload | ChatToolCall | ChatStructuredContent;
+export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface ChatMessage {
   id: string;
   role: ChatRole;
-  content: ChatMessageContent;
+  content: string;
   timestamp: number;
-  metadata?: {
-    name?: string;
-    toolCallId?: string;
-    reasoning?: ChatReasoningChunk[];
-    [key: string]: unknown;
-  };
+  metadata?: Record<string, any>;
+  reasoning?: string; // For "thinking" models
 }
 
-export interface ChatStructuredContent {
-  type: 'structured';
-  data: unknown;
-}
-
-export enum ChatStreamEventType {
-  MESSAGE_START = 'message_start',
-  CONTENT_CHUNK = 'content_chunk',
-  REASONING_CHUNK = 'reasoning_chunk',
-  TOOL_CALL_START = 'tool_call_start',
-  TOOL_CALL_END = 'tool_call_end',
-  MESSAGE_END = 'message_end',
-  ERROR = 'error',
-  SUGGESTION = 'suggestion',
-  TASK = 'task',
-}
+export type ChatStreamEventType =
+  | 'text-delta'
+  | 'reasoning-delta'
+  | 'tool-call'
+  | 'suggestion'
+  | 'error'
+  | 'done';
 
 export interface ChatStreamChunk {
   type: ChatStreamEventType;
-  content?: string | unknown;
-  messageId?: string;
-  metadata?: unknown;
-}
-
-export interface ChatReasoningChunk {
-  content: string;
-  confidence?: number;
-  step?: number;
-  timestamp: number;
-}
-
-export interface ChatSuggestion {
-  id: string;
-  text: string;
-  action?: string;
-  icon?: string;
-}
-
-export interface ChatTask {
-  id: string;
-  title: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'failed';
-  progress?: number;
-  subtasks?: ChatTask[];
-}
-
-export interface ChatImagePayload {
-  type: 'image';
-  url: string;
-  alt?: string;
-  generatedBy?: string;
-  prompt?: string;
-}
-
-export interface ChatToolCall {
-  type: 'tool_call';
-  id: string;
-  name: string;
-  arguments: Record<string, unknown>;
-  result?: unknown;
+  payload: any; // string for text/reasoning, object for tool/suggestion
 }
 
 export interface ChatRequestOptions {
   model?: string;
   temperature?: number;
-  maxTokens?: number;
-  stream?: boolean;
-  tools?: unknown[]; // Define specific tool types if needed
-  systemPrompt?: string;
-  topP?: number;
-  topK?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-  stopSequences?: string[];
-  /** Formatted financial context for the AI */
-  context?: string;
-}
-
-export class ChatError extends Error {
-  code: string;
-  details?: unknown;
-
-  constructor(message: string, code: string = 'UNKNOWN_ERROR', details?: unknown) {
-    super(message);
-    this.name = 'ChatError';
-    this.code = code;
-    this.details = details;
-  }
+  tools?: any[]; // To be defined more strictly later
+  signal?: AbortSignal;
 }

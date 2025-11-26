@@ -2,7 +2,7 @@
 # 🔐 Environment & Secrets
 # =============================================================================
 .env*
-.env.local
+.env.local*
 .mcp.json
 *.secrets
 *.credentials

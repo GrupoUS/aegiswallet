@@ -35,11 +35,11 @@ export const ensureTestUtils = (): TestUtils => {
       timestamp: new Date().toISOString(),
       version: '1.0',
     }),
-    createMockVoiceCommand: vi.fn().mockReturnValue({
-      command: 'test command',
-      confidence: 0.95,
+    createMockVoiceCommand: vi.fn().mockImplementation((command?: string, confidence?: number) => ({
+      command: command ?? 'test command',
+      confidence: confidence ?? 0.95,
       timestamp: new Date().toISOString(),
-    }),
+    })),
     encryptMockClientData: vi.fn().mockResolvedValue('encrypted-client-data'),
     encryptMockData: vi.fn().mockResolvedValue('encrypted-payload'),
     generateMockCSRFToken: vi.fn().mockReturnValue('csrf-token-123'),

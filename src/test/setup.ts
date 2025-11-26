@@ -97,6 +97,12 @@ if (typeof globalThis.document === 'undefined') {
 import '@testing-library/jest-dom';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
+// Import healthcare test utilities to ensure global.testUtils is available
+import { ensureTestUtils } from './healthcare/test-utils';
+
+// Initialize global testUtils immediately
+ensureTestUtils();
+
 type MutableGlobal = typeof globalThis & {
   localStorage?: Storage;
   SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
@@ -113,8 +119,9 @@ type MutableGlobal = typeof globalThis & {
 
 const globalObj = globalThis as MutableGlobal;
 
-// Enable fake timers for all tests
-vi.useFakeTimers();
+// NOTE: Do NOT enable fake timers globally - it breaks waitFor and userEvent
+// Use vi.useFakeTimers() only in specific tests that need it
+// vi.useFakeTimers();
 
 // Set required environment variables for tests
 process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';

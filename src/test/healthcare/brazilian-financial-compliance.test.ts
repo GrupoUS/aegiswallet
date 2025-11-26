@@ -864,7 +864,8 @@ describe('Brazilian Financial Compliance Testing', () => {
       // Complete valid transaction
       await userEvent.type(screen.getByTestId('transaction-amount'), '5000');
       await userEvent.type(screen.getByTestId('recipient-name'), 'Maria Silva');
-      await userEvent.type(screen.getByTestId('recipient-document'), '123.456.789-00');
+      // Use digits only for CPF - the validation regex expects /^\d{11}|\d{14}$/
+      await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
       await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '341');
       await userEvent.type(
         screen.getByTestId('transaction-description'),
@@ -898,7 +899,7 @@ describe('Brazilian Financial Compliance Testing', () => {
               amount: '5000',
               description: 'Pagamento de consultoria',
               recipientBank: '341',
-              recipientDocument: '123.456.789-00',
+              recipientDocument: '12345678900',
               recipientName: 'Maria Silva',
               suspicious: false,
               transactionType: 'pix',
@@ -914,6 +915,8 @@ describe('Brazilian Financial Compliance Testing', () => {
     });
 
     it('should prevent non-compliant transactions from processing', async () => {
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      
       render(React.createElement(BrazilianFinancialCompliance));
 
       // Non-compliant transaction (missing required fields)
@@ -923,10 +926,12 @@ describe('Brazilian Financial Compliance Testing', () => {
       await userEvent.click(screen.getByTestId('process-transaction'));
 
       await waitFor(() => {
-        expect(
-          screen.getByText('Transação não atende aos requisitos de conformidade regulatória.')
-        ).toBeInTheDocument();
+        expect(alertSpy).toHaveBeenCalledWith(
+          'Transação não atende aos requisitos de conformidade regulatória.'
+        );
       });
+      
+      alertSpy.mockRestore();
     });
 
     it('should generate comprehensive compliance audit trail', async () => {

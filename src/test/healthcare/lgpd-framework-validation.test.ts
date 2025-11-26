@@ -554,13 +554,14 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
     it('should document all processing purposes clearly', () => {
       render(React.createElement(LGPDComplianceFramework));
 
+      // Expected consent purposes match actual data-testid values in component
       const expectedPurposes = [
-        'dataProcessing',
-        'voiceRecording',
-        'biometricData',
-        'financialData',
-        'healthData',
-        'internationalTransfer',
+        'data-processing',
+        'voice-recording',
+        'biometric-data',
+        'financial-data',
+        'health-data',
+        'international-transfer',
       ];
 
       expectedPurposes.forEach((purpose) => {

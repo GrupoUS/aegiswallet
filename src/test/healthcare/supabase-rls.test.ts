@@ -181,6 +181,9 @@ const testRLSPolicy = async (
       throw error;
     }
   }
+  
+  // Explicitly return to satisfy Promise<void> type for resolves.not.toThrow()
+  return Promise.resolve();
 };
 
 describe('Supabase RLS Policy Testing', () => {

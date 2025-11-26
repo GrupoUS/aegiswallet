@@ -11,20 +11,34 @@ import { createSTTService } from '@/lib/stt/speechToTextService';
 import { createVAD } from '@/lib/stt/voiceActivityDetection';
 
 // Mock Web Speech API
-const mockSpeechRecognition = vi.fn();
-const mockSpeechRecognitionInstance = {
+let mockSpeechRecognitionInstance = {
   continuous: false,
   interimResults: true,
   lang: 'pt-BR',
-  onend: null,
-  onerror: null,
+  onend: null as ((event: unknown) => void) | null,
+  onerror: null as ((event: unknown) => void) | null,
   onresult: null as ((event: unknown) => void) | null,
-  onstart: null,
+  onstart: null as ((event: unknown) => void) | null,
   start: vi.fn(),
   stop: vi.fn(),
 };
 
-mockSpeechRecognition.mockImplementation(() => mockSpeechRecognitionInstance);
+const mockSpeechRecognition = vi.fn().mockImplementation(() => {
+  // Create a fresh instance for each call and keep reference
+  const instance = {
+    continuous: false,
+    interimResults: true,
+    lang: 'pt-BR',
+    onend: null as ((event: unknown) => void) | null,
+    onerror: null as ((event: unknown) => void) | null,
+    onresult: null as ((event: unknown) => void) | null,
+    onstart: null as ((event: unknown) => void) | null,
+    start: vi.fn(),
+    stop: vi.fn(),
+  };
+  mockSpeechRecognitionInstance = instance;
+  return instance;
+});
 
 const globalSpeech = globalThis as typeof globalThis & {
   SpeechRecognition?: unknown;

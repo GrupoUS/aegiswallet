@@ -16,6 +16,7 @@ VARS_TO_SYNC=(
     "GOOGLE_CLIENT_SECRET"
     "GOOGLE_REDIRECT_URI"
     "TOKENS_ENCRYPTION_KEY"
+    "VITE_GEMINI_API_KEY"
 )
 
 echo -e "${BLUE}🔧 Vercel Environment Variables Setup${NC}"

@@ -919,6 +919,8 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
     });
 
     it('should prevent submission of non-compliant health data', async () => {
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      
       render(React.createElement(HealthcareDataProtection));
 
       // Incomplete health data (missing patient name)
@@ -927,7 +929,8 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
       await userEvent.click(screen.getByTestId('submit-health-data'));
 
-      expect(screen.getByText('ID do paciente e nome são obrigatórios.')).toBeInTheDocument();
+      expect(alertSpy).toHaveBeenCalledWith('ID do paciente e nome são obrigatórios.');
+      alertSpy.mockRestore();
     });
 
     it('should generate comprehensive protection audit trail', async () => {

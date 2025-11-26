@@ -1,5 +1,5 @@
+import { GEMINI_MODELS } from '../config/models';
 import type { ChatBackend } from '../domain/ChatBackend';
-
 import { AgUiBackend, type AgUiBackendConfig } from './AgUiBackend';
 import { CopilotKitBackend, type CopilotKitBackendConfig } from './CopilotKitBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
@@ -99,7 +99,7 @@ export function getDefaultBackend(): ChatBackend {
 
   return new GeminiBackend({
     apiKey,
-    model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'gemini-pro',
+    model: import.meta.env.VITE_DEFAULT_AI_MODEL || GEMINI_MODELS.FLASH_LITE,
   });
 }
 

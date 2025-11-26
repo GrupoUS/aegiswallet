@@ -1,5 +1,23 @@
-export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
+/**
+ * AG-UI Protocol compatible chat role types
+ * @see https://github.com/ag-ui-protocol/ag-ui
+ */
+export type ChatRole = 'system' | 'user' | 'assistant' | 'tool' | 'developer';
 
+/**
+ * Content types for multimodal chat messages
+ */
+export type ChatMessageContent =
+  | string
+  | { type: 'text'; text: string }
+  | { type: 'image'; image: ChatImagePayload }
+  | { type: 'tool_call'; toolCall: ChatToolCall }
+  | { type: 'tool_result'; toolCallId: string; result: unknown };
+
+/**
+ * AG-UI Protocol compatible chat message
+ * Supports text, images, tool calls, and structured content
+ */
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -7,13 +25,26 @@ export interface ChatMessage {
   timestamp: number;
   metadata?: Record<string, unknown>;
   reasoning?: string; // For "thinking" models
+  /** Optional display name for the message sender */
+  name?: string;
+  /** Tool call ID if this message is a tool response */
+  toolCallId?: string;
 }
 
+/**
+ * AG-UI Protocol compatible stream event types
+ * Extended from standard AG-UI events with additional AegisWallet-specific types
+ */
 export type ChatStreamEventType =
+  | 'message-start'
+  | 'message-end'
   | 'text-delta'
   | 'reasoning-delta'
+  | 'tool-call-start'
+  | 'tool-call-end'
   | 'tool-call'
   | 'suggestion'
+  | 'task'
   | 'error'
   | 'done';
 
@@ -60,6 +91,7 @@ export type ChatStreamPayload =
   | string // Simple text content
   | ChatToolCall // Tool call
   | ChatSuggestion // Suggestion
+  | ChatTask // Task
   | ChatError // Error
   | null; // Done event
 
@@ -68,11 +100,33 @@ export interface ChatStreamChunk {
   payload: ChatStreamPayload;
 }
 
+/**
+ * Options for chat requests to the backend
+ */
 export interface ChatRequestOptions {
+  /** Model identifier to use for generation */
   model?: string;
+  /** Temperature for response randomness (0-2) */
   temperature?: number;
-  tools?: ChatToolCall[];
+  /** Maximum tokens to generate */
+  maxTokens?: number;
+  /** Enable streaming responses */
+  stream?: boolean;
+  /** Available tools for function calling */
+  tools?: ChatToolDefinition[];
+  /** System prompt to prepend */
+  systemPrompt?: string;
+  /** AbortSignal for cancellation */
   signal?: AbortSignal;
+}
+
+/**
+ * Tool definition for function calling
+ */
+export interface ChatToolDefinition {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
 }
 
 /**
@@ -92,7 +146,28 @@ export interface ChatImagePayload {
   url: string;
   alt?: string;
   mimeType?: string;
+  /** Model that generated the image (if AI-generated) */
   generatedBy?: string;
+  /** Prompt used to generate the image */
+  prompt?: string;
+  /** Image dimensions */
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Custom error class for chat operations
+ */
+export class ChatErrorClass extends Error {
+  code: string;
+  details?: Record<string, unknown>;
+
+  constructor(code: string, message: string, details?: Record<string, unknown>) {
+    super(message);
+    this.name = 'ChatError';
+    this.code = code;
+    this.details = details;
+  }
 }
 
 /**

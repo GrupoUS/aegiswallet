@@ -44,11 +44,17 @@ export function ChatContainer({
       return new MockBackend();
     }
 
-    return createChatBackend({
-      type: backendType,
-      apiKey: apiKey || '',
-      model: selectedModel,
-    });
+    // Create backend config with proper type literal
+    if (backendType === 'gemini') {
+      return createChatBackend({
+        type: 'gemini' as const,
+        apiKey: apiKey || '',
+        model: selectedModel,
+      });
+    }
+
+    // Default fallback to MockBackend for unsupported types
+    return new MockBackend();
   }, [backendType, selectedModel]);
 
   // Initialize controller

@@ -178,17 +178,27 @@ export class PushProvider {
 
     // Fetch from database
     // TODO: Create push_subscriptions table in database
-    const { data } = await (supabase as unknown as {
-      from: (table: string) => {
-        select: (columns: string) => {
-          eq: (col: string, val: string) => {
-            eq: (col: string, val: boolean) => {
-              single: () => Promise<{ data: { endpoint: string; auth_key: string; p256dh_key: string } | null }>;
+    const { data } = await (
+      supabase as unknown as {
+        from: (table: string) => {
+          select: (columns: string) => {
+            eq: (
+              col: string,
+              val: string
+            ) => {
+              eq: (
+                col: string,
+                val: boolean
+              ) => {
+                single: () => Promise<{
+                  data: { endpoint: string; auth_key: string; p256dh_key: string } | null;
+                }>;
+              };
             };
           };
         };
-      };
-    })
+      }
+    )
       .from('push_subscriptions')
       .select('*')
       .eq('user_id', userId)

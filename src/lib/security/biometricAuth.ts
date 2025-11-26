@@ -16,7 +16,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 
 // Database row types for type-safe queries
 type SecurityEventInsert = Database['public']['Tables']['security_events']['Insert'];
@@ -238,9 +238,6 @@ export class BiometricAuthService {
   private activeSessions: Map<string, AuthSession> = new Map();
   private rateLimitStore: Map<string, { attempts: number; resetTime: number }> = new Map();
 
-  // Fraud detection rules (used internally for validation)
-  private fraudRules: Array<{ type: string; threshold: number; enabled: boolean }> = [];
-
   // Enhanced security providers
   private smsProvider?: SMSProvider;
   private pushProvider?: PushProvider;
@@ -257,31 +254,7 @@ export class BiometricAuthService {
     }
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.initializeFraudDetection();
     this.initializeSecurityProviders(securityProviders);
-  }
-
-  /**
-   * Initialize fraud detection rules
-   */
-  private initializeFraudDetection(): void {
-    this.fraudRules = [
-      {
-        type: 'frequency_anomaly',
-        threshold: 5, // More than 5 failed attempts in rate limit window
-        enabled: true,
-      },
-      {
-        type: 'location_anomaly',
-        threshold: 0.8, // 80% confidence for location anomaly
-        enabled: true,
-      },
-      {
-        type: 'device_anomaly',
-        threshold: 0.7, // 70% confidence for device anomaly
-        enabled: true,
-      },
-    ];
   }
 
   /**
@@ -781,7 +754,7 @@ export class BiometricAuthService {
         .eq('is_locked', true)
         .maybeSingle();
 
-      if (lockout && lockout.lockout_until && new Date(lockout.lockout_until) > new Date()) {
+      if (lockout?.lockout_until && new Date(lockout.lockout_until) > new Date()) {
         const remainingTime = new Date(lockout.lockout_until).getTime() - Date.now();
 
         return {
@@ -1422,7 +1395,7 @@ export class BiometricAuthService {
         .maybeSingle();
 
       const isLocked =
-        lockout && lockout.lockout_until && new Date(lockout.lockout_until) > new Date();
+        lockout?.lockout_until && new Date(lockout.lockout_until) > new Date();
       const lockoutRemaining =
         isLocked && lockout.lockout_until
           ? new Date(lockout.lockout_until).getTime() - Date.now()

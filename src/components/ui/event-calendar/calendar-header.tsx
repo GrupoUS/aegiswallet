@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 import type {
   BrazilianEventType,
   FinancialEventPriority,
@@ -43,7 +43,7 @@ import type { CalendarView } from './types';
 const mapPriority = (dbPriority: string | null): FinancialEventPriority => {
   const priorityMap: Record<string, FinancialEventPriority> = {
     low: 'BAIXA',
-    medium: 'NORMAL', 
+    medium: 'NORMAL',
     high: 'ALTA',
     urgent: 'URGENTE',
     // Also handle Portuguese values from DB
@@ -58,17 +58,36 @@ const mapPriority = (dbPriority: string | null): FinancialEventPriority => {
 // Helper to map database installment info to domain type
 const mapBrazilianEventType = (dbType: string | null): BrazilianEventType | undefined => {
   if (!dbType) return undefined;
-  
+
   // Valid BrazilianEventType values from the interface
   const validTypes: BrazilianEventType[] = [
-    'SALARIO', 'DECIMO_TERCEIRO', 'FERIAS', 'ALUGUEL', 'CONDOMINIO',
-    'LUZ', 'AGUA', 'INTERNET', 'CELULAR', 'SUPERMERCADO', 'RESTAURANTE',
-    'TRANSPORTE_PUBLICO', 'UBER_99', 'COMBUSTIVEL', 'PIX_TRANSFER',
-    'TED_DOC', 'BOLETO_PAGAMENTO', 'CARTAO_CREDITO', 'INVESTIMENTO_CDB',
-    'INVESTIMENTO_TESOURO', 'PREVIDENCIA', 'PLANO_SAUDE'
+    'SALARIO',
+    'DECIMO_TERCEIRO',
+    'FERIAS',
+    'ALUGUEL',
+    'CONDOMINIO',
+    'LUZ',
+    'AGUA',
+    'INTERNET',
+    'CELULAR',
+    'SUPERMERCADO',
+    'RESTAURANTE',
+    'TRANSPORTE_PUBLICO',
+    'UBER_99',
+    'COMBUSTIVEL',
+    'PIX_TRANSFER',
+    'TED_DOC',
+    'BOLETO_PAGAMENTO',
+    'CARTAO_CREDITO',
+    'INVESTIMENTO_CDB',
+    'INVESTIMENTO_TESOURO',
+    'PREVIDENCIA',
+    'PLANO_SAUDE',
   ];
-  
-  return validTypes.includes(dbType as BrazilianEventType) ? dbType as BrazilianEventType : undefined;
+
+  return validTypes.includes(dbType as BrazilianEventType)
+    ? (dbType as BrazilianEventType)
+    : undefined;
 };
 
 // Helper to map database installment info to domain type
@@ -82,7 +101,7 @@ const mapInstallmentInfo = (dbInstallmentInfo: unknown): InstallmentInfo | undef
     remainingAmount: (info.remainingAmount as number) || 0,
     nextInstallmentDate: info.nextInstallmentDate as string | undefined,
   };
-};;
+};
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -133,7 +152,9 @@ export function CalendarHeader({
           isIncome: event.is_income ?? false, // Handle null case
           category: event.category as string | undefined, // Type conversion from DB
           brazilianEventType: mapBrazilianEventType(event.brazilian_event_type),
-          status: (event.status as 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed') || 'pending',
+          status:
+            (event.status as 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed') ||
+            'pending',
           priority: mapPriority(event.priority),
           start: new Date(event.start_date),
           end: new Date(event.end_date),
@@ -141,7 +162,22 @@ export function CalendarHeader({
           allDay: event.all_day ?? false,
           isRecurring: event.is_recurring ?? false,
           recurrenceRule: event.recurrence_rule || undefined,
-          color: (event.color as 'emerald' | 'rose' | 'orange' | 'blue' | 'violet' | 'indigo' | 'amber' | 'red' | 'green' | 'yellow' | 'purple' | 'pink' | 'teal' | 'cyan') || 'blue',
+          color:
+            (event.color as
+              | 'emerald'
+              | 'rose'
+              | 'orange'
+              | 'blue'
+              | 'violet'
+              | 'indigo'
+              | 'amber'
+              | 'red'
+              | 'green'
+              | 'yellow'
+              | 'purple'
+              | 'pink'
+              | 'teal'
+              | 'cyan') || 'blue',
           icon: event.icon || undefined,
           attachments: event.attachments || [],
           tags: event.tags || [],

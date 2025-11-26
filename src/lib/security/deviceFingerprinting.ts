@@ -550,8 +550,8 @@ export class DeviceFingerprintingService {
       case 'canvas':
         return Boolean(
           fingerprint.canvas &&
-          fingerprint.canvas !== 'canvas-not-supported' &&
-          fingerprint.canvas !== 'canvas-error'
+            fingerprint.canvas !== 'canvas-not-supported' &&
+            fingerprint.canvas !== 'canvas-error'
         );
       case 'audio':
         return Boolean(

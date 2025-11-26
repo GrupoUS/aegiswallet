@@ -68,7 +68,7 @@ voiceRouter.post(
 
     // Command text is required for non-audio processing
     const command = commandText ?? '';
-    
+
     try {
       // Log incoming voice command for audit
       secureLogger.audit('Voice command processing started', {
@@ -258,7 +258,8 @@ async function processVoiceCommand(
   }
 
   // Determine if confirmation is required
-  const requiresConfirmation = confidence < MIN_AUTOMATION_CONFIDENCE || (requireConfirmation ?? false);
+  const requiresConfirmation =
+    confidence < MIN_AUTOMATION_CONFIDENCE || (requireConfirmation ?? false);
 
   return {
     confidence,

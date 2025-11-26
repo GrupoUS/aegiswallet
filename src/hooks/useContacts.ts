@@ -1,25 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 
 // Contact type from database
 type Contact = Database['public']['Tables']['contacts']['Row'];
 
-// Contact list response type
-interface ContactsListResponse {
-  contacts: Contact[];
-  total: number;
-  hasMore: boolean;
-}
-
-interface ContactsApiResponse {
-  data: ContactsListResponse;
-  meta: {
-    requestId: string;
-    retrievedAt: string;
-  };
+// Response meta type
+interface ResponseMeta {
+  requestId: string;
+  retrievedAt: string;
 }
 
 interface ContactApiResponse {
@@ -57,19 +48,22 @@ export function useContacts(filters?: {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Default filters
-  const defaultFilters = {
+  // Memoize filters to avoid unnecessary re-renders
+  const defaultFilters = useMemo(() => ({
     limit: 50,
     offset: 0,
     ...filters,
-  };
+  }), [filters]);
 
   const total = contacts.length;
 
   const createContact = async (contactData: Partial<Contact>) => {
     try {
+      if (!contactData.name) {
+        throw new Error('Nome do contato é obrigatório');
+      }
       const response = await apiClient.post<ContactApiResponse>('/v1/contacts', {
-        name: contactData.name!,
+        name: contactData.name,
         email: contactData.email || undefined,
         phone: contactData.phone || undefined,
         notes: contactData.notes || undefined,
@@ -130,7 +124,7 @@ export function useContacts(filters?: {
     }
   };
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -174,12 +168,12 @@ export function useContacts(filters?: {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [defaultFilters]);
 
   // Load contacts on mount and when filters change
   useEffect(() => {
     refetch();
-  }, [JSON.stringify(defaultFilters)]);
+  }, [refetch]);
 
   return {
     contacts,
@@ -241,12 +235,12 @@ export function useFavoriteContacts() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFavoriteContacts = async () => {
+  const fetchFavoriteContacts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await apiClient.get<{ data: Contact[]; meta: any }>(
+      const response = await apiClient.get<{ data: Contact[]; meta: ResponseMeta }>(
         '/v1/contacts/favorites'
       );
       setFavoriteContacts(response.data);
@@ -255,11 +249,11 @@ export function useFavoriteContacts() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFavoriteContacts();
-  }, []);
+  }, [fetchFavoriteContacts]);
 
   return {
     error,
@@ -287,7 +281,7 @@ export function useContactSearch(query: string, limit: number = 10) {
       setError(null);
 
       try {
-        const response = await apiClient.get<{ data: Contact[]; meta: any }>(
+        const response = await apiClient.get<{ data: Contact[]; meta: ResponseMeta }>(
           `/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`
         );
         setSearchResults(response.data);
@@ -316,7 +310,7 @@ export function useContactsStats() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -328,11 +322,11 @@ export function useContactsStats() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [fetchStats]);
 
   return {
     error,

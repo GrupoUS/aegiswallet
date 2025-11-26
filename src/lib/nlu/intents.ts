@@ -262,7 +262,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
     requiredSlots: [],
     type: IntentType.UNKNOWN,
   },
-};;;
+};
 
 // ============================================================================
 // Intent Utilities

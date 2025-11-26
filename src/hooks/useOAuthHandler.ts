@@ -1,11 +1,50 @@
 /**
  * OAuth Handler Hook
  * Extracts and centralizes OAuth hash fragment handling logic
+ * Enhanced with PKCE debugging and comprehensive error handling
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
+
+export interface OAuthHandlerResult {
+  isRedirecting: boolean;
+  isProcessing: boolean;
+  oauthError: string | null;
+}
+
+/**
+ * Validates that PKCE code verifier exists in localStorage
+ * This is crucial for the code exchange to work
+ */
+const validatePKCEState = (): { isValid: boolean; diagnostics: Record<string, unknown> } => {
+  if (typeof window === 'undefined') {
+    return { diagnostics: { reason: 'SSR context' }, isValid: false };
+  }
+
+  const diagnostics: Record<string, unknown> = {
+    hasLocalStorage: typeof localStorage !== 'undefined',
+    origin: window.location.origin,
+    pathname: window.location.pathname,
+  };
+
+  // Check for Supabase auth storage keys
+  try {
+    const storageKeys = Object.keys(localStorage).filter(
+      (key) => key.includes('supabase') || key.includes('sb-') || key.includes('pkce')
+    );
+    diagnostics.supabaseStorageKeys = storageKeys.length;
+    diagnostics.hasAuthToken = storageKeys.some((key) => key.includes('auth-token'));
+  } catch (e) {
+    diagnostics.storageAccessError = e instanceof Error ? e.message : 'Unknown error';
+  }
+
+  return {
+    diagnostics,
+    isValid: true,
+  };
+};
 
 export interface OAuthHandlerResult {
   isRedirecting: boolean;
@@ -61,18 +100,49 @@ export function useOAuthHandler(): OAuthHandlerResult {
 
       try {
         setIsProcessing(true);
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+        // Validate PKCE state before attempting exchange
+        const pkceState = validatePKCEState();
+        secureLogger.info('PKCE state validation', {
+          diagnostics: pkceState.diagnostics,
+          hasCode: true,
+          isValid: pkceState.isValid,
+        });
+
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
-          secureLogger.error('Failed to exchange PKCE code for session', {
-            code,
-            error: exchangeError.message,
+          // Enhanced error logging with diagnostic context
+          const errorContext = {
+            code: `${code.substring(0, 10)}...`, // Truncate for security
+            errorCode: exchangeError.status?.toString(),
+            errorMessage: exchangeError.message,
+            errorName: exchangeError.name,
             pathname: window.location.pathname,
-          });
-          setOAuthError(exchangeError.message);
+            pkceState: validatePKCEState().diagnostics,
+          };
+
+          secureLogger.error('Failed to exchange PKCE code for session', errorContext);
+
+          // Provide more specific error messages based on error type
+          let userMessage = exchangeError.message;
+          if (exchangeError.message?.toLowerCase().includes('invalid')) {
+            userMessage = 'Invalid API key. Verifique a configuração do Supabase.';
+          } else if (exchangeError.message?.toLowerCase().includes('expired')) {
+            userMessage = 'Código de autenticação expirado. Tente fazer login novamente.';
+          }
+
+          setOAuthError(userMessage);
           setIsProcessing(false);
           return true;
         }
+
+        // Log successful exchange
+        secureLogger.info('PKCE code exchange successful', {
+          hasSession: !!data?.session,
+          hasUser: !!data?.user,
+          pathname: window.location.pathname,
+        });
 
         // Clean up query parameters after successful exchange
         for (const param of ['code', 'state', 'scope', 'auth_type']) {

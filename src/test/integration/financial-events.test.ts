@@ -5,7 +5,7 @@ import {
   validateFinancialEventForInsert,
   validateFinancialEventForUpdate,
 } from '@/lib/validation/financial-events-validator';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 import type { FinancialEvent } from '@/types/financial-events';
 import { cleanupUserData, createTestUser, getSupabaseAdminClient } from './helpers';
 

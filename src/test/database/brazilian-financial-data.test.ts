@@ -1,11 +1,11 @@
 /**
  * Brazilian Financial Data Test Suite
- * 
+ *
  * Validates that test fixtures align with the current database schema
  * Tests Brazilian-specific financial data and compliance
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
 import { setupMockDatabase } from '../mocks/supabase-mock';
 
@@ -122,7 +122,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
         owner_name: 'João Silva',
         owner_cpf: '123.456.789-00',
         is_primary: true,
-        balance: 5000.00,
+        balance: 5000.0,
         currency: 'BRL',
         status: 'active',
         created_at: new Date().toISOString(),
@@ -139,7 +139,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
       expect(data).not.toBeNull();
       expect(data!.bank_code).toBe('001');
       expect(data!.currency).toBe('BRL');
-      expect(data!.balance).toBe(5000.00);
+      expect(data!.balance).toBe(5000.0);
       expect(data!.is_primary).toBe(true);
     });
   });
@@ -156,11 +156,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
-        .from('pix_keys')
-        .insert(pixKey)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('pix_keys').insert(pixKey).select().single();
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();

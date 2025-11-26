@@ -25,9 +25,7 @@ interface LGPDConsentFormDemoProps {
   onConsentSubmitted?: (values: LGPDConsentValues) => void;
 }
 
-export function LGPDConsentFormDemo({
-  onConsentSubmitted,
-}: LGPDConsentFormDemoProps) {
+export function LGPDConsentFormDemo({ onConsentSubmitted }: LGPDConsentFormDemoProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (values: LGPDConsentValues) => {
@@ -49,8 +47,7 @@ export function LGPDConsentFormDemo({
             Teste do Componente LGPDConsentForm
           </h1>
           <p className="text-xl text-gray-600">
-            Validação do componente de consentimento LGPD para o mercado
-            brasileiro
+            Validação do componente de consentimento LGPD para o mercado brasileiro
           </p>
         </div>
 
@@ -68,9 +65,7 @@ export function LGPDConsentFormDemo({
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">
-            ✅ Checklist de Validação
-          </h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">✅ Checklist de Validação</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <h4 className="font-semibold mb-2">Funcionalidade LGPD:</h4>
@@ -97,9 +92,7 @@ export function LGPDConsentFormDemo({
 
         <footer className="mt-12 text-center text-gray-500 text-sm">
           <p>AegisWallet - Assistente Financeiro Autônomo para o Brasil</p>
-          <p>
-            Conforme Lei Geral de Proteção de Dados (LGPD) - Lei nº 13.709/2018
-          </p>
+          <p>Conforme Lei Geral de Proteção de Dados (LGPD) - Lei nº 13.709/2018</p>
         </footer>
       </div>
     </div>

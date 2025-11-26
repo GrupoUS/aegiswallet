@@ -1,11 +1,10 @@
 // Setup enhanced DOM environment for React Testing Library
 import { setupTestDOM } from '../utils/test-dom-setup';
+
 setupTestDOM();
 
-import type { ReactElement } from 'react';
-
-
 import { render, screen } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { ChatConversation } from '../../features/ai-chat/components/ChatConversation';
 import type { ChatMessage } from '../../features/ai-chat/domain/types';
@@ -14,11 +13,11 @@ import type { ChatMessage } from '../../features/ai-chat/domain/types';
 const customRender = (ui: ReactElement) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
-  
+
   // Patch scrollIntoView for any elements that might need it
   const originalScrollIntoView = Element.prototype.scrollIntoView;
-  Element.prototype.scrollIntoView = function() {};
-  
+  Element.prototype.scrollIntoView = function () {};
+
   try {
     return render(ui, { container });
   } finally {

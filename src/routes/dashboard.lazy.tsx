@@ -110,9 +110,7 @@ export function Dashboard() {
     const list = pixTransactions ?? [];
     // Already filtered by type: 'pix' in query, just check if it's an expense
     return list
-      .filter(
-        (transaction) => transaction.amount < 0 || (transaction as FinancialEvent).is_expense
-      )
+      .filter((transaction) => transaction.amount < 0 || (transaction as FinancialEvent).is_expense)
       .reduce((sum, transaction) => sum + Math.abs(Number(transaction.amount)), 0);
   }, [pixTransactions]);
 

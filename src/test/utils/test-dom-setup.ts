@@ -22,7 +22,7 @@ const createDOMEnvironment = () => {
 // Set up global environment
 export function setupTestDOM(): void {
   // Only setup if DOM doesn't exist
-  if (typeof globalThis.document === "undefined") {
+  if (typeof globalThis.document === 'undefined') {
     const dom = createDOMEnvironment();
 
     // Set comprehensive global properties
@@ -51,12 +51,12 @@ export function setupTestDOM(): void {
 
     // Comprehensive Element prototype patching for React Testing Library
     const patchElementPrototype = (ElementClass: any) => {
-      if (ElementClass && ElementClass.prototype) {
+      if (ElementClass?.prototype) {
         if (!ElementClass.prototype.scrollIntoView) {
-          ElementClass.prototype.scrollIntoView = function() {};
+          ElementClass.prototype.scrollIntoView = function () {};
         }
         if (!ElementClass.prototype.getBoundingClientRect) {
-          ElementClass.prototype.getBoundingClientRect = function() {
+          ElementClass.prototype.getBoundingClientRect = function () {
             return { bottom: 0, height: 0, left: 0, right: 0, top: 0, width: 0, x: 0, y: 0 };
           };
         }
@@ -70,16 +70,16 @@ export function setupTestDOM(): void {
     if (globalThis.HTMLElement) {
       patchElementPrototype(globalThis.HTMLElement);
     }
-    
+
     // Ensure DOM elements created by JSDOM also have the methods
     const originalCreateElement = dom.window.document.createElement;
-    dom.window.document.createElement = function(tagName: string, options?: any) {
+    dom.window.document.createElement = function (tagName: string, options?: any) {
       const element = originalCreateElement.call(this, tagName, options);
       if (!element.scrollIntoView) {
-        element.scrollIntoView = function() {};
+        element.scrollIntoView = function () {};
       }
       if (!element.getBoundingClientRect) {
-        element.getBoundingClientRect = function() {
+        element.getBoundingClientRect = function () {
           return { bottom: 0, height: 0, left: 0, right: 0, top: 0, width: 0, x: 0, y: 0 };
         };
       }

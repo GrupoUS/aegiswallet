@@ -18,8 +18,8 @@ import type {
   NLUResult,
 } from '@/lib/nlu/types';
 import { EntityType, IntentType } from '@/lib/nlu/types';
+import type { Json } from '@/integrations/supabase/types';
 import type { TransactionEntity } from '@/types/nlu.types';
-import type { Json } from '@/types/database.types';
 
 // ============================================================================
 // Context Processing Configuration
@@ -1430,8 +1430,16 @@ export class ContextProcessor {
   ): Promise<void> {
     try {
       // Update user preferences based on interaction
-      const validRegions = ['SP', 'RJ', 'Nordeste', 'Sul', 'Norte', 'Centro-Oeste', 'Unknown'] as const;
-      type RegionType = typeof validRegions[number];
+      const validRegions = [
+        'SP',
+        'RJ',
+        'Nordeste',
+        'Sul',
+        'Norte',
+        'Centro-Oeste',
+        'Unknown',
+      ] as const;
+      type RegionType = (typeof validRegions)[number];
       if (
         brazilianContext.region !== 'Unknown' &&
         userPreferences.regionalVariation === 'Unknown' &&

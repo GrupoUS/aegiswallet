@@ -341,7 +341,7 @@ describe('Voice Command Performance', () => {
 
       // 3. Simulate speech recognition (<100ms) using async utility
       const { waitForMs, actAsync } = await import('@/test/utils/async-test-utils');
-      
+
       (async () => {
         await waitForMs(100);
         await actAsync(() => {

@@ -103,13 +103,13 @@ export class IntentClassifier {
       // Enhanced confidence calculation for Brazilian Portuguese
       if (patternMatches > 0) {
         // Base confidence for pattern matches
-        let score = 0.85 + (patternMatches * 0.05);
-        
+        let score = 0.85 + patternMatches * 0.05;
+
         // Bonus for keyword matches alongside patterns
         if (keywordMatches > 0) {
           score += keywordMatches * 0.03;
         }
-        
+
         // Cap at very high confidence for strong pattern matches
         score = Math.min(0.98, score);
         candidates.push({ intent, patternCount: patternMatches, score });
@@ -117,20 +117,20 @@ export class IntentClassifier {
         // Enhanced scoring for keyword-only matches
         const textWords = normalizedText.split(/\s+/).length;
         const keywordRatio = keywordMatches / definition.keywords.length;
-        
+
         // Score based on keyword density and text length
-        let score = 0.4 + (keywordMatches * 0.12) + (keywordRatio * 0.1);
-        
+        let score = 0.4 + keywordMatches * 0.12 + keywordRatio * 0.1;
+
         // Boost for shorter, more focused queries
         if (textWords <= 5) {
           score += 0.1;
         }
-        
+
         // Reduce for very generic single-word queries
         if (textWords === 1 && keywordMatches === 1) {
           score = Math.min(0.5, score);
         }
-        
+
         score = Math.min(0.8, Math.max(0.4, score));
         candidates.push({ intent, patternCount: 0, score });
       }
@@ -194,8 +194,14 @@ export class IntentClassifier {
     tfidfResult: { intent: IntentType; confidence: number }
   ): { intent: IntentType; confidence: number } {
     // If both agree, high confidence with boost
-    if (patternResult.intent === tfidfResult.intent && patternResult.intent !== IntentType.UNKNOWN) {
-      const combinedConfidence = Math.min(0.95, patternResult.confidence + tfidfResult.confidence * 0.3);
+    if (
+      patternResult.intent === tfidfResult.intent &&
+      patternResult.intent !== IntentType.UNKNOWN
+    ) {
+      const combinedConfidence = Math.min(
+        0.95,
+        patternResult.confidence + tfidfResult.confidence * 0.3
+      );
       return {
         confidence: combinedConfidence,
         intent: patternResult.intent,
@@ -300,14 +306,14 @@ export class IntentClassifier {
 
     // Compute TF-IDF with better normalization
     const maxFreq = Math.max(...tokenCounts.values());
-    
+
     for (const [token, count] of tokenCounts.entries()) {
       // Normalized term frequency (0.5 + 0.5 * tf/max_tf)
       const tf = 0.5 + 0.5 * (count / maxFreq);
-      
+
       // Simplified IDF for Brazilian context
       const idf = Math.log(1 + 6 / (1 + 1)); // 6 intents, assuming token appears in at least 1
-      
+
       vector.set(token, tf * idf);
     }
 
@@ -327,7 +333,7 @@ export class IntentClassifier {
    */
   private stemBrazilianToken(token: string): string {
     let stemmed = token.toLowerCase();
-    
+
     // Remove common Brazilian Portuguese suffixes
     const suffixes = ['ando', 'ando', 'ando', 'ar', 'er', 'ir', 'ando', 'endo', 'indo'];
     for (const suffix of suffixes) {
@@ -336,32 +342,32 @@ export class IntentClassifier {
         break;
       }
     }
-    
+
     // Remove common plurals
     if (stemmed.endsWith('s') && stemmed.length > 3) {
       stemmed = stemmed.slice(0, -1);
     }
-    
+
     // Normalize common variations
     const normalizations: Record<string, string> = {
-      'ç': 'c',
-      'ã': 'a',
-      'õ': 'o',
-      'á': 'a',
-      'à': 'a',
-      'â': 'a',
-      'é': 'e',
-      'ê': 'e',
-      'í': 'i',
-      'ó': 'o',
-      'ô': 'o',
-      'ú': 'u'
+      ç: 'c',
+      ã: 'a',
+      õ: 'o',
+      á: 'a',
+      à: 'a',
+      â: 'a',
+      é: 'e',
+      ê: 'e',
+      í: 'i',
+      ó: 'o',
+      ô: 'o',
+      ú: 'u',
     };
-    
+
     for (const [accented, normal] of Object.entries(normalizations)) {
       stemmed = stemmed.replace(new RegExp(accented, 'g'), normal);
     }
-    
+
     return stemmed;
   }
 

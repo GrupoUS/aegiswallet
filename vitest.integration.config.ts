@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  extends: './vitest.config.ts', // Herda configurações base
+  plugins: [react()],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -60,14 +60,7 @@ export default defineConfig({
       'src/**/*integration*.spec.{ts,tsx}',
     ],
 
-    exclude: [
-      'node_modules/',
-      'dist/',
-      'build/',
-      'coverage/',
-      '**/*.unit.*',
-      '**/*.e2e.*',
-    ],
+    exclude: ['node_modules/', 'dist/', 'build/', 'coverage/', '**/*.unit.*', '**/*.e2e.*'],
 
     // Timeout maior para operações de integração
     testTimeout: 15000,

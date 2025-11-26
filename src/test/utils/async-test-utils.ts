@@ -12,6 +12,7 @@
 
 import { act, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
+import { vi } from 'vitest';
 
 // ============================================================================
 // Timing Utilities
@@ -37,10 +38,7 @@ export const waitForNextTick = async (): Promise<void> => {
  * Wait for multiple milliseconds with optional jitter
  * Simulates real-world async delays in tests
  */
-export const waitForWithJitter = async (
-  baseMs: number,
-  jitterMs: number = 0
-): Promise<void> => {
+export const waitForWithJitter = async (baseMs: number, jitterMs: number = 0): Promise<void> => {
   const jitter = Math.random() * jitterMs;
   await waitForMs(baseMs + jitter);
 };
@@ -69,7 +67,7 @@ export const actAndWait = async <T>(
   options?: { timeout?: number }
 ): Promise<void> => {
   let result: T;
-  
+
   await act(async () => {
     result = await callback();
   });
@@ -91,9 +89,9 @@ export const renderHookAsync = async <T>(
   initialProps?: ReactElement
 ): Promise<{ result: { current: T } }> => {
   const { renderHook } = await import('@testing-library/react');
-  
+
   let hookResult: { result: { current: T } };
-  
+
   await act(async () => {
     hookResult = renderHook(setup, { initialProps });
   });
@@ -114,7 +112,7 @@ export const createMockAsyncResolve = <T>(
 ): jest.MockedFunction<() => Promise<T>> => {
   const { vi } = require('vitest');
   const mockFn = vi.fn();
-  
+
   mockFn.mockImplementation(async () => {
     if (delay > 0) {
       await waitForMs(delay);
@@ -134,7 +132,7 @@ export const createMockAsyncReject = (
 ): jest.MockedFunction<() => Promise<never>> => {
   const { vi } = require('vitest');
   const mockFn = vi.fn();
-  
+
   mockFn.mockImplementation(async () => {
     if (delay > 0) {
       await waitForMs(delay);
@@ -154,19 +152,19 @@ export const createMockAsyncSequence = <T>(
   const { vi } = require('vitest');
   const mockFn = vi.fn();
   let callCount = 0;
-  
+
   mockFn.mockImplementation(async () => {
     const response = responses[Math.min(callCount, responses.length - 1)];
     callCount++;
-    
+
     if (response.delay && response.delay > 0) {
       await waitForMs(response.delay);
     }
-    
+
     if (response.error) {
       throw response.error;
     }
-    
+
     return response.value as T;
   });
 
@@ -187,7 +185,7 @@ export const simulateSpeechRecognition = async (
   delay: number = 100
 ): Promise<void> => {
   await waitForMs(delay);
-  
+
   if (mockRecognition.onresult) {
     mockRecognition.onresult({
       resultIndex: 0,
@@ -211,7 +209,7 @@ export const simulateSpeechRecognitionError = async (
   delay: number = 100
 ): Promise<void> => {
   await waitForMs(delay);
-  
+
   if (mockRecognition.onerror) {
     mockRecognition.onerror({ error });
   }
@@ -225,7 +223,7 @@ export const simulateSpeechSynthesis = async (
   delay: number = 200
 ): Promise<void> => {
   await waitForMs(delay);
-  
+
   if (mockSpeechSynthesis.speak.mock.calls.length > 0) {
     const utterance = mockSpeechSynthesis.speak.mock.calls[0][0];
     if (utterance.onend) {
@@ -244,15 +242,18 @@ export const simulateSpeechSynthesis = async (
 export const testBrazilianVoiceCommand = async (
   mockRecognition: any,
   command: string,
-  expectedIntent: string,
+  _expectedIntent: string,
   delay: number = 100
 ): Promise<void> => {
   await simulateSpeechRecognition(mockRecognition, command, 0.9, delay);
-  
-  await waitFor(async () => {
-    // Assert intent recognition happened
-    expect(mockRecognition.start).toHaveBeenCalled();
-  }, { timeout: 3000 });
+
+  await waitFor(
+    async () => {
+      // Assert intent recognition happened
+      expect(mockRecognition.start).toHaveBeenCalled();
+    },
+    { timeout: 3000 }
+  );
 };
 
 /**
@@ -263,13 +264,8 @@ export const testBrazilianVoiceCommands = async (
   commands: Array<{ text: string; expectedIntent: string; confidence?: number }>
 ): Promise<void> => {
   for (const command of commands) {
-    await testBrazilianVoiceCommand(
-      mockRecognition,
-      command.text,
-      command.expectedIntent,
-      100
-    );
-    
+    await testBrazilianVoiceCommand(mockRecognition, command.text, command.expectedIntent, 100);
+
     // Reset mock for next command
     mockRecognition.onresult = vi.fn();
     mockRecognition.start.mockClear();
@@ -284,12 +280,12 @@ export const testBrazilianVoiceCommands = async (
  * Simulate Brazilian financial transaction processing
  */
 export const simulateBrazilianTransaction = async (
-  transactionType: 'pix' | 'ted' | 'boleto',
-  amount: number,
+  _transactionType: 'pix' | 'ted' | 'boleto',
+  _amount: number,
   delay: number = 500
 ): Promise<{ success: boolean; transactionId: string }> => {
   await waitForMs(delay);
-  
+
   return {
     success: true,
     transactionId: `BR${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
@@ -306,7 +302,8 @@ export const testBankAccountOperation = async (
 ): Promise<any> => {
   const operations = {
     create: () => mockSupabase.from('bank_accounts').insert(accountData).single(),
-    update: () => mockSupabase.from('bank_accounts').update(accountData).eq('id', accountData.id).single(),
+    update: () =>
+      mockSupabase.from('bank_accounts').update(accountData).eq('id', accountData.id).single(),
     delete: () => mockSupabase.from('bank_accounts').delete().eq('id', accountData.id),
   };
 
@@ -340,7 +337,7 @@ export const testAsyncError = async (
   }
 
   expect(errorCaught).not.toBeNull();
-  
+
   if (typeof expectedError === 'string') {
     expect(errorCaught!.message).toContain(expectedError);
   } else {
@@ -388,7 +385,7 @@ export const measureAsyncPerformance = async <T>(
   const startTime = performance.now();
   const result = await operation();
   const endTime = performance.now();
-  
+
   return {
     result,
     durationMs: Math.round(endTime - startTime),
@@ -403,7 +400,7 @@ export const expectAsyncCompletesWithin = async <T>(
   maxDurationMs: number
 ): Promise<T> => {
   const { result, durationMs } = await measureAsyncPerformance(operation);
-  
+
   expect(durationMs).toBeLessThan(maxDurationMs);
   return result;
 };
@@ -428,12 +425,12 @@ export const cleanupAsyncOperations = (): void => {
  */
 export const resetAsyncMocks = (...mocks: Array<any>): void => {
   const vi = require('vitest');
-  
-  mocks.forEach(mock => {
+
+  mocks.forEach((mock) => {
     if (mock && typeof mock.mockReset === 'function') {
       mock.mockReset();
     }
   });
-  
+
   vi.clearAllMocks();
 };

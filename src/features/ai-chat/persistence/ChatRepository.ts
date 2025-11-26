@@ -9,7 +9,6 @@ type ChatConversationRow = Database['public']['Tables']['chat_conversations']['R
 type ChatConversationInsert = Database['public']['Tables']['chat_conversations']['Insert'];
 type ChatMessageRow = Database['public']['Tables']['chat_messages']['Row'];
 type ChatMessageInsert = Database['public']['Tables']['chat_messages']['Insert'];
-type ChatContextSnapshotRow = Database['public']['Tables']['chat_context_snapshots']['Row'];
 type ChatContextSnapshotInsert = Database['public']['Tables']['chat_context_snapshots']['Insert'];
 
 export interface Conversation {
@@ -25,7 +24,6 @@ export interface Conversation {
 export interface ConversationWithMessages extends Conversation {
   messages: ChatMessage[];
 }
-
 
 export class ChatRepository {
   private supabase: SupabaseClient<Database>;
@@ -51,13 +49,16 @@ export class ChatRepository {
       .single();
 
     if (error) {
-      logger.error('Error creating conversation', { component: 'ChatRepository', action: 'createConversation', error: String(error) });
+      logger.error('Error creating conversation', {
+        component: 'ChatRepository',
+        action: 'createConversation',
+        error: String(error),
+      });
       throw new Error('Failed to create conversation');
     }
 
     return this.mapConversation(data);
   }
-
 
   /**
    * Get a conversation by ID
@@ -70,7 +71,11 @@ export class ChatRepository {
       .single();
 
     if (error) {
-      logger.error('Error fetching conversation', { component: 'ChatRepository', action: 'getConversation', error: String(error) });
+      logger.error('Error fetching conversation', {
+        component: 'ChatRepository',
+        action: 'getConversation',
+        error: String(error),
+      });
       return null;
     }
 
@@ -95,7 +100,6 @@ export class ChatRepository {
     };
   }
 
-
   /**
    * List all conversations for a user
    */
@@ -108,7 +112,11 @@ export class ChatRepository {
       .limit(limit);
 
     if (error) {
-      logger.error('Error listing conversations', { component: 'ChatRepository', action: 'listConversations', error: String(error) });
+      logger.error('Error listing conversations', {
+        component: 'ChatRepository',
+        action: 'listConversations',
+        error: String(error),
+      });
       return [];
     }
 
@@ -120,27 +128,36 @@ export class ChatRepository {
    */
   async saveMessage(conversationId: string, message: ChatMessage): Promise<void> {
     // Prepare metadata without reasoning since it has its own field
-    const metadataWithoutReasoning = message.metadata ? {
-      ...message.metadata,
-      reasoning: undefined, // Remove reasoning from metadata as it has its own field
-    } : {};
+    const metadataWithoutReasoning = message.metadata
+      ? {
+          ...message.metadata,
+          reasoning: undefined, // Remove reasoning from metadata as it has its own field
+        }
+      : {};
 
     const insertData: ChatMessageInsert = {
       conversation_id: conversationId,
       role: message.role,
-      content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
-      metadata: Object.keys(metadataWithoutReasoning).length > 0 ? metadataWithoutReasoning as Json : null,
+      content:
+        typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
+      metadata:
+        Object.keys(metadataWithoutReasoning).length > 0
+          ? (metadataWithoutReasoning as Json)
+          : null,
       reasoning: message.metadata?.reasoning ? JSON.stringify(message.metadata.reasoning) : null,
     };
 
     const { error } = await this.supabase.from('chat_messages').insert(insertData);
 
     if (error) {
-      logger.error('Error saving message', { component: 'ChatRepository', action: 'saveMessage', error: String(error) });
+      logger.error('Error saving message', {
+        component: 'ChatRepository',
+        action: 'saveMessage',
+        error: String(error),
+      });
       throw new Error('Failed to save message');
     }
   }
-
 
   /**
    * Get messages from a conversation
@@ -159,7 +176,11 @@ export class ChatRepository {
     const { data, error } = await query;
 
     if (error) {
-      logger.error('Error fetching messages', { component: 'ChatRepository', action: 'getMessages', error: String(error) });
+      logger.error('Error fetching messages', {
+        component: 'ChatRepository',
+        action: 'getMessages',
+        error: String(error),
+      });
       return [];
     }
 
@@ -188,11 +209,14 @@ export class ChatRepository {
     const { error } = await this.supabase.from('chat_context_snapshots').insert(insertData);
 
     if (error) {
-      logger.error('Error saving context snapshot', { component: 'ChatRepository', action: 'saveContextSnapshot', error: String(error) });
+      logger.error('Error saving context snapshot', {
+        component: 'ChatRepository',
+        action: 'saveContextSnapshot',
+        error: String(error),
+      });
       throw new Error('Failed to save context snapshot');
     }
   }
-
 
   /**
    * Get latest context snapshot for a conversation
@@ -207,7 +231,11 @@ export class ChatRepository {
       .single();
 
     if (error) {
-      logger.error('Error fetching context snapshot', { component: 'ChatRepository', action: 'getLatestContextSnapshot', error: String(error) });
+      logger.error('Error fetching context snapshot', {
+        component: 'ChatRepository',
+        action: 'getLatestContextSnapshot',
+        error: String(error),
+      });
       return null;
     }
 
@@ -215,9 +243,11 @@ export class ChatRepository {
 
     return {
       recentTransactions: (data.recent_transactions as unknown as Transaction[]) || [],
-      accountBalances: (data.account_balances as unknown as FinancialContext['accountBalances']) || [],
+      accountBalances:
+        (data.account_balances as unknown as FinancialContext['accountBalances']) || [],
       upcomingEvents: (data.upcoming_events as unknown as FinancialContext['upcomingEvents']) || [],
-      userPreferences: (data.user_preferences as unknown as FinancialContext['userPreferences']) || {},
+      userPreferences:
+        (data.user_preferences as unknown as FinancialContext['userPreferences']) || {},
       summary: {
         totalBalance: 0,
         monthlyIncome: 0,
@@ -237,11 +267,14 @@ export class ChatRepository {
       .eq('id', conversationId);
 
     if (error) {
-      logger.error('Error updating conversation title', { component: 'ChatRepository', action: 'updateConversationTitle', error: String(error) });
+      logger.error('Error updating conversation title', {
+        component: 'ChatRepository',
+        action: 'updateConversationTitle',
+        error: String(error),
+      });
       throw new Error('Failed to update conversation title');
     }
   }
-
 
   /**
    * Delete a conversation
@@ -253,7 +286,11 @@ export class ChatRepository {
       .eq('id', conversationId);
 
     if (error) {
-      logger.error('Error deleting conversation', { component: 'ChatRepository', action: 'deleteConversation', error: String(error) });
+      logger.error('Error deleting conversation', {
+        component: 'ChatRepository',
+        action: 'deleteConversation',
+        error: String(error),
+      });
       throw new Error('Failed to delete conversation');
     }
   }
@@ -284,7 +321,7 @@ export class ChatRepository {
       content: data.content,
       timestamp: new Date(data.created_at).getTime(),
       metadata: {
-        ...(data.metadata as Record<string, unknown> || {}),
+        ...((data.metadata as Record<string, unknown>) || {}),
         reasoning: parsedReasoning,
       },
     };

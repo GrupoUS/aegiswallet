@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging';
-import type { Json } from '@/types/database.types';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface RetentionPolicy {
   dataType: string;

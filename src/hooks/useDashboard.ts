@@ -72,11 +72,7 @@ export function useDashboard() {
   };
 
   const isLoading =
-    profileLoading ||
-    accountsLoading ||
-    balancesLoading ||
-    contactsLoading ||
-    contactStatsLoading;
+    profileLoading || accountsLoading || balancesLoading || contactsLoading || contactStatsLoading;
 
   return {
     dashboardData,
@@ -174,21 +170,23 @@ export function useDashboardSettings() {
 
   // profile is ProfileApiResponse<UserProfile>, access data.user_preferences
   const preferences = (profile as { data?: { user_preferences?: unknown[] } })?.data
-    ?.user_preferences?.[0] as {
-    accessibility_high_contrast?: boolean;
-    accessibility_large_text?: boolean;
-    accessibility_screen_reader?: boolean;
-    autonomy_level?: number;
-    currency?: string;
-    language?: string;
-    email_notifications?: boolean;
-    notifications_enabled?: boolean;
-    push_notifications?: boolean;
-    theme?: string;
-    timezone?: string;
-    voice_commands_enabled?: boolean;
-    voice_feedback?: boolean;
-  } | undefined;
+    ?.user_preferences?.[0] as
+    | {
+        accessibility_high_contrast?: boolean;
+        accessibility_large_text?: boolean;
+        accessibility_screen_reader?: boolean;
+        autonomy_level?: number;
+        currency?: string;
+        language?: string;
+        email_notifications?: boolean;
+        notifications_enabled?: boolean;
+        push_notifications?: boolean;
+        theme?: string;
+        timezone?: string;
+        voice_commands_enabled?: boolean;
+        voice_feedback?: boolean;
+      }
+    | undefined;
 
   const settings = {
     accessibility: {

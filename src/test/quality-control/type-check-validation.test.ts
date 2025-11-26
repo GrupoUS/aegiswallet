@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Tables } from '@/types/database.types';
+import type { Tables } from '@/integrations/supabase/types';
 
 describe('Type Check Validation', () => {
   describe('Database Schema Fixes', () => {

@@ -316,7 +316,9 @@ class VoiceService {
       this.synthesis.cancel();
 
       // Use the global SpeechSynthesisUtterance to avoid type conflicts
-      const utterance = new (globalThis.SpeechSynthesisUtterance as typeof SpeechSynthesisUtterance)(text);
+      const utterance = new (
+        globalThis.SpeechSynthesisUtterance as typeof SpeechSynthesisUtterance
+      )(text);
       utterance.lang = this.config.language || 'pt-BR';
       utterance.rate = options?.rate ?? 1.0;
       utterance.pitch = options?.pitch ?? 1.0;
@@ -328,7 +330,9 @@ class VoiceService {
         reject(new Error(`Speech synthesis error: ${errorEvent.error}`));
       };
 
-      (this.synthesis as unknown as globalThis.SpeechSynthesis).speak(utterance as globalThis.SpeechSynthesisUtterance);
+      (this.synthesis as unknown as globalThis.SpeechSynthesis).speak(
+        utterance as globalThis.SpeechSynthesisUtterance
+      );
     });
   }
 

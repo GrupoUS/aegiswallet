@@ -1,10 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { z } from 'zod';
 import type { Context } from '@/server/context';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 
 // Hono-based RPC helpers for AegisWallet
 export type AegisContext = Context & {
@@ -70,7 +70,6 @@ export const protectedProcedure = <T extends z.ZodType>(schema?: T) => {
 // Legacy tRPC compatibility layer (to be removed after full migration)
 export const router = createRouter;
 
-// biome-ignore lint/suspicious/noExplicitAny: Legacy tRPC compatibility - middleware types are complex
 type AnyMiddleware = (opts: unknown) => Promise<unknown>;
 
 export const t = {

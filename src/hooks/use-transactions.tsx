@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { trpc } from '@/lib/trpc';
 
-interface Transaction {
+// Transaction type for internal use
+type Transaction = {
   id: string;
   user_id: string;
   amount: number;
@@ -14,15 +15,19 @@ interface Transaction {
   account_id?: string;
   created_at: string;
   metadata?: Record<string, unknown>;
-}
+};
 
-interface TransactionStats {
+// Statistics type for transaction summaries
+type TransactionStats = {
   balance: number;
   expenses: number;
   income: number;
   period: string;
   transactionsCount: number;
-}
+};
+
+// Export types for external use
+export type { Transaction, TransactionStats };
 
 export function useTransactions(filters?: {
   limit?: number;
@@ -134,7 +139,11 @@ export function useTransactionsStats(
 }
 
 export function useCreateTransaction() {
-  const { mutate: createTransaction, mutateAsync, isPending } = trpc.transactions.create.useMutation({
+  const {
+    mutate: createTransaction,
+    mutateAsync,
+    isPending,
+  } = trpc.transactions.create.useMutation({
     onError: (error: { message?: string; code?: string }) => {
       toast.error(error.message || 'Erro ao criar transação');
     },

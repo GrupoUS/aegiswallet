@@ -561,8 +561,12 @@ export class TextToSpeechService {
 
   private isMockEnvironment(): boolean {
     const synth = this.ensureSynth();
-    const speakMethod = synth?.speak as ((...args: unknown[]) => void) & { mock?: boolean } | undefined;
-    const isMockedSpeak = Boolean(speakMethod && typeof speakMethod === 'function' && speakMethod.mock);
+    const speakMethod = synth?.speak as
+      | (((...args: unknown[]) => void) & { mock?: boolean })
+      | undefined;
+    const isMockedSpeak = Boolean(
+      speakMethod && typeof speakMethod === 'function' && speakMethod.mock
+    );
     return isMockedSpeak || this.isTestEnvironment();
   }
 

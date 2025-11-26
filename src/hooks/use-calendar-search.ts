@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 
 // Type for financial events from database
 type FinancialEvent = Database['public']['Tables']['financial_events']['Row'];

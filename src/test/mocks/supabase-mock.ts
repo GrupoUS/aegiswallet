@@ -1,13 +1,13 @@
 /**
  * Comprehensive Typed Supabase Mock for AegisWallet Tests
- * 
+ *
  * Provides type-safe Supabase client mocking with Brazilian financial data
  * Aligns with current database schema and includes proper RLS policy testing
  */
 
-import type { Database } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { vi } from 'vitest';
+import type { Database } from '@/integrations/supabase/types';
 
 // Factory function types
 interface BankAccountOverrides {
@@ -109,14 +109,26 @@ class MockDatabase {
   constructor() {
     // Initialize with empty data for all tables
     const tables: TableName[] = [
-      'audit_logs', 'auth_attempts', 'user_profiles', 'bank_accounts',
-      'transactions', 'pix_keys', 'financial_events', 'calendar_events',
-      'chat_messages', 'chat_sessions', 'voice_recordings',
-      'nlu_training_data', 'nlu_intent_patterns', 'security_logs',
-      'device_fingerprints', 'ip_reputations', 'failed_logins'
+      'audit_logs',
+      'auth_attempts',
+      'user_profiles',
+      'bank_accounts',
+      'transactions',
+      'pix_keys',
+      'financial_events',
+      'calendar_events',
+      'chat_messages',
+      'chat_sessions',
+      'voice_recordings',
+      'nlu_training_data',
+      'nlu_intent_patterns',
+      'security_logs',
+      'device_fingerprints',
+      'ip_reputations',
+      'failed_logins',
     ];
 
-    tables.forEach(table => {
+    tables.forEach((table) => {
       this.data.set(table, []);
     });
   }
@@ -143,8 +155,8 @@ class MockDatabase {
 
   update<T extends TableName>(table: T, id: string, updates: Update<T>): Row<T> | null {
     const tableData = this.data.get(table) || [];
-    const index = tableData.findIndex(record => record.id === id);
-    
+    const index = tableData.findIndex((record) => record.id === id);
+
     if (index === -1) return null;
 
     const updatedRecord = {
@@ -161,8 +173,8 @@ class MockDatabase {
 
   delete<T extends TableName>(table: T, id: string): boolean {
     const tableData = this.data.get(table) || [];
-    const index = tableData.findIndex(record => record.id === id);
-    
+    const index = tableData.findIndex((record) => record.id === id);
+
     if (index === -1) return false;
 
     tableData.splice(index, 1);
@@ -190,27 +202,27 @@ class MockDatabase {
   // Seed with test data
   seedBrazilianScenario() {
     const scenario = require('../factories/database-factory').createBrazilianFinancialScenario();
-    
+
     // Insert user profile
     this.insert('user_profiles', scenario.userProfile);
-    
+
     // Insert bank accounts
-    scenario.bankAccounts.forEach(account => {
+    scenario.bankAccounts.forEach((account) => {
       this.insert('bank_accounts', account);
     });
-    
+
     // Insert PIX keys
-    scenario.pixKeys.forEach(pixKey => {
+    scenario.pixKeys.forEach((pixKey) => {
       this.insert('pix_keys', pixKey);
     });
-    
+
     // Insert transactions
-    scenario.transactions.forEach(transaction => {
+    scenario.transactions.forEach((transaction) => {
       this.insert('transactions', transaction);
     });
-    
+
     // Insert financial events
-    scenario.financialEvents.forEach(event => {
+    scenario.financialEvents.forEach((event) => {
       this.insert('financial_events', event);
     });
   }
@@ -342,7 +354,7 @@ class MockQueryBuilder<T extends TableName> {
 
       // Apply filters
       Object.entries(this.filters).forEach(([key, value]) => {
-        results = results.filter(record => (record as any)[key] === value);
+        results = results.filter((record) => (record as any)[key] === value);
       });
 
       // Apply ordering
@@ -363,25 +375,27 @@ class MockQueryBuilder<T extends TableName> {
       if (this.singleMode) {
         return {
           data: results.length > 0 ? results[0] : null,
-          error: null
+          error: null,
         };
       }
 
       return {
         data: results,
-        error: null
+        error: null,
       };
     } catch (error) {
       return {
         data: this.singleMode ? null : [],
-        error
+        error,
       };
     }
   }
 
   // Supabase query builder is thenable
   then<TResult1 = { data: Row<T>[]; error: null }, TResult2 = never>(
-    onfulfilled?: ((value: { data: Row<T>[]; error: null }) => TResult1 | PromiseLike<TResult1>) | null,
+    onfulfilled?:
+      | ((value: { data: Row<T>[]; error: null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
   ): Promise<TResult1 | TResult2> {
     return Promise.resolve(this.execute() as any).then(onfulfilled, onrejected);
@@ -398,7 +412,7 @@ function createMockSupabaseClient(): SupabaseClient<Database> {
     auth: {
       getUser: vi.fn().mockResolvedValue({
         data: { user: { id: 'test-user-id' } },
-        error: null
+        error: null,
       }),
       signInWithOAuth: vi.fn(),
       signInWithPassword: vi.fn(),
@@ -458,9 +472,9 @@ export const supabaseMock = createMockSupabaseClient();
 export const setupMockDatabase = {
   clear: <T extends TableName>(table: T) => mockDatabase.clear(table),
   insert: <T extends TableName>(table: T, record: Insert<T>) => mockDatabase.insert(table, record),
-  find: <T extends TableName>(table: T, predicate: (record: Row<T>) => boolean) => 
+  find: <T extends TableName>(table: T, predicate: (record: Row<T>) => boolean) =>
     mockDatabase.find(table, predicate),
-  findOne: <T extends TableName>(table: T, predicate: (record: Row<T>) => boolean) => 
+  findOne: <T extends TableName>(table: T, predicate: (record: Row<T>) => boolean) =>
     mockDatabase.findOne(table, predicate),
   seedBrazilianScenario: () => mockDatabase.seedBrazilianScenario(),
 
@@ -468,11 +482,11 @@ export const setupMockDatabase = {
   seedPixScenario: () => {
     const userProfile = createUserProfile();
     const bankAccount = createBankAccount({ user_id: userProfile.user_id, is_primary: true });
-    const pixKey = createPixKey({ 
-      user_id: userProfile.user_id, 
+    const pixKey = createPixKey({
+      user_id: userProfile.user_id,
       bank_account_id: bankAccount.id,
       key_type: 'cpf',
-      key_value: userProfile.cpf 
+      key_value: userProfile.cpf,
     });
 
     mockDatabase.insert('user_profiles', userProfile);
@@ -485,30 +499,30 @@ export const setupMockDatabase = {
   seedTransactionScenario: () => {
     const userProfile = createUserProfile();
     const bankAccount = createBankAccount({ user_id: userProfile.user_id, is_primary: true });
-    
+
     const transactions = [
-      createTransaction({ 
+      createTransaction({
         user_id: userProfile.user_id,
         bank_account_id: bankAccount.id,
         type: 'debit',
         category: 'mercado',
         description: 'Supermercado Carrefour',
         amount: 347.85,
-        merchant_cnpj: '12.345.678/0001-90'
+        merchant_cnpj: '12.345.678/0001-90',
       }),
-      createTransaction({ 
+      createTransaction({
         user_id: userProfile.user_id,
         bank_account_id: bankAccount.id,
         type: 'credit',
         description: 'Salário',
-        amount: 5450.00
+        amount: 5450.0,
       }),
-      createTransaction({ 
+      createTransaction({
         user_id: userProfile.user_id,
         bank_account_id: bankAccount.id,
         type: 'pix_out',
         description: 'Transferência PIX',
-        amount: 150.00
+        amount: 150.0,
       }),
     ];
 
@@ -519,7 +533,7 @@ export const setupMockDatabase = {
     }
 
     return { userProfile, bankAccount, transactions };
-  }
+  },
 };
 
 // ============================================================================

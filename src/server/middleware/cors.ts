@@ -22,11 +22,12 @@ const ALLOWED_ORIGINS = [
  */
 export const corsMiddleware = async (c: Context, next: Next) => {
   const origin = c.req.header('Origin');
-  
+
   // Validate origin against allowed list
-  const isOriginAllowed = ALLOWED_ORIGINS.includes(origin || '') || 
-                        (origin?.startsWith('http://localhost:') && process.env.NODE_ENV === 'development') ||
-                        (origin?.startsWith('https://localhost:') && process.env.NODE_ENV === 'development');
+  const isOriginAllowed =
+    ALLOWED_ORIGINS.includes(origin || '') ||
+    (origin?.startsWith('http://localhost:') && process.env.NODE_ENV === 'development') ||
+    (origin?.startsWith('https://localhost:') && process.env.NODE_ENV === 'development');
 
   // Set secure CORS headers
   if (isOriginAllowed) {
@@ -35,9 +36,12 @@ export const corsMiddleware = async (c: Context, next: Next) => {
     // In production, don't allow unknown origins
     c.header('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
   }
-  
+
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Client-ID');
+  c.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With, X-Client-ID'
+  );
   c.header('Access-Control-Allow-Credentials', 'true');
   c.header('Access-Control-Max-Age', '86400'); // 24 hours
   c.header('Vary', 'Origin'); // Important for caching
@@ -56,10 +60,13 @@ export const corsMiddleware = async (c: Context, next: Next) => {
  */
 export const devCorsMiddleware = async (c: Context, next: Next) => {
   const origin = c.req.header('Origin');
-  
+
   c.header('Access-Control-Allow-Origin', origin || '*');
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Client-ID');
+  c.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With, X-Client-ID'
+  );
   c.header('Access-Control-Allow-Credentials', 'true');
   c.header('Access-Control-Max-Age', '86400');
   c.header('Vary', 'Origin');

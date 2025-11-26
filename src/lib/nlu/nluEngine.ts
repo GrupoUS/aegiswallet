@@ -29,7 +29,7 @@ import type {
   PatternEvolution,
   UserAdaptation,
 } from '@/lib/nlu/types';
-import { EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
+import { type EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
 
 // ============================================================================
 // Default Configuration
@@ -280,7 +280,9 @@ export class NLUEngine {
     }
 
     const extractedTypes = new Set(entities.map((e) => e.type));
-    const missingSlots = definition.requiredSlots.filter((slot) => !extractedTypes.has(slot)) as EntityType[];
+    const missingSlots = definition.requiredSlots.filter(
+      (slot) => !extractedTypes.has(slot)
+    ) as EntityType[];
 
     return missingSlots;
   }
@@ -508,13 +510,19 @@ export class NLUEngine {
     // Enhanced confidence boosting for Brazilian Portuguese
     if (patternMatched) {
       // Strong boost for pattern matches
-      const boostAmount = 0.25 + (keywordMatches.length * 0.05);
-      boostedConfidence = Math.max(boostedConfidence, Math.min(0.98, requiredConfidence + boostAmount));
+      const boostAmount = 0.25 + keywordMatches.length * 0.05;
+      boostedConfidence = Math.max(
+        boostedConfidence,
+        Math.min(0.98, requiredConfidence + boostAmount)
+      );
       method = 'pattern';
     } else if (keywordMatches.length >= 2) {
       // Moderate boost for multiple keyword matches
-      const boostAmount = 0.15 + (keywordMatches.length * 0.03);
-      boostedConfidence = Math.max(boostedConfidence, Math.min(0.92, requiredConfidence + boostAmount));
+      const boostAmount = 0.15 + keywordMatches.length * 0.03;
+      boostedConfidence = Math.max(
+        boostedConfidence,
+        Math.min(0.92, requiredConfidence + boostAmount)
+      );
     } else if (keywordMatches.length === 1) {
       // Small boost for single keyword match
       boostedConfidence = Math.max(boostedConfidence, requiredConfidence);
@@ -542,7 +550,7 @@ export class NLUEngine {
    */
   private isBrazilianContextual(text: string, intent: IntentType): boolean {
     const lowerText = text.toLowerCase();
-    
+
     // Brazilian financial slang and expressions
     const brazilianContext: Record<string, string[]> = {
       [IntentType.CHECK_BALANCE]: ['grana', 'dinheiro', 'bufunfa', 'tá quanto', 'quanto tá'],
@@ -550,11 +558,11 @@ export class NLUEngine {
       [IntentType.PAY_BILL]: ['conta', 'boleto', 'fatura', 'quitar', 'débito'],
       [IntentType.CHECK_INCOME]: ['cair', 'entrar', 'recebimento', 'salário'],
       [IntentType.FINANCIAL_PROJECTION]: ['projeção', 'previsão', 'balanço', 'vai ficar'],
-      [IntentType.CHECK_BUDGET]: ['orçamento', 'gastar', 'limite', 'teto']
+      [IntentType.CHECK_BUDGET]: ['orçamento', 'gastar', 'limite', 'teto'],
     };
 
     const contextTerms = brazilianContext[intent] || [];
-    return contextTerms.some(term => lowerText.includes(term));
+    return contextTerms.some((term) => lowerText.includes(term));
   }
 
   /**

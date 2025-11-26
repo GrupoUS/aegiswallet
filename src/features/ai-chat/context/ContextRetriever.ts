@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 import logger from '@/lib/logging/logger';
 
 export interface FinancialContext {
@@ -49,7 +49,18 @@ interface UserPreferences {
 export class ContextRetriever {
   private supabase: SupabaseClient<Database>;
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
-  private cache: Map<string, { data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences; timestamp: number }> = new Map();
+  private cache: Map<
+    string,
+    {
+      data:
+        | FinancialContext
+        | Transaction[]
+        | AccountBalance[]
+        | FinancialEvent[]
+        | UserPreferences;
+      timestamp: number;
+    }
+  > = new Map();
 
   constructor(supabase: SupabaseClient<Database>) {
     this.supabase = supabase;
@@ -57,12 +68,14 @@ export class ContextRetriever {
 
   /**
    * Fetch complete financial context for the user
+   * Simplified version using direct queries only
    */
   async getFinancialContext(userId: string): Promise<FinancialContext> {
     const cacheKey = `context:${userId}`;
     const cached = this.getFromCache<FinancialContext>(cacheKey);
     if (cached) return cached as FinancialContext;
 
+    // Use direct queries only
     const [transactions, balances, events, preferences] = await Promise.all([
       this.getRecentTransactions(userId),
       this.getAccountBalances(userId),
@@ -93,30 +106,43 @@ export class ContextRetriever {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data, error } = await this.supabase
-      .from('financial_events')
-      .select('id, amount, description, category, created_at, event_type, is_income')
-      .eq('user_id', userId)
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(50);
+    try {
+      const { data, error } = await this.supabase
+        .from('financial_events')
+        .select('id, amount, description, category, created_at, event_type, is_income')
+        .eq('user_id', userId)
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-    if (error) {
-      logger.error('Error fetching transactions', { component: 'ContextRetriever', action: 'getRecentTransactions', error: String(error) });
+      if (error) {
+        logger.error('Error fetching transactions', {
+          component: 'ContextRetriever',
+          action: 'getRecentTransactions',
+          error: String(error),
+        });
+        return [];
+      }
+
+      const transactions: Transaction[] = (data || []).map((t) => ({
+        id: t.id,
+        amount: t.amount,
+        description: t.description || '',
+        category: t.category || 'other',
+        date: t.created_at ?? new Date().toISOString(),
+        type: (t.is_income ? 'income' : 'expense') as 'income' | 'expense',
+      }));
+
+      this.setCache(cacheKey, transactions);
+      return transactions;
+    } catch (err) {
+      logger.error('Unexpected error fetching transactions', {
+        component: 'ContextRetriever',
+        action: 'getRecentTransactions',
+        error: String(err),
+      });
       return [];
     }
-
-    const transactions: Transaction[] = (data || []).map((t) => ({
-      id: t.id,
-      amount: t.amount,
-      description: t.description || '',
-      category: t.category || 'other',
-      date: t.created_at ?? new Date().toISOString(),
-      type: (t.is_income ? 'income' : 'expense') as 'income' | 'expense',
-    }));
-
-    this.setCache(cacheKey, transactions);
-    return transactions;
   }
 
   /**
@@ -127,26 +153,39 @@ export class ContextRetriever {
     const cached = this.getFromCache<AccountBalance[]>(cacheKey);
     if (cached) return cached as AccountBalance[];
 
-    const { data, error } = await this.supabase
-      .from('bank_accounts')
-      .select('id, institution_name, balance, currency')
-      .eq('user_id', userId)
-      .eq('is_active', true);
+    try {
+      const { data, error } = await this.supabase
+        .from('bank_accounts')
+        .select('id, institution_name, balance, currency')
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
-    if (error) {
-      logger.error('Error fetching balances', { component: 'ContextRetriever', action: 'getAccountBalances', error: String(error) });
+      if (error) {
+        logger.error('Error fetching balances', {
+          component: 'ContextRetriever',
+          action: 'getAccountBalances',
+          error: String(error),
+        });
+        return [];
+      }
+
+      const balances: AccountBalance[] = (data || []).map((a) => ({
+        accountId: a.id,
+        accountName: a.institution_name || 'Unnamed Account',
+        balance: a.balance || 0,
+        currency: a.currency || 'BRL',
+      }));
+
+      this.setCache(cacheKey, balances);
+      return balances;
+    } catch (err) {
+      logger.error('Unexpected error fetching balances', {
+        component: 'ContextRetriever',
+        action: 'getAccountBalances',
+        error: String(err),
+      });
       return [];
     }
-
-    const balances: AccountBalance[] = (data || []).map((a) => ({
-      accountId: a.id,
-      accountName: a.institution_name || 'Unnamed Account',
-      balance: a.balance || 0,
-      currency: a.currency || 'BRL',
-    }));
-
-    this.setCache(cacheKey, balances);
-    return balances;
   }
 
   /**
@@ -160,30 +199,43 @@ export class ContextRetriever {
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
 
-    const { data, error } = await this.supabase
-      .from('financial_events')
-      .select('id, title, amount, due_date, event_type_id, status')
-      .eq('user_id', userId)
-      .lte('due_date', endDate.toISOString())
-      .order('due_date', { ascending: true })
-      .limit(20);
+    try {
+      const { data, error } = await this.supabase
+        .from('financial_events')
+        .select('id, title, amount, due_date, event_type_id, status')
+        .eq('user_id', userId)
+        .lte('due_date', endDate.toISOString())
+        .order('due_date', { ascending: true })
+        .limit(20);
 
-    if (error) {
-      logger.error('Error fetching events', { component: 'ContextRetriever', action: 'getUpcomingEvents', error: String(error) });
+      if (error) {
+        logger.error('Error fetching events', {
+          component: 'ContextRetriever',
+          action: 'getUpcomingEvents',
+          error: String(error),
+        });
+        return [];
+      }
+
+      const events: FinancialEvent[] = (data || []).map((e) => ({
+        id: e.id,
+        title: e.title,
+        amount: e.amount || 0,
+        date: e.due_date || new Date().toISOString(),
+        type: e.event_type_id || 'other',
+        status: e.status || 'pending',
+      }));
+
+      this.setCache(cacheKey, events);
+      return events;
+    } catch (err) {
+      logger.error('Unexpected error fetching events', {
+        component: 'ContextRetriever',
+        action: 'getUpcomingEvents',
+        error: String(err),
+      });
       return [];
     }
-
-    const events: FinancialEvent[] = (data || []).map((e) => ({
-      id: e.id,
-      title: e.title,
-      amount: e.amount || 0,
-      date: e.due_date || new Date().toISOString(),
-      type: e.event_type_id || 'other',
-      status: e.status || 'pending',
-    }));
-
-    this.setCache(cacheKey, events);
-    return events;
   }
 
   /**
@@ -194,29 +246,46 @@ export class ContextRetriever {
     const cached = this.getFromCache<UserPreferences>(cacheKey);
     if (cached) return cached as UserPreferences;
 
-    const { data, error } = await this.supabase
-      .from('users')
-      .select('language, currency, timezone')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('language, currency, timezone')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      logger.error('Error fetching preferences', { component: 'ContextRetriever', action: 'getUserPreferences', error: String(error) });
+      if (error) {
+        logger.error('Error fetching preferences', {
+          component: 'ContextRetriever',
+          action: 'getUserPreferences',
+          error: String(error),
+        });
+        return {
+          language: 'pt-BR',
+          currency: 'BRL',
+          timezone: 'America/Sao_Paulo',
+        };
+      }
+
+      const preferences: UserPreferences = {
+        language: data?.language || 'pt-BR',
+        currency: data?.currency || 'BRL',
+        timezone: data?.timezone || 'America/Sao_Paulo',
+      };
+
+      this.setCache(cacheKey, preferences);
+      return preferences;
+    } catch (err) {
+      logger.error('Unexpected error fetching preferences', {
+        component: 'ContextRetriever',
+        action: 'getUserPreferences',
+        error: String(err),
+      });
       return {
         language: 'pt-BR',
         currency: 'BRL',
         timezone: 'America/Sao_Paulo',
       };
     }
-
-    const preferences: UserPreferences = {
-      language: data?.language || 'pt-BR',
-      currency: data?.currency || 'BRL',
-      timezone: data?.timezone || 'America/Sao_Paulo',
-    };
-
-    this.setCache(cacheKey, preferences);
-    return preferences;
   }
 
   /**
@@ -257,7 +326,14 @@ export class ContextRetriever {
   /**
    * Get from cache if not expired
    */
-  private getFromCache<T extends FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences>(key: string): T | null {
+  private getFromCache<
+    T extends
+      | FinancialContext
+      | Transaction[]
+      | AccountBalance[]
+      | FinancialEvent[]
+      | UserPreferences,
+  >(key: string): T | null {
     const cached = this.cache.get(key);
     if (!cached || cached.data === undefined) return null;
 
@@ -273,8 +349,10 @@ export class ContextRetriever {
   /**
    * Set cache
    */
-  private setCache(key: string, data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences) {
+  private setCache(
+    key: string,
+    data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences
+  ) {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 }
-

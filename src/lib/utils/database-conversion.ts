@@ -17,29 +17,33 @@ export type CamelCaseToSnakeCase<S extends string> = S extends `${infer P1}${inf
 /**
  * Converts snake_case database field names to camelCase
  */
-export function snakeToCamel<T extends Record<string, any>>(obj: T): { [K in keyof T as SnakeCaseToCamelCase<string & K>]: T[K] } {
-  const result = {} as any;
+export function snakeToCamel<T extends Record<string, unknown>>(
+  obj: T
+): { [K in keyof T as SnakeCaseToCamelCase<string & K>]: T[K] } {
+  const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const camelKey = key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
     result[camelKey] = value;
   }
 
-  return result;
+  return result as { [K in keyof T as SnakeCaseToCamelCase<string & K>]: T[K] };
 }
 
 /**
  * Converts camelCase field names to snake_case for database operations
  */
-export function camelToSnake<T extends Record<string, any>>(obj: T): { [K in keyof T as CamelCaseToSnakeCase<string & K>]: T[K] } {
-  const result = {} as any;
+export function camelToSnake<T extends Record<string, unknown>>(
+  obj: T
+): { [K in keyof T as CamelCaseToSnakeCase<string & K>]: T[K] } {
+  const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    const snakeKey = key.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
     result[snakeKey] = value;
   }
 
-  return result;
+  return result as { [K in keyof T as CamelCaseToSnakeCase<string & K>]: T[K] };
 }
 
 /**
@@ -55,14 +59,14 @@ export function deepSnakeToCamel<T>(obj: T): T {
   }
 
   if (typeof obj === 'object') {
-    const result = {} as any;
+    const result: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      const camelKey = key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
       result[camelKey] = deepSnakeToCamel(value);
     }
 
-    return result;
+    return result as T;
   }
 
   return obj;
@@ -81,14 +85,14 @@ export function deepCamelToSnake<T>(obj: T): T {
   }
 
   if (typeof obj === 'object') {
-    const result = {} as any;
+    const result: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      const snakeKey = key.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
       result[snakeKey] = deepCamelToSnake(value);
     }
 
-    return result;
+    return result as T;
   }
 
   return obj;
@@ -97,13 +101,17 @@ export function deepCamelToSnake<T>(obj: T): T {
 /**
  * Type-safe conversion for database rows to application interfaces
  */
-export function convertDatabaseRow<T extends Record<string, any>>(row: T): { [K in keyof T as SnakeCaseToCamelCase<string & K>]: T[K] } {
+export function convertDatabaseRow<T extends Record<string, unknown>>(
+  row: T
+): { [K in keyof T as SnakeCaseToCamelCase<string & K>]: T[K] } {
   return snakeToCamel(row);
 }
 
 /**
  * Type-safe conversion for application data to database format
  */
-export function convertToDatabaseRow<T extends Record<string, any>>(data: T): { [K in keyof T as CamelCaseToSnakeCase<string & K>]: T[K] } {
+export function convertToDatabaseRow<T extends Record<string, unknown>>(
+  data: T
+): { [K in keyof T as CamelCaseToSnakeCase<string & K>]: T[K] } {
   return camelToSnake(data);
 }

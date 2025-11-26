@@ -81,13 +81,13 @@ export class Logger {
 
     const msg = `[${entry.timestamp}] [${LogLevel[entry.level]}] ${entry.message}`;
     let context = '';
-    
+
     if (entry.context) {
       try {
         context = JSON.stringify(entry.context);
-      } catch (error) {
+      } catch {
         // Handle circular references or other JSON.stringify issues
-        context = JSON.stringify(entry.context, (key, value) => {
+        context = JSON.stringify(entry.context, (_key, value) => {
           if (typeof value === 'object' && value !== null) {
             if (value.constructor && value.constructor.name === 'Object') {
               try {
@@ -124,7 +124,7 @@ export class Logger {
 
   private log(level: LogLevel, message: string, context?: LogContext): void {
     const sanitizedContext = this.config.sanitizeData ? this.sanitizeContext(context) : context;
-    
+
     const entry: LogEntry = {
       context: sanitizedContext,
       level,
@@ -148,8 +148,17 @@ export class Logger {
     if (!context) return context;
 
     const sensitiveFields = [
-      'password', 'token', 'cpf', 'email', 'balance', 'secret', 'key',
-      'creditCard', 'ssn', 'accountNumber', 'routingNumber'
+      'password',
+      'token',
+      'cpf',
+      'email',
+      'balance',
+      'secret',
+      'key',
+      'creditCard',
+      'ssn',
+      'accountNumber',
+      'routingNumber',
     ];
 
     const sanitized = { ...context };
@@ -157,7 +166,7 @@ export class Logger {
     const sanitizeValue = (value: unknown, seen = new WeakSet()): unknown => {
       if (typeof value === 'string') {
         // Check if the value looks like sensitive data
-        if (sensitiveFields.some(field => value.toLowerCase().includes(field))) {
+        if (sensitiveFields.some((field) => value.toLowerCase().includes(field))) {
           return '[REDACTED]';
         }
       } else if (typeof value === 'object' && value !== null) {
@@ -166,23 +175,22 @@ export class Logger {
           return '[Circular Reference]';
         }
         seen.add(value);
-        
+
         if (Array.isArray(value)) {
-          const result = value.map(item => sanitizeValue(item, seen));
+          const result = value.map((item) => sanitizeValue(item, seen));
           seen.delete(value);
           return result;
-        } else {
-          const sanitizedObj: Record<string, unknown> = {};
-          for (const [key, val] of Object.entries(value)) {
-            if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
-              sanitizedObj[key] = '[REDACTED]';
-            } else {
-              sanitizedObj[key] = sanitizeValue(val, seen);
-            }
-          }
-          seen.delete(value);
-          return sanitizedObj;
         }
+        const sanitizedObj: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(value)) {
+          if (sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
+            sanitizedObj[key] = '[REDACTED]';
+          } else {
+            sanitizedObj[key] = sanitizeValue(val, seen);
+          }
+        }
+        seen.delete(value);
+        return sanitizedObj;
       }
       return value;
     };

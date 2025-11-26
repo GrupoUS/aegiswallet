@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Database, Tables } from '@/types/database.types';
+import type { Database, Tables } from '@/integrations/supabase/types';
 
 describe('Database Schema Type Safety', () => {
   describe('User Preferences Schema', () => {

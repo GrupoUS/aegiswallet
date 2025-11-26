@@ -49,9 +49,8 @@ declare global {
   }
 }
 
-if (typeof globalThis.Element === "undefined") {
-  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM Element
-  (globalThis as any).Element = class Element {
+if (typeof globalThis.Element === 'undefined') {
+  (globalThis as Record<string, unknown>).Element = class Element {
     scrollIntoView() {}
     getBoundingClientRect() {
       return { bottom: 0, height: 0, left: 0, right: 0, top: 0, width: 0, x: 0, y: 0 };
@@ -59,11 +58,9 @@ if (typeof globalThis.Element === "undefined") {
   };
 }
 
-if (typeof globalThis.HTMLElement === "undefined") {
-  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM HTMLElement
-  const GlobalElement = (globalThis as any).Element;
-  // biome-ignore lint/suspicious/noExplicitAny: Test polyfill for DOM HTMLElement
-  (globalThis as any).HTMLElement = class HTMLElement extends GlobalElement {
+if (typeof globalThis.HTMLElement === 'undefined') {
+  const GlobalElement = (globalThis as Record<string, unknown>).Element as typeof Element;
+  (globalThis as Record<string, unknown>).HTMLElement = class HTMLElement extends GlobalElement {
     style: Record<string, unknown>;
     constructor() {
       super();
@@ -73,7 +70,7 @@ if (typeof globalThis.HTMLElement === "undefined") {
 }
 
 // Create comprehensive document mock if not available
-if (typeof globalThis.document === "undefined") {
+if (typeof globalThis.document === 'undefined') {
   const { JSDOM } = require('jsdom');
   const dom = new JSDOM(
     '<!DOCTYPE html><html><head><title>Test</title></head><body><div id="root"></div></body></html>',
@@ -90,7 +87,7 @@ if (typeof globalThis.document === "undefined") {
   globalThis.navigator = dom.window.navigator;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.Element = dom.window.Element;
-  
+
   // Set global document for Testing Library
   global.document = dom.window.document;
   global.window = dom.window;
@@ -474,7 +471,6 @@ beforeAll(() => {
         select: () => queryBuilder,
         update: () => queryBuilder,
         delete: () => queryBuilder,
-        // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are thenable in the real client.
         then: (resolve: (value: { data: unknown[]; error: null }) => void) => {
           resolve({ data: queryBuilder.data, error: queryBuilder.error });
         },
@@ -559,7 +555,6 @@ export const createMockSpeechSynthesisEvent = (name: string, charIndex: number =
 if (typeof globalObj.vi === 'undefined') {
   globalObj.vi = vi;
 }
-
 
 // Mock Supabase with typed configuration using our comprehensive mock
 vi.mock('@/integrations/supabase/client', async () => {

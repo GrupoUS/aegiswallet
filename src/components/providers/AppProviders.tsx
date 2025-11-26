@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { ErrorBoundary } from '@/components/error-boundaries/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LoggerProvider } from '@/contexts/LoggerContext';
 
@@ -23,7 +24,10 @@ export function AppProviders({ children, defaultConfig: _defaultConfig = {} }: A
       <ErrorBoundary>
         <AccessibilityProvider>
           <LoggerProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+              <Toaster richColors closeButton position="top-right" />
+            </AuthProvider>
           </LoggerProvider>
         </AccessibilityProvider>
       </ErrorBoundary>

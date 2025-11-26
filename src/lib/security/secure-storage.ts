@@ -11,6 +11,7 @@
  */
 
 import type { Session, User } from '@supabase/supabase-js';
+import { logger } from '@/lib/logging/logger';
 
 export interface SecureStorageData {
   session?: Session;
@@ -193,7 +194,7 @@ export class SecureStorageManager {
 
       return btoa(String.fromCharCode(...combined));
     } catch (error) {
-      console.warn('Encryption failed, falling back to base64:', error);
+      logger.warn('Encryption failed, falling back to base64', { error });
       return btoa(data); // Secure fallback
     }
   }
@@ -228,7 +229,9 @@ export class SecureStorageManager {
 
       // Convert base64 to Uint8Array
       const combined = new Uint8Array(
-        atob(encryptedData).split('').map((c) => c.charCodeAt(0))
+        atob(encryptedData)
+          .split('')
+          .map((c) => c.charCodeAt(0))
       );
 
       // Extract IV (first 12 bytes) and encrypted data
@@ -245,7 +248,7 @@ export class SecureStorageManager {
       // Convert back to string
       return new TextDecoder().decode(decryptedData);
     } catch (error) {
-      console.warn('Decryption failed, falling back to base64:', error);
+      logger.warn('Decryption failed, falling back to base64', { error });
       return atob(encryptedData); // Secure fallback
     }
   }

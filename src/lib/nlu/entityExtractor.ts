@@ -316,7 +316,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
   },
   {
     normalizer: () => 'lazer',
-    // Enhanced pattern for "lazer" with diacritic support  
+    // Enhanced pattern for "lazer" with diacritic support
     pattern: /\b(lazer|entretenimento|diversao|divers[ãa]o)\b/gi,
     type: EntityType.CATEGORY,
   },
@@ -358,7 +358,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
       /\b([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+(?:\s+[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+)*)\b/g,
     type: EntityType.PERSON,
   },
-];;;;;
+];
 
 // ============================================================================
 // Entity Extractor Class
@@ -399,12 +399,12 @@ export class EntityExtractor {
       try {
         const value = match[0];
         const normalizedValue = pattern.normalizer(value);
-        
+
         // Enhanced validation with Brazilian Portuguese context
         if (normalizedValue === undefined || normalizedValue === null) {
           continue;
         }
-        
+
         if (typeof normalizedValue === 'number' && Number.isNaN(normalizedValue)) {
           continue;
         }
@@ -416,7 +416,7 @@ export class EntityExtractor {
 
         // Calculate confidence based on pattern specificity and Brazilian context
         let confidence = 0.9; // Base high confidence for pattern-based extraction
-        
+
         // Boost confidence for Brazilian-specific patterns
         if (this.isBrazilianSpecificPattern(value, pattern.type)) {
           confidence = Math.min(confidence + 0.05, 0.95);
@@ -448,7 +448,7 @@ export class EntityExtractor {
    */
   private isBrazilianSpecificPattern(value: string, type: EntityType): boolean {
     const lowerValue = value.toLowerCase();
-    
+
     switch (type) {
       case EntityType.DATE:
         return /amanha|ontem|hoje|proxima|pr[óo]xima/.test(lowerValue);
@@ -466,17 +466,17 @@ export class EntityExtractor {
    */
   private calculateContextConfidence(text: string, value: string, type: EntityType): number {
     const lowerText = text.toLowerCase();
-    
+
     // Get surrounding context (5 words before and after)
     const words = lowerText.split(/\s+/);
-    const valueWordIndex = words.findIndex(word => value.toLowerCase().includes(word));
-    
+    const valueWordIndex = words.findIndex((word) => value.toLowerCase().includes(word));
+
     if (valueWordIndex === -1) return 0.8;
-    
+
     const contextStart = Math.max(0, valueWordIndex - 5);
     const contextEnd = Math.min(words.length - 1, valueWordIndex + 5);
     const contextWords = words.slice(contextStart, contextEnd + 1).join(' ');
-    
+
     // Brazilian context indicators
     switch (type) {
       case EntityType.DATE:
@@ -495,7 +495,7 @@ export class EntityExtractor {
         }
         break;
     }
-    
+
     return 0.85;
   }
 

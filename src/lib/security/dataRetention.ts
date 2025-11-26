@@ -193,7 +193,7 @@ export class DataRetentionManager {
         // Anonymize by marking as processed and setting retention expiry
         const { error: anonymizeError } = await supabase
           .from('voice_recordings')
-          .update({ 
+          .update({
             processed: true,
             retention_expires_at: new Date().toISOString(),
           })

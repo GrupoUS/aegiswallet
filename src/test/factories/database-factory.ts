@@ -1,12 +1,12 @@
 /**
  * Database Test Factory for AegisWallet Brazilian Financial Assistant
- * 
+ *
  * Provides type-safe test data that aligns with the current database schema
  * Includes Brazilian financial compliance data (PIX, Boletos, BRL formatting, etc.)
  */
 
-import type { Database } from '@/types/database.types';
 import { faker } from '@faker-js/faker';
+import type { Database } from '@/integrations/supabase/types';
 import 'faker-br';
 
 // Type aliases for easier use
@@ -29,7 +29,7 @@ export function createUserProfile(overrides: Partial<UserProfile> = {}): UserPro
   const email = faker.internet.email({ firstName, lastName });
   const phone = faker.phone.number('## #####-####');
   const cpf = faker.br.cpf(); // Brazilian CPF generator
-  
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -45,7 +45,13 @@ export function createUserProfile(overrides: Partial<UserProfile> = {}): UserPro
       number: faker.location.buildingNumber(),
       complement: faker.helpers.arrayElement([null, 'Apto 101', 'Casa 2', 'Sala 505']),
       neighborhood: faker.location.county(),
-      city: faker.helpers.arrayElement(['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Porto Alegre', 'Recife']),
+      city: faker.helpers.arrayElement([
+        'São Paulo',
+        'Rio de Janeiro',
+        'Belo Horizonte',
+        'Porto Alegre',
+        'Recife',
+      ]),
       state: faker.helpers.arrayElement(['SP', 'RJ', 'MG', 'RS', 'PE']),
       zip_code: faker.location.zipCode('#####-###'),
       country: 'BR',
@@ -84,10 +90,14 @@ export function createBankAccount(overrides: Partial<BankAccount> = {}): BankAcc
     { name: 'Banco Bradesco', code: '237', ispb: '00233628' },
     { name: 'Banco Santander', code: '033', ispb: '26094515' },
   ];
-  
+
   const bank = faker.helpers.arrayElement(banks);
-  const accountTypes: ('checking' | 'savings' | 'investment')[] = ['checking', 'savings', 'investment'];
-  
+  const accountTypes: ('checking' | 'savings' | 'investment')[] = [
+    'checking',
+    'savings',
+    'investment',
+  ];
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -117,13 +127,26 @@ export function createBankAccount(overrides: Partial<BankAccount> = {}): BankAcc
 
 export function createTransaction(overrides: Partial<Transaction> = {}): Transaction {
   const categories = [
-    'mercado', 'transporte', 'saude', 'lazer', 'educacao', 
-    'moradia', 'vestuario', 'comunicacao', 'outros'
+    'mercado',
+    'transporte',
+    'saude',
+    'lazer',
+    'educacao',
+    'moradia',
+    'vestuario',
+    'comunicacao',
+    'outros',
   ];
-  
-  const types: ('credit' | 'debit' | 'transfer_in' | 'transfer_out' | 'pix_in' | 'pix_out')[] = 
-    ['credit', 'debit', 'transfer_in', 'transfer_out', 'pix_in', 'pix_out'];
-  
+
+  const types: ('credit' | 'debit' | 'transfer_in' | 'transfer_out' | 'pix_in' | 'pix_out')[] = [
+    'credit',
+    'debit',
+    'transfer_in',
+    'transfer_out',
+    'pix_in',
+    'pix_out',
+  ];
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -152,11 +175,16 @@ export function createTransaction(overrides: Partial<Transaction> = {}): Transac
 // ============================================================================
 
 export function createPixKey(overrides: Partial<PixKey> = {}): PixKey {
-  const keyTypes: ('cpf' | 'phone' | 'email' | 'random_key')[] = ['cpf', 'phone', 'email', 'random_key'];
-  
+  const keyTypes: ('cpf' | 'phone' | 'email' | 'random_key')[] = [
+    'cpf',
+    'phone',
+    'email',
+    'random_key',
+  ];
+
   const keyType = faker.helpers.arrayElement(keyTypes);
   let keyValue: string;
-  
+
   switch (keyType) {
     case 'cpf':
       keyValue = faker.br.cpf();
@@ -171,7 +199,7 @@ export function createPixKey(overrides: Partial<PixKey> = {}): PixKey {
       keyValue = faker.string.alphanumeric(32);
       break;
   }
-  
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -204,7 +232,7 @@ export function createFinancialEvent(overrides: Partial<FinancialEvent> = {}): F
     'emergencia_medica',
     'construcao_casa',
   ];
-  
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -216,8 +244,14 @@ export function createFinancialEvent(overrides: Partial<FinancialEvent> = {}): F
     date: faker.date.recent({ days: 60 }).toISOString().split('T')[0],
     is_recurring: faker.datatype.boolean(),
     recurring_period: faker.helpers.arrayElement(['daily', 'weekly', 'monthly', 'yearly']),
-    end_date: faker.helpers.arrayElement([null, faker.date.future({ years: 1 }).toISOString().split('T')[0]]),
-    tags: faker.helpers.arrayElements(['prioritario', 'automatizado', 'fiscal'], { min: 0, max: 2 }),
+    end_date: faker.helpers.arrayElement([
+      null,
+      faker.date.future({ years: 1 }).toISOString().split('T')[0],
+    ]),
+    tags: faker.helpers.arrayElements(['prioritario', 'automatizado', 'fiscal'], {
+      min: 0,
+      max: 2,
+    }),
     metadata: {
       priority: faker.helpers.arrayElement(['baixa', 'media', 'alta']),
       category: faker.helpers.arrayElement(['pessoal', 'profissional', 'familiar']),
@@ -258,7 +292,7 @@ export function createCalendarEvent(overrides: Partial<CalendarEvent> = {}): Cal
 
 export function createChatMessage(overrides: Partial<ChatMessage> = {}): ChatMessage {
   const roles: ('user' | 'assistant' | 'system')[] = ['user', 'assistant'];
-  
+
   return {
     id: faker.string.uuid(),
     user_id: faker.string.uuid(),
@@ -267,8 +301,12 @@ export function createChatMessage(overrides: Partial<ChatMessage> = {}): ChatMes
     session_id: faker.string.uuid(),
     metadata: {
       intent: faker.helpers.arrayElement([
-        'check_balance', 'pay_bill', 'transfer_money', 
-        'check_budget', 'check_income', 'financial_projection'
+        'check_balance',
+        'pay_bill',
+        'transfer_money',
+        'check_budget',
+        'check_income',
+        'financial_projection',
       ]),
       confidence: parseFloat(faker.number.float({ min: 0.7, max: 1.0, precision: 0.01 })),
       entities: {},
@@ -285,72 +323,72 @@ export function createChatMessage(overrides: Partial<ChatMessage> = {}): ChatMes
 export function createBrazilianFinancialScenario() {
   const userProfile = createUserProfile();
   const userId = userProfile.user_id;
-  
+
   const bankAccounts = [
     createBankAccount({ user_id: userId, is_primary: true }),
     createBankAccount({ user_id: userId, bank_name: 'Nubank', bank_code: '260' }),
   ];
-  
+
   const pixKeys = [
     createPixKey({ user_id: userId, key_type: 'cpf' }),
     createPixKey({ user_id: userId, key_type: 'random_key' }),
   ];
-  
+
   const transactions = [
     // Brazilian specific transactions
-    createTransaction({ 
-      user_id: userId, 
-      type: 'debit', 
+    createTransaction({
+      user_id: userId,
+      type: 'debit',
       category: 'mercado',
       description: 'Supermercado Carrefour',
-      amount: 347.85
+      amount: 347.85,
     }),
-    createTransaction({ 
-      user_id: userId, 
-      type: 'debit', 
+    createTransaction({
+      user_id: userId,
+      type: 'debit',
       category: 'saude',
       description: 'Farmácia Drogasil',
-      amount: 89.90
+      amount: 89.9,
     }),
-    createTransaction({ 
-      user_id: userId, 
-      type: 'debit', 
+    createTransaction({
+      user_id: userId,
+      type: 'debit',
       category: 'transporte',
       description: 'Uber Viagem',
-      amount: 42.50
+      amount: 42.5,
     }),
-    createTransaction({ 
-      user_id: userId, 
+    createTransaction({
+      user_id: userId,
       type: 'credit',
       description: 'Salário',
-      amount: 5450.00
+      amount: 5450.0,
     }),
   ];
-  
+
   const financialEvents = [
-    createFinancialEvent({ 
-      user_id: userId, 
+    createFinancialEvent({
+      user_id: userId,
       event_type: 'recebimento_salario',
-      amount: 5450.00,
+      amount: 5450.0,
       is_recurring: true,
-      recurring_period: 'monthly'
+      recurring_period: 'monthly',
     }),
-    createFinancialEvent({ 
-      user_id: userId, 
+    createFinancialEvent({
+      user_id: userId,
       event_type: 'pagamento_conta_energia',
       amount: 234.67,
       is_recurring: true,
-      recurring_period: 'monthly'
+      recurring_period: 'monthly',
     }),
-    createFinancialEvent({ 
-      user_id: userId, 
+    createFinancialEvent({
+      user_id: userId,
       event_type: 'pagamento_conta_internet',
-      amount: 149.90,
+      amount: 149.9,
       is_recurring: true,
-      recurring_period: 'monthly'
+      recurring_period: 'monthly',
     }),
   ];
-  
+
   return {
     userProfile,
     bankAccounts,

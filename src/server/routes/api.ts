@@ -22,18 +22,15 @@ async function checkDatabaseHealth(): Promise<{
   error?: string;
 }> {
   const startTime = Date.now();
-  
+
   try {
     const supabase = createServerSupabaseClient();
-    
+
     // Simple query to verify connectivity - using a lightweight query
-    const { error } = await supabase
-      .from('users')
-      .select('id')
-      .limit(1);
-    
+    const { error } = await supabase.from('users').select('id').limit(1);
+
     const latencyMs = Date.now() - startTime;
-    
+
     if (error) {
       // RLS error means DB is connected but user not authenticated - that's fine for health check
       if (error.code === 'PGRST301' || error.message.includes('RLS')) {
@@ -41,14 +38,14 @@ async function checkDatabaseHealth(): Promise<{
       }
       return { status: 'error', latencyMs, error: error.message };
     }
-    
+
     return { status: 'connected', latencyMs };
   } catch (err) {
     const latencyMs = Date.now() - startTime;
-    return { 
-      status: 'disconnected', 
+    return {
+      status: 'disconnected',
       latencyMs,
-      error: err instanceof Error ? err.message : 'Unknown error'
+      error: err instanceof Error ? err.message : 'Unknown error',
     };
   }
 }
@@ -66,9 +63,9 @@ export function setupApiRoutes(app: Hono<AppEnv>) {
   // API status endpoint with actual health checks
   app.get('/api/status', async (c) => {
     const dbHealth = await checkDatabaseHealth();
-    
+
     const allHealthy = dbHealth.status === 'connected';
-    
+
     return c.json({
       services: {
         database: dbHealth.status,
@@ -85,15 +82,18 @@ export function setupApiRoutes(app: Hono<AppEnv>) {
   // Dedicated health check endpoint for monitoring
   app.get('/api/health', async (c) => {
     const dbHealth = await checkDatabaseHealth();
-    
+
     if (dbHealth.status !== 'connected') {
-      return c.json({
-        healthy: false,
-        database: dbHealth,
-        timestamp: new Date().toISOString(),
-      }, 503);
+      return c.json(
+        {
+          healthy: false,
+          database: dbHealth,
+          timestamp: new Date().toISOString(),
+        },
+        503
+      );
     }
-    
+
     return c.json({
       healthy: true,
       database: dbHealth,

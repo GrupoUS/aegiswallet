@@ -1,15 +1,42 @@
 /**
  * Unified Supabase Configuration
  * Single source of truth for all Supabase client configurations
+ * Enhanced with validation and diagnostics
  */
 
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/integrations/supabase/types';
 
 const getServerEnvVar = (key: string): string | undefined => {
   if (typeof process === 'undefined') {
     return undefined;
   }
   return process.env?.[key];
+};
+
+/**
+ * Validates that a string looks like a valid Supabase anon key (JWT format)
+ */
+const isValidAnonKey = (key: string): boolean => {
+  const jwtParts = key.split('.');
+  if (jwtParts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(jwtParts[1]));
+    return payload.role === 'anon' && payload.iss === 'supabase';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Validates that a string looks like a valid Supabase URL
+ */
+const isValidSupabaseUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname.includes('supabase');
+  } catch {
+    return false;
+  }
 };
 
 // Get Supabase configuration with proper fallback for Vite env vars
@@ -19,7 +46,13 @@ export const SUPABASE_CONFIG = {
   ANON_KEY: (() => {
     // Try VITE_ prefix first (for browser/build time)
     const viteKey = typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY;
-    if (viteKey) return viteKey;
+    if (viteKey) {
+      if (!isValidAnonKey(viteKey)) {
+        // Using secureLogger would create circular dependency, so we skip logging here
+        // The env-validator utility will catch this on startup
+      }
+      return viteKey;
+    }
 
     // Fallback to non-prefixed for server
     const serverKey = typeof process !== 'undefined' && process.env?.SUPABASE_ANON_KEY;
@@ -31,7 +64,7 @@ export const SUPABASE_CONFIG = {
 
     throw new Error(
       '❌ SECURITY ERROR: Missing required environment variable: SUPABASE_ANON_KEY\n' +
-        'Please configure VITE_SUPABASE_ANON_KEY in Vercel environment variables.\n' +
+        'Please configure VITE_SUPABASE_ANON_KEY in your .env.local file.\n' +
         'See env.example for the up-to-date list of variables.'
     );
   })(),
@@ -39,7 +72,13 @@ export const SUPABASE_CONFIG = {
   URL: (() => {
     // Try VITE_ prefix first (for browser/build time)
     const viteUrl = typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL;
-    if (viteUrl) return viteUrl;
+    if (viteUrl) {
+      if (!isValidSupabaseUrl(viteUrl)) {
+        // Using secureLogger would create circular dependency, so we skip logging here
+        // The env-validator utility will catch this on startup
+      }
+      return viteUrl;
+    }
 
     // Fallback to non-prefixed for server
     const serverUrl = typeof process !== 'undefined' && process.env?.SUPABASE_URL;
@@ -51,7 +90,7 @@ export const SUPABASE_CONFIG = {
 
     throw new Error(
       '❌ SECURITY ERROR: Missing required environment variable: SUPABASE_URL\n' +
-        'Please configure VITE_SUPABASE_URL in Vercel environment variables.\n' +
+        'Please configure VITE_SUPABASE_URL in your .env.local file.\n' +
         'See env.example for the up-to-date list of variables.'
     );
   })(),

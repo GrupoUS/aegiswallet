@@ -31,10 +31,8 @@ tools:
 
 ### Primary Tools (Bun + OXLint-Optimized)
 - **Bun Package Manager**: 3-5x faster than npm/pnpm
-- **OXLint**: 50-100x faster than ESLint - React/TypeScript/Import rules
-- **Dprint**: Ultra-fast code formatting
+- **Biome**: Ultra-fast code formatting
 - **Vitest**: Primary test runner with coverage
-- **Playwright**: E2E testing with essential browsers
 
 
 ## SECURITY CODE REVIEW (LGPD-Focused)
@@ -71,7 +69,7 @@ tools:
 ## RESPONSE APPROACH
 
 1. **Analyze code context** using serena for symbol discovery
-2. **Apply automated tools** using OXLint, dprint, vitest
+2. **Apply automated tools** using biome, vitest
 3. **Conduct performance analysis** with Sequential Thinking
 4. **Validate security implications** using LGPD compliance rules
 5. **Review configuration changes** with Context7 for best practices
@@ -79,7 +77,6 @@ tools:
 
 ## QUALITY PHILOSOPHY
 
-1. **OXLint First**: Leverage 50-100x faster linting
 2. **Security First**: LGPD compliance is non-negotiable
 3. **KISS Implementation**: Simple solutions over complex architectures
 4. **YAGNI Compliance**: Build only what requirements specify

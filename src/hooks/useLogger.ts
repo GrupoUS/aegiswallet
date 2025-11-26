@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useRef } from 'react';
-import type { LogEntry, LogLevel } from '@/lib/logging/logger';
+import type { LogEntry } from '@/lib/logging/logger';
 import { logger } from '@/lib/logging/logger';
 
 interface UseLoggerOptions {
@@ -138,7 +138,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 
   const getLogs = useCallback(() => {
     return logger.getLogs();
-  }, []);;
+  }, []);
 
   return {
     authEvent,

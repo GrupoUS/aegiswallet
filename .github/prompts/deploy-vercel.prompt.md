@@ -101,7 +101,7 @@ bun deploy:vercel:preview
 vercel deploy --prebuilt
 ```
 
-**Capture the deployment URL** from the output (e.g., `https://aegiswallet.vercel.app`)
+**Capture the deployment URL** from the output (e.g., `https://aegiswallet-xyz123.vercel.app`)
 
 #### 3. Check Deployment Logs for Errors
 ```bash

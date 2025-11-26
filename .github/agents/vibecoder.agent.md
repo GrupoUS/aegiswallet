@@ -5,31 +5,22 @@ handoffs:
   - label: "🔬 Research First"
     agent: apex-researcher
     prompt: "Research the requirements and best practices before implementation."
-    send: false
   - label: "🏛️ Design Architecture"
     agent: architect-review
     prompt: "Design the architecture for this feature before implementation."
-    send: false
   - label: "🎨 Design UI/UX"
     agent: apex-ui-ux-designer
     prompt: "Design the user interface for this feature."
-    send: false
   - label: "🗄️ Database Work"
     agent: database-specialist
     prompt: "Handle the database schema and migrations for this feature."
-    send: false
   - label: "📝 Code Review"
     agent: code-reviewer
     prompt: "Review the implementation for quality and security."
-    send: false
   - label: "🧪 Run Tests"
     agent: tester
     prompt: "Test the implementation visually and functionally."
-    send: false
-  - label: "📚 Document"
-    agent: documentation
-    prompt: "Document this feature."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'supabase/*', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

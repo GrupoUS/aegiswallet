@@ -5,15 +5,13 @@ handoffs:
   - label: "🚀 Implement Design"
     agent: vibecoder
     prompt: "Implement the UI/UX design I created. Use shadcn/ui components and follow the specifications."
-    send: false
   - label: "🧪 Test Accessibility"
     agent: tester
     prompt: "Test the UI implementation for accessibility (WCAG 2.1 AA) and visual correctness."
-    send: false
   - label: "📋 Plan Tests"
     agent: tester
     prompt: "Create test scenarios for the UI components I designed."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

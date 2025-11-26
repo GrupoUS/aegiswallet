@@ -134,7 +134,7 @@ export class ContextRetriever {
       .eq('is_active', true);
 
     if (error) {
-      console.error('Error fetching balances:', error);
+      logger.error('Error fetching balances', { component: 'ContextRetriever', action: 'getAccountBalances', error: String(error) });
       return [];
     }
 
@@ -201,7 +201,7 @@ export class ContextRetriever {
       .single();
 
     if (error) {
-      console.error('Error fetching preferences:', error);
+      logger.error('Error fetching preferences', { component: 'ContextRetriever', action: 'getUserPreferences', error: String(error) });
       return {
         language: 'pt-BR',
         currency: 'BRL',

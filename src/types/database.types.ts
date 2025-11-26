@@ -585,6 +585,124 @@ export type Database = {
           },
         ]
       }
+      chat_context_snapshots: {
+        Row: {
+          id: string
+          conversation_id: string
+          created_at: string
+          recent_transactions: Json
+          account_balances: Json
+          upcoming_events: Json
+          user_preferences: Json
+          context_version: number | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          created_at?: string
+          recent_transactions?: Json
+          account_balances?: Json
+          upcoming_events?: Json
+          user_preferences?: Json
+          context_version?: number | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          created_at?: string
+          recent_transactions?: Json
+          account_balances?: Json
+          upcoming_events?: Json
+          user_preferences?: Json
+          context_version?: number | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_context_snapshots_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          created_at: string
+          updated_at: string
+          last_message_at: string | null
+          message_count: number
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          message_count?: number
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          message_count?: number
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          role: string
+          content: string
+          created_at: string
+          metadata: Json | null
+          attachments: Json | null
+          reasoning: string | null
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          role: string
+          content: string
+          created_at?: string
+          metadata?: Json | null
+          attachments?: Json | null
+          reasoning?: string | null
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          role?: string
+          content?: string
+          created_at?: string
+          metadata?: Json | null
+          attachments?: Json | null
+          reasoning?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_sync_audit: {
         Row: {
           action: string

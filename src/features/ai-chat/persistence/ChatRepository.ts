@@ -1,48 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database.types';
+import type { Database, Json } from '@/integrations/supabase/types';
 import logger from '@/lib/logging/logger';
 import type { FinancialContext, Transaction } from '../context';
 import type { ChatMessage } from '../domain/types';
 
-// Extract the Json type from Database for convenience
-type Json = Database['public']['Tables']['conversation_contexts']['Insert']['history'];
-
-// Temporary type for chat tables that are pending migration
-// These tables are defined in the codebase but not yet in the Supabase type definitions
-// TODO: Run Supabase type generation after tables are created
-type ChatConversation = {
-  id: string;
-  user_id: string;
-  title: string | null;
-  created_at: string;
-  updated_at: string;
-  last_message_at: string | null;
-  message_count: number;
-};
-
-type ChatMessageRow = {
-  id: string;
-  conversation_id: string;
-  role: string;
-  content: string;
-  metadata: Json | null;
-  reasoning: string | null;
-  created_at: string;
-};
-
-type ChatContextSnapshot = {
-  id: string;
-  conversation_id: string;
-  recent_transactions: Json;
-  account_balances: Json;
-  upcoming_events: Json;
-  user_preferences: Json;
-  created_at: string;
-};
-
-// Helper function for accessing pending migration tables
-// biome-ignore lint/suspicious/noExplicitAny: Temporary escape hatch until chat tables migration is applied to Supabase types
-const getUntypedClient = (supabase: SupabaseClient<Database>) => supabase as any;
+// Extract table row types from Database for type safety
+type ChatConversationRow = Database['public']['Tables']['chat_conversations']['Row'];
+type ChatConversationInsert = Database['public']['Tables']['chat_conversations']['Insert'];
+type ChatMessageRow = Database['public']['Tables']['chat_messages']['Row'];
+type ChatMessageInsert = Database['public']['Tables']['chat_messages']['Insert'];
+type ChatContextSnapshotRow = Database['public']['Tables']['chat_context_snapshots']['Row'];
+type ChatContextSnapshotInsert = Database['public']['Tables']['chat_context_snapshots']['Insert'];
 
 export interface Conversation {
   id: string;
@@ -71,13 +39,14 @@ export class ChatRepository {
    * Create a new conversation
    */
   async createConversation(userId: string, title?: string): Promise<Conversation> {
+    const insertData: ChatConversationInsert = {
+      user_id: userId,
+      title: title || null,
+    };
+
     const { data, error } = await this.supabase
-      .from('conversation_contexts')
-      .insert({
-        user_id: userId,
-        session_id: `chat_${Date.now()}`,
-        history: { title: title || null, created_at: new Date().toISOString() },
-      })
+      .from('chat_conversations')
+      .insert(insertData)
       .select()
       .single();
 
@@ -94,9 +63,7 @@ export class ChatRepository {
    * Get a conversation by ID
    */
   async getConversation(conversationId: string): Promise<Conversation | null> {
-    // Using untyped client as chat_conversations table is pending migration
-    const client = getUntypedClient(this.supabase);
-    const { data, error } = await client
+    const { data, error } = await this.supabase
       .from('chat_conversations')
       .select()
       .eq('id', conversationId)
@@ -107,7 +74,7 @@ export class ChatRepository {
       return null;
     }
 
-    return data ? this.mapConversation(data as ChatConversation) : null;
+    return data ? this.mapConversation(data) : null;
   }
 
   /**
@@ -133,9 +100,7 @@ export class ChatRepository {
    * List all conversations for a user
    */
   async listConversations(userId: string, limit = 50): Promise<Conversation[]> {
-    // Using type assertion as chat_conversations table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    const { data, error } = await untypedClient
+    const { data, error } = await this.supabase
       .from('chat_conversations')
       .select()
       .eq('user_id', userId)
@@ -147,7 +112,7 @@ export class ChatRepository {
       return [];
     }
 
-    return (data || []).map((d: unknown) => this.mapConversation(d as ChatConversation));
+    return (data || []).map((d) => this.mapConversation(d));
   }
 
   /**
@@ -160,16 +125,15 @@ export class ChatRepository {
       reasoning: undefined, // Remove reasoning from metadata as it has its own field
     } : {};
 
-    // Using type assertion as chat_messages table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    const { error } = await untypedClient.from('chat_messages').insert({
+    const insertData: ChatMessageInsert = {
       conversation_id: conversationId,
       role: message.role,
-      content:
-        typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
+      content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
       metadata: Object.keys(metadataWithoutReasoning).length > 0 ? metadataWithoutReasoning as Json : null,
       reasoning: message.metadata?.reasoning ? JSON.stringify(message.metadata.reasoning) : null,
-    });
+    };
+
+    const { error } = await this.supabase.from('chat_messages').insert(insertData);
 
     if (error) {
       logger.error('Error saving message', { component: 'ChatRepository', action: 'saveMessage', error: String(error) });
@@ -182,9 +146,7 @@ export class ChatRepository {
    * Get messages from a conversation
    */
   async getMessages(conversationId: string, limit?: number): Promise<ChatMessage[]> {
-    // Using type assertion as chat_messages table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    let query = untypedClient
+    let query = this.supabase
       .from('chat_messages')
       .select()
       .eq('conversation_id', conversationId)
@@ -201,7 +163,7 @@ export class ChatRepository {
       return [];
     }
 
-    return (data || []).map((d: unknown) => this.mapMessage(d as ChatMessageRow));
+    return (data || []).map((d) => this.mapMessage(d));
   }
 
   /**
@@ -215,15 +177,15 @@ export class ChatRepository {
    * Save context snapshot for a conversation
    */
   async saveContextSnapshot(conversationId: string, context: FinancialContext): Promise<void> {
-    // Using untyped client as chat_context_snapshots table is pending migration
-    const client = getUntypedClient(this.supabase);
-    const { error } = await client.from('chat_context_snapshots').insert({
+    const insertData: ChatContextSnapshotInsert = {
       conversation_id: conversationId,
-      recent_transactions: JSON.stringify(context.recentTransactions),
-      account_balances: JSON.stringify(context.accountBalances),
-      upcoming_events: JSON.stringify(context.upcomingEvents),
-      user_preferences: JSON.stringify(context.userPreferences),
-    });
+      recent_transactions: context.recentTransactions as unknown as Json,
+      account_balances: context.accountBalances as unknown as Json,
+      upcoming_events: context.upcomingEvents as unknown as Json,
+      user_preferences: context.userPreferences as unknown as Json,
+    };
+
+    const { error } = await this.supabase.from('chat_context_snapshots').insert(insertData);
 
     if (error) {
       logger.error('Error saving context snapshot', { component: 'ChatRepository', action: 'saveContextSnapshot', error: String(error) });
@@ -236,9 +198,7 @@ export class ChatRepository {
    * Get latest context snapshot for a conversation
    */
   async getLatestContextSnapshot(conversationId: string): Promise<FinancialContext | null> {
-    // Using type assertion as chat_context_snapshots table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    const { data, error } = await untypedClient
+    const { data, error } = await this.supabase
       .from('chat_context_snapshots')
       .select()
       .eq('conversation_id', conversationId)
@@ -253,12 +213,11 @@ export class ChatRepository {
 
     if (!data) return null;
 
-    const snapshot = data as ChatContextSnapshot;
     return {
-      recentTransactions: (snapshot.recent_transactions as unknown as Transaction[]) || [],
-      accountBalances: (snapshot.account_balances as unknown as FinancialContext['accountBalances']) || [],
-      upcomingEvents: (snapshot.upcoming_events as unknown as FinancialContext['upcomingEvents']) || [],
-      userPreferences: (snapshot.user_preferences as unknown as FinancialContext['userPreferences']) || {},
+      recentTransactions: (data.recent_transactions as unknown as Transaction[]) || [],
+      accountBalances: (data.account_balances as unknown as FinancialContext['accountBalances']) || [],
+      upcomingEvents: (data.upcoming_events as unknown as FinancialContext['upcomingEvents']) || [],
+      userPreferences: (data.user_preferences as unknown as FinancialContext['userPreferences']) || {},
       summary: {
         totalBalance: 0,
         monthlyIncome: 0,
@@ -272,9 +231,7 @@ export class ChatRepository {
    * Update conversation title
    */
   async updateConversationTitle(conversationId: string, title: string): Promise<void> {
-    // Using type assertion as chat_conversations table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    const { error } = await untypedClient
+    const { error } = await this.supabase
       .from('chat_conversations')
       .update({ title })
       .eq('id', conversationId);
@@ -290,9 +247,7 @@ export class ChatRepository {
    * Delete a conversation
    */
   async deleteConversation(conversationId: string): Promise<void> {
-    // Using type assertion as chat_conversations table is pending migration
-    const untypedClient = getUntypedClient(this.supabase);
-    const { error } = await untypedClient
+    const { error } = await this.supabase
       .from('chat_conversations')
       .delete()
       .eq('id', conversationId);
@@ -306,16 +261,15 @@ export class ChatRepository {
   /**
    * Map database conversation to domain model
    */
-  private mapConversation(data: ChatConversation | Record<string, unknown>): Conversation {
-    const d = data as ChatConversation;
+  private mapConversation(data: ChatConversationRow): Conversation {
     return {
-      id: d.id,
-      userId: d.user_id,
-      title: d.title || 'Nova Conversa',
-      createdAt: d.created_at,
-      updatedAt: d.updated_at,
-      lastMessageAt: d.last_message_at || d.updated_at,
-      messageCount: d.message_count || 0,
+      id: data.id,
+      userId: data.user_id,
+      title: data.title || 'Nova Conversa',
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      lastMessageAt: data.last_message_at || data.updated_at,
+      messageCount: data.message_count || 0,
     };
   }
 

@@ -5,15 +5,13 @@ handoffs:
   - label: "🚀 Implement Design"
     agent: vibecoder
     prompt: "Implement the architecture design I just created. Follow the patterns and structure outlined."
-    send: false
   - label: "🗄️ Database Schema"
     agent: database-specialist
     prompt: "Implement the database schema based on the architecture design I created."
-    send: false
   - label: "📝 Review Implementation"
     agent: code-reviewer
     prompt: "Review the implementation against the architectural requirements I defined."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

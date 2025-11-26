@@ -5,19 +5,16 @@ handoffs:
   - label: "🚀 Implement (GREEN)"
     agent: vibecoder
     prompt: "Write the implementation to make the failing tests pass (GREEN phase). Here are the test requirements:"
-    send: false
   - label: "🔧 Fix UI Issues"
     agent: vibecoder
     prompt: "Fix the UI issues found during visual testing. Here are the problems:"
-    send: false
   - label: "📚 Document Results"
     agent: documentation
     prompt: "Document the test results, coverage metrics, and any known limitations discovered."
-    send: false
   - label: "✅ Tests Complete"
     agent: vibecoder
     prompt: "All tests passed with visual verification! Proceed with the next feature."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'supabase/*', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

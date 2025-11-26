@@ -5,15 +5,13 @@ handoffs:
   - label: "🔧 Fix Issues"
     agent: vibecoder
     prompt: "Fix the issues I identified in my code review. Here are the problems to address:"
-    send: false
   - label: "🧪 Run Tests"
     agent: tester
     prompt: "Proceed with visual and E2E testing now that the code review is complete."
-    send: false
   - label: "📚 Update Docs"
     agent: documentation
     prompt: "Update documentation based on the code changes I reviewed."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'supabase/*', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

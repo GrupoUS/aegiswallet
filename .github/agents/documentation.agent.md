@@ -5,15 +5,13 @@ handoffs:
   - label: "🔬 Research Topic"
     agent: apex-researcher
     prompt: "Research the topic I need to document. Gather technical details and best practices."
-    send: false
   - label: "📝 Review Docs"
     agent: code-reviewer
     prompt: "Review the documentation I created for accuracy and completeness."
-    send: false
   - label: "🚀 Implement Examples"
     agent: vibecoder
     prompt: "Implement the code examples I documented to verify they work correctly."
-    send: false
+    send: true
 tools:
   ['search', 'runTasks', 'supabase/*', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---

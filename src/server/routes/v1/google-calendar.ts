@@ -370,28 +370,51 @@ googleCalendarRouter.post(
     windowMs: 60 * 1000, // 1 minute
   }),
   async (c) => {
-    const { user } = c.get('auth');
+    const { user, supabase } = c.get('auth');
     const requestId = c.get('requestId');
 
     try {
-      // This would typically trigger an Edge Function or background job
-      // For now, we'll just return a success response
-      // TODO: Integrate with Edge Function for actual sync
+      // Get auth token for Edge Function call
+      const authHeader = c.req.header('Authorization');
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
 
-      secureLogger.info('Full sync requested', {
+      // Invoke Edge Function for full sync
+      const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
+        body: { action: 'full_sync' },
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+
+      if (error) {
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+
+      // Update last_full_sync_at in settings
+      await supabase
+        .from('calendar_sync_settings')
+        .update({ last_full_sync_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+      secureLogger.info('Full sync completed', {
+        processed: data.processed,
+        errors: data.errors,
         requestId,
         userId: user.id,
       });
 
       return c.json({
         data: {
-          message: 'Sincronização completa solicitada',
-          processed: 0,
-          success: true,
+          message: 'Sincronização completa realizada',
+          processed: data.processed || 0,
+          errors: data.errors || 0,
+          success: data.success,
         },
         meta: {
           requestId,
-          requestedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
@@ -425,27 +448,44 @@ googleCalendarRouter.post(
     windowMs: 60 * 1000, // 1 minute
   }),
   async (c) => {
-    const { user } = c.get('auth');
+    const { user, supabase } = c.get('auth');
     const requestId = c.get('requestId');
 
     try {
-      // This would typically trigger an Edge Function or background job
-      // For now, we'll just return a success response
-      // TODO: Integrate with Edge Function for actual sync
+      // Get auth token for Edge Function call
+      const authHeader = c.req.header('Authorization');
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
 
-      secureLogger.info('Incremental sync requested', {
+      // Invoke Edge Function for incremental sync
+      const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
+        body: { action: 'incremental_sync' },
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+
+      if (error) {
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+
+      secureLogger.info('Incremental sync completed', {
+        processed: data.processed,
+        errors: data.errors,
         requestId,
         userId: user.id,
       });
 
       return c.json({
         data: {
-          processed: 0,
-          success: true,
+          processed: data.processed || 0,
+          errors: data.errors || 0,
+          success: data.success,
         },
         meta: {
           requestId,
-          requestedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
@@ -480,30 +520,53 @@ googleCalendarRouter.post(
   }),
   zValidator('json', syncEventSchema),
   async (c) => {
-    const { user } = c.get('auth');
+    const { user, supabase } = c.get('auth');
     const input = c.req.valid('json');
     const requestId = c.get('requestId');
 
     try {
-      // This would typically sync a single event
-      // For now, we'll just return a success response
-      // TODO: Integrate with Edge Function for actual sync
+      // Get auth token for Edge Function call
+      const authHeader = c.req.header('Authorization');
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
 
-      secureLogger.info('Event sync requested', {
+      // Determine action based on direction
+      const action = input.direction === 'to_google' ? 'sync_to_google' : 'sync_from_google';
+      const bodyKey = input.direction === 'to_google' ? 'event_id' : 'google_event_id';
+
+      // Invoke Edge Function for event sync
+      const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
+        body: {
+          action,
+          [bodyKey]: input.eventId,
+        },
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+
+      if (error) {
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+
+      secureLogger.info('Event sync completed', {
         direction: input.direction,
         eventId: input.eventId,
         requestId,
+        success: data.success,
         userId: user.id,
       });
 
       return c.json({
         data: {
           eventId: input.eventId,
-          success: true,
+          google_id: data.google_id,
+          success: data.success,
         },
         meta: {
           requestId,
-          requestedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
@@ -518,6 +581,165 @@ googleCalendarRouter.post(
         {
           code: 'EVENT_SYNC_ERROR',
           error: 'Erro ao sincronizar evento',
+        },
+        500
+      );
+    }
+  }
+);
+
+/**
+ * Renew webhook channel
+ * POST /v1/google-calendar/sync/channel/renew
+ */
+googleCalendarRouter.post(
+  '/sync/channel/renew',
+  authMiddleware,
+  userRateLimitMiddleware({
+    max: 5, // 5 requests per minute per user
+    message: 'Muitas requisições, tente novamente mais tarde',
+    windowMs: 60 * 1000, // 1 minute
+  }),
+  async (c) => {
+    const { user, supabase } = c.get('auth');
+    const requestId = c.get('requestId');
+
+    try {
+      // Check if channel is expiring soon
+      const { data: settings } = await supabase
+        .from('calendar_sync_settings')
+        .select('channel_expiry_at')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!settings?.channel_expiry_at) {
+        throw new Error('No active channel found');
+      }
+
+      const expiryDate = new Date(settings.channel_expiry_at);
+      const now = new Date();
+      const hoursUntilExpiry = (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      if (hoursUntilExpiry > 24) {
+        return c.json({
+          data: {
+            message: 'Channel does not need renewal yet',
+            expiry_at: settings.channel_expiry_at,
+            hours_until_expiry: hoursUntilExpiry,
+          },
+          meta: {
+            requestId,
+          },
+        });
+      }
+
+      // Get auth token for Edge Function call
+      const authHeader = c.req.header('Authorization');
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
+
+      // Invoke Edge Function to renew channel
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'renew_channel' },
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+
+      if (error) {
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+
+      secureLogger.info('Channel renewed', {
+        channel_id: data.channel_id,
+        expiry_at: data.expiry_at,
+        requestId,
+        userId: user.id,
+      });
+
+      return c.json({
+        data: {
+          message: 'Channel renewed successfully',
+          channel_id: data.channel_id,
+          expiry_at: data.expiry_at,
+        },
+        meta: {
+          requestId,
+          renewedAt: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      secureLogger.error('Failed to renew channel', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
+      });
+
+      return c.json(
+        {
+          code: 'CHANNEL_RENEWAL_ERROR',
+          error: 'Erro ao renovar canal de webhook',
+        },
+        500
+      );
+    }
+  }
+);
+
+/**
+ * Get sync conflicts
+ * GET /v1/google-calendar/sync/conflicts
+ */
+googleCalendarRouter.get(
+  '/sync/conflicts',
+  authMiddleware,
+  userRateLimitMiddleware({
+    max: 30, // 30 requests per minute per user
+    message: 'Muitas requisições, tente novamente mais tarde',
+    windowMs: 60 * 1000, // 1 minute
+  }),
+  async (c) => {
+    const { user, supabase } = c.get('auth');
+    const requestId = c.get('requestId');
+
+    try {
+      // Query audit log for conflict entries
+      const { data, error } = await supabase
+        .from('calendar_sync_audit')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('action', 'sync_failed')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        throw new Error(`Erro ao buscar conflitos: ${error.message}`);
+      }
+
+      // Filter for actual conflicts (not just errors)
+      const conflicts = (data || []).filter(
+        (entry) => entry.details && typeof entry.details === 'object' && 'conflict' in entry.details
+      );
+
+      return c.json({
+        data: conflicts,
+        meta: {
+          requestId,
+          retrievedAt: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      secureLogger.error('Failed to get conflicts', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        userId: user.id,
+      });
+
+      return c.json(
+        {
+          code: 'CONFLICTS_ERROR',
+          error: 'Erro ao buscar conflitos de sincronização',
         },
         500
       );

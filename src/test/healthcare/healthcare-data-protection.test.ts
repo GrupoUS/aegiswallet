@@ -17,6 +17,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestUtils } from '../healthcare-setup';
+import { ensureTestUtils } from '../healthcare/test-utils';
 
 // Mock Web Crypto API for encryption tests
 const mockCrypto = {
@@ -492,6 +493,9 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.localStorage?.clear();
+    // Force recreate testUtils to avoid stale mocks after vi.clearAllMocks()
+    global.testUtils = undefined;
+    ensureTestUtils();
   });
 
   beforeAll(() => {
@@ -920,7 +924,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
     it('should prevent submission of non-compliant health data', async () => {
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      
+
       render(React.createElement(HealthcareDataProtection));
 
       // Incomplete health data (missing patient name)
@@ -929,7 +933,9 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
       await userEvent.click(screen.getByTestId('submit-health-data'));
 
-      expect(alertSpy).toHaveBeenCalledWith('ID do paciente e nome são obrigatórios.');
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith('ID do paciente e nome são obrigatórios.');
+      });
       alertSpy.mockRestore();
     });
 

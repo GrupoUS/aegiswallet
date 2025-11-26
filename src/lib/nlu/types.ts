@@ -103,7 +103,7 @@ export interface NLUResult {
     previousIntents: IntentType[];
   };
   metadata?: {
-    classificationMethod?: 'pattern' | 'tfidf' | 'ensemble';
+    classificationMethod?: 'pattern' | 'tfidf' | 'ensemble' | 'keyword';
     alternativeIntents?: { intent: IntentType; confidence: number }[];
     contextUsed?: boolean;
     brazilianContext?: Record<string, unknown>;
@@ -117,7 +117,7 @@ export interface NLUResult {
 export interface IntentClassificationResult {
   intent: IntentType;
   confidence: number;
-  method: 'pattern' | 'tfidf' | 'ensemble';
+  method: 'pattern' | 'tfidf' | 'ensemble' | 'keyword';
   alternatives: { intent: IntentType; confidence: number }[];
 }
 

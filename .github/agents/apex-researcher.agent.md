@@ -19,7 +19,7 @@ handoffs:
     prompt: '#createFile the plan as is into an untitled file (`untitled:plan-${camelCaseName}.prompt.md` without frontmatter) for further refinement.'
     send: true
 tools:
-  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'shadcn/*', 'supabase/*', 'tavily/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'shadcn/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🔬 APEX RESEARCHER AGENT

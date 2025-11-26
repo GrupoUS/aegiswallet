@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TestUtils } from '../healthcare-setup';
+import { ensureTestUtils, type TestUtils } from '../healthcare-setup';
 
 // Type declarations for global Speech API
 declare global {
@@ -121,6 +121,9 @@ const VoiceAssistant = ({ onCommand }: { onCommand: (command: any) => void }) =>
 describe('Voice Interface Testing (Portuguese)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Force recreate testUtils to avoid stale mocks after vi.clearAllMocks()
+    global.testUtils = undefined;
+    ensureTestUtils();
     // Reset SpeechRecognition mock to default implementation
     const mockSpeechRecognition = {
       abort: vi.fn(),

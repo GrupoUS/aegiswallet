@@ -222,7 +222,7 @@ const LGPDComplianceFramework = () => {
     // Mask sensitive data
     const maskedData = {
       ...userData,
-      cpf: userData.cpf.replace(/(\d{3})\d{3}(\d{3})\d{2}$/, '$1.***.$2-**'),
+      cpf: userData.cpf.replace(/(\d{3})\.(\d{3})\.(\d{3})-(\d{2})/, '$1.***.$3-**'),
       phone: userData.phone.replace(/(\d{2})(\d{1})\d{4}(\d{4})$/, '$1$2****$3'),
       rg: userData.rg.replace(/(\d{2})\d{7}(\d{1})$/, '$1.*******.$2'),
     };
@@ -249,6 +249,9 @@ const LGPDComplianceFramework = () => {
       dataProcessingLocation: 'Brazil',
       internationalTransferConsent: userConsent.internationalTransfer,
     };
+
+    // Log masked data for security verification
+    console.log(maskedData);
 
     // Log submission for audit trail
     await runComplianceValidation();

@@ -125,6 +125,36 @@ describe('Voice Command Performance', () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    
+    // Reinitialize the mock instance with fresh spies after clearAllMocks
+    mockSpeechRecognitionInstance = {
+      continuous: false,
+      interimResults: true,
+      lang: 'pt-BR',
+      onend: null,
+      onerror: null,
+      onresult: null,
+      onstart: null,
+      start: vi.fn(),
+      stop: vi.fn(),
+    };
+    
+    // Restore the mockSpeechRecognition implementation after clearAllMocks
+    mockSpeechRecognition.mockImplementation(() => {
+      const instance = {
+        continuous: false,
+        interimResults: true,
+        lang: 'pt-BR',
+        onend: null as ((event: unknown) => void) | null,
+        onerror: null as ((event: unknown) => void) | null,
+        onresult: null as ((event: unknown) => void) | null,
+        onstart: null as ((event: unknown) => void) | null,
+        start: vi.fn(),
+        stop: vi.fn(),
+      };
+      mockSpeechRecognitionInstance = instance;
+      return instance;
+    });
   });
 
   describe('useVoiceRecognition Performance', () => {

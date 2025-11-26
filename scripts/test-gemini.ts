@@ -19,7 +19,7 @@ const modelsToTest = [
 async function testModel(modelName: string) {
   console.log(`\nTesting model: ${modelName}...`);
   try {
-    const genAI = new GoogleGenerativeAI(apiKey!);
+    const genAI = new GoogleGenerativeAI(apiKey as string);
     const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.generateContent('Hello, are you working?');
     const response = await result.response;

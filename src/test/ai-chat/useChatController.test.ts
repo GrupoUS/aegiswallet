@@ -93,7 +93,8 @@ describe('useChatController', () => {
   });
 
   it('collects reasoning chunks', async () => {
-    const { result } = renderHook(() => useChatController(backend));
+    // enableReasoningView should be passed to the hook, not sendMessage
+    const { result } = renderHook(() => useChatController(backend, { enableReasoningView: true }));
 
     await act(async () => {
       await result.current.sendMessage('Hi');

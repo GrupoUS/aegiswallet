@@ -72,14 +72,72 @@ serve(async (req) => {
       });
       const userData = await userResponse.json();
 
-      // Encrypt tokens (Simple XOR for demo, use AES-GCM in production)
-      // NOTE: For this implementation plan, we will assume a simple encryption helper or just store as is if encryption lib is complex to setup in Deno without deps.
-      // Let's use a placeholder for encryption to keep it simple but acknowledge the requirement.
-      // In a real scenario, use Web Crypto API AES-GCM.
-      const encrypt = (text: string) => text; // TODO: Implement actual encryption using encryptionKey
+      // Encrypt tokens using AES-256-GCM with Web Crypto API
+      const encrypt = async (text: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
 
-      const encryptedAccessToken = encrypt(tokens.access_token);
-      const encryptedRefreshToken = tokens.refresh_token ? encrypt(tokens.refresh_token) : undefined;
+        // Derive key from encryption key string
+        const keyMaterial = encoder.encode(encryptionKey);
+        const key = await crypto.subtle.importKey(
+          'raw',
+          keyMaterial.slice(0, 32), // Use first 32 bytes for AES-256
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt']
+        );
+
+        // Generate random IV (12 bytes for GCM)
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        // Encrypt
+        const encrypted = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          data
+        );
+
+        // Combine IV + encrypted data and encode as base64
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(encrypted), iv.length);
+
+        return btoa(String.fromCharCode(...combined));
+      };
+
+      const decrypt = async (encryptedText: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+
+        // Decode base64
+        const combined = Uint8Array.from(atob(encryptedText), c => c.charCodeAt(0));
+
+        // Extract IV and encrypted data
+        const iv = combined.slice(0, 12);
+        const encrypted = combined.slice(12);
+
+        // Derive key
+        const keyMaterial = encoder.encode(encryptionKey);
+        const key = await crypto.subtle.importKey(
+          'raw',
+          keyMaterial.slice(0, 32),
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['decrypt']
+        );
+
+        // Decrypt
+        const decrypted = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          encrypted
+        );
+
+        return decoder.decode(decrypted);
+      };
+
+      const encryptedAccessToken = await encrypt(tokens.access_token);
+      const encryptedRefreshToken = tokens.refresh_token ? await encrypt(tokens.refresh_token) : undefined;
 
       // Store tokens
       const { error: dbError } = await supabase
@@ -96,19 +154,72 @@ serve(async (req) => {
 
       if (dbError) throw dbError;
 
-      // Initialize settings
-      await supabase
-        .from('calendar_sync_settings')
-        .upsert({
+      // Register webhook channel with Google Calendar
+      const webhookUrl = `${supabaseUrl}/functions/v1/google-calendar-webhook`;
+      const webhookSecret = crypto.randomUUID();
+      const channelId = `aegis-${user.id}-${Date.now()}`;
+
+      try {
+        const channelResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/watch', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokens.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: channelId,
+            type: 'web_hook',
+            address: webhookUrl,
+            token: webhookSecret,
+            expiration: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+          }),
+        });
+
+        if (channelResponse.ok) {
+          const channelData = await channelResponse.json();
+
+          // Store channel info in settings
+          await supabase
+            .from('calendar_sync_settings')
+            .upsert({
+              user_id: user.id,
+              sync_enabled: true,
+              google_channel_id: channelData.id,
+              google_resource_id: channelData.resourceId,
+              channel_expiry_at: new Date(parseInt(channelData.expiration)).toISOString(),
+              webhook_secret: webhookSecret,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+        } else {
+          // Log channel registration failure but don't fail the entire auth flow
+          console.error('Failed to register webhook channel:', await channelResponse.text());
+
+          // Initialize settings without channel info
+          await supabase
+            .from('calendar_sync_settings')
+            .upsert({
+              user_id: user.id,
+              sync_enabled: true,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+        }
+      } catch (channelError) {
+        console.error('Error registering webhook channel:', channelError);
+
+        // Initialize settings without channel info
+        await supabase
+          .from('calendar_sync_settings')
+          .upsert({
             user_id: user.id,
             sync_enabled: true,
             updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id', ignoreDuplicates: true }); // Don't overwrite if exists
+          }, { onConflict: 'user_id' });
+      }
 
       // Audit log
       await supabase.from('calendar_sync_audit').insert({
         user_id: user.id,
-        action: 'sync_started', // Or 'connected'
+        action: 'sync_started',
         details: { message: 'Google Calendar connected', email: userData.email }
       });
 
@@ -152,6 +263,101 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+    }
+
+    if (action === 'renew_channel') {
+      if (!user) throw new Error('Unauthorized');
+
+      // Get current settings and tokens
+      const { data: settings } = await supabase
+        .from('calendar_sync_settings')
+        .select('google_channel_id, google_resource_id, channel_expiry_at')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: tokenData } = await supabase
+        .from('google_calendar_tokens')
+        .select('access_token')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!tokenData) throw new Error('No tokens found');
+
+      // Stop old channel if exists
+      if (settings?.google_channel_id && settings?.google_resource_id) {
+        try {
+          await fetch('https://www.googleapis.com/calendar/v3/channels/stop', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${tokenData.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: settings.google_channel_id,
+              resourceId: settings.google_resource_id,
+            }),
+          });
+        } catch (stopError) {
+          console.error('Error stopping old channel:', stopError);
+        }
+      }
+
+      // Register new channel
+      const webhookUrl = `${supabaseUrl}/functions/v1/google-calendar-webhook`;
+      const webhookSecret = crypto.randomUUID();
+      const channelId = `aegis-${user.id}-${Date.now()}`;
+
+      const channelResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/watch', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: channelId,
+          type: 'web_hook',
+          address: webhookUrl,
+          token: webhookSecret,
+          expiration: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+        }),
+      });
+
+      if (!channelResponse.ok) {
+        throw new Error(`Failed to renew channel: ${await channelResponse.text()}`);
+      }
+
+      const channelData = await channelResponse.json();
+
+      // Update settings with new channel info
+      await supabase
+        .from('calendar_sync_settings')
+        .update({
+          google_channel_id: channelData.id,
+          google_resource_id: channelData.resourceId,
+          channel_expiry_at: new Date(parseInt(channelData.expiration)).toISOString(),
+          webhook_secret: webhookSecret,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      // Audit log
+      await supabase.from('calendar_sync_audit').insert({
+        user_id: user.id,
+        action: 'channel_renewed',
+        details: {
+          message: 'Webhook channel renewed',
+          channel_id: channelData.id,
+          expiry: new Date(parseInt(channelData.expiration)).toISOString()
+        }
+      });
+
+      return new Response(JSON.stringify({
+        success: true,
+        channel_id: channelData.id,
+        expiry_at: new Date(parseInt(channelData.expiration)).toISOString()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     throw new Error('Invalid action');

@@ -15,6 +15,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestUtils } from '../healthcare-setup';
+import { ensureTestUtils } from '../healthcare/test-utils';
 
 // Mock Brazilian financial system APIs
 vi.mock('@/lib/financial/bacen-api', () => ({
@@ -161,10 +162,11 @@ const BrazilianFinancialCompliance = () => {
     const riskFactors = [];
     let riskLevel = 'low';
 
-    if (amount > 50000) {
+    // Brazilian regulations: transactions above R$ 10.000 are high-risk
+    if (amount > 10000) {
       riskFactors.push('High-value transaction');
       riskLevel = 'high';
-    } else if (amount > 10000) {
+    } else if (amount > 5000) {
       riskFactors.push('Medium-value transaction');
       riskLevel = 'medium';
     }
@@ -184,7 +186,10 @@ const BrazilianFinancialCompliance = () => {
 
     if (amount > 1000 && !transactionData.description) {
       riskFactors.push('Missing transaction description');
-      riskLevel = 'medium';
+      // Don't downgrade from high to medium just for missing description
+      if (riskLevel !== 'high') {
+        riskLevel = 'medium';
+      }
     }
 
     const recommendations =
@@ -197,7 +202,7 @@ const BrazilianFinancialCompliance = () => {
     return { recommendations, riskFactors, riskLevel };
   };
 
-  // Run Compliance Validation
+  // Run Compliance Validation - returns the new status for immediate use
   const runComplianceValidation = async () => {
     const testUtils = global.testUtils as TestUtils;
 
@@ -224,16 +229,18 @@ const BrazilianFinancialCompliance = () => {
       transactionData,
       userId: 'test-user-001',
     });
+    
+    return newStatus;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Run compliance validation before processing
-    await runComplianceValidation();
+    // Run compliance validation before processing - use returned status directly
+    const currentStatus = await runComplianceValidation();
 
-    // Check if all validations pass
-    const allCompliant = Object.values(complianceStatus).every((status) => status === 'compliant');
+    // Check if all validations pass using the returned status (not stale state)
+    const allCompliant = Object.values(currentStatus).every((status) => status === 'compliant');
 
     if (!allCompliant) {
       alert('Transação não atende aos requisitos de conformidade regulatória.');
@@ -485,6 +492,9 @@ describe('Brazilian Financial Compliance Testing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.localStorage?.clear();
+    // Force recreate testUtils to avoid stale mocks after vi.clearAllMocks()
+    global.testUtils = undefined;
+    ensureTestUtils();
   });
 
   describe('PIX Payment System Security', () => {
@@ -916,7 +926,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 
     it('should prevent non-compliant transactions from processing', async () => {
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      
+
       render(React.createElement(BrazilianFinancialCompliance));
 
       // Non-compliant transaction (missing required fields)
@@ -930,7 +940,7 @@ describe('Brazilian Financial Compliance Testing', () => {
           'Transação não atende aos requisitos de conformidade regulatória.'
         );
       });
-      
+
       alertSpy.mockRestore();
     });
 

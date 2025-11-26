@@ -50,7 +50,6 @@ app.all('/api/*', (c) => {
 });
 
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 30,
 };
 

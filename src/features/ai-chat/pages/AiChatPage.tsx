@@ -8,8 +8,8 @@ import { ChatPromptInput } from '../components/input/ChatPromptInput';
 import { ChatLayout } from '../components/layout/ChatLayout';
 import { useChatController } from '../hooks/useChatController';
 
-// In a real app, this would come from env or config
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+// Vite uses import.meta.env for environment variables (prefix with VITE_)
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 export default function AiChatPage() {
   const backend = useMemo(() => new GeminiBackend({ apiKey: GEMINI_API_KEY }), []);

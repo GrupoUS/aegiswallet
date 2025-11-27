@@ -187,19 +187,19 @@ export function Contas() {
       <div className="flex gap-2">
         <Button
           variant={currentFilter === 'all' ? 'default' : 'outline'}
-          onClick={() => updateFilters({ status: 'all' })}
+          onClick={() => setFilters({ status: 'all' })}
         >
           Todas
         </Button>
         <Button
           variant={currentFilter === 'pending' ? 'default' : 'outline'}
-          onClick={() => updateFilters({ status: 'pending' })}
+          onClick={() => setFilters({ status: 'pending' })}
         >
           Pendentes
         </Button>
         <Button
           variant={currentFilter === 'paid' ? 'default' : 'outline'}
-          onClick={() => updateFilters({ status: 'paid' })}
+          onClick={() => setFilters({ status: 'completed' })}
         >
           Pagas
         </Button>
@@ -230,7 +230,7 @@ export function Contas() {
           <FinancialEventForm
             onSuccess={() => {
               setIsCreateModalOpen(false);
-              refetch();
+              refresh();
             }}
             onCancel={() => setIsCreateModalOpen(false)}
           />

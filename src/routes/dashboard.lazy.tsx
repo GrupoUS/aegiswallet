@@ -85,7 +85,7 @@ export function Dashboard() {
   const { totalBRL } = useTotalBalance();
   const { accounts } = useBankAccounts();
   const { statistics } = useFinancialEvents({ status: 'all' });
-  
+
   // Get current month date range for financial summary
   const startOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     .toISOString()
@@ -271,40 +271,15 @@ export function Dashboard() {
                 <>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Receitas</span>
-                    <FinancialAmount amount={summary.paidThisMonth} size="sm" />
+                    <FinancialAmount amount={summary?.income ?? 0} size="sm" />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Despesas</span>
-                    <FinancialAmount amount={-summary.pendingThisMonth} size="sm" />
-                    {/* Note: pendingThisMonth might be sum of expenses, check useFinancialSummary logic.
-                        Actually it splits income/expense inside.
-                        Wait, `pendingThisMonth` in hook logic:
-                        sum + (e.type === 'income' ? e.amount : -Math.abs(e.amount))
-                        So it is a net balance of pending.
-
-                        Let's check logic again:
-                        paidThisMonth: NET paid.
-                        pendingThisMonth: NET pending.
-
-                        The UI expects "Receitas" and "Despesas".
-                        The hook aggregates them into nets.
-                        I should probably use `statistics` from `useFinancialEvents` which has `totalIncome`, `totalExpenses`, `pendingIncome`, `pendingExpenses`.
-                        But `summary` has `paidThisMonth` and `pendingThisMonth`...
-
-                        Let's use statistics which seems broken down better in `useFinancialEvents`.
-                        However, statistics is based on the query filters (which is 'all' events).
-                        The hook `useFinancialSummary` filters by current month internally.
-
-                        So I'll rely on `useFinancialSummary` but maybe I need to adjust what I display or how I use it.
-                        Actually `useFinancialSummary` returns `paidThisMonth`, `pendingThisMonth`, `overdueThisMonth`.
-                        It doesn't separate Income vs Expense totals for the month explicitly in the return, it returns net flow.
-
-                        Let's look at `statistics` from `useFinancialEvents` again.
-                        It calculates totalIncome/Expenses from `events`.
-                        If I pass filters for this month to `useFinancialEvents`, `statistics` will be correct for this month.
-
-                    */}
+                    <FinancialAmount amount={-(summary?.expenses ?? 0)} size="sm" />
                   </div>
+                  {/* Note: Summary now returns { income, expenses, balance } from useProfile.ts
+                      This gives a breakdown for the current month based on the API response.
+                  */}
                 </>
               )}
 

@@ -294,7 +294,43 @@ googleCalendarRouter.put(
         .eq('user_id', user.id)
         .maybeSingle();
 
-      let result: CalendarSyncSettings | null;
+      let result: CalendarSyncSettings | null = null;
+
+      // Helper to transform database row to CalendarSyncSettings
+      // The database row has nullable fields, we need to provide defaults
+      const transformToSettings = (data: {
+        auto_sync_interval_minutes: number | null;
+        channel_expiry_at: string | null;
+        created_at: string | null;
+        google_channel_id: string | null;
+        google_resource_id: string | null;
+        last_full_sync_at: string | null;
+        sync_categories: string[] | null;
+        sync_direction: string | null;
+        sync_enabled: boolean | null;
+        sync_financial_amounts: boolean | null;
+        sync_token: string | null;
+        updated_at: string | null;
+        user_id: string;
+        webhook_secret: string | null;
+      }): CalendarSyncSettings => ({
+        auto_sync_interval_minutes: data.auto_sync_interval_minutes ?? 15,
+        channel_expiry_at: data.channel_expiry_at ?? null,
+        created_at: data.created_at ?? new Date().toISOString(),
+        google_channel_id: data.google_channel_id ?? null,
+        google_resource_id: data.google_resource_id ?? null,
+        last_full_sync_at: data.last_full_sync_at ?? null,
+        sync_categories: data.sync_categories ?? null,
+        sync_direction:
+          (data.sync_direction as CalendarSyncSettings['sync_direction']) ?? 'one_way_to_google',
+        sync_enabled: data.sync_enabled ?? false,
+        sync_financial_amounts: data.sync_financial_amounts ?? false,
+        sync_token: data.sync_token ?? null,
+        updated_at: data.updated_at ?? new Date().toISOString(),
+        user_id: data.user_id,
+        webhook_secret: data.webhook_secret ?? null,
+      });
+
       if (existing) {
         // Update existing
         const { data, error } = await supabase
@@ -307,7 +343,7 @@ googleCalendarRouter.put(
         if (error) {
           throw new Error(`Erro ao atualizar configurações: ${error.message}`);
         }
-        result = data;
+        result = data ? transformToSettings(data) : null;
       } else {
         // Create new settings with defaults
         const { data, error } = await supabase
@@ -327,7 +363,7 @@ googleCalendarRouter.put(
         if (error) {
           throw new Error(`Erro ao criar configurações: ${error.message}`);
         }
-        result = data;
+        result = data ? transformToSettings(data) : null;
       }
 
       secureLogger.info('Sync settings updated', {

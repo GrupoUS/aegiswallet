@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Loading placeholder component
@@ -19,12 +19,8 @@ function SaldoLoader() {
       {/* Total Balance Card */}
       <Card className="border-2 border-primary/20" variant="glass">
         <CardHeader>
-          <CardDescription>
-            <Skeleton className="h-4 w-24" />
-          </CardDescription>
-          <CardTitle>
-            <Skeleton className="h-12 w-48" />
-          </CardTitle>
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-12 w-48" />
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
@@ -42,9 +38,7 @@ function SaldoLoader() {
             <Card key={i} variant="glass">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription>
-                    <Skeleton className="h-4 w-24" />
-                  </CardDescription>
+                  <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-5 w-5" />
                 </div>
               </CardHeader>
@@ -60,9 +54,7 @@ function SaldoLoader() {
       <Card variant="glass">
         <CardHeader>
           <Skeleton className="mb-2 h-6 w-40" />
-          <CardDescription>
-            <Skeleton className="h-4 w-28" />
-          </CardDescription>
+          <Skeleton className="h-4 w-28" />
         </CardHeader>
         <CardContent>
           <div className="flex h-64 items-center justify-center rounded-lg border-2 border-muted border-dashed">
@@ -79,9 +71,7 @@ function SaldoLoader() {
       <Card variant="glass">
         <CardHeader>
           <Skeleton className="mb-2 h-6 w-48" />
-          <CardDescription>
-            <Skeleton className="h-4 w-36" />
-          </CardDescription>
+          <Skeleton className="h-4 w-36" />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

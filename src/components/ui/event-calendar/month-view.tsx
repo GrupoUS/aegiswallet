@@ -139,6 +139,7 @@ export function MonthView({
 								return (
 									<td key={date.toISOString()} className="p-1 align-top">
 										{/* biome-ignore lint/a11y/noStaticElementInteractions: Calendar cell interaction */}
+										{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: Calendar cell double-click to add event is intentional UX */}
 										<div
 											onDoubleClick={() => onEventAdd?.(date)}
 											className={cn(

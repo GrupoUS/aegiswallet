@@ -126,6 +126,7 @@ function Calendar({
 				...classNames,
 			}}
 			components={{
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
 					return (
 						<div
@@ -136,6 +137,7 @@ function Calendar({
 						/>
 					);
 				},
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
 						return (
@@ -157,6 +159,7 @@ function Calendar({
 					);
 				},
 				DayButton: CalendarDayButton,
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				WeekNumber: ({ children, ...props }) => {
 					return (
 						<td {...props}>
@@ -323,6 +326,7 @@ export const CompactCalendar = ({
 				...classNames,
 			}}
 			components={{
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
 					return (
 						<div
@@ -333,6 +337,7 @@ export const CompactCalendar = ({
 						/>
 					);
 				},
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
 						return (
@@ -354,6 +359,7 @@ export const CompactCalendar = ({
 					);
 				},
 				DayButton: CompactCalendarDayButton,
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				WeekNumber: ({ children, ...props }) => {
 					return (
 						<td {...props}>
@@ -520,6 +526,7 @@ export const MiniCalendarWidget = ({
 				...classNames,
 			}}
 			components={{
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
 					return (
 						<div
@@ -530,6 +537,7 @@ export const MiniCalendarWidget = ({
 						/>
 					);
 				},
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
 						return (
@@ -554,6 +562,7 @@ export const MiniCalendarWidget = ({
 					);
 				},
 				DayButton: MiniCalendarDayButton,
+				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				WeekNumber: ({ children, ...props }) => {
 					return (
 						<td {...props}>

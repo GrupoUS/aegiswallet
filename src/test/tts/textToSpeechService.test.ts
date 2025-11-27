@@ -44,7 +44,7 @@ describe('TextToSpeechService', () => {
 		removeEventListener: ReturnType<typeof vi.fn>;
 		dispatchEvent: ReturnType<typeof vi.fn>;
 		onvoiceschanged: ((this: SpeechSynthesis, ev: Event) => any) | null;
-	};
+	} & SpeechSynthesis;
 	let tts: TextToSpeechService;
 
 	beforeEach(() => {
@@ -88,7 +88,7 @@ describe('TextToSpeechService', () => {
 		tts = createTTSService(undefined, {
 			SpeechSynthesisUtterance:
 				MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
-			speechSynthesis: mockSpeechSynthesis as unknown as SpeechSynthesis,
+			speechSynthesis: mockSpeechSynthesis,
 		});
 	});
 

@@ -54,6 +54,7 @@ export function CompactCalendar({
 				onMonthChange={setCurrentDate}
 				className={cn('rounded-md [--cell-size:1.75rem]')}
 				components={{
+					// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition for custom day rendering
 					DayButton: ({ day, ...props }) => {
 						const dayEvents = getEventsForDay(day.date);
 						const hasEvents = dayEvents.length > 0;

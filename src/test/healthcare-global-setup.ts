@@ -1,6 +1,4 @@
-import { setup } from 'vitest/node';
-
-export default setup(async () => {
+export default async function globalSetup() {
 	// Global healthcare test environment setup
 	process.env.NODE_ENV = 'test';
 	process.env.VITE_ENVIRONMENT = 'test';
@@ -17,7 +15,7 @@ export default setup(async () => {
 
 	global.fetch = mockFetch;
 
-	return async () => {
+	return async function globalTeardown() {
 		// Global cleanup logic here if needed
 	};
-});
+}

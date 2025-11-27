@@ -114,7 +114,7 @@ export const renderHookAsync = async <T>(
 export const createMockAsyncResolve = <T>(
 	resolveValue: T,
 	delay: number = 0,
-): jest.MockedFunction<() => Promise<T>> => {
+): ReturnType<typeof vi.fn> => {
 	const { vi } = require('vitest');
 	const mockFn = vi.fn();
 
@@ -125,7 +125,7 @@ export const createMockAsyncResolve = <T>(
 		return resolveValue;
 	});
 
-	return mockFn as jest.MockedFunction<() => Promise<T>>;
+	return mockFn;
 };
 
 /**
@@ -134,7 +134,7 @@ export const createMockAsyncResolve = <T>(
 export const createMockAsyncReject = (
 	error: Error,
 	delay: number = 0,
-): jest.MockedFunction<() => Promise<never>> => {
+): ReturnType<typeof vi.fn> => {
 	const { vi } = require('vitest');
 	const mockFn = vi.fn();
 
@@ -145,7 +145,7 @@ export const createMockAsyncReject = (
 		throw error;
 	});
 
-	return mockFn as jest.MockedFunction<() => Promise<never>>;
+	return mockFn;
 };
 
 /**
@@ -153,7 +153,7 @@ export const createMockAsyncReject = (
  */
 export const createMockAsyncSequence = <T>(
 	responses: Array<{ value?: T; error?: Error; delay?: number }>,
-): jest.MockedFunction<() => Promise<T>> => {
+): ReturnType<typeof vi.fn> => {
 	const { vi } = require('vitest');
 	const mockFn = vi.fn();
 	let callCount = 0;
@@ -173,7 +173,7 @@ export const createMockAsyncSequence = <T>(
 		return response.value as T;
 	});
 
-	return mockFn as jest.MockedFunction<() => Promise<T>>;
+	return mockFn;
 };
 
 // ============================================================================

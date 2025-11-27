@@ -110,23 +110,16 @@ class MockDatabase {
 	constructor() {
 		// Initialize with empty data for all tables
 		const tables: TableName[] = [
-			'audit_logs',
-			'auth_attempts',
-			'user_profiles',
-			'bank_accounts',
-			'transactions',
-			'pix_keys',
+			'users',
+			'bank_connections',
+			'scheduled_payments',
+			'financial_categories',
 			'financial_events',
-			'calendar_events',
-			'chat_messages',
-			'chat_sessions',
-			'voice_recordings',
-			'nlu_training_data',
-			'nlu_intent_patterns',
-			'security_logs',
-			'device_fingerprints',
-			'ip_reputations',
-			'failed_logins',
+			'chat_conversations',
+			'contacts',
+			'event_types',
+			'payment_rules',
+			'voice_transcriptions',
 		];
 
 		tables.forEach((table) => {
@@ -216,25 +209,25 @@ class MockDatabase {
 			require('../factories/database-factory').createBrazilianFinancialScenario();
 
 		// Insert user profile
-		this.insert('user_profiles', scenario.userProfile);
+		this.insert('users', scenario.userProfile);
 
 		// Insert bank accounts
-		scenario.bankAccounts.forEach((account) => {
-			this.insert('bank_accounts', account);
+		scenario.bankAccounts.forEach((account: any) => {
+			this.insert('bank_connections', account);
 		});
 
 		// Insert PIX keys
-		scenario.pixKeys.forEach((pixKey) => {
-			this.insert('pix_keys', pixKey);
+		scenario.pixKeys.forEach((pixKey: any) => {
+			this.insert('contacts', pixKey);
 		});
 
 		// Insert transactions
-		scenario.transactions.forEach((transaction) => {
-			this.insert('transactions', transaction);
+		scenario.transactions.forEach((transaction: any) => {
+			this.insert('financial_events', transaction);
 		});
 
 		// Insert financial events
-		scenario.financialEvents.forEach((event) => {
+		scenario.financialEvents.forEach((event: any) => {
 			this.insert('financial_events', event);
 		});
 	}
@@ -553,9 +546,9 @@ export const setupMockDatabase = {
 			key_value: userProfile.cpf,
 		});
 
-		mockDatabase.insert('user_profiles', userProfile);
-		mockDatabase.insert('bank_accounts', bankAccount);
-		mockDatabase.insert('pix_keys', pixKey);
+		mockDatabase.insert('users', userProfile);
+		mockDatabase.insert('bank_connections', bankAccount);
+		mockDatabase.insert('contacts', pixKey);
 
 		return { userProfile, bankAccount, pixKey };
 	},
@@ -593,10 +586,10 @@ export const setupMockDatabase = {
 			}),
 		];
 
-		mockDatabase.insert('user_profiles', userProfile);
-		mockDatabase.insert('bank_accounts', bankAccount);
+		mockDatabase.insert('users', userProfile);
+		mockDatabase.insert('bank_connections', bankAccount);
 		for (const transaction of transactions) {
-			mockDatabase.insert('transactions', transaction);
+			mockDatabase.insert('financial_events', transaction);
 		}
 
 		return { userProfile, bankAccount, transactions };

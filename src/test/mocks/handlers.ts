@@ -99,7 +99,7 @@ const createMockUserProfile = (overrides = {}) => ({
 });
 
 // Response wrapper helper
-const createResponse = (data: any, meta: any = {}) => ({
+const createResponse = (data: unknown, meta: Record<string, unknown> = {}) => ({
 	data,
 	meta: {
 		requestId: 'test-request-id',
@@ -134,7 +134,7 @@ const createTransactionSchema = z.object({
 	status: z
 		.enum(['cancelled', 'failed', 'pending', 'posted'])
 		.default('posted'),
-	metadata: z.record(z.unknown()).optional(),
+	metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const createContactSchema = z.object({
@@ -328,7 +328,7 @@ export const handlers = [
 
 	http.put('/api/v1/contacts/:id', async ({ params, request }) => {
 		const { id } = params;
-		const body = await request.json();
+		const body = await request.json() as Record<string, unknown>;
 
 		const updatedContact = createMockContact({
 			...body,
@@ -430,7 +430,7 @@ export const handlers = [
 	}),
 
 	http.put('/api/v1/users/me', async ({ request }) => {
-		const body = await request.json();
+		const body = await request.json() as Record<string, unknown>;
 
 		const updatedProfile = createMockUserProfile({
 			...body,
@@ -441,7 +441,7 @@ export const handlers = [
 	}),
 
 	http.put('/api/v1/users/me/preferences', async ({ request }) => {
-		const body = await request.json();
+		const body = await request.json() as Record<string, unknown>;
 
 		const updatedPreferences = {
 			user_id: 'test-user-id',
@@ -464,11 +464,7 @@ export const handlers = [
 		return HttpResponse.json(createResponse(status));
 	}),
 
-	http.get('/api/v1/users/me/financial-summary', ({ request }) => {
-		const url = new URL(request.url);
-		const startDate = url.searchParams.get('period_start');
-		const endDate = url.searchParams.get('period_end');
-
+	http.get('/api/v1/users/me/financial-summary', () => {
 		const summary = {
 			income: 8000.0,
 			expenses: 3000.0,

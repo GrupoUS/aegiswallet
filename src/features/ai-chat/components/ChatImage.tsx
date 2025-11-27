@@ -85,6 +85,7 @@ export function ChatImage({ image, className }: ChatImageProps) {
 				)}
 
 				{/* Image */}
+				{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: onLoad/onError are standard img event handlers for loading states */}
 				<img
 					src={image.url}
 					alt={image.alt || 'Chat image'}

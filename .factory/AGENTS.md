@@ -542,58 +542,37 @@ REVIEW_AGENT_PROMPTS:
 
 ### Core Implementation
 #### apex-dev ⚡
-**Purpose**: Advanced development for complex, critical implementations with TDD
-- **When**: Complexity ≥7, performance-critical, security-sensitive
-- **Focus**: Brazilian compliance, TDD methodology, 9.5/10 quality rating
-
-#### coder
-**Purpose**: Standard implementation for routine tasks
-- **When**: Complexity <7, standard features, simple components
-- **Focus**: Portuguese-first interfaces, basic LGPD compliance
+**Purpose**: Advanced development with Brazilian fintech specialization and task delegation
+- **When**: Complexity ≥7, performance-critical, security-sensitive, task delegation
+- **Focus**: TDD methodology, Brazilian compliance, 9.5/10 quality rating, 60% workflow optimization
 
 #### database-specialist 🗄️
 **Purpose**: Supabase/PostgreSQL expert with Brazilian fintech expertise
 - **When**: ANY database operation, schema changes, RLS implementation
-- **Focus**: LGPD data protection, Brazilian financial data security
+- **Focus**: LGPD data protection, Brazilian financial data security, database migrations
 
 ### Quality Assurance
-#### test-auditor
-**Purpose**: Test strategy and Brazilian compliance validation
-- **When**: Test strategy design, Brazilian compliance validation, TDD methodology
-- **Focus**: PIX flows, LGPD testing, Portuguese interface validation, WCAG 2.1 AA+
-
 #### code-reviewer 🔍
-**Purpose**: Security and Brazilian compliance validation
-- **When**: Post-complex implementations, before deployment
-- **Focus**: OWASP security, LGPD compliance, Brazilian financial standards
+**Purpose**: Enhanced security architect with Brazilian compliance and skill integration
+- **When**: Post-complex implementations, security validation, architecture review
+- **Focus**: 360-degree security validation, skill coordination, Brazilian compliance
 
 ### Design & Architecture
 #### apex-ui-ux-designer 🎨
-**Purpose**: Accessible UI/UX with Brazilian market expertise
-- **When**: ANY new UI component, user flow, design decision
-- **Focus**: WCAG 2.1 AA+ accessibility, Portuguese-first design
-
-#### architect-review 🏛️
-**Purpose**: Software architecture review and validation
-- **When**: Major architecture decisions, system design reviews
-- **Focus**: Clean architecture, scalability, Brazilian fintech integration
+**Purpose**: Enhanced UI/UX orchestrator with intelligent skill coordination
+- **When**: ANY new UI component, design decision, skill coordination
+- **Focus**: WCAG 2.1 AA+ accessibility, Brazilian market specialization, 60% workflow optimization
 
 ### Research & Knowledge
 #### apex-researcher 🔬
 **Purpose**: Multi-source Brazilian regulations research
 - **When**: Compliance questions, regulatory research, market analysis
-- **Focus**: ≥95% cross-validation accuracy, PIX, LGPD, Open Banking specs
+- **Focus**: ≥95% cross-validation accuracy, PIX, LGPD, Open Banking specs, research patterns
 
 #### product-architect
 **Purpose**: Product strategy and requirements integration
 - **When**: Product strategy, large-scale documentation, rules framework
 - **Focus**: Diátaxis framework, strategic PRD generation
-
-### Emergency
-#### stuck 🚨
-**Purpose**: Human escalation for ANY problem or uncertainty
-- **When**: ANY error, failure, uncertainty, decision needed
-- **Authority**: Can stop all work, direct human intervention
 
 ## 🧠 Agent Allocation Matrix
 
@@ -650,12 +629,12 @@ parallel_research_team:
     focus: "Enhanced UI/UX design with skill coordination and Brazilian market specialization"
     timeline: "0-20 minutes"
     
-  apex-ui-ux-designer:
-    focus: "Accessibility compliance, Portuguese-first design"
+  code_reviewer:
+    focus: "Security architecture patterns and Brazilian compliance validation requirements"
     timeline: "0-20 minutes"
 
 synchronization_point: "15 minutes for requirements alignment"
-final_sync: "30 minutes for consolidated research presentation"
+final_sync: "30 minutes for consolidated research presentation with skill coordination plan"
 ```
 
 ### Phase 2: Parallel Implementation Strategy

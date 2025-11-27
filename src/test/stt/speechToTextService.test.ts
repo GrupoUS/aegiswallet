@@ -18,7 +18,7 @@ beforeAll(async () => {
 });
 
 describe('SpeechToTextService', () => {
-	let sttService: SpeechToTextService;
+	let sttService: InstanceType<typeof SpeechToTextService>;
 	const mockApiKey = 'test-api-key-12345';
 	let mockFetch: ReturnType<typeof vi.fn>;
 
@@ -34,7 +34,7 @@ describe('SpeechToTextService', () => {
 				language: 'pt',
 				timeout: 5000,
 			},
-			{ fetch: mockFetch },
+			{ fetch: mockFetch as typeof fetch },
 		);
 	});
 
@@ -45,7 +45,7 @@ describe('SpeechToTextService', () => {
 
 		it('should throw error without API key', () => {
 			expect(() => {
-				new SpeechToTextService({ apiKey: '' }, { fetch: mockFetch });
+				new SpeechToTextService({ apiKey: '' }, { fetch: mockFetch as typeof fetch });
 			}).toThrow('OpenAI API key is required');
 		});
 	});
@@ -152,7 +152,7 @@ describe('SpeechToTextService', () => {
 					language: 'pt',
 					timeout: 100, // 100ms timeout
 				},
-				{ fetch: mockFetch },
+				{ fetch: mockFetch as typeof fetch },
 			);
 
 			const audioBlob = new Blob([new Uint8Array(1024)], {
@@ -160,7 +160,7 @@ describe('SpeechToTextService', () => {
 			});
 
 			// Use mockImplementation to persist through retries
-			mockFetch.mockImplementation((_req: Request, init: unknown) => {
+			mockFetch.mockImplementation((_req: Request, init: RequestInit) => {
 				return new Promise((resolve, reject) => {
 					// Respect abort signal
 					if (init.signal) {
@@ -210,7 +210,7 @@ describe('SpeechToTextService', () => {
 			});
 
 			const networkError = new Error('Network error occurred');
-			networkError.name = 'TypeError';
+			(networkError as Error & { name: string }).name = 'TypeError';
 			// Use mockRejectedValue to persist through retries
 			mockFetch.mockRejectedValue(networkError);
 
@@ -279,7 +279,7 @@ describe('SpeechToTextService', () => {
 
 		it('should return false on network errors', async () => {
 			const networkError = new Error('Network error occurred');
-			networkError.name = 'TypeError';
+			(networkError as Error & { name: string }).name = 'TypeError';
 			// Ensure mock consistently rejects through all retries
 			mockFetch.mockRejectedValue(networkError);
 

@@ -89,6 +89,7 @@ export function OriginCompactCalendar({
 				hideNavigation
 				showOutsideDays={showOutsideDays}
 				components={{
+					// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition for custom dropdown
 					Dropdown: (props: DropdownProps) => {
 						return (
 							<Select
@@ -116,6 +117,7 @@ export function OriginCompactCalendar({
 							</Select>
 						);
 					},
+					// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition for custom navigation
 					DropdownNav: (props: DropdownNavProps) => {
 						return (
 							<div className="flex w-full items-center gap-2">

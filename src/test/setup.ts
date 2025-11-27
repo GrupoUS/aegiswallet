@@ -49,6 +49,9 @@ declare global {
     SpeechRecognition: SpeechRecognitionConstructor;
     webkitSpeechRecognition: SpeechRecognitionConstructor;
   }
+
+  const SpeechRecognition: SpeechRecognitionConstructor;
+  const webkitSpeechRecognition: SpeechRecognitionConstructor;
 }
 
 if (typeof globalThis.Element === 'undefined') {
@@ -92,15 +95,15 @@ if (typeof globalThis.document === 'undefined') {
   );
 
   // Set up global DOM objects
-  globalThis.window = dom.window;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
   globalThis.document = dom.window.document;
   globalThis.navigator = dom.window.navigator;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.Element = dom.window.Element;
 
   // Set global document for Testing Library
-  global.document = dom.window.document;
-  global.window = dom.window;
+  (globalThis as unknown as { document: Document }).document = dom.window.document;
+  (globalThis as unknown as { window: Window }).window = dom.window;
 }
 
 import '@testing-library/jest-dom';
@@ -149,15 +152,15 @@ if (typeof globalThis.document === 'undefined') {
     },
   );
 
-  globalThis.window = dom.window;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
   globalThis.document = dom.window.document;
   globalThis.navigator = dom.window.navigator;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.Element = dom.window.Element;
 
-  // Set up global document for Testing Library
-  global.document = dom.window.document;
-  global.window = dom.window;
+  // Set global document for Testing Library
+  (globalThis as unknown as { document: Document }).document = dom.window.document;
+  (globalThis as unknown as { window: Window }).window = dom.window;
 }
 
 // Mock audio processor, VAD, and STT services at module level
@@ -374,10 +377,10 @@ beforeAll(() => {
 
   // Ensure window object has Speech API
   if (typeof window !== 'undefined') {
-    (window as any).speechSynthesis = mockSpeechSynthesis;
-    (window as any).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
-    (window as any).SpeechRecognition = mockSpeechRecognition;
-    (window as any).webkitSpeechRecognition = mockSpeechRecognition;
+    (window as unknown as { speechSynthesis: SpeechSynthesis }).speechSynthesis = mockSpeechSynthesis;
+    (window as unknown as { SpeechSynthesisUtterance: typeof SpeechSynthesisUtterance }).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
+    (window as unknown as { SpeechRecognition: SpeechRecognitionConstructor }).SpeechRecognition = mockSpeechRecognition;
+    (window as unknown as { webkitSpeechRecognition: SpeechRecognitionConstructor }).webkitSpeechRecognition = mockSpeechRecognition;
   }
 
   // Mock navigator for tests

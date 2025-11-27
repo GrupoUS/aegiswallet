@@ -21,7 +21,7 @@ import {
 	Search,
 	X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -141,6 +141,10 @@ export function CalendarHeader({
 }: CalendarHeaderProps) {
 	const [showSearch, setShowSearch] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	// Generate unique IDs for form fields
+	const startDateId = useId();
+	const endDateId = useId();
 
 	const {
 		query,
@@ -440,11 +444,11 @@ export function CalendarHeader({
 								{/* Date range filters */}
 								<div className="grid grid-cols-2 gap-2">
 									<div className="space-y-2">
-										<label htmlFor="start-date" className="font-medium text-sm">
+										<label htmlFor={startDateId} className="font-medium text-sm">
 											Data Início
 										</label>
 										<Input
-											id="start-date"
+											id={startDateId}
 											type="date"
 											value={filters.startDate || ''}
 											onChange={(e) =>
@@ -453,11 +457,11 @@ export function CalendarHeader({
 										/>
 									</div>
 									<div className="space-y-2">
-										<label htmlFor="end-date" className="font-medium text-sm">
+										<label htmlFor={endDateId} className="font-medium text-sm">
 											Data Fim
 										</label>
 										<Input
-											id="end-date"
+											id={endDateId}
 											type="date"
 											value={filters.endDate || ''}
 											onChange={(e) =>

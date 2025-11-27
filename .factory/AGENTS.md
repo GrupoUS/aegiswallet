@@ -261,10 +261,6 @@ PHASE_1_PARALLEL_RESEARCH:
       focus: "Brazilian regulations, LGPD compliance, BCB specs"
       independent: true
       
-    architect_review:
-      focus: "System architecture, scalability patterns"
-      independent: true
-      
     database_specialist:
       focus: "Schema design, RLS policies, migrations"
       independent: true
@@ -274,7 +270,11 @@ PHASE_1_PARALLEL_RESEARCH:
       independent: true
       
     apex_ui_ux_designer:
-      focus: "Accessibility compliance, Portuguese-first design"
+      focus: "Accessibility compliance, Portuguese-first design with skill coordination"
+      independent: true
+      
+    code_reviewer:
+      focus: "Security architecture patterns and Brazilian compliance requirements"
       independent: true
   
   synchronization:
@@ -290,7 +290,7 @@ PHASE_1_PARALLEL_RESEARCH:
 ```
 
 **UI/UX Requirements:**
-- **apex-ui-ux-designer**: Accessible interface design (WCAG 2.1 AA+)
+- **apex-ui-ux-designer**: Enhanced accessible interface design with skill coordination (WCAG 2.1 AA+)
 
 **Standard Tasks (Complexity <7):**
 - Skip to Phase 2 with basic research
@@ -302,27 +302,33 @@ PHASE_1_PARALLEL_RESEARCH:
 PHASE_2_PARALLEL_IMPLEMENTATION:
   track_database:
     agent: "database_specialist"
-    focus: "Schema, migrations, RLS policies"
+    focus: "Schema, migrations, RLS policies with Brazilian compliance"
     independent: true
     # Can start immediately after research
     
-  track_testing:
-    agent: "test_auditor"
-    focus: "Test strategy, TDD RED phase"
+  track_security:
+    agent: "code_reviewer"
+    focus: "Security architecture review and Brazilian compliance validation"
     independent: true
-    # Can design tests while others implement
+    # Can review while others implement
     
   track_backend:
     agent: "apex_dev"
-    focus: "API endpoints, business logic"
+    focus: "API endpoints, business logic with task delegation"
     depends_on: ["track_database"]
     # Needs schema before full implementation
     
   track_frontend:
-    agent: "apex_dev or coder"
-    focus: "UI components, user interactions"
-    partial_independence: true
-    # Can start with mocks while backend develops
+    agent: "apex_dev"
+    focus: "UI components, user interactions with Brazilian localization"
+    depends_on: ["apex_ui_ux_designer"]
+    # Needs design patterns before implementation
+    
+  track_ui_ux:
+    agent: "apex_ui_ux_designer"
+    focus: "Skill coordination and Brazilian market design patterns"
+    independent: true
+    # Can coordinate skills while others implement
   
   coordination_points:
     api_contract: |
@@ -333,11 +339,16 @@ PHASE_2_PARALLEL_IMPLEMENTATION:
     schema_approval: |
       Get database schema approved before backend starts.
       MOTIVATION: Prevents rework if schema changes later.
+    
+    skill_coordination: |
+      Coordinate skill usage between apex_ui_ux_designer and other agents.
+      MOTIVATION: Ensures optimal skill utilization and 60% workflow optimization.
 ```
 
-- **apex-dev**: Critical components (complexity ≥7), performance-critical, security-sensitive
-- **coder**: Standard features, simple components (complexity <7), bug fixes, documentation
-- **database-specialist**: All database operations, migrations, RLS policies
+- **apex-dev**: Critical components (complexity ≥7), performance-critical, security-sensitive, task delegation
+- **database-specialist**: All database operations, migrations, RLS policies with Brazilian fintech expertise
+- **code-reviewer**: Enhanced security and Brazilian compliance validation with integrated skills
+- **apex-ui-ux-designer**: Skill coordination and Brazilian market design patterns
 
 ### Phase 3: Parallel Quality Assurance
 ```yaml
@@ -345,47 +356,57 @@ PHASE_3_PARALLEL_QA:
   # ALL run simultaneously
   parallel_validation:
     code_reviewer:
-      focus: "Security review, OWASP compliance"
-      commands: ["bun lint", "security audit"]
+      focus: "Enhanced security review, architecture validation, Brazilian compliance"
+      commands: ["bun lint", "security audit", "architecture review"]
       independent: true
       
-    test_auditor:
-      focus: "Test execution, coverage validation"
-      commands: ["bun test", "bun test:e2e"]
+    apex_ui_ux_designer:
+      focus: "Skill coordination validation and Brazilian UX compliance"
+      commands: ["accessibility audit", "skill integration testing"]
       independent: true
       
-    architect_review:
-      focus: "Architecture compliance validation"
-      commands: ["bun build", "performance analysis"]
+    database_specialist:
+      focus: "Database security, RLS policies, and Brazilian data compliance"
+      commands: ["database audit", "RLS validation", "migration testing"]
       independent: true
   
   brazilian_compliance_parallel:
     lgpd_validation:
-      command: "bun test:e2e:lgpd"
+      lead: "code_reviewer"
+      support: "database_specialist"
+      command: "LGPD compliance testing with skill integration"
       independent: true
       
     accessibility_audit:
-      command: "bun test:e2e:a11y"
+      lead: "apex_ui_ux_designer"
+      support: "code_reviewer"
+      command: "WCAG 2.1 AA+ Brazilian accessibility validation"
       independent: true
       
     pix_transactions:
-      command: "bun test:e2e:pix"
+      lead: "code_reviewer"
+      support: "database_specialist"
+      command: "PIX security and Brazilian financial compliance testing"
       independent: true
       
     portuguese_interface:
-      command: "bun test:e2e:portuguese"
+      lead: "apex_ui_ux_designer"
+      support: "code_reviewer"
+      command: "Portuguese language and Brazilian cultural validation"
       independent: true
   
   post_qa_reflection: |
     After all QA results are gathered, reflect on:
     - Are there any critical failures that block release?
     - Are there any security vulnerabilities?
-    - Is Brazilian compliance fully validated?
+    - Is Brazilian compliance fully validated across all integrated skills?
+    - Have all skill coordination patterns been properly validated?
     Then determine next steps.
 ```
 
-- **test-auditor**: Test strategy, coverage validation, Brazilian compliance testing
-- **code-reviewer**: Security review, Brazilian compliance validation
+- **code-reviewer**: Enhanced security review, architecture validation, integrated skill coordination
+- **apex-ui-ux-designer**: Brazilian UX compliance, skill coordination validation
+- **database-specialist**: Database security, RLS policies, Brazilian data compliance
 
 ### Phase 4: Integration & Validation
 1. Review all specialized agent outputs
@@ -577,33 +598,36 @@ REVIEW_AGENT_PROMPTS:
 ## 🧠 Agent Allocation Matrix
 
 ### Task Complexity Scale
-- **1-3**: Simple, routine tasks → coder
-- **4-6**: Moderate complexity → coder → test-auditor
-- **7-8**: Complex components → apex-dev → code-reviewer → test-auditor
-- **9-10**: Mission-critical → apex-researcher → architect-review → apex-dev
+- **1-3**: Simple, routine tasks → database-specialist, code-reviewer (basic validation)
+- **4-6**: Moderate complexity → database-specialist, code-reviewer, apex-ui-ux-designer
+- **7-8**: Complex components → apex-dev → code-reviewer → database-specialist
+- **9-10**: Mission-critical → apex-researcher → apex-dev → code-reviewer
 
 ### Brazilian Specialization
 **Financial/Banking:**
-- PIX: apex-researcher → apex-dev → database-specialist
-- Boletos: apex-researcher → apex-dev → code-reviewer
-- Open Banking: apex-researcher → architect-review → apex-dev
+- PIX: apex-researcher → apex-dev → database-specialist → code-reviewer (security)
+- Boletos: apex-researcher → apex-dev → code-reviewer → database-specialist
+- Open Banking: apex-researcher → apex-dev → code-reviewer → apex-ui_ux_designer (UX)
 
 **UI/UX Development:**
-- New Components: apex-ui-ux-designer → apex-dev/coder
-- User Flows: apex-ui-ux-designer → test-auditor → implementation
-- Accessibility: apex-ui-ux-designer → test-auditor
+- New Components: apex-ui-ux-designer → apex-dev → code-reviewer (security)
+- User Flows: apex-ui-ux-designer → apex-dev → code-reviewer (compliance)
+- Accessibility: apex-ui-ux-designer → code-reviewer → database-specialist (data)
+- Brazilian Patterns: apex-ui_ux_designer → apex_researcher → code-reviewer
 
 ## 🔄 Parallel Execution Strategy
 
 **Can Run in Parallel:**
-- Research Phase: apex-researcher + architect-review + database-specialist + product-architect
-- Design Phase: apex-ui-ux-designer + test-auditor + code-reviewer
-- Quality Assurance: test-auditor + code-reviewer + architect-review
+- Research Phase: apex-researcher + database-specialist + product-architect + apex-ui-ux-designer + code-reviewer
+- Design Phase: apex-ui-ux-designer + database-specialist + code-reviewer (architecture validation)
+- Quality Assurance: code-reviewer + apex-ui_ux-designer + database-specialist (integrated validation)
+- Skill Coordination: apex-ui-ux-designer coordinates other droids for optimal workflow
 
 **Must Run Sequentially:**
 - Design → Implementation → Testing
 - Database schema → Application implementation
-- Architecture review → Implementation
+- Security validation → Brazilian compliance validation
+- Skill coordination → Individual agent execution
 
 ## 🚀 Advanced Parallel Execution Patterns
 
@@ -614,17 +638,17 @@ parallel_research_team:
     focus: "Brazilian regulations, LGPD compliance, BCB specs"
     timeline: "0-30 minutes"
     
-  architect-review:
-    focus: "System architecture, scalability patterns"
+  database-specialist:
+    focus: "Schema design, RLS policies, migrations with Brazilian data compliance"
     timeline: "0-25 minutes"
     
-  database-specialist:
-    focus: "Schema design, RLS policies, migrations"
+  product_architect:
+    focus: "Requirements validation, PRD alignment"
     timeline: "0-20 minutes"
     
-  product-architect:
-    focus: "Requirements validation, PRD alignment"
-    timeline: "0-15 minutes"
+  apex-ui_ux-designer:
+    focus: "Enhanced UI/UX design with skill coordination and Brazilian market specialization"
+    timeline: "0-20 minutes"
     
   apex-ui-ux-designer:
     focus: "Accessibility compliance, Portuguese-first design"
@@ -766,12 +790,14 @@ CONFLICT_RESOLUTION_PROTOCOL:
     3_architecture: "System architecture decisions guide implementation"
     4_performance: "Performance optimization within security constraints"
     5_features: "Feature implementation follows established patterns"
+    6_skill_coordination: "Skill integration patterns guide agent collaboration"
     
   escalation_rules:
-    agent_disagreement: "escalate to architect_review for decision"
+    agent_disagreement: "escalate to apex_researcher for decision with regulatory research"
     compliance_conflict: "escalate to apex_researcher for regulatory clarification"
     performance_v_security: "security takes precedence over performance"
     feature_v_architecture: "architecture takes precedence over feature preferences"
+    skill_coordination_conflict: "escalate to apex_researcher for optimal skill usage"
 ```
 
 ### Progress Tracking Dashboard
@@ -861,20 +887,22 @@ LEARNING_SYSTEM:
 ### Emergency Parallel Procedures
 ```yaml
 parallel_problem_resolution:
-  stuck_agent_activation:
+  agent_failure_recovery:
     trigger: "Any agent failure or uncertainty"
     parallel_safety:
       - "Continue other tracks if possible"
       - "Isolate failing component"
-      - "Human escalation via stuck agent"
+      "escalate_to_apex_researcher: "Research-based conflict resolution"
+      "skill_coordination_fallback: "Optimize skill usage without failed agent"
       
   rollback_procedures:
     parallel_rollback:
-      database: "database-specialist"
-      backend: "apex-dev"
-      frontend: "apex-dev"
+      database: "database-specialist with apex_researcher compliance validation"
+      backend: "apex-dev with code_reviewer security validation"
+      frontend: "apex-ui_ux_designer with Brazilian design pattern validation"
+      architecture: "apex_researcher for regulatory architecture decisions"
       
-    coordination: "stuck agent manages rollback sequence"
+    coordination: "apex_researcher manages rollback with Brazilian compliance focus"
 ```
 
 ## ⚡ Performance Optimization Through Parallelism

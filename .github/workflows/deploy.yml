@@ -77,21 +77,10 @@ jobs:
         with:
           fetch-depth: 0 # Full history for better analysis
 
-      - name: Setup Node.js with optimized caching
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          cache-dependency-path: '**/pnpm-lock.yaml'
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup pnpm with optimized caching
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.0
-          package_json_file: './package.json'
+          bun-version: latest
 
       # =============================================================================
       # SECRET VALIDATION SECTION
@@ -152,11 +141,11 @@ jobs:
       - name: Install dependencies with optimized caching
         run: |
           echo "📦 Installing dependencies..."
-          pnpm install --frozen-lockfile --reporter=silent
+          bun install --frozen-lockfile
 
           # Log dependency information for audit
           echo "📊 Dependency Information:"
-          pnpm list --depth=0 | head -20
+          bun pm ls | head -20
 
       # =============================================================================
       # MANDATORY TYPESCRIPT ERROR CHECKING
@@ -171,7 +160,7 @@ jobs:
           echo "Checking for TypeScript errors..."
 
           # Run TypeScript type checking
-          pnpm run type-check 2>&1 | tee typecheck-results.txt
+          bun run type-check 2>&1 | tee typecheck-results.txt
           TYPECHECK_EXIT_CODE=${PIPESTATUS[0]}
 
           # Count TypeScript errors
@@ -199,7 +188,7 @@ jobs:
       - name: Run linting and quality checks
         run: |
           echo "🔍 Running quality checks..."
-          pnpm run lint
+          bun run lint
           echo "✅ Linting passed"
 
       - name: Security and secret scanning
@@ -214,13 +203,13 @@ jobs:
           fi
           echo "✅ Secret scanning passed"
 
-      # name: Critical Compliance Validation
+      - name: Critical Compliance Validation
         run: |
           echo "🛡️ Running compliance validation..."
 
           # Run all compliance tests
           if [[ "${{ steps.env.outputs.skip_tests }}" != "true" ]]; then
-            pnpm run test:all-compliance
+            bun run test:healthcare-full
             echo "✅ Compliance validation passed"
           else
             echo "⚠️ Compliance tests skipped (NOT RECOMMENDED)"
@@ -232,7 +221,7 @@ jobs:
       - name: Build application
         run: |
           echo "🏗️ Building application..."
-          pnpm run build
+          bun run build
           echo "✅ Build completed successfully"
 
       # =============================================================================
@@ -286,31 +275,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js with optimized caching
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          cache-dependency-path: '**/pnpm-lock.yaml'
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup pnpm with optimized caching
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.0
-          package_json_file: './package.json'
+          bun-version: latest
 
       - name: Install dependencies with optimized caching
         run: |
           echo "📦 Installing dependencies..."
-          pnpm install --frozen-lockfile --reporter=silent
+          bun install --frozen-lockfile
 
       - name: Build application
         run: |
           echo "🏗️ Building application..."
-          pnpm run build
+          bun run build
           echo "✅ Build completed successfully"
 
       # =============================================================================

@@ -6,20 +6,17 @@ export default async function setup() {
 
 	// Set up global window/document if they don't exist
 	if (typeof globalThis.window === 'undefined') {
-		// @ts-expect-error - we're setting up the global environment
-		globalThis.window = globalThis.window || {};
+		(globalThis as any).window = {};
 	}
 
 	// Ensure document exists
 	if (typeof globalThis.document === 'undefined') {
-		// @ts-expect-error - we're setting up the global environment
-		globalThis.document = globalThis.window.document || {};
+		(globalThis as any).document = {};
 	}
 
 	// Ensure navigator exists
 	if (typeof globalThis.navigator === 'undefined') {
-		// @ts-expect-error - we're setting up the global environment
-		globalThis.navigator = {
+		(globalThis as any).navigator = {
 			language: 'pt-BR',
 			languages: ['pt-BR', 'pt', 'en-US', 'en'],
 			platform: 'Win32',

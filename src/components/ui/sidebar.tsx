@@ -114,6 +114,8 @@ export const MobileSidebar = ({
 	...props
 }: React.ComponentProps<'div'>) => {
 	const { open, setOpen } = useSidebar();
+	const sidebarContentId = useId();
+
 	return (
 		<div
 			className={cn(
@@ -144,7 +146,7 @@ export const MobileSidebar = ({
 							duration: 0.3,
 							ease: 'easeInOut',
 						}}
-						id="sidebar-content"
+						id={sidebarContentId}
 						className={cn(
 							'fixed inset-0 z-100 flex h-full w-full flex-col justify-between bg-sidebar-background p-10',
 							'glass-dark backdrop-blur-xl',

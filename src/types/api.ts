@@ -4,7 +4,7 @@
  */
 
 // Base API Response Structure
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
 	data: T;
 	meta: {
 		requestId: string;
@@ -17,7 +17,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
 	error: string;
 	code: string;
-	details?: Record<string, any>;
+	details?: Record<string, unknown>;
 }
 
 // Paginated Response
@@ -205,7 +205,7 @@ export interface GoogleCalendarSyncHistory {
 	userId: string;
 	action: string;
 	eventId?: string;
-	details: any;
+	details: unknown;
 	createdAt: string;
 }
 
@@ -215,26 +215,26 @@ export interface SyncHistoryFilters {
 
 // HTTP Method Aliases for API Client
 export interface ApiMethods {
-	get<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
-	post<T = any>(
+	get<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	post<T = unknown>(
 		url: string,
-		data?: any,
+		data?: unknown,
 		config?: RequestConfig,
 	): Promise<ApiResponse<T>>;
-	put<T = any>(
+	put<T = unknown>(
 		url: string,
-		data?: any,
+		data?: unknown,
 		config?: RequestConfig,
 	): Promise<ApiResponse<T>>;
-	patch<T = any>(
+	patch<T = unknown>(
 		url: string,
-		data?: any,
+		data?: unknown,
 		config?: RequestConfig,
 	): Promise<ApiResponse<T>>;
-	delete<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	delete<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
 }
 
 export interface RequestConfig {
-	params?: Record<string, any>;
+	params?: Record<string, unknown>;
 	headers?: Record<string, string>;
 }

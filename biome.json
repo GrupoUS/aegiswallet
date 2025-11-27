@@ -7,6 +7,9 @@
       "scripts/**/*.{ts,tsx,js,jsx}",
       "vitest.config.ts",
       "vitest.*.config.ts"
+    ],
+    "ignore": [
+      "src/routeTree.gen.ts"
     ]
   },
   "vcs": {

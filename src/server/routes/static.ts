@@ -28,7 +28,12 @@ export function setupStaticRoutes(app: Hono<AppEnv>) {
     );
   } else {
     // Development mode - inform about frontend dev server
+    // Only for non-API routes
     app.get('/*', (c) => {
+      // Skip API routes - they should 404 naturally
+      if (c.req.path.startsWith('/api/')) {
+        return c.notFound();
+      }
       return c.json({
         api: `http://localhost:${environment.PORT}`,
         frontend: 'http://localhost:5173',

@@ -63,36 +63,12 @@ async function renewExpiringChannels() {
       try {
         console.log(`Renewing channel for user ${channel.user_id}...`);
 
-        // Get user's auth token
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.admin.getUserById(channel.user_id);
-
-        if (userError || !user) {
-          console.error(`Failed to get user ${channel.user_id}:`, userError?.message);
-          failed++;
-          continue;
-        }
-
-        // Create a temporary session for the user
-        const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-          type: 'magiclink',
-          email: user.email!,
-        });
-
-        if (sessionError || !sessionData) {
-          console.error(
-            `Failed to create session for user ${channel.user_id}:`,
-            sessionError?.message
-          );
-          failed++;
-          continue;
-        }
-
-        // Call Edge Function to renew channel
+        // Call Edge Function to renew channel with service-role and user_id
         const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-          body: { action: 'renew_channel' },
+          body: {
+            action: 'renew_channel',
+            user_id: channel.user_id,
+          },
           headers: {
             Authorization: `Bearer ${supabaseServiceKey}`,
           },
@@ -144,8 +120,11 @@ async function renewExpiringChannels() {
           try {
             await new Promise((resolve) => setTimeout(resolve, 2 ** retryCount * 1000));
 
-            const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-              body: { action: 'renew_channel' },
+            const { data: _data, error } = await supabase.functions.invoke('google-calendar-auth', {
+              body: {
+                action: 'renew_channel',
+                user_id: channel.user_id,
+              },
               headers: {
                 Authorization: `Bearer ${supabaseServiceKey}`,
               },

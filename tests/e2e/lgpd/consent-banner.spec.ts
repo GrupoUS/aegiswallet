@@ -13,37 +13,39 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('LGPD Compliance - Consent Banner', () => {
-  test.beforeEach(async ({ context }) => {
+  test.beforeEach(async ({ page, context }) => {
     // Clear cookies to ensure fresh consent state
     await context.clearCookies();
+    
+    // Clear localStorage to reset consent state (component uses localStorage, not cookies)
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.removeItem('aegis_lgpd_consent');
+    });
+    // Reload to apply the cleared state
+    await page.reload();
   });
 
   test('should display consent banner on first visit', async ({ page }) => {
     await page.goto('/');
 
-    // Consent banner should be visible
-    const consentBanner = page.locator(
-      '[data-testid="consent-banner"], [data-testid="lgpd-banner"], [role="dialog"][aria-label*="cookie"], .cookie-banner, .lgpd-banner'
-    );
+    // Consent banner should be visible - matches ConsentBanner component
+    const consentBanner = page.locator('[data-testid="consent-banner"]');
 
-    await expect(consentBanner.first()).toBeVisible({ timeout: 10000 });
+    await expect(consentBanner).toBeVisible({ timeout: 10000 });
   });
 
   test('should allow accepting all cookies', async ({ page }) => {
     await page.goto('/');
 
-    // Find and click accept all button
-    const acceptButton = page.locator(
-      'button:has-text("Aceitar"), button:has-text("Aceitar todos"), [data-testid="accept-cookies"], [data-testid="consent-accept"]'
-    ).first();
+    // Find and click accept all button - matches ConsentBanner component
+    const acceptButton = page.locator('[data-testid="consent-accept"]');
 
     await expect(acceptButton).toBeVisible({ timeout: 10000 });
     await acceptButton.click();
 
     // Banner should disappear
-    const consentBanner = page.locator(
-      '[data-testid="consent-banner"], [data-testid="lgpd-banner"], .cookie-banner'
-    ).first();
+    const consentBanner = page.locator('[data-testid="consent-banner"]');
 
     await expect(consentBanner).not.toBeVisible({ timeout: 5000 });
   });
@@ -51,48 +53,51 @@ test.describe('LGPD Compliance - Consent Banner', () => {
   test('should allow customizing cookie preferences', async ({ page }) => {
     await page.goto('/');
 
-    // Find customize/manage preferences button
-    const customizeButton = page.locator(
-      'button:has-text("Personalizar"), button:has-text("Gerenciar"), [data-testid="customize-cookies"], [data-testid="consent-customize"]'
-    ).first();
+    // Find customize/manage preferences button - matches ConsentBanner component
+    const customizeButton = page.locator('[data-testid="consent-customize"]');
 
     await expect(customizeButton).toBeVisible({ timeout: 10000 });
     await customizeButton.click();
 
-    // Preferences modal/panel should appear
-    const preferencesPanel = page.locator(
-      '[data-testid="cookie-preferences"], [data-testid="consent-preferences"], [role="dialog"]'
-    ).first();
-
-    await expect(preferencesPanel).toBeVisible({ timeout: 5000 });
+    // Should navigate to settings page
+    await page.waitForURL(/configuracoes|settings/i, { timeout: 5000 });
+    
+    // Verify we're on the settings page with privacy tab
+    // Note: Full privacy settings content requires authentication
+    const pageTitle = page.locator('h1');
+    await expect(pageTitle).toContainText(/Configurações/i, { timeout: 5000 });
+    
+    // Check that the privacy tab exists and is accessible
+    const privacyTab = page.locator('button[role="tab"]:has-text("Privacidade")');
+    await expect(privacyTab).toBeVisible({ timeout: 5000 });
   });
 
   test('should provide link to privacy policy', async ({ page }) => {
     await page.goto('/');
 
     // Privacy policy link should be accessible
-    const privacyLink = page.locator(
-      'a:has-text("Política de Privacidade"), a:has-text("Privacidade"), a[href*="privacy"], a[href*="privacidade"]'
-    ).first();
+    const privacyLink = page.locator('[data-testid="privacy-policy-link"]');
 
     await expect(privacyLink).toBeVisible({ timeout: 10000 });
 
     // Link should navigate to privacy policy page
     await privacyLink.click();
-    await page.waitForURL(/privacy|privacidade|politica/i, { timeout: 10000 });
+    await page.waitForURL(/privacidade/i, { timeout: 10000 });
 
-    // Privacy policy content should be present
-    const policyContent = await page.textContent('body');
-    expect(policyContent).toMatch(/dados|proteção|LGPD|privacidade/i);
+    // Privacy policy page should have LGPD-related heading and content
+    const policyHeading = page.locator('h1:has-text("Política de Privacidade")');
+    await expect(policyHeading).toBeVisible({ timeout: 5000 });
+    
+    // Check for LGPD-specific content
+    const lgpdContent = page.locator('text=/LGPD|Lei Geral de Proteção de Dados/i');
+    await expect(lgpdContent.first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should remember consent preferences on refresh', async ({ page }) => {
     await page.goto('/');
 
-    // Accept cookies
-    const acceptButton = page.locator(
-      'button:has-text("Aceitar"), [data-testid="accept-cookies"]'
-    ).first();
+    // Accept cookies - matches ConsentBanner component
+    const acceptButton = page.locator('[data-testid="consent-accept"]');
 
     await acceptButton.click({ timeout: 10000 }).catch(() => {});
 
@@ -100,9 +105,7 @@ test.describe('LGPD Compliance - Consent Banner', () => {
     await page.reload();
 
     // Banner should NOT appear again
-    const consentBanner = page.locator(
-      '[data-testid="consent-banner"], .cookie-banner'
-    ).first();
+    const consentBanner = page.locator('[data-testid="consent-banner"]');
 
     // Wait a moment for any animations
     await page.waitForTimeout(1000);

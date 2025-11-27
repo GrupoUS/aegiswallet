@@ -93,24 +93,7 @@ serve(async (req) => {
       // Event changed - trigger incremental sync
       console.log('Event changed, triggering incremental sync for user:', settings.user_id);
 
-      // Get user's auth token (we need to create a service role token for the user)
-      const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(settings.user_id);
-
-      if (userError || !user) {
-        console.error('User not found:', settings.user_id);
-        return new Response('OK', {
-          status: 200,
-          headers: corsHeaders
-        });
-      }
-
-      // Create a temporary access token for the user
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.createUser({
-        email: user.email!,
-        email_confirm: true,
-      });
-
-      // Trigger incremental sync via Edge Function
+      // Trigger incremental sync via Edge Function with service-role and user_id
       try {
         const syncResponse = await fetch(`${supabaseUrl}/functions/v1/google-calendar-sync?action=incremental_sync`, {
           method: 'POST',
@@ -118,6 +101,9 @@ serve(async (req) => {
             'Authorization': `Bearer ${supabaseServiceKey}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            user_id: settings.user_id,
+          }),
         });
 
         const syncResult = await syncResponse.json();
@@ -164,6 +150,9 @@ serve(async (req) => {
             'Authorization': `Bearer ${supabaseServiceKey}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            user_id: settings.user_id,
+          }),
         });
 
         // Audit log

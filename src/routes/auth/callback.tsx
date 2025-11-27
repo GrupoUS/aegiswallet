@@ -11,7 +11,6 @@ import { secureLogger } from '@/lib/logging/secure-logger';
 
 // Route tree needs regeneration to include this path
 // Run `bun run dev` or TanStack Router generate command to update routeTree.gen.ts
-// @ts-expect-error - Route not in generated tree, regeneration needed
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackComponent,
 });

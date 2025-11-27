@@ -79,7 +79,6 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID')!;
@@ -88,11 +87,38 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Parse request body first to check for user_id and action (service-role calls)
+    let requestBody: Record<string, unknown> = {};
+    try {
+      const clonedReq = req.clone();
+      requestBody = await clonedReq.json();
+    } catch {
+      // Body parsing failed, might be empty or invalid - continue
+    }
+
+    // Get action from URL query params OR request body (for supabase.functions.invoke() calls)
+    const action = url.searchParams.get('action') || (requestBody.action as string);
+
+    // Authenticate: Support both user JWT and service-role with user_id
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('Unauthorized');
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) throw new Error('Unauthorized');
+
+    let userId: string;
+
+    // Check if this is a service-role call (token matches service key)
+    if (token === supabaseServiceKey) {
+      // Service-role call: user_id must be provided in the request body
+      if (!requestBody.user_id || typeof requestBody.user_id !== 'string') {
+        throw new Error('user_id is required for service-role calls');
+      }
+      userId = requestBody.user_id;
+    } else {
+      // User JWT call: get user from token
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) throw new Error('Unauthorized');
+      userId = user.id;
+    }
 
     // Helper to get fresh access token with decryption
     const getAccessToken = async (userId: string) => {
@@ -142,13 +168,13 @@ serve(async (req) => {
       return decryptedAccessToken;
     };
 
-    const accessToken = await getAccessToken(user.id);
+    const accessToken = await getAccessToken(userId);
 
     // ========================================
     // ACTION: sync_to_google (Outbound Sync)
     // ========================================
     if (action === 'sync_to_google') {
-      const { event_id } = await req.json();
+      const { event_id } = requestBody.event_id ? requestBody : await req.json();
 
       // Get event details
       const { data: event } = await supabase
@@ -157,13 +183,73 @@ serve(async (req) => {
         .eq('id', event_id)
         .single();
 
-      if (!event) throw new Error('Event not found');
+      // If event is not found, it may have been deleted - handle outbound delete
+      if (!event) {
+        // Check if there's a mapping for this event
+        const { data: mapping } = await supabase
+          .from('calendar_sync_mapping')
+          .select('google_event_id')
+          .eq('financial_event_id', event_id)
+          .single();
+
+        if (mapping?.google_event_id) {
+          // Delete the event from Google Calendar
+          const deleteResponse = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/primary/events/${mapping.google_event_id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              }
+            }
+          );
+
+          // 404/410 means already deleted - treat as success
+          if (!deleteResponse.ok && deleteResponse.status !== 404 && deleteResponse.status !== 410) {
+            throw new Error(`Failed to delete event from Google: ${deleteResponse.statusText}`);
+          }
+
+          // Delete the mapping
+          await supabase
+            .from('calendar_sync_mapping')
+            .delete()
+            .eq('financial_event_id', event_id);
+
+          // Audit log
+          await supabase.from('calendar_sync_audit').insert({
+            user_id: userId,
+            action: 'event_deleted',
+            details: {
+              direction: 'to_google',
+              event_id,
+              google_id: mapping.google_event_id
+            }
+          });
+
+          return new Response(JSON.stringify({
+            success: true,
+            deleted: true,
+            google_id: mapping.google_event_id
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // No mapping exists - event was never synced
+        return new Response(JSON.stringify({
+          success: true,
+          skipped: true,
+          reason: 'Event not found and no mapping exists'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
       // Get sync settings
       const { data: settings } = await supabase
         .from('calendar_sync_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       // Map to Google Event
@@ -271,7 +357,7 @@ serve(async (req) => {
 
       // Update mapping with loop prevention
       await supabase.from('calendar_sync_mapping').upsert({
-        user_id: user.id,
+        user_id: userId,
         financial_event_id: event_id,
         google_event_id: googleData.id,
         sync_status: 'synced',
@@ -284,7 +370,7 @@ serve(async (req) => {
 
       // Audit log
       await supabase.from('calendar_sync_audit').insert({
-        user_id: user.id,
+        user_id: userId,
         action: 'event_synced',
         details: {
           direction: 'to_google',
@@ -359,12 +445,12 @@ serve(async (req) => {
       const { data: settings } = await supabase
         .from('calendar_sync_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       // Map Google event to AegisWallet format
       const financialEvent: any = {
-        user_id: user.id,
+        user_id: userId,
         title: googleEvent.summary || 'Untitled Event',
         description: googleEvent.description || '',
         start_date: googleEvent.start.dateTime || googleEvent.start.date,
@@ -442,7 +528,7 @@ serve(async (req) => {
 
       // Create mapping
       await supabase.from('calendar_sync_mapping').insert({
-        user_id: user.id,
+        user_id: userId,
         financial_event_id: newEvent.id,
         google_event_id: google_event_id,
         sync_status: 'synced',
@@ -455,7 +541,7 @@ serve(async (req) => {
 
       // Audit log
       await supabase.from('calendar_sync_audit').insert({
-        user_id: user.id,
+        user_id: userId,
         action: 'event_synced',
         details: {
           direction: 'from_google',
@@ -480,7 +566,7 @@ serve(async (req) => {
       const { data: settings } = await supabase
         .from('calendar_sync_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       if (!settings) throw new Error('Sync settings not found');
@@ -505,7 +591,7 @@ serve(async (req) => {
           await supabase
             .from('calendar_sync_settings')
             .update({ sync_token: null })
-            .eq('user_id', user.id);
+            .eq('user_id', userId);
 
           return new Response(JSON.stringify({
             success: false,
@@ -572,7 +658,7 @@ serve(async (req) => {
             sync_token: data.nextSyncToken,
             last_incremental_sync_at: new Date().toISOString()
           })
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
       }
 
       return new Response(JSON.stringify({
@@ -592,7 +678,7 @@ serve(async (req) => {
       const { data: settings } = await supabase
         .from('calendar_sync_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       if (!settings) throw new Error('Sync settings not found');
@@ -612,8 +698,9 @@ serve(async (req) => {
       const data = await googleResponse.json();
       let processed = 0;
       let errors = 0;
+      let pushed = 0;
 
-      // Process each event based on sync direction
+      // Process each event from Google based on sync direction
       for (const googleEvent of data.items || []) {
         try {
           if (settings.sync_direction === 'one_way_from_google' ||
@@ -625,7 +712,7 @@ serve(async (req) => {
                 'Authorization': authHeader,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ google_event_id: googleEvent.id }),
+              body: JSON.stringify({ google_event_id: googleEvent.id, user_id: userId }),
             });
 
             if (syncResponse.ok) processed++;
@@ -637,6 +724,59 @@ serve(async (req) => {
         }
       }
 
+      // ========================================
+      // Push local-only events to Google (bidirectional + one_way_to_google)
+      // ========================================
+      if (settings.sync_direction === 'one_way_to_google' ||
+          settings.sync_direction === 'bidirectional') {
+
+        // Get all financial events for this user
+        const { data: localEvents, error: localEventsError } = await supabase
+          .from('financial_events')
+          .select('id')
+          .eq('user_id', userId);
+
+        if (!localEventsError && localEvents) {
+          // Get all existing mappings
+          const { data: mappings } = await supabase
+            .from('calendar_sync_mapping')
+            .select('financial_event_id')
+            .eq('user_id', userId);
+
+          const mappedEventIds = new Set((mappings || []).map(m => m.financial_event_id));
+
+          // Find events that don't have a mapping (not yet synced to Google)
+          const unmappedEvents = localEvents.filter(e => !mappedEventIds.has(e.id));
+
+          console.log(`Found ${unmappedEvents.length} local-only events to push to Google`);
+
+          // Push each unmapped event to Google
+          for (const event of unmappedEvents) {
+            try {
+              const pushResponse = await fetch(`${supabaseUrl}/functions/v1/google-calendar-sync?action=sync_to_google`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': authHeader,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ event_id: event.id, user_id: userId }),
+              });
+
+              if (pushResponse.ok) {
+                pushed++;
+              } else {
+                const errorText = await pushResponse.text();
+                console.error(`Failed to push event ${event.id}:`, errorText);
+                errors++;
+              }
+            } catch (err) {
+              console.error(`Error pushing event ${event.id}:`, err);
+              errors++;
+            }
+          }
+        }
+      }
+
       // Store sync token for future incremental syncs
       if (data.nextSyncToken) {
         await supabase
@@ -645,12 +785,13 @@ serve(async (req) => {
             sync_token: data.nextSyncToken,
             last_full_sync_at: new Date().toISOString()
           })
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
       }
 
       return new Response(JSON.stringify({
         success: true,
         processed,
+        pushed,
         errors
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -7,6 +7,71 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper: Decrypt token using AES-256-GCM
+const decryptToken = async (encryptedText: string, encryptionKey: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
+  // Decode base64
+  const combined = Uint8Array.from(atob(encryptedText), c => c.charCodeAt(0));
+
+  // Extract IV and encrypted data
+  const iv = combined.slice(0, 12);
+  const encrypted = combined.slice(12);
+
+  // Derive key
+  const keyMaterial = encoder.encode(encryptionKey);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyMaterial.slice(0, 32),
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+
+  // Decrypt
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encrypted
+  );
+
+  return decoder.decode(decrypted);
+};
+
+// Helper: Encrypt token using AES-256-GCM
+const encryptToken = async (text: string, encryptionKey: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+
+  // Derive key from encryption key string
+  const keyMaterial = encoder.encode(encryptionKey);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyMaterial.slice(0, 32),
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+
+  // Generate random IV (12 bytes for GCM)
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  // Encrypt
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+
+  // Combine IV + encrypted data and encode as base64
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), iv.length);
+
+  return btoa(String.fromCharCode(...combined));
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -14,7 +79,6 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID')!;
@@ -24,16 +88,42 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify user for callback and revoke
-    let user;
-    if (action !== 'start') { // 'start' might be called without auth header if just getting URL, but usually we want auth. Let's assume auth is required for all to be safe or at least for callback/revoke.
-       const authHeader = req.headers.get('Authorization');
-       if (authHeader) {
-         const token = authHeader.replace('Bearer ', '');
-         const { data: { user: u }, error } = await supabase.auth.getUser(token);
-         if (error || !u) throw new Error('Unauthorized');
-         user = u;
-       }
+    // Parse request body for service-role calls that may contain user_id and action
+    let requestBody: Record<string, unknown> = {};
+    try {
+      if (req.method === 'POST') {
+        const clonedReq = req.clone();
+        requestBody = await clonedReq.json();
+      }
+    } catch {
+      // Body parsing failed, might be empty or invalid - continue
+    }
+
+    // Get action from URL query params OR request body (for supabase.functions.invoke() calls)
+    const action = url.searchParams.get('action') || (requestBody.action as string);
+
+    // Authenticate: Support both user JWT and service-role with user_id
+    let userId: string | undefined;
+
+    if (action !== 'start') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) throw new Error('Unauthorized');
+
+      const token = authHeader.replace('Bearer ', '');
+
+      // Check if this is a service-role call (token matches service key)
+      if (token === supabaseServiceKey) {
+        // Service-role call: user_id must be provided in the request body
+        if (!requestBody.user_id || typeof requestBody.user_id !== 'string') {
+          throw new Error('user_id is required for service-role calls');
+        }
+        userId = requestBody.user_id;
+      } else {
+        // User JWT call: get user from token
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) throw new Error('Unauthorized');
+        userId = user.id;
+      }
     }
 
     if (action === 'start') {
@@ -48,7 +138,7 @@ serve(async (req) => {
     if (action === 'callback') {
       const code = url.searchParams.get('code');
       if (!code) throw new Error('No code provided');
-      if (!user) throw new Error('Unauthorized');
+      if (!userId) throw new Error('Unauthorized');
 
       // Exchange code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -72,78 +162,14 @@ serve(async (req) => {
       });
       const userData = await userResponse.json();
 
-      // Encrypt tokens using AES-256-GCM with Web Crypto API
-      const encrypt = async (text: string): Promise<string> => {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(text);
-
-        // Derive key from encryption key string
-        const keyMaterial = encoder.encode(encryptionKey);
-        const key = await crypto.subtle.importKey(
-          'raw',
-          keyMaterial.slice(0, 32), // Use first 32 bytes for AES-256
-          { name: 'AES-GCM', length: 256 },
-          false,
-          ['encrypt']
-        );
-
-        // Generate random IV (12 bytes for GCM)
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-
-        // Encrypt
-        const encrypted = await crypto.subtle.encrypt(
-          { name: 'AES-GCM', iv },
-          key,
-          data
-        );
-
-        // Combine IV + encrypted data and encode as base64
-        const combined = new Uint8Array(iv.length + encrypted.byteLength);
-        combined.set(iv, 0);
-        combined.set(new Uint8Array(encrypted), iv.length);
-
-        return btoa(String.fromCharCode(...combined));
-      };
-
-      const decrypt = async (encryptedText: string): Promise<string> => {
-        const encoder = new TextEncoder();
-        const decoder = new TextDecoder();
-
-        // Decode base64
-        const combined = Uint8Array.from(atob(encryptedText), c => c.charCodeAt(0));
-
-        // Extract IV and encrypted data
-        const iv = combined.slice(0, 12);
-        const encrypted = combined.slice(12);
-
-        // Derive key
-        const keyMaterial = encoder.encode(encryptionKey);
-        const key = await crypto.subtle.importKey(
-          'raw',
-          keyMaterial.slice(0, 32),
-          { name: 'AES-GCM', length: 256 },
-          false,
-          ['decrypt']
-        );
-
-        // Decrypt
-        const decrypted = await crypto.subtle.decrypt(
-          { name: 'AES-GCM', iv },
-          key,
-          encrypted
-        );
-
-        return decoder.decode(decrypted);
-      };
-
-      const encryptedAccessToken = await encrypt(tokens.access_token);
-      const encryptedRefreshToken = tokens.refresh_token ? await encrypt(tokens.refresh_token) : undefined;
+      const encryptedAccessToken = await encryptToken(tokens.access_token, encryptionKey);
+      const encryptedRefreshToken = tokens.refresh_token ? await encryptToken(tokens.refresh_token, encryptionKey) : undefined;
 
       // Store tokens
       const { error: dbError } = await supabase
         .from('google_calendar_tokens')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           access_token: encryptedAccessToken,
           refresh_token: encryptedRefreshToken, // Only update if present (Google only sends refresh token on first consent)
           expiry_timestamp: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
@@ -157,7 +183,7 @@ serve(async (req) => {
       // Register webhook channel with Google Calendar
       const webhookUrl = `${supabaseUrl}/functions/v1/google-calendar-webhook`;
       const webhookSecret = crypto.randomUUID();
-      const channelId = `aegis-${user.id}-${Date.now()}`;
+      const channelId = `aegis-${userId}-${Date.now()}`;
 
       try {
         const channelResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/watch', {
@@ -182,7 +208,7 @@ serve(async (req) => {
           await supabase
             .from('calendar_sync_settings')
             .upsert({
-              user_id: user.id,
+              user_id: userId,
               sync_enabled: true,
               google_channel_id: channelData.id,
               google_resource_id: channelData.resourceId,
@@ -198,7 +224,7 @@ serve(async (req) => {
           await supabase
             .from('calendar_sync_settings')
             .upsert({
-              user_id: user.id,
+              user_id: userId,
               sync_enabled: true,
               updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
@@ -210,7 +236,7 @@ serve(async (req) => {
         await supabase
           .from('calendar_sync_settings')
           .upsert({
-            user_id: user.id,
+            user_id: userId,
             sync_enabled: true,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
@@ -231,31 +257,38 @@ serve(async (req) => {
     }
 
     if (action === 'revoke') {
-        if (!user) throw new Error('Unauthorized');
+        if (!userId) throw new Error('Unauthorized');
 
         // Get token to revoke
         const { data: tokenData } = await supabase
             .from('google_calendar_tokens')
             .select('access_token')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .single();
 
         if (tokenData) {
-            await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenData.access_token}`, {
-                method: 'POST',
-                headers: { 'Content-type': 'application/x-www-form-urlencoded' }
-            });
+            try {
+                // Decrypt the access token before revoking
+                const decryptedAccessToken = await decryptToken(tokenData.access_token, encryptionKey);
+                await fetch(`https://oauth2.googleapis.com/revoke?token=${decryptedAccessToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-type': 'application/x-www-form-urlencoded' }
+                });
+            } catch (decryptError) {
+                console.error('Error decrypting token for revoke, proceeding with cleanup:', decryptError);
+                // Continue with cleanup even if decryption fails
+            }
         }
 
         // Remove from DB
-        await supabase.from('google_calendar_tokens').delete().eq('user_id', user.id);
+        await supabase.from('google_calendar_tokens').delete().eq('user_id', userId);
 
         // Update settings
-        await supabase.from('calendar_sync_settings').update({ sync_enabled: false }).eq('user_id', user.id);
+        await supabase.from('calendar_sync_settings').update({ sync_enabled: false }).eq('user_id', userId);
 
         // Audit
         await supabase.from('calendar_sync_audit').insert({
-            user_id: user.id,
+            user_id: userId,
             action: 'sync_completed', // 'disconnected'
             details: { message: 'Google Calendar disconnected' }
         });
@@ -266,22 +299,31 @@ serve(async (req) => {
     }
 
     if (action === 'renew_channel') {
-      if (!user) throw new Error('Unauthorized');
+      if (!userId) throw new Error('Unauthorized');
 
       // Get current settings and tokens
       const { data: settings } = await supabase
         .from('calendar_sync_settings')
         .select('google_channel_id, google_resource_id, channel_expiry_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       const { data: tokenData } = await supabase
         .from('google_calendar_tokens')
         .select('access_token')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       if (!tokenData) throw new Error('No tokens found');
+
+      // Decrypt access token
+      let decryptedAccessToken: string;
+      try {
+        decryptedAccessToken = await decryptToken(tokenData.access_token, encryptionKey);
+      } catch (decryptError) {
+        console.error('Error decrypting token:', decryptError);
+        throw new Error('Token decryption failed. Please reconnect your Google Calendar.');
+      }
 
       // Stop old channel if exists
       if (settings?.google_channel_id && settings?.google_resource_id) {
@@ -289,7 +331,7 @@ serve(async (req) => {
           await fetch('https://www.googleapis.com/calendar/v3/channels/stop', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
+              'Authorization': `Bearer ${decryptedAccessToken}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -305,12 +347,12 @@ serve(async (req) => {
       // Register new channel
       const webhookUrl = `${supabaseUrl}/functions/v1/google-calendar-webhook`;
       const webhookSecret = crypto.randomUUID();
-      const channelId = `aegis-${user.id}-${Date.now()}`;
+      const channelId = `aegis-${userId}-${Date.now()}`;
 
       const channelResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/watch', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Authorization': `Bearer ${decryptedAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -338,11 +380,11 @@ serve(async (req) => {
           webhook_secret: webhookSecret,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       // Audit log
       await supabase.from('calendar_sync_audit').insert({
-        user_id: user.id,
+        user_id: userId,
         action: 'channel_renewed',
         details: {
           message: 'Webhook channel renewed',

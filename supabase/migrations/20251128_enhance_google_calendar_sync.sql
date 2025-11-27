@@ -109,22 +109,31 @@ WITH CHECK (true);
 CREATE OR REPLACE FUNCTION queue_google_calendar_sync()
 RETURNS TRIGGER AS $$
 DECLARE
-  sync_enabled BOOLEAN;
-  is_connected BOOLEAN;
-  sync_direction TEXT;
+  v_sync_enabled BOOLEAN;
+  v_is_connected BOOLEAN;
+  v_sync_direction TEXT;
+  v_user_id UUID;
 BEGIN
-  -- Check if user has Google Calendar sync enabled and connected
+  -- Determine the user_id based on operation type
+  v_user_id := COALESCE(NEW.user_id, OLD.user_id);
+
+  -- Check if user has Google Calendar sync enabled
   SELECT
-    enabled,
-    google_access_token IS NOT NULL,
-    COALESCE(sync_direction_setting, 'bidirectional')
-  INTO sync_enabled, is_connected, sync_direction
-  FROM calendar_sync_settings
-  WHERE user_id = COALESCE(NEW.user_id, OLD.user_id)
+    COALESCE(css.sync_enabled, false),
+    COALESCE(css.sync_direction, 'bidirectional')
+  INTO v_sync_enabled, v_sync_direction
+  FROM calendar_sync_settings css
+  WHERE css.user_id = v_user_id
   LIMIT 1;
 
+  -- Check if user has tokens stored (indicates connected state)
+  SELECT EXISTS(
+    SELECT 1 FROM google_calendar_tokens gct
+    WHERE gct.user_id = v_user_id
+  ) INTO v_is_connected;
+
   -- Only queue if sync is enabled, connected, and direction allows outbound sync
-  IF sync_enabled AND is_connected AND sync_direction IN ('bidirectional', 'one_way_to_google') THEN
+  IF v_sync_enabled AND v_is_connected AND v_sync_direction IN ('bidirectional', 'one_way_to_google') THEN
     -- Skip if this change originated from Google (to prevent loops)
     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
       -- Check if the event was just synced from Google

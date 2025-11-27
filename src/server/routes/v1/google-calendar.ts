@@ -156,6 +156,10 @@ googleCalendarRouter.get(
         sync_enabled: data.sync_enabled ?? false,
         sync_financial_amounts: data.sync_financial_amounts ?? false,
         sync_token: data.sync_token,
+        google_channel_id: data.google_channel_id ?? null,
+        google_resource_id: data.google_resource_id ?? null,
+        channel_expiry_at: data.channel_expiry_at ?? null,
+        webhook_secret: data.webhook_secret ?? null,
         updated_at: data.updated_at ?? new Date().toISOString(),
         user_id: data.user_id,
       };
@@ -290,7 +294,7 @@ googleCalendarRouter.put(
         .eq('user_id', user.id)
         .maybeSingle();
 
-      let result;
+      let result: CalendarSyncSettings | null;
       if (existing) {
         // Update existing
         const { data, error } = await supabase
@@ -610,7 +614,7 @@ googleCalendarRouter.post(
         .from('calendar_sync_settings')
         .select('channel_expiry_at')
         .eq('user_id', user.id)
-        .single();
+        .single() as { data: { channel_expiry_at: string | null } | null };
 
       if (!settings?.channel_expiry_at) {
         throw new Error('No active channel found');

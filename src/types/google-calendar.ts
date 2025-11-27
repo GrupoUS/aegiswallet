@@ -60,13 +60,12 @@ export interface CalendarSyncSettings {
   sync_financial_amounts: boolean;
   sync_categories: string[] | null;
   last_full_sync_at: string | null;
-  last_incremental_sync_at: string | null; // NEW
   sync_token: string | null;
   auto_sync_interval_minutes: number;
-  google_channel_id: string | null; // NEW: Webhook channel ID
-  google_resource_id: string | null; // NEW: Google resource ID
-  channel_expiry_at: string | null; // NEW: Channel expiration
-  webhook_secret: string | null; // NEW: Webhook verification token
+  google_channel_id: string | null; // Webhook channel ID
+  google_resource_id: string | null; // Google resource ID
+  channel_expiry_at: string | null; // Channel expiration
+  webhook_secret: string | null; // Webhook verification token
   created_at: string;
   updated_at: string;
 }

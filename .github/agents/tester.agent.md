@@ -13,7 +13,7 @@ handoffs:
     prompt: "Document the test results, coverage metrics, code review findings, and any known limitations discovered."
     send: true
 tools:
-  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'tavily/search', 'playwright-mcp/*', 'chrome-devtools/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
+  ['search', 'runTasks', 'chrome-devtools/*', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'todos', 'runSubagent']
 ---
 
 # 🧪 TESTER AGENT
@@ -297,10 +297,10 @@ import { test, expect } from '@playwright/test';
 
 test('dashboard visual regression', async ({ page }) => {
   await page.goto('/dashboard');
-  
+
   // Full page screenshot comparison
   await expect(page).toHaveScreenshot('dashboard-full.png');
-  
+
   // Component-specific screenshot
   await expect(page.locator('[data-testid="balance-card"]'))
     .toHaveScreenshot('balance-card.png');
@@ -315,11 +315,11 @@ import AxeBuilder from '@axe-core/playwright';
 
 test('page has no accessibility violations', async ({ page }) => {
   await page.goto('/');
-  
+
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
-  
+
   expect(results.violations).toHaveLength(0);
 });
 ```
@@ -516,23 +516,23 @@ TRIGGERS:
   - "mobile testing"
   - "smoke tests"
   - "test flows"
-  
+
   # Accessibility triggers
   - "accessibility testing"
   - "a11y audit"
   - "WCAG compliance"
   - "axe-core testing"
-  
+
   # LGPD triggers
   - "LGPD compliance testing"
   - "consent banner test"
   - "data privacy test"
-  
+
   # TDD triggers
   - "RED phase testing"
   - "TDD cycle"
   - "write failing tests"
-  
+
   # Code review triggers
   - "code review"
   - "security review"

@@ -1,9 +1,10 @@
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import { Building, Calendar, FileText, Home, LogOut, Mic, Wallet } from 'lucide-react';
+import { Building, Calendar, FileText, Home, LogOut, Mic, Settings, Wallet } from 'lucide-react';
 import { useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
+import { ConsentBanner } from '@/components/privacy';
 
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
@@ -67,6 +68,11 @@ function RootComponent() {
       icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
       label: 'Contas Bancárias',
     },
+    {
+      href: '/configuracoes',
+      icon: <Settings className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+      label: 'Configurações',
+    },
   ];
 
   // Handle logout functionality
@@ -81,6 +87,11 @@ function RootComponent() {
     });
   };
 
+  // Handle customize consent preferences - navigate to settings
+  const handleCustomizeConsent = () => {
+    navigate({ to: '/configuracoes' });
+  };
+
   // Render without sidebar for login page
   if (!showSidebar) {
     return (
@@ -89,6 +100,7 @@ function RootComponent() {
           <Outlet />
         </div>
         <ChatWidget />
+        <ConsentBanner onCustomize={handleCustomizeConsent} />
       </CalendarProvider>
     );
   }
@@ -146,6 +158,7 @@ function RootComponent() {
           </div>
         </div>
         <ChatWidget />
+        <ConsentBanner onCustomize={handleCustomizeConsent} />
       </div>
     </CalendarProvider>
   );

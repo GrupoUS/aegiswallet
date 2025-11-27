@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '../lib/api-client';
+import { supabase } from '@/integrations/supabase/client';
 
 type SyncStatus = {
   googleEmail: string | null;
@@ -118,17 +119,31 @@ export function useGoogleCalendarSync() {
   };
 
   const disconnect = async () => {
-    // Call revoke endpoint directly
+    // Call revoke endpoint with user's auth token
     try {
+      // Get the current session to include the access token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        toast.error('Sessão expirada. Por favor, faça login novamente.');
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-auth?action=revoke`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
         }
       );
+
+      if (response.status === 401) {
+        toast.error('Sessão expirada. Por favor, faça login novamente.');
+        return;
+      }
 
       if (response.ok) {
         toast.success('Conexão com Google Calendar removida');
@@ -137,7 +152,7 @@ export function useGoogleCalendarSync() {
       } else {
         throw new Error('Falha ao remover conexão');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao remover conexão com Google Calendar');
     }
   };

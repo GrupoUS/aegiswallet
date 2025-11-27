@@ -68,24 +68,15 @@ async function processSyncQueue() {
           })
           .eq('id', item.id);
 
-        // Get user's auth token
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.admin.getUserById(item.user_id);
-
-        if (userError || !user) {
-          throw new Error(`Failed to get user: ${userError?.message}`);
-        }
-
         // Determine action based on sync direction
         const action = item.sync_direction === 'to_google' ? 'sync_to_google' : 'sync_from_google';
         const bodyKey = item.sync_direction === 'to_google' ? 'event_id' : 'google_event_id';
 
-        // Call Edge Function to sync event
+        // Call Edge Function to sync event with user_id for service-role auth
         const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
           body: {
             action,
+            user_id: item.user_id,
             [bodyKey]: item.event_id,
           },
           headers: {
@@ -97,7 +88,8 @@ async function processSyncQueue() {
           throw new Error(`Edge Function error: ${error.message}`);
         }
 
-        if (!data.success) {
+        // Handle successful response (includes deleted: true as success)
+        if (!data.success && !data.deleted) {
           throw new Error(data.reason || 'Sync failed');
         }
 

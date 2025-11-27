@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createComplianceService } from '@/lib/compliance';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { ConsentType } from '@/types/compliance';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -31,20 +32,6 @@ const grantConsentSchema = z.object({
   ]),
 });
 
-
-const revokeConsentSchema = z.object({
-  consentType: z.enum([
-    'data_processing',
-    'financial_data',
-    'voice_recording',
-    'analytics',
-    'marketing',
-    'third_party_sharing',
-    'open_banking',
-    'biometric',
-  ]),
-});
-
 const createExportRequestSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
@@ -55,7 +42,7 @@ const createExportRequestSchema = z.object({
 const createDeletionRequestSchema = z.object({
   reason: z.string().optional(),
   requestType: z.enum(['full_deletion', 'anonymization', 'partial_deletion', 'consent_withdrawal']),
-  scope: z.record(z.unknown()).optional(),
+  scope: z.record(z.string(), z.unknown()).optional(),
 });
 
 const checkLimitSchema = z.object({
@@ -227,7 +214,7 @@ complianceRouter.delete(
 
     try {
       const complianceService = createComplianceService(supabase);
-      await complianceService.revokeConsent(user.id, consentType as any);
+      await complianceService.revokeConsent(user.id, consentType as ConsentType);
 
       secureLogger.info('Consent revoked', { consentType, requestId, userId: user.id });
 

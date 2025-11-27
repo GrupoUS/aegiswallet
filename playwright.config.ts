@@ -62,8 +62,8 @@ export default defineConfig({
 
   // Shared settings for all projects
   use: {
-    // Base URL for navigation
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
+    // Base URL for navigation (matches Vite server.port: 8080)
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
 
     // Collect trace on first retry
     trace: 'on-first-retry',
@@ -131,7 +131,7 @@ export default defineConfig({
   // Run local dev server before starting tests
   webServer: {
     command: 'bun dev',
-    url: 'http://localhost:5173',
+    url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     stdout: 'pipe',

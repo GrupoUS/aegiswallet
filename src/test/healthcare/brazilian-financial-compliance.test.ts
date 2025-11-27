@@ -229,7 +229,7 @@ const BrazilianFinancialCompliance = () => {
       transactionData,
       userId: 'test-user-001',
     });
-    
+
     return newStatus;
   };
 

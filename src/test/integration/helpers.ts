@@ -1,7 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../types/database.types';
 
-export const getSupabaseAdminClient = () => {
+/**
+ * Check if integration test environment variables are configured
+ */
+export const hasIntegrationTestEnv = (): boolean => {
+  const url = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && serviceKey);
+};
+
+export const getSupabaseAdminClient = (): SupabaseClient<Database> => {
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

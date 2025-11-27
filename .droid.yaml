@@ -1,0 +1,374 @@
+# AegisWallet Orchestration Configuration
+# Sistema Híbrido: AGENTS.md (Orquestrador) + .droid.yaml (Configuração Estruturada)
+
+version: "1.0"
+project: "aegiswallet"
+description: "Voice-first autonomous financial assistant for Brazilian market"
+
+# Configuração Principal de Orquestração
+orchestration:
+  # Arquivo mestre de orquestração
+  master_agents_file: ".factory/AGENTS.md"
+  
+  # Descoberta automática de droids
+  auto_discovery: true
+  droids_directory: ".factory/droids/"
+  
+  # Configurações de roteamento inteligente
+  routing:
+    enabled: true
+    complexity_threshold: 7
+    parallel_execution: true
+    context_preservation: true
+
+# Regras de Ativação Automática Baseadas em Palavras-Chave
+auto_routing_rules:
+  research_triggers:
+    keywords:
+      portuguese:
+        - "pesquise"
+        - "pesquisar"
+        - "analisar"
+        - "investigar"
+        - "compliance"
+        - "regulamentação"
+        - "lgpd"
+        - "bcb"
+        - "banco central"
+      english:
+        - "research"
+        - "analyze"
+        - "investigate"
+        - "compliance"
+        - "regulatory"
+        - "study"
+        - "document"
+    
+    target_droid: "apex-researcher"
+    complexity_threshold: 5
+    auto_invoke: true
+    
+    # Contexto adicional para pesquisa
+    context_files:
+      - ".factory/AGENTS.md"
+      - "README.md"
+      - "package.json"
+      - "docs/**"
+
+  implementation_triggers:
+    keywords:
+      portuguese:
+        - "implemente"
+        - "crie"
+        - "desenvolva"
+        - "construa"
+        - "codifique"
+        - "desenvolvimento"
+      english:
+        - "implement"
+        - "create"
+        - "develop"
+        - "build"
+        - "code"
+        - "write"
+    
+    # Routing baseado em complexidade
+    complexity_routing:
+      low_complexity:    # 1-6
+        target_droid: "coder"
+        auto_invoke: true
+      high_complexity:   # 7-10
+        target_droid: "apex-dev"
+        auto_invoke: true
+
+  testing_triggers:
+    keywords:
+      portuguese:
+        - "testar"
+        - "validar"
+        - "verificar"
+        - "auditar"
+        - "qualidade"
+        - "teste"
+      english:
+        - "test"
+        - "validate"
+        - "verify"
+        - "audit"
+        - "quality"
+        - "check"
+    
+    target_droid: "test-auditor"
+    auto_invoke: true
+    
+    # Contexto para testes
+    context_files:
+      - "vitest.config.ts"
+      - "playwright.config.ts"
+      - "tests/**"
+
+  security_triggers:
+    keywords:
+      portuguese:
+        - "segurança"
+        - "vulnerabilidade"
+        - "seguro"
+        - "proteger"
+        - "auditoria"
+      english:
+        - "security"
+        - "vulnerability"
+        - "secure"
+        - "protect"
+        - "safety"
+    
+    target_droid: "code-reviewer"
+    auto_invoke: true
+    priority: "high"  # Security tem prioridade alta
+
+  database_triggers:
+    keywords:
+      portuguese:
+        - "banco de dados"
+        - "schema"
+        - "migration"
+        - "supabase"
+        - "postgres"
+      english:
+        - "database"
+        - "schema"
+        - "migration"
+        - "supabase"
+        - "postgres"
+        - "sql"
+    
+    target_droid: "database-specialist"
+    auto_invoke: true
+
+  design_triggers:
+    keywords:
+      portuguese:
+        - "design"
+        - "interface"
+        - "ux"
+        - "ui"
+        - "acessibilidade"
+        - "wcag"
+      english:
+        - "design"
+        - "interface"
+        - "ux"
+        - "ui"
+        - "accessibility"
+        - "wcag"
+    
+    target_droid: "apex-ui-ux-designer"
+    auto_invoke: true
+
+# Configuração dos Droids Especializados
+custom_droids:
+  apex-researcher:
+    name: "APEX RESEARCHER"
+    file: ".factory/droids/apex-researcher.md"
+    description: "Multi-source research specialist with ≥95% accuracy validation"
+    capabilities:
+      - "Regulatory compliance research (LGPD, BCB)"
+      - "Technology analysis and documentation"
+      - "Market research and competitive analysis"
+      - "Multi-source validation using Context7 and Tavily"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["context7", "tavily", "sequential_thinking", "serena"]
+
+  apex-dev:
+    name: "APEX DEV"
+    file: ".factory/droids/apex-dev.md"
+    description: "Advanced development specialist with TDD methodology"
+    capabilities:
+      - "Complex system implementation (complexity ≥7)"
+      - "Test-Driven Development (RED-GREEN-REFACTOR)"
+      - "Performance optimization and security"
+      - "Brazilian fintech integration"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["all"]
+
+  coder:
+    name: "CODER"
+    file: ".factory/droids/coder.md"
+    description: "Standard implementation specialist for routine tasks"
+    capabilities:
+      - "Simple component development (complexity <7)"
+      - "Portuguese-first interfaces"
+      - "Basic LGPD compliance"
+      - "Bug fixes and documentation"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "write", "edit", "execute"]
+
+  test-auditor:
+    name: "TEST AUDITOR"
+    file: ".factory/droids/test-auditor.md"
+    description: "Comprehensive QA specialist with TDD + Playwright E2E"
+    capabilities:
+      - "Test strategy and TDD methodology"
+      - "Playwright E2E testing with visual regression"
+      - "Brazilian compliance validation (LGPD, WCAG)"
+      - "Performance testing and accessibility audit"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["test", "execute", "read", "write"]
+
+  code-reviewer:
+    name: "CODE REVIEWER"
+    file: ".factory/droids/code-reviewer.md"
+    description: "Security and Brazilian compliance specialist"
+    capabilities:
+      - "OWASP security validation"
+      - "LGPD compliance review"
+      - "Vulnerability assessment"
+      - "Brazilian financial standards validation"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "grep", "execute"]
+
+  database-specialist:
+    name: "DATABASE SPECIALIST"
+    file: ".factory/droids/database-specialist.md"
+    description: "Multi-database expert with performance optimization"
+    capabilities:
+      - "Supabase/PostgreSQL operations"
+      - "Schema design and migrations"
+      - "Performance optimization"
+      - "Data protection and security"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "write", "execute", "database"]
+
+  apex-ui-ux-designer:
+    name: "APEX UI/UX DESIGNER"
+    file: ".factory/droids/apex-ui-ux-designer.md"
+    description: "Accessible UI/UX specialist with WCAG 2.1 AA+ compliance"
+    capabilities:
+      - "WCAG 2.1 AA+ accessible design"
+      - "Portuguese-first interface design"
+      - "Responsive design and mobile-first"
+      - "Brazilian cultural adaptation"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "write", "create"]
+
+  architect-review:
+    name: "ARCHITECT REVIEW"
+    file: ".factory/droids/architect-review.md"
+    description: "Master software architect for modern patterns"
+    capabilities:
+      - "Clean architecture and microservices"
+      - "Scalability and system design"
+      - "Brazilian fintech architecture"
+      - "Performance optimization strategies"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "analyze", "plan"]
+
+  product-architect:
+    name: "PRODUCT ARCHITECT"
+    file: ".factory/droids/product-architect.md"
+    description: "Product strategy and requirements specialist"
+    capabilities:
+      - "PRD generation and requirements analysis"
+      - "Diátaxis framework documentation"
+      - "Strategic product planning"
+      - "Rules engineering and governance"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["read", "write", "plan", "research"]
+
+  stuck:
+    name: "STUCK"
+    file: ".factory/droids/stuck.md"
+    description: "Emergency escalation agent with HALT authority"
+    capabilities:
+      - "Human escalation for any problem"
+      - "HALT ALL WORK authority"
+      - "Emergency problem resolution"
+      - "Critical decision making"
+    model: "claude-sonnet-4-5-20250929"
+    tools: ["ask_user_question", "emergency_stop"]
+
+# Configuração de Execução Paralela
+parallel_execution:
+  enabled: true
+  max_concurrent_droids: 5
+  
+  # Padrões de execução paralela permitidos
+  allowed_patterns:
+    - "research_team"  # apex-researcher + architect-review + database-specialist
+    - "quality_gates"  # test-auditor + code-reviewer + architect-review
+    - "implementation" # apex-dev + database-specialist
+    - "compliance"     # test-auditor + code-reviewer
+  
+  # Sincronização points
+  sync_points:
+    research_complete: "Requirements validated and patterns identified"
+    design_approved: "Architecture approved and contracts defined"
+    implementation_ready: "Code complete and documentation updated"
+    testing_complete: "All tests pass and compliance validated"
+
+# Configurações de Compliance Brasileiro
+brazilian_compliance:
+  lgpd:
+    enabled: true
+    validation_level: "strict"
+    auto_validation: true
+    
+  financial:
+    enabled: true
+    bcb_compliance: true
+    pix_standards: true
+    
+  accessibility:
+    enabled: true
+    wcag_level: "2.1 AA+"
+    auto_validation: true
+
+# Configuração de Qualidade e Performance
+quality_gates:
+  enabled: true
+  
+  # Métricas obrigatórias
+  required_metrics:
+    test_coverage: 90
+    performance_score: 90
+    security_score: 95
+    compliance_score: 100
+  
+  # Validação automática
+  auto_validation:
+    - "type_check"
+    - "lint"
+    - "security_scan"
+    - "accessibility_audit"
+
+# Configuração de Monitoramento e Analytics
+monitoring:
+  enabled: true
+  
+  # Métricas de performance
+  performance_metrics:
+    agent_utilization: true
+    task_completion_time: true
+    context_transfer_efficiency: true
+    routing_accuracy: true
+  
+  # Learning e melhoria contínua
+  continuous_learning:
+    enabled: true
+    pattern_recognition: true
+    optimization_suggestions: true
+
+# Configuração de Emergência
+emergency_procedures:
+  stuck_agent:
+    auto_invoke: true
+    timeout_minutes: 5
+    
+  rollback_procedures:
+    enabled: true
+    auto_rollback: false  # Requer confirmação
+    
+  escalation_rules:
+    security_issues: "immediate"
+    compliance_failures: "immediate"
+    performance_degradation: "after_analysis"

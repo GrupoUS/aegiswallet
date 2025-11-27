@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { apiClient } from '@/lib/api-client';
 import { supabase } from '@/integrations/supabase/client';
+import { hasIntegrationTestEnv } from './helpers';
 
-describe('Transactions API Integration', () => {
+describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => {
   let authToken: string;
   let testTransactionId: string;
 

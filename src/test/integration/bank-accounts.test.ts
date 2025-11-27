@@ -1,46 +1,28 @@
 /**
  * Bank Accounts Integration Tests
- * Tests the Hono HTTP API for bank account CRUD operations
+ * Tests the Supabase database operations for bank account CRUD
  *
- * These tests verify data integrity and database operations through the API layer.
+ * These tests verify data integrity and database operations directly.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import app from '@/server/index';
 import type { Database } from '@/types/database.types';
 import type { TestUser } from './helpers';
-import { cleanupUserData, createTestUser, getSupabaseAdminClient } from './helpers';
-
-const supabase = getSupabaseAdminClient();
+import {
+  cleanupUserData,
+  createTestUser,
+  getSupabaseAdminClient,
+  hasIntegrationTestEnv,
+} from './helpers';
 
 type BankAccountRow = Database['public']['Tables']['bank_accounts']['Row'];
 
-// Helper to make authenticated requests to the Hono app
-const makeRequest = async (
-  method: string,
-  path: string,
-  userId: string,
-  body?: Record<string, unknown>
-) => {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    // For testing, we'll use direct database access instead of JWT
-    // since the auth middleware will be mocked/bypassed in test mode
-  };
-
-  const request = new Request(`http://localhost${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  return app.fetch(request);
-};
-
-describe('Bank Accounts API Integration', () => {
+describe.skipIf(!hasIntegrationTestEnv())('Bank Accounts API Integration', () => {
   let testUser: TestUser;
   let createdAccountIds: string[] = [];
+  let supabase: ReturnType<typeof getSupabaseAdminClient>;
 
   beforeAll(async () => {
+    supabase = getSupabaseAdminClient();
     testUser = await createTestUser(supabase);
   });
 

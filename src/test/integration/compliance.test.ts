@@ -12,9 +12,15 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { getSupabaseAdminClient, createTestUser, cleanupUserData, type TestUser } from './helpers';
+import {
+  getSupabaseAdminClient,
+  createTestUser,
+  cleanupUserData,
+  hasIntegrationTestEnv,
+  type TestUser,
+} from './helpers';
 
-describe('LGPD Compliance Integration Tests', () => {
+describe.skipIf(!hasIntegrationTestEnv())('LGPD Compliance Integration Tests', () => {
   let supabase: ReturnType<typeof getSupabaseAdminClient>;
   let testUser: TestUser;
 
@@ -57,7 +63,7 @@ describe('LGPD Compliance Integration Tests', () => {
       expect(error).toBeNull();
       expect(templates).toBeDefined();
       expect(templates!.length).toBeGreaterThan(0);
-      
+
       // Check that data_processing is mandatory
       const hasDataProcessing = templates!.some(t => t.consent_type === 'data_processing');
       expect(hasDataProcessing).toBe(true);

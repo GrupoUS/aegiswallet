@@ -7,17 +7,22 @@ import {
 } from '@/lib/validation/financial-events-validator';
 import type { Database } from '@/types/database.types';
 import type { FinancialEvent } from '@/types/financial-events';
-import { cleanupUserData, createTestUser, getSupabaseAdminClient } from './helpers';
+import {
+  cleanupUserData,
+  createTestUser,
+  getSupabaseAdminClient,
+  hasIntegrationTestEnv,
+} from './helpers';
 
 type DbFinancialEventRow = Database['public']['Tables']['financial_events']['Row'];
 
-const supabase = getSupabaseAdminClient();
-
-describe('Financial Events Integration', () => {
+describe.skipIf(!hasIntegrationTestEnv())('Financial Events Integration', () => {
   let testUser: { id: string; email: string };
   let createdEventIds: string[] = [];
+  let supabase: ReturnType<typeof getSupabaseAdminClient>;
 
   beforeAll(async () => {
+    supabase = getSupabaseAdminClient();
     testUser = await createTestUser(supabase);
   });
 

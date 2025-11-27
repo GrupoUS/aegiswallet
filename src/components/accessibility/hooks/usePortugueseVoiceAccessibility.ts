@@ -36,13 +36,14 @@ interface BrowserSpeechRecognition {
 	lang: string;
 	continuous: boolean;
 	interimResults: boolean;
-	maxAlternatives: number;
 	onstart: ((event: Event) => void) | null;
 	onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
 	onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
 	onend: (() => void) | null;
 	start(): void;
 	stop(): void;
+	// Optional properties that may not exist in all browsers
+	maxAlternatives?: number;
 }
 
 // Alias for compatibility - using BrowserSpeechRecognition directly
@@ -261,15 +262,19 @@ export const usePortugueseVoiceAccessibility = ({
 		recognition.lang = 'pt-BR';
 		recognition.continuous = false;
 		recognition.interimResults = true;
-		recognition.maxAlternatives = 1;
+		// Only set maxAlternatives if the property exists
+		if ('maxAlternatives' in recognition) {
+			(recognition as unknown as BrowserSpeechRecognition).maxAlternatives = 1;
+		}
 
-		recognition.onstart = () => {
+		// Use addEventListener for better compatibility
+		recognition.addEventListener('start', () => {
 			setIsListening(true);
 			setTranscript('');
 			announceToScreenReader(
 				'Microfone ativado. Fale seu comando em português.',
 			);
-		};
+		});
 
 		recognition.onresult = (event: BrowserSpeechRecognitionEvent) => {
 			const current = event.resultIndex;
@@ -285,18 +290,19 @@ export const usePortugueseVoiceAccessibility = ({
 			}
 		};
 
-		recognition.onerror = (event: BrowserSpeechRecognitionErrorEvent) => {
+		recognition.addEventListener('error', (event: Event) => {
+			const errorEvent = event as BrowserSpeechRecognitionErrorEvent;
 			setIsListening(false);
 			setIsProcessing(false);
-			const errorMessage = getErrorMessage(event.error);
+			const errorMessage = getErrorMessage(errorEvent.error);
 			announceToScreenReader(errorMessage, 'assertive');
 			setLastResponse(errorMessage);
-		};
+		});
 
-		recognition.onend = () => {
+		recognition.addEventListener('end', () => {
 			setIsListening(false);
 			setIsProcessing(false);
-		};
+		});
 
 		recognitionRef.current = recognition as unknown as BrowserSpeechRecognition;
 		synthesisRef.current = window.speechSynthesis;

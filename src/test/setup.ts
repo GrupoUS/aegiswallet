@@ -49,9 +49,6 @@ declare global {
     SpeechRecognition: SpeechRecognitionConstructor;
     webkitSpeechRecognition: SpeechRecognitionConstructor;
   }
-
-  const SpeechRecognition: SpeechRecognitionConstructor;
-  const webkitSpeechRecognition: SpeechRecognitionConstructor;
 }
 
 if (typeof globalThis.Element === 'undefined') {
@@ -103,7 +100,7 @@ if (typeof globalThis.document === 'undefined') {
 
   // Set global document for Testing Library
   (globalThis as unknown as { document: Document }).document = dom.window.document;
-  (globalThis as unknown as { window: Window }).window = dom.window;
+  (globalThis as unknown as { window: Window }).window = dom.window as unknown as Window;
 }
 
 import '@testing-library/jest-dom';
@@ -369,18 +366,18 @@ beforeAll(() => {
     globalObj.speechSynthesis = mockSpeechSynthesis as unknown as SpeechSynthesis;
   }
   if (!globalObj.SpeechRecognition) {
-    globalObj.SpeechRecognition = mockSpeechRecognition;
+    globalObj.SpeechRecognition = mockSpeechRecognition as unknown;
   }
   if (!globalObj.webkitSpeechRecognition) {
-    globalObj.webkitSpeechRecognition = mockSpeechRecognition;
+    globalObj.webkitSpeechRecognition = mockSpeechRecognition as unknown;
   }
 
   // Ensure window object has Speech API
   if (typeof window !== 'undefined') {
     (window as unknown as { speechSynthesis: SpeechSynthesis }).speechSynthesis = mockSpeechSynthesis;
     (window as unknown as { SpeechSynthesisUtterance: typeof SpeechSynthesisUtterance }).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
-    (window as unknown as { SpeechRecognition: SpeechRecognitionConstructor }).SpeechRecognition = mockSpeechRecognition;
-    (window as unknown as { webkitSpeechRecognition: SpeechRecognitionConstructor }).webkitSpeechRecognition = mockSpeechRecognition;
+    (window as unknown as { SpeechRecognition: SpeechRecognitionConstructor }).SpeechRecognition = mockSpeechRecognition as SpeechRecognitionConstructor;
+    (window as unknown as { webkitSpeechRecognition: SpeechRecognitionConstructor }).webkitSpeechRecognition = mockSpeechRecognition as SpeechRecognitionConstructor;
   }
 
   // Mock navigator for tests

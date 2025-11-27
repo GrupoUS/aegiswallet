@@ -91,7 +91,7 @@ describe('Voice Command Performance', () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
-    
+
     // Reinitialize the mock instance with fresh spies after clearAllMocks
     mockSpeechRecognitionInstance = {
       continuous: false,
@@ -104,7 +104,7 @@ describe('Voice Command Performance', () => {
       start: vi.fn(),
       stop: vi.fn(),
     };
-    
+
     // Restore the mockSpeechRecognition implementation after clearAllMocks
     mockSpeechRecognition.mockImplementation(() => {
       const instance = {
@@ -143,7 +143,7 @@ describe('Voice Command Performance', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any;
       const windowSpeechRecognition = win.SpeechRecognition;
-      
+
       const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
       expect(result.current.supported).toBe(true);
@@ -155,7 +155,7 @@ describe('Voice Command Performance', () => {
 
       // Check window.SpeechRecognition was called (not mockSpeechRecognition reference)
       expect(windowSpeechRecognition).toHaveBeenCalled();
-      
+
       // Get the instance that was returned from the mock constructor
       const createdInstance = windowSpeechRecognition.mock.results[0]?.value;
       expect(createdInstance).toBeDefined();

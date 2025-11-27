@@ -123,16 +123,19 @@ describe('Type Check Validation', () => {
     });
   });
 
-  describe('Context Type Fixes', () => {
-    it('should have tRPC context with user property', async () => {
-      const contextModule = await import('@/server/context');
+  describe('Hono Auth Context Fixes', () => {
+    it('should have Hono auth middleware with user property', async () => {
+      // Now using Hono RPC instead of tRPC
+      const authModule = await import('@/server/middleware/auth');
 
-      // This should now include the user property
-      const createContext = contextModule.createContext;
+      // This should include the authMiddleware function
+      const { authMiddleware, optionalAuthMiddleware } = authModule;
 
-      // We can't actually test the function execution here easily,
-      // but we can verify the module exists
-      expect(createContext).toBeDefined();
+      // Verify the auth middlewares exist and are functions
+      expect(authMiddleware).toBeDefined();
+      expect(optionalAuthMiddleware).toBeDefined();
+      expect(typeof authMiddleware).toBe('function');
+      expect(typeof optionalAuthMiddleware).toBe('function');
     });
   });
 

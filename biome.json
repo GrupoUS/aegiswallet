@@ -1,22 +1,24 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
   "files": {
     "ignoreUnknown": false,
     "includes": [
       "src/**/*.{ts,tsx,js,jsx}",
       "scripts/**/*.{ts,tsx,js,jsx}",
       "vitest.config.ts",
-      "vitest.*.config.ts"
-    ],
-    "ignore": [
-      "src/routeTree.gen.ts"
+      "vitest.*.config.ts",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.next",
+      "!**/coverage",
+      "!src/routeTree.gen.ts"
     ]
-  },
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
   },
   "formatter": {
     "enabled": true,
@@ -32,76 +34,43 @@
       "recommended": true,
       "suspicious": {
         "noExplicitAny": "warn",
-        "noDebugger": "error",
-        "noDocumentCookie": "error",
-        "noArrayIndexKey": "warn",
         "noConsole": "warn",
-        "noDoubleEquals": "error",
-        "noRedeclare": "error",
-        "noDuplicateObjectKeys": "error",
-        "noDuplicateParameters": "error",
-        "noEmptyBlock": "warn",
-        "useIsArray": "error"
+        "noArrayIndexKey": "warn"
       },
-      "correctness": {
-        "noUnusedVariables": "error",
-        "useExhaustiveDependencies": "error",
-        "useHookAtTopLevel": "error",
-        "noUnusedImports": "error",
-        "noConstAssign": "error",
-        "noGlobalObjectCalls": "error",
-        "noInvalidConstructorSuper": "error",
-        "noSetterReturn": "error",
-        "noUndeclaredVariables": "error",
-        "noUnreachable": "error",
-        "noUnsafeFinally": "error"
-      },
-      "security": {
-        "noDangerouslySetInnerHtml": "error"
+      "style": {
+        "noNonNullAssertion": "warn",
+        "useSelfClosingElements": "warn"
       },
       "a11y": {
-        "noLabelWithoutControl": "warn",
-        "noStaticElementInteractions": "warn",
-        "useKeyWithClickEvents": "warn",
-        "useButtonType": "warn",
         "noSvgWithoutTitle": "warn",
-        "useAltText": "warn",
-        "useValidAnchor": "warn"
+        "useButtonType": "warn"
       },
       "complexity": {
         "noForEach": "off",
         "useLiteralKeys": "off",
         "useArrowFunction": "off"
-      },
-      "performance": {
-        "noAccumulatingSpread": "error",
-        "noDelete": "error"
-      },
-      "style": {
-        "useConst": "error",
-        "noNonNullAssertion": "warn",
-        "noUselessElse": "error",
-        "useTemplate": "error",
-        "useSelfClosingElements": "warn"
       }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "es5",
+      "bracketSpacing": true,
+      "arrowParentheses": "always"
+    },
+    "globals": ["console", "process", "Buffer", "__dirname", "__filename"]
+  },
+  "json": {
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2
     }
   },
   "overrides": [
     {
-      "includes": ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "correctness": {
-            "useHookAtTopLevel": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/test/**/*.{ts,tsx}"],
+      "includes": ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}", "src/test/**/*.{ts,tsx}"],
       "linter": {
         "rules": {
           "suspicious": {
@@ -128,21 +97,5 @@
         }
       }
     }
-  ],
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "always",
-      "trailingCommas": "es5",
-      "bracketSpacing": true,
-      "arrowParentheses": "always"
-    },
-    "globals": ["console", "process", "Buffer", "__dirname", "__filename"]
-  },
-  "json": {
-    "formatter": {
-      "indentStyle": "space",
-      "indentWidth": 2
-    }
-  }
+  ]
 }

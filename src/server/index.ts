@@ -19,6 +19,7 @@ import {
   transactionsRouter,
   usersRouter,
   voiceRouter,
+  aiChatRouter,
 } from '@/server/routes/v1';
 
 /**
@@ -54,6 +55,7 @@ app.route('/api/v1/transactions', transactionsRouter);
 app.route('/api/v1/calendar', calendarRouter);
 app.route('/api/v1/google-calendar', googleCalendarRouter);
 app.route('/api/v1/compliance', complianceRouter);
+app.route('/api/v1/ai', aiChatRouter);
 
 // Apply auth middleware to authenticated v1 routes
 // Note: Individual routes will apply auth as needed

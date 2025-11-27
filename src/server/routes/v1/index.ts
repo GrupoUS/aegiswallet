@@ -14,6 +14,7 @@ import healthRouter from './health';
 import transactionsRouter from './transactions';
 import usersRouter from './users';
 import voiceRouter from './voice';
+import { aiChat as aiChatRouter } from './ai-chat';
 
 // Export all routers for use in main server
 export {
@@ -28,4 +29,5 @@ export {
   calendarRouter,
   googleCalendarRouter,
   complianceRouter,
+  aiChatRouter,
 };

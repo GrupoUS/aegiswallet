@@ -6,6 +6,7 @@
  * @module test/tts/textToSpeechService
  */
 
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TextToSpeechService } from '@/lib/tts/textToSpeechService';
@@ -30,21 +31,24 @@ class MockSpeechSynthesisUtterance {
 	}
 }
 
+// Type for our mock SpeechSynthesis
+interface MockSpeechSynthesisType {
+	speak: Mock;
+	cancel: Mock;
+	pause: Mock;
+	resume: Mock;
+	getVoices: Mock;
+	speaking: boolean;
+	paused: boolean;
+	pending: boolean;
+	addEventListener: Mock;
+	removeEventListener: Mock;
+	dispatchEvent: Mock;
+	onvoiceschanged: ((this: SpeechSynthesis, ev: Event) => unknown) | null;
+}
+
 describe('TextToSpeechService', () => {
-	let mockSpeechSynthesis: {
-		speak: ReturnType<typeof vi.fn>;
-		cancel: ReturnType<typeof vi.fn>;
-		pause: ReturnType<typeof vi.fn>;
-		resume: ReturnType<typeof vi.fn>;
-		getVoices: ReturnType<typeof vi.fn>;
-		speaking: boolean;
-		paused: boolean;
-		pending: boolean;
-		addEventListener: ReturnType<typeof vi.fn>;
-		removeEventListener: ReturnType<typeof vi.fn>;
-		dispatchEvent: ReturnType<typeof vi.fn>;
-		onvoiceschanged: ((this: SpeechSynthesis, ev: Event) => any) | null;
-	} & SpeechSynthesis;
+	let mockSpeechSynthesis: MockSpeechSynthesisType;
 	let tts: TextToSpeechService;
 
 	beforeEach(() => {
@@ -88,7 +92,7 @@ describe('TextToSpeechService', () => {
 		tts = createTTSService(undefined, {
 			SpeechSynthesisUtterance:
 				MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
-			speechSynthesis: mockSpeechSynthesis,
+			speechSynthesis: mockSpeechSynthesis as unknown as SpeechSynthesis,
 		});
 	});
 
@@ -112,7 +116,7 @@ describe('TextToSpeechService', () => {
 				{
 					SpeechSynthesisUtterance:
 						MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
-					speechSynthesis: mockSpeechSynthesis,
+					speechSynthesis: mockSpeechSynthesis as unknown as SpeechSynthesis,
 				},
 			);
 
@@ -190,7 +194,7 @@ describe('TextToSpeechService', () => {
 				{
 					SpeechSynthesisUtterance:
 						MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
-					speechSynthesis: mockSpeechSynthesis,
+					speechSynthesis: mockSpeechSynthesis as unknown as SpeechSynthesis,
 				},
 			);
 

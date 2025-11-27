@@ -1,13 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2022"
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "isolatedModules": false,
+    "esModuleInterop": true
   },
   "include": [
-    "src/**/*",
     "src/**/*.test.ts",
-    "src/**/*.test.tsx"
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/test/**/*.ts"
   ],
   "exclude": [
     "node_modules",

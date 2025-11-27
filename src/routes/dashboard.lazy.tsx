@@ -44,6 +44,8 @@ const CalendarLoader = () => (
 	</Card>
 );
 
+import { RouteGuard } from '@/lib/auth/route-guard';
+
 export function Dashboard() {
 	const navigate = useNavigate();
 
@@ -188,148 +190,153 @@ export function Dashboard() {
 	];
 
 	return (
-		<div className="container mx-auto space-y-6 p-4">
-			<div className="flex items-center justify-between">
+		<RouteGuard>
+			<div className="container mx-auto space-y-6 p-4">
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
+							Dashboard
+						</h1>
+						<p className="text-muted-foreground">
+							Insights inteligentes sobre suas finanças
+						</p>
+					</div>
+				</div>
+
+				{/* Magic Cards - Insights Financeiros */}
 				<div>
-					<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
-						Dashboard
-					</h1>
-					<p className="text-muted-foreground">
-						Insights inteligentes sobre suas finanças
-					</p>
-				</div>
-			</div>
-
-			{/* Magic Cards - Insights Financeiros */}
-			<div>
-				<h2 className="mb-4 font-semibold text-2xl">Insights Financeiros</h2>
-				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-					{magicCardsData.map((card) => {
-						const Icon = card.icon;
-						return (
-							<MagicCard key={card.title} className="p-6">
-								<div className="flex items-center justify-between">
-									<div>
-										<p className="font-medium text-muted-foreground text-sm">
-											{card.title}
-										</p>
-										<p className="font-bold text-2xl">
-											{card.isCurrency ? (
-												<FinancialAmount
-													amount={card.value}
-													currency="BRL"
-													size="xl"
-													showSign={false}
-													className="text-foreground"
-												/>
-											) : (
-												card.value
-											)}
-										</p>
-										<p className={`text-sm ${card.color}`}>{card.change}</p>
-									</div>
-									<Icon className="h-8 w-8 text-muted-foreground/50" />
-								</div>
-							</MagicCard>
-						);
-					})}
-				</div>
-			</div>
-
-			{/* Quick Actions - 3 Columns Layout */}
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-				{/* Coluna 1: Transações Recentes */}
-				<Card variant="glass">
-					<CardHeader>
-						<CardTitle>Transações Recentes</CardTitle>
-						<CardDescription>Últimas transações</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{((recentTransactions as Transaction[] | undefined) ?? []).map(
-								(transaction) => (
-									<div
-										key={transaction.id}
-										className="flex items-center justify-between"
-									>
+					<h2 className="mb-4 font-semibold text-2xl">Insights Financeiros</h2>
+					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+						{magicCardsData.map((card) => {
+							const Icon = card.icon;
+							return (
+								<MagicCard key={card.title} className="p-6">
+									<div className="flex items-center justify-between">
 										<div>
-											<p className="font-medium truncate max-w-[150px]">
-												{transaction.description}
+											<p className="font-medium text-muted-foreground text-sm">
+												{card.title}
 											</p>
-											<p className="text-muted-foreground text-sm">
-												{new Date(transaction.created_at).toLocaleDateString(
-													'pt-BR',
+											<p className="font-bold text-2xl">
+												{card.isCurrency ? (
+													<FinancialAmount
+														amount={card.value}
+														currency="BRL"
+														size="xl"
+														showSign={false}
+														className="text-foreground"
+													/>
+												) : (
+													card.value
 												)}
 											</p>
+											<p className={`text-sm ${card.color}`}>{card.change}</p>
 										</div>
-										<FinancialAmount amount={Number(transaction.amount)} />
+										<Icon className="h-8 w-8 text-muted-foreground/50" />
 									</div>
-								),
-							)}
-							{!recentTransactions?.length && (
-								<p className="text-sm text-muted-foreground text-center py-4">
-									Nenhuma transação recente
-								</p>
-							)}
-						</div>
-						<Link to="/saldo">
-							<Button variant="outline" className="mt-4 w-full">
-								Ver Todas as Transações
-							</Button>
-						</Link>
-					</CardContent>
-				</Card>
+								</MagicCard>
+							);
+						})}
+					</div>
+				</div>
 
-				{/* Coluna 2: Mini Calendário */}
-				<Suspense fallback={<CalendarLoader />}>
-					<LazyMiniCalendarWidget />
-				</Suspense>
+				{/* Quick Actions - 3 Columns Layout */}
+				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+					{/* Coluna 1: Transações Recentes */}
+					<Card variant="glass">
+						<CardHeader>
+							<CardTitle>Transações Recentes</CardTitle>
+							<CardDescription>Últimas transações</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<div className="space-y-4">
+								{((recentTransactions as Transaction[] | undefined) ?? []).map(
+									(transaction) => (
+										<div
+											key={transaction.id}
+											className="flex items-center justify-between"
+										>
+											<div>
+												<p className="font-medium truncate max-w-[150px]">
+													{transaction.description}
+												</p>
+												<p className="text-muted-foreground text-sm">
+													{new Date(transaction.created_at).toLocaleDateString(
+														'pt-BR',
+													)}
+												</p>
+											</div>
+											<FinancialAmount amount={Number(transaction.amount)} />
+										</div>
+									),
+								)}
+								{!recentTransactions?.length && (
+									<p className="text-sm text-muted-foreground text-center py-4">
+										Nenhuma transação recente
+									</p>
+								)}
+							</div>
+							<Link to="/saldo">
+								<Button variant="outline" className="mt-4 w-full">
+									Ver Todas as Transações
+								</Button>
+							</Link>
+						</CardContent>
+					</Card>
 
-				{/* Coluna 3: Resumo Mensal */}
-				<Card variant="glass">
-					<CardHeader>
-						<CardTitle>Resumo Mensal</CardTitle>
-						<CardDescription>
-							{new Date().toLocaleDateString('pt-BR', {
-								month: 'long',
-								year: 'numeric',
-							})}
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{summaryLoading ? (
-								<div className="space-y-2">
-									<Skeleton className="h-4 w-full" />
-									<Skeleton className="h-4 w-full" />
-									<Skeleton className="h-4 w-full" />
-								</div>
-							) : (
-								<>
-									<div className="flex items-center justify-between">
-										<span className="text-sm">Receitas</span>
-										<FinancialAmount amount={summary?.income ?? 0} size="sm" />
+					{/* Coluna 2: Mini Calendário */}
+					<Suspense fallback={<CalendarLoader />}>
+						<LazyMiniCalendarWidget />
+					</Suspense>
+
+					{/* Coluna 3: Resumo Mensal */}
+					<Card variant="glass">
+						<CardHeader>
+							<CardTitle>Resumo Mensal</CardTitle>
+							<CardDescription>
+								{new Date().toLocaleDateString('pt-BR', {
+									month: 'long',
+									year: 'numeric',
+								})}
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<div className="space-y-4">
+								{summaryLoading ? (
+									<div className="space-y-2">
+										<Skeleton className="h-4 w-full" />
+										<Skeleton className="h-4 w-full" />
+										<Skeleton className="h-4 w-full" />
 									</div>
-									<div className="flex items-center justify-between">
-										<span className="text-sm">Despesas</span>
-										<FinancialAmount
-											amount={-(summary?.expenses ?? 0)}
-											size="sm"
-										/>
-									</div>
-									{/* Note: Summary now returns { income, expenses, balance } from useProfile.ts
-                      This gives a breakdown for the current month based on the API response.
-                  */}
-								</>
-							)}
+								) : (
+									<>
+										<div className="flex items-center justify-between">
+											<span className="text-sm">Receitas</span>
+											<FinancialAmount
+												amount={summary?.income ?? 0}
+												size="sm"
+											/>
+										</div>
+										<div className="flex items-center justify-between">
+											<span className="text-sm">Despesas</span>
+											<FinancialAmount
+												amount={-(summary?.expenses ?? 0)}
+												size="sm"
+											/>
+										</div>
+										{/* Note: Summary now returns { income, expenses, balance } from useProfile.ts
+						  This gives a breakdown for the current month based on the API response.
+					  */}
+									</>
+								)}
 
-							{/* Re-implementing monthly summary using a dedicated useFinancialEvents call for this month to get proper breakdown */}
-						</div>
-						<MonthlySummaryContent />
-					</CardContent>
-				</Card>
+								{/* Re-implementing monthly summary using a dedicated useFinancialEvents call for this month to get proper breakdown */}
+							</div>
+							<MonthlySummaryContent />
+						</CardContent>
+					</Card>
+				</div>
 			</div>
-		</div>
+		</RouteGuard>
 	);
 }
 

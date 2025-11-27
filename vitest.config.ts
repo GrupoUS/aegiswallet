@@ -1,13 +1,26 @@
+/**
+ * Vitest Configuration v4.x with Phase 1 Improvements Applied
+ *
+ * This configuration implements comprehensive testing optimizations for AegisWallet:
+ * - Fork-based pool isolation for database and financial testing
+ * - Coverage thresholds tailored for critical modules (security: 95%, compliance: 95%, hooks: 90%)
+ * - Brazilian timezone (America/Sao_Paulo) for consistent financial date tests
+ * - Automatic mock resets to prevent test interference
+ * - CI-optimized reporting with JUnit and GitHub Actions integration
+ *
+ * Reference: docs/quality-control.md - Phase 1 Testing Infrastructure Improvements
+ */
 import * as path from 'node:path';
+
 import react from '@vitejs/plugin-react';
-import { defineConfig, configDefaults } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   // ✅ MELHORIA 1: optimizeDeps movido para dentro de test.deps
   // O optimizeDeps no root é para Vite dev server, não para Vitest
 
-  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
-  plugins: [react()] as any,
+  // @ts-expect-error -- Vite/Vitest version mismatch (Vitest bundles its own Vite types)
+  plugins: [react()],
 
   resolve: {
     alias: {
@@ -60,7 +73,7 @@ export default defineConfig({
     // O isolamento é garantido pelo pool, não pela sequência
     sequence: {
       concurrent: true, // Permite execução paralela DENTRO de cada arquivo
-      shuffle: false,   // Mantém ordem determinística para debugging
+      shuffle: false, // Mantém ordem determinística para debugging
     },
 
     coverage: {
@@ -136,9 +149,7 @@ export default defineConfig({
     teardownTimeout: 5000,
 
     // ✅ MELHORIA 17: Reporters otimizados
-    reporters: process.env.CI
-      ? ['default', 'junit', 'github-actions']
-      : ['default'],
+    reporters: process.env.CI ? ['default', 'junit', 'github-actions'] : ['default'],
     outputFile: {
       junit: './coverage/junit.xml',
     },
@@ -163,8 +174,7 @@ export default defineConfig({
     restoreMocks: true,
     clearMocks: true,
 
-    // ✅ MELHORIA 22: Watch mode otimizado
-    // ✅ FIX: watchExclude moved to test.watch.exclude as it doesn't exist at root level
+    // ✅ MELHORIA 22: Watch mode otimizado para desenvolvimento rápido
 
     // ✅ MELHORIA 23: Timezone fixa para testes consistentes
     // (Importante para AegisWallet - mercado brasileiro)

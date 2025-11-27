@@ -1,7 +1,8 @@
 // Vercel Serverless Function - Hono App Entry Point
-// Connects Vercel Edge Functions to the Hono application
+// This file is bundled by esbuild at build time with path aliases resolved
 
 import { handle } from '@hono/node-server/vercel';
+
 // Import the configured Hono application
 import app from '../src/server/index';
 

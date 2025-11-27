@@ -138,6 +138,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				institution_name: 'Banco Duplicado',
 				institution_id: 'DUPLICADO_TEST',
 				account_mask: '**** 1111',
+				account_type: 'checking',
 			};
 
 			await createAccountDirect(payload);

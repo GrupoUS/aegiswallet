@@ -54,7 +54,11 @@ const BrazilianFinancialCompliance = () => {
 		transactionMonitoring: 'pending',
 	});
 
-	const [riskAssessment, setRiskAssessment] = React.useState({
+	const [riskAssessment, setRiskAssessment] = React.useState<{
+		recommendations: string[];
+		riskFactors: string[];
+		riskLevel: string;
+	}>({
 		recommendations: [],
 		riskFactors: [],
 		riskLevel: 'low',
@@ -368,7 +372,7 @@ const BrazilianFinancialCompliance = () => {
 								{
 									'data-testid': 'recipient-bank',
 									key: 'recipient-bank-select',
-									onChange: (e) =>
+									onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
 										setTransactionData({
 											...transactionData,
 											recipientBank: e.target.value,
@@ -422,7 +426,7 @@ const BrazilianFinancialCompliance = () => {
 								{
 									'data-testid': 'transaction-type',
 									key: 'transaction-type-select',
-									onChange: (e) =>
+									onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
 										setTransactionData({
 											...transactionData,
 											transactionType: e.target.value,
@@ -463,7 +467,7 @@ const BrazilianFinancialCompliance = () => {
 							React.createElement('textarea', {
 								'data-testid': 'transaction-description',
 								key: 'description-input',
-								onChange: (e) =>
+								onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
 									setTransactionData({
 										...transactionData,
 										description: e.target.value,

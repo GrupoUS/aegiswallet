@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -212,7 +212,8 @@ export function createInsightsTools(userId: string) {
 						futureEvents,
 						confidenceLevel,
 					);
-					const { totalPredictedIncome, totalPredictedExpenses } = calculateTotals(monthlyBreakdown);
+					const { totalPredictedIncome, totalPredictedExpenses } =
+						calculateTotals(monthlyBreakdown);
 					const netCashFlow = totalPredictedIncome - totalPredictedExpenses;
 					const forecast = buildCashFlowForecast(
 						forecastMonths,
@@ -224,7 +225,14 @@ export function createInsightsTools(userId: string) {
 						monthlyPatterns,
 					);
 
-					return buildCashFlowResponse(forecast, forecastMonths, totalPredictedIncome, totalPredictedExpenses, netCashFlow, monthlyBreakdown);
+					return buildCashFlowResponse(
+						forecast,
+						forecastMonths,
+						totalPredictedIncome,
+						totalPredictedExpenses,
+						netCashFlow,
+						monthlyBreakdown,
+					);
 				} catch (error) {
 					secureLogger.error('Falha na previsão de fluxo de caixa', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -259,8 +267,14 @@ export function createInsightsTools(userId: string) {
 				includeRecommendations,
 			}) => {
 				try {
-					const { startDate, endDate } = calculateAnalysisPeriod(analysisPeriod);
-					const transactions = await fetchAnomalyTransactions(supabase, userId, startDate, endDate);
+					const { startDate, endDate } =
+						calculateAnalysisPeriod(analysisPeriod);
+					const transactions = await fetchAnomalyTransactions(
+						supabase,
+						userId,
+						startDate,
+						endDate,
+					);
 					const anomalies = detectAllAnomalies(transactions, severityThreshold);
 					const riskScore = calculateOverallRiskScore(anomalies);
 					const riskLevel = getRiskLevel(riskScore);
@@ -268,7 +282,13 @@ export function createInsightsTools(userId: string) {
 						? generateAnomalyRecommendations(anomalies, riskLevel)
 						: [];
 
-					return buildAnomalyDetectionResponse(anomalies, riskScore, recommendations, startDate, endDate);
+					return buildAnomalyDetectionResponse(
+						anomalies,
+						riskScore,
+						recommendations,
+						startDate,
+						endDate,
+					);
 				} catch (error) {
 					secureLogger.error('Falha na detecção de anomalias', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -307,12 +327,32 @@ export function createInsightsTools(userId: string) {
 				prioritizeEssential,
 			}) => {
 				try {
-					const { transactions } = await fetchBudgetTransactions(supabase, userId, analysisMonths);
-					const spendingAnalysis = analyzeSpendingPatterns(transactions, analysisMonths);
-					const budgetAllocations = calculateBudgetAllocations(spendingAnalysis, targetSavingsRate, prioritizeEssential);
-					const projections = calculateBudgetProjections(spendingAnalysis, budgetAllocations, targetSavingsRate);
+					const { transactions } = await fetchBudgetTransactions(
+						supabase,
+						userId,
+						analysisMonths,
+					);
+					const spendingAnalysis = analyzeSpendingPatterns(
+						transactions,
+						analysisMonths,
+					);
+					const budgetAllocations = calculateBudgetAllocations(
+						spendingAnalysis,
+						targetSavingsRate,
+						prioritizeEssential,
+					);
+					const projections = calculateBudgetProjections(
+						spendingAnalysis,
+						budgetAllocations,
+						targetSavingsRate,
+					);
 
-					return buildBudgetResponse(spendingAnalysis, budgetAllocations, projections, targetSavingsRate);
+					return buildBudgetResponse(
+						spendingAnalysis,
+						budgetAllocations,
+						projections,
+						targetSavingsRate,
+					);
 				} catch (error) {
 					secureLogger.error('Falha ao gerar recomendações de orçamento', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -693,8 +733,12 @@ function calculateVariance(values: number[]): number {
 }
 
 // Helper functions for getCashFlowForecast
-// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-async function fetchCashFlowData(supabaseClient: any, userId: string, forecastMonths: number, includeScheduledEvents: boolean) {
+async function fetchCashFlowData(
+	supabaseClient: SupabaseClient,
+	userId: string,
+	forecastMonths: number,
+	includeScheduledEvents: boolean,
+) {
 	const endDate = new Date();
 	const startDate = new Date(
 		endDate.getFullYear() - 1,
@@ -872,7 +916,10 @@ function buildCashFlowResponse(
 }
 
 // Helper functions for getAnomalyDetection
-function calculateAnalysisPeriod(analysisPeriod: string): { startDate: Date; endDate: Date } {
+function calculateAnalysisPeriod(analysisPeriod: string): {
+	startDate: Date;
+	endDate: Date;
+} {
 	const endDate = new Date();
 	const startDate = new Date();
 
@@ -891,8 +938,12 @@ function calculateAnalysisPeriod(analysisPeriod: string): { startDate: Date; end
 	return { startDate, endDate };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-async function fetchAnomalyTransactions(supabaseClient: any, userId: string, startDate: Date, endDate: Date): Promise<TransactionRecord[]> {
+async function fetchAnomalyTransactions(
+	supabaseClient: SupabaseClient,
+	userId: string,
+	startDate: Date,
+	endDate: Date,
+): Promise<TransactionRecord[]> {
 	const { data: transactions, error } = await supabaseClient
 		.from('transactions')
 		.select(`
@@ -914,7 +965,10 @@ async function fetchAnomalyTransactions(supabaseClient: any, userId: string, sta
 	return transactions ?? [];
 }
 
-function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold: string): FinancialAnomaly[] {
+function detectAllAnomalies(
+	transactions: TransactionRecord[],
+	severityThreshold: string,
+): FinancialAnomaly[] {
 	const anomalies: FinancialAnomaly[] = [];
 
 	// 1. Transações de valor异常mente alto
@@ -924,7 +978,10 @@ function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold
 	);
 
 	highValueTransactions.forEach((tx) => {
-		const severity = Math.abs(tx.amount) > amountStats.mean + 5 * amountStats.stdDev ? 'high' : 'medium';
+		const severity =
+			Math.abs(tx.amount) > amountStats.mean + 5 * amountStats.stdDev
+				? 'high'
+				: 'medium';
 		if (meetsSeverityThreshold(severity, severityThreshold)) {
 			anomalies.push({
 				type: 'unusual_spending',
@@ -933,7 +990,8 @@ function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold
 				amount: Math.abs(tx.amount),
 				date: tx.transaction_date,
 				category: getCategoryName(tx.category),
-				recommendedAction: 'Verificar se esta transação foi autorizada por você',
+				recommendedAction:
+					'Verificar se esta transação foi autorizada por você',
 			});
 		}
 	});
@@ -949,7 +1007,8 @@ function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold
 				amount: group.reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
 				date: group[0].transaction_date,
 				category: getCategoryName(group[0].category),
-				recommendedAction: 'Verificar se houve cobrança duplicada e contestar se necessário',
+				recommendedAction:
+					'Verificar se houve cobrança duplicada e contestar se necessário',
 			});
 		}
 	});
@@ -964,7 +1023,10 @@ function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold
 
 	// 4. Excesso de transações em curto período
 	const excessiveTransactions = detectExcessiveTransactionPattern(transactions);
-	if (excessiveTransactions && meetsSeverityThreshold(excessiveTransactions.severity, severityThreshold)) {
+	if (
+		excessiveTransactions &&
+		meetsSeverityThreshold(excessiveTransactions.severity, severityThreshold)
+	) {
 		anomalies.push(excessiveTransactions);
 	}
 
@@ -1005,18 +1067,24 @@ function buildAnomalyDetectionResponse(
 			analysisPeriod: {
 				startDate: startDate.toISOString(),
 				endDate: endDate.toISOString(),
-				days: Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+				days: Math.ceil(
+					(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+				),
 			},
 		},
-		message: anomalies.length > 0
-			? `Detectadas ${anomalies.length} anomalias no período de análise com nível de risco ${riskLevel}.`
-			: 'Nenhuma anomalia significativa detectada no período analisado.',
+		message:
+			anomalies.length > 0
+				? `Detectadas ${anomalies.length} anomalias no período de análise com nível de risco ${riskLevel}.`
+				: 'Nenhuma anomalia significativa detectada no período analisado.',
 	};
 }
 
 // Helper functions for getBudgetRecommendations
-// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-async function fetchBudgetTransactions(supabaseClient: any, userId: string, analysisMonths: number) {
+async function fetchBudgetTransactions(
+	supabaseClient: SupabaseClient,
+	userId: string,
+	analysisMonths: number,
+) {
 	const endDate = new Date();
 	const startDate = new Date();
 	startDate.setMonth(startDate.getMonth() - analysisMonths);
@@ -1098,7 +1166,10 @@ function analyzeSpendingPatterns(
 	// Calcular médias e percentuais
 	categoryExpenses.forEach((category) => {
 		category.averageMonthly = category.totalAmount / analysisMonths;
-		category.percentage = averageMonthlyExpenses > 0 ? (category.averageMonthly / averageMonthlyExpenses) * 100 : 0;
+		category.percentage =
+			averageMonthlyExpenses > 0
+				? (category.averageMonthly / averageMonthlyExpenses) * 100
+				: 0;
 	});
 
 	return {
@@ -1156,7 +1227,12 @@ function calculateBudgetAllocations(
 	// Atualizar categorias essenciais baseado na configuração
 	const updatedCategories = categoryExpenses.map((cat) => ({
 		...cat,
-		isEssential: cat.isEssential || (prioritizeEssential && ['Alimentação', 'Moradia', 'Transporte', 'Saúde'].includes(cat.categoryName)),
+		isEssential:
+			cat.isEssential ||
+			(prioritizeEssential &&
+				['Alimentação', 'Moradia', 'Transporte', 'Saúde'].includes(
+					cat.categoryName,
+				)),
 	}));
 
 	// Gerar recomendações de orçamento
@@ -1202,7 +1278,10 @@ function calculateBudgetAllocations(
 
 		nonEssentialCategories.forEach((category) => {
 			const recommendedBudget = category.averageMonthly * reductionFactor;
-			const reductionPercentage = ((category.averageMonthly - recommendedBudget) / category.averageMonthly) * 100;
+			const reductionPercentage =
+				((category.averageMonthly - recommendedBudget) /
+					category.averageMonthly) *
+				100;
 
 			budgetRecommendations.push({
 				categoryId: category.categoryId,
@@ -1211,9 +1290,10 @@ function calculateBudgetAllocations(
 				recommendedMonthlyBudget: recommendedBudget,
 				reductionPercentage,
 				priority: 'non_essential',
-				reasoning: reductionPercentage > 30
-					? 'Redução significativa recomendada para atingir meta de economia'
-					: 'Redução moderada para equilibrar orçamento',
+				reasoning:
+					reductionPercentage > 30
+						? 'Redução significativa recomendada para atingir meta de economia'
+						: 'Redução moderada para equilibrar orçamento',
 				color: category.color,
 				icon: category.icon,
 			});
@@ -1223,7 +1303,9 @@ function calculateBudgetAllocations(
 	return {
 		targetMonthlySavings,
 		targetBudget,
-		budgetRecommendations: budgetRecommendations.sort((a, b) => b.reductionPercentage - a.reductionPercentage),
+		budgetRecommendations: budgetRecommendations.sort(
+			(a, b) => b.reductionPercentage - a.reductionPercentage,
+		),
 	};
 }
 
@@ -1245,8 +1327,12 @@ function calculateBudgetProjections(
 		(sum, rec) => sum + rec.recommendedMonthlyBudget,
 		0,
 	);
-	const projectedMonthlySavings = averageMonthlyIncome - projectedMonthlyExpenses;
-	const projectedSavingsRate = averageMonthlyIncome > 0 ? projectedMonthlySavings / averageMonthlyIncome : 0;
+	const projectedMonthlySavings =
+		averageMonthlyIncome - projectedMonthlyExpenses;
+	const projectedSavingsRate =
+		averageMonthlyIncome > 0
+			? projectedMonthlySavings / averageMonthlyIncome
+			: 0;
 
 	return {
 		projectedMonthlyExpenses,
@@ -1266,14 +1352,21 @@ function buildBudgetResponse(
 	targetSavingsRate: number,
 ) {
 	const { averageMonthlyIncome, averageMonthlyExpenses } = spendingAnalysis;
-	const { targetMonthlySavings, targetBudget, budgetRecommendations } = budgetAllocations;
-	const { projectedMonthlyExpenses, projectedMonthlySavings, projectedSavingsRate, canAchieveTarget } = projections;
+	const { targetMonthlySavings, targetBudget, budgetRecommendations } =
+		budgetAllocations;
+	const {
+		projectedMonthlyExpenses,
+		projectedMonthlySavings,
+		projectedSavingsRate,
+		canAchieveTarget,
+	} = projections;
 
 	return {
 		currentAnalysis: {
 			averageMonthlyIncome,
 			averageMonthlyExpenses,
-			currentSavingsRate: (averageMonthlyIncome - averageMonthlyExpenses) / averageMonthlyIncome,
+			currentSavingsRate:
+				(averageMonthlyIncome - averageMonthlyExpenses) / averageMonthlyIncome,
 		},
 		targetAnalysis: {
 			targetSavingsRate,
@@ -1287,8 +1380,9 @@ function buildBudgetResponse(
 			projectedSavingsRate,
 			canAchieveTarget,
 		},
-		message: projectedSavingsRate >= targetSavingsRate
-			? `Meta de economia de ${(targetSavingsRate * 100).toFixed(1)}% atingível com orçamento recomendado! Projeção: ${(projectedSavingsRate * 100).toFixed(1)}% de economia mensal.`
-			: `Meta de ${(targetSavingsRate * 100).toFixed(1)}% desafiadora. Projeção atual: ${(projectedSavingsRate * 100).toFixed(1)}%. Considere reduções adicionais.`,
+		message:
+			projectedSavingsRate >= targetSavingsRate
+				? `Meta de economia de ${(targetSavingsRate * 100).toFixed(1)}% atingível com orçamento recomendado! Projeção: ${(projectedSavingsRate * 100).toFixed(1)}% de economia mensal.`
+				: `Meta de ${(targetSavingsRate * 100).toFixed(1)}% desafiadora. Projeção atual: ${(projectedSavingsRate * 100).toFixed(1)}%. Considere reduções adicionais.`,
 	};
 }

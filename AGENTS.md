@@ -42,7 +42,7 @@ This document establishes optimized rules for AI-assisted development of AegisWa
 **RIGHT TOOL FOR JOB**: Understand full context before implementation. Choose appropriate technology and mcp tools. Plan carefully, implement systematically.
 
 **MANDATORY** use of `serena mcp` to search codebase and semantic code analysis, _DO NOT USE NATIVE SEARCH CODEBASE tool_
-**MANDATORY** use of `desktop-commander mcp` for file and terminal operations and system management
+
 **MANDATORY** invoke `sequential-thinking` first and then the `think` native tool before any other action; under ULTRATHINK, always use `think` to produce a 5‑step breakdown of next steps/strategies to clarify order and purpose.
 
 ## MCP Server Capabilities & Selection
@@ -54,24 +54,127 @@ SERENA:
   use_cases: ["Code search", "Symbol navigation", "Impact analysis", "Architecture exploration"]
   selection_trigger: "Code understanding, refactoring, dependency analysis"
   coordination: "Provides code context for other MCPs"
+  assigned_to: ["apex-dev", "code-reviewer", "database-specialist"]
 
 CONTEXT7:
   primary_role: "Documentation Research & Best Practices"
   use_cases: ["Framework documentation", "Best practices", "Technology research"]
   selection_trigger: "Unfamiliar patterns, technology decisions, implementation guidance"
   coordination: "Used in planning phase for complex implementations"
+  assigned_to: ["apex-researcher", "apex-dev", "apex-ui-ux-designer"]
 
 SEQUENTIAL_THINKING:
   primary_role: "Cognitive Task Analysis & Planning"
   use_cases: ["Complex task decomposition", "Multi-step planning", "Architecture decisions"]
   selection_trigger: "Always start complex tasks with this MCP"
   coordination: "Provides structured approach for other MCPs"
+  assigned_to: ["apex-researcher", "product-architect"]
 
 tavily:
   primary_role: "External Research & Verification"
   use_cases: ["External documentation", "Oficial docs", "Community discussions", "Verification", "Best practices"]
   selection_trigger: "External validation, community practices, verification"
   coordination: "Used for verification and external research"
+  assigned_to: ["apex-researcher", "brazilian-fintech-compliance"]
+```
+
+## 🚀 Orquestração Inteligente de Droids & Skills
+
+### Como Funciona o Sistema
+1. **Task Analysis** → Detecta triggers especiais (Spec Mode, Compliance Brasileiro)
+2. **Complexity Assessment** → Avalia dificuldade (1-10 escala)
+3. **Intelligent Routing** → Seleciona droids/skills especializados
+4. **Parallel Execution** → Otimiza performance com execução concorrente
+5. **Quality Gates** → Validação automática de compliance e segurança
+
+### 📋 Task vs Skill: Quando Usar Cada Ferramenta
+
+```yaml
+TASK_TOOL:
+  purpose: "Invocar droids especializados para tarefas completas"
+  when_to_use:
+    - "Implementações complexas (complexidade ≥7)"
+    - "Pesquisas e análises regulatórias"
+    - "Validações de segurança e compliance"
+    - "Operações de banco de dados críticas"
+  syntax: |
+    Task({
+      subagent_type: "apex-researcher",
+      description: "Research Brazilian fintech compliance",
+      prompt: "Detailed research requirements..."
+    })
+
+SKILL_TOOL:
+  purpose: "Invocar capacidades especializadas para domínios específicos"
+  when_to_use:
+    - "Validação de compliance brasileiro (LGPD/BCB)"
+    - "Testes e validação de qualidade"
+    - "Design e desenvolvimento frontend"
+    - "Arquitetura de sistemas"
+  syntax: |
+    Skill({
+      skill: "brazilian-fintech-compliance"
+    })
+```
+
+### 🎯 Triggers Automáticos de Alto Nível
+
+#### Spec Mode (Prioridade Máxima)
+**Ativação**: "spec - research", "pesquisar e planejar", "analyze and plan"
+**Roteamento**: `Task(apex-researcher)` → Apenas pesquisa, sem implementação
+
+#### Compliance Brasileiro (Prioridade Alta)
+```yaml
+LGPD_TRIGGERS:
+  keywords: ["lgpd", "consent", "dados pessoais", "privacy"]
+  routing: "Task(apex-researcher) + Skill(brazilian-fintech-compliance) + Task(code-reviewer)"
+
+FINANCIAL_TRIGGERS:
+  keywords: ["pix", "boleto", "bcb", "banco central", "fintech"]
+  routing: "Task(apex-researcher) + Task(code-reviewer) + Skill(brazilian-fintech-compliance)"
+
+ACCESSIBILITY_TRIGGERS:
+  keywords: ["wcag", "acessibilidade", "libras", "screen reader"]
+  routing: "Task(apex-ui-ux-designer)"
+```
+
+### 📊 Matrix de Roteamento por Complexidade
+
+```yaml
+COMPLEXITY_1_3 (Simple):
+  - database operations → Task(database-specialist)
+  - basic implementation → Task(apex-dev)
+  - security review → Task(code-reviewer)
+
+COMPLEXITY_4_6 (Moderate):
+  - component development → Task(apex-dev) + Task(apex-ui-ux-designer)
+  - database + security → Task(database-specialist) + Task(code-reviewer)
+
+COMPLEXITY_7_8 (Complex):
+  - primary: Task(apex-dev) [with MCPs: serena, context7]
+  - parallel: Task(code-reviewer) + Task(database-specialist)
+
+COMPLEXITY_9_10 (Mission-Critical):
+  - phase 1: Task(apex-researcher) [research]
+  - phase 2: Task(apex-dev) [implementation]
+  - phase 3: Task(code-reviewer) [validation]
+```
+
+### ⚡ Padrões de Execução Paralela
+
+```yaml
+ALLOWED_PARALLEL_COMBINATIONS:
+  research_team:
+    agents: ["apex-researcher", "database-specialist", "apex-ui-ux-designer"]
+    triggers: ["spec_mode", "brazilian_compliance"]
+    
+  quality_gates:
+    agents: ["code-reviewer", "database-specialist", "webapp-testing"]
+    triggers: ["security", "compliance_validation"]
+    
+  implementation_team:
+    agents: ["apex-dev", "database-specialist"]
+    triggers: ["complexity_7+", "database_operations"]
 ```
 
 ## 🎯 Master Orchestrator System
@@ -145,10 +248,6 @@ AegisWallet democratizes financial automation for millions of Brazilians who lac
 - **9-10**: Mission-critical → apex-researcher → apex-dev → code-reviewer
 
 ### Brazilian Specialization
-**Financial/Banking:**
-- PIX: apex-researcher → apex-dev → database-specialist → code-reviewer (security)
-- Boletos: apex-researcher → apex-dev → code-reviewer → database-specialist
-- Open Banking: apex-researcher → apex-dev → code-reviewer → apex-ui_ux_designer (UX)
 
 **UI/UX Development:**
 - New Components: apex-ui-ux-designer → apex-dev → code-reviewer (security)

@@ -1,8 +1,8 @@
 ---
-title: "NeonPro Code Quality Control - Advanced Standards"
-last_updated: 2025-11-23
+title: "AegisWallet Quality Control - Phase 1-5 Testing Infrastructure Complete"
+last_updated: 2025-11-27
 form: reference
-tags: [quality, healthcare, bun, oxlint, lgpd, compliance, research-driven, planning-first, biome, vitest]
+tags: [quality, brazilian-fintech, bun, oxlint, lgpd, compliance, research-driven, planning-first, biome, vitest, msw, page-objects]
 related:
   - ../architecture/tech-stack.md
   - ../architecture/frontend-architecture.md
@@ -11,9 +11,9 @@ related:
   - ../agents/apex-researcher.md
 ---
 
-# 🔍 NeonPro Code Quality Control - Advanced Standards
+# 🔍 AegisWallet Quality Control - Phase 1-5 Testing Infrastructure Complete
 
-**Strict, research-driven quality control with comprehensive planning, atomic task decomposition, and healthcare compliance**
+**Production-ready testing infrastructure for Brazilian financial compliance with MSW mocking, custom matchers, and Page Object Models**
 
 ## 🎯 Core Philosophy
 
@@ -32,8 +32,12 @@ We use a state-of-the-art toolchain optimized for speed and strictness.
 - **Linting & Formatting**: **Biome** (Primary)
   - Handles formatting, linting, and import sorting.
   - **OXLint**: Secondary, used for ultra-fast pre-check scans.
-- **Testing**: **Vitest** with Typechecking enabled.
-  - **Coverage**: 90%+ Strict enforcement.
+- **Testing**: **Vitest v4.x** with Typechecking enabled.
+  - **Coverage**: 90%+ Global, 95% for security/compliance modules.
+  - **Pool**: Fork-based isolation for database tests.
+- **API Mocking**: **MSW (Mock Service Worker)**
+  - Type-safe Supabase API mocking with realistic HTTP behavior.
+- **E2E Testing**: **Playwright** with Page Object Models.
 - **Documentation**: **Context7 MCP** + **Serena MCP** for semantic understanding.
 
 ### 2. Configuration Standards
@@ -49,12 +53,85 @@ Our `biome.json` is configured for production-grade quality:
   - `noAccumulatingSpread`: **ERROR**. Performance optimization.
   - `useConst`: **ERROR**. Prefer const over let.
 
-#### Vitest (Enhanced)
+#### Vitest (Enhanced v4.x)
 Our `vitest.config.ts` ensures reliability and coverage:
-- **Type Checking**: Enabled (`typecheck: { enabled: true }`). Tests fail if types are invalid.
-- **Coverage**: 90% threshold for branches, functions, lines, and statements.
-- **Reporters**: Verbose and JUnit for CI visibility.
-- **Isolation**: Full test isolation enabled.
+- **Pool**: `forks` (full process isolation for database tests)
+- **Type Checking**: Enabled with `tsconfig.test.json`
+- **Coverage**: 90% global, 95% for security/compliance modules
+- **Reporters**: 
+  - CI: `['default', 'junit', 'github-actions']`
+  - Dev: `['default']`
+- **Isolation**: Full test isolation with automatic mock resets
+- **Timezone**: `America/Sao_Paulo` for Brazilian financial date consistency
+- **Retry**: 2 retries in CI, 0 in dev
+- **Bail**: Fail-fast in dev (stops on first error)
+
+### MSW (Mock Service Worker) Integration
+Our test suite uses MSW for HTTP request mocking:
+- **Server Setup**: `src/test/mocks/server.ts` with `onUnhandledRequest: 'error'`
+- **Handlers**: `src/test/mocks/handlers.ts` for Supabase endpoints
+- **Lifecycle**: Automatic setup/teardown in `src/test/setup.ts`
+- **Benefits**: Type-safe mocking, realistic HTTP behavior, no network calls
+
+**Usage Example**:
+```typescript
+// Handlers automatically intercept Supabase requests
+// No manual mocking needed in tests
+const { data } = await supabase.from('transactions').select();
+expect(data).toBeDefined(); // Uses MSW handler response
+```
+
+### Custom Brazilian Financial Matchers
+We've extended Vitest with domain-specific matchers:
+
+- **`toBeValidBRL()`**: Validates Brazilian currency amounts (0.01 - 999,999,999.99)
+- **`toBeValidCPF()`**: Validates CPF with check digit algorithm
+- **`toBeValidPIXKey()`**: Validates PIX keys (CPF/CNPJ/email/phone/UUID)
+
+**Implementation**: `src/test/setup.ts` with `expect.extend()`
+**Types**: `src/types/vitest.d.ts` for TypeScript autocomplete
+**Validators**: Reuses `@/lib/security/financial-validator` logic
+
+**Usage Examples**:
+```typescript
+expect(1234.56).toBeValidBRL(); // ✅ Pass
+expect(-100).not.toBeValidBRL(); // ✅ Pass (negatives invalid)
+expect('123.456.789-09').toBeValidCPF(); // ✅ Pass
+expect('invalid-cpf').not.toBeValidCPF(); // ✅ Pass
+expect('user@example.com').toBeValidPIXKey(); // ✅ Pass (email key)
+```
+
+### Page Object Models (E2E Testing)
+Our Playwright tests use the Page Object Model pattern for maintainability:
+
+**Location**: `tests/e2e/pages/`
+**Pattern**: Encapsulate page locators and actions in reusable classes
+
+**Available Page Objects**:
+- **`LoginPage`**: Email/password login flow with `login()` and `expectLoggedIn()`
+- **`DashboardPage`**: Balance display, quick actions, navigation with `getBalance()`, `clickQuickAction()`
+- **`TransferPage`**: PIX/transfer flow with `transfer()`, `expectSuccess()`, `expectError()`
+
+**Benefits**:
+- Single source of truth for selectors (no duplication)
+- Portuguese-first locators (e.g., `getByLabel('Descrição')`)
+- Type-safe methods with Brazilian currency parsing
+- Easy maintenance when UI changes
+
+**Usage Example**:
+```typescript
+import { LoginPage, DashboardPage } from '../pages';
+
+test('user can view balance after login', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.login('user@example.com', 'password');
+  await loginPage.expectLoggedIn();
+  
+  const dashboardPage = new DashboardPage(page);
+  const balance = await dashboardPage.getBalance();
+  expect(balance).toBeGreaterThan(0);
+});
+```
 
 ---
 
@@ -192,6 +269,24 @@ ATOMIC_TASK:
 
 ---
 
+### Coverage Thresholds (Per Module)
+
+**Global Thresholds** (applies to all code):
+- Lines: 90%
+- Functions: 90%
+- Branches: 85% (more realistic than 90%)
+- Statements: 90%
+
+**Critical Module Thresholds** (higher standards):
+
+| Module | Lines | Functions | Branches | Statements | Rationale |
+|--------|-------|-----------|----------|------------|----------|
+| `src/lib/security/**/*.ts` | 95% | 95% | 90% | 95% | Financial security critical |
+| `src/lib/compliance/**/*.ts` | 95% | 95% | 90% | 95% | LGPD compliance required |
+| `src/hooks/use*.ts` | 90% | 90% | 80% | 90% | Business logic hooks |
+
+**Rationale**: Brazilian financial regulations (BCB, LGPD) demand higher test coverage for security and compliance modules. Hooks contain business logic that requires thorough testing.
+
 ## 📊 Quality Gates
 
 | Gate | Tool | Threshold | Blocking? | Command |
@@ -199,9 +294,11 @@ ATOMIC_TASK:
 | **Syntax/Style** | Biome | Zero Errors | YES | `bun check` |
 | **Type Safety** | TypeScript | Zero Errors | YES | `bun type-check` |
 | **Testing** | Vitest | 100% Pass | YES | `bun test` |
-| **Coverage** | Vitest | 90% Coverage | YES | `bun test:coverage` |
+| **Coverage** | Vitest | 90% Global, 95% Critical | YES | `bun test:coverage` |
+| **Coverage (Critical)** | Vitest | 95% Security/Compliance | YES | `bun test:coverage:critical` |
 | **Security** | OXLint | Zero High Severity | YES | `bun lint:security` |
-| **Compliance** | LGPD | 100% Compliance | YES | `bun validate:lgpd` |
+| **LGPD Compliance** | Playwright | 100% Pass | YES | `bun test:e2e:lgpd` |
+| **Accessibility** | Playwright + Axe | Zero Violations | YES | `bun test:e2e:a11y` |
 
 ---
 
@@ -239,18 +336,28 @@ ATOMIC_TASK:
 
 ### Quick Commands
 ```bash
-# Quality Check (Full)
-bun quality
+# Testing (Enhanced)
+bun test                    # Run unit tests
+bun test:coverage           # Run with coverage report
+bun test:coverage:critical  # Test only security/compliance modules
+bun test:ui                 # Open Vitest UI for interactive testing
+bun test:watch              # Watch mode for TDD
+
+# E2E Testing (Brazilian Compliance)
+bun test:e2e                # Run all E2E tests
+bun test:e2e:lgpd           # LGPD compliance tests
+bun test:e2e:a11y           # Accessibility audit (WCAG 2.1 AA+)
+bun test:e2e:ui             # Interactive Playwright UI
+
+# Quality Assurance (Parallel)
+bun quality:parallel        # Run all checks in parallel (CI-optimized)
+bun quality:gates           # Full quality gate validation
 
 # Linting & Formatting (Biome)
-bun check         # Check only
-bun check --write # Auto-fix
-
-# Testing
-bun test          # Run tests
-bun test:coverage # Run coverage
-bun type-check    # Check types
+bun check                   # Check only
+bun check --write          # Auto-fix
+bun type-check             # Check types
 ```
 
 ---
-*Version: 3.1 - Advanced Standards & Detailed Methodology*
+*Version: 4.0 - Phase 1-5 Testing Infrastructure Complete*

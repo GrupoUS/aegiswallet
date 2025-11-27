@@ -122,7 +122,9 @@ describe('Utterances Dataset', () => {
 
 	describe('Utterance Quality', () => {
 		it('should have no duplicate utterances within same intent', () => {
-			const intents = Object.keys(utterancesData.intents);
+			const intents = Object.keys(utterancesData.intents) as Array<
+				keyof typeof utterancesData.intents
+			>;
 
 			intents.forEach((intent) => {
 				// Skip transfer_money due to benign duplicate region variations
@@ -130,7 +132,9 @@ describe('Utterances Dataset', () => {
 					return;
 				}
 				const utterances = utterancesData.intents[intent].utterances;
-				const texts = utterances.map((u) => u.text.toLowerCase());
+				const texts = utterances.map((u: { text: string }) =>
+					u.text.toLowerCase(),
+				);
 				const uniqueTexts = new Set(texts);
 
 				expect(uniqueTexts.size).toBe(texts.length);

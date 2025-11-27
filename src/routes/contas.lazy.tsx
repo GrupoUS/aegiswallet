@@ -68,6 +68,8 @@ function BillsListLoader() {
 	);
 }
 
+import { RouteGuard } from '@/lib/auth/route-guard';
+
 export function Contas() {
 	const [isListening, setIsListening] = useState(false);
 	const [editingBill, setEditingBill] = useState<FinancialEvent | null>(null);
@@ -118,155 +120,174 @@ export function Contas() {
 	const currentFilter = filters.status || 'all';
 
 	return (
-		<div className="container mx-auto space-y-6 p-4">
-			{/* Header */}
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
-						Contas
-					</h1>
-					<p className="text-muted-foreground">
-						Gerencie suas contas e pagamentos
-					</p>
+		<RouteGuard>
+			<div className="container mx-auto space-y-6 p-4">
+				{/* Header */}
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
+							Contas
+						</h1>
+						<p className="text-muted-foreground">
+							Gerencie suas contas e pagamentos
+						</p>
+					</div>
+					<Button
+						onClick={handleVoiceCommand}
+						variant={isListening ? 'default' : 'outline'}
+						size="lg"
+						className="gap-2"
+						withGradient
+					>
+						<Mic className={isListening ? 'animate-pulse' : ''} />
+						{isListening ? 'Ouvindo...' : 'Quais contas pagar?'}
+					</Button>
 				</div>
-				<Button
-					onClick={handleVoiceCommand}
-					variant={isListening ? 'default' : 'outline'}
-					size="lg"
-					className="gap-2"
-					withGradient
-				>
-					<Mic className={isListening ? 'animate-pulse' : ''} />
-					{isListening ? 'Ouvindo...' : 'Quais contas pagar?'}
-				</Button>
-			</div>
 
-			{/* Summary Cards */}
-			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-				<Card className="border-2 border-warning/20">
-					<CardHeader className="pb-2">
-						<CardDescription>Contas Pendentes</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="flex items-center justify-between">
+				{/* Summary Cards */}
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<Card className="border-2 border-warning/20">
+						<CardHeader className="pb-2">
+							<CardDescription>Contas Pendentes</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<div className="flex items-center justify-between">
+								{loading ? (
+									<Skeleton className="h-8 w-32" />
+								) : (
+									<FinancialAmount amount={-totalPending} size="lg" />
+								)}
+								<Badge
+									variant="outline"
+									className="border-warning text-warning"
+								>
+									{loading ? (
+										<Skeleton className="h-4 w-8" />
+									) : (
+										pendingBillsCount
+									)}{' '}
+									contas
+								</Badge>
+							</div>
+						</CardContent>
+					</Card>
+
+					<Card className="border-2 border-success/20">
+						<CardHeader className="pb-2">
+							<CardDescription>Contas Pagas</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<div className="flex items-center justify-between">
+								{loading ? (
+									<Skeleton className="h-8 w-32" />
+								) : (
+									<FinancialAmount amount={-totalPaid} size="lg" />
+								)}
+								<Badge
+									variant="outline"
+									className="border-success text-success"
+								>
+									{loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount}{' '}
+									contas
+								</Badge>
+							</div>
+						</CardContent>
+					</Card>
+
+					<Card className="border-2 border-primary/20">
+						<CardHeader className="pb-2">
+							<CardDescription>Total do Mês</CardDescription>
+						</CardHeader>
+						<CardContent>
 							{loading ? (
 								<Skeleton className="h-8 w-32" />
 							) : (
-								<FinancialAmount amount={-totalPending} size="lg" />
+								<FinancialAmount
+									amount={-(totalPending + totalPaid)}
+									size="lg"
+								/>
 							)}
-							<Badge variant="outline" className="border-warning text-warning">
-								{loading ? <Skeleton className="h-4 w-8" /> : pendingBillsCount}{' '}
-								contas
-							</Badge>
-						</div>
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
+				</div>
 
-				<Card className="border-2 border-success/20">
-					<CardHeader className="pb-2">
-						<CardDescription>Contas Pagas</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="flex items-center justify-between">
-							{loading ? (
-								<Skeleton className="h-8 w-32" />
-							) : (
-								<FinancialAmount amount={-totalPaid} size="lg" />
-							)}
-							<Badge variant="outline" className="border-success text-success">
-								{loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount}{' '}
-								contas
-							</Badge>
-						</div>
-					</CardContent>
-				</Card>
+				{/* Filter Buttons */}
+				<div className="flex gap-2">
+					<Button
+						variant={currentFilter === 'all' ? 'default' : 'outline'}
+						onClick={() => setFilters({ status: 'all' })}
+					>
+						Todas
+					</Button>
+					<Button
+						variant={currentFilter === 'pending' ? 'default' : 'outline'}
+						onClick={() => setFilters({ status: 'pending' })}
+					>
+						Pendentes
+					</Button>
+					<Button
+						variant={currentFilter === 'paid' ? 'default' : 'outline'}
+						onClick={() => setFilters({ status: 'completed' })}
+					>
+						Pagas
+					</Button>
+				</div>
 
-				<Card className="border-2 border-primary/20">
-					<CardHeader className="pb-2">
-						<CardDescription>Total do Mês</CardDescription>
-					</CardHeader>
-					<CardContent>
-						{loading ? (
-							<Skeleton className="h-8 w-32" />
-						) : (
-							<FinancialAmount amount={-(totalPending + totalPaid)} size="lg" />
-						)}
-					</CardContent>
-				</Card>
+				{/* Bills List */}
+				<Suspense fallback={<BillsListLoader />}>
+					{loading ? (
+						<BillsListLoader />
+					) : (
+						<BillsList
+							bills={bills}
+							onEdit={handleEdit}
+							onDelete={deleteEvent}
+						/>
+					)}
+				</Suspense>
+
+				<EditTransactionDialog
+					open={isEditModalOpen}
+					onOpenChange={setIsEditModalOpen}
+					transaction={editingBill}
+				/>
+
+				{/* Create Bill Modal */}
+				<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+					<DialogContent className="sm:max-w-[600px]">
+						<DialogHeader>
+							<DialogTitle>Nova Conta a Pagar</DialogTitle>
+							<DialogDescription>
+								Adicione uma nova conta ou despesa.
+							</DialogDescription>
+						</DialogHeader>
+						<FinancialEventForm
+							onSuccess={() => {
+								setIsCreateModalOpen(false);
+								refresh();
+							}}
+							onCancel={() => setIsCreateModalOpen(false)}
+						/>
+					</DialogContent>
+				</Dialog>
+
+				{/* Actions */}
+				<div className="flex gap-4">
+					<Button
+						size="lg"
+						className="flex-1"
+						withGradient
+						onClick={() => setIsCreateModalOpen(true)}
+					>
+						<FileText className="mr-2 h-5 w-5" />
+						Adicionar Nova Conta
+					</Button>
+					{/* TODO: Implementar Gerenciar Recorrentes */}
+					<Button variant="outline" size="lg" className="flex-1">
+						Gerenciar Recorrentes
+					</Button>
+				</div>
 			</div>
-
-			{/* Filter Buttons */}
-			<div className="flex gap-2">
-				<Button
-					variant={currentFilter === 'all' ? 'default' : 'outline'}
-					onClick={() => setFilters({ status: 'all' })}
-				>
-					Todas
-				</Button>
-				<Button
-					variant={currentFilter === 'pending' ? 'default' : 'outline'}
-					onClick={() => setFilters({ status: 'pending' })}
-				>
-					Pendentes
-				</Button>
-				<Button
-					variant={currentFilter === 'paid' ? 'default' : 'outline'}
-					onClick={() => setFilters({ status: 'completed' })}
-				>
-					Pagas
-				</Button>
-			</div>
-
-			{/* Bills List */}
-			<Suspense fallback={<BillsListLoader />}>
-				{loading ? (
-					<BillsListLoader />
-				) : (
-					<BillsList bills={bills} onEdit={handleEdit} onDelete={deleteEvent} />
-				)}
-			</Suspense>
-
-			<EditTransactionDialog
-				open={isEditModalOpen}
-				onOpenChange={setIsEditModalOpen}
-				transaction={editingBill}
-			/>
-
-			{/* Create Bill Modal */}
-			<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-				<DialogContent className="sm:max-w-[600px]">
-					<DialogHeader>
-						<DialogTitle>Nova Conta a Pagar</DialogTitle>
-						<DialogDescription>
-							Adicione uma nova conta ou despesa.
-						</DialogDescription>
-					</DialogHeader>
-					<FinancialEventForm
-						onSuccess={() => {
-							setIsCreateModalOpen(false);
-							refresh();
-						}}
-						onCancel={() => setIsCreateModalOpen(false)}
-					/>
-				</DialogContent>
-			</Dialog>
-
-			{/* Actions */}
-			<div className="flex gap-4">
-				<Button
-					size="lg"
-					className="flex-1"
-					withGradient
-					onClick={() => setIsCreateModalOpen(true)}
-				>
-					<FileText className="mr-2 h-5 w-5" />
-					Adicionar Nova Conta
-				</Button>
-				{/* TODO: Implementar Gerenciar Recorrentes */}
-				<Button variant="outline" size="lg" className="flex-1">
-					Gerenciar Recorrentes
-				</Button>
-			</div>
-		</div>
+		</RouteGuard>
 	);
 }

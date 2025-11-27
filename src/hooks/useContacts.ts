@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
 import type { Database } from '@/types/database.types';
 
@@ -225,41 +224,26 @@ export function useContacts(filters?: {
 	};
 
 	const refetch = useCallback(async () => {
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-		if (!user) return [];
-
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			let query = supabase.from('contacts').select('*').eq('user_id', user.id);
+			const params = new URLSearchParams();
+			if (defaultFilters.search) params.append('search', defaultFilters.search);
+			if (defaultFilters.isFavorite !== undefined)
+				params.append('isFavorite', String(defaultFilters.isFavorite));
+			if (defaultFilters.limit)
+				params.append('limit', String(defaultFilters.limit));
+			if (defaultFilters.offset)
+				params.append('offset', String(defaultFilters.offset));
 
-			if (defaultFilters.search) {
-				query = query.or(
-					`name.ilike.%${defaultFilters.search}%,email.ilike.%${defaultFilters.search}%,phone.ilike.%${defaultFilters.search}%`,
-				);
-			}
+			const response = await apiClient.get<{
+				data: Contact[];
+				meta: ResponseMeta;
+			}>(`/v1/contacts?${params.toString()}`);
 
-			if (defaultFilters.isFavorite !== undefined) {
-				query = query.eq('is_favorite', defaultFilters.isFavorite);
-			}
-
-			const { data, error } = await query
-				.order('is_favorite', { ascending: false })
-				.order('name', { ascending: true })
-				.range(
-					defaultFilters.offset || 0,
-					(defaultFilters.offset || 0) + (defaultFilters.limit || 50) - 1,
-				);
-
-			if (error) {
-				throw error;
-			}
-
-			setContacts(data || []);
-			return data || [];
+			setContacts(response.data || []);
+			return response.data || [];
 		} catch (err) {
 			const errorMessage =
 				err instanceof Error ? err.message : 'Erro ao carregar contatos';

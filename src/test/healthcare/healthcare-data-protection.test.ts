@@ -72,7 +72,7 @@ vi.mock('@/lib/security/auditLogger', () => ({
 
 // Healthcare Data Protection Component
 const HealthcareDataProtection = () => {
-	const [healthData, setHealthData] = React.useState({
+	const [healthData, setHealthData] = React.useState<Record<string, string>>({
 		allergies: '',
 		appointmentDate: '',
 		doctorNotes: '',
@@ -94,7 +94,13 @@ const HealthcareDataProtection = () => {
 		voiceProtection: 'pending',
 	});
 
-	const [encryptionMetadata, setEncryptionMetadata] = React.useState({
+	const [encryptionMetadata, setEncryptionMetadata] = React.useState<{
+		algorithm: string;
+		decryptedData: string | null;
+		encryptionTime: string | null;
+		ivLength: number;
+		keyLength: number;
+	}>({
 		algorithm: 'AES-256-GCM',
 		decryptedData: null,
 		encryptionTime: null,
@@ -391,7 +397,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('input', {
 							'data-testid': 'patient-id',
 							key: 'patient-id-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 								setHealthData({ ...healthData, patientId: e.target.value }),
 							placeholder: 'ID único do paciente',
 							required: true,
@@ -407,7 +413,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('input', {
 							'data-testid': 'patient-name',
 							key: 'patient-name-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 								setHealthData({ ...healthData, patientName: e.target.value }),
 							placeholder: 'Nome completo do paciente',
 							required: true,
@@ -425,7 +431,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('textarea', {
 							'data-testid': 'health-condition',
 							key: 'health-condition-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
 								setHealthData({
 									...healthData,
 									healthCondition: e.target.value,
@@ -443,7 +449,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('input', {
 							'data-testid': 'medication',
 							key: 'medication-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 								setHealthData({ ...healthData, medication: e.target.value }),
 							placeholder: 'Medicamentos prescritos',
 							type: 'text',
@@ -458,7 +464,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('input', {
 							'data-testid': 'allergies',
 							key: 'allergies-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 								setHealthData({ ...healthData, allergies: e.target.value }),
 							placeholder: 'Alergias conhecidas',
 							type: 'text',
@@ -473,7 +479,7 @@ const HealthcareDataProtection = () => {
 						React.createElement('textarea', {
 							'data-testid': 'doctor-notes',
 							key: 'doctor-notes-input',
-							onChange: (e) =>
+							onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
 								setHealthData({ ...healthData, doctorNotes: e.target.value }),
 							placeholder: 'Anotações do médico',
 							rows: 4,

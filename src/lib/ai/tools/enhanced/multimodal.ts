@@ -526,15 +526,55 @@ export function createMultimodalTools(userId: string) {
 				branding,
 			}) => {
 				try {
-					const reportData = await generateFinancialReportData(userId, reportType, dateRange);
-					const insights = includeInsights ? await generateReportInsights(reportData, reportType, language) : [];
-					const charts = includeCharts ? await generateReportCharts(reportData, reportType, getCustomColors(branding)) : [];
-					const exportOptions = buildExportOptions(reportData, format, dateRange, includeCharts, includeInsights);
-					const exportResult = await processExport(reportData, exportOptions, { insights, charts, language, branding });
-					const exportRecord = await saveExportRecord(userId, reportType, format, dateRange, exportResult);
-					const exportedReport = buildExportedReport(exportRecord, reportType, format, exportResult);
+					const reportData = await generateFinancialReportData(
+						userId,
+						reportType,
+						dateRange,
+					);
+					const insights = includeInsights
+						? await generateReportInsights(reportData, reportType, language)
+						: [];
+					const charts = includeCharts
+						? await generateReportCharts(
+								reportData,
+								reportType,
+								getCustomColors(branding),
+							)
+						: [];
+					const exportOptions = buildExportOptions(
+						reportData,
+						format,
+						dateRange,
+						includeCharts,
+						includeInsights,
+					);
+					const exportResult = await processExport(reportData, exportOptions, {
+						insights,
+						charts,
+						language,
+						branding,
+					});
+					const exportRecord = await saveExportRecord(
+						userId,
+						reportType,
+						format,
+						dateRange,
+						exportResult,
+					);
+					const exportedReport = buildExportedReport(
+						exportRecord,
+						reportType,
+						format,
+						exportResult,
+					);
 
-					return buildExportResponse(exportedReport, exportResult, format, includeCharts, includeInsights);
+					return buildExportResponse(
+						exportedReport,
+						exportResult,
+						format,
+						includeCharts,
+						includeInsights,
+					);
 				} catch (error) {
 					secureLogger.error('Falha ao exportar relatório financeiro', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -793,9 +833,14 @@ function calculateDownloadTime(fileSize: number): string {
 }
 
 // Helper functions for exportFinancialReport
-function getCustomColors(branding?: { customColors?: { primary?: string; secondary?: string } }): string[] {
+function getCustomColors(branding?: {
+	customColors?: { primary?: string; secondary?: string };
+}): string[] {
 	if (!branding?.customColors) return [];
-	return [branding.customColors.primary, branding.customColors.secondary].filter((c): c is string => !!c);
+	return [
+		branding.customColors.primary,
+		branding.customColors.secondary,
+	].filter((c): c is string => !!c);
 }
 
 function buildExportOptions(
@@ -805,7 +850,9 @@ function buildExportOptions(
 	includeCharts: boolean,
 	includeInsights: boolean,
 ): ExportOptions {
-	const reportDataTyped = reportData as { byCategory?: Record<string, unknown> };
+	const reportDataTyped = reportData as {
+		byCategory?: Record<string, unknown>;
+	};
 	return {
 		format: format as 'json' | 'pdf' | 'csv' | 'xlsx',
 		dateRange,

@@ -15,7 +15,7 @@ import {
 	Settings,
 	Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { ConsentBanner } from '@/components/privacy';
@@ -51,11 +51,25 @@ export const Route = createRootRoute({
 
 function RootComponent() {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const [open, setOpen] = useState(false);
+	const { isAuthenticated, isLoading, signOut } = useAuth();
 
-	// Pages that should not show the sidebar
-	const noSidebarPages = ['/login'];
-	const showSidebar = !noSidebarPages.includes(location.pathname);
+	// Pages that should not show the sidebar (public pages)
+	const publicPages = ['/login', '/auth/callback'];
+	const isPublicPage = publicPages.some((page) =>
+		location.pathname.startsWith(page),
+	);
+
+	// Redirect to login if not authenticated and not on a public page
+	useEffect(() => {
+		if (!isLoading && !isAuthenticated && !isPublicPage) {
+			navigate({
+				to: '/login',
+				search: { redirect: location.pathname, error: undefined },
+			});
+		}
+	}, [isAuthenticated, isLoading, isPublicPage, location.pathname, navigate]);
 
 	const navigationItems = [
 		{
@@ -90,10 +104,6 @@ function RootComponent() {
 		},
 	];
 
-	// Handle logout functionality
-	const { signOut } = useAuth();
-	const navigate = useNavigate();
-
 	const handleLogout = async () => {
 		await signOut();
 		navigate({
@@ -107,8 +117,17 @@ function RootComponent() {
 		navigate({ to: '/configuracoes' });
 	};
 
-	// Render without sidebar for login page
-	if (!showSidebar) {
+	// Show loading while checking auth
+	if (isLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
+			</div>
+		);
+	}
+
+	// Render without sidebar for public pages
+	if (isPublicPage) {
 		return (
 			<CalendarProvider>
 				<div className="min-h-screen bg-background">
@@ -118,6 +137,11 @@ function RootComponent() {
 				<ConsentBanner onCustomize={handleCustomizeConsent} />
 			</CalendarProvider>
 		);
+	}
+
+	// If not authenticated and not on public page, don't render protected content
+	if (!isAuthenticated) {
+		return null;
 	}
 
 	// Render with sidebar for authenticated pages

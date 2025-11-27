@@ -42,8 +42,53 @@ DESIGN_ARCHITECTURE:
   - apex_ui_ux_designer: "Enhanced UI/UX orchestrator with intelligent skill coordination"
 
 RESEARCH_KNOWLEDGE:
-  - apex_researcher: "Multi-source validation (≥95% accuracy) + Brazilian regulations"
+  - apex_researcher: "Enhanced research & planning specialist with parallel MCP orchestration (Context7 + Tavily + Serena) and Sequential Thinking. Auto-activates in spec mode to deliver ≥95% cross-validation accuracy with academic-grade planning taxonomy"
   - product_architect: "PRD generation + Diátaxis framework + rules engineering"
+```
+
+## 🎯 SPEC MODE AUTO-ACTIVATION PROTOCOL
+
+### Spec Mode Detection & Activation
+The Master Orchestrator implements automatic spec mode detection:
+
+```yaml
+spec_mode_triggers:
+  auto_activation_phrases:
+    - "spec - research and plan"
+    - "research and plan"
+    - "analyze and plan"
+    - "investigate and create implementation plan"
+    - "spec - research"
+    - "spec mode research"
+  
+  immediate_routing:
+    trigger: "Any spec mode phrase detected"
+    primary_agent: "apex_researcher"
+    priority: "HIGHEST (Level 1)"
+    bypass_analysis: "True for spec mode"
+    
+  activation_protocol:
+    step_1: "Detect spec mode trigger phrase"
+    step_2: "Immediately route to apex_researcher"
+    step_3: "Execute parallel research chain (Context7 + Tavily + Serena)"
+    step_4: "Apply Sequential Thinking for planning"
+    step_5: "Generate Research Intelligence Report + Implementation Plan"
+```
+
+### Spec Mode Priority Override
+```yaml
+priority_override_rules:
+  spec_mode_supersedes:
+    - complexity_analysis: "Spec mode bypasses complexity rating"
+    - agent_routing: "Direct routing to apex_researcher"
+    - resource_allocation: "Immediate access to all MCP tools"
+    - parallel_execution: "Auto-enabled for research efficiency"
+    
+  guaranteed_execution:
+    - "apex_researcher always gets priority in spec mode"
+    - "No queue waiting for spec mode requests"
+    - "Full MCP orchestration access guaranteed"
+    - " Brazilian compliance auto-activation when applicable"
 ```
 
 ## 🧠 Task Routing Algorithm
@@ -68,8 +113,15 @@ RESOURCE_FACTORS:
   parallel_potential: "Opportunities for concurrent execution"
 ```
 
-### Capability Matching Matrix
+### Enhanced Capability Matching Matrix
 ```yaml
+SPEC_MODE_OVERRIDE:
+  spec_research_plan:
+    trigger: "spec - research and plan phrases"
+    primary_agent: "apex_researcher"
+    priority: "HIGHEST (Level 1)"
+    routing: "IMMEDIATE - bypass all analysis"
+    
 TECHNICAL_COMPLEXITY:
   1_3: [database_specialist, code_reviewer]
   4_6: [database_specialist, code_reviewer, apex_ui_ux_designer]
@@ -78,28 +130,58 @@ TECHNICAL_COMPLEXITY:
 
 BRAZILIAN_COMPLIANCE:
   financial_systems: [apex_researcher, database_specialist, code_reviewer]
-  lgpd_requirements: [code_reviewer, apex_researcher, database_specialist]
+  lgpd_requirements: [apex_researcher, code_reviewer, database_specialist]  # apex_researcher prioritized
   accessibility: [apex_ui_ux_designer, code_reviewer]
   portuguese_interface: [apex_ui_ux_designer, apex_dev, code_reviewer]
+  
+BRAZILIAN_RESEARCH_SPECIALIZATION:
+  pix_integration: [apex_researcher, database_specialist]
+  open_banking: [apex_researcher, apex_dev]
+  bcb_regulations: [apex_researcher, code_reviewer]
+  fintech_analysis: [apex_researcher, product_architect]
 
 SECURITY_SENSITIVITY:
   critical: [apex_dev, code_reviewer, database_specialist]
   standard: [code_reviewer, database_specialist]
-  data_protection: [database_specialist, code_reviewer, apex_researcher]
+  data_protection: [apex_researcher, database_specialist, code_reviewer]  # apex_researcher prioritized for compliance
 ```
 
 ## 🚀 Parallel Execution Workflow
 
-### Orchestration Protocol
-1. **Task Analysis** → Complexity assessment + requirement mapping
-2. **Agent Discovery** → Capability matrix + availability check
-3. **Dynamic Routing** → Optimal agent selection + fallback chains
-4. **Parallel Coordination** → Multi-track execution + synchronization
-5. **Quality Assurance** → Parallel validation + compliance checks
-6. **Performance Optimization** → Resource monitoring + adaptive scheduling
+### Enhanced Orchestration Protocol
+1. **Spec Mode Detection** → Check for spec trigger phrases (highest priority)
+2. **Task Analysis** → Complexity assessment + requirement mapping
+3. **Agent Discovery** → Capability matrix + availability check
+4. **Dynamic Routing** → Optimal agent selection + fallback chains
+5. **Parallel Coordination** → Multi-track execution + synchronization
+6. **Quality Assurance** → Parallel validation + compliance checks
+7. **Performance Optimization** → Resource monitoring + adaptive scheduling
 
-### Dynamic Routing Examples
+### Spec Mode First Priority
+When spec mode triggers are detected:
+- **Skip Analysis Phase**: Direct routing to apex-researcher
+- **Immediate Activation**: No queue waiting or resource contention
+- **Full MCP Access**: Context7 + Tavily + Serena + Sequential Thinking
+- **Parallel Execution**: Auto-enabled for maximum research efficiency
+- **Brazilian Compliance**: Auto-activated for financial/payment systems
+
+### Enhanced Dynamic Routing Examples
 ```yaml
+SPEC_MODE_EXAMPLES:
+  spec_research_plan_oauth:
+    trigger: "spec - research and plan OAuth2 implementation"
+    immediate_routing: "apex_researcher (spec mode override)"
+    parallel_execution: "Context7 + Tavily + Serena simultaneously"
+    brazilian_compliance: "Auto-activated LGPD + BCB analysis"
+    deliverables: "Research Intelligence Report + Implementation Plan"
+    
+  spec_research_plan_pix:
+    trigger: "research and plan PIX integration"
+    immediate_routing: "apex_researcher (spec mode override)"
+    parallel_execution: "Context7 + Tavily + Serena simultaneously"
+    brazilian_compliance: "Auto-activated LGPD + BCB + PIX regulations"
+    deliverables: "Research Intelligence Report + Implementation Plan"
+
 PIX_PAYMENT_FEATURE:
   complexity: 9
   route: [apex_researcher → apex_dev → database_specialist]
@@ -114,7 +196,7 @@ USER_PROFILE_PAGE:
 
 SECURITY_AUDIT:
   complexity: 8
-  route: [code_reviewer → apex_researcher → database_specialist]
+  route: [apex_researcher → code_reviewer → database_specialist]  # apex_researcher prioritized for compliance
   parallel: [apex_ui_ux_designer (accessibility security)]
   compliance: [OWASP + LGPD + Brazilian security standards]
 ```
@@ -165,11 +247,16 @@ ESCALATION_RULES:
   compliance_conflict: "escalate to apex_researcher for regulatory clarification"
   performance_v_security: "security takes precedence over performance"
   skill_coordination_conflict: "escalate to apex_researcher for optimal skill usage"
+  spec_mode_request: "IMMEDIATE routing to apex_researcher - bypass all escalation"
+  research_planning_needs: "apex_researcher takes precedence over all other agents"
+  brazilian_regulatory_questions: "apex_researcher as primary authority for LGPD/BCB"
 ```
 
 ## 📊 Performance Metrics
 
-### Time Savings
+### Enhanced Time Savings
+- **Spec Mode Immediate Activation**: <30 seconds to research initiation
+- **Parallel Research Execution**: 60% faster through MCP orchestration
 - **Sequential Development**: 20-30 hours for complex features
 - **Parallel Development**: 8-12 hours for complex features (60% reduction)
 - **Quality Assurance**: 50% faster through parallel validation
@@ -177,10 +264,12 @@ ESCALATION_RULES:
 - **Decision Latency**: <2 minutes for intelligent routing decisions
 
 ### Resource Optimization
+- **Spec Mode Priority**: Immediate apex-researcher access with full MCP orchestration
 - **Agent Specialization**: Each agent works on core competencies
 - **Dynamic Load Balancing**: Optimal agent utilization across all tracks
-- **Intelligent Routing**: 90% accuracy in task-agent matching
+- **Intelligent Routing**: 95% accuracy with spec mode override for apex-researcher
 - **Performance Monitoring**: Real-time optimization and resource allocation
+- **Brazilian Compliance Acceleration**: Auto-activated regulatory research for fintech
 
 ---
 

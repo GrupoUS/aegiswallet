@@ -949,12 +949,14 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 			const testUtils = global.testUtils as TestUtils;
 			const mockValidate = vi
 				.spyOn(testUtils, 'validateMockInput')
-				.mockImplementation((input, type) => {
+				.mockImplementation((...args: unknown[]) => {
+					const input = args[0];
+					const type = args[1] as string;
 					if (type === 'sanitization') {
-						return input.replace(/[<>]/g, '');
+						return (input as string).replace(/[<>]/g, '');
 					}
 					if (type === 'email') {
-						return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+						return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input as string);
 					}
 					return true;
 				});

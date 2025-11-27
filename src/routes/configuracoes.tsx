@@ -1,20 +1,24 @@
 /**
  * Configurações / Settings Page
  *
- * Main settings page with privacy preferences and LGPD compliance options.
+ * Complete settings page with 5 tabs:
+ * - Profile: User information and regional preferences
+ * - AI Assistant: AI model, voice, and autonomy settings
+ * - Notifications: Channel and type preferences
+ * - Accessibility: Theme, visual, and assistive technology options
+ * - Privacy: LGPD compliance and data preferences
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { Bell, Settings, Shield, User } from 'lucide-react';
+import { Accessibility, Bell, Bot, Settings, Shield, User } from 'lucide-react';
 
 import { PrivacyPreferences } from '@/components/privacy';
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+	AccessibilitySettings,
+	AIAssistantSettings,
+	NotificationSettings,
+	ProfileSettings,
+} from '@/components/settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const Route = createFileRoute('/configuracoes')({
@@ -24,75 +28,80 @@ export const Route = createFileRoute('/configuracoes')({
 function ConfiguracoesPage() {
 	return (
 		<div className="container mx-auto max-w-4xl py-6 space-y-6">
+			{/* Page Header */}
 			<div className="flex items-center gap-3">
 				<Settings className="h-8 w-8 text-primary" />
 				<div>
 					<h1 className="text-2xl font-bold">Configurações</h1>
 					<p className="text-muted-foreground">
-						Gerencie suas preferências e configurações de privacidade
+						Gerencie suas preferências, perfil e configurações de privacidade
 					</p>
 				</div>
 			</div>
 
-			<Tabs defaultValue="privacy" className="w-full">
-				<TabsList className="grid w-full grid-cols-3">
-					<TabsTrigger value="privacy" className="flex items-center gap-2">
-						<Shield className="h-4 w-4" />
-						Privacidade
+			{/* Settings Tabs */}
+			<Tabs defaultValue="profile" className="w-full">
+				<TabsList className="grid w-full grid-cols-5 h-auto">
+					<TabsTrigger
+						value="profile"
+						className="flex items-center gap-1.5 text-xs sm:text-sm px-2 py-2"
+					>
+						<User className="h-4 w-4 shrink-0" />
+						<span className="hidden sm:inline">Perfil</span>
 					</TabsTrigger>
-					<TabsTrigger value="profile" className="flex items-center gap-2">
-						<User className="h-4 w-4" />
-						Perfil
+					<TabsTrigger
+						value="ai-assistant"
+						className="flex items-center gap-1.5 text-xs sm:text-sm px-2 py-2"
+					>
+						<Bot className="h-4 w-4 shrink-0" />
+						<span className="hidden sm:inline">Assistente</span>
 					</TabsTrigger>
 					<TabsTrigger
 						value="notifications"
-						className="flex items-center gap-2"
+						className="flex items-center gap-1.5 text-xs sm:text-sm px-2 py-2"
 					>
-						<Bell className="h-4 w-4" />
-						Notificações
+						<Bell className="h-4 w-4 shrink-0" />
+						<span className="hidden sm:inline">Notificações</span>
+					</TabsTrigger>
+					<TabsTrigger
+						value="accessibility"
+						className="flex items-center gap-1.5 text-xs sm:text-sm px-2 py-2"
+					>
+						<Accessibility className="h-4 w-4 shrink-0" />
+						<span className="hidden sm:inline">Acessibilidade</span>
+					</TabsTrigger>
+					<TabsTrigger
+						value="privacy"
+						className="flex items-center gap-1.5 text-xs sm:text-sm px-2 py-2"
+					>
+						<Shield className="h-4 w-4 shrink-0" />
+						<span className="hidden sm:inline">Privacidade</span>
 					</TabsTrigger>
 				</TabsList>
 
+				{/* Profile Tab */}
+				<TabsContent value="profile" className="mt-6">
+					<ProfileSettings />
+				</TabsContent>
+
+				{/* AI Assistant Tab */}
+				<TabsContent value="ai-assistant" className="mt-6">
+					<AIAssistantSettings />
+				</TabsContent>
+
+				{/* Notifications Tab */}
+				<TabsContent value="notifications" className="mt-6">
+					<NotificationSettings />
+				</TabsContent>
+
+				{/* Accessibility Tab */}
+				<TabsContent value="accessibility" className="mt-6">
+					<AccessibilitySettings />
+				</TabsContent>
+
+				{/* Privacy Tab (LGPD Compliance) */}
 				<TabsContent value="privacy" className="mt-6">
 					<PrivacyPreferences />
-				</TabsContent>
-
-				<TabsContent value="profile" className="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<User className="h-5 w-5" />
-								Informações do Perfil
-							</CardTitle>
-							<CardDescription>
-								Gerencie suas informações pessoais
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<p className="text-muted-foreground">
-								Em breve você poderá editar suas informações de perfil aqui.
-							</p>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value="notifications" className="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Bell className="h-5 w-5" />
-								Preferências de Notificação
-							</CardTitle>
-							<CardDescription>
-								Configure como deseja receber notificações
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<p className="text-muted-foreground">
-								Em breve você poderá configurar suas notificações aqui.
-							</p>
-						</CardContent>
-					</Card>
 				</TabsContent>
 			</Tabs>
 		</div>

@@ -1,4 +1,3 @@
-// Satisfies: Section 2: Voice Interface Testing of .claude/skills/webapp-testing/SKILL.md
 import {
 	act,
 	render,
@@ -8,6 +7,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ensureTestUtils, type TestUtils } from '../healthcare-setup';
@@ -16,9 +16,9 @@ import { useVoiceCommand } from '@/hooks/useVoiceCommand';
 // Type declarations for global Speech API
 declare global {
 	// eslint-disable-next-line no-var
-	var SpeechRecognition: any;
+	var SpeechRecognition: Mock;
 	// eslint-disable-next-line no-var
-	var webkitSpeechRecognition: any;
+	var webkitSpeechRecognition: Mock;
 }
 
 // Mock voice interface component
@@ -213,8 +213,17 @@ describe('Voice Interface Testing (Portuguese)', () => {
 		it('should handle appointment scheduling commands', async () => {
 			const onCommand = vi.fn();
 
-			// Mock different command
-			const mockRecognition = {
+			// Mock different command with proper typing
+			const mockRecognition: {
+				lang: string;
+				onerror: ((event: unknown) => void) | null;
+				onresult:
+					| ((event: {
+							results: { transcript: string; confidence: number }[][];
+					  }) => void)
+					| null;
+				start: ReturnType<typeof vi.fn>;
+			} = {
 				lang: 'pt-BR',
 				onerror: null,
 				onresult: null,
@@ -276,7 +285,16 @@ describe('Voice Interface Testing (Portuguese)', () => {
 	describe('Voice Command Accuracy', () => {
 		it('should require minimum confidence threshold for commands', async () => {
 			const onCommand = vi.fn();
-			const lowConfidenceRecognition = {
+			const lowConfidenceRecognition: {
+				lang: string;
+				onerror: ((event: unknown) => void) | null;
+				onresult:
+					| ((event: {
+							results: { confidence: number; transcript: string }[][];
+					  }) => void)
+					| null;
+				start: ReturnType<typeof vi.fn>;
+			} = {
 				lang: 'pt-BR',
 				onerror: null,
 				onresult: null,
@@ -368,7 +386,16 @@ describe('Voice Interface Testing (Portuguese)', () => {
 
 	describe('Error Handling', () => {
 		it('should handle speech recognition errors gracefully', async () => {
-			const errorRecognition = {
+			const errorRecognition: {
+				lang: string;
+				onerror: ((event: unknown) => void) | null;
+				onresult:
+					| ((event: {
+							results: [{ confidence: number; transcript: string }[]][];
+					  }) => void)
+					| null;
+				start: ReturnType<typeof vi.fn>;
+			} = {
 				lang: 'pt-BR',
 				onerror: null,
 				onresult: null,
@@ -412,7 +439,16 @@ describe('Voice Interface Testing (Portuguese)', () => {
 		it('should handle no-speech errors as informational, not critical', async () => {
 			const onCommand = vi.fn();
 
-			const errorRecognition = {
+			const errorRecognition: {
+				lang: string;
+				onerror: ((event: unknown) => void) | null;
+				onresult:
+					| ((event: {
+							results: [{ confidence: number; transcript: string }[]][];
+					  }) => void)
+					| null;
+				start: ReturnType<typeof vi.fn>;
+			} = {
 				lang: 'pt-BR',
 				onerror: null,
 				onresult: null,

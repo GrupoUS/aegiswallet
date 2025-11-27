@@ -21,6 +21,7 @@ node_modules/
 bun.lockb
 *.tsbuildinfo
 dist/
+api/dist/
 build/
 out/
 coverage/

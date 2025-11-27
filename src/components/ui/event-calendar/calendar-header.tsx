@@ -129,7 +129,7 @@ const mapStatus = (
 	const validStatuses: Array<
 		'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'
 	> = ['pending', 'paid', 'scheduled', 'cancelled', 'completed'];
-	const status = dbStatus as typeof validStatuses[number] | null;
+	const status = dbStatus as (typeof validStatuses)[number] | null;
 	if (status && validStatuses.includes(status)) return status;
 	return 'pending';
 };
@@ -137,7 +137,8 @@ const mapStatus = (
 // Helper to map database color to domain color
 const mapColor = (
 	dbColor: string | null,
-): | 'emerald'
+):
+	| 'emerald'
 	| 'rose'
 	| 'orange'
 	| 'blue'
@@ -182,7 +183,7 @@ const mapColor = (
 		'teal',
 		'cyan',
 	];
-	const color = dbColor as typeof validColors[number] | null;
+	const color = dbColor as (typeof validColors)[number] | null;
 	if (color && validColors.includes(color)) return color;
 	return 'blue';
 };
@@ -310,7 +311,9 @@ export function CalendarHeader({
 	// Transform database results to CalendarFinancialEvent format
 	const transformedResults = useMemo(() => {
 		if (searchType === 'events') {
-			return (results as DatabaseFinancialEvent[]).map(mapDatabaseEventToCalendarEvent);
+			return (results as DatabaseFinancialEvent[]).map(
+				mapDatabaseEventToCalendarEvent,
+			);
 		}
 		// For transactions, return empty array for now since the callback expects CalendarFinancialEvent[]
 		return [];

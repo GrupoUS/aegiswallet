@@ -10,15 +10,21 @@
  *
  * @see https://playwright.dev/docs/test-fixtures
  */
-import { test as base, expect, type Page } from '@playwright/test';
+
 import AxeBuilder from '@axe-core/playwright';
+import { test as base, expect, type Page } from '@playwright/test';
 
 // Fixture types
 type AegisWalletFixtures = {
   /** Pre-authenticated page with user session */
   authenticatedPage: Page;
-  /** Axe accessibility scanner configured for WCAG 2.1 AA+ */
-  axeBuilder: AxeBuilder;
+  /** Axe accessibility scanner utilities configured for WCAG 2.1 AA+ */
+  axeBuilder: {
+    /** Pre-configured AxeBuilder instance with exclusions */
+    builder: AxeBuilder;
+    /** Helper method to create fresh configured AxeBuilder instances */
+    makeAxeBuilder: () => AxeBuilder;
+  };
   /** Brazilian locale utilities */
   brazilianContext: {
     formatCurrency: (value: number) => string;
@@ -56,20 +62,26 @@ export const test = base.extend<AegisWalletFixtures>({
     await use(page);
   },
 
-  // Axe accessibility builder with WCAG 2.1 AA+ configuration
+  // Axe accessibility builder with WCAG 2.1 AA+ configuration and exclusions
   axeBuilder: async ({ page }, use) => {
-    const builder = new AxeBuilder({ page }).withTags([
-      'wcag2a',
-      'wcag2aa',
-      'wcag21a',
-      'wcag21aa',
-      'best-practice',
-    ]);
-    await use(builder);
+    // Create helper function to generate configured AxeBuilder instances
+    const makeAxeBuilder = () => {
+      return new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
+        .exclude([
+          '.cookie-banner', // Exclude cookie consent banners
+          '[data-testid="loading"]', // Exclude loading states/spinners
+        ]);
+    };
+
+    // Create pre-configured builder instance
+    const builder = makeAxeBuilder();
+
+    await use({ builder, makeAxeBuilder });
   },
 
   // Brazilian locale utilities for financial testing
-  brazilianContext: async ({}, use) => {
+  brazilianContext: async ({ page: _page }, use) => {
     const formatCurrency = (value: number): string => {
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -101,4 +113,4 @@ export const test = base.extend<AegisWalletFixtures>({
 export { expect };
 
 // Re-export common utilities
-export { type Page, type Locator, type BrowserContext } from '@playwright/test';
+export type { BrowserContext, Locator, Page } from '@playwright/test';

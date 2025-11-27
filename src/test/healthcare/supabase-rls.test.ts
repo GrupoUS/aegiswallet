@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Database } from '@/types/database.types';
 
 // Mock Supabase client for testing
-const createMockSupabaseClient = (jwtPayload?: any) => {
+const createMockSupabaseClient = (jwtPayload?: Record<string, unknown>) => {
 	const client = createClient<Database>(
 		'http://localhost:54321', // Test URL
 		'test-anon-key', // Test key
@@ -18,7 +18,7 @@ const createMockSupabaseClient = (jwtPayload?: any) => {
 				headers: {
 					Authorization: jwtPayload
 						? `Bearer ${createMockJWT(jwtPayload)}`
-						: undefined,
+						: '',
 				},
 			},
 		},
@@ -118,9 +118,9 @@ const testRLSPolicy = async (
 		switch (operation) {
 			case 'select': {
 				const { data: selectData, error: selectError } = await supabase
-					.from(table)
+					.from(table as keyof Database['public']['Tables'])
 					.select('*')
-					.eq('id', 'test-id')
+					.eq('id' as never, 'test-id' as never)
 					.single();
 
 				if (expectedAccess) {
@@ -135,8 +135,8 @@ const testRLSPolicy = async (
 
 			case 'insert': {
 				const { data: insertData, error: insertError } = await supabase
-					.from(table)
-					.insert({ test_field: 'test_value' })
+					.from(table as keyof Database['public']['Tables'])
+					.insert({ test_field: 'test_value' } as never)
 					.select()
 					.single();
 
@@ -152,9 +152,9 @@ const testRLSPolicy = async (
 
 			case 'update': {
 				const { data: updateData, error: updateError } = await supabase
-					.from(table)
-					.update({ test_field: 'updated_value' })
-					.eq('id', 'test-id')
+					.from(table as keyof Database['public']['Tables'])
+					.update({ test_field: 'updated_value' } as never)
+					.eq('id' as never, 'test-id' as never)
 					.select()
 					.single();
 
@@ -170,9 +170,9 @@ const testRLSPolicy = async (
 
 			case 'delete': {
 				const { error: deleteError } = await supabase
-					.from(table)
+					.from(table as keyof Database['public']['Tables'])
 					.delete()
-					.eq('id', 'test-id');
+					.eq('id' as never, 'test-id' as never);
 
 				if (expectedAccess) {
 					expect(deleteError).toBeNull();
@@ -594,7 +594,7 @@ describe('Supabase RLS Policy Testing', () => {
 			const { data: patient } = await supabase
 				.from('patients')
 				.select('*')
-				.eq('id', 'test-patient-001')
+				.eq('id' as never, 'test-patient-001' as never)
 				.single();
 
 			expect(patient).toMatchObject({
@@ -617,7 +617,7 @@ describe('Supabase RLS Policy Testing', () => {
 			const { data: patient } = await supabase
 				.from('patients')
 				.select('cpf, phone')
-				.eq('id', 'test-patient-001')
+				.eq('id' as never, 'test-patient-001' as never)
 				.single();
 
 			// In real implementation, admin would see unmasked data

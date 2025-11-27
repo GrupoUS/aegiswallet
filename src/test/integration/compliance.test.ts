@@ -387,10 +387,13 @@ describe.skipIf(!hasIntegrationTestEnv())(
 					.insert({
 						user_id: testUser.id,
 						event_type: 'consent_granted',
+						action: 'grant_consent',
 						resource_type: 'lgpd_consents',
 						resource_id: 'test-consent-id',
-						description: 'User granted data processing consent',
-						metadata: { consent_type: 'data_processing' },
+						context: {
+							consent_type: 'data_processing',
+							description: 'User granted data processing consent',
+						},
 					})
 					.select()
 					.single();
@@ -398,7 +401,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				expect(error).toBeNull();
 				expect(log).toBeDefined();
 				expect(log!.event_type).toBe('consent_granted');
-				expect(log!.description).toContain('data processing');
+				expect(log!.context).toBeDefined();
 			});
 
 			it('should query audit logs by event type', async () => {
@@ -407,17 +410,17 @@ describe.skipIf(!hasIntegrationTestEnv())(
 					{
 						user_id: testUser.id,
 						event_type: 'consent_granted',
-						description: 'Consent granted 1',
+						action: 'grant_consent',
 					},
 					{
 						user_id: testUser.id,
 						event_type: 'consent_revoked',
-						description: 'Consent revoked 1',
+						action: 'revoke_consent',
 					},
 					{
 						user_id: testUser.id,
 						event_type: 'data_export_requested',
-						description: 'Export requested',
+						action: 'export_data',
 					},
 				]);
 

@@ -57,7 +57,7 @@ describe('Component Integration', () => {
 			expect(sidebarComponents.Sidebar).toBeDefined();
 			expect(sidebarComponents.SidebarProvider).toBeDefined();
 			expect(sidebarComponents.SidebarLink).toBeDefined();
-			expect(sidebarComponents.useSidebar).toBeDefined();
+			expect(sidebarComponents.SidebarBody).toBeDefined();
 		});
 	});
 });

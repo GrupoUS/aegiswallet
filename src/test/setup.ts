@@ -103,7 +103,7 @@ if (typeof globalThis.document === 'undefined') {
 
 import '@testing-library/jest-dom';
 
-import { afterAll, afterEach, beforeAll, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, expect, vi } from 'vitest';
 
 // Import healthcare test utilities to ensure global.testUtils is available
 import { ensureTestUtils } from './healthcare/test-utils';
@@ -115,8 +115,10 @@ type MutableGlobal = typeof globalThis & {
 	localStorage?: Storage;
 	SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 	speechSynthesis?: SpeechSynthesis;
-	SpeechRecognition?: unknown;
-	webkitSpeechRecognition?: unknown;
+	SpeechRecognition?: SpeechRecognitionConstructor | ReturnType<typeof vi.fn>;
+	webkitSpeechRecognition?:
+		| SpeechRecognitionConstructor
+		| ReturnType<typeof vi.fn>;
 	AudioContext?: typeof AudioContext;
 	webkitAudioContext?: typeof AudioContext;
 	requestAnimationFrame?: typeof requestAnimationFrame;
@@ -366,10 +368,12 @@ beforeAll(() => {
 			mockSpeechSynthesis as unknown as SpeechSynthesis;
 	}
 	if (!globalObj.SpeechRecognition) {
-		globalObj.SpeechRecognition = mockSpeechRecognition as unknown;
+		(globalObj as Record<string, unknown>).SpeechRecognition =
+			mockSpeechRecognition;
 	}
 	if (!globalObj.webkitSpeechRecognition) {
-		globalObj.webkitSpeechRecognition = mockSpeechRecognition as unknown;
+		(globalObj as Record<string, unknown>).webkitSpeechRecognition =
+			mockSpeechRecognition;
 	}
 
 	// Ensure window object has Speech API
@@ -554,6 +558,127 @@ afterEach(() => {
 // Stop MSW server after all tests
 afterAll(() => {
 	stopServer();
+});
+
+// Import validation functions for custom matchers
+import {
+	PIX_PATTERNS,
+	validateAndFormatCurrency,
+	validateCPF,
+} from '@/lib/security/financial-validator';
+
+// Custom Vitest matchers for Brazilian financial validation
+expect.extend({
+	/**
+	 * Matcher to validate Brazilian currency amounts
+	 */
+	toBeValidBRL(received: unknown) {
+		if (typeof received !== 'number') {
+			return {
+				pass: false,
+				message: () =>
+					`expected ${this.utils.printReceived(received)} to be a number`,
+			};
+		}
+
+		const result = validateAndFormatCurrency(received);
+
+		return {
+			pass: result.isValid,
+			message: () =>
+				result.isValid
+					? `expected ${this.utils.printReceived(received)} not to be a valid BRL amount`
+					: `expected ${this.utils.printReceived(received)} to be a valid BRL amount, but got error: ${result.error}`,
+		};
+	},
+
+	/**
+	 * Matcher to validate Brazilian CPF (tax ID)
+	 */
+	toBeValidCPF(received: unknown) {
+		if (typeof received !== 'string') {
+			return {
+				pass: false,
+				message: () =>
+					`expected ${this.utils.printReceived(received)} to be a string`,
+			};
+		}
+
+		if (received.length === 0) {
+			return {
+				pass: false,
+				message: () =>
+					`expected ${this.utils.printReceived(received)} to be a non-empty string`,
+			};
+		}
+
+		const isValid = validateCPF(received);
+
+		return {
+			pass: isValid,
+			message: () =>
+				isValid
+					? `expected ${this.utils.printReceived(received)} not to be a valid CPF`
+					: `expected ${this.utils.printReceived(received)} to be a valid CPF, but check digit validation failed`,
+		};
+	},
+
+	/**
+	 * Matcher to validate PIX keys
+	 */
+	toBeValidPIXKey(received: unknown) {
+		if (typeof received !== 'string') {
+			return {
+				pass: false,
+				message: () =>
+					`expected ${this.utils.printReceived(received)} to be a string`,
+			};
+		}
+
+		if (received.length === 0) {
+			return {
+				pass: false,
+				message: () =>
+					`expected ${this.utils.printReceived(received)} to be a non-empty string`,
+			};
+		}
+
+		const testPattern = (
+			pattern: { regex: RegExp; format: string },
+			type: string,
+		) => {
+			const cleanValue =
+				type === 'CPF' || type === 'CNPJ' || type === 'PHONE'
+					? received.replace(/\D/g, '')
+					: received;
+			return pattern.regex.test(cleanValue);
+		};
+
+		const cpfMatch = testPattern(PIX_PATTERNS.CPF, 'CPF');
+		const cnpjMatch = testPattern(PIX_PATTERNS.CNPJ, 'CNPJ');
+		const emailMatch = testPattern(PIX_PATTERNS.EMAIL, 'EMAIL');
+		const phoneMatch = testPattern(PIX_PATTERNS.PHONE, 'PHONE');
+		const randomKeyMatch = testPattern(PIX_PATTERNS.RANDOM_KEY, 'RANDOM_KEY');
+
+		const isValid =
+			cpfMatch || cnpjMatch || emailMatch || phoneMatch || randomKeyMatch;
+
+		const failedPatterns: string[] = [];
+		if (!cpfMatch) failedPatterns.push('CPF (11 digits)');
+		if (!cnpjMatch) failedPatterns.push('CNPJ (14 digits)');
+		if (!emailMatch) failedPatterns.push('Email (valid email format)');
+		if (!phoneMatch)
+			failedPatterns.push('Phone (10-15 digits with optional +)');
+		if (!randomKeyMatch) failedPatterns.push('Random Key (UUID v4 format)');
+
+		return {
+			pass: isValid,
+			message: () =>
+				isValid
+					? `expected ${this.utils.printReceived(received)} not to be a valid PIX key`
+					: `expected ${this.utils.printReceived(received)} to be a valid PIX key, but failed all patterns: ${failedPatterns.join(', ')}`,
+		};
+	},
 });
 
 // Mock Supabase with typed configuration using our comprehensive mock

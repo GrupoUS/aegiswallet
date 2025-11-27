@@ -4,7 +4,7 @@
   "installCommand": "bun install",
   "framework": null,
   "functions": {
-    "api/**/*.ts": {
+    "api/dist/*.js": {
       "maxDuration": 30
     }
   },
@@ -19,7 +19,7 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/index"
+      "destination": "/api/dist/index"
     },
     {
       "source": "/((?!api/).*)",

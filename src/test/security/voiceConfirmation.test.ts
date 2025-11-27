@@ -304,6 +304,7 @@ describe('Biometric Authentication Service', () => {
 
 		it('should track processing time for SMS authentication', async () => {
 			const result = await service.authenticateWithSMS(
+				'test-user-id',
 				'123456',
 				'+5511999999999',
 			);

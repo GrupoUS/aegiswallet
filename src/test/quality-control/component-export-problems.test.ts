@@ -140,7 +140,7 @@ describe('Component Export Problems', () => {
 
 			try {
 				const module = await componentImport();
-				expect(module.Button || module.default).toBeDefined();
+				expect(module.Button).toBeDefined();
 			} catch (error) {
 				expect.fail(`Lazy loading failed: ${error}`);
 			}

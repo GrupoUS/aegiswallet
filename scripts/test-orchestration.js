@@ -5,18 +5,14 @@
  * Valida comunicação entre AGENTS.md e .droid.yaml
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
 
 console.log('🧪 Testando Integração do Sistema de Orquestração AegisWallet\n');
 
 // 1. Verificar existencia dos arquivos principais
 console.log('📋 Verificando arquivos de configuração...');
 
-const requiredFiles = [
-  '.factory/AGENTS.md',
-  '.droid.yaml'
-];
+const requiredFiles = ['.factory/AGENTS.md', '.droid.yaml'];
 
 for (const file of requiredFiles) {
   if (fs.existsSync(file)) {
@@ -32,15 +28,17 @@ console.log('\n🤖 Verificando droids referenciados...');
 
 try {
   const droidYaml = fs.readFileSync('.droid.yaml', 'utf8');
-  
+
   // Extrair referências de arquivos de droids
   const droidFileMatches = droidYaml.match(/file: "(\.?factory\/droids\/[^"]+)"/g);
-  
+
   if (droidFileMatches) {
-    const droidFiles = droidFileMatches.map(match => match.replace(/file: "/, '').replace(/"/, ''));
-    
+    const droidFiles = droidFileMatches.map((match) =>
+      match.replace(/file: "/, '').replace(/"/, '')
+    );
+
     console.log(`📁 ${droidFiles.length} droids referenciados:`);
-    
+
     for (const droidFile of droidFiles) {
       if (fs.existsSync(droidFile)) {
         console.log(`✅ ${droidFile} - existe`);
@@ -64,33 +62,35 @@ const testCases = [
   {
     phrase: 'pesquise compliance LGPD',
     expectedDroid: 'apex-researcher',
-    category: 'Pesquisa'
+    category: 'Pesquisa',
   },
   {
     phrase: 'test user interface',
     expectedDroid: 'test-auditor',
-    category: 'Teste'
+    category: 'Teste',
   },
   {
     phrase: 'implement payment system',
     expectedDroid: 'apex-dev',
-    category: 'Implementação'
+    category: 'Implementação',
   },
   {
     phrase: 'verificar segurança',
     expectedDroid: 'code-reviewer',
-    category: 'Segurança'
+    category: 'Segurança',
   },
   {
     phrase: 'create schema database',
     expectedDroid: 'database-specialist',
-    category: 'Banco de Dados'
-  }
+    category: 'Banco de Dados',
+  },
 ];
 
 console.log('📝 Testando frases de ativação:');
 for (const testCase of testCases) {
-  console.log(`  🔄 "${testCase.phrase}" → deve ativar ${testCase.expectedDroid} (${testCase.category})`);
+  console.log(
+    `  🔄 "${testCase.phrase}" → deve ativar ${testCase.expectedDroid} (${testCase.category})`
+  );
 }
 
 // 4. Verificar configurações de paralelismo
@@ -98,11 +98,11 @@ console.log('\n🚀 Verificando configurações de execução paralela...');
 
 try {
   const droidYaml = fs.readFileSync('.droid.yaml', 'utf8');
-  
+
   const parallelEnabled = droidYaml.includes('parallel_execution: true');
   const autoDiscovery = droidYaml.includes('auto_discovery: true');
   const routingEnabled = droidYaml.includes('enabled: true');
-  
+
   console.log(`🔄 Execução paralela: ${parallelEnabled ? '✅' : '❌'}`);
   console.log(`🔍 Auto-discovery: ${autoDiscovery ? '✅' : '❌'}`);
   console.log(`🧭 Roteamento inteligente: ${routingEnabled ? '✅' : '❌'}`);
@@ -115,11 +115,12 @@ console.log('\n🇧🇷 Verificando configurações de compliance brasileiro...'
 
 try {
   const droidYaml = fs.readFileSync('.droid.yaml', 'utf8');
-  
+
   const lgpdEnabled = droidYaml.includes('lgpd:') && droidYaml.includes('enabled: true');
-  const accessibilityEnabled = droidYaml.includes('accessibility:') && droidYaml.includes('enabled: true');
+  const accessibilityEnabled =
+    droidYaml.includes('accessibility:') && droidYaml.includes('enabled: true');
   const financialEnabled = droidYaml.includes('financial:') && droidYaml.includes('enabled: true');
-  
+
   console.log(`🛡️ LGPD: ${lgpdEnabled ? '✅' : '❌'}`);
   console.log(`♿ Acessibilidade: ${accessibilityEnabled ? '✅' : '❌'}`);
   console.log(`💰 Financeiro: ${financialEnabled ? '✅' : '❌'}`);

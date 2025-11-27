@@ -160,6 +160,7 @@ export function useFinancialEvents(
   }, []);
 
   // Clear cache when user changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: user?.id triggers cache clear when user changes
   useEffect(() => {
     clearCache();
   }, [clearCache, user?.id]);
@@ -230,7 +231,9 @@ export function useFinancialEvents(
       if (filters.search) params.search = filters.search;
 
       // Executar requisição
-      const response = await apiClient.get<TransactionApiResponse<any[]>>('/v1/transactions', { params });
+      const response = await apiClient.get<TransactionApiResponse<any[]>>('/v1/transactions', {
+        params,
+      });
 
       const mappedEvents = response.data.map(mapBackendToFrontend);
       const total = response.meta.total || mappedEvents.length;
@@ -317,7 +320,10 @@ export function useFinancialEvents(
           categoryId: event.category, // Map category to categoryId for backend
         };
 
-        const response = await apiClient.post<TransactionApiResponse<any>>('/v1/transactions', payload);
+        const response = await apiClient.post<TransactionApiResponse<any>>(
+          '/v1/transactions',
+          payload
+        );
         const newEvent = mapBackendToFrontend(response.data.data);
 
         clearCache();
@@ -352,7 +358,10 @@ export function useFinancialEvents(
         const payload: any = { ...updates };
         if (updates.category) payload.categoryId = updates.category;
 
-        const response = await apiClient.put<TransactionApiResponse<any>>(`/v1/transactions/${id}`, payload);
+        const response = await apiClient.put<TransactionApiResponse<any>>(
+          `/v1/transactions/${id}`,
+          payload
+        );
         const updatedEvent = mapBackendToFrontend(response.data.data);
 
         clearCache();
@@ -412,30 +421,21 @@ export function useFinancialEvents(
   const duplicateEvent = useCallback(
     async (id: string) => {
       try {
-        // First fetch the event details
-        const response = await apiClient.get<TransactionApiResponse<any>>(`/v1/transactions`, {
-           params: { search: id } // This is hacky, better to have getById or just find in current list
-        });
-        // Actually we can just find it in `events` if available, or fetch it.
-        // Since we don't have getById exposed in hook, let's just use what we have or fetch list.
-        // But wait, `duplicateEvent` logic was: fetch -> insert new.
-        // We can reuse `createEvent` with data from `events` list.
-
-        const eventToDuplicate = events.find(e => e.id === id);
+        // Find event in local state instead of making an API call
+        const eventToDuplicate = events.find((e) => e.id === id);
         if (!eventToDuplicate) {
-             throw new Error("Evento não encontrado para duplicar");
+          throw new Error('Evento não encontrado para duplicar');
         }
 
         const { id: _, ...eventData } = eventToDuplicate;
         await createEvent({
-            ...eventData,
-            title: `${eventData.title} (Cópia)`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+          ...eventData,
+          title: `${eventData.title} (Cópia)`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         });
-
-      } catch (error) {
-         toast.error("Erro ao duplicar evento");
+      } catch {
+        toast.error('Erro ao duplicar evento');
       }
     },
     [createEvent, events]
@@ -514,7 +514,10 @@ export function useFinancialEventMutations() {
           categoryId: event.category,
         };
 
-        const response = await apiClient.post<TransactionApiResponse<any>>('/v1/transactions', payload);
+        const response = await apiClient.post<TransactionApiResponse<any>>(
+          '/v1/transactions',
+          payload
+        );
         const newEvent = mapBackendToFrontend(response.data.data);
 
         toast.success('Evento financeiro criado com sucesso!', {
@@ -546,7 +549,10 @@ export function useFinancialEventMutations() {
         const payload: any = { ...updates };
         if (updates.category) payload.categoryId = updates.category;
 
-        const response = await apiClient.put<TransactionApiResponse<any>>(`/v1/transactions/${id}`, payload);
+        const response = await apiClient.put<TransactionApiResponse<any>>(
+          `/v1/transactions/${id}`,
+          payload
+        );
         const updatedEvent = mapBackendToFrontend(response.data.data);
 
         toast.success('Evento atualizado com sucesso!');

@@ -4,11 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatBackend } from '../../features/ai-chat/domain/ChatBackend';
 import { createStreamChunk } from '../../features/ai-chat/domain/events';
-import type {
-  ChatError,
-  ChatMessage,
-  ChatStreamEventType,
-} from '../../features/ai-chat/domain/types';
+import type { ChatError, ChatMessage, ChatStreamChunk } from '../../features/ai-chat/domain/types';
 import { useChatController } from '../../features/ai-chat/hooks/useChatController';
 
 // Mock Backend
@@ -16,19 +12,22 @@ class MockBackend implements ChatBackend {
   public callCount = 0;
   public lastMessages: ChatMessage[] = [];
 
-  async *send(messages: ChatMessage[], _options?: unknown) {
+  async *send(
+    messages: ChatMessage[],
+    _options?: unknown
+  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
     this.callCount++;
     this.lastMessages = messages;
 
     yield {
-      type: 'text-delta' as ChatStreamEventType,
+      type: 'message-start',
       payload: { messageId: 'msg-1', role: 'assistant', event: 'start' },
     };
-    yield createStreamChunk('text-delta' as ChatStreamEventType, 'Hello', 'msg-1');
-    yield createStreamChunk('text-delta' as ChatStreamEventType, ' World', 'msg-1');
-    yield createStreamChunk('reasoning-delta' as ChatStreamEventType, 'Thinking...', 'msg-1');
+    yield createStreamChunk('text-delta', 'Hello', 'msg-1');
+    yield createStreamChunk('text-delta', ' World', 'msg-1');
+    yield createStreamChunk('reasoning-delta', 'Thinking...', 'msg-1');
     yield {
-      type: 'done' as ChatStreamEventType,
+      type: 'message-end',
       payload: { messageId: 'msg-1', event: 'end' },
     };
   }
@@ -46,9 +45,12 @@ class MockBackend implements ChatBackend {
 
 // Error-producing backend for error handling tests
 class ErrorBackend implements ChatBackend {
-  async *send(_messages: ChatMessage[], _options?: unknown) {
+  async *send(
+    _messages: ChatMessage[],
+    _options?: unknown
+  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
     yield {
-      type: 'error' as ChatStreamEventType,
+      type: 'error',
       payload: { code: 'TEST_ERROR', message: 'Test error' } as ChatError,
     };
   }

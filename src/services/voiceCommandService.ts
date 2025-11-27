@@ -57,7 +57,7 @@ export interface VoiceCommandServiceInput extends ServerProcessVoiceCommandInput
 export async function processVoiceCommand(
   input: VoiceCommandServiceInput
 ): Promise<VoiceCommandResult> {
-  const { commandText, sessionId, language, requireConfirmation, userId } = input;
+  const { commandText, sessionId, language, requireConfirmation, userId: _userId } = input;
   const command = commandText ?? '';
 
   // Simulate processing delay for realistic UX

@@ -12,7 +12,7 @@ import { setupMockDatabase } from '../mocks/supabase-mock';
 describe('Brazilian Financial Data Schema Alignment', () => {
   beforeEach(() => {
     // Clear all mock data before each test
-    setupMockDatabase.clear('user_profiles');
+    setupMockDatabase.clear('users');
     setupMockDatabase.clear('bank_accounts');
     setupMockDatabase.clear('transactions');
     setupMockDatabase.clear('pix_keys');
@@ -23,110 +23,72 @@ describe('Brazilian Financial Data Schema Alignment', () => {
     it('should create user profile with Brazilian CPF', async () => {
       const userProfile = {
         id: 'test-user-id',
-        user_id: 'user-123',
         email: 'joao.silva@email.com',
+        full_name: 'João Silva',
         phone: '11 98765-4321',
-        first_name: 'João',
-        last_name: 'Silva',
         cpf: '123.456.789-00',
-        date_of_birth: '1990-01-01',
-        address: {
-          street: 'Rua das Flores',
-          number: '123',
-          complement: 'Apto 101',
-          neighborhood: 'Vila Madalena',
-          city: 'São Paulo',
-          state: 'SP',
-          zip_code: '05443-000',
-          country: 'BR',
-        },
-        preferences: {
-          language: 'pt-BR',
-          currency: 'BRL',
-          timezone: 'America/Sao_Paulo',
-          notifications: {
-            email: true,
-            sms: false,
-            push: true,
-          },
-          voice: {
-            enabled: true,
-            language: 'pt-BR',
-            speed: 1.0,
-            pitch: 1.0,
-          },
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        birth_date: '1990-01-01',
+        autonomy_level: 50,
+        voice_command_enabled: true,
+        language: 'pt-BR',
+        timezone: 'America/Sao_Paulo',
+        currency: 'BRL',
+        is_active: true,
       };
 
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert(userProfile)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('users').insert(userProfile).select().single();
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
       expect(data!.cpf).toBe('123.456.789-00');
-      expect(data!.preferences.language).toBe('pt-BR');
-      expect(data!.preferences.currency).toBe('BRL');
-      expect(data!.address.country).toBe('BR');
+      expect(data!.language).toBe('pt-BR');
+      expect(data!.currency).toBe('BRL');
+      expect(data!.is_active).toBe(true);
     });
 
-    it('should validate Brazilian address structure', async () => {
+    it('should validate Brazilian user data', async () => {
       const userProfile = {
-        user_id: 'user-123',
+        id: 'test-user-2',
         email: 'maria.santos@email.com',
-        first_name: 'Maria',
-        last_name: 'Santos',
+        full_name: 'Maria Santos',
         cpf: '987.654.321-00',
-        address: {
-          street: 'Avenida Paulista',
-          number: '1000',
-          neighborhood: 'Bela Vista',
-          city: 'São Paulo',
-          state: 'SP',
-          zip_code: '01310-100',
-          country: 'BR',
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        phone: '11 99876-5432',
+        birth_date: '1985-05-15',
+        autonomy_level: 75,
+        voice_command_enabled: true,
+        language: 'pt-BR',
+        timezone: 'America/Sao_Paulo',
+        currency: 'BRL',
+        is_active: true,
       };
 
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert(userProfile)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('users').insert(userProfile).select().single();
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
-      expect(data!.address.state).toBe('SP');
-      expect(data!.address.zip_code).toMatch(/^\d{5}-\d{3}$/);
+      expect(data!.cpf).toBe('987.654.321-00');
+      expect(data!.autonomy_level).toBe(75);
+      expect(data!.is_active).toBe(true);
     });
   });
 
   describe('Bank Account Schema', () => {
-    it('should create Brazilian bank account with proper codes', async () => {
+    it('should create Brazilian bank account with proper structure', async () => {
       const bankAccount = {
-        user_id: 'user-123',
-        bank_name: 'Banco do Brasil',
-        bank_code: '001',
-        bank_ispb: '00000000',
-        account_type: 'checking',
-        account_number: '1234567',
-        account_digit: '8',
-        agency_number: '1234',
-        agency_digit: '1',
-        owner_name: 'João Silva',
-        owner_cpf: '123.456.789-00',
-        is_primary: true,
+        user_id: 'test-user-id',
+        belvo_account_id: 'belvo-acc-123',
+        institution_id: 'br-bank-bb',
+        institution_name: 'Banco do Brasil',
+        account_type: 'CHECKING',
+        account_number: '1234567-8',
+        account_mask: '****567-8',
+        account_holder_name: 'João Silva',
         balance: 5000.0,
+        available_balance: 4800.0,
         currency: 'BRL',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        is_active: true,
+        is_primary: true,
+        sync_status: 'success',
       };
 
       const { data, error } = await supabase
@@ -137,7 +99,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
-      expect(data!.bank_code).toBe('001');
+      expect(data!.institution_name).toBe('Banco do Brasil');
       expect(data!.currency).toBe('BRL');
       expect(data!.balance).toBe(5000.0);
       expect(data!.is_primary).toBe(true);
@@ -147,43 +109,42 @@ describe('Brazilian Financial Data Schema Alignment', () => {
   describe('PIX Keys Schema', () => {
     it('should create PIX keys for Brazilian financial system', async () => {
       const pixKey = {
-        user_id: 'user-123',
-        bank_account_id: 'bank-account-1',
-        key_type: 'cpf' as const,
+        user_id: 'test-user-id',
+        key_type: 'CPF',
         key_value: '123.456.789-00',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        key_name: 'CPF Principal',
+        is_active: true,
+        verification_status: 'verified',
+        usage_count: 0,
       };
 
       const { data, error } = await supabase.from('pix_keys').insert(pixKey).select().single();
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
-      expect(data!.key_type).toBe('cpf');
+      expect(data!.key_type).toBe('CPF');
       expect(data!.key_value).toBe('123.456.789-00');
-      expect(data!.status).toBe('active');
+      expect(data!.is_active).toBe(true);
     });
   });
 
   describe('Transactions Schema', () => {
     it('should create Brazilian financial transactions', async () => {
       const transaction = {
-        user_id: 'user-123',
-        bank_account_id: 'bank-account-1',
-        amount: 347.85,
+        user_id: 'test-user-id',
+        account_id: 'test-bank-account-id',
+        amount: -347.85, // Negative for expense
         currency: 'BRL',
-        type: 'debit' as const,
-        category: 'mercado',
         description: 'Supermercado Carrefour',
         merchant_name: 'Carrefour Comércio e Indústria Ltda',
-        merchant_cnpj: '00.531.610/0001-54',
-        date: new Date().toISOString().split('T')[0],
+        transaction_date: new Date().toISOString(),
+        transaction_type: 'debit',
+        payment_method: 'debit_card',
+        status: 'posted',
         tags: ['essencial'],
         notes: 'Compra mensal de supermercado',
-        reconciled: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        is_manual_entry: false,
+        external_source: 'belvo',
       };
 
       const { data, error } = await supabase
@@ -194,34 +155,39 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
-      expect(data!.amount).toBe(347.85);
+      expect(data!.amount).toBe(-347.85);
       expect(data!.currency).toBe('BRL');
-      expect(data!.type).toBe('debit');
-      expect(data!.category).toBe('mercado');
-      expect(data!.merchant_cnpj).toMatch(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/);
+      expect(data!.transaction_type).toBe('debit');
+      expect(data!.merchant_name).toBe('Carrefour Comércio e Indústria Ltda');
     });
   });
 
   describe('Financial Events Schema', () => {
     it('should create Brazilian financial events', async () => {
+      const eventDate = new Date();
       const financialEvent = {
-        user_id: 'user-123',
+        user_id: 'test-user-id',
         title: 'Pagamento de Conta de Energia',
         description: 'Conta mensal de energia elétrica',
-        event_type: 'pagamento_conta_energia',
         amount: 234.67,
-        currency: 'BRL',
-        date: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        start_date: eventDate.toISOString(),
+        end_date: eventDate.toISOString(),
+        all_day: false,
+        color: 'red',
+        is_income: false,
+        is_completed: false,
         is_recurring: true,
-        recurring_period: 'monthly',
+        recurrence_rule: 'FREQ=MONTHLY;BYMONTHDAY=15',
+        priority: 'high',
         tags: ['prioritario', 'automatizado'],
+        brazilian_event_type: 'conta_energia',
+        event_type: 'bill_payment',
         metadata: {
           priority: 'alta',
           category: 'essencial',
           due_day: 15,
         },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -232,11 +198,11 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
-      expect(data!.event_type).toBe('pagamento_conta_energia');
+      expect(data!.title).toBe('Pagamento de Conta de Energia');
       expect(data!.amount).toBe(234.67);
-      expect(data!.currency).toBe('BRL');
+      expect(data!.status).toBe('pending');
       expect(data!.is_recurring).toBe(true);
-      expect(data!.recurring_period).toBe('monthly');
+      expect(data!.brazilian_event_type).toBe('conta_energia');
     });
   });
 });

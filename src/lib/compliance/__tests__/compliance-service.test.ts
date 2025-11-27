@@ -4,9 +4,9 @@
  *
  * Run: bun test src/lib/compliance/__tests__/compliance-service.test.ts
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CollectionMethod, ConsentType } from '@/types/compliance';
 import { ComplianceService, createComplianceService } from '../compliance-service';
-import type { ConsentType, CollectionMethod } from '@/types/compliance';
 
 // Mock secureLogger
 vi.mock('@/lib/logging/secure-logger', () => ({
@@ -287,9 +287,9 @@ describe('ComplianceService', () => {
         }),
       });
 
-      await expect(
-        service.revokeConsent('user-123', 'marketing' as ConsentType)
-      ).rejects.toThrow('Erro ao revogar consentimento: Revocation failed');
+      await expect(service.revokeConsent('user-123', 'marketing' as ConsentType)).rejects.toThrow(
+        'Erro ao revogar consentimento: Revocation failed'
+      );
     });
   });
 
@@ -445,9 +445,9 @@ describe('ComplianceService', () => {
         }),
       });
 
-      await expect(
-        service.createExportRequest('user-123', 'full_export', 'json')
-      ).rejects.toThrow('Erro ao criar solicitação de exportação: Export creation failed');
+      await expect(service.createExportRequest('user-123', 'full_export', 'json')).rejects.toThrow(
+        'Erro ao criar solicitação de exportação: Export creation failed'
+      );
     });
   });
 
@@ -518,9 +518,7 @@ describe('ComplianceService', () => {
         }),
       });
 
-      await expect(
-        service.createDeletionRequest('user-123', 'full_deletion')
-      ).rejects.toThrow(
+      await expect(service.createDeletionRequest('user-123', 'full_deletion')).rejects.toThrow(
         'Seus dados estão sob retenção legal e não podem ser excluídos no momento.'
       );
     });
@@ -655,9 +653,9 @@ describe('ComplianceService', () => {
         error: { message: 'RPC failed' },
       });
 
-      await expect(
-        service.updateLimitUsage('user-123', 'pix_daytime', 500)
-      ).rejects.toThrow('Erro ao atualizar uso do limite: RPC failed');
+      await expect(service.updateLimitUsage('user-123', 'pix_daytime', 500)).rejects.toThrow(
+        'Erro ao atualizar uso do limite: RPC failed'
+      );
     });
   });
 

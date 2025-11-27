@@ -1,14 +1,14 @@
 /**
  * Configurações / Settings Page
- * 
+ *
  * Main settings page with privacy preferences and LGPD compliance options.
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { Settings, Shield, User, Bell } from 'lucide-react';
+import { Bell, Settings, Shield, User } from 'lucide-react';
 import { PrivacyPreferences } from '@/components/privacy';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const Route = createFileRoute('/configuracoes')({
   component: ConfiguracoesPage,
@@ -54,9 +54,7 @@ function ConfiguracoesPage() {
                 <User className="h-5 w-5" />
                 Informações do Perfil
               </CardTitle>
-              <CardDescription>
-                Gerencie suas informações pessoais
-              </CardDescription>
+              <CardDescription>Gerencie suas informações pessoais</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -73,9 +71,7 @@ function ConfiguracoesPage() {
                 <Bell className="h-5 w-5" />
                 Preferências de Notificação
               </CardTitle>
-              <CardDescription>
-                Configure como deseja receber notificações
-              </CardDescription>
+              <CardDescription>Configure como deseja receber notificações</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">

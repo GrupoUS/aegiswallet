@@ -365,7 +365,9 @@ describe('Voice Command Performance', () => {
       });
 
       // Get the created instance from the mock
-      const createdInstance = windowSpeechRecognition.mock.results[windowSpeechRecognition.mock.results.length - 1]?.value;
+      const createdInstance =
+        windowSpeechRecognition.mock.results[windowSpeechRecognition.mock.results.length - 1]
+          ?.value;
 
       // 3. Simulate speech recognition (<100ms) using async utility
       const { waitForMs, actAsync } = await import('@/test/utils/async-test-utils');

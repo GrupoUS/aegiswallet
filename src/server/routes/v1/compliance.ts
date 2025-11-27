@@ -8,9 +8,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createComplianceService } from '@/lib/compliance';
 import { secureLogger } from '@/lib/logging/secure-logger';
-import type { ConsentType } from '@/types/compliance';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
+import type { ConsentType } from '@/types/compliance';
 
 const complianceRouter = new Hono<AppEnv>();
 
@@ -19,7 +19,9 @@ const complianceRouter = new Hono<AppEnv>();
 // =====================================================
 
 const grantConsentSchema = z.object({
-  collectionMethod: z.enum(['explicit_form', 'voice_command', 'terms_acceptance', 'settings_toggle']).default('explicit_form'),
+  collectionMethod: z
+    .enum(['explicit_form', 'voice_command', 'terms_acceptance', 'settings_toggle'])
+    .default('explicit_form'),
   consentType: z.enum([
     'data_processing',
     'financial_data',
@@ -36,7 +38,9 @@ const createExportRequestSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   format: z.enum(['json', 'csv', 'pdf']).default('json'),
-  requestType: z.enum(['full_export', 'financial_only', 'transactions', 'voice_commands', 'specific_period']).default('full_export'),
+  requestType: z
+    .enum(['full_export', 'financial_only', 'transactions', 'voice_commands', 'specific_period'])
+    .default('full_export'),
 });
 
 const createDeletionRequestSchema = z.object({
@@ -47,9 +51,16 @@ const createDeletionRequestSchema = z.object({
 
 const checkLimitSchema = z.object({
   amount: z.number().positive('Valor deve ser positivo'),
-  limitType: z.enum(['pix_daytime', 'pix_nighttime', 'pix_total_daily', 'ted_daily', 'boleto_daily', 'total_daily', 'total_monthly']),
+  limitType: z.enum([
+    'pix_daytime',
+    'pix_nighttime',
+    'pix_total_daily',
+    'ted_daily',
+    'boleto_daily',
+    'total_daily',
+    'total_monthly',
+  ]),
 });
-
 
 // =====================================================
 // CONSENT MANAGEMENT ENDPOINTS
@@ -58,38 +69,33 @@ const checkLimitSchema = z.object({
 /**
  * GET /consent-templates - Get available consent templates
  */
-complianceRouter.get(
-  '/consent-templates',
-  authMiddleware,
-  async (c) => {
-    const { supabase } = c.get('auth');
-    const requestId = c.get('requestId');
+complianceRouter.get('/consent-templates', authMiddleware, async (c) => {
+  const { supabase } = c.get('auth');
+  const requestId = c.get('requestId');
 
-    try {
-      const complianceService = createComplianceService(supabase);
-      const templates = await complianceService.getConsentTemplates();
+  try {
+    const complianceService = createComplianceService(supabase);
+    const templates = await complianceService.getConsentTemplates();
 
-      return c.json({
-        data: templates,
-        meta: {
-          requestId,
-          retrievedAt: new Date().toISOString(),
-        },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to get consent templates', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    return c.json({
+      data: templates,
+      meta: {
         requestId,
-      });
+        retrievedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    secureLogger.error('Failed to get consent templates', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId,
+    });
 
-      return c.json(
-        { code: 'CONSENT_TEMPLATES_ERROR', error: 'Erro ao buscar modelos de consentimento' },
-        500
-      );
-    }
+    return c.json(
+      { code: 'CONSENT_TEMPLATES_ERROR', error: 'Erro ao buscar modelos de consentimento' },
+      500
+    );
   }
-);
-
+});
 
 /**
  * GET /consents - Get user's consents
@@ -122,36 +128,34 @@ complianceRouter.get(
   }
 );
 
-
 /**
  * GET /consents/missing - Get missing mandatory consents
  */
-complianceRouter.get(
-  '/consents/missing',
-  authMiddleware,
-  async (c) => {
-    const { user, supabase } = c.get('auth');
-    const requestId = c.get('requestId');
+complianceRouter.get('/consents/missing', authMiddleware, async (c) => {
+  const { user, supabase } = c.get('auth');
+  const requestId = c.get('requestId');
 
-    try {
-      const complianceService = createComplianceService(supabase);
-      const missingConsents = await complianceService.getMissingMandatoryConsents(user.id);
+  try {
+    const complianceService = createComplianceService(supabase);
+    const missingConsents = await complianceService.getMissingMandatoryConsents(user.id);
 
-      return c.json({
-        data: { hasMissing: missingConsents.length > 0, missingConsents },
-        meta: { requestId, retrievedAt: new Date().toISOString() },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to get missing consents', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        requestId,
-        userId: user.id,
-      });
+    return c.json({
+      data: { hasMissing: missingConsents.length > 0, missingConsents },
+      meta: { requestId, retrievedAt: new Date().toISOString() },
+    });
+  } catch (error) {
+    secureLogger.error('Failed to get missing consents', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId,
+      userId: user.id,
+    });
 
-      return c.json({ code: 'MISSING_CONSENTS_ERROR', error: 'Erro ao verificar consentimentos' }, 500);
-    }
+    return c.json(
+      { code: 'MISSING_CONSENTS_ERROR', error: 'Erro ao verificar consentimentos' },
+      500
+    );
   }
-);
+});
 
 /**
  * POST /consents - Grant a consent
@@ -185,7 +189,10 @@ complianceRouter.post(
         userId: user.id,
       });
 
-      return c.json({ data: consent, meta: { requestId, grantedAt: new Date().toISOString() } }, 201);
+      return c.json(
+        { data: consent, meta: { requestId, grantedAt: new Date().toISOString() } },
+        201
+      );
     } catch (error) {
       secureLogger.error('Failed to grant consent', {
         consentType: input.consentType,
@@ -198,7 +205,6 @@ complianceRouter.post(
     }
   }
 );
-
 
 /**
  * DELETE /consents/:type - Revoke a consent
@@ -235,7 +241,6 @@ complianceRouter.delete(
   }
 );
 
-
 // =====================================================
 // DATA EXPORT ENDPOINTS
 // =====================================================
@@ -243,33 +248,28 @@ complianceRouter.delete(
 /**
  * GET /export-requests - Get user's export requests
  */
-complianceRouter.get(
-  '/export-requests',
-  authMiddleware,
-  async (c) => {
-    const { user, supabase } = c.get('auth');
-    const requestId = c.get('requestId');
+complianceRouter.get('/export-requests', authMiddleware, async (c) => {
+  const { user, supabase } = c.get('auth');
+  const requestId = c.get('requestId');
 
-    try {
-      const complianceService = createComplianceService(supabase);
-      const requests = await complianceService.getExportRequests(user.id);
+  try {
+    const complianceService = createComplianceService(supabase);
+    const requests = await complianceService.getExportRequests(user.id);
 
-      return c.json({
-        data: requests,
-        meta: { requestId, retrievedAt: new Date().toISOString() },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to get export requests', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        requestId,
-        userId: user.id,
-      });
+    return c.json({
+      data: requests,
+      meta: { requestId, retrievedAt: new Date().toISOString() },
+    });
+  } catch (error) {
+    secureLogger.error('Failed to get export requests', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId,
+      userId: user.id,
+    });
 
-      return c.json({ code: 'EXPORT_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
-    }
+    return c.json({ code: 'EXPORT_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
   }
-);
-
+});
 
 /**
  * POST /export-requests - Create a data export request
@@ -277,7 +277,11 @@ complianceRouter.get(
 complianceRouter.post(
   '/export-requests',
   authMiddleware,
-  userRateLimitMiddleware({ windowMs: 3600_000, max: 5, message: 'Limite de solicitações atingido' }),
+  userRateLimitMiddleware({
+    windowMs: 3600_000,
+    max: 5,
+    message: 'Limite de solicitações atingido',
+  }),
   zValidator('json', createExportRequestSchema),
   async (c) => {
     const { user, supabase } = c.get('auth');
@@ -304,10 +308,13 @@ complianceRouter.post(
         userId: user.id,
       });
 
-      return c.json({
-        data: request,
-        meta: { requestId, createdAt: new Date().toISOString() },
-      }, 201);
+      return c.json(
+        {
+          data: request,
+          meta: { requestId, createdAt: new Date().toISOString() },
+        },
+        201
+      );
     } catch (error) {
       secureLogger.error('Failed to create export request', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -320,7 +327,6 @@ complianceRouter.post(
   }
 );
 
-
 // =====================================================
 // DATA DELETION ENDPOINTS
 // =====================================================
@@ -328,33 +334,28 @@ complianceRouter.post(
 /**
  * GET /deletion-requests - Get user's deletion requests
  */
-complianceRouter.get(
-  '/deletion-requests',
-  authMiddleware,
-  async (c) => {
-    const { user, supabase } = c.get('auth');
-    const requestId = c.get('requestId');
+complianceRouter.get('/deletion-requests', authMiddleware, async (c) => {
+  const { user, supabase } = c.get('auth');
+  const requestId = c.get('requestId');
 
-    try {
-      const complianceService = createComplianceService(supabase);
-      const requests = await complianceService.getDeletionRequests(user.id);
+  try {
+    const complianceService = createComplianceService(supabase);
+    const requests = await complianceService.getDeletionRequests(user.id);
 
-      return c.json({
-        data: requests,
-        meta: { requestId, retrievedAt: new Date().toISOString() },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to get deletion requests', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        requestId,
-        userId: user.id,
-      });
+    return c.json({
+      data: requests,
+      meta: { requestId, retrievedAt: new Date().toISOString() },
+    });
+  } catch (error) {
+    secureLogger.error('Failed to get deletion requests', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId,
+      userId: user.id,
+    });
 
-      return c.json({ code: 'DELETION_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
-    }
+    return c.json({ code: 'DELETION_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
   }
-);
-
+});
 
 /**
  * POST /deletion-requests - Create a data deletion request
@@ -387,10 +388,13 @@ complianceRouter.post(
         userId: user.id,
       });
 
-      return c.json({
-        data: request,
-        meta: { requestId, createdAt: new Date().toISOString() },
-      }, 201);
+      return c.json(
+        {
+          data: request,
+          meta: { requestId, createdAt: new Date().toISOString() },
+        },
+        201
+      );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       secureLogger.error('Failed to create deletion request', {
@@ -409,7 +413,6 @@ complianceRouter.post(
   }
 );
 
-
 // =====================================================
 // TRANSACTION LIMITS ENDPOINTS
 // =====================================================
@@ -417,33 +420,28 @@ complianceRouter.post(
 /**
  * GET /limits - Get user's transaction limits
  */
-complianceRouter.get(
-  '/limits',
-  authMiddleware,
-  async (c) => {
-    const { user, supabase } = c.get('auth');
-    const requestId = c.get('requestId');
+complianceRouter.get('/limits', authMiddleware, async (c) => {
+  const { user, supabase } = c.get('auth');
+  const requestId = c.get('requestId');
 
-    try {
-      const complianceService = createComplianceService(supabase);
-      const limits = await complianceService.getTransactionLimits(user.id);
+  try {
+    const complianceService = createComplianceService(supabase);
+    const limits = await complianceService.getTransactionLimits(user.id);
 
-      return c.json({
-        data: limits,
-        meta: { requestId, retrievedAt: new Date().toISOString() },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to get transaction limits', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        requestId,
-        userId: user.id,
-      });
+    return c.json({
+      data: limits,
+      meta: { requestId, retrievedAt: new Date().toISOString() },
+    });
+  } catch (error) {
+    secureLogger.error('Failed to get transaction limits', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId,
+      userId: user.id,
+    });
 
-      return c.json({ code: 'LIMITS_ERROR', error: 'Erro ao buscar limites' }, 500);
-    }
+    return c.json({ code: 'LIMITS_ERROR', error: 'Erro ao buscar limites' }, 500);
   }
-);
-
+});
 
 /**
  * POST /limits/check - Check if a transaction is within limits
@@ -483,7 +481,6 @@ complianceRouter.post(
     }
   }
 );
-
 
 // =====================================================
 // AUDIT ENDPOINTS

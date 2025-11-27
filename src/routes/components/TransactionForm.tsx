@@ -312,7 +312,7 @@ const createSubmitHandler =
       toast.error(validation.error);
       return;
     }
-    const { account, numericAmount, transactionDate } = validation;
+    const { account, numericAmount, transactionDate: _transactionDate } = validation;
     setIsLoading(true);
     try {
       const finalAmount = computeFinalAmount(formState.type, numericAmount);

@@ -3,6 +3,7 @@
  * Imports and exports all v1 route modules
  */
 
+import { aiChat as aiChatRouter } from './ai-chat';
 import bankAccountsRouter from './bank-accounts';
 import bankingRouter from './banking';
 import calendarRouter from './calendar';
@@ -14,7 +15,6 @@ import healthRouter from './health';
 import transactionsRouter from './transactions';
 import usersRouter from './users';
 import voiceRouter from './voice';
-import { aiChat as aiChatRouter } from './ai-chat';
 
 // Export all routers for use in main server
 export {

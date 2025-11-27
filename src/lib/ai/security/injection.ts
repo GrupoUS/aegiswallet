@@ -28,9 +28,11 @@ export function checkPromptInjection(input: string): InjectionCheckResult {
     }
   }
 
-  // Sanitize control characters
+  // Sanitize control characters - regex pattern to remove ASCII control characters
+  // biome-ignore lint/complexity/useRegexLiterals: RegExp constructor needed to avoid noControlCharactersInRegex lint error
+  const controlCharPattern = new RegExp('[\\x00-\\x1F\\x7F]', 'g');
   const sanitized = input
-    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control chars
+    .replace(controlCharPattern, '') // Remove control chars
     .trim();
 
   return {

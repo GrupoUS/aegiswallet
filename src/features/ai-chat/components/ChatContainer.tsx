@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { type BackendType, createChatBackend, MockBackend } from '@/features/ai-chat/backends';
 import {
@@ -78,8 +78,6 @@ export function ChatContainer({
       });
     },
   });
-
-
 
   // Default suggestions if none
   const defaultSuggestions: ChatSuggestion[] = [

@@ -1,39 +1,39 @@
 /**
  * LGPD Privacy Preferences Component
- * 
+ *
  * Allows users to manage their privacy preferences and consent settings.
  * Provides toggles for different types of data processing.
- * 
+ *
  * @example
  * ```tsx
  * <PrivacyPreferences userId={userId} />
  * ```
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Shield, 
-  BarChart3, 
-  Megaphone, 
-  Mic, 
-  Building2, 
-  Fingerprint,
+import {
+  BarChart3,
+  Building2,
   Download,
-  Trash2,
+  Fingerprint,
   Loader2,
+  Megaphone,
+  Mic,
+  Shield,
+  Trash2,
 } from 'lucide-react';
-import { 
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import {
   useConsentManagement,
-  useCreateExportRequest,
   useCreateDeletionRequest,
+  useCreateExportRequest,
 } from '@/hooks/use-compliance';
-import type { ConsentType, CollectionMethod } from '@/types/compliance';
+import type { CollectionMethod, ConsentType } from '@/types/compliance';
 
 interface PrivacyPreferencesProps {
   /** User ID for compliance operations (reserved for future use) */
@@ -96,27 +96,21 @@ const CONSENT_OPTIONS: ConsentOption[] = [
 ];
 
 export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
-  const { 
-    consents, 
-    isLoading, 
-    grantConsent, 
-    revokeConsent,
-    isGranting,
-    isRevoking,
-  } = useConsentManagement();
+  const { consents, isLoading, grantConsent, revokeConsent, isGranting, isRevoking } =
+    useConsentManagement();
   const createExportRequest = useCreateExportRequest();
   const createDeletionRequest = useCreateDeletionRequest();
   const [pendingChanges, setPendingChanges] = useState<Partial<Record<ConsentType, boolean>>>({});
 
   // Check if a consent type is currently granted
   const isConsentGranted = (type: ConsentType): boolean => {
-    const consent = consents?.find(c => c.consent_type === type && c.granted && !c.revoked_at);
+    const consent = consents?.find((c) => c.consent_type === type && c.granted && !c.revoked_at);
     return !!consent || pendingChanges[type] === true;
   };
 
   // Handle toggle change
   const handleToggle = (type: ConsentType, checked: boolean) => {
-    setPendingChanges(prev => ({ ...prev, [type]: checked }));
+    setPendingChanges((prev) => ({ ...prev, [type]: checked }));
 
     if (checked) {
       grantConsent({
@@ -138,7 +132,11 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
 
   // Handle account deletion request
   const handleDeleteAccount = () => {
-    if (window.confirm('Tem certeza que deseja solicitar a exclusão da sua conta? Esta ação não pode ser desfeita.')) {
+    if (
+      window.confirm(
+        'Tem certeza que deseja solicitar a exclusão da sua conta? Esta ação não pode ser desfeita.'
+      )
+    ) {
       createDeletionRequest.mutate({
         requestType: 'full_deletion',
         reason: 'Solicitação do usuário via configurações de privacidade',
@@ -179,15 +177,10 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
               {index > 0 && <Separator className="my-4" />}
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="text-muted-foreground mt-0.5">
-                    {option.icon}
-                  </div>
+                  <div className="text-muted-foreground mt-0.5">{option.icon}</div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <Label
-                        htmlFor={`consent-${option.type}`}
-                        className="text-sm font-medium"
-                      >
+                      <Label htmlFor={`consent-${option.type}`} className="text-sm font-medium">
                         {option.title}
                       </Label>
                       {option.isMandatory && (
@@ -196,9 +189,7 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {option.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{option.description}</p>
                   </div>
                 </div>
                 <Switch

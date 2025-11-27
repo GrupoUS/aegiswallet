@@ -7,18 +7,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import type {
+  CheckLimitResponse,
+  CollectionMethod,
   ConsentTemplate,
   ConsentType,
-  CollectionMethod,
-  LgpdConsent,
-  DataExportRequest,
-  DataExportFormat,
-  DataExportRequestType,
   DataDeletionRequest,
   DataDeletionRequestType,
+  DataExportFormat,
+  DataExportRequest,
+  DataExportRequestType,
+  LgpdConsent,
   TransactionLimit,
   TransactionLimitType,
-  CheckLimitResponse,
 } from '@/types/compliance';
 
 // =====================================================
@@ -78,9 +78,7 @@ export function useConsents() {
   return useQuery({
     queryKey: complianceKeys.consents(),
     queryFn: async (): Promise<LgpdConsent[]> => {
-      const response = await apiClient.get<ApiResponse<LgpdConsent[]>>(
-        '/v1/compliance/consents'
-      );
+      const response = await apiClient.get<ApiResponse<LgpdConsent[]>>('/v1/compliance/consents');
       return response.data;
     },
   });
@@ -113,13 +111,10 @@ export function useGrantConsent() {
       consentType: ConsentType;
       collectionMethod?: CollectionMethod;
     }): Promise<LgpdConsent> => {
-      const response = await apiClient.post<ApiResponse<LgpdConsent>>(
-        '/v1/compliance/consents',
-        {
-          consentType: params.consentType,
-          collectionMethod: params.collectionMethod ?? 'explicit_form',
-        }
-      );
+      const response = await apiClient.post<ApiResponse<LgpdConsent>>('/v1/compliance/consents', {
+        consentType: params.consentType,
+        collectionMethod: params.collectionMethod ?? 'explicit_form',
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -199,7 +194,9 @@ export function useCreateExportRequest() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: complianceKeys.exportRequests() });
-      toast.success('Solicitação de exportação criada. Você receberá um e-mail quando estiver pronta.');
+      toast.success(
+        'Solicitação de exportação criada. Você receberá um e-mail quando estiver pronta.'
+      );
     },
     onError: (error: Error) => {
       toast.error(`Erro ao solicitar exportação: ${error.message}`);
@@ -273,9 +270,8 @@ export function useTransactionLimits() {
   return useQuery({
     queryKey: complianceKeys.limits(),
     queryFn: async (): Promise<TransactionLimit[]> => {
-      const response = await apiClient.get<ApiResponse<TransactionLimit[]>>(
-        '/v1/compliance/limits'
-      );
+      const response =
+        await apiClient.get<ApiResponse<TransactionLimit[]>>('/v1/compliance/limits');
       return response.data;
     },
   });
@@ -313,10 +309,9 @@ export function useAuditHistory(options?: { limit?: number; eventType?: string }
   return useQuery({
     queryKey: complianceKeys.audit(options),
     queryFn: async (): Promise<unknown[]> => {
-      const response = await apiClient.get<ApiResponse<unknown[]>>(
-        '/v1/compliance/audit',
-        { params: options }
-      );
+      const response = await apiClient.get<ApiResponse<unknown[]>>('/v1/compliance/audit', {
+        params: options,
+      });
       return response.data;
     },
   });
@@ -355,10 +350,11 @@ export function useConsentManagement() {
 export function useRequiredConsentsCheck(requiredTypes: ConsentType[]) {
   const { data: consents, isLoading } = useConsents();
 
-  const hasAllRequired = consents?.every((consent) => {
-    if (!requiredTypes.includes(consent.consent_type)) return true;
-    return consent.granted && !consent.revoked_at;
-  }) ?? false;
+  const hasAllRequired =
+    consents?.every((consent) => {
+      if (!requiredTypes.includes(consent.consent_type)) return true;
+      return consent.granted && !consent.revoked_at;
+    }) ?? false;
 
   const missingTypes = requiredTypes.filter((type) => {
     const consent = consents?.find((c) => c.consent_type === type);

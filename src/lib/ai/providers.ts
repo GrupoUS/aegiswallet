@@ -1,5 +1,5 @@
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 // import { google } from '@ai-sdk/google'; // Temporarily commented - package not available
 import { z } from 'zod';
 

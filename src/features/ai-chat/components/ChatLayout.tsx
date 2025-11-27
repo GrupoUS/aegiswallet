@@ -1,5 +1,6 @@
 import { MessageSquare, Settings, X } from 'lucide-react';
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -56,7 +57,12 @@ export function ChatLayout({
         <div className="flex items-center gap-1">
           {modelSelector}
 
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsSettingsOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setIsSettingsOpen(true)}
+          >
             <Settings className="w-4 h-4" />
             <span className="sr-only">Settings</span>
           </Button>

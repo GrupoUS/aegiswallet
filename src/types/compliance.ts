@@ -63,7 +63,6 @@ export interface ConsentTemplate {
   updated_at: string;
 }
 
-
 // ========================================
 // DATA SUBJECT RIGHTS TYPES
 // ========================================
@@ -145,7 +144,6 @@ export interface DataDeletionRequest {
   updated_at: string;
 }
 
-
 // ========================================
 // OPEN BANKING & FINANCIAL COMPLIANCE
 // ========================================
@@ -226,7 +224,6 @@ export interface TermsAcceptance {
   document_hash: string;
   created_at: string;
 }
-
 
 // ========================================
 // COMPLIANCE AUDIT TYPES
@@ -337,4 +334,3 @@ export interface UserConsentsResponse {
   templates: ConsentTemplate[];
   missing_mandatory: ConsentType[];
 }
-

@@ -13,10 +13,7 @@ import type {
   CalendarView,
 } from '@/components/ui/event-calendar/types';
 import { DEFAULT_CALENDAR_CATEGORIES } from '@/components/ui/event-calendar/types';
-import {
-  useFinancialEventMutations,
-  useFinancialEvents,
-} from '@/hooks/useFinancialEvents';
+import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import type { EventColor, FinancialEvent } from '@/types/financial-events';
 
 interface CalendarContextType {
@@ -57,7 +54,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   );
 
   // Use Supabase hooks
-  const { events: supabaseEvents, loading, error, refresh } = useFinancialEvents();
+  const { events: supabaseEvents, loading, error } = useFinancialEvents();
   const {
     addEvent: addEventMutation,
     updateEvent: updateEventMutation,

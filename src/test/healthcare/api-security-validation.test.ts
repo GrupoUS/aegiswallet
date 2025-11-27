@@ -452,7 +452,8 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'email-input',
           key: 'email-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, email: (e.target as HTMLInputElement).value }),
+          onChange: (e) =>
+            setApiTestData({ ...apiTestData, email: (e.target as HTMLInputElement).value }),
           placeholder: 'seu@email.com',
           required: true,
           type: 'email',
@@ -463,7 +464,8 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'password-input',
           key: 'password-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, password: (e.target as HTMLInputElement).value }),
+          onChange: (e) =>
+            setApiTestData({ ...apiTestData, password: (e.target as HTMLInputElement).value }),
           placeholder: 'Senha segura',
           required: true,
           type: 'password',
@@ -476,7 +478,8 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'patient-id-input',
           key: 'patient-id-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, patientId: (e.target as HTMLInputElement).value }),
+          onChange: (e) =>
+            setApiTestData({ ...apiTestData, patientId: (e.target as HTMLInputElement).value }),
           placeholder: 'PAT-001',
           type: 'text',
           value: apiTestData.patientId,
@@ -486,7 +489,8 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'amount-input',
           key: 'amount-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, amount: (e.target as HTMLInputElement).value }),
+          onChange: (e) =>
+            setApiTestData({ ...apiTestData, amount: (e.target as HTMLInputElement).value }),
           placeholder: '100.00',
           type: 'number',
           value: apiTestData.amount,

@@ -34,9 +34,7 @@ export function ChatSettings({
             <Settings className="w-5 h-5 text-primary" />
             Configurações do Chat
           </DialogTitle>
-          <DialogDescription>
-            Personalize sua experiência com o assistente IA
-          </DialogDescription>
+          <DialogDescription>Personalize sua experiência com o assistente IA</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -48,16 +46,10 @@ export function ChatSettings({
                 <Label htmlFor="voice-input" className="text-sm font-medium">
                   Entrada por voz
                 </Label>
-                <p className="text-xs text-muted-foreground">
-                  Permite comandos de voz no chat
-                </p>
+                <p className="text-xs text-muted-foreground">Permite comandos de voz no chat</p>
               </div>
             </div>
-            <Switch
-              id="voice-input"
-              checked={enableVoice}
-              onCheckedChange={onVoiceToggle}
-            />
+            <Switch id="voice-input" checked={enableVoice} onCheckedChange={onVoiceToggle} />
           </div>
 
           {/* Reasoning View Toggle */}

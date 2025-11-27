@@ -1,41 +1,183 @@
 ---
 name: aegis-architect
-description: Specialized architecture guidance for voice-first Brazilian fintech applications. Use when designing voice interfaces, implementing PIX/Boletos, optimizing financial systems, or making technology stack decisions for Brazilian market applications.
+description: Enhanced architecture guidance for voice-first Brazilian fintech applications. Use when designing voice interfaces, implementing PIX/Boletos, optimizing financial systems, or making technology stack decisions for Brazilian market applications. Integrates with docs/ content, MCP tools for Brazilian market research, enhanced validation scripts, and comprehensive Brazilian compliance patterns.
 license: MIT
 metadata:
-  version: "2.1.0"
+  version: "3.0.0"
   author: "AegisWallet Development Team"
   category: "architecture"
   last-updated: "2025-11-27"
   domain: "brazilian-fintech"
-  expertise: ["voice-first", "brazilian-financial", "lgpd-compliance", "performance-optimization"]
+  expertise: ["voice-first", "brazilian-financial", "lgpd-compliance", "performance-optimization", "hono-rpc"]
+  links:
+  references: [
+    {
+      "title": "AegisWallet Architecture Documentation",
+      "url": "docs/architecture.md"
+    },
+    {
+      "title": "Technology Stack Specification", 
+      "url": "docs/architecture/tech-stack.md"
+    },
+    {
+      "Performance Patterns",
+      "url": "docs/architecture/hono-rpc-patterns.md"
+    },
+    {
+      "Voice Interface Patterns",
+      "url": "docs/architecture/voice-interface-patterns.md"
+    },
+    {
+      "AI Chat Architecture",
+      "url": "docs/architecture/ai-chat-architecture.md"
+    }
+  ]
 ---
 
-# AegisWallet Architecture Skill
+# Enhanced AegisWallet Architecture Skill v3.0 - Brazilian Fintech Voice-First Assistant
 
 ## About This Skill
 
-This skill specializes in AegisWallet architecture - a voice-first autonomous financial assistant for the Brazilian market achieving 95% automation through AI-driven financial management. It provides comprehensive expertise on the technology stack, architectural patterns, and implementation best practices.
+This skill provides **enhanced architecture guidance** for voice-first Brazilian fintech applications, now **specialized in real-world problem resolution** with comprehensive documentation integration, MCP tools, and **practical implementation examples**. Use when designing voice interfaces, implementing PIX/Boletos, optimizing financial systems, or making technology stack decisions for Brazilian market applications.
+
+### What's New in v3.0
+
+- **🔧 Practical Problem Resolution**: Enhanced with actual code examples and working scripts
+- **📚 Documentation Integration**: Full sync with `docs/architecture/` reference materials  
+- **🇧🇷 Brazilian Compliance**: Deep LGPD, PIX, and Open Banking implementation patterns
+- **⚡ Performance Optimization**: Sub-200ms voice response patterns and benchmarks
+- **🎯 Enhanced Validation**: Comprehensive scripts for architecture compliance
+- **🚀 Emergency Recovery**: Diagnostic and recovery scripts for production issues
 
 ## When to Use This Skill
 
-Use this skill when:
-- Designing architecture for voice-first financial applications
-- Making technology stack decisions for Brazilian fintech
-- Implementing PIX, boletos, or Open Banking integrations
-- Setting up real-time financial data synchronization
-- Designing secure, LGPD-compliant financial systems
-- Optimizing performance for sub-500ms voice responses (now sub-200ms with latest optimizations)
-- Creating event-driven financial transaction systems
-- Implementing enhanced NLU with Brazilian Portuguese specialization
-- Planning comprehensive voice command processing with regional variations
-- Setting up performance monitoring and analytics for voice operations
-- Implementing error recovery and learning systems
-- Setting up development workflows for financial applications
+**Use this skill when:**
+- **Voice Interface Issues**: "Voice commands are slow/unresponsive" → Use performance optimization patterns
+- **Brazilian Compliance**: "Need to implement LGPD/PIX" → Use comprehensive implementation guides
+- **Architecture Decisions**: "How should I structure X?" → Consult integrated documentation
+- **Performance Problems**: "System is slow/lagging" → Use diagnostic scripts and patterns
+- **Security Implementation**: "Need financial-grade security" → Use security patterns
+- **Real-time Sync Issues**: "Data not updating properly" → Use real-time patterns
+- **Development Workflow**: "How to implement X feature?" → Use templates and examples
 
-## Recent Enhancements (v2.1)
+### Enhanced Troubleshooting Capabilities
 
-This skill has been updated with the latest implementations from the AegisWallet project:
+#### Voice Performance Issues
+```
+Quando: "A autenticação está demorando 2+ segundos para responder comandos de voz"
+
+Resposta: Use `scripts/performance_audit.py --directory .` e verifique:
+- VITE_ENABLE_VOICE_REASONING está desabilitado
+- Configurações de microfone e silêncio
+- Sobrecarga de processamento de voz
+- Otimizações de cache para comandos comuns
+```
+
+#### Architecture Consulting
+```
+Quando: "Preciso implementar PIX com Hono RPC"
+
+Resposta: Consulte `docs/architecture/hono-rpc-patterns.md` para padrões detalhados:
+- Endpoint structure: `/api/v1/pix/transfer`
+- Validation: zValidator + authMiddleware  
+- Rate limiting para segurança PIX
+- Autenticação dupla (senha + biometria)
+- Tratamento de erro padronizado
+```
+
+#### System Recovery
+```
+Quando: "Sistema não está respondendo ou deu erro"
+
+Resposta: Use `scripts/emergency-recovery.sh` para diagnóstico completo:
+- Verificar API status (curl http://localhost:3000/health)
+- Verificar Hono server status
+- Verificar Supabase service status
+- Executar recovery automatizado
+```
+
+## 📚 Enhanced Documentation Integration
+
+This skill now provides **complete integration** with existing AegisWallet documentation:
+
+### Primary Documentation Sources
+- **`docs/architecture.md`**: Complete architecture overview and system design
+- **`docs/architecture/tech-stack.md`**: Detailed technology specifications and patterns
+- **`docs/architecture/hono-rpc-patterns.md`**: API design patterns with validation and security
+- **`docs/architecture/voice-interface-patterns.md`**: Voice-first interaction patterns
+- **`docs/architecture/frontend-spec.md`**: Frontend architecture and component patterns
+- **`docs/architecture/ai-chat-architecture.md`**: AI-powered conversational interfaces
+- **`docs/LGPD_COMPLIANCE_TESTING_PENDING.md`**: Brazilian compliance implementation status
+- **`docs/VERCEL_DEPLOYMENT_GUIDE.md`**: Deployment and production patterns
+
+### Quick Reference Documentation
+```bash
+# Architecture fundamentals
+docs/architecture.md                    # System overview and design principles
+
+# Technology stack specifics  
+docs/architecture/tech-stack.md         # Bun + Hono + React 19 + Supabase patterns
+docs/architecture/hono-rpc-patterns.md   # API endpoint design and security
+
+# Voice interface implementation
+docs/architecture/voice-interface-patterns.md  # Voice-first UI patterns
+docs/architecture/ai-chat-architecture.md       # AI conversation patterns
+
+# Frontend development
+docs/architecture/frontend-spec.md       # React 19 + TanStack patterns
+docs/architecture/frontend-architecture.md # Component architecture
+
+# Compliance and deployment
+docs/LGPD_COMPLIANCE_TESTING_PENDING.md  # LGPD implementation checklist
+docs/VERCEL_DEPLOYMENT_GUIDE.md          # Production deployment guide
+```
+
+### Enhanced MCP Integration
+- **Context7**: Access latest framework documentation and best practices
+- **Tavily**: Research Brazilian fintech regulations and market trends  
+- **Serena**: Semantic code analysis and architecture validation
+- **Apex Researcher**: Multi-source validation for Brazilian compliance (≥95% accuracy)
+
+## 🛠️ Enhanced Validation & Diagnostic Tools
+
+### Architecture Compliance Validation
+```bash
+# Complete architecture validation
+python scripts/validate_architecture.py --directory . --output json
+
+# Performance audit with voice-specific metrics
+python scripts/performance_audit.py --directory . --benchmark voice
+
+# Brazilian compliance validation
+python scripts/brazilian_compliance_validator.py --check pix,lgpd,openbanking
+
+# Emergency system recovery
+./scripts/emergency-recovery.sh --full-scan
+```
+
+### Performance Monitoring Scripts
+```bash
+# Voice response time analysis
+python scripts/voice_performance_analyzer.py --target-ms 200
+
+# Memory leak detection for voice components
+python scripts/memory_leak_detector.py --focus voice-hooks
+
+# Database query optimization
+python scripts/database_performance_optimizer.py --analyze-financial-queries
+```
+
+### Brazilian Compliance Testing
+```bash
+# LGPD compliance validation
+python scripts/lgpd_compliance_test.py --comprehensive
+
+# PIX transaction flow testing
+python scripts/pix_transaction_validator.py --test-full-flow
+
+# Open Banking integration testing
+python scripts/openbanking_compliance_test.py --validate-spec-3.1
+```
 
 ### 🎯 Enhanced NLU System
 - **Brazilian Portuguese Specialization**: 6 major regional variations with 50+ slang terms

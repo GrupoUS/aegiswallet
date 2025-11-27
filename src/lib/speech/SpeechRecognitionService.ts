@@ -18,6 +18,7 @@
 // ============================================================================
 
 // Define Web Speech API types that may not be available in all TypeScript configs
+// biome-ignore lint/correctness/noUnusedVariables: Type definition for Web Speech API reference
 interface SpeechRecognitionEventMap {
   audioend: Event;
   audiostart: Event;
@@ -367,7 +368,10 @@ export class SpeechRecognitionService {
   private processSpeechRecognitionError(
     event: SpeechRecognitionErrorEventType
   ): SpeechRecognitionError {
-    const errorMap: Record<string, { isRetryable: boolean; message: string; isNoSpeech?: boolean }> = {
+    const errorMap: Record<
+      string,
+      { isRetryable: boolean; message: string; isNoSpeech?: boolean }
+    > = {
       aborted: { isRetryable: true, message: 'Recognition was aborted.' },
       'audio-capture': {
         isRetryable: true,

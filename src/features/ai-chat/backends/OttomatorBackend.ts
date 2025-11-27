@@ -138,6 +138,7 @@ export class OttomatorBackend implements ChatBackend {
    *
    * @throws {Error} Not yet implemented
    */
+  // biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
   async *send(
     _messages: ChatMessage[],
     _options?: ChatRequestOptions

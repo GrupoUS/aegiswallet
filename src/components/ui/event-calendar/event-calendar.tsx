@@ -59,7 +59,8 @@ export function EventCalendar({
   onEventUpdate,
   onEventEdit,
   onEventClick,
-  syncWithGoogle,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  syncWithGoogle: _syncWithGoogle,
 }: EventCalendarProps) {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [view, setView] = useState<CalendarView>(initialView);

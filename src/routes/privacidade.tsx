@@ -1,11 +1,11 @@
 /**
  * Política de Privacidade / Privacy Policy Page
- * 
+ *
  * LGPD compliant privacy policy page for AegisWallet.
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { Shield, FileText, Mail, Building2 } from 'lucide-react';
+import { Building2, FileText, Mail, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -35,13 +35,13 @@ function PrivacidadePage() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p>
-            A AegisWallet está comprometida com a proteção da privacidade e dos dados 
-            pessoais de seus usuários, em conformidade com a Lei nº 13.709/2018 (Lei 
-            Geral de Proteção de Dados - LGPD).
+            A AegisWallet está comprometida com a proteção da privacidade e dos dados pessoais de
+            seus usuários, em conformidade com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados
+            - LGPD).
           </p>
           <p>
-            Esta política descreve como coletamos, usamos, armazenamos e protegemos 
-            suas informações pessoais ao utilizar nosso aplicativo de gestão financeira.
+            Esta política descreve como coletamos, usamos, armazenamos e protegemos suas informações
+            pessoais ao utilizar nosso aplicativo de gestão financeira.
           </p>
         </CardContent>
       </Card>
@@ -51,10 +51,19 @@ function PrivacidadePage() {
           <CardTitle>1. Dados que Coletamos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
-          <p><strong>Dados de identificação:</strong> Nome, e-mail, CPF (quando necessário).</p>
-          <p><strong>Dados financeiros:</strong> Informações de contas bancárias, transações, saldos.</p>
-          <p><strong>Dados de uso:</strong> Interações com o aplicativo, comandos de voz (quando habilitado).</p>
-          <p><strong>Dados técnicos:</strong> IP, tipo de dispositivo, sistema operacional.</p>
+          <p>
+            <strong>Dados de identificação:</strong> Nome, e-mail, CPF (quando necessário).
+          </p>
+          <p>
+            <strong>Dados financeiros:</strong> Informações de contas bancárias, transações, saldos.
+          </p>
+          <p>
+            <strong>Dados de uso:</strong> Interações com o aplicativo, comandos de voz (quando
+            habilitado).
+          </p>
+          <p>
+            <strong>Dados técnicos:</strong> IP, tipo de dispositivo, sistema operacional.
+          </p>
         </CardContent>
       </Card>
 
@@ -81,12 +90,24 @@ function PrivacidadePage() {
         <CardContent className="space-y-4 text-sm">
           <p>Você tem direito a:</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Acesso:</strong> Solicitar uma cópia de seus dados pessoais</li>
-            <li><strong>Correção:</strong> Solicitar a correção de dados incorretos</li>
-            <li><strong>Exclusão:</strong> Solicitar a exclusão de seus dados</li>
-            <li><strong>Portabilidade:</strong> Exportar seus dados em formato portátil</li>
-            <li><strong>Revogação:</strong> Revogar consentimentos previamente concedidos</li>
-            <li><strong>Oposição:</strong> Opor-se a determinados tratamentos de dados</li>
+            <li>
+              <strong>Acesso:</strong> Solicitar uma cópia de seus dados pessoais
+            </li>
+            <li>
+              <strong>Correção:</strong> Solicitar a correção de dados incorretos
+            </li>
+            <li>
+              <strong>Exclusão:</strong> Solicitar a exclusão de seus dados
+            </li>
+            <li>
+              <strong>Portabilidade:</strong> Exportar seus dados em formato portátil
+            </li>
+            <li>
+              <strong>Revogação:</strong> Revogar consentimentos previamente concedidos
+            </li>
+            <li>
+              <strong>Oposição:</strong> Opor-se a determinados tratamentos de dados
+            </li>
           </ul>
           <p className="mt-4">
             Para exercer esses direitos, acesse{' '}
@@ -120,12 +141,12 @@ function PrivacidadePage() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p>
-            Mantemos seus dados apenas pelo tempo necessário para cumprir as finalidades 
-            para as quais foram coletados, incluindo obrigações legais e regulatórias.
+            Mantemos seus dados apenas pelo tempo necessário para cumprir as finalidades para as
+            quais foram coletados, incluindo obrigações legais e regulatórias.
           </p>
           <p>
-            Dados financeiros podem ser retidos por períodos mais longos conforme exigido 
-            pela legislação fiscal e bancária brasileira.
+            Dados financeiros podem ser retidos por períodos mais longos conforme exigido pela
+            legislação fiscal e bancária brasileira.
           </p>
         </CardContent>
       </Card>

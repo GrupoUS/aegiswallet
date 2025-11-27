@@ -125,9 +125,7 @@ describe('Type Check Validation', () => {
       // These should exist and be React components (functions or forwardRef objects)
       const isReactComponent = (component: unknown): boolean =>
         typeof component === 'function' ||
-        (typeof component === 'object' &&
-          component !== null &&
-          '$$typeof' in component);
+        (typeof component === 'object' && component !== null && '$$typeof' in component);
 
       expect(isReactComponent(uiModule.PopoverAnchor)).toBe(true);
       expect(isReactComponent(uiModule.SheetOverlay)).toBe(true);

@@ -220,7 +220,7 @@ export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: Hoo
       announceToScreenReader('Microfone ativado. Fale seu comando em português.');
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: BrowserSpeechRecognitionEvent) => {
       const current = event.resultIndex;
       const currentResult = event.results[current];
       const capturedTranscript = currentResult[0].transcript;
@@ -234,7 +234,7 @@ export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: Hoo
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: BrowserSpeechRecognitionErrorEvent) => {
       setIsListening(false);
       setIsProcessing(false);
       const errorMessage = getErrorMessage(event.error);

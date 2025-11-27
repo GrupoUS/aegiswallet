@@ -1,6 +1,6 @@
 /**
  * Settings Page (English alias for /configuracoes)
- * 
+ *
  * Redirects to the Portuguese settings page for E2E test compatibility.
  */
 

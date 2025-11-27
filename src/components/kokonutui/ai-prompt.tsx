@@ -51,9 +51,18 @@ export function AiPrompt({
   }
 
   return (
-    <div className={cn('relative flex items-end gap-2 p-2 border rounded-xl bg-background shadow-sm', className)}>
+    <div
+      className={cn(
+        'relative flex items-end gap-2 p-2 border rounded-xl bg-background shadow-sm',
+        className
+      )}
+    >
       {enableAttachments && (
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+        >
           <Paperclip className="w-4 h-4" />
           <span className="sr-only">Attach file</span>
         </Button>
@@ -77,7 +86,9 @@ export function AiPrompt({
             onClick={onVoiceToggle}
             className={cn(
               'h-9 w-9 transition-colors',
-              isListening ? 'text-red-500 hover:text-red-600 bg-red-50' : 'text-muted-foreground hover:text-foreground'
+              isListening
+                ? 'text-red-500 hover:text-red-600 bg-red-50'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}

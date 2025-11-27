@@ -6,19 +6,21 @@ export function createAccountTools(userId: string) {
   return {
     listAccounts: tool({
       description: 'Lista todas as contas bancárias do usuário.',
-      parameters: z.object({
-        includeInactive: z.boolean().default(false)
-          .describe('Incluir contas inativas'),
+      inputSchema: z.object({
+        includeInactive: z.boolean().default(false).describe('Incluir contas inativas'),
       }),
       execute: async ({ includeInactive }) => {
         const { createClient } = await import('@supabase/supabase-js');
         const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        const supabaseKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         let query = supabase
           .from('bank_accounts')
-          .select('id, institution_name, account_type, balance, available_balance, currency, is_active, is_primary, last_sync')
+          .select(
+            'id, institution_name, account_type, balance, available_balance, currency, is_active, is_primary, last_sync'
+          )
           .eq('user_id', userId)
           .order('is_primary', { ascending: false });
 
@@ -42,14 +44,14 @@ export function createAccountTools(userId: string) {
 
     getAccountBalance: tool({
       description: 'Obtém saldo atual de uma conta específica ou total de todas as contas.',
-      parameters: z.object({
-        accountId: z.string().uuid().optional()
-          .describe('ID da conta (omitir para total)'),
+      inputSchema: z.object({
+        accountId: z.string().uuid().optional().describe('ID da conta (omitir para total)'),
       }),
       execute: async ({ accountId }) => {
         const { createClient } = await import('@supabase/supabase-js');
         const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        const supabaseKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         if (accountId) {
@@ -75,7 +77,8 @@ export function createAccountTools(userId: string) {
         if (error) throw new Error(`Erro: ${error.message}`);
 
         const totalBalance = data?.reduce((sum, acc) => sum + (acc.balance ?? 0), 0) ?? 0;
-        const totalAvailable = data?.reduce((sum, acc) => sum + (acc.available_balance ?? 0), 0) ?? 0;
+        const totalAvailable =
+          data?.reduce((sum, acc) => sum + (acc.available_balance ?? 0), 0) ?? 0;
 
         return {
           totalBalance,

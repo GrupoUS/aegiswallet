@@ -14,8 +14,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TestUtils } from '../healthcare-setup';
 import { ensureTestUtils } from '../healthcare/test-utils';
+import type { TestUtils } from '../healthcare-setup';
 
 // Mock Brazilian financial system APIs
 vi.mock('@/lib/financial/bacen-api', () => ({

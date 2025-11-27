@@ -646,11 +646,11 @@ googleCalendarRouter.post(
 
     try {
       // Check if channel is expiring soon
-      const { data: settings } = await supabase
+      const { data: settings } = (await supabase
         .from('calendar_sync_settings')
         .select('channel_expiry_at')
         .eq('user_id', user.id)
-        .single() as { data: { channel_expiry_at: string | null } | null };
+        .single()) as { data: { channel_expiry_at: string | null } | null };
 
       if (!settings?.channel_expiry_at) {
         throw new Error('No active channel found');

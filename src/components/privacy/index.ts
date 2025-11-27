@@ -1,6 +1,6 @@
 /**
  * Privacy Components Exports
- * 
+ *
  * Components for LGPD compliance and privacy management
  */
 

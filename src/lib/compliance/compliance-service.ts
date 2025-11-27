@@ -1,7 +1,7 @@
 /**
  * LGPD Compliance Service
  * Manages consent, data export, deletion requests, and transaction limits
- * 
+ *
  * NOTE: This service uses 'any' typing for Supabase client because the
  * compliance tables (lgpd_consents, consent_templates, etc.) are defined
  * in migration 20251127_add_lgpd_compliance_tables.sql but the TypeScript
@@ -11,22 +11,22 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { secureLogger } from '@/lib/logging/secure-logger';
 import type {
-  ConsentType,
+  CheckLimitResponse,
   CollectionMethod,
-  LgpdConsent,
+  ComplianceEventType,
   ConsentTemplate,
-  DataExportRequest,
-  DataExportRequestType,
-  DataExportFormat,
+  ConsentType,
   DataDeletionRequest,
   DataDeletionRequestType,
+  DataExportFormat,
+  DataExportRequest,
+  DataExportRequestType,
+  LgpdConsent,
   TransactionLimit,
   TransactionLimitType,
-  CheckLimitResponse,
-  ComplianceEventType,
 } from '@/types/compliance';
-import { secureLogger } from '@/lib/logging/secure-logger';
 
 // Using any type until migration is applied and types regenerated
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +56,6 @@ export class ComplianceService {
 
     return (data ?? []) as unknown as LgpdConsent[];
   }
-
 
   /**
    * Get active consent templates
@@ -105,22 +104,25 @@ export class ComplianceService {
 
     const { data, error } = await this.supabase
       .from('lgpd_consents')
-      .upsert({
-        user_id: userId,
-        consent_type: consentType,
-        purpose: template.description_pt,
-        legal_basis: 'consent',
-        granted: true,
-        granted_at: new Date().toISOString(),
-        revoked_at: null,
-        consent_version: template.version,
-        consent_text_hash: textHash,
-        collection_method: collectionMethod,
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      }, {
-        onConflict: 'user_id,consent_type,consent_version'
-      })
+      .upsert(
+        {
+          user_id: userId,
+          consent_type: consentType,
+          purpose: template.description_pt,
+          legal_basis: 'consent',
+          granted: true,
+          granted_at: new Date().toISOString(),
+          revoked_at: null,
+          consent_version: template.version,
+          consent_text_hash: textHash,
+          collection_method: collectionMethod,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        },
+        {
+          onConflict: 'user_id,consent_type,consent_version',
+        }
+      )
       .select()
       .single();
 
@@ -132,7 +134,6 @@ export class ComplianceService {
     secureLogger.info('Consent granted', { userId, consentType });
     return data as unknown as LgpdConsent;
   }
-
 
   /**
    * Revoke a consent
@@ -161,11 +162,10 @@ export class ComplianceService {
    * Check if user has required consents
    */
   async checkRequiredConsents(userId: string, requiredConsents: ConsentType[]): Promise<boolean> {
-    const { data, error } = await this.supabase
-      .rpc('check_required_consents', {
-        p_user_id: userId,
-        p_required_consents: requiredConsents
-      });
+    const { data, error } = await this.supabase.rpc('check_required_consents', {
+      p_user_id: userId,
+      p_required_consents: requiredConsents,
+    });
 
     if (error) {
       secureLogger.error('Failed to check required consents', { error: error.message, userId });
@@ -188,7 +188,7 @@ export class ComplianceService {
 
     if (!templates || templates.length === 0) return [];
 
-    const mandatoryTypes = templates.map(t => t.consent_type) as ConsentType[];
+    const mandatoryTypes = templates.map((t) => t.consent_type) as ConsentType[];
 
     // Get user's active consents
     const { data: consents } = await this.supabase
@@ -198,11 +198,10 @@ export class ComplianceService {
       .eq('granted', true)
       .is('revoked_at', null);
 
-    const grantedTypes = (consents ?? []).map(c => c.consent_type) as ConsentType[];
+    const grantedTypes = (consents ?? []).map((c) => c.consent_type) as ConsentType[];
 
-    return mandatoryTypes.filter(type => !grantedTypes.includes(type));
+    return mandatoryTypes.filter((type) => !grantedTypes.includes(type));
   }
-
 
   // ========================================
   // DATA EXPORT REQUESTS
@@ -240,8 +239,13 @@ export class ComplianceService {
     }
 
     // Log compliance event
-    await this.logComplianceEvent(userId, 'data_export_requested', 'data_export_requests', data.id, 
-      `Export request created: ${requestType} in ${format} format`);
+    await this.logComplianceEvent(
+      userId,
+      'data_export_requested',
+      'data_export_requests',
+      data.id,
+      `Export request created: ${requestType} in ${format} format`
+    );
 
     secureLogger.info('Export request created', { userId, requestId: data.id, requestType });
     return data as unknown as DataExportRequest;
@@ -264,7 +268,6 @@ export class ComplianceService {
 
     return (data ?? []) as unknown as DataExportRequest[];
   }
-
 
   // ========================================
   // DATA DELETION REQUESTS
@@ -321,8 +324,13 @@ export class ComplianceService {
     }
 
     // Log compliance event
-    await this.logComplianceEvent(userId, 'data_deletion_requested', 'data_deletion_requests', data.id,
-      `Deletion request created: ${requestType}`);
+    await this.logComplianceEvent(
+      userId,
+      'data_deletion_requested',
+      'data_deletion_requests',
+      data.id,
+      `Deletion request created: ${requestType}`
+    );
 
     secureLogger.info('Deletion request created', { userId, requestId: data.id, requestType });
     return data as unknown as DataDeletionRequest;
@@ -424,7 +432,11 @@ export class ComplianceService {
     });
 
     if (error) {
-      secureLogger.error('Failed to update limit usage', { error: error.message, userId, limitType });
+      secureLogger.error('Failed to update limit usage', {
+        error: error.message,
+        userId,
+        limitType,
+      });
       throw new Error(`Erro ao atualizar uso do limite: ${error.message}`);
     }
   }
@@ -445,17 +457,15 @@ export class ComplianceService {
     metadata?: Record<string, unknown>,
     ipAddress?: string
   ): Promise<void> {
-    const { error } = await this.supabase
-      .from('compliance_audit_logs')
-      .insert({
-        user_id: userId,
-        event_type: eventType,
-        resource_type: resourceType,
-        resource_id: resourceId,
-        description,
-        metadata: metadata ?? {},
-        ip_address: ipAddress,
-      });
+    const { error } = await this.supabase.from('compliance_audit_logs').insert({
+      user_id: userId,
+      event_type: eventType,
+      resource_type: resourceType,
+      resource_id: resourceId,
+      description,
+      metadata: metadata ?? {},
+      ip_address: ipAddress,
+    });
 
     if (error) {
       secureLogger.error('Failed to log compliance event', { error: error.message, eventType });
@@ -469,10 +479,7 @@ export class ComplianceService {
     userId: string,
     options?: { limit?: number; eventType?: string; startDate?: Date; endDate?: Date }
   ): Promise<unknown[]> {
-    let query = this.supabase
-      .from('compliance_audit_logs')
-      .select('*')
-      .eq('user_id', userId);
+    let query = this.supabase.from('compliance_audit_logs').select('*').eq('user_id', userId);
 
     if (options?.eventType) {
       query = query.eq('event_type', options.eventType);
@@ -512,7 +519,7 @@ export class ComplianceService {
     const data = encoder.encode(text);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 }
 

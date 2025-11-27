@@ -3,8 +3,8 @@
  * Unified Supabase client using factory pattern
  */
 
-import { getBrowserClient } from './factory';
 import { createClient } from '@supabase/supabase-js';
+import { getBrowserClient } from './factory';
 
 /**
  * Browser Supabase client instance

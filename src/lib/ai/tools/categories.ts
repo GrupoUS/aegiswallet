@@ -5,14 +5,14 @@ export function createCategoryTools(userId: string) {
   return {
     listCategories: tool({
       description: 'Lista todas as categorias de transação disponíveis.',
-      parameters: z.object({
-        includeSystem: z.boolean().default(true)
-          .describe('Incluir categorias do sistema'),
+      inputSchema: z.object({
+        includeSystem: z.boolean().default(true).describe('Incluir categorias do sistema'),
       }),
-      execute: async ({ includeSystem }) => {
+      execute: async ({ includeSystem }: { includeSystem: boolean }) => {
         const { createClient } = await import('@supabase/supabase-js');
         const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        const supabaseKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         let query = supabase
@@ -38,16 +38,20 @@ export function createCategoryTools(userId: string) {
 
     createCategory: tool({
       description: 'Cria uma nova categoria personalizada.',
-      parameters: z.object({
+      inputSchema: z.object({
         name: z.string().min(1).max(50).describe('Nome da categoria'),
-        color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#6B7280')
+        color: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/)
+          .default('#6B7280')
           .describe('Cor em hexadecimal'),
         icon: z.string().default('circle').describe('Nome do ícone'),
       }),
-      execute: async ({ name, color, icon }) => {
+      execute: async ({ name, color, icon }: { name: string; color: string; icon: string }) => {
         const { createClient } = await import('@supabase/supabase-js');
         const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        const supabaseKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const { data, error } = await supabase

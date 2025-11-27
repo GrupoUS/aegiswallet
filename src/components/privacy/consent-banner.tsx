@@ -1,19 +1,19 @@
 /**
  * LGPD Consent Banner Component
- * 
+ *
  * Displays a cookie/consent banner for LGPD compliance.
  * Shows on first visit and allows users to accept or customize preferences.
- * 
+ *
  * @example
  * ```tsx
  * <ConsentBanner onAccept={handleAccept} onCustomize={handleCustomize} />
  * ```
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { Cookie, Settings, Shield, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Cookie, Settings, Shield } from 'lucide-react';
 
 interface ConsentBannerProps {
   /** Callback when user accepts all consents */
@@ -48,29 +48,35 @@ export function ConsentBanner({
   const showBanner = controlledShow !== undefined ? controlledShow : isVisible;
 
   const handleAccept = useCallback(() => {
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify({
-      accepted: true,
-      timestamp: new Date().toISOString(),
-      preferences: {
-        necessary: true,
-        analytics: true,
-        marketing: true,
-      },
-    }));
+    localStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({
+        accepted: true,
+        timestamp: new Date().toISOString(),
+        preferences: {
+          necessary: true,
+          analytics: true,
+          marketing: true,
+        },
+      })
+    );
     setIsVisible(false);
     onAccept?.();
   }, [onAccept]);
 
   const handleRejectOptional = useCallback(() => {
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify({
-      accepted: true,
-      timestamp: new Date().toISOString(),
-      preferences: {
-        necessary: true,
-        analytics: false,
-        marketing: false,
-      },
-    }));
+    localStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({
+        accepted: true,
+        timestamp: new Date().toISOString(),
+        preferences: {
+          necessary: true,
+          analytics: false,
+          marketing: false,
+        },
+      })
+    );
     setIsVisible(false);
     onRejectOptional?.();
   }, [onRejectOptional]);
@@ -103,8 +109,8 @@ export function ConsentBanner({
             </Button>
           </div>
           <CardDescription>
-            Utilizamos cookies e tecnologias similares para melhorar sua experiência.
-            Em conformidade com a LGPD (Lei Geral de Proteção de Dados).
+            Utilizamos cookies e tecnologias similares para melhorar sua experiência. Em
+            conformidade com a LGPD (Lei Geral de Proteção de Dados).
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-2 pt-0">

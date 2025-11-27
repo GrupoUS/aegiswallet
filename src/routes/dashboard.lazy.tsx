@@ -93,7 +93,10 @@ export function Dashboard() {
   const endOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
     .toISOString()
     .split('T')[0];
-  const { summary, isLoading: summaryLoading } = useFinancialSummary(startOfCurrentMonth, endOfCurrentMonth);
+  const { summary, isLoading: summaryLoading } = useFinancialSummary(
+    startOfCurrentMonth,
+    endOfCurrentMonth
+  );
 
   const recentTransactionsQuery = useTransactions({ limit: 5 });
   const recentTransactions = recentTransactionsQuery.data ?? [];

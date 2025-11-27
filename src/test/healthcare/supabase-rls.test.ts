@@ -398,22 +398,21 @@ describe('Supabase RLS Policy Testing', () => {
         { userId: 'billing-001', userMetadata: { role: 'billing' } },
       ];
 
-      it.each(contexts)(
-        'should deny write access to audit logs for $userMetadata.role',
-        async (context) => {
-          await expect(
-            testRLSPolicy('authenticated', context, 'insert', 'audit_logs', false)
-          ).resolves.not.toThrow();
+      it.each(
+        contexts
+      )('should deny write access to audit logs for $userMetadata.role', async (context) => {
+        await expect(
+          testRLSPolicy('authenticated', context, 'insert', 'audit_logs', false)
+        ).resolves.not.toThrow();
 
-          await expect(
-            testRLSPolicy('authenticated', context, 'update', 'audit_logs', false)
-          ).resolves.not.toThrow();
+        await expect(
+          testRLSPolicy('authenticated', context, 'update', 'audit_logs', false)
+        ).resolves.not.toThrow();
 
-          await expect(
-            testRLSPolicy('authenticated', context, 'delete', 'audit_logs', false)
-          ).resolves.not.toThrow();
-        }
-      );
+        await expect(
+          testRLSPolicy('authenticated', context, 'delete', 'audit_logs', false)
+        ).resolves.not.toThrow();
+      });
     });
 
     describe('System-Level Access', () => {

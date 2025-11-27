@@ -8,6 +8,7 @@ import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
 import { setupStaticRoutes } from '@/server/routes/static';
 import {
+  aiChatRouter,
   bankAccountsRouter,
   bankingRouter,
   calendarRouter,
@@ -19,7 +20,6 @@ import {
   transactionsRouter,
   usersRouter,
   voiceRouter,
-  aiChatRouter,
 } from '@/server/routes/v1';
 
 /**

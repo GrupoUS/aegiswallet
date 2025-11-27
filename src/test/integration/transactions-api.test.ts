@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { apiClient } from '@/lib/api-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import { hasIntegrationTestEnv } from './helpers';
 
 describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => {
@@ -16,12 +16,12 @@ describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => 
     // The user plan provided this code, so I assume they have a way to run it.
     const { data, error } = await supabase.auth.signInWithPassword({
       email: 'test@aegiswallet.com',
-      password: 'test-password'
+      password: 'test-password',
     });
 
     if (error) {
-        console.warn("Skipping integration tests: Could not sign in.", error);
-        return;
+      console.warn('Skipping integration tests: Could not sign in.', error);
+      return;
     }
 
     authToken = data.session!.access_token;
@@ -32,10 +32,10 @@ describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => 
 
     const transaction = {
       title: 'Teste de Transação',
-      amount: 100.50,
+      amount: 100.5,
       type: 'expense',
       category: 'ALIMENTACAO', // Ensure this category exists or is valid string
-      status: 'pending'
+      status: 'pending',
     };
 
     const response = await apiClient.post<any>('/v1/transactions', transaction);

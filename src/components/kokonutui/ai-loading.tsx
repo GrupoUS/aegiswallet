@@ -32,11 +32,23 @@ export function AiLoading({
   };
 
   return (
-    <div className={cn('flex items-center gap-3 text-muted-foreground animate-in fade-in', className)}>
+    <div
+      className={cn('flex items-center gap-3 text-muted-foreground animate-in fade-in', className)}
+    >
       {variant === 'dots' && (
         <div className={cn('flex items-center', containerClasses[size])}>
-          <span className={cn('bg-current rounded-full animate-bounce [animation-delay:-0.3s]', sizeClasses[size])} />
-          <span className={cn('bg-current rounded-full animate-bounce [animation-delay:-0.15s]', sizeClasses[size])} />
+          <span
+            className={cn(
+              'bg-current rounded-full animate-bounce [animation-delay:-0.3s]',
+              sizeClasses[size]
+            )}
+          />
+          <span
+            className={cn(
+              'bg-current rounded-full animate-bounce [animation-delay:-0.15s]',
+              sizeClasses[size]
+            )}
+          />
           <span className={cn('bg-current rounded-full animate-bounce', sizeClasses[size])} />
         </div>
       )}
@@ -46,9 +58,12 @@ export function AiLoading({
       )}
 
       {variant === 'spinner' && (
-        <div className={cn('border-2 border-current border-t-transparent rounded-full animate-spin',
-          size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'
-        )} />
+        <div
+          className={cn(
+            'border-2 border-current border-t-transparent rounded-full animate-spin',
+            size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'
+          )}
+        />
       )}
 
       {message && <span className="text-xs font-medium">{message}</span>}

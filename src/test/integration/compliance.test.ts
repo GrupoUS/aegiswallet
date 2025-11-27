@@ -11,11 +11,11 @@
  * Run: bun test src/test/integration/compliance.test.ts
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
-  getSupabaseAdminClient,
-  createTestUser,
   cleanupUserData,
+  createTestUser,
+  getSupabaseAdminClient,
   hasIntegrationTestEnv,
   type TestUser,
 } from './helpers';
@@ -65,7 +65,7 @@ describe.skipIf(!hasIntegrationTestEnv())('LGPD Compliance Integration Tests', (
       expect(templates!.length).toBeGreaterThan(0);
 
       // Check that data_processing is mandatory
-      const hasDataProcessing = templates!.some(t => t.consent_type === 'data_processing');
+      const hasDataProcessing = templates!.some((t) => t.consent_type === 'data_processing');
       expect(hasDataProcessing).toBe(true);
     });
 
@@ -154,17 +154,20 @@ describe.skipIf(!hasIntegrationTestEnv())('LGPD Compliance Integration Tests', (
       });
 
       // Second insert with same version should be upserted
-      const { error } = await supabase.from('lgpd_consents').upsert({
-        user_id: testUser.id,
-        consent_type: 'analytics',
-        purpose: template.description_pt,
-        legal_basis: 'consent',
-        granted: true,
-        granted_at: new Date().toISOString(),
-        consent_version: template.version,
-        consent_text_hash: 'test-hash-updated',
-        collection_method: 'explicit_form',
-      }, { onConflict: 'user_id,consent_type,consent_version' });
+      const { error } = await supabase.from('lgpd_consents').upsert(
+        {
+          user_id: testUser.id,
+          consent_type: 'analytics',
+          purpose: template.description_pt,
+          legal_basis: 'consent',
+          granted: true,
+          granted_at: new Date().toISOString(),
+          consent_version: template.version,
+          consent_text_hash: 'test-hash-updated',
+          collection_method: 'explicit_form',
+        },
+        { onConflict: 'user_id,consent_type,consent_version' }
+      );
 
       expect(error).toBeNull();
     });
@@ -425,7 +428,7 @@ describe.skipIf(!hasIntegrationTestEnv())('LGPD Compliance Integration Tests', (
         .eq('user_id', testUser.id);
 
       expect(consents).toBeDefined();
-      expect(consents!.every(c => c.user_id === testUser.id)).toBe(true);
+      expect(consents!.every((c) => c.user_id === testUser.id)).toBe(true);
     });
   });
 });

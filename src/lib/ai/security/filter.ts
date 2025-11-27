@@ -13,14 +13,12 @@ const SENSITIVE_FIELDS = new Set([
 ]);
 
 const MASK_FIELDS: Record<string, (value: string) => string> = {
-  cpf: (v) => v ? `***.***.***-${v.slice(-2)}` : '[não informado]',
-  account_number: (v) => v ? `****${v.slice(-4)}` : '[não informado]',
-  phone: (v) => v ? `(**) *****-${v.slice(-4)}` : '[não informado]',
+  cpf: (v) => (v ? `***.***.***-${v.slice(-2)}` : '[não informado]'),
+  account_number: (v) => (v ? `****${v.slice(-4)}` : '[não informado]'),
+  phone: (v) => (v ? `(**) *****-${v.slice(-4)}` : '[não informado]'),
 };
 
-export function filterSensitiveData<T extends Record<string, unknown>>(
-  data: T
-): Partial<T> {
+export function filterSensitiveData<T extends object>(data: T): Partial<T> {
   if (!data) return {};
 
   const filtered: Record<string, unknown> = {};

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiClient } from '../lib/api-client';
 import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '../lib/api-client';
 
 type SyncStatus = {
   googleEmail: string | null;
@@ -122,7 +122,10 @@ export function useGoogleCalendarSync() {
     // Call revoke endpoint with user's auth token
     try {
       // Get the current session to include the access token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session?.access_token) {
         toast.error('Sessão expirada. Por favor, faça login novamente.');
@@ -135,7 +138,7 @@ export function useGoogleCalendarSync() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         }
       );

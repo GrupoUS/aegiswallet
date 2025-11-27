@@ -9,9 +9,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   CalendarSyncMapping,
   CalendarSyncSettings,
-  SyncResult,
   ChannelInfo,
   SyncDirectionEnum,
+  SyncResult,
 } from '@/types/google-calendar';
 
 // Environment configuration interface
@@ -306,10 +306,7 @@ export class GoogleCalendarService {
    * Resolve conflict between local and Google event
    * Uses "Last Write Wins" strategy based on timestamps
    */
-  resolveConflict(
-    localModifiedAt: Date,
-    googleModifiedAt: Date
-  ): 'local_wins' | 'remote_wins' {
+  resolveConflict(localModifiedAt: Date, googleModifiedAt: Date): 'local_wins' | 'remote_wins' {
     return googleModifiedAt > localModifiedAt ? 'remote_wins' : 'local_wins';
   }
 
@@ -317,10 +314,7 @@ export class GoogleCalendarService {
    * Check if sync should be skipped (loop prevention)
    * Skip if change originated from destination within last 5 seconds
    */
-  async shouldSkipSync(
-    eventId: string,
-    direction: 'to_google' | 'from_google'
-  ): Promise<boolean> {
+  async shouldSkipSync(eventId: string, direction: 'to_google' | 'from_google'): Promise<boolean> {
     const mapping = await this.getMappingByEventId(eventId);
 
     if (!mapping) return false;

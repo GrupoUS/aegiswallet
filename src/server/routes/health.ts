@@ -7,15 +7,16 @@ import type { Hono } from 'hono';
 
 import { environment } from '@/server/config/environment';
 
+// biome-ignore lint/suspicious/noExplicitAny: Hono app type requires generic env type which is complex to type properly
 export function setupHealthRoute(app: Hono<any>) {
-	app.get('/api/health', (c) => {
-		return c.json({
-			environment: environment.NODE_ENV,
-			memory: process.memoryUsage?.() || {},
-			service: 'aegiswallet-server',
-			status: 'ok',
-			timestamp: new Date().toISOString(),
-			uptime: process.uptime?.() || 0,
-		});
-	});
+  app.get('/api/health', (c) => {
+    return c.json({
+      environment: environment.NODE_ENV,
+      memory: process.memoryUsage?.() || {},
+      service: 'aegiswallet-server',
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime?.() || 0,
+    });
+  });
 }

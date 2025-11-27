@@ -444,7 +444,10 @@ export function CalendarHeader({
 								{/* Date range filters */}
 								<div className="grid grid-cols-2 gap-2">
 									<div className="space-y-2">
-										<label htmlFor={startDateId} className="font-medium text-sm">
+										<label
+											htmlFor={startDateId}
+											className="font-medium text-sm"
+										>
 											Data Início
 										</label>
 										<Input

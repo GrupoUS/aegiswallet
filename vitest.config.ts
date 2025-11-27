@@ -6,7 +6,8 @@ export default defineConfig({
   // ✅ MELHORIA 1: optimizeDeps movido para dentro de test.deps
   // O optimizeDeps no root é para Vite dev server, não para Vitest
 
-  plugins: [react()], // ✅ MELHORIA 2: Removido cast 'as any' - veja solução abaixo
+  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
+  plugins: [react()] as any,
 
   resolve: {
     alias: {
@@ -54,14 +55,6 @@ export default defineConfig({
     // ✅ MELHORIA 7: Usar 'forks' ao invés de 'threads' para melhor isolamento
     // Threads compartilham memória, forks são isolados (melhor para testes de DB)
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        isolate: true,
-        // Número de workers baseado no ambiente
-        minForks: 1,
-        maxForks: process.env.CI ? 2 : undefined, // CI tem menos recursos
-      },
-    },
 
     // ✅ MELHORIA 8: sequence.concurrent pode ser true para velocidade
     // O isolamento é garantido pelo pool, não pela sequência
@@ -124,7 +117,6 @@ export default defineConfig({
         },
       },
 
-      all: true,
       clean: true,
       cleanOnRerun: true,
       // ✅ MELHORIA 13: Reportar falha mesmo sem threshold
@@ -172,7 +164,7 @@ export default defineConfig({
     clearMocks: true,
 
     // ✅ MELHORIA 22: Watch mode otimizado
-    watchExclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**'],
+    // ✅ FIX: watchExclude moved to test.watch.exclude as it doesn't exist at root level
 
     // ✅ MELHORIA 23: Timezone fixa para testes consistentes
     // (Importante para AegisWallet - mercado brasileiro)

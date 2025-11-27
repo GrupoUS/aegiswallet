@@ -215,7 +215,10 @@ export interface SyncHistoryFilters {
 
 // HTTP Method Aliases for API Client
 export interface ApiMethods {
-	get<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	get<T = unknown>(
+		url: string,
+		config?: RequestConfig,
+	): Promise<ApiResponse<T>>;
 	post<T = unknown>(
 		url: string,
 		data?: unknown,
@@ -231,7 +234,10 @@ export interface ApiMethods {
 		data?: unknown,
 		config?: RequestConfig,
 	): Promise<ApiResponse<T>>;
-	delete<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	delete<T = unknown>(
+		url: string,
+		config?: RequestConfig,
+	): Promise<ApiResponse<T>>;
 }
 
 export interface RequestConfig {

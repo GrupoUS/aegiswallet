@@ -70,7 +70,10 @@ export function ChatSettings({
 						<div className="flex items-center gap-3">
 							<Brain className="w-5 h-5 text-muted-foreground" />
 							<div className="space-y-0.5">
-								<Label htmlFor={reasoningViewId} className="text-sm font-medium">
+								<Label
+									htmlFor={reasoningViewId}
+									className="text-sm font-medium"
+								>
 									Exibir raciocínio da IA
 								</Label>
 								<p className="text-xs text-muted-foreground">

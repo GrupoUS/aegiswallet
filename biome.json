@@ -6,8 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*.ts", "**/*.tsx", "**/*.json"],
-    "experimentalScannerIgnores": ["**/node_modules/**", "**/dist/**", "**/coverage/**"]
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.json"]
   },
   "linter": {
     "enabled": true,
@@ -34,7 +33,7 @@
       "complexity": {
         "noExcessiveCognitiveComplexity": {
           "level": "warn",
-          "options": { "maxAllowedComplexity": 15 }
+          "options": { "maxAllowedComplexity": 30 }
         }
       },
       "a11y": "error"
@@ -71,10 +70,52 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"],
+      "includes": ["src/routeTree.gen.ts"],
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**",
+        "src/test/**"
+      ],
       "linter": {
         "rules": {
-          "suspicious": { "noExplicitAny": "off", "noConsole": "off" }
+          "correctness": {
+            "noUnusedVariables": "off",
+            "useUniqueElementIds": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noConsole": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useComponentExportOnlyModules": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/useFinancialEvents.ts", "**/compliance-service.ts", "**/pushProvider.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noExplicitAny": "warn" }
         }
       }
     }

@@ -45,7 +45,10 @@ describe('SpeechToTextService', () => {
 
 		it('should throw error without API key', () => {
 			expect(() => {
-				new SpeechToTextService({ apiKey: '' }, { fetch: mockFetch as typeof fetch });
+				new SpeechToTextService(
+					{ apiKey: '' },
+					{ fetch: mockFetch as typeof fetch },
+				);
 			}).toThrow('OpenAI API key is required');
 		});
 	});

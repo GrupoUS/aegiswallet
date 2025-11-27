@@ -144,7 +144,6 @@ export {
 	SidebarBody,
 	SidebarLink,
 	SidebarProvider,
-	useSidebar,
 } from './sidebar';
 export { Skeleton } from './skeleton';
 export { Toaster } from './sonner';
@@ -169,6 +168,7 @@ export {
 	TooltipProvider,
 	TooltipTrigger,
 } from './tooltip';
+export { useSidebar } from './use-sidebar';
 // Voice Components - Temporarily commented out due to Supabase import issues
 // export { VoiceDashboard } from '../voice/VoiceDashboard';
 // export { VoiceIndicator } from '../voice/VoiceIndicator';

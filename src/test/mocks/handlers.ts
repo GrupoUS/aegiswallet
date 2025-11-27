@@ -328,7 +328,7 @@ export const handlers = [
 
 	http.put('/api/v1/contacts/:id', async ({ params, request }) => {
 		const { id } = params;
-		const body = await request.json() as Record<string, unknown>;
+		const body = (await request.json()) as Record<string, unknown>;
 
 		const updatedContact = createMockContact({
 			...body,
@@ -430,7 +430,7 @@ export const handlers = [
 	}),
 
 	http.put('/api/v1/users/me', async ({ request }) => {
-		const body = await request.json() as Record<string, unknown>;
+		const body = (await request.json()) as Record<string, unknown>;
 
 		const updatedProfile = createMockUserProfile({
 			...body,
@@ -441,7 +441,7 @@ export const handlers = [
 	}),
 
 	http.put('/api/v1/users/me/preferences', async ({ request }) => {
-		const body = await request.json() as Record<string, unknown>;
+		const body = (await request.json()) as Record<string, unknown>;
 
 		const updatedPreferences = {
 			user_id: 'test-user-id',

@@ -22,8 +22,9 @@ export function AiInputSearch({
   const [value, setValue] = useState('');
 
   const handleSearch = () => {
-    if (!value.trim()) return;
-    onSearch(value);
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+    onSearch(trimmedValue);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -52,7 +53,7 @@ export function AiInputSearch({
           disabled={!value.trim() || disabled}
           className="h-full px-3 text-xs font-medium text-muted-foreground hover:text-primary"
         >
-          Search
+          Buscar
         </Button>
       </div>
     </div>

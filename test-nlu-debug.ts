@@ -1,1 +1,0 @@
-import { createNLUEngine } from './src/lib/nlu/nluEngine'; const engine = createNLUEngine(); const tests = ['como vai ficar o mes?']; async function run() { for (const t of tests) { const r = await engine.processUtterance(t); console.log(t, '-', r.intent, r.confidence); }} run();  

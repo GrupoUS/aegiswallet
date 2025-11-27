@@ -23,8 +23,7 @@ let mockSpeechRecognitionInstance = {
   stop: vi.fn(),
 };
 
-const mockSpeechRecognition = vi.fn().mockImplementation(() => {
-  // Create a fresh instance for each call and keep reference
+const createMockSpeechRecognitionInstance = () => {
   const instance = {
     continuous: false,
     interimResults: true,
@@ -38,31 +37,13 @@ const mockSpeechRecognition = vi.fn().mockImplementation(() => {
   };
   mockSpeechRecognitionInstance = instance;
   return instance;
-});
-
-const globalSpeech = globalThis as typeof globalThis & {
-  SpeechRecognition?: unknown;
-  webkitSpeechRecognition?: unknown;
-  MediaRecorder?: unknown;
-  navigator?: Navigator;
 };
 
-// Mock browser APIs
-if (typeof window !== 'undefined') {
-  Object.defineProperty(window, 'webkitSpeechRecognition', {
-    value: mockSpeechRecognition,
-    writable: true,
-  });
+const mockSpeechRecognition = vi.fn().mockImplementation(createMockSpeechRecognitionInstance);
 
-  Object.defineProperty(window, 'SpeechRecognition', {
-    value: mockSpeechRecognition,
-    writable: true,
-  });
-} else {
-  // Fallback for Node.js environment
-  globalSpeech.SpeechRecognition = mockSpeechRecognition;
-  globalSpeech.webkitSpeechRecognition = mockSpeechRecognition;
-}
+// Use vi.stubGlobal for proper global mocking across module boundaries
+vi.stubGlobal('SpeechRecognition', mockSpeechRecognition);
+vi.stubGlobal('webkitSpeechRecognition', mockSpeechRecognition);
 
 // Mock MediaRecorder
 const mockMediaRecorder = {
@@ -80,45 +61,30 @@ Object.defineProperty(mockMediaRecorderConstructor, 'isTypeSupported', {
   writable: true,
 });
 
-// Mock MediaRecorder
-if (typeof window !== 'undefined') {
-  Object.defineProperty(window, 'MediaRecorder', {
-    value: mockMediaRecorderConstructor,
-    writable: true,
-  });
-} else {
-  globalSpeech.MediaRecorder = mockMediaRecorderConstructor as unknown as typeof MediaRecorder;
-}
+// Use vi.stubGlobal for MediaRecorder
+vi.stubGlobal('MediaRecorder', mockMediaRecorderConstructor);
 
-// Mock getUserMedia
-if (typeof navigator !== 'undefined') {
+// Mock navigator.mediaDevices.getUserMedia
+const mockMediaDevices = {
+  getUserMedia: vi.fn(() =>
+    Promise.resolve({
+      getTracks: () => [{ stop: vi.fn() }],
+    })
+  ),
+};
+
+// Stub navigator with mediaDevices
+if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
   Object.defineProperty(navigator, 'mediaDevices', {
-    value: {
-      getUserMedia: vi.fn(() =>
-        Promise.resolve({
-          getTracks: () => [{ stop: vi.fn() }],
-        })
-      ),
-    },
+    value: mockMediaDevices,
     writable: true,
+    configurable: true,
   });
 } else {
-  globalSpeech.navigator = {
-    mediaDevices: {
-      getUserMedia: vi.fn(() =>
-        Promise.resolve({
-          active: true,
-          addEventListener: vi.fn(),
-          dispatchEvent: vi.fn(),
-          getTracks: () => [{ stop: vi.fn() }],
-          id: 'mock-stream-id',
-          onaddtrack: null,
-          onremovetrack: null,
-          removeEventListener: vi.fn(),
-        })
-      ),
-    },
-  } as unknown as Navigator;
+  vi.stubGlobal('navigator', {
+    ...navigator,
+    mediaDevices: mockMediaDevices,
+  });
 }
 
 describe('Voice Command Performance', () => {
@@ -173,16 +139,27 @@ describe('Voice Command Performance', () => {
     });
 
     it('should process commands within 500ms of final result', async () => {
+      // Get reference to window's SpeechRecognition for assertions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any;
+      const windowSpeechRecognition = win.SpeechRecognition;
+      
       const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
       expect(result.current.supported).toBe(true);
 
-      // Start listening
-      act(() => {
-        result.current.startListening();
+      // Start listening - must await the async function
+      await act(async () => {
+        await result.current.startListening();
       });
 
-      expect(mockSpeechRecognitionInstance.start).toHaveBeenCalled();
+      // Check window.SpeechRecognition was called (not mockSpeechRecognition reference)
+      expect(windowSpeechRecognition).toHaveBeenCalled();
+      
+      // Get the instance that was returned from the mock constructor
+      const createdInstance = windowSpeechRecognition.mock.results[0]?.value;
+      expect(createdInstance).toBeDefined();
+      expect(createdInstance.start).toHaveBeenCalled();
 
       // Simulate speech recognition result
       const mockResult = {
@@ -201,8 +178,8 @@ describe('Voice Command Performance', () => {
       const startTime = performance.now();
 
       act(() => {
-        if (mockSpeechRecognitionInstance.onresult) {
-          mockSpeechRecognitionInstance.onresult(mockResult);
+        if (createdInstance.onresult) {
+          createdInstance.onresult(mockResult);
         }
       });
 
@@ -223,9 +200,9 @@ describe('Voice Command Performance', () => {
     it('should auto-stop listening within 3 seconds', async () => {
       const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 250 }));
 
-      // Start listening
-      act(() => {
-        result.current.startListening();
+      // Start listening - must await the async function
+      await act(async () => {
+        await result.current.startListening();
       });
 
       expect(result.current.isListening).toBe(true);
@@ -365,6 +342,10 @@ describe('Voice Command Performance', () => {
 
   describe('End-to-End Performance', () => {
     it('should complete full voice command cycle within 2 seconds', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any;
+      const windowSpeechRecognition = win.SpeechRecognition;
+
       const { result } = renderHook(() =>
         useVoiceRecognition({
           autoStopTimeoutMs: 400,
@@ -378,10 +359,13 @@ describe('Voice Command Performance', () => {
         expect(result.current.supported).toBe(true);
       });
 
-      // 2. Start listening (<50ms)
-      act(() => {
-        result.current.startListening();
+      // 2. Start listening (<50ms) - must await the async function
+      await act(async () => {
+        await result.current.startListening();
       });
+
+      // Get the created instance from the mock
+      const createdInstance = windowSpeechRecognition.mock.results[windowSpeechRecognition.mock.results.length - 1]?.value;
 
       // 3. Simulate speech recognition (<100ms) using async utility
       const { waitForMs, actAsync } = await import('@/test/utils/async-test-utils');
@@ -389,8 +373,8 @@ describe('Voice Command Performance', () => {
       (async () => {
         await waitForMs(100);
         await actAsync(() => {
-          if (mockSpeechRecognitionInstance.onresult) {
-            mockSpeechRecognitionInstance.onresult({
+          if (createdInstance?.onresult) {
+            createdInstance.onresult({
               resultIndex: 0,
               results: [
                 {

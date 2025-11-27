@@ -256,7 +256,7 @@ const LGDComplianceAuditReport = () => {
   };
 
   // Export audit report
-  const exportAuditReport = (format: 'pdf' | 'json' | 'csv') => {
+  const exportAuditReport = (_format: 'pdf' | 'json' | 'csv') => {
     const reportContent = {
       auditTrail: 'Completo e digitalmente assinado',
       detailedMetrics: complianceMetrics,
@@ -279,7 +279,6 @@ const LGDComplianceAuditReport = () => {
       issuesAnalysis: criticalIssues,
       recommendations: recommendations,
     };
-    console.log(`Exporting audit report as ${format.toUpperCase()}`, reportContent);
     return reportContent;
   };
 

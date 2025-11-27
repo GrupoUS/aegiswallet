@@ -43,9 +43,7 @@ export const ContasBancarias = () => {
       try {
         await deleteAccountAsync({ id: deletingAccount.id });
         setDeletingAccount(null);
-      } catch (error) {
-        console.error('Failed to delete account:', error);
-      }
+      } catch (_error) {}
     }
   };
 

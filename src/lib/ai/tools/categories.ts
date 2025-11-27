@@ -1,20 +1,27 @@
-import { tool } from 'ai';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-export function createCategoryTools(userId: string) {
-  return {
-    listCategories: tool({
-      description: 'Lista todas as categorias de transação disponíveis.',
-      inputSchema: z.object({
-        includeSystem: z.boolean().default(true).describe('Incluir categorias do sistema'),
-      }),
-      execute: async ({ includeSystem }: { includeSystem: boolean }) => {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey =
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
+export function createCategoryTools(userId: string, supabase: SupabaseClient) {
+  const listCategoriesSchema = z.object({
+    includeSystem: z.boolean().default(true).describe('Incluir categorias do sistema'),
+  });
 
+  const createCategorySchema = z.object({
+    name: z.string().min(1).max(50).describe('Nome da categoria'),
+    color: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/)
+      .default('#6B7280')
+      .describe('Cor em hexadecimal'),
+    icon: z.string().default('circle').describe('Nome do ícone'),
+  });
+
+  return {
+    listCategories: {
+      description: 'Lista todas as categorias de transação disponíveis.',
+      parameters: listCategoriesSchema,
+      execute: async (args: z.infer<typeof listCategoriesSchema>) => {
+        const { includeSystem } = args;
         let query = supabase
           .from('transaction_categories')
           .select('id, name, color, icon, is_system, parent_id')
@@ -34,26 +41,13 @@ export function createCategoryTools(userId: string) {
           count: data?.length ?? 0,
         };
       },
-    }),
+    },
 
-    createCategory: tool({
+    createCategory: {
       description: 'Cria uma nova categoria personalizada.',
-      inputSchema: z.object({
-        name: z.string().min(1).max(50).describe('Nome da categoria'),
-        color: z
-          .string()
-          .regex(/^#[0-9A-Fa-f]{6}$/)
-          .default('#6B7280')
-          .describe('Cor em hexadecimal'),
-        icon: z.string().default('circle').describe('Nome do ícone'),
-      }),
-      execute: async ({ name, color, icon }: { name: string; color: string; icon: string }) => {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey =
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
+      parameters: createCategorySchema,
+      execute: async (args: z.infer<typeof createCategorySchema>) => {
+        const { name, color, icon } = args;
         const { data, error } = await supabase
           .from('transaction_categories')
           .insert({
@@ -70,6 +64,6 @@ export function createCategoryTools(userId: string) {
 
         return { success: true, category: data };
       },
-    }),
+    },
   };
 }

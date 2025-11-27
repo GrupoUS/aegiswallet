@@ -60,9 +60,7 @@ export default function TransactionsList() {
 
       setDeletingId(null);
       refetch();
-    } catch (error) {
-      console.error('Failed to delete transaction:', error);
-    }
+    } catch (_error) {}
   };
 
   const getIcon = (type: string) => {

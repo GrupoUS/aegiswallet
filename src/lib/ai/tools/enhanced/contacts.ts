@@ -10,6 +10,15 @@ import {
   PixKeyTypeSchema,
 } from './types';
 
+// Interface for transfer results to ensure type safety
+interface TransferResult {
+  success: boolean;
+  transfer: Record<string, unknown>;
+  message: string;
+  endToEndId?: string;
+  estimatedCompletion?: string;
+}
+
 export function createContactsTools(userId: string) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const supabaseKey =
@@ -383,7 +392,7 @@ export function createContactsTools(userId: string) {
             .eq('id', selectedMethod.id);
 
           // Criar transferência baseada no tipo
-          let transferResult;
+          let transferResult: TransferResult;
           const finalDescription = description || `Transferência para ${contact.name}`;
 
           if (selectedMethod.payment_type === 'PIX') {
@@ -395,13 +404,15 @@ export function createContactsTools(userId: string) {
               throw new Error('Método PIX selecionado não possui chave configurada');
             }
 
-            transferResult = await pixTools.sendPixTransfer({
+            // Call the execute function of the sendPixTransfer tool
+            const pixTransferResult = await pixTools.sendPixTransfer.execute({
               recipientKey: selectedMethod.pix_key,
               recipientKeyType: selectedMethod.pix_key_type,
               recipientName: contact.name,
               amount,
               description: finalDescription,
             });
+            transferResult = pixTransferResult;
           } else {
             // TED/DOC - simular criação de transferência
             // Em produção, integrar com serviço bancário

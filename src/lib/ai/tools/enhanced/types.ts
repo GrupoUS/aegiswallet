@@ -180,6 +180,9 @@ export interface SpendingTrend {
   amount: number;
   percentageChange: number;
   categories: CategorySpending[];
+  // Per-category trend fields for detailed analysis
+  categoryId?: string;
+  direction?: 'increasing' | 'decreasing' | 'stable';
 }
 
 export interface CashFlowForecast {
@@ -303,7 +306,12 @@ export interface FinancialAlert {
 
 // Multi-modal Responses
 export interface VisualReport {
-  type: 'spending_chart' | 'cash_flow_graph' | 'category_breakdown' | 'trend_analysis';
+  type:
+    | 'spending_chart'
+    | 'cash_flow_graph'
+    | 'category_breakdown'
+    | 'trend_analysis'
+    | 'budget_comparison';
   title: string;
   description: string;
   chartData: ChartData;

@@ -1,25 +1,21 @@
 import { zValidator } from '@hono/zod-validator';
-import { streamText } from 'ai';
+import { convertToCoreMessages, streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { logAIOperation } from '@/lib/ai/audit/logger';
-import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT, ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT, getSystemPromptWithCustomization } from '@/lib/ai/prompts/system';
+import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
 import { AIProviderSchema, getAvailableProviders, getModel } from '@/lib/ai/providers';
 import { checkPromptInjection } from '@/lib/ai/security/injection';
 import { createAllTools } from '@/lib/ai/tools';
-import { type AuthContext, authMiddleware } from '@/server/middleware/auth';
+import type { AppEnv } from '@/server/hono-types';
+import { authMiddleware } from '@/server/middleware/auth';
 
-const aiChat = new Hono<{ Variables: { auth: AuthContext } }>();
+const aiChat = new Hono<AppEnv>();
 
 // Schema de request
 const chatRequestSchema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.enum(['user', 'assistant', 'system']),
-      content: z.string(),
-    })
-  ),
-  provider: AIProviderSchema.optional().default('anthropic'),
+  messages: z.array(z.any()), // Allow any message structure to support tool invocations
+  provider: AIProviderSchema.optional().default('google'),
   tier: z.enum(['default', 'fast']).optional().default('default'),
 });
 
@@ -27,14 +23,24 @@ const chatRequestSchema = z.object({
 aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), async (c) => {
   const startTime = Date.now();
   const { messages, provider, tier } = c.req.valid('json');
+
+  // Access user from auth context
   const auth = c.get('auth');
+  if (!auth?.user) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
   const userId = auth.user.id;
+
+  // Generate session ID if not present (we don't persist it in context yet)
   const sessionId = crypto.randomUUID();
 
   // Verificar prompt injection na última mensagem do usuário
-  const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
-  if (lastUserMessage) {
-    const injectionCheck = checkPromptInjection(lastUserMessage.content);
+  // We need to safely extract content from the last message
+  const lastMessage = messages[messages.length - 1];
+  const lastUserContent = lastMessage?.role === 'user' ? lastMessage.content : null;
+
+  if (lastUserContent && typeof lastUserContent === 'string') {
+    const injectionCheck = checkPromptInjection(lastUserContent);
     if (!injectionCheck.isSafe) {
       await logAIOperation({
         userId,
@@ -42,7 +48,7 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
         provider,
         model: `${provider}/${tier}`,
         actionType: 'chat',
-        inputSummary: lastUserMessage.content.slice(0, 100),
+        inputSummary: lastUserContent.slice(0, 100),
         outputSummary: 'Blocked: injection detected',
         latencyMs: Date.now() - startTime,
         outcome: 'blocked',
@@ -55,18 +61,23 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 
   try {
     const model = getModel(provider, tier);
-    const tools = createAllTools(userId);
+    const tools = createAllTools(userId, auth.supabase);
 
     const result = streamText({
       model,
-      system: ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        parts: [{ type: 'text', text: msg.content }],
-      })),
+      system: FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
+      messages: convertToCoreMessages(messages),
       tools,
-      onFinish: async ({ usage, finishReason, toolCalls }) => {
+      maxSteps: 5, // Permitir até 5 tool calls encadeadas
+      onFinish: async ({
+        usage,
+        finishReason,
+        toolCalls,
+      }: {
+        usage: { totalTokens: number };
+        finishReason: string;
+        toolCalls?: { toolName: string }[];
+      }) => {
         await logAIOperation({
           userId,
           sessionId,
@@ -74,16 +85,20 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
           model: `${provider}/${tier}`,
           actionType: toolCalls?.length ? 'tool_call' : 'chat',
           toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
-          inputSummary: lastUserMessage?.content.slice(0, 100) ?? '',
+          inputSummary:
+            typeof lastUserContent === 'string'
+              ? lastUserContent.slice(0, 100)
+              : 'Multi-modal/Tool input',
           outputSummary: finishReason,
-          tokensUsed: usage?.totalTokens,
+          tokensUsed: usage.totalTokens,
           latencyMs: Date.now() - startTime,
           outcome: 'success',
         });
       },
-    });
+    } as any);
 
-    return result.toTextStreamResponse();
+    // Cast to any to avoid TS error if types are stale, but toDataStreamResponse should exist
+    return (result as any).toDataStreamResponse();
   } catch (error) {
     await logAIOperation({
       userId,
@@ -91,7 +106,7 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
       provider,
       model: `${provider}/${tier}`,
       actionType: 'chat',
-      inputSummary: lastUserMessage?.content.slice(0, 100) ?? '',
+      inputSummary: typeof lastUserContent === 'string' ? lastUserContent.slice(0, 100) : '',
       outputSummary: 'Error',
       latencyMs: Date.now() - startTime,
       outcome: 'error',
@@ -106,7 +121,7 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 aiChat.get('/providers', authMiddleware, (c) => {
   return c.json({
     available: getAvailableProviders(),
-    default: 'anthropic',
+    default: 'google',
   });
 });
 

@@ -73,11 +73,50 @@ export interface VoiceRecognitionResult {
   intent?: string;
 }
 
+/**
+ * Structured error information for voice service errors
+ */
+export interface VoiceServiceErrorInfo {
+  type:
+    | 'no-speech'
+    | 'network'
+    | 'not-allowed'
+    | 'service-not-allowed'
+    | 'aborted'
+    | 'language-not-supported';
+  message: string;
+  timestamp: Date;
+  isNoSpeech: boolean;
+  originalEvent?: any;
+}
+
+/**
+ * Custom error class for VoiceService with structured properties
+ */
+export class VoiceServiceError extends Error {
+  public readonly type: VoiceServiceErrorInfo['type'];
+  public readonly isNoSpeech: boolean;
+  public readonly timestamp: Date;
+  public readonly originalEvent?: any;
+
+  constructor(message: string, type: VoiceServiceErrorInfo['type'], originalEvent?: any) {
+    super(message);
+    this.name = 'VoiceServiceError';
+    this.type = type;
+    this.isNoSpeech = type === 'no-speech';
+    this.timestamp = new Date();
+    this.originalEvent = originalEvent;
+  }
+}
+
 export interface VoiceServiceConfig {
   language?: string;
   continuous?: boolean;
   interimResults?: boolean;
   maxAlternatives?: number;
+  autoRetry?: boolean;
+  maxRetryAttempts?: number;
+  retryDelay?: number;
 }
 
 class VoiceService {
@@ -85,6 +124,7 @@ class VoiceService {
   private synthesis: any = null;
   private isListening = false;
   private config: VoiceServiceConfig;
+  private lastError: VoiceServiceErrorInfo | null = null;
 
   constructor(config: VoiceServiceConfig = {}) {
     this.config = {
@@ -92,6 +132,9 @@ class VoiceService {
       continuous: false,
       interimResults: false,
       maxAlternatives: 1,
+      autoRetry: false,
+      maxRetryAttempts: 3,
+      retryDelay: 1000,
       ...config,
     };
 
@@ -137,6 +180,15 @@ class VoiceService {
 
   /**
    * Start listening for voice commands
+   *
+   * Error handling behavior:
+   * - 'no-speech' errors are treated as informational and do NOT trigger onError callback
+   * - All other errors (network, permission denied, etc.) will trigger the onError callback
+   * - Use getLastError() method to retrieve structured error information
+   * - 'no-speech' errors can be retrieved via getLastError() but won't be passed to onError
+   *
+   * @param onResult - Callback called when voice recognition results are available
+   * @param onError - Callback called for critical errors (not called for 'no-speech')
    */
   startListening(
     onResult: (result: VoiceRecognitionResult) => void,
@@ -173,6 +225,18 @@ class VoiceService {
     this.recognition.onerror = (event: any) => {
       const errorType = event.error;
 
+      // Create structured error information
+      const errorInfo: VoiceServiceErrorInfo = {
+        type: errorType,
+        message: event.message || `Speech recognition error: ${errorType}`,
+        timestamp: new Date(),
+        isNoSpeech: errorType === 'no-speech',
+        originalEvent: event,
+      };
+
+      // Store error for observability
+      this.lastError = errorInfo;
+
       // Special handling for 'no-speech' error - treat as informational, not critical
       if (errorType === 'no-speech') {
         logger.warn('No speech detected during voice recognition', {
@@ -182,10 +246,7 @@ class VoiceService {
           isNoSpeech: true,
         });
         this.isListening = false;
-        // Create a special error that can be identified by the hook
-        const noSpeechError = new Error('no-speech') as Error & { isNoSpeech: boolean };
-        noSpeechError.isNoSpeech = true;
-        onError?.(noSpeechError);
+        // For 'no-speech', only log warning and don't call onError - it's a normal use case
         return;
       }
 
@@ -196,7 +257,7 @@ class VoiceService {
         errorMessage: event.message,
       });
       this.isListening = false;
-      onError?.(new Error(`Speech recognition error: ${errorType}`));
+      onError?.(new VoiceServiceError(errorInfo.message, errorType, event));
     };
 
     this.recognition.onend = () => {
@@ -340,6 +401,22 @@ class VoiceService {
    */
   getPortugueseVoices(): SpeechSynthesisVoice[] {
     return this.getAvailableVoices().filter((voice) => voice.lang.startsWith('pt'));
+  }
+
+  /**
+   * Get the last error that occurred during voice recognition
+   * Returns structured error information or null if no error occurred
+   * @returns {VoiceServiceErrorInfo | null} The last error information
+   */
+  getLastError(): VoiceServiceErrorInfo | null {
+    return this.lastError;
+  }
+
+  /**
+   * Clear the last error (useful for starting fresh recognition sessions)
+   */
+  clearLastError(): void {
+    this.lastError = null;
   }
 }
 

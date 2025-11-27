@@ -1,21 +1,22 @@
-import { tool } from 'ai';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { filterSensitiveData } from '../security/filter';
 
-export function createAccountTools(userId: string) {
-  return {
-    listAccounts: tool({
-      description: 'Lista todas as contas bancárias do usuário.',
-      inputSchema: z.object({
-        includeInactive: z.boolean().default(false).describe('Incluir contas inativas'),
-      }),
-      execute: async ({ includeInactive }) => {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey =
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
+export function createAccountTools(userId: string, supabase: SupabaseClient) {
+  const listAccountsSchema = z.object({
+    includeInactive: z.boolean().default(false).describe('Incluir contas inativas'),
+  });
 
+  const getAccountBalanceSchema = z.object({
+    accountId: z.string().uuid().optional().describe('ID da conta (omitir para total)'),
+  });
+
+  return {
+    listAccounts: {
+      description: 'Lista todas as contas bancárias do usuário.',
+      parameters: listAccountsSchema,
+      execute: async (args: z.infer<typeof listAccountsSchema>) => {
+        const { includeInactive } = args;
         let query = supabase
           .from('bank_accounts')
           .select(
@@ -40,20 +41,13 @@ export function createAccountTools(userId: string) {
           count: data?.length ?? 0,
         };
       },
-    }),
+    },
 
-    getAccountBalance: tool({
+    getAccountBalance: {
       description: 'Obtém saldo atual de uma conta específica ou total de todas as contas.',
-      inputSchema: z.object({
-        accountId: z.string().uuid().optional().describe('ID da conta (omitir para total)'),
-      }),
-      execute: async ({ accountId }) => {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-        const supabaseKey =
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
+      parameters: getAccountBalanceSchema,
+      execute: async (args: z.infer<typeof getAccountBalanceSchema>) => {
+        const { accountId } = args;
         if (accountId) {
           const { data, error } = await supabase
             .from('bank_accounts')
@@ -87,6 +81,6 @@ export function createAccountTools(userId: string) {
           accountCount: data?.length ?? 0,
         };
       },
-    }),
+    },
   };
 }

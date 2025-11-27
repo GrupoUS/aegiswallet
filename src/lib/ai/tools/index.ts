@@ -1,21 +1,14 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAccountTools } from './accounts';
 import { createCategoryTools } from './categories';
 import { createTransactionTools } from './transactions';
-import { createEnhancedTools } from './enhanced';
 
-export function createAllTools(userId: string) {
+export function createAllTools(userId: string, supabase: SupabaseClient) {
   return {
-    // Core tools
-    ...createTransactionTools(userId),
-    ...createAccountTools(userId),
-    ...createCategoryTools(userId),
-    
-    // Enhanced Brazilian financial tools
-    ...createEnhancedTools(userId),
+    ...createTransactionTools(userId, supabase),
+    ...createAccountTools(userId, supabase),
+    ...createCategoryTools(userId, supabase),
   };
 }
 
 export type AITools = ReturnType<typeof createAllTools>;
-
-// Re-export enhanced tools for direct access
-export { createEnhancedTools, type EnhancedTools } from './enhanced';

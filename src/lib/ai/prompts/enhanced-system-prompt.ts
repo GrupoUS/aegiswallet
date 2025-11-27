@@ -220,22 +220,27 @@ export const getSystemPromptWithCustomization = (userProfile?: {
 // Helper functions for customization
 function getRegionalInfo(region: string): string {
   const regions: Record<string, string> = {
-    'sudeste': 'Foco em bancos tradicionais (Itaú, Bradesco, BB), custo de vida elevado, mais transações eletrônicas.',
-    'nordeste': 'Ênfase em Caixa, bancos digitais, transferências PIX para familiares, contexto de menor formalidade bancária.',
-    'sul': 'Bancos regionais (Sicredi, Banrisul), maior uso de crédito rural, safras agrícolas.',
+    sudeste:
+      'Foco em bancos tradicionais (Itaú, Bradesco, BB), custo de vida elevado, mais transações eletrônicas.',
+    nordeste:
+      'Ênfase em Caixa, bancos digitais, transferências PIX para familiares, contexto de menor formalidade bancária.',
+    sul: 'Bancos regionais (Sicredi, Banrisul), maior uso de crédito rural, safras agrícolas.',
     'centro-oeste': 'Foco em agroindústria, bancos estaduais, comércio local forte.',
-    'norte': 'Banco da Amazônia, Caixa forte, transferências para outras regiões.'
+    norte: 'Banco da Amazônia, Caixa forte, transferências para outras regiões.',
   };
-  
+
   return regions[region.toLowerCase()] || 'Perfil bancário padrão brasileiro.';
 }
 
 function getRiskLevelGuidance(riskLevel: string): string {
   const guidance: Record<string, string> = {
-    conservative: 'Priorizar segurança, evitar investimentos arriscados, sugestões de economia, alertas conservadores.',
-    moderate: 'Equilíbrio entre segurança e oportunidades, diversificação moderada, análise cuidadosa de riscos.',
-    aggressive: 'Maior tolerância a risco, oportunidades de maior retorno, monitoramento intensivo de carteiras.'
+    conservative:
+      'Priorizar segurança, evitar investimentos arriscados, sugestões de economia, alertas conservadores.',
+    moderate:
+      'Equilíbrio entre segurança e oportunidades, diversificação moderada, análise cuidadosa de riscos.',
+    aggressive:
+      'Maior tolerância a risco, oportunidades de maior retorno, monitoramento intensivo de carteiras.',
   };
-  
+
   return guidance[riskLevel.toLowerCase()] || 'Perfil financeiro padrão brasileiro.';
 }

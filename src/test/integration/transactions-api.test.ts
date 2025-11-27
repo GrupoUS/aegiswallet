@@ -20,7 +20,6 @@ describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => 
     });
 
     if (error) {
-      console.warn('Skipping integration tests: Could not sign in.', error);
       return;
     }
 

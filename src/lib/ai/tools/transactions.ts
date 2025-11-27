@@ -1,79 +1,79 @@
-import { createClient } from '@supabase/supabase-js';
-import { tool } from 'ai';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { filterSensitiveData } from '../security/filter';
 
-// Type for transaction data returned from Supabase query
-type TransactionQueryResult = {
-  amount: number;
-  category: {
-    id: string;
-    name: string;
-    color: string;
-  } | null;
-};
+export function createTransactionTools(userId: string, supabase: SupabaseClient) {
+  const listTransactionsSchema = z.object({
+    startDate: z
+      .string()
+      .datetime()
+      .optional()
+      .describe('Data inicial no formato ISO (YYYY-MM-DD)'),
+    endDate: z.string().datetime().optional().describe('Data final no formato ISO (YYYY-MM-DD)'),
+    categoryId: z.string().uuid().optional().describe('ID da categoria para filtrar'),
+    accountId: z.string().uuid().optional().describe('ID da conta para filtrar'),
+    minAmount: z.number().optional().describe('Valor mínimo da transação'),
+    maxAmount: z.number().optional().describe('Valor máximo da transação'),
+    searchTerm: z.string().optional().describe('Termo para buscar na descrição'),
+    limit: z.number().min(1).max(100).default(20).describe('Número máximo de resultados'),
+    offset: z.number().min(0).default(0).describe('Pular N resultados para paginação'),
+  });
 
-// Type for category summary accumulator
-type CategorySummaryAccumulator = Record<
-  string,
-  {
-    categoryId: string;
-    categoryName: string;
-    color: string;
-    total: number;
-    count: number;
-  }
->;
+  const getTransactionSchema = z.object({
+    transactionId: z.string().uuid().describe('ID da transação'),
+  });
 
-// Type for category summary object
-type CategorySummary = {
-  categoryId: string;
-  categoryName: string;
-  color: string;
-  total: number;
-  count: number;
-};
+  const createTransactionSchema = z.object({
+    amount: z
+      .number()
+      .describe('Valor da transação (positivo para receita, negativo para despesa)'),
+    description: z.string().min(1).max(255).describe('Descrição da transação'),
+    categoryId: z.string().uuid().optional().describe('ID da categoria'),
+    accountId: z.string().uuid().optional().describe('ID da conta bancária'),
+    transactionDate: z.string().datetime().optional().describe('Data da transação (padrão: agora)'),
+    merchantName: z.string().optional().describe('Nome do estabelecimento'),
+  });
 
-export function createTransactionTools(userId: string) {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  const updateTransactionSchema = z.object({
+    transactionId: z.string().uuid().describe('ID da transação a atualizar'),
+    amount: z.number().optional().describe('Novo valor'),
+    description: z.string().min(1).max(255).optional().describe('Nova descrição'),
+    categoryId: z.string().uuid().optional().describe('Nova categoria'),
+    transactionDate: z.string().datetime().optional().describe('Nova data'),
+    merchantName: z.string().optional().describe('Novo estabelecimento'),
+  });
+
+  const requestDeleteConfirmationSchema = z.object({
+    transactionId: z.string().uuid().describe('ID da transação a deletar'),
+  });
+
+  const deleteTransactionSchema = z.object({
+    transactionId: z.string().uuid().describe('ID da transação'),
+    confirmationToken: z.string().uuid().describe('Token de confirmação'),
+  });
+
+  const getSpendingSummarySchema = z.object({
+    startDate: z.string().datetime().describe('Data inicial'),
+    endDate: z.string().datetime().describe('Data final'),
+  });
 
   return {
-    listTransactions: tool({
+    listTransactions: {
       description:
         'Lista transações do usuário com filtros opcionais. Use para consultar histórico, buscar por período ou categoria.',
-      inputSchema: z.object({
-        startDate: z
-          .string()
-          .datetime()
-          .optional()
-          .describe('Data inicial no formato ISO (YYYY-MM-DD)'),
-        endDate: z
-          .string()
-          .datetime()
-          .optional()
-          .describe('Data final no formato ISO (YYYY-MM-DD)'),
-        categoryId: z.string().uuid().optional().describe('ID da categoria para filtrar'),
-        accountId: z.string().uuid().optional().describe('ID da conta para filtrar'),
-        minAmount: z.number().optional().describe('Valor mínimo da transação'),
-        maxAmount: z.number().optional().describe('Valor máximo da transação'),
-        searchTerm: z.string().optional().describe('Termo para buscar na descrição'),
-        limit: z.number().min(1).max(100).default(20).describe('Número máximo de resultados'),
-        offset: z.number().min(0).default(0).describe('Pular N resultados para paginação'),
-      }),
-      execute: async ({
-        startDate,
-        endDate,
-        categoryId,
-        accountId,
-        minAmount,
-        maxAmount,
-        searchTerm,
-        limit = 20,
-        offset = 0,
-      }) => {
+      parameters: listTransactionsSchema,
+      execute: async (args: z.infer<typeof listTransactionsSchema>) => {
+        const {
+          startDate,
+          endDate,
+          categoryId,
+          accountId,
+          minAmount,
+          maxAmount,
+          searchTerm,
+          limit,
+          offset,
+        } = args;
         let query = supabase
           .from('transactions')
           .select(`
@@ -109,14 +109,13 @@ export function createTransactionTools(userId: string) {
           hasMore: (count ?? 0) > offset + limit,
         };
       },
-    }),
+    },
 
-    getTransaction: tool({
+    getTransaction: {
       description: 'Obtém detalhes de uma transação específica pelo ID.',
-      inputSchema: z.object({
-        transactionId: z.string().uuid().describe('ID da transação'),
-      }),
-      execute: async ({ transactionId }) => {
+      parameters: getTransactionSchema,
+      execute: async (args: z.infer<typeof getTransactionSchema>) => {
+        const { transactionId } = args;
         const { data, error } = await supabase
           .from('transactions')
           .select(`
@@ -132,32 +131,13 @@ export function createTransactionTools(userId: string) {
 
         return filterSensitiveData(data);
       },
-    }),
+    },
 
-    createTransaction: tool({
+    createTransaction: {
       description: 'Cria uma nova transação manual para o usuário.',
-      inputSchema: z.object({
-        amount: z
-          .number()
-          .describe('Valor da transação (positivo para receita, negativo para despesa)'),
-        description: z.string().min(1).max(255).describe('Descrição da transação'),
-        categoryId: z.string().uuid().optional().describe('ID da categoria'),
-        accountId: z.string().uuid().optional().describe('ID da conta bancária'),
-        transactionDate: z
-          .string()
-          .datetime()
-          .optional()
-          .describe('Data da transação (padrão: agora)'),
-        merchantName: z.string().optional().describe('Nome do estabelecimento'),
-      }),
-      execute: async ({
-        amount,
-        description,
-        categoryId,
-        accountId,
-        transactionDate,
-        merchantName,
-      }) => {
+      parameters: createTransactionSchema,
+      execute: async (args: z.infer<typeof createTransactionSchema>) => {
+        const { amount, description, categoryId, accountId, transactionDate, merchantName } = args;
         const { data, error } = await supabase
           .from('transactions')
           .insert({
@@ -177,19 +157,13 @@ export function createTransactionTools(userId: string) {
 
         return { success: true, transaction: filterSensitiveData(data) };
       },
-    }),
+    },
 
-    updateTransaction: tool({
+    updateTransaction: {
       description: 'Atualiza uma transação existente do usuário.',
-      inputSchema: z.object({
-        transactionId: z.string().uuid().describe('ID da transação a atualizar'),
-        amount: z.number().optional().describe('Novo valor'),
-        description: z.string().min(1).max(255).optional().describe('Nova descrição'),
-        categoryId: z.string().uuid().optional().describe('Nova categoria'),
-        transactionDate: z.string().datetime().optional().describe('Nova data'),
-        merchantName: z.string().optional().describe('Novo estabelecimento'),
-      }),
-      execute: async ({ transactionId, ...updates }) => {
+      parameters: updateTransactionSchema,
+      execute: async (args: z.infer<typeof updateTransactionSchema>) => {
+        const { transactionId, ...updates } = args;
         // Remover campos undefined
         const cleanUpdates = Object.fromEntries(
           Object.entries(updates).filter(([, v]) => v !== undefined)
@@ -213,15 +187,14 @@ export function createTransactionTools(userId: string) {
 
         return { success: true, transaction: filterSensitiveData(data) };
       },
-    }),
+    },
 
-    requestDeleteConfirmation: tool({
+    requestDeleteConfirmation: {
       description:
         'Solicita confirmação antes de deletar uma transação. SEMPRE use esta tool antes de deleteTransaction.',
-      inputSchema: z.object({
-        transactionId: z.string().uuid().describe('ID da transação a deletar'),
-      }),
-      execute: async ({ transactionId }) => {
+      parameters: requestDeleteConfirmationSchema,
+      execute: async (args: z.infer<typeof requestDeleteConfirmationSchema>) => {
+        const { transactionId } = args;
         const { data, error } = await supabase
           .from('transactions')
           .select('id, amount, description, transaction_date')
@@ -256,16 +229,14 @@ export function createTransactionTools(userId: string) {
           message: `Para confirmar a exclusão da transação "${data.description}" (R$ ${Math.abs(data.amount).toFixed(2)}), peça ao usuário que confirme.`,
         };
       },
-    }),
+    },
 
-    deleteTransaction: tool({
+    deleteTransaction: {
       description:
         'Deleta uma transação. REQUER confirmationToken obtido via requestDeleteConfirmation.',
-      inputSchema: z.object({
-        transactionId: z.string().uuid().describe('ID da transação'),
-        confirmationToken: z.string().uuid().describe('Token de confirmação'),
-      }),
-      execute: async ({ transactionId, confirmationToken }) => {
+      parameters: deleteTransactionSchema,
+      execute: async (args: z.infer<typeof deleteTransactionSchema>) => {
+        const { transactionId, confirmationToken } = args;
         // Verificar token
         const { data: confirmation, error: tokenError } = await supabase
           .from('delete_confirmations')
@@ -296,15 +267,13 @@ export function createTransactionTools(userId: string) {
 
         return { success: true, message: 'Transação deletada com sucesso.' };
       },
-    }),
+    },
 
-    getSpendingSummary: tool({
+    getSpendingSummary: {
       description: 'Obtém resumo de gastos por categoria em um período.',
-      inputSchema: z.object({
-        startDate: z.string().datetime().describe('Data inicial'),
-        endDate: z.string().datetime().describe('Data final'),
-      }),
-      execute: async ({ startDate, endDate }) => {
+      parameters: getSpendingSummarySchema,
+      execute: async (args: z.infer<typeof getSpendingSummarySchema>) => {
+        const { startDate, endDate } = args;
         const { data, error } = await supabase
           .from('transactions')
           .select(`
@@ -319,17 +288,17 @@ export function createTransactionTools(userId: string) {
         if (error) throw new Error(`Erro: ${error.message}`);
 
         // Agrupar por categoria
-        const summary = (data as unknown as TransactionQueryResult[])?.reduce(
-          (acc: CategorySummaryAccumulator, tx: TransactionQueryResult) => {
-            const catName = tx.category?.name ?? 'Sem categoria';
-            const catId = tx.category?.id ?? 'uncategorized';
-            const catColor = tx.category?.color ?? '#6B7280';
+        const summary = data?.reduce(
+          (acc, tx) => {
+            const cat = Array.isArray(tx.category) ? tx.category[0] : tx.category;
+            const catName = cat?.name ?? 'Sem categoria';
+            const catId = cat?.id ?? 'uncategorized';
 
             if (!acc[catId]) {
               acc[catId] = {
                 categoryId: catId,
                 categoryName: catName,
-                color: catColor,
+                color: cat?.color ?? '#6B7280',
                 total: 0,
                 count: 0,
               };
@@ -340,16 +309,20 @@ export function createTransactionTools(userId: string) {
 
             return acc;
           },
-          {} as CategorySummaryAccumulator
+          {} as Record<
+            string,
+            {
+              categoryId: string;
+              categoryName: string;
+              color: string;
+              total: number;
+              count: number;
+            }
+          >
         );
 
-        const categories = Object.values(summary ?? {}).sort(
-          (a: CategorySummary, b: CategorySummary) => b.total - a.total
-        );
-        const grandTotal = categories.reduce(
-          (sum: number, cat: CategorySummary) => sum + cat.total,
-          0
-        );
+        const categories = Object.values(summary ?? {}).sort((a, b) => b.total - a.total);
+        const grandTotal = categories.reduce((sum, cat) => sum + cat.total, 0);
 
         return {
           period: { startDate, endDate },
@@ -357,6 +330,6 @@ export function createTransactionTools(userId: string) {
           categories,
         };
       },
-    }),
+    },
   };
 }

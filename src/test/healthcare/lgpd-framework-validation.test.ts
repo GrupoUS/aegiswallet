@@ -250,9 +250,6 @@ const LGPDComplianceFramework = () => {
       internationalTransferConsent: userConsent.internationalTransfer,
     };
 
-    // Log masked data for security verification
-    console.log(maskedData);
-
     // Log submission for audit trail
     await runComplianceValidation();
     await testUtils.createMockAuditLog({

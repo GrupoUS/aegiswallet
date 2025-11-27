@@ -2,10 +2,7 @@ import { createBoletoTools } from './boletos';
 import { createContactsTools } from './contacts';
 import { createInsightsTools } from './insights';
 import { createMultimodalTools } from './multimodal';
-import { createNotificationsTools } from './notifications';
 import { createPixTools } from './pix';
-import { createSecurityTools } from './security';
-import { createVoiceTools } from './voice';
 
 export function createEnhancedTools(userId: string) {
   return {
@@ -16,15 +13,6 @@ export function createEnhancedTools(userId: string) {
 
     // Advanced Analytics & Insights
     ...createInsightsTools(userId),
-
-    // Enhanced Security & Compliance
-    ...createSecurityTools(userId),
-
-    // Voice-First Features
-    ...createVoiceTools(userId),
-
-    // Notifications & Alerts
-    ...createNotificationsTools(userId),
 
     // Multi-modal Responses
     ...createMultimodalTools(userId),

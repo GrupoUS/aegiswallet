@@ -40,8 +40,7 @@ export async function logAIOperation(entry: AuditLogEntry): Promise<void> {
       affected_record_ids: entry.affectedRecordIds,
       created_at: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Failed to log AI operation:', error);
+  } catch (_error) {
     // Do not fail the main operation due to logging error
   }
 }

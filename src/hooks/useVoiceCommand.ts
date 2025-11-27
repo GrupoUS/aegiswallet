@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useVoiceLogger } from '@/hooks/useLogger';
-import type { VoiceRecognitionResult } from '@/services/voiceService';
+import type { VoiceRecognitionResult, VoiceServiceErrorInfo } from '@/services/voiceService';
 import { getVoiceService, VOICE_FEEDBACK } from '@/services/voiceService';
 
 export interface UseVoiceCommandOptions {
@@ -10,6 +10,9 @@ export interface UseVoiceCommandOptions {
   onCommandDetected?: (result: VoiceRecognitionResult) => void;
   onError?: (error: Error) => void;
   enableFeedback?: boolean;
+  autoRetryOnNoSpeech?: boolean;
+  maxRetryAttempts?: number;
+  retryDelay?: number;
 }
 
 export interface UseVoiceCommandReturn {
@@ -20,6 +23,10 @@ export interface UseVoiceCommandReturn {
   speak: (text: string) => Promise<void>;
   lastTranscript: string | null;
   lastCommand: string | null;
+  canRetry: boolean;
+  retryCount: number;
+  retry: () => void;
+  getLastError: () => VoiceServiceErrorInfo | null;
 }
 
 /**
@@ -27,17 +34,31 @@ export interface UseVoiceCommandReturn {
  * Provides voice recognition and text-to-speech capabilities
  */
 export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
-  const { autoNavigate = true, onCommandDetected, onError, enableFeedback = true } = options;
+  const {
+    autoNavigate = true,
+    onCommandDetected,
+    onError,
+    enableFeedback = true,
+    autoRetryOnNoSpeech = false,
+    maxRetryAttempts = 3,
+    retryDelay = 1000,
+  } = options;
 
   const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string | null>(null);
   const [lastCommand, setLastCommand] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [canRetry, setCanRetry] = useState(false);
 
   const logger = useVoiceLogger();
   logger.setContext({ autoNavigate, enableFeedback, hook: 'useVoiceCommand' });
 
-  const voiceService = getVoiceService();
+  const voiceService = getVoiceService({
+    autoRetry: autoRetryOnNoSpeech,
+    maxRetryAttempts,
+    retryDelay,
+  });
   const isSupported =
     typeof window !== 'undefined' &&
     ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
@@ -92,7 +113,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   );
 
   /**
-   * Handle voice recognition error
+   * Handle voice recognition error with retry logic
    */
   const handleError = useCallback(
     (error: Error & { isNoSpeech?: boolean }) => {
@@ -103,12 +124,42 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         logger.info('No speech detected - user did not speak or spoke too quietly', {
           action: 'handleNoSpeech',
           enableFeedback,
+          retryCount,
+          maxRetryAttempts,
         });
 
-        if (enableFeedback) {
-          toast.info('Não detectei sua voz. Tente falar mais alto ou mais perto do microfone.', {
-            duration: 4000,
+        // Update retry state
+        const newRetryCount = retryCount + 1;
+        setRetryCount(newRetryCount);
+        setCanRetry(newRetryCount <= maxRetryAttempts);
+
+        // Auto-retry if configured and within limits
+        if (autoRetryOnNoSpeech && newRetryCount <= maxRetryAttempts) {
+          logger.info('Auto-retrying voice recognition', {
+            action: 'autoRetry',
+            retryAttempt: newRetryCount,
+            maxRetryAttempts,
+            retryDelay,
           });
+
+          setTimeout(() => {
+            if (!isListening) {
+              voiceService.startListening(handleResult, handleError);
+              setIsListening(true);
+            }
+          }, retryDelay);
+        } else {
+          // Show user feedback and enable manual retry
+          if (enableFeedback) {
+            const retryMessage =
+              newRetryCount <= maxRetryAttempts
+                ? `Não detectei sua voz. Tente falar mais alto ou mais perto do microfone. (${newRetryCount}/${maxRetryAttempts})`
+                : 'Não detectei sua voz. Toque para tentar novamente.';
+
+            toast.info(retryMessage, {
+              duration: 4000,
+            });
+          }
         }
         // Don't call onError for no-speech - it's a normal use case, not a critical error
         return;
@@ -129,7 +180,18 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
       onError?.(error);
     },
-    [onError, enableFeedback, logger]
+    [
+      onError,
+      enableFeedback,
+      logger,
+      retryCount,
+      maxRetryAttempts,
+      autoRetryOnNoSpeech,
+      retryDelay,
+      isListening,
+      voiceService,
+      handleResult,
+    ]
   );
 
   /**
@@ -148,6 +210,11 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     if (isListening) {
       return;
     }
+
+    // Reset retry state when starting fresh
+    setRetryCount(0);
+    setCanRetry(true);
+    voiceService.clearLastError();
 
     setIsListening(true);
 
@@ -209,6 +276,25 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     };
   }, [isListening, voiceService]);
 
+  /**
+   * Manual retry function
+   */
+  const retry = useCallback(() => {
+    if (canRetry && !isListening) {
+      setRetryCount(0);
+      setCanRetry(true);
+      voiceService.clearLastError();
+      startListening();
+    }
+  }, [canRetry, isListening, voiceService, startListening]);
+
+  /**
+   * Get last error from voice service
+   */
+  const getLastError = useCallback(() => {
+    return voiceService.getLastError();
+  }, [voiceService]);
+
   return {
     isListening,
     isSupported,
@@ -217,6 +303,10 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     speak,
     startListening,
     stopListening,
+    canRetry,
+    retryCount,
+    retry,
+    getLastError,
   };
 }
 

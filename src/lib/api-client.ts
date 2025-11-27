@@ -74,7 +74,6 @@ class ApiClient {
       }
 
       if (import.meta.env.DEV) {
-        console.error(`[API] Error ${response.status}:`, errorMessage, errorDetails);
       }
 
       const error: ApiError = new Error(errorMessage);
@@ -132,7 +131,6 @@ class ApiClient {
     const headers = await this.getHeaders();
 
     if (import.meta.env.DEV) {
-      console.log(`[API] POST ${fullUrl}`, { data });
     }
 
     const response = await fetch(fullUrl, {

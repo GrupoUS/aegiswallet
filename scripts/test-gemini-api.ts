@@ -26,13 +26,14 @@ async function testModel(modelName: string) {
 
     console.log(`   ✅ SUCCESS - Response: "${text}"`);
     return true;
-  } catch (error: any) {
-    console.error(`   ❌ FAILED - Error:`, error.message || error);
-    if (error.status) {
-      console.error(`   📊 Status:`, error.status);
+  } catch (error: unknown) {
+    const err = error as { message?: string; status?: number; statusText?: string };
+    console.error(`   ❌ FAILED - Error:`, err.message || error);
+    if (err.status) {
+      console.error(`   📊 Status:`, err.status);
     }
-    if (error.statusText) {
-      console.error(`   📝 Status Text:`, error.statusText);
+    if (err.statusText) {
+      console.error(`   📝 Status Text:`, err.statusText);
     }
     return false;
   }

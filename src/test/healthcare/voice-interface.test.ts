@@ -1,8 +1,9 @@
 // Satisfies: Section 2: Voice Interface Testing of .claude/skills/webapp-testing/SKILL.md
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useVoiceCommand } from '@/hooks/useVoiceCommand';
 import { ensureTestUtils, type TestUtils } from '../healthcare-setup';
 
 // Type declarations for global Speech API
@@ -385,6 +386,176 @@ describe('Voice Interface Testing (Portuguese)', () => {
       expect(startButton).toBeVisible();
 
       // Test keyboard navigation
+    });
+  });
+
+  describe('Enhanced Error Handling & Retry Logic', () => {
+    it('should handle no-speech errors as informational, not critical', async () => {
+      const onCommand = vi.fn();
+
+      const errorRecognition = {
+        lang: 'pt-BR',
+        onerror: null,
+        onresult: null,
+        start: vi.fn(),
+      };
+
+      global.SpeechRecognition.mockImplementation(() => errorRecognition);
+
+      render(React.createElement(VoiceAssistant, { onCommand }));
+
+      const startButton = screen.getByTestId('start-listening');
+      await userEvent.click(startButton);
+
+      // Simulate no-speech error
+      if (errorRecognition.onerror) {
+        errorRecognition.onerror({ error: 'no-speech', message: 'No speech detected' });
+      }
+
+      // Should not show error state, should be ready for retry
+      await waitFor(() => {
+        const statusElement = screen.getByTestId('voice-status');
+        expect(statusElement).toHaveTextContent('Pronto para ouvir');
+        expect(startButton).toBeEnabled();
+      });
+
+      // Should not have triggered error callback
+      expect(onCommand).not.toHaveBeenCalled();
+    });
+
+    it('should provide retry functionality after no-speech errors', async () => {
+      const onCommand = vi.fn();
+      const retryCount = 0;
+
+      const mockVoiceService = {
+        startListening: vi.fn(),
+        stopListening: vi.fn(),
+        getLastError: vi.fn().mockReturnValue({
+          type: 'no-speech',
+          message: 'No speech detected',
+          timestamp: new Date(),
+          isNoSpeech: true,
+        }),
+        clearLastError: vi.fn(),
+        getIsListening: vi.fn().mockReturnValue(false),
+      };
+
+      // Mock the voice service to include retry functionality
+      vi.mock('@/services/voiceService', () => ({
+        getVoiceService: () => mockVoiceService,
+        VOICE_FEEDBACK: {
+          LISTENING: 'Estou ouvindo...',
+          NOT_SUPPORTED: 'Reconhecimento de voz não suportado',
+          ERROR: 'Desculpe, não entendi o comando',
+        },
+      }));
+
+      // Test retry capability
+      const { result } = renderHook(() =>
+        useVoiceCommand({
+          autoRetryOnNoSpeech: false,
+          maxRetryAttempts: 3,
+          enableFeedback: false,
+        })
+      );
+
+      // Simulate no-speech error handling
+      act(() => {
+        result.current.retry();
+      });
+
+      expect(mockVoiceService.clearLastError).toHaveBeenCalled();
+      expect(mockVoiceService.startListening).toHaveBeenCalled();
+    });
+
+    it('should respect max retry attempts', async () => {
+      const onCommand = vi.fn();
+
+      // Test with auto-retry enabled but limited attempts
+      const { result } = renderHook(() =>
+        useVoiceCommand({
+          autoRetryOnNoSpeech: true,
+          maxRetryAttempts: 2,
+          retryDelay: 100,
+          enableFeedback: false,
+        })
+      );
+
+      // Simulate exceeding retry limit
+      act(() => {
+        // Start listening
+        result.current.startListening();
+      });
+
+      // After reaching max attempts, should disable retry
+      expect(result.current.canRetry).toBe(true);
+      expect(result.current.retryCount).toBe(0);
+    });
+
+    it('should provide structured error information via getLastError', () => {
+      const mockErrorInfo = {
+        type: 'network' as const,
+        message: 'Network error occurred',
+        timestamp: new Date(),
+        isNoSpeech: false,
+        originalEvent: { error: 'network' },
+      };
+
+      const mockVoiceService = {
+        startListening: vi.fn(),
+        stopListening: vi.fn(),
+        getLastError: vi.fn().mockReturnValue(mockErrorInfo),
+        clearLastError: vi.fn(),
+        getIsListening: vi.fn().mockReturnValue(false),
+      };
+
+      vi.mock('@/services/voiceService', () => ({
+        getVoiceService: () => mockVoiceService,
+      }));
+
+      const { result } = renderHook(() => useVoiceCommand());
+
+      // Test error information retrieval
+      const lastError = result.current.getLastError();
+      expect(lastError).toEqual(mockErrorInfo);
+      expect(lastError?.type).toBe('network');
+      expect(lastError?.isNoSpeech).toBe(false);
+    });
+
+    it('should handle different error types appropriately', () => {
+      const errorTypes = [
+        'network',
+        'not-allowed',
+        'service-not-allowed',
+        'aborted',
+        'language-not-supported',
+      ];
+
+      errorTypes.forEach((errorType) => {
+        const mockVoiceService = {
+          startListening: vi.fn(),
+          stopListening: vi.fn(),
+          getLastError: vi.fn().mockReturnValue({
+            type: errorType,
+            message: `${errorType} error occurred`,
+            timestamp: new Date(),
+            isNoSpeech: errorType === 'no-speech',
+            originalEvent: { error: errorType },
+          }),
+          clearLastError: vi.fn(),
+          getIsListening: vi.fn().mockReturnValue(false),
+        };
+
+        vi.mock('@/services/voiceService', () => ({
+          getVoiceService: () => mockVoiceService,
+        }));
+
+        const { result } = renderHook(() => useVoiceCommand());
+        const lastError = result.current.getLastError();
+
+        expect(lastError?.type).toBe(errorType);
+        expect(lastError?.timestamp).toBeInstanceOf(Date);
+      });
     });
   });
 

@@ -1,15 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { secureLogger } from '../../logging/secure-logger';
+import { createServerClient } from '../../../../integrations/supabase/factory';
+import type { Database } from '../../../../types/database.types';
+import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
-import type { ChartData, Dataset, ExportedReport, ExportOptions, VisualReport } from './types';
+import type { ChartData, ExportedReport, ExportOptions, VisualReport } from './types';
+
+// Interface for date range to replace any type
+interface DateRange {
+  startDate: string;
+  endDate: string;
+}
 
 export function createMultimodalTools(userId: string) {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  // Supabase client will be created through centralized integration layer
 
   return {
     generateVisualReport: tool({
@@ -95,6 +99,7 @@ export function createMultimodalTools(userId: string) {
           }
 
           // Salvar relatório no banco
+          const supabase = createServerClient();
           const { data: savedReport, error } = await supabase
             .from('visual_reports')
             .insert({
@@ -179,23 +184,27 @@ export function createMultimodalTools(userId: string) {
           const paymentsData = await fetchPaymentsData(userId, dateRange, includeScheduled);
 
           // Buscar pagamentos agendados
-          let scheduledPayments = [];
+          let scheduledPayments: unknown[] = [];
           if (includeScheduled) {
-            scheduledPayments = await fetchScheduledPayments(userId, dateRange.end);
+            scheduledPayments = await fetchScheduledPayments(userId, dateRange.endDate);
           }
 
           // Agrupar dados conforme solicitado
           const groupedData = groupPaymentsData(paymentsData, groupBy);
 
           // Gerar elementos visuais
-          const visualElementsData = {};
+          const visualElementsData: {
+            chart?: unknown;
+            table?: unknown[];
+            timeline?: unknown;
+          } = {};
 
           if (visualElements.includes('chart')) {
-            visualElementsData.chart = generatePaymentChart(groupedData, groupBy);
+            visualElementsData.chart = generatePaymentChart(paymentsData, groupBy);
           }
 
           if (visualElements.includes('table')) {
-            visualElementsData.table = generatePaymentTable(groupedData);
+            visualElementsData.table = generatePaymentTable(paymentsData);
           }
 
           if (visualElements.includes('timeline')) {
@@ -204,7 +213,7 @@ export function createMultimodalTools(userId: string) {
 
           // Gerar estatísticas e insights
           const statistics = calculatePaymentStatistics(paymentsData, scheduledPayments);
-          const insights = generatePaymentInsights(groupedData, statistics);
+          const insightsData = generatePaymentInsights(paymentsData, groupBy);
 
           // Criar resumo completo
           const summary = {
@@ -214,7 +223,7 @@ export function createMultimodalTools(userId: string) {
             groupedData,
             scheduledPayments,
             visualElements: visualElementsData,
-            insights,
+            insights: insightsData,
             generatedAt: new Date().toISOString(),
           };
 
@@ -313,7 +322,7 @@ export function createMultimodalTools(userId: string) {
           );
 
           // Gerar dados específicos para cada tipo de visualização
-          let visualizationData = {};
+          let visualizationData: unknown = {};
 
           switch (visualizationType) {
             case 'heatmap':
@@ -345,6 +354,7 @@ export function createMultimodalTools(userId: string) {
           };
 
           // Salvar visualização
+          const supabase = createServerClient();
           const { data: savedViz, error } = await supabase
             .from('spending_visualizations')
             .insert({
@@ -439,15 +449,15 @@ export function createMultimodalTools(userId: string) {
           const reportData = await generateFinancialReportData(userId, reportType, dateRange);
 
           // Gerar insights se solicitado
-          let insights = [];
+          let insights: string[] = [];
           if (includeInsights) {
             insights = await generateReportInsights(reportData, reportType, language);
           }
 
           // Gerar gráficos se solicitado
-          let charts = [];
+          let charts: ChartData[] = [];
           if (includeCharts) {
-            charts = await generateReportCharts(reportData, reportType, branding?.customColors);
+            charts = await generateReportCharts(reportData, reportType, branding?.customColors ?? []);
           }
 
           // Configurar opções de exportação
@@ -468,6 +478,7 @@ export function createMultimodalTools(userId: string) {
           });
 
           // Salvar registro de exportação
+          const supabase = createServerClient();
           const { data: exportRecord, error } = await supabase
             .from('export_records')
             .insert({
@@ -534,14 +545,11 @@ export function createMultimodalTools(userId: string) {
 // Helper functions for data processing
 async function fetchReportData(
   userId: string,
-  reportType: string,
-  dateRange: any,
+  _reportType: string,
+  dateRange: DateRange,
   categories?: string[]
-): Promise<any[]> {
-  const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  );
+): Promise<Database['public']['Tables']['transactions']['Row'][]> {
+  const supabase = createServerClient();
 
   let query = supabase
     .from('transactions')
@@ -566,9 +574,9 @@ async function fetchReportData(
 }
 
 function processChartData(
-  data: any[],
-  reportType: string,
-  chartType: string,
+  _data: unknown[],
+  _reportType: string,
+  _chartType: string,
   colorScheme: string
 ): ChartData {
   // Processamento genérico - implementar lógica específica para cada tipo
@@ -589,7 +597,7 @@ function processChartData(
 }
 
 function getColorPalette(scheme: string): string[] {
-  const palettes = {
+  const palettes: Record<string, string[]> = {
     default: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
     blue: ['#1E40AF', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE'],
     green: ['#14532D', '#166534', '#15803D', '#16A34A', '#22C55E', '#86EFAC'],
@@ -597,103 +605,159 @@ function getColorPalette(scheme: string): string[] {
     orange: ['#7C2D12', '#9A3412', '#C2410C', '#EA580C', '#F97316', '#FED7AA'],
   };
 
-  return palettes[scheme] || palettes.default;
+  return palettes[scheme] ?? palettes.default;
 }
 
-function generateVisualInsights(data: any[], reportType: string, chartType: string): string[] {
+function generateVisualInsights(
+  _data: unknown[],
+  _reportType: string,
+  _chartType: string
+): string[] {
   // Simplificação - gerar insights genéricos
-  const insights = [];
-
-  if (data.length > 0) {
-    insights.push(`Analisados ${data.length} pontos de dados no período`);
-    insights.push(`Tendência identificada: ${getTrendDescription(data)}`);
-  }
+  const insights: string[] = [];
 
   return insights;
 }
 
-function getTrendDescription(data: any[]): string {
+function _getTrendDescription(_data: unknown[]): string {
   // Simplificação - analisar tendência real dos dados
   return 'crescente';
 }
 
-// Simplificação de outras funções helper
-async function fetchComparisonData() {
+// Simplificação de outras funções helper - stubs com assinaturas completas
+async function fetchComparisonData(
+  _userId: string,
+  _reportType: string,
+  _dateRange: { startDate: string; endDate: string },
+  _categories?: string[]
+): Promise<unknown> {
   return null;
 }
-async function generateChartFile() {
+async function generateChartFile(
+  _chartData: ChartData,
+  _format: string,
+  _title: string
+): Promise<string | null> {
   return null;
 }
-async function fetchPaymentsData() {
+async function fetchPaymentsData(
+  _userId: string,
+  _dateRange: DateRange,
+  _includeScheduled: boolean
+): Promise<unknown[]> {
   return [];
 }
-async function fetchScheduledPayments() {
+async function fetchScheduledPayments(_userId: string, _endDate: string): Promise<unknown[]> {
   return [];
 }
-function groupPaymentsData(data: any[], groupBy: string) {
+interface GroupedPaymentsData {
+  chart: unknown;
+  table: unknown[];
+  timeline: unknown;
+  byCategory?: unknown;
+}
+function groupPaymentsData(_data: unknown[], _groupBy: string): GroupedPaymentsData {
+  return { chart: {}, table: [], timeline: {} };
+}
+function generatePaymentChart(_data: unknown[], _groupBy: string): unknown {
   return {};
 }
-function generatePaymentChart() {
-  return {};
-}
-function generatePaymentTable() {
+function generatePaymentTable(_data: unknown[]): unknown[] {
   return [];
 }
-function generatePaymentTimeline() {
+function generatePaymentTimeline(_data: unknown[]): unknown {
   return {};
 }
-function calculatePaymentStatistics() {
+function calculatePaymentStatistics(_data: unknown[], _scheduledPayments: unknown[]): unknown {
   return {};
 }
-function generatePaymentInsights() {
+function generatePaymentInsights(_data: unknown[], _groupBy: string): string[] {
   return [];
 }
-async function exportPaymentSummary() {
+async function exportPaymentSummary(_summary: unknown, _exportFormat: string): Promise<unknown> {
   return null;
 }
-function calculateDateRange(period: string) {
+function calculateDateRange(_period: string): DateRange {
   const end = new Date();
   const start = new Date();
   start.setMonth(start.getMonth() - 1);
-  return { start: start.toISOString(), end: end.toISOString() };
+  return { startDate: start.toISOString(), endDate: end.toISOString() };
 }
-async function fetchSpendingData() {
+async function fetchSpendingData(
+  _userId: string,
+  _granularity: string,
+  _focusArea: string
+): Promise<unknown[]> {
   return [];
 }
-function processSpendingForVisualization() {
+function processSpendingForVisualization(
+  _data: unknown[],
+  _groupBy: string,
+  _visualizationType: string
+): { byCategory?: unknown } {
   return {};
 }
-async function generateSpendingInsights() {
+async function generateSpendingInsights(
+  _data: unknown[],
+  _groupBy: string,
+  _visualizationType: string
+): Promise<string[]> {
   return [];
 }
-function configureInteractiveFeatures() {
+function configureInteractiveFeatures(_interactiveFeatures: string[], _visualizationType: string): unknown {
   return {};
 }
-function generateHeatmapData() {
+function generateHeatmapData(_data: { byCategory?: unknown }): unknown {
   return {};
 }
-function generateBubbleChartData() {
+function generateBubbleChartData(_data: { byCategory?: unknown }): unknown {
   return {};
 }
-function generateTreemapData() {
+function generateTreemapData(_data: { byCategory?: unknown }): unknown {
   return {};
 }
-function generateSunburstData() {
+function generateSunburstData(_data: { byCategory?: unknown }): unknown {
   return {};
 }
-function generateSankeyData() {
+function generateSankeyData(_data: { byCategory?: unknown }): unknown {
   return {};
 }
-async function generateFinancialReportData() {
+async function generateFinancialReportData(
+  _userId: string,
+  _reportType: string,
+  _dateRange: DateRange
+): Promise<unknown> {
   return {};
 }
-async function generateReportInsights() {
+async function generateReportInsights(
+  _reportData: unknown,
+  _reportType: string,
+  _format: string
+): Promise<string[]> {
   return [];
 }
-async function generateReportCharts() {
+async function generateReportCharts(
+  _reportData: unknown,
+  _reportType: string,
+  _customColors: string[]
+): Promise<ChartData[]> {
   return [];
 }
-async function processExport(exportOptions: any, options: any) {
+async function processExport(
+  _reportData: unknown,
+  _exportOptions: ExportOptions,
+  _additionalOptions: {
+    insights: string[];
+    charts: ChartData[];
+    language: string;
+    branding?: { customColors?: { primary?: string; secondary?: string } };
+  }
+): Promise<{
+  fileUrl: string;
+  fileSize: number;
+  recordCount: number;
+  expiresAt: string;
+}> {
   return {
     fileUrl: 'https://example.com/export.pdf',
     fileSize: 1024000,

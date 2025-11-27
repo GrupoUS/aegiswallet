@@ -1,22 +1,28 @@
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useCallback, useState } from 'react';
 
 interface UseAIChatOptions {
-  provider?: 'openai' | 'anthropic';
+  provider?: 'openai' | 'anthropic' | 'google';
   tier?: 'default' | 'fast';
 }
 
 export function useAIChat(options: UseAIChatOptions = {}) {
-  const [provider, setProvider] = useState(options.provider ?? 'anthropic');
+  const [provider, setProvider] = useState(options.provider ?? 'google');
   const [tier, setTier] = useState(options.tier ?? 'default');
 
   const chat = useChat({
-    onError: (error) => {
-      console.error('AI Chat error:', error);
-    },
+    transport: new DefaultChatTransport({
+      api: '/api/v1/ai/chat',
+      body: () => ({
+        provider,
+        tier,
+      }),
+    }),
+    onError: (_error: Error) => {},
   });
 
-  const switchProvider = useCallback((newProvider: 'openai' | 'anthropic') => {
+  const switchProvider = useCallback((newProvider: 'openai' | 'anthropic' | 'google') => {
     setProvider(newProvider);
   }, []);
 

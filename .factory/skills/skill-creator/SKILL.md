@@ -1,7 +1,14 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
-license: Complete terms in LICENSE.txt
+description: Comprehensive guide for creating and optimizing Claude skills. Use when building new skills, updating existing ones, implementing workflows, or integrating specialized tools and domain expertise.
+license: Apache 2.0
+metadata:
+  version: "2.0.0"
+  author: "Factory Skills Team"
+  category: "development"
+  last-updated: "2025-11-27"
+  domain: "skill-development"
+  expertise: ["skill-authoring", "workflow-automation", "tool-integration", "progressive-disclosure"]
 ---
 
 # Skill Creator

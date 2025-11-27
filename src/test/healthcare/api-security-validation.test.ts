@@ -141,11 +141,17 @@ const ensureDom = async () => {
   domReady = true;
 };
 
-await ensureDom();
-({ render, screen, waitFor, cleanup } = await import('@testing-library/react'));
-userEvent = (await import('@testing-library/user-event')).default;
-React = (await import('react')).default;
-afterEach(() => cleanup());
+// Initialize DOM and imports in a setup function
+const setupTestEnvironment = async () => {
+  await ensureDom();
+  ({ render, screen, waitFor, cleanup } = await import('@testing-library/react'));
+  userEvent = (await import('@testing-library/user-event')).default;
+  React = await import('react');
+  afterEach(() => cleanup());
+};
+
+// Call the setup function
+setupTestEnvironment();
 
 beforeAll(() => {
   if (typeof vi.useFakeTimers === 'function') {
@@ -446,7 +452,7 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'email-input',
           key: 'email-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, email: e.target.value }),
+          onChange: (e) => setApiTestData({ ...apiTestData, email: (e.target as HTMLInputElement).value }),
           placeholder: 'seu@email.com',
           required: true,
           type: 'email',
@@ -457,7 +463,7 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'password-input',
           key: 'password-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, password: e.target.value }),
+          onChange: (e) => setApiTestData({ ...apiTestData, password: (e.target as HTMLInputElement).value }),
           placeholder: 'Senha segura',
           required: true,
           type: 'password',
@@ -470,7 +476,7 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'patient-id-input',
           key: 'patient-id-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, patientId: e.target.value }),
+          onChange: (e) => setApiTestData({ ...apiTestData, patientId: (e.target as HTMLInputElement).value }),
           placeholder: 'PAT-001',
           type: 'text',
           value: apiTestData.patientId,
@@ -480,7 +486,7 @@ const APISecurityValidation = () => {
         React.createElement('input', {
           'data-testid': 'amount-input',
           key: 'amount-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, amount: e.target.value }),
+          onChange: (e) => setApiTestData({ ...apiTestData, amount: (e.target as HTMLInputElement).value }),
           placeholder: '100.00',
           type: 'number',
           value: apiTestData.amount,
@@ -490,7 +496,8 @@ const APISecurityValidation = () => {
         React.createElement('textarea', {
           'data-testid': 'notes-input',
           key: 'notes-input',
-          onChange: (e) => setApiTestData({ ...apiTestData, notes: e.target.value }),
+          onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            setApiTestData({ ...apiTestData, notes: e.target.value }),
           placeholder: 'Notas do paciente',
           rows: 3,
           value: apiTestData.notes,

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "strict": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "src/test/quality-control/type-check-validation.test.ts",
+    "src/test/performance/voiceCommandPerformance.test.ts",
+    "src/test/healthcare/api-security-validation.test.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}

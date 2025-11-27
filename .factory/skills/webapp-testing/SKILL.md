@@ -1,10 +1,14 @@
 ---
 name: webapp-testing
-description: Advanced healthcare testing framework for AegisWallet using Biome + Vitest. Provides LGPD compliance testing, Portuguese voice interface validation, tRPC type-safe testing, and Supabase RLS validation. Integrates with 4-phase quality control methodology for comprehensive healthcare fintech testing in Brazilian market.
-license: Complete terms in LICENSE.txt
-version: 2.0.0
-author: AegisWallet Development Team
-lastUpdated: 2025-01-20
+description: Comprehensive testing framework for Brazilian fintech applications. Use when implementing LGPD compliance, Portuguese voice validation, tRPC testing, Supabase RLS validation, or 4-phase quality control methodology.
+license: Apache 2.0
+metadata:
+  version: "2.1.0"
+  author: "AegisWallet Development Team"
+  category: "testing"
+  last-updated: "2025-11-27"
+  domain: "brazilian-fintech-testing"
+  expertise: ["lgpd-compliance", "voice-testing", "trpc-testing", "performance-testing", "quality-control"]
 ---
 
 # 🏥 AegisWallet Web Application Testing Framework

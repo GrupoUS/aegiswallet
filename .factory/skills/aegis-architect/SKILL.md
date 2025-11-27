@@ -1,7 +1,14 @@
 ---
 name: aegis-architect
-description: Specialized architecture skill for AegisWallet voice-first autonomous financial assistant. This skill provides comprehensive guidance on Bun + Hono + React 19 + Supabase + tRPC technology stack, Brazilian financial market integration (PIX, boletos), voice interface design, real-time architecture, security patterns, and LGPD compliance. Use this skill when designing, implementing, or reviewing AegisWallet architecture, making technology decisions, or solving complex architectural challenges for Brazilian fintech applications.
+description: Specialized architecture guidance for voice-first Brazilian fintech applications. Use when designing voice interfaces, implementing PIX/Boletos, optimizing financial systems, or making technology stack decisions for Brazilian market applications.
 license: MIT
+metadata:
+  version: "2.1.0"
+  author: "AegisWallet Development Team"
+  category: "architecture"
+  last-updated: "2025-11-27"
+  domain: "brazilian-fintech"
+  expertise: ["voice-first", "brazilian-financial", "lgpd-compliance", "performance-optimization"]
 ---
 
 # AegisWallet Architecture Skill

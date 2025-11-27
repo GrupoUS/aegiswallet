@@ -29,6 +29,7 @@ export default defineConfig({
     typecheck: {
       enabled: true,
       checker: 'tsc',
+      tsconfig: './tsconfig.test.json',
     },
     // Pool options for performance
     poolOptions: {
@@ -77,7 +78,6 @@ export default defineConfig({
       cleanOnRerun: true,
     },
     include: [
-      'src/**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     exclude: ['node_modules/', 'dist/', 'build/', 'coverage/'],

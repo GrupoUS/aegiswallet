@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { type BackendType, createChatBackend, MockBackend } from '@/features/ai-chat/backends';
 import {
@@ -28,6 +28,7 @@ export function ChatContainer({
   const [selectedModel, setSelectedModel] = useState<GeminiModel>(
     (import.meta.env.VITE_DEFAULT_AI_MODEL as GeminiModel) || DEFAULT_MODEL
   );
+  const [enableVoiceInput, setEnableVoiceInput] = useState(true);
   // Initialize backend using factory
   const backend = useMemo(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -78,6 +79,8 @@ export function ChatContainer({
     },
   });
 
+
+
   // Default suggestions if none
   const defaultSuggestions: ChatSuggestion[] = [
     { id: '1', text: 'Analise meus gastos deste mês', icon: 'chart' },
@@ -87,6 +90,13 @@ export function ChatContainer({
 
   const activeSuggestions =
     suggestions.length > 0 ? suggestions : messages.length === 0 ? defaultSuggestions : [];
+
+  const [showReasoning, setShowReasoning] = useState(enableReasoningView);
+
+  // Update showReasoning when prop changes (optional, but good for syncing)
+  useMemo(() => {
+    setShowReasoning(enableReasoningView);
+  }, [enableReasoningView]);
 
   return (
     <ChatLayout
@@ -99,6 +109,10 @@ export function ChatContainer({
           <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
         ) : undefined
       }
+      enableVoice={enableVoiceInput}
+      onVoiceToggle={setEnableVoiceInput}
+      enableReasoning={showReasoning}
+      onReasoningToggle={setShowReasoning}
     >
       <div className="flex flex-1 overflow-hidden">
         {/* Main Chat Area */}
@@ -107,7 +121,7 @@ export function ChatContainer({
             messages={messages}
             reasoning={reasoning}
             isStreaming={isStreaming}
-            showReasoning={enableReasoningView}
+            showReasoning={showReasoning}
           />
 
           {/* Suggestions Overlay */}
@@ -122,7 +136,7 @@ export function ChatContainer({
             onStop={stopStreaming}
             isStreaming={isStreaming}
             placeholder="Pergunte sobre suas finanças..."
-            enableVoiceInput={true}
+            enableVoiceInput={enableVoiceInput}
             enableAttachments={false} // Disabled for MVP
           />
         </div>

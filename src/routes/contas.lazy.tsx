@@ -69,11 +69,11 @@ export function Contas() {
   const {
     events: bills,
     loading,
-    updateFilters,
+    setFilters,
     filters,
     statistics,
     deleteEvent,
-    refetch,
+    refresh,
   } = useFinancialEvents(
     {
       type: 'expense', // Busca apenas despesas (inclui contas)

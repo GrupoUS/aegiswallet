@@ -19,7 +19,7 @@ handoffs:
     prompt: "Test the implementation visually and functionally."
     send: true
 tools:
-  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'shadcn/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'context7/*', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT
@@ -124,13 +124,8 @@ terminate_when: ["Query 100% resolved", "No remaining steps", "All criteria met"
 **Follow**: [architect-review.agent.md](architect-review.agent.md)
 **Process**: Requirements → Context → Design → Specification → Transition
 
-### Refactor Mode
-**Trigger**: "refactor", "improve", "optimize"
-**Follow**: [code-reviewer.agent.md](code-reviewer.agent.md)
-**Safety**: Preserve public APIs, maintain backward compatibility, test after each step
-
-### Audit Mode
-**Trigger**: "security", "audit", "vulnerability", "compliance"
+### Audit Mode and Refactor Mode
+**Trigger**: "security", "audit", "vulnerability", "compliance", "refactor", "improve", "optimize"
 **Follow**: [tester.agent.md](tester.agent.md)
 **Focus**: Static analysis, authentication testing, input validation, dependency audit
 

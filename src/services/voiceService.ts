@@ -172,7 +172,7 @@ class VoiceService {
 
     this.recognition.onerror = (event: any) => {
       const errorType = event.error;
-      
+
       // Special handling for 'no-speech' error - treat as informational, not critical
       if (errorType === 'no-speech') {
         logger.warn('No speech detected during voice recognition', {
@@ -188,7 +188,7 @@ class VoiceService {
         onError?.(noSpeechError);
         return;
       }
-      
+
       logger.voiceError(`Speech recognition error: ${errorType}`, {
         action: 'recognition',
         component: 'VoiceService',

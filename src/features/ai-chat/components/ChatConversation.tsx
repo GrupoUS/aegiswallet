@@ -31,7 +31,7 @@ export function ChatConversation({
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
+  }, [messages]);
 
   return (
     <Conversation
@@ -39,7 +39,7 @@ export function ChatConversation({
       isStreaming={isStreaming}
       className="flex-1"
     >
-      <ScrollArea className="h-full p-4 sm:p-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollRef}>
         <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-[40vh] text-center space-y-4">

@@ -1,31 +1,21 @@
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type AiLoadingVariant = 'dots' | 'spinner' | 'skeleton' | 'pulse';
+export type AiLoadingVariant = 'dots' | 'pulse' | 'spinner';
 
-export interface AiLoadingProps {
-  /** Loading state control */
-  isLoading?: boolean;
-  /** Optional loading message */
+interface AiLoadingProps {
+  isLoading: boolean;
   message?: string;
-  /** Visual variant */
   variant?: AiLoadingVariant;
-  /** Additional CSS classes */
-  className?: string;
-  /** Size of the loading indicator */
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
-/**
- * KokonutUI AiLoading component
- * A versatile loading indicator for AI operations
- */
 export function AiLoading({
-  isLoading = true,
+  isLoading,
   message,
   variant = 'dots',
-  className,
   size = 'md',
+  className,
 }: AiLoadingProps) {
   if (!isLoading) return null;
 
@@ -35,84 +25,33 @@ export function AiLoading({
     lg: 'w-2 h-2',
   };
 
-  const spinnerSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+  const containerClasses = {
+    sm: 'gap-0.5',
+    md: 'gap-1',
+    lg: 'gap-1.5',
   };
 
-  if (variant === 'dots') {
-    return (
-      <output
-        className={cn(
-          'flex items-center gap-2 text-muted-foreground text-sm p-4 animate-in fade-in',
-          className
-        )}
-        aria-label={message || 'Carregando'}
-        aria-busy="true"
-      >
-        <div className="flex gap-1">
-          <span
-            className={cn(
-              'bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]',
-              sizeClasses[size]
-            )}
-          />
-          <span
-            className={cn(
-              'bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]',
-              sizeClasses[size]
-            )}
-          />
-          <span className={cn('bg-primary/40 rounded-full animate-bounce', sizeClasses[size])} />
+  return (
+    <div className={cn('flex items-center gap-3 text-muted-foreground animate-in fade-in', className)}>
+      {variant === 'dots' && (
+        <div className={cn('flex items-center', containerClasses[size])}>
+          <span className={cn('bg-current rounded-full animate-bounce [animation-delay:-0.3s]', sizeClasses[size])} />
+          <span className={cn('bg-current rounded-full animate-bounce [animation-delay:-0.15s]', sizeClasses[size])} />
+          <span className={cn('bg-current rounded-full animate-bounce', sizeClasses[size])} />
         </div>
-        {message && <span>{message}</span>}
-      </output>
-    );
-  }
+      )}
 
-  if (variant === 'spinner') {
-    return (
-      <output
-        className={cn('flex items-center gap-2 text-muted-foreground text-sm p-4', className)}
-        aria-label={message || 'Carregando'}
-        aria-busy="true"
-      >
-        <Loader2 className={cn('animate-spin text-primary', spinnerSizes[size])} />
-        {message && <span>{message}</span>}
-      </output>
-    );
-  }
+      {variant === 'pulse' && (
+        <div className={cn('bg-current rounded-full animate-pulse', sizeClasses[size])} />
+      )}
 
-  if (variant === 'skeleton') {
-    return (
-      <output
-        className={cn('space-y-2 p-4', className)}
-        aria-label={message || 'Carregando'}
-        aria-busy="true"
-      >
-        <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
-        <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-        <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
-        {message && <span className="sr-only">{message}</span>}
-      </output>
-    );
-  }
+      {variant === 'spinner' && (
+        <div className={cn('border-2 border-current border-t-transparent rounded-full animate-spin',
+          size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'
+        )} />
+      )}
 
-  if (variant === 'pulse') {
-    return (
-      <output
-        className={cn(
-          'flex items-center justify-center p-8 text-muted-foreground animate-pulse',
-          className
-        )}
-        aria-label={message || 'Carregando'}
-        aria-busy="true"
-      >
-        {message || 'Carregando...'}
-      </output>
-    );
-  }
-
-  return null;
+      {message && <span className="text-xs font-medium">{message}</span>}
+    </div>
+  );
 }

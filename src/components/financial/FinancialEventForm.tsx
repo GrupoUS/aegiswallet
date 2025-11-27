@@ -236,8 +236,11 @@ function FinancialEventFormComponent({
 
       onSuccess?.();
     } catch (error) {
-      // Error logged for debugging purposes during development
-      void error;
+      // Error is already handled by the hook with toast notifications
+      // Log for debugging in development
+      if (import.meta.env.DEV) {
+        console.error('[FinancialEventForm] Error:', error);
+      }
     } finally {
       setIsSubmitting(false);
     }

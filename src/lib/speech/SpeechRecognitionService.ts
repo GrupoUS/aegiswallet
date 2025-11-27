@@ -374,8 +374,8 @@ export class SpeechRecognitionService {
         message: 'Audio capture error. Please check microphone permissions.',
       },
       network: { isRetryable: true, message: 'Network error. Please check your connection.' },
-      'no-speech': { 
-        isRetryable: false, 
+      'no-speech': {
+        isRetryable: false,
         message: 'Não detectamos sua voz. Por favor, tente novamente.',
         isNoSpeech: true,
       },

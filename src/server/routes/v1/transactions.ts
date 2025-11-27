@@ -291,6 +291,102 @@ transactionsRouter.post(
 );
 
 /**
+ * Update an existing transaction
+ */
+transactionsRouter.put(
+  '/:id',
+  authMiddleware,
+  userRateLimitMiddleware({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: 'Too many update attempts, please try again later',
+  }),
+  zValidator('json', createTransactionSchema.partial()),
+  async (c) => {
+    const { user } = c.get('auth');
+    const transactionId = c.req.param('id');
+    const input = c.req.valid('json');
+    const requestId = c.get('requestId');
+
+    try {
+      // Verify ownership
+      const { data: existing, error: fetchError } = await supabase
+        .from('financial_events')
+        .select('id')
+        .eq('id', transactionId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError || !existing) {
+        return c.json(
+          {
+            code: 'NOT_FOUND',
+            error: 'Transação não encontrada',
+          },
+          404
+        );
+      }
+
+      const updateData: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (input.title) updateData.title = input.title;
+      if (input.amount !== undefined) updateData.amount = input.amount;
+      if (input.type) {
+        updateData.event_type = input.type;
+        updateData.is_income = input.type === 'income' || input.type === 'credit';
+      }
+      if (input.status) updateData.status = input.status;
+      if (input.description !== undefined) updateData.description = input.description;
+      if (input.categoryId) updateData.category = input.categoryId;
+
+      // Handle metadata updates if needed
+      if (input.metadata) updateData.metadata = input.metadata;
+
+      const { data: updatedTransaction, error } = await supabase
+        .from('financial_events')
+        .update(updateData)
+        .eq('id', transactionId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      secureLogger.info('Transaction updated', {
+        requestId,
+        transactionId,
+        userId: user.id,
+      });
+
+      return c.json({
+        data: updatedTransaction,
+        meta: {
+          updatedAt: new Date().toISOString(),
+          requestId,
+        },
+      });
+    } catch (error) {
+      secureLogger.error('Failed to update transaction', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        transactionId,
+        userId: user.id,
+      });
+
+      return c.json(
+        {
+          code: 'TRANSACTION_UPDATE_ERROR',
+          error: 'Failed to update transaction',
+        },
+        500
+      );
+    }
+  }
+);
+
+/**
  * Delete a transaction
  */
 transactionsRouter.delete(
@@ -359,99 +455,3 @@ transactionsRouter.delete(
 );
 
 export default transactionsRouter;
-
-/**
- * Update an existing transaction
- */
-transactionsRouter.put(
-  '/:id',
-  authMiddleware,
-  userRateLimitMiddleware({
-    windowMs: 60 * 1000,
-    max: 30,
-    message: 'Too many update attempts, please try again later',
-  }),
-  zValidator('json', createTransactionSchema.partial()),
-  async (c) => {
-    const { user, supabase } = c.get('auth');
-    const transactionId = c.req.param('id');
-    const input = c.req.valid('json');
-    const requestId = c.get('requestId');
-
-    try {
-      // Verify ownership
-      const { data: existing, error: fetchError } = await supabase
-        .from('financial_events')
-        .select('id')
-        .eq('id', transactionId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError || !existing) {
-        return c.json(
-          {
-            code: 'NOT_FOUND',
-            error: 'Transação não encontrada',
-          },
-          404
-        );
-      }
-
-      const updateData: any = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (input.title) updateData.title = input.title;
-      if (input.amount !== undefined) updateData.amount = input.amount;
-      if (input.type) {
-        updateData.event_type = input.type;
-        updateData.is_income = input.type === 'income' || input.type === 'credit';
-      }
-      if (input.status) updateData.status = input.status;
-      if (input.description !== undefined) updateData.description = input.description;
-      if (input.categoryId) updateData.category = input.categoryId;
-
-      // Handle metadata updates if needed, currently just passing through if schema allows
-      if (input.metadata) updateData.metadata = input.metadata;
-
-      const { data: updatedTransaction, error } = await supabase
-        .from('financial_events')
-        .update(updateData)
-        .eq('id', transactionId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      secureLogger.info('Transaction updated', {
-        requestId,
-        transactionId,
-        userId: user.id,
-      });
-
-      return c.json({
-        data: updatedTransaction,
-        meta: {
-          updatedAt: new Date().toISOString(),
-          requestId,
-        },
-      });
-    } catch (error) {
-      secureLogger.error('Failed to update transaction', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        requestId,
-        transactionId,
-        userId: user.id,
-      });
-
-      return c.json(
-        {
-          code: 'TRANSACTION_UPDATE_ERROR',
-          error: 'Failed to update transaction',
-        },
-        500
-      );
-    }
-  }
-);

@@ -1,8 +1,9 @@
 import { MessageSquare, Settings, X } from 'lucide-react';
-import type React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ChatSettings } from './ChatSettings';
 
 interface ChatLayoutProps {
   title?: string;
@@ -11,6 +12,10 @@ interface ChatLayoutProps {
   isWidget?: boolean;
   onClose?: () => void;
   modelSelector?: React.ReactNode;
+  enableVoice?: boolean;
+  onVoiceToggle?: (enabled: boolean) => void;
+  enableReasoning?: boolean;
+  onReasoningToggle?: (enabled: boolean) => void;
 }
 
 export function ChatLayout({
@@ -20,7 +25,12 @@ export function ChatLayout({
   isWidget = false,
   onClose,
   modelSelector,
+  enableVoice,
+  onVoiceToggle,
+  enableReasoning,
+  onReasoningToggle,
 }: ChatLayoutProps) {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   return (
     <Card
       className={cn(
@@ -46,7 +56,7 @@ export function ChatLayout({
         <div className="flex items-center gap-1">
           {modelSelector}
 
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsSettingsOpen(true)}>
             <Settings className="w-4 h-4" />
             <span className="sr-only">Settings</span>
           </Button>
@@ -64,6 +74,16 @@ export function ChatLayout({
       <div className="flex-1 flex flex-col min-h-0 relative bg-slate-50/50 dark:bg-slate-950/50">
         {children}
       </div>
+
+      {/* Settings Dialog */}
+      <ChatSettings
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        enableVoice={enableVoice}
+        onVoiceToggle={onVoiceToggle}
+        enableReasoning={enableReasoning}
+        onReasoningToggle={onReasoningToggle}
+      />
     </Card>
   );
 }

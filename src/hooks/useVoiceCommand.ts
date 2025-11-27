@@ -97,7 +97,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const handleError = useCallback(
     (error: Error & { isNoSpeech?: boolean }) => {
       setIsListening(false);
-      
+
       // Special handling for 'no-speech' error - treat as informational, not critical
       if (error.isNoSpeech || error.message === 'no-speech') {
         logger.info('No speech detected - user did not speak or spoke too quietly', {
@@ -113,7 +113,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         // Don't call onError for no-speech - it's a normal use case, not a critical error
         return;
       }
-      
+
       logger.voiceError(error.message, {
         action: 'handleRecognitionError',
         enableFeedback,

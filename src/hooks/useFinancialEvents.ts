@@ -232,8 +232,8 @@ export function useFinancialEvents(
       // Executar requisição
       const response = await apiClient.get<TransactionApiResponse<any[]>>('/v1/transactions', { params });
 
-      const mappedEvents = response.data.data.map(mapBackendToFrontend);
-      const total = response.data.meta.total || mappedEvents.length;
+      const mappedEvents = response.data.map(mapBackendToFrontend);
+      const total = response.meta.total || mappedEvents.length;
 
       setEvents(mappedEvents);
       setTotalCount(total);
@@ -441,6 +441,41 @@ export function useFinancialEvents(
     [createEvent, events]
   );
 
+  // Calculate statistics from events
+  const statistics = useMemo(() => {
+    const totalIncome = events
+      .filter((e) => e.type === 'income' && e.status === 'completed')
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+
+    const totalExpenses = events
+      .filter((e) => e.type === 'expense' && e.status === 'completed')
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+
+    const pendingIncome = events
+      .filter((e) => e.type === 'income' && e.status === 'pending')
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+
+    const pendingExpenses = events
+      .filter((e) => e.type === 'expense' && e.status === 'pending')
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+
+    const overdueCount = events.filter(
+      (e) => e.status === 'pending' && e.dueDate && new Date(e.dueDate) < new Date()
+    ).length;
+
+    const netBalance = totalIncome - totalExpenses + pendingIncome - pendingExpenses;
+
+    return {
+      totalIncome,
+      totalExpenses,
+      pendingIncome,
+      pendingExpenses,
+      overdueCount,
+      netBalance,
+      totalEvents: events.length,
+    };
+  }, [events]);
+
   return {
     events,
     loading,
@@ -450,11 +485,120 @@ export function useFinancialEvents(
     pagination,
     setPagination,
     totalCount,
+    statistics,
     createEvent,
     updateEvent,
     deleteEvent,
     markAsPaid,
     duplicateEvent,
     refresh: fetchEvents,
+  };
+}
+
+/**
+ * Hook for financial event mutations only (without query state)
+ * Used when you only need to modify events without managing the list state
+ */
+export function useFinancialEventMutations() {
+  const { user } = useAuth();
+
+  const addEvent = useCallback(
+    async (event: Omit<FinancialEvent, 'id'>) => {
+      try {
+        if (!user) {
+          throw new FinancialError('Usuário não autenticado', 'AUTH');
+        }
+
+        const payload = {
+          ...event,
+          categoryId: event.category,
+        };
+
+        const response = await apiClient.post<TransactionApiResponse<any>>('/v1/transactions', payload);
+        const newEvent = mapBackendToFrontend(response.data.data);
+
+        toast.success('Evento financeiro criado com sucesso!', {
+          description: `${newEvent.title} - R$ ${Math.abs(newEvent.amount).toFixed(2)}`,
+        });
+
+        return newEvent;
+      } catch (error) {
+        const err = new FinancialError(
+          error instanceof Error ? error.message : 'Erro ao criar evento',
+          'NETWORK'
+        );
+        toast.error('Erro ao criar evento financeiro', {
+          description: err.message,
+        });
+        throw err;
+      }
+    },
+    [user]
+  );
+
+  const updateEvent = useCallback(
+    async (id: string, updates: Partial<FinancialEvent>) => {
+      try {
+        if (!user) {
+          throw new FinancialError('Usuário não autenticado', 'AUTH');
+        }
+
+        const payload: any = { ...updates };
+        if (updates.category) payload.categoryId = updates.category;
+
+        const response = await apiClient.put<TransactionApiResponse<any>>(`/v1/transactions/${id}`, payload);
+        const updatedEvent = mapBackendToFrontend(response.data.data);
+
+        toast.success('Evento atualizado com sucesso!');
+        return updatedEvent;
+      } catch (error) {
+        const err = new FinancialError(
+          error instanceof Error ? error.message : 'Erro ao atualizar evento',
+          'NETWORK'
+        );
+        toast.error('Erro ao atualizar evento financeiro', {
+          description: err.message,
+        });
+        throw err;
+      }
+    },
+    [user]
+  );
+
+  const deleteEvent = useCallback(
+    async (id: string) => {
+      try {
+        if (!user) {
+          throw new FinancialError('Usuário não autenticado', 'AUTH');
+        }
+
+        await apiClient.delete(`/v1/transactions/${id}`);
+        toast.success('Evento financeiro removido com sucesso!');
+      } catch (error) {
+        const err = new FinancialError(
+          error instanceof Error ? error.message : 'Erro ao remover evento',
+          'NETWORK'
+        );
+        toast.error('Erro ao remover evento financeiro', {
+          description: err.message,
+        });
+        throw err;
+      }
+    },
+    [user]
+  );
+
+  const markAsPaid = useCallback(
+    async (id: string) => {
+      return updateEvent(id, { status: 'completed' });
+    },
+    [updateEvent]
+  );
+
+  return {
+    addEvent,
+    updateEvent,
+    deleteEvent,
+    markAsPaid,
   };
 }

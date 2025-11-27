@@ -16,7 +16,6 @@ import { DEFAULT_CALENDAR_CATEGORIES } from '@/components/ui/event-calendar/type
 import {
   useFinancialEventMutations,
   useFinancialEvents,
-  useFinancialEventsRealtime,
 } from '@/hooks/useFinancialEvents';
 import type { EventColor, FinancialEvent } from '@/types/financial-events';
 
@@ -58,7 +57,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   );
 
   // Use Supabase hooks
-  const { events: supabaseEvents, loading, error, refetch } = useFinancialEvents();
+  const { events: supabaseEvents, loading, error, refresh } = useFinancialEvents();
   const {
     addEvent: addEventMutation,
     updateEvent: updateEventMutation,
@@ -92,10 +91,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     }
   }, [supabaseEvents, loading, error]);
 
-  // Real-time subscription
-  useFinancialEventsRealtime(() => {
-    refetch();
-  });
+  // Real-time updates are handled within useFinancialEvents hook
+  // The hook already subscribes to postgres_changes
 
   const addEvent = useCallback(
     async (event: FinancialEvent) => {

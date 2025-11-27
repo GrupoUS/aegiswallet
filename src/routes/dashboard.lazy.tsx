@@ -8,7 +8,8 @@ import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type Transaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
-import { useFinancialEvents, useFinancialSummary } from '@/hooks/useFinancialEvents';
+import { useFinancialEvents } from '@/hooks/useFinancialEvents';
+import { useFinancialSummary } from '@/hooks/useProfile';
 
 // Lazy loaded components
 const LazyMiniCalendarWidget = lazy(() =>
@@ -84,7 +85,15 @@ export function Dashboard() {
   const { totalBRL } = useTotalBalance();
   const { accounts } = useBankAccounts();
   const { statistics } = useFinancialEvents({ status: 'all' });
-  const { summary, loading: summaryLoading } = useFinancialSummary();
+  
+  // Get current month date range for financial summary
+  const startOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    .toISOString()
+    .split('T')[0];
+  const endOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+    .toISOString()
+    .split('T')[0];
+  const { summary, isLoading: summaryLoading } = useFinancialSummary(startOfCurrentMonth, endOfCurrentMonth);
 
   const recentTransactionsQuery = useTransactions({ limit: 5 });
   const recentTransactions = recentTransactionsQuery.data ?? [];

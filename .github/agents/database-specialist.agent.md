@@ -10,7 +10,7 @@ handoffs:
     prompt: "Test the data integrity and verify the database operations work correctly."
     send: true
 tools:
-  ['search', 'runTasks', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'shadcn/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'context7/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🗄️ DATABASE SPECIALIST AGENT

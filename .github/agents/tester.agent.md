@@ -13,7 +13,7 @@ handoffs:
     prompt: "Document the test results, coverage metrics, code review findings, and any known limitations discovered."
     send: true
 tools:
-  ['search', 'runTasks', 'chrome-devtools/*', 'context7/*', 'desktop-commander/*', 'sequential-thinking/*', 'serena/*', 'supabase/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'todos', 'runSubagent']
+  ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runCommands', 'runTasks', 'chrome-devtools/*', 'context7/*', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🧪 TESTER AGENT

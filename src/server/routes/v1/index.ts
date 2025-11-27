@@ -18,16 +18,16 @@ import voiceRouter from './voice';
 
 // Export all routers for use in main server
 export {
-  healthRouter,
-  voiceRouter,
-  bankingRouter,
-  // pixRouter removed - PIX functionality discontinued
-  contactsRouter,
-  bankAccountsRouter,
-  usersRouter,
-  transactionsRouter,
-  calendarRouter,
-  googleCalendarRouter,
-  complianceRouter,
-  aiChatRouter,
+	healthRouter,
+	voiceRouter,
+	bankingRouter,
+	// pixRouter removed - PIX functionality discontinued
+	contactsRouter,
+	bankAccountsRouter,
+	usersRouter,
+	transactionsRouter,
+	calendarRouter,
+	googleCalendarRouter,
+	complianceRouter,
+	aiChatRouter,
 };

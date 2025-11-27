@@ -4,40 +4,41 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+
 import type { Database } from '@/types/database.types';
 
 /**
  * User context extracted from authentication
  */
 export interface AuthUser {
-  id: string;
-  email: string;
-  role?: string;
+	id: string;
+	email: string;
+	role?: string;
 }
 
 /**
  * Authentication context set by authMiddleware
  */
 export interface AuthContext {
-  user: AuthUser;
-  supabase: SupabaseClient<Database>;
+	user: AuthUser;
+	supabase: SupabaseClient<Database>;
 }
 
 /**
  * Hono context variables available in routes
  */
 export interface AppVariables {
-  requestId: string;
-  auth: AuthContext;
+	requestId: string;
+	auth: AuthContext;
 }
 
 /**
  * Environment bindings (for Cloudflare Workers compatibility)
  */
 export interface AppBindings {
-  SUPABASE_URL: string;
-  SUPABASE_ANON_KEY: string;
-  SUPABASE_SERVICE_ROLE_KEY?: string;
+	SUPABASE_URL: string;
+	SUPABASE_ANON_KEY: string;
+	SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
 /**
@@ -59,8 +60,8 @@ export interface AppBindings {
  * ```
  */
 export interface AppEnv {
-  Bindings: AppBindings;
-  Variables: AppVariables;
+	Bindings: AppBindings;
+	Variables: AppVariables;
 }
 
 /**
@@ -68,22 +69,25 @@ export interface AppEnv {
  * (before auth middleware runs)
  */
 export interface PublicAppEnv {
-  Bindings: AppBindings;
-  Variables: Pick<AppVariables, 'requestId'>;
+	Bindings: AppBindings;
+	Variables: Pick<AppVariables, 'requestId'>;
 }
 
 /**
  * Type helper for getting auth context from Hono context
  */
-export type GetAuth<C extends { get: (key: 'auth') => AuthContext }> = ReturnType<C['get']>;
+export type GetAuth<C extends { get: (key: 'auth') => AuthContext }> =
+	ReturnType<C['get']>;
 
 /**
  * Type guard to check if auth context is present
  */
-export function hasAuthContext(variables: Partial<AppVariables>): variables is AppVariables {
-  return (
-    variables.auth !== undefined &&
-    variables.auth.user !== undefined &&
-    variables.auth.supabase !== undefined
-  );
+export function hasAuthContext(
+	variables: Partial<AppVariables>,
+): variables is AppVariables {
+	return (
+		variables.auth !== undefined &&
+		variables.auth.user !== undefined &&
+		variables.auth.supabase !== undefined
+	);
 }

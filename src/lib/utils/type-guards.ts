@@ -8,8 +8,9 @@
  * @since 2025-11-19
  */
 
-import type { CalendarEvent } from '@/components/ui/event-calendar/types';
 import type { FinancialEvent } from '@/types';
+
+import type { CalendarEvent } from '@/components/ui/event-calendar/types';
 
 /**
  * Generic non-null type guard
@@ -28,7 +29,7 @@ import type { FinancialEvent } from '@/types';
  * ```
  */
 export function isNonNull<T>(value: T | null | undefined): value is T {
-  return value !== null && value !== undefined;
+	return value !== null && value !== undefined;
 }
 
 /**
@@ -47,20 +48,20 @@ export function isNonNull<T>(value: T | null | undefined): value is T {
  * ```
  */
 export function isValidCalendarEvent(event: unknown): event is CalendarEvent {
-  if (!event || typeof event !== 'object') {
-    return false;
-  }
+	if (!event || typeof event !== 'object') {
+		return false;
+	}
 
-  const e = event as Record<string, unknown>;
+	const e = event as Record<string, unknown>;
 
-  // Required properties for calendar events
-  return (
-    typeof e.id === 'string' &&
-    typeof e.title === 'string' &&
-    (e.start instanceof Date || typeof e.start === 'string') &&
-    (e.end instanceof Date || typeof e.end === 'string') &&
-    typeof e.allDay === 'boolean'
-  );
+	// Required properties for calendar events
+	return (
+		typeof e.id === 'string' &&
+		typeof e.title === 'string' &&
+		(e.start instanceof Date || typeof e.start === 'string') &&
+		(e.end instanceof Date || typeof e.end === 'string') &&
+		typeof e.allDay === 'boolean'
+	);
 }
 
 /**
@@ -79,21 +80,21 @@ export function isValidCalendarEvent(event: unknown): event is CalendarEvent {
  * ```
  */
 export function isValidFinancialEvent(event: unknown): event is FinancialEvent {
-  if (!event || typeof event !== 'object') {
-    return false;
-  }
+	if (!event || typeof event !== 'object') {
+		return false;
+	}
 
-  const e = event as Record<string, unknown>;
+	const e = event as Record<string, unknown>;
 
-  // Required properties for financial events
-  return (
-    typeof e.id === 'string' &&
-    typeof e.amount === 'number' &&
-    typeof e.description === 'string' &&
-    (e.date instanceof Date || typeof e.date === 'string') &&
-    typeof e.category === 'string' &&
-    typeof e.type === 'string'
-  );
+	// Required properties for financial events
+	return (
+		typeof e.id === 'string' &&
+		typeof e.amount === 'number' &&
+		typeof e.description === 'string' &&
+		(e.date instanceof Date || typeof e.date === 'string') &&
+		typeof e.category === 'string' &&
+		typeof e.type === 'string'
+	);
 }
 
 /**
@@ -106,27 +107,27 @@ export function isValidFinancialEvent(event: unknown): event is FinancialEvent {
  * @LGPD This function handles sensitive financial data - ensure proper encryption
  */
 export function isValidPixKey(pixKey: unknown): pixKey is {
-  id: string;
-  key_type: string;
-  key_value: string;
-  label?: string;
-  is_active?: boolean;
-  is_favorite?: boolean;
+	id: string;
+	key_type: string;
+	key_value: string;
+	label?: string;
+	is_active?: boolean;
+	is_favorite?: boolean;
 } {
-  if (!pixKey || typeof pixKey !== 'object') {
-    return false;
-  }
+	if (!pixKey || typeof pixKey !== 'object') {
+		return false;
+	}
 
-  const key = pixKey as Record<string, unknown>;
+	const key = pixKey as Record<string, unknown>;
 
-  return (
-    typeof key.id === 'string' &&
-    typeof key.key_type === 'string' &&
-    typeof key.key_value === 'string' &&
-    (key.label === undefined || typeof key.label === 'string') &&
-    (key.is_active === undefined || typeof key.is_active === 'boolean') &&
-    (key.is_favorite === undefined || typeof key.is_favorite === 'boolean')
-  );
+	return (
+		typeof key.id === 'string' &&
+		typeof key.key_type === 'string' &&
+		typeof key.key_value === 'string' &&
+		(key.label === undefined || typeof key.label === 'string') &&
+		(key.is_active === undefined || typeof key.is_active === 'boolean') &&
+		(key.is_favorite === undefined || typeof key.is_favorite === 'boolean')
+	);
 }
 
 /**
@@ -137,23 +138,23 @@ export function isValidPixKey(pixKey: unknown): pixKey is {
  * @returns Type predicate for valid user profile
  */
 export function isValidUser(user: unknown): user is {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
+	id: string;
+	email: string;
+	name?: string;
+	role?: string;
 } {
-  if (!user || typeof user !== 'object') {
-    return false;
-  }
+	if (!user || typeof user !== 'object') {
+		return false;
+	}
 
-  const u = user as Record<string, unknown>;
+	const u = user as Record<string, unknown>;
 
-  return (
-    typeof u.id === 'string' &&
-    typeof u.email === 'string' &&
-    (u.name === undefined || typeof u.name === 'string') &&
-    (u.role === undefined || typeof u.role === 'string')
-  );
+	return (
+		typeof u.id === 'string' &&
+		typeof u.email === 'string' &&
+		(u.name === undefined || typeof u.name === 'string') &&
+		(u.role === undefined || typeof u.role === 'string')
+	);
 }
 
 /**
@@ -166,27 +167,28 @@ export function isValidUser(user: unknown): user is {
  * @LGPD This function handles sensitive financial data - ensure proper encryption
  */
 export function isValidBankAccount(account: unknown): account is {
-  id: string;
-  account_number: string;
-  account_type: string;
-  balance?: number;
-  available_balance?: number;
-  is_primary?: boolean;
+	id: string;
+	account_number: string;
+	account_type: string;
+	balance?: number;
+	available_balance?: number;
+	is_primary?: boolean;
 } {
-  if (!account || typeof account !== 'object') {
-    return false;
-  }
+	if (!account || typeof account !== 'object') {
+		return false;
+	}
 
-  const acc = account as Record<string, unknown>;
+	const acc = account as Record<string, unknown>;
 
-  return (
-    typeof acc.id === 'string' &&
-    typeof acc.account_number === 'string' &&
-    typeof acc.account_type === 'string' &&
-    (acc.balance === undefined || typeof acc.balance === 'number') &&
-    (acc.available_balance === undefined || typeof acc.available_balance === 'number') &&
-    (acc.is_primary === undefined || typeof acc.is_primary === 'boolean')
-  );
+	return (
+		typeof acc.id === 'string' &&
+		typeof acc.account_number === 'string' &&
+		typeof acc.account_type === 'string' &&
+		(acc.balance === undefined || typeof acc.balance === 'number') &&
+		(acc.available_balance === undefined ||
+			typeof acc.available_balance === 'number') &&
+		(acc.is_primary === undefined || typeof acc.is_primary === 'boolean')
+	);
 }
 
 /**
@@ -197,29 +199,29 @@ export function isValidBankAccount(account: unknown): account is {
  * @returns Type predicate for valid transaction
  */
 export function isValidTransaction(transaction: unknown): transaction is {
-  id: string;
-  amount: number;
-  description: string;
-  date: string | Date;
-  category: string;
-  type: 'income' | 'expense' | 'transfer';
-  account_id?: string;
+	id: string;
+	amount: number;
+	description: string;
+	date: string | Date;
+	category: string;
+	type: 'income' | 'expense' | 'transfer';
+	account_id?: string;
 } {
-  if (!transaction || typeof transaction !== 'object') {
-    return false;
-  }
+	if (!transaction || typeof transaction !== 'object') {
+		return false;
+	}
 
-  const tx = transaction as Record<string, unknown>;
+	const tx = transaction as Record<string, unknown>;
 
-  return (
-    typeof tx.id === 'string' &&
-    typeof tx.amount === 'number' &&
-    typeof tx.description === 'string' &&
-    (tx.date instanceof Date || typeof tx.date === 'string') &&
-    typeof tx.category === 'string' &&
-    (tx.type === 'income' || tx.type === 'expense' || tx.type === 'transfer') &&
-    (tx.account_id === undefined || typeof tx.account_id === 'string')
-  );
+	return (
+		typeof tx.id === 'string' &&
+		typeof tx.amount === 'number' &&
+		typeof tx.description === 'string' &&
+		(tx.date instanceof Date || typeof tx.date === 'string') &&
+		typeof tx.category === 'string' &&
+		(tx.type === 'income' || tx.type === 'expense' || tx.type === 'transfer') &&
+		(tx.account_id === undefined || typeof tx.account_id === 'string')
+	);
 }
 
 /**
@@ -238,8 +240,11 @@ export function isValidTransaction(transaction: unknown): transaction is {
  * }
  * ```
  */
-export function isValidArray<T>(arr: unknown, guard: (item: unknown) => item is T): arr is T[] {
-  return Array.isArray(arr) && arr.every(guard);
+export function isValidArray<T>(
+	arr: unknown,
+	guard: (item: unknown) => item is T,
+): arr is T[] {
+	return Array.isArray(arr) && arr.every(guard);
 }
 
 /**
@@ -261,14 +266,14 @@ export function isValidArray<T>(arr: unknown, guard: (item: unknown) => item is 
  * ```
  */
 export function getSafeProperty<T>(
-  obj: unknown,
-  key: string,
-  guard: (value: unknown) => value is T
+	obj: unknown,
+	key: string,
+	guard: (value: unknown) => value is T,
 ): T | undefined {
-  if (!obj || typeof obj !== 'object') {
-    return undefined;
-  }
+	if (!obj || typeof obj !== 'object') {
+		return undefined;
+	}
 
-  const value = (obj as Record<string, unknown>)[key];
-  return guard(value) ? value : undefined;
+	const value = (obj as Record<string, unknown>)[key];
+	return guard(value) ? value : undefined;
 }

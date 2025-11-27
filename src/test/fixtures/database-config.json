@@ -1,9 +1,9 @@
 {
-  "test": {
-    "host": "localhost",
-    "port": 54322,
-    "database": "aegiswallet_test",
-    "user": "postgres",
-    "password": "postgres"
-  }
+	"test": {
+		"host": "localhost",
+		"port": 54322,
+		"database": "aegiswallet_test",
+		"user": "postgres",
+		"password": "postgres"
+	}
 }

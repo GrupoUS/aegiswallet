@@ -9,65 +9,69 @@
  */
 
 export interface ChartPayload {
-  /** Financial value (amount, balance, etc.) */
-  value: number;
+	/** Financial value (amount, balance, etc.) */
+	value: number;
 
-  /** Chart label or category name */
-  name: string;
+	/** Chart label or category name */
+	name: string;
 
-  /** Additional data key for chart identification */
-  dataKey: string;
+	/** Additional data key for chart identification */
+	dataKey: string;
 
-  /** Optional color for chart element */
-  color?: string;
+	/** Optional color for chart element */
+	color?: string;
 
-  /** Optional metadata for chart interactions */
-  metadata?: Record<string, unknown>;
+	/** Optional metadata for chart interactions */
+	metadata?: Record<string, unknown>;
 }
 
 export interface ChartData {
-  /** Array of chart data points */
-  payload: ChartPayload[];
+	/** Array of chart data points */
+	payload: ChartPayload[];
 
-  /** Optional chart label */
-  label?: string;
+	/** Optional chart label */
+	label?: string;
 
-  /** Optional formatter function for display values */
-  formatter?: (
-    value: number,
-    name: string,
-    item: ChartPayload,
-    index: number,
-    payload: ChartPayload[]
-  ) => React.ReactNode;
+	/** Optional formatter function for display values */
+	formatter?: (
+		value: number,
+		name: string,
+		item: ChartPayload,
+		index: number,
+		payload: ChartPayload[],
+	) => React.ReactNode;
 
-  /** Optional tooltip formatter */
-  tooltipFormatter?: (value: number, name: string, item: ChartPayload) => string;
+	/** Optional tooltip formatter */
+	tooltipFormatter?: (
+		value: number,
+		name: string,
+		item: ChartPayload,
+	) => string;
 
-  /** Optional color scheme */
-  colors?: string[];
+	/** Optional color scheme */
+	colors?: string[];
 }
 
 export interface ChartConfig {
-  /** Chart type (bar, line, pie, etc.) */
-  type: 'bar' | 'line' | 'pie' | 'area' | 'scatter';
+	/** Chart type (bar, line, pie, etc.) */
+	type: 'bar' | 'line' | 'pie' | 'area' | 'scatter';
 
-  /** Data source for the chart */
-  data: ChartData[];
+	/** Data source for the chart */
+	data: ChartData[];
 
-  /** Chart dimensions */
-  width?: number;
-  height?: number;
+	/** Chart dimensions */
+	width?: number;
+	height?: number;
 
-  /** Accessibility labels */
-  title?: string;
-  description?: string;
+	/** Accessibility labels */
+	title?: string;
+	description?: string;
 
-  /** Financial data compliance flag */
-  containsSensitiveData: boolean;
+	/** Financial data compliance flag */
+	containsSensitiveData: boolean;
 
-  /** LGPD consent requirement for data display */
-  requiresConsent?: boolean;
+	/** LGPD consent requirement for data display */
+	requiresConsent?: boolean;
 }
 
 /**
@@ -75,14 +79,14 @@ export interface ChartConfig {
  * Ensures financial data integrity before chart rendering
  */
 export function isValidChartPayload(payload: unknown): payload is ChartPayload {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    typeof (payload as ChartPayload).value === 'number' &&
-    !Number.isNaN((payload as ChartPayload).value) &&
-    typeof (payload as ChartPayload).name === 'string' &&
-    typeof (payload as ChartPayload).dataKey === 'string'
-  );
+	return (
+		typeof payload === 'object' &&
+		payload !== null &&
+		typeof (payload as ChartPayload).value === 'number' &&
+		!Number.isNaN((payload as ChartPayload).value) &&
+		typeof (payload as ChartPayload).name === 'string' &&
+		typeof (payload as ChartPayload).dataKey === 'string'
+	);
 }
 
 /**
@@ -90,10 +94,10 @@ export function isValidChartPayload(payload: unknown): payload is ChartPayload {
  * Prevents rendering with invalid financial data
  */
 export function isValidChartData(data: unknown): data is ChartData {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    Array.isArray((data as ChartData).payload) &&
-    (data as ChartData).payload.every(isValidChartPayload)
-  );
+	return (
+		typeof data === 'object' &&
+		data !== null &&
+		Array.isArray((data as ChartData).payload) &&
+		(data as ChartData).payload.every(isValidChartPayload)
+	);
 }

@@ -1,16 +1,16 @@
 import { AiInputSearch } from '@/components/kokonutui';
 
 interface ChatSearchBarProps {
-  /** Callback when search is submitted */
-  onSearch: (query: string) => void;
-  /** Placeholder text */
-  placeholder?: string;
-  /** Additional CSS classes */
-  className?: string;
-  /** Whether the search is disabled */
-  disabled?: boolean;
-  /** Auto-focus on mount */
-  autoFocus?: boolean;
+	/** Callback when search is submitted */
+	onSearch: (query: string) => void;
+	/** Placeholder text */
+	placeholder?: string;
+	/** Additional CSS classes */
+	className?: string;
+	/** Whether the search is disabled */
+	disabled?: boolean;
+	/** Auto-focus on mount */
+	autoFocus?: boolean;
 }
 
 /**
@@ -29,19 +29,19 @@ interface ChatSearchBarProps {
  * ```
  */
 export function ChatSearchBar({
-  onSearch,
-  placeholder = 'Pesquisar nas finanças...',
-  className,
-  disabled = false,
-  autoFocus = false,
+	onSearch,
+	placeholder = 'Pesquisar nas finanças...',
+	className,
+	disabled = false,
+	autoFocus = false,
 }: ChatSearchBarProps) {
-  return (
-    <AiInputSearch
-      onSearch={onSearch}
-      placeholder={placeholder}
-      className={className}
-      disabled={disabled}
-      autoFocus={autoFocus}
-    />
-  );
+	return (
+		<AiInputSearch
+			onSearch={onSearch}
+			placeholder={placeholder}
+			className={className}
+			disabled={disabled}
+			autoFocus={autoFocus}
+		/>
+	);
 }

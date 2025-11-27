@@ -6,138 +6,149 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface DebugContext {
-  component?: string;
-  action?: string;
+	component?: string;
+	action?: string;
 }
 
 class Logger {
-  private isDevelopment: boolean;
+	private isDevelopment: boolean;
 
-  constructor() {
-    this.isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development';
-  }
+	constructor() {
+		this.isDevelopment =
+			import.meta.env.DEV || process.env.NODE_ENV === 'development';
+	}
 
-  private formatMessage(level: LogLevel, message: string, context?: DebugContext): string {
-    const timestamp = new Date().toISOString();
-    const contextStr = context
-      ? `[${context.component}${context.action ? `::${context.action}` : ''}]`
-      : '';
-    return `${timestamp} ${level.toUpperCase()}${contextStr}: ${message}`;
-  }
+	private formatMessage(
+		level: LogLevel,
+		message: string,
+		context?: DebugContext,
+	): string {
+		const timestamp = new Date().toISOString();
+		const contextStr = context
+			? `[${context.component}${context.action ? `::${context.action}` : ''}]`
+			: '';
+		return `${timestamp} ${level.toUpperCase()}${contextStr}: ${message}`;
+	}
 
-  private log(level: LogLevel, message: string, _data?: unknown, context?: DebugContext): void {
-    if (!this.isDevelopment) {
-      return;
-    }
+	private log(
+		level: LogLevel,
+		message: string,
+		_data?: unknown,
+		context?: DebugContext,
+	): void {
+		if (!this.isDevelopment) {
+			return;
+		}
 
-    const _formattedMessage = this.formatMessage(level, message, context);
+		const _formattedMessage = this.formatMessage(level, message, context);
 
-    switch (level) {
-      case 'debug':
-        break;
-      case 'info':
-        break;
-      case 'warn':
-        break;
-      case 'error':
-        break;
-    }
-  }
+		switch (level) {
+			case 'debug':
+				break;
+			case 'info':
+				break;
+			case 'warn':
+				break;
+			case 'error':
+				break;
+		}
+	}
 
-  debug(message: string, data?: unknown, context?: DebugContext): void {
-    this.log('debug', message, data, context);
-  }
+	debug(message: string, data?: unknown, context?: DebugContext): void {
+		this.log('debug', message, data, context);
+	}
 
-  info(message: string, data?: unknown, context?: DebugContext): void {
-    this.log('info', message, data, context);
-  }
+	info(message: string, data?: unknown, context?: DebugContext): void {
+		this.log('info', message, data, context);
+	}
 
-  warn(message: string, data?: unknown, context?: DebugContext): void {
-    this.log('warn', message, data, context);
-  }
+	warn(message: string, data?: unknown, context?: DebugContext): void {
+		this.log('warn', message, data, context);
+	}
 
-  error(message: string, error?: unknown, context?: DebugContext): void {
-    this.log('error', message, error, context);
-  }
+	error(message: string, error?: unknown, context?: DebugContext): void {
+		this.log('error', message, error, context);
+	}
 
-  // Component-specific logging helpers
-  component(componentName: string) {
-    return {
-      action: (actionName: string) => ({
-        debug: (message: string, data?: unknown) =>
-          this.debug(message, data, {
-            action: actionName,
-            component: componentName,
-          }),
-        error: (message: string, error?: unknown) =>
-          this.error(message, error, {
-            action: actionName,
-            component: componentName,
-          }),
-        info: (message: string, data?: unknown) =>
-          this.info(message, data, {
-            action: actionName,
-            component: componentName,
-          }),
-        warn: (message: string, data?: unknown) =>
-          this.warn(message, data, {
-            action: actionName,
-            component: componentName,
-          }),
-      }),
-      debug: (message: string, data?: unknown) =>
-        this.debug(message, data, { component: componentName }),
-      error: (message: string, error?: unknown) =>
-        this.error(message, error, { component: componentName }),
-      info: (message: string, data?: unknown) =>
-        this.info(message, data, { component: componentName }),
-      warn: (message: string, data?: unknown) =>
-        this.warn(message, data, { component: componentName }),
-    };
-  }
+	// Component-specific logging helpers
+	component(componentName: string) {
+		return {
+			action: (actionName: string) => ({
+				debug: (message: string, data?: unknown) =>
+					this.debug(message, data, {
+						action: actionName,
+						component: componentName,
+					}),
+				error: (message: string, error?: unknown) =>
+					this.error(message, error, {
+						action: actionName,
+						component: componentName,
+					}),
+				info: (message: string, data?: unknown) =>
+					this.info(message, data, {
+						action: actionName,
+						component: componentName,
+					}),
+				warn: (message: string, data?: unknown) =>
+					this.warn(message, data, {
+						action: actionName,
+						component: componentName,
+					}),
+			}),
+			debug: (message: string, data?: unknown) =>
+				this.debug(message, data, { component: componentName }),
+			error: (message: string, error?: unknown) =>
+				this.error(message, error, { component: componentName }),
+			info: (message: string, data?: unknown) =>
+				this.info(message, data, { component: componentName }),
+			warn: (message: string, data?: unknown) =>
+				this.warn(message, data, { component: componentName }),
+		};
+	}
 
-  // Performance logging
-  time(_label: string): void {
-    if (this.isDevelopment) {
-    }
-  }
+	// Performance logging
+	time(_label: string): void {
+		if (this.isDevelopment) {
+		}
+	}
 
-  timeEnd(_label: string): void {
-    if (this.isDevelopment) {
-    }
-  }
+	timeEnd(_label: string): void {
+		if (this.isDevelopment) {
+		}
+	}
 
-  // Group logging
-  group(_label: string): void {
-    if (this.isDevelopment) {
-    }
-  }
+	// Group logging
+	group(_label: string): void {
+		if (this.isDevelopment) {
+		}
+	}
 
-  groupEnd(): void {
-    if (this.isDevelopment) {
-    }
-  }
+	groupEnd(): void {
+		if (this.isDevelopment) {
+		}
+	}
 }
 
 // Create singleton instance
 export const logger = new Logger();
 
 // Export convenience functions for common patterns
-export const createComponentLogger = (componentName: string) => logger.component(componentName);
+export const createComponentLogger = (componentName: string) =>
+	logger.component(componentName);
 
 // Development-only assertions
 export const assert = (condition: boolean, message: string): void => {
-  if (import.meta.env.DEV && !condition) {
-    throw new Error(`Assertion failed: ${message}`);
-  }
+	if (import.meta.env.DEV && !condition) {
+		throw new Error(`Assertion failed: ${message}`);
+	}
 };
 
 // Development-only warnings
 export const warnOnce = (message: string): void => {
-  if (import.meta.env.DEV && !warnOnce.warnedMessages.has(message)) {
-    logger.warn(message);
-    warnOnce.warnedMessages.add(message);
-  }
+	if (import.meta.env.DEV && !warnOnce.warnedMessages.has(message)) {
+		logger.warn(message);
+		warnOnce.warnedMessages.add(message);
+	}
 };
 
 warnOnce.warnedMessages = new Set<string>();

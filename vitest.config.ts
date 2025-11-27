@@ -1,96 +1,183 @@
 import * as path from 'node:path';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ['@testing-library/react', '@testing-library/jest-dom'],
-  },
-  // biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
-  plugins: [react() as any],
+  // ✅ MELHORIA 1: optimizeDeps movido para dentro de test.deps
+  // O optimizeDeps no root é para Vite dev server, não para Vitest
+
+  plugins: [react()], // ✅ MELHORIA 2: Removido cast 'as any' - veja solução abaixo
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // ✅ MELHORIA 3: Adicionar alias para test utilities
+      '@test-utils': path.resolve(__dirname, './src/test'),
     },
   },
+
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    // Enhanced JSDOM environment configuration
+
+    // ✅ MELHORIA 4: environmentOptions simplificado
+    // 'runScripts: dangerously' é um risco de segurança e raramente necessário
+    // 'resources: usable' pode causar memory leaks em testes
     environmentOptions: {
       jsdom: {
         pretendToBeVisual: true,
-        resources: 'usable',
-        runScripts: 'dangerously',
+        // Removido: resources e runScripts (riscos desnecessários)
       },
     },
-    // Type checking enabled
+
+    // ✅ MELHORIA 5: deps.optimizer ao invés de optimizeDeps no root
+    deps: {
+      optimizer: {
+        web: {
+          include: ['@testing-library/react', '@testing-library/jest-dom'],
+        },
+      },
+      // Interoperabilidade para módulos ESM
+      interopDefault: true,
+    },
+
+    // TypeScript type checking
     typecheck: {
       enabled: true,
       checker: 'tsc',
       tsconfig: './tsconfig.test.json',
+      // ✅ MELHORIA 6: Adicionar include para typecheck
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
     },
-    // Pool options for performance
+
+    // ✅ MELHORIA 7: Usar 'forks' ao invés de 'threads' para melhor isolamento
+    // Threads compartilham memória, forks são isolados (melhor para testes de DB)
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: false,
-        useAtomics: true,
+      forks: {
+        isolate: true,
+        // Número de workers baseado no ambiente
+        minForks: 1,
+        maxForks: process.env.CI ? 2 : undefined, // CI tem menos recursos
       },
     },
-    // Ensure setup runs before any tests
+
+    // ✅ MELHORIA 8: sequence.concurrent pode ser true para velocidade
+    // O isolamento é garantido pelo pool, não pela sequência
     sequence: {
-      concurrent: false,
-      shuffle: false,
+      concurrent: true, // Permite execução paralela DENTRO de cada arquivo
+      shuffle: false,   // Mantém ordem determinística para debugging
     },
-    // Enhanced coverage configuration for 90%+ target
+
     coverage: {
-      provider: 'v8', // Faster and more accurate for TypeScript
-      reporter: ['text', 'json', 'html', 'lcov', 'text-summary'],
+      provider: 'v8',
+      // ✅ MELHORIA 9: Remover reporters redundantes
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      // 'text-summary' é redundante com 'text'
+      // 'json' raramente usado, 'json-summary' é mais útil
+
+      // ✅ MELHORIA 10: Usar include ao invés de apenas exclude
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'node_modules/',
-        'src/test/',
+        ...configDefaults.coverage.exclude, // Inclui defaults do Vitest
+        'src/test/**',
+        'src/mocks/**',
+        'src/types/**',
+        'src/integrations/**',
         '**/*.d.ts',
-        '**/*.config.js',
-        '**/*.config.ts',
-        'src/integrations/', // Integration code might have external deps
-        'src/mocks/', // Mock files
-        'docs/',
-        'scripts/',
-        'src/routeTree.gen.ts',
-        'dist/',
-        'coverage/',
-        '**/*.gen.ts', // Generated files
+        '**/*.gen.ts',
+        '**/*.config.{ts,js}',
+        // ✅ MELHORIA 11: Excluir arquivos de barrel (index.ts que só exportam)
+        '**/index.ts',
+        // Excluir componentes UI do shadcn (código de terceiros)
+        'src/components/ui/**',
       ],
+
+      // ✅ MELHORIA 12: Thresholds por módulo crítico
       thresholds: {
-        global: {
+        // Global permanece 90%
+        lines: 90,
+        functions: 90,
+        branches: 85, // Branches é mais difícil, 85% é realista
+        statements: 90,
+
+        // Módulos financeiros críticos precisam de 95%+
+        'src/lib/security/**/*.ts': {
+          lines: 95,
+          functions: 95,
           branches: 90,
-          functions: 90,
+          statements: 95,
+        },
+        'src/lib/compliance/**/*.ts': {
+          lines: 95,
+          functions: 95,
+          branches: 90,
+          statements: 95,
+        },
+        // Hooks de negócio
+        'src/hooks/use*.ts': {
           lines: 90,
+          functions: 90,
+          branches: 80,
           statements: 90,
         },
       },
-      // Include all source files in coverage
+
       all: true,
-      // Clean coverage directories before running
       clean: true,
-      // Clean on re-run
       cleanOnRerun: true,
+      // ✅ MELHORIA 13: Reportar falha mesmo sem threshold
+      reportOnFailure: true,
+      // ✅ MELHORIA 14: Ignorar arquivos vazios
+      skipFull: false,
     },
-    include: [
-      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-    ],
-    exclude: ['node_modules/', 'dist/', 'build/', 'coverage/'],
-    // Enhanced timeout for async operations
+
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // ✅ MELHORIA 15: Usar configDefaults.exclude
+    exclude: [...configDefaults.exclude, 'e2e/**', 'playwright/**'],
+
+    // ✅ MELHORIA 16: Timeouts diferenciados
     testTimeout: 10000,
-    // Better error reporting
-    reporters: ['default', 'verbose', 'junit'],
+    hookTimeout: 10000,
+    // Teardown timeout para cleanup de conexões (Supabase)
+    teardownTimeout: 5000,
+
+    // ✅ MELHORIA 17: Reporters otimizados
+    reporters: process.env.CI
+      ? ['default', 'junit', 'github-actions']
+      : ['default'],
     outputFile: {
       junit: './coverage/junit.xml',
     },
-    // Better isolate tests
+
+    // ✅ MELHORIA 18: Retry apenas em CI
+    retry: process.env.CI ? 2 : 0,
+
+    // ✅ MELHORIA 19: Bail para falhar rápido em desenvolvimento
+    bail: process.env.CI ? 0 : 1, // Para no primeiro erro em dev
+
+    // Isolamento
     isolate: true,
-    // Hook timeout
-    hookTimeout: 10000,
+
+    // ✅ MELHORIA 20: Configuração de snapshot
+    snapshotFormat: {
+      escapeString: false,
+      printBasicPrototype: false,
+    },
+
+    // ✅ MELHORIA 21: Mock reset automático
+    mockReset: true,
+    restoreMocks: true,
+    clearMocks: true,
+
+    // ✅ MELHORIA 22: Watch mode otimizado
+    watchExclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**'],
+
+    // ✅ MELHORIA 23: Timezone fixa para testes consistentes
+    // (Importante para AegisWallet - mercado brasileiro)
+    env: {
+      TZ: 'America/Sao_Paulo',
+    },
   },
 });

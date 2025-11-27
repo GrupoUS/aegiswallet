@@ -129,45 +129,45 @@ The master orchestrator automatically scans `.factory/droids/` directory to:
 ```yaml
 DISCOVERED_DROIDS:
   core_implementation:
-    - apex_dev: "Advanced development (Complexity ≥7, TDD, performance-critical)"
-    - coder: "Standard implementation (Complexity <7, Portuguese-first, basic LGPD)"
-    - database_specialist: "Supabase/PostgreSQL expert (All database ops, migrations, RLS)"
+    - apex_dev: "Advanced development with Brazilian fintech specialization, TDD methodology, and task delegation (Complexity ≥7)"
+    - database_specialist: "Supabase/PostgreSQL expert with Brazilian fintech expertise (All database ops, migrations, RLS)"
   
   quality_assurance:
-    - test_auditor: "TDD + Playwright E2E + Brazilian compliance validation"
-    - code_reviewer: "Security + LGPD compliance + vulnerability assessment"
+    - code_reviewer: "Enhanced security architect with Brazilian compliance, architecture validation, and integrated skill coordination"
   
   design_architecture:
-    - apex_ui_ux_designer: "WCAG 2.1 AA+ accessibility + Portuguese-first design"
-    - architect_review: "Clean architecture + scalability + Brazilian fintech"
+    - apex_ui_ux_designer: "Enhanced UI/UX orchestrator with intelligent skill coordination and Brazilian market specialization"
   
   research_knowledge:
     - apex_researcher: "Multi-source validation (≥95% accuracy) + Brazilian regulations"
     - product_architect: "PRD generation + Diátaxis framework + rules engineering"
-  
-  emergency:
-    stuck: "Human escalation + HALT ALL WORK authority"
 ```
 
 ### Capability Matching Algorithm
 ```yaml
 TASK_ROUTING_MATRIX:
   technical_complexity:
-    1_3: [coder]
-    4_6: [coder, test_auditor]
-    7_8: [apex_dev, code_reviewer, test_auditor]
-    9_10: [apex_researcher, architect_review, apex_dev]
+    1_3: [database_specialist, code_reviewer] # Basic database ops and simple code review
+    4_6: [database_specialist, code_reviewer, apex_ui_ux_designer] # Moderate complexity
+    7_8: [apex_dev, code_reviewer, database_specialist] # Complex implementations
+    9_10: [apex_researcher, apex_dev, code_reviewer] # Mission-critical research and development
   
   brazilian_compliance:
     financial_systems: [apex_researcher, database_specialist, code_reviewer]
-    lgpd_requirements: [test_auditor, code_reviewer, apex_researcher]
-    accessibility: [apex_ui_ux_designer, test_auditor]
-    portuguese_interface: [coder, apex_ui_ux_designer, test_auditor]
+    lgpd_requirements: [code_reviewer, apex_researcher, database_specialist]
+    accessibility: [apex_ui_ux_designer, code_reviewer]
+    portuguese_interface: [apex_ui_ux_designer, apex_dev, code_reviewer]
   
   security_sensitivity:
     critical: [apex_dev, code_reviewer, database_specialist]
-    standard: [coder, test_auditor]
-    data_protection: [database_specialist, code_reviewer, test_auditor]
+    standard: [code_reviewer, database_specialist]
+    data_protection: [database_specialist, code_reviewer, apex_researcher]
+  
+  design_ux_requirements:
+    ui_components: [apex_ui_ux_designer, code_reviewer]
+    user_flows: [apex_ui_ux_designer, code_reviewer, apex_dev]
+    accessibility: [apex_ui_ux_designer, code_reviewer]
+    brazilian_patterns: [apex_ui_ux_designer, apex_researcher, code_reviewer]
 ```
 
 ## 🧠 Intelligent Task Routing Algorithm
@@ -208,21 +208,33 @@ TASK_ANALYSIS_DIMENSIONS:
 ROUTING_SCENARIOS:
   pix_payment_feature:
     complexity_score: 9
-    primary_route: [apex_researcher → architect_review → apex_dev]
-    parallel_tracks: [database_specialist + code_reviewer + test_auditor]
-    brazilian_compliance: [LGPD + BCB specs + accessibility]
+    primary_route: [apex_researcher → apex_dev → database_specialist]
+    parallel_support: [code_reviewer (security) + apex_ui_ux_designer (Brazilian UX)]
+    brazilian_compliance: [LGPD + BCB specs + accessibility + PIX security]
     
   user_profile_page:
     complexity_score: 4
-    primary_route: [coder → test_auditor]
-    parallel_support: [apex_ui_ux_designer]
-    compliance_focus: [Portuguese interface + basic LGPD]
+    primary_route: [database_specialist → apex_ui_ux_designer]
+    parallel_support: [code_reviewer (security validation)]
+    compliance_focus: [Portuguese interface + LGPD + accessibility]
     
   security_audit:
     complexity_score: 8
-    primary_route: [code_reviewer → test_auditor]
-    expert_support: [apex_researcher + database_specialist]
-    compliance_focus: [OWASP + LGPD + Brazilian standards]
+    primary_route: [code_reviewer → apex_researcher → database_specialist]
+    parallel_support: [apex_ui_ux_designer (accessibility security)]
+    compliance_focus: [OWASP + LGPD + Brazilian security standards]
+    
+  voice_interface_feature:
+    complexity_score: 7
+    primary_route: [apex_ui_ux_designer → apex_dev]
+    parallel_support: [code_reviewer (voice security) + apex_researcher (Brazilian patterns)]
+    compliance_focus: [Portuguese voice commands + accessibility + LGPD]
+    
+  database_migration:
+    complexity_score: 6
+    primary_route: [database_specialist → code_reviewer]
+    parallel_support: [apex_researcher (Brazilian data compliance)]
+    compliance_focus: [Data protection + RLS policies + LGPD]
 ```
 
 ## 🚀 Enhanced Workflow (6 Phases)

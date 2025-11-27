@@ -9,370 +9,382 @@ import '../healthcare-setup';
 
 // Define PatientData type locally for the test
 interface PatientData {
-  name: string;
-  email: string;
-  phone: string;
-  cpf: string;
-  lgpdConsent: {
-    consentType: string;
-    deviceId: string;
-    ip: string;
-    timestamp: string;
-    version: string;
-  };
+	name: string;
+	email: string;
+	phone: string;
+	cpf: string;
+	lgpdConsent: {
+		consentType: string;
+		deviceId: string;
+		ip: string;
+		timestamp: string;
+		version: string;
+	};
 }
 
 // Mock healthcare components (these would be your actual components)
-const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => void }) => {
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
-  const [cpf, setCpf] = React.useState('');
-  const [consent, setConsent] = React.useState(false);
+const PatientForm = ({
+	onSubmit,
+}: {
+	onSubmit: (data: Partial<PatientData>) => void;
+}) => {
+	const [name, setName] = React.useState('');
+	const [email, setEmail] = React.useState('');
+	const [phone, setPhone] = React.useState('');
+	const [cpf, setCpf] = React.useState('');
+	const [consent, setConsent] = React.useState(false);
 
-  const handleSubmit = () => {
-    if (!consent) {
-      return;
-    }
+	const handleSubmit = () => {
+		if (!consent) {
+			return;
+		}
 
-    // Simulate masking logic that would be in the real component/service
-    // Input: 12345678900 -> Output: 123.***.789-**
-    const maskedCpf = cpf === '12345678900' ? '123.***.789-**' : cpf;
+		// Simulate masking logic that would be in the real component/service
+		// Input: 12345678900 -> Output: 123.***.789-**
+		const maskedCpf = cpf === '12345678900' ? '123.***.789-**' : cpf;
 
-    // Input: 11987654321 -> Output: 119****4321
-    const maskedPhone = phone === '11987654321' ? '119****4321' : phone;
+		// Input: 11987654321 -> Output: 119****4321
+		const maskedPhone = phone === '11987654321' ? '119****4321' : phone;
 
-    onSubmit({
-      cpf: maskedCpf,
-      email,
-      lgpdConsent: {
-        consentType: 'treatment',
-        deviceId: 'test-device-id',
-        ip: '127.0.0.1',
-        timestamp: new Date().toISOString(),
-        version: '1.0',
-      },
-      name,
-      phone: maskedPhone,
-    });
-  };
+		onSubmit({
+			cpf: maskedCpf,
+			email,
+			lgpdConsent: {
+				consentType: 'treatment',
+				deviceId: 'test-device-id',
+				ip: '127.0.0.1',
+				timestamp: new Date().toISOString(),
+				version: '1.0',
+			},
+			name,
+			phone: maskedPhone,
+		});
+	};
 
-  return (
-    <div>
-      <label htmlFor="patient-name">Name</label>
-      <input
-        id="patient-name"
-        data-testid="patient-name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+	return (
+		<div>
+			<label htmlFor="patient-name">Name</label>
+			<input
+				id="patient-name"
+				data-testid="patient-name"
+				value={name}
+				onChange={(e) => setName(e.target.value)}
+			/>
 
-      <label htmlFor="patient-email">Email</label>
-      <input
-        id="patient-email"
-        data-testid="patient-email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+			<label htmlFor="patient-email">Email</label>
+			<input
+				id="patient-email"
+				data-testid="patient-email"
+				value={email}
+				onChange={(e) => setEmail(e.target.value)}
+			/>
 
-      <label htmlFor="patient-phone">Phone</label>
-      <input
-        id="patient-phone"
-        data-testid="patient-phone"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-      />
+			<label htmlFor="patient-phone">Phone</label>
+			<input
+				id="patient-phone"
+				data-testid="patient-phone"
+				value={phone}
+				onChange={(e) => setPhone(e.target.value)}
+			/>
 
-      <label htmlFor="patient-cpf">CPF</label>
-      <input
-        id="patient-cpf"
-        data-testid="patient-cpf"
-        value={cpf}
-        onChange={(e) => setCpf(e.target.value)}
-      />
+			<label htmlFor="patient-cpf">CPF</label>
+			<input
+				id="patient-cpf"
+				data-testid="patient-cpf"
+				value={cpf}
+				onChange={(e) => setCpf(e.target.value)}
+			/>
 
-      <label htmlFor="lgpd-consent">
-        <input
-          id="lgpd-consent"
-          type="checkbox"
-          data-testid="lgpd-consent"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-        />
-        I consent to data processing
-      </label>
+			<label htmlFor="lgpd-consent">
+				<input
+					id="lgpd-consent"
+					type="checkbox"
+					data-testid="lgpd-consent"
+					checked={consent}
+					onChange={(e) => setConsent(e.target.checked)}
+				/>
+				I consent to data processing
+			</label>
 
-      <button type="submit" data-testid="submit-patient" disabled={!consent} onClick={handleSubmit}>
-        Submit
-      </button>
-    </div>
-  );
+			<button
+				type="submit"
+				data-testid="submit-patient"
+				disabled={!consent}
+				onClick={handleSubmit}
+			>
+				Submit
+			</button>
+		</div>
+	);
 };
 
 describe('LGPD Compliance Testing', () => {
-  beforeEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
-    window.localStorage.clear();
-  });
+	beforeEach(() => {
+		vi.useRealTimers();
+		vi.clearAllMocks();
+		window.localStorage.clear();
+	});
 
-  describe('Consent Management', () => {
-    it('should require explicit consent before data collection', async () => {
-      const onSubmit = vi.fn();
+	describe('Consent Management', () => {
+		it('should require explicit consent before data collection', async () => {
+			const onSubmit = vi.fn();
 
-      render(React.createElement(PatientForm, { onSubmit }));
+			render(React.createElement(PatientForm, { onSubmit }));
 
-      const submitButton = screen.getByTestId('submit-patient');
-      expect(submitButton).toBeDisabled();
+			const submitButton = screen.getByTestId('submit-patient');
+			expect(submitButton).toBeDisabled();
 
-      // Form should not be submittable without consent
-      const nameInput = screen.getByTestId('patient-name');
-      await userEvent.type(nameInput, 'João Silva');
+			// Form should not be submittable without consent
+			const nameInput = screen.getByTestId('patient-name');
+			await userEvent.type(nameInput, 'João Silva');
 
-      expect(submitButton).toBeDisabled();
-    });
+			expect(submitButton).toBeDisabled();
+		});
 
-    it('should enable form submission only after consent is given', async () => {
-      const onSubmit = vi.fn();
+		it('should enable form submission only after consent is given', async () => {
+			const onSubmit = vi.fn();
 
-      render(React.createElement(PatientForm, { onSubmit }));
+			render(React.createElement(PatientForm, { onSubmit }));
 
-      const consentCheckbox = screen.getByTestId('lgpd-consent');
-      const submitButton = screen.getByTestId('submit-patient');
+			const consentCheckbox = screen.getByTestId('lgpd-consent');
+			const submitButton = screen.getByTestId('submit-patient');
 
-      // Enable consent
-      await userEvent.click(consentCheckbox);
+			// Enable consent
+			await userEvent.click(consentCheckbox);
 
-      expect(consentCheckbox).toBeChecked();
-      expect(submitButton).toBeEnabled();
-    });
+			expect(consentCheckbox).toBeChecked();
+			expect(submitButton).toBeEnabled();
+		});
 
-    it('should record consent metadata with all required fields', async () => {
-      const onSubmit = vi.fn();
+		it('should record consent metadata with all required fields', async () => {
+			const onSubmit = vi.fn();
 
-      render(React.createElement(PatientForm, { onSubmit }));
+			render(React.createElement(PatientForm, { onSubmit }));
 
-      // Fill form with patient data
-      await userEvent.type(screen.getByTestId('patient-name'), 'João Silva');
-      await userEvent.type(screen.getByTestId('patient-email'), 'joao@example.com');
-      await userEvent.type(screen.getByTestId('patient-phone'), '11987654321');
-      await userEvent.type(screen.getByTestId('patient-cpf'), '12345678900');
+			// Fill form with patient data
+			await userEvent.type(screen.getByTestId('patient-name'), 'João Silva');
+			await userEvent.type(
+				screen.getByTestId('patient-email'),
+				'joao@example.com',
+			);
+			await userEvent.type(screen.getByTestId('patient-phone'), '11987654321');
+			await userEvent.type(screen.getByTestId('patient-cpf'), '12345678900');
 
-      // Give consent
-      await userEvent.click(screen.getByTestId('lgpd-consent'));
+			// Give consent
+			await userEvent.click(screen.getByTestId('lgpd-consent'));
 
-      // Submit form
-      await userEvent.click(screen.getByTestId('submit-patient'));
+			// Submit form
+			await userEvent.click(screen.getByTestId('submit-patient'));
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            lgpdConsent: expect.objectContaining({
-              consentType: 'treatment',
-              deviceId: 'test-device-id',
-              ip: '127.0.0.1',
-              timestamp: expect.any(String),
-              version: '1.0',
-            }),
-          })
-        );
-      });
-    });
-  });
+			await waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledWith(
+					expect.objectContaining({
+						lgpdConsent: expect.objectContaining({
+							consentType: 'treatment',
+							deviceId: 'test-device-id',
+							ip: '127.0.0.1',
+							timestamp: expect.any(String),
+							version: '1.0',
+						}),
+					}),
+				);
+			});
+		});
+	});
 
-  describe('Data Protection and Masking', () => {
-    it('should mask CPF in submitted data', async () => {
-      const onSubmit = vi.fn();
+	describe('Data Protection and Masking', () => {
+		it('should mask CPF in submitted data', async () => {
+			const onSubmit = vi.fn();
 
-      render(React.createElement(PatientForm, { onSubmit }));
+			render(React.createElement(PatientForm, { onSubmit }));
 
-      // Fill form with CPF
-      await userEvent.type(screen.getByTestId('patient-cpf'), '12345678900');
-      await userEvent.type(screen.getByTestId('patient-name'), 'Test Patient');
-      await userEvent.click(screen.getByTestId('lgpd-consent'));
+			// Fill form with CPF
+			await userEvent.type(screen.getByTestId('patient-cpf'), '12345678900');
+			await userEvent.type(screen.getByTestId('patient-name'), 'Test Patient');
+			await userEvent.click(screen.getByTestId('lgpd-consent'));
 
-      // Submit form
-      await userEvent.click(screen.getByTestId('submit-patient'));
+			// Submit form
+			await userEvent.click(screen.getByTestId('submit-patient'));
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            cpf: expect.stringMatching(/^\d{3}\.\*{3}\.\d{3}-\*{2}$/),
-          })
-        );
-      });
-    });
+			await waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledWith(
+					expect.objectContaining({
+						cpf: expect.stringMatching(/^\d{3}\.\*{3}\.\d{3}-\*{2}$/),
+					}),
+				);
+			});
+		});
 
-    it('should mask phone numbers in submitted data', async () => {
-      const onSubmit = vi.fn();
+		it('should mask phone numbers in submitted data', async () => {
+			const onSubmit = vi.fn();
 
-      render(React.createElement(PatientForm, { onSubmit }));
+			render(React.createElement(PatientForm, { onSubmit }));
 
-      // Fill form with phone
-      await userEvent.type(screen.getByTestId('patient-phone'), '11987654321');
-      await userEvent.type(screen.getByTestId('patient-name'), 'Test Patient');
-      await userEvent.click(screen.getByTestId('lgpd-consent'));
+			// Fill form with phone
+			await userEvent.type(screen.getByTestId('patient-phone'), '11987654321');
+			await userEvent.type(screen.getByTestId('patient-name'), 'Test Patient');
+			await userEvent.click(screen.getByTestId('lgpd-consent'));
 
-      // Submit form
-      await userEvent.click(screen.getByTestId('submit-patient'));
+			// Submit form
+			await userEvent.click(screen.getByTestId('submit-patient'));
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            phone: expect.stringMatching(/^\d{2}\d{1}\*{4}\d{4}$/),
-          })
-        );
-      });
-    });
+			await waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledWith(
+					expect.objectContaining({
+						phone: expect.stringMatching(/^\d{2}\d{1}\*{4}\d{4}$/),
+					}),
+				);
+			});
+		});
 
-    it('should validate LGPD field masking using custom matcher', () => {
-      const maskedCPF = '***.***.***-**';
-      const unmaskedCPF = '123.456.789-00';
+		it('should validate LGPD field masking using custom matcher', () => {
+			const maskedCPF = '***.***.***-**';
+			const unmaskedCPF = '123.456.789-00';
 
-      expect(maskedCPF).toBeLGPDCompliant('cpf');
-      expect(() => {
-        expect(unmaskedCPF).toBeLGPDCompliant('cpf');
-      }).toThrow();
-    });
-  });
+			expect(maskedCPF).toBeLGPDCompliant('cpf');
+			expect(() => {
+				expect(unmaskedCPF).toBeLGPDCompliant('cpf');
+			}).toThrow();
+		});
+	});
 
-  describe('Right to Erasure', () => {
-    it('should provide data deletion functionality', async () => {
-      // Mock delete function
-      const deletePatientData = vi.fn().mockResolvedValue({ success: true });
+	describe('Right to Erasure', () => {
+		it('should provide data deletion functionality', async () => {
+			// Mock delete function
+			const deletePatientData = vi.fn().mockResolvedValue({ success: true });
 
-      // Simulate data deletion request
-      const result = await deletePatientData('test-patient-id');
+			// Simulate data deletion request
+			const result = await deletePatientData('test-patient-id');
 
-      expect(deletePatientData).toHaveBeenCalledWith('test-patient-id');
-      expect(result).toEqual({ success: true });
-    });
+			expect(deletePatientData).toHaveBeenCalledWith('test-patient-id');
+			expect(result).toEqual({ success: true });
+		});
 
-    it('should log erasure requests for audit trail', async () => {
-      const logAuditEntry = vi.fn();
+		it('should log erasure requests for audit trail', async () => {
+			const logAuditEntry = vi.fn();
 
-      // Mock erasure request
-      const erasureRequest = {
-        patientId: 'test-patient-id',
-        reason: 'user_request',
-        requestId: 'erasure-001',
-        timestamp: new Date().toISOString(),
-      };
+			// Mock erasure request
+			const erasureRequest = {
+				patientId: 'test-patient-id',
+				reason: 'user_request',
+				requestId: 'erasure-001',
+				timestamp: new Date().toISOString(),
+			};
 
-      // Log the erasure request
-      logAuditEntry({
-        action: 'DATA_ERASURE',
-        patientId: erasureRequest.patientId,
-        reason: erasureRequest.reason,
-        requestId: erasureRequest.requestId,
-        timestamp: erasureRequest.timestamp,
-      });
+			// Log the erasure request
+			logAuditEntry({
+				action: 'DATA_ERASURE',
+				patientId: erasureRequest.patientId,
+				reason: erasureRequest.reason,
+				requestId: erasureRequest.requestId,
+				timestamp: erasureRequest.timestamp,
+			});
 
-      expect(logAuditEntry).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: 'DATA_ERASURE',
-          patientId: 'test-patient-id',
-          reason: 'user_request',
-          requestId: 'erasure-001',
-        })
-      );
-    });
-  });
+			expect(logAuditEntry).toHaveBeenCalledWith(
+				expect.objectContaining({
+					action: 'DATA_ERASURE',
+					patientId: 'test-patient-id',
+					reason: 'user_request',
+					requestId: 'erasure-001',
+				}),
+			);
+		});
+	});
 
-  describe('Audit Trail', () => {
-    it('should log all data access operations', async () => {
-      const logAccess = vi.fn();
+	describe('Audit Trail', () => {
+		it('should log all data access operations', async () => {
+			const logAccess = vi.fn();
 
-      // Simulate patient data access
-      const accessEvent = {
-        action: 'READ',
-        ipAddress: '127.0.0.1',
-        patientId: 'test-patient-001',
-        timestamp: new Date().toISOString(),
-        userId: 'test-user-001',
-      };
+			// Simulate patient data access
+			const accessEvent = {
+				action: 'READ',
+				ipAddress: '127.0.0.1',
+				patientId: 'test-patient-001',
+				timestamp: new Date().toISOString(),
+				userId: 'test-user-001',
+			};
 
-      logAccess(accessEvent);
+			logAccess(accessEvent);
 
-      expect(logAccess).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: 'READ',
-          ipAddress: '127.0.0.1',
-          patientId: 'test-patient-001',
-          userId: 'test-user-001',
-        })
-      );
-    });
+			expect(logAccess).toHaveBeenCalledWith(
+				expect.objectContaining({
+					action: 'READ',
+					ipAddress: '127.0.0.1',
+					patientId: 'test-patient-001',
+					userId: 'test-user-001',
+				}),
+			);
+		});
 
-    it('should track data modifications with full context', async () => {
-      const logModification = vi.fn();
+		it('should track data modifications with full context', async () => {
+			const logModification = vi.fn();
 
-      // Simulate patient data update
-      const modificationEvent = {
-        action: 'UPDATE',
-        fieldsChanged: ['phone', 'email'],
-        newValues: {
-          email: 'new@example.com',
-          phone: '+55******9999',
-        },
-        patientId: 'test-patient-001',
-        previousValues: {
-          email: 'old@example.com',
-          phone: '+55******4321',
-        },
-        timestamp: new Date().toISOString(),
-        userId: 'test-user-001',
-      };
+			// Simulate patient data update
+			const modificationEvent = {
+				action: 'UPDATE',
+				fieldsChanged: ['phone', 'email'],
+				newValues: {
+					email: 'new@example.com',
+					phone: '+55******9999',
+				},
+				patientId: 'test-patient-001',
+				previousValues: {
+					email: 'old@example.com',
+					phone: '+55******4321',
+				},
+				timestamp: new Date().toISOString(),
+				userId: 'test-user-001',
+			};
 
-      logModification(modificationEvent);
+			logModification(modificationEvent);
 
-      expect(logModification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: 'UPDATE',
-          fieldsChanged: ['phone', 'email'],
-          patientId: 'test-patient-001',
-          userId: 'test-user-001',
-        })
-      );
-    });
-  });
+			expect(logModification).toHaveBeenCalledWith(
+				expect.objectContaining({
+					action: 'UPDATE',
+					fieldsChanged: ['phone', 'email'],
+					patientId: 'test-patient-001',
+					userId: 'test-user-001',
+				}),
+			);
+		});
+	});
 
-  describe('Data Minimization', () => {
-    it('should only collect necessary data for the intended purpose', () => {
-      const requiredFields = ['name', 'email', 'consent'];
-      const collectedData = {
-        name: 'João Silva',
-        email: 'joao@example.com',
-        phone: '11987654321', // Optional field
-        cpf: '12345678900', // Optional field
-        consent: true,
-      };
+	describe('Data Minimization', () => {
+		it('should only collect necessary data for the intended purpose', () => {
+			const requiredFields = ['name', 'email', 'consent'];
+			const collectedData = {
+				name: 'João Silva',
+				email: 'joao@example.com',
+				phone: '11987654321', // Optional field
+				cpf: '12345678900', // Optional field
+				consent: true,
+			};
 
-      // Validate that only required data is being processed
-      requiredFields.forEach((field) => {
-        expect(collectedData).toHaveProperty(field);
-      });
+			// Validate that only required data is being processed
+			requiredFields.forEach((field) => {
+				expect(collectedData).toHaveProperty(field);
+			});
 
-      // Optional fields should be clearly marked as such
-      expect(Object.keys(collectedData)).toEqual(
-        expect.arrayContaining(['name', 'email', 'consent'])
-      );
-    });
+			// Optional fields should be clearly marked as such
+			expect(Object.keys(collectedData)).toEqual(
+				expect.arrayContaining(['name', 'email', 'consent']),
+			);
+		});
 
-    it('should have clear purpose limitation for data processing', () => {
-      const dataProcessingPurposes = {
-        appointment_scheduling: ['name', 'phone'],
-        emergency_contact: ['name', 'phone', 'emergency_contact'],
-        patient_registration: ['name', 'email', 'phone'],
-        payment_processing: ['name', 'cpf'],
-      };
+		it('should have clear purpose limitation for data processing', () => {
+			const dataProcessingPurposes = {
+				appointment_scheduling: ['name', 'phone'],
+				emergency_contact: ['name', 'phone', 'emergency_contact'],
+				patient_registration: ['name', 'email', 'phone'],
+				payment_processing: ['name', 'cpf'],
+			};
 
-      // Validate that each purpose has a defined and limited set of data fields
-      Object.entries(dataProcessingPurposes).forEach(([_purpose, fields]) => {
-        expect(Array.isArray(fields)).toBe(true);
-        expect(fields.length).toBeGreaterThan(0);
-        expect(fields.length).toBeLessThan(5); // Reasonable limit
-      });
-    });
-  });
+			// Validate that each purpose has a defined and limited set of data fields
+			Object.entries(dataProcessingPurposes).forEach(([_purpose, fields]) => {
+				expect(Array.isArray(fields)).toBe(true);
+				expect(fields.length).toBeGreaterThan(0);
+				expect(fields.length).toBeLessThan(5); // Reasonable limit
+			});
+		});
+	});
 });

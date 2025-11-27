@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import { getBrowserClient } from './factory';
 
 /**

@@ -6,26 +6,26 @@
 
 // Export types from audioProcessor
 export type {
-  AudioProcessingConfig,
-  ProcessedAudio,
+	AudioProcessingConfig,
+	ProcessedAudio,
 } from './audioProcessor';
 // Explicitly re-export from audioProcessor to avoid VADResult conflict
 export {
-  AudioProcessor,
-  createAudioProcessor,
+	AudioProcessor,
+	createAudioProcessor,
 } from './audioProcessor';
 export * from './speechToTextService';
 // Export types from voiceActivityDetection
 // Resolve naming conflicts
 export type {
-  VADConfig,
-  VADResult as VoiceActivityResult,
+	VADConfig,
+	VADResult as VoiceActivityResult,
 } from './voiceActivityDetection';
 // Explicitly re-export from voiceActivityDetection (excluding VADResult to avoid conflict)
 export {
-  createVAD,
-  detectVoiceActivity,
-  VoiceActivityDetector,
+	createVAD,
+	detectVoiceActivity,
+	VoiceActivityDetector,
 } from './voiceActivityDetection';
 
 // Import and re-export AudioVADResult to avoid conflicts

@@ -185,62 +185,66 @@ Combine múltiplas ferramentas para respostas completas:
 
 // Enhanced system prompt with specialization hooks
 export const getSystemPromptWithCustomization = (userProfile?: {
-  region?: string;
-  bankingPreferences?: string[];
-  riskLevel?: 'conservative' | 'moderate' | 'aggressive';
-  voiceEnabled?: boolean;
+	region?: string;
+	bankingPreferences?: string[];
+	riskLevel?: 'conservative' | 'moderate' | 'aggressive';
+	voiceEnabled?: boolean;
 }) => {
-  let customPrompt = ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT;
+	let customPrompt = ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT;
 
-  // Regional customization
-  if (userProfile?.region) {
-    const regionalInfo = getRegionalInfo(userProfile.region);
-    customPrompt += `\n\n## CONTEXTO REGIONAL: ${userProfile.region.toUpperCase()}\n${regionalInfo}`;
-  }
+	// Regional customization
+	if (userProfile?.region) {
+		const regionalInfo = getRegionalInfo(userProfile.region);
+		customPrompt += `\n\n## CONTEXTO REGIONAL: ${userProfile.region.toUpperCase()}\n${regionalInfo}`;
+	}
 
-  // Banking preferences
-  if (userProfile?.bankingPreferences?.length) {
-    customPrompt += `\n\n## PREFERÊNCIAS BANCÁRIAS\nUsuário prefere: ${userProfile.bankingPreferences.join(', ')}`;
-  }
+	// Banking preferences
+	if (userProfile?.bankingPreferences?.length) {
+		customPrompt += `\n\n## PREFERÊNCIAS BANCÁRIAS\nUsuário prefere: ${userProfile.bankingPreferences.join(', ')}`;
+	}
 
-  // Risk level adjustments
-  if (userProfile?.riskLevel) {
-    const riskGuidance = getRiskLevelGuidance(userProfile.riskLevel);
-    customPrompt += `\n\n## PERFIL DE RISCO: ${userProfile.riskLevel.toUpperCase()}\n${riskGuidance}`;
-  }
+	// Risk level adjustments
+	if (userProfile?.riskLevel) {
+		const riskGuidance = getRiskLevelGuidance(userProfile.riskLevel);
+		customPrompt += `\n\n## PERFIL DE RISCO: ${userProfile.riskLevel.toUpperCase()}\n${riskGuidance}`;
+	}
 
-  // Voice optimization
-  if (userProfile?.voiceEnabled) {
-    customPrompt += `\n\n## INTERFACE VOZ-FIRST ATIVADA\nPriorize respostas otimizadas para síntese de voz, confirmações por áudio e comandos em português brasileiro natural.`;
-  }
+	// Voice optimization
+	if (userProfile?.voiceEnabled) {
+		customPrompt += `\n\n## INTERFACE VOZ-FIRST ATIVADA\nPriorize respostas otimizadas para síntese de voz, confirmações por áudio e comandos em português brasileiro natural.`;
+	}
 
-  return customPrompt;
+	return customPrompt;
 };
 
 // Helper functions for customization
 function getRegionalInfo(region: string): string {
-  const regions: Record<string, string> = {
-    sudeste:
-      'Foco em bancos tradicionais (Itaú, Bradesco, BB), custo de vida elevado, mais transações eletrônicas.',
-    nordeste:
-      'Ênfase em Caixa, bancos digitais, transferências PIX para familiares, contexto de menor formalidade bancária.',
-    sul: 'Bancos regionais (Sicredi, Banrisul), maior uso de crédito rural, safras agrícolas.',
-    'centro-oeste': 'Foco em agroindústria, bancos estaduais, comércio local forte.',
-    norte: 'Banco da Amazônia, Caixa forte, transferências para outras regiões.',
-  };
+	const regions: Record<string, string> = {
+		sudeste:
+			'Foco em bancos tradicionais (Itaú, Bradesco, BB), custo de vida elevado, mais transações eletrônicas.',
+		nordeste:
+			'Ênfase em Caixa, bancos digitais, transferências PIX para familiares, contexto de menor formalidade bancária.',
+		sul: 'Bancos regionais (Sicredi, Banrisul), maior uso de crédito rural, safras agrícolas.',
+		'centro-oeste':
+			'Foco em agroindústria, bancos estaduais, comércio local forte.',
+		norte:
+			'Banco da Amazônia, Caixa forte, transferências para outras regiões.',
+	};
 
-  return regions[region.toLowerCase()] || 'Perfil bancário padrão brasileiro.';
+	return regions[region.toLowerCase()] || 'Perfil bancário padrão brasileiro.';
 }
 
 function getRiskLevelGuidance(riskLevel: string): string {
-  const guidance: Record<string, string> = {
-    conservative:
-      'Priorizar segurança, evitar investimentos arriscados, sugestões de economia, alertas conservadores.',
-    moderate:
-      'Equilíbrio entre segurança e oportunidades, diversificação moderada, análise cuidadosa de riscos.',
-    aggressive:
-      'Maior tolerância a risco, oportunidades de maior retorno, monitoramento intensivo de carteiras.',
-  };
+	const guidance: Record<string, string> = {
+		conservative:
+			'Priorizar segurança, evitar investimentos arriscados, sugestões de economia, alertas conservadores.',
+		moderate:
+			'Equilíbrio entre segurança e oportunidades, diversificação moderada, análise cuidadosa de riscos.',
+		aggressive:
+			'Maior tolerância a risco, oportunidades de maior retorno, monitoramento intensivo de carteiras.',
+	};
 
-  return guidance[riskLevel.toLowerCase()] || 'Perfil financeiro padrão brasileiro.';
+	return (
+		guidance[riskLevel.toLowerCase()] || 'Perfil financeiro padrão brasileiro.'
+	);
 }

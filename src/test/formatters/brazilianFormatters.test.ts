@@ -4,7 +4,7 @@
  */
 
 describe('Brazilian Formatters', () => {
-  it('should have test content', () => {
-    expect(true).toBe(true);
-  });
+	it('should have test content', () => {
+		expect(true).toBe(true);
+	});
 });

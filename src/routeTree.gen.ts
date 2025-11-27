@@ -8,289 +8,291 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SaldoRouteImport } from './routes/saldo'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias'
-import { Route as ContasRouteImport } from './routes/contas'
-import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
-import { Route as CalendarioRouteImport } from './routes/calendario'
-import { Route as AiChatRouteImport } from './routes/ai-chat'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as AiChatRouteImport } from './routes/ai-chat';
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback';
+import { Route as CalendarioRouteImport } from './routes/calendario';
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes';
+import { Route as ContasRouteImport } from './routes/contas';
+import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias';
+import { Route as DashboardRouteImport } from './routes/dashboard';
+import { Route as IndexRouteImport } from './routes/index';
+import { Route as LoginRouteImport } from './routes/login';
+import { Route as PrivacidadeRouteImport } from './routes/privacidade';
+import { Route as SaldoRouteImport } from './routes/saldo';
+import { Route as SettingsRouteImport } from './routes/settings';
 
 const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/settings',
+	path: '/settings',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SaldoRoute = SaldoRouteImport.update({
-  id: '/saldo',
-  path: '/saldo',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/saldo',
+	path: '/saldo',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/privacidade',
+	path: '/privacidade',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/login',
+	path: '/login',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/dashboard',
+	path: '/dashboard',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ContasBancariasRoute = ContasBancariasRouteImport.update({
-  id: '/contas-bancarias',
-  path: '/contas-bancarias',
-  getParentRoute: () => rootRouteImport,
+	id: '/contas-bancarias',
+	path: '/contas-bancarias',
+	getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
-  import('./routes/contas-bancarias.lazy').then((d) => d.Route),
-)
+	import('./routes/contas-bancarias.lazy').then((d) => d.Route),
+);
 const ContasRoute = ContasRouteImport.update({
-  id: '/contas',
-  path: '/contas',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/contas',
+	path: '/contas',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
-  id: '/configuracoes',
-  path: '/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/configuracoes.lazy').then((d) => d.Route))
+	id: '/configuracoes',
+	path: '/configuracoes',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+	import('./routes/configuracoes.lazy').then((d) => d.Route),
+);
 const CalendarioRoute = CalendarioRouteImport.update({
-  id: '/calendario',
-  path: '/calendario',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route))
+	id: '/calendario',
+	path: '/calendario',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route));
 const AiChatRoute = AiChatRouteImport.update({
-  id: '/ai-chat',
-  path: '/ai-chat',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route))
+	id: '/ai-chat',
+	path: '/ai-chat',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route));
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/',
+	path: '/',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/auth/callback',
+	path: '/auth/callback',
+	getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/auth/callback': typeof AuthCallbackRoute
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/auth/callback': typeof AuthCallbackRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/auth/callback': typeof AuthCallbackRoute
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/auth/callback': typeof AuthCallbackRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/auth/callback': typeof AuthCallbackRoute
+	__root__: typeof rootRouteImport;
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/auth/callback': typeof AuthCallbackRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/ai-chat'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/auth/callback'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/ai-chat'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/auth/callback'
-  id:
-    | '__root__'
-    | '/'
-    | '/ai-chat'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/auth/callback'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths:
+		| '/'
+		| '/ai-chat'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/auth/callback';
+	fileRoutesByTo: FileRoutesByTo;
+	to:
+		| '/'
+		| '/ai-chat'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/auth/callback';
+	id:
+		| '__root__'
+		| '/'
+		| '/ai-chat'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/auth/callback';
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AiChatRoute: typeof AiChatRoute
-  CalendarioRoute: typeof CalendarioRoute
-  ConfiguracoesRoute: typeof ConfiguracoesRoute
-  ContasRoute: typeof ContasRoute
-  ContasBancariasRoute: typeof ContasBancariasRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
-  PrivacidadeRoute: typeof PrivacidadeRoute
-  SaldoRoute: typeof SaldoRoute
-  SettingsRoute: typeof SettingsRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
+	IndexRoute: typeof IndexRoute;
+	AiChatRoute: typeof AiChatRoute;
+	CalendarioRoute: typeof CalendarioRoute;
+	ConfiguracoesRoute: typeof ConfiguracoesRoute;
+	ContasRoute: typeof ContasRoute;
+	ContasBancariasRoute: typeof ContasBancariasRoute;
+	DashboardRoute: typeof DashboardRoute;
+	LoginRoute: typeof LoginRoute;
+	PrivacidadeRoute: typeof PrivacidadeRoute;
+	SaldoRoute: typeof SaldoRoute;
+	SettingsRoute: typeof SettingsRoute;
+	AuthCallbackRoute: typeof AuthCallbackRoute;
 }
 
 declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saldo': {
-      id: '/saldo'
-      path: '/saldo'
-      fullPath: '/saldo'
-      preLoaderRoute: typeof SaldoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contas-bancarias': {
-      id: '/contas-bancarias'
-      path: '/contas-bancarias'
-      fullPath: '/contas-bancarias'
-      preLoaderRoute: typeof ContasBancariasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contas': {
-      id: '/contas'
-      path: '/contas'
-      fullPath: '/contas'
-      preLoaderRoute: typeof ContasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/configuracoes': {
-      id: '/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof ConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendario': {
-      id: '/calendario'
-      path: '/calendario'
-      fullPath: '/calendario'
-      preLoaderRoute: typeof CalendarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai-chat': {
-      id: '/ai-chat'
-      path: '/ai-chat'
-      fullPath: '/ai-chat'
-      preLoaderRoute: typeof AiChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
+	interface FileRoutesByPath {
+		'/settings': {
+			id: '/settings';
+			path: '/settings';
+			fullPath: '/settings';
+			preLoaderRoute: typeof SettingsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/saldo': {
+			id: '/saldo';
+			path: '/saldo';
+			fullPath: '/saldo';
+			preLoaderRoute: typeof SaldoRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/privacidade': {
+			id: '/privacidade';
+			path: '/privacidade';
+			fullPath: '/privacidade';
+			preLoaderRoute: typeof PrivacidadeRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/login': {
+			id: '/login';
+			path: '/login';
+			fullPath: '/login';
+			preLoaderRoute: typeof LoginRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/dashboard': {
+			id: '/dashboard';
+			path: '/dashboard';
+			fullPath: '/dashboard';
+			preLoaderRoute: typeof DashboardRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/contas-bancarias': {
+			id: '/contas-bancarias';
+			path: '/contas-bancarias';
+			fullPath: '/contas-bancarias';
+			preLoaderRoute: typeof ContasBancariasRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/contas': {
+			id: '/contas';
+			path: '/contas';
+			fullPath: '/contas';
+			preLoaderRoute: typeof ContasRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/configuracoes': {
+			id: '/configuracoes';
+			path: '/configuracoes';
+			fullPath: '/configuracoes';
+			preLoaderRoute: typeof ConfiguracoesRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/calendario': {
+			id: '/calendario';
+			path: '/calendario';
+			fullPath: '/calendario';
+			preLoaderRoute: typeof CalendarioRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/ai-chat': {
+			id: '/ai-chat';
+			path: '/ai-chat';
+			fullPath: '/ai-chat';
+			preLoaderRoute: typeof AiChatRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/': {
+			id: '/';
+			path: '/';
+			fullPath: '/';
+			preLoaderRoute: typeof IndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/auth/callback': {
+			id: '/auth/callback';
+			path: '/auth/callback';
+			fullPath: '/auth/callback';
+			preLoaderRoute: typeof AuthCallbackRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+	}
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AiChatRoute: AiChatRoute,
-  CalendarioRoute: CalendarioRoute,
-  ConfiguracoesRoute: ConfiguracoesRoute,
-  ContasRoute: ContasRoute,
-  ContasBancariasRoute: ContasBancariasRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
-  PrivacidadeRoute: PrivacidadeRoute,
-  SaldoRoute: SaldoRoute,
-  SettingsRoute: SettingsRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
-}
+	IndexRoute: IndexRoute,
+	AiChatRoute: AiChatRoute,
+	CalendarioRoute: CalendarioRoute,
+	ConfiguracoesRoute: ConfiguracoesRoute,
+	ContasRoute: ContasRoute,
+	ContasBancariasRoute: ContasBancariasRoute,
+	DashboardRoute: DashboardRoute,
+	LoginRoute: LoginRoute,
+	PrivacidadeRoute: PrivacidadeRoute,
+	SaldoRoute: SaldoRoute,
+	SettingsRoute: SettingsRoute,
+	AuthCallbackRoute: AuthCallbackRoute,
+};
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();

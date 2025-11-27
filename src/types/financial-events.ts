@@ -8,36 +8,41 @@
  */
 
 import type {
-  FinancialEvent as CoreFinancialEvent,
-  FinancialEventCategory,
+	FinancialEvent as CoreFinancialEvent,
+	FinancialEventCategory,
 } from './financial.interfaces';
 
 export type { FinancialEventCategory };
 
 export type FinancialEventType =
-  | 'income' // Entrada/Receita
-  | 'expense' // Saída/Despesa
-  | 'bill' // Conta a pagar
-  | 'scheduled' // Pagamento agendado
-  | 'transfer'; // Transferência
+	| 'income' // Entrada/Receita
+	| 'expense' // Saída/Despesa
+	| 'bill' // Conta a pagar
+	| 'scheduled' // Pagamento agendado
+	| 'transfer'; // Transferência
 
 export type EventColor =
-  | 'emerald'
-  | 'rose'
-  | 'orange'
-  | 'blue'
-  | 'violet'
-  | 'indigo'
-  | 'amber'
-  | 'red'
-  | 'green'
-  | 'yellow'
-  | 'purple'
-  | 'pink'
-  | 'teal'
-  | 'cyan';
+	| 'emerald'
+	| 'rose'
+	| 'orange'
+	| 'blue'
+	| 'violet'
+	| 'indigo'
+	| 'amber'
+	| 'red'
+	| 'green'
+	| 'yellow'
+	| 'purple'
+	| 'pink'
+	| 'teal'
+	| 'cyan';
 
-export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed';
+export type EventStatus =
+	| 'pending'
+	| 'paid'
+	| 'scheduled'
+	| 'cancelled'
+	| 'completed';
 
 /**
  * Calendar-specific Financial Event interface
@@ -45,31 +50,37 @@ export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'comp
  * and maps specific UI fields.
  */
 export interface CalendarFinancialEvent
-  extends Omit<
-    CoreFinancialEvent,
-    'startDate' | 'endDate' | 'status' | 'color' | 'category' | 'allDay' | 'isRecurring'
-  > {
-  // Calendar specific overrides (Date objects instead of ISO strings)
-  start: Date;
-  end: Date;
+	extends Omit<
+		CoreFinancialEvent,
+		| 'startDate'
+		| 'endDate'
+		| 'status'
+		| 'color'
+		| 'category'
+		| 'allDay'
+		| 'isRecurring'
+	> {
+	// Calendar specific overrides (Date objects instead of ISO strings)
+	start: Date;
+	end: Date;
 
-  // UI specific fields
-  type: FinancialEventType;
-  color: EventColor;
-  status: EventStatus;
+	// UI specific fields
+	type: FinancialEventType;
+	color: EventColor;
+	status: EventStatus;
 
-  // Optional fields from Core that might be used in Calendar
-  category?: FinancialEventCategory | string; // Allow string for flexibility or strict category
-  account?: string; // Not in Core yet, but used in Calendar
-  allDay?: boolean;
+	// Optional fields from Core that might be used in Calendar
+	category?: FinancialEventCategory | string; // Allow string for flexibility or strict category
+	account?: string; // Not in Core yet, but used in Calendar
+	allDay?: boolean;
 
-  // Recurring field - standardized to isRecurring
-  isRecurring?: boolean;
+	// Recurring field - standardized to isRecurring
+	isRecurring?: boolean;
 
-  // Additional fields used in dashboard/list views
-  date?: Date; // Alias for start date in some views
-  account_id?: string; // Account ID reference
-  is_expense?: boolean; // Whether this is an expense (type === 'expense' || type === 'bill')
+	// Additional fields used in dashboard/list views
+	date?: Date; // Alias for start date in some views
+	account_id?: string; // Account ID reference
+	is_expense?: boolean; // Whether this is an expense (type === 'expense' || type === 'bill')
 }
 
 // Re-export as FinancialEvent for backward compatibility during refactor
@@ -80,36 +91,36 @@ export type FinancialEvent = CalendarFinancialEvent;
  * Helper function to get color for event type
  */
 export function getColorForEventType(type: FinancialEventType): EventColor {
-  const colorMap: Record<FinancialEventType, EventColor> = {
-    bill: 'orange',
-    expense: 'rose',
-    income: 'emerald',
-    scheduled: 'blue',
-    transfer: 'violet',
-  };
-  return colorMap[type];
+	const colorMap: Record<FinancialEventType, EventColor> = {
+		bill: 'orange',
+		expense: 'rose',
+		income: 'emerald',
+		scheduled: 'blue',
+		transfer: 'violet',
+	};
+	return colorMap[type];
 }
 
 /**
  * Helper function to get icon for event type
  */
 export function getIconForEventType(type: FinancialEventType): string {
-  const iconMap: Record<FinancialEventType, string> = {
-    bill: '📄',
-    expense: '💸',
-    income: '💰',
-    scheduled: '📅',
-    transfer: '↔️',
-  };
-  return iconMap[type];
+	const iconMap: Record<FinancialEventType, string> = {
+		bill: '📄',
+		expense: '💸',
+		income: '💰',
+		scheduled: '📅',
+		transfer: '↔️',
+	};
+	return iconMap[type];
 }
 
 /**
  * Helper function to format event for display
  */
 export function formatEventAmount(amount: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    currency: 'BRL',
-    style: 'currency',
-  }).format(Math.abs(amount));
+	return new Intl.NumberFormat('pt-BR', {
+		currency: 'BRL',
+		style: 'currency',
+	}).format(Math.abs(amount));
 }

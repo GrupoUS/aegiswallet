@@ -16,252 +16,258 @@ import { IntentType } from './types';
 // ============================================================================
 
 class MetricsStore {
-  private logs: ClassificationLog[] = [];
-  private metrics: NLUMetrics = {
-    accuracyByIntent: {} as Record<IntentType, number>,
-    averageConfidence: 0,
-    averageProcessingTime: 0,
-    colloquialCorrectness: 0,
-    disambiguationRate: 0,
-    failedClassifications: 0,
-    falseNegatives: 0,
-    falsePositives: 0,
-    formalCorrectness: 0,
-    intentDistribution: {} as Record<IntentType, number>,
-    learningProgress: 0,
-    patternEvolution: [],
-    regionalAccuracy: {},
-    slangCorrectness: 0,
-    successfulClassifications: 0,
-    temporalAccuracy: {},
-    totalProcessed: 0,
-  };
+	private logs: ClassificationLog[] = [];
+	private metrics: NLUMetrics = {
+		accuracyByIntent: {} as Record<IntentType, number>,
+		averageConfidence: 0,
+		averageProcessingTime: 0,
+		colloquialCorrectness: 0,
+		disambiguationRate: 0,
+		failedClassifications: 0,
+		falseNegatives: 0,
+		falsePositives: 0,
+		formalCorrectness: 0,
+		intentDistribution: {} as Record<IntentType, number>,
+		learningProgress: 0,
+		patternEvolution: [],
+		regionalAccuracy: {},
+		slangCorrectness: 0,
+		successfulClassifications: 0,
+		temporalAccuracy: {},
+		totalProcessed: 0,
+	};
 
-  constructor() {
-    // Initialize intent counters
-    for (const intent of Object.values(IntentType)) {
-      this.metrics.intentDistribution[intent as IntentType] = 0;
-      this.metrics.accuracyByIntent[intent as IntentType] = 0;
-    }
-  }
+	constructor() {
+		// Initialize intent counters
+		for (const intent of Object.values(IntentType)) {
+			this.metrics.intentDistribution[intent as IntentType] = 0;
+			this.metrics.accuracyByIntent[intent as IntentType] = 0;
+		}
+	}
 
-  addLog(log: ClassificationLog): void {
-    this.logs.push(log);
-    this.updateMetrics(log);
-  }
+	addLog(log: ClassificationLog): void {
+		this.logs.push(log);
+		this.updateMetrics(log);
+	}
 
-  private updateMetrics(log: ClassificationLog): void {
-    this.metrics.totalProcessed++;
+	private updateMetrics(log: ClassificationLog): void {
+		this.metrics.totalProcessed++;
 
-    // Update intent distribution
-    this.metrics.intentDistribution[log.predictedIntent]++;
+		// Update intent distribution
+		this.metrics.intentDistribution[log.predictedIntent]++;
 
-    // Update averages
-    const totalConfidence = this.logs.reduce((sum, l) => sum + l.confidence, 0);
-    this.metrics.averageConfidence = totalConfidence / this.logs.length;
+		// Update averages
+		const totalConfidence = this.logs.reduce((sum, l) => sum + l.confidence, 0);
+		this.metrics.averageConfidence = totalConfidence / this.logs.length;
 
-    const totalTime = this.logs.reduce((sum, l) => sum + l.processingTime, 0);
-    this.metrics.averageProcessingTime = totalTime / this.logs.length;
+		const totalTime = this.logs.reduce((sum, l) => sum + l.processingTime, 0);
+		this.metrics.averageProcessingTime = totalTime / this.logs.length;
 
-    // Update success/failure counts based on feedback
-    if (log.feedback === 'correct') {
-      this.metrics.successfulClassifications++;
-    } else if (log.feedback === 'incorrect') {
-      this.metrics.failedClassifications++;
+		// Update success/failure counts based on feedback
+		if (log.feedback === 'correct') {
+			this.metrics.successfulClassifications++;
+		} else if (log.feedback === 'incorrect') {
+			this.metrics.failedClassifications++;
 
-      // Track false positives/negatives
-      if (log.correctIntent) {
-        if (
-          log.predictedIntent !== IntentType.UNKNOWN &&
-          log.correctIntent === IntentType.UNKNOWN
-        ) {
-          this.metrics.falsePositives++;
-        } else if (
-          log.predictedIntent === IntentType.UNKNOWN &&
-          log.correctIntent !== IntentType.UNKNOWN
-        ) {
-          this.metrics.falseNegatives++;
-        }
-      }
-    }
+			// Track false positives/negatives
+			if (log.correctIntent) {
+				if (
+					log.predictedIntent !== IntentType.UNKNOWN &&
+					log.correctIntent === IntentType.UNKNOWN
+				) {
+					this.metrics.falsePositives++;
+				} else if (
+					log.predictedIntent === IntentType.UNKNOWN &&
+					log.correctIntent !== IntentType.UNKNOWN
+				) {
+					this.metrics.falseNegatives++;
+				}
+			}
+		}
 
-    // Update accuracy by intent
-    this.updateAccuracyByIntent();
-  }
+		// Update accuracy by intent
+		this.updateAccuracyByIntent();
+	}
 
-  private updateAccuracyByIntent(): void {
-    const intentCounts: Record<string, { total: number; correct: number }> = {};
+	private updateAccuracyByIntent(): void {
+		const intentCounts: Record<string, { total: number; correct: number }> = {};
 
-    // Initialize counters
-    for (const intent of Object.values(IntentType)) {
-      intentCounts[intent] = { correct: 0, total: 0 };
-    }
+		// Initialize counters
+		for (const intent of Object.values(IntentType)) {
+			intentCounts[intent] = { correct: 0, total: 0 };
+		}
 
-    // Count correct predictions per intent
-    for (const log of this.logs) {
-      if (log.correctIntent) {
-        intentCounts[log.correctIntent].total++;
-        if (log.predictedIntent === log.correctIntent) {
-          intentCounts[log.correctIntent].correct++;
-        }
-      }
-    }
+		// Count correct predictions per intent
+		for (const log of this.logs) {
+			if (log.correctIntent) {
+				intentCounts[log.correctIntent].total++;
+				if (log.predictedIntent === log.correctIntent) {
+					intentCounts[log.correctIntent].correct++;
+				}
+			}
+		}
 
-    // Calculate accuracy percentages
-    for (const intent of Object.values(IntentType)) {
-      const { total, correct } = intentCounts[intent];
-      this.metrics.accuracyByIntent[intent as IntentType] = total > 0 ? (correct / total) * 100 : 0;
-    }
-  }
+		// Calculate accuracy percentages
+		for (const intent of Object.values(IntentType)) {
+			const { total, correct } = intentCounts[intent];
+			this.metrics.accuracyByIntent[intent as IntentType] =
+				total > 0 ? (correct / total) * 100 : 0;
+		}
+	}
 
-  getMetrics(): NLUMetrics {
-    return { ...this.metrics };
-  }
+	getMetrics(): NLUMetrics {
+		return { ...this.metrics };
+	}
 
-  getLogs(filters?: {
-    intent?: IntentType;
-    feedback?: 'correct' | 'incorrect' | 'ambiguous';
-    startDate?: Date;
-    endDate?: Date;
-    userId?: string;
-  }): ClassificationLog[] {
-    let filtered = [...this.logs];
+	getLogs(filters?: {
+		intent?: IntentType;
+		feedback?: 'correct' | 'incorrect' | 'ambiguous';
+		startDate?: Date;
+		endDate?: Date;
+		userId?: string;
+	}): ClassificationLog[] {
+		let filtered = [...this.logs];
 
-    if (filters) {
-      if (filters.intent) {
-        filtered = filtered.filter((log) => log.predictedIntent === filters.intent);
-      }
+		if (filters) {
+			if (filters.intent) {
+				filtered = filtered.filter(
+					(log) => log.predictedIntent === filters.intent,
+				);
+			}
 
-      if (filters.feedback) {
-        filtered = filtered.filter((log) => log.feedback === filters.feedback);
-      }
+			if (filters.feedback) {
+				filtered = filtered.filter((log) => log.feedback === filters.feedback);
+			}
 
-      if (filters.startDate) {
-        const startDate = filters.startDate;
-        filtered = filtered.filter((log) => log.timestamp >= startDate);
-      }
+			if (filters.startDate) {
+				const startDate = filters.startDate;
+				filtered = filtered.filter((log) => log.timestamp >= startDate);
+			}
 
-      if (filters.endDate) {
-        const endDate = filters.endDate;
-        filtered = filtered.filter((log) => log.timestamp <= endDate);
-      }
+			if (filters.endDate) {
+				const endDate = filters.endDate;
+				filtered = filtered.filter((log) => log.timestamp <= endDate);
+			}
 
-      if (filters.userId) {
-        filtered = filtered.filter((log) => log.userId === filters.userId);
-      }
-    }
+			if (filters.userId) {
+				filtered = filtered.filter((log) => log.userId === filters.userId);
+			}
+		}
 
-    return filtered;
-  }
+		return filtered;
+	}
 
-  getFalsePositives(): ClassificationLog[] {
-    return this.logs.filter(
-      (log) =>
-        log.feedback === 'incorrect' &&
-        log.correctIntent === IntentType.UNKNOWN &&
-        log.predictedIntent !== IntentType.UNKNOWN
-    );
-  }
+	getFalsePositives(): ClassificationLog[] {
+		return this.logs.filter(
+			(log) =>
+				log.feedback === 'incorrect' &&
+				log.correctIntent === IntentType.UNKNOWN &&
+				log.predictedIntent !== IntentType.UNKNOWN,
+		);
+	}
 
-  getFalseNegatives(): ClassificationLog[] {
-    return this.logs.filter(
-      (log) =>
-        log.feedback === 'incorrect' &&
-        log.correctIntent !== IntentType.UNKNOWN &&
-        log.predictedIntent === IntentType.UNKNOWN
-    );
-  }
+	getFalseNegatives(): ClassificationLog[] {
+		return this.logs.filter(
+			(log) =>
+				log.feedback === 'incorrect' &&
+				log.correctIntent !== IntentType.UNKNOWN &&
+				log.predictedIntent === IntentType.UNKNOWN,
+		);
+	}
 
-  getConfusionMatrix(): Record<IntentType, Record<IntentType, number>> {
-    const matrix: Record<string, Record<string, number>> = {};
+	getConfusionMatrix(): Record<IntentType, Record<IntentType, number>> {
+		const matrix: Record<string, Record<string, number>> = {};
 
-    // Initialize matrix
-    for (const actual of Object.values(IntentType)) {
-      matrix[actual] = {};
-      for (const predicted of Object.values(IntentType)) {
-        matrix[actual][predicted] = 0;
-      }
-    }
+		// Initialize matrix
+		for (const actual of Object.values(IntentType)) {
+			matrix[actual] = {};
+			for (const predicted of Object.values(IntentType)) {
+				matrix[actual][predicted] = 0;
+			}
+		}
 
-    // Fill matrix with actual predictions
-    for (const log of this.logs) {
-      if (log.correctIntent) {
-        matrix[log.correctIntent][log.predictedIntent]++;
-      }
-    }
+		// Fill matrix with actual predictions
+		for (const log of this.logs) {
+			if (log.correctIntent) {
+				matrix[log.correctIntent][log.predictedIntent]++;
+			}
+		}
 
-    return matrix as Record<IntentType, Record<IntentType, number>>;
-  }
+		return matrix as Record<IntentType, Record<IntentType, number>>;
+	}
 
-  getIntentAccuracy(intent: IntentType): number {
-    return this.metrics.accuracyByIntent[intent] || 0;
-  }
+	getIntentAccuracy(intent: IntentType): number {
+		return this.metrics.accuracyByIntent[intent] || 0;
+	}
 
-  getPrecisionRecallF1(intent: IntentType): {
-    precision: number;
-    recall: number;
-    f1Score: number;
-  } {
-    const matrix = this.getConfusionMatrix();
+	getPrecisionRecallF1(intent: IntentType): {
+		precision: number;
+		recall: number;
+		f1Score: number;
+	} {
+		const matrix = this.getConfusionMatrix();
 
-    // True Positives: correctly predicted as this intent
-    const tp = matrix[intent][intent] || 0;
+		// True Positives: correctly predicted as this intent
+		const tp = matrix[intent][intent] || 0;
 
-    // False Positives: incorrectly predicted as this intent
-    let fp = 0;
-    for (const actualIntent of Object.values(IntentType)) {
-      if (actualIntent !== intent) {
-        fp += matrix[actualIntent as IntentType][intent] || 0;
-      }
-    }
+		// False Positives: incorrectly predicted as this intent
+		let fp = 0;
+		for (const actualIntent of Object.values(IntentType)) {
+			if (actualIntent !== intent) {
+				fp += matrix[actualIntent as IntentType][intent] || 0;
+			}
+		}
 
-    // False Negatives: this intent incorrectly predicted as something else
-    let fn = 0;
-    for (const predictedIntent of Object.values(IntentType)) {
-      if (predictedIntent !== intent) {
-        fn += matrix[intent][predictedIntent as IntentType] || 0;
-      }
-    }
+		// False Negatives: this intent incorrectly predicted as something else
+		let fn = 0;
+		for (const predictedIntent of Object.values(IntentType)) {
+			if (predictedIntent !== intent) {
+				fn += matrix[intent][predictedIntent as IntentType] || 0;
+			}
+		}
 
-    const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
-    const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
-    const f1Score = precision + recall > 0 ? (2 * (precision * recall)) / (precision + recall) : 0;
+		const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+		const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+		const f1Score =
+			precision + recall > 0
+				? (2 * (precision * recall)) / (precision + recall)
+				: 0;
 
-    return {
-      f1Score: f1Score * 100,
-      precision: precision * 100,
-      recall: recall * 100,
-    };
-  }
+		return {
+			f1Score: f1Score * 100,
+			precision: precision * 100,
+			recall: recall * 100,
+		};
+	}
 
-  clear(): void {
-    this.logs = [];
-    this.metrics = {
-      accuracyByIntent: {} as Record<IntentType, number>,
-      averageConfidence: 0,
-      averageProcessingTime: 0,
-      colloquialCorrectness: 0,
-      disambiguationRate: 0,
-      failedClassifications: 0,
-      falseNegatives: 0,
-      falsePositives: 0,
-      formalCorrectness: 0,
-      intentDistribution: {} as Record<IntentType, number>,
-      learningProgress: 0,
-      patternEvolution: [],
-      regionalAccuracy: {},
-      slangCorrectness: 0,
-      successfulClassifications: 0,
-      temporalAccuracy: {},
-      totalProcessed: 0,
-    };
+	clear(): void {
+		this.logs = [];
+		this.metrics = {
+			accuracyByIntent: {} as Record<IntentType, number>,
+			averageConfidence: 0,
+			averageProcessingTime: 0,
+			colloquialCorrectness: 0,
+			disambiguationRate: 0,
+			failedClassifications: 0,
+			falseNegatives: 0,
+			falsePositives: 0,
+			formalCorrectness: 0,
+			intentDistribution: {} as Record<IntentType, number>,
+			learningProgress: 0,
+			patternEvolution: [],
+			regionalAccuracy: {},
+			slangCorrectness: 0,
+			successfulClassifications: 0,
+			temporalAccuracy: {},
+			totalProcessed: 0,
+		};
 
-    // Reinitialize intent counters
-    for (const intent of Object.values(IntentType)) {
-      this.metrics.intentDistribution[intent as IntentType] = 0;
-      this.metrics.accuracyByIntent[intent as IntentType] = 0;
-    }
-  }
+		// Reinitialize intent counters
+		for (const intent of Object.values(IntentType)) {
+			this.metrics.intentDistribution[intent as IntentType] = 0;
+			this.metrics.accuracyByIntent[intent as IntentType] = 0;
+		}
+	}
 }
 
 // ============================================================================
@@ -277,145 +283,152 @@ const metricsStore = new MetricsStore();
 /**
  * Log a classification for metrics tracking
  */
-export function logClassification(log: Omit<ClassificationLog, 'id' | 'timestamp'>): void {
-  const fullLog: ClassificationLog = {
-    ...log,
-    id: generateId(),
-    timestamp: new Date(),
-  };
+export function logClassification(
+	log: Omit<ClassificationLog, 'id' | 'timestamp'>,
+): void {
+	const fullLog: ClassificationLog = {
+		...log,
+		id: generateId(),
+		timestamp: new Date(),
+	};
 
-  metricsStore.addLog(fullLog);
+	metricsStore.addLog(fullLog);
 }
 
 /**
  * Provide feedback on a classification
  */
 export function provideFeedback(
-  logId: string,
-  feedback: 'correct' | 'incorrect' | 'ambiguous',
-  correctIntent?: IntentType
+	logId: string,
+	feedback: 'correct' | 'incorrect' | 'ambiguous',
+	correctIntent?: IntentType,
 ): void {
-  const logs = metricsStore.getLogs();
-  const log = logs.find((l) => l.id === logId);
+	const logs = metricsStore.getLogs();
+	const log = logs.find((l) => l.id === logId);
 
-  if (log) {
-    log.feedback = feedback;
-    if (correctIntent) {
-      log.correctIntent = correctIntent;
-    }
-    // Re-add to update metrics
-    metricsStore.addLog(log);
-  }
+	if (log) {
+		log.feedback = feedback;
+		if (correctIntent) {
+			log.correctIntent = correctIntent;
+		}
+		// Re-add to update metrics
+		metricsStore.addLog(log);
+	}
 }
 
 /**
  * Get overall metrics
  */
 export function getMetrics(): NLUMetrics {
-  return metricsStore.getMetrics();
+	return metricsStore.getMetrics();
 }
 
 /**
  * Get classification logs with optional filters
  */
-export function getLogs(filters?: Parameters<typeof metricsStore.getLogs>[0]): ClassificationLog[] {
-  return metricsStore.getLogs(filters);
+export function getLogs(
+	filters?: Parameters<typeof metricsStore.getLogs>[0],
+): ClassificationLog[] {
+	return metricsStore.getLogs(filters);
 }
 
 /**
  * Get false positives for retraining
  */
 export function getFalsePositives(): ClassificationLog[] {
-  return metricsStore.getFalsePositives();
+	return metricsStore.getFalsePositives();
 }
 
 /**
  * Get false negatives for retraining
  */
 export function getFalseNegatives(): ClassificationLog[] {
-  return metricsStore.getFalseNegatives();
+	return metricsStore.getFalseNegatives();
 }
 
 /**
  * Get confusion matrix
  */
-export function getConfusionMatrix(): Record<IntentType, Record<IntentType, number>> {
-  return metricsStore.getConfusionMatrix();
+export function getConfusionMatrix(): Record<
+	IntentType,
+	Record<IntentType, number>
+> {
+	return metricsStore.getConfusionMatrix();
 }
 
 /**
  * Get accuracy for specific intent
  */
 export function getIntentAccuracy(intent: IntentType): number {
-  return metricsStore.getIntentAccuracy(intent);
+	return metricsStore.getIntentAccuracy(intent);
 }
 
 /**
  * Get precision, recall, and F1 score for specific intent
  */
 export function getIntentMetrics(intent: IntentType): {
-  precision: number;
-  recall: number;
-  f1Score: number;
+	precision: number;
+	recall: number;
+	f1Score: number;
 } {
-  return metricsStore.getPrecisionRecallF1(intent);
+	return metricsStore.getPrecisionRecallF1(intent);
 }
 
 /**
  * Generate metrics report
  */
 export function generateReport(): {
-  summary: NLUMetrics;
-  intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>>;
-  retrainingCandidates: {
-    falsePositives: ClassificationLog[];
-    falseNegatives: ClassificationLog[];
-    lowConfidenceCorrect: ClassificationLog[];
-    highConfidenceIncorrect: ClassificationLog[];
-  };
+	summary: NLUMetrics;
+	intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>>;
+	retrainingCandidates: {
+		falsePositives: ClassificationLog[];
+		falseNegatives: ClassificationLog[];
+		lowConfidenceCorrect: ClassificationLog[];
+		highConfidenceIncorrect: ClassificationLog[];
+	};
 } {
-  const metrics = getMetrics();
-  const intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>> = {} as Record<
-    IntentType,
-    ReturnType<typeof getIntentMetrics>
-  >;
+	const metrics = getMetrics();
+	const intentMetrics: Record<
+		IntentType,
+		ReturnType<typeof getIntentMetrics>
+	> = {} as Record<IntentType, ReturnType<typeof getIntentMetrics>>;
 
-  for (const intent of Object.values(IntentType)) {
-    if (intent !== IntentType.UNKNOWN) {
-      intentMetrics[intent] = getIntentMetrics(intent as IntentType);
-    }
-  }
+	for (const intent of Object.values(IntentType)) {
+		if (intent !== IntentType.UNKNOWN) {
+			intentMetrics[intent] = getIntentMetrics(intent as IntentType);
+		}
+	}
 
-  const logs = getLogs();
+	const logs = getLogs();
 
-  return {
-    intentMetrics,
-    retrainingCandidates: {
-      falseNegatives: getFalseNegatives(),
-      falsePositives: getFalsePositives(),
-      highConfidenceIncorrect: logs.filter(
-        (log) => log.feedback === 'incorrect' && log.confidence > 0.8
-      ),
-      lowConfidenceCorrect: logs.filter(
-        (log) => log.feedback === 'correct' && log.confidence < 0.7
-      ),
-    },
-    summary: metrics,
-  };
+	return {
+		intentMetrics,
+		retrainingCandidates: {
+			falseNegatives: getFalseNegatives(),
+			falsePositives: getFalsePositives(),
+			highConfidenceIncorrect: logs.filter(
+				(log) => log.feedback === 'incorrect' && log.confidence > 0.8,
+			),
+			lowConfidenceCorrect: logs.filter(
+				(log) => log.feedback === 'correct' && log.confidence < 0.7,
+			),
+		},
+		summary: metrics,
+	};
 }
 
 /**
  * Clear all metrics
  */
 export function clearMetrics(): void {
-  metricsStore.clear();
+	metricsStore.clear();
 }
 
 /**
  * Export metrics to JSON
  */
 export function exportMetrics(): string {
-  return JSON.stringify(generateReport(), null, 2);
+	return JSON.stringify(generateReport(), null, 2);
 }
 
 // ============================================================================
@@ -423,7 +436,7 @@ export function exportMetrics(): string {
 // ============================================================================
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 // ============================================================================

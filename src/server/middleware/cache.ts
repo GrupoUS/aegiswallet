@@ -4,26 +4,27 @@
  */
 
 import type { Context, MiddlewareHandler, Next } from 'hono';
+
 import { cacheConfig } from '@/server/config/environment';
 
 /**
  * Cache middleware for static assets
  */
 export const staticAssetsCache = (): MiddlewareHandler => {
-  return async (c: Context, next: Next) => {
-    c.header('Cache-Control', cacheConfig.staticAssets);
-    await next();
-  };
+	return async (c: Context, next: Next) => {
+		c.header('Cache-Control', cacheConfig.staticAssets);
+		await next();
+	};
 };
 
 /**
  * Cache middleware for HTML files
  */
 export const htmlCache = (): MiddlewareHandler => {
-  return async (c: Context, next: Next) => {
-    c.header('Cache-Control', cacheConfig.htmlFiles);
-    c.header('Pragma', 'no-cache');
-    c.header('Expires', '0');
-    await next();
-  };
+	return async (c: Context, next: Next) => {
+		c.header('Cache-Control', cacheConfig.htmlFiles);
+		c.header('Pragma', 'no-cache');
+		c.header('Expires', '0');
+		await next();
+	};
 };

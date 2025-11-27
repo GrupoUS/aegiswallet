@@ -4,111 +4,111 @@
  */
 
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
+	DEBUG = 0,
+	INFO = 1,
+	WARN = 2,
+	ERROR = 3,
 }
 
 export interface LogEntry {
-  level: LogLevel;
-  message: string;
-  timestamp: Date;
-  context?: Record<string, unknown>;
-  userId?: string;
-  requestId?: string;
+	level: LogLevel;
+	message: string;
+	timestamp: Date;
+	context?: Record<string, unknown>;
+	userId?: string;
+	requestId?: string;
 }
 
 export interface LogContext {
-  userId?: string;
-  requestId?: string;
-  ip?: string;
-  userAgent?: string;
-  [key: string]: unknown;
+	userId?: string;
+	requestId?: string;
+	ip?: string;
+	userAgent?: string;
+	[key: string]: unknown;
 }
 
 class Logger {
-  private static instance: Logger;
-  private logLevel: LogLevel = LogLevel.INFO;
+	private static instance: Logger;
+	private logLevel: LogLevel = LogLevel.INFO;
 
-  private constructor() {}
+	private constructor() {}
 
-  static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
+	static getInstance(): Logger {
+		if (!Logger.instance) {
+			Logger.instance = new Logger();
+		}
+		return Logger.instance;
+	}
 
-  setLogLevel(level: LogLevel): void {
-    this.logLevel = level;
-  }
+	setLogLevel(level: LogLevel): void {
+		this.logLevel = level;
+	}
 
-  private shouldLog(level: LogLevel): boolean {
-    return level >= this.logLevel;
-  }
+	private shouldLog(level: LogLevel): boolean {
+		return level >= this.logLevel;
+	}
 
-  private formatMessage(entry: LogEntry): string {
-    const timestamp = entry.timestamp.toISOString();
-    const level = LogLevel[entry.level].padEnd(5);
-    const context = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
-    return `[${timestamp}] ${level} ${entry.message}${context}`;
-  }
+	private formatMessage(entry: LogEntry): string {
+		const timestamp = entry.timestamp.toISOString();
+		const level = LogLevel[entry.level].padEnd(5);
+		const context = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
+		return `[${timestamp}] ${level} ${entry.message}${context}`;
+	}
 
-  private log(level: LogLevel, message: string, context?: LogContext): void {
-    if (!this.shouldLog(level)) {
-      return;
-    }
+	private log(level: LogLevel, message: string, context?: LogContext): void {
+		if (!this.shouldLog(level)) {
+			return;
+		}
 
-    const entry: LogEntry = {
-      context,
-      level,
-      message,
-      timestamp: new Date(),
-    };
+		const entry: LogEntry = {
+			context,
+			level,
+			message,
+			timestamp: new Date(),
+		};
 
-    const _formattedMessage = this.formatMessage(entry);
+		const _formattedMessage = this.formatMessage(entry);
 
-    switch (level) {
-      case LogLevel.DEBUG:
-        break;
-      case LogLevel.INFO:
-        break;
-      case LogLevel.WARN:
-        break;
-      case LogLevel.ERROR:
-        break;
-    }
-  }
+		switch (level) {
+			case LogLevel.DEBUG:
+				break;
+			case LogLevel.INFO:
+				break;
+			case LogLevel.WARN:
+				break;
+			case LogLevel.ERROR:
+				break;
+		}
+	}
 
-  debug(message: string, context?: LogContext): void {
-    this.log(LogLevel.DEBUG, message, context);
-  }
+	debug(message: string, context?: LogContext): void {
+		this.log(LogLevel.DEBUG, message, context);
+	}
 
-  info(message: string, context?: LogContext): void {
-    this.log(LogLevel.INFO, message, context);
-  }
+	info(message: string, context?: LogContext): void {
+		this.log(LogLevel.INFO, message, context);
+	}
 
-  warn(message: string, context?: LogContext): void {
-    this.log(LogLevel.WARN, message, context);
-  }
+	warn(message: string, context?: LogContext): void {
+		this.log(LogLevel.WARN, message, context);
+	}
 
-  error(message: string, context?: LogContext): void {
-    this.log(LogLevel.ERROR, message, context);
-  }
+	error(message: string, context?: LogContext): void {
+		this.log(LogLevel.ERROR, message, context);
+	}
 
-  // Convenience methods for specific contexts
-  security(message: string, context?: LogContext): void {
-    this.warn(`[SECURITY] ${message}`, context);
-  }
+	// Convenience methods for specific contexts
+	security(message: string, context?: LogContext): void {
+		this.warn(`[SECURITY] ${message}`, context);
+	}
 
-  audit(message: string, context?: LogContext): void {
-    this.info(`[AUDIT] ${message}`, context);
-  }
+	audit(message: string, context?: LogContext): void {
+		this.info(`[AUDIT] ${message}`, context);
+	}
 
-  performance(message: string, context?: LogContext): void {
-    this.info(`[PERF] ${message}`, context);
-  }
+	performance(message: string, context?: LogContext): void {
+		this.info(`[PERF] ${message}`, context);
+	}
 }
 
 // Export singleton instance
@@ -116,32 +116,35 @@ export const logger = Logger.getInstance();
 
 // Set default log level based on environment
 if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
-  logger.setLogLevel(LogLevel.INFO);
-} else if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-  logger.setLogLevel(LogLevel.DEBUG);
+	logger.setLogLevel(LogLevel.INFO);
+} else if (
+	typeof process !== 'undefined' &&
+	process.env?.NODE_ENV === 'development'
+) {
+	logger.setLogLevel(LogLevel.DEBUG);
 } else {
-  logger.setLogLevel(LogLevel.INFO);
+	logger.setLogLevel(LogLevel.INFO);
 }
 
 /**
  * Convenience function for logging errors
  */
 export function logError(message: string, context?: LogContext): void {
-  logger.error(message, context);
+	logger.error(message, context);
 }
 
 /**
  * Convenience function for logging operations
  */
 export function logOperation(message: string, context?: LogContext): void {
-  logger.info(`[OPERATION] ${message}`, context);
+	logger.info(`[OPERATION] ${message}`, context);
 }
 
 /**
  * Convenience function for logging security events
  */
 export function logSecurityEvent(message: string, context?: LogContext): void {
-  logger.security(message, context);
+	logger.security(message, context);
 }
 
 // Export types for external use

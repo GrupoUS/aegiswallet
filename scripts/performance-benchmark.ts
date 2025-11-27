@@ -11,339 +11,358 @@
 import { execSync } from 'node:child_process';
 
 interface BenchmarkResult {
-  tool: string;
-  duration: number;
-  exitCode: number;
-  filesProcessed?: number;
-  issuesFound?: number;
+	tool: string;
+	duration: number;
+	exitCode: number;
+	filesProcessed?: number;
+	issuesFound?: number;
 }
 
 interface PerformanceReport {
-  totalFiles: number;
-  benchmarks: BenchmarkResult[];
-  improvements: {
-    vsBiome: number;
-    vsESLint?: number;
-  };
-  target: number;
-  achieved: boolean;
+	totalFiles: number;
+	benchmarks: BenchmarkResult[];
+	improvements: {
+		vsBiome: number;
+		vsESLint?: number;
+	};
+	target: number;
+	achieved: boolean;
 }
 
 // Configuration
 const CONFIG = {
-  // File patterns to benchmark
-  patterns: ['src/**/*.{ts,tsx,js,jsx}', 'scripts/**/*.{ts,tsx,js,jsx}'],
-  // Target performance improvement (50x minimum)
-  targetImprovement: 50,
-  // Benchmark tools
-  tools: [
-    {
-      command: 'bunx oxlint --quiet',
-      name: 'OXLint',
-      warmup: true,
-    },
-    {
-      command: 'bunx biome check --files-ignore-unknown=true src scripts',
-      name: 'Biome',
-    },
-    {
-      command: 'bunx oxlint --category=security --quiet',
-      name: 'OXLint Security',
-    },
-    {
-      command: 'bunx oxlint --config=.oxlintrc.healthcare.json --quiet',
-      name: 'OXLint Healthcare',
-    },
-  ],
+	// File patterns to benchmark
+	patterns: ['src/**/*.{ts,tsx,js,jsx}', 'scripts/**/*.{ts,tsx,js,jsx}'],
+	// Target performance improvement (50x minimum)
+	targetImprovement: 50,
+	// Benchmark tools
+	tools: [
+		{
+			command: 'bunx oxlint --quiet',
+			name: 'OXLint',
+			warmup: true,
+		},
+		{
+			command: 'bunx biome check --files-ignore-unknown=true src scripts',
+			name: 'Biome',
+		},
+		{
+			command: 'bunx oxlint --category=security --quiet',
+			name: 'OXLint Security',
+		},
+		{
+			command: 'bunx oxlint --config=.oxlintrc.healthcare.json --quiet',
+			name: 'OXLint Healthcare',
+		},
+	],
 };
 
 // Colors for output
 const colors = {
-  blue: '\x1b[34m',
-  bright: '\x1b[1m',
-  cyan: '\x1b[36m',
-  green: '\x1b[32m',
-  magenta: '\x1b[35m',
-  red: '\x1b[31m',
-  reset: '\x1b[0m',
-  yellow: '\x1b[33m',
+	blue: '\x1b[34m',
+	bright: '\x1b[1m',
+	cyan: '\x1b[36m',
+	green: '\x1b[32m',
+	magenta: '\x1b[35m',
+	red: '\x1b[31m',
+	reset: '\x1b[0m',
+	yellow: '\x1b[33m',
 };
 
 function colorize(text: string, color: keyof typeof colors): string {
-  return `${colors[color]}${text}${colors.reset}`;
+	return `${colors[color]}${text}${colors.reset}`;
 }
 
-function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
-  const timestamp = new Date().toISOString();
+function log(
+	message: string,
+	type: 'info' | 'success' | 'warning' | 'error' = 'info',
+): void {
+	const timestamp = new Date().toISOString();
 
-  let prefix = 'ℹ️';
-  let color: keyof typeof colors = 'blue';
+	let prefix = 'ℹ️';
+	let color: keyof typeof colors = 'blue';
 
-  if (type === 'success') {
-    prefix = '✅';
-    color = 'green';
-  } else if (type === 'warning') {
-    prefix = '⚠️';
-    color = 'yellow';
-  } else if (type === 'error') {
-    prefix = '❌';
-    color = 'red';
-  }
+	if (type === 'success') {
+		prefix = '✅';
+		color = 'green';
+	} else if (type === 'warning') {
+		prefix = '⚠️';
+		color = 'yellow';
+	} else if (type === 'error') {
+		prefix = '❌';
+		color = 'red';
+	}
 
-  const coloredTimestamp = colorize(`[${timestamp}]`, 'bright');
-  const coloredMessage = colorize(message, color);
-  console.log(`${coloredTimestamp} ${prefix} ${coloredMessage}`);
+	const coloredTimestamp = colorize(`[${timestamp}]`, 'bright');
+	const coloredMessage = colorize(message, color);
+	console.log(`${coloredTimestamp} ${prefix} ${coloredMessage}`);
 }
 /**
  * Count total files that will be processed
  */
 function countFiles(): number {
-  try {
-    const result = execSync(
-      'find src scripts -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null | wc -l',
-      { encoding: 'utf8', stdio: 'pipe' }
-    );
-    return parseInt(result.trim(), 10) || 0;
-  } catch {
-    // Fallback for Windows
-    try {
-      const result = execSync(
-        'dir /s /b src\\*.ts src\\*.tsx src\\*.js src\\*.jsx scripts\\*.ts scripts\\*.tsx scripts\\*.js scripts\\*.jsx 2>nul | find /c /v ""',
-        { encoding: 'utf8', stdio: 'pipe' }
-      );
-      return parseInt(result.trim(), 10) || 0;
-    } catch {
-      return 0;
-    }
-  }
+	try {
+		const result = execSync(
+			'find src scripts -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null | wc -l',
+			{ encoding: 'utf8', stdio: 'pipe' },
+		);
+		return parseInt(result.trim(), 10) || 0;
+	} catch {
+		// Fallback for Windows
+		try {
+			const result = execSync(
+				'dir /s /b src\\*.ts src\\*.tsx src\\*.js src\\*.jsx scripts\\*.ts scripts\\*.tsx scripts\\*.js scripts\\*.jsx 2>nul | find /c /v ""',
+				{ encoding: 'utf8', stdio: 'pipe' },
+			);
+			return parseInt(result.trim(), 10) || 0;
+		} catch {
+			return 0;
+		}
+	}
 }
 
 /**
  * Execute benchmark run for a tool
  */
 function runBenchmark(tool: (typeof CONFIG.tools)[0]): BenchmarkResult {
-  log(`Benchmarking ${colorize(tool.name, 'cyan')}...`);
+	log(`Benchmarking ${colorize(tool.name, 'cyan')}...`);
 
-  // Warm up cache if specified
-  if (tool.warmup) {
-    try {
-      execSync(tool.command, { stdio: 'ignore' });
-    } catch {
-      // Ignore warmup failures
-    }
-  }
+	// Warm up cache if specified
+	if (tool.warmup) {
+		try {
+			execSync(tool.command, { stdio: 'ignore' });
+		} catch {
+			// Ignore warmup failures
+		}
+	}
 
-  // Run actual benchmark
-  const startTime = process.hrtime.bigint();
+	// Run actual benchmark
+	const startTime = process.hrtime.bigint();
 
-  try {
-    execSync(tool.command, {
-      cwd: process.cwd(),
-      stdio: 'pipe',
-    });
+	try {
+		execSync(tool.command, {
+			cwd: process.cwd(),
+			stdio: 'pipe',
+		});
 
-    const endTime = process.hrtime.bigint();
-    const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+		const endTime = process.hrtime.bigint();
+		const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
 
-    log(`${tool.name} completed in ${colorize(`${duration.toFixed(2)}ms`, 'green')}`, 'success');
+		log(
+			`${tool.name} completed in ${colorize(`${duration.toFixed(2)}ms`, 'green')}`,
+			'success',
+		);
 
-    return {
-      duration,
-      exitCode: 0,
-      tool: tool.name,
-    };
-  } catch (error: unknown) {
-    const endTime = process.hrtime.bigint();
-    const duration = Number(endTime - startTime) / 1000000;
+		return {
+			duration,
+			exitCode: 0,
+			tool: tool.name,
+		};
+	} catch (error: unknown) {
+		const endTime = process.hrtime.bigint();
+		const duration = Number(endTime - startTime) / 1000000;
 
-    log(`${tool.name} failed after ${colorize(`${duration.toFixed(2)}ms`, 'red')}`, 'error');
+		log(
+			`${tool.name} failed after ${colorize(`${duration.toFixed(2)}ms`, 'red')}`,
+			'error',
+		);
 
-    return {
-      duration,
-      exitCode: (error as { status?: number }).status || 1,
-      tool: tool.name,
-    };
-  }
+		return {
+			duration,
+			exitCode: (error as { status?: number }).status || 1,
+			tool: tool.name,
+		};
+	}
 }
 
 /**
  * Calculate performance improvements
  */
 function calculateImprovements(benchmarks: BenchmarkResult[]): {
-  vsBiome: number;
-  vsESLint?: number;
+	vsBiome: number;
+	vsESLint?: number;
 } {
-  const oxlintResult = benchmarks.find((b) => b.tool === 'OXLint');
-  const biomeResult = benchmarks.find((b) => b.tool === 'Biome');
+	const oxlintResult = benchmarks.find((b) => b.tool === 'OXLint');
+	const biomeResult = benchmarks.find((b) => b.tool === 'Biome');
 
-  const improvements: { vsBiome: number; vsESLint?: number } = {
-    vsBiome: 0,
-  };
+	const improvements: { vsBiome: number; vsESLint?: number } = {
+		vsBiome: 0,
+	};
 
-  if (oxlintResult && biomeResult && biomeResult.duration > 0) {
-    improvements.vsBiome = biomeResult.duration / oxlintResult.duration;
-  }
+	if (oxlintResult && biomeResult && biomeResult.duration > 0) {
+		improvements.vsBiome = biomeResult.duration / oxlintResult.duration;
+	}
 
-  return improvements;
+	return improvements;
 }
 
 function classifyImprovement(
-  value: number
+	value: number,
 ): 'exceptional' | 'excellent' | 'good' | 'moderate' | 'needs-optimization' {
-  if (value >= 100) {
-    return 'exceptional';
-  }
-  if (value >= 50) {
-    return 'excellent';
-  }
-  if (value >= 20) {
-    return 'good';
-  }
-  if (value >= 5) {
-    return 'moderate';
-  }
-  return 'needs-optimization';
+	if (value >= 100) {
+		return 'exceptional';
+	}
+	if (value >= 50) {
+		return 'excellent';
+	}
+	if (value >= 20) {
+		return 'good';
+	}
+	if (value >= 5) {
+		return 'moderate';
+	}
+	return 'needs-optimization';
 }
 
 /**
  * Generate performance report
  */
-function generateReport(totalFiles: number, benchmarks: BenchmarkResult[]): PerformanceReport {
-  const improvements = calculateImprovements(benchmarks);
-  const achieved = improvements.vsBiome >= CONFIG.targetImprovement;
+function generateReport(
+	totalFiles: number,
+	benchmarks: BenchmarkResult[],
+): PerformanceReport {
+	const improvements = calculateImprovements(benchmarks);
+	const achieved = improvements.vsBiome >= CONFIG.targetImprovement;
 
-  return {
-    achieved,
-    benchmarks,
-    improvements,
-    target: CONFIG.targetImprovement,
-    totalFiles,
-  };
+	return {
+		achieved,
+		benchmarks,
+		improvements,
+		target: CONFIG.targetImprovement,
+		totalFiles,
+	};
 }
 
 /**
  * Display benchmark results
  */
 function displayResults(report: PerformanceReport): void {
-  const fastest = Math.min(...report.benchmarks.map((b) => b.duration));
+	const fastest = Math.min(...report.benchmarks.map((b) => b.duration));
 
-  report.benchmarks.forEach((benchmark) => {
-    const _speed = fastest > 0 ? `${(benchmark.duration / fastest).toFixed(1)}x` : 'N/A';
-    const _status =
-      benchmark.exitCode === 0 ? colorize('✓ PASS', 'green') : colorize('✗ FAIL', 'red');
-    const _duration = colorize(`${benchmark.duration.toFixed(2)}ms`, 'blue');
-  });
+	report.benchmarks.forEach((benchmark) => {
+		const _speed =
+			fastest > 0 ? `${(benchmark.duration / fastest).toFixed(1)}x` : 'N/A';
+		const _status =
+			benchmark.exitCode === 0
+				? colorize('✓ PASS', 'green')
+				: colorize('✗ FAIL', 'red');
+		const _duration = colorize(`${benchmark.duration.toFixed(2)}ms`, 'blue');
+	});
 
-  const oxlintResult = report.benchmarks.find((b) => b.tool === 'OXLint');
-  const biomeResult = report.benchmarks.find((b) => b.tool === 'Biome');
+	const oxlintResult = report.benchmarks.find((b) => b.tool === 'OXLint');
+	const biomeResult = report.benchmarks.find((b) => b.tool === 'Biome');
 
-  if (oxlintResult && biomeResult) {
-    const improvement = report.improvements.vsBiome;
-    const _totalTime = oxlintResult.duration + biomeResult.duration;
+	if (oxlintResult && biomeResult) {
+		const improvement = report.improvements.vsBiome;
+		const _totalTime = oxlintResult.duration + biomeResult.duration;
 
-    // Performance classification
-    if (improvement >= 100) {
-    } else if (improvement >= 50) {
-    } else if (improvement >= 20) {
-    } else if (improvement >= 5) {
-    } else {
-    }
-  }
+		// Performance classification
+		if (improvement >= 100) {
+		} else if (improvement >= 50) {
+		} else if (improvement >= 20) {
+		} else if (improvement >= 5) {
+		} else {
+		}
+	}
 
-  if (report.achieved) {
-  } else {
-  }
+	if (report.achieved) {
+	} else {
+	}
 
-  // Healthcare compliance note
-  const healthcareResult = report.benchmarks.find((b) => b.tool === 'OXLint Healthcare');
-  if (healthcareResult) {
-  }
+	// Healthcare compliance note
+	const healthcareResult = report.benchmarks.find(
+		(b) => b.tool === 'OXLint Healthcare',
+	);
+	if (healthcareResult) {
+	}
 }
 
 /**
  * Generate JSON report for CI/CD integration
  */
 function generateJsonReport(report: PerformanceReport): void {
-  const jsonReport = {
-    benchmarks: report.benchmarks,
-    classification: classifyImprovement(report.improvements.vsBiome),
-    summary: {
-      achieved: report.achieved,
-      actualImprovement: report.improvements.vsBiome,
-      targetImprovement: report.target,
-      totalFiles: report.totalFiles,
-    },
-    timestamp: new Date().toISOString(),
-  };
+	const jsonReport = {
+		benchmarks: report.benchmarks,
+		classification: classifyImprovement(report.improvements.vsBiome),
+		summary: {
+			achieved: report.achieved,
+			actualImprovement: report.improvements.vsBiome,
+			targetImprovement: report.target,
+			totalFiles: report.totalFiles,
+		},
+		timestamp: new Date().toISOString(),
+	};
 
-  try {
-    require('node:fs').writeFileSync(
-      'oxlint-performance-report.json',
-      JSON.stringify(jsonReport, null, 2)
-    );
-    log('JSON report saved to oxlint-performance-report.json', 'success');
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error while writing JSON report';
-    log(`Failed to save JSON report: ${message}`, 'error');
-  }
+	try {
+		require('node:fs').writeFileSync(
+			'oxlint-performance-report.json',
+			JSON.stringify(jsonReport, null, 2),
+		);
+		log('JSON report saved to oxlint-performance-report.json', 'success');
+	} catch (error) {
+		const message =
+			error instanceof Error
+				? error.message
+				: 'Unknown error while writing JSON report';
+		log(`Failed to save JSON report: ${message}`, 'error');
+	}
 }
 
 /**
  * Main execution function
  */
 function main(): void {
-  const args = process.argv.slice(2);
-  const jsonOutput = args.includes('--json');
-  const quiet = args.includes('--quiet');
+	const args = process.argv.slice(2);
+	const jsonOutput = args.includes('--json');
+	const quiet = args.includes('--quiet');
 
-  if (!quiet) {
-    log('🚀 OXLint Performance Benchmark for AegisWallet');
-    log('Validating 50-100x faster linting performance claims');
-    log('');
-  }
+	if (!quiet) {
+		log('🚀 OXLint Performance Benchmark for AegisWallet');
+		log('Validating 50-100x faster linting performance claims');
+		log('');
+	}
 
-  // Count files to process
-  const totalFiles = countFiles();
-  if (!quiet) {
-    log(`Found ${colorize(totalFiles.toString(), 'blue')} files to process`);
-  }
+	// Count files to process
+	const totalFiles = countFiles();
+	if (!quiet) {
+		log(`Found ${colorize(totalFiles.toString(), 'blue')} files to process`);
+	}
 
-  if (totalFiles === 0) {
-    log('No files found to benchmark', 'error');
-    process.exit(1);
-  }
+	if (totalFiles === 0) {
+		log('No files found to benchmark', 'error');
+		process.exit(1);
+	}
 
-  // Run benchmarks
-  const benchmarks: BenchmarkResult[] = [];
+	// Run benchmarks
+	const benchmarks: BenchmarkResult[] = [];
 
-  CONFIG.tools.forEach((tool) => {
-    const result = runBenchmark(tool);
-    benchmarks.push(result);
-  });
+	CONFIG.tools.forEach((tool) => {
+		const result = runBenchmark(tool);
+		benchmarks.push(result);
+	});
 
-  // Generate report
-  const report = generateReport(totalFiles, benchmarks);
+	// Generate report
+	const report = generateReport(totalFiles, benchmarks);
 
-  // Display results
-  if (!quiet) {
-    displayResults(report);
-  }
+	// Display results
+	if (!quiet) {
+		displayResults(report);
+	}
 
-  // Generate JSON output if requested
-  if (jsonOutput) {
-    generateJsonReport(report);
-  }
+	// Generate JSON output if requested
+	if (jsonOutput) {
+		generateJsonReport(report);
+	}
 
-  // Exit with appropriate code
-  if (report.achieved) {
-    process.exit(0);
-  } else {
-    process.exit(1);
-  }
+	// Exit with appropriate code
+	if (report.achieved) {
+		process.exit(0);
+	} else {
+		process.exit(1);
+	}
 }
 
 // Execute if run directly (Bun-compatible)
 if ((import.meta as { main?: boolean }).main) {
-  main();
+	main();
 }

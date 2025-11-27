@@ -44,21 +44,29 @@
  * @module backends/CopilotKitBackend
  */
 
-import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
-import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
+import type {
+	ChatBackend,
+	ChatBackendConfig,
+	ModelInfo,
+} from '../domain/ChatBackend';
+import type {
+	ChatMessage,
+	ChatRequestOptions,
+	ChatStreamChunk,
+} from '../domain/types';
 
 /**
  * Configuration for CopilotKit backend
  */
 export interface CopilotKitBackendConfig extends ChatBackendConfig {
-  /** CopilotKit Cloud API key */
-  apiKey: string;
-  /** CopilotKit Copilot ID */
-  copilotId?: string;
-  /** Custom runtime URL (for self-hosted) */
-  runtimeUrl?: string;
-  /** Enable debug mode */
-  debug?: boolean;
+	/** CopilotKit Cloud API key */
+	apiKey: string;
+	/** CopilotKit Copilot ID */
+	copilotId?: string;
+	/** Custom runtime URL (for self-hosted) */
+	runtimeUrl?: string;
+	/** Enable debug mode */
+	debug?: boolean;
 }
 
 /**
@@ -78,57 +86,57 @@ export interface CopilotKitBackendConfig extends ChatBackendConfig {
  * ```
  */
 export class CopilotKitBackend implements ChatBackend {
-  private _config: CopilotKitBackendConfig;
+	private _config: CopilotKitBackendConfig;
 
-  constructor(config: CopilotKitBackendConfig) {
-    this._config = config;
-  }
+	constructor(config: CopilotKitBackendConfig) {
+		this._config = config;
+	}
 
-  /**
-   * Send messages to CopilotKit and stream responses
-   *
-   * @throws {Error} Not yet implemented
-   */
-  // biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
-  async *send(
-    _messages: ChatMessage[],
-    _options?: ChatRequestOptions
-  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
-    throw new Error(
-      'CopilotKit backend not yet implemented. ' +
-        'See https://docs.copilotkit.ai for integration guide. ' +
-        'Use GeminiBackend as the primary backend for now.'
-    );
-  }
+	/**
+	 * Send messages to CopilotKit and stream responses
+	 *
+	 * @throws {Error} Not yet implemented
+	 */
+	// biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
+	async *send(
+		_messages: ChatMessage[],
+		_options?: ChatRequestOptions,
+	): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		throw new Error(
+			'CopilotKit backend not yet implemented. ' +
+				'See https://docs.copilotkit.ai for integration guide. ' +
+				'Use GeminiBackend as the primary backend for now.',
+		);
+	}
 
-  /**
-   * Abort the current generation
-   */
-  abort(): void {
-    // Will use CopilotKit's abort mechanism when implemented
-  }
+	/**
+	 * Abort the current generation
+	 */
+	abort(): void {
+		// Will use CopilotKit's abort mechanism when implemented
+	}
 
-  /**
-   * Get information about the CopilotKit backend
-   */
-  getModelInfo(): ModelInfo {
-    return {
-      id: 'copilotkit',
-      name: 'CopilotKit (Not Implemented)',
-      provider: 'CopilotKit',
-      capabilities: {
-        streaming: true,
-        multimodal: true,
-        tools: true,
-        reasoning: false,
-      },
-    };
-  }
+	/**
+	 * Get information about the CopilotKit backend
+	 */
+	getModelInfo(): ModelInfo {
+		return {
+			id: 'copilotkit',
+			name: 'CopilotKit (Not Implemented)',
+			provider: 'CopilotKit',
+			capabilities: {
+				streaming: true,
+				multimodal: true,
+				tools: true,
+				reasoning: false,
+			},
+		};
+	}
 
-  /**
-   * Get the current configuration (for debugging)
-   */
-  getConfig(): CopilotKitBackendConfig {
-    return { ...this._config };
-  }
+	/**
+	 * Get the current configuration (for debugging)
+	 */
+	getConfig(): CopilotKitBackendConfig {
+		return { ...this._config };
+	}
 }

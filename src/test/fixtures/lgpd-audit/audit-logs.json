@@ -1,20 +1,17 @@
 [
-  {
-    "id": "audit-001",
-    "action": "DATA_ACCESS",
-    "table": "patients",
-    "record_id": "test-patient-001",
-    "user_id": "test-user-001",
-    "timestamp": "2025-01-15T10:30:00Z",
-    "ip_address": "127.0.0.1",
-    "user_agent": "AegisWallet-Test/1.0",
-    "metadata": {
-      "purpose": "treatment",
-      "legal_basis": "consent",
-      "data_categories": [
-        "health_data",
-        "personal_data"
-      ]
-    }
-  }
+	{
+		"id": "audit-001",
+		"action": "DATA_ACCESS",
+		"table": "patients",
+		"record_id": "test-patient-001",
+		"user_id": "test-user-001",
+		"timestamp": "2025-01-15T10:30:00Z",
+		"ip_address": "127.0.0.1",
+		"user_agent": "AegisWallet-Test/1.0",
+		"metadata": {
+			"purpose": "treatment",
+			"legal_basis": "consent",
+			"data_categories": ["health_data", "personal_data"]
+		}
+	}
 ]

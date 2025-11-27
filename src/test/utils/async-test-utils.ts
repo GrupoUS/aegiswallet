@@ -23,7 +23,7 @@ import { vi } from 'vitest';
  * Replaces setTimeout with awaitable Promise
  */
 export const waitForMs = async (ms: number): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+	await new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 /**
@@ -31,16 +31,19 @@ export const waitForMs = async (ms: number): Promise<void> => {
  * Useful for React state updates and async operations
  */
 export const waitForNextTick = async (): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 0));
+	await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
 /**
  * Wait for multiple milliseconds with optional jitter
  * Simulates real-world async delays in tests
  */
-export const waitForWithJitter = async (baseMs: number, jitterMs: number = 0): Promise<void> => {
-  const jitter = Math.random() * jitterMs;
-  await waitForMs(baseMs + jitter);
+export const waitForWithJitter = async (
+	baseMs: number,
+	jitterMs: number = 0,
+): Promise<void> => {
+	const jitter = Math.random() * jitterMs;
+	await waitForMs(baseMs + jitter);
 };
 
 // ============================================================================
@@ -51,10 +54,12 @@ export const waitForWithJitter = async (baseMs: number, jitterMs: number = 0): P
  * Wrapper around Testing Library's act for async operations
  * Ensures React state updates are properly flushed
  */
-export const actAsync = async (callback: () => Promise<void> | void): Promise<void> => {
-  await act(async () => {
-    await callback();
-  });
+export const actAsync = async (
+	callback: () => Promise<void> | void,
+): Promise<void> => {
+	await act(async () => {
+		await callback();
+	});
 };
 
 /**
@@ -62,22 +67,22 @@ export const actAsync = async (callback: () => Promise<void> | void): Promise<vo
  * Combines act() and waitFor() for common test patterns
  */
 export const actAndWait = async <T>(
-  callback: () => Promise<T> | T,
-  assertions: () => void | Promise<void>,
-  options?: { timeout?: number }
+	callback: () => Promise<T> | T,
+	assertions: () => void | Promise<void>,
+	options?: { timeout?: number },
 ): Promise<void> => {
-  let result: T;
+	let result: T;
 
-  await act(async () => {
-    result = await callback();
-  });
+	await act(async () => {
+		result = await callback();
+	});
 
-  await waitFor(
-    async () => {
-      await assertions();
-    },
-    { timeout: options?.timeout || 3000 }
-  );
+	await waitFor(
+		async () => {
+			await assertions();
+		},
+		{ timeout: options?.timeout || 3000 },
+	);
 };
 
 /**
@@ -85,18 +90,18 @@ export const actAndWait = async <T>(
  * Standardizes async hook rendering patterns
  */
 export const renderHookAsync = async <T>(
-  setup: () => T,
-  initialProps?: ReactElement
+	setup: () => T,
+	initialProps?: ReactElement,
 ): Promise<{ result: { current: T } }> => {
-  const { renderHook } = await import('@testing-library/react');
+	const { renderHook } = await import('@testing-library/react');
 
-  let hookResult: { result: { current: T } };
+	let hookResult: { result: { current: T } };
 
-  await act(async () => {
-    hookResult = renderHook(setup, { initialProps });
-  });
+	await act(async () => {
+		hookResult = renderHook(setup, { initialProps });
+	});
 
-  return hookResult!;
+	return hookResult!;
 };
 
 // ============================================================================
@@ -107,68 +112,68 @@ export const renderHookAsync = async <T>(
  * Create a mock async function that resolves with value
  */
 export const createMockAsyncResolve = <T>(
-  resolveValue: T,
-  delay: number = 0
+	resolveValue: T,
+	delay: number = 0,
 ): jest.MockedFunction<() => Promise<T>> => {
-  const { vi } = require('vitest');
-  const mockFn = vi.fn();
+	const { vi } = require('vitest');
+	const mockFn = vi.fn();
 
-  mockFn.mockImplementation(async () => {
-    if (delay > 0) {
-      await waitForMs(delay);
-    }
-    return resolveValue;
-  });
+	mockFn.mockImplementation(async () => {
+		if (delay > 0) {
+			await waitForMs(delay);
+		}
+		return resolveValue;
+	});
 
-  return mockFn as jest.MockedFunction<() => Promise<T>>;
+	return mockFn as jest.MockedFunction<() => Promise<T>>;
 };
 
 /**
  * Create a mock async function that rejects with error
  */
 export const createMockAsyncReject = (
-  error: Error,
-  delay: number = 0
+	error: Error,
+	delay: number = 0,
 ): jest.MockedFunction<() => Promise<never>> => {
-  const { vi } = require('vitest');
-  const mockFn = vi.fn();
+	const { vi } = require('vitest');
+	const mockFn = vi.fn();
 
-  mockFn.mockImplementation(async () => {
-    if (delay > 0) {
-      await waitForMs(delay);
-    }
-    throw error;
-  });
+	mockFn.mockImplementation(async () => {
+		if (delay > 0) {
+			await waitForMs(delay);
+		}
+		throw error;
+	});
 
-  return mockFn as jest.MockedFunction<() => Promise<never>>;
+	return mockFn as jest.MockedFunction<() => Promise<never>>;
 };
 
 /**
  * Create a mock async function with sequential responses
  */
 export const createMockAsyncSequence = <T>(
-  responses: Array<{ value?: T; error?: Error; delay?: number }>
+	responses: Array<{ value?: T; error?: Error; delay?: number }>,
 ): jest.MockedFunction<() => Promise<T>> => {
-  const { vi } = require('vitest');
-  const mockFn = vi.fn();
-  let callCount = 0;
+	const { vi } = require('vitest');
+	const mockFn = vi.fn();
+	let callCount = 0;
 
-  mockFn.mockImplementation(async () => {
-    const response = responses[Math.min(callCount, responses.length - 1)];
-    callCount++;
+	mockFn.mockImplementation(async () => {
+		const response = responses[Math.min(callCount, responses.length - 1)];
+		callCount++;
 
-    if (response.delay && response.delay > 0) {
-      await waitForMs(response.delay);
-    }
+		if (response.delay && response.delay > 0) {
+			await waitForMs(response.delay);
+		}
 
-    if (response.error) {
-      throw response.error;
-    }
+		if (response.error) {
+			throw response.error;
+		}
 
-    return response.value as T;
-  });
+		return response.value as T;
+	});
 
-  return mockFn as jest.MockedFunction<() => Promise<T>>;
+	return mockFn as jest.MockedFunction<() => Promise<T>>;
 };
 
 // ============================================================================
@@ -179,57 +184,57 @@ export const createMockAsyncSequence = <T>(
  * Simulate speech recognition result with async timing
  */
 export const simulateSpeechRecognition = async (
-  mockRecognition: any,
-  transcript: string,
-  confidence: number = 0.95,
-  delay: number = 100
+	mockRecognition: any,
+	transcript: string,
+	confidence: number = 0.95,
+	delay: number = 100,
 ): Promise<void> => {
-  await waitForMs(delay);
+	await waitForMs(delay);
 
-  if (mockRecognition.onresult) {
-    mockRecognition.onresult({
-      resultIndex: 0,
-      results: [
-        {
-          0: { confidence, transcript },
-          isFinal: true,
-          length: 1,
-        },
-      ],
-    });
-  }
+	if (mockRecognition.onresult) {
+		mockRecognition.onresult({
+			resultIndex: 0,
+			results: [
+				{
+					0: { confidence, transcript },
+					isFinal: true,
+					length: 1,
+				},
+			],
+		});
+	}
 };
 
 /**
  * Simulate speech recognition error with async timing
  */
 export const simulateSpeechRecognitionError = async (
-  mockRecognition: any,
-  error: string,
-  delay: number = 100
+	mockRecognition: any,
+	error: string,
+	delay: number = 100,
 ): Promise<void> => {
-  await waitForMs(delay);
+	await waitForMs(delay);
 
-  if (mockRecognition.onerror) {
-    mockRecognition.onerror({ error });
-  }
+	if (mockRecognition.onerror) {
+		mockRecognition.onerror({ error });
+	}
 };
 
 /**
  * Simulate speech synthesis completion
  */
 export const simulateSpeechSynthesis = async (
-  mockSpeechSynthesis: any,
-  delay: number = 200
+	mockSpeechSynthesis: any,
+	delay: number = 200,
 ): Promise<void> => {
-  await waitForMs(delay);
+	await waitForMs(delay);
 
-  if (mockSpeechSynthesis.speak.mock.calls.length > 0) {
-    const utterance = mockSpeechSynthesis.speak.mock.calls[0][0];
-    if (utterance.onend) {
-      utterance.onend();
-    }
-  }
+	if (mockSpeechSynthesis.speak.mock.calls.length > 0) {
+		const utterance = mockSpeechSynthesis.speak.mock.calls[0][0];
+		if (utterance.onend) {
+			utterance.onend();
+		}
+	}
 };
 
 // ============================================================================
@@ -240,36 +245,45 @@ export const simulateSpeechSynthesis = async (
  * Test Brazilian Portuguese voice command recognition
  */
 export const testBrazilianVoiceCommand = async (
-  mockRecognition: any,
-  command: string,
-  _expectedIntent: string,
-  delay: number = 100
+	mockRecognition: any,
+	command: string,
+	_expectedIntent: string,
+	delay: number = 100,
 ): Promise<void> => {
-  await simulateSpeechRecognition(mockRecognition, command, 0.9, delay);
+	await simulateSpeechRecognition(mockRecognition, command, 0.9, delay);
 
-  await waitFor(
-    async () => {
-      // Assert intent recognition happened
-      expect(mockRecognition.start).toHaveBeenCalled();
-    },
-    { timeout: 3000 }
-  );
+	await waitFor(
+		async () => {
+			// Assert intent recognition happened
+			expect(mockRecognition.start).toHaveBeenCalled();
+		},
+		{ timeout: 3000 },
+	);
 };
 
 /**
  * Batch test multiple Brazilian Portuguese commands
  */
 export const testBrazilianVoiceCommands = async (
-  mockRecognition: any,
-  commands: Array<{ text: string; expectedIntent: string; confidence?: number }>
+	mockRecognition: any,
+	commands: Array<{
+		text: string;
+		expectedIntent: string;
+		confidence?: number;
+	}>,
 ): Promise<void> => {
-  for (const command of commands) {
-    await testBrazilianVoiceCommand(mockRecognition, command.text, command.expectedIntent, 100);
+	for (const command of commands) {
+		await testBrazilianVoiceCommand(
+			mockRecognition,
+			command.text,
+			command.expectedIntent,
+			100,
+		);
 
-    // Reset mock for next command
-    mockRecognition.onresult = vi.fn();
-    mockRecognition.start.mockClear();
-  }
+		// Reset mock for next command
+		mockRecognition.onresult = vi.fn();
+		mockRecognition.start.mockClear();
+	}
 };
 
 // ============================================================================
@@ -280,35 +294,41 @@ export const testBrazilianVoiceCommands = async (
  * Simulate Brazilian financial transaction processing
  */
 export const simulateBrazilianTransaction = async (
-  _transactionType: 'pix' | 'ted' | 'boleto',
-  _amount: number,
-  delay: number = 500
+	_transactionType: 'pix' | 'ted' | 'boleto',
+	_amount: number,
+	delay: number = 500,
 ): Promise<{ success: boolean; transactionId: string }> => {
-  await waitForMs(delay);
+	await waitForMs(delay);
 
-  return {
-    success: true,
-    transactionId: `BR${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
-  };
+	return {
+		success: true,
+		transactionId: `BR${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+	};
 };
 
 /**
  * Test Brazilian bank account operations
  */
 export const testBankAccountOperation = async (
-  operation: 'create' | 'update' | 'delete',
-  accountData: any,
-  mockSupabase: any
+	operation: 'create' | 'update' | 'delete',
+	accountData: any,
+	mockSupabase: any,
 ): Promise<any> => {
-  const operations = {
-    create: () => mockSupabase.from('bank_accounts').insert(accountData).single(),
-    update: () =>
-      mockSupabase.from('bank_accounts').update(accountData).eq('id', accountData.id).single(),
-    delete: () => mockSupabase.from('bank_accounts').delete().eq('id', accountData.id),
-  };
+	const operations = {
+		create: () =>
+			mockSupabase.from('bank_accounts').insert(accountData).single(),
+		update: () =>
+			mockSupabase
+				.from('bank_accounts')
+				.update(accountData)
+				.eq('id', accountData.id)
+				.single(),
+		delete: () =>
+			mockSupabase.from('bank_accounts').delete().eq('id', accountData.id),
+	};
 
-  const result = await operations[operation]();
-  return result;
+	const result = await operations[operation]();
+	return result;
 };
 
 // ============================================================================
@@ -319,57 +339,57 @@ export const testBankAccountOperation = async (
  * Test async error scenarios with timeout
  */
 export const testAsyncError = async (
-  asyncOperation: () => Promise<any>,
-  expectedError: string | RegExp,
-  timeout: number = 5000
+	asyncOperation: () => Promise<any>,
+	expectedError: string | RegExp,
+	timeout: number = 5000,
 ): Promise<void> => {
-  let errorCaught: Error | null = null;
+	let errorCaught: Error | null = null;
 
-  try {
-    await Promise.race([
-      asyncOperation(),
-      waitForMs(timeout).then(() => {
-        throw new Error(`Operation timed out after ${timeout}ms`);
-      }),
-    ]);
-  } catch (error) {
-    errorCaught = error as Error;
-  }
+	try {
+		await Promise.race([
+			asyncOperation(),
+			waitForMs(timeout).then(() => {
+				throw new Error(`Operation timed out after ${timeout}ms`);
+			}),
+		]);
+	} catch (error) {
+		errorCaught = error as Error;
+	}
 
-  expect(errorCaught).not.toBeNull();
+	expect(errorCaught).not.toBeNull();
 
-  if (typeof expectedError === 'string') {
-    expect(errorCaught!.message).toContain(expectedError);
-  } else {
-    expect(errorCaught!.message).toMatch(expectedError);
-  }
+	if (typeof expectedError === 'string') {
+		expect(errorCaught!.message).toContain(expectedError);
+	} else {
+		expect(errorCaught!.message).toMatch(expectedError);
+	}
 };
 
 /**
  * Test async retry mechanisms
  */
 export const testAsyncRetry = async (
-  operation: () => Promise<any>,
-  maxAttempts: number = 3,
-  delayBetweenAttempts: number = 100
+	operation: () => Promise<any>,
+	maxAttempts: number = 3,
+	delayBetweenAttempts: number = 100,
 ): Promise<{ success: boolean; attempts: number; error?: Error }> => {
-  let lastError: Error | undefined;
-  let attempts = 0;
+	let lastError: Error | undefined;
+	let attempts = 0;
 
-  for (let i = 0; i < maxAttempts; i++) {
-    attempts++;
-    try {
-      const result = await operation();
-      return { success: true, attempts };
-    } catch (error) {
-      lastError = error as Error;
-      if (i < maxAttempts - 1) {
-        await waitForMs(delayBetweenAttempts);
-      }
-    }
-  }
+	for (let i = 0; i < maxAttempts; i++) {
+		attempts++;
+		try {
+			const result = await operation();
+			return { success: true, attempts };
+		} catch (error) {
+			lastError = error as Error;
+			if (i < maxAttempts - 1) {
+				await waitForMs(delayBetweenAttempts);
+			}
+		}
+	}
 
-  return { success: false, attempts, error: lastError };
+	return { success: false, attempts, error: lastError };
 };
 
 // ============================================================================
@@ -380,29 +400,29 @@ export const testAsyncRetry = async (
  * Measure async operation performance
  */
 export const measureAsyncPerformance = async <T>(
-  operation: () => Promise<T>
+	operation: () => Promise<T>,
 ): Promise<{ result: T; durationMs: number }> => {
-  const startTime = performance.now();
-  const result = await operation();
-  const endTime = performance.now();
+	const startTime = performance.now();
+	const result = await operation();
+	const endTime = performance.now();
 
-  return {
-    result,
-    durationMs: Math.round(endTime - startTime),
-  };
+	return {
+		result,
+		durationMs: Math.round(endTime - startTime),
+	};
 };
 
 /**
  * Assert async operation completes within time limit
  */
 export const expectAsyncCompletesWithin = async <T>(
-  operation: () => Promise<T>,
-  maxDurationMs: number
+	operation: () => Promise<T>,
+	maxDurationMs: number,
 ): Promise<T> => {
-  const { result, durationMs } = await measureAsyncPerformance(operation);
+	const { result, durationMs } = await measureAsyncPerformance(operation);
 
-  expect(durationMs).toBeLessThan(maxDurationMs);
-  return result;
+	expect(durationMs).toBeLessThan(maxDurationMs);
+	return result;
 };
 
 // ============================================================================
@@ -414,23 +434,23 @@ export const expectAsyncCompletesWithin = async <T>(
  * Useful for test teardown
  */
 export const cleanupAsyncOperations = (): void => {
-  // Clear all pending timers
-  const vi = require('vitest');
-  vi.clearAllTimers();
-  vi.useRealTimers();
+	// Clear all pending timers
+	const vi = require('vitest');
+	vi.clearAllTimers();
+	vi.useRealTimers();
 };
 
 /**
  * Reset mock functions and async state
  */
 export const resetAsyncMocks = (...mocks: Array<any>): void => {
-  const vi = require('vitest');
+	const vi = require('vitest');
 
-  mocks.forEach((mock) => {
-    if (mock && typeof mock.mockReset === 'function') {
-      mock.mockReset();
-    }
-  });
+	mocks.forEach((mock) => {
+		if (mock && typeof mock.mockReset === 'function') {
+			mock.mockReset();
+		}
+	});
 
-  vi.clearAllMocks();
+	vi.clearAllMocks();
 };

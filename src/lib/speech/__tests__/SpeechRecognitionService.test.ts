@@ -5,9 +5,10 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
-  createSpeechRecognitionService,
-  SpeechRecognitionService,
+	createSpeechRecognitionService,
+	SpeechRecognitionService,
 } from '../SpeechRecognitionService';
 
 // Mock Web Speech API
@@ -15,145 +16,148 @@ const mockSpeechRecognition = vi.fn();
 
 // Mock MediaDevices API
 Object.defineProperty(global.navigator, 'mediaDevices', {
-  value: {
-    getUserMedia: vi.fn(),
-  },
-  writable: true,
+	value: {
+		getUserMedia: vi.fn(),
+	},
+	writable: true,
 });
 
 describe('SpeechRecognitionService', () => {
-  let service: SpeechRecognitionService;
-  let mockInstance: Record<string, unknown>;
+	let service: SpeechRecognitionService;
+	let mockInstance: Record<string, unknown>;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+	beforeEach(() => {
+		vi.clearAllMocks();
 
-    // Mock successful media access
-    global.navigator.mediaDevices.getUserMedia = vi.fn().mockResolvedValue({
-      getTracks: () => [{ stop: vi.fn() }],
-    });
+		// Mock successful media access
+		global.navigator.mediaDevices.getUserMedia = vi.fn().mockResolvedValue({
+			getTracks: () => [{ stop: vi.fn() }],
+		});
 
-    // Mock global Web Speech API
-    Object.defineProperty(window, 'SpeechRecognition', {
-      writable: true,
-      value: mockSpeechRecognition,
-    });
-    Object.defineProperty(window, 'webkitSpeechRecognition', {
-      writable: true,
-      value: mockSpeechRecognition,
-    });
+		// Mock global Web Speech API
+		Object.defineProperty(window, 'SpeechRecognition', {
+			writable: true,
+			value: mockSpeechRecognition,
+		});
+		Object.defineProperty(window, 'webkitSpeechRecognition', {
+			writable: true,
+			value: mockSpeechRecognition,
+		});
 
-    // Mock SpeechRecognition
-    mockInstance = {
-      continuous: false,
-      grammars: null,
-      interimResults: true,
-      lang: '',
-      maxAlternatives: 3,
-      onend: null,
-      onerror: null,
-      onresult: null,
-      onstart: null,
-      start: vi.fn(),
-      stop: vi.fn(),
-    };
+		// Mock SpeechRecognition
+		mockInstance = {
+			continuous: false,
+			grammars: null,
+			interimResults: true,
+			lang: '',
+			maxAlternatives: 3,
+			onend: null,
+			onerror: null,
+			onresult: null,
+			onstart: null,
+			start: vi.fn(),
+			stop: vi.fn(),
+		};
 
-    mockSpeechRecognition.mockReturnValue(mockInstance);
-    service = new SpeechRecognitionService();
-  });
+		mockSpeechRecognition.mockReturnValue(mockInstance);
+		service = new SpeechRecognitionService();
+	});
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 
-  describe('Initialization', () => {
-    it('should initialize with Brazilian Portuguese configuration', () => {
-      const config = service.getConfig();
-      expect(config.language).toBe('pt-BR');
-      expect(config.confidenceThreshold).toBe(0.85);
-      expect(config.maxAlternatives).toBe(3);
-      expect(config.continuous).toBe(false);
-      expect(config.interimResults).toBe(true);
-    });
+	describe('Initialization', () => {
+		it('should initialize with Brazilian Portuguese configuration', () => {
+			const config = service.getConfig();
+			expect(config.language).toBe('pt-BR');
+			expect(config.confidenceThreshold).toBe(0.85);
+			expect(config.maxAlternatives).toBe(3);
+			expect(config.continuous).toBe(false);
+			expect(config.interimResults).toBe(true);
+		});
 
-    it('should detect Web Speech API support', () => {
-      expect(service.isWebSpeechSupported()).toBe(true);
-    });
+		it('should detect Web Speech API support', () => {
+			expect(service.isWebSpeechSupported()).toBe(true);
+		});
 
-    it('should handle unsupported browsers gracefully', () => {
-      const globalAny = global as unknown as {
-        window: { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
-      };
-      globalAny.window.SpeechRecognition = undefined;
-      globalAny.window.webkitSpeechRecognition = undefined;
+		it('should handle unsupported browsers gracefully', () => {
+			const globalAny = global as unknown as {
+				window: {
+					SpeechRecognition?: unknown;
+					webkitSpeechRecognition?: unknown;
+				};
+			};
+			globalAny.window.SpeechRecognition = undefined;
+			globalAny.window.webkitSpeechRecognition = undefined;
 
-      expect(() => new SpeechRecognitionService()).toThrow(
-        'Web Speech API not supported in this browser'
-      );
-    });
-  });
+			expect(() => new SpeechRecognitionService()).toThrow(
+				'Web Speech API not supported in this browser',
+			);
+		});
+	});
 
-  describe('Regional Accent Support', () => {
-    it('should support Brazilian Portuguese regional variants', () => {
-      service.configureRegionalVariant('pt-BR-SP');
-      const config = service.getConfig();
-      expect(config.language).toBe('pt-BR');
-    });
+	describe('Regional Accent Support', () => {
+		it('should support Brazilian Portuguese regional variants', () => {
+			service.configureRegionalVariant('pt-BR-SP');
+			const config = service.getConfig();
+			expect(config.language).toBe('pt-BR');
+		});
 
-    it('should add financial grammar without errors', () => {
-      expect(() => service.addFinancialGrammar()).not.toThrow();
-    });
-  });
+		it('should add financial grammar without errors', () => {
+			expect(() => service.addFinancialGrammar()).not.toThrow();
+		});
+	});
 
-  describe('Factory Functions', () => {
-    it('should create service with factory function', () => {
-      const factoryService = createSpeechRecognitionService();
-      expect(factoryService).toBeInstanceOf(SpeechRecognitionService);
-      expect(factoryService.getConfig().language).toBe('pt-BR');
-    });
-  });
+	describe('Factory Functions', () => {
+		it('should create service with factory function', () => {
+			const factoryService = createSpeechRecognitionService();
+			expect(factoryService).toBeInstanceOf(SpeechRecognitionService);
+			expect(factoryService.getConfig().language).toBe('pt-BR');
+		});
+	});
 
-  describe('Configuration', () => {
-    it('should update configuration', () => {
-      service.updateConfig({
-        confidenceThreshold: 0.9,
-        maxAlternatives: 5,
-      });
+	describe('Configuration', () => {
+		it('should update configuration', () => {
+			service.updateConfig({
+				confidenceThreshold: 0.9,
+				maxAlternatives: 5,
+			});
 
-      const config = service.getConfig();
-      expect(config.confidenceThreshold).toBe(0.9);
-      expect(config.maxAlternatives).toBe(5);
-    });
+			const config = service.getConfig();
+			expect(config.confidenceThreshold).toBe(0.9);
+			expect(config.maxAlternatives).toBe(5);
+		});
 
-    it('should reset performance metrics', () => {
-      service.resetMetrics();
-      const metrics = service.getPerformanceMetrics();
-      expect(metrics.totalRecognitions).toBe(0);
-      expect(metrics.successfulRecognitions).toBe(0);
-      expect(metrics.averageResponseTime).toBe(0);
-      expect(metrics.averageConfidence).toBe(0);
-      expect(metrics.fallbackUsage).toBe(0);
-    });
-  });
+		it('should reset performance metrics', () => {
+			service.resetMetrics();
+			const metrics = service.getPerformanceMetrics();
+			expect(metrics.totalRecognitions).toBe(0);
+			expect(metrics.successfulRecognitions).toBe(0);
+			expect(metrics.averageResponseTime).toBe(0);
+			expect(metrics.averageConfidence).toBe(0);
+			expect(metrics.fallbackUsage).toBe(0);
+		});
+	});
 
-  describe('Essential Voice Commands Support', () => {
-    it('should have Brazilian Portuguese configuration', () => {
-      const config = service.getConfig();
-      expect(config.language).toBe('pt-BR');
-      expect(config.confidenceThreshold).toBeGreaterThanOrEqual(0.8);
-    });
+	describe('Essential Voice Commands Support', () => {
+		it('should have Brazilian Portuguese configuration', () => {
+			const config = service.getConfig();
+			expect(config.language).toBe('pt-BR');
+			expect(config.confidenceThreshold).toBeGreaterThanOrEqual(0.8);
+		});
 
-    it('should support regional variants', () => {
-      expect(() => service.configureRegionalVariant('pt-BR')).not.toThrow();
-      expect(() => service.configureRegionalVariant('pt-BR-SP')).not.toThrow();
-    });
+		it('should support regional variants', () => {
+			expect(() => service.configureRegionalVariant('pt-BR')).not.toThrow();
+			expect(() => service.configureRegionalVariant('pt-BR-SP')).not.toThrow();
+		});
 
-    it('should provide performance metrics tracking', () => {
-      const metrics = service.getPerformanceMetrics();
-      expect(metrics).toHaveProperty('totalRecognitions');
-      expect(metrics).toHaveProperty('successfulRecognitions');
-      expect(metrics).toHaveProperty('averageResponseTime');
-      expect(metrics).toHaveProperty('averageConfidence');
-    });
-  });
+		it('should provide performance metrics tracking', () => {
+			const metrics = service.getPerformanceMetrics();
+			expect(metrics).toHaveProperty('totalRecognitions');
+			expect(metrics).toHaveProperty('successfulRecognitions');
+			expect(metrics).toHaveProperty('averageResponseTime');
+			expect(metrics).toHaveProperty('averageConfidence');
+		});
+	});
 });

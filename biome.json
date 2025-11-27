@@ -3,97 +3,78 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
+    "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
-    "includes": [
-      "src/**/*.{ts,tsx,js,jsx}",
-      "scripts/**/*.{ts,tsx,js,jsx}",
-      "vitest.config.ts",
-      "vitest.*.config.ts",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/.next",
-      "!**/coverage",
-      "!src/routeTree.gen.ts"
-    ]
-  },
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineEnding": "lf",
-    "lineWidth": 100
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.json"],
+    "experimentalScannerIgnores": ["**/node_modules/**", "**/dist/**", "**/coverage/**"]
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "react": "all",
+      "project": "recommended"
+    },
     "rules": {
       "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "error"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error",
+        "noGlobalEval": "error"
+      },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noConsole": "warn",
-        "noArrayIndexKey": "warn"
-      },
-      "style": {
-        "noNonNullAssertion": "warn",
-        "useSelfClosingElements": "warn"
-      },
-      "a11y": {
-        "noSvgWithoutTitle": "warn",
-        "useButtonType": "warn"
+        "noDoubleEquals": "error"
       },
       "complexity": {
-        "noForEach": "off",
-        "useLiteralKeys": "off",
-        "useArrowFunction": "off"
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": { "maxAllowedComplexity": 15 }
+        }
+      },
+      "a11y": "error"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              [":BUN:", ":NODE:"],
+              ":BLANK_LINE:",
+              ":PACKAGE:",
+              ":BLANK_LINE:",
+              ["@/*", "~/*"],
+              ":BLANK_LINE:",
+              ":PATH:"
+            ]
+          }
+        }
       }
     }
   },
   "javascript": {
+    "jsxRuntime": "transparent",
     "formatter": {
       "quoteStyle": "single",
       "semicolons": "always",
-      "trailingCommas": "es5",
-      "bracketSpacing": true,
-      "arrowParentheses": "always"
-    },
-    "globals": ["console", "process", "Buffer", "__dirname", "__filename"]
-  },
-  "json": {
-    "formatter": {
-      "indentStyle": "space",
-      "indentWidth": 2
+      "trailingCommas": "all"
     }
   },
   "overrides": [
     {
-      "includes": ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}", "src/test/**/*.{ts,tsx}"],
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"],
       "linter": {
         "rules": {
-          "suspicious": {
-            "noExplicitAny": "off",
-            "noThenProperty": "off"
-          },
-          "correctness": {
-            "noUnusedVariables": "off",
-            "useHookAtTopLevel": "off"
-          },
-          "style": {
-            "noNonNullAssertion": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["scripts/**/*.{ts,tsx,js,jsx}"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
+          "suspicious": { "noExplicitAny": "off", "noConsole": "off" }
         }
       }
     }

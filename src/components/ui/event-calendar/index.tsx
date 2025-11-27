@@ -7,14 +7,14 @@ export { EventDialog } from './event-dialog';
 export { MonthView } from './month-view';
 export { TimeGrid } from './time-grid';
 export type {
-  CalendarCategory,
-  CalendarEvent,
-  CalendarFilter,
-  CalendarSettings,
-  CalendarView,
-  EventColor,
-  EventPosition,
-  TimeSlot,
-  WeekDay,
+	CalendarCategory,
+	CalendarEvent,
+	CalendarFilter,
+	CalendarSettings,
+	CalendarView,
+	EventColor,
+	EventPosition,
+	TimeSlot,
+	WeekDay,
 } from './types';
 export { WeekView } from './week-view';

@@ -57,25 +57,33 @@
  * @module backends/AgUiBackend
  */
 
-import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
-import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
+import type {
+	ChatBackend,
+	ChatBackendConfig,
+	ModelInfo,
+} from '../domain/ChatBackend';
+import type {
+	ChatMessage,
+	ChatRequestOptions,
+	ChatStreamChunk,
+} from '../domain/types';
 
 /**
  * Configuration for AG-UI Protocol backend
  */
 export interface AgUiBackendConfig extends ChatBackendConfig {
-  /** AG-UI endpoint URL */
-  endpoint: string;
-  /** Transport protocol */
-  protocol?: 'sse' | 'websocket' | 'http';
-  /** Agent identifier */
-  agentId?: string;
-  /** Session ID for conversation continuity */
-  sessionId?: string;
-  /** Enable human-in-the-loop features */
-  enableHitl?: boolean;
-  /** Custom headers for authentication */
-  headers?: Record<string, string>;
+	/** AG-UI endpoint URL */
+	endpoint: string;
+	/** Transport protocol */
+	protocol?: 'sse' | 'websocket' | 'http';
+	/** Agent identifier */
+	agentId?: string;
+	/** Session ID for conversation continuity */
+	sessionId?: string;
+	/** Enable human-in-the-loop features */
+	enableHitl?: boolean;
+	/** Custom headers for authentication */
+	headers?: Record<string, string>;
 }
 
 /**
@@ -96,57 +104,57 @@ export interface AgUiBackendConfig extends ChatBackendConfig {
  * ```
  */
 export class AgUiBackend implements ChatBackend {
-  private _config: AgUiBackendConfig;
+	private _config: AgUiBackendConfig;
 
-  constructor(config: AgUiBackendConfig) {
-    this._config = config;
-  }
+	constructor(config: AgUiBackendConfig) {
+		this._config = config;
+	}
 
-  /**
-   * Send messages via AG-UI Protocol and stream responses
-   *
-   * @throws {Error} Not yet implemented
-   */
-  // biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
-  async *send(
-    _messages: ChatMessage[],
-    _options?: ChatRequestOptions
-  ): AsyncGenerator<ChatStreamChunk, void, unknown> {
-    throw new Error(
-      'AG-UI Protocol backend not yet implemented. ' +
-        'See https://github.com/ag-ui-protocol/ag-ui for protocol specification. ' +
-        'Use GeminiBackend as the primary backend for now.'
-    );
-  }
+	/**
+	 * Send messages via AG-UI Protocol and stream responses
+	 *
+	 * @throws {Error} Not yet implemented
+	 */
+	// biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
+	async *send(
+		_messages: ChatMessage[],
+		_options?: ChatRequestOptions,
+	): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		throw new Error(
+			'AG-UI Protocol backend not yet implemented. ' +
+				'See https://github.com/ag-ui-protocol/ag-ui for protocol specification. ' +
+				'Use GeminiBackend as the primary backend for now.',
+		);
+	}
 
-  /**
-   * Abort the current generation
-   */
-  abort(): void {
-    // Will send abort signal via AG-UI protocol when implemented
-  }
+	/**
+	 * Abort the current generation
+	 */
+	abort(): void {
+		// Will send abort signal via AG-UI protocol when implemented
+	}
 
-  /**
-   * Get information about the AG-UI backend
-   */
-  getModelInfo(): ModelInfo {
-    return {
-      id: this._config.agentId || 'ag-ui-agent',
-      name: 'AG-UI Protocol (Not Implemented)',
-      provider: 'AG-UI',
-      capabilities: {
-        streaming: true,
-        multimodal: true,
-        tools: true,
-        reasoning: true,
-      },
-    };
-  }
+	/**
+	 * Get information about the AG-UI backend
+	 */
+	getModelInfo(): ModelInfo {
+		return {
+			id: this._config.agentId || 'ag-ui-agent',
+			name: 'AG-UI Protocol (Not Implemented)',
+			provider: 'AG-UI',
+			capabilities: {
+				streaming: true,
+				multimodal: true,
+				tools: true,
+				reasoning: true,
+			},
+		};
+	}
 
-  /**
-   * Get the current configuration (for debugging)
-   */
-  getConfig(): AgUiBackendConfig {
-    return { ...this._config };
-  }
+	/**
+	 * Get the current configuration (for debugging)
+	 */
+	getConfig(): AgUiBackendConfig {
+		return { ...this._config };
+	}
 }

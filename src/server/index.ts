@@ -1,25 +1,25 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import { corsMiddleware } from '@/server/middleware/cors';
-
 import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
 import { setupStaticRoutes } from '@/server/routes/static';
 import {
-  aiChatRouter,
-  bankAccountsRouter,
-  bankingRouter,
-  calendarRouter,
-  complianceRouter,
-  contactsRouter,
-  googleCalendarRouter,
-  healthRouter,
-  // pixRouter removed - PIX functionality discontinued
-  transactionsRouter,
-  usersRouter,
-  voiceRouter,
+	aiChatRouter,
+	bankAccountsRouter,
+	bankingRouter,
+	calendarRouter,
+	complianceRouter,
+	contactsRouter,
+	googleCalendarRouter,
+	healthRouter,
+	// pixRouter removed - PIX functionality discontinued
+	transactionsRouter,
+	usersRouter,
+	voiceRouter,
 } from '@/server/routes/v1';
 
 /**
@@ -34,9 +34,9 @@ app.use('*', corsMiddleware);
 
 // Request ID middleware for tracing
 app.use('*', async (c, next) => {
-  const requestId = crypto.randomUUID();
-  c.set('requestId', requestId);
-  await next();
+	const requestId = crypto.randomUUID();
+	c.set('requestId', requestId);
+	await next();
 });
 
 // Setup legacy route handlers
@@ -66,47 +66,48 @@ setupStaticRoutes(app);
 
 // 404 handler
 app.notFound((c) => {
-  const requestId = c.get('requestId');
+	const requestId = c.get('requestId');
 
-  secureLogger.warn('Route not found', {
-    ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
-    method: c.req.method,
-    path: c.req.path,
-    requestId,
-    userAgent: c.req.header('User-Agent') || 'unknown',
-  });
+	secureLogger.warn('Route not found', {
+		ip:
+			c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
+		method: c.req.method,
+		path: c.req.path,
+		requestId,
+		userAgent: c.req.header('User-Agent') || 'unknown',
+	});
 
-  return c.json(
-    {
-      error: 'Not Found',
-      message: `Route ${c.req.method} ${c.req.path} not found`,
-      requestId,
-      timestamp: new Date().toISOString(),
-    },
-    404
-  );
+	return c.json(
+		{
+			error: 'Not Found',
+			message: `Route ${c.req.method} ${c.req.path} not found`,
+			requestId,
+			timestamp: new Date().toISOString(),
+		},
+		404,
+	);
 });
 
 // Global error handler
 app.onError((err, c) => {
-  const requestId = c.get('requestId');
+	const requestId = c.get('requestId');
 
-  secureLogger.error('Unhandled error', {
-    error: err.message,
-    method: c.req.method,
-    path: c.req.path,
-    requestId,
-    stack: err.stack,
-  });
+	secureLogger.error('Unhandled error', {
+		error: err.message,
+		method: c.req.method,
+		path: c.req.path,
+		requestId,
+		stack: err.stack,
+	});
 
-  return c.json(
-    {
-      error: 'Internal server error',
-      requestId,
-      timestamp: new Date().toISOString(),
-    },
-    500
-  );
+	return c.json(
+		{
+			error: 'Internal server error',
+			requestId,
+			timestamp: new Date().toISOString(),
+		},
+		500,
+	);
 });
 
 export default app;

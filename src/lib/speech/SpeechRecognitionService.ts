@@ -123,6 +123,7 @@ export interface SpeechRecognitionError {
   message: string;
   code?: number;
   isRetryable: boolean;
+  isNoSpeech?: boolean;
   provider: 'web-speech' | 'cloud-fallback';
 }
 
@@ -277,6 +278,13 @@ export class SpeechRecognitionService {
 
         onError?.(error);
 
+        // For 'no-speech' error, don't try cloud fallback - it's a user behavior, not a system error
+        if (error.isNoSpeech) {
+          reject(new Error(error.message));
+          this.stopRecognition();
+          return;
+        }
+
         // For network errors, try cloud fallback
         if (error.isRetryable) {
           this.startCloudRecognition(options).then(resolve).catch(reject);
@@ -359,14 +367,18 @@ export class SpeechRecognitionService {
   private processSpeechRecognitionError(
     event: SpeechRecognitionErrorEventType
   ): SpeechRecognitionError {
-    const errorMap: Record<string, { isRetryable: boolean; message: string }> = {
+    const errorMap: Record<string, { isRetryable: boolean; message: string; isNoSpeech?: boolean }> = {
       aborted: { isRetryable: true, message: 'Recognition was aborted.' },
       'audio-capture': {
         isRetryable: true,
         message: 'Audio capture error. Please check microphone permissions.',
       },
       network: { isRetryable: true, message: 'Network error. Please check your connection.' },
-      'no-speech': { isRetryable: false, message: 'No speech detected. Please try again.' },
+      'no-speech': { 
+        isRetryable: false, 
+        message: 'Não detectamos sua voz. Por favor, tente novamente.',
+        isNoSpeech: true,
+      },
       'not-allowed': {
         isRetryable: false,
         message: 'Microphone access denied. Please enable microphone permissions.',
@@ -386,6 +398,7 @@ export class SpeechRecognitionService {
       code: undefined,
       error: event.error,
       isRetryable: errorInfo.isRetryable,
+      isNoSpeech: errorInfo.isNoSpeech,
       message: errorInfo.message,
       provider: 'web-speech',
     };

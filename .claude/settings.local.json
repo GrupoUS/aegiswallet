@@ -85,16 +85,10 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "desktop-commander",
     "context7",
-    "Sequential Thinking",
+    "sequential-thinking",
     "serena",
-    "chrome-devtools",
-    "n8n-mcp",
-    "tavily",
-    "supabase",
-    "shadcn",
-    "jpisnice/shadcn-ui-mcp-server"
+    "tavily"
   ],
   "outputStyle": "default"
 }

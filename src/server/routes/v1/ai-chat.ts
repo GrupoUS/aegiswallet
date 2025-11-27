@@ -3,7 +3,7 @@ import { streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { logAIOperation } from '@/lib/ai/audit/logger';
-import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
+import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT, ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT, getSystemPromptWithCustomization } from '@/lib/ai/prompts/system';
 import { AIProviderSchema, getAvailableProviders, getModel } from '@/lib/ai/providers';
 import { checkPromptInjection } from '@/lib/ai/security/injection';
 import { createAllTools } from '@/lib/ai/tools';
@@ -59,7 +59,7 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 
     const result = streamText({
       model,
-      system: FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
+      system: ENHANCED_FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
       messages: messages.map((msg) => ({
         role: msg.role,
         content: msg.content,

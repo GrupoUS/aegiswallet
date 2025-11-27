@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { filterSensitiveData } from '../../security/filter';
 import { secureLogger } from '../../../logging/secure-logger';
+import { filterSensitiveData } from '../../security/filter';
 import {
   type PixKey,
   PixKeyTypeSchema,
@@ -121,7 +121,7 @@ export function createPixTools(userId: string) {
               error: error.message,
               userId,
               amount,
-              recipientKey: recipientKey.substring(0, 3) + '***',
+              recipientKey: `${recipientKey.substring(0, 3)}***`,
             });
             throw new Error(`Erro ao processar transferência PIX: ${error.message}`);
           }
@@ -256,7 +256,7 @@ export function createPixTools(userId: string) {
           const qrCodeData = data as PixQrCode;
 
           secureLogger.info('QR Code PIX gerado com sucesso', {
-            qrCode: qrCodeData.qrCode.slice(0, 20) + '...',
+            qrCode: `${qrCodeData.qrCode.slice(0, 20)}...`,
             userId,
             amount: amount ?? 'unspecified',
             expiresAt,
@@ -474,7 +474,7 @@ export function createPixTools(userId: string) {
               error: error.message,
               userId,
               amount,
-              recipientKey: recipientKey.substring(0, 3) + '***',
+              recipientKey: `${recipientKey.substring(0, 3)}***`,
             });
             throw new Error(`Erro ao agendar transferência PIX: ${error.message}`);
           }

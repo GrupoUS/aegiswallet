@@ -1,23 +1,25 @@
+import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
-import { 
-  PixKeyTypeSchema,
-  type ContactWithPaymentMethods,
-  type ContactPaymentMethodDbRow,
-  type ContactDbRow
-} from './types';
-import { filterSensitiveData } from '../../security/filter';
 import { secureLogger } from '../../../logging/secure-logger';
+import { filterSensitiveData } from '../../security/filter';
+import {
+  type ContactDbRow,
+  type ContactPaymentMethodDbRow,
+  type ContactWithPaymentMethods,
+  PixKeyTypeSchema,
+} from './types';
 
 export function createContactsTools(userId: string) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   return {
     listContacts: tool({
-      description: 'Lista todos os contatos do usuário com métodos de pagamento. Use para encontrar contatos para transferências.',
+      description:
+        'Lista todos os contatos do usuário com métodos de pagamento. Use para encontrar contatos para transferências.',
       inputSchema: z.object({
         searchName: z.string().optional().describe('Buscar por nome do contato'),
         hasPix: z.boolean().optional().describe('Filtrar contatos com chave PIX'),
@@ -55,28 +57,32 @@ export function createContactsTools(userId: string) {
 
           // Filtrar por PIX se solicitado
           if (hasPix !== undefined) {
-            contacts = contacts.filter(contact => 
-              hasPix 
-                ? contact.contact_payment_methods.some(pm => pm.payment_type === 'PIX')
-                : !contact.contact_payment_methods.some(pm => pm.payment_type === 'PIX')
+            contacts = contacts.filter((contact) =>
+              hasPix
+                ? contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
+                : !contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
             );
           }
 
           // Adicionar estatísticas
           const totalContacts = contacts.length;
-          const favoriteContacts = contacts.filter(c => c.is_favorite).length;
-          const contactsWithPix = contacts.filter(c => 
-            c.contact_payment_methods.some(pm => pm.payment_type === 'PIX')
+          const favoriteContacts = contacts.filter((c) => c.is_favorite).length;
+          const contactsWithPix = contacts.filter((c) =>
+            c.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
           ).length;
-          const totalPaymentMethods = contacts.reduce((sum, c) => sum + c.contact_payment_methods.length, 0);
+          const totalPaymentMethods = contacts.reduce(
+            (sum, c) => sum + c.contact_payment_methods.length,
+            0
+          );
 
           // Formatar resposta
-          const formattedContacts = contacts.map(contact => ({
+          const formattedContacts = contacts.map((contact) => ({
             ...filterSensitiveData(contact),
             paymentMethods: contact.contact_payment_methods.map(filterSensitiveData),
-            hasPix: contact.contact_payment_methods.some(pm => pm.payment_type === 'PIX'),
-            favoritePaymentMethod: contact.contact_payment_methods
-              .sort((a, b) => b.usage_count - a.usage_count)[0]
+            hasPix: contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
+            favoritePaymentMethod: contact.contact_payment_methods.sort(
+              (a, b) => b.usage_count - a.usage_count
+            )[0],
           }));
 
           return {
@@ -85,16 +91,17 @@ export function createContactsTools(userId: string) {
             summary: {
               favoriteContacts,
               contactsWithPix,
-              totalPaymentMethods
+              totalPaymentMethods,
             },
-            message: contacts.length > 0 
-              ? `Encontrados ${totalContacts} contatos (${favoriteContacts} favoritos, ${contactsWithPix} com PIX)`
-              : 'Nenhum contato encontrado'
+            message:
+              contacts.length > 0
+                ? `Encontrados ${totalContacts} contatos (${favoriteContacts} favoritos, ${contactsWithPix} com PIX)`
+                : 'Nenhum contato encontrado',
           };
         } catch (error) {
-          secureLogger.error('Falha ao listar contatos', { 
+          secureLogger.error('Falha ao listar contatos', {
             error: error instanceof Error ? error.message : 'Unknown',
-            userId
+            userId,
           });
           throw error;
         }
@@ -107,7 +114,11 @@ export function createContactsTools(userId: string) {
         name: z.string().min(1).max(100).describe('Nome completo do contato'),
         email: z.string().email().optional().describe('Email do contato'),
         phone: z.string().optional().describe('Telefone com DDD'),
-        cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/).optional().describe('CPF formatado'),
+        cpf: z
+          .string()
+          .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)
+          .optional()
+          .describe('CPF formatado'),
         isFavorite: z.boolean().default(false).describe('Marcar como favorito'),
       }),
       execute: async ({ name, email, phone, cpf, isFavorite }) => {
@@ -117,7 +128,9 @@ export function createContactsTools(userId: string) {
             .from('contacts')
             .select('id')
             .eq('user_id', userId)
-            .or(`name.eq.${name},${email ? `email.eq.${email}` : ''},${phone ? `phone.eq.${phone}` : ''}`)
+            .or(
+              `name.eq.${name},${email ? `email.eq.${email}` : ''},${phone ? `phone.eq.${phone}` : ''}`
+            )
             .limit(1);
 
           if (existingContact && existingContact.length > 0) {
@@ -142,10 +155,10 @@ export function createContactsTools(userId: string) {
             .single();
 
           if (error) {
-            secureLogger.error('Erro ao adicionar contato', { 
-              error: error.message, 
-              userId, 
-              contactName: name 
+            secureLogger.error('Erro ao adicionar contato', {
+              error: error.message,
+              userId,
+              contactName: name,
             });
             throw new Error(`Erro ao adicionar contato: ${error.message}`);
           }
@@ -156,20 +169,20 @@ export function createContactsTools(userId: string) {
             contactId: contact.id,
             userId,
             contactName: name,
-            isFavorite
+            isFavorite,
           });
 
           return {
             success: true,
             contact: filterSensitiveData(contact),
             message: `Contato "${name}" adicionado com sucesso${isFavorite ? ' e marcado como favorito' : ''}`,
-            nextStep: 'Adicione métodos de pagamento (PIX, TED, DOC) para facilitar transferências'
+            nextStep: 'Adicione métodos de pagamento (PIX, TED, DOC) para facilitar transferências',
           };
         } catch (error) {
-          secureLogger.error('Falha ao adicionar contato', { 
+          secureLogger.error('Falha ao adicionar contato', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
-            contactName: name
+            contactName: name,
           });
           throw error;
         }
@@ -193,18 +206,18 @@ export function createContactsTools(userId: string) {
         accountNumber: z.string().optional().describe('Número da conta'),
         accountType: z.enum(['corrente', 'poupança']).optional().describe('Tipo de conta'),
       }),
-      execute: async ({ 
-        contactId, 
-        paymentType, 
-        label, 
+      execute: async ({
+        contactId,
+        paymentType,
+        label,
         isFavorite,
-        pixKey, 
+        pixKey,
         pixKeyType,
         bankCode,
         bankName,
         agency,
         accountNumber,
-        accountType
+        accountType,
       }) => {
         try {
           // Verificar se contato existe
@@ -254,11 +267,11 @@ export function createContactsTools(userId: string) {
             .single();
 
           if (error) {
-            secureLogger.error('Erro ao adicionar método de pagamento', { 
-              error: error.message, 
-              userId, 
+            secureLogger.error('Erro ao adicionar método de pagamento', {
+              error: error.message,
+              userId,
               contactId,
-              paymentType 
+              paymentType,
             });
             throw new Error(`Erro ao adicionar método de pagamento: ${error.message}`);
           }
@@ -270,26 +283,27 @@ export function createContactsTools(userId: string) {
             userId,
             contactId,
             paymentType,
-            isFavorite
+            isFavorite,
           });
 
-          const paymentDescription = paymentType === 'PIX' 
-            ? `chave PIX ${pixKey} (${pixKeyType})`
-            : `conta ${accountType} - ${bankName || `Banco ${bankCode}`}`;
+          const paymentDescription =
+            paymentType === 'PIX'
+              ? `chave PIX ${pixKey} (${pixKeyType})`
+              : `conta ${accountType} - ${bankName || `Banco ${bankCode}`}`;
 
           return {
             success: true,
             paymentMethod: filterSensitiveData(paymentMethod),
             contactName: contact.name,
             message: `Método de pagamento ${paymentType} adicionado para "${contact.name}": ${paymentDescription}`,
-            isReady: paymentType === 'PIX' // PIX já está pronto para uso
+            isReady: paymentType === 'PIX', // PIX já está pronto para uso
           };
         } catch (error) {
-          secureLogger.error('Falha ao adicionar método de pagamento', { 
+          secureLogger.error('Falha ao adicionar método de pagamento', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
             contactId,
-            paymentType
+            paymentType,
           });
           throw error;
         }
@@ -300,10 +314,17 @@ export function createContactsTools(userId: string) {
       description: 'Envia transferência para um contato usando método de pagamento salvo.',
       inputSchema: z.object({
         contactId: z.string().uuid().describe('ID do contato'),
-        paymentMethodId: z.string().uuid().optional().describe('ID do método de pagamento (omitir para usar favorito)'),
+        paymentMethodId: z
+          .string()
+          .uuid()
+          .optional()
+          .describe('ID do método de pagamento (omitir para usar favorito)'),
         amount: z.number().positive().max(50000).describe('Valor da transferência'),
         description: z.string().max(140).optional().describe('Descrição da transferência'),
-        paymentType: z.enum(['PIX', 'TED', 'DOC']).optional().describe('Tipo de transferência (se não informado, usa o do método)'),
+        paymentType: z
+          .enum(['PIX', 'TED', 'DOC'])
+          .optional()
+          .describe('Tipo de transferência (se não informado, usa o do método)'),
       }),
       execute: async ({ contactId, paymentMethodId, amount, description, paymentType }) => {
         try {
@@ -323,22 +344,23 @@ export function createContactsTools(userId: string) {
           }
 
           const paymentMethods = contact.contact_payment_methods as ContactPaymentMethodDbRow[];
-          
+
           // Selecionar método de pagamento
           let selectedMethod: ContactPaymentMethodDbRow | undefined;
-          
+
           if (paymentMethodId) {
-            selectedMethod = paymentMethods.find(pm => pm.id === paymentMethodId);
+            selectedMethod = paymentMethods.find((pm) => pm.id === paymentMethodId);
             if (!selectedMethod) {
               throw new Error('Método de pagamento não encontrado para este contato');
             }
           } else {
             // Usar método favorito ou o mais usado
-            selectedMethod = paymentMethods
-              .filter(pm => pm.is_favorite)
-              .sort((a, b) => b.usage_count - a.usage_count)[0] ||
+            selectedMethod =
+              paymentMethods
+                .filter((pm) => pm.is_favorite)
+                .sort((a, b) => b.usage_count - a.usage_count)[0] ||
               paymentMethods.sort((a, b) => b.usage_count - a.usage_count)[0];
-            
+
             if (!selectedMethod) {
               throw new Error('Nenhum método de pagamento encontrado para este contato');
             }
@@ -346,7 +368,9 @@ export function createContactsTools(userId: string) {
 
           // Validar tipo de pagamento
           if (paymentType && selectedMethod.payment_type !== paymentType) {
-            throw new Error(`O método selecionado é do tipo ${selectedMethod.payment_type}, mas foi solicitado ${paymentType}`);
+            throw new Error(
+              `O método selecionado é do tipo ${selectedMethod.payment_type}, mas foi solicitado ${paymentType}`
+            );
           }
 
           // Incrementar contador de uso do método
@@ -354,7 +378,7 @@ export function createContactsTools(userId: string) {
             .from('contact_payment_methods')
             .update({
               usage_count: selectedMethod.usage_count + 1,
-              last_used_at: new Date().toISOString()
+              last_used_at: new Date().toISOString(),
             })
             .eq('id', selectedMethod.id);
 
@@ -364,12 +388,13 @@ export function createContactsTools(userId: string) {
 
           if (selectedMethod.payment_type === 'PIX') {
             // Usar PIX tools
-            const pixTools = await import('./pix').then(m => m.createPixTools(userId));
-            
+            const { createPixTools } = await import('./pix');
+            const pixTools = createPixTools(userId);
+
             if (!selectedMethod.pix_key || !selectedMethod.pix_key_type) {
               throw new Error('Método PIX selecionado não possui chave configurada');
             }
-            
+
             transferResult = await pixTools.sendPixTransfer({
               recipientKey: selectedMethod.pix_key,
               recipientKeyType: selectedMethod.pix_key_type,
@@ -388,9 +413,9 @@ export function createContactsTools(userId: string) {
                 recipientName: contact.name,
                 recipientBank: selectedMethod.bank_name,
                 accountInfo: selectedMethod.account_number,
-                status: 'PENDING'
+                status: 'PENDING',
               },
-              message: `Transferência ${selectedMethod.payment_type} de R$ ${amount.toFixed(2)} agendada para ${contact.name}`
+              message: `Transferência ${selectedMethod.payment_type} de R$ ${amount.toFixed(2)} agendada para ${contact.name}`,
             };
           }
 
@@ -399,7 +424,7 @@ export function createContactsTools(userId: string) {
             userId,
             amount,
             paymentType: selectedMethod.payment_type,
-            paymentMethodId: selectedMethod.id
+            paymentMethodId: selectedMethod.id,
           });
 
           return {
@@ -409,19 +434,21 @@ export function createContactsTools(userId: string) {
               id: contact.id,
               name: contact.name,
               paymentMethod: {
-                type: selectedMethod.paymentType,
+                type: selectedMethod.payment_type,
                 label: selectedMethod.label,
-                key: selectedMethod.pixKey || selectedMethod.accountNumber
-              }
+                key: selectedMethod.pix_key || selectedMethod.account_number,
+              },
             },
-            message: transferResult.message || `Transferência de R$ ${amount.toFixed(2)} enviada para ${contact.name} com sucesso!`
+            message:
+              transferResult.message ||
+              `Transferência de R$ ${amount.toFixed(2)} enviada para ${contact.name} com sucesso!`,
           };
         } catch (error) {
-          secureLogger.error('Falha ao enviar transferência para contato', { 
+          secureLogger.error('Falha ao enviar transferência para contato', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
             contactId,
-            amount
+            amount,
           });
           throw error;
         }
@@ -448,10 +475,10 @@ export function createContactsTools(userId: string) {
             .single();
 
           if (error) {
-            secureLogger.error('Erro ao atualizar favorito do contato', { 
-              error: error.message, 
-              userId, 
-              contactId 
+            secureLogger.error('Erro ao atualizar favorito do contato', {
+              error: error.message,
+              userId,
+              contactId,
             });
             throw new Error(`Erro ao atualizar contato: ${error.message}`);
           }
@@ -462,7 +489,7 @@ export function createContactsTools(userId: string) {
             contactId,
             userId,
             isFavorite,
-            contactName: contact.name
+            contactName: contact.name,
           });
 
           return {
@@ -470,15 +497,15 @@ export function createContactsTools(userId: string) {
             contactId,
             isFavorite,
             contactName: contact.name,
-            message: isFavorite 
+            message: isFavorite
               ? `"${contact.name}" marcado como favorito`
-              : `"${contact.name}" removido dos favoritos`
+              : `"${contact.name}" removido dos favoritos`,
           };
         } catch (error) {
-          secureLogger.error('Falha ao atualizar favorito do contato', { 
+          secureLogger.error('Falha ao atualizar favorito do contato', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
-            contactId
+            contactId,
           });
           throw error;
         }
@@ -511,7 +538,7 @@ export function createContactsTools(userId: string) {
               contactId,
               contactName: contact.name,
               paymentMethodsCount: contact.contact_payment_methods?.[0]?.count || 0,
-              message: `Deseja realmente excluir o contato "${contact.name}" e todos os seus métodos de pagamento? Esta ação não pode ser desfeita.`
+              message: `Deseja realmente excluir o contato "${contact.name}" e todos os seus métodos de pagamento? Esta ação não pode ser desfeita.`,
             };
           }
 
@@ -524,10 +551,7 @@ export function createContactsTools(userId: string) {
             .single();
 
           // Excluir métodos de pagamento primeiro (devido a foreign key)
-          await supabase
-            .from('contact_payment_methods')
-            .delete()
-            .eq('contact_id', contactId);
+          await supabase.from('contact_payment_methods').delete().eq('contact_id', contactId);
 
           // Excluir contato
           const { error } = await supabase
@@ -537,10 +561,10 @@ export function createContactsTools(userId: string) {
             .eq('user_id', userId);
 
           if (error) {
-            secureLogger.error('Erro ao excluir contato', { 
-              error: error.message, 
-              userId, 
-              contactId 
+            secureLogger.error('Erro ao excluir contato', {
+              error: error.message,
+              userId,
+              contactId,
             });
             throw new Error(`Erro ao excluir contato: ${error.message}`);
           }
@@ -548,19 +572,19 @@ export function createContactsTools(userId: string) {
           secureLogger.info('Contato excluído com sucesso', {
             contactId,
             userId,
-            contactName: contact?.name || 'Nome não disponível'
+            contactName: contact?.name || 'Nome não disponível',
           });
 
           return {
             success: true,
             contactId,
-            message: `Contato "${contact?.name}" e todos os seus métodos de pagamento foram excluídos com sucesso`
+            message: `Contato "${contact?.name}" e todos os seus métodos de pagamento foram excluídos com sucesso`,
           };
         } catch (error) {
-          secureLogger.error('Falha ao excluir contato', { 
+          secureLogger.error('Falha ao excluir contato', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
-            contactId
+            contactId,
           });
           throw error;
         }

@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { filterSensitiveData } from '../../security/filter';
 import { secureLogger } from '../../../logging/secure-logger';
-import { type Boleto, type BoletoCalculation, BoletoStatusSchema } from './types';
+import { filterSensitiveData } from '../../security/filter';
+import type { Boleto, BoletoCalculation } from './types';
 
 export function createBoletoTools(userId: string) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
@@ -162,7 +162,7 @@ export function createBoletoTools(userId: string) {
             secureLogger.error('Erro ao registrar boleto', {
               error: error.message,
               userId,
-              barcode: barcode.substring(0, 10) + '***',
+              barcode: `${barcode.substring(0, 10)}***`,
             });
             throw new Error(`Erro ao registrar boleto: ${error.message}`);
           }
@@ -193,7 +193,7 @@ export function createBoletoTools(userId: string) {
 
           // Calcular dias até vencimento
           const daysUntilDue = Math.ceil(
-            (new Date(boleto.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+            (new Date(boleto.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
           );
 
           return {
@@ -208,7 +208,7 @@ export function createBoletoTools(userId: string) {
           secureLogger.error('Falha ao registrar boleto', {
             error: error instanceof Error ? error.message : 'Unknown',
             userId,
-            barcode: barcode.substring(0, 10) + '***',
+            barcode: `${barcode.substring(0, 10)}***`,
           });
           throw error;
         }
@@ -286,7 +286,7 @@ export function createBoletoTools(userId: string) {
           .default(false)
           .describe('Confirmação final do pagamento (depois de calcular valores)'),
       }),
-      execute: async ({ boletoId, accountId, paymentDate, confirmPayment }) => {
+      execute: async ({ boletoId, accountId: _accountId, paymentDate, confirmPayment }) => {
         try {
           // Buscar boleto
           const { data: boleto, error } = await supabase
@@ -535,7 +535,9 @@ export function createBoletoTools(userId: string) {
 
           const now = new Date();
           const dueDate = new Date(boleto.dueDate);
-          const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const daysUntilDue = Math.ceil(
+            (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
 
           const details = {
             ...filterSensitiveData(boleto),
@@ -582,11 +584,11 @@ async function extractBoletoInformation(barcode: string): Promise<{
   // Extrair valor e data do código de barras
 
   // Valor (posições 9-19)
-  const amountValue = parseInt(barcode.substring(9, 19));
+  const amountValue = parseInt(barcode.substring(9, 19), 10);
   const amount = amountValue / 100;
 
   // Data de vencimento (posições 5-9) - dias desde 07/10/1997
-  const dueDateDays = parseInt(barcode.substring(5, 9));
+  const dueDateDays = parseInt(barcode.substring(5, 9), 10);
   const baseDate = new Date('1997-10-07');
   const dueDate = new Date(baseDate.getTime() + dueDateDays * 24 * 60 * 60 * 1000);
 

@@ -526,114 +526,15 @@ export function createMultimodalTools(userId: string) {
 				branding,
 			}) => {
 				try {
-					// Gerar dados do relatório
-					const reportData = await generateFinancialReportData(
-						userId,
-						reportType,
-						dateRange,
-					);
+					const reportData = await generateFinancialReportData(userId, reportType, dateRange);
+					const insights = includeInsights ? await generateReportInsights(reportData, reportType, language) : [];
+					const charts = includeCharts ? await generateReportCharts(reportData, reportType, getCustomColors(branding)) : [];
+					const exportOptions = buildExportOptions(reportData, format, dateRange, includeCharts, includeInsights);
+					const exportResult = await processExport(reportData, exportOptions, { insights, charts, language, branding });
+					const exportRecord = await saveExportRecord(userId, reportType, format, dateRange, exportResult);
+					const exportedReport = buildExportedReport(exportRecord, reportType, format, exportResult);
 
-					// Gerar insights se solicitado
-					let insights: string[] = [];
-					if (includeInsights) {
-						insights = await generateReportInsights(
-							reportData,
-							reportType,
-							language,
-						);
-					}
-
-					// Gerar gráficos se solicitado
-					let charts: ChartData[] = [];
-					if (includeCharts) {
-						const customColors = branding?.customColors
-							? [
-									branding.customColors.primary,
-									branding.customColors.secondary,
-								].filter((c): c is string => !!c)
-							: [];
-						charts = await generateReportCharts(
-							reportData,
-							reportType,
-							customColors,
-						);
-					}
-
-					// Configurar opções de exportação
-					const reportDataTyped = reportData as {
-						byCategory?: Record<string, unknown>;
-					};
-					const exportOptions: ExportOptions = {
-						format,
-						dateRange,
-						includeCategories: Object.keys(reportDataTyped.byCategory || {}),
-						includeCharts,
-						includeInsights,
-					};
-
-					// Gerar arquivo de exportação
-					const exportResult = await processExport(reportData, exportOptions, {
-						insights,
-						charts,
-						language,
-						branding,
-					});
-
-					// Salvar registro de exportação
-					// Note: export_records table needs to be added to the schema
-					const supabase = createServerClient();
-					const exportRecordData = {
-						user_id: userId,
-						report_type: reportType,
-						format,
-						date_range: dateRange,
-						file_url: exportResult.fileUrl,
-						file_size: exportResult.fileSize,
-						record_count: exportResult.recordCount,
-						created_at: new Date().toISOString(),
-					};
-					const { data: exportRecord, error } = await supabase
-						.from('export_records' as keyof Database['public']['Tables'])
-						.insert(exportRecordData as never)
-						.select()
-						.single();
-
-					if (error) {
-						throw new Error(`Erro ao registrar exportação: ${error.message}`);
-					}
-
-					secureLogger.info('Relatório financeiro exportado com sucesso', {
-						userId,
-						reportType,
-						format,
-						fileSize: exportResult.fileSize,
-						recordCount: exportResult.recordCount,
-					});
-
-					const exportedReport: ExportedReport = {
-						id: (exportRecord as { id?: string })?.id ?? crypto.randomUUID(),
-						type: reportType,
-						format,
-						fileUrl: exportResult.fileUrl,
-						expiresAt: exportResult.expiresAt,
-						generatedAt: new Date().toISOString(),
-						recordCount: exportResult.recordCount,
-					};
-
-					return {
-						report: exportedReport,
-						exportResult: filterSensitiveData(exportResult),
-						preview: {
-							recordCount: exportResult.recordCount,
-							fileFormat: format.toUpperCase(),
-							estimatedDownloadTime: calculateDownloadTime(
-								exportResult.fileSize,
-							),
-							includesCharts: includeCharts,
-							includesInsights: includeInsights,
-						},
-						message: `Relatório ${reportType} exportado com sucesso em formato ${format.toUpperCase()}`,
-					};
+					return buildExportResponse(exportedReport, exportResult, format, includeCharts, includeInsights);
 				} catch (error) {
 					secureLogger.error('Falha ao exportar relatório financeiro', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -889,4 +790,104 @@ async function processExport(
 function calculateDownloadTime(fileSize: number): string {
 	const seconds = Math.ceil(fileSize / (1024 * 1024)); // Assumindo 1MB/s
 	return `${Math.ceil(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+}
+
+// Helper functions for exportFinancialReport
+function getCustomColors(branding?: { customColors?: { primary?: string; secondary?: string } }): string[] {
+	if (!branding?.customColors) return [];
+	return [branding.customColors.primary, branding.customColors.secondary].filter((c): c is string => !!c);
+}
+
+function buildExportOptions(
+	reportData: unknown,
+	format: string,
+	dateRange: { startDate: string; endDate: string },
+	includeCharts: boolean,
+	includeInsights: boolean,
+): ExportOptions {
+	const reportDataTyped = reportData as { byCategory?: Record<string, unknown> };
+	return {
+		format: format as 'json' | 'pdf' | 'csv' | 'xlsx',
+		dateRange,
+		includeCategories: Object.keys(reportDataTyped.byCategory || {}),
+		includeCharts,
+		includeInsights,
+	};
+}
+
+async function saveExportRecord(
+	userId: string,
+	reportType: string,
+	format: string,
+	dateRange: { startDate: string; endDate: string },
+	exportResult: { fileUrl: string; fileSize: number; recordCount: number },
+): Promise<unknown> {
+	const supabase = createServerClient();
+	const exportRecordData = {
+		user_id: userId,
+		report_type: reportType,
+		format,
+		date_range: dateRange,
+		file_url: exportResult.fileUrl,
+		file_size: exportResult.fileSize,
+		record_count: exportResult.recordCount,
+		created_at: new Date().toISOString(),
+	};
+	const { data: exportRecord, error } = await supabase
+		.from('export_records' as keyof Database['public']['Tables'])
+		.insert(exportRecordData as never)
+		.select()
+		.single();
+
+	if (error) {
+		throw new Error(`Erro ao registrar exportação: ${error.message}`);
+	}
+
+	secureLogger.info('Relatório financeiro exportado com sucesso', {
+		userId,
+		reportType,
+		format,
+		fileSize: exportResult.fileSize,
+		recordCount: exportResult.recordCount,
+	});
+
+	return exportRecord;
+}
+
+function buildExportedReport(
+	exportRecord: unknown,
+	reportType: string,
+	format: string,
+	exportResult: { fileUrl: string; expiresAt: string; recordCount: number },
+): ExportedReport {
+	return {
+		id: (exportRecord as { id?: string })?.id ?? crypto.randomUUID(),
+		type: reportType,
+		format,
+		fileUrl: exportResult.fileUrl,
+		expiresAt: exportResult.expiresAt,
+		generatedAt: new Date().toISOString(),
+		recordCount: exportResult.recordCount,
+	};
+}
+
+function buildExportResponse(
+	exportedReport: ExportedReport,
+	exportResult: { fileSize: number; recordCount: number },
+	format: string,
+	includeCharts: boolean,
+	includeInsights: boolean,
+) {
+	return {
+		report: exportedReport,
+		exportResult: filterSensitiveData(exportResult),
+		preview: {
+			recordCount: exportResult.recordCount,
+			fileFormat: format.toUpperCase(),
+			estimatedDownloadTime: calculateDownloadTime(exportResult.fileSize),
+			includesCharts: includeCharts,
+			includesInsights: includeInsights,
+		},
+		message: `Relatório ${exportedReport.type} exportado com sucesso em formato ${format.toUpperCase()}`,
+	};
 }

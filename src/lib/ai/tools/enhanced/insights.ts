@@ -199,157 +199,32 @@ export function createInsightsTools(userId: string) {
 				confidenceLevel,
 			}) => {
 				try {
-					const endDate = new Date();
-					const startDate = new Date(
-						endDate.getFullYear() - 1,
-						endDate.getMonth(),
-						endDate.getDate(),
-					); // 12 meses de histórico
-
-					// Buscar dados históricos
-					const { data: historicalData, error } = await supabase
-						.from('transactions')
-						.select('amount, transaction_date')
-						.eq('user_id', userId)
-						.gte('transaction_date', startDate.toISOString())
-						.lte('transaction_date', endDate.toISOString());
-
-					if (error) {
-						throw new Error(
-							`Erro ao buscar dados históricos: ${error.message}`,
-						);
-					}
-
-					const transactions = historicalData ?? [];
-
-					// Buscar eventos futuros agendados
-					interface FutureEvent {
-						amount: number;
-						start_date: string;
-						is_income: boolean;
-						brazilian_event_type: string;
-					}
-					let futureEvents: FutureEvent[] = [];
-					if (includeScheduledEvents) {
-						const futureStart = new Date();
-						const futureEnd = new Date();
-						futureEnd.setMonth(futureEnd.getMonth() + forecastMonths);
-
-						const { data: events } = await supabase
-							.from('financial_events')
-							.select('amount, start_date, is_income, brazilian_event_type')
-							.eq('user_id', userId)
-							.gte('start_date', futureStart.toISOString())
-							.lte('start_date', futureEnd.toISOString());
-
-						futureEvents = events ?? [];
-					}
-
-					// Analisar padrões mensais
+					const { transactions, futureEvents } = await fetchCashFlowData(
+						supabase,
+						userId,
+						forecastMonths,
+						includeScheduledEvents,
+					);
 					const monthlyPatterns = analyzeMonthlyPatterns(transactions);
-
-					// Gerar previsão mensal
-					const monthlyBreakdown: MonthlyCashFlow[] = [];
-					let totalPredictedIncome = 0;
-					let totalPredictedExpenses = 0;
-
-					for (let i = 0; i < forecastMonths; i++) {
-						const forecastDate = new Date();
-						forecastDate.setMonth(forecastDate.getMonth() + i + 1);
-
-						const monthKey = `${forecastDate.getFullYear()}-${forecastDate.getMonth() + 1}`;
-						const pattern = monthlyPatterns[monthKey];
-
-						let predictedIncome = pattern?.averageIncome || 0;
-						let predictedExpenses = pattern?.averageExpenses || 0;
-
-						// Adicionar eventos futuros do mês
-						const monthEvents = futureEvents.filter((event) => {
-							const eventDate = new Date(event.start_date);
-							return (
-								eventDate.getMonth() === forecastDate.getMonth() &&
-								eventDate.getFullYear() === forecastDate.getFullYear()
-							);
-						});
-
-						monthEvents.forEach((event) => {
-							if (event.is_income) {
-								predictedIncome += Math.abs(event.amount);
-							} else {
-								predictedExpenses += Math.abs(event.amount);
-							}
-						});
-
-						// Aplicar fator de confiança
-						const confidence = pattern?.dataPoints
-							? Math.min(pattern.dataPoints / 12, confidenceLevel)
-							: confidenceLevel;
-						predictedIncome *= confidence;
-						predictedExpenses *= confidence;
-
-						const netFlow = predictedIncome - predictedExpenses;
-
-						totalPredictedIncome += predictedIncome;
-						totalPredictedExpenses += predictedExpenses;
-
-						monthlyBreakdown.push({
-							month: forecastDate.toLocaleDateString('pt-BR', {
-								month: 'long',
-								year: 'numeric',
-							}),
-							income: predictedIncome,
-							expenses: predictedExpenses,
-							netFlow,
-							confidence,
-						});
-					}
-
+					const monthlyBreakdown = generateMonthlyBreakdown(
+						forecastMonths,
+						monthlyPatterns,
+						futureEvents,
+						confidenceLevel,
+					);
+					const { totalPredictedIncome, totalPredictedExpenses } = calculateTotals(monthlyBreakdown);
 					const netCashFlow = totalPredictedIncome - totalPredictedExpenses;
-
-					// Identificar fatores chave e avisos
-					const keyFactors = identifyCashFlowFactors(
+					const forecast = buildCashFlowForecast(
+						forecastMonths,
+						totalPredictedIncome,
+						totalPredictedExpenses,
+						netCashFlow,
+						confidenceLevel,
 						monthlyBreakdown,
 						monthlyPatterns,
 					);
-					const warnings = generateCashFlowWarnings(
-						monthlyBreakdown,
-						netCashFlow,
-					);
 
-					const forecast: CashFlowForecast = {
-						forecastPeriod: {
-							startDate: new Date().toISOString(),
-							endDate: new Date(
-								Date.now() + forecastMonths * 30 * 24 * 60 * 60 * 1000,
-							).toISOString(),
-						},
-						predictedIncome: totalPredictedIncome,
-						predictedExpenses: totalPredictedExpenses,
-						netCashFlow,
-						confidence: confidenceLevel,
-						keyFactors,
-						warnings,
-						monthlyBreakdown,
-					};
-
-					return {
-						forecast,
-						summary: {
-							netCashFlowStatus:
-								netCashFlow > 0
-									? 'positivo'
-									: netCashFlow < 0
-										? 'negativo'
-										: 'equilibrado',
-							averageMonthlyIncome: totalPredictedIncome / forecastMonths,
-							averageMonthlyExpenses: totalPredictedExpenses / forecastMonths,
-							highestExpenseMonth: monthlyBreakdown.reduce(
-								(max, month) => (month.expenses > max.expenses ? month : max),
-								monthlyBreakdown[0],
-							)?.month,
-						},
-						message: `Previsão de fluxo de caixa para ${forecastMonths} meses: receita prevista de R$ ${totalPredictedIncome.toFixed(2)}, despesas de R$ ${totalPredictedExpenses.toFixed(2)}, resultando em fluxo ${netCashFlow >= 0 ? 'positivo' : 'negativo'} de R$ ${Math.abs(netCashFlow).toFixed(2)}.`,
-					};
+					return buildCashFlowResponse(forecast, forecastMonths, totalPredictedIncome, totalPredictedExpenses, netCashFlow, monthlyBreakdown);
 				} catch (error) {
 					secureLogger.error('Falha na previsão de fluxo de caixa', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -384,146 +259,16 @@ export function createInsightsTools(userId: string) {
 				includeRecommendations,
 			}) => {
 				try {
-					// Calcular período de análise
-					const endDate = new Date();
-					const startDate = new Date();
-
-					switch (analysisPeriod) {
-						case '7d':
-							startDate.setDate(endDate.getDate() - 7);
-							break;
-						case '30d':
-							startDate.setDate(endDate.getDate() - 30);
-							break;
-						case '90d':
-							startDate.setDate(endDate.getDate() - 90);
-							break;
-					}
-
-					// Buscar transações do período
-					const { data: transactions, error } = await supabase
-						.from('transactions')
-						.select(`
-              amount,
-              transaction_date,
-              category:transaction_categories(id, name),
-              description,
-              merchant_name
-            `)
-						.eq('user_id', userId)
-						.gte('transaction_date', startDate.toISOString())
-						.lte('transaction_date', endDate.toISOString())
-						.order('transaction_date', { ascending: false });
-
-					if (error) {
-						throw new Error(`Erro ao buscar transações: ${error.message}`);
-					}
-
-					const txList = transactions ?? [];
-					const anomalies: FinancialAnomaly[] = [];
-
-					// Detectar anomalias
-
-					// 1. Transações de valor异常mente alto
-					const amountStats = calculateAmountStatistics(txList);
-					const highValueTransactions = txList.filter(
-						(tx) =>
-							Math.abs(tx.amount) > amountStats.mean + 3 * amountStats.stdDev,
-					);
-
-					highValueTransactions.forEach((tx) => {
-						const severity =
-							Math.abs(tx.amount) > amountStats.mean + 5 * amountStats.stdDev
-								? 'high'
-								: 'medium';
-						if (meetsSeverityThreshold(severity, severityThreshold)) {
-							anomalies.push({
-								type: 'unusual_spending',
-								severity,
-								description: `Transação de valor异常mente alto: R$ ${Math.abs(tx.amount).toFixed(2)} em ${tx.merchant_name || tx.description}`,
-								amount: Math.abs(tx.amount),
-								date: tx.transaction_date,
-								category: getCategoryName(tx.category),
-								recommendedAction:
-									'Verificar se esta transação foi autorizada por você',
-							});
-						}
-					});
-
-					// 2. Possíveis transações duplicadas
-					const duplicateGroups = findPotentialDuplicates(txList);
-					duplicateGroups.forEach((group) => {
-						if (meetsSeverityThreshold('medium', severityThreshold)) {
-							anomalies.push({
-								type: 'duplicate_transaction',
-								severity: 'medium',
-								description: `Possíveis transações duplicadas: ${group.length} transações similares`,
-								amount: group.reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
-								date: group[0].transaction_date,
-								category: getCategoryName(group[0].category),
-								recommendedAction:
-									'Verificar se houve cobrança duplicada e contestar se necessário',
-							});
-						}
-					});
-
-					// 3. Padrões suspeitos por categoria
-					const categoryAnomalies = analyzeCategoryPatterns(txList);
-					categoryAnomalies.forEach((anomaly) => {
-						if (meetsSeverityThreshold(anomaly.severity, severityThreshold)) {
-							anomalies.push(anomaly);
-						}
-					});
-
-					// 4. Excesso de transações em curto período
-					const excessiveTransactions =
-						detectExcessiveTransactionPattern(txList);
-					if (
-						excessiveTransactions &&
-						meetsSeverityThreshold(
-							excessiveTransactions.severity,
-							severityThreshold,
-						)
-					) {
-						anomalies.push(excessiveTransactions);
-					}
-
-					// Calcular risco geral
+					const { startDate, endDate } = calculateAnalysisPeriod(analysisPeriod);
+					const transactions = await fetchAnomalyTransactions(supabase, userId, startDate, endDate);
+					const anomalies = detectAllAnomalies(transactions, severityThreshold);
 					const riskScore = calculateOverallRiskScore(anomalies);
 					const riskLevel = getRiskLevel(riskScore);
-
-					// Gerar recomendações
 					const recommendations = includeRecommendations
 						? generateAnomalyRecommendations(anomalies, riskLevel)
 						: [];
 
-					const detection: AnomalyDetection = {
-						anomalies,
-						riskScore,
-						recommendations,
-						lastAnalyzed: new Date().toISOString(),
-					};
-
-					return {
-						detection,
-						summary: {
-							totalAnomalies: anomalies.length,
-							anomaliesByType: groupAnomaliesByType(anomalies),
-							riskLevel,
-							analysisPeriod: {
-								startDate: startDate.toISOString(),
-								endDate: endDate.toISOString(),
-								days: Math.ceil(
-									(endDate.getTime() - startDate.getTime()) /
-										(1000 * 60 * 60 * 24),
-								),
-							},
-						},
-						message:
-							anomalies.length > 0
-								? `Detectadas ${anomalies.length} anomalias no período de análise com nível de risco ${riskLevel}.`
-								: 'Nenhuma anomalia significativa detectada no período analisado.',
-					};
+					return buildAnomalyDetectionResponse(anomalies, riskScore, recommendations, startDate, endDate);
 				} catch (error) {
 					secureLogger.error('Falha na detecção de anomalias', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -562,220 +307,12 @@ export function createInsightsTools(userId: string) {
 				prioritizeEssential,
 			}) => {
 				try {
-					const endDate = new Date();
-					const startDate = new Date();
-					startDate.setMonth(startDate.getMonth() - analysisMonths);
+					const { transactions } = await fetchBudgetTransactions(supabase, userId, analysisMonths);
+					const spendingAnalysis = analyzeSpendingPatterns(transactions, analysisMonths);
+					const budgetAllocations = calculateBudgetAllocations(spendingAnalysis, targetSavingsRate, prioritizeEssential);
+					const projections = calculateBudgetProjections(spendingAnalysis, budgetAllocations, targetSavingsRate);
 
-					// Buscar dados de transações
-					const { data: transactions, error } = await supabase
-						.from('transactions')
-						.select(`
-              amount,
-              category:transaction_categories(id, name, color, icon, is_system)
-            `)
-						.eq('user_id', userId)
-						.gte('transaction_date', startDate.toISOString())
-						.lte('transaction_date', endDate.toISOString());
-
-					if (error) {
-						throw new Error(`Erro ao buscar transações: ${error.message}`);
-					}
-
-					const txList = transactions ?? [];
-
-					// Analisar padrões de gastos
-					const totalIncome = txList
-						.filter((tx) => tx.amount > 0)
-						.reduce((sum, tx) => sum + tx.amount, 0);
-
-					const totalExpenses = txList
-						.filter((tx) => tx.amount < 0)
-						.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-
-					const averageMonthlyIncome = totalIncome / analysisMonths;
-					const averageMonthlyExpenses = totalExpenses / analysisMonths;
-
-					// Calcular orçamento-alvo
-					const targetMonthlySavings = averageMonthlyIncome * targetSavingsRate;
-					const targetBudget = averageMonthlyIncome - targetMonthlySavings;
-
-					// Analisar gastos por categoria
-					const categoryExpenses = new Map<
-						string,
-						{
-							categoryName: string;
-							categoryId: string;
-							totalAmount: number;
-							averageMonthly: number;
-							percentage: number;
-							isEssential: boolean;
-							color: string;
-							icon: string;
-						}
-					>();
-
-					txList
-						.filter((tx) => tx.amount < 0 && tx.category)
-						.forEach((tx) => {
-							// Supabase joins return arrays for relations
-							const cat = Array.isArray(tx.category)
-								? tx.category[0]
-								: tx.category;
-							if (!cat) return;
-							const catId = cat.id;
-
-							if (!categoryExpenses.has(catId)) {
-								categoryExpenses.set(catId, {
-									categoryName: cat.name,
-									categoryId: catId,
-									totalAmount: 0,
-									averageMonthly: 0,
-									percentage: 0,
-									isEssential:
-										cat.is_system ||
-										(prioritizeEssential &&
-											[
-												'Alimentação',
-												'Moradia',
-												'Transporte',
-												'Saúde',
-											].includes(cat.name)),
-									color: cat.color || '#6B7280',
-									icon: cat.icon || 'circle',
-								});
-							}
-
-							const categoryData = categoryExpenses.get(catId);
-							if (categoryData) {
-								categoryData.totalAmount += Math.abs(tx.amount);
-							}
-						});
-
-					// Calcular médias e percentuais
-					categoryExpenses.forEach((category) => {
-						category.averageMonthly = category.totalAmount / analysisMonths;
-						category.percentage =
-							averageMonthlyExpenses > 0
-								? (category.averageMonthly / averageMonthlyExpenses) * 100
-								: 0;
-					});
-
-					// Gerar recomendações de orçamento
-					interface BudgetRecommendation {
-						categoryId: string;
-						categoryName: string;
-						currentMonthlyAverage: number;
-						recommendedMonthlyBudget: number;
-						reductionPercentage: number;
-						priority: 'essential' | 'non_essential';
-						reasoning: string;
-						color: string;
-						icon: string;
-					}
-					const budgetRecommendations: BudgetRecommendation[] = [];
-					const categories = Array.from(categoryExpenses.values());
-					let allocatedBudget = 0;
-
-					// Alocar orçamento para categorias essenciais primeiro
-					const essentialCategories = categories
-						.filter((cat) => cat.isEssential)
-						.sort((a, b) => b.averageMonthly - a.averageMonthly);
-					const nonEssentialCategories = categories
-						.filter((cat) => !cat.isEssential)
-						.sort((a, b) => b.averageMonthly - a.averageMonthly);
-
-					// Orçamento para essenciais (manter ou reduzir modestamente)
-					essentialCategories.forEach((category) => {
-						const recommendedBudget = category.averageMonthly * 0.9; // Redução de 10%
-						allocatedBudget += recommendedBudget;
-
-						budgetRecommendations.push({
-							categoryId: category.categoryId,
-							categoryName: category.categoryName,
-							currentMonthlyAverage: category.averageMonthly,
-							recommendedMonthlyBudget: recommendedBudget,
-							reductionPercentage: 10,
-							priority: 'essential',
-							reasoning: 'Categoria essencial, recomenda-se redução moderada',
-							color: category.color,
-							icon: category.icon,
-						});
-					});
-
-					// Orçamento para não essenciais (reduções mais agressivas)
-					const remainingBudget = targetBudget - allocatedBudget;
-					const totalNonEssentialExpenses = nonEssentialCategories.reduce(
-						(sum, cat) => sum + cat.averageMonthly,
-						0,
-					);
-
-					if (remainingBudget > 0 && totalNonEssentialExpenses > 0) {
-						const reductionFactor = remainingBudget / totalNonEssentialExpenses;
-
-						nonEssentialCategories.forEach((category) => {
-							const recommendedBudget =
-								category.averageMonthly * reductionFactor;
-							const reductionPercentage =
-								((category.averageMonthly - recommendedBudget) /
-									category.averageMonthly) *
-								100;
-
-							budgetRecommendations.push({
-								categoryId: category.categoryId,
-								categoryName: category.categoryName,
-								currentMonthlyAverage: category.averageMonthly,
-								recommendedMonthlyBudget: recommendedBudget,
-								reductionPercentage,
-								priority: 'non_essential',
-								reasoning:
-									reductionPercentage > 30
-										? 'Redução significativa recomendada para atingir meta de economia'
-										: 'Redução moderada para equilibrar orçamento',
-								color: category.color,
-								icon: category.icon,
-							});
-						});
-					}
-
-					// Calcular projeções
-					const projectedMonthlyExpenses = budgetRecommendations.reduce(
-						(sum, rec) => sum + rec.recommendedMonthlyBudget,
-						0,
-					);
-					const projectedMonthlySavings =
-						averageMonthlyIncome - projectedMonthlyExpenses;
-					const projectedSavingsRate =
-						averageMonthlyIncome > 0
-							? projectedMonthlySavings / averageMonthlyIncome
-							: 0;
-
-					return {
-						currentAnalysis: {
-							averageMonthlyIncome,
-							averageMonthlyExpenses,
-							currentSavingsRate:
-								(averageMonthlyIncome - averageMonthlyExpenses) /
-								averageMonthlyIncome,
-						},
-						targetAnalysis: {
-							targetSavingsRate,
-							targetMonthlySavings,
-							targetBudget,
-						},
-						budgetRecommendations: budgetRecommendations.sort(
-							(a, b) => b.reductionPercentage - a.reductionPercentage,
-						),
-						projections: {
-							projectedMonthlyExpenses,
-							projectedMonthlySavings,
-							projectedSavingsRate,
-							canAchieveTarget: projectedSavingsRate >= targetSavingsRate,
-						},
-						message:
-							projectedSavingsRate >= targetSavingsRate
-								? `Meta de economia de ${(targetSavingsRate * 100).toFixed(1)}% atingível com orçamento recomendado! Projeção: ${(projectedSavingsRate * 100).toFixed(1)}% de economia mensal.`
-								: `Meta de ${(targetSavingsRate * 100).toFixed(1)}% desafiadora. Projeção atual: ${(projectedSavingsRate * 100).toFixed(1)}%. Considere reduções adicionais.`,
-					};
+					return buildBudgetResponse(spendingAnalysis, budgetAllocations, projections, targetSavingsRate);
 				} catch (error) {
 					secureLogger.error('Falha ao gerar recomendações de orçamento', {
 						error: error instanceof Error ? error.message : 'Unknown',
@@ -1153,4 +690,605 @@ function calculateVariance(values: number[]): number {
 	return (
 		values.reduce((sum, val) => sum + (val - mean) ** 2, 0) / values.length
 	);
+}
+
+// Helper functions for getCashFlowForecast
+// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
+async function fetchCashFlowData(supabaseClient: any, userId: string, forecastMonths: number, includeScheduledEvents: boolean) {
+	const endDate = new Date();
+	const startDate = new Date(
+		endDate.getFullYear() - 1,
+		endDate.getMonth(),
+		endDate.getDate(),
+	); // 12 meses de histórico
+
+	// Buscar dados históricos
+	const { data: historicalData, error } = await supabaseClient
+		.from('transactions')
+		.select('amount, transaction_date')
+		.eq('user_id', userId)
+		.gte('transaction_date', startDate.toISOString())
+		.lte('transaction_date', endDate.toISOString());
+
+	if (error) {
+		throw new Error(`Erro ao buscar dados históricos: ${error.message}`);
+	}
+
+	const transactions = historicalData ?? [];
+
+	// Buscar eventos futuros agendados
+	interface FutureEvent {
+		amount: number;
+		start_date: string;
+		is_income: boolean;
+		brazilian_event_type: string;
+	}
+	let futureEvents: FutureEvent[] = [];
+	if (includeScheduledEvents) {
+		const futureStart = new Date();
+		const futureEnd = new Date();
+		futureEnd.setMonth(futureEnd.getMonth() + forecastMonths);
+
+		const { data: events } = await supabaseClient
+			.from('financial_events')
+			.select('amount, start_date, is_income, brazilian_event_type')
+			.eq('user_id', userId)
+			.gte('start_date', futureStart.toISOString())
+			.lte('start_date', futureEnd.toISOString());
+
+		futureEvents = events ?? [];
+	}
+
+	return { transactions, futureEvents };
+}
+
+function generateMonthlyBreakdown(
+	forecastMonths: number,
+	monthlyPatterns: Record<string, MonthlyPattern>,
+	futureEvents: { amount: number; start_date: string; is_income: boolean }[],
+	confidenceLevel: number,
+): MonthlyCashFlow[] {
+	const monthlyBreakdown: MonthlyCashFlow[] = [];
+
+	for (let i = 0; i < forecastMonths; i++) {
+		const forecastDate = new Date();
+		forecastDate.setMonth(forecastDate.getMonth() + i + 1);
+
+		const monthKey = `${forecastDate.getFullYear()}-${forecastDate.getMonth() + 1}`;
+		const pattern = monthlyPatterns[monthKey];
+
+		let predictedIncome = pattern?.averageIncome || 0;
+		let predictedExpenses = pattern?.averageExpenses || 0;
+
+		// Adicionar eventos futuros do mês
+		const monthEvents = futureEvents.filter((event) => {
+			const eventDate = new Date(event.start_date);
+			return (
+				eventDate.getMonth() === forecastDate.getMonth() &&
+				eventDate.getFullYear() === forecastDate.getFullYear()
+			);
+		});
+
+		monthEvents.forEach((event) => {
+			if (event.is_income) {
+				predictedIncome += Math.abs(event.amount);
+			} else {
+				predictedExpenses += Math.abs(event.amount);
+			}
+		});
+
+		// Aplicar fator de confiança
+		const confidence = pattern?.dataPoints
+			? Math.min(pattern.dataPoints / 12, confidenceLevel)
+			: confidenceLevel;
+		predictedIncome *= confidence;
+		predictedExpenses *= confidence;
+
+		const netFlow = predictedIncome - predictedExpenses;
+
+		monthlyBreakdown.push({
+			month: forecastDate.toLocaleDateString('pt-BR', {
+				month: 'long',
+				year: 'numeric',
+			}),
+			income: predictedIncome,
+			expenses: predictedExpenses,
+			netFlow,
+			confidence,
+		});
+	}
+
+	return monthlyBreakdown;
+}
+
+function calculateTotals(monthlyBreakdown: MonthlyCashFlow[]) {
+	let totalPredictedIncome = 0;
+	let totalPredictedExpenses = 0;
+
+	monthlyBreakdown.forEach((month) => {
+		totalPredictedIncome += month.income;
+		totalPredictedExpenses += month.expenses;
+	});
+
+	return { totalPredictedIncome, totalPredictedExpenses };
+}
+
+function buildCashFlowForecast(
+	forecastMonths: number,
+	totalPredictedIncome: number,
+	totalPredictedExpenses: number,
+	netCashFlow: number,
+	confidenceLevel: number,
+	monthlyBreakdown: MonthlyCashFlow[],
+	monthlyPatterns: Record<string, MonthlyPattern>,
+): CashFlowForecast {
+	// Identificar fatores chave e avisos
+	const keyFactors = identifyCashFlowFactors(monthlyBreakdown, monthlyPatterns);
+	const warnings = generateCashFlowWarnings(monthlyBreakdown, netCashFlow);
+
+	return {
+		forecastPeriod: {
+			startDate: new Date().toISOString(),
+			endDate: new Date(
+				Date.now() + forecastMonths * 30 * 24 * 60 * 60 * 1000,
+			).toISOString(),
+		},
+		predictedIncome: totalPredictedIncome,
+		predictedExpenses: totalPredictedExpenses,
+		netCashFlow,
+		confidence: confidenceLevel,
+		keyFactors,
+		warnings,
+		monthlyBreakdown,
+	};
+}
+
+function buildCashFlowResponse(
+	forecast: CashFlowForecast,
+	forecastMonths: number,
+	totalPredictedIncome: number,
+	totalPredictedExpenses: number,
+	netCashFlow: number,
+	monthlyBreakdown: MonthlyCashFlow[],
+) {
+	return {
+		forecast,
+		summary: {
+			netCashFlowStatus:
+				netCashFlow > 0
+					? 'positivo'
+					: netCashFlow < 0
+						? 'negativo'
+						: 'equilibrado',
+			averageMonthlyIncome: totalPredictedIncome / forecastMonths,
+			averageMonthlyExpenses: totalPredictedExpenses / forecastMonths,
+			highestExpenseMonth: monthlyBreakdown.reduce(
+				(max, month) => (month.expenses > max.expenses ? month : max),
+				monthlyBreakdown[0],
+			)?.month,
+		},
+		message: `Previsão de fluxo de caixa para ${forecastMonths} meses: receita prevista de R$ ${totalPredictedIncome.toFixed(2)}, despesas de R$ ${totalPredictedExpenses.toFixed(2)}, resultando em fluxo ${netCashFlow >= 0 ? 'positivo' : 'negativo'} de R$ ${Math.abs(netCashFlow).toFixed(2)}.`,
+	};
+}
+
+// Helper functions for getAnomalyDetection
+function calculateAnalysisPeriod(analysisPeriod: string): { startDate: Date; endDate: Date } {
+	const endDate = new Date();
+	const startDate = new Date();
+
+	switch (analysisPeriod) {
+		case '7d':
+			startDate.setDate(endDate.getDate() - 7);
+			break;
+		case '30d':
+			startDate.setDate(endDate.getDate() - 30);
+			break;
+		case '90d':
+			startDate.setDate(endDate.getDate() - 90);
+			break;
+	}
+
+	return { startDate, endDate };
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
+async function fetchAnomalyTransactions(supabaseClient: any, userId: string, startDate: Date, endDate: Date): Promise<TransactionRecord[]> {
+	const { data: transactions, error } = await supabaseClient
+		.from('transactions')
+		.select(`
+		    amount,
+		    transaction_date,
+		    category:transaction_categories(id, name),
+		    description,
+		    merchant_name
+		  `)
+		.eq('user_id', userId)
+		.gte('transaction_date', startDate.toISOString())
+		.lte('transaction_date', endDate.toISOString())
+		.order('transaction_date', { ascending: false });
+
+	if (error) {
+		throw new Error(`Erro ao buscar transações: ${error.message}`);
+	}
+
+	return transactions ?? [];
+}
+
+function detectAllAnomalies(transactions: TransactionRecord[], severityThreshold: string): FinancialAnomaly[] {
+	const anomalies: FinancialAnomaly[] = [];
+
+	// 1. Transações de valor异常mente alto
+	const amountStats = calculateAmountStatistics(transactions);
+	const highValueTransactions = transactions.filter(
+		(tx) => Math.abs(tx.amount) > amountStats.mean + 3 * amountStats.stdDev,
+	);
+
+	highValueTransactions.forEach((tx) => {
+		const severity = Math.abs(tx.amount) > amountStats.mean + 5 * amountStats.stdDev ? 'high' : 'medium';
+		if (meetsSeverityThreshold(severity, severityThreshold)) {
+			anomalies.push({
+				type: 'unusual_spending',
+				severity,
+				description: `Transação de valor异常mente alto: R$ ${Math.abs(tx.amount).toFixed(2)} em ${tx.merchant_name || tx.description}`,
+				amount: Math.abs(tx.amount),
+				date: tx.transaction_date,
+				category: getCategoryName(tx.category),
+				recommendedAction: 'Verificar se esta transação foi autorizada por você',
+			});
+		}
+	});
+
+	// 2. Possíveis transações duplicadas
+	const duplicateGroups = findPotentialDuplicates(transactions);
+	duplicateGroups.forEach((group) => {
+		if (meetsSeverityThreshold('medium', severityThreshold)) {
+			anomalies.push({
+				type: 'duplicate_transaction',
+				severity: 'medium',
+				description: `Possíveis transações duplicadas: ${group.length} transações similares`,
+				amount: group.reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
+				date: group[0].transaction_date,
+				category: getCategoryName(group[0].category),
+				recommendedAction: 'Verificar se houve cobrança duplicada e contestar se necessário',
+			});
+		}
+	});
+
+	// 3. Padrões suspeitos por categoria
+	const categoryAnomalies = analyzeCategoryPatterns(transactions);
+	categoryAnomalies.forEach((anomaly) => {
+		if (meetsSeverityThreshold(anomaly.severity, severityThreshold)) {
+			anomalies.push(anomaly);
+		}
+	});
+
+	// 4. Excesso de transações em curto período
+	const excessiveTransactions = detectExcessiveTransactionPattern(transactions);
+	if (excessiveTransactions && meetsSeverityThreshold(excessiveTransactions.severity, severityThreshold)) {
+		anomalies.push(excessiveTransactions);
+	}
+
+	return anomalies;
+}
+
+function buildAnomalyDetectionResponse(
+	anomalies: FinancialAnomaly[],
+	riskScore: number,
+	recommendations: string[],
+	startDate: Date,
+	endDate: Date,
+): {
+	detection: AnomalyDetection;
+	summary: {
+		totalAnomalies: number;
+		anomaliesByType: Record<string, number>;
+		riskLevel: string;
+		analysisPeriod: { startDate: string; endDate: string; days: number };
+	};
+	message: string;
+} {
+	const riskLevel = getRiskLevel(riskScore);
+
+	const detection: AnomalyDetection = {
+		anomalies,
+		riskScore,
+		recommendations,
+		lastAnalyzed: new Date().toISOString(),
+	};
+
+	return {
+		detection,
+		summary: {
+			totalAnomalies: anomalies.length,
+			anomaliesByType: groupAnomaliesByType(anomalies),
+			riskLevel,
+			analysisPeriod: {
+				startDate: startDate.toISOString(),
+				endDate: endDate.toISOString(),
+				days: Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+			},
+		},
+		message: anomalies.length > 0
+			? `Detectadas ${anomalies.length} anomalias no período de análise com nível de risco ${riskLevel}.`
+			: 'Nenhuma anomalia significativa detectada no período analisado.',
+	};
+}
+
+// Helper functions for getBudgetRecommendations
+// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
+async function fetchBudgetTransactions(supabaseClient: any, userId: string, analysisMonths: number) {
+	const endDate = new Date();
+	const startDate = new Date();
+	startDate.setMonth(startDate.getMonth() - analysisMonths);
+
+	const { data: transactions, error } = await supabaseClient
+		.from('transactions')
+		.select(`
+		    amount,
+		    category:transaction_categories(id, name, color, icon, is_system)
+		  `)
+		.eq('user_id', userId)
+		.gte('transaction_date', startDate.toISOString())
+		.lte('transaction_date', endDate.toISOString());
+
+	if (error) {
+		throw new Error(`Erro ao buscar transações: ${error.message}`);
+	}
+
+	return { transactions: transactions ?? [], startDate, endDate };
+}
+
+function analyzeSpendingPatterns(
+	// biome-ignore lint/suspicious/noExplicitAny: Transaction data has dynamic structure from Supabase
+	transactions: any[],
+	analysisMonths: number,
+) {
+	const totalIncome = transactions
+		.filter((tx) => tx.amount > 0)
+		.reduce((sum, tx) => sum + tx.amount, 0);
+
+	const totalExpenses = transactions
+		.filter((tx) => tx.amount < 0)
+		.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+
+	const averageMonthlyIncome = totalIncome / analysisMonths;
+	const averageMonthlyExpenses = totalExpenses / analysisMonths;
+
+	// Analisar gastos por categoria
+	const categoryExpenses = new Map<
+		string,
+		{
+			categoryName: string;
+			categoryId: string;
+			totalAmount: number;
+			averageMonthly: number;
+			percentage: number;
+			isEssential: boolean;
+			color: string;
+			icon: string;
+		}
+	>();
+
+	transactions
+		.filter((tx) => tx.amount < 0 && tx.category)
+		.forEach((tx) => {
+			const cat = Array.isArray(tx.category) ? tx.category[0] : tx.category;
+			if (!cat) return;
+			const catId = cat.id;
+
+			if (!categoryExpenses.has(catId)) {
+				categoryExpenses.set(catId, {
+					categoryName: cat.name,
+					categoryId: catId,
+					totalAmount: 0,
+					averageMonthly: 0,
+					percentage: 0,
+					isEssential: cat.is_system,
+					color: cat.color || '#6B7280',
+					icon: cat.icon || 'circle',
+				});
+			}
+
+			const categoryData = categoryExpenses.get(catId);
+			if (categoryData) {
+				categoryData.totalAmount += Math.abs(tx.amount);
+			}
+		});
+
+	// Calcular médias e percentuais
+	categoryExpenses.forEach((category) => {
+		category.averageMonthly = category.totalAmount / analysisMonths;
+		category.percentage = averageMonthlyExpenses > 0 ? (category.averageMonthly / averageMonthlyExpenses) * 100 : 0;
+	});
+
+	return {
+		totalIncome,
+		totalExpenses,
+		averageMonthlyIncome,
+		averageMonthlyExpenses,
+		categoryExpenses: Array.from(categoryExpenses.values()),
+	};
+}
+
+// Internal types for budget calculations
+interface CategoryExpenseInternal {
+	categoryId: string;
+	categoryName: string;
+	totalAmount: number;
+	averageMonthly: number;
+	percentage: number;
+	isEssential: boolean;
+	color?: string;
+	icon?: string;
+}
+
+interface BudgetRecommendation {
+	categoryId: string;
+	categoryName: string;
+	currentMonthlyAverage: number;
+	recommendedMonthlyBudget: number;
+	reductionPercentage: number;
+	priority: 'essential' | 'non_essential';
+	reasoning: string;
+	color?: string;
+	icon?: string;
+}
+
+interface InternalSpendingAnalysis {
+	totalIncome: number;
+	totalExpenses: number;
+	averageMonthlyIncome: number;
+	averageMonthlyExpenses: number;
+	categoryExpenses: CategoryExpenseInternal[];
+}
+
+function calculateBudgetAllocations(
+	spendingAnalysis: InternalSpendingAnalysis,
+	targetSavingsRate: number,
+	prioritizeEssential: boolean,
+) {
+	const { averageMonthlyIncome, categoryExpenses } = spendingAnalysis;
+
+	// Calcular orçamento-alvo
+	const targetMonthlySavings = averageMonthlyIncome * targetSavingsRate;
+	const targetBudget = averageMonthlyIncome - targetMonthlySavings;
+
+	// Atualizar categorias essenciais baseado na configuração
+	const updatedCategories = categoryExpenses.map((cat) => ({
+		...cat,
+		isEssential: cat.isEssential || (prioritizeEssential && ['Alimentação', 'Moradia', 'Transporte', 'Saúde'].includes(cat.categoryName)),
+	}));
+
+	// Gerar recomendações de orçamento
+	const budgetRecommendations: BudgetRecommendation[] = [];
+	const categories = updatedCategories;
+	let allocatedBudget = 0;
+
+	// Alocar orçamento para categorias essenciais primeiro
+	const essentialCategories = categories
+		.filter((cat) => cat.isEssential)
+		.sort((a, b) => b.averageMonthly - a.averageMonthly);
+	const nonEssentialCategories = categories
+		.filter((cat) => !cat.isEssential)
+		.sort((a, b) => b.averageMonthly - a.averageMonthly);
+
+	// Orçamento para essenciais (manter ou reduzir modestamente)
+	essentialCategories.forEach((category) => {
+		const recommendedBudget = category.averageMonthly * 0.9; // Redução de 10%
+		allocatedBudget += recommendedBudget;
+
+		budgetRecommendations.push({
+			categoryId: category.categoryId,
+			categoryName: category.categoryName,
+			currentMonthlyAverage: category.averageMonthly,
+			recommendedMonthlyBudget: recommendedBudget,
+			reductionPercentage: 10,
+			priority: 'essential',
+			reasoning: 'Categoria essencial, recomenda-se redução moderada',
+			color: category.color,
+			icon: category.icon,
+		});
+	});
+
+	// Orçamento para não essenciais (reduções mais agressivas)
+	const remainingBudget = targetBudget - allocatedBudget;
+	const totalNonEssentialExpenses = nonEssentialCategories.reduce(
+		(sum, cat) => sum + cat.averageMonthly,
+		0,
+	);
+
+	if (remainingBudget > 0 && totalNonEssentialExpenses > 0) {
+		const reductionFactor = remainingBudget / totalNonEssentialExpenses;
+
+		nonEssentialCategories.forEach((category) => {
+			const recommendedBudget = category.averageMonthly * reductionFactor;
+			const reductionPercentage = ((category.averageMonthly - recommendedBudget) / category.averageMonthly) * 100;
+
+			budgetRecommendations.push({
+				categoryId: category.categoryId,
+				categoryName: category.categoryName,
+				currentMonthlyAverage: category.averageMonthly,
+				recommendedMonthlyBudget: recommendedBudget,
+				reductionPercentage,
+				priority: 'non_essential',
+				reasoning: reductionPercentage > 30
+					? 'Redução significativa recomendada para atingir meta de economia'
+					: 'Redução moderada para equilibrar orçamento',
+				color: category.color,
+				icon: category.icon,
+			});
+		});
+	}
+
+	return {
+		targetMonthlySavings,
+		targetBudget,
+		budgetRecommendations: budgetRecommendations.sort((a, b) => b.reductionPercentage - a.reductionPercentage),
+	};
+}
+
+interface BudgetAllocationsResult {
+	targetMonthlySavings: number;
+	targetBudget: number;
+	budgetRecommendations: BudgetRecommendation[];
+}
+
+function calculateBudgetProjections(
+	spendingAnalysis: InternalSpendingAnalysis,
+	budgetAllocations: BudgetAllocationsResult,
+	targetSavingsRate: number,
+) {
+	const { averageMonthlyIncome } = spendingAnalysis;
+	const { budgetRecommendations } = budgetAllocations;
+
+	const projectedMonthlyExpenses = budgetRecommendations.reduce(
+		(sum, rec) => sum + rec.recommendedMonthlyBudget,
+		0,
+	);
+	const projectedMonthlySavings = averageMonthlyIncome - projectedMonthlyExpenses;
+	const projectedSavingsRate = averageMonthlyIncome > 0 ? projectedMonthlySavings / averageMonthlyIncome : 0;
+
+	return {
+		projectedMonthlyExpenses,
+		projectedMonthlySavings,
+		projectedSavingsRate,
+		canAchieveTarget: projectedSavingsRate >= targetSavingsRate,
+	};
+}
+
+function buildBudgetResponse(
+	// biome-ignore lint/suspicious/noExplicitAny: Analysis data has dynamic structure
+	spendingAnalysis: any,
+	// biome-ignore lint/suspicious/noExplicitAny: Budget allocations have dynamic structure
+	budgetAllocations: any,
+	// biome-ignore lint/suspicious/noExplicitAny: Projections have dynamic structure
+	projections: any,
+	targetSavingsRate: number,
+) {
+	const { averageMonthlyIncome, averageMonthlyExpenses } = spendingAnalysis;
+	const { targetMonthlySavings, targetBudget, budgetRecommendations } = budgetAllocations;
+	const { projectedMonthlyExpenses, projectedMonthlySavings, projectedSavingsRate, canAchieveTarget } = projections;
+
+	return {
+		currentAnalysis: {
+			averageMonthlyIncome,
+			averageMonthlyExpenses,
+			currentSavingsRate: (averageMonthlyIncome - averageMonthlyExpenses) / averageMonthlyIncome,
+		},
+		targetAnalysis: {
+			targetSavingsRate,
+			targetMonthlySavings,
+			targetBudget,
+		},
+		budgetRecommendations,
+		projections: {
+			projectedMonthlyExpenses,
+			projectedMonthlySavings,
+			projectedSavingsRate,
+			canAchieveTarget,
+		},
+		message: projectedSavingsRate >= targetSavingsRate
+			? `Meta de economia de ${(targetSavingsRate * 100).toFixed(1)}% atingível com orçamento recomendado! Projeção: ${(projectedSavingsRate * 100).toFixed(1)}% de economia mensal.`
+			: `Meta de ${(targetSavingsRate * 100).toFixed(1)}% desafiadora. Projeção atual: ${(projectedSavingsRate * 100).toFixed(1)}%. Considere reduções adicionais.`,
+	};
 }

@@ -82,6 +82,7 @@ export function QuickActionModal({
     }
   };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Financial transaction handling requires multiple validation and action branches
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

@@ -330,6 +330,7 @@ export function useFinancialEvents(
           categoryId: event.category, // Map category to categoryId for backend
         };
 
+        // biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic
         const response = await apiClient.post<TransactionApiResponse<any>>(
           '/v1/transactions',
           payload,
@@ -365,9 +366,11 @@ export function useFinancialEvents(
           throw new FinancialError('Usuário não autenticado', 'AUTH');
         }
 
+        // biome-ignore lint/suspicious/noExplicitAny: Payload type is dynamic for partial updates
         const payload: any = { ...updates };
         if (updates.category) payload.categoryId = updates.category;
 
+        // biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic
         const response = await apiClient.put<TransactionApiResponse<any>>(
           `/v1/transactions/${id}`,
           payload,

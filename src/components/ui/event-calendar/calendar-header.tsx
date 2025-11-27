@@ -122,6 +122,151 @@ const mapInstallmentInfo = (
 	};
 };
 
+// Helper to map database status to domain status
+const mapStatus = (
+	dbStatus: string | null,
+): 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed' => {
+	const validStatuses: Array<
+		'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'
+	> = ['pending', 'paid', 'scheduled', 'cancelled', 'completed'];
+	const status = dbStatus as typeof validStatuses[number] | null;
+	if (status && validStatuses.includes(status)) return status;
+	return 'pending';
+};
+
+// Helper to map database color to domain color
+const mapColor = (
+	dbColor: string | null,
+): | 'emerald'
+	| 'rose'
+	| 'orange'
+	| 'blue'
+	| 'violet'
+	| 'indigo'
+	| 'amber'
+	| 'red'
+	| 'green'
+	| 'yellow'
+	| 'purple'
+	| 'pink'
+	| 'teal'
+	| 'cyan' => {
+	const validColors: Array<
+		| 'emerald'
+		| 'rose'
+		| 'orange'
+		| 'blue'
+		| 'violet'
+		| 'indigo'
+		| 'amber'
+		| 'red'
+		| 'green'
+		| 'yellow'
+		| 'purple'
+		| 'pink'
+		| 'teal'
+		| 'cyan'
+	> = [
+		'emerald',
+		'rose',
+		'orange',
+		'blue',
+		'violet',
+		'indigo',
+		'amber',
+		'red',
+		'green',
+		'yellow',
+		'purple',
+		'pink',
+		'teal',
+		'cyan',
+	];
+	const color = dbColor as typeof validColors[number] | null;
+	if (color && validColors.includes(color)) return color;
+	return 'blue';
+};
+
+// Helper to map database event to calendar event
+const mapDatabaseEventToCalendarEvent = (
+	event: DatabaseFinancialEvent,
+): CalendarFinancialEvent => {
+	const basicFields = {
+		id: event.id,
+		userId: event.user_id,
+		title: event.title,
+		description: event.description || undefined,
+		amount: event.amount,
+		isIncome: event.is_income ?? false,
+		category: event.category as string | undefined,
+		brazilianEventType: mapBrazilianEventType(event.brazilian_event_type),
+	};
+
+	const statusAndPriority = {
+		status: mapStatus(event.status),
+		priority: mapPriority(event.priority),
+	};
+
+	const dates = {
+		start: new Date(event.start_date),
+		end: new Date(event.end_date),
+		dueDate: event.due_date || undefined,
+		allDay: event.all_day ?? false,
+	};
+
+	const recurring = {
+		isRecurring: event.is_recurring ?? false,
+		recurrenceRule: event.recurrence_rule || undefined,
+	};
+
+	const appearance = {
+		color: mapColor(event.color),
+		icon: event.icon || undefined,
+	};
+
+	const arrays = {
+		attachments: event.attachments || [],
+		tags: event.tags || [],
+		metadata: event.metadata as Record<string, unknown> | undefined,
+	};
+
+	const installment = {
+		installmentInfo: mapInstallmentInfo(event.installment_info),
+	};
+
+	const ids = {
+		parentEventId: event.parent_event_id || undefined,
+		createdAt: event.created_at || '',
+		updatedAt: event.updated_at || '',
+		completedAt: event.completed_at || undefined,
+	};
+
+	const locationAndNotes = {
+		location: event.location || undefined,
+		notes: event.notes || undefined,
+	};
+
+	const calendarSpecific = {
+		type: (event.is_income ? 'income' : 'expense') as 'income' | 'expense',
+		date: new Date(event.start_date),
+		account: undefined,
+		is_expense: !event.is_income,
+	};
+
+	return {
+		...basicFields,
+		...statusAndPriority,
+		...dates,
+		...recurring,
+		...appearance,
+		...arrays,
+		...installment,
+		...ids,
+		...locationAndNotes,
+		...calendarSpecific,
+	};
+};
+
 interface CalendarHeaderProps {
 	currentDate: Date;
 	onDateChange: (date: Date) => void;
@@ -165,64 +310,7 @@ export function CalendarHeader({
 	// Transform database results to CalendarFinancialEvent format
 	const transformedResults = useMemo(() => {
 		if (searchType === 'events') {
-			return (results as DatabaseFinancialEvent[]).map(
-				(event): CalendarFinancialEvent => ({
-					id: event.id,
-					userId: event.user_id,
-					title: event.title,
-					description: event.description || undefined,
-					amount: event.amount,
-					isIncome: event.is_income ?? false, // Handle null case
-					category: event.category as string | undefined, // Type conversion from DB
-					brazilianEventType: mapBrazilianEventType(event.brazilian_event_type),
-					status:
-						(event.status as
-							| 'pending'
-							| 'paid'
-							| 'scheduled'
-							| 'cancelled'
-							| 'completed') || 'pending',
-					priority: mapPriority(event.priority),
-					start: new Date(event.start_date),
-					end: new Date(event.end_date),
-					dueDate: event.due_date || undefined, // Keep as string since that's what CoreFinancialEvent expects
-					allDay: event.all_day ?? false,
-					isRecurring: event.is_recurring ?? false,
-					recurrenceRule: event.recurrence_rule || undefined,
-					color:
-						(event.color as
-							| 'emerald'
-							| 'rose'
-							| 'orange'
-							| 'blue'
-							| 'violet'
-							| 'indigo'
-							| 'amber'
-							| 'red'
-							| 'green'
-							| 'yellow'
-							| 'purple'
-							| 'pink'
-							| 'teal'
-							| 'cyan') || 'blue',
-					icon: event.icon || undefined,
-					attachments: event.attachments || [],
-					tags: event.tags || [],
-					metadata: event.metadata as Record<string, unknown> | undefined,
-					installmentInfo: mapInstallmentInfo(event.installment_info),
-					parentEventId: event.parent_event_id || undefined,
-					createdAt: event.created_at || '',
-					updatedAt: event.updated_at || '',
-					completedAt: event.completed_at || undefined,
-					location: event.location || undefined,
-					notes: event.notes || undefined,
-					// Calendar-specific fields
-					type: event.is_income ? 'income' : 'expense',
-					date: new Date(event.start_date),
-					account: undefined, // No account_id field in database
-					is_expense: !event.is_income,
-				}),
-			);
+			return (results as DatabaseFinancialEvent[]).map(mapDatabaseEventToCalendarEvent);
 		}
 		// For transactions, return empty array for now since the callback expects CalendarFinancialEvent[]
 		return [];

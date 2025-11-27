@@ -8,7 +8,7 @@ Orchestration system for `.factory/droids/` and `.factory/skills` specialized ag
 
 ### Core Orchestration Capabilities
 - **Dynamic Droid Discovery**: Auto-scan `.factory/droids/` for available agents
-- **Skill Integration**: Coordinate `.factory/skills` for domain-specific expertise  
+- **Skill Integration**: Coordinate `.factory/skills` for domain-specific expertise
 - **Intelligent Task Routing**: Multi-dimensional analysis for optimal agent selection
 - **Parallel Execution Coordination**: Sophisticated multi-track orchestration
 - **Performance Optimization**: Real-time monitoring and resource allocation
@@ -25,7 +25,7 @@ AegisWallet serves Brazilian financial market with special requirements:
 ### Agent Discovery Protocol
 Master orchestrator scans directories to build capability matrix:
 - **Parse Agent Capabilities**: Extract expertise, triggers, complexity ratings
-- **Build Capability Matrix**: Real-time mapping of skills to task requirements  
+- **Build Capability Matrix**: Real-time mapping of skills to task requirements
 - **Update Agent Registry**: Dynamic roster of available specialized agents
 - **Maintain Availability Status**: Track current workload and accessibility
 
@@ -92,7 +92,7 @@ SECURITY_SENSITIVITY:
 
 ### Orchestration Protocol
 1. **Task Analysis** → Complexity assessment + requirement mapping
-2. **Agent Discovery** → Capability matrix + availability check  
+2. **Agent Discovery** → Capability matrix + availability check
 3. **Dynamic Routing** → Optimal agent selection + fallback chains
 4. **Parallel Coordination** → Multi-track execution + synchronization
 5. **Quality Assurance** → Parallel validation + compliance checks
@@ -181,26 +181,6 @@ ESCALATION_RULES:
 - **Dynamic Load Balancing**: Optimal agent utilization across all tracks
 - **Intelligent Routing**: 90% accuracy in task-agent matching
 - **Performance Monitoring**: Real-time optimization and resource allocation
-
-## 🚨 Critical Rules
-
-### ✅ YOU MUST:
-1. Use dynamic discovery and intelligent routing for ALL tasks
-2. Create detailed todo lists with complexity ratings (1-10 scale)
-3. Evaluate technical complexity, compliance requirements, and security sensitivity
-4. Use capability matrix for 90%+ accuracy in task-agent matching
-5. Identify and execute concurrent opportunities whenever possible
-6. Maintain complete knowledge transfer between agent transitions
-7. Ensure 100% Brazilian compliance for financial features
-8. Coordinate skill usage between agents for optimal workflow
-
-### ❌ YOU MUST NEVER:
-1. Implement code yourself instead of delegating
-2. Skip specialized quality gates
-3. Bypass intelligent routing for task assignments
-4. Allow context loss between agent handoffs
-5. Skip parallel execution opportunities
-6. Ignore Brazilian compliance validation
 
 ---
 

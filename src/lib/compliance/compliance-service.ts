@@ -10,8 +10,8 @@ import {
 	complianceAuditLogs,
 	consentTemplates,
 	dataDeletionRequests,
-	dataExportRequests,
 	lgpdConsents,
+	lgpdExportRequests,
 	transactionLimits,
 } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
@@ -163,7 +163,6 @@ export class ComplianceService {
 					collectionMethod,
 					ipAddress: ipAddress ?? null,
 					userAgent: userAgent ?? null,
-					expiresAt: null,
 				})
 				.returning();
 
@@ -298,14 +297,14 @@ export class ComplianceService {
 	): Promise<DataExportRequest> {
 		try {
 			const [request] = await this.db
-				.insert(dataExportRequests)
+				.insert(lgpdExportRequests)
 				.values({
 					userId,
 					requestType,
 					format,
 					status: 'pending',
-					dateFrom: dateFrom ?? null,
-					dateTo: dateTo ?? null,
+					dateFrom: dateFrom ? new Date(dateFrom) : null,
+					dateTo: dateTo ? new Date(dateTo) : null,
 					requestedVia: 'app',
 					ipAddress: ipAddress ?? null,
 				})
@@ -500,8 +499,8 @@ export class ComplianceService {
 
 			const dailyLimit = Number(limit.dailyLimit);
 			const currentUsed = Number(limit.currentDailyUsed ?? 0);
-			const perTransactionLimit = limit.perTransactionLimit
-				? Number(limit.perTransactionLimit)
+			const perTransactionLimit = limit.transactionLimit
+				? Number(limit.transactionLimit)
 				: null;
 			const availableAmount = dailyLimit - currentUsed;
 
@@ -529,22 +528,7 @@ export class ComplianceService {
 				};
 			}
 
-			// Check if requires approval
-			const requiresApprovalAbove = limit.requiresApprovalAbove
-				? Number(limit.requiresApprovalAbove)
-				: null;
-
-			if (requiresApprovalAbove && amount > requiresApprovalAbove) {
-				return {
-					allowed: true,
-					requires_approval: true,
-					reason: `Transação requer aprovação manual (acima de R$ ${requiresApprovalAbove.toFixed(2)})`,
-					limit: dailyLimit,
-					used: currentUsed,
-					requested: amount,
-					remaining: availableAmount,
-				};
-			}
+			
 
 			return {
 				allowed: true,
@@ -622,19 +606,13 @@ export class ComplianceService {
 				eventType,
 				resourceType,
 				resourceId: resourceId ?? null,
-				action: (metadata?.action as string) ?? null,
-				oldValue: null,
-				newValue: null,
+				description: (metadata?.action as string) ?? null,
+				metadata: metadata ?? {},
+				previousState: null,
+				newState: null,
 				ipAddress: null,
 				userAgent: null,
-				geoLocation: null,
 				sessionId: null,
-				requestId: null,
-				riskScore: null,
-				requiresReview: false,
-				reviewedBy: null,
-				reviewedAt: null,
-				context: metadata ?? {},
 				retentionUntil,
 			});
 		} catch (error) {

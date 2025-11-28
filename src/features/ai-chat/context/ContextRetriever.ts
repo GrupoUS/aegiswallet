@@ -215,7 +215,7 @@ export class ContextRetriever {
 				.where(
 					and(
 						eq(financialEvents.userId, userId),
-						lte(financialEvents.startDate, endDate.toISOString()),
+						lte(financialEvents.startDate, endDate),
 					),
 				)
 				.orderBy(financialEvents.startDate)

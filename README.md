@@ -53,7 +53,6 @@ bun quality
 AegisWallet uses Clerk for authentication and user management.
 
 - **Setup Guide**: For complete setup instructions, see [Clerk Setup Guide](docs/auth/clerk-setup.md)
-- **Setup Guide**: For complete setup instructions, see [Clerk Setup Guide](docs/auth/clerk-setup.md)
 - **Quick Start**: Add `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` to `.env` (see `env.example` for details)
 
 ---

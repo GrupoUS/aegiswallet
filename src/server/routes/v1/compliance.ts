@@ -33,13 +33,13 @@ const grantConsentSchema = z.object({
 		.default('explicit_form'),
 	consentType: z.enum([
 		'data_processing',
-		'financial_data',
-		'voice_recording',
-		'analytics',
 		'marketing',
-		'third_party_sharing',
-		'open_banking',
+		'analytics',
+		'third_party',
+		'voice_data',
 		'biometric',
+		'financial_data',
+		'location',
 	]),
 });
 
@@ -49,11 +49,12 @@ const createExportRequestSchema = z.object({
 	format: z.enum(['json', 'csv', 'pdf']).default('json'),
 	requestType: z
 		.enum([
+			'full_data',
 			'full_export',
-			'financial_only',
 			'transactions',
-			'voice_commands',
-			'specific_period',
+			'profile',
+			'consents',
+			'audit_logs',
 		])
 		.default('full_export'),
 });
@@ -61,10 +62,10 @@ const createExportRequestSchema = z.object({
 const createDeletionRequestSchema = z.object({
 	reason: z.string().optional(),
 	requestType: z.enum([
+		'full_account',
 		'full_deletion',
+		'specific_data',
 		'anonymization',
-		'partial_deletion',
-		'consent_withdrawal',
 	]),
 	scope: z.record(z.string(), z.unknown()).optional(),
 });
@@ -72,13 +73,12 @@ const createDeletionRequestSchema = z.object({
 const checkLimitSchema = z.object({
 	amount: z.number().positive('Valor deve ser positivo'),
 	limitType: z.enum([
+		'pix_daily',
 		'pix_daytime',
-		'pix_nighttime',
-		'pix_total_daily',
-		'ted_daily',
+		'pix_transaction',
 		'boleto_daily',
-		'total_daily',
-		'total_monthly',
+		'transfer_daily',
+		'withdrawal_daily',
 	]),
 });
 

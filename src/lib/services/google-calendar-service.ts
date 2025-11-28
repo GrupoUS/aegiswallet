@@ -45,12 +45,11 @@ interface IncrementalSyncOptions {
 export class GoogleCalendarService {
 	private config: GoogleCalendarConfig;
 	private userId: string;
-	private authToken: string;
 
-	constructor(config: GoogleCalendarConfig, userId: string, authToken: string) {
+	constructor(config: GoogleCalendarConfig, userId: string, _authToken: string) {
 		this.config = config;
 		this.userId = userId;
-		this.authToken = authToken;
+		// authToken not used in current implementation
 	}
 
 	/**
@@ -158,7 +157,7 @@ export class GoogleCalendarService {
 				{ params: { user_id: this.userId } },
 			);
 			return response;
-		} catch (error) {
+		} catch (_error) {
 			// Return null if settings not found
 			return null;
 		}

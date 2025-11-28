@@ -1,5 +1,5 @@
 import { tool } from 'ai';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { secureLogger } from '../../../logging/secure-logger';
@@ -199,28 +199,29 @@ export function createBoletoTools(userId: string) {
 						throw new Error('Erro ao registrar boleto: Insert failed');
 					}
 
-					const boleto = insertedBoleto as unknown as Boleto;
+					// Use the inserted data directly
+					const boletoId = insertedBoleto?.id;
 
 					// Log de auditoria
 					await db.insert(complianceAuditLogs).values({
 						userId: userId,
-						eventType: 'consent_granted',
+						eventType: 'data_accessed',  // Changed from 'consent_granted' as it's more appropriate
 						resourceType: 'boletos',
-						resourceId: boleto.id,
-						description: `Boleto registrado no valor de R$ ${Number(boleto.amount).toFixed(2)} - Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
+						resourceId: boletoId,
+						description: `Boleto registrado no valor de R$ ${Number(boletoData.amount).toFixed(2)} - Vencimento: ${new Date(boletoData.dueDate).toLocaleDateString('pt-BR')}`,
 						metadata: {
-							amount: boleto.amount,
-							due_date: boleto.dueDate,
+							amount: boletoData.amount,
+							due_date: boletoData.dueDate,
 							capture_method: captureMethod,
-							payee_name: boleto.beneficiaryName,
+							payee_name: boletoData.beneficiaryName,
 						},
 					});
 
 					secureLogger.info('Boleto registrado com sucesso', {
-						boletoId: boleto.id,
+						boletoId,
 						userId,
-						amount: Number(boleto.amount),
-						dueDate: boleto.dueDate,
+						amount: Number(boletoData.amount),
+						dueDate: boletoData.dueDate,
 					});
 
 					// Calcular dias até vencimento
@@ -274,17 +275,23 @@ export function createBoletoTools(userId: string) {
 					}
 
 					const paymentDt = paymentDate ? new Date(paymentDate) : new Date();
-					const dueDate = new Date(boleto.dueDate!);
+					if (!boleto.dueDate) {
+						throw new Error('Boleto não possui data de vencimento');
+					}
+					const dueDate = new Date(boleto.dueDate);
 
 					if (boleto.status === 'paid') {
 						throw new Error('Este boleto já está pago');
 					}
 
 					// Calcular juros e multas - convert DB record to Boleto type
+					if (!boleto.dueDate) {
+						throw new Error('Boleto não possui data de vencimento');
+					}
 					const boletoForCalc = {
 						...boleto,
 						amount: Number(boleto.amount),
-						dueDate: boleto.dueDate!,
+						dueDate: boleto.dueDate,
 					} as unknown as Boleto;
 					const calculation = calculateBoletoAmount(boletoForCalc, paymentDt);
 
@@ -293,7 +300,7 @@ export function createBoletoTools(userId: string) {
 						originalAmount: Number(boleto.amount),
 						calculation: calculation,
 						paymentDate: paymentDt.toISOString().split('T')[0],
-						dueDate: boleto.dueDate!,
+						dueDate: boleto.dueDate,
 						isOverdue: paymentDt > dueDate,
 						message:
 							`Valor original: R$ ${Number(boleto.amount).toFixed(2)}. ` +
@@ -358,10 +365,13 @@ export function createBoletoTools(userId: string) {
 					}
 
 					const paymentDt = paymentDate ? new Date(paymentDate) : new Date();
+					if (!boleto.dueDate) {
+						throw new Error('Boleto não possui data de vencimento');
+					}
 					const boletoForCalc = {
 						...boleto,
 						amount: Number(boleto.amount),
-						dueDate: boleto.dueDate!,
+						dueDate: boleto.dueDate,
 					} as unknown as Boleto;
 					const calculation = calculateBoletoAmount(boletoForCalc, paymentDt);
 
@@ -607,7 +617,10 @@ export function createBoletoTools(userId: string) {
 					}
 
 					const now = new Date();
-					const dueDate = new Date(boleto.dueDate!);
+					if (!boleto.dueDate) {
+						throw new Error('Boleto não possui data de vencimento');
+					}
+					const dueDate = new Date(boleto.dueDate);
 					const daysUntilDue = Math.ceil(
 						(dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
 					);
@@ -622,10 +635,13 @@ export function createBoletoTools(userId: string) {
 
 					let paymentCalculation = null;
 					if (includePaymentCalculation && boleto.status === 'pending') {
+						if (!boleto.dueDate) {
+							throw new Error('Boleto não possui data de vencimento');
+						}
 						const boletoForCalc = {
 							...boleto,
 							amount: Number(boleto.amount),
-							dueDate: boleto.dueDate!,
+							dueDate: boleto.dueDate,
 						} as unknown as Boleto;
 						paymentCalculation = calculateBoletoAmount(boletoForCalc, now);
 					}

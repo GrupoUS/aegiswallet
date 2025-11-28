@@ -72,8 +72,8 @@ export interface Boleto {
 	digitableLine: string;
 	amount: number;
 	dueDate: string;
-	payeeName: string;
-	payeeDocument?: string;
+	beneficiaryName: string;
+	beneficiaryCnpj?: string;
 	status: BoletoStatus;
 	discountAmount?: number;
 	fineAmount?: number;

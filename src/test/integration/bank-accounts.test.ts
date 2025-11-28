@@ -4,7 +4,7 @@
  *
  * These tests verify data integrity and database operations directly.
  */
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import {

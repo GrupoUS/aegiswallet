@@ -86,7 +86,6 @@ export function createMultimodalTools(userId: string) {
 						userId,
 						reportType,
 						dateRange,
-						categories,
 					);
 
 					// Processar dados para visualização
@@ -575,7 +574,6 @@ async function fetchReportData(
 	userId: string,
 	_reportType: string,
 	dateRange: DateRange,
-	categories?: string[],
 ): Promise<unknown[]> {
 	const conditions = [
 		eq(transactions.userId, userId),

@@ -52,60 +52,55 @@ function detectIntentAndEntities(command: string): {
 	confidence: number;
 } {
 	const lowerCommand = command.toLowerCase().trim();
-	let intent = null;
 	const entities: VoiceCommandEntities = {};
-	let confidence = 0.9;
 
-	// Balance checking commands
-	if (
-		lowerCommand.includes('saldo') ||
-		lowerCommand.includes('quanto tenho') ||
-		lowerCommand.includes('quanto dinheiro') ||
-		lowerCommand.includes('verificar saldo')
-	) {
-		intent = 'check_balance';
+	// Define intent patterns for better maintainability
+	const intentPatterns = [
+		{
+			intent: 'check_balance',
+			patterns: ['saldo', 'quanto tenho', 'quanto dinheiro', 'verificar saldo'],
+		},
+		{
+			intent: 'transfer_money',
+			patterns: ['transferir', 'pagar', 'enviar dinheiro', 'mandar dinheiro'],
+			entityExtractor: (cmd: string) => extractTransferEntities(cmd, entities),
+		},
+		{
+			intent: 'pay_bill',
+			patterns: ['conta', 'boleto', 'pagar conta', 'pagar boleto'],
+			entityExtractor: () => extractBillEntities(lowerCommand, entities),
+		},
+		{
+			intent: 'transaction_history',
+			patterns: ['extrato', 'transações', 'historico', 'compras'],
+		},
+		{
+			intent: 'pix_transfer',
+			patterns: ['pix', 'fazer pix'],
+			entityExtractor: (cmd: string) => extractPixEntities(cmd, entities),
+		},
+	];
+
+	// Find matching intent
+	for (const { intent, patterns, entityExtractor } of intentPatterns) {
+		if (patterns.some(pattern => lowerCommand.includes(pattern))) {
+			if (entityExtractor) {
+				entityExtractor(command);
+			}
+			return {
+				intent,
+				entities,
+				confidence: 0.9,
+			};
+		}
 	}
-	// Transfer commands
-	else if (
-		lowerCommand.includes('transferir') ||
-		lowerCommand.includes('pagar') ||
-		lowerCommand.includes('enviar dinheiro') ||
-		lowerCommand.includes('mandar dinheiro')
-	) {
-		intent = 'transfer_money';
-		extractTransferEntities(command, entities);
-	}
-	// Bill payment commands
-	else if (
-		lowerCommand.includes('conta') ||
-		lowerCommand.includes('boleto') ||
-		lowerCommand.includes('pagar conta') ||
-		lowerCommand.includes('pagar boleto')
-	) {
-		intent = 'pay_bill';
-		extractBillEntities(lowerCommand, entities);
-	}
-	// Transaction history commands
-	else if (
-		lowerCommand.includes('extrato') ||
-		lowerCommand.includes('transações') ||
-		lowerCommand.includes('historico') ||
-		lowerCommand.includes('compras')
-	) {
-		intent = 'transaction_history';
-	}
-	// PIX commands
-	else if (lowerCommand.includes('pix') || lowerCommand.includes('fazer pix')) {
-		intent = 'pix_transfer';
-		extractPixEntities(command, entities);
-	}
+
 	// Unknown command
-	else {
-		intent = 'unknown';
-		confidence = 0.3;
-	}
-
-	return { intent, entities, confidence };
+	return {
+		intent: 'unknown',
+		entities,
+		confidence: 0.3,
+	};
 }
 
 /**

@@ -2,9 +2,9 @@
  * Custom Clerk Hooks
  *
  * Extended hooks for AegisWallet authentication needs
+ * NOTE: Clerk integration is currently disabled - using Supabase auth instead
  */
 
-import { useAuth, useClerk, useSession, useUser } from '@clerk/clerk-react';
 import { useCallback, useMemo } from 'react';
 
 /**
@@ -27,71 +27,44 @@ export interface AegisWalletUser {
 
 /**
  * Hook to get the current authenticated user with AegisWallet-specific data
+ * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisUser() {
-	const { user, isLoaded, isSignedIn } = useUser();
-
-	const aegisUser = useMemo<AegisWalletUser | null>(() => {
-		if (!user) return null;
-
-		const publicMetadata = user.publicMetadata as Record<string, unknown>;
-
-		return {
-			id: user.id,
-			email: user.primaryEmailAddress?.emailAddress ?? null,
-			fullName: user.fullName,
-			firstName: user.firstName,
-			lastName: user.lastName,
-			imageUrl: user.imageUrl,
-			// AegisWallet-specific from public metadata
-			cpf: publicMetadata.cpf as string | undefined,
-			autonomyLevel: publicMetadata.autonomyLevel as number | undefined,
-			voiceCommandEnabled: publicMetadata.voiceCommandEnabled as
-				| boolean
-				| undefined,
-			language: (publicMetadata.language as string | undefined) ?? 'pt-BR',
-			timezone:
-				(publicMetadata.timezone as string | undefined) ?? 'America/Sao_Paulo',
-		};
-	}, [user]);
+	// Stub implementation - Clerk not currently used
+	const aegisUser = useMemo<AegisWalletUser | null>(() => null, []);
 
 	return {
 		user: aegisUser,
-		isLoaded,
-		isSignedIn,
-		clerkUser: user,
+		isLoaded: true,
+		isSignedIn: false,
+		clerkUser: null,
 	};
 }
 
 /**
  * Hook to get authentication state and token
+ * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisAuth() {
-	const { isLoaded, isSignedIn, userId, sessionId, getToken, signOut } =
-		useAuth();
-
 	/**
 	 * Get a session token for API requests
 	 */
 	const getApiToken = useCallback(async () => {
-		return getToken();
-	}, [getToken]);
+		return null;
+	}, []);
 
 	/**
 	 * Sign out with optional redirect
 	 */
-	const handleSignOut = useCallback(
-		async (redirectUrl?: string) => {
-			await signOut({ redirectUrl: redirectUrl ?? '/' });
-		},
-		[signOut],
-	);
+	const handleSignOut = useCallback(async (_redirectUrl?: string) => {
+		// Stub implementation
+	}, []);
 
 	return {
-		isLoaded,
-		isSignedIn,
-		userId,
-		sessionId,
+		isLoaded: true,
+		isSignedIn: false,
+		userId: null,
+		sessionId: null,
 		getToken: getApiToken,
 		signOut: handleSignOut,
 	};
@@ -99,49 +72,36 @@ export function useAegisAuth() {
 
 /**
  * Hook to manage user session
+ * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisSession() {
-	const { session, isLoaded, isSignedIn } = useSession();
-	const { openUserProfile, openSignIn, openSignUp } = useClerk();
-
 	/**
 	 * Get session expiration info
 	 */
-	const sessionInfo = useMemo(() => {
-		if (!session) return null;
-
-		return {
-			id: session.id,
-			status: session.status,
-			lastActiveAt: session.lastActiveAt,
-			expireAt: session.expireAt,
-			abandonAt: session.abandonAt,
-		};
-	}, [session]);
+	const sessionInfo = useMemo(() => null, []);
 
 	return {
 		session: sessionInfo,
-		isLoaded,
-		isSignedIn,
-		openUserProfile,
-		openSignIn,
-		openSignUp,
+		isLoaded: true,
+		isSignedIn: false,
+		openUserProfile: () => {},
+		openSignIn: () => {},
+		openSignUp: () => {},
 	};
 }
 
 /**
  * Hook to update user metadata
+ * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useUpdateUserMetadata() {
-	const { user } = useUser();
-
 	/**
 	 * Update unsafe metadata (can store user preferences)
 	 * Note: publicMetadata can only be updated server-side via Clerk Backend SDK
 	 */
 	const updateUnsafeMetadata = useCallback(
 		async (
-			metadata: Partial<{
+			_metadata: Partial<{
 				cpf: string;
 				autonomyLevel: number;
 				voiceCommandEnabled: boolean;
@@ -149,16 +109,10 @@ export function useUpdateUserMetadata() {
 				timezone: string;
 			}>,
 		) => {
-			if (!user) throw new Error('User not authenticated');
-
-			await user.update({
-				unsafeMetadata: {
-					...user.unsafeMetadata,
-					...metadata,
-				},
-			});
+			// Stub implementation
+			throw new Error('Clerk integration is currently disabled');
 		},
-		[user],
+		[],
 	);
 
 	return {
@@ -166,25 +120,25 @@ export function useUpdateUserMetadata() {
 	};
 }
 
-// Re-export Clerk hooks for convenience
-// Re-export Clerk components
-export {
-	Protect,
-	RedirectToSignIn,
-	RedirectToSignUp,
-	SignedIn,
-	SignedOut,
-	SignIn,
-	SignInButton,
-	SignOutButton,
-	SignUp,
-	SignUpButton,
-	UserButton,
-	UserProfile,
-	useAuth,
-	useClerk,
-	useSession,
-	useSignIn,
-	useSignUp,
-	useUser,
-} from '@clerk/clerk-react';
+// Clerk integration is currently disabled - using Supabase auth instead
+// Re-exports commented out to avoid import errors
+
+// export {
+// 	useAuth,
+// 	useClerk,
+// 	useSession,
+// 	useSignIn,
+// 	useSignUp,
+// 	useUser,
+// } from '@clerk/clerk-react';
+
+// export {
+// 	Protect,
+// 	RedirectToSignIn,
+// 	RedirectToSignUp,
+// 	SignedIn,
+// 	SignedOut,
+// 	SignInButton,
+// 	SignOutButton,
+// 	UserButton,
+// } from '@clerk/clerk-react';

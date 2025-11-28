@@ -8,7 +8,8 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // Polyfills for jsdom environment
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any; // biome-ignore lint/suspicious/noExplicitAny: Polyfill
+// biome-ignore lint/suspicious/noExplicitAny: Polyfill required for jsdom
+global.TextDecoder = TextDecoder as any;
 
 // Mock IntersectionObserver for healthcare components
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -97,7 +98,8 @@ global.MediaDevices = {
 		getTracks: () => [{ stop: vi.fn() }],
 		removeEventListener: vi.fn(),
 	}),
-} as any; // biome-ignore lint/suspicious/noExplicitAny: Mocking MediaDevices
+// biome-ignore lint/suspicious/noExplicitAny: Mocking MediaDevices for tests
+} as any;
 
 // Mock navigator for healthcare testing
 Object.defineProperty(window, 'navigator', {

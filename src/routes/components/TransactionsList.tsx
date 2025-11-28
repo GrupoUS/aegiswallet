@@ -59,8 +59,8 @@ export default function TransactionsList() {
 			await deleteMutation.mutateAsync({ id: deletingId });
 
 			// Revert balance if possible
-			if (transaction?.account_id) {
-				const account = accounts.find((a) => a.id === transaction.account_id);
+			if (transaction?.accountId) {
+				const account = accounts.find((a) => a.id === transaction.accountId);
 				if (account) {
 					// Inverse amount: subtract transaction amount (which is signed)
 					// If transaction was -100 (debit), we need to add 100.
@@ -68,7 +68,7 @@ export default function TransactionsList() {
 					// So: balance - transaction.amount
 					await updateBalance({
 						balance: Number(account.balance) - Number(transaction.amount),
-						id: transaction.account_id,
+						id: transaction.accountId,
 					});
 				}
 			}
@@ -152,7 +152,7 @@ export default function TransactionsList() {
 							>
 								<div className="flex items-center gap-4">
 									<div className="p-2 rounded-full bg-background border shadow-sm">
-										{getIcon(transaction.type)}
+										{getIcon(transaction.transactionType)}
 									</div>
 									<div>
 										<p className="font-medium leading-none">
@@ -168,10 +168,10 @@ export default function TransactionsList() {
 													},
 												)}
 											</span>
-											{transaction.type && (
+											{transaction.transactionType && (
 												<>
 													<span>•</span>
-													<span className="capitalize">{transaction.type}</span>
+													<span className="capitalize">{transaction.transactionType}</span>
 												</>
 											)}
 										</div>

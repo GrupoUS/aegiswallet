@@ -8,7 +8,7 @@
  * TODO: Implement using Vercel Functions or similar serverless platform
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 type SyncStatus = {
@@ -32,7 +32,6 @@ type SyncSettings = {
 };
 
 export function useGoogleCalendarSync() {
-	const queryClient = useQueryClient();
 
 	// Stub sync status - not connected
 	const { data: syncStatus, isLoading: isLoadingStatus } = useQuery({

@@ -321,6 +321,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 	);
 }
 
+// Hook export - not a component, but commonly exported from context files
 export function useCalendar() {
 	const context = useContext(CalendarContext);
 	if (context === undefined) {

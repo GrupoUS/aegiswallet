@@ -140,22 +140,22 @@ export function QuickActionModal({
 
 				// 1. Debit source
 				await createTransactionMutation.mutateAsync({
-					fromAccountId: accountId,
+					accountId,
 					amount: -val,
 					description:
 						description ||
 						`Transferência para ${targetAccount.institution_name}`,
-					type: 'transfer',
+					transactionType: 'transfer',
 					status: 'posted',
 				});
 
 				// 2. Credit target
 				await createTransactionMutation.mutateAsync({
-					fromAccountId: targetAccountId,
+					accountId: targetAccountId,
 					amount: val,
 					description:
 						description || `Transferência de ${sourceAccount.institution_name}`,
-					type: 'transfer',
+					transactionType: 'transfer',
 					status: 'posted',
 				});
 
@@ -172,10 +172,10 @@ export function QuickActionModal({
 			} else if (actionType === 'deposit') {
 				// Credit account
 				await createTransactionMutation.mutateAsync({
-					fromAccountId: accountId,
+					accountId,
 					amount: val,
 					description: description || 'Depósito',
-					type: 'credit',
+					transactionType: 'credit',
 					status: 'posted',
 				});
 
@@ -186,10 +186,10 @@ export function QuickActionModal({
 			} else if (actionType === 'withdraw') {
 				// Debit account
 				await createTransactionMutation.mutateAsync({
-					fromAccountId: accountId,
+					accountId,
 					amount: -val,
 					description: description || 'Saque',
-					type: 'debit',
+					transactionType: 'debit',
 					status: 'posted',
 				});
 

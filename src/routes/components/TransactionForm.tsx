@@ -31,9 +31,9 @@ type SubmitTransaction = (input: {
 	amount: number;
 	categoryId?: string;
 	description?: string;
-	fromAccountId: string;
+	accountId: string;
 	toAccountId?: string;
-	type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+	transactionType: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
 	status?: 'cancelled' | 'failed' | 'pending' | 'posted';
 	metadata?: Record<string, unknown>;
 }) => Promise<unknown>;
@@ -350,10 +350,10 @@ const createSubmitHandler =
 		try {
 			const finalAmount = computeFinalAmount(formState.type, numericAmount);
 			await submitTransaction({
-				fromAccountId: account.id,
+				accountId: account.id,
 				amount: finalAmount,
 				description: formState.description,
-				type: formState.type,
+				transactionType: formState.type,
 				status: 'posted',
 			});
 			updateBalance({

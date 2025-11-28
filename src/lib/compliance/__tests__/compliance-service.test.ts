@@ -781,12 +781,12 @@ describe('ComplianceService', () => {
 				insert: vi.fn().mockResolvedValue({ error: null }),
 			});
 
-			await service.logComplianceEvent(
+			await service['logAuditEvent'](
 				'user-123',
 				'consent_granted',
 				'lgpd_consents',
 				'consent-1',
-				'User granted data processing consent',
+				{ action: 'User granted data processing consent' },
 			);
 
 			expect(mockSupabase._mockFrom).toHaveBeenCalledWith(

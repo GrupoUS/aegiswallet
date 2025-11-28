@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAccessibility } from '../AccessibilityProvider';
+import { useAccessibility } from './useAccessibility';
 
 // Web Speech API types for browser compatibility
 interface SpeechRecognitionResult {

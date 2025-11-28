@@ -28,10 +28,13 @@ export function checkPromptInjection(input: string): InjectionCheckResult {
 		}
 	}
 
-	// Sanitize control characters - regex pattern to remove control characters using Unicode property escapes
-	const controlCharPattern = /[\p{C}]/gu;
-	const sanitized = input
-		.replace(controlCharPattern, '') // Remove control chars
+	// Sanitize control characters - remove ASCII control characters (0-31 and 127)
+	const sanitized = [...input]
+		.filter((char) => {
+			const code = char.charCodeAt(0);
+			return code >= 32 && code !== 127;
+		})
+		.join('')
 		.trim();
 
 	return {

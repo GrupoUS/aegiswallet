@@ -150,7 +150,7 @@ export class BrazilianComplianceBackupManager {
 
 			return results;
 		} catch (error) {
-			console.error('Brazilian compliance backup failed:', error);
+			console.error('Backup execution error:', error);
 			throw error;
 		}
 	}

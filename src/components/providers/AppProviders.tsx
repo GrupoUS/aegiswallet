@@ -3,29 +3,16 @@
  * Organizes and manages all application-level providers in a clean hierarchy
  */
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { ErrorBoundary } from '@/components/error-boundaries/ErrorBoundary';
+import { queryClient } from '@/components/providers/queryClient';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LoggerProvider } from '@/contexts/LoggerContext';
-
-// Create a client instance for TanStack Query
-export const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			retry: 3,
-			staleTime: 5 * 60 * 1000, // 5 minutes
-			gcTime: 10 * 60 * 1000, // 10 minutes
-		},
-		mutations: {
-			retry: 1,
-		},
-	},
-});
 
 export interface AppProvidersProps {
 	children: ReactNode;

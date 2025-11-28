@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
+
+import { useAccessibility } from './hooks/useAccessibility';
 
 interface AccessibilitySettings {
 	highContrast: boolean;
@@ -26,9 +28,8 @@ interface AccessibilityContextType {
 	setShowSettings: (value: boolean) => void;
 }
 
-const AccessibilityContext = createContext<AccessibilityContextType | null>(
-	null,
-);
+export const AccessibilityContext =
+	createContext<AccessibilityContextType | null>(null);
 
 interface AccessibilityProviderProps {
 	children: ReactNode;
@@ -264,16 +265,6 @@ export function AccessibilityProvider({
 			{children}
 		</AccessibilityContext.Provider>
 	);
-}
-
-export function useAccessibility() {
-	const context = useContext(AccessibilityContext);
-	if (!context) {
-		throw new Error(
-			'useAccessibility must be used within an AccessibilityProvider',
-		);
-	}
-	return context;
 }
 
 // Utility component for accessibility announcements

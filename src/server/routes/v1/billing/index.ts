@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 
 import checkoutRouter from './checkout';
+import invoicesRouter from './invoices';
 import paymentHistoryRouter from './payment-history';
+import paymentMethodsRouter from './payment-methods';
 import plansRouter from './plans';
 import portalRouter from './portal';
 import subscriptionRouter from './subscription';
@@ -16,5 +18,7 @@ billingRouter.route('/portal', portalRouter);
 billingRouter.route('/plans', plansRouter);
 billingRouter.route('/webhook', webhookRouter);
 billingRouter.route('/payment-history', paymentHistoryRouter);
+billingRouter.route('/payment-methods', paymentMethodsRouter);
+billingRouter.route('/invoices', invoicesRouter);
 
 export default billingRouter;

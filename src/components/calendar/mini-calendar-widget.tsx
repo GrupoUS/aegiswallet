@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCalendar } from '@/components/calendar/calendar-context';
+import { useCalendar } from '@/components/calendar/hooks/useCalendar';
 import { OriginCompactCalendar } from '@/components/calendar/origin-compact-calendar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

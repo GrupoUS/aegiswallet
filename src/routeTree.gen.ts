@@ -26,6 +26,11 @@ import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as SignupRouteImport } from './routes/signup';
 
 const BillingSuccessLazyRouteImport = createFileRoute('/billing/success')();
+const BillingPaymentMethodsLazyRouteImport = createFileRoute(
+	'/billing/payment-methods',
+)();
+const BillingInvoicesLazyRouteImport = createFileRoute('/billing/invoices')();
+const BillingHistoryLazyRouteImport = createFileRoute('/billing/history')();
 const BillingCancelLazyRouteImport = createFileRoute('/billing/cancel')();
 
 const SignupRoute = SignupRouteImport.update({
@@ -104,6 +109,28 @@ const BillingSuccessLazyRoute = BillingSuccessLazyRouteImport.update({
 } as any).lazy(() =>
 	import('./routes/billing/success.lazy').then((d) => d.Route),
 );
+const BillingPaymentMethodsLazyRoute =
+	BillingPaymentMethodsLazyRouteImport.update({
+		id: '/payment-methods',
+		path: '/payment-methods',
+		getParentRoute: () => BillingRoute,
+	} as any).lazy(() =>
+		import('./routes/billing/payment-methods.lazy').then((d) => d.Route),
+	);
+const BillingInvoicesLazyRoute = BillingInvoicesLazyRouteImport.update({
+	id: '/invoices',
+	path: '/invoices',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/invoices.lazy').then((d) => d.Route),
+);
+const BillingHistoryLazyRoute = BillingHistoryLazyRouteImport.update({
+	id: '/history',
+	path: '/history',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/history.lazy').then((d) => d.Route),
+);
 const BillingCancelLazyRoute = BillingCancelLazyRouteImport.update({
 	id: '/cancel',
 	path: '/cancel',
@@ -127,6 +154,9 @@ export interface FileRoutesByFullPath {
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
 	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
 	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesByTo {
@@ -144,6 +174,9 @@ export interface FileRoutesByTo {
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
 	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
 	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesById {
@@ -162,6 +195,9 @@ export interface FileRoutesById {
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
 	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
 	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRouteTypes {
@@ -181,6 +217,9 @@ export interface FileRouteTypes {
 		| '/settings'
 		| '/signup'
 		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
 		| '/billing/success';
 	fileRoutesByTo: FileRoutesByTo;
 	to:
@@ -198,6 +237,9 @@ export interface FileRouteTypes {
 		| '/settings'
 		| '/signup'
 		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
 		| '/billing/success';
 	id:
 		| '__root__'
@@ -215,6 +257,9 @@ export interface FileRouteTypes {
 		| '/settings'
 		| '/signup'
 		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
 		| '/billing/success';
 	fileRoutesById: FileRoutesById;
 }
@@ -334,6 +379,27 @@ declare module '@tanstack/react-router' {
 			preLoaderRoute: typeof BillingSuccessLazyRouteImport;
 			parentRoute: typeof BillingRoute;
 		};
+		'/billing/payment-methods': {
+			id: '/billing/payment-methods';
+			path: '/payment-methods';
+			fullPath: '/billing/payment-methods';
+			preLoaderRoute: typeof BillingPaymentMethodsLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/invoices': {
+			id: '/billing/invoices';
+			path: '/invoices';
+			fullPath: '/billing/invoices';
+			preLoaderRoute: typeof BillingInvoicesLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/history': {
+			id: '/billing/history';
+			path: '/history';
+			fullPath: '/billing/history';
+			preLoaderRoute: typeof BillingHistoryLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
 		'/billing/cancel': {
 			id: '/billing/cancel';
 			path: '/cancel';
@@ -346,11 +412,17 @@ declare module '@tanstack/react-router' {
 
 interface BillingRouteChildren {
 	BillingCancelLazyRoute: typeof BillingCancelLazyRoute;
+	BillingHistoryLazyRoute: typeof BillingHistoryLazyRoute;
+	BillingInvoicesLazyRoute: typeof BillingInvoicesLazyRoute;
+	BillingPaymentMethodsLazyRoute: typeof BillingPaymentMethodsLazyRoute;
 	BillingSuccessLazyRoute: typeof BillingSuccessLazyRoute;
 }
 
 const BillingRouteChildren: BillingRouteChildren = {
 	BillingCancelLazyRoute: BillingCancelLazyRoute,
+	BillingHistoryLazyRoute: BillingHistoryLazyRoute,
+	BillingInvoicesLazyRoute: BillingInvoicesLazyRoute,
+	BillingPaymentMethodsLazyRoute: BillingPaymentMethodsLazyRoute,
 	BillingSuccessLazyRoute: BillingSuccessLazyRoute,
 };
 

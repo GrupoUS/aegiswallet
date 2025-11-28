@@ -51,20 +51,18 @@ async function testDrizzleConnection() {
 		// Test 6: List table names in public schema
 		console.log('\n📡 Test 6: List public schema tables');
 		try {
-			const tablesResult = await db.execute(sql`
-		      SELECT table_name
-		      FROM information_schema.tables
-		      WHERE table_schema = 'public'
-		      ORDER BY table_name
-		    `);
-			console.log('   ✅ Public schema tables:', (tablesResult as any).length);
-			(tablesResult as any)
-				.slice(0, 5)
-				.forEach((row: { table_name: string }) => {
-					console.log(`      - ${row.table_name}`);
-				});
-			if ((tablesResult as any).length > 5) {
-				console.log(`      ... and ${(tablesResult as any).length - 5} more`);
+			const tablesResult = (await db.execute(sql`
+			     SELECT table_name
+			     FROM information_schema.tables
+			     WHERE table_schema = 'public'
+			     ORDER BY table_name
+			   `)) as unknown as Array<{ table_name: string }>;
+			console.log('   ✅ Public schema tables:', tablesResult.length);
+			tablesResult.slice(0, 5).forEach((row: { table_name: string }) => {
+				console.log(`      - ${row.table_name}`);
+			});
+			if (tablesResult.length > 5) {
+				console.log(`      ... and ${tablesResult.length - 5} more`);
 			}
 		} catch (error) {
 			console.log(

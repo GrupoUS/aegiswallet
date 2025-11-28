@@ -1,4 +1,7 @@
+export { BillingHistory } from './BillingHistory';
 export { FeatureList } from './FeatureList';
+export { InvoiceList } from './InvoiceList';
+export { PaymentMethodManager } from './PaymentMethodManager';
 export { PaywallModal } from './PaywallModal';
 export { PricingCard } from './PricingCard';
 export { PricingTable } from './PricingTable';

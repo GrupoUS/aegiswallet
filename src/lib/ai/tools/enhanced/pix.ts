@@ -2,8 +2,6 @@ import { tool } from 'ai';
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db } from '@/db/client';
-import { complianceAuditLogs, pixKeys, pixQrCodes, pixTransactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import {
@@ -13,9 +11,15 @@ import {
 	type PixTransfer,
 	PixTransferStatusSchema,
 } from './types';
+import { db } from '@/db/client';
+import {
+	complianceAuditLogs,
+	pixKeys,
+	pixQrCodes,
+	pixTransactions,
+} from '@/db/schema';
 
 export function createPixTools(userId: string) {
-
 	return {
 		listPixKeys: tool({
 			description:
@@ -126,7 +130,9 @@ export function createPixTools(userId: string) {
 							amount,
 							recipientKey: `${recipientKey.substring(0, 3)}***`,
 						});
-						throw new Error('Erro ao processar transferência PIX: Insert failed');
+						throw new Error(
+							'Erro ao processar transferência PIX: Insert failed',
+						);
 					}
 
 					// Log de auditoria para compliance
@@ -226,7 +232,9 @@ export function createPixTools(userId: string) {
 							const anyKey = await db
 								.select({ key: pixKeys.keyValue })
 								.from(pixKeys)
-								.where(and(eq(pixKeys.userId, userId), eq(pixKeys.isActive, true)))
+								.where(
+									and(eq(pixKeys.userId, userId), eq(pixKeys.isActive, true)),
+								)
 								.limit(1);
 
 							if (!anyKey || anyKey.length === 0) {
@@ -397,11 +405,18 @@ export function createPixTools(userId: string) {
 				try {
 					const conditions = [eq(pixTransactions.userId, userId)];
 
-					if (startDate) conditions.push(gte(pixTransactions.createdAt!, new Date(startDate)));
-					if (endDate) conditions.push(lte(pixTransactions.createdAt!, new Date(endDate)));
-					if (status) conditions.push(eq(pixTransactions.status, status.toLowerCase()));
-					if (minAmount) conditions.push(gte(pixTransactions.amount, String(minAmount)));
-					if (maxAmount) conditions.push(lte(pixTransactions.amount, String(maxAmount)));
+					if (startDate)
+						conditions.push(
+							gte(pixTransactions.createdAt, new Date(startDate)),
+						);
+					if (endDate)
+						conditions.push(lte(pixTransactions.createdAt, new Date(endDate)));
+					if (status)
+						conditions.push(eq(pixTransactions.status, status.toLowerCase()));
+					if (minAmount)
+						conditions.push(gte(pixTransactions.amount, String(minAmount)));
+					if (maxAmount)
+						conditions.push(lte(pixTransactions.amount, String(maxAmount)));
 
 					const data = await db
 						.select()

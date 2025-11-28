@@ -1,9 +1,9 @@
 /**
  * Google Calendar Sync Hook
- * 
+ *
  * NOTE: Google Calendar sync functionality was implemented using Supabase Edge Functions.
  * After migration to Neon/Clerk, this feature needs to be re-architected.
- * 
+ *
  * Current status: DEPRECATED - Returns stub data
  * TODO: Implement using Vercel Functions or similar serverless platform
  */
@@ -57,14 +57,21 @@ export function useGoogleCalendarSync() {
 	});
 
 	const updateSettingsMutation = useMutation({
-		mutationFn: async (_settings: Partial<{
-			auto_sync_interval_minutes: number;
-			sync_categories: string[] | null;
-			sync_direction: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
-			sync_enabled: boolean;
-			sync_financial_amounts: boolean;
-		}>): Promise<SyncSettings> => {
-			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
+		mutationFn: async (
+			_settings: Partial<{
+				auto_sync_interval_minutes: number;
+				sync_categories: string[] | null;
+				sync_direction:
+					| 'one_way_to_google'
+					| 'one_way_from_google'
+					| 'bidirectional';
+				sync_enabled: boolean;
+				sync_financial_amounts: boolean;
+			}>,
+		): Promise<SyncSettings> => {
+			throw new Error(
+				'Sincronização com Google Calendar temporariamente indisponível',
+			);
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
@@ -73,7 +80,9 @@ export function useGoogleCalendarSync() {
 
 	const requestFullSyncMutation = useMutation({
 		mutationFn: async () => {
-			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
+			throw new Error(
+				'Sincronização com Google Calendar temporariamente indisponível',
+			);
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
@@ -85,13 +94,14 @@ export function useGoogleCalendarSync() {
 			direction: 'to_google' | 'from_google';
 			eventId: string;
 		}) => {
-			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
+			throw new Error(
+				'Sincronização com Google Calendar temporariamente indisponível',
+			);
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
 		},
 	});
-
 
 	const startOAuthFlow = async () => {
 		toast.error('Conexão com Google Calendar temporariamente indisponível');
@@ -104,7 +114,8 @@ export function useGoogleCalendarSync() {
 	// Legacy tRPC compatibility properties
 	const isConnected = syncStatus?.isConnected ?? false;
 	const settings = syncSettings;
-	const isSyncing = requestFullSyncMutation.isPending || syncSingleEventMutation.isPending;
+	const isSyncing =
+		requestFullSyncMutation.isPending || syncSingleEventMutation.isPending;
 
 	return {
 		syncStatus,

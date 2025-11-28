@@ -13,7 +13,15 @@ import {
 	lgpdConsentLogs,
 	userSessions,
 } from './audit';
+import {
+	accountBalanceHistory,
+	bankAccounts,
+	bankSyncLogs,
+} from './bank-accounts';
 import { paymentHistory, subscriptionPlans, subscriptions } from './billing';
+import { boletoPayments, boletos } from './boletos';
+import { eventReminders, eventTypes, financialEvents } from './calendar';
+import { contactPaymentMethods, contacts } from './contacts';
 import {
 	complianceAuditLogs,
 	consentTemplates,
@@ -24,14 +32,6 @@ import {
 	lgpdExportRequests,
 	transactionLimits,
 } from './lgpd';
-import {
-	accountBalanceHistory,
-	bankAccounts,
-	bankSyncLogs,
-} from './bank-accounts';
-import { boletoPayments, boletos } from './boletos';
-import { eventReminders, eventTypes, financialEvents } from './calendar';
-import { contactPaymentMethods, contacts } from './contacts';
 import { alertRules, notificationLogs, notifications } from './notifications';
 import { pixKeys, pixQrCodes, pixTransactions } from './pix';
 import {

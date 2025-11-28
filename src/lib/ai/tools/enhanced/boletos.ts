@@ -2,14 +2,17 @@ import { tool } from 'ai';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db } from '@/db/client';
-import { boletos, complianceAuditLogs, transactionSchedules } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import type { Boleto, BoletoCalculation } from './types';
+import { db } from '@/db/client';
+import {
+	boletos,
+	complianceAuditLogs,
+	transactionSchedules,
+} from '@/db/schema';
 
 export function createBoletoTools(userId: string) {
-
 	return {
 		listBoletos: tool({
 			description:
@@ -61,8 +64,10 @@ export function createBoletoTools(userId: string) {
 					}
 					if (startDate) conditions.push(gte(boletos.dueDate, startDate));
 					if (endDate) conditions.push(lte(boletos.dueDate, endDate));
-					if (minAmount) conditions.push(gte(boletos.amount, String(minAmount)));
-					if (maxAmount) conditions.push(lte(boletos.amount, String(maxAmount)));
+					if (minAmount)
+						conditions.push(gte(boletos.amount, String(minAmount)));
+					if (maxAmount)
+						conditions.push(lte(boletos.amount, String(maxAmount)));
 
 					const data = await db
 						.select()
@@ -76,7 +81,9 @@ export function createBoletoTools(userId: string) {
 					const now = new Date();
 
 					// Calcular estatísticas e classificações
-					const registered = boletosList.filter((b) => b.status === 'REGISTERED');
+					const registered = boletosList.filter(
+						(b) => b.status === 'REGISTERED',
+					);
 					const paid = boletosList.filter((b) => b.status === 'PAID');
 					const overdue = boletosList.filter(
 						(b) => b.status === 'REGISTERED' && new Date(b.dueDate) < now,
@@ -171,7 +178,8 @@ export function createBoletoTools(userId: string) {
 						lineIdDigitable: calculatedDigitableLine,
 						amount: String(boletoInfo.amount),
 						dueDate: boletoInfo.dueDate,
-						beneficiaryName: boletoInfo.payeeName || 'Beneficiário não identificado',
+						beneficiaryName:
+							boletoInfo.payeeName || 'Beneficiário não identificado',
 						beneficiaryCnpj: boletoInfo.payeeDocument || null,
 						status: 'REGISTERED',
 						description: `Captura: ${captureMethod}`,
@@ -384,9 +392,15 @@ export function createBoletoTools(userId: string) {
 						.set({
 							status: 'paid',
 							paymentDate: paymentDt,
-							discountAmount: calculation.discountAmount ? String(calculation.discountAmount) : null,
-							fineAmount: calculation.fineAmount ? String(calculation.fineAmount) : null,
-							interestAmount: calculation.interestAmount ? String(calculation.interestAmount) : null,
+							discountAmount: calculation.discountAmount
+								? String(calculation.discountAmount)
+								: null,
+							fineAmount: calculation.fineAmount
+								? String(calculation.fineAmount)
+								: null,
+							interestAmount: calculation.interestAmount
+								? String(calculation.interestAmount)
+								: null,
 							updatedAt: new Date(),
 						})
 						.where(eq(boletos.id, boletoId))

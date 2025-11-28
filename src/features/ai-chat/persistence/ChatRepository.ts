@@ -1,18 +1,17 @@
 import { asc, desc, eq } from 'drizzle-orm';
 
+import type { FinancialContext, Transaction } from '../context';
+import type { ChatMessage } from '../domain/types';
 import { db, type HttpClient } from '@/db/client';
 import {
+	type ChatSession,
 	chatMessages,
 	chatSessions,
 	type ChatMessage as DbChatMessage,
-	type ChatSession,
 	type InsertChatMessage,
 	type InsertChatSession,
 } from '@/db/schema';
 import logger from '@/lib/logging/logger';
-
-import type { FinancialContext, Transaction } from '../context';
-import type { ChatMessage } from '../domain/types';
 
 export interface Conversation {
 	id: string;

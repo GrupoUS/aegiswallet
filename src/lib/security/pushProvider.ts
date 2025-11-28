@@ -237,7 +237,7 @@ export class PushProvider {
 				badge: message.badge || '/badge-72x72.png',
 				body: message.body,
 				data: {
-					...(message.data || {}),
+					...message.data,
 					url: message.url || '/',
 					timestamp: Date.now(),
 				},

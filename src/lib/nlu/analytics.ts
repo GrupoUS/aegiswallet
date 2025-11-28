@@ -261,7 +261,7 @@ export class NLUAnalytics {
 		}
 
 		try {
-			// Load existing analytics data from Supabase
+			// Load existing analytics data from database
 			if (this.config.persistenceEnabled) {
 				await this.loadHistoricalData();
 			}
@@ -811,22 +811,11 @@ export class NLUAnalytics {
 
 	private async loadHistoricalData(): Promise<void> {
 		try {
-			// TODO: Load recent classification logs from Supabase - temporarily disabled
-			// const { data: recentLogs, error } = await supabase
-			//   .from('nlu_classification_logs')
-			//   .select('*')
-			//   .order('timestamp', { ascending: false })
-			//   .limit(100);
-
+			// TODO: Implement loading historical NLU data via API client when database tables are created
+			// For now, start with empty metrics - data will be collected from new sessions
 			const recentLogs: ClassificationLog[] = [];
-			const error = null;
 
-			if (error) {
-				logger.warn('Failed to load historical NLU data', { error });
-				return;
-			}
-
-			if (recentLogs) {
+			if (recentLogs.length > 0) {
 				// Process historical data to initialize metrics
 				recentLogs.forEach((log) => {
 					this.updateHitMissMetrics(log);
@@ -876,43 +865,14 @@ export class NLUAnalytics {
 
 	private async persistBatch(batch: ClassificationLog[]): Promise<void> {
 		try {
-			// TODO: Implement NLU analytics table in database
-			// Temporarily disabled to fix deployment issues
+			// TODO: Implement NLU analytics persistence via API client when database tables are created
+			// For now, log to system logger only
 			logger.info(
-				`NLU analytics persistence temporarily disabled - ${batch.length} records skipped`,
+				`NLU analytics batch processed - ${batch.length} records (persistence pending table creation)`,
 				{
 					recordCount: batch.length,
 				},
 			);
-			return;
-
-			/*
-      const { error } = await supabase.from('nlu_classification_logs').insert(
-        batch.map((log) => ({
-          id: log.id,
-          user_id: log.userId,
-          session_id: log.sessionId,
-          original_text: log.originalText,
-          normalized_text: log.normalizedText,
-          predicted_intent: log.predictedIntent,
-          confidence: log.confidence,
-          entities: log.entities,
-          processing_time: log.processingTime,
-          correct_intent: log.correctIntent,
-          feedback: log.feedback,
-          timestamp: log.timestamp.toISOString(),
-          regional_variation: log.regionalVariation,
-          linguistic_style: log.linguisticStyle,
-          contextual_clues: log.contextualClues,
-          error_analysis: log.errorAnalysis,
-          learning_signals: log.learningSignals,
-        }))
-      );
-
-      if (error) {
-        throw error;
-      }
-      */
 		} catch (error) {
 			logger.error('Failed to persist NLU batch', { error });
 			throw error;

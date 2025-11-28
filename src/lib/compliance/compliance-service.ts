@@ -140,7 +140,6 @@ export class ComplianceService {
 						collectionMethod,
 						ipAddress: ipAddress ?? null,
 						userAgent: userAgent ?? null,
-						metadata: {},
 					})
 					.where(eq(lgpdConsents.id, existing.id))
 					.returning();
@@ -164,7 +163,6 @@ export class ComplianceService {
 					collectionMethod,
 					ipAddress: ipAddress ?? null,
 					userAgent: userAgent ?? null,
-					metadata: {},
 					expiresAt: null,
 				})
 				.returning();

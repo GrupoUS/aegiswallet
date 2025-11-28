@@ -25,22 +25,21 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 		it('should validate user profile structure with Brazilian data', () => {
 			const userProfile: InsertUser = {
 				id: 'test-user-id',
-				clerkId: 'clerk_test_123',
 				email: 'joao.silva@email.com',
 				fullName: 'João Silva',
 				phone: '11987654321',
 				cpf: '12345678900',
-				dateOfBirth: '1990-01-01',
+				birthDate: '1990-01-01',
 				autonomyLevel: 50,
 				voiceCommandEnabled: true,
-				preferredLanguage: 'pt-BR',
+				language: 'pt-BR',
 				timezone: 'America/Sao_Paulo',
 				currency: 'BRL',
 				isActive: true,
 			};
 
 			expect(userProfile.cpf).toBe('12345678900');
-			expect(userProfile.preferredLanguage).toBe('pt-BR');
+			expect(userProfile.language).toBe('pt-BR');
 			expect(userProfile.currency).toBe('BRL');
 			expect(userProfile.isActive).toBe(true);
 		});
@@ -54,7 +53,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 				phone: '11998765432',
 				autonomyLevel: 75,
 				voiceCommandEnabled: true,
-				preferredLanguage: 'pt-BR',
+				language: 'pt-BR',
 				timezone: 'America/Sao_Paulo',
 				currency: 'BRL',
 				isActive: true,
@@ -109,7 +108,6 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 		it('should validate PIX key structure for Brazilian financial system', () => {
 			const pixKey: InsertPixKey = {
 				userId: 'test-user-id',
-				bankAccountId: 'test-account-id',
 				keyType: 'cpf',
 				keyValue: '12345678900',
 				keyName: 'CPF Principal',
@@ -145,7 +143,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 				currency: 'BRL',
 				description: 'Supermercado Carrefour',
 				merchantName: 'Carrefour Comércio e Indústria Ltda',
-				transactionDate: new Date().toISOString(),
+				transactionDate: new Date(),
 				transactionType: 'debit',
 				paymentMethod: 'debit_card',
 				status: 'posted',

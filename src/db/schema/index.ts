@@ -39,6 +39,20 @@ export {
 	type InsertBankAccount,
 	type InsertBankSyncLog,
 } from './bank-accounts';
+// Billing & Subscriptions
+export {
+	type InsertPaymentHistory,
+	type InsertSubscription,
+	type InsertSubscriptionPlan,
+	type PaymentHistory,
+	paymentHistory,
+	paymentStatusEnum,
+	type Subscription,
+	type SubscriptionPlan,
+	subscriptionPlans,
+	subscriptionStatusEnum,
+	subscriptions,
+} from './billing';
 // Boletos
 export {
 	type Boleto,
@@ -74,6 +88,44 @@ export {
 	type PixPaymentMethodDetails,
 	paymentMethodTypeEnum,
 } from './contacts';
+// LGPD Compliance
+export {
+	// Tables
+	type ComplianceAuditLog,
+	type ConsentTemplate,
+	// Enums
+	collectionMethodEnum,
+	complianceAuditLogs,
+	complianceEventTypeEnum,
+	consentTemplates,
+	consentTypeEnum,
+	type DataDeletionRequest,
+	type DataRetentionPolicy,
+	dataDeletionRequests,
+	dataRetentionPolicies,
+	deletionRequestStatusEnum,
+	deletionRequestTypeEnum,
+	exportFormatEnum,
+	exportRequestTypeEnum,
+	exportStatusEnum,
+	type InsertComplianceAuditLog,
+	type InsertConsentTemplate,
+	type InsertDataDeletionRequest,
+	type InsertDataRetentionPolicy,
+	type InsertLegalHold,
+	type InsertLgpdConsent,
+	type InsertLgpdExportRequest,
+	type InsertTransactionLimit,
+	type LegalHold,
+	type LgpdConsent,
+	type LgpdExportRequest,
+	legalHolds,
+	lgpdConsents,
+	lgpdExportRequests,
+	limitTypeEnum,
+	type TransactionLimit,
+	transactionLimits,
+} from './lgpd';
 // Notifications
 export {
 	type AlertRule,
@@ -151,58 +203,6 @@ export {
 	type VoiceCommand,
 	voiceCommands,
 } from './voice-ai';
-// Billing & Subscriptions
-export {
-	type InsertPaymentHistory,
-	type InsertSubscription,
-	type InsertSubscriptionPlan,
-	type PaymentHistory,
-	paymentHistory,
-	paymentStatusEnum,
-	type Subscription,
-	subscriptions,
-	type SubscriptionPlan,
-	subscriptionPlans,
-	subscriptionStatusEnum,
-} from './billing';
-// LGPD Compliance
-export {
-	// Enums
-	collectionMethodEnum,
-	complianceEventTypeEnum,
-	consentTypeEnum,
-	deletionRequestStatusEnum,
-	deletionRequestTypeEnum,
-	exportFormatEnum,
-	exportRequestTypeEnum,
-	exportStatusEnum,
-	limitTypeEnum,
-	// Tables
-	type ComplianceAuditLog,
-	complianceAuditLogs,
-	type ConsentTemplate,
-	consentTemplates,
-	type DataDeletionRequest,
-	dataDeletionRequests,
-	type DataRetentionPolicy,
-	dataRetentionPolicies,
-	type InsertComplianceAuditLog,
-	type InsertConsentTemplate,
-	type InsertDataDeletionRequest,
-	type InsertDataRetentionPolicy,
-	type InsertLegalHold,
-	type InsertLgpdConsent,
-	type InsertLgpdExportRequest,
-	type InsertTransactionLimit,
-	type LegalHold,
-	legalHolds,
-	type LgpdConsent,
-	lgpdConsents,
-	type LgpdExportRequest,
-	lgpdExportRequests,
-	type TransactionLimit,
-	transactionLimits,
-} from './lgpd';
 
 // ========================================
 // RELATIONS

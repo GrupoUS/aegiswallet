@@ -44,6 +44,167 @@ export interface VoiceCommandServiceInput
 }
 
 /**
+ * Detect intent and extract entities from voice command
+ */
+function detectIntentAndEntities(command: string): {
+	intent: string | null;
+	entities: VoiceCommandEntities;
+	confidence: number;
+} {
+	const lowerCommand = command.toLowerCase().trim();
+	let intent = null;
+	const entities: VoiceCommandEntities = {};
+	let confidence = 0.9;
+
+	// Balance checking commands
+	if (
+		lowerCommand.includes('saldo') ||
+		lowerCommand.includes('quanto tenho') ||
+		lowerCommand.includes('quanto dinheiro') ||
+		lowerCommand.includes('verificar saldo')
+	) {
+		intent = 'check_balance';
+	}
+	// Transfer commands
+	else if (
+		lowerCommand.includes('transferir') ||
+		lowerCommand.includes('pagar') ||
+		lowerCommand.includes('enviar dinheiro') ||
+		lowerCommand.includes('mandar dinheiro')
+	) {
+		intent = 'transfer_money';
+		extractTransferEntities(command, entities);
+	}
+	// Bill payment commands
+	else if (
+		lowerCommand.includes('conta') ||
+		lowerCommand.includes('boleto') ||
+		lowerCommand.includes('pagar conta') ||
+		lowerCommand.includes('pagar boleto')
+	) {
+		intent = 'pay_bill';
+		extractBillEntities(lowerCommand, entities);
+	}
+	// Transaction history commands
+	else if (
+		lowerCommand.includes('extrato') ||
+		lowerCommand.includes('transações') ||
+		lowerCommand.includes('historico') ||
+		lowerCommand.includes('compras')
+	) {
+		intent = 'transaction_history';
+	}
+	// PIX commands
+	else if (lowerCommand.includes('pix') || lowerCommand.includes('fazer pix')) {
+		intent = 'pix_transfer';
+		extractPixEntities(command, entities);
+	}
+	// Unknown command
+	else {
+		intent = 'unknown';
+		confidence = 0.3;
+	}
+
+	return { intent, entities, confidence };
+}
+
+/**
+ * Extract entities for transfer commands
+ */
+function extractTransferEntities(
+	command: string,
+	entities: VoiceCommandEntities,
+): void {
+	// Extract amount entity (simplified regex for demo)
+	const amountMatch = command.match(/r?\$?\s*(\d+(?:,\d{1,2})?)/i);
+	if (amountMatch) {
+		const amount = parseFloat(amountMatch[1].replace(',', '.'));
+		entities.amount = amount;
+		entities.currency = 'BRL';
+	}
+
+	// Extract recipient (simplified - would need NLP in production)
+	const recipientMatch = command.match(
+		/(?:para|para o|para a)\s+([a-zá-ú\s]{2,30})/i,
+	);
+	if (recipientMatch) {
+		entities.recipient = recipientMatch[1].trim();
+	}
+}
+
+/**
+ * Extract entities for bill payment commands
+ */
+function extractBillEntities(
+	lowerCommand: string,
+	entities: VoiceCommandEntities,
+): void {
+	// Extract bill type
+	if (lowerCommand.includes('luz')) {
+		entities.billType = 'electricity';
+	} else if (lowerCommand.includes('água')) {
+		entities.billType = 'water';
+	} else if (lowerCommand.includes('telefone')) {
+		entities.billType = 'phone';
+	} else if (lowerCommand.includes('internet')) {
+		entities.billType = 'internet';
+	}
+}
+
+/**
+ * Extract entities for PIX commands
+ */
+function extractPixEntities(
+	command: string,
+	entities: VoiceCommandEntities,
+): void {
+	// Extract PIX key patterns
+	const emailMatch = command.match(
+		/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
+	);
+	const phoneMatch = command.match(/\(?(\d{2})?\)?\s?(\d{4,5})-?(\d{4})/);
+	const cpfMatch = command.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/);
+
+	if (emailMatch) {
+		entities.pixKey = emailMatch[1];
+		entities.pixKeyType = 'EMAIL';
+	} else if (phoneMatch) {
+		entities.pixKey = phoneMatch[0];
+		entities.pixKeyType = 'PHONE';
+	} else if (cpfMatch) {
+		entities.pixKey = cpfMatch[0];
+		entities.pixKeyType = 'CPF';
+	}
+}
+
+/**
+ * Generate response based on intent and entities
+ */
+function generateResponse(
+	intent: string | null,
+	entities: VoiceCommandEntities,
+): string {
+	switch (intent) {
+		case 'check_balance':
+			return 'Verificando seu saldo...';
+		case 'transfer_money':
+			if (entities.amount && entities.recipient) {
+				return `Preparando transferência de R$ ${entities.amount} para ${entities.recipient}`;
+			} else {
+				return 'Entendi que quer transferir dinheiro. Para quem e quanto?';
+			}
+		case 'pay_bill':
+			return 'Buscando suas contas a pagar...';
+		case 'transaction_history':
+			return 'Mostrando seu histórico de transações...';
+		case 'pix_transfer':
+			return 'Preparando transferência PIX...';
+		default:
+			return 'Não entendi o comando. Pode repetir?';
+	}
+}
+
+/**
  * Process voice command through NLU pipeline
  *
  * Features:
@@ -69,125 +230,14 @@ export async function processVoiceCommand(
 	await new Promise((resolve) => setTimeout(resolve, 300));
 
 	// Command detection and intent extraction
-	const lowerCommand = command.toLowerCase().trim();
-	let intent = null;
-	let entities: VoiceCommandEntities = {};
-	let confidence = 0.9;
-
-	// Balance checking commands
-	if (
-		lowerCommand.includes('saldo') ||
-		lowerCommand.includes('quanto tenho') ||
-		lowerCommand.includes('quanto dinheiro') ||
-		lowerCommand.includes('verificar saldo')
-	) {
-		intent = 'check_balance';
-	}
-	// Transfer commands
-	else if (
-		lowerCommand.includes('transferir') ||
-		lowerCommand.includes('pagar') ||
-		lowerCommand.includes('enviar dinheiro') ||
-		lowerCommand.includes('mandar dinheiro')
-	) {
-		intent = 'transfer_money';
-		// Extract amount entity (simplified regex for demo)
-		const amountMatch = command.match(/r?\$?\s*(\d+(?:,\d{1,2})?)/i);
-		if (amountMatch) {
-			const amount = parseFloat(amountMatch[1].replace(',', '.'));
-			entities = {
-				amount,
-				currency: 'BRL',
-			};
-		}
-
-		// Extract recipient (simplified - would need NLP in production)
-		const recipientMatch = command.match(
-			/(?:para|para o|para a)\s+([a-zá-ú\s]{2,30})/i,
-		);
-		if (recipientMatch) {
-			entities = { ...entities, recipient: recipientMatch[1].trim() };
-		}
-	}
-	// Bill payment commands
-	else if (
-		lowerCommand.includes('conta') ||
-		lowerCommand.includes('boleto') ||
-		lowerCommand.includes('pagar conta') ||
-		lowerCommand.includes('pagar boleto')
-	) {
-		intent = 'pay_bill';
-		// Extract bill type
-		if (lowerCommand.includes('luz'))
-			entities = { ...entities, billType: 'electricity' };
-		else if (lowerCommand.includes('água'))
-			entities = { ...entities, billType: 'water' };
-		else if (lowerCommand.includes('telefone'))
-			entities = { ...entities, billType: 'phone' };
-		else if (lowerCommand.includes('internet'))
-			entities = { ...entities, billType: 'internet' };
-	}
-	// Transaction history commands
-	else if (
-		lowerCommand.includes('extrato') ||
-		lowerCommand.includes('transações') ||
-		lowerCommand.includes('historico') ||
-		lowerCommand.includes('compras')
-	) {
-		intent = 'transaction_history';
-	}
-	// PIX commands
-	else if (lowerCommand.includes('pix') || lowerCommand.includes('fazer pix')) {
-		intent = 'pix_transfer';
-		// Extract PIX key patterns
-		const emailMatch = command.match(
-			/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
-		);
-		const phoneMatch = command.match(/\(?(\d{2})?\)?\s?(\d{4,5})-?(\d{4})/);
-		const cpfMatch = command.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/);
-
-		if (emailMatch)
-			entities = { ...entities, pixKey: emailMatch[1], pixKeyType: 'EMAIL' };
-		else if (phoneMatch)
-			entities = { ...entities, pixKey: phoneMatch[0], pixKeyType: 'PHONE' };
-		else if (cpfMatch)
-			entities = { ...entities, pixKey: cpfMatch[0], pixKeyType: 'CPF' };
-	}
-	// Unknown command
-	else {
-		intent = 'unknown';
-		confidence = 0.3;
-	}
+	const { intent, entities, confidence } = detectIntentAndEntities(command);
 
 	// Determine if confirmation is required based on confidence
 	const requiresConfirmation =
 		confidence < MIN_AUTOMATION_CONFIDENCE || (requireConfirmation ?? false);
 
 	// Generate appropriate response
-	let response = '';
-	switch (intent) {
-		case 'check_balance':
-			response = 'Verificando seu saldo...';
-			break;
-		case 'transfer_money':
-			if (entities.amount && entities.recipient) {
-				response = `Preparando transferência de R$ ${entities.amount} para ${entities.recipient}`;
-			} else {
-				response = 'Entendi que quer transferir dinheiro. Para quem e quanto?';
-			}
-			break;
-		case 'pay_bill':
-			response = 'Buscando suas contas a pagar...';
-			break;
-		case 'transaction_history':
-			response = 'Mostrando seu histórico de transações...';
-			break;
-		case 'pix_transfer':
-			response = 'Preparando transferência PIX...';
-			break;
-		default:
-			response = 'Não entendi o comando. Pode repetir?';
-	}
+	const response = generateResponse(intent, entities);
 
 	const result: VoiceCommandResult = {
 		confidence,

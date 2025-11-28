@@ -9,7 +9,6 @@
  */
 
 import { apiClient } from '@/lib/api-client';
-
 import type {
 	CalendarSyncMapping,
 	CalendarSyncSettings,
@@ -48,11 +47,7 @@ export class GoogleCalendarService {
 	private userId: string;
 	private authToken: string;
 
-	constructor(
-		config: GoogleCalendarConfig,
-		userId: string,
-		authToken: string,
-	) {
+	constructor(config: GoogleCalendarConfig, userId: string, authToken: string) {
 		this.config = config;
 		this.userId = userId;
 		this.authToken = authToken;

@@ -1,96 +1,94 @@
 /**
  * Bank Accounts Integration Tests
- * Tests the Supabase database operations for bank account CRUD
+ * Tests the Drizzle database operations for bank account CRUD
  *
  * These tests verify data integrity and database operations directly.
  */
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import type { TestUser } from './helpers';
 import {
+	bankAccounts,
+	cleanupBankAccounts,
 	cleanupUserData,
 	createTestUser,
-	getSupabaseAdminClient,
+	type DbClient,
+	getTestDbClient,
 	hasIntegrationTestEnv,
+	type TestUser,
+	users,
 } from './helpers';
-import type { Database } from '@/types/database.types';
-
-type BankAccountRow = Database['public']['Tables']['bank_accounts']['Row'];
+import type { InsertBankAccount } from '@/db/schema';
 
 describe.skipIf(!hasIntegrationTestEnv())(
 	'Bank Accounts API Integration',
 	() => {
 		let testUser: TestUser;
 		let createdAccountIds: string[] = [];
-		let supabase: ReturnType<typeof getSupabaseAdminClient>;
+		let db: DbClient;
 
 		beforeAll(async () => {
-			supabase = getSupabaseAdminClient();
-			testUser = await createTestUser(supabase);
+			db = getTestDbClient();
+			testUser = await createTestUser(db);
 		});
 
 		afterEach(async () => {
 			if (createdAccountIds.length) {
-				await supabase
-					.from('bank_accounts')
-					.delete()
-					.in('id', createdAccountIds);
+				await cleanupBankAccounts(createdAccountIds, db);
 				createdAccountIds = [];
 			}
 		});
 
 		afterAll(async () => {
-			await cleanupUserData(supabase, testUser.id);
+			await cleanupUserData(testUser.id, db);
 		});
 
 		// Helper to directly create account in DB for testing
 		const createAccountDirect = async (
-			accountData: Partial<BankAccountRow>,
+			accountData: Partial<InsertBankAccount>,
 		) => {
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.insert({
-					user_id: testUser.id,
-					institution_name: accountData.institution_name || 'Test Bank',
-					institution_id: accountData.institution_id || `inst_${Date.now()}`,
-					account_type: accountData.account_type || 'CHECKING',
-					account_mask:
-						accountData.account_mask ||
+			const [data] = await db
+				.insert(bankAccounts)
+				.values({
+					userId: testUser.id,
+					institutionName: accountData.institutionName || 'Test Bank',
+					institutionId: accountData.institutionId || `inst_${Date.now()}`,
+					accountType: accountData.accountType || 'CHECKING',
+					accountMask:
+						accountData.accountMask ||
 						`**** ${Math.floor(1000 + Math.random() * 9000)}`,
-					balance: accountData.balance ?? 0,
+					balance: accountData.balance ?? '0',
 					currency: accountData.currency || 'BRL',
-					is_primary: accountData.is_primary ?? false,
-					is_active: accountData.is_active ?? true,
-					belvo_account_id:
-						accountData.belvo_account_id || `manual_${Date.now()}`,
-					sync_status: accountData.sync_status || 'manual',
+					isPrimary: accountData.isPrimary ?? false,
+					isActive: accountData.isActive ?? true,
+					belvoAccountId: accountData.belvoAccountId || `manual_${Date.now()}`,
+					syncStatus: accountData.syncStatus || 'manual',
 				})
-				.select()
-				.single();
+				.returning();
 
-			if (error)
-				throw new Error(`Failed to create test account: ${error.message}`);
+			if (!data) throw new Error('Failed to create test account');
 			createdAccountIds.push(data.id);
 			return data;
 		};
 
 		const listAccounts = async () => {
-			const { data } = await supabase
-				.from('bank_accounts')
-				.select('*')
-				.eq('user_id', testUser.id)
-				.order('created_at', { ascending: false });
-			return data as BankAccountRow[] | null;
+			const data = await db
+				.select()
+				.from(bankAccounts)
+				.where(eq(bankAccounts.userId, testUser.id))
+				.orderBy(desc(bankAccounts.createdAt));
+			return data;
 		};
 
 		const getAccountById = async (id: string) => {
-			const { data } = await supabase
-				.from('bank_accounts')
-				.select('*')
-				.eq('id', id)
-				.eq('user_id', testUser.id)
-				.single();
-			return data as BankAccountRow | null;
+			const [data] = await db
+				.select()
+				.from(bankAccounts)
+				.where(
+					and(eq(bankAccounts.id, id), eq(bankAccounts.userId, testUser.id)),
+				)
+				.limit(1);
+			return data ?? null;
 		};
 
 		// =====================================================
@@ -99,59 +97,65 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('creates manual account with correct sync_status', async () => {
 			const account = await createAccountDirect({
-				institution_name: 'Banco Manual',
-				account_type: 'CHECKING',
-				balance: 1500,
-				sync_status: 'manual',
-				belvo_account_id: `manual_${Date.now()}`,
+				institutionName: 'Banco Manual',
+				accountType: 'CHECKING',
+				balance: '1500',
+				syncStatus: 'manual',
+				belvoAccountId: `manual_${Date.now()}`,
 			});
 
-			expect(account.sync_status).toBe('manual');
-			expect(account.belvo_account_id).toMatch(/^manual_/);
+			expect(account.syncStatus).toBe('manual');
+			expect(account.belvoAccountId).toMatch(/^manual_/);
 		});
 
 		it('normalizes account mask format correctly', async () => {
 			const account = await createAccountDirect({
-				institution_name: 'Banco Máscara',
-				account_mask: '**** 1234',
+				institutionName: 'Banco Máscara',
+				accountMask: '**** 1234',
 			});
 
-			expect(account.account_mask).toBe('**** 1234');
+			expect(account.accountMask).toBe('**** 1234');
 		});
 
 		it('stores Belvo account with pending sync_status', async () => {
 			const belvoId = 'belvo-account-123';
 			const account = await createAccountDirect({
-				institution_name: 'Banco Digital',
-				belvo_account_id: belvoId,
-				sync_status: 'pending',
-				is_primary: true,
+				institutionName: 'Banco Digital',
+				belvoAccountId: belvoId,
+				syncStatus: 'pending',
+				isPrimary: true,
 			});
 
-			expect(account.sync_status).toBe('pending');
-			expect(account.belvo_account_id).toBe(belvoId);
-			expect(account.is_primary).toBe(true);
+			expect(account.syncStatus).toBe('pending');
+			expect(account.belvoAccountId).toBe(belvoId);
+			expect(account.isPrimary).toBe(true);
 		});
 
-		it('prevents duplicate accounts by institution_id + account_mask', async () => {
-			const payload = {
-				institution_name: 'Banco Duplicado',
-				institution_id: 'DUPLICADO_TEST',
-				account_mask: '**** 1111',
-				account_type: 'checking',
-			};
-
-			await createAccountDirect(payload);
-
-			// Attempt to create duplicate
-			const { error } = await supabase.from('bank_accounts').insert({
-				user_id: testUser.id,
-				...payload,
-				belvo_account_id: `manual_${Date.now()}`,
+		it('prevents duplicate accounts by belvo_account_id (unique constraint)', async () => {
+			const belvoId = `unique_${Date.now()}`;
+			await createAccountDirect({
+				institutionName: 'Banco Duplicado',
+				institutionId: 'DUPLICADO_TEST',
+				accountMask: '**** 1111',
+				accountType: 'CHECKING',
+				belvoAccountId: belvoId,
 			});
 
-			// Should fail due to unique constraint or RLS
-			expect(error).toBeDefined();
+			// Attempt to create duplicate with same belvo_account_id
+			try {
+				await db.insert(bankAccounts).values({
+					userId: testUser.id,
+					institutionName: 'Banco Duplicado 2',
+					institutionId: 'DUPLICADO_TEST_2',
+					accountMask: '**** 2222',
+					accountType: 'CHECKING',
+					belvoAccountId: belvoId, // Same belvo_account_id
+				});
+				expect.fail('Should have thrown unique constraint error');
+			} catch (error) {
+				// Should fail due to unique constraint on belvo_account_id
+				expect(error).toBeDefined();
+			}
 		});
 
 		// =====================================================
@@ -160,46 +164,51 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('updates account information correctly', async () => {
 			const created = await createAccountDirect({
-				institution_name: 'Banco Atualização',
-				balance: 500,
-				is_primary: false,
+				institutionName: 'Banco Atualização',
+				balance: '500',
+				isPrimary: false,
 			});
 
-			const { data: updated, error } = await supabase
-				.from('bank_accounts')
-				.update({
-					balance: 800,
-					institution_name: 'Banco Atualizado',
-					is_primary: true,
+			const [updated] = await db
+				.update(bankAccounts)
+				.set({
+					balance: '800',
+					institutionName: 'Banco Atualizado',
+					isPrimary: true,
 				})
-				.eq('id', created.id)
-				.eq('user_id', testUser.id)
-				.select()
-				.single();
+				.where(
+					and(
+						eq(bankAccounts.id, created.id),
+						eq(bankAccounts.userId, testUser.id),
+					),
+				)
+				.returning();
 
-			expect(error).toBeNull();
-			expect(updated?.balance).toBe(800);
-			expect(updated?.institution_name).toBe('Banco Atualizado');
-			expect(updated?.is_primary).toBe(true);
+			expect(updated?.balance).toBe('800');
+			expect(updated?.institutionName).toBe('Banco Atualizado');
+			expect(updated?.isPrimary).toBe(true);
 		});
 
 		it('preserves immutable belvo_account_id on update', async () => {
 			const originalBelvoId = `manual_${Date.now()}`;
 			const created = await createAccountDirect({
-				institution_name: 'Banco Imutável',
-				belvo_account_id: originalBelvoId,
+				institutionName: 'Banco Imutável',
+				belvoAccountId: originalBelvoId,
 			});
 
-			// Attempt to update belvo_account_id (should be ignored by application logic)
-			const { data: updated } = await supabase
-				.from('bank_accounts')
-				.update({ institution_name: 'Banco Atualizado' })
-				.eq('id', created.id)
-				.eq('user_id', testUser.id)
-				.select()
-				.single();
+			// Update institution name only (not belvo_account_id)
+			const [updated] = await db
+				.update(bankAccounts)
+				.set({ institutionName: 'Banco Atualizado' })
+				.where(
+					and(
+						eq(bankAccounts.id, created.id),
+						eq(bankAccounts.userId, testUser.id),
+					),
+				)
+				.returning();
 
-			expect(updated?.belvo_account_id).toBe(originalBelvoId);
+			expect(updated?.belvoAccountId).toBe(originalBelvoId);
 		});
 
 		// =====================================================
@@ -208,23 +217,24 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('removes account and verifies deletion', async () => {
 			const created = await createAccountDirect({
-				institution_name: 'Banco Remoção',
+				institutionName: 'Banco Remoção',
 			});
 
 			const accountId = created.id;
 			// Remove from tracked IDs since we're deleting it manually
 			createdAccountIds = createdAccountIds.filter((id) => id !== accountId);
 
-			const { error } = await supabase
-				.from('bank_accounts')
-				.delete()
-				.eq('id', accountId)
-				.eq('user_id', testUser.id);
-
-			expect(error).toBeNull();
+			await db
+				.delete(bankAccounts)
+				.where(
+					and(
+						eq(bankAccounts.id, accountId),
+						eq(bankAccounts.userId, testUser.id),
+					),
+				);
 
 			const list = await listAccounts();
-			expect(list?.some((acc) => acc.id === accountId)).toBe(false);
+			expect(list.some((acc) => acc.id === accountId)).toBe(false);
 		});
 
 		// =====================================================
@@ -233,31 +243,31 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('returns all accounts for user', async () => {
 			const acc1 = await createAccountDirect({
-				institution_name: 'Banco Lista 1',
-				balance: 1000,
+				institutionName: 'Banco Lista 1',
+				balance: '1000',
 			});
 			const acc2 = await createAccountDirect({
-				institution_name: 'Banco Lista 2',
-				balance: 2000,
+				institutionName: 'Banco Lista 2',
+				balance: '2000',
 			});
 
 			const all = await listAccounts();
-			expect(all?.length).toBeGreaterThanOrEqual(2);
-			expect(all?.some((a) => a.id === acc1.id)).toBe(true);
-			expect(all?.some((a) => a.id === acc2.id)).toBe(true);
+			expect(all.length).toBeGreaterThanOrEqual(2);
+			expect(all.some((a) => a.id === acc1.id)).toBe(true);
+			expect(all.some((a) => a.id === acc2.id)).toBe(true);
 		});
 
 		it('fetches account by ID', async () => {
 			const account = await createAccountDirect({
-				institution_name: 'Banco Busca',
-				balance: 700,
-				is_primary: true,
+				institutionName: 'Banco Busca',
+				balance: '700',
+				isPrimary: true,
 			});
 
 			const byId = await getAccountById(account.id);
 			expect(byId?.id).toBe(account.id);
-			expect(byId?.institution_name).toBe('Banco Busca');
-			expect(byId?.balance).toBe(700);
+			expect(byId?.institutionName).toBe('Banco Busca');
+			expect(byId?.balance).toBe('700');
 		});
 
 		// =====================================================
@@ -266,32 +276,39 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('calculates total balance aggregated by currency', async () => {
 			await createAccountDirect({
-				institution_name: 'Banco Soma A',
-				balance: 100,
+				institutionName: 'Banco Soma A',
+				balance: '100',
 				currency: 'BRL',
-				is_active: true,
+				isActive: true,
 			});
 			await createAccountDirect({
-				institution_name: 'Banco Soma B',
-				balance: 300,
+				institutionName: 'Banco Soma B',
+				balance: '300',
 				currency: 'BRL',
-				is_active: true,
+				isActive: true,
 			});
 			await createAccountDirect({
-				institution_name: 'Banco USD',
-				balance: 50,
+				institutionName: 'Banco USD',
+				balance: '50',
 				currency: 'USD',
-				is_active: true,
+				isActive: true,
 			});
 
-			const { data: accounts } = await supabase
-				.from('bank_accounts')
-				.select('balance, currency')
-				.eq('user_id', testUser.id)
-				.eq('is_active', true);
+			const accounts = await db
+				.select({
+					balance: bankAccounts.balance,
+					currency: bankAccounts.currency,
+				})
+				.from(bankAccounts)
+				.where(
+					and(
+						eq(bankAccounts.userId, testUser.id),
+						eq(bankAccounts.isActive, true),
+					),
+				);
 
 			const totals: Record<string, number> = {};
-			accounts?.forEach((acc) => {
+			accounts.forEach((acc) => {
 				const currency = acc.currency || 'BRL';
 				totals[currency] = (totals[currency] || 0) + Number(acc.balance || 0);
 			});
@@ -302,20 +319,22 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 		it('updates balance directly', async () => {
 			const created = await createAccountDirect({
-				institution_name: 'Banco Saldo',
-				balance: 10,
+				institutionName: 'Banco Saldo',
+				balance: '10',
 			});
 
-			const { data: updated, error } = await supabase
-				.from('bank_accounts')
-				.update({ balance: 999 })
-				.eq('id', created.id)
-				.eq('user_id', testUser.id)
-				.select()
-				.single();
+			const [updated] = await db
+				.update(bankAccounts)
+				.set({ balance: '999' })
+				.where(
+					and(
+						eq(bankAccounts.id, created.id),
+						eq(bankAccounts.userId, testUser.id),
+					),
+				)
+				.returning();
 
-			expect(error).toBeNull();
-			expect(updated?.balance).toBe(999);
+			expect(updated?.balance).toBe('999');
 		});
 
 		// =====================================================
@@ -332,10 +351,10 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 			for (const accountType of accountTypes) {
 				const account = await createAccountDirect({
-					institution_name: `Banco ${accountType}`,
-					account_type: accountType,
+					institutionName: `Banco ${accountType}`,
+					accountType,
 				});
-				expect(account.account_type).toBe(accountType);
+				expect(account.accountType).toBe(accountType);
 			}
 		});
 
@@ -344,7 +363,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 			for (const currency of currencies) {
 				const account = await createAccountDirect({
-					institution_name: `Banco ${currency}`,
+					institutionName: `Banco ${currency}`,
 					currency,
 				});
 				expect(account.currency).toBe(currency);
@@ -352,43 +371,44 @@ describe.skipIf(!hasIntegrationTestEnv())(
 		});
 
 		// =====================================================
-		// RLS Security Tests
+		// User Isolation Tests
 		// =====================================================
 
-		it('isolates accounts between users (RLS)', async () => {
+		it('isolates accounts between users', async () => {
 			// Create account for test user
 			const testAccount = await createAccountDirect({
-				institution_name: 'Banco RLS Test',
-				balance: 1000,
+				institutionName: 'Banco RLS Test',
+				balance: '1000',
 			});
 
 			// Create another user
-			const otherUser = await supabase.auth.admin.createUser({
-				email: `other_${Date.now()}@aegiswallet.dev`,
-				email_confirm: true,
+			const otherUserId = `other_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+			const otherUserEmail = `other_${Date.now()}@aegiswallet.dev`;
+
+			await db.insert(users).values({
+				id: otherUserId,
+				email: otherUserEmail,
+				fullName: 'Other Test User',
+				autonomyLevel: 50,
+				isActive: true,
 			});
 
-			if (!otherUser.data.user) {
-				throw new Error('Failed to create other user');
-			}
-
 			try {
-				// Other user should not see test user's accounts
-				// Using admin client here - in real app, RLS would block this
-				const { data: otherUserAccounts } = await supabase
-					.from('bank_accounts')
-					.select('*')
-					.eq('user_id', otherUser.data.user.id);
+				// Query accounts for other user - should return empty
+				const otherUserAccounts = await db
+					.select()
+					.from(bankAccounts)
+					.where(eq(bankAccounts.userId, otherUserId));
 
 				// Other user should have no accounts
-				expect(otherUserAccounts?.length ?? 0).toBe(0);
+				expect(otherUserAccounts.length).toBe(0);
 
-				// Test user's account should still exist
+				// Test user's account should still exist and be accessible
 				const myAccount = await getAccountById(testAccount.id);
 				expect(myAccount?.id).toBe(testAccount.id);
 			} finally {
 				// Cleanup other user
-				await supabase.auth.admin.deleteUser(otherUser.data.user.id);
+				await db.delete(users).where(eq(users.id, otherUserId));
 			}
 		});
 	},

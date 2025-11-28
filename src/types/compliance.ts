@@ -13,6 +13,7 @@ export type ConsentType =
 	| 'analytics'
 	| 'third_party'
 	| 'voice_data'
+	| 'voice_recording'
 	| 'biometric'
 	| 'financial_data'
 	| 'location';
@@ -70,6 +71,7 @@ export interface ConsentTemplate {
 
 export type DataExportRequestType =
 	| 'full_data'
+	| 'full_export'
 	| 'transactions'
 	| 'profile'
 	| 'consents'
@@ -108,6 +110,7 @@ export interface DataExportRequest {
 
 export type DataDeletionRequestType =
 	| 'full_account'
+	| 'full_deletion'
 	| 'specific_data'
 	| 'anonymization';
 
@@ -178,6 +181,7 @@ export interface OpenBankingConsent {
 
 export type TransactionLimitType =
 	| 'pix_daily'
+	| 'pix_daytime'
 	| 'pix_transaction'
 	| 'boleto_daily'
 	| 'transfer_daily'

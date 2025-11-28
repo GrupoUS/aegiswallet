@@ -516,7 +516,10 @@ export const secureSession = {
 	remove: (): boolean => {
 		return secureStorage.remove('session');
 	},
-	retrieve: async (): Promise<{ session: SecureSession; user: SecureUser } | null> => {
+	retrieve: async (): Promise<{
+		session: SecureSession;
+		user: SecureUser;
+	} | null> => {
 		const data = await secureStorage.retrieve('session');
 		return data?.session && data.user
 			? {

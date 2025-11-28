@@ -1,10 +1,21 @@
+/**
+ * Financial Events Integration Tests
+ *
+ * Tests Drizzle database operations for financial events CRUD
+ * including validation and date filtering.
+ */
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+	cleanupFinancialEvents,
 	cleanupUserData,
 	createTestUser,
-	getSupabaseAdminClient,
+	type DbClient,
+	financialEvents,
+	getTestDbClient,
 	hasIntegrationTestEnv,
+	type TestUser,
 } from './helpers';
 import {
 	sanitizeFinancialEventData,
@@ -12,39 +23,32 @@ import {
 	validateFinancialEventForInsert,
 	validateFinancialEventForUpdate,
 } from '@/lib/validation/financial-events-validator';
-import type { Database } from '@/types/database.types';
 import type { FinancialEvent } from '@/types/financial-events';
-
-type DbFinancialEventRow =
-	Database['public']['Tables']['financial_events']['Row'];
 
 describe.skipIf(!hasIntegrationTestEnv())(
 	'Financial Events Integration',
 	() => {
-		let testUser: { id: string; email: string };
+		let testUser: TestUser;
 		let createdEventIds: string[] = [];
-		let supabase: ReturnType<typeof getSupabaseAdminClient>;
+		let db: DbClient;
 
 		beforeAll(async () => {
-			supabase = getSupabaseAdminClient();
-			testUser = await createTestUser(supabase);
+			db = getTestDbClient();
+			testUser = await createTestUser(db);
 		});
 
 		afterEach(async () => {
 			if (createdEventIds.length) {
-				await supabase
-					.from('financial_events')
-					.delete()
-					.in('id', createdEventIds);
+				await cleanupFinancialEvents(createdEventIds, db);
 				createdEventIds = [];
 			}
 		});
 
 		afterAll(async () => {
-			await cleanupUserData(supabase, testUser.id);
+			await cleanupUserData(testUser.id, db);
 		});
 
-		// Helper to build database row from sanitized data (extracted to reduce complexity)
+		// Helper to build database row from sanitized data
 		const buildEventRow = (
 			sanitized: ReturnType<typeof sanitizeFinancialEventData> & {
 				title: string;
@@ -54,42 +58,36 @@ describe.skipIf(!hasIntegrationTestEnv())(
 			},
 			userId: string,
 		) => {
-			const now = new Date().toISOString();
+			const now = new Date();
 			return {
-				all_day: sanitized.allDay ?? false,
-				amount: sanitized.amount,
-				attachments: sanitized.attachments ?? null,
-				brazilian_event_type: sanitized.brazilianEventType ?? null,
-				category: (sanitized.category as string) ?? null,
-				color: sanitized.color ?? 'blue',
-				completed_at: sanitized.completedAt?.toISOString() ?? null,
-				created_at: now,
-				description: sanitized.description ?? null,
-				due_date: sanitized.dueDate?.toISOString().split('T')[0] ?? null,
-				end_date: (sanitized.end ?? sanitized.start).toISOString(),
-				event_type: sanitized.type,
-				icon: sanitized.icon ?? null,
-				installment_info: sanitized.installmentInfo
-					? JSON.stringify(sanitized.installmentInfo)
-					: null,
-				is_income: sanitized.type === 'income',
-				is_recurring: sanitized.isRecurring ?? false,
-				location: sanitized.location ?? null,
-				merchant_category: sanitized.metadata?.merchantCategory ?? null,
-				metadata: sanitized.metadata
-					? JSON.stringify(sanitized.metadata)
-					: null,
-				notes: sanitized.notes ?? null,
-				parent_event_id:
-					(sanitized as { parentEventId?: string }).parentEventId ?? null,
-				priority: sanitized.priority ?? 'NORMAL',
-				recurrence_rule: sanitized.recurrenceRule ?? null,
-				start_date: sanitized.start.toISOString(),
-				status: sanitized.status ?? 'pending',
-				tags: sanitized.tags ?? null,
+				userId,
 				title: sanitized.title,
-				updated_at: now,
-				user_id: userId,
+				description: sanitized.description ?? null,
+				amount: String(sanitized.amount),
+				status: sanitized.status ?? 'pending',
+				startDate: sanitized.start,
+				endDate: sanitized.end ?? sanitized.start,
+				allDay: sanitized.allDay ?? false,
+				color: sanitized.color ?? 'blue',
+				icon: sanitized.icon ?? null,
+				isIncome: sanitized.type === 'income',
+				isRecurring: sanitized.isRecurring ?? false,
+				recurrenceRule: sanitized.recurrenceRule ?? null,
+				parentEventId:
+					(sanitized as { parentEventId?: string }).parentEventId ?? null,
+				location: sanitized.location ?? null,
+				notes: sanitized.notes ?? null,
+				dueDate: sanitized.dueDate?.toISOString().split('T')[0] ?? null,
+				completedAt: sanitized.completedAt ?? null,
+				priority: sanitized.priority ?? 'normal',
+				tags: sanitized.tags ?? null,
+				attachments: sanitized.attachments ?? null,
+				brazilianEventType: sanitized.brazilianEventType ?? null,
+				installmentInfo: sanitized.installmentInfo ?? null,
+				merchantCategory: sanitized.metadata?.merchantCategory ?? null,
+				metadata: sanitized.metadata ?? null,
+				createdAt: now,
+				updatedAt: now,
 			};
 		};
 
@@ -126,17 +124,14 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 			const row = buildEventRow(validatedSanitized, testUser.id);
 
-			const { data, error } = await supabase
-				.from('financial_events')
-				.insert(row)
-				.select()
-				.single();
-			if (error || !data) {
-				throw new Error(`Falha ao criar evento: ${error?.message}`);
+			const [data] = await db.insert(financialEvents).values(row).returning();
+
+			if (!data) {
+				throw new Error('Falha ao criar evento');
 			}
 
 			createdEventIds.push(data.id);
-			return data as DbFinancialEventRow;
+			return data;
 		};
 
 		it('cria um evento de receita e persiste todos os campos essenciais', async () => {
@@ -153,9 +148,8 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'income',
 			});
 
-			expect(eventRow.is_income).toBe(true);
-			expect(eventRow.event_type).toBe('income');
-			expect(eventRow.amount).toBe(9500.5);
+			expect(eventRow.isIncome).toBe(true);
+			expect(Number(eventRow.amount)).toBe(9500.5);
 			expect(eventRow.status).toBe('paid');
 		});
 
@@ -171,7 +165,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'expense',
 			});
 
-			expect(eventRow.is_income).toBe(false);
+			expect(eventRow.isIncome).toBe(false);
 			expect(eventRow.priority).toBe('ALTA');
 			expect(eventRow.notes).toBe('Vencimento dia 1');
 		});
@@ -186,7 +180,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'income',
 			});
 
-			expect(eventRow.brazilian_event_type).toBe('DECIMO_TERCEIRO');
+			expect(eventRow.brazilianEventType).toBe('DECIMO_TERCEIRO');
 		});
 
 		it('armazena installment_info corretamente em JSONB', async () => {
@@ -205,11 +199,11 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'expense',
 			});
 
-			expect(eventRow.installment_info).not.toBeNull();
+			expect(eventRow.installmentInfo).not.toBeNull();
 			const parsed =
-				typeof eventRow.installment_info === 'string'
-					? JSON.parse(eventRow.installment_info)
-					: (eventRow.installment_info as Record<string, unknown>);
+				typeof eventRow.installmentInfo === 'string'
+					? JSON.parse(eventRow.installmentInfo)
+					: (eventRow.installmentInfo as Record<string, unknown>);
 			expect(parsed.totalInstallments).toBe(6);
 		});
 
@@ -227,7 +221,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'expense',
 			});
 
-			expect(eventRow.merchant_category).toBe('RESTAURANTE');
+			expect(eventRow.merchantCategory).toBe('RESTAURANTE');
 			const parsedMetadata =
 				typeof eventRow.metadata === 'string'
 					? JSON.parse(eventRow.metadata)
@@ -253,30 +247,27 @@ describe.skipIf(!hasIntegrationTestEnv())(
 			const validation = validateFinancialEventForUpdate(sanitized);
 			expect(validation.valid).toBe(true);
 
-			const { data, error } = await supabase
-				.from('financial_events')
-				.update({
-					due_date: sanitized.dueDate
+			const [data] = await db
+				.update(financialEvents)
+				.set({
+					dueDate: sanitized.dueDate
 						? sanitized.dueDate.toISOString().split('T')[0]
 						: null,
-					merchant_category: sanitized.metadata?.merchantCategory || null,
-					metadata: sanitized.metadata
-						? JSON.stringify(sanitized.metadata)
-						: null,
+					merchantCategory: sanitized.metadata?.merchantCategory || null,
+					metadata: sanitized.metadata || null,
 					status: sanitized.status,
+					updatedAt: new Date(),
 				})
-				.eq('id', created.id)
-				.select()
-				.single();
+				.where(eq(financialEvents.id, created.id))
+				.returning();
 
-			expect(error).toBeNull();
 			expect(data?.status).toBe('paid');
-			expect(data?.due_date).toBe('2025-01-25');
-			const updatedAt = data?.updated_at
-				? new Date(data.updated_at).getTime()
+			expect(data?.dueDate).toBe('2025-01-25');
+			const updatedAt = data?.updatedAt
+				? new Date(data.updatedAt).getTime()
 				: 0;
-			const createdAt = created.updated_at
-				? new Date(created.updated_at).getTime()
+			const createdAt = created.updatedAt
+				? new Date(created.updatedAt).getTime()
 				: 0;
 			expect(updatedAt).toBeGreaterThan(createdAt);
 		});
@@ -290,19 +281,19 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'expense',
 			});
 
-			const { error } = await supabase
-				.from('financial_events')
-				.delete()
-				.eq('id', created.id);
-			expect(error).toBeNull();
+			await db
+				.delete(financialEvents)
+				.where(eq(financialEvents.id, created.id));
+
 			createdEventIds = createdEventIds.filter((id) => id !== created.id);
 
-			const { data } = await supabase
-				.from('financial_events')
-				.select('id')
-				.eq('id', created.id)
-				.maybeSingle();
-			expect(data).toBeNull();
+			const [data] = await db
+				.select({ id: financialEvents.id })
+				.from(financialEvents)
+				.where(eq(financialEvents.id, created.id))
+				.limit(1);
+
+			expect(data).toBeUndefined();
 		});
 
 		it('bloqueia criação quando faltam campos obrigatórios (validação)', () => {
@@ -346,15 +337,21 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				});
 			}
 
-			const { data, error } = await supabase
-				.from('financial_events')
-				.select('id, start_date')
-				.eq('user_id', testUser.id)
-				.gte('start_date', '2025-06-01T00:00:00Z')
-				.lte('start_date', '2025-06-30T23:59:59Z');
+			const data = await db
+				.select({
+					id: financialEvents.id,
+					startDate: financialEvents.startDate,
+				})
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, testUser.id),
+						gte(financialEvents.startDate, new Date('2025-06-01T00:00:00Z')),
+						lte(financialEvents.startDate, new Date('2025-06-30T23:59:59Z')),
+					),
+				);
 
-			expect(error).toBeNull();
-			expect(data?.length).toBeGreaterThanOrEqual(2);
+			expect(data.length).toBeGreaterThanOrEqual(2);
 		});
 
 		it('filtra eventos por status', async () => {
@@ -375,14 +372,17 @@ describe.skipIf(!hasIntegrationTestEnv())(
 				type: 'bill',
 			});
 
-			const { data, error } = await supabase
-				.from('financial_events')
-				.select('id, status')
-				.eq('user_id', testUser.id)
-				.eq('status', 'paid');
+			const data = await db
+				.select({ id: financialEvents.id, status: financialEvents.status })
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, testUser.id),
+						eq(financialEvents.status, 'paid'),
+					),
+				);
 
-			expect(error).toBeNull();
-			expect(data?.every((row) => row.status === 'paid')).toBe(true);
+			expect(data.every((row) => row.status === 'paid')).toBe(true);
 		});
 	},
 );

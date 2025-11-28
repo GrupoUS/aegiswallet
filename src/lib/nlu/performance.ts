@@ -1020,62 +1020,11 @@ export class NLUPerformanceTracker {
 			return;
 		}
 
-		// KISS/YAGNI: Persistence tables not yet created in Supabase
-		// Metrics are kept in-memory for now. To enable persistence:
-		// 1. Create nlu_performance_metrics and nlu_performance_alerts tables
-		// 2. Uncomment the code below
+		// TODO: Implement performance metrics persistence via API client when database tables are created
+		// For now, metrics are kept in-memory only
 		logger.debug(
-			'Performance metrics tracking (persistence disabled - tables not created)',
+			'Performance metrics tracking (persistence pending table creation)',
 		);
-
-		// TODO: Enable when tables are created
-		/*
-    try {
-      // Persist current metrics to Supabase
-      const { error } = await supabase.from('nlu_performance_metrics').insert({
-        accuracy_metrics: this.metrics.accuracy,
-        cache_metrics: this.metrics.cache,
-        error_metrics: this.metrics.errors,
-        processing_metrics: this.metrics.processing,
-        regional_metrics: this.metrics.regional,
-        system_metrics: this.metrics.system,
-        temporal_metrics: this.metrics.temporal,
-        timestamp: new Date().toISOString(),
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Persist active alerts
-      const activeAlerts = this.getActiveAlerts();
-      if (activeAlerts.length > 0) {
-        const { error: alertError } = await supabase.from('nlu_performance_alerts').upsert(
-          activeAlerts.map((alert) => ({
-            current_value: alert.currentValue,
-            id: alert.id,
-            message: alert.message,
-            resolution_notes: alert.resolutionNotes,
-            resolved: alert.resolved,
-            resolved_at: alert.resolvedAt?.toISOString(),
-            severity: alert.severity,
-            threshold: alert.threshold,
-            timestamp: alert.timestamp.toISOString(),
-            title: alert.title,
-            type: alert.type,
-          }))
-        );
-
-        if (alertError) {
-          throw alertError;
-        }
-      }
-
-      logger.debug('Performance metrics persisted to database');
-    } catch (error) {
-      logger.error('Failed to persist performance metrics', { error });
-    }
-    */
 	}
 
 	private calculateProcessingScore(): number {

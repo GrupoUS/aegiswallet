@@ -1,7 +1,7 @@
 /**
  * API Client for Hono RPC endpoints
  * Provides type-safe fetch wrapper with authentication and error handling
- * 
+ *
  * Updated to use Clerk authentication instead of Supabase
  */
 
@@ -134,7 +134,6 @@ class ApiClient {
 		return this.handleResponse<T>(response);
 	}
 
-
 	/**
 	 * Make a POST request
 	 */
@@ -236,7 +235,6 @@ class ApiClient {
 
 		return this.handleResponse<T>(response);
 	}
-
 
 	/**
 	 * Download a file

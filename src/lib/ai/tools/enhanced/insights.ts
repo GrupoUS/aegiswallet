@@ -1,9 +1,7 @@
 import { tool } from 'ai';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db } from '@/db/client';
-import { financialEvents, transactionCategories, transactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import type {
 	AnomalyDetection,
@@ -14,9 +12,14 @@ import type {
 	SpendingAnalysis,
 	SpendingTrend,
 } from './types';
+import { db } from '@/db/client';
+import {
+	financialEvents,
+	transactionCategories,
+	transactions,
+} from '@/db/schema';
 
 export function createInsightsTools(userId: string) {
-
 	return {
 		getSpendingAnalysis: tool({
 			description:
@@ -24,12 +27,8 @@ export function createInsightsTools(userId: string) {
 			inputSchema: z.object({
 				startDate: z.string().datetime().describe('Data inicial da análise'),
 				endDate: z.string().datetime().describe('Data final da análise'),
-				categoryIds: z
-					.array(z.string().uuid())
-					.optional()
-					.describe('Analisar categorias específicas'),
 			}),
-			execute: async ({ startDate, endDate, categoryIds }) => {
+			execute: async ({ startDate, endDate }) => {
 				try {
 					const start = new Date(startDate);
 					const end = new Date(endDate);
@@ -70,7 +69,8 @@ export function createInsightsTools(userId: string) {
 							? [
 									{
 										id: tx.category_id,
-										name: categoryMap.get(tx.category_id)?.name || 'Sem categoria',
+										name:
+											categoryMap.get(tx.category_id)?.name || 'Sem categoria',
 										color: categoryMap.get(tx.category_id)?.color,
 										icon: categoryMap.get(tx.category_id)?.icon,
 									},
@@ -114,13 +114,13 @@ export function createInsightsTools(userId: string) {
 					});
 
 					// Calcular percentuais
-					const categoryBreakdown = Array.from(categorySpendingMap.values()).map(
-						(cat) => ({
-							...cat,
-							percentage:
-								totalSpending > 0 ? (cat.amount / totalSpending) * 100 : 0,
-						}),
-					);
+					const categoryBreakdown = Array.from(
+						categorySpendingMap.values(),
+					).map((cat) => ({
+						...cat,
+						percentage:
+							totalSpending > 0 ? (cat.amount / totalSpending) * 100 : 0,
+					}));
 
 					// Ordenar por valor
 					categoryBreakdown.sort((a, b) => b.amount - a.amount);
@@ -803,7 +803,7 @@ async function fetchCashFlowData(
 
 		futureEvents = events.map((e) => ({
 			amount: Number(e.amount),
-			start_date: e.start_date!.toISOString(),
+			start_date: e.start_date?.toISOString() || new Date().toISOString(),
 			is_income: e.is_income ?? false,
 			brazilian_event_type: e.brazilian_event_type ?? '',
 		}));

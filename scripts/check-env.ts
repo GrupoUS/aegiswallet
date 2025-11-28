@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Minimal environment validator to ensure critical Supabase secrets exist
+ * Minimal environment validator to ensure critical Neon Database and Clerk secrets exist
  * before running smoke tests, migrations or production builds.
  *
  * Usage:
@@ -14,14 +14,17 @@ import path from 'node:path';
 type EnvMap = Record<string, string>;
 
 const REQUIRED_VARS = [
-	'SUPABASE_URL',
-	'VITE_SUPABASE_URL',
-	'SUPABASE_ANON_KEY',
-	'SUPABASE_SERVICE_ROLE_KEY',
-	'SUPABASE_QA_USER_ID',
+	'DATABASE_URL',
+	'VITE_CLERK_PUBLISHABLE_KEY',
+	'CLERK_SECRET_KEY',
+	'VITE_API_URL',
 ] as const;
 
-const OPTIONAL_VARS = ['VITE_SUPABASE_ANON_KEY'];
+const OPTIONAL_VARS = [
+	'DATABASE_URL_UNPOOLED',
+	'VITE_APP_ENV',
+	'VITE_APP_VERSION',
+];
 
 const envFiles = ['.env.local', '.env'];
 
@@ -70,7 +73,7 @@ if (missing.length > 0) {
 		process.stderr.write(`  • ${key}\n`);
 	}
 	process.stderr.write(
-		'\nRefer to env.example and docs/ops/supabase-env.md for the authoritative list.\n',
+		'\nRefer to env.example for the authoritative list of required variables.\n',
 	);
 	process.exit(1);
 }
@@ -84,4 +87,4 @@ if (warnings.length > 0) {
 	}
 }
 
-process.stdout.write('✅ Supabase environment validated successfully.\n');
+process.stdout.write('✅ Environment variables validated successfully.\n');

@@ -2,16 +2,11 @@ import { tool } from 'ai';
 import { and, desc, eq, ilike, or } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db } from '@/db/client';
-import { contactPaymentMethods, contacts } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
-import {
-	type ContactDbRow,
-	type ContactPaymentMethodDbRow,
-	type ContactWithPaymentMethods,
-	PixKeyTypeSchema,
-} from './types';
+import { type ContactWithPaymentMethods, PixKeyTypeSchema } from './types';
+import { db } from '@/db/client';
+import { contactPaymentMethods, contacts } from '@/db/schema';
 
 // Interface for transfer results to ensure type safety
 interface TransferResult {
@@ -23,7 +18,6 @@ interface TransferResult {
 }
 
 export function createContactsTools(userId: string) {
-
 	return {
 		listContacts: tool({
 			description:
@@ -100,8 +94,8 @@ export function createContactsTools(userId: string) {
 									(pm.methodDetails as { is_favorite?: boolean })
 										?.is_favorite ?? false,
 								usage_count:
-									(pm.methodDetails as { usage_count?: number })
-										?.usage_count ?? 0,
+									(pm.methodDetails as { usage_count?: number })?.usage_count ??
+									0,
 							})),
 					})) as unknown as ContactWithPaymentMethods[];
 
@@ -402,10 +396,7 @@ export function createContactsTools(userId: string) {
 					}
 
 					// Validate payment type if specified
-					if (
-						paymentType &&
-						selectedMethod.methodType !== paymentType
-					) {
+					if (paymentType && selectedMethod.methodType !== paymentType) {
 						throw new Error(
 							`O método selecionado é do tipo ${selectedMethod.methodType}, mas foi solicitado ${paymentType}`,
 						);
@@ -447,7 +438,12 @@ export function createContactsTools(userId: string) {
 						const pixTransferResult = (await executeFunc(
 							{
 								recipientKey: details.pix_key as string,
-								recipientKeyType: details.pix_key_type as 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY',
+								recipientKeyType: details.pix_key_type as
+									| 'CPF'
+									| 'CNPJ'
+									| 'EMAIL'
+									| 'PHONE'
+									| 'RANDOM_KEY',
 								recipientName: contact.name,
 								amount,
 								description: finalDescription,
@@ -611,7 +607,9 @@ export function createContactsTools(userId: string) {
 					// Excluir contato
 					await db
 						.delete(contacts)
-						.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)));
+						.where(
+							and(eq(contacts.id, contactId), eq(contacts.userId, userId)),
+						);
 
 					secureLogger.info('Contato excluído com sucesso', {
 						contactId,

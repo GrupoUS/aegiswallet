@@ -2,7 +2,7 @@
  * Environment Variables Validator
  * Validates required environment variables on application startup
  * and provides clear error messages for misconfiguration
- * 
+ *
  * Updated for Clerk Auth + Neon DB architecture
  */
 
@@ -63,7 +63,8 @@ export const validateEnv = (): EnvValidationResult => {
 	// Check Clerk Publishable Key
 	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
 	diagnostics.hasClerkPublishableKey = !!clerkPublishableKey;
-	diagnostics.clerkPublishableKeyValid = isValidClerkPublishableKey(clerkPublishableKey);
+	diagnostics.clerkPublishableKeyValid =
+		isValidClerkPublishableKey(clerkPublishableKey);
 
 	if (!clerkPublishableKey) {
 		errors.push('VITE_CLERK_PUBLISHABLE_KEY não está definida');
@@ -89,7 +90,9 @@ export const validateEnv = (): EnvValidationResult => {
 	const googleClientId = getEnvVar('VITE_GOOGLE_CLIENT_ID');
 	diagnostics.hasGoogleClientId = !!googleClientId;
 	if (!googleClientId) {
-		warnings.push('VITE_GOOGLE_CLIENT_ID não definida (Google OAuth desabilitado)');
+		warnings.push(
+			'VITE_GOOGLE_CLIENT_ID não definida (Google OAuth desabilitado)',
+		);
 	}
 
 	const isValid = errors.length === 0;
@@ -114,7 +117,6 @@ export const validateEnv = (): EnvValidationResult => {
 
 // Legacy alias for backward compatibility
 export const validateSupabaseEnv = validateEnv;
-
 
 /**
  * Validates environment and throws if critical vars missing

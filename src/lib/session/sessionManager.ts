@@ -560,25 +560,8 @@ export class SessionManager {
 	}
 
 	private async logSessionEvent(_event: string): Promise<void> {
-		// Temporarily disabled to avoid 401 error
-		// TODO: Re-enable when authentication is properly configured
-		/*
-    try {
-      await supabase.from('audit_logs').insert({
-        action: event,
-        details: {
-          last_activity: this.state.lastActivity.toISOString(),
-          session_id: this.state.sessionId,
-          time_remaining: this.state.timeRemaining,
-          warning_shown: this.state.warningShown,
-        },
-        resource_type: 'session',
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-      });
-    } catch (error) {
-      logger.error('Error logging session event:', { error: String(error) });
-    }
-    */
+		// TODO: Implement session event logging via API client when audit_logs table is created
+		// Session events can be logged to monitor user activity and session health
 	}
 
 	// Public API methods

@@ -7,8 +7,8 @@
  * @module nlu/contextProcessor
  */
 
-import { logger } from '@/lib/logging/logger';
 import { apiClient } from '@/lib/api-client';
+import { logger } from '@/lib/logging/logger';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
 import type {

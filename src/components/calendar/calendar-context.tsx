@@ -61,9 +61,7 @@ const CalendarContext = createContext<CalendarContextType | undefined>(
 	undefined,
 );
 
-// Mock data - eventos financeiros de exemplo
-// Mock data removed - use only real Supabase data
-// Financial events should come exclusively from the database
+// Financial events come exclusively from the database via API
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
 	const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -71,15 +69,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		new Set(['emerald', 'rose', 'orange', 'blue', 'violet']),
 	);
 
-	// Use Supabase hooks
-	const { events: supabaseEvents, loading, error } = useFinancialEvents();
+	// Use financial events hook (data from database via API)
+	const { events: databaseEvents, loading, error } = useFinancialEvents();
 	const {
 		addEvent: addEventMutation,
 		updateEvent: updateEventMutation,
 		deleteEvent: deleteEventMutation,
 	} = useFinancialEventMutations();
 
-	// State for events (only from Supabase - no mock data)
+	// State for events (from database only - no mock data)
 	const [localEvents, setLocalEvents] = useState<FinancialEvent[]>([]);
 	// Enhanced states for view and filtering
 	const [currentView, setCurrentView] = useState<CalendarView>('week');
@@ -96,20 +94,19 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		weekStartsOn: 0,
 	});
 
-	// Initialize with Supabase data only - no mock data fallback
+	// Initialize with database data only - no mock data fallback
 	useEffect(() => {
 		if (!loading) {
 			if (error) {
 				setLocalEvents([]);
 			} else {
-				// Use only Supabase data, even if empty
-				setLocalEvents(supabaseEvents);
+				// Use only database data, even if empty
+				setLocalEvents(databaseEvents);
 			}
 		}
-	}, [supabaseEvents, loading, error]);
+	}, [databaseEvents, loading, error]);
 
 	// Real-time updates are handled within useFinancialEvents hook
-	// The hook already subscribes to postgres_changes
 
 	const addEvent = useCallback(
 		async (event: FinancialEvent) => {

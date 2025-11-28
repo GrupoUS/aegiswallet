@@ -1,10 +1,9 @@
 /**
  * Database Table Stubs
  *
- * Temporary type definitions for database tables that are referenced in code
- * but not yet implemented in the actual database schema.
- *
- * TODO: Replace these stubs with proper Drizzle schema definitions
+ * Type definitions for database tables that are referenced in code.
+ * These types complement the Drizzle schema definitions in src/db/schema/
+ * for backward compatibility and type safety.
  */
 
 // Generic JSON type for metadata fields

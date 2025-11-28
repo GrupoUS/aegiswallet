@@ -67,7 +67,7 @@ const COMMAND_PATTERNS = {
 /**
  * Process voice command using NLU Engine (Story 01.02)
  * Enhanced version with Natural Language Understanding
- * 
+ *
  * Note: This now requires userId and authToken to be passed from the frontend
  * as we no longer use direct Supabase access
  */
@@ -99,7 +99,13 @@ export async function processVoiceCommandWithNLU(
 
 		// Process command based on intent via API
 		const commandType = mapIntentToCommandType(nluResult.intent);
-		return executeCommand(commandType, transcript, userId, authToken, nluResult.confidence);
+		return executeCommand(
+			commandType,
+			transcript,
+			userId,
+			authToken,
+			nluResult.confidence,
+		);
 	} catch (error) {
 		logger.voiceError('NLU processing error', {
 			error: error instanceof Error ? error.message : String(error),
@@ -114,7 +120,6 @@ export async function processVoiceCommandWithNLU(
 		};
 	}
 }
-
 
 function mapIntentToCommandType(intent: IntentType): string | null {
 	switch (intent) {
@@ -188,7 +193,8 @@ async function executeCommand(
 	if (!commandType) {
 		return {
 			confidence,
-			message: 'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
+			message:
+				'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
 			type: 'error',
 		};
 	}
@@ -197,7 +203,7 @@ async function executeCommand(
 		const response = await fetch('/api/v1/voice/command', {
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${authToken}`,
+				Authorization: `Bearer ${authToken}`,
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
@@ -228,7 +234,6 @@ async function executeCommand(
 		};
 	}
 }
-
 
 function formatCurrency(amount: number): string {
 	return new Intl.NumberFormat('pt-BR', {

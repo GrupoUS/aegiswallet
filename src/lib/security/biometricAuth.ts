@@ -18,7 +18,6 @@
 
 import { apiClient } from '@/lib/api-client';
 import logger from '@/lib/logging/secure-logger';
-
 import { createAuditLog } from '@/lib/security/auditLogger';
 import type { DeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';
 import { createDeviceFingerprintingService } from '@/lib/security/deviceFingerprinting';

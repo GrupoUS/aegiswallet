@@ -160,15 +160,12 @@ export class ContextRetriever {
 				.select({
 					id: bankAccounts.id,
 					institutionName: bankAccounts.institutionName,
-					currentBalance: bankAccounts.currentBalance,
+					currentBalance: bankAccounts.balance,
 					currency: bankAccounts.currency,
 				})
 				.from(bankAccounts)
 				.where(
-					and(
-						eq(bankAccounts.userId, userId),
-						eq(bankAccounts.isActive, true),
-					),
+					and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true)),
 				);
 
 			const balances: AccountBalance[] = (data || []).map((a) => ({
@@ -210,7 +207,7 @@ export class ContextRetriever {
 					id: financialEvents.id,
 					title: financialEvents.title,
 					amount: financialEvents.amount,
-					dueDate: financialEvents.dueDate,
+					startDate: financialEvents.startDate,
 					eventTypeId: financialEvents.eventTypeId,
 					status: financialEvents.status,
 				})
@@ -218,17 +215,17 @@ export class ContextRetriever {
 				.where(
 					and(
 						eq(financialEvents.userId, userId),
-						lte(financialEvents.dueDate, endDate),
+						lte(financialEvents.startDate, endDate.toISOString()),
 					),
 				)
-				.orderBy(financialEvents.dueDate)
+				.orderBy(financialEvents.startDate)
 				.limit(20);
 
 			const events: FinancialEvent[] = (data || []).map((e) => ({
 				id: e.id,
 				title: e.title || '',
 				amount: Number(e.amount) || 0,
-				date: e.dueDate?.toISOString() || new Date().toISOString(),
+				date: e.startDate?.toISOString() || new Date().toISOString(),
 				type: e.eventTypeId || 'other',
 				status: e.status || 'pending',
 			}));
@@ -256,7 +253,7 @@ export class ContextRetriever {
 		try {
 			const [data] = await db
 				.select({
-					preferredLanguage: users.preferredLanguage,
+					language: users.language,
 					currency: users.currency,
 					timezone: users.timezone,
 				})
@@ -265,7 +262,7 @@ export class ContextRetriever {
 				.limit(1);
 
 			const preferences: UserPreferences = {
-				language: data?.preferredLanguage || 'pt-BR',
+				language: data?.language || 'pt-BR',
 				currency: data?.currency || 'BRL',
 				timezone: data?.timezone || 'America/Sao_Paulo',
 			};

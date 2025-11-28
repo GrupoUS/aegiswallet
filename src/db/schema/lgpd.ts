@@ -35,6 +35,7 @@ export const consentTypeEnum = pgEnum('consent_type', [
 	'analytics',
 	'third_party',
 	'voice_data',
+	'voice_recording',
 	'biometric',
 	'financial_data',
 	'location',
@@ -50,6 +51,7 @@ export const collectionMethodEnum = pgEnum('collection_method', [
 
 export const deletionRequestTypeEnum = pgEnum('deletion_request_type', [
 	'full_account',
+	'full_deletion',
 	'specific_data',
 	'anonymization',
 ]);
@@ -66,17 +68,14 @@ export const deletionRequestStatusEnum = pgEnum('deletion_request_status', [
 
 export const exportRequestTypeEnum = pgEnum('export_request_type', [
 	'full_data',
+	'full_export',
 	'transactions',
 	'profile',
 	'consents',
 	'audit_logs',
 ]);
 
-export const exportFormatEnum = pgEnum('export_format', [
-	'json',
-	'csv',
-	'pdf',
-]);
+export const exportFormatEnum = pgEnum('export_format', ['json', 'csv', 'pdf']);
 
 export const exportStatusEnum = pgEnum('export_status', [
 	'pending',
@@ -88,6 +87,7 @@ export const exportStatusEnum = pgEnum('export_status', [
 
 export const limitTypeEnum = pgEnum('limit_type', [
 	'pix_daily',
+	'pix_daytime',
 	'pix_transaction',
 	'boleto_daily',
 	'transfer_daily',
@@ -138,7 +138,9 @@ export const consentTemplates = pgTable('consent_templates', {
 	legalBasis: text('legal_basis'), // LGPD legal basis (consent, legitimate interest, etc.)
 
 	// Validity
-	effectiveFrom: timestamp('effective_from', { withTimezone: true }).defaultNow(),
+	effectiveFrom: timestamp('effective_from', {
+		withTimezone: true,
+	}).defaultNow(),
 	effectiveUntil: timestamp('effective_until', { withTimezone: true }),
 
 	// Timestamps
@@ -352,9 +354,17 @@ export const transactionLimits = pgTable(
 		monthlyLimit: decimal('monthly_limit', { precision: 15, scale: 2 }),
 
 		// Current usage (reset daily/monthly)
-		currentDailyUsed: decimal('current_daily_used', { precision: 15, scale: 2 }).default('0'),
-		currentMonthlyUsed: decimal('current_monthly_used', { precision: 15, scale: 2 }).default('0'),
-		lastResetAt: timestamp('last_reset_at', { withTimezone: true }).defaultNow(),
+		currentDailyUsed: decimal('current_daily_used', {
+			precision: 15,
+			scale: 2,
+		}).default('0'),
+		currentMonthlyUsed: decimal('current_monthly_used', {
+			precision: 15,
+			scale: 2,
+		}).default('0'),
+		lastResetAt: timestamp('last_reset_at', {
+			withTimezone: true,
+		}).defaultNow(),
 
 		// Time-based limits (PIX noturno, etc.)
 		nighttimeLimit: decimal('nighttime_limit', { precision: 15, scale: 2 }), // 20:00-06:00
@@ -466,10 +476,12 @@ export type LgpdConsent = typeof lgpdConsents.$inferSelect;
 export type InsertLgpdConsent = typeof lgpdConsents.$inferInsert;
 
 export type DataRetentionPolicy = typeof dataRetentionPolicies.$inferSelect;
-export type InsertDataRetentionPolicy = typeof dataRetentionPolicies.$inferInsert;
+export type InsertDataRetentionPolicy =
+	typeof dataRetentionPolicies.$inferInsert;
 
 export type DataDeletionRequest = typeof dataDeletionRequests.$inferSelect;
-export type InsertDataDeletionRequest = typeof dataDeletionRequests.$inferInsert;
+export type InsertDataDeletionRequest =
+	typeof dataDeletionRequests.$inferInsert;
 
 export type LgpdExportRequest = typeof lgpdExportRequests.$inferSelect;
 export type InsertLgpdExportRequest = typeof lgpdExportRequests.$inferInsert;

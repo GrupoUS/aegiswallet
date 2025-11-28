@@ -2,8 +2,6 @@ import { tool } from 'ai';
 import { and, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db } from '@/db/client';
-import { transactionCategories, transactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import type {
@@ -12,6 +10,8 @@ import type {
 	ExportOptions,
 	VisualReport,
 } from './types';
+import { db } from '@/db/client';
+import { transactionCategories, transactions } from '@/db/schema';
 
 // Interface for date range to replace any type
 interface DateRange {

@@ -4,7 +4,7 @@
  * NOTE: This hook was previously using Supabase Storage.
  * After migration to Neon/Clerk, file storage needs to be implemented
  * with a different provider (Cloudflare R2, AWS S3, etc.)
- * 
+ *
  * For now, this returns a stub that shows a not implemented message.
  */
 
@@ -45,7 +45,9 @@ export function useAvatarUpload(): UseAvatarUploadReturn {
 
 			// TODO: Implement file upload to new storage provider
 			// Options: Cloudflare R2, AWS S3, Vercel Blob Storage
-			throw new Error('Upload de avatar temporariamente indisponível. Funcionalidade em migração.');
+			throw new Error(
+				'Upload de avatar temporariamente indisponível. Funcionalidade em migração.',
+			);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users', 'me'] });

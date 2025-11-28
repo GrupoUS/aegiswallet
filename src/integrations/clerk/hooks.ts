@@ -122,15 +122,6 @@ export function useUpdateUserMetadata() {
 
 // Re-export Clerk hooks and components
 export {
-	useAuth,
-	useClerk,
-	useSession,
-	useSignIn,
-	useSignUp,
-	useUser,
-} from '@clerk/clerk-react';
-
-export {
 	Protect,
 	RedirectToSignIn,
 	RedirectToSignUp,
@@ -143,4 +134,10 @@ export {
 	SignUpButton,
 	UserButton,
 	UserProfile,
+	useAuth,
+	useClerk,
+	useSession,
+	useSignIn,
+	useSignUp,
+	useUser,
 } from '@clerk/clerk-react';

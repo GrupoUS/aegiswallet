@@ -205,7 +205,7 @@ export function createBoletoTools(userId: string) {
 					// Log de auditoria
 					await db.insert(complianceAuditLogs).values({
 						userId: userId,
-						eventType: 'data_accessed',  // Changed from 'consent_granted' as it's more appropriate
+						eventType: 'data_accessed', // Changed from 'consent_granted' as it's more appropriate
 						resourceType: 'boletos',
 						resourceId: boletoId,
 						description: `Boleto registrado no valor de R$ ${Number(boletoData.amount).toFixed(2)} - Vencimento: ${new Date(boletoData.dueDate).toLocaleDateString('pt-BR')}`,

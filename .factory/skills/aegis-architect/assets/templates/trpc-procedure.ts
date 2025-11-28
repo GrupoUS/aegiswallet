@@ -26,6 +26,9 @@
 
 // Export template metadata
 export const templateInfo = {
-  description:
-    'Comprehensive templates for financial transactions, PIX transfers, and voice commands', lastUpdated: new Date().toISOString(), name: 'AegisWallet tRPC Procedure Templates', version: '1.0.0',
-}
+	description:
+		'Comprehensive templates for financial transactions, PIX transfers, and voice commands',
+	lastUpdated: new Date().toISOString(),
+	name: 'AegisWallet tRPC Procedure Templates',
+	version: '1.0.0',
+};

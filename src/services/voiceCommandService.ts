@@ -83,7 +83,7 @@ function detectIntentAndEntities(command: string): {
 
 	// Find matching intent
 	for (const { intent, patterns, entityExtractor } of intentPatterns) {
-		if (patterns.some(pattern => lowerCommand.includes(pattern))) {
+		if (patterns.some((pattern) => lowerCommand.includes(pattern))) {
 			if (entityExtractor) {
 				entityExtractor(command);
 			}

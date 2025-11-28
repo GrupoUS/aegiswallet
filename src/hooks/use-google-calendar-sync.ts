@@ -32,7 +32,6 @@ type SyncSettings = {
 };
 
 export function useGoogleCalendarSync() {
-
 	// Stub sync status - not connected
 	const { data: syncStatus, isLoading: isLoadingStatus } = useQuery({
 		queryKey: ['google-calendar', 'sync-status'],

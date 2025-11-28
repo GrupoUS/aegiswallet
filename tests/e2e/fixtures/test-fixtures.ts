@@ -16,98 +16,98 @@ import { test as base, expect, type Page } from '@playwright/test';
 
 // Fixture types
 type AegisWalletFixtures = {
-  /** Pre-authenticated page with user session */
-  authenticatedPage: Page;
-  /** Axe accessibility scanner utilities configured for WCAG 2.1 AA+ */
-  axeBuilder: {
-    /** Pre-configured AxeBuilder instance with exclusions */
-    builder: AxeBuilder;
-    /** Helper method to create fresh configured AxeBuilder instances */
-    makeAxeBuilder: () => AxeBuilder;
-  };
-  /** Brazilian locale utilities */
-  brazilianContext: {
-    formatCurrency: (value: number) => string;
-    formatDate: (date: Date) => string;
-    formatCPF: (cpf: string) => string;
-  };
+	/** Pre-authenticated page with user session */
+	authenticatedPage: Page;
+	/** Axe accessibility scanner utilities configured for WCAG 2.1 AA+ */
+	axeBuilder: {
+		/** Pre-configured AxeBuilder instance with exclusions */
+		builder: AxeBuilder;
+		/** Helper method to create fresh configured AxeBuilder instances */
+		makeAxeBuilder: () => AxeBuilder;
+	};
+	/** Brazilian locale utilities */
+	brazilianContext: {
+		formatCurrency: (value: number) => string;
+		formatDate: (date: Date) => string;
+		formatCPF: (cpf: string) => string;
+	};
 };
 
 /**
  * Extended test fixture with AegisWallet-specific utilities
  */
 export const test = base.extend<AegisWalletFixtures>({
-  // Authenticated page fixture - handles login state
-  authenticatedPage: async ({ page }, use) => {
-    // Navigate to app
-    await page.goto('/');
+	// Authenticated page fixture - handles login state
+	authenticatedPage: async ({ page }, use) => {
+		// Navigate to app
+		await page.goto('/');
 
-    // Check if already authenticated (storage state)
-    const isAuthenticated = await page
-      .locator('[data-testid="user-menu"], [data-testid="dashboard"]')
-      .first()
-      .isVisible()
-      .catch(() => false);
+		// Check if already authenticated (storage state)
+		const isAuthenticated = await page
+			.locator('[data-testid="user-menu"], [data-testid="dashboard"]')
+			.first()
+			.isVisible()
+			.catch(() => false);
 
-    if (!isAuthenticated) {
-      // Perform login flow
-      await page.goto('/auth');
-      // Login implementation depends on your auth flow
-      // This is a placeholder for your actual login logic
-      await page.waitForSelector('[data-testid="dashboard"]', {
-        timeout: 10000,
-      });
-    }
+		if (!isAuthenticated) {
+			// Perform login flow
+			await page.goto('/auth');
+			// Login implementation depends on your auth flow
+			// This is a placeholder for your actual login logic
+			await page.waitForSelector('[data-testid="dashboard"]', {
+				timeout: 10000,
+			});
+		}
 
-    await use(page);
-  },
+		await use(page);
+	},
 
-  // Axe accessibility builder with WCAG 2.1 AA+ configuration and exclusions
-  axeBuilder: async ({ page }, use) => {
-    // Create helper function to generate configured AxeBuilder instances
-    const makeAxeBuilder = () => {
-      return new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
-        .exclude([
-          '.cookie-banner', // Exclude cookie consent banners
-          '[data-testid="loading"]', // Exclude loading states/spinners
-        ]);
-    };
+	// Axe accessibility builder with WCAG 2.1 AA+ configuration and exclusions
+	axeBuilder: async ({ page }, use) => {
+		// Create helper function to generate configured AxeBuilder instances
+		const makeAxeBuilder = () => {
+			return new AxeBuilder({ page })
+				.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
+				.exclude([
+					'.cookie-banner', // Exclude cookie consent banners
+					'[data-testid="loading"]', // Exclude loading states/spinners
+				]);
+		};
 
-    // Create pre-configured builder instance
-    const builder = makeAxeBuilder();
+		// Create pre-configured builder instance
+		const builder = makeAxeBuilder();
 
-    await use({ builder, makeAxeBuilder });
-  },
+		await use({ builder, makeAxeBuilder });
+	},
 
-  // Brazilian locale utilities for financial testing
-  brazilianContext: async ({ page: _page }, use) => {
-    const formatCurrency = (value: number): string => {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      }).format(value);
-    };
+	// Brazilian locale utilities for financial testing
+	brazilianContext: async ({ page: _page }, use) => {
+		const formatCurrency = (value: number): string => {
+			return new Intl.NumberFormat('pt-BR', {
+				style: 'currency',
+				currency: 'BRL',
+			}).format(value);
+		};
 
-    const formatDate = (date: Date): string => {
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(date);
-    };
+		const formatDate = (date: Date): string => {
+			return new Intl.DateTimeFormat('pt-BR', {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+			}).format(date);
+		};
 
-    const formatCPF = (cpf: string): string => {
-      const cleaned = cpf.replace(/\D/g, '');
-      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    };
+		const formatCPF = (cpf: string): string => {
+			const cleaned = cpf.replace(/\D/g, '');
+			return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+		};
 
-    await use({
-      formatCurrency,
-      formatDate,
-      formatCPF,
-    });
-  },
+		await use({
+			formatCurrency,
+			formatDate,
+			formatCPF,
+		});
+	},
 });
 
 export { expect };

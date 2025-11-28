@@ -29,3 +29,8 @@ routeTree.gen.ts
 .DS_Store
 Thumbs.db
 
+# OXLint configs with JSONC syntax (comments)
+.oxlintrc.healthcare.json
+.oxlintrc.minimal.json
+.oxlintrc.simple.json
+

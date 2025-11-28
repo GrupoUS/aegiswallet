@@ -10,17 +10,10 @@
  * - Eficiência de índices >95%
  */
 
-import { and, eq, gte, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { getOrganizationClient, getPoolClient } from '@/db/client';
-import {
-	auditLogs,
-	bankAccounts,
-	pixKeys,
-	pixTransactions,
-	transactions,
-} from '@/db/schema';
+import { getPoolClient } from '@/db/client';
 
 // ========================================
 // CONFIGURAÇÕES DE MONITORAMENTO
@@ -83,7 +76,7 @@ class DatabasePerformanceMonitor {
 	async analyzeQueryPerformance(
 		db: any,
 		query: string,
-		params: any[] = [],
+		_params: any[] = [],
 	): Promise<{
 		executionTime: number;
 		plan: any;
@@ -575,7 +568,7 @@ describe('Database Performance Monitoring', () => {
 				const startAcquisition = performance.now();
 
 				// Create new client to measure acquisition time
-				const client = getOrganizationClient(`test_org_${i}`);
+				const client = getPoolClient();
 
 				const acquisitionTime = performance.now() - startAcquisition;
 				connectionTimes.push(acquisitionTime);
@@ -717,7 +710,7 @@ describe('Database Performance Monitoring', () => {
 
 			// Export report for analysis
 			if (process.env.CI) {
-				require('fs').writeFileSync(
+				require('node:fs').writeFileSync(
 					'./test-results/database-performance-report.json',
 					JSON.stringify(report, null, 2),
 				);

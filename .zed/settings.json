@@ -1,41 +1,41 @@
 {
-  "languages": {
-    "TypeScript": {
-      "formatter": {
-        "language_server": {
-          "name": "biome"
-        }
-      }
-    }
-  },
-  "lsp": {
-    "biome": {
-      "settings": {
-        "format": {
-          "enabled": true,
-          "indentStyle": "space",
-          "indentWidth": 2,
-          "lineEnding": "lf",
-          "lineWidth": 100
-        },
-        "javascript": {
-          "formatter": {
-            "quoteStyle": "single",
-            "semicolons": "asNeeded",
-            "trailingCommas": "es5",
-            "bracketSpacing": true,
-            "arrowParentheses": "always"
-          }
-        },
-        "linter": {
-          "enabled": true,
-          "rules": {
-            "no-unused-vars": "error",
-            "no-console": "warn"
-          },
-          "ignorePatterns": ["node_modules"]
-        }
-      }
-    }
-  }
+	"languages": {
+		"TypeScript": {
+			"formatter": {
+				"language_server": {
+					"name": "biome"
+				}
+			}
+		}
+	},
+	"lsp": {
+		"biome": {
+			"settings": {
+				"format": {
+					"enabled": true,
+					"indentStyle": "space",
+					"indentWidth": 2,
+					"lineEnding": "lf",
+					"lineWidth": 100
+				},
+				"javascript": {
+					"formatter": {
+						"quoteStyle": "single",
+						"semicolons": "asNeeded",
+						"trailingCommas": "es5",
+						"bracketSpacing": true,
+						"arrowParentheses": "always"
+					}
+				},
+				"linter": {
+					"enabled": true,
+					"rules": {
+						"no-unused-vars": "error",
+						"no-console": "warn"
+					},
+					"ignorePatterns": ["node_modules"]
+				}
+			}
+		}
+	}
 }

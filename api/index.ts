@@ -7,7 +7,7 @@ import { handle } from '@hono/node-server/vercel';
 import app from '../src/server/index';
 
 export const config = {
-  maxDuration: 10,
+	maxDuration: 10,
 };
 
 // Export the Hono app handler for Vercel using the proper adapter

@@ -20,7 +20,6 @@ import type {
 	SuccessResponseData,
 	TransferResponseData,
 	TypedVoiceResponseProps,
-	VoiceResponseType,
 } from '@/types/voice/responseTypes';
 import {
 	isBalanceResponse,
@@ -412,19 +411,5 @@ export const VoiceResponse = React.memo(function VoiceResponse({
 
 VoiceResponse.displayName = 'VoiceResponse';
 
-// ============================================================================
-// Component Type Exports
-// ============================================================================
-
-export type {
-	TypedVoiceResponseProps,
-	VoiceResponseType,
-	BalanceResponseData,
-	BudgetResponseData,
-	BillsResponseData,
-	IncomingResponseData,
-	ProjectionResponseData,
-	TransferResponseData,
-	SuccessResponseData,
-	ErrorResponseData,
-};
+// Types are exported from @/types/voice/responseTypes
+// Do not re-export here to comply with React Fast Refresh rules

@@ -57,6 +57,31 @@ AegisWallet uses Clerk for authentication and user management.
 
 ---
 
+## 💳 Billing System
+
+AegisWallet uses Stripe for subscription billing with three tiers:
+- **Gratuito**: Dashboard básico e recursos limitados
+- **Básico (R$ 59/mês)**: Chat IA + automações básicas
+- **Avançado (R$ 119/mês)**: Todos os modelos de IA + recursos premium
+
+### Setup
+
+1. **Configure Stripe**: See [Stripe Setup Guide](docs/billing/stripe-setup.md)
+2. **Configure Clerk Webhooks**: See [Clerk Integration Guide](docs/billing/clerk-integration.md)
+3. **Seed Plans**: Run `bun scripts/seed-subscription-plans.ts`
+
+### API Endpoints
+
+- `GET /api/v1/billing/subscription` - Get current subscription
+- `POST /api/v1/billing/checkout` - Create checkout session
+- `POST /api/v1/billing/portal` - Access customer portal
+- `GET /api/v1/billing/plans` - List available plans
+- `GET /api/v1/billing/payment-history` - Get payment history
+
+📖 **Full Documentation**: [Billing API Reference](docs/billing/api-reference.md)
+
+---
+
 ## 🎨 Design System
 
 AegisWallet uses a semantic color token system for consistent, accessible UI design.

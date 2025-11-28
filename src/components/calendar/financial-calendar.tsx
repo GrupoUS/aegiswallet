@@ -10,8 +10,8 @@ import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useCalendar } from '@/components/calendar/calendar-context';
 import { GoogleCalendarSettings } from '@/components/calendar/google-calendar-settings';
+import { useCalendar } from '@/components/calendar/hooks/useCalendar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

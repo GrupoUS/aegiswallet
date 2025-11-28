@@ -7,7 +7,6 @@
  */
 
 import { neon, neonConfig, Pool } from '@neondatabase/serverless';
-import { and, desc, eq, gte } from 'drizzle-orm';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
 
@@ -199,7 +198,6 @@ export const checkReadReplicaHealth = async () => {
 	};
 
 	if (!results.overall) {
-		console.warn('Read replica health check failed:', results);
 	}
 
 	return results;

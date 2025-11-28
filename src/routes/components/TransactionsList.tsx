@@ -171,7 +171,9 @@ export default function TransactionsList() {
 											{transaction.transactionType && (
 												<>
 													<span>•</span>
-													<span className="capitalize">{transaction.transactionType}</span>
+													<span className="capitalize">
+														{transaction.transactionType}
+													</span>
 												</>
 											)}
 										</div>

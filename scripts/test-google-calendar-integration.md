@@ -198,9 +198,9 @@ ORDER BY created_at DESC LIMIT 10;
 | `supabase/functions/google-calendar-auth/index.ts` | OAuth and channel management |
 | `supabase/functions/google-calendar-sync/index.ts` | Bi-directional sync logic |
 | `supabase/functions/google-calendar-webhook/index.ts` | Google push notification handler |
-| `api/cron/calendar-channel-renewal.ts` | Daily channel renewal |
-| `api/cron/sync-queue-processor.ts` | Process pending syncs |
-| `api/cron/cleanup-sync-queue.ts` | Weekly cleanup |
+| `src/server/cron/calendar-channel-renewal.ts` | Daily channel renewal |
+| `src/server/cron/sync-queue-processor.ts` | Process pending syncs |
+| `src/server/cron/cleanup-sync-queue.ts` | Weekly cleanup |
 | `src/hooks/use-google-calendar-sync.ts` | Frontend sync hook |
 | `src/components/calendar/google-calendar-settings.tsx` | Settings UI |
 

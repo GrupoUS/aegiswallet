@@ -11,11 +11,8 @@ export {
 	clerkPublishableKey,
 	clerkUrls,
 } from './client';
-// Custom hooks
-// Re-exported Clerk hooks
-// Re-exported Clerk components
+// Stub components
 export {
-	type AegisWalletUser,
 	Protect,
 	RedirectToSignIn,
 	RedirectToSignUp,
@@ -28,6 +25,10 @@ export {
 	SignUpButton,
 	UserButton,
 	UserProfile,
+} from './components';
+// Custom hooks
+export {
+	type AegisWalletUser,
 	useAegisAuth,
 	useAegisSession,
 	useAegisUser,

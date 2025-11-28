@@ -8,7 +8,7 @@ import React, {
 	useState,
 } from 'react';
 
-import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
+import { useAccessibility } from '@/components/accessibility/hooks/useAccessibility';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { VoiceIndicator } from '@/components/voice/VoiceIndicator';

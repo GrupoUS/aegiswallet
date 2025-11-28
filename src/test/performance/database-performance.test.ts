@@ -10,17 +10,10 @@
  * - Eficiência de índices >95%
  */
 
-import { and, eq, gte, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { getOrganizationClient, getPoolClient } from '@/db/client';
-import {
-	auditLogs,
-	bankAccounts,
-	pixKeys,
-	pixTransactions,
-	transactions,
-} from '@/db/schema';
+import { getPoolClient } from '@/db/client';
 
 // ========================================
 // CONFIGURAÇÕES DE MONITORAMENTO
@@ -83,14 +76,13 @@ class DatabasePerformanceMonitor {
 	async analyzeQueryPerformance(
 		db: any,
 		query: string,
-		params: any[] = [],
+		_params: any[] = [],
 	): Promise<{
 		executionTime: number;
 		plan: any;
 		indexUsage: number;
 	}> {
 		const startTime = performance.now();
-
 		try {
 			// Execute EXPLAIN ANALYZE to get query plan and timing
 			const explainQuery = `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}`;
@@ -257,7 +249,7 @@ describe('Database Performance Monitoring', () => {
       `;
 
 			const params = [
-				crypto.randomUUID(),
+				`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`,
 				'test_user',
 				'test_org',
 				`E${Date.now()}${Math.random().toString(36).substring(7)}`,
@@ -575,7 +567,7 @@ describe('Database Performance Monitoring', () => {
 				const startAcquisition = performance.now();
 
 				// Create new client to measure acquisition time
-				const client = getOrganizationClient(`test_org_${i}`);
+				const client = getPoolClient();
 
 				const acquisitionTime = performance.now() - startAcquisition;
 				connectionTimes.push(acquisitionTime);
@@ -602,7 +594,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					name: 'pix_transaction_lookup',
 					query: 'SELECT * FROM pix_transactions WHERE id = $1',
-					params: [crypto.randomUUID()],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 					baselineP95: 50, // Expected P95 in milliseconds
 				},
 				{
@@ -657,7 +649,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_insert',
 					query: 'INSERT INTO pix_transactions (id) VALUES ($1)',
-					params: [crypto.randomUUID()],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'pix_select',
@@ -667,7 +659,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_update',
 					query: 'UPDATE pix_transactions SET status = $1 WHERE id = $2',
-					params: ['completed', crypto.randomUUID()],
+					params: ['completed', `test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'complex_join',
@@ -717,7 +709,7 @@ describe('Database Performance Monitoring', () => {
 
 			// Export report for analysis
 			if (process.env.CI) {
-				require('fs').writeFileSync(
+				require('node:fs').writeFileSync(
 					'./test-results/database-performance-report.json',
 					JSON.stringify(report, null, 2),
 				);

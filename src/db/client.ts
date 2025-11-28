@@ -85,6 +85,23 @@ export const closePool = async () => {
 	}
 };
 
+/**
+ * Get organization-scoped database client
+ *
+ * ⚠️ WARNING: Multi-tenant isolation is NOT yet implemented!
+ * This is a placeholder stub that returns the same shared pool client
+ * regardless of organization ID. DO NOT use this function expecting
+ * organization-level data isolation.
+ *
+ * @param _organizationId - The organization ID (currently IGNORED, reserved for future multi-tenant support)
+ * @returns The shared pool client (NOT organization-scoped)
+ */
+export const getOrganizationClient = (_organizationId: string) => {
+	// TODO: Implement proper organization-scoped connection pooling
+	// when multi-tenant support is added
+	return getPoolClient();
+};
+
 // ========================================
 // DEFAULT EXPORT
 // ========================================

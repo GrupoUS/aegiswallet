@@ -67,7 +67,7 @@ voiceRouter.post(
 	}),
 	zValidator('json', processCommandSchema),
 	async (c) => {
-		const { user, db } = c.get('auth');
+		const { user } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 

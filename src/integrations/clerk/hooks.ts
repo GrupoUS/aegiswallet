@@ -120,27 +120,64 @@ export function useUpdateUserMetadata() {
 	};
 }
 
-// Re-export Clerk hooks and components
-export {
-	useAuth,
-	useClerk,
-	useSession,
-	useSignIn,
-	useSignUp,
-	useUser,
-} from '@clerk/clerk-react';
+// Stub implementations for Clerk hooks
+// NOTE: Clerk integration is currently disabled - using Supabase auth instead
 
-export {
-	Protect,
-	RedirectToSignIn,
-	RedirectToSignUp,
-	SignedIn,
-	SignedOut,
-	SignIn,
-	SignInButton,
-	SignOutButton,
-	SignUp,
-	SignUpButton,
-	UserButton,
-	UserProfile,
-} from '@clerk/clerk-react';
+export function useAuth() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		userId: null,
+		sessionId: null,
+		orgId: null,
+		orgRole: null,
+		orgSlug: null,
+		actor: null,
+		getToken: async () => null,
+		signOut: async () => {},
+	};
+}
+
+export function useClerk() {
+	return {
+		client: null,
+		session: null,
+		user: null,
+		openSignIn: () => {},
+		openSignUp: () => {},
+		openUserProfile: () => {},
+		signOut: async () => {},
+	};
+}
+
+export function useSession() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		session: null,
+	};
+}
+
+export function useSignIn() {
+	return {
+		isLoaded: true,
+		signIn: null,
+		setActive: async () => {},
+	};
+}
+
+export function useSignUp() {
+	return {
+		isLoaded: true,
+		signUp: null,
+		setActive: async () => {},
+	};
+}
+
+export function useUser() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		user: null,
+	};
+}

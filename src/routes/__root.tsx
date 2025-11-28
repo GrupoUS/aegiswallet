@@ -9,6 +9,7 @@ import {
 import {
 	Building,
 	Calendar,
+	CreditCard,
 	FileText,
 	Home,
 	LogOut,
@@ -86,6 +87,11 @@ function RootComponent() {
 			href: '/contas-bancarias',
 			icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
 			label: 'Contas Bancárias',
+		},
+		{
+			href: '/billing',
+			icon: <CreditCard className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+			label: 'Planos',
 		},
 		{
 			href: '/configuracoes',

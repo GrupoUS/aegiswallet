@@ -6,7 +6,7 @@
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import { useCalendar } from '@/components/calendar/calendar-context';
+import { useCalendar } from '@/components/calendar/hooks/useCalendar';
 import { Calendar } from '@/components/ui/calendar';
 import { EVENT_COLOR_STYLES } from '@/components/ui/event-calendar/types';
 import { cn } from '@/lib/utils';

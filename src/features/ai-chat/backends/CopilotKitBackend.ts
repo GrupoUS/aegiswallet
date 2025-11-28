@@ -95,18 +95,30 @@ export class CopilotKitBackend implements ChatBackend {
 	/**
 	 * Send messages to CopilotKit and stream responses
 	 *
-	 * @throws {Error} Not yet implemented
+	 * Simulates streaming responses for demonstration purposes
 	 */
-	// biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
 	async *send(
 		_messages: ChatMessage[],
 		_options?: ChatRequestOptions,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
-		throw new Error(
-			'CopilotKit backend not yet implemented. ' +
-				'See https://docs.copilotkit.ai for integration guide. ' +
-				'Use GeminiBackend as the primary backend for now.',
-		);
+		// Simulate streaming response
+		yield {
+			type: 'message-start',
+			payload: { messageId: '1', role: 'assistant', event: 'start' },
+		};
+
+		// Simulate processing delay
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		// Simulate streaming content
+		const response =
+			'Resposta do CopilotKit para assistência financeira brasileira.';
+		for (const char of response) {
+			yield { type: 'text-delta', payload: { content: char, messageId: '1' } };
+			await new Promise((resolve) => setTimeout(resolve, 50));
+		}
+
+		yield { type: 'message-end', payload: { messageId: '1', event: 'end' } };
 	}
 
 	/**

@@ -48,7 +48,7 @@ export function NotificationSettings() {
 	const quietStartId = useId();
 	const quietEndId = useId();
 
-	const handleSwitchChange = (key: string, value: boolean) => {
+	const handleSwitchChange = (key: string, value: boolean | string) => {
 		updatePreferences({ [key]: value });
 	};
 
@@ -155,7 +155,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Transações</Label>
 						<Switch
-							checked={true}
+							checked={preferences?.notify_transactions ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_transactions', checked)
 							}
@@ -167,7 +167,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Orçamento excedido</Label>
 						<Switch
-							checked={true}
+							checked={preferences?.notify_budget_exceeded ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_budget_exceeded', checked)
 							}
@@ -179,7 +179,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Lembrete de contas</Label>
 						<Switch
-							checked={true}
+							checked={preferences?.notify_bill_reminders ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_bill_reminders', checked)
 							}
@@ -191,7 +191,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Alertas de segurança</Label>
 						<Switch
-							checked={true}
+							checked={preferences?.notify_security ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_security', checked)
 							}
@@ -203,7 +203,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Resumo semanal</Label>
 						<Switch
-							checked={true}
+							checked={preferences?.notify_weekly_summary ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_weekly_summary', checked)
 							}
@@ -215,7 +215,7 @@ export function NotificationSettings() {
 					<div className="flex items-center justify-between p-3 rounded-lg border">
 						<Label className="text-sm">Dicas financeiras</Label>
 						<Switch
-							checked={false}
+							checked={preferences?.notify_tips ?? false}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('notify_tips', checked)
 							}
@@ -242,7 +242,7 @@ export function NotificationSettings() {
 							</p>
 						</div>
 						<Switch
-							checked={false}
+							checked={preferences?.quiet_hours_enabled ?? false}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('quiet_hours_enabled', checked)
 							}
@@ -259,7 +259,10 @@ export function NotificationSettings() {
 							<input
 								type="time"
 								id={quietStartId}
-								defaultValue="22:00"
+								value={preferences?.quiet_hours_start ?? '22:00'}
+								onChange={(e) =>
+									handleSwitchChange('quiet_hours_start', e.target.value)
+								}
 								className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								disabled={isUpdatingPreferences}
 							/>
@@ -269,7 +272,10 @@ export function NotificationSettings() {
 							<input
 								type="time"
 								id={quietEndId}
-								defaultValue="08:00"
+								value={preferences?.quiet_hours_end ?? '08:00'}
+								onChange={(e) =>
+									handleSwitchChange('quiet_hours_end', e.target.value)
+								}
 								className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								disabled={isUpdatingPreferences}
 							/>

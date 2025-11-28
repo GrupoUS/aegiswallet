@@ -327,7 +327,7 @@ export function AccessibilitySettings() {
 							</div>
 						</div>
 						<Switch
-							checked={false}
+							checked={preferences?.reduce_motion ?? false}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('reduce_motion', checked)
 							}
@@ -352,7 +352,7 @@ export function AccessibilitySettings() {
 							</div>
 						</div>
 						<Switch
-							checked={true}
+							checked={preferences?.keyboard_shortcuts ?? true}
 							onCheckedChange={(checked) =>
 								handleSwitchChange('keyboard_shortcuts', checked)
 							}

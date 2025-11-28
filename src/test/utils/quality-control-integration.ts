@@ -46,6 +46,7 @@ export interface QualityControlPhase {
 }
 
 export class QualityControlTestingFramework {
+private testUtils: TestUtils;
   private currentPhase: QualityControlPhase = {
     errors: [],
     phase: 'detection',

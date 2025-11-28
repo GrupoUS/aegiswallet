@@ -13,22 +13,20 @@ function Index() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!isLoading && !isAuthenticated) {
-			navigate({ search: { error: undefined, redirect: '/' }, to: '/login' });
+		if (!isLoading) {
+			if (!isAuthenticated) {
+				navigate({ search: { error: undefined, redirect: '/' }, to: '/login' });
+			} else {
+				// Redirect authenticated users to dashboard
+				navigate({ to: '/dashboard' });
+			}
 		}
 	}, [isAuthenticated, isLoading, navigate]);
 
-	if (isLoading) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
-			</div>
-		);
-	}
-
-	if (!isAuthenticated) {
-		return null;
-	}
-
-	return <VoiceDashboard />;
+	// Show loading while checking auth or redirecting
+	return (
+		<div className="flex min-h-screen items-center justify-center">
+			<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
+		</div>
+	);
 }

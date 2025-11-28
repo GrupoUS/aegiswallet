@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
@@ -47,49 +47,9 @@ const CalendarLoader = () => (
 import { RouteGuard } from '@/lib/auth/route-guard';
 
 export function Dashboard() {
-	const navigate = useNavigate();
+	const _navigate = useNavigate();
 
-	useEffect(() => {
-		const handleOAuthCallback = async () => {
-			// Check for hash in URL first
-			let hashToProcess = window.location.hash;
-
-			// If no hash in URL, check sessionStorage
-			if (!hashToProcess) {
-				hashToProcess = sessionStorage.getItem('oauth_hash') || '';
-			}
-
-			if (hashToProcess) {
-				const hashParams = new URLSearchParams(hashToProcess.substring(1));
-				const accessToken = hashParams.get('access_token');
-				const error = hashParams.get('error');
-
-				if (error) {
-					sessionStorage.removeItem('oauth_hash');
-					navigate({
-						search: {
-							error: 'Authentication failed',
-							redirect: '/dashboard',
-						},
-						to: '/login',
-					});
-					return;
-				}
-
-				if (accessToken) {
-					// Clear the hash from URL and sessionStorage
-					window.history.replaceState(null, '', '/dashboard');
-					sessionStorage.removeItem('oauth_hash');
-
-					setTimeout(() => {
-						// The onAuthStateChange listener in AuthContext will handle the session update
-					}, 1000);
-				}
-			}
-		};
-
-		handleOAuthCallback();
-	}, [navigate]);
+	// useEffect for OAuth callback removed as it is handled by the auth callback route and Supabase client
 
 	// Hooks for data
 	const { totalBRL } = useTotalBalance();

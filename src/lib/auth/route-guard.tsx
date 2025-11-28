@@ -19,7 +19,9 @@ export function RouteGuard({ children }: { children: ReactNode }) {
 		return (
 			<Navigate
 				to="/login"
-				search={{ redirect: location.href, error: undefined }}
+				search={{
+					redirect: location.pathname + location.search + location.hash,
+				}}
 			/>
 		);
 	}

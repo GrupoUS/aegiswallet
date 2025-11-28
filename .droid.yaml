@@ -75,38 +75,13 @@ auto_routing_rules:
     # Routing baseado em complexidade
     complexity_routing:
       low_complexity:    # 1-6
-        target_droid: "coder"
+        target_droid: "apex-dev"
         auto_invoke: true
       high_complexity:   # 7-10
         target_droid: "apex-dev"
         auto_invoke: true
 
-  testing_triggers:
-    keywords:
-      portuguese:
-        - "testar"
-        - "validar"
-        - "verificar"
-        - "auditar"
-        - "qualidade"
-        - "teste"
-      english:
-        - "test"
-        - "validate"
-        - "verify"
-        - "audit"
-        - "quality"
-        - "check"
-    
-    target_droid: "test-auditor"
-    auto_invoke: true
-    
-    # Contexto para testes
-    context_files:
-      - "vitest.config.ts"
-      - "playwright.config.ts"
-      - "tests/**"
-
+  
   security_triggers:
     keywords:
       portuguese:
@@ -191,29 +166,7 @@ custom_droids:
     model: "claude-sonnet-4-5-20250929"
     tools: ["all"]
 
-  coder:
-    name: "CODER"
-    file: ".factory/droids/coder.md"
-    description: "Standard implementation specialist for routine tasks"
-    capabilities:
-      - "Simple component development (complexity <7)"
-      - "Portuguese-first interfaces"
-      - "Basic LGPD compliance"
-      - "Bug fixes and documentation"
-    model: "claude-sonnet-4-5-20250929"
-    tools: ["read", "write", "edit", "execute"]
-
-  test-auditor:
-    name: "TEST AUDITOR"
-    file: ".factory/droids/test-auditor.md"
-    description: "Comprehensive QA specialist with TDD + Playwright E2E"
-    capabilities:
-      - "Test strategy and TDD methodology"
-      - "Playwright E2E testing with visual regression"
-      - "Brazilian compliance validation (LGPD, WCAG)"
-      - "Performance testing and accessibility audit"
-    model: "claude-sonnet-4-5-20250929"
-    tools: ["test", "execute", "read", "write"]
+  
 
   code-reviewer:
     name: "CODE REVIEWER"
@@ -251,17 +204,7 @@ custom_droids:
     model: "claude-sonnet-4-5-20250929"
     tools: ["read", "write", "create"]
 
-  architect-review:
-    name: "ARCHITECT REVIEW"
-    file: ".factory/droids/architect-review.md"
-    description: "Master software architect for modern patterns"
-    capabilities:
-      - "Clean architecture and microservices"
-      - "Scalability and system design"
-      - "Brazilian fintech architecture"
-      - "Performance optimization strategies"
-    model: "claude-sonnet-4-5-20250929"
-    tools: ["read", "analyze", "plan"]
+  
 
   product-architect:
     name: "PRODUCT ARCHITECT"
@@ -275,17 +218,7 @@ custom_droids:
     model: "claude-sonnet-4-5-20250929"
     tools: ["read", "write", "plan", "research"]
 
-  stuck:
-    name: "STUCK"
-    file: ".factory/droids/stuck.md"
-    description: "Emergency escalation agent with HALT authority"
-    capabilities:
-      - "Human escalation for any problem"
-      - "HALT ALL WORK authority"
-      - "Emergency problem resolution"
-      - "Critical decision making"
-    model: "claude-sonnet-4-5-20250929"
-    tools: ["ask_user_question", "emergency_stop"]
+  
 
 # Configuração de Execução Paralela
 parallel_execution:
@@ -294,10 +227,9 @@ parallel_execution:
   
   # Padrões de execução paralela permitidos
   allowed_patterns:
-    - "research_team"  # apex-researcher + architect-review + database-specialist
-    - "quality_gates"  # test-auditor + code-reviewer + architect-review
+    - "research_team"  # apex-researcher + database-specialist
     - "implementation" # apex-dev + database-specialist
-    - "compliance"     # test-auditor + code-reviewer
+    - "compliance"     # code-reviewer + database-specialist
   
   # Sincronização points
   sync_points:
@@ -358,17 +290,4 @@ monitoring:
     pattern_recognition: true
     optimization_suggestions: true
 
-# Configuração de Emergência
-emergency_procedures:
-  stuck_agent:
-    auto_invoke: true
-    timeout_minutes: 5
-    
-  rollback_procedures:
-    enabled: true
-    auto_rollback: false  # Requer confirmação
-    
-  escalation_rules:
-    security_issues: "immediate"
-    compliance_failures: "immediate"
-    performance_degradation: "after_analysis"
+

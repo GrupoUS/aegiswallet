@@ -5,6 +5,7 @@ export interface ChatBackendConfig {
 	baseURL?: string;
 	defaultModel?: string;
 	timeout?: number;
+	userId?: string;
 	[key: string]: unknown;
 }
 

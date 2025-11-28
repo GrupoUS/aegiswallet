@@ -46,6 +46,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import { useProfile } from '@/hooks/useProfile';
 import {
 	formatCPF,
@@ -83,6 +84,7 @@ const profileSchema = z.object({
 			},
 			{ message: 'CPF inválido' },
 		),
+	birth_date: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -156,6 +158,7 @@ export function ProfileSettings() {
 		isUpdatingProfile,
 		isUpdatingPreferences,
 	} = useProfile();
+	const { uploadAvatar, isUploading } = useAvatarUpload();
 	const preferences = profile?.user_preferences?.[0];
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -169,6 +172,7 @@ export function ProfileSettings() {
 			full_name: '',
 			phone: '',
 			cpf: '',
+			birth_date: '',
 		},
 	});
 
@@ -177,16 +181,20 @@ export function ProfileSettings() {
 			form.reset({
 				full_name: profile.full_name || '',
 				phone: profile.phone ? formatPhone(profile.phone) : '',
-				cpf: '',
+				cpf: profile.cpf ? formatCPF(profile.cpf) : '',
+				birth_date: profile.birth_date || '',
 			});
 		}
 	}, [profile, form]);
 
 	const onSubmit = (values: ProfileFormValues) => {
 		const cleanedPhone = values.phone?.replace(/\D/g, '') || undefined;
+		const cleanedCpf = values.cpf?.replace(/\D/g, '') || undefined;
 		updateProfile({
 			full_name: values.full_name,
 			phone: cleanedPhone,
+			cpf: cleanedCpf,
+			birth_date: values.birth_date || undefined,
 		});
 	};
 
@@ -212,13 +220,15 @@ export function ProfileSettings() {
 			return;
 		}
 
+		// Show preview immediately
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			setAvatarPreview(e.target?.result as string);
 		};
 		reader.readAsDataURL(file);
 
-		toast.info('Upload de imagem será implementado em breve.');
+		// Upload to Supabase Storage
+		uploadAvatar(file);
 	};
 
 	const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,9 +289,18 @@ export function ProfileSettings() {
 							onChange={handleFileChange}
 							aria-label="Upload de foto de perfil"
 						/>
-						<Button variant="outline" size="sm" onClick={handleAvatarClick}>
-							<Camera className="mr-2 h-4 w-4" />
-							Alterar foto
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={handleAvatarClick}
+							disabled={isUploading}
+						>
+							{isUploading ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<Camera className="mr-2 h-4 w-4" />
+							)}
+							{isUploading ? 'Enviando...' : 'Alterar foto'}
 						</Button>
 						<p className="text-xs text-muted-foreground">
 							JPG, PNG ou WebP. Máximo 2MB.
@@ -376,6 +395,36 @@ export function ProfileSettings() {
 										</FormControl>
 										<FormDescription>
 											Seu CPF é criptografado e protegido pela LGPD.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="birth_date"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											<Calendar className="mr-1 h-3 w-3 inline" />
+											Data de Nascimento
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="date"
+												max={
+													new Date(
+														Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000,
+													)
+														.toISOString()
+														.split('T')[0]
+												}
+												{...field}
+											/>
+										</FormControl>
+										<FormDescription>
+											Você deve ter pelo menos 18 anos.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>

@@ -23,6 +23,9 @@ import {
 const updateProfileSchema = z.object({
 	full_name: z.string().optional(),
 	phone: z.string().optional(),
+	cpf: z.string().optional(),
+	birth_date: z.string().optional(),
+	profile_image_url: z.string().url().optional(),
 });
 
 const updatePreferencesSchema = z.record(z.string(), z.any());
@@ -31,6 +34,72 @@ const getFinancialSummarySchema = z.object({
 	period_start: z.string(),
 	period_end: z.string(),
 });
+
+// List of allowed preference fields to prevent arbitrary field injection
+const ALLOWED_PREFERENCE_FIELDS = [
+	// Theme
+	'theme',
+	// Notifications
+	'notifications_email',
+	'notifications_push',
+	'notifications_sms',
+	'email_notifications',
+	'push_notifications',
+	'notifications_enabled',
+	// Notification types
+	'notify_transactions',
+	'notify_budget_exceeded',
+	'notify_bill_reminders',
+	'notify_security',
+	'notify_weekly_summary',
+	'notify_tips',
+	// Quiet hours
+	'quiet_hours_enabled',
+	'quiet_hours_start',
+	'quiet_hours_end',
+	// AI settings
+	'auto_categorize',
+	'budget_alerts',
+	'voice_feedback',
+	'voice_commands_enabled',
+	'autonomy_level',
+	'ai_model',
+	'show_reasoning',
+	'custom_prompt',
+	'chat_history_cleared_at',
+	// Accessibility
+	'accessibility_high_contrast',
+	'accessibility_large_text',
+	'accessibility_screen_reader',
+	'font_size',
+	'reduce_motion',
+	'keyboard_shortcuts',
+	// Regional
+	'language',
+	'timezone',
+	'currency',
+] as const;
+
+/**
+ * Build preference data from input, only allowing whitelisted fields
+ */
+function buildPreferenceData(
+	input: Record<string, unknown>,
+	userId: string,
+): Record<string, unknown> {
+	const prefData: Record<string, unknown> = {
+		user_id: userId,
+		updated_at: new Date().toISOString(),
+	};
+
+	for (const field of ALLOWED_PREFERENCE_FIELDS) {
+		if (input[field] !== undefined) {
+			prefData[field] = input[field];
+		}
+	}
+
+	return prefData;
+}
 
 const usersRouter = new Hono<AppEnv>();
 
@@ -108,6 +177,10 @@ usersRouter.put(
 			const updateData: Record<string, unknown> = {};
 			if (input.full_name) updateData.full_name = input.full_name;
 			if (input.phone) updateData.phone = input.phone;
+			if (input.cpf) updateData.cpf = input.cpf;
+			if (input.birth_date) updateData.birth_date = input.birth_date;
+			if (input.profile_image_url)
+				updateData.profile_image_url = input.profile_image_url;
 
 			const { data: updatedProfile, error } = await supabase
 				.from('users')
@@ -166,24 +239,7 @@ usersRouter.put(
 		const requestId = c.get('requestId');
 
 		try {
-			const prefData: Record<string, unknown> = {
-				user_id: user.id,
-				updated_at: new Date().toISOString(),
-			};
-
-			if (input.theme) prefData.theme = input.theme;
-			if (input.notifications_email !== undefined)
-				prefData.notifications_email = input.notifications_email;
-			if (input.notifications_push !== undefined)
-				prefData.notifications_push = input.notifications_push;
-			if (input.notifications_sms !== undefined)
-				prefData.notifications_sms = input.notifications_sms;
-			if (input.auto_categorize !== undefined)
-				prefData.auto_categorize = input.auto_categorize;
-			if (input.budget_alerts !== undefined)
-				prefData.budget_alerts = input.budget_alerts;
-			if (input.voice_feedback !== undefined)
-				prefData.voice_feedback = input.voice_feedback;
+			const prefData = buildPreferenceData(input, user.id);
 
 			const { data: updatedPrefs, error } = await supabase
 				.from('user_preferences')

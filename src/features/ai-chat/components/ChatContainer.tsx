@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useAuth } from '@/contexts/AuthContext';
 import {
 	type BackendType,
 	createChatBackend,
@@ -33,6 +34,7 @@ export function ChatContainer({
 	onClose,
 	backendType = 'gemini',
 }: ChatContainerProps) {
+	const { user } = useAuth();
 	const [selectedModel, setSelectedModel] = useState<GeminiModel>(
 		(import.meta.env.VITE_DEFAULT_AI_MODEL as GeminiModel) || DEFAULT_MODEL,
 	);
@@ -59,12 +61,13 @@ export function ChatContainer({
 				type: 'gemini' as const,
 				apiKey: apiKey || '',
 				model: selectedModel,
+				userId: user?.id,
 			});
 		}
 
 		// Default fallback to MockBackend for unsupported types
 		return new MockBackend();
-	}, [backendType, selectedModel]);
+	}, [backendType, selectedModel, user?.id]);
 
 	// Initialize controller
 	const {

@@ -8,6 +8,9 @@ interface UserProfile {
 	email: string;
 	full_name?: string;
 	phone?: string;
+	cpf?: string;
+	birth_date?: string;
+	profile_image_url?: string;
 	is_active?: boolean;
 	last_login?: string;
 	created_at: string;
@@ -17,19 +20,47 @@ interface UserProfile {
 
 interface UserPreferences {
 	user_id: string;
+	// Accessibility
 	accessibility_high_contrast?: boolean;
 	accessibility_large_text?: boolean;
 	accessibility_screen_reader?: boolean;
+	font_size?: number;
+	reduce_motion?: boolean;
+	keyboard_shortcuts?: boolean;
+	// AI settings
 	autonomy_level?: number;
+	ai_model?: string;
+	auto_categorize?: boolean;
+	budget_alerts?: boolean;
+	voice_commands_enabled?: boolean;
+	voice_feedback?: boolean;
+	show_reasoning?: boolean;
+	custom_prompt?: string;
+	chat_history_cleared_at?: string;
+	// Regional
 	currency?: string;
 	language?: string;
+	timezone?: string;
+	// Theme
+	theme?: string;
+	// Notifications
 	email_notifications?: boolean;
 	notifications_enabled?: boolean;
 	push_notifications?: boolean;
-	theme?: string;
-	timezone?: string;
-	voice_commands_enabled?: boolean;
-	voice_feedback?: boolean;
+	notifications_email?: boolean;
+	notifications_push?: boolean;
+	notifications_sms?: boolean;
+	// Notification types
+	notify_transactions?: boolean;
+	notify_budget_exceeded?: boolean;
+	notify_bill_reminders?: boolean;
+	notify_security?: boolean;
+	notify_weekly_summary?: boolean;
+	notify_tips?: boolean;
+	// Quiet hours
+	quiet_hours_enabled?: boolean;
+	quiet_hours_start?: string;
+	quiet_hours_end?: string;
 	[key: string]: unknown;
 }
 
@@ -48,7 +79,13 @@ interface UseProfileReturn {
 	error: Error | null;
 	isUpdatingProfile: boolean;
 	isUpdatingPreferences: boolean;
-	updateProfile: (input: { full_name?: string; phone?: string }) => void;
+	updateProfile: (input: {
+		full_name?: string;
+		phone?: string;
+		cpf?: string;
+		birth_date?: string;
+		profile_image_url?: string;
+	}) => void;
 	updatePreferences: (input: Record<string, unknown>) => void;
 	updateLastLogin: () => void;
 }
@@ -87,7 +124,13 @@ export function useProfile(): UseProfileReturn {
 	});
 
 	const { mutate: updateProfile, isPending: isUpdatingProfile } = useMutation({
-		mutationFn: async (input: { full_name?: string; phone?: string }) => {
+		mutationFn: async (input: {
+			full_name?: string;
+			phone?: string;
+			cpf?: string;
+			birth_date?: string;
+			profile_image_url?: string;
+		}) => {
 			const response = await apiClient.put<ProfileApiResponse<UserProfile>>(
 				'/v1/users/me',
 				input,

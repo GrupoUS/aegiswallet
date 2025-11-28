@@ -431,14 +431,26 @@ export function createContactsTools(userId: string) {
 						const { createPixTools } = await import('./pix');
 						const pixTools = createPixTools(userId);
 
-						const executeFunc = pixTools.sendPixTransfer.execute;
-						if (!executeFunc) {
-							throw new Error('PIX transfer not available');
+						if (!pixTools.sendPixTransfer?.execute) {
+							throw new Error('PIX transfer functionality not available');
 						}
-						const pixTransferResult = (await executeFunc(
+
+						// Validate Brazilian CPF format for PIX transfers
+						const recipientKey = details.pix_key as string;
+						const recipientKeyType = details.pix_key_type as string;
+
+						if (
+							recipientKeyType === 'CPF' &&
+							!isValidBrazilianCPF(recipientKey)
+						) {
+							throw new Error('CPF inválido para transferência PIX');
+						}
+
+						// Execute PIX transfer with proper async handling
+						const pixTransferResult = await pixTools.sendPixTransfer.execute(
 							{
-								recipientKey: details.pix_key as string,
-								recipientKeyType: details.pix_key_type as
+								recipientKey,
+								recipientKeyType: recipientKeyType as
 									| 'CPF'
 									| 'CNPJ'
 									| 'EMAIL'
@@ -449,8 +461,19 @@ export function createContactsTools(userId: string) {
 								description: finalDescription,
 							},
 							{} as never,
-						)) as TransferResult;
-						transferResult = pixTransferResult;
+						);
+
+						// Handle AsyncIterable result properly
+						if (isAsyncIterable(pixTransferResult)) {
+							// Convert AsyncIterable to TransferResult
+							const results: unknown[] = [];
+							for await (const result of pixTransferResult) {
+								results.push(result);
+							}
+							transferResult = results[0] as TransferResult;
+						} else {
+							transferResult = pixTransferResult as TransferResult;
+						}
 					} else {
 						transferResult = {
 							success: true,
@@ -708,4 +731,49 @@ function buildContactsResponse(
 				? `Encontrados ${totalContacts} contatos (${favoriteContacts} favoritos, ${contactsWithPix} com PIX)`
 				: 'Nenhum contato encontrado',
 	};
+}
+
+// Type guard for AsyncIterable
+function isAsyncIterable(obj: unknown): obj is AsyncIterable<unknown> {
+	return (
+		obj != null && typeof (obj as Record<PropertyKey, unknown>)[Symbol.asyncIterator] === 'function'
+	);
+}
+
+// Brazilian CPF validation for LGPD compliance
+function isValidBrazilianCPF(cpf: string): boolean {
+	// Remove non-numeric characters
+	const cleanCPF = cpf.replace(/\D/g, '');
+
+	// Check if it has 11 digits
+	if (cleanCPF.length !== 11) {
+		return false;
+	}
+
+	// Check if all digits are the same (invalid CPF)
+	if (/^(\d)\1+$/.test(cleanCPF)) {
+		return false;
+	}
+
+	// Calculate first verification digit
+	let sum = 0;
+	for (let i = 0; i < 9; i++) {
+		sum += parseInt(cleanCPF.charAt(i), 10) * (10 - i);
+	}
+	let remainder = (sum * 10) % 11;
+	const firstDigit = remainder === 10 ? 0 : remainder;
+
+	// Calculate second verification digit
+	sum = 0;
+	for (let i = 0; i < 10; i++) {
+		sum += parseInt(cleanCPF.charAt(i), 10) * (11 - i);
+	}
+	remainder = (sum * 10) % 11;
+	const secondDigit = remainder === 10 ? 0 : remainder;
+
+	// Check if verification digits match
+	return (
+		firstDigit === parseInt(cleanCPF.charAt(9), 10) &&
+		secondDigit === parseInt(cleanCPF.charAt(10), 10)
+	);
 }

@@ -1,6 +1,5 @@
 {
 	"compilerOptions": {
-		"composite": true,
 		"skipLibCheck": true,
 		"module": "ESNext",
 		"moduleResolution": "bundler",
@@ -10,7 +9,11 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"]
-		}
+		},
+		"strict": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"types": ["node", "bun-types"]
 	},
 	"include": [
 		"vite.config.ts",

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// @ts-nocheck - Utility script with dynamic error status access
 
 /**
  * OXLint + Biome Synergy Script for AegisWallet

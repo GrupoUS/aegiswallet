@@ -19,7 +19,7 @@ handoffs:
     prompt: "Test the implementation visually and functionally."
     send: true
 tools:
-  ['edit', 'search', 'runCommands', 'runTasks', 'context7/*', 'desktop-commander/edit_block', 'desktop-commander/read_multiple_files', 'desktop-commander/read_process_output', 'desktop-commander/start_process', 'desktop-commander/write_file', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'context7/*', 'desktop-commander/edit_block', 'desktop-commander/read_multiple_files', 'desktop-commander/read_process_output', 'desktop-commander/start_process', 'desktop-commander/write_file', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT
@@ -125,6 +125,16 @@ terminate_when: ["Query 100% resolved", "No remaining steps", "All criteria met"
 **Trigger**: "security", "audit", "vulnerability", "compliance", "refactor", "improve", "optimize"
 **Follow**: [tester.agent.md](tester.agent.md)
 **Focus**: Static analysis, authentication testing, input validation, dependency audit
+
+### Database Mode
+**Trigger**: "database", "schema", "migration", "RLS", "LGPD", "SQL", "PostgreSQL"
+**Follow**: [database-specialist.agent.md](database-specialist.agent.md)
+**Process**: Schema design → Migration generation → RLS policies → LGPD compliance → Performance tuning
+
+### Documentation Mode
+**Trigger**: "document", "docs", "README", "comment", "explain"
+**Follow**: [documentation.agent.md](documentation.agent.md)
+**Process**: Context analysis → Structure planning → Content generation → Review → Integration
 
 ---
 

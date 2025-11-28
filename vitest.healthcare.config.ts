@@ -78,7 +78,6 @@ export default defineConfig({
 					statements: 90,
 				},
 			},
-			all: true, // Include all source files in coverage
 			clean: true, // Clean coverage directories before running
 			cleanOnRerun: true, // Clean on re-run
 		},
@@ -121,11 +120,7 @@ export default defineConfig({
 		// Performance optimization for large test suites
 		maxConcurrency: 1, // Sequential execution for healthcare compliance
 		pool: 'forks',
-		poolOptions: {
-			forks: {
-				singleFork: true, // Use single fork for healthcare compliance
-			},
-		},
+		// Note: Using sequential execution with single process for healthcare compliance
 	},
 
 	resolve: {

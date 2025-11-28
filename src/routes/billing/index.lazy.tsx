@@ -153,7 +153,10 @@ function BillingPage() {
 					</CardHeader>
 					<CardContent className="space-y-6">
 						{faqItems.map((item, itemIndex) => (
-							<div key={item.question.replace(/\s+/g, '-').toLowerCase()} className="space-y-2">
+							<div
+								key={item.question.replace(/\s+/g, '-').toLowerCase()}
+								className="space-y-2"
+							>
 								<h3 className="font-medium text-lg">{item.question}</h3>
 								<p className="text-muted-foreground">{item.answer}</p>
 								{itemIndex < faqItems.length - 1 && (

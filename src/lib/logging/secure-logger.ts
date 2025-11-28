@@ -53,16 +53,18 @@ export class SecureLogger {
 	private flushInterval: number = 5000; // 5 seconds
 
 	constructor() {
-		this.isDevelopment =
+		this.isDevelopment = Boolean(
 			(typeof process !== 'undefined' &&
 				process.env?.NODE_ENV === 'development') ||
-			(typeof import.meta !== 'undefined' && import.meta.env?.DEV);
+				(typeof import.meta !== 'undefined' && import.meta.env?.DEV),
+		);
 
-		this.isProduction =
+		this.isProduction = Boolean(
 			(typeof process !== 'undefined' &&
 				process.env?.NODE_ENV === 'production') ||
-			(typeof import.meta !== 'undefined' &&
-				import.meta.env?.MODE === 'production');
+				(typeof import.meta !== 'undefined' &&
+					import.meta.env?.MODE === 'production'),
+		);
 
 		// Initialize sensitive data patterns
 		this.sensitivePatterns = [

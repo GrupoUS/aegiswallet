@@ -3,19 +3,91 @@ import { convertToCoreMessages, streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-// Define interfaces for AI SDK types
+// Define interfaces for AI SDK types with Brazilian compliance
 interface AIUsage {
 	totalTokens: number;
+	promptTokens?: number;
+	completionTokens?: number;
 }
 
 interface AIToolCall {
+	toolCallId: string;
 	toolName: string;
+	args: Record<string, unknown>;
 }
 
 interface AIFinishCallback {
 	usage: AIUsage;
-	finishReason: string;
+	finishReason: 'stop' | 'length' | 'tool-calls' | 'error';
 	toolCalls?: AIToolCall[];
+}
+
+// Brazilian Portuguese AI response validation
+interface AIResponseValidation {
+	isValid: boolean;
+	language: 'pt-BR' | 'en';
+	contentType: 'text' | 'tool_call' | 'error';
+	sensitiveDataDetected: boolean;
+	complianceIssues: string[];
+}
+
+// LGPD-compliant message interface
+interface LGPDCompliantMessage {
+	role: 'user' | 'assistant' | 'system' | 'tool';
+	content: string;
+	// LGPD: Redact sensitive data
+	sensitiveDataRedacted: boolean;
+	timestamp: string;
+	sessionId?: string;
+}
+
+// Type guard for LGPD compliance
+function _isLGPDCompliantMessage(
+	message: unknown,
+): message is LGPDCompliantMessage {
+	if (typeof message !== 'object' || message === null) return false;
+
+	const msg = message as Record<string, unknown>;
+	return (
+		typeof msg.role === 'string' &&
+		['user', 'assistant', 'system', 'tool'].includes(msg.role) &&
+		typeof msg.content === 'string' &&
+		typeof msg.sensitiveDataRedacted === 'boolean' &&
+		typeof msg.timestamp === 'string'
+	);
+}
+
+// Brazilian Portuguese content validation
+function validateBrazilianPortugueseContent(
+	content: string,
+): AIResponseValidation {
+	const issues: string[] = [];
+
+	// Check for sensitive data patterns (LGPD compliance)
+	const sensitivePatterns = [
+		/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/, // CPF
+		/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/, // CNPJ
+		/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/, // Credit card
+	];
+
+	const hasSensitiveData = sensitivePatterns.some((pattern) =>
+		pattern.test(content),
+	);
+	if (hasSensitiveData) {
+		issues.push('Sensitive data detected in response');
+	}
+
+	// Basic Portuguese validation (could be enhanced)
+	const isPortuguese =
+		/[áéíóúãõâêôûç]/i.test(content) || content.includes('R$');
+
+	return {
+		isValid: issues.length === 0,
+		language: isPortuguese ? 'pt-BR' : 'en',
+		contentType: 'text',
+		sensitiveDataDetected: hasSensitiveData,
+		complianceIssues: issues,
+	};
 }
 
 import { logAIOperation } from '@/lib/ai/audit/logger';
@@ -32,9 +104,43 @@ import { authMiddleware } from '@/server/middleware/auth';
 
 const aiChat = new Hono<AppEnv>();
 
-// Schema de request
+// Schema de request with LGPD compliance
 const chatRequestSchema = z.object({
-	messages: z.array(z.any()), // Allow any message structure to support tool invocations
+	messages: z
+		.array(
+			z.object({
+				role: z.enum(['user', 'assistant', 'system', 'tool']),
+				content: z.string(),
+				// LGPD: Ensure sensitive data is marked
+				sensitiveDataRedacted: z.boolean().optional().default(false),
+				timestamp: z.string().datetime().optional(),
+				sessionId: z.string().uuid().optional(),
+				// AI SDK compatibility - convert content to parts
+				parts: z
+					.array(
+						z.object({
+							type: z.literal('text'),
+							text: z.string(),
+						}),
+					)
+					.optional(),
+			}),
+		)
+		.min(1, 'At least one message is required')
+		.transform((messages) =>
+			messages
+				.filter(
+					(
+						msg,
+					): msg is typeof msg & { role: 'user' | 'assistant' | 'system' } =>
+						msg.role !== 'tool',
+				) // AI SDK doesn't support 'tool' role
+				.map((msg) => ({
+					...msg,
+					// Ensure parts is present for AI SDK compatibility
+					parts: msg.parts || [{ type: 'text' as const, text: msg.content }],
+				})),
+		),
 	provider: AIProviderSchema.optional().default('google'),
 	tier: z.enum(['default', 'fast']).optional().default('default'),
 });
@@ -99,21 +205,54 @@ aiChat.post(
 					finishReason,
 					toolCalls,
 				}: AIFinishCallback) => {
+					// LGPD-compliant logging with Brazilian Portuguese validation
+					const typedMessages = messages as LGPDCompliantMessage[];
+					const lastMessage = typedMessages[typedMessages.length - 1];
+					const responseContent =
+						lastMessage?.role === 'assistant'
+							? lastMessage.content
+							: finishReason;
+
+					// Validate content for compliance
+					const validation =
+						typeof responseContent === 'string'
+							? validateBrazilianPortugueseContent(responseContent)
+							: {
+									isValid: true,
+									language: 'pt-BR' as const,
+									contentType: 'text' as const,
+									sensitiveDataDetected: false,
+									complianceIssues: [],
+								};
+
+					// Log with compliance information
+					const complianceNote = validation.sensitiveDataDetected
+						? ` [LGPD Warning: Sensitive data detected]`
+						: validation.language === 'pt-BR'
+							? ' [PT-BR]'
+							: ' [EN]';
+
 					await logAIOperation({
 						userId,
 						sessionId,
 						provider,
 						model: `${provider}/${tier}`,
 						actionType: toolCalls?.length ? 'tool_call' : 'chat',
-						toolName: toolCalls?.map((tc: AIToolCall) => tc.toolName).join(', '),
+						toolName: toolCalls
+							?.map((tc: AIToolCall) => tc.toolName)
+							.join(', '),
 						inputSummary:
 							typeof lastUserContent === 'string'
 								? lastUserContent.slice(0, 100)
 								: 'Multi-modal/Tool input',
-						outputSummary: finishReason,
+						outputSummary: finishReason + complianceNote,
 						tokensUsed: usage.totalTokens,
 						latencyMs: Date.now() - startTime,
-						outcome: 'success',
+						outcome: validation.isValid ? 'success' : 'error',
+						errorMessage:
+							validation.complianceIssues.length > 0
+								? `Compliance issues: ${validation.complianceIssues.join('; ')}`
+								: undefined,
 					});
 				},
 				// biome-ignore lint/suspicious/noExplicitAny: AI SDK streamText options type is complex and version-dependent

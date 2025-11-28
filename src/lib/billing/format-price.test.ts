@@ -2,26 +2,33 @@ import { describe, expect, it } from 'vitest';
 
 import { formatPrice, formatPriceCustom } from '@/lib/billing/format-price';
 
+// Intl.NumberFormat uses non-breaking space (U+00A0) between currency and value
+// for pt-BR locale. Using regex to match either space type for robustness.
+const matchCurrency = (value: string, expected: string) => {
+	const normalized = value.replace(/\u00A0/g, ' ');
+	expect(normalized).toBe(expected);
+};
+
 describe('formatPrice', () => {
 	it('formats BRL currency correctly', () => {
-		expect(formatPrice(5900)).toBe('R$ 59,00');
-		expect(formatPrice(11900)).toBe('R$ 119,00');
-		expect(formatPrice(0)).toBe('R$ 0,00');
+		matchCurrency(formatPrice(5900), 'R$ 59,00');
+		matchCurrency(formatPrice(11900), 'R$ 119,00');
+		matchCurrency(formatPrice(0), 'R$ 0,00');
 	});
 
 	it('handles different currencies', () => {
-		expect(formatPrice(10000, 'USD')).toBe('US$ 100,00');
-		expect(formatPrice(10000, 'EUR')).toBe('€ 100,00');
+		matchCurrency(formatPrice(10000, 'USD'), 'US$ 100,00');
+		matchCurrency(formatPrice(10000, 'EUR'), '€ 100,00');
 	});
 
 	it('handles cents correctly', () => {
-		expect(formatPrice(1050)).toBe('R$ 10,50');
-		expect(formatPrice(99)).toBe('R$ 0,99');
+		matchCurrency(formatPrice(1050), 'R$ 10,50');
+		matchCurrency(formatPrice(99), 'R$ 0,99');
 	});
 
 	it('handles large numbers', () => {
-		expect(formatPrice(100000)).toBe('R$ 1.000,00');
-		expect(formatPrice(1000000)).toBe('R$ 10.000,00');
+		matchCurrency(formatPrice(100000), 'R$ 1.000,00');
+		matchCurrency(formatPrice(1000000), 'R$ 10.000,00');
 	});
 });
 

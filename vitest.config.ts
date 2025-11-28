@@ -19,8 +19,8 @@ export default defineConfig({
 	// ✅ MELHORIA 1: optimizeDeps movido para dentro de test.deps
 	// O optimizeDeps no root é para Vite dev server, não para Vitest
 
-	// @ts-expect-error -- Vite/Vitest version mismatch (Vitest bundles its own Vite types)
-	plugins: [react()],
+	// biome-ignore lint/suspicious/noExplicitAny: React plugin type mismatch between vite and vitest versions
+	plugins: [react() as any],
 
 	resolve: {
 		alias: {
@@ -86,7 +86,7 @@ export default defineConfig({
 			// ✅ MELHORIA 10: Usar include ao invés de apenas exclude
 			include: ['src/**/*.{ts,tsx}'],
 			exclude: [
-				...configDefaults.coverage.exclude, // Inclui defaults do Vitest
+				...(configDefaults.coverage.exclude ?? []), // Inclui defaults do Vitest
 				'src/test/**',
 				'src/mocks/**',
 				'src/types/**',

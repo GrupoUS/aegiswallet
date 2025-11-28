@@ -33,10 +33,18 @@ class ApiClient {
 	private baseUrl: string;
 
 	constructor() {
-		// Use environment variable or default to current origin
-		this.baseUrl =
-			import.meta.env.VITE_API_URL ||
-			`${typeof window !== 'undefined' ? window.location.origin : ''}/api`;
+		// Dynamic URL detection for different environments
+		// Priority: window.location.origin (browser) > relative path (fallback)
+		// Never use VITE_API_URL in production as it gets baked during build
+		if (typeof window !== 'undefined') {
+			// Client-side: ALWAYS use current origin for API calls
+			// This ensures requests go to the correct domain after deployment
+			this.baseUrl = `${window.location.origin}/api`;
+		} else {
+			// Server-side / SSR: use relative path
+			// The server will resolve this correctly
+			this.baseUrl = '/api';
+		}
 	}
 
 	/**

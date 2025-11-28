@@ -1,14 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const rawAliases = JSON.parse(
-	fs.readFileSync(path.resolve(__dirname, 'aliases.json'), 'utf-8'),
-);
-// Remove es-toolkit aliases since directory has been deleted
 const esToolkitAliases = {};
 
 export default defineConfig(({ mode }) => {
@@ -27,8 +22,6 @@ export default defineConfig(({ mode }) => {
 						'react-vendor': ['react', 'react-dom', 'scheduler', 'react-is'],
 						// TanStack libraries
 						tanstack: ['@tanstack/react-router', '@tanstack/react-query'],
-						// Supabase
-						supabase: ['@supabase/supabase-js'],
 						// UI libraries
 						'ui-libraries': [
 							'@radix-ui/react-slot',
@@ -62,8 +55,6 @@ export default defineConfig(({ mode }) => {
 				'react-dom',
 				'@tanstack/react-router',
 				'@tanstack/react-query',
-
-				'@supabase/supabase-js',
 				'@radix-ui/react-dialog',
 				'@radix-ui/react-dropdown-menu',
 				'@radix-ui/react-select',
@@ -75,6 +66,7 @@ export default defineConfig(({ mode }) => {
 				'react-is',
 				'use-sync-external-store',
 				'eventemitter3',
+				'@clerk/clerk-react',
 			],
 		},
 		plugins: [react(), tailwindcss()],
@@ -83,6 +75,7 @@ export default defineConfig(({ mode }) => {
 				'@': path.resolve(__dirname, './src'),
 				...esToolkitAliases,
 			},
+			dedupe: ['@clerk/clerk-react', '@clerk/backend', '@clerk/localizations'],
 		},
 		server: {
 			host: true,

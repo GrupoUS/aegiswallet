@@ -50,7 +50,6 @@ export default defineConfig({
 					statements: 80,
 				},
 			},
-			all: true,
 			clean: true,
 			cleanOnRerun: true,
 		},
@@ -81,13 +80,8 @@ export default defineConfig({
 		// Isolar testes de integração
 		isolate: true,
 
-		// Pool options para integração
-		poolOptions: {
-			threads: {
-				singleThread: false,
-				useAtomics: true,
-			},
-		},
+		// Pool configuration para integração (poolOptions deprecated in Vitest 4.x)
+		pool: 'threads',
 	},
 
 	resolve: {

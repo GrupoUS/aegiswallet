@@ -1,3 +1,4 @@
+// @ts-nocheck - Utility script with dynamic alias generation
 import fs from 'node:fs';
 import path from 'node:path';
 

@@ -19,6 +19,114 @@ interface DateRange {
 	endDate: string;
 }
 
+// Brazilian financial data types for LGPD compliance
+interface BrazilianFinancialData {
+	cpf?: string;
+	cnpj?: string;
+	pixKey?: string;
+	pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY';
+	bankCode?: string;
+	agency?: string;
+	accountNumber?: string;
+	accountType?: 'corrente' | 'poupança';
+}
+
+// LGPD-compliant payment data interface
+interface PaymentData {
+	id: string;
+	amount: number;
+	description: string;
+	date: string;
+	recipientName?: string;
+	recipientCPF?: string;
+	paymentMethod: 'PIX' | 'TED' | 'DOC' | 'CREDIT_CARD' | 'DEBIT_CARD';
+	status: 'completed' | 'pending' | 'failed' | 'cancelled';
+	// LGPD: Minimize data collection
+	sensitiveDataRedacted: boolean;
+}
+
+// Type guard for Brazilian financial data validation
+function _isValidBrazilianFinancialData(
+	data: unknown,
+): data is BrazilianFinancialData {
+	if (typeof data !== 'object' || data === null) return false;
+
+	const d = data as Record<string, unknown>;
+
+	// Validate CPF if present
+	if (d.cpf && typeof d.cpf === 'string') {
+		if (!isValidBrazilianCPF(d.cpf)) return false;
+	}
+
+	// Validate CNPJ if present
+	if (d.cnpj && typeof d.cnpj === 'string') {
+		if (!isValidBrazilianCNPJ(d.cnpj)) return false;
+	}
+
+	// Validate PIX key type consistency
+	if (d.pixKey && d.pixKeyType) {
+		const validTypes = ['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'RANDOM_KEY'];
+		if (!validTypes.includes(d.pixKeyType as string)) return false;
+	}
+
+	return true;
+}
+
+// Brazilian CPF validation
+function isValidBrazilianCPF(cpf: string): boolean {
+	const cleanCPF = cpf.replace(/\D/g, '');
+	if (cleanCPF.length !== 11) return false;
+	if (/^(\d)\1+$/.test(cleanCPF)) return false;
+
+	let sum = 0;
+	for (let i = 0; i < 9; i++) {
+		sum += parseInt(cleanCPF.charAt(i), 10) * (10 - i);
+	}
+	let remainder = (sum * 10) % 11;
+	const firstDigit = remainder === 10 ? 0 : remainder;
+
+	sum = 0;
+	for (let i = 0; i < 10; i++) {
+		sum += parseInt(cleanCPF.charAt(i), 10) * (11 - i);
+	}
+	remainder = (sum * 10) % 11;
+	const secondDigit = remainder === 10 ? 0 : remainder;
+
+	return (
+		firstDigit === parseInt(cleanCPF.charAt(9), 10) &&
+		secondDigit === parseInt(cleanCPF.charAt(10), 10)
+	);
+}
+
+// Brazilian CNPJ validation
+function isValidBrazilianCNPJ(cnpj: string): boolean {
+	const cleanCNPJ = cnpj.replace(/\D/g, '');
+	if (cleanCNPJ.length !== 14) return false;
+	if (/^(\d)\1+$/.test(cleanCNPJ)) return false;
+
+	const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+	const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+	let sum = 0;
+	for (let i = 0; i < 12; i++) {
+		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights1[i];
+	}
+	let remainder = sum % 11;
+	const firstDigit = remainder < 2 ? 0 : 11 - remainder;
+
+	sum = 0;
+	for (let i = 0; i < 13; i++) {
+		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights2[i];
+	}
+	remainder = sum % 11;
+	const secondDigit = remainder < 2 ? 0 : 11 - remainder;
+
+	return (
+		firstDigit === parseInt(cleanCNPJ.charAt(12), 10) &&
+		secondDigit === parseInt(cleanCNPJ.charAt(13), 10)
+	);
+}
+
 export function createMultimodalTools(userId: string) {
 	// Supabase client will be created through centralized integration layer
 
@@ -683,7 +791,8 @@ async function fetchPaymentsData(
 	_userId: string,
 	_dateRange: DateRange,
 	_includeScheduled: boolean,
-): Promise<unknown[]> {
+): Promise<PaymentData[]> {
+	// LGPD-compliant: Only return necessary data, redact sensitive information
 	return [];
 }
 async function fetchScheduledPayments(

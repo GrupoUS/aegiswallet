@@ -3,6 +3,21 @@ import { convertToCoreMessages, streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+// Define interfaces for AI SDK types
+interface AIUsage {
+	totalTokens: number;
+}
+
+interface AIToolCall {
+	toolName: string;
+}
+
+interface AIFinishCallback {
+	usage: AIUsage;
+	finishReason: string;
+	toolCalls?: AIToolCall[];
+}
+
 import { logAIOperation } from '@/lib/ai/audit/logger';
 import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
 import {
@@ -83,18 +98,14 @@ aiChat.post(
 					usage,
 					finishReason,
 					toolCalls,
-				}: {
-					usage: { totalTokens: number };
-					finishReason: string;
-					toolCalls?: { toolName: string }[];
-				}) => {
+				}: AIFinishCallback) => {
 					await logAIOperation({
 						userId,
 						sessionId,
 						provider,
 						model: `${provider}/${tier}`,
 						actionType: toolCalls?.length ? 'tool_call' : 'chat',
-						toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
+						toolName: toolCalls?.map((tc: AIToolCall) => tc.toolName).join(', '),
 						inputSummary:
 							typeof lastUserContent === 'string'
 								? lastUserContent.slice(0, 100)

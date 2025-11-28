@@ -51,7 +51,7 @@ function DashboardSkeleton() {
 // ========================================
 
 function BalanceCard() {
-	const { data: totalBalance, isLoading, error } = useTotalBalance();
+	const { totalBRL, isLoading, error } = useTotalBalance();
 
 	if (isLoading) {
 		return <Skeleton className="h-32" />;
@@ -67,7 +67,7 @@ function BalanceCard() {
 		);
 	}
 
-	const balance = totalBalance?.BRL || 0;
+	const balance = totalBRL || 0;
 
 	return (
 		<Card className="bg-gradient-to-br from-primary/10 to-primary/5">
@@ -92,7 +92,7 @@ function BalanceCard() {
 // ========================================
 
 function AccountsList() {
-	const { data: accounts, isLoading, error } = useBankAccounts();
+	const { accounts, isLoading, error } = useBankAccounts();
 
 	if (isLoading) {
 		return (
@@ -205,7 +205,7 @@ function RecentTransactionsList() {
 					</div>
 					<p
 						className={`font-semibold ${
-							tx.transactionType === 'income'
+							tx.transactionType === 'credit' || tx.amount > 0
 								? 'text-green-600'
 								: 'text-red-600'
 						}`}

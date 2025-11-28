@@ -48,6 +48,7 @@ import {
 	chatSessions,
 	spendingPatterns,
 	voiceCommands,
+	voiceTranscriptions,
 } from './voice-ai';
 
 // ========================================
@@ -78,6 +79,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 	contacts: many(contacts),
 	boletos: many(boletos),
 	voiceCommands: many(voiceCommands),
+	voiceTranscriptions: many(voiceTranscriptions),
 	aiInsights: many(aiInsights),
 	spendingPatterns: many(spendingPatterns),
 	budgetCategories: many(budgetCategories),
@@ -380,6 +382,16 @@ export const voiceCommandsRelations = relations(voiceCommands, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
+
+export const voiceTranscriptionsRelations = relations(
+	voiceTranscriptions,
+	({ one }) => ({
+		user: one(users, {
+			fields: [voiceTranscriptions.userId],
+			references: [users.id],
+		}),
+	}),
+);
 
 export const aiInsightsRelations = relations(aiInsights, ({ one }) => ({
 	user: one(users, {

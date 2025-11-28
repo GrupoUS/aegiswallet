@@ -11,13 +11,7 @@ import {
 	subMonths,
 } from 'date-fns';
 import type { ReactNode } from 'react';
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from 'react';
+import { createContext, useCallback, useEffect, useState } from 'react';
 
 import type {
 	CalendarCategory,
@@ -57,9 +51,12 @@ interface CalendarContextType {
 	navigateDate: (direction: 'prev' | 'next') => void;
 }
 
-const CalendarContext = createContext<CalendarContextType | undefined>(
+export const CalendarContext = createContext<CalendarContextType | undefined>(
 	undefined,
 );
+
+// Re-export useCalendar for backward compatibility
+export { useCalendar } from './hooks/useCalendar';
 
 // Financial events come exclusively from the database via API
 
@@ -319,13 +316,4 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 			{children}
 		</CalendarContext.Provider>
 	);
-}
-
-// Hook export - not a component, but commonly exported from context files
-export function useCalendar() {
-	const context = useContext(CalendarContext);
-	if (context === undefined) {
-		throw new Error('useCalendar must be used within a CalendarProvider');
-	}
-	return context;
 }

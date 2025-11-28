@@ -98,9 +98,9 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
 				{data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
 			</p>
 		)}
-		{data.bills.slice(0, 3).map((bill, index) => (
+		{data.bills.slice(0, 3).map((bill) => (
 			<p
-				key={`bill-${bill.name}-${index}`}
+				key={`bill-${bill.name}-${bill.amount}`}
 				className="text-muted-foreground text-xs"
 			>
 				{bill.name}: {formatCurrency(bill.amount)}
@@ -120,9 +120,9 @@ const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
 				{formatCurrency(data.nextIncome.amount)}
 			</p>
 		)}
-		{data.incoming.slice(0, 3).map((income, index) => (
+		{data.incoming.slice(0, 3).map((income) => (
 			<p
-				key={`income-${income.source}-${index}`}
+				key={`income-${income.source}-${income.amount}`}
 				className="text-muted-foreground text-xs"
 			>
 				{income.source}: {formatCurrency(income.amount)}
@@ -232,9 +232,9 @@ const ErrorData: React.FC<{ data: ErrorResponseData }> = ({ data }) => (
 		{data.suggestedActions && data.suggestedActions.length > 0 && (
 			<div className="mt-1">
 				<p className="font-medium text-muted-foreground text-xs">Sugestões:</p>
-				{data.suggestedActions.map((action, index) => (
+				{data.suggestedActions.map((action) => (
 					<p
-						key={`suggestion-${action.replace(/\s+/g, '-')}-${index}`}
+						key={`suggestion-${action.replace(/\s+/g, '-')}-${action.length}`}
 						className="ml-2 text-muted-foreground text-xs"
 					>
 						• {action}

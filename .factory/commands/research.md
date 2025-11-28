@@ -2,276 +2,197 @@
 
 ## Universal Description
 
-**Ultimate Research & Knowledge Management System** - Multi-source intelligence gathering with
-automated knowledge synthesis, progressive depth analysis, and comprehensive knowledge base
-management for any domain or complexity.
+**APEX-RESEARCHER POWERED Research System** - Multi-MCP orchestration with apex-researcher droid delivering ≥95% cross-validation accuracy through Context7, Tavily, Serena, and Sequential Thinking integration.
 
 ## Purpose
 
-Orchestrate comprehensive research operations with Context7 intelligence chains,
-automated knowledge synthesis, and intelligent knowledge base management, ensuring accurate,
-current, and actionable insights with long-term knowledge preservation.
+Execute comprehensive research operations through apex-researcher droid with automatic MCP orchestration for authoritative multi-source validation and actionable intelligence.
 
-## Context Detection
-
-- **Research Operations**: Topic investigation, technology evaluation, comparative analysis,
-  validation studies
-- **Knowledge Management**: Knowledge base creation, organization, retrieval, and maintenance
-- **Intelligence Synthesis**: Multi-source validation, cross-reference analysis, expert insight
-  compilation
-- **Healthcare Compliance**: LGPD/ANVISA/CFM research and regulatory compliance validation
-- **Technology Research**: Framework comparison, best practices, implementation patterns
-
-## Knowledge Management System
-
-### Knowledge Operations
+## Automatic Apex-Researcher Routing
 
 ```yaml
-knowledge_create:
-  documentation_generation:
-    - "Technical guides, tutorials, and implementation documentation"
-    - "Best practices, methodologies, and standard procedures"
-    - "Troubleshooting guides, FAQs, and problem-solution mapping"
-    - "API documentation and integration guide generation"
+command_execution:
+  trigger: "/research | /pesquisar"
+  routing: "Task(apex-researcher) - IMMEDIATE PRIORITY"
+  bypass_implementation: "TRUE - apex-researcher NEVER implements"
+  
+input_parsing:
+  goal: "Extract from research objective description"
+  scope: "Technology, domain, or regulatory area" 
+  complexity: "L1-L10 research depth assessment"
+  brazilian_focus: "LGPD/BCB/PIX requirements auto-detection"
 
-  content_synthesis:
-    - "Multi-source research compilation and synthesis"
-    - "Expert interview integration and knowledge extraction"
-    - "Community knowledge compilation and validation"
-    - "Case study development and lessons learned documentation"
-
-knowledge_retrieve:
-  search_capabilities:
-    - "Semantic search with natural language query processing"
-    - "Faceted search with advanced filtering and categorization"
-    - "Full-text search with relevance ranking and scoring"
-    - "Tag-based and metadata-driven knowledge discovery"
-
-  context_awareness:
-    - "User role and permission-based result filtering"
-    - "Project and domain-specific knowledge prioritization"
-    - "Personalized recommendations and intelligent suggestions"
-    - "Recent activity and search history integration"
-
-knowledge_update:
-  modification_strategies:
-    append: "Add new information while preserving existing content"
-    replace: "Substitute outdated information with current data"
-    merge: "Intelligently combine multiple sources and perspectives"
-    synthesize: "Create new knowledge from research findings"
-
-  version_control:
-    - "Change tracking and comprehensive history preservation"
-    - "Rollback capability and recovery options"
-    - "Collaborative editing and conflict resolution"
-    - "Quality gate approval workflows and validation"
-
-knowledge_organize:
-  information_architecture:
-    - "Hierarchical categorization and taxonomic classification"
-    - "Cross-reference mapping and relationship definition"
-    - "Search optimization and keyword integration"
-    - "Learning pathway creation and optimization"
-
-  quality_management:
-    - "Accuracy validation and fact-checking processes"
-    - "Completeness assessment and gap identification"
-    - "Currency monitoring and update scheduling"
-    - "User feedback integration and continuous improvement"
+quality_assurance:
+  accuracy_threshold: "≥95% cross-validation required"
+  source_authority: "Official documentation + community validation"
+  confidence_levels: "Explicit confidence scoring on all findings"
 ```
 
-### Knowledge Formats & Structures
+## Context Detection & MCP Routing
 
-### Structured Knowledge
+- **Research Operations**: Topic investigation, technology evaluation → Context7 + Tavily
+- **Knowledge Management**: Knowledge base creation, organization → Serena + Sequential Thinking  
+- **Intelligence Synthesis**: Multi-source validation → All MCPs parallel
+- **Brazilian Compliance**: LGPD/BCB/PIX research → Tavily + Context7 + Sequential Thinking
+- **Technology Research**: Framework comparison, patterns → Context7 + Tavily
+
+## MCP Serena: Codebase Intelligence
+
+### Core Capabilities
+- **Symbol Resolution**: `find_symbol` - Function/class/interface discovery
+- **Reference Analysis**: `find_referencing_symbols` - Code relationships mapping
+- **Pattern Search**: `search_for_pattern` - Implementation pattern discovery
+- **Code Overview**: `get_symbols_overview` - High-level code structure analysis
+
+### Usage Patterns
+```yaml
+code_analysis:
+  symbol_resolution: "Function/class/interface discovery"
+  pattern_analysis: "Existing implementation patterns"
+  dependency_mapping: "Code relationships + imports"
+  architecture_insights: "Current system structure"
+
+implementation_feasibility:
+  compatibility_check: "Integration with existing codebase"
+  pattern_alignment: "Consistency with current architecture"
+  effort_estimation: "Implementation complexity assessment"
+```
+
+### Memory Management
+- Creates persistent knowledge memories for project insights
+- Stores architectural patterns and implementation decisions
+- Enables cross-session context preservation
+- Supports research-to-implementation knowledge transfer
+
+## MCP Orchestration Workflow
+
+### Multi-MCP Execution Strategy
+```yaml
+parallel_execution:
+  phase_1_discovery:
+    context7: "Official documentation + API references"
+    tavily: "Web research + community validation"
+    serena: "Codebase analysis + symbol resolution"
+    
+  phase_2_analysis:
+    sequential_thinking: "Multi-perspective synthesis + logical reasoning"
+    context7: "Deep dive into technical specifics"
+    tavily: "Cross-source verification + credibility assessment"
+    
+  phase_3_validation:
+    serena: "Implementation feasibility analysis"
+    sequential_thinking: "Pattern recognition + gap identification"
+    all_mcps: "Cross-validation for ≥95% accuracy"
+```
+
+### Context7 (Documentation Intelligence)
+- Framework docs and best practices
+- Brazilian LGPD/BCB compliance documentation
+- Security guidelines and requirements
+- Installation and configuration patterns
+
+### Tavily (Web Intelligence)
+- Multi-source information gathering
+- Community best practices validation
+- Real-world implementation experiences
+- Expert insights and tutorials
+
+### Sequential Thinking (Cognitive Analysis)
+- Multi-perspective analysis synthesis
+- Pattern recognition and relationship mapping
+- Brazilian compliance requirements assessment
+- Logical reasoning and conclusion formation
+
+## Deliverables: Apex-Researcher Intelligence Report
+
+### Executive Summary
+- Research scope and complexity assessment
+- Confidence score with validation achieved
+- MCP orchestration summary
+- Brazilian compliance validation status
+
+### Multi-MCP Research Analysis
+**Context7**: Framework capabilities and official validation
+**Tavily**: Multi-source validation and community consensus
+**Serena**: Pattern analysis and integration feasibility
+**Sequential Thinking**: Multi-perspective synthesis and gap identification
+
+### Implementation Decision Framework
+- Primary recommendations with confidence levels
+- Alternative strategies with trade-off analysis
+- Risk mitigation strategies
+- Brazilian compliance assessment
+
+### Execution Workflow
+- Atomic task decomposition with complexity assessment
+- Multi-droid coordination plan
+- MCP support during implementation
+- Quality assurance validation
+
+## Quality Gates
+
+### Research Validation
+- ≥95% cross-source validation required
+- Minimum 3 authoritative sources
+- Explicit confidence scoring
+- Clear identification of research gaps
+
+### Brazilian Compliance
+- LGPD data protection verification
+- BCB regulatory compliance validation
+- WCAG 2.1 AA+ accessibility confirmation
+- Security standards verification
+
+### Implementation Readiness
+- Serena validated integration complexity
+- Risk assessment with mitigation strategies
+- Timeline and resource requirements
+- Quality validation specifications
+
+## Command Usage Examples
+
+### Technology Research
+```
+/research "React Server Components best practices for Brazilian fintech applications"
+
+→ Routes to Task(apex-researcher) with:
+- Context7: React documentation + Next.js standards
+- Tavily: Community best practices + fintech patterns
+- Serena: Current codebase pattern analysis
+- Sequential Thinking: Brazilian compliance synthesis
+- Output: ≥95% validated implementation guidance
+```
+
+### Brazilian Compliance Research
+```
+/research "LGPD compliance requirements for voice authentication in financial apps"
+
+→ Routes to Task(apex-researcher) with:
+- Context7: LGPD official documentation + security standards
+- Tavily: Brazilian legal interpretations + compliance frameworks
+- Serena: Current authentication pattern analysis
+- Sequential Thinking: Multi-jurisdictional compliance synthesis
+- Output: Legal compliance matrix + implementation roadmap
+```
+
+## Apex-Researcher Activation Protocol
 
 ```yaml
-structured_format:
-  characteristics:
-    - "Formal organization with clear hierarchical structure"
-    - "Consistent formatting and comprehensive style guidelines"
-    - "Machine-readable metadata and intelligent tagging"
-    - "Comprehensive cross-referencing and link management"
+trigger_detection:
+  command_keywords: ["/research", "/pesquisar", "spec - research"]
+  automatic_routing: "Immediate Task(apex-researcher) invocation"
+  priority_override: "HIGHEST - bypass all other routing"
 
-  optimal_for:
-    - "Technical documentation and detailed specifications"
-    - "Compliance and regulatory guideline documentation"
-    - "Standard operating procedures and workflow documentation"
-    - "API documentation and integration reference materials"
+quality_assurance:
+  confidence_threshold: "≥95% before completion approval"
+  source_validation: "Multi-MCP verification required"
+  brazilian_compliance: "Auto-activated for financial/regulatory topics"
+  implementation_readiness: "Feasibility validation mandatory"
 
-  components:
-    - "Executive summary with key insights and recommendations"
-    - "Detailed sections with logical subsection organization"
-    - "Practical examples, code snippets, and usage demonstrations"
-    - "Comprehensive references and authoritative external links"
-```
-
-### Narrative Knowledge
-
-```yaml
-narrative_format:
-  characteristics:
-    - "Story-driven explanations with contextual background"
-    - "Conversational tone with accessibility optimization"
-    - "Real-world scenarios and practical examples"
-    - "Progressive disclosure and optimized learning flow"
-
-  optimal_for:
-    - "Training materials, tutorials, and educational content"
-    - "Onboarding documentation and orientation materials"
-    - "Best practice sharing and detailed case studies"
-    - "Cultural and organizational knowledge preservation"
-
-  components:
-    - "Engaging introduction with clear context setting"
-    - "Step-by-step narrative progression with logical flow"
-    - "Practical illustrations and real-world applications"
-    - "Key takeaways and actionable implementation items"
-```
-
-### Reference Knowledge
-
-```yaml
-reference_format:
-  characteristics:
-    - "Quick-access facts with scannable organization"
-    - "Concise explanations with search optimization"
-    - "Frequently updated with current information"
-    - "Cross-referenced with related topics and concepts"
-
-  optimal_for:
-    - "Quick reference guides and comprehensive cheat sheets"
-    - "Troubleshooting and diagnostic procedure guides"
-    - "Configuration and setup step-by-step procedures"
-    - "Command references and syntax guide collections"
-
-  components:
-    - "Searchable index and comprehensive table of contents"
-    - "Concise definitions with clear explanations"
-    - "Code examples and command syntax demonstrations"
-    - "Cross-references and related topic suggestions"
-```
-
-## MCP Integration
-
-### Context7 (Technical Documentation)
-
-```yaml
-technical_research:
-  - "Framework documentation and official API references"
-  - "Best practice implementation patterns and guidelines"
-  - "Configuration and setup documentation validation"
-  - "Security standards and compliance requirement research"
-```
-
-### Sequential Thinking (Analysis & Synthesis)
-
-```yaml
-intelligent_synthesis:
-  - "Multi-perspective analysis and critical evaluation"
-  - "Pattern recognition and trend identification"
-  - "Logical reasoning and conclusion formation"
-  - "Knowledge organization and relationship mapping"
-```
-
-### Desktop Commander (Knowledge Management)
-
-```yaml
-knowledge_operations:
-  - "Knowledge base file management and organization"
-  - "Documentation generation and formatting"
-  - "Search index creation and maintenance"
-  - "Version control and backup management"
-```
-
-## Deliverables
-
-### 1. Research Intelligence Report
-
-```markdown
-# Research Intelligence Report
-
-## Executive Summary
-
-- **Research Scope**: [Technology/Domain/Topic comprehensive coverage]
-- **Complexity Level**: [L1-L10 with detailed assessment rationale]
-- **Research Depth**: [Surface/Deep/Comprehensive with methodology]
-- **Sources Validated**: [Count, types, and credibility assessment]
-- **Key Recommendations**: [Top 3-5 actionable insights with rationale]
-
-## Multi-Source Findings Analysis
-
-### Context7 (Official Documentation Research)
-
-- **Framework Capabilities**: [Detailed analysis of capabilities and limitations]
-- **Official Best Practices**: [Verified implementation recommendations]
-- **Security & Performance**: [Guidelines and optimization strategies]
-- **Configuration & Setup**: [Step-by-step implementation guidance]
-
-## Knowledge Base Integration
-
-- **Knowledge Articles Created**: [List of structured knowledge entries]
-- **Knowledge Organization**: [Categorization and relationship mapping]
-- **Learning Pathways**: [Recommended learning progression]
-- **Knowledge Gaps**: [Identified areas for future research]
-
-## Implementation & Decision Framework
-
-1. **Primary Recommendation**: [Detailed approach with comprehensive rationale]
-2. **Alternative Options**: [Backup strategies with trade-off analysis]
-3. **Risk Assessment**: [Identified risks with mitigation strategies]
-4. **Quality Considerations**: [Standards and validation requirements]
-5. **Timeline & Resources**: [Implementation planning and resource requirements]
-
-## Knowledge Management Outcomes
-
-- **Knowledge Base Updates**: [New entries and organizational improvements]
-- **Documentation Generated**: [Technical guides and reference materials]
-- **Learning Materials**: [Training content and educational resources]
-- **Quality Validation**: [Accuracy verification and peer review results]
-```
-
-### 2. Knowledge Base Architecture
-
-```yaml
-knowledge_structure:
-  research_findings:
-    - "Structured research reports with comprehensive analysis"
-    - "Comparative analysis matrices with decision frameworks"
-    - "Technology evaluation summaries with recommendations"
-    - "Best practices compilations with implementation guidance"
-
-  knowledge_articles:
-    - "Technical documentation with step-by-step procedures"
-    - "Troubleshooting guides with problem-solution mapping"
-    - "Configuration references with examples and explanations"
-    - "Learning materials with progressive skill development"
-
-  knowledge_organization:
-    - "Hierarchical categorization with tag-based organization"
-    - "Cross-reference mapping with relationship definitions"
-    - "Search optimization with keyword and metadata indexing"
-    - "Version control with change tracking and audit trails"
-```
-
-### 3. Quality Validation Framework
-
-```yaml
-research_quality:
-  source_validation:
-    - "Authority and credibility assessment with scoring"
-    - "Currency and relevance verification with timestamps"
-    - "Bias detection and mitigation with multi-source validation"
-    - "Factual accuracy verification with cross-referencing"
-
-  synthesis_quality:
-    - "Logical consistency and coherence validation"
-    - "Completeness assessment with gap identification"
-    - "Actionability and practical application verification"
-    - "Constitutional compliance with multi-perspective analysis"
-
-knowledge_quality:
-  content_accuracy: "Factual correctness with verification processes"
-  organization_effectiveness: "Logical structure with usability testing"
-  accessibility_optimization: "Multi-audience accessibility with feedback integration"
-  maintenance_sustainability: "Update processes with quality monitoring"
+output_standards:
+  format: "Apex-Researcher Intelligence Report with Execution Workflow"
+  confidence_levels: "Explicit scoring on all findings"
+  implementation_guidance: "Step-by-step actionable recommendations"
+  execution_workflow: "Detailed multi-droid coordination plan"
+  gap_identification: "Clear research limitations + next steps"
 ```

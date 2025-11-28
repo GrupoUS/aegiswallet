@@ -22,7 +22,7 @@ const envSchema = z.object({
 
 // Validate environment variables
 // Note: We use a try-catch block to allow build-time execution without env vars
-let env;
+let env: z.infer<typeof envSchema> | undefined;
 try {
 	env = envSchema.parse(process.env);
 } catch (_error) {

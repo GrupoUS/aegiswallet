@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type Stripe from 'stripe';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
@@ -25,30 +26,32 @@ webhookRouter.post('/', async (c) => {
 		switch (event.type) {
 			case 'checkout.session.completed':
 				await StripeWebhookService.handleCheckoutSessionCompleted(
-					event.data.object as any,
+					event.data.object as Stripe.Checkout.Session,
 				);
 				break;
 			case 'customer.subscription.created':
 				await StripeWebhookService.handleSubscriptionCreated(
-					event.data.object as any,
+					event.data.object as Stripe.Subscription,
 				);
 				break;
 			case 'customer.subscription.updated':
 				await StripeWebhookService.handleSubscriptionUpdated(
-					event.data.object as any,
+					event.data.object as Stripe.Subscription,
 				);
 				break;
 			case 'customer.subscription.deleted':
 				await StripeWebhookService.handleSubscriptionDeleted(
-					event.data.object as any,
+					event.data.object as Stripe.Subscription,
 				);
 				break;
 			case 'invoice.paid':
-				await StripeWebhookService.handleInvoicePaid(event.data.object as any);
+				await StripeWebhookService.handleInvoicePaid(
+					event.data.object as Stripe.Invoice,
+				);
 				break;
 			case 'invoice.payment_failed':
 				await StripeWebhookService.handleInvoicePaymentFailed(
-					event.data.object as any,
+					event.data.object as Stripe.Invoice,
 				);
 				break;
 			default:

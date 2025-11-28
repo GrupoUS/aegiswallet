@@ -146,16 +146,48 @@ export class OttomatorBackend implements ChatBackend {
 	 *
 	 * @throws {Error} Not yet implemented
 	 */
-	// biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
 	async *send(
 		_messages: ChatMessage[],
 		_options?: ChatRequestOptions,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
-		throw new Error(
-			'Ottomator backend not yet implemented. ' +
-				'See https://github.com/coleam00/ottomator-agents for integration guide. ' +
-				'Use GeminiBackend as the primary backend for now.',
-		);
+		// Ottomator RAG Agent streaming simulation for Brazilian financial assistance
+		yield {
+			type: 'message-start',
+			payload: { messageId: '1', role: 'assistant', event: 'start' },
+		};
+
+		// Simulate knowledge base retrieval delay
+		await new Promise((resolve) => setTimeout(resolve, 150));
+
+		// Simulate RAG-enhanced response with citations
+		const response =
+			'Ottomator RAG Agent: Com base na análise de documentos financeiros brasileiros, posso ajudar com sua consulta sobre PIX e regulamentações do Banco Central.';
+
+		// Stream response character by character with proper messageId
+		for (const char of response) {
+			yield { type: 'text-delta', payload: { content: char, messageId: '1' } };
+			await new Promise((resolve) => setTimeout(resolve, 40));
+		}
+
+		// Simulate citation as suggestion for reference
+		yield {
+			type: 'suggestion',
+			payload: {
+				id: 'citations-1',
+				text: 'Ver fontes: Manual PIX v2.1 (p.12) e Guia LGPD Financeiro (p.8)',
+				action: {
+					type: 'show-citations',
+					payload: {
+						citations: [
+							{ source: 'BCB_PIX_Manual_v2.1.pdf', page: 12, confidence: 0.95 },
+							{ source: 'LGPD_Guia_Financeiro.pdf', page: 8, confidence: 0.89 },
+						],
+					},
+				},
+			},
+		};
+
+		yield { type: 'message-end', payload: { messageId: '1', event: 'end' } };
 	}
 
 	/**

@@ -71,7 +71,14 @@ export const DesktopSidebar = ({
 	children,
 	...props
 }: React.ComponentProps<typeof motion.div>) => {
-	const { open, setOpen, animate } = useSidebar();
+	const { open: isOpen, setOpen, animate } = useSidebar();
+	const shouldAnimate = animate !== false;
+	const isOpenBool = Boolean(isOpen);
+	const sidebarWidth = shouldAnimate
+		? isOpenBool
+			? '300px'
+			: '60px'
+		: '300px';
 	return (
 		<motion.div
 			className={cn(
@@ -79,11 +86,9 @@ export const DesktopSidebar = ({
 				'glass-dark border-white/10 border-r',
 				className,
 			)}
-			animate={{
-				width: animate ? (open ? '300px' : '60px') : '300px',
-			}}
-			onMouseEnter={() => setOpen(true)}
-			onMouseLeave={() => setOpen(false)}
+			animate={{ width: sidebarWidth }}
+			onMouseEnter={() => setOpen?.(true)}
+			onMouseLeave={() => setOpen?.(false)}
 			{...props}
 		>
 			{children}
@@ -96,7 +101,7 @@ export const MobileSidebar = ({
 	children,
 	...props
 }: React.ComponentProps<'div'>) => {
-	const { open, setOpen } = useSidebar();
+	const { open: isOpen, setOpen } = useSidebar();
 	const sidebarContentId = useId();
 
 	return (
@@ -112,15 +117,15 @@ export const MobileSidebar = ({
 				<button
 					type="button"
 					className="p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring transition-colors"
-					onClick={() => setOpen(!open)}
+					onClick={() => setOpen?.(!isOpen)}
 					aria-label="Abrir menu lateral"
-					aria-expanded={open}
+					aria-expanded={!!isOpen}
 				>
 					<IconMenu2 className="h-6 w-6" />
 				</button>
 			</div>
 			<AnimatePresence>
-				{open && (
+				{isOpen && (
 					<motion.div
 						initial={{ opacity: 0, x: '-100%' }}
 						animate={{ opacity: 1, x: 0 }}
@@ -141,9 +146,9 @@ export const MobileSidebar = ({
 						<button
 							type="button"
 							className="absolute right-10 top-10 z-50 rounded-md p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-							onClick={() => setOpen(!open)}
+							onClick={() => setOpen?.(!isOpen)}
 							aria-label="Fechar menu lateral"
-							aria-expanded={open}
+							aria-expanded={!!isOpen}
 						>
 							<IconX className="h-6 w-6" />
 						</button>
@@ -164,7 +169,15 @@ export const SidebarLink = ({
 	className?: string;
 	props?: LinkProps;
 }) => {
-	const { open, animate } = useSidebar();
+	const { open: isOpen, animate } = useSidebar();
+	const shouldAnimate = animate !== false;
+	const isOpenBool = Boolean(isOpen);
+	const spanDisplay = shouldAnimate
+		? isOpenBool
+			? 'inline-block'
+			: 'none'
+		: 'inline-block';
+	const spanOpacity = shouldAnimate ? (isOpenBool ? 1 : 0) : 1;
 	return (
 		<Link
 			to={link.href}
@@ -178,10 +191,7 @@ export const SidebarLink = ({
 			{link.icon}
 
 			<motion.span
-				animate={{
-					display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
-					opacity: animate ? (open ? 1 : 0) : 1,
-				}}
+				animate={{ display: spanDisplay, opacity: spanOpacity }}
 				className="m-0! inline-block p-0! whitespace-pre text-sidebar-foreground text-sm transition duration-150 group-hover/sidebar:translate-x-1"
 			>
 				{link.label}
@@ -335,12 +345,12 @@ export const SidebarTrigger = ({
 	className,
 	...props
 }: React.ComponentProps<'button'>) => {
-	const { open, setOpen } = useSidebar();
+	const { open: isOpen, setOpen } = useSidebar();
 
 	return (
 		<button
 			type="button"
-			onClick={() => setOpen(!open)}
+			onClick={() => setOpen?.(!isOpen)}
 			className={cn(
 				'inline-flex items-center justify-center rounded-md p-2',
 				'text-sidebar-foreground transition-colors',
@@ -350,7 +360,7 @@ export const SidebarTrigger = ({
 				className,
 			)}
 			aria-label="Alternar menu lateral"
-			aria-expanded={open}
+			aria-expanded={!!isOpen}
 			aria-controls="sidebar-content"
 			{...props}
 		>

@@ -25,7 +25,7 @@ interface ErrorBoundaryState {
 	retryCount: number;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
 	children: ReactNode;
 	fallback?: ComponentType<{
 		error: Error;
@@ -259,37 +259,4 @@ export class ErrorBoundary extends Component<
 
 		return children;
 	}
-}
-
-/**
- * HOC to wrap components with error boundary
- */
-export function withErrorBoundary<P extends object>(
-	Component: ComponentType<P>,
-	errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>,
-) {
-	const WrappedComponent = (props: P) => (
-		<ErrorBoundary {...errorBoundaryProps}>
-			<Component {...props} />
-		</ErrorBoundary>
-	);
-
-	WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-
-	return WrappedComponent;
-}
-
-/**
- * Hook for handling async errors in functional components
- */
-export function useErrorHandler() {
-	return (_error: Error, _errorInfo?: string) => {
-		// In production, send to error reporting service
-		if (process.env.NODE_ENV === 'production') {
-			// errorReportingService.captureException(error, { extra: { errorInfo } });
-		}
-
-		// You could also show a toast notification here
-		// toast.error('Ocorreu um erro inesperado');
-	};
 }

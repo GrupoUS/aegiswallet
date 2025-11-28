@@ -16,6 +16,9 @@
 		"vite.config.ts",
 		"vitest.config.ts",
 		"vitest.*.config.ts",
-		"scripts/**/*.ts"
+		"scripts/**/*.ts",
+		"drizzle.config.ts",
+		"playwright.config.ts",
+		"tailwind.config.ts"
 	]
 }

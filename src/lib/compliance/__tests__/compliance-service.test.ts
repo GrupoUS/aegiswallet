@@ -781,7 +781,18 @@ describe('ComplianceService', () => {
 				insert: vi.fn().mockResolvedValue({ error: null }),
 			});
 
-			await service['logAuditEvent'](
+			// Test private method via type casting (common pattern for unit testing)
+			await (
+				service as unknown as {
+					logAuditEvent: (
+						userId: string,
+						action: string,
+						tableName: string,
+						recordId: string,
+						details: Record<string, unknown>,
+					) => Promise<void>;
+				}
+			).logAuditEvent(
 				'user-123',
 				'consent_granted',
 				'lgpd_consents',

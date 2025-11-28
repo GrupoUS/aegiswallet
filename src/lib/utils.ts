@@ -6,6 +6,16 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+/**
+ * Format currency amount to Brazilian Real format
+ */
+export function formatCurrency(amount: number): string {
+	return new Intl.NumberFormat('pt-BR', {
+		style: 'currency',
+		currency: 'BRL',
+	}).format(amount);
+}
+
 export const CPFValidator = {
 	format(cpf: string): string {
 		const cleaned = cpf.replace(/[^\d]/g, '');

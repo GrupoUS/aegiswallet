@@ -8,8 +8,11 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router';
+
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as AiChatRouteImport } from './routes/ai-chat';
+import { Route as BillingRouteImport } from './routes/billing';
 import { Route as CalendarioRouteImport } from './routes/calendario';
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes';
 import { Route as ContasRouteImport } from './routes/contas';
@@ -21,6 +24,14 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade';
 import { Route as SaldoRouteImport } from './routes/saldo';
 import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as SignupRouteImport } from './routes/signup';
+
+const BillingSuccessLazyRouteImport = createFileRoute('/billing/success')();
+const BillingPaymentMethodsLazyRouteImport = createFileRoute(
+	'/billing/payment-methods',
+)();
+const BillingInvoicesLazyRouteImport = createFileRoute('/billing/invoices')();
+const BillingHistoryLazyRouteImport = createFileRoute('/billing/history')();
+const BillingCancelLazyRouteImport = createFileRoute('/billing/cancel')();
 
 const SignupRoute = SignupRouteImport.update({
 	id: '/signup',
@@ -76,6 +87,11 @@ const CalendarioRoute = CalendarioRouteImport.update({
 	path: '/calendario',
 	getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route));
+const BillingRoute = BillingRouteImport.update({
+	id: '/billing',
+	path: '/billing',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const AiChatRoute = AiChatRouteImport.update({
 	id: '/ai-chat',
 	path: '/ai-chat',
@@ -86,10 +102,47 @@ const IndexRoute = IndexRouteImport.update({
 	path: '/',
 	getParentRoute: () => rootRouteImport,
 } as any);
+const BillingSuccessLazyRoute = BillingSuccessLazyRouteImport.update({
+	id: '/success',
+	path: '/success',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/success.lazy').then((d) => d.Route),
+);
+const BillingPaymentMethodsLazyRoute =
+	BillingPaymentMethodsLazyRouteImport.update({
+		id: '/payment-methods',
+		path: '/payment-methods',
+		getParentRoute: () => BillingRoute,
+	} as any).lazy(() =>
+		import('./routes/billing/payment-methods.lazy').then((d) => d.Route),
+	);
+const BillingInvoicesLazyRoute = BillingInvoicesLazyRouteImport.update({
+	id: '/invoices',
+	path: '/invoices',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/invoices.lazy').then((d) => d.Route),
+);
+const BillingHistoryLazyRoute = BillingHistoryLazyRouteImport.update({
+	id: '/history',
+	path: '/history',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/history.lazy').then((d) => d.Route),
+);
+const BillingCancelLazyRoute = BillingCancelLazyRouteImport.update({
+	id: '/cancel',
+	path: '/cancel',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() =>
+	import('./routes/billing/cancel.lazy').then((d) => d.Route),
+);
 
 export interface FileRoutesByFullPath {
 	'/': typeof IndexRoute;
 	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
 	'/calendario': typeof CalendarioRoute;
 	'/configuracoes': typeof ConfiguracoesRoute;
 	'/contas': typeof ContasRoute;
@@ -100,10 +153,16 @@ export interface FileRoutesByFullPath {
 	'/saldo': typeof SaldoRoute;
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesByTo {
 	'/': typeof IndexRoute;
 	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
 	'/calendario': typeof CalendarioRoute;
 	'/configuracoes': typeof ConfiguracoesRoute;
 	'/contas': typeof ContasRoute;
@@ -114,11 +173,17 @@ export interface FileRoutesByTo {
 	'/saldo': typeof SaldoRoute;
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
 	'/': typeof IndexRoute;
 	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
 	'/calendario': typeof CalendarioRoute;
 	'/configuracoes': typeof ConfiguracoesRoute;
 	'/contas': typeof ContasRoute;
@@ -129,12 +194,18 @@ export interface FileRoutesById {
 	'/saldo': typeof SaldoRoute;
 	'/settings': typeof SettingsRoute;
 	'/signup': typeof SignupRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
 	fullPaths:
 		| '/'
 		| '/ai-chat'
+		| '/billing'
 		| '/calendario'
 		| '/configuracoes'
 		| '/contas'
@@ -144,11 +215,17 @@ export interface FileRouteTypes {
 		| '/privacidade'
 		| '/saldo'
 		| '/settings'
-		| '/signup';
+		| '/signup'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| '/'
 		| '/ai-chat'
+		| '/billing'
 		| '/calendario'
 		| '/configuracoes'
 		| '/contas'
@@ -158,11 +235,17 @@ export interface FileRouteTypes {
 		| '/privacidade'
 		| '/saldo'
 		| '/settings'
-		| '/signup';
+		| '/signup'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
 	id:
 		| '__root__'
 		| '/'
 		| '/ai-chat'
+		| '/billing'
 		| '/calendario'
 		| '/configuracoes'
 		| '/contas'
@@ -172,12 +255,18 @@ export interface FileRouteTypes {
 		| '/privacidade'
 		| '/saldo'
 		| '/settings'
-		| '/signup';
+		| '/signup'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
 	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
 	AiChatRoute: typeof AiChatRoute;
+	BillingRoute: typeof BillingRouteWithChildren;
 	CalendarioRoute: typeof CalendarioRoute;
 	ConfiguracoesRoute: typeof ConfiguracoesRoute;
 	ContasRoute: typeof ContasRoute;
@@ -262,6 +351,13 @@ declare module '@tanstack/react-router' {
 			preLoaderRoute: typeof CalendarioRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		'/billing': {
+			id: '/billing';
+			path: '/billing';
+			fullPath: '/billing';
+			preLoaderRoute: typeof BillingRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		'/ai-chat': {
 			id: '/ai-chat';
 			path: '/ai-chat';
@@ -276,12 +372,67 @@ declare module '@tanstack/react-router' {
 			preLoaderRoute: typeof IndexRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		'/billing/success': {
+			id: '/billing/success';
+			path: '/success';
+			fullPath: '/billing/success';
+			preLoaderRoute: typeof BillingSuccessLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/payment-methods': {
+			id: '/billing/payment-methods';
+			path: '/payment-methods';
+			fullPath: '/billing/payment-methods';
+			preLoaderRoute: typeof BillingPaymentMethodsLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/invoices': {
+			id: '/billing/invoices';
+			path: '/invoices';
+			fullPath: '/billing/invoices';
+			preLoaderRoute: typeof BillingInvoicesLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/history': {
+			id: '/billing/history';
+			path: '/history';
+			fullPath: '/billing/history';
+			preLoaderRoute: typeof BillingHistoryLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/cancel': {
+			id: '/billing/cancel';
+			path: '/cancel';
+			fullPath: '/billing/cancel';
+			preLoaderRoute: typeof BillingCancelLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
 	}
 }
+
+interface BillingRouteChildren {
+	BillingCancelLazyRoute: typeof BillingCancelLazyRoute;
+	BillingHistoryLazyRoute: typeof BillingHistoryLazyRoute;
+	BillingInvoicesLazyRoute: typeof BillingInvoicesLazyRoute;
+	BillingPaymentMethodsLazyRoute: typeof BillingPaymentMethodsLazyRoute;
+	BillingSuccessLazyRoute: typeof BillingSuccessLazyRoute;
+}
+
+const BillingRouteChildren: BillingRouteChildren = {
+	BillingCancelLazyRoute: BillingCancelLazyRoute,
+	BillingHistoryLazyRoute: BillingHistoryLazyRoute,
+	BillingInvoicesLazyRoute: BillingInvoicesLazyRoute,
+	BillingPaymentMethodsLazyRoute: BillingPaymentMethodsLazyRoute,
+	BillingSuccessLazyRoute: BillingSuccessLazyRoute,
+};
+
+const BillingRouteWithChildren =
+	BillingRoute._addFileChildren(BillingRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
 	AiChatRoute: AiChatRoute,
+	BillingRoute: BillingRouteWithChildren,
 	CalendarioRoute: CalendarioRoute,
 	ConfiguracoesRoute: ConfiguracoesRoute,
 	ContasRoute: ContasRoute,

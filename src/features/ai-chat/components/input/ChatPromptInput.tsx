@@ -9,6 +9,7 @@ interface ChatPromptInputProps {
 	isLoading?: boolean;
 	onStop?: () => void;
 	placeholder?: string;
+	disabled?: boolean;
 }
 
 export function ChatPromptInput({
@@ -16,17 +17,18 @@ export function ChatPromptInput({
 	isLoading,
 	onStop,
 	placeholder = 'Ask anything...',
+	disabled = false,
 }: ChatPromptInputProps) {
 	const [input, setInput] = useState('');
 
 	const handleSend = () => {
-		if (!input.trim()) return;
+		if (!input.trim() || disabled) return;
 		onSend(input);
 		setInput('');
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
+		if (e.key === 'Enter' && !e.shiftKey && !disabled) {
 			e.preventDefault();
 			handleSend();
 		}
@@ -38,14 +40,15 @@ export function ChatPromptInput({
 				value={input}
 				onChange={(e) => setInput(e.target.value)}
 				onKeyDown={handleKeyDown}
-				placeholder={placeholder}
+				placeholder={disabled ? 'Upgrade para usar o chat IA...' : placeholder}
 				className="min-h-[50px] max-h-[200px] resize-none"
 				rows={1}
+				disabled={disabled}
 			/>
 			<Button
 				size="icon"
 				onClick={isLoading ? onStop : handleSend}
-				disabled={!input.trim() && !isLoading}
+				disabled={disabled || (!input.trim() && !isLoading)}
 				className={isLoading ? 'bg-destructive hover:bg-destructive/90' : ''}
 			>
 				{isLoading ? (

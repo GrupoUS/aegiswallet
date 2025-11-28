@@ -35,11 +35,41 @@ bun test:e2e:portuguese    # Portuguese interface tests
 ## Project Structure
 
 ```
-apps/web/        # Main React application
-apps/api/        # Hono API endpoints
-packages/        # Shared packages
-.factory/        # Droid CLI agents & skills
-docs/            # Project documentation
+src/                     # Main application source code
+├── components/          # React components by feature
+│   ├── accessibility/   # WCAG compliance & voice features
+│   ├── auth/           # Authentication components (Clerk)
+│   ├── billing/        # Subscription & payment management
+│   ├── dashboard/      # Main dashboard components
+│   ├── financial/      # Banking & transaction features
+│   ├── providers/      # React context providers
+│   ├── voice/          # Voice interface components
+│   └── ui/             # Reusable UI components
+├── server/              # Hono API server
+│   ├── config/         # Server configuration
+│   ├── cron/           # Cron job handlers
+│   ├── routes/         # API route handlers
+│   ├── middleware/     # Request middleware
+│   ├── lib/            # Server utilities
+│   └── webhooks/       # External webhook handlers
+├── db/                  # Drizzle database schema
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility libraries
+├── routes/              # Frontend routes (TanStack Router)
+├── types/               # TypeScript type definitions
+└── features/            # Feature-based modules
+
+drizzle/                 # Database management
+└── migrations/         # Database schema migrations
+
+scripts/                 # Build & utility scripts
+├── seed-database.ts    # Database seeding
+├── build-api.ts        # API build process
+└── test-*.ts           # Integration test scripts
+
+.factory/                # Droid CLI agents & skills
+docs/                    # Project documentation
+tests/                   # End-to-end tests (Playwright)
 ```
 
 ## Core Principles

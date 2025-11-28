@@ -198,10 +198,13 @@ export {
 	type InsertCommandIntent,
 	type InsertSpendingPattern,
 	type InsertVoiceCommand,
+	type InsertVoiceTranscription,
 	type SpendingPattern,
 	spendingPatterns,
 	type VoiceCommand,
+	type VoiceTranscription,
 	voiceCommands,
+	voiceTranscriptions,
 } from './voice-ai';
 
 // ========================================
@@ -253,4 +256,5 @@ export {
 	userSessionsRelations,
 	usersRelations,
 	voiceCommandsRelations,
+	voiceTranscriptionsRelations,
 } from './relations';

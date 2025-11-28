@@ -137,6 +137,27 @@ const globalObj = globalThis as MutableGlobal;
 process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
 process.env.VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
 
+// Polyfill crypto.randomUUID for test environment
+if (!globalThis.crypto) {
+	(globalThis as any).crypto = {
+		randomUUID: () => {
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+				const r = (Math.random() * 16) | 0;
+				const v = c === 'x' ? r : (r & 0x3) | 0x8;
+				return v.toString(16);
+			}) as `${string}-${string}-${string}-${string}-${string}`;
+		},
+	};
+} else if (!globalThis.crypto.randomUUID) {
+	globalThis.crypto.randomUUID = (() => {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+			const r = (Math.random() * 16) | 0;
+			const v = c === 'x' ? r : (r & 0x3) | 0x8;
+			return v.toString(16);
+		}) as `${string}-${string}-${string}-${string}-${string}`;
+	}) as () => `${string}-${string}-${string}-${string}-${string}`;
+}
+
 // Ensure DOM is available immediately (before tests run)
 if (typeof globalThis.document === 'undefined') {
 	const { JSDOM } = require('jsdom');

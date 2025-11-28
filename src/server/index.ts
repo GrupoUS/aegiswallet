@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
+import cronJobs from '@/server/cron';
 import type { AppEnv } from '@/server/hono-types';
 import { corsMiddleware } from '@/server/middleware/cors';
 import { setupApiRoutes } from '@/server/routes/api';
@@ -56,6 +57,9 @@ app.route('/api/v1/calendar', calendarRouter);
 app.route('/api/v1/google-calendar', googleCalendarRouter);
 app.route('/api/v1/compliance', complianceRouter);
 app.route('/api/v1/ai', aiChatRouter);
+
+// Cron job routes
+app.route('/cron', cronJobs);
 
 // Apply auth middleware to authenticated v1 routes
 // Note: Individual routes will apply auth as needed

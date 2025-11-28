@@ -243,6 +243,30 @@ export const chatMessages = pgTable('chat_messages', {
 });
 
 /**
+ * Voice transcriptions for speech-to-text processing
+ */
+export const voiceTranscriptions = pgTable('voice_transcriptions', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+
+	// Transcription data
+	audioStoragePath: text('audio_storage_path').notNull(),
+	transcript: text('transcript').notNull(),
+	confidenceScore: decimal('confidence_score', { precision: 3, scale: 2 }),
+	language: text('language').notNull(),
+	processingTimeMs: integer('processing_time_ms').notNull(),
+
+	// Expiration
+	expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+
+	// Timestamps
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+/**
  * Snapshots of financial context for chat history
  */
 export const chatContextSnapshots = pgTable('chat_context_snapshots', {
@@ -287,6 +311,9 @@ export type InsertChatSession = typeof chatSessions.$inferInsert;
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+export type VoiceTranscription = typeof voiceTranscriptions.$inferSelect;
+export type InsertVoiceTranscription = typeof voiceTranscriptions.$inferInsert;
 
 export type ChatContextSnapshot = typeof chatContextSnapshots.$inferSelect;
 export type InsertChatContextSnapshot =

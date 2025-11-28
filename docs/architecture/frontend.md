@@ -1,369 +1,505 @@
-# Frontend - AegisWallet
+# Frontend Architecture - Voice-First Experience
 
-## Stack Técnico
+## Stack Técnico (Modern & Performant)
 
-| Componente | Tecnologia | Versão |
-|------------|------------|--------|
-| Runtime | Bun | Latest |
-| Framework | React | 19.x |
-| Routing | TanStack Router | 1.139+ |
-| Data Fetching | TanStack Query | 5.90+ |
-| State | Zustand | 5.x |
-| Forms | React Hook Form + Zod | 7.x / 4.x |
-| Styling | Tailwind CSS | 4.x |
-| UI Components | shadcn/ui + Radix | - |
-| Build | Vite | 7.x |
+| Componente | Tecnologia | Versão | Optimização |
+|------------|------------|--------|------------|
+| Runtime | Bun | Latest | 3-5x faster than Node.js |
+| Framework | React 19 | 19.x | Concurrent features |
+| Routing | TanStack Router | 1.139+ | File-based, type-safe |
+| Data Fetching | TanStack Query | 5.90+ | Smart caching |
+| State | Zustand | 5.x | Lightweight state |
+| Forms | React Hook Form + Zod | 7.x / 4.x | Type-safe forms |
+| Styling | Tailwind CSS | 4.x | Utility-first |
+| UI Components | shadcn/ui + Radix | - | WCAG 2.1 AA compliant |
+| Build | Vite | 7.x | Lightning-fast builds |
 
 ---
 
-## Estrutura de Diretórios
+## Estrutura de Diretórios (Voice-First)
 
 ```
 src/
 ├── components/
-│   ├── ui/              # shadcn/ui components
-│   ├── layout/          # Layout components
-│   ├── financial/       # Componentes financeiros
-│   └── providers/       # Context providers
-├── routes/              # TanStack Router (file-based)
-│   ├── __root.tsx       # Root layout
-│   ├── index.tsx        # Home
-│   ├── dashboard.tsx    # Dashboard
-│   ├── calendario.tsx   # Calendário financeiro
-│   ├── contas.tsx       # Contas
-│   ├── ai-chat.tsx      # Chat com IA
-│   ├── configuracoes/   # Configurações
-│   └── billing/         # Billing
-├── hooks/               # Custom hooks
-├── lib/                 # Utilitários
-├── types/               # TypeScript types
-├── contexts/            # React contexts
-└── services/            # Business logic
+│   ├── ui/                    # shadcn/ui base components
+│   ├── voice/                 # Voice interface components ⭐
+│   │   ├── VoiceDashboard.tsx
+│   │   ├── VoiceIndicator.tsx
+│   │   └── VoiceResponse.tsx
+│   ├── ai-elements/           # AI chat semantic components ⭐
+│   │   ├── Conversation.tsx
+│   │   ├── Response.tsx
+│   │   ├── Reasoning.tsx
+│   │   └── PromptInput.tsx
+│   ├── kokonutui/            # AI-specific UI patterns ⭐
+│   │   ├── AiPrompt.tsx
+│   │   ├── AiInputSearch.tsx
+│   │   └── AiLoading.tsx
+│   ├── accessibility/         # Brazilian accessibility ⭐
+│   │   ├── AccessibilityProvider.tsx
+│   │   └── hooks/
+│   ├── financial/             # Financial components
+│   ├── layout/                # Layout components
+│   └── providers/             # Context providers
+├── features/
+│   ├── ai-chat/               # AI chat feature ⭐
+│   │   ├── ChatLayout.tsx
+│   │   ├── ChatConversation.tsx
+│   │   ├── ChatSuggestions.tsx
+│   │   └── hooks/
+│   └── calendar/              # Financial calendar
+├── routes/                    # TanStack Router
+│   ├── __root.tsx            # Root layout
+│   ├── index.tsx             # Voice-first home ⭐
+│   ├── dashboard.tsx         # Minimal dashboard
+│   ├── ai-chat.lazy.tsx      # AI chat route ⭐
+│   └── calendar.tsx          # Financial calendar
+├── hooks/                     # Custom hooks
+│   ├── useVoiceRecognition.ts ⭐ Voice recognition
+│   ├── useMultimodalResponse.ts ⭐ TTS integration
+│   └── useAccessibility.ts    # Brazilian accessibility
+├── lib/
+│   ├── voiceCommandProcessor.ts ⭐ Voice command NLU ⭐
+│   ├── nlu/                   # Natural Language Understanding ⭐
+│   └── stt/                   # Speech-to-Text services ⭐
+├── integrations/
+│   └── supabase/              # Supabase client
+└── types/                     # TypeScript types
 ```
 
 ---
 
-## Rotas Principais
+## Voice Interface Architecture ⭐
 
-| Rota | Componente | Descrição |
-|------|------------|-----------|
-| `/` | index.tsx | Landing/Login |
-| `/dashboard` | dashboard.tsx | Dashboard principal |
-| `/calendario` | calendario.tsx | Calendário financeiro |
-| `/contas` | contas.tsx | Gerenciar contas |
-| `/contas-bancarias` | contas-bancarias.tsx | Contas bancárias |
-| `/saldo` | saldo.tsx | Visualização de saldo |
-| `/ai-chat` | ai-chat.tsx | Chat com IA |
-| `/configuracoes` | configuracoes.tsx | Configurações |
-| `/privacidade` | privacidade.tsx | Privacidade (LGPD) |
+### Voice Command Processing Pipeline
 
----
-
-## Componentes UI (shadcn/ui)
-
-### Instalados
-
-```
-accordion, alert, avatar, badge, breadcrumb, button, calendar,
-card, checkbox, collapsible, dialog, dropdown-menu, form, input,
-label, popover, progress, radio-group, scroll-area, select,
-separator, sheet, skeleton, slider, switch, table, tabs,
-textarea, toast, tooltip
-```
-
-### Uso
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-
-export function Example() {
-  return (
-    <Card>
-      <CardHeader>Título</CardHeader>
-      <CardContent>
-        <Button>Ação</Button>
-      </CardContent>
-    </Card>
-  )
+```typescript
+interface VoiceCommandPipeline {
+  1. Wake Detection: "Ok Assistente" or tap gesture
+  2. Speech Recognition: Portuguese (BR) - 95% accuracy target
+  3. Intent Classification: 6 essential commands + variations
+  4. Context Analysis: Financial data + user history
+  5. AI Processing: Autonomous decision making
+  6. Response Generation: Voice + visual feedback
+  7. Action Execution: Financial operations
+  8. Confirmation: Success/failure feedback
 }
 ```
 
+### 6 Essential Voice Commands (95% of needs)
+
+1. **"Como está meu saldo?"** - Current balance + available funds
+2. **"Quanto posso gastar esse mês?"** - Budget availability + recommendations  
+3. **"Tem algum boleto programado para pagar?"** - Upcoming bills + payment options
+4. **"Tem algum recebimento programado para entrar?"** - Scheduled income + dates
+5. **"Como ficará meu saldo no final do mês?"** - Month-end projection + trends
+6. **"Faz uma transferência para tal pessoa?"** - Transfer + security verification
+
+### Voice Response Patterns
+
+```typescript
+interface VoiceResponseTemplate {
+  greeting: string;           // "Claro", "Com certeza", "Entendido"
+  acknowledgment: string;     // Echo of user's request
+  data: FinancialData;        // Specific financial information
+  context: string;           // Additional relevant information  
+  suggestion: string;        // Optional recommendation
+  confirmation: string;      // Action confirmation or question
+}
+```
+
+### AI Autonomy Visualization
+
+```typescript
+interface AutonomyLevel {
+  level: number;              // 0-100 percentage
+  visualIndicator: string;    // Progress bar, confidence meter
+  capabilities: string[];     // What AI can do autonomously
+  userApproval: boolean;      // Requires confirmation for sensitive actions
+  transparency: string;       // What AI shows user about its decisions
+}
+```
+
+**Autonomy Levels:**
+- **0-25**: Learning Phase - Basic balance queries only
+- **26-50**: Assistant Phase - Bill reminders, basic transfers  
+- **51-75**: Autonomy Phase - Autonomous bill payments
+- **76-100**: Trust Phase - Full financial management
+
 ---
 
-## Data Fetching
+## AI Chat Architecture ⭐
 
-### TanStack Query
+### Unified Chat System
 
-```tsx
+**Backend Support:**
+- **Gemini**: Google Gemini API (fully implemented)
+- **CopilotKit**: Future integration
+- **AG-UI Protocol**: Direct protocol support
+- **Ottomator**: RAG agents integration
+
+### Chat Layers
+
+#### 1. Domain Layer
+```typescript
+// Universal message format - AG-UI compatible
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant' | 'system' | 'tool'
+  content: string
+  timestamp: Date
+}
+```
+
+#### 2. Backend Abstraction
+```typescript
+interface ChatBackend {
+  send(messages: ChatMessage[]): AsyncIterableIterator<ChatStreamChunk>;
+  abort(): void;
+  getModelInfo(): ModelInfo;
+}
+```
+
+#### 3. React Integration
+```typescript
+// useChatController hook
+const {
+  messages,
+  isLoading,
+  sendMessage,
+  error,
+  enableReasoningView
+} = useChatController({
+  enableReasoningView: process.env.VITE_ENABLE_AI_REASONING === 'true'
+});
+```
+
+### Voice + Chat Integration
+
+**Input Methods:**
+- **Voice Input**: `ChatPromptInput` + `useVoiceCommand` for speech-to-text
+- **Text Input**: Standard typing with autocomplete suggestions
+- **Hybrid**: Voice + touch combinations for sensitive actions
+
+**Output Methods:**
+- **Voice Output**: `useMultimodalResponse` for text-to-speech
+- **Visual Output**: Streaming response display
+- **Combined**: Voice response with visual confirmation
+
+### AI Chat Components
+
+**Core Components:**
+- `ChatLayout`: Structural layout with voice support
+- `ChatConversation`: Message list with auto-scroll
+- `ChatResponse`: Assistant message with markdown rendering
+- `ChatReasoning`: Collapsible AI reasoning view
+- `ChatPromptInput`: Voice + text input integration
+- `ChatSuggestions`: Intelligent suggestion chips
+
+**Voice Integration:**
+- `AiPrompt` (KokonutUI): Feature-rich input with voice support
+- `ChatSearchBar`: Search-driven chat flows
+- `ChatOpenInChatLink`: Share to external AI providers
+
+---
+
+## Data Fetching & State Management
+
+### TanStack Query Patterns
+
+```typescript
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 
-// Query
+// Voice-optimized query
 const { data, isLoading } = useQuery({
-  queryKey: ['transactions'],
-  queryFn: () => apiClient.get('/api/v1/transactions'),
+  queryKey: ['balance'],
+  queryFn: () => apiClient.get('/api/v1/voice/balance'),
+  staleTime: 30_000, // 30 seconds for financial data
 })
 
-// Mutation
+// Optimistic updates for voice commands
 const { mutate } = useMutation({
-  mutationFn: (data) => apiClient.post('/api/v1/transactions', data),
-  onSuccess: () => {
+  mutationFn: (data) => apiClient.post('/api/v1/pix/transactions', data),
+  onMutate: async (newTransaction) => {
+    // Cancel in-flight queries
+    await queryClient.cancelQueries(['transactions'])
+    
+    // Snapshot previous value
+    const previousTransactions = queryClient.getQueryData(['transactions'])
+    
+    // Optimistically update
+    queryClient.setQueryData(['transactions'], old => [...old, newTransaction])
+    
+    return { previousTransactions }
+  },
+  onError: (err, newTransaction, context) => {
+    // Rollback on error
+    queryClient.setQueryData(['transactions'], context.previousTransactions)
+  },
+  onSettled: () => {
+    // Always refetch after error or success
     queryClient.invalidateQueries(['transactions'])
   },
 })
 ```
 
----
+### Voice Command State Management
 
-## Forms
+```typescript
+// Voice recognition state
+interface VoiceState {
+  isListening: boolean
+  isProcessing: boolean
+  transcript: string
+  confidence: number
+  error: string | null
+  supported: boolean
+}
 
-### React Hook Form + Zod
-
-```tsx
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-
-const schema = z.object({
-  amount: z.number().positive('Valor deve ser positivo'),
-  description: z.string().min(1, 'Descrição obrigatória'),
+// useVoiceRecognition hook integration
+const {
+  isListening,
+  isProcessing,
+  transcript,
+  confidence,
+  startListening,
+  stopListening
+} = useVoiceRecognition({
+  onTranscript: handleVoiceTranscript,
+  onError: handleVoiceError
 })
-
-type FormData = z.infer<typeof schema>
-
-function TransactionForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-  })
-
-  const onSubmit = (data: FormData) => {
-    // ...
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {/* ... */}
-    </form>
-  )
-}
 ```
 
 ---
 
-## Autenticação (Clerk)
+## Brazilian Accessibility & Localization ⭐
 
-### Provider
+### WCAG 2.1 AA Compliance
 
-```tsx
-// main.tsx
-import { ClerkProvider } from '@clerk/clerk-react'
-import { ptBR } from '@clerk/localizations'
+**Voice-First Accessibility:**
+- Screen reader announcements for voice responses
+- Keyboard navigation with voice shortcuts
+- High contrast voice visualization indicators
+- Font size scaling for voice feedback displays
 
-<ClerkProvider
-  publishableKey={CLERK_KEY}
-  localization={ptBR}
->
-  <App />
-</ClerkProvider>
-```
-
-### Hooks
-
-```tsx
-import { useUser, useAuth, useClerk } from '@clerk/clerk-react'
-
-function Profile() {
-  const { user } = useUser()
-  const { signOut } = useClerk()
-
-  return (
-    <div>
-      <p>Olá, {user?.firstName}</p>
-      <button onClick={() => signOut()}>Sair</button>
-    </div>
-  )
-}
-```
-
-### Componentes
-
-```tsx
-import { SignIn, SignUp, UserButton } from '@clerk/clerk-react'
-
-// Login
-<SignIn />
-
-// Registro
-<SignUp />
-
-// Avatar com menu
-<UserButton />
-```
-
----
-
-## State Management
-
-### Zustand (UI State)
-
-```tsx
-import { create } from 'zustand'
-
-interface UIStore {
-  sidebarOpen: boolean
-  toggleSidebar: () => void
+**Brazilian Localization:**
+```typescript
+// Portuguese Brazilian voice settings
+const voiceSettings = {
+  language: 'pt-BR',
+  accent: 'neutral-sao-paulo',
+  speed: 140, // words per minute
+  tone: 'professional-friendly',
+  gender: 'neutral' // inclusive voice
 }
 
-export const useUIStore = create<UIStore>((set) => ({
-  sidebarOpen: true,
-  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-}))
-```
-
----
-
-## Styling
-
-### Tailwind CSS 4
-
-```tsx
-// Uso básico
-<div className="flex items-center gap-4 p-4 bg-background">
-  <span className="text-foreground font-medium">Texto</span>
-</div>
-
-// Responsivo
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-  {/* ... */}
-</div>
-
-// Dark mode
-<div className="bg-white dark:bg-gray-900">
-  {/* ... */}
-</div>
-```
-
-### Utilitário cn()
-
-```tsx
-import { cn } from '@/lib/utils'
-
-<div className={cn(
-  'base-classes',
-  isActive && 'active-classes',
-  variant === 'primary' && 'primary-classes'
-)}>
-```
-
----
-
-## Formatação (Brasil)
-
-### Moeda
-
-```tsx
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('pt-BR', {
+// Brazilian date/currency formatting
+const formatters = {
+  currency: new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-
-formatCurrency(1234.56) // "R$ 1.234,56"
+    currency: 'BRL'
+  }),
+  date: new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
 ```
 
-### Data
+### Voice Emergency Patterns
 
-```tsx
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+**Emergency Voice Commands:**
+- `"Ajuda"` - Emergency contact mode
+- `"Emergência"` - Call predefined contact
+- `"Sem voz"` - Switch to visual-only mode
+- `"Acessibilidade"` - Enhanced accessibility mode
 
-format(new Date(), 'dd/MM/yyyy', { locale: ptBR })
-format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+**Visual-Only Mode Features:**
+- Large text and high contrast options
+- Simplified navigation with clear labels
+- Emergency contact quick access
+- Voice commands remain available as backup
+
+---
+
+## Component Patterns
+
+### Voice Interface Components
+
+```typescript
+// Voice Dashboard - Main interface
+export const VoiceDashboard = () => {
+  const { isListening, startListening, stopListening } = useVoiceRecognition();
+  
+  return (
+    <div className="voice-dashboard">
+      <VoiceIndicator isListening={isListening} />
+      <VoiceResponse />
+      <VoiceButton 
+        onPress={isListening ? stopListening : startListening}
+      />
+    </div>
+  );
+};
+
+// Voice Feedback Component
+export const VoiceResponse = ({ command, response }: VoiceResponseProps) => {
+  const { speak } = useMultimodalResponse();
+  
+  useEffect(() => {
+    if (response) {
+      speak(response.message);
+    }
+  }, [response, speak]);
+  
+  return (
+    <Card className="voice-response">
+      <CardContent>
+        <div className="transcript">{command}</div>
+        <div className="response">{response.message}</div>
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+### AI Chat Components
+
+```typescript
+// Chat Layout with Voice Integration
+export const ChatLayout = () => {
+  const { messages, sendMessage, isLoading } = useChatController({
+    enableReasoningView: process.env.VITE_ENABLE_AI_REASONING === 'true'
+  });
+  
+  return (
+    <div className="chat-layout">
+      <ChatConversation messages={messages} />
+      <ChatPromptInput 
+        onSubmit={sendMessage}
+        disabled={isLoading}
+        voiceEnabled={true}
+      />
+      {isLoading && <ChatLoading />}
+    </div>
+  );
+};
 ```
 
 ---
 
-## Acessibilidade
+## Performance Optimization
 
-### Requisitos WCAG 2.1 AA
+### Targets (Voice-First Optimized)
 
-- Contraste mínimo 4.5:1
-- Foco visível em todos elementos interativos
-- Labels em todos os inputs
-- Alt text em imagens
-- Navegação por teclado
+| Métrica | Alvo | Voice-Specific |
+|---------|------|----------------|
+| Voice Response Time | <200ms | <150ms TTFB |
+| Speech Recognition | <500ms | 95% accuracy |
+| Chat Streaming | <150ms | 60fps UI updates |
+| LCP | < 2.5s | Optimized for voice |
+| TTI | < 3s | Voice ready state |
 
-### Componentes Acessíveis
+### Optimizations
 
-```tsx
-// Radix UI já fornece acessibilidade
-import { Dialog, DialogTrigger, DialogContent } from '@radix-ui/react-dialog'
+**Voice Performance:**
+- Pre-load speech recognition models
+- Cache voice command patterns
+- Optimize audio processing with Web Workers
+- Implement voice-specific code splitting
 
-// React Aria para casos especiais
-import { useButton } from 'react-aria'
-```
+**Chat Performance:**
+- Streaming responses with immediate TTFB
+- Lazy-load AI chat route (`ai-chat.lazy.tsx`)
+- Memoize message components with `React.memo`
+- Implement virtual scrolling for long conversations
+
+**General Performance:**
+- Code splitting por rota (TanStack Router)
+- Prefetch de rotas adjacentes
+- Cache de queries (TanStack Query)
+- Service Worker for offline voice commands
 
 ---
 
-## Scripts
+## Development Scripts
 
 ```bash
-# Desenvolvimento
-bun dev              # Inicia Vite dev server
-bun dev:full         # Dev server + backend
+# Development
+bun dev                    # Vite dev server
+bun dev:full              # Dev server + voice tools
+
+# Voice Testing
+bun test:voice            # Voice recognition tests
+bun test:voice:accuracy   # Speech accuracy tests
+bun test:accessibility    # WCAG compliance tests
 
 # Build
-bun build            # Build produção
-bun build:client     # Build apenas frontend
-bun preview          # Preview do build
+bun build                 # Production build
+bun build:client          # Frontend only build
+bun preview               # Build preview
 
-# Qualidade
-bun lint             # OXLint + Biome
-bun lint:fix         # Auto-fix
-bun type-check       # TypeScript check
+# Quality
+bun lint                  # OXLint + Biome
+bun lint:fix              # Auto-fix issues
+bun type-check            # TypeScript validation
+bun test                  # Unit + integration tests
+bun test:e2e              # End-to-end voice tests
 
-# Testes
-bun test             # Vitest
-bun test:watch       # Watch mode
-bun test:coverage    # Com cobertura
-
-# Rotas
-bun routes:generate  # Gera route tree
+# Routes
+bun routes:generate       # Generate route tree
 ```
 
 ---
 
-## Variáveis de Ambiente
+## Environment Variables
 
 ```bash
-# Clerk
+# Clerk Authentication
 VITE_CLERK_PUBLISHABLE_KEY=pk_...
 
-# API (opcional - usa proxy em dev)
+# AI Chat (Voice Assistant)
+VITE_GEMINI_API_KEY=...
+VITE_ENABLE_AI_REASONING=true
+
+# Voice Recognition
+VITE_VOICE_SERVICE_KEY=...
+VITE_STT_PROVIDER=google|azure|aws
+
+# Text-to-Speech
+VITE_TTS_SERVICE_KEY=...
+VITE_TTS_PROVIDER=google|azure|aws
+
+# API (uses Hono RPC)
 VITE_API_URL=http://localhost:3000
 ```
 
 ---
 
-## Performance
+## Future Enhancements
 
-### Targets
+**Phase 2 (Advanced Voice):**
+- Multi-language support (English/Spanish)
+- Voice biometrics authentication
+- Context-aware voice responses
+- Voice-controlled financial automation
 
-| Métrica | Alvo |
-|---------|------|
-| LCP | < 2.5s |
-| INP | < 200ms |
-| CLS | < 0.1 |
-| TTI | < 3s |
+**Phase 3 (AI Evolution):**
+- RAG integration with financial knowledge base
+- Multi-agent conversations
+- Voice-driven investment recommendations
+- Personalized voice personality adaptation
 
-### Otimizações
-
-- Code splitting por rota (TanStack Router)
-- Lazy loading de componentes pesados
-- Prefetch de rotas adjacentes
-- Cache de queries (TanStack Query)
+**Phase 4 (Enterprise):**
+- Team voice collaboration
+- Voice analytics dashboard
+- Custom voice models
+- On-premise voice processing
 
 ---
 
-**Última Atualização**: Novembro 2025
+**Última Atualização**: Novembro 2025  
+**Status**: Voice-First MVP Complete  
+**Quality Target**: ≥9.5/10 (Voice + AI + Accessibility)

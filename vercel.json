@@ -4,7 +4,10 @@
   "installCommand": "bun install",
   "framework": null,
   "functions": {
-    "api/dist/*.js": {
+    "src/server/vercel.ts": {
+      "maxDuration": 30
+    },
+    "src/server/cron/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -19,11 +22,29 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/dist/index"
+      "destination": "/src/server/vercel.ts"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/cron/(.*)",
+      "destination": "/src/server/vercel.ts"
+    },
+    {
+      "source": "/((?!api/|cron/).*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/cron/calendar-channel-renewal",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/cron/sync-queue-processor",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/cron/cleanup-sync-queue",
+      "schedule": "0 2 * * *"
     }
   ],
   "headers": [

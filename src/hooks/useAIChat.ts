@@ -19,7 +19,10 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 				tier,
 			}),
 		}),
-		onError: (_error: Error) => {},
+		onError: (error: Error) => {
+			// TODO: Implement proper error handling
+			console.error('Chat error:', error);
+		},
 	});
 
 	const switchProvider = useCallback(

@@ -2,10 +2,11 @@
  * Safe Audit Log Helper
  * Ensures audit logs are only inserted when user is authenticated
  * and handles errors gracefully to avoid breaking the application
+ *
+ * NOTE: Migrated from Supabase to API-based logging
  */
 
-import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
+import { apiClient } from '@/lib/api-client';
 import logger from '@/lib/logging/secure-logger';
 
 export interface SafeAuditLogData {
@@ -23,53 +24,26 @@ export interface SafeAuditLogData {
 }
 
 /**
- * Safely insert an audit log entry
+ * Safely insert an audit log entry via API
  * Returns true if successful, false otherwise
  */
 export async function safeInsertAuditLog(
 	data: SafeAuditLogData,
 ): Promise<boolean> {
 	try {
-		// Get authenticated user
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-
-		// Determine user_id: use provided, authenticated user, or null for system logs
-		const userId = data.user_id !== undefined ? data.user_id : user?.id || null;
-
-		// If user_id is required but not available, skip logging
-		// (This prevents 401 errors when user is not authenticated)
-		if (userId === null && data.user_id !== null) {
-			// Only log if explicitly allowed to log system events (user_id: null)
-			// Otherwise, silently skip to avoid errors
-			return false;
-		}
-
-		// Insert audit log
-		const { error } = await supabase.from('audit_logs').insert({
+		// Call the compliance API to log the audit entry
+		await apiClient.post('/v1/compliance/audit-log', {
 			action: data.action,
-			resource_type: data.resource_type,
-			resource_id: data.resource_id,
-			details: (data.details as Json) ?? null,
-			old_values: (data.old_values as Json) ?? null,
-			new_values: (data.new_values as Json) ?? null,
-			ip_address: data.ip_address,
-			user_agent: data.user_agent,
+			resourceType: data.resource_type,
+			resourceId: data.resource_id,
+			details: data.details ?? null,
+			oldValues: data.old_values ?? null,
+			newValues: data.new_values ?? null,
+			ipAddress: data.ip_address,
+			userAgent: data.user_agent,
 			success: data.success ?? true,
-			error_message: data.error_message,
-			user_id: userId,
+			errorMessage: data.error_message,
 		});
-
-		if (error) {
-			// Log error but don't throw to avoid breaking the application
-			logger.error('Failed to insert audit log', {
-				component: 'safeAuditLog',
-				action: 'safeInsertAuditLog',
-				error: error.message,
-			});
-			return false;
-		}
 
 		return true;
 	} catch (error) {

@@ -9,13 +9,13 @@
 
 export type ConsentType =
 	| 'data_processing'
-	| 'financial_data'
-	| 'voice_recording'
-	| 'analytics'
 	| 'marketing'
-	| 'third_party_sharing'
-	| 'open_banking'
-	| 'biometric';
+	| 'analytics'
+	| 'third_party'
+	| 'voice_data'
+	| 'biometric'
+	| 'financial_data'
+	| 'location';
 
 export type LegalBasis =
 	| 'consent'
@@ -25,10 +25,11 @@ export type LegalBasis =
 	| 'credit_protection';
 
 export type CollectionMethod =
-	| 'explicit_form'
-	| 'voice_command'
-	| 'terms_acceptance'
-	| 'settings_toggle';
+	| 'signup'
+	| 'settings'
+	| 'prompt'
+	| 'api'
+	| 'import';
 
 export interface LgpdConsent {
 	id: string;
@@ -68,11 +69,11 @@ export interface ConsentTemplate {
 // ========================================
 
 export type DataExportRequestType =
-	| 'full_export'
-	| 'financial_only'
+	| 'full_data'
 	| 'transactions'
-	| 'voice_commands'
-	| 'specific_period';
+	| 'profile'
+	| 'consents'
+	| 'audit_logs';
 
 export type DataExportFormat = 'json' | 'csv' | 'pdf';
 
@@ -81,8 +82,7 @@ export type DataExportStatus =
 	| 'processing'
 	| 'completed'
 	| 'failed'
-	| 'expired'
-	| 'downloaded';
+	| 'expired';
 
 export interface DataExportRequest {
 	id: string;
@@ -107,14 +107,13 @@ export interface DataExportRequest {
 }
 
 export type DataDeletionRequestType =
-	| 'full_deletion'
-	| 'anonymization'
-	| 'partial_deletion'
-	| 'consent_withdrawal';
+	| 'full_account'
+	| 'specific_data'
+	| 'anonymization';
 
 export type DataDeletionStatus =
 	| 'pending'
-	| 'under_review'
+	| 'verified'
 	| 'approved'
 	| 'processing'
 	| 'completed'
@@ -178,13 +177,11 @@ export interface OpenBankingConsent {
 }
 
 export type TransactionLimitType =
-	| 'pix_daytime'
-	| 'pix_nighttime'
-	| 'pix_total_daily'
-	| 'ted_daily'
+	| 'pix_daily'
+	| 'pix_transaction'
 	| 'boleto_daily'
-	| 'total_daily'
-	| 'total_monthly';
+	| 'transfer_daily'
+	| 'withdrawal_daily';
 
 export interface TransactionLimit {
 	id: string;
@@ -233,22 +230,13 @@ export type ComplianceEventType =
 	| 'consent_granted'
 	| 'consent_revoked'
 	| 'data_export_requested'
-	| 'data_export_downloaded'
+	| 'data_export_completed'
 	| 'data_deletion_requested'
 	| 'data_deletion_completed'
 	| 'data_accessed'
 	| 'data_modified'
-	| 'ob_consent_created'
-	| 'ob_consent_revoked'
-	| 'ob_data_synced'
-	| 'ob_token_refreshed'
-	| 'suspicious_activity'
-	| 'limit_exceeded_attempt'
-	| 'authentication_failed'
-	| 'mfa_bypass_attempt'
-	| 'regulatory_report_generated'
-	| 'anpd_request_received'
-	| 'bacen_notification';
+	| 'limit_updated'
+	| 'policy_acknowledged';
 
 export interface ComplianceAuditLog {
 	id: string;

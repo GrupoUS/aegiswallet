@@ -1,7 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { db } from '@/db/client';
+import { complianceAuditLogs, pixKeys, pixQrCodes, pixTransactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import {
@@ -13,13 +15,6 @@ import {
 } from './types';
 
 export function createPixTools(userId: string) {
-	const supabaseUrl =
-		process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-	const supabaseKey =
-		process.env.SUPABASE_SERVICE_ROLE_KEY ||
-		process.env.VITE_SUPABASE_ANON_KEY ||
-		'';
-	const supabase = createClient(supabaseUrl, supabaseKey);
 
 	return {
 		listPixKeys: tool({
@@ -33,35 +28,26 @@ export function createPixTools(userId: string) {
 			}),
 			execute: async ({ includeInactive }) => {
 				try {
-					let query = supabase
-						.from('pix_keys')
-						.select('*')
-						.eq('user_id', userId)
-						.order('created_at', { ascending: false });
-
+					const conditions = [eq(pixKeys.userId, userId)];
 					if (!includeInactive) {
-						query = query.eq('is_active', true);
+						conditions.push(eq(pixKeys.isActive, true));
 					}
 
-					const { data, error } = await query;
+					const data = await db
+						.select()
+						.from(pixKeys)
+						.where(and(...conditions))
+						.orderBy(desc(pixKeys.createdAt));
 
-					if (error) {
-						secureLogger.error('Erro ao buscar chaves PIX', {
-							error: error.message,
-							userId,
-						});
-						throw new Error(`Erro ao buscar chaves PIX: ${error.message}`);
-					}
-
-					const pixKeys = (data ?? []) as PixKey[];
+					const pixKeysList = (data ?? []) as unknown as PixKey[];
 
 					return {
-						pixKeys: pixKeys.map(filterSensitiveData),
-						total: pixKeys.length,
-						activeCount: pixKeys.filter((key) => key.isActive).length,
+						pixKeys: pixKeysList.map(filterSensitiveData),
+						total: pixKeysList.length,
+						activeCount: pixKeysList.filter((key) => key.isActive).length,
 						message:
-							pixKeys.length > 0
-								? `Encontradas ${pixKeys.length} chaves PIX (${pixKeys.filter((key) => key.isActive).length} ativas)`
+							pixKeysList.length > 0
+								? `Encontradas ${pixKeysList.length} chaves PIX (${pixKeysList.filter((key) => key.isActive).length} ativas)`
 								: 'Nenhuma chave PIX cadastrada',
 					};
 				} catch (error) {
@@ -116,45 +102,39 @@ export function createPixTools(userId: string) {
 					// Gerar endToEndId único
 					const endToEndId = `E${Date.now()}${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
 
-					const transferData = {
-						user_id: userId,
-						amount,
-						recipient_key: recipientKey,
-						recipient_key_type: recipientKeyType,
-						recipient_name: recipientName,
-						description: description ?? null,
-						status: scheduledFor ? 'SCHEDULED' : 'PENDING',
-						end_to_end_id: endToEndId,
-						scheduled_for: scheduledFor ?? null,
-						created_at: new Date().toISOString(),
-					};
+					const [transfer] = await db
+						.insert(pixTransactions)
+						.values({
+							userId: userId,
+							amount: String(amount),
+							pixKey: recipientKey,
+							pixKeyType: recipientKeyType,
+							recipientName: recipientName,
+							description: description ?? null,
+							status: scheduledFor ? 'pending' : 'pending',
+							endToEndId: endToEndId,
+							scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+							transactionDate: new Date(),
+							transactionType: 'sent',
+						})
+						.returning();
 
-					const { data, error } = await supabase
-						.from('pix_transfers')
-						.insert(transferData)
-						.select()
-						.single();
-
-					if (error) {
+					if (!transfer) {
 						secureLogger.error('Erro ao criar transferência PIX', {
-							error: error.message,
+							error: 'Insert failed',
 							userId,
 							amount,
 							recipientKey: `${recipientKey.substring(0, 3)}***`,
 						});
-						throw new Error(
-							`Erro ao processar transferência PIX: ${error.message}`,
-						);
+						throw new Error('Erro ao processar transferência PIX: Insert failed');
 					}
 
-					const transfer = data as PixTransfer;
-
 					// Log de auditoria para compliance
-					await supabase.from('compliance_audit_logs').insert({
-						user_id: userId,
-						event_type: 'pix_transfer_initiated',
-						resource_type: 'pix_transfers',
-						resource_id: transfer.id,
+					await db.insert(complianceAuditLogs).values({
+						userId: userId,
+						eventType: 'consent_granted',
+						resourceType: 'pix_transactions',
+						resourceId: transfer.id,
 						description: `Transferência PIX de R$ ${amount.toFixed(2)} para ${recipientName}`,
 						metadata: {
 							amount,
@@ -230,20 +210,23 @@ export function createPixTools(userId: string) {
 					// Se não informar chave, usar a primeira chave ativa do usuário
 					let targetKey = recipientKey;
 					if (!targetKey) {
-						const { data: keys } = await supabase
-							.from('pix_keys')
-							.select('key')
-							.eq('user_id', userId)
-							.eq('is_active', true)
-							.eq('is_default', true)
+						const keys = await db
+							.select({ key: pixKeys.keyValue })
+							.from(pixKeys)
+							.where(
+								and(
+									eq(pixKeys.userId, userId),
+									eq(pixKeys.isActive, true),
+									eq(pixKeys.isDefault, true),
+								),
+							)
 							.limit(1);
 
 						if (!keys || keys.length === 0) {
-							const { data: anyKey } = await supabase
-								.from('pix_keys')
-								.select('key')
-								.eq('user_id', userId)
-								.eq('is_active', true)
+							const anyKey = await db
+								.select({ key: pixKeys.keyValue })
+								.from(pixKeys)
+								.where(and(eq(pixKeys.userId, userId), eq(pixKeys.isActive, true)))
 								.limit(1);
 
 							if (!anyKey || anyKey.length === 0) {
@@ -265,31 +248,27 @@ export function createPixTools(userId: string) {
 					const qrCodePayload = `br.gov.bcb.pix${targetKey}${amount ? `${amount.toFixed(2)}` : ''}${description ? description : ''}`;
 					const qrCode = btoa(qrCodePayload).substring(0, 200);
 
-					const qrData = {
-						user_id: userId,
-						qr_code: qrCode,
-						amount: amount ?? null,
-						recipient_key: targetKey,
-						description: description ?? null,
-						expires_at: expiresAt,
-						created_at: new Date().toISOString(),
-					};
+					const [data] = await db
+						.insert(pixQrCodes)
+						.values({
+							userId: userId,
+							qrCode: qrCode,
+							amount: amount ? String(amount) : null,
+							recipientKey: targetKey,
+							description: description ?? null,
+							expiresAt: new Date(expiresAt),
+						})
+						.returning();
 
-					const { data, error } = await supabase
-						.from('pix_qr_codes')
-						.insert(qrData)
-						.select()
-						.single();
-
-					if (error) {
+					if (!data) {
 						secureLogger.error('Erro ao gerar QR Code PIX', {
-							error: error.message,
+							error: 'Insert failed',
 							userId,
 						});
-						throw new Error(`Erro ao gerar QR Code PIX: ${error.message}`);
+						throw new Error('Erro ao gerar QR Code PIX: Insert failed');
 					}
 
-					const qrCodeData = data as PixQrCode;
+					const qrCodeData = data as unknown as PixQrCode;
 
 					secureLogger.info('QR Code PIX gerado com sucesso', {
 						qrCode: `${qrCodeData.qrCode.slice(0, 20)}...`,
@@ -330,26 +309,28 @@ export function createPixTools(userId: string) {
 			}),
 			execute: async ({ transferId, endToEndId }) => {
 				try {
-					let query = supabase
-						.from('pix_transfers')
-						.select('*')
-						.eq('user_id', userId);
-
-					if (transferId) {
-						query = query.eq('id', transferId);
-					} else if (endToEndId) {
-						query = query.eq('end_to_end_id', endToEndId);
-					} else {
+					if (!transferId && !endToEndId) {
 						throw new Error('É necessário informar transferId ou endToEndId');
 					}
 
-					const { data, error } = await query.single();
+					const conditions = [eq(pixTransactions.userId, userId)];
+					if (transferId) {
+						conditions.push(eq(pixTransactions.id, transferId));
+					} else if (endToEndId) {
+						conditions.push(eq(pixTransactions.endToEndId, endToEndId));
+					}
 
-					if (error || !data) {
+					const [data] = await db
+						.select()
+						.from(pixTransactions)
+						.where(and(...conditions))
+						.limit(1);
+
+					if (!data) {
 						throw new Error('Transferência PIX não encontrada');
 					}
 
-					const transfer = data as PixTransfer;
+					const transfer = data as unknown as PixTransfer;
 
 					// Calcular status detalhado
 					const statusMessages = {
@@ -413,30 +394,26 @@ export function createPixTools(userId: string) {
 				offset = 0,
 			}) => {
 				try {
-					let query = supabase
-						.from('pix_transfers')
-						.select('*')
-						.eq('user_id', userId)
-						.order('created_at', { ascending: false })
-						.range(offset, offset + limit - 1);
+					const conditions = [eq(pixTransactions.userId, userId)];
 
-					if (startDate) query = query.gte('created_at', startDate);
-					if (endDate) query = query.lte('created_at', endDate);
-					if (status) query = query.eq('status', status);
-					if (minAmount) query = query.gte('amount', minAmount);
-					if (maxAmount) query = query.lte('amount', maxAmount);
+					if (startDate) conditions.push(gte(pixTransactions.createdAt!, new Date(startDate)));
+					if (endDate) conditions.push(lte(pixTransactions.createdAt!, new Date(endDate)));
+					if (status) conditions.push(eq(pixTransactions.status, status.toLowerCase()));
+					if (minAmount) conditions.push(gte(pixTransactions.amount, String(minAmount)));
+					if (maxAmount) conditions.push(lte(pixTransactions.amount, String(maxAmount)));
 
-					const { data, error, count } = await query;
+					const data = await db
+						.select()
+						.from(pixTransactions)
+						.where(and(...conditions))
+						.orderBy(desc(pixTransactions.createdAt))
+						.limit(limit)
+						.offset(offset);
 
-					if (error) {
-						secureLogger.error('Erro ao listar transferências PIX', {
-							error: error.message,
-							userId,
-						});
-						throw new Error(`Erro ao buscar transferências: ${error.message}`);
-					}
-
-					const transfers = (data ?? []) as PixTransfer[];
+					const transfers = (data ?? []).map((tx) => ({
+						...tx,
+						amount: Number(tx.amount),
+					})) as unknown as PixTransfer[];
 
 					// Calcular estatísticas
 					const totalSent = transfers.reduce((sum, tx) => sum + tx.amount, 0);

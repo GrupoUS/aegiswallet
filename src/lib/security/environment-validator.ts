@@ -6,9 +6,12 @@
  */
 
 export interface EnvironmentConfig {
-	supabase: {
+	database: {
 		url: string;
-		anonKey: string;
+	};
+	clerk: {
+		publishableKey: string;
+		secretKey: string;
 	};
 	api: {
 		baseUrl: string;
@@ -85,27 +88,37 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 		}
 	};
 
-	// Validate Supabase configuration
-	const supabaseUrl = getEnvVar('SUPABASE_URL');
-	const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY');
-
-	if (supabaseUrl) {
-		checkSuspiciousPattern('SUPABASE_URL', supabaseUrl);
+	// Validate Database configuration
+	const databaseUrl = getEnvVar('DATABASE_URL');
+	if (databaseUrl) {
+		checkSuspiciousPattern('DATABASE_URL', databaseUrl);
 		validateEnvFormat(
-			'SUPABASE_URL',
-			supabaseUrl,
-			/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/,
-			'Must be a valid Supabase URL (https://your-project.supabase.co)',
+			'DATABASE_URL',
+			databaseUrl,
+			/^(postgres|postgresql):\/\//,
+			'Must be a valid PostgreSQL connection string',
 		);
 	}
 
-	if (supabaseAnonKey) {
-		checkSuspiciousPattern('SUPABASE_ANON_KEY', supabaseAnonKey);
+	// Validate Clerk configuration
+	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
+	const clerkSecretKey = getEnvVar('CLERK_SECRET_KEY', false); // Optional in client
+
+	if (clerkPublishableKey) {
 		validateEnvFormat(
-			'SUPABASE_ANON_KEY',
-			supabaseAnonKey,
-			/^eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$/,
-			'Must be a valid JWT token (should start with eyJ)',
+			'VITE_CLERK_PUBLISHABLE_KEY',
+			clerkPublishableKey,
+			/^pk_(test|live)_/,
+			'Must be a valid Clerk publishable key (starts with pk_)',
+		);
+	}
+
+	if (clerkSecretKey) {
+		validateEnvFormat(
+			'CLERK_SECRET_KEY',
+			clerkSecretKey,
+			/^sk_(test|live)_/,
+			'Must be a valid Clerk secret key (starts with sk_)',
 		);
 	}
 
@@ -132,9 +145,12 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 			encryptionEnabled: getEnvVar('VITE_ENCRYPTION_ENABLED') === 'true',
 			lgpdCompliance: getEnvVar('VITE_LGPD_ENABLED') !== 'false',
 		},
-		supabase: {
-			anonKey: supabaseAnonKey || '',
-			url: supabaseUrl || '',
+		database: {
+			url: databaseUrl || '',
+		},
+		clerk: {
+			publishableKey: clerkPublishableKey || '',
+			secretKey: clerkSecretKey || '',
 		},
 	};
 
@@ -152,8 +168,8 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 			'3. Restart the application',
 			'',
 			'📋 Example .env file:',
-			'SUPABASE_URL=https://your-project.supabase.co',
-			'SUPABASE_ANON_KEY=your_supabase_anon_key',
+			'DATABASE_URL=postgres://your-neon-connection-string',
+			'VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_key',
 			'VITE_APP_ENV=development',
 			'VITE_API_URL=http://localhost:3000',
 			'',

@@ -6,11 +6,11 @@ export interface Transaction {
 	id: string;
 	user_id: string;
 	amount: number;
-	type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+	transactionType: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
 	status: 'cancelled' | 'failed' | 'pending' | 'posted';
 	description?: string;
-	category_id?: string;
-	account_id?: string;
+	categoryId?: string;
+	accountId?: string;
 	created_at: string;
 	metadata?: Record<string, unknown>;
 }
@@ -46,7 +46,7 @@ export function useTransactions(filters?: {
 	offset?: number;
 	categoryId?: string;
 	accountId?: string;
-	type?: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+	transactionType?: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
 	status?: 'cancelled' | 'failed' | 'pending' | 'posted';
 	startDate?: string;
 	endDate?: string;
@@ -76,11 +76,13 @@ type CreateTransactionInput = {
 	amount: number;
 	categoryId?: string;
 	description?: string;
-	fromAccountId: string;
-	toAccountId?: string;
-	type: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
+	accountId?: string;
+	transactionType: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
 	status?: 'cancelled' | 'failed' | 'pending' | 'posted';
-	metadata?: Record<string, unknown>;
+	paymentMethod?: string;
+	merchantName?: string;
+	notes?: string;
+	tags?: string[];
 };
 
 interface UseCreateTransactionReturn {

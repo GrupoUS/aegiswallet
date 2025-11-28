@@ -1,13 +1,15 @@
 /**
  * Transactions API - Hono RPC Implementation
  * Handles transaction CRUD operations and statistics
- * Refactored to use Supabase directly (KISS/YAGNI)
+ * Using Drizzle ORM with Neon serverless
  */
 
 import { zValidator } from '@hono/zod-validator';
+import { and, desc, eq, gte, ilike, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import {
@@ -24,10 +26,8 @@ const listTransactionsSchema = z.object({
 	offset: z.coerce.number().int().min(0).default(0),
 	categoryId: z.string().optional(),
 	accountId: z.string().optional(),
-	type: z.enum(['transfer', 'debit', 'credit', 'expense', 'income']).optional(),
-	status: z
-		.enum(['cancelled', 'failed', 'pending', 'posted', 'completed'])
-		.optional(),
+	type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']).optional(),
+	status: z.enum(['cancelled', 'failed', 'pending', 'posted']).optional(),
 	startDate: z.string().optional(),
 	endDate: z.string().optional(),
 	search: z.string().optional(),
@@ -36,13 +36,17 @@ const listTransactionsSchema = z.object({
 const createTransactionSchema = z.object({
 	amount: z.number(),
 	categoryId: z.string().optional(),
-	description: z.string().optional(),
-	title: z.string().optional(),
-	type: z.enum(['transfer', 'debit', 'credit', 'expense', 'income']),
+	description: z.string(),
+	transactionType: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']),
 	status: z
-		.enum(['cancelled', 'failed', 'pending', 'posted', 'completed'])
+		.enum(['cancelled', 'failed', 'pending', 'posted'])
 		.default('pending'),
-	metadata: z.record(z.string(), z.unknown()).optional(),
+	transactionDate: z.string().optional(),
+	accountId: z.string().optional(),
+	paymentMethod: z.string().optional(),
+	merchantName: z.string().optional(),
+	notes: z.string().optional(),
+	tags: z.array(z.string()).optional(),
 });
 
 const getStatisticsSchema = z.object({
@@ -69,52 +73,60 @@ transactionsRouter.get(
 	}),
 	zValidator('query', listTransactionsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const filters = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			let query = supabase
-				.from('financial_events')
-				.select('*')
-				.eq('user_id', user.id)
-				.order('created_at', { ascending: false })
-				.range(filters.offset, filters.offset + filters.limit - 1);
+			// Build conditions array
+			const conditions = [eq(transactions.userId, user.id)];
 
 			if (filters.categoryId) {
-				query = query.eq('category', filters.categoryId);
+				conditions.push(eq(transactions.categoryId, filters.categoryId));
+			}
+
+			if (filters.accountId) {
+				conditions.push(eq(transactions.accountId, filters.accountId));
 			}
 
 			if (filters.type) {
-				query = query.eq('event_type', filters.type);
+				conditions.push(eq(transactions.transactionType, filters.type));
 			}
 
 			if (filters.status) {
-				query = query.eq('status', filters.status);
+				conditions.push(eq(transactions.status, filters.status));
 			}
 
 			if (filters.startDate) {
-				query = query.gte('created_at', filters.startDate);
+				conditions.push(
+					gte(transactions.transactionDate, new Date(filters.startDate)),
+				);
 			}
 
 			if (filters.endDate) {
-				query = query.lte('created_at', filters.endDate);
+				conditions.push(
+					lte(transactions.transactionDate, new Date(filters.endDate)),
+				);
 			}
 
 			if (filters.search) {
-				query = query.ilike('description', `%${filters.search}%`);
+				conditions.push(ilike(transactions.description, `%${filters.search}%`));
 			}
 
-			const { data, error } = await query;
-
-			if (error) throw error;
+			const data = await db
+				.select()
+				.from(transactions)
+				.where(and(...conditions))
+				.orderBy(desc(transactions.createdAt))
+				.limit(filters.limit)
+				.offset(filters.offset);
 
 			return c.json({
-				data: data || [],
+				data,
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),
-					total: data?.length || 0,
+					total: data.length,
 				},
 			});
 		} catch (error) {
@@ -148,7 +160,7 @@ transactionsRouter.get(
 	}),
 	zValidator('query', getStatisticsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const { period } = c.req.valid('query');
 		const requestId = c.get('requestId');
 
@@ -171,24 +183,23 @@ transactionsRouter.get(
 					break;
 			}
 
-			const { data: transactions, error } = await supabase
-				.from('financial_events')
-				.select('amount, event_type, status, is_income')
-				.eq('user_id', user.id)
-				.gte('created_at', startDate.toISOString())
-				.lte('created_at', now.toISOString());
+			const result = await db
+				.select()
+				.from(transactions)
+				.where(
+					and(
+						eq(transactions.userId, user.id),
+						gte(transactions.transactionDate, startDate),
+						lte(transactions.transactionDate, now),
+					),
+				);
 
-			if (error) throw error;
-
-			const balance = (transactions || []).reduce(
-				(sum, t) => sum + Number(t.amount),
-				0,
-			);
-			const expenses = (transactions || [])
-				.filter((t) => !t.is_income)
-				.reduce((sum, t) => sum + Number(t.amount), 0);
-			const income = (transactions || [])
-				.filter((t) => t.is_income)
+			const balance = result.reduce((sum, t) => sum + Number(t.amount), 0);
+			const expenses = result
+				.filter((t) => Number(t.amount) < 0)
+				.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+			const income = result
+				.filter((t) => Number(t.amount) > 0)
 				.reduce((sum, t) => sum + Number(t.amount), 0);
 
 			return c.json({
@@ -197,7 +208,7 @@ transactionsRouter.get(
 					expenses,
 					income,
 					period,
-					transactionsCount: transactions?.length || 0,
+					transactionsCount: result.length,
 				},
 				meta: {
 					requestId,
@@ -235,40 +246,39 @@ transactionsRouter.post(
 	}),
 	zValidator('json', createTransactionSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
-			const now = new Date().toISOString();
+			const now = new Date();
 
-			const { data: newTransaction, error } = await supabase
-				.from('financial_events')
-				.insert({
-					user_id: user.id,
-					title:
-						input.title || input.description || `Transaction ${input.type}`,
-					amount: input.amount,
-					event_type: input.type,
-					status: input.status,
-					start_date: now,
-					end_date: now,
+			const [newTransaction] = await db
+				.insert(transactions)
+				.values({
+					userId: user.id,
+					amount: input.amount.toString(),
 					description: input.description,
-					category: input.categoryId,
-					is_income: input.type === 'income' || input.type === 'credit',
-					// biome-ignore lint/suspicious/noExplicitAny: Supabase JSON column requires flexible typing
-					metadata: input.metadata as any,
+					transactionType: input.transactionType,
+					status: input.status,
+					transactionDate: input.transactionDate
+						? new Date(input.transactionDate)
+						: now,
+					categoryId: input.categoryId,
+					accountId: input.accountId,
+					paymentMethod: input.paymentMethod,
+					merchantName: input.merchantName,
+					notes: input.notes,
+					tags: input.tags,
+					isManualEntry: true,
 				})
-				.select()
-				.single();
-
-			if (error) throw error;
+				.returning();
 
 			secureLogger.info('Transaction created', {
 				amount: input.amount,
 				requestId,
 				transactionId: newTransaction.id,
-				type: input.type,
+				type: input.transactionType,
 				userId: user.id,
 			});
 
@@ -287,7 +297,7 @@ transactionsRouter.post(
 				amount: input.amount,
 				error: error instanceof Error ? error.message : 'Unknown error',
 				requestId,
-				type: input.type,
+				type: input.transactionType,
 				userId: user.id,
 			});
 
@@ -315,21 +325,25 @@ transactionsRouter.put(
 	}),
 	zValidator('json', createTransactionSchema.partial()),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const transactionId = c.req.param('id');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
 			// Verify ownership
-			const { data: existing, error: fetchError } = await supabase
-				.from('financial_events')
-				.select('id')
-				.eq('id', transactionId)
-				.eq('user_id', user.id)
-				.single();
+			const [existing] = await db
+				.select({ id: transactions.id })
+				.from(transactions)
+				.where(
+					and(
+						eq(transactions.id, transactionId),
+						eq(transactions.userId, user.id),
+					),
+				)
+				.limit(1);
 
-			if (fetchError || !existing) {
+			if (!existing) {
 				return c.json(
 					{
 						code: 'NOT_FOUND',
@@ -339,34 +353,38 @@ transactionsRouter.put(
 				);
 			}
 
+			// Build update object
 			const updateData: Record<string, unknown> = {
-				updated_at: new Date().toISOString(),
+				updatedAt: new Date(),
 			};
 
-			if (input.title) updateData.title = input.title;
-			if (input.amount !== undefined) updateData.amount = input.amount;
-			if (input.type) {
-				updateData.event_type = input.type;
-				updateData.is_income =
-					input.type === 'income' || input.type === 'credit';
-			}
-			if (input.status) updateData.status = input.status;
 			if (input.description !== undefined)
 				updateData.description = input.description;
-			if (input.categoryId) updateData.category = input.categoryId;
+			if (input.amount !== undefined)
+				updateData.amount = input.amount.toString();
+			if (input.transactionType !== undefined)
+				updateData.transactionType = input.transactionType;
+			if (input.status !== undefined) updateData.status = input.status;
+			if (input.categoryId !== undefined)
+				updateData.categoryId = input.categoryId;
+			if (input.accountId !== undefined) updateData.accountId = input.accountId;
+			if (input.paymentMethod !== undefined)
+				updateData.paymentMethod = input.paymentMethod;
+			if (input.merchantName !== undefined)
+				updateData.merchantName = input.merchantName;
+			if (input.notes !== undefined) updateData.notes = input.notes;
+			if (input.tags !== undefined) updateData.tags = input.tags;
 
-			// Handle metadata updates if needed
-			if (input.metadata) updateData.metadata = input.metadata;
-
-			const { data: updatedTransaction, error } = await supabase
-				.from('financial_events')
-				.update(updateData)
-				.eq('id', transactionId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
-
-			if (error) throw error;
+			const [updatedTransaction] = await db
+				.update(transactions)
+				.set(updateData)
+				.where(
+					and(
+						eq(transactions.id, transactionId),
+						eq(transactions.userId, user.id),
+					),
+				)
+				.returning();
 
 			secureLogger.info('Transaction updated', {
 				requestId,
@@ -412,21 +430,22 @@ transactionsRouter.delete(
 		message: 'Too many deletion attempts, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const transactionId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data: deleted, error } = await supabase
-				.from('financial_events')
-				.delete()
-				.eq('id', transactionId)
-				.eq('user_id', user.id)
-				.select();
+			const deleted = await db
+				.delete(transactions)
+				.where(
+					and(
+						eq(transactions.id, transactionId),
+						eq(transactions.userId, user.id),
+					),
+				)
+				.returning();
 
-			if (error) throw error;
-
-			if (!deleted || deleted.length === 0) {
+			if (deleted.length === 0) {
 				return c.json(
 					{
 						code: 'NOT_FOUND',

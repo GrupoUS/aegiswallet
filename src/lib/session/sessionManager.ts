@@ -1,5 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logging';
+
+// Note: Auth signout is now handled by Clerk via the ClerkProvider
+// This module manages session state and inactivity timeout only
 
 export interface SessionConfig {
 	timeoutMinutes: number;
@@ -442,7 +444,8 @@ export class SessionManager {
 
 	private async logoutPrivate(): Promise<void> {
 		try {
-			await supabase.auth.signOut();
+			// Auth signout is handled by Clerk via ClerkProvider
+			// We just need to log and cleanup session state
 			await this.logSessionEvent('session_logout');
 		} catch (error) {
 			logger.error('Error during logout:', { error: String(error) });

@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
 
 export interface BankAccount {
@@ -230,34 +228,9 @@ export function useBankAccounts(): UseBankAccountsReturn {
 		},
 	});
 
-	// Real-time subscription para contas bancárias
-	useEffect(() => {
-		if (!accountsResponse) {
-			return;
-		}
-
-		const channel = supabase
-			.channel('bank_accounts_changes')
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'bank_accounts',
-				},
-				() => {
-					queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
-					queryClient.invalidateQueries({
-						queryKey: ['bank-accounts', 'total-balance'],
-					});
-				},
-			)
-			.subscribe();
-
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	}, [accountsResponse, queryClient]);
+	// Note: Realtime subscriptions removed in Neon migration
+	// Data is refreshed via React Query invalidation and polling
+	// TODO: Add WebSocket support for realtime updates if needed
 
 	return {
 		accounts: accountsResponse || [],

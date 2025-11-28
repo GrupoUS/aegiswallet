@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import App from '@/App';
+
+import { ClerkProvider } from '@/integrations/clerk';
 import './index.css';
 
 // Accessibility initialization for Brazilian market compliance
@@ -42,6 +44,8 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
 	<React.StrictMode>
-		<App />
+		<ClerkProvider>
+			<App />
+		</ClerkProvider>
 	</React.StrictMode>,
 );

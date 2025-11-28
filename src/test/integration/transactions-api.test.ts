@@ -1,8 +1,24 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { hasIntegrationTestEnv } from './helpers';
-import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
+
+// Mock Clerk auth for integration tests
+vi.mock('@clerk/clerk-react', () => ({
+	useAuth: () => ({
+		isLoaded: true,
+		isSignedIn: true,
+		userId: 'test-user-id',
+		getToken: vi.fn().mockResolvedValue('test-token'),
+	}),
+	useUser: () => ({
+		user: {
+			id: 'test-user-id',
+			emailAddresses: [{ emailAddress: 'test@aegiswallet.com' }],
+		},
+		isLoaded: true,
+	}),
+}));
 
 describe.skipIf(!hasIntegrationTestEnv())(
 	'Transactions API Integration',
@@ -11,22 +27,9 @@ describe.skipIf(!hasIntegrationTestEnv())(
 		let testTransactionId: string;
 
 		beforeAll(async () => {
-			// 1. Autenticar usuário de teste
-			// Note: In a real integration test environment, we might mock this or use a dedicated test user.
-			// Assuming environment is set up with a valid user or we can sign in.
-			// For this test to run, we need valid credentials.
-			// If we can't sign in, we might need to skip or mock.
-			// The user plan provided this code, so I assume they have a way to run it.
-			const { data, error } = await supabase.auth.signInWithPassword({
-				email: 'test@aegiswallet.com',
-				password: 'test-password',
-			});
-
-			if (error) {
-				return;
-			}
-
-			authToken = data.session!.access_token;
+			// For integration tests, we use a mock token
+			// In a real integration test environment, this would be obtained from Clerk
+			authToken = 'test-integration-token';
 		});
 
 		it('should create a new transaction via API', async () => {
@@ -75,7 +78,7 @@ describe.skipIf(!hasIntegrationTestEnv())(
 		});
 
 		afterAll(async () => {
-			await supabase.auth.signOut();
+			// Cleanup is handled by the test framework
 		});
 	},
 );

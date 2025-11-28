@@ -8,15 +8,34 @@
  * - Session management
  * - LGPD compliance
  * - Data retention policies
+ *
+ * NOTE: Migrated from Supabase to Clerk authentication
  */
-
-import type { Session, User } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/logging/logger';
 
+// Session and User types for secure storage (compatible with Clerk)
+export interface SecureSession {
+	id: string;
+	userId: string;
+	expiresAt: string;
+	status: 'active' | 'expired' | 'revoked';
+	lastActiveAt?: string;
+}
+
+export interface SecureUser {
+	id: string;
+	email?: string;
+	firstName?: string;
+	lastName?: string;
+	imageUrl?: string;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
 export interface SecureStorageData {
-	session?: Session;
-	user?: User;
+	session?: SecureSession;
+	user?: SecureUser;
 	preferences?: Record<string, unknown>;
 	lastAccess?: string;
 	deviceId?: string;
@@ -486,7 +505,7 @@ export const secureSession = {
 		const data = await secureStorage.retrieve('session');
 		return data !== null && !!data.session;
 	},
-	refresh: async (session: Session): Promise<boolean> => {
+	refresh: async (session: SecureSession): Promise<boolean> => {
 		const data = await secureStorage.retrieve('session');
 		if (data) {
 			data.session = session;
@@ -497,7 +516,7 @@ export const secureSession = {
 	remove: (): boolean => {
 		return secureStorage.remove('session');
 	},
-	retrieve: async (): Promise<{ session: Session; user: User } | null> => {
+	retrieve: async (): Promise<{ session: SecureSession; user: SecureUser } | null> => {
 		const data = await secureStorage.retrieve('session');
 		return data?.session && data.user
 			? {
@@ -506,7 +525,7 @@ export const secureSession = {
 				}
 			: null;
 	},
-	store: async (session: Session, user: User): Promise<boolean> => {
+	store: async (session: SecureSession, user: SecureUser): Promise<boolean> => {
 		return secureStorage.store('session', { session, user });
 	},
 };

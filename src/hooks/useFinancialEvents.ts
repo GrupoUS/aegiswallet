@@ -8,13 +8,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { apiClient } from '@/lib/api-client';
 import type {
-	BrazilianEventType,
 	FinancialEventCategory,
 	FinancialEventMetadata,
-	FinancialEventPriority,
 	InstallmentInfo,
 } from '@/types/financial.interfaces';
 import type {
@@ -85,51 +82,39 @@ interface TransactionApiResponse<T> {
 // Mapeamento de campos do backend para frontend
 // biome-ignore lint/suspicious/noExplicitAny: Database response mapping requires flexible types - output is strictly typed via FinancialEvent
 function mapBackendToFrontend(item: any): FinancialEvent {
-	const type: FinancialEventType =
-		item.event_type || (item.is_income ? 'income' : 'expense');
+	const _transactionType =
+		item.transactionType || (item.amount > 0 ? 'credit' : 'debit');
+	const type: FinancialEventType = item.amount > 0 ? 'income' : 'expense';
 
-	let metadata: FinancialEventMetadata | undefined = item.metadata;
-	if (item.merchant_category) {
-		metadata = { ...metadata, merchantCategory: item.merchant_category };
-	}
+	let _metadata: FinancialEventMetadata | undefined;
+	// Handle metadata if it exists in notes or tags, or if backend adds it back
 
-	let installmentInfo: InstallmentInfo | undefined = item.installment_info;
-	if (typeof item.installment_info === 'string') {
-		try {
-			installmentInfo = JSON.parse(item.installment_info);
-		} catch {}
-	}
+	let _installmentInfo: InstallmentInfo | undefined;
+	// Handle installment info if needed
 
 	return {
 		id: item.id,
-		userId: item.user_id,
-		title: item.title,
-		description: item.description || undefined,
-		start: new Date(item.start_date),
-		end: new Date(item.end_date),
+		userId: item.userId,
+		title: item.description,
+		description: item.notes || undefined,
+		start: new Date(item.transactionDate),
+		end: new Date(item.transactionDate),
 		type,
 		amount: Number(item.amount),
-		color:
-			(item.color as EventColor) ||
-			((type === 'income' ? 'emerald' : 'rose') as EventColor),
-		status: item.status as EventStatus,
-		category: (item.category as FinancialEventCategory) || 'OUTROS',
-		location: item.location || undefined,
-		isRecurring: item.is_recurring || false,
-		allDay: item.all_day || false,
-		isIncome: item.is_income || false,
-		priority: (item.priority as FinancialEventPriority) || 'NORMAL',
-		createdAt: item.created_at,
-		updatedAt: item.updated_at,
-		dueDate: item.due_date || undefined,
-		completedAt: item.completed_at || undefined,
+		color: (type === 'income' ? 'emerald' : 'rose') as EventColor,
+		status: item.status === 'posted' ? 'completed' : 'pending',
+		category: (item.categoryId as FinancialEventCategory) || 'OUTROS',
+		isRecurring: false, // Not yet supported in transactions table
+		allDay: false,
+		isIncome: item.amount > 0,
+		priority: 'NORMAL',
+		createdAt: item.createdAt,
+		updatedAt: item.updatedAt,
+		dueDate: item.transactionDate,
+		completedAt: item.status === 'posted' ? item.updatedAt : undefined,
 		notes: item.notes || undefined,
 		tags: item.tags || undefined,
-		icon: item.icon || undefined,
-		metadata,
-		installmentInfo,
-		brazilianEventType:
-			(item.brazilian_event_type as BrazilianEventType) || undefined,
+		brazilianEventType: undefined, // Map if needed
 	};
 }
 
@@ -279,53 +264,9 @@ export function useFinancialEvents(
 		fetchEvents();
 	}, [fetchEvents]);
 
-	// Configurar real-time subscription
-	useEffect(() => {
-		if (!user) {
-			return;
-		}
-
-		const channel = supabase
-			.channel(`financial_events_changes_${user.id}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					filter: `user_id=eq.${user.id}`,
-					schema: 'public',
-					table: 'financial_events',
-				},
-				(payload) => {
-					// Invalidar cache e refazer busca
-					clearCache();
-					fetchEvents();
-
-					// Mostrar notificação para mudanças relevantes
-					if (payload.eventType === 'INSERT') {
-						// biome-ignore lint/suspicious/noExplicitAny: Supabase realtime payload typing is generic Record<string, unknown>
-						const newEvent = payload.new as any;
-						toast.success('Novo evento financeiro adicionado', {
-							description: `${newEvent.title} - R$ ${Math.abs(Number(newEvent.amount)).toFixed(2)}`,
-						});
-					} else if (payload.eventType === 'UPDATE') {
-						// biome-ignore lint/suspicious/noExplicitAny: Supabase realtime payload typing is generic Record<string, unknown>
-						const updatedEvent = payload.new as any;
-						// biome-ignore lint/suspicious/noExplicitAny: Supabase realtime payload typing is generic Record<string, unknown>
-						const oldStatus = (payload.old as any)?.status;
-						if (updatedEvent.status === 'paid' && oldStatus !== 'paid') {
-							toast.success('Evento marcado como pago', {
-								description: `${updatedEvent.title} - R$ ${Math.abs(Number(updatedEvent.amount)).toFixed(2)}`,
-							});
-						}
-					}
-				},
-			)
-			.subscribe();
-
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	}, [fetchEvents, clearCache, user]);
+	// Note: Realtime subscriptions removed in Neon migration
+	// Data is refreshed via polling and manual refetch
+	// TODO: Add WebSocket support for realtime updates if needed
 
 	// Mutations
 	const createEvent = useCallback(
@@ -336,8 +277,16 @@ export function useFinancialEvents(
 				}
 
 				const payload = {
-					...event,
-					categoryId: event.category, // Map category to categoryId for backend
+					amount: Number(event.amount),
+					description: event.title,
+					transactionType: event.type === 'income' ? 'credit' : 'debit',
+					status: event.status === 'completed' ? 'posted' : 'pending',
+					transactionDate:
+						event.start instanceof Date
+							? event.start.toISOString()
+							: event.start,
+					categoryId: event.category,
+					notes: event.description,
 				};
 
 				// biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic

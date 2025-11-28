@@ -1,9 +1,9 @@
 /**
  * API Client for Hono RPC endpoints
  * Provides type-safe fetch wrapper with authentication and error handling
+ * 
+ * Updated to use Clerk authentication instead of Supabase
  */
-
-import { supabase } from '@/integrations/supabase/client';
 
 interface ApiResponse<T = unknown> {
 	data?: T;
@@ -18,6 +18,17 @@ interface ApiError extends Error {
 	details?: Record<string, unknown>;
 }
 
+// Global auth token getter - set by AuthContext
+let getAuthToken: (() => Promise<string | null>) | null = null;
+
+/**
+ * Set the auth token getter function
+ * Called by AuthContext when initializing
+ */
+export function setAuthTokenGetter(getter: () => Promise<string | null>) {
+	getAuthToken = getter;
+}
+
 class ApiClient {
 	private baseUrl: string;
 
@@ -30,18 +41,18 @@ class ApiClient {
 
 	/**
 	 * Get authentication headers for API requests
+	 * Uses Clerk session token via the globally registered getter
 	 */
 	private async getHeaders(): Promise<Record<string, string>> {
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
-
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 		};
 
-		if (session?.access_token) {
-			headers.Authorization = `Bearer ${session.access_token}`;
+		if (getAuthToken) {
+			const token = await getAuthToken();
+			if (token) {
+				headers.Authorization = `Bearer ${token}`;
+			}
 		}
 
 		return headers;
@@ -71,9 +82,6 @@ class ApiClient {
 				}
 			} else {
 				errorMessage = (await response.text()) || errorMessage;
-			}
-
-			if (import.meta.env.DEV) {
 			}
 
 			const error: ApiError = new Error(errorMessage);
@@ -126,15 +134,13 @@ class ApiClient {
 		return this.handleResponse<T>(response);
 	}
 
+
 	/**
 	 * Make a POST request
 	 */
 	async post<T = unknown>(url: string, data?: unknown): Promise<T> {
 		const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
 		const headers = await this.getHeaders();
-
-		if (import.meta.env.DEV) {
-		}
 
 		const response = await fetch(fullUrl, {
 			body: data ? JSON.stringify(data) : undefined,
@@ -201,9 +207,6 @@ class ApiClient {
 		additionalData?: Record<string, unknown>,
 	): Promise<T> {
 		const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
 
 		const formData = new FormData();
 		formData.append('file', file);
@@ -218,8 +221,11 @@ class ApiClient {
 		}
 
 		const headers: Record<string, string> = {};
-		if (session?.access_token) {
-			headers.Authorization = `Bearer ${session.access_token}`;
+		if (getAuthToken) {
+			const token = await getAuthToken();
+			if (token) {
+				headers.Authorization = `Bearer ${token}`;
+			}
 		}
 
 		const response = await fetch(fullUrl, {
@@ -230,6 +236,7 @@ class ApiClient {
 
 		return this.handleResponse<T>(response);
 	}
+
 
 	/**
 	 * Download a file

@@ -134,8 +134,8 @@ const globalObj = globalThis as MutableGlobal;
 // vi.useFakeTimers();
 
 // Set required environment variables for tests
-process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+process.env.VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
 
 // Ensure DOM is available immediately (before tests run)
 if (typeof globalThis.document === 'undefined') {
@@ -681,10 +681,5 @@ expect.extend({
 	},
 });
 
-// Mock Supabase with typed configuration using our comprehensive mock
-vi.mock('@/integrations/supabase/client', async () => {
-	const { supabaseMock } = await import('./mocks/supabase-mock');
-	return {
-		supabase: supabaseMock,
-	};
-});
+// Extend expect with custom matchers for Brazilian financial validation
+// (already extended above)

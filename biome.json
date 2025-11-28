@@ -1,123 +1,138 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "includes": ["**/*.ts", "**/*.tsx", "**/*.json"]
-  },
-  "linter": {
-    "enabled": true,
-    "domains": {
-      "react": "all",
-      "project": "recommended"
-    },
-    "rules": {
-      "recommended": true,
-      "correctness": {
-        "noUnusedVariables": "error",
-        "noUnusedImports": "error",
-        "useExhaustiveDependencies": "error"
-      },
-      "security": {
-        "noDangerouslySetInnerHtml": "error",
-        "noGlobalEval": "error"
-      },
-      "suspicious": {
-        "noExplicitAny": "error",
-        "noConsole": "warn",
-        "noDoubleEquals": "error"
-      },
-      "complexity": {
-        "noExcessiveCognitiveComplexity": {
-          "level": "warn",
-          "options": { "maxAllowedComplexity": 30 }
-        }
-      },
-      "a11y": "error"
-    }
-  },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": {
-          "level": "on",
-          "options": {
-            "groups": [
-              [":BUN:", ":NODE:"],
-              ":BLANK_LINE:",
-              ":PACKAGE:",
-              ":BLANK_LINE:",
-              ["@/*", "~/*"],
-              ":BLANK_LINE:",
-              ":PATH:"
-            ]
-          }
-        }
-      }
-    }
-  },
-  "javascript": {
-    "jsxRuntime": "transparent",
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "always",
-      "trailingCommas": "all"
-    }
-  },
-  "overrides": [
-    {
-      "includes": ["src/routeTree.gen.ts"],
-      "linter": {
-        "enabled": false
-      }
-    },
-    {
-      "includes": [
-        "**/*.test.ts",
-        "**/*.test.tsx",
-        "**/__tests__/**",
-        "**/test/**",
-        "**/tests/**",
-        "src/test/**"
-      ],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedVariables": "off",
-            "useUniqueElementIds": "off"
-          },
-          "suspicious": {
-            "noExplicitAny": "off",
-            "noConsole": "off"
-          },
-          "style": {
-            "noNonNullAssertion": "off",
-            "useComponentExportOnlyModules": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["scripts/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["**/useFinancialEvents.ts", "**/compliance-service.ts", "**/pushProvider.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": { "noExplicitAny": "warn" }
-        }
-      }
-    }
-  ]
+	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"includes": ["**/*.ts", "**/*.tsx", "**/*.json"]
+	},
+	"linter": {
+		"enabled": true,
+		"domains": {
+			"react": "all",
+			"project": "recommended"
+		},
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "error",
+				"noUnusedImports": "error",
+				"useExhaustiveDependencies": "error"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "error",
+				"noGlobalEval": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noConsole": "warn",
+				"noDoubleEquals": "error"
+			},
+			"complexity": {
+				"noExcessiveCognitiveComplexity": {
+					"level": "warn",
+					"options": { "maxAllowedComplexity": 30 }
+				}
+			},
+			"a11y": "error"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							[":BUN:", ":NODE:"],
+							":BLANK_LINE:",
+							":PACKAGE:",
+							":BLANK_LINE:",
+							["@/*", "~/*"],
+							":BLANK_LINE:",
+							":PATH:"
+						]
+					}
+				}
+			}
+		}
+	},
+	"javascript": {
+		"jsxRuntime": "transparent",
+		"formatter": {
+			"quoteStyle": "single",
+			"semicolons": "always",
+			"trailingCommas": "all"
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["src/routeTree.gen.ts"],
+			"linter": {
+				"enabled": false
+			}
+		},
+		{
+			"includes": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/__tests__/**",
+				"**/test/**",
+				"**/tests/**",
+				"src/test/**"
+			],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedPrivateClassMembers": "off",
+						"useUniqueElementIds": "off"
+					},
+					"suspicious": {
+						"noExplicitAny": "off",
+						"noConsole": "off"
+					},
+					"style": {
+						"noNonNullAssertion": "off",
+						"useComponentExportOnlyModules": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/routes/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useComponentExportOnlyModules": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["scripts/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"**/useFinancialEvents.ts",
+				"**/compliance-service.ts",
+				"**/pushProvider.ts"
+			],
+			"linter": {
+				"rules": {
+					"suspicious": { "noExplicitAny": "warn" }
+				}
+			}
+		}
+	]
 }

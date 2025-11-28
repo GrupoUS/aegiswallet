@@ -5,116 +5,107 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { Tables } from '@/integrations/supabase/types';
+import type {
+	AuditLog,
+	BankAccount,
+	FinancialEvent,
+	Transaction,
+	UserPreferences,
+	VoiceCommand,
+} from '@/db/schema';
 
 describe('Type Check Validation', () => {
 	describe('Database Schema Fixes', () => {
 		it('should have user_preferences with voice_feedback', () => {
-			// Tables<'table_name'> returns the Row type directly
-			const mockPreferences: Tables<'user_preferences'> = {
-				accessibility_high_contrast: true,
-				accessibility_large_text: false,
-				accessibility_screen_reader: true,
-				auto_categorize: null,
-				budget_alerts: null,
-				created_at: new Date().toISOString(),
+			const mockPreferences: Partial<UserPreferences> = {
+				accessibilityHighContrast: true,
+				accessibilityLargeText: false,
+				accessibilityScreenReader: true,
+				autoCategorize: null,
+				budgetAlerts: null,
+				createdAt: new Date(),
 				id: 'test-id',
-				notifications_email: true,
-				notifications_push: false,
-				notifications_sms: null,
+				notificationsEmail: true,
+				notificationsPush: false,
+				notificationsSms: null,
 				theme: 'dark',
-				updated_at: new Date().toISOString(),
-				user_id: 'user-id',
-				voice_feedback: true,
+				updatedAt: new Date(),
+				userId: 'user-id',
+				voiceFeedback: true,
 			};
 
-			expect(mockPreferences.voice_feedback).toBe(true);
-			expect(mockPreferences.accessibility_high_contrast).toBe(true);
+			expect(mockPreferences.voiceFeedback).toBe(true);
+			expect(mockPreferences.accessibilityHighContrast).toBe(true);
 		});
 
 		it('should have bank_accounts with is_primary', () => {
-			// Use partial type since we don't need all fields for testing
-			type BankAccountRow = Tables<'bank_accounts'>;
-			const mockAccount: Partial<BankAccountRow> = {
-				account_mask: '1234',
-				balance: 1000,
-				created_at: new Date().toISOString(),
+			const mockAccount: Partial<BankAccount> = {
+				accountMask: '1234',
+				balance: '1000',
+				createdAt: new Date(),
 				currency: 'BRL',
 				id: 'test-id',
-				institution_name: 'Test Bank',
-				is_active: true,
-				is_primary: true,
-				updated_at: new Date().toISOString(),
-				user_id: 'user-id',
+				institutionName: 'Test Bank',
+				isActive: true,
+				isPrimary: true,
+				updatedAt: new Date(),
+				userId: 'user-id',
 			};
 
-			expect(mockAccount.is_primary).toBe(true);
+			expect(mockAccount.isPrimary).toBe(true);
 		});
 
 		it('should have financial_events with new properties', () => {
-			// Use partial type since schema has many required fields
-			type FinancialEventRow = Tables<'financial_events'>;
-			const mockEvent: Partial<FinancialEventRow> = {
-				amount: 100,
+			const mockEvent: Partial<FinancialEvent> = {
+				amount: '100',
 				category: 'test-category',
-				created_at: new Date().toISOString(),
+				createdAt: new Date(),
 				description: 'Test description',
 				id: 'test-id',
 				title: 'Test Event',
-				updated_at: new Date().toISOString(),
-				user_id: 'user-id',
-				is_income: true,
+				updatedAt: new Date(),
+				userId: 'user-id',
+				isIncome: true,
 				priority: 'high',
 			};
 
 			expect(mockEvent.description).toBe('Test description');
-			expect(mockEvent.is_income).toBe(true);
+			expect(mockEvent.isIncome).toBe(true);
 			expect(mockEvent.priority).toBe('high');
 		});
 
 		it('should have transactions with date field', () => {
-			type TransactionRow = Tables<'transactions'>;
-			const mockTransaction: Partial<TransactionRow> = {
-				account_id: 'account-id',
-				amount: 100,
-				category_id: 'category-id',
-				created_at: new Date().toISOString(),
+			const mockTransaction: Partial<Transaction> = {
+				accountId: 'account-id',
+				amount: '100',
+				categoryId: 'category-id',
+				createdAt: new Date(),
 				description: 'Test Transaction',
 				id: 'test-id',
-				transaction_date: '2024-01-01',
-				transaction_type: 'credit',
-				updated_at: new Date().toISOString(),
-				user_id: 'user-id',
+				transactionDate: '2024-01-01',
+				transactionType: 'credit',
+				updatedAt: new Date(),
+				userId: 'user-id',
 			};
 
-			expect(mockTransaction.transaction_date).toBe('2024-01-01');
+			expect(mockTransaction.transactionDate).toBe('2024-01-01');
 		});
 
-		it('should have voice tables available', () => {
-			// voice_feedback table exists
-			type VoiceFeedbackRow = Tables<'voice_feedback'>;
-			const voiceFeedbackRow: Partial<VoiceFeedbackRow> = {
-				command_text: 'test command',
-				was_correct: true,
+		it('should have voice and audit tables available', () => {
+			// voice_commands table exists
+			const voiceCommandRow: Partial<VoiceCommand> = {
+				commandText: 'test command',
+				wasSuccessful: true,
 			};
 
 			// audit_logs table exists
-			type AuditLogsRow = Tables<'audit_logs'>;
-			const auditLogsRow: Partial<AuditLogsRow> = {
+			const auditLogsRow: Partial<AuditLog> = {
 				action: 'test_action',
-				resource_type: 'test',
+				resourceType: 'test',
 			};
 
-			// bank_tokens table exists
-			type BankTokensRow = Tables<'bank_tokens'>;
-			const bankTokensRow: Partial<BankTokensRow> = {
-				encrypted_access_token: 'token',
-				encryption_algorithm: 'AES-256-GCM',
-			};
-
-			expect(voiceFeedbackRow).toBeDefined();
+			expect(voiceCommandRow).toBeDefined();
 			expect(auditLogsRow).toBeDefined();
-			expect(bankTokensRow).toBeDefined();
 		});
 	});
 

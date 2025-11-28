@@ -1,12 +1,15 @@
 /**
  * Calendar API - Hono RPC Implementation
  * Handles calendar search for events and transactions
+ * Using Drizzle ORM with Neon serverless
  */
 
 import { zValidator } from '@hono/zod-validator';
+import { and, desc, eq, gte, ilike, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { financialEvents, transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import {
@@ -51,54 +54,55 @@ calendarRouter.get(
 	'/events/search',
 	authMiddleware,
 	userRateLimitMiddleware({
-		max: 30, // 30 requests per minute per user
+		max: 30,
 		message: 'Muitas requisições, tente novamente mais tarde',
-		windowMs: 60 * 1000, // 1 minute
+		windowMs: 60 * 1000,
 	}),
 	zValidator('query', searchEventsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			let query = supabase
-				.from('financial_events')
-				.select('*')
-				.eq('user_id', user.id)
-				.ilike('title', `%${input.query}%`);
+			// Build where conditions
+			const conditions = [
+				eq(financialEvents.userId, user.id),
+				ilike(financialEvents.title, `%${input.query}%`),
+			];
 
-			// Apply optional filters
 			if (input.categoryId) {
-				query = query.eq('category', input.categoryId);
+				conditions.push(eq(financialEvents.categoryId, input.categoryId));
 			}
 
 			if (input.startDate) {
-				query = query.gte('start_date', input.startDate);
+				conditions.push(
+					gte(financialEvents.startDate, new Date(input.startDate)),
+				);
 			}
 
 			if (input.endDate) {
-				query = query.lte('end_date', input.endDate);
+				conditions.push(lte(financialEvents.endDate, new Date(input.endDate)));
 			}
 
-			const { data, error } = await query
-				.order('created_at', { ascending: false })
-				.range(input.offset, input.offset + input.limit - 1);
-
-			if (error) {
-				throw new Error(`Erro ao buscar eventos: ${error.message}`);
-			}
+			const data = await db
+				.select()
+				.from(financialEvents)
+				.where(and(...conditions))
+				.orderBy(desc(financialEvents.createdAt))
+				.limit(input.limit)
+				.offset(input.offset);
 
 			secureLogger.info('Calendar events searched', {
 				limit: input.limit,
 				query: input.query,
 				requestId,
-				resultsCount: data?.length || 0,
+				resultsCount: data.length,
 				userId: user.id,
 			});
 
 			return c.json({
-				data: data || [],
+				data,
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),
@@ -130,58 +134,61 @@ calendarRouter.get(
 	'/transactions/search',
 	authMiddleware,
 	userRateLimitMiddleware({
-		max: 30, // 30 requests per minute per user
+		max: 30,
 		message: 'Muitas requisições, tente novamente mais tarde',
-		windowMs: 60 * 1000, // 1 minute
+		windowMs: 60 * 1000,
 	}),
 	zValidator('query', searchTransactionsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			let query = supabase
-				.from('transactions')
-				.select('*')
-				.eq('user_id', user.id)
-				.ilike('description', `%${input.query}%`);
+			// Build where conditions
+			const conditions = [
+				eq(transactions.userId, user.id),
+				ilike(transactions.description, `%${input.query}%`),
+			];
 
-			// Apply optional filters
 			if (input.accountId) {
-				query = query.eq('account_id', input.accountId);
+				conditions.push(eq(transactions.accountId, input.accountId));
 			}
 
 			if (input.categoryId) {
-				query = query.eq('category_id', input.categoryId);
+				conditions.push(eq(transactions.categoryId, input.categoryId));
 			}
 
 			if (input.startDate) {
-				query = query.gte('date', input.startDate);
+				conditions.push(
+					gte(transactions.transactionDate, new Date(input.startDate)),
+				);
 			}
 
 			if (input.endDate) {
-				query = query.lte('date', input.endDate);
+				conditions.push(
+					lte(transactions.transactionDate, new Date(input.endDate)),
+				);
 			}
 
-			const { data, error } = await query
-				.order('created_at', { ascending: false })
-				.range(input.offset, input.offset + input.limit - 1);
-
-			if (error) {
-				throw new Error(`Erro ao buscar transações: ${error.message}`);
-			}
+			const data = await db
+				.select()
+				.from(transactions)
+				.where(and(...conditions))
+				.orderBy(desc(transactions.createdAt))
+				.limit(input.limit)
+				.offset(input.offset);
 
 			secureLogger.info('Calendar transactions searched', {
 				limit: input.limit,
 				query: input.query,
 				requestId,
-				resultsCount: data?.length || 0,
+				resultsCount: data.length,
 				userId: user.id,
 			});
 
 			return c.json({
-				data: data || [],
+				data,
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),

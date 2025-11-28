@@ -4,11 +4,17 @@
  * Temporary type definitions for database tables that are referenced in code
  * but not yet implemented in the actual database schema.
  *
- * TODO: Replace these stubs with proper database migrations and regenerate types
- * from Supabase using: bun run supabase gen types typescript
+ * TODO: Replace these stubs with proper Drizzle schema definitions
  */
 
-import type { Json } from '@/integrations/supabase/types';
+// Generic JSON type for metadata fields
+export type Json =
+	| string
+	| number
+	| boolean
+	| null
+	| { [key: string]: Json | undefined }
+	| Json[];
 
 // Voice Metrics Table
 export interface VoiceMetric {

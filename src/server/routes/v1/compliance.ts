@@ -90,11 +90,11 @@ const checkLimitSchema = z.object({
  * GET /consent-templates - Get available consent templates
  */
 complianceRouter.get('/consent-templates', authMiddleware, async (c) => {
-	const { supabase } = c.get('auth');
+	const { db } = c.get('auth');
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(supabase);
+		const complianceService = createComplianceService(db);
 		const templates = await complianceService.getConsentTemplates();
 
 		return c.json({
@@ -132,11 +132,11 @@ complianceRouter.get(
 		message: 'Muitas requisições',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const consents = await complianceService.getUserConsents(user.id);
 
 			return c.json({
@@ -162,11 +162,11 @@ complianceRouter.get(
  * GET /consents/missing - Get missing mandatory consents
  */
 complianceRouter.get('/consents/missing', authMiddleware, async (c) => {
-	const { user, supabase } = c.get('auth');
+	const { user, db } = c.get('auth');
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(supabase);
+		const complianceService = createComplianceService(db);
 		const missingConsents = await complianceService.getMissingMandatoryConsents(
 			user.id,
 		);
@@ -205,7 +205,7 @@ complianceRouter.post(
 	}),
 	zValidator('json', grantConsentSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
@@ -214,7 +214,7 @@ complianceRouter.post(
 				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 			const userAgent = c.req.header('user-agent');
 
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const consent = await complianceService.grantConsent(
 				user.id,
 				input.consentType,
@@ -267,12 +267,12 @@ complianceRouter.delete(
 		message: 'Muitas requisições',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const consentType = c.req.param('type');
 		const requestId = c.get('requestId');
 
 		try {
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			await complianceService.revokeConsent(
 				user.id,
 				consentType as ConsentType,
@@ -315,11 +315,11 @@ complianceRouter.delete(
  * GET /export-requests - Get user's export requests
  */
 complianceRouter.get('/export-requests', authMiddleware, async (c) => {
-	const { user, supabase } = c.get('auth');
+	const { user, db } = c.get('auth');
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(supabase);
+		const complianceService = createComplianceService(db);
 		const requests = await complianceService.getExportRequests(user.id);
 
 		return c.json({
@@ -353,7 +353,7 @@ complianceRouter.post(
 	}),
 	zValidator('json', createExportRequestSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
@@ -361,7 +361,7 @@ complianceRouter.post(
 			const ipAddress =
 				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const request = await complianceService.createExportRequest(
 				user.id,
 				input.requestType,
@@ -408,11 +408,11 @@ complianceRouter.post(
  * GET /deletion-requests - Get user's deletion requests
  */
 complianceRouter.get('/deletion-requests', authMiddleware, async (c) => {
-	const { user, supabase } = c.get('auth');
+	const { user, db } = c.get('auth');
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(supabase);
+		const complianceService = createComplianceService(db);
 		const requests = await complianceService.getDeletionRequests(user.id);
 
 		return c.json({
@@ -446,7 +446,7 @@ complianceRouter.post(
 	}),
 	zValidator('json', createDeletionRequestSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
@@ -454,7 +454,7 @@ complianceRouter.post(
 			const ipAddress =
 				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const request = await complianceService.createDeletionRequest(
 				user.id,
 				input.requestType,
@@ -506,11 +506,11 @@ complianceRouter.post(
  * GET /limits - Get user's transaction limits
  */
 complianceRouter.get('/limits', authMiddleware, async (c) => {
-	const { user, supabase } = c.get('auth');
+	const { user, db } = c.get('auth');
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(supabase);
+		const complianceService = createComplianceService(db);
 		const limits = await complianceService.getTransactionLimits(user.id);
 
 		return c.json({
@@ -544,12 +544,12 @@ complianceRouter.post(
 	}),
 	zValidator('json', checkLimitSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const result = await complianceService.checkTransactionLimit(
 				user.id,
 				input.limitType,
@@ -593,14 +593,14 @@ complianceRouter.get(
 		message: 'Muitas requisições',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
 			const limit = Number(c.req.query('limit')) || 50;
 			const eventType = c.req.query('eventType');
 
-			const complianceService = createComplianceService(supabase);
+			const complianceService = createComplianceService(db);
 			const history = await complianceService.getAuditHistory(user.id, {
 				limit,
 				eventType: eventType || undefined,

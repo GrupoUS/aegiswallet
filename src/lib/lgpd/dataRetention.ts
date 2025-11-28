@@ -1,6 +1,14 @@
-import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
-import { logger } from '@/lib/logging';
+/**
+ * LGPD Data Retention Manager
+ *
+ * Brazilian General Data Protection Law (LGPD) compliance module
+ * Manages data retention policies and subject rights
+ *
+ * NOTE: Migrated from Supabase to API-based operations
+ */
+
+import { apiClient } from '@/lib/api-client';
+import { logger } from '@/lib/logging/logger';
 
 export interface RetentionPolicy {
 	dataType: string;
@@ -138,7 +146,6 @@ export class LGPDDataRetentionManager {
 				if (eligible && policy.autoDelete && !policy.legalHold) {
 					await this.deleteDataByType(userId, dataType, policy);
 
-					// Log the deletion for audit purposes
 					const { safeInsertAuditLog } = await import(
 						'../security/safeAuditLog'
 					);
@@ -183,24 +190,15 @@ export class LGPDDataRetentionManager {
 		try {
 			const requestId = crypto.randomUUID();
 
-			const _request: Partial<DataSubjectRequest> = {
-				createdAt: new Date(),
-				requestData,
-				requestType,
-				status: 'pending',
-				userId,
-			};
-
-			await supabase.from('data_subject_requests').insert({
+			await apiClient.post('/v1/compliance/data-subject-requests', {
 				created_at: new Date().toISOString(),
 				id: requestId,
-				request_data: (requestData ?? null) as Json,
+				request_data: requestData ?? null,
 				request_type: requestType,
 				status: 'pending',
 				user_id: userId,
 			});
 
-			// Log the request for audit
 			const { safeInsertAuditLog } = await import('../security/safeAuditLog');
 			void safeInsertAuditLog({
 				action: 'data_subject_request_created',
@@ -247,46 +245,30 @@ export class LGPDDataRetentionManager {
 				},
 			);
 
-			// Update request status
-			await supabase
-				.from('data_subject_requests')
-				.update({
-					processed_at: new Date().toISOString(),
-					status: 'processing',
-				})
-				.eq('id', requestId);
+			await apiClient.post('/v1/compliance/data-subject-requests/process', {
+				request_id: requestId,
+				status: 'processing',
+			});
 
-			// Process deletion for all data types
 			for (const policy of this.RETENTION_POLICIES) {
 				if (!policy.legalHold) {
 					await this.deleteDataByType(userId, policy.dataType, policy);
 				}
 			}
 
-			// Mark user account as deleted/anonymized
-			await supabase
-				.from('users')
-				.update({
+			await apiClient.post('/v1/compliance/user/anonymize', {
+				user_id: userId,
+				reason: 'lgpd_request',
+			});
+
+			await apiClient.post('/v1/compliance/data-subject-requests/complete', {
+				request_id: requestId,
+				response: {
+					data_types_deleted: this.RETENTION_POLICIES.map((p) => p.dataType),
 					deleted_at: new Date().toISOString(),
-					deletion_reason: 'lgpd_request',
-					email: `deleted_${Date.now()}@deleted.com`,
-					full_name: 'DELETED',
-				})
-				.eq('id', userId);
+				},
+			});
 
-			// Update request status to completed
-			await supabase
-				.from('data_subject_requests')
-				.update({
-					response: {
-						data_types_deleted: this.RETENTION_POLICIES.map((p) => p.dataType),
-						deleted_at: new Date().toISOString(),
-					},
-					status: 'completed',
-				})
-				.eq('id', requestId);
-
-			// Final audit log
 			const { safeInsertAuditLog } = await import('../security/safeAuditLog');
 			void safeInsertAuditLog({
 				action: 'data_deletion_completed',
@@ -307,16 +289,6 @@ export class LGPDDataRetentionManager {
 				resource_type: 'lgpd_rights',
 				user_id: userId,
 			});
-
-			// Update request status to failed
-			await supabase
-				.from('data_subject_requests')
-				.update({
-					notes: error instanceof Error ? error.message : 'Unknown error',
-					status: 'rejected',
-				})
-				.eq('id', requestId);
-
 			throw error;
 		}
 	}
@@ -326,37 +298,17 @@ export class LGPDDataRetentionManager {
 	 */
 	async getUserData(userId: string): Promise<Record<string, unknown>> {
 		try {
-			const userData = {
-				profile: await supabase
-					.from('users')
-					.select('*')
-					.eq('id', userId)
-					.single(),
+			const response = await apiClient.get<{
+				profile: unknown;
+				consents: unknown;
+				transactions: unknown;
+				auditLogs: unknown;
+				preferences: unknown;
+			}>('/v1/compliance/user/data', {
+				params: { user_id: userId },
+			});
 
-				consents: await supabase
-					.from('user_consent')
-					.select('*')
-					.eq('user_id', userId),
-
-				transactions: await supabase
-					.from('transactions')
-					.select('*')
-					.eq('user_id', userId)
-					.limit(100), // Limit for practical purposes
-
-				auditLogs: await supabase
-					.from('audit_logs')
-					.select('*')
-					.eq('user_id', userId)
-					.limit(50), // Limit for practical purposes
-
-				preferences: await supabase
-					.from('user_preferences')
-					.select('*')
-					.eq('user_id', userId),
-			};
-
-			return userData;
+			return response;
 		} catch (error) {
 			logger.error('Error retrieving user data:', { error: String(error) });
 			throw error;
@@ -367,16 +319,19 @@ export class LGPDDataRetentionManager {
 		userId: string,
 		dataType: string,
 	): Promise<Date> {
-		// Implementation depends on how you track activity for each data type
-		// This is a simplified version
-		const { data } = await supabase
-			.from('user_activity')
-			.select('last_activity')
-			.eq('user_id', userId)
-			.eq('activity_type', dataType)
-			.single();
-
-		return data?.last_activity ? new Date(data.last_activity) : new Date();
+		try {
+			const response = await apiClient.get<{ last_activity: string }>(
+				'/v1/compliance/user/activity',
+				{
+					params: { user_id: userId, activity_type: dataType },
+				},
+			);
+			return response.last_activity
+				? new Date(response.last_activity)
+				: new Date();
+		} catch {
+			return new Date();
+		}
 	}
 
 	private isDataEligibleForDeletion(
@@ -385,7 +340,6 @@ export class LGPDDataRetentionManager {
 	): boolean {
 		const cutoffDate = new Date();
 		cutoffDate.setMonth(cutoffDate.getMonth() - policy.retentionMonths);
-
 		return lastActivity < cutoffDate;
 	}
 
@@ -395,48 +349,11 @@ export class LGPDDataRetentionManager {
 		policy: RetentionPolicy,
 	): Promise<void> {
 		try {
-			switch (dataType) {
-				case 'voice_recordings':
-					await supabase
-						.from('voice_recordings')
-						.delete()
-						.eq('user_id', userId);
-					break;
-
-				case 'biometric_patterns':
-					if (policy.deletionMethod === 'anonymization') {
-						await supabase
-							.from('biometric_patterns')
-							.update({
-								anonymized_at: new Date().toISOString(),
-								pattern_data: null,
-							})
-							.eq('user_id', userId);
-					} else {
-						await supabase
-							.from('biometric_patterns')
-							.delete()
-							.eq('user_id', userId);
-					}
-					break;
-
-				case 'transaction_data':
-					if (policy.deletionMethod === 'anonymization') {
-						await supabase
-							.from('transactions')
-							.update({
-								anonymized_at: new Date().toISOString(),
-								description: 'ANONYMIZED',
-								notes: 'Data anonymized per retention policy',
-							})
-							.eq('user_id', userId);
-					}
-					break;
-
-				// Add more data types as needed
-				default:
-					logger.warn(`Unknown data type for deletion: ${dataType}`);
-			}
+			await apiClient.post('/v1/compliance/retention/delete', {
+				user_id: userId,
+				data_type: dataType,
+				deletion_method: policy.deletionMethod,
+			});
 		} catch (error) {
 			logger.error(`Error deleting ${dataType} for user ${userId}:`, {
 				error: String(error),
@@ -457,14 +374,13 @@ export class LGPDDataRetentionManager {
 	 */
 	async checkLegalHolds(userId: string): Promise<boolean> {
 		try {
-			const { data } = await supabase
-				.from('legal_holds')
-				.select('id')
-				.eq('user_id', userId)
-				.eq('active', true)
-				.single();
-
-			return !!data;
+			const response = await apiClient.get<{ hasLegalHold: boolean }>(
+				'/v1/compliance/legal-holds',
+				{
+					params: { user_id: userId },
+				},
+			);
+			return response.hasLegalHold || false;
 		} catch (error) {
 			logger.error('Error checking legal holds:', { error: String(error) });
 			return false;

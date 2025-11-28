@@ -3,9 +3,12 @@
  *
  * Central service class for Google Calendar integration.
  * Encapsulates core operations for OAuth, sync, and channel management.
+ *
+ * NOTE: This service requires external Google Calendar API integration.
+ * Database operations have been converted from Supabase to API-based calls.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { apiClient } from '@/lib/api-client';
 
 import type {
 	CalendarSyncMapping,
@@ -20,7 +23,7 @@ interface GoogleCalendarConfig {
 	clientId: string;
 	clientSecret: string;
 	redirectUri: string;
-	supabaseUrl: string;
+	apiBaseUrl: string;
 }
 
 // Full sync options
@@ -41,18 +44,15 @@ interface IncrementalSyncOptions {
  * Used by Hono routes and can be used by future consumers.
  */
 export class GoogleCalendarService {
-	private supabase: SupabaseClient;
 	private config: GoogleCalendarConfig;
 	private userId: string;
 	private authToken: string;
 
 	constructor(
-		supabase: SupabaseClient,
 		config: GoogleCalendarConfig,
 		userId: string,
 		authToken: string,
 	) {
-		this.supabase = supabase;
 		this.config = config;
 		this.userId = userId;
 		this.authToken = authToken;
@@ -157,17 +157,16 @@ export class GoogleCalendarService {
 	 * Get current sync settings for the user
 	 */
 	async getSyncSettings(): Promise<CalendarSyncSettings | null> {
-		const { data, error } = await this.supabase
-			.from('calendar_sync_settings')
-			.select('*')
-			.eq('user_id', this.userId)
-			.maybeSingle();
-
-		if (error && error.code !== 'PGRST116') {
-			throw new Error(`Failed to get sync settings: ${error.message}`);
+		try {
+			const response = await apiClient.get<CalendarSyncSettings | null>(
+				'/v1/google-calendar/sync-settings',
+				{ params: { user_id: this.userId } },
+			);
+			return response;
+		} catch (error) {
+			// Return null if settings not found
+			return null;
 		}
-
-		return data;
 	}
 
 	/**
@@ -182,48 +181,19 @@ export class GoogleCalendarService {
 			auto_sync_interval_minutes: number;
 		}>,
 	): Promise<CalendarSyncSettings> {
-		const { data: existing } = await this.supabase
-			.from('calendar_sync_settings')
-			.select('user_id')
-			.eq('user_id', this.userId)
-			.maybeSingle();
+		const response = await apiClient.post<CalendarSyncSettings>(
+			'/v1/google-calendar/sync-settings',
+			{
+				user_id: this.userId,
+				sync_enabled: settings.sync_enabled ?? false,
+				sync_direction: settings.sync_direction ?? 'one_way_to_google',
+				sync_financial_amounts: settings.sync_financial_amounts ?? false,
+				sync_categories: settings.sync_categories ?? null,
+				auto_sync_interval_minutes: settings.auto_sync_interval_minutes ?? 15,
+			},
+		);
 
-		const updateData = {
-			...settings,
-			updated_at: new Date().toISOString(),
-		};
-
-		let result: CalendarSyncSettings;
-		if (existing) {
-			const { data, error } = await this.supabase
-				.from('calendar_sync_settings')
-				.update(updateData)
-				.eq('user_id', this.userId)
-				.select()
-				.single();
-
-			if (error) throw new Error(`Failed to update settings: ${error.message}`);
-			result = data;
-		} else {
-			const { data, error } = await this.supabase
-				.from('calendar_sync_settings')
-				.insert({
-					user_id: this.userId,
-					sync_enabled: settings.sync_enabled ?? false,
-					sync_direction: settings.sync_direction ?? 'one_way_to_google',
-					sync_financial_amounts: settings.sync_financial_amounts ?? false,
-					sync_categories: settings.sync_categories ?? null,
-					auto_sync_interval_minutes: settings.auto_sync_interval_minutes ?? 15,
-					...updateData,
-				})
-				.select()
-				.single();
-
-			if (error) throw new Error(`Failed to create settings: ${error.message}`);
-			result = data;
-		}
-
-		return result;
+		return response;
 	}
 
 	/**
@@ -238,7 +208,7 @@ export class GoogleCalendarService {
 			channel_id: response.channel_id as string,
 			resource_id: response.resource_id as string,
 			expiry_at: response.expiry_at as string,
-			webhook_url: `${this.config.supabaseUrl}/functions/v1/google-calendar-webhook`,
+			webhook_url: `${this.config.apiBaseUrl}/api/v1/google-calendar/webhook`,
 		};
 	}
 
@@ -257,16 +227,17 @@ export class GoogleCalendarService {
 	 * Get sync mappings for the user
 	 */
 	async getMappings(): Promise<CalendarSyncMapping[]> {
-		const { data, error } = await this.supabase
-			.from('calendar_sync_mapping')
-			.select('*')
-			.eq('user_id', this.userId);
-
-		if (error) {
-			throw new Error(`Failed to get mappings: ${error.message}`);
+		try {
+			const response = await apiClient.get<CalendarSyncMapping[]>(
+				'/v1/google-calendar/mappings',
+				{ params: { user_id: this.userId } },
+			);
+			return response ?? [];
+		} catch (error) {
+			throw new Error(
+				`Failed to get mappings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		return data ?? [];
 	}
 
 	/**
@@ -275,18 +246,15 @@ export class GoogleCalendarService {
 	async getMappingByEventId(
 		eventId: string,
 	): Promise<CalendarSyncMapping | null> {
-		const { data, error } = await this.supabase
-			.from('calendar_sync_mapping')
-			.select('*')
-			.eq('user_id', this.userId)
-			.eq('financial_event_id', eventId)
-			.maybeSingle();
-
-		if (error && error.code !== 'PGRST116') {
-			throw new Error(`Failed to get mapping: ${error.message}`);
+		try {
+			const response = await apiClient.get<CalendarSyncMapping | null>(
+				'/v1/google-calendar/mappings/by-event',
+				{ params: { user_id: this.userId, event_id: eventId } },
+			);
+			return response;
+		} catch (_error) {
+			return null;
 		}
-
-		return data;
 	}
 
 	/**
@@ -295,18 +263,15 @@ export class GoogleCalendarService {
 	async getMappingByGoogleEventId(
 		googleEventId: string,
 	): Promise<CalendarSyncMapping | null> {
-		const { data, error } = await this.supabase
-			.from('calendar_sync_mapping')
-			.select('*')
-			.eq('user_id', this.userId)
-			.eq('google_event_id', googleEventId)
-			.maybeSingle();
-
-		if (error && error.code !== 'PGRST116') {
-			throw new Error(`Failed to get mapping: ${error.message}`);
+		try {
+			const response = await apiClient.get<CalendarSyncMapping | null>(
+				'/v1/google-calendar/mappings/by-google-event',
+				{ params: { user_id: this.userId, google_event_id: googleEventId } },
+			);
+			return response;
+		} catch (_error) {
+			return null;
 		}
-
-		return data;
 	}
 
 	/**
@@ -350,47 +315,44 @@ export class GoogleCalendarService {
 		googleEmail: string | null;
 		lastSyncAt: string | null;
 	}> {
-		// Check tokens
-		const { data: tokens } = await this.supabase
-			.from('google_calendar_tokens')
-			.select('google_user_email')
-			.eq('user_id', this.userId)
-			.maybeSingle();
+		try {
+			const response = await apiClient.get<{
+				isConnected: boolean;
+				isEnabled: boolean;
+				googleEmail: string | null;
+				lastSyncAt: string | null;
+			}>('/v1/google-calendar/status', { params: { user_id: this.userId } });
 
-		// Get settings
-		const { data: settings } = await this.supabase
-			.from('calendar_sync_settings')
-			.select('sync_enabled, last_full_sync_at')
-			.eq('user_id', this.userId)
-			.maybeSingle();
-
-		return {
-			isConnected: !!tokens,
-			isEnabled: settings?.sync_enabled ?? false,
-			googleEmail: tokens?.google_user_email ?? null,
-			lastSyncAt: settings?.last_full_sync_at ?? null,
-		};
+			return response;
+		} catch (_error) {
+			return {
+				isConnected: false,
+				isEnabled: false,
+				googleEmail: null,
+				lastSyncAt: null,
+			};
+		}
 	}
 
 	/**
-	 * Helper to invoke Edge Functions
+	 * Helper to invoke Edge Functions via API
 	 */
 	private async invokeEdgeFunction(
 		functionName: string,
 		body: Record<string, unknown>,
 	): Promise<Record<string, unknown>> {
-		const { data, error } = await this.supabase.functions.invoke(functionName, {
-			body,
-			headers: {
-				Authorization: `Bearer ${this.authToken}`,
-			},
-		});
+		try {
+			const response = await apiClient.post<Record<string, unknown>>(
+				`/v1/functions/${functionName}`,
+				body,
+			);
 
-		if (error) {
-			throw new Error(`Edge Function ${functionName} error: ${error.message}`);
+			return response;
+		} catch (error) {
+			throw new Error(
+				`Edge Function ${functionName} error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		return data;
 	}
 }
 
@@ -398,7 +360,6 @@ export class GoogleCalendarService {
  * Factory function to create GoogleCalendarService instance
  */
 export function createGoogleCalendarService(
-	supabase: SupabaseClient,
 	userId: string,
 	authToken: string,
 ): GoogleCalendarService {
@@ -406,10 +367,10 @@ export function createGoogleCalendarService(
 		clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '',
 		clientSecret: '', // Not needed on client side
 		redirectUri: import.meta.env.VITE_GOOGLE_REDIRECT_URI ?? '',
-		supabaseUrl: import.meta.env.VITE_SUPABASE_URL ?? '',
+		apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
 	};
 
-	return new GoogleCalendarService(supabase, config, userId, authToken);
+	return new GoogleCalendarService(config, userId, authToken);
 }
 
 export default GoogleCalendarService;

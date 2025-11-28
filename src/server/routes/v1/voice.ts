@@ -67,7 +67,7 @@ voiceRouter.post(
 	}),
 	zValidator('json', processCommandSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
@@ -91,7 +91,7 @@ voiceRouter.post(
 				audioData,
 				commandText: command,
 				userId: user.id,
-				context: { user, supabase },
+				context: { user, db },
 				language,
 				requireConfirmation,
 				sessionId,

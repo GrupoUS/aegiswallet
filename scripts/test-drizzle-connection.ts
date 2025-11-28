@@ -11,7 +11,7 @@
 
 import { sql } from 'drizzle-orm';
 
-import { db, pgClient, schema } from '../src/db';
+import { closePool, db, schema } from '../src/db';
 
 async function testDrizzleConnection() {
 	console.log('🔄 Starting Drizzle ORM connection test...\n');
@@ -34,12 +34,12 @@ async function testDrizzleConnection() {
 			.from(schema.users);
 		console.log('   ✅ Users count:', userCount[0]?.count);
 
-		// Test 4: Count financial_categories
-		console.log('\n📡 Test 4: Schema validation - financial_categories');
+		// Test 4: Count transaction_categories
+		console.log('\n📡 Test 4: Schema validation - transaction_categories');
 		const categoryCount = await db
 			.select({ count: sql<number>`count(*)` })
-			.from(schema.financialCategories);
-		console.log('   ✅ Financial categories count:', categoryCount[0]?.count);
+			.from(schema.transactionCategories);
+		console.log('   ✅ Transaction categories count:', categoryCount[0]?.count);
 
 		// Test 5: Count audit_logs (LGPD)
 		console.log('\n📡 Test 5: Schema validation - audit_logs (LGPD)');
@@ -51,17 +51,17 @@ async function testDrizzleConnection() {
 		// Test 6: List table names in public schema
 		console.log('\n📡 Test 6: List public schema tables');
 		const tablesResult = await db.execute(sql`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
       ORDER BY table_name
     `);
-		console.log('   ✅ Public schema tables:', tablesResult.length);
-		tablesResult.slice(0, 5).forEach((row: { table_name: string }) => {
+		console.log('   ✅ Public schema tables:', (tablesResult as any).length);
+		(tablesResult as any).slice(0, 5).forEach((row: { table_name: string }) => {
 			console.log(`      - ${row.table_name}`);
 		});
-		if (tablesResult.length > 5) {
-			console.log(`      ... and ${tablesResult.length - 5} more`);
+		if ((tablesResult as any).length > 5) {
+			console.log(`      ... and ${(tablesResult as any).length - 5} more`);
 		}
 
 		console.log('\n✅ All Drizzle ORM connection tests PASSED!\n');
@@ -76,7 +76,7 @@ async function testDrizzleConnection() {
 		process.exit(1);
 	} finally {
 		// Close connection pool
-		await pgClient.end();
+		await closePool();
 		console.log('\n🔒 Connection pool closed.');
 	}
 }

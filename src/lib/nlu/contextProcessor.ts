@@ -7,8 +7,6 @@
  * @module nlu/contextProcessor
  */
 
-import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
 import { logger } from '@/lib/logging/logger';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
@@ -923,12 +921,16 @@ export class ContextProcessor {
 		}
 
 		try {
-			// Load from Supabase
-			const { data, error } = await supabase
-				.from('user_preferences')
-				.select('*')
-				.eq('user_id', userId)
-				.single();
+			// Load from API
+			const response = await apiClient.get<{
+				id: string;
+				user_id: string;
+				created_at?: string;
+				updated_at?: string;
+			}>('/v1/users/preferences', { params: { user_id: userId } });
+
+			const data = response;
+			const error = !data ? new Error('No preferences found') : null;
 
 			if (error || !data) {
 				// Create default preferences
@@ -1054,28 +1056,46 @@ export class ContextProcessor {
 		}
 
 		try {
-			// Load financial data from Supabase
-			const { data: accountData, error: accountError } = await supabase
-				.from('bank_accounts')
-				.select('*')
-				.eq('user_id', userId)
-				.single();
-
-			if (accountError) {
+			// Load financial data from API
+			let accountData: { available_balance: number; balance: number } | null =
+				null;
+			try {
+				const accountResponse = await apiClient.get<{
+					data: { available_balance: number; balance: number }[];
+				}>('/v1/bank-accounts');
+				accountData = accountResponse.data?.[0] || null;
+			} catch (accountError) {
 				logger.error('Failed to load bank accounts for financial context', {
 					error: accountError,
 					userId,
 				});
 			}
 
-			const { data: transactionData, error: transactionError } = await supabase
-				.from('transactions')
-				.select('*')
-				.eq('user_id', userId)
-				.order('created_at', { ascending: false })
-				.limit(50);
-
-			if (transactionError) {
+			let transactionData: {
+				id: string;
+				amount: number;
+				category_id?: string;
+				created_at?: string;
+				transaction_date?: string;
+				description?: string;
+				transaction_type?: string;
+				user_id: string;
+			}[] = [];
+			try {
+				const txResponse = await apiClient.get<{
+					data: {
+						id: string;
+						amount: number;
+						category_id?: string;
+						created_at?: string;
+						transaction_date?: string;
+						description?: string;
+						transaction_type?: string;
+						user_id: string;
+					}[];
+				}>('/v1/transactions', { params: { limit: 50 } });
+				transactionData = txResponse.data || [];
+			} catch (transactionError) {
 				logger.error('Failed to load transactions for financial context', {
 					error: transactionError,
 					userId,
@@ -1562,7 +1582,7 @@ export class ContextProcessor {
 		preferences: UserPreferences,
 	): Promise<void> {
 		try {
-			const { error } = await supabase.from('user_preferences').upsert({
+			await apiClient.post('/v1/users/preferences', {
 				financial_habits: preferences.financialHabits,
 				id: preferences.id,
 				interaction_preferences: preferences.interactionPreferences,
@@ -1574,10 +1594,6 @@ export class ContextProcessor {
 				updated_at: preferences.updatedAt.toISOString(),
 				user_id: preferences.userId,
 			});
-
-			if (error) {
-				throw error;
-			}
 		} catch (error) {
 			logger.error('Failed to update user preferences', { error });
 		}
@@ -1586,18 +1602,14 @@ export class ContextProcessor {
 	private async persistContext(context: ConversationContext): Promise<void> {
 		try {
 			// Persist conversation context to database
-			const { error } = await supabase.from('conversation_contexts').upsert({
-				history: context.history as unknown as Json,
-				last_entities: (context.lastEntities ?? null) as unknown as Json,
+			await apiClient.post('/v1/conversations/contexts', {
+				history: context.history,
+				last_entities: context.lastEntities ?? null,
 				last_intent: context.lastIntent,
 				session_id: context.sessionId,
 				timestamp: context.timestamp.toISOString(),
 				user_id: context.userId,
 			});
-
-			if (error) {
-				throw error;
-			}
 		} catch (error) {
 			logger.error('Failed to persist context', { error });
 		}
@@ -1609,14 +1621,20 @@ export class ContextProcessor {
 		sessionId: string,
 	): Promise<ConversationContext | null> {
 		try {
-			const { data, error } = await supabase
-				.from('conversation_contexts')
-				.select('*')
-				.eq('user_id', userId)
-				.eq('session_id', sessionId)
-				.single();
+			const response = await apiClient.get<{
+				user_id: string;
+				session_id: string;
+				history?: ConversationTurn[];
+				last_intent?: string;
+				last_entities?: Record<string, unknown>[];
+				timestamp?: string;
+			}>('/v1/conversations/contexts', {
+				params: { user_id: userId, session_id: sessionId },
+			});
 
-			if (error || !data) {
+			const data = response;
+
+			if (!data) {
 				return null;
 			}
 

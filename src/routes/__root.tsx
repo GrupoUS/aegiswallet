@@ -1,3 +1,4 @@
+import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import {
 	createRootRoute,
@@ -15,7 +16,7 @@ import {
 	Settings,
 	Wallet,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { ConsentBanner } from '@/components/privacy';
@@ -53,23 +54,12 @@ function RootComponent() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [open, setOpen] = useState(false);
-	const { isAuthenticated, isLoading, signOut } = useAuth();
+	const { isLoading, signOut } = useAuth();
 
-	// Pages that should not show the sidebar (public pages)
-	const publicPages = ['/login', '/auth/callback'];
+	const publicPages = ['/login', '/signup'];
 	const isPublicPage = publicPages.some((page) =>
 		location.pathname.startsWith(page),
 	);
-
-	// Redirect to login if not authenticated and not on a public page
-	useEffect(() => {
-		if (!isLoading && !isAuthenticated && !isPublicPage) {
-			navigate({
-				to: '/login',
-				search: { redirect: location.pathname, error: undefined },
-			});
-		}
-	}, [isAuthenticated, isLoading, isPublicPage, location.pathname, navigate]);
 
 	const navigationItems = [
 		{
@@ -126,7 +116,6 @@ function RootComponent() {
 		);
 	}
 
-	// Render without sidebar for public pages
 	if (isPublicPage) {
 		return (
 			<CalendarProvider>
@@ -139,71 +128,72 @@ function RootComponent() {
 		);
 	}
 
-	// If not authenticated and not on public page, don't render protected content
-	if (!isAuthenticated) {
-		return null;
-	}
-
-	// Render with sidebar for authenticated pages
 	return (
-		<CalendarProvider>
-			<div
-				className={cn(
-					'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
-					'h-screen', // Use h-screen to take full height
-				)}
-			>
-				<Sidebar open={open} setOpen={setOpen}>
-					<SidebarBody className="justify-between gap-10">
-						<div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-							<div className="flex flex-col gap-4">
-								<Logo />
-								{navigationItems.map((item) => (
-									<SidebarLink key={item.href} link={item} />
-								))}
+		<>
+			<SignedOut>
+				<RedirectToSignIn />
+			</SignedOut>
+			<SignedIn>
+				<CalendarProvider>
+					<div
+						className={cn(
+							'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
+							'h-screen',
+						)}
+					>
+						<Sidebar open={open} setOpen={setOpen}>
+							<SidebarBody className="justify-between gap-10">
+								<div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+									<div className="flex flex-col gap-4">
+										<Logo />
+										{navigationItems.map((item) => (
+											<SidebarLink key={item.href} link={item} />
+										))}
+									</div>
+								</div>
+								<div className="flex flex-col gap-2">
+									<SidebarLink
+										link={{
+											href: '/ai-chat', // Updated to point to the page, but widget is also available
+											icon: (
+												<Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />
+											),
+											label: 'Assistente',
+										}}
+									/>
+									<button
+										type="button"
+										onClick={handleLogout}
+										className="w-full cursor-pointer"
+										aria-label="Sair"
+									>
+										<SidebarLink
+											link={{
+												href: '#',
+												icon: (
+													<LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />
+												),
+												label: 'Sair',
+											}}
+										/>
+									</button>
+									<div className="mt-2 pl-1">
+										<AnimatedThemeToggler />
+									</div>
+								</div>
+							</SidebarBody>
+						</Sidebar>
+						<div className="flex flex-1">
+							<div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
+								<Outlet />
 							</div>
 						</div>
-						<div className="flex flex-col gap-2">
-							<SidebarLink
-								link={{
-									href: '/ai-chat', // Updated to point to the page, but widget is also available
-									icon: (
-										<Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />
-									),
-									label: 'Assistente',
-								}}
-							/>
-							<button
-								type="button"
-								onClick={handleLogout}
-								className="w-full cursor-pointer"
-								aria-label="Sair"
-							>
-								<SidebarLink
-									link={{
-										href: '#',
-										icon: (
-											<LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />
-										),
-										label: 'Sair',
-									}}
-								/>
-							</button>
-							<div className="mt-2 pl-1">
-								<AnimatedThemeToggler />
-							</div>
-						</div>
-					</SidebarBody>
-				</Sidebar>
-				<div className="flex flex-1">
-					<div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
-						<Outlet />
+						<ChatWidget />
+						<ConsentBanner onCustomize={handleCustomizeConsent} />
 					</div>
-				</div>
-				<ChatWidget />
-				<ConsentBanner onCustomize={handleCustomizeConsent} />
-			</div>
-		</CalendarProvider>
+				</CalendarProvider>
+			</SignedIn>
+		</>
 	);
 }
 

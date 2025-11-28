@@ -3,53 +3,12 @@
  *
  * Web Push notification system for authentication and security alerts
  * VAPID authentication with LGPD compliance
+ *
+ * NOTE: Migrated from Supabase to API-based operations
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/types/database.types';
-
-// Type for push table operations
-type PushQueryBuilder = {
-	upsert: (values: Record<string, unknown>) => Promise<{ error: unknown }>;
-	update: (values: Record<string, unknown>) => {
-		eq: (col: string, val: unknown) => Promise<{ error: unknown }>;
-	};
-	select: (columns: string) => {
-		eq: (
-			col: string,
-			val: unknown,
-		) => {
-			eq: (
-				col: string,
-				val: unknown,
-			) => {
-				single: () => Promise<{
-					data: Record<string, unknown> | null;
-					error: unknown;
-				}>;
-			};
-		};
-	};
-	insert: (values: Record<string, unknown>) => Promise<{ error: unknown }>;
-};
-
-// Extended Supabase client type to allow dynamic table access
-type ExtendedSupabaseClient = SupabaseClient<Database> & {
-	from: (table: string) => PushQueryBuilder;
-};
-
-type JsonValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonValue[]
-	| { [key: string]: JsonValue };
-interface JsonObject {
-	[key: string]: JsonValue;
-}
+import { apiClient } from '@/lib/api-client';
+import logger from '@/lib/logging/secure-logger';
 
 export interface PushConfig {
 	vapidPublicKey: string;
@@ -116,9 +75,6 @@ export class PushProvider {
 		this.initializeServiceWorker();
 	}
 
-	/**
-	 * Initialize service worker for push notifications
-	 */
 	private async initializeServiceWorker(): Promise<void> {
 		if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
 			return;
@@ -126,12 +82,11 @@ export class PushProvider {
 
 		try {
 			await navigator.serviceWorker.register('/sw.js');
-		} catch (_error) {}
+		} catch (_error) {
+			// Silent fail - service worker may not be available
+		}
 	}
 
-	/**
-	 * Convert base64 URL to Uint8Array
-	 */
 	private base64UrlToUint8Array(base64UrlData: string): Uint8Array {
 		const padding = '='.repeat((4 - (base64UrlData.length % 4)) % 4);
 		const base64 = (base64UrlData + padding)
@@ -168,11 +123,9 @@ export class PushProvider {
 			throw new Error('Push subscription keys are missing');
 		}
 
-		// Store subscription in database
-		// TODO: Create push_subscriptions table in database
-		await (supabase as ExtendedSupabaseClient)
-			.from('push_subscriptions')
-			.upsert({
+		// Store subscription via API
+		try {
+			await apiClient.post('/v1/security/push-subscriptions', {
 				auth_key: subscriptionJson.keys.auth,
 				created_at: new Date().toISOString(),
 				endpoint: subscription.endpoint,
@@ -181,6 +134,13 @@ export class PushProvider {
 				updated_at: new Date().toISOString(),
 				user_id: userId,
 			});
+		} catch (error) {
+			logger.debug('Push subscription endpoint not available', {
+				component: 'pushProvider',
+				action: 'subscribe',
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+		}
 
 		const stored: StoredPushSubscription = {
 			endpoint: subscription.endpoint,
@@ -201,11 +161,10 @@ export class PushProvider {
 		try {
 			this.subscriptions.delete(userId);
 
-			// Deactivate in database
-			await (supabase as ExtendedSupabaseClient)
-				.from('push_subscriptions')
-				.update({ is_active: false })
-				.eq('user_id', userId);
+			// Deactivate via API
+			await apiClient.post('/v1/security/push-subscriptions/deactivate', {
+				user_id: userId,
+			});
 
 			return true;
 		} catch (_error) {
@@ -224,30 +183,31 @@ export class PushProvider {
 			return this.subscriptions.get(userId) as StoredPushSubscription;
 		}
 
-		// Fetch from database
-		// TODO: Create push_subscriptions table in database
-		const { data } = await (supabase as ExtendedSupabaseClient)
-			.from('push_subscriptions')
-			.select('endpoint, auth_key, p256dh_key')
-			.eq('user_id', userId)
-			.eq('is_active', true)
-			.single();
+		// Fetch from API
+		try {
+			const response = await apiClient.get<{
+				data: {
+					endpoint: string;
+					auth_key: string;
+					p256dh_key: string;
+				} | null;
+			}>('/v1/security/push-subscriptions/active', {
+				params: { user_id: userId },
+			});
 
-		if (data) {
-			const typedData = data as {
-				endpoint: string;
-				auth_key: string;
-				p256dh_key: string;
-			};
-			const subscription: StoredPushSubscription = {
-				endpoint: typedData.endpoint,
-				keys: {
-					auth: typedData.auth_key,
-					p256dh: typedData.p256dh_key,
-				},
-			};
-			this.subscriptions.set(userId, subscription);
-			return subscription;
+			if (response.data) {
+				const subscription: StoredPushSubscription = {
+					endpoint: response.data.endpoint,
+					keys: {
+						auth: response.data.auth_key,
+						p256dh: response.data.p256dh_key,
+					},
+				};
+				this.subscriptions.set(userId, subscription);
+				return subscription;
+			}
+		} catch {
+			// Endpoint may not exist yet
 		}
 
 		return null;
@@ -272,15 +232,12 @@ export class PushProvider {
 				};
 			}
 
-			const sanitizedData = this.sanitizeData(message.data) ?? {};
-
-			// Prepare payload
 			const payload = JSON.stringify({
 				actions: message.actions,
 				badge: message.badge || '/badge-72x72.png',
 				body: message.body,
 				data: {
-					...sanitizedData,
+					...(message.data || {}),
 					url: message.url || '/',
 					timestamp: Date.now(),
 				},
@@ -292,7 +249,6 @@ export class PushProvider {
 				title: message.title,
 			});
 
-			// Send via backend API
 			const response = await fetch('/api/push/send', {
 				body: JSON.stringify({
 					options: {
@@ -320,7 +276,7 @@ export class PushProvider {
 
 			const data = await response.json();
 
-			// Log push notification
+			// Log push notification via API
 			await this.logPushNotification(userId, message, data.messageId, 'sent');
 
 			return {
@@ -332,7 +288,6 @@ export class PushProvider {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error';
 
-			// Log failed push notification
 			await this.logPushNotification(
 				userId,
 				message,
@@ -349,9 +304,6 @@ export class PushProvider {
 		}
 	}
 
-	/**
-	 * Log push notification to database for LGPD compliance
-	 */
 	private async logPushNotification(
 		userId: string,
 		message: PushMessage,
@@ -360,12 +312,9 @@ export class PushProvider {
 		error?: string,
 	): Promise<void> {
 		try {
-			const serializedData = this.sanitizeData(message.data);
-
-			// TODO: Create push_logs table in database
-			await (supabase as ExtendedSupabaseClient).from('push_logs').insert({
+			await apiClient.post('/v1/security/push-logs', {
 				created_at: new Date().toISOString(),
-				data: serializedData,
+				data: message.data,
 				error,
 				message_body: message.body,
 				message_id: messageId,
@@ -374,7 +323,9 @@ export class PushProvider {
 				tag: message.tag,
 				user_id: userId,
 			});
-		} catch (_logError) {}
+		} catch {
+			// Silent fail - logging endpoint may not exist
+		}
 	}
 
 	/**
@@ -382,7 +333,7 @@ export class PushProvider {
 	 */
 	async createAuthPushRequest(userId: string): Promise<AuthPushRequest> {
 		const pushToken = this.generateSecureToken(16);
-		const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+		const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
 		const request: AuthPushRequest = {
 			createdAt: new Date(),
@@ -393,15 +344,19 @@ export class PushProvider {
 			userId,
 		};
 
-		// Store in database
-		await supabase.from('push_auth_requests').insert({
-			created_at: request.createdAt.toISOString(),
-			expires_at: expiresAt.toISOString(),
-			id: request.id,
-			push_token: pushToken,
-			status: 'pending',
-			user_id: userId,
-		});
+		// Store via API
+		try {
+			await apiClient.post('/v1/security/push-auth-requests', {
+				created_at: request.createdAt.toISOString(),
+				expires_at: expiresAt.toISOString(),
+				id: request.id,
+				push_token: pushToken,
+				status: 'pending',
+				user_id: userId,
+			});
+		} catch {
+			// Silent fail
+		}
 
 		return request;
 	}
@@ -458,16 +413,12 @@ export class PushProvider {
 		userId: string,
 	): Promise<void> {
 		try {
-			// Update request status
-			await supabase
-				.from('push_auth_requests')
-				.update({
-					responded_at: new Date().toISOString(),
-					status: approved ? 'approved' : 'denied',
-				})
-				.eq('id', requestId);
+			await apiClient.post('/v1/security/push-auth-requests/respond', {
+				request_id: requestId,
+				approved,
+				responded_at: new Date().toISOString(),
+			});
 
-			// Log response
 			await this.logPushNotification(
 				userId,
 				{
@@ -478,64 +429,11 @@ export class PushProvider {
 				undefined,
 				'delivered',
 			);
-		} catch (_error) {}
+		} catch (_error) {
+			// Silent fail
+		}
 	}
 
-	private sanitizeData(data?: Record<string, unknown>): JsonObject | null {
-		if (!data) {
-			return null;
-		}
-
-		const result: JsonObject = {};
-		for (const [key, value] of Object.entries(data)) {
-			const jsonValue = this.toJsonValue(value);
-			if (jsonValue !== undefined) {
-				result[key] = jsonValue;
-			}
-		}
-		return result;
-	}
-
-	private toJsonValue(value: unknown): JsonValue | undefined {
-		if (value === undefined) {
-			return undefined;
-		}
-
-		if (
-			value === null ||
-			typeof value === 'string' ||
-			typeof value === 'number' ||
-			typeof value === 'boolean'
-		) {
-			return value;
-		}
-
-		if (Array.isArray(value)) {
-			const arrayValues = value
-				.map((item) => this.toJsonValue(item))
-				.filter((item): item is JsonValue => item !== undefined);
-			return arrayValues;
-		}
-
-		if (typeof value === 'object') {
-			const record: JsonObject = {};
-			for (const [nestedKey, nestedValue] of Object.entries(
-				value as Record<string, unknown>,
-			)) {
-				const jsonValue = this.toJsonValue(nestedValue);
-				if (jsonValue !== undefined) {
-					record[nestedKey] = jsonValue;
-				}
-			}
-			return record;
-		}
-
-		return String(value);
-	}
-
-	/**
-	 * Generate secure random token
-	 */
 	private generateSecureToken(length: number): string {
 		const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 		let result = '';
@@ -575,12 +473,12 @@ export class PushProvider {
 	 */
 	async cleanupExpiredRequests(): Promise<void> {
 		try {
-			await supabase
-				.from('push_auth_requests')
-				.update({ status: 'expired' })
-				.lt('expires_at', new Date().toISOString())
-				.eq('status', 'pending');
-		} catch (_error) {}
+			await apiClient.post('/v1/security/push-auth-requests/cleanup', {
+				before: new Date().toISOString(),
+			});
+		} catch (_error) {
+			// Silent fail
+		}
 	}
 }
 

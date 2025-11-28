@@ -3,9 +3,12 @@
  *
  * Twilio SMS integration for OTP and security notifications
  * LGPD-compliant messaging with Brazilian phone number support
+ *
+ * NOTE: Migrated from Supabase to API-based logging
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
+import logger from '@/lib/logging/secure-logger';
 
 export interface SMSConfig {
 	accountSid: string;
@@ -82,24 +85,17 @@ export class SMSProvider {
 		this.loadTemplates();
 	}
 
-	/**
-	 * Load default SMS templates
-	 */
 	private loadTemplates(): void {
-		DEFAULT_TEMPLATES.forEach((template) => {
+		for (const template of DEFAULT_TEMPLATES) {
 			this.templates.set(template.id, template);
-		});
+		}
 	}
 
 	/**
 	 * Validate Brazilian phone number
 	 */
 	private validateBrazilianPhone(phone: string): boolean {
-		// Remove all non-digit characters
 		const cleanPhone = phone.replace(/\D/g, '');
-
-		// Check if it's a valid Brazilian mobile number
-		// Brazilian mobile numbers: +55 (11-99) 9xxxx-xxxx
 		const mobileRegex = /^55[1-9]{2}9?[6-9]\d{7,8}$/;
 		return mobileRegex.test(cleanPhone);
 	}
@@ -110,7 +106,6 @@ export class SMSProvider {
 	private formatPhoneNumber(phone: string): string {
 		let cleanPhone = phone.replace(/\D/g, '');
 
-		// Add +55 if missing country code
 		if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
 			cleanPhone = cleanPhone.slice(1);
 		}
@@ -131,16 +126,16 @@ export class SMSProvider {
 	): string {
 		let result = template;
 
-		Object.entries(variables).forEach(([key, value]) => {
+		for (const [key, value] of Object.entries(variables)) {
 			const regex = new RegExp(`{{${key}}}`, 'g');
 			result = result.replace(regex, value);
-		});
+		}
 
 		return result;
 	}
 
 	/**
-	 * Log SMS message to database for LGPD compliance
+	 * Log SMS message via API for LGPD compliance
 	 */
 	private async logSMSMessage(
 		userId: string,
@@ -148,9 +143,7 @@ export class SMSProvider {
 		result: SMSResult,
 	): Promise<void> {
 		try {
-			// TODO: Create sms_logs table in database
-			// @ts-expect-error - Table not yet in schema
-			await supabase.from('sms_logs').insert({
+			await apiClient.post('/v1/security/sms-logs', {
 				body: message.body,
 				created_at: new Date().toISOString(),
 				error: result.error,
@@ -162,7 +155,13 @@ export class SMSProvider {
 				user_id: userId,
 				variables: message.variables,
 			});
-		} catch (_error) {}
+		} catch (error) {
+			logger.debug('SMS log endpoint not available', {
+				component: 'smsProvider',
+				action: 'logSMSMessage',
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+		}
 	}
 
 	/**
@@ -172,7 +171,6 @@ export class SMSProvider {
 		const startTime = Date.now();
 
 		try {
-			// Validate phone number
 			if (!this.validateBrazilianPhone(message.to)) {
 				const error = 'Invalid Brazilian phone number format';
 				const result: SMSResult = {
@@ -184,10 +182,8 @@ export class SMSProvider {
 				return result;
 			}
 
-			// Format phone number
 			const formattedPhone = this.formatPhoneNumber(message.to);
 
-			// Process template if provided
 			let finalBody = message.body ?? '';
 			if (message.template && this.templates.has(message.template)) {
 				const template = this.templates.get(message.template);
@@ -206,16 +202,14 @@ export class SMSProvider {
 					'Mensagem AegisWallet.';
 			}
 
-			// Prepare Twilio request
 			const requestBody = new URLSearchParams({
 				Body: finalBody,
 				From: this.config.fromNumber,
 				MaxPrice: '0.10',
 				StatusCallback: `${window.location.origin}/api/sms/status`,
-				To: formattedPhone, // Limit cost for Brazilian SMS
+				To: formattedPhone,
 			});
 
-			// Make API request to backend (server-side)
 			const response = await fetch('/api/sms/send', {
 				body: requestBody.toString(),
 				headers: {

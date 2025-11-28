@@ -1,15 +1,17 @@
 /**
  * API Routes
  * Non-tRPC API endpoints
+ * Using Drizzle ORM with Neon serverless
  */
 
+import { sql } from 'drizzle-orm';
 import type { Hono } from 'hono';
 
-import { createServerSupabaseClient } from '@/integrations/supabase/server';
+import { db } from '@/db/client';
 import type { AppEnv } from '@/server/hono-types';
 
 /**
- * Check Supabase database connectivity
+ * Check Neon database connectivity using Drizzle
  * @returns Promise with connection status and latency
  */
 async function checkDatabaseHealth(): Promise<{
@@ -20,21 +22,10 @@ async function checkDatabaseHealth(): Promise<{
 	const startTime = Date.now();
 
 	try {
-		const supabase = createServerSupabaseClient();
-
-		// Simple query to verify connectivity - using a lightweight query
-		const { error } = await supabase.from('users').select('id').limit(1);
+		// Simple query to verify connectivity - using SQL raw query
+		await db.execute(sql`SELECT 1`);
 
 		const latencyMs = Date.now() - startTime;
-
-		if (error) {
-			// RLS error means DB is connected but user not authenticated - that's fine for health check
-			if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-				return { status: 'connected', latencyMs };
-			}
-			return { status: 'error', latencyMs, error: error.message };
-		}
-
 		return { status: 'connected', latencyMs };
 	} catch (err) {
 		const latencyMs = Date.now() - startTime;

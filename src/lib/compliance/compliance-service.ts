@@ -1,17 +1,19 @@
 /**
  * LGPD Compliance Service
  * Manages consent, data export, deletion requests, and transaction limits
- *
- * NOTE: This service uses 'any' typing for Supabase client because the
- * compliance tables (lgpd_consents, consent_templates, etc.) are defined
- * in migration 20251127_add_lgpd_compliance_tables.sql but the TypeScript
- * types have not been regenerated yet. After running the migration and
- * regenerating types with `bunx supabase gen types`, this can be updated
- * to use proper typed client.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
+import type { HttpClient } from '@/db/client';
+import {
+	complianceAuditLogs,
+	consentTemplates,
+	dataDeletionRequests,
+	dataExportRequests,
+	lgpdConsents,
+	transactionLimits,
+} from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type {
 	CheckLimitResponse,
@@ -29,12 +31,8 @@ import type {
 	TransactionLimitType,
 } from '@/types/compliance';
 
-// Using any type until migration is applied and types regenerated
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseClientType = SupabaseClient<any>;
-
 export class ComplianceService {
-	constructor(private supabase: SupabaseClientType) {}
+	constructor(private db: HttpClient) {}
 
 	// ========================================
 	// CONSENT MANAGEMENT
@@ -44,43 +42,45 @@ export class ComplianceService {
 	 * Get all consents for a user
 	 */
 	async getUserConsents(userId: string): Promise<LgpdConsent[]> {
-		const { data, error } = await this.supabase
-			.from('lgpd_consents')
-			.select('*')
-			.eq('user_id', userId)
-			.order('created_at', { ascending: false });
+		try {
+			const data = await this.db
+				.select()
+				.from(lgpdConsents)
+				.where(eq(lgpdConsents.userId, userId))
+				.orderBy(desc(lgpdConsents.createdAt));
 
-		if (error) {
+			return data as unknown as LgpdConsent[];
+		} catch (error) {
 			secureLogger.error('Failed to get user consents', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
-			throw new Error(`Erro ao buscar consentimentos: ${error.message}`);
+			throw new Error(
+				`Erro ao buscar consentimentos: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		return (data ?? []) as unknown as LgpdConsent[];
 	}
 
 	/**
 	 * Get active consent templates
 	 */
 	async getConsentTemplates(): Promise<ConsentTemplate[]> {
-		const { data, error } = await this.supabase
-			.from('consent_templates')
-			.select('*')
-			.eq('is_active', true)
-			.order('consent_type');
+		try {
+			const data = await this.db
+				.select()
+				.from(consentTemplates)
+				.where(eq(consentTemplates.isActive, true))
+				.orderBy(consentTemplates.consentType);
 
-		if (error) {
+			return data as unknown as ConsentTemplate[];
+		} catch (error) {
 			secureLogger.error('Failed to get consent templates', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 			});
 			throw new Error(
-				`Erro ao buscar modelos de consentimento: ${error.message}`,
+				`Erro ao buscar templates de consentimento: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-
-		return (data ?? []) as unknown as ConsentTemplate[];
 	}
 
 	/**
@@ -93,85 +93,122 @@ export class ComplianceService {
 		ipAddress?: string,
 		userAgent?: string,
 	): Promise<LgpdConsent> {
-		// Get the template for this consent type
-		const { data: template } = await this.supabase
-			.from('consent_templates')
-			.select('*')
-			.eq('consent_type', consentType)
-			.eq('is_active', true)
-			.order('version', { ascending: false })
-			.limit(1)
-			.single();
+		try {
+			// Get the template for this consent type
+			const [template] = await this.db
+				.select()
+				.from(consentTemplates)
+				.where(
+					and(
+						eq(consentTemplates.consentType, consentType),
+						eq(consentTemplates.isActive, true),
+					),
+				)
+				.limit(1);
 
-		if (!template) {
-			throw new Error(`Modelo de consentimento não encontrado: ${consentType}`);
-		}
+			if (!template) {
+				throw new Error(
+					`Template de consentimento não encontrado: ${consentType}`,
+				);
+			}
 
-		// Generate hash of consent text
-		const textHash = await this.generateHash(template.full_text_pt);
+			// Generate hash of consent text
+			const consentTextHash = await this.generateHash(template.fullTextPt);
 
-		const { data, error } = await this.supabase
-			.from('lgpd_consents')
-			.upsert(
-				{
-					user_id: userId,
-					consent_type: consentType,
-					purpose: template.description_pt,
-					legal_basis: 'consent',
+			// Check if consent already exists
+			const [existing] = await this.db
+				.select()
+				.from(lgpdConsents)
+				.where(
+					and(
+						eq(lgpdConsents.userId, userId),
+						eq(lgpdConsents.consentType, consentType),
+					),
+				)
+				.limit(1);
+
+			if (existing) {
+				// Update existing consent
+				const [updated] = await this.db
+					.update(lgpdConsents)
+					.set({
+						granted: true,
+						grantedAt: new Date(),
+						revokedAt: null,
+						consentVersion: template.version,
+						consentTextHash,
+						collectionMethod,
+						ipAddress: ipAddress ?? null,
+						userAgent: userAgent ?? null,
+						metadata: {},
+					})
+					.where(eq(lgpdConsents.id, existing.id))
+					.returning();
+
+				return updated as unknown as LgpdConsent;
+			}
+
+			// Create new consent
+			const [newConsent] = await this.db
+				.insert(lgpdConsents)
+				.values({
+					userId,
+					consentType,
+					purpose: template.descriptionPt,
+					legalBasis: 'consent',
 					granted: true,
-					granted_at: new Date().toISOString(),
-					revoked_at: null,
-					consent_version: template.version,
-					consent_text_hash: textHash,
-					collection_method: collectionMethod,
-					ip_address: ipAddress,
-					user_agent: userAgent,
-				},
-				{
-					onConflict: 'user_id,consent_type,consent_version',
-				},
-			)
-			.select()
-			.single();
+					grantedAt: new Date(),
+					revokedAt: null,
+					consentVersion: template.version,
+					consentTextHash,
+					collectionMethod,
+					ipAddress: ipAddress ?? null,
+					userAgent: userAgent ?? null,
+					metadata: {},
+					expiresAt: null,
+				})
+				.returning();
 
-		if (error) {
+			return newConsent as unknown as LgpdConsent;
+		} catch (error) {
 			secureLogger.error('Failed to grant consent', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 				consentType,
 			});
-			throw new Error(`Erro ao registrar consentimento: ${error.message}`);
+			throw new Error(
+				`Erro ao conceder consentimento: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		secureLogger.info('Consent granted', { userId, consentType });
-		return data as unknown as LgpdConsent;
 	}
 
 	/**
 	 * Revoke a consent
 	 */
 	async revokeConsent(userId: string, consentType: ConsentType): Promise<void> {
-		const { error } = await this.supabase
-			.from('lgpd_consents')
-			.update({
-				revoked_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
-			})
-			.eq('user_id', userId)
-			.eq('consent_type', consentType)
-			.eq('granted', true)
-			.is('revoked_at', null);
-
-		if (error) {
+		try {
+			await this.db
+				.update(lgpdConsents)
+				.set({
+					granted: false,
+					revokedAt: new Date(),
+				})
+				.where(
+					and(
+						eq(lgpdConsents.userId, userId),
+						eq(lgpdConsents.consentType, consentType),
+					),
+				);
+		} catch (error) {
 			secureLogger.error('Failed to revoke consent', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 				consentType,
 			});
-			throw new Error(`Erro ao revogar consentimento: ${error.message}`);
+			throw new Error(
+				`Erro ao revogar consentimento: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		secureLogger.info('Consent revoked', { userId, consentType });
 	}
 
 	/**
@@ -181,56 +218,73 @@ export class ComplianceService {
 		userId: string,
 		requiredConsents: ConsentType[],
 	): Promise<boolean> {
-		const { data, error } = await this.supabase.rpc('check_required_consents', {
-			p_user_id: userId,
-			p_required_consents: requiredConsents,
-		});
+		try {
+			const data = await this.db
+				.select()
+				.from(lgpdConsents)
+				.where(
+					and(
+						eq(lgpdConsents.userId, userId),
+						inArray(lgpdConsents.consentType, requiredConsents),
+						eq(lgpdConsents.granted, true),
+					),
+				);
 
-		if (error) {
+			return data.length === requiredConsents.length;
+		} catch (error) {
 			secureLogger.error('Failed to check required consents', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
 			return false;
 		}
-
-		return data as boolean;
 	}
 
 	/**
 	 * Get missing mandatory consents
 	 */
 	async getMissingMandatoryConsents(userId: string): Promise<ConsentType[]> {
-		// Get mandatory templates
-		const { data: templates } = await this.supabase
-			.from('consent_templates')
-			.select('consent_type')
-			.eq('is_mandatory', true)
-			.eq('is_active', true);
+		try {
+			// Get all mandatory templates
+			const templates = await this.db
+				.select()
+				.from(consentTemplates)
+				.where(
+					and(
+						eq(consentTemplates.isMandatory, true),
+						eq(consentTemplates.isActive, true),
+					),
+				);
 
-		if (!templates || templates.length === 0) return [];
+			const mandatoryTypes = templates.map((t) => t.consentType as ConsentType);
 
-		const mandatoryTypes = templates.map(
-			(t) => t.consent_type,
-		) as ConsentType[];
+			// Get granted consents
+			const grantedConsents = await this.db
+				.select()
+				.from(lgpdConsents)
+				.where(
+					and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.granted, true)),
+				);
 
-		// Get user's active consents
-		const { data: consents } = await this.supabase
-			.from('lgpd_consents')
-			.select('consent_type')
-			.eq('user_id', userId)
-			.eq('granted', true)
-			.is('revoked_at', null);
+			const grantedTypes = grantedConsents.map(
+				(c) => c.consentType as ConsentType,
+			);
 
-		const grantedTypes = (consents ?? []).map(
-			(c) => c.consent_type,
-		) as ConsentType[];
-
-		return mandatoryTypes.filter((type) => !grantedTypes.includes(type));
+			// Return missing consents
+			return mandatoryTypes.filter((type) => !grantedTypes.includes(type));
+		} catch (error) {
+			secureLogger.error('Failed to get missing mandatory consents', {
+				error: error instanceof Error ? error.message : 'Unknown error',
+				userId,
+			});
+			throw new Error(
+				`Erro ao buscar consentimentos obrigatórios faltantes: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
+		}
 	}
 
 	// ========================================
-	// DATA EXPORT REQUESTS
+	// DATA EXPORT
 	// ========================================
 
 	/**
@@ -244,73 +298,67 @@ export class ComplianceService {
 		dateTo?: string,
 		ipAddress?: string,
 	): Promise<DataExportRequest> {
-		const { data, error } = await this.supabase
-			.from('data_export_requests')
-			.insert({
-				user_id: userId,
-				request_type: requestType,
-				format,
-				status: 'pending',
-				date_from: dateFrom ?? null,
-				date_to: dateTo ?? null,
-				requested_via: 'app',
-				ip_address: ipAddress,
-			})
-			.select()
-			.single();
+		try {
+			const [request] = await this.db
+				.insert(dataExportRequests)
+				.values({
+					userId,
+					requestType,
+					format,
+					status: 'pending',
+					dateFrom: dateFrom ?? null,
+					dateTo: dateTo ?? null,
+					requestedVia: 'app',
+					ipAddress: ipAddress ?? null,
+				})
+				.returning();
 
-		if (error) {
+			// Log audit event
+			await this.logAuditEvent(
+				userId,
+				'data_export_requested',
+				'data_export_requests',
+				request.id,
+				{ requestType, format },
+			);
+
+			return request as unknown as DataExportRequest;
+		} catch (error) {
 			secureLogger.error('Failed to create export request', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
 			throw new Error(
-				`Erro ao criar solicitação de exportação: ${error.message}`,
+				`Erro ao criar solicitação de exportação: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-
-		// Log compliance event
-		await this.logComplianceEvent(
-			userId,
-			'data_export_requested',
-			'data_export_requests',
-			data.id,
-			`Export request created: ${requestType} in ${format} format`,
-		);
-
-		secureLogger.info('Export request created', {
-			userId,
-			requestId: data.id,
-			requestType,
-		});
-		return data as unknown as DataExportRequest;
 	}
 
 	/**
 	 * Get user's export requests
 	 */
 	async getExportRequests(userId: string): Promise<DataExportRequest[]> {
-		const { data, error } = await this.supabase
-			.from('data_export_requests')
-			.select('*')
-			.eq('user_id', userId)
-			.order('created_at', { ascending: false });
+		try {
+			const data = await this.db
+				.select()
+				.from(dataExportRequests)
+				.where(eq(dataExportRequests.userId, userId))
+				.orderBy(desc(dataExportRequests.createdAt));
 
-		if (error) {
+			return data as unknown as DataExportRequest[];
+		} catch (error) {
 			secureLogger.error('Failed to get export requests', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
 			throw new Error(
-				`Erro ao buscar solicitações de exportação: ${error.message}`,
+				`Erro ao buscar solicitações de exportação: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-
-		return (data ?? []) as unknown as DataExportRequest[];
 	}
 
 	// ========================================
-	// DATA DELETION REQUESTS
+	// DATA DELETION
 	// ========================================
 
 	/**
@@ -323,94 +371,82 @@ export class ComplianceService {
 		reason?: string,
 		ipAddress?: string,
 	): Promise<DataDeletionRequest> {
-		// Check for legal holds
-		const { data: hasHold } = await this.supabase
-			.from('data_deletion_requests')
-			.select('id')
-			.eq('user_id', userId)
-			.eq('legal_hold', true)
-			.eq('status', 'approved')
-			.limit(1);
+		try {
+			// Check for legal hold
+			const [existingHold] = await this.db
+				.select({ legalHold: dataDeletionRequests.legalHold })
+				.from(dataDeletionRequests)
+				.where(
+					and(
+						eq(dataDeletionRequests.userId, userId),
+						eq(dataDeletionRequests.legalHold, true),
+					),
+				)
+				.limit(1);
 
-		if (hasHold && hasHold.length > 0) {
-			throw new Error(
-				'Seus dados estão sob retenção legal e não podem ser excluídos no momento.',
+			if (existingHold?.legalHold) {
+				throw new Error(
+					'Seus dados estão em retenção legal e não podem ser excluídos no momento',
+				);
+			}
+
+			// Calculate review deadline (15 days per LGPD)
+			const reviewDeadline = new Date();
+			reviewDeadline.setDate(reviewDeadline.getDate() + 15);
+
+			const [request] = await this.db
+				.insert(dataDeletionRequests)
+				.values({
+					userId,
+					requestType,
+					scope: scope ?? {},
+					reason: reason ?? null,
+					status: 'pending',
+					reviewDeadline,
+					ipAddress: ipAddress ?? null,
+				})
+				.returning();
+
+			// Log audit event
+			await this.logAuditEvent(
+				userId,
+				'data_deletion_requested',
+				'data_deletion_requests',
+				request.id,
+				{ requestType },
 			);
-		}
 
-		// Calculate review deadline (15 days per LGPD)
-		const reviewDeadline = new Date();
-		reviewDeadline.setDate(reviewDeadline.getDate() + 15);
-
-		// Generate verification code
-		const verificationCode = Math.random()
-			.toString(36)
-			.substring(2, 8)
-			.toUpperCase();
-
-		const { data, error } = await this.supabase
-			.from('data_deletion_requests')
-			.insert({
-				user_id: userId,
-				request_type: requestType,
-				scope: scope ?? {},
-				reason: reason ?? null,
-				status: 'pending',
-				verification_code: verificationCode,
-				review_deadline: reviewDeadline.toISOString(),
-				ip_address: ipAddress,
-			})
-			.select()
-			.single();
-
-		if (error) {
+			return request as unknown as DataDeletionRequest;
+		} catch (error) {
 			secureLogger.error('Failed to create deletion request', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
-			throw new Error(
-				`Erro ao criar solicitação de exclusão: ${error.message}`,
-			);
+			throw error;
 		}
-
-		// Log compliance event
-		await this.logComplianceEvent(
-			userId,
-			'data_deletion_requested',
-			'data_deletion_requests',
-			data.id,
-			`Deletion request created: ${requestType}`,
-		);
-
-		secureLogger.info('Deletion request created', {
-			userId,
-			requestId: data.id,
-			requestType,
-		});
-		return data as unknown as DataDeletionRequest;
 	}
 
 	/**
 	 * Get user's deletion requests
 	 */
 	async getDeletionRequests(userId: string): Promise<DataDeletionRequest[]> {
-		const { data, error } = await this.supabase
-			.from('data_deletion_requests')
-			.select('*')
-			.eq('user_id', userId)
-			.order('created_at', { ascending: false });
+		try {
+			const data = await this.db
+				.select()
+				.from(dataDeletionRequests)
+				.where(eq(dataDeletionRequests.userId, userId))
+				.orderBy(desc(dataDeletionRequests.createdAt));
 
-		if (error) {
+			return data as unknown as DataDeletionRequest[];
+		} catch (error) {
 			secureLogger.error('Failed to get deletion requests', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
 			throw new Error(
-				`Erro ao buscar solicitações de exclusão: ${error.message}`,
+				`Erro ao buscar solicitações de exclusão: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-
-		return (data ?? []) as unknown as DataDeletionRequest[];
 	}
 
 	// ========================================
@@ -421,22 +457,22 @@ export class ComplianceService {
 	 * Get user's transaction limits
 	 */
 	async getTransactionLimits(userId: string): Promise<TransactionLimit[]> {
-		const { data, error } = await this.supabase
-			.from('transaction_limits')
-			.select('*')
-			.eq('user_id', userId)
-			.eq('is_active', true)
-			.order('limit_type', { ascending: true });
+		try {
+			const data = await this.db
+				.select()
+				.from(transactionLimits)
+				.where(eq(transactionLimits.userId, userId));
 
-		if (error) {
+			return data as unknown as TransactionLimit[];
+		} catch (error) {
 			secureLogger.error('Failed to get transaction limits', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
-			throw new Error(`Erro ao buscar limites de transação: ${error.message}`);
+			throw new Error(
+				`Erro ao buscar limites de transação: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		return (data ?? []) as unknown as TransactionLimit[];
 	}
 
 	/**
@@ -447,40 +483,88 @@ export class ComplianceService {
 		limitType: TransactionLimitType,
 		amount: number,
 	): Promise<CheckLimitResponse> {
-		const { data: limit, error } = await this.supabase
-			.from('transaction_limits')
-			.select('*')
-			.eq('user_id', userId)
-			.eq('limit_type', limitType)
-			.eq('is_active', true)
-			.single();
+		try {
+			const [limit] = await this.db
+				.select()
+				.from(transactionLimits)
+				.where(
+					and(
+						eq(transactionLimits.userId, userId),
+						eq(transactionLimits.limitType, limitType),
+						eq(transactionLimits.isActive, true),
+					),
+				)
+				.limit(1);
 
-		if (error && error.code !== 'PGRST116') {
-			secureLogger.error('Failed to check limit', {
-				error: error.message,
-				userId,
-				limitType,
-			});
-			throw new Error(`Erro ao verificar limite: ${error.message}`);
-		}
+			if (!limit) {
+				return { allowed: true };
+			}
 
-		// No limit configured - allow transaction
-		if (!limit) {
-			return { allowed: true, remaining: Number.POSITIVE_INFINITY };
-		}
+			const dailyLimit = Number(limit.dailyLimit);
+			const currentUsed = Number(limit.currentDailyUsed ?? 0);
+			const perTransactionLimit = limit.perTransactionLimit
+				? Number(limit.perTransactionLimit)
+				: null;
+			const availableAmount = dailyLimit - currentUsed;
 
-		const typedLimit = limit as unknown as TransactionLimit;
-		const remaining = typedLimit.daily_limit - typedLimit.current_daily_used;
+			// Check per-transaction limit
+			if (perTransactionLimit && amount > perTransactionLimit) {
+				return {
+					allowed: false,
+					reason: `Valor excede limite por transação de R$ ${perTransactionLimit.toFixed(2)}`,
+					limit: dailyLimit,
+					used: currentUsed,
+					requested: amount,
+					remaining: availableAmount,
+				};
+			}
 
-		if (amount > remaining) {
+			// Check daily limit
+			if (amount > availableAmount) {
+				return {
+					allowed: false,
+					reason: `Valor excede saldo diário disponível de R$ ${availableAmount.toFixed(2)}`,
+					limit: dailyLimit,
+					used: currentUsed,
+					requested: amount,
+					remaining: availableAmount,
+				};
+			}
+
+			// Check if requires approval
+			const requiresApprovalAbove = limit.requiresApprovalAbove
+				? Number(limit.requiresApprovalAbove)
+				: null;
+
+			if (requiresApprovalAbove && amount > requiresApprovalAbove) {
+				return {
+					allowed: true,
+					requires_approval: true,
+					reason: `Transação requer aprovação manual (acima de R$ ${requiresApprovalAbove.toFixed(2)})`,
+					limit: dailyLimit,
+					used: currentUsed,
+					requested: amount,
+					remaining: availableAmount,
+				};
+			}
+
 			return {
-				allowed: false,
-				remaining,
-				reason: `Limite diário excedido. Disponível: R$ ${remaining.toFixed(2)}`,
+				allowed: true,
+				limit: dailyLimit,
+				used: currentUsed,
+				requested: amount,
+				remaining: availableAmount,
 			};
+		} catch (error) {
+			secureLogger.error('Failed to check transaction limit', {
+				error: error instanceof Error ? error.message : 'Unknown error',
+				limitType,
+				userId,
+			});
+			throw new Error(
+				`Erro ao verificar limite de transação: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
-
-		return { allowed: true, remaining: remaining - amount };
 	}
 
 	/**
@@ -491,19 +575,28 @@ export class ComplianceService {
 		limitType: TransactionLimitType,
 		amount: number,
 	): Promise<void> {
-		const { error } = await this.supabase.rpc('update_limit_usage', {
-			p_user_id: userId,
-			p_limit_type: limitType,
-			p_amount: amount,
-		});
-
-		if (error) {
+		try {
+			await this.db
+				.update(transactionLimits)
+				.set({
+					currentDailyUsed: sql`${transactionLimits.currentDailyUsed} + ${amount}`,
+				})
+				.where(
+					and(
+						eq(transactionLimits.userId, userId),
+						eq(transactionLimits.limitType, limitType),
+					),
+				);
+		} catch (error) {
 			secureLogger.error('Failed to update limit usage', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 				limitType,
+				amount,
 			});
-			throw new Error(`Erro ao atualizar uso do limite: ${error.message}`);
+			throw new Error(
+				`Erro ao atualizar uso de limite: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
 	}
 
@@ -514,29 +607,44 @@ export class ComplianceService {
 	/**
 	 * Log a compliance event
 	 */
-	async logComplianceEvent(
+	private async logAuditEvent(
 		userId: string,
 		eventType: ComplianceEventType,
 		resourceType: string,
 		resourceId: string,
-		description: string,
 		metadata?: Record<string, unknown>,
-		ipAddress?: string,
 	): Promise<void> {
-		const { error } = await this.supabase.from('compliance_audit_logs').insert({
-			user_id: userId,
-			event_type: eventType,
-			resource_type: resourceType,
-			resource_id: resourceId,
-			description,
-			metadata: metadata ?? {},
-			ip_address: ipAddress,
-		});
+		try {
+			// Calculate retention until date (keep for 5 years per LGPD)
+			const retentionUntil = new Date();
+			retentionUntil.setFullYear(retentionUntil.getFullYear() + 5);
 
-		if (error) {
-			secureLogger.error('Failed to log compliance event', {
-				error: error.message,
+			await this.db.insert(complianceAuditLogs).values({
+				userId,
 				eventType,
+				resourceType,
+				resourceId: resourceId ?? null,
+				action: (metadata?.action as string) ?? null,
+				oldValue: null,
+				newValue: null,
+				ipAddress: null,
+				userAgent: null,
+				geoLocation: null,
+				sessionId: null,
+				requestId: null,
+				riskScore: null,
+				requiresReview: false,
+				reviewedBy: null,
+				reviewedAt: null,
+				context: metadata ?? {},
+				retentionUntil,
+			});
+		} catch (error) {
+			// Don't throw on audit log failure, just log it
+			secureLogger.error('Failed to log audit event', {
+				error: error instanceof Error ? error.message : 'Unknown error',
+				eventType,
+				userId,
 			});
 		}
 	}
@@ -553,40 +661,43 @@ export class ComplianceService {
 			endDate?: Date;
 		},
 	): Promise<unknown[]> {
-		let query = this.supabase
-			.from('compliance_audit_logs')
-			.select('*')
-			.eq('user_id', userId);
+		try {
+			const conditions = [eq(complianceAuditLogs.userId, userId)];
 
-		if (options?.eventType) {
-			query = query.eq('event_type', options.eventType);
-		}
-		if (options?.startDate) {
-			query = query.gte('created_at', options.startDate.toISOString());
-		}
-		if (options?.endDate) {
-			query = query.lte('created_at', options.endDate.toISOString());
-		}
+			if (options?.eventType) {
+				conditions.push(
+					eq(
+						complianceAuditLogs.eventType,
+						options.eventType as ComplianceEventType,
+					),
+				);
+			}
 
-		query = query.order('created_at', { ascending: false });
+			if (options?.startDate) {
+				conditions.push(gte(complianceAuditLogs.createdAt, options.startDate));
+			}
 
-		if (options?.limit) {
-			query = query.limit(options.limit);
-		}
+			if (options?.endDate) {
+				conditions.push(lte(complianceAuditLogs.createdAt, options.endDate));
+			}
 
-		const { data, error } = await query;
+			const data = await this.db
+				.select()
+				.from(complianceAuditLogs)
+				.where(conditions.length > 1 ? and(...conditions) : conditions[0])
+				.orderBy(desc(complianceAuditLogs.createdAt))
+				.limit(options?.limit ?? 100);
 
-		if (error) {
+			return data;
+		} catch (error) {
 			secureLogger.error('Failed to get audit history', {
-				error: error.message,
+				error: error instanceof Error ? error.message : 'Unknown error',
 				userId,
 			});
 			throw new Error(
-				`Erro ao buscar histórico de auditoria: ${error.message}`,
+				`Erro ao buscar histórico de auditoria: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-
-		return data ?? [];
 	}
 
 	// ========================================
@@ -606,8 +717,6 @@ export class ComplianceService {
 }
 
 // Factory function
-export function createComplianceService(
-	supabase: SupabaseClientType,
-): ComplianceService {
-	return new ComplianceService(supabase);
+export function createComplianceService(db: HttpClient): ComplianceService {
+	return new ComplianceService(db);
 }

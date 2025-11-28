@@ -1,112 +1,47 @@
-import type { AuthError, Session, User } from '@supabase/supabase-js';
+import {
+	useAuth as useClerkAuth,
+	useSession,
+	useUser,
+} from '@clerk/clerk-react';
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect } from 'react';
 
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logging/logger';
+import { setAuthTokenGetter } from '@/lib/api-client';
+
+type ClerkUser = ReturnType<typeof useUser>['user'];
 
 export interface AuthContextType {
-	user: User | null;
-	session: Session | null;
+	user: ClerkUser;
 	isLoading: boolean;
 	isAuthenticated: boolean;
-	signIn: (
-		email: string,
-		password: string,
-	) => Promise<{ error: AuthError | null }>;
-	signUp: (
-		email: string,
-		password: string,
-	) => Promise<{ error: AuthError | null }>;
-	signInWithGoogle: (redirectPath?: string) => Promise<void>;
 	signOut: () => Promise<void>;
+	getToken: () => Promise<string | null>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+	undefined,
+);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-	const [user, setUser] = useState<User | null>(null);
-	const [session, setSession] = useState<Session | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const { user, isLoaded, isSignedIn } = useUser();
+	const { signOut: clerkSignOut } = useClerkAuth();
+	const { session } = useSession();
 
+	const getToken = useCallback(async (): Promise<string | null> => {
+		if (!session) return null;
+		return session.getToken();
+	}, [session]);
+
+	// Register the token getter with the API client
 	useEffect(() => {
-		// Check for existing session on mount
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			setSession(session);
-			setUser(session?.user ?? null);
-			setIsAuthenticated(!!session?.user);
-			setIsLoading(false);
-		});
-
-		// Set up auth state listener
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_event, session) => {
-			setSession(session);
-			setUser(session?.user ?? null);
-			setIsAuthenticated(!!session?.user);
-			setIsLoading(false);
-		});
-
-		return () => subscription.unsubscribe();
-	}, []);
-
-	const signIn = async (email: string, password: string) => {
-		const { error } = await supabase.auth.signInWithPassword({
-			email,
-			password,
-		});
-		return { error };
-	};
-
-	const signUp = async (email: string, password: string) => {
-		const redirectUrl = `${window.location.origin}/dashboard`;
-		const { error } = await supabase.auth.signUp({
-			email,
-			options: {
-				emailRedirectTo: redirectUrl,
-			},
-			password,
-		});
-		return { error };
-	};
-
-	const signInWithGoogle = async (redirectPath = '/dashboard') => {
-		if (typeof window !== 'undefined') {
-			sessionStorage.setItem('post_auth_redirect', redirectPath);
-		}
-
-		// For PKCE flow, redirectTo must match the exact URL where the callback will be processed
-		// Using the current origin ensures the code verifier is preserved
-		const redirectTo = `${window.location.origin}${window.location.pathname}`;
-
-		const { error } = await supabase.auth.signInWithOAuth({
-			options: {
-				redirectTo,
-				queryParams: {
-					access_type: 'offline',
-					prompt: 'consent',
-				},
-			},
-			provider: 'google',
-		});
-
-		if (error) {
-			logger.authEvent('google_sign_in_error', undefined, {
-				component: 'AuthProvider',
-				error: error.message,
-				errorType: error.status ? 'oauth_error' : 'unknown_error',
-			});
-		}
-	};
+		setAuthTokenGetter(getToken);
+	}, [getToken]);
 
 	const signOut = async () => {
-		await supabase.auth.signOut();
+		await clerkSignOut();
 	};
 
-	// Show loading state while checking auth
-	if (isLoading) {
+	if (!isLoaded) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
 				<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
@@ -117,13 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	return (
 		<AuthContext.Provider
 			value={{
-				isAuthenticated,
-				isLoading,
-				session,
-				signIn,
-				signInWithGoogle,
+				getToken,
+				isAuthenticated: !!isSignedIn,
+				isLoading: !isLoaded,
 				signOut,
-				signUp,
 				user,
 			}}
 		>
@@ -132,7 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	);
 }
 
-export function useAuth() {
+/**
+ * Hook for accessing auth context
+ * Must be used within an AuthProvider
+ */
+export function useAuth(): AuthContextType {
 	const context = useContext(AuthContext);
 	if (context === undefined) {
 		throw new Error('useAuth must be used within an AuthProvider');

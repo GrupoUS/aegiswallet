@@ -19,7 +19,18 @@ export const environment = {
 	IS_DEVELOPMENT: process.env.NODE_ENV !== 'production',
 	IS_PRODUCTION: process.env.NODE_ENV === 'production',
 
-	// Supabase configuration
+	// Database configuration (Neon)
+	DATABASE_URL: process.env.DATABASE_URL || '',
+	DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED || '',
+
+	// Clerk configuration
+	CLERK_PUBLISHABLE_KEY:
+		process.env.VITE_CLERK_PUBLISHABLE_KEY ||
+		process.env.CLERK_PUBLISHABLE_KEY ||
+		'',
+	CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || '',
+
+	// Supabase configuration (Deprecated)
 	SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
 	SUPABASE_ANON_KEY:
 		process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '',

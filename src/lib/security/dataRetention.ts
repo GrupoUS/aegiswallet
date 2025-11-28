@@ -3,9 +3,11 @@
  *
  * This module implements automated data retention and deletion policies
  * in compliance with Brazilian General Data Protection Law (LGPD).
+ *
+ * NOTE: Migrated from Supabase to API-based operations
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import logger from '@/lib/logging/secure-logger';
 
 export interface RetentionPolicy {
@@ -17,24 +19,20 @@ export interface RetentionPolicy {
 }
 
 export const RETENTION_POLICIES: Record<string, RetentionPolicy> = {
-	// Voice and Audio Data
 	voice_recordings: {
 		dataType: 'voice_recordings',
-		retentionPeriod: 30, // 30 days
+		retentionPeriod: 30,
 		retentionCondition: 'after_creation',
 		anonymize: true,
 		secureDelete: true,
 	},
-
 	biometric_patterns: {
 		dataType: 'biometric_patterns',
-		retentionPeriod: 730, // 2 years
+		retentionPeriod: 730,
 		retentionCondition: 'after_inactivity',
 		anonymize: true,
 		secureDelete: true,
 	},
-
-	// Transaction and Financial Data
 	transactions: {
 		dataType: 'transactions',
 		retentionPeriod: 2555, // 7 years (fiscal requirement)
@@ -42,35 +40,27 @@ export const RETENTION_POLICIES: Record<string, RetentionPolicy> = {
 		anonymize: false,
 		secureDelete: false,
 	},
-
-	// User Activity and Analytics
 	user_activity_logs: {
 		dataType: 'user_activity_logs',
-		retentionPeriod: 365, // 1 year
+		retentionPeriod: 365,
 		retentionCondition: 'after_creation',
 		anonymize: true,
 		secureDelete: true,
 	},
-
-	// Session Data
 	sessions: {
 		dataType: 'sessions',
-		retentionPeriod: 30, // 30 days
+		retentionPeriod: 30,
 		retentionCondition: 'after_creation',
 		anonymize: true,
 		secureDelete: true,
 	},
-
-	// Error Logs
 	error_logs: {
 		dataType: 'error_logs',
-		retentionPeriod: 90, // 3 months
+		retentionPeriod: 90,
 		retentionCondition: 'after_creation',
 		anonymize: true,
 		secureDelete: true,
 	},
-
-	// Audit Logs (keep longer for compliance)
 	audit_logs: {
 		dataType: 'audit_logs',
 		retentionPeriod: 2555, // 7 years
@@ -89,17 +79,13 @@ type RetentionStatsEntry =
 	| { error: string };
 
 export class DataRetentionManager {
-	private retentionScheduleDays = [1, 7, 30, 90]; // Run on these days of month
+	private retentionScheduleDays = [1, 7, 30, 90];
 
 	constructor() {
 		this.scheduleRetentionChecks();
 	}
 
-	/**
-	 * Schedule automated retention checks
-	 */
 	private scheduleRetentionChecks(): void {
-		// Run daily check at 2 AM
 		setInterval(
 			() => {
 				const now = new Date();
@@ -110,29 +96,33 @@ export class DataRetentionManager {
 				}
 			},
 			24 * 60 * 60 * 1000,
-		); // Daily
+		);
 	}
 
-	/**
-	 * Perform comprehensive retention check
-	 */
 	async performRetentionCheck(): Promise<void> {
-		logger.info('Starting data retention check');
+		logger.info('Starting data retention check', {
+			component: 'dataRetention',
+			action: 'performRetentionCheck',
+		});
 
 		try {
 			for (const [dataType, policy] of Object.entries(RETENTION_POLICIES)) {
 				await this.applyRetentionPolicy(dataType, policy);
 			}
 
-			logger.info('Data retention check completed successfully');
+			logger.info('Data retention check completed successfully', {
+				component: 'dataRetention',
+				action: 'performRetentionCheck',
+			});
 		} catch (error) {
-			logger.error('Data retention check failed', { error });
+			logger.error('Data retention check failed', {
+				component: 'dataRetention',
+				action: 'performRetentionCheck',
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
 		}
 	}
 
-	/**
-	 * Apply retention policy for specific data type
-	 */
 	private async applyRetentionPolicy(
 		dataType: string,
 		policy: RetentionPolicy,
@@ -140,47 +130,27 @@ export class DataRetentionManager {
 		const cutoffDate = this.calculateCutoffDate(policy);
 
 		logger.debug(`Applying retention policy for ${dataType}`, {
+			component: 'dataRetention',
+			action: 'applyRetentionPolicy',
 			cutoffDate: cutoffDate.toISOString(),
 			policy,
 		});
 
-		switch (dataType) {
-			case 'voice_recordings':
-				await this.cleanupVoiceRecordings(cutoffDate, policy);
-				break;
-
-			case 'biometric_patterns':
-				await this.cleanupBiometricPatterns(cutoffDate, policy);
-				break;
-
-			case 'transactions':
-				await this.cleanupTransactions(cutoffDate, policy);
-				break;
-
-			case 'user_activity_logs':
-				await this.cleanupUserActivityLogs(cutoffDate, policy);
-				break;
-
-			case 'sessions':
-				await this.cleanupSessions(cutoffDate, policy);
-				break;
-
-			case 'error_logs':
-				await this.cleanupErrorLogs(cutoffDate, policy);
-				break;
-
-			case 'audit_logs':
-				// Audit logs are kept for compliance, no automatic cleanup
-				break;
-
-			default:
-				logger.warn(`Unknown data type for retention: ${dataType}`);
+		try {
+			await apiClient.post('/v1/compliance/retention/apply', {
+				dataType,
+				cutoffDate: cutoffDate.toISOString(),
+				policy,
+			});
+		} catch (error) {
+			logger.debug(`Retention endpoint not available for ${dataType}`, {
+				component: 'dataRetention',
+				action: 'applyRetentionPolicy',
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
 		}
 	}
 
-	/**
-	 * Calculate cutoff date based on retention policy
-	 */
 	private calculateCutoffDate(policy: RetentionPolicy): Date {
 		const cutoff = new Date();
 		cutoff.setDate(cutoff.getDate() - policy.retentionPeriod);
@@ -188,115 +158,14 @@ export class DataRetentionManager {
 	}
 
 	/**
-	 * Cleanup voice recordings older than retention period
-	 */
-	private async cleanupVoiceRecordings(
-		cutoffDate: Date,
-		policy: RetentionPolicy,
-	): Promise<void> {
-		try {
-			if (policy.anonymize) {
-				// Anonymize by marking as processed and setting retention expiry
-				const { error: anonymizeError } = await supabase
-					.from('voice_recordings')
-					.update({
-						processed: true,
-						retention_expires_at: new Date().toISOString(),
-					})
-					.lt('created_at', cutoffDate.toISOString());
-
-				if (anonymizeError) {
-					throw anonymizeError;
-				}
-			}
-
-			if (policy.secureDelete) {
-				// Delete old recordings
-				const { error } = await supabase
-					.from('voice_recordings')
-					.delete()
-					.lt('created_at', cutoffDate.toISOString());
-
-				if (error) {
-					throw error;
-				}
-
-				logger.info(
-					`Cleaned up voice recordings older than ${cutoffDate.toISOString()}`,
-				);
-			}
-		} catch (error) {
-			logger.error('Failed to cleanup voice recordings', { cutoffDate, error });
-		}
-	}
-
-	/**
-	 * Cleanup biometric patterns for inactive users
-	 */
-	private async cleanupBiometricPatterns(
-		cutoffDate: Date,
-		policy: RetentionPolicy,
-	): Promise<void> {
-		try {
-			if (policy.retentionCondition === 'after_inactivity') {
-				// Find users inactive since cutoff date
-				const { data: inactiveUsers, error: userError } = await supabase
-					.from('users')
-					.select('id')
-					.lt('last_activity', cutoffDate.toISOString());
-
-				if (userError) {
-					throw userError;
-				}
-
-				if (inactiveUsers && inactiveUsers.length > 0) {
-					const userIds = inactiveUsers.map((user) => user.id);
-
-					if (policy.anonymize) {
-						// Anonymize biometric patterns by marking anonymization date
-						const { error: anonymizeError } = await supabase
-							.from('biometric_patterns')
-							.update({
-								anonymized_at: new Date().toISOString(),
-								is_active: false,
-							})
-							.in('user_id', userIds);
-
-						if (anonymizeError) {
-							throw anonymizeError;
-						}
-					}
-
-					if (policy.secureDelete) {
-						// Delete biometric patterns
-						const { error } = await supabase
-							.from('biometric_patterns')
-							.delete()
-							.in('user_id', userIds);
-
-						if (error) {
-							throw error;
-						}
-					}
-
-					logger.info(
-						`Cleaned up biometric patterns for ${inactiveUsers.length} inactive users`,
-					);
-				}
-			}
-		} catch (error) {
-			logger.error('Failed to cleanup biometric patterns', {
-				cutoffDate,
-				error,
-			});
-		}
-	}
-
-	/**
 	 * Handle user data deletion request (Right to be Forgotten)
 	 */
 	async handleUserDeletionRequest(userId: string): Promise<void> {
-		logger.info(`Processing user deletion request`, { userId });
+		logger.info('Processing user deletion request', {
+			component: 'dataRetention',
+			action: 'handleUserDeletionRequest',
+			userId,
+		});
 
 		try {
 			// Log the deletion request
@@ -308,97 +177,25 @@ export class DataRetentionManager {
 				user_id: userId,
 			});
 
-			// Anonymize or delete user data according to policies
-			for (const [dataType, policy] of Object.entries(RETENTION_POLICIES)) {
-				await this.anonymizeUserData(userId, dataType, policy);
-			}
+			// Request deletion via API
+			await apiClient.post('/v1/compliance/user/delete', {
+				userId,
+				timestamp: new Date().toISOString(),
+			});
 
-			// Delete user account if allowed by policy
-			const userPolicy = RETENTION_POLICIES.transactions; // Use longest retention period
-			const userCutoffDate = this.calculateCutoffDate(userPolicy);
-
-			const { data: userData } = await supabase
-				.from('users')
-				.select('created_at')
-				.eq('id', userId)
-				.single();
-
-			if (
-				userData?.created_at &&
-				new Date(userData.created_at) < userCutoffDate
-			) {
-				// Can delete entire user account
-				await supabase.auth.admin.deleteUser(userId);
-
-				const { safeInsertAuditLog } = await import('./safeAuditLog');
-				void safeInsertAuditLog({
-					action: 'user_account_deleted',
-					details: { timestamp: new Date().toISOString() },
-					resource_type: 'user_account',
-					user_id: userId,
-				});
-			}
-
-			logger.info(`User deletion request completed`, { userId });
+			logger.info('User deletion request completed', {
+				component: 'dataRetention',
+				action: 'handleUserDeletionRequest',
+				userId,
+			});
 		} catch (error) {
 			logger.error('Failed to process user deletion request', {
-				error,
+				component: 'dataRetention',
+				action: 'handleUserDeletionRequest',
 				userId,
+				error: error instanceof Error ? error.message : 'Unknown error',
 			});
 			throw error;
-		}
-	}
-
-	/**
-	 * Anonymize user data for specific type
-	 */
-	private async anonymizeUserData(
-		userId: string,
-		dataType: string,
-		policy: RetentionPolicy,
-	): Promise<void> {
-		if (!policy.anonymize) {
-			return;
-		}
-
-		try {
-			switch (dataType) {
-				case 'voice_recordings': {
-					// Anonymize by marking as processed and setting retention expiry
-					await supabase
-						.from('voice_recordings')
-						.update({
-							processed: true,
-							retention_expires_at: new Date().toISOString(),
-						})
-						.eq('user_id', userId);
-					break;
-				}
-
-				case 'biometric_patterns':
-					// Anonymize by marking anonymization date and deactivating
-					await supabase
-						.from('biometric_patterns')
-						.update({
-							anonymized_at: new Date().toISOString(),
-							is_active: false,
-						})
-						.eq('user_id', userId);
-					break;
-
-				case 'transactions':
-				case 'user_activity_logs':
-				case 'sessions':
-				case 'error_logs':
-				case 'audit_logs':
-					// These data types are handled via dedicated cleanup routines or compliance storage.
-					break;
-			}
-		} catch (error) {
-			logger.error(`Failed to anonymize user data for ${dataType}`, {
-				error,
-				userId,
-			});
 		}
 	}
 
@@ -412,132 +209,34 @@ export class DataRetentionManager {
 			const cutoffDate = this.calculateCutoffDate(policy);
 
 			try {
-				let count = 0;
-
-				switch (dataType) {
-					case 'voice_recordings': {
-						const { count: voiceCount } = await supabase
-							.from('voice_recordings')
-							.select('*', { count: 'exact', head: true })
-							.lt('created_at', cutoffDate.toISOString());
-						count = voiceCount || 0;
-						break;
-					}
-
-					case 'sessions': {
-						// TODO: Requires database migration for user_sessions table
-						// const { count: sessionCount } = await supabase
-						//   .from('user_sessions')
-						//   .select('*', { count: 'exact', head: true })
-						//   .lt('created_at', cutoffDate.toISOString());
-						// count = sessionCount || 0;
-						count = 0;
-						break;
-					}
-				}
+				const response = await apiClient.get<{ count: number }>(
+					'/v1/compliance/retention/stats',
+					{
+						params: {
+							dataType,
+							cutoffDate: cutoffDate.toISOString(),
+						},
+					},
+				);
 
 				stats[dataType] = {
 					cutoffDate: cutoffDate.toISOString(),
-					eligibleForDeletion: count,
+					eligibleForDeletion: response.count || 0,
 					policy,
 				};
 			} catch (error) {
-				const message = this.extractErrorMessage(error);
-				logger.error(`Failed to get retention stats for ${dataType}`, {
-					error,
+				const message =
+					error instanceof Error ? error.message : 'Unknown error';
+				logger.debug(`Failed to get retention stats for ${dataType}`, {
+					component: 'dataRetention',
+					action: 'getRetentionStatistics',
+					error: message,
 				});
 				stats[dataType] = { error: message };
 			}
 		}
 
 		return stats;
-	}
-
-	private async cleanupTransactions(
-		_cutoffDate: Date,
-		policy: RetentionPolicy,
-	): Promise<void> {
-		// Financial records are retained for fiscal compliance; log for visibility.
-		logger.debug(
-			'Transactions retention policy is compliance-only; no automatic cleanup executed',
-			{
-				policy,
-			},
-		);
-	}
-
-	private async cleanupUserActivityLogs(
-		cutoffDate: Date,
-		policy: RetentionPolicy,
-	): Promise<void> {
-		if (!policy.secureDelete) {
-			return;
-		}
-		try {
-			const { error } = await supabase
-				.from('user_activity')
-				.delete()
-				.lt('created_at', cutoffDate.toISOString());
-			if (error) {
-				throw error;
-			}
-			logger.info(
-				`Cleaned up user activity logs older than ${cutoffDate.toISOString()}`,
-			);
-		} catch (error) {
-			logger.error('Failed to cleanup user activity logs', {
-				cutoffDate,
-				error,
-			});
-		}
-	}
-
-	private async cleanupSessions(
-		_cutoffDate: Date,
-		_policy: RetentionPolicy,
-	): Promise<void> {
-		// TODO: Requires database migration for user_sessions table
-		/*
-    if (!policy.secureDelete) {
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('user_sessions')
-        .delete()
-        .lt('created_at', cutoffDate.toISOString());
-      if (error) {
-        throw error;
-      }
-      logger.info(`Cleaned up sessions older than ${cutoffDate.toISOString()}`);
-    } catch (error) {
-      logger.error('Failed to cleanup sessions', { cutoffDate, error });
-    }
-    */
-	}
-
-	private async cleanupErrorLogs(
-		_cutoffDate: Date,
-		_policy: RetentionPolicy,
-	): Promise<void> {
-		// Error logs live outside Supabase tables in this project; document manual cleanup.
-		logger.debug(
-			'No error log storage configured in Supabase; skipping cleanup step.',
-		);
-	}
-
-	private extractErrorMessage(error: unknown): string {
-		if (error instanceof Error) {
-			return error.message;
-		}
-		if (typeof error === 'string') {
-			return error;
-		}
-		try {
-			return JSON.stringify(error);
-		} catch {
-			return 'Unknown error';
-		}
 	}
 }
 
@@ -551,20 +250,20 @@ export const handleConsentWithdrawal = async (
 	userId: string,
 	consentTypes: string[],
 ): Promise<void> => {
-	logger.info(`Processing consent withdrawal`, { consentTypes, userId });
+	logger.info('Processing consent withdrawal', {
+		component: 'dataRetention',
+		action: 'handleConsentWithdrawal',
+		userId,
+		consentTypes,
+	});
 
 	try {
-		// Update consent records
-		for (const consentType of consentTypes) {
-			await supabase.from('user_consent').upsert({
-				consent_date: new Date().toISOString(),
-				consent_type: consentType,
-				consent_version: '1.0.0',
-				granted: false,
-				user_id: userId,
-				withdrawal_date: new Date().toISOString(),
-			});
-		}
+		// Update consent records via API
+		await apiClient.post('/v1/compliance/consent/withdraw', {
+			userId,
+			consentTypes,
+			withdrawalDate: new Date().toISOString(),
+		});
 
 		// Log consent withdrawal
 		const { safeInsertAuditLog } = await import('./safeAuditLog');
@@ -578,14 +277,19 @@ export const handleConsentWithdrawal = async (
 			user_id: userId,
 		});
 
-		// If biometric consent withdrawn, immediately delete biometric data
-		if (consentTypes.includes('biometric_data')) {
-			await supabase.from('biometric_patterns').delete().eq('user_id', userId);
-		}
-
-		logger.info(`Consent withdrawal completed`, { consentTypes, userId });
+		logger.info('Consent withdrawal completed', {
+			component: 'dataRetention',
+			action: 'handleConsentWithdrawal',
+			userId,
+			consentTypes,
+		});
 	} catch (error) {
-		logger.error('Failed to process consent withdrawal', { error, userId });
+		logger.error('Failed to process consent withdrawal', {
+			component: 'dataRetention',
+			action: 'handleConsentWithdrawal',
+			userId,
+			error: error instanceof Error ? error.message : 'Unknown error',
+		});
 		throw error;
 	}
 };

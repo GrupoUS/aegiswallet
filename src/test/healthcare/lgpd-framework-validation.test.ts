@@ -46,50 +46,26 @@ type UserDataState = Record<UserDataKey, string>;
 // Import healthcare setup to configure test environment
 import '../healthcare-setup';
 
-// Mock Supabase client for database operations
-vi.mock('@/integrations/supabase/client', () => ({
-	supabase: {
-		auth: {
-			admin: {
-				deleteUser: vi.fn(() => Promise.resolve({ data: null, error: null })),
-			},
+// Mock API client for database operations
+vi.mock('@/lib/api-client', () => ({
+	apiClient: {
+		users: {
+			delete: vi.fn(() => Promise.resolve({ data: null, error: null })),
+			me: vi.fn(() =>
+				Promise.resolve({
+					data: { created_at: '2024-01-01T00:00:00Z', id: 'test-user-001' },
+					error: null,
+				}),
+			),
 		},
-		from: vi.fn(() => ({
-			select: vi.fn(() => ({
-				delete: vi.fn(() =>
-					Promise.resolve({
-						data: { success: true },
-						error: null,
-					}),
-				),
-				eq: vi.fn(() => ({
-					data: vi.fn(() =>
-						Promise.resolve({
-							data: [],
-							error: null,
-						}),
-					),
-					single: vi.fn(() =>
-						Promise.resolve({
-							data: { created_at: '2024-01-01T00:00:00Z', id: 'test-user-001' },
-							error: null,
-						}),
-					),
-				})),
-				insert: vi.fn(() =>
-					Promise.resolve({
-						data: { id: 'audit-001' },
-						error: null,
-					}),
-				),
-				update: vi.fn(() =>
-					Promise.resolve({
-						data: { success: true },
-						error: null,
-					}),
-				),
-			})),
-		})),
+		audit: {
+			log: vi.fn(() =>
+				Promise.resolve({
+					data: { id: 'audit-001' },
+					error: null,
+				}),
+			),
+		},
 	},
 }));
 

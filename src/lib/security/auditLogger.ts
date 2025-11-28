@@ -3,9 +3,12 @@
  *
  * Digitally signed audit logs with 12-month retention
  * LGPD-compliant security logging
+ *
+ * NOTE: Migrated from Supabase to API-based logging
+ * The audit log is now sent to the server which handles DB storage via Drizzle
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api-client';
 import logger from '@/lib/logging/secure-logger';
 
 export interface AuditLogEntry {
@@ -20,71 +23,36 @@ export interface AuditLogEntry {
 }
 
 /**
- * Create digitally signed audit log
+ * Create digitally signed audit log via API
  */
 export async function createAuditLog(entry: AuditLogEntry): Promise<string> {
 	try {
-		// Verify user is authenticated before inserting
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-
-		// Use authenticated user ID if available, otherwise use provided userId
-		const userId = user?.id || entry.userId;
-
-		if (!userId) {
-			// Silently fail if no user ID available (user not authenticated)
-			logger.warn('Cannot create audit log: user not authenticated', {
-				component: 'auditLogger',
-				action: 'createAuditLog',
-			});
-			return '';
-		}
-
-		// Create signature (simplified - would use proper crypto in production)
+		// Create signature
 		const signature = await generateSignature(entry);
 
-		// Store in Supabase
-		// Use details JSONB field to store additional metadata
-		const details: Record<string, unknown> = {
-			...entry.metadata,
-			transactionType: entry.transactionType,
-			amount: entry.amount,
-			method: entry.method,
-			confidence: entry.confidence,
-			transcriptionHash: entry.transcription
-				? await hashText(entry.transcription)
-				: null,
-			signature,
-		};
+		// Send to API endpoint
+		const response = await apiClient.post<{ id: string }>('/v1/compliance/audit-log', {
+			action: entry.action,
+			resourceType: entry.transactionType ? 'transaction' : undefined,
+			details: {
+				...entry.metadata,
+				transactionType: entry.transactionType,
+				amount: entry.amount,
+				method: entry.method,
+				confidence: entry.confidence,
+				transcriptionHash: entry.transcription
+					? await hashText(entry.transcription)
+					: null,
+				signature,
+			},
+		});
 
-		const { data, error } = await supabase
-			.from('audit_logs')
-			.insert({
-				action: entry.action,
-				resource_type: entry.transactionType ? 'transaction' : undefined,
-				details: details as unknown as Record<string, never>,
-				created_at: new Date().toISOString(),
-			})
-			.select('id')
-			.single();
-
-		if (error) {
-			// Log error but don't throw to avoid breaking the application
-			logger.error('Failed to create audit log', {
-				component: 'auditLogger',
-				action: 'createAuditLog',
-				error: error.message,
-			});
-			return '';
-		}
-
-		return data?.id || '';
+		return response.id || '';
 	} catch (error) {
-		// Silently handle errors to avoid breaking the application
-		logger.error('Error creating audit log', {
-			component: 'auditLogger',
+		// Log error but don't throw to avoid breaking the application
+		logger.error('Failed to create audit log', {
 			action: 'createAuditLog',
+			component: 'auditLogger',
 			error: error instanceof Error ? error.message : 'Unknown error',
 		});
 		return '';
@@ -138,6 +106,7 @@ async function generateSignature(entry: AuditLogEntry): Promise<string> {
 	return hashText(data);
 }
 
+
 /**
  * Hash sensitive text (for transcriptions)
  */
@@ -161,7 +130,7 @@ async function hashText(text: string): Promise<string> {
 }
 
 /**
- * Query audit logs (admin only)
+ * Query audit logs (admin only) via API
  */
 export async function queryAuditLogs(params: {
 	userId?: string;
@@ -170,33 +139,24 @@ export async function queryAuditLogs(params: {
 	endDate?: Date;
 	limit?: number;
 }): Promise<unknown[]> {
-	let query = supabase.from('audit_logs').select('*');
+	try {
+		const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/audit-logs', {
+			params: {
+				action: params.action,
+				endDate: params.endDate?.toISOString(),
+				limit: params.limit || 100,
+				startDate: params.startDate?.toISOString(),
+				userId: params.userId,
+			},
+		});
 
-	if (params.userId) {
-		query = query.eq('user_id', params.userId);
-	}
-
-	if (params.action) {
-		query = query.eq('action', params.action);
-	}
-
-	if (params.startDate) {
-		query = query.gte('created_at', params.startDate.toISOString());
-	}
-
-	if (params.endDate) {
-		query = query.lte('created_at', params.endDate.toISOString());
-	}
-
-	query = query
-		.order('created_at', { ascending: false })
-		.limit(params.limit || 100);
-
-	const { data, error } = await query;
-
-	if (error) {
+		return response.data || [];
+	} catch (error) {
+		logger.error('Failed to query audit logs', {
+			action: 'queryAuditLogs',
+			component: 'auditLogger',
+			error: error instanceof Error ? error.message : 'Unknown error',
+		});
 		return [];
 	}
-
-	return data || [];
 }

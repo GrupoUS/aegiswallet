@@ -1,19 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { db } from '@/db/client';
+import { boletos, complianceAuditLogs, transactionSchedules } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import type { Boleto, BoletoCalculation } from './types';
 
 export function createBoletoTools(userId: string) {
-	const supabaseUrl =
-		process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-	const supabaseKey =
-		process.env.SUPABASE_SERVICE_ROLE_KEY ||
-		process.env.VITE_SUPABASE_ANON_KEY ||
-		'';
-	const supabase = createClient(supabaseUrl, supabaseKey);
 
 	return {
 		listBoletos: tool({
@@ -58,42 +53,36 @@ export function createBoletoTools(userId: string) {
 				offset = 0,
 			}) => {
 				try {
-					let query = supabase
-						.from('boletos')
-						.select('*')
-						.eq('user_id', userId)
-						.order('due_date', { ascending: true })
-						.range(offset, offset + limit - 1);
+					// Build conditions array
+					const conditions = [eq(boletos.userId, userId)];
 
 					if (status !== 'ALL') {
-						query = query.eq('status', status);
+						conditions.push(eq(boletos.status, status));
 					}
-					if (startDate) query = query.gte('due_date', startDate);
-					if (endDate) query = query.lte('due_date', endDate);
-					if (minAmount) query = query.gte('amount', minAmount);
-					if (maxAmount) query = query.lte('amount', maxAmount);
+					if (startDate) conditions.push(gte(boletos.dueDate, startDate));
+					if (endDate) conditions.push(lte(boletos.dueDate, endDate));
+					if (minAmount) conditions.push(gte(boletos.amount, String(minAmount)));
+					if (maxAmount) conditions.push(lte(boletos.amount, String(maxAmount)));
 
-					const { data, error, count } = await query;
+					const data = await db
+						.select()
+						.from(boletos)
+						.where(and(...conditions))
+						.orderBy(boletos.dueDate)
+						.limit(limit)
+						.offset(offset);
 
-					if (error) {
-						secureLogger.error('Erro ao listar boletos', {
-							error: error.message,
-							userId,
-						});
-						throw new Error(`Erro ao buscar boletos: ${error.message}`);
-					}
-
-					const boletos = (data ?? []) as Boleto[];
+					const boletosList = (data ?? []) as unknown as Boleto[];
 					const now = new Date();
 
 					// Calcular estatísticas e classificações
-					const registered = boletos.filter((b) => b.status === 'REGISTERED');
-					const paid = boletos.filter((b) => b.status === 'PAID');
-					const overdue = boletos.filter(
+					const registered = boletosList.filter((b) => b.status === 'REGISTERED');
+					const paid = boletosList.filter((b) => b.status === 'PAID');
+					const overdue = boletosList.filter(
 						(b) => b.status === 'REGISTERED' && new Date(b.dueDate) < now,
 					);
 
-					const totalAmount = boletos.reduce((sum, b) => sum + b.amount, 0);
+					const totalAmount = boletosList.reduce((sum, b) => sum + b.amount, 0);
 					const pendingAmount = registered.reduce(
 						(sum, b) => sum + b.amount,
 						0,
@@ -101,9 +90,9 @@ export function createBoletoTools(userId: string) {
 					const overdueAmount = overdue.reduce((sum, b) => sum + b.amount, 0);
 
 					return {
-						boletos: boletos.map(filterSensitiveData),
-						total: count ?? 0,
-						hasMore: (count ?? 0) > offset + limit,
+						boletos: boletosList.map(filterSensitiveData),
+						total: boletosList.length,
+						hasMore: boletosList.length >= limit,
 						summary: {
 							registered: registered.length,
 							paid: paid.length,
@@ -113,8 +102,8 @@ export function createBoletoTools(userId: string) {
 							overdueAmount,
 						},
 						message:
-							boletos.length > 0
-								? `Encontrados ${boletos.length} boletos (${overdue.length} vencidos, total de R$ ${pendingAmount.toFixed(2)})`
+							boletosList.length > 0
+								? `Encontrados ${boletosList.length} boletos (${overdue.length} vencidos, total de R$ ${pendingAmount.toFixed(2)})`
 								: 'Nenhum boleto encontrado',
 					};
 				} catch (error) {
@@ -154,12 +143,16 @@ export function createBoletoTools(userId: string) {
 					const boletoInfo = await extractBoletoInformation(barcode);
 
 					// Verificar se boleto já existe
-					const { data: existingBoleto } = await supabase
-						.from('boletos')
-						.select('id')
-						.eq('user_id', userId)
-						.eq('barcode', barcode)
-						.eq('status', 'PAID')
+					const existingBoleto = await db
+						.select({ id: boletos.id })
+						.from(boletos)
+						.where(
+							and(
+								eq(boletos.userId, userId),
+								eq(boletos.barcode, barcode),
+								eq(boletos.status, 'PAID'),
+							),
+						)
 						.limit(1);
 
 					if (existingBoleto && existingBoleto.length > 0) {
@@ -173,54 +166,52 @@ export function createBoletoTools(userId: string) {
 						digitableLine || generateDigitableLine(barcode);
 
 					const boletoData = {
-						user_id: userId,
+						userId: userId,
 						barcode,
-						digitable_line: calculatedDigitableLine,
-						amount: boletoInfo.amount,
-						due_date: boletoInfo.dueDate,
-						payee_name: boletoInfo.payeeName || 'Beneficiário não identificado',
-						payee_document: boletoInfo.payeeDocument || null,
+						lineIdDigitable: calculatedDigitableLine,
+						amount: String(boletoInfo.amount),
+						dueDate: boletoInfo.dueDate,
+						beneficiaryName: boletoInfo.payeeName || 'Beneficiário não identificado',
+						beneficiaryCnpj: boletoInfo.payeeDocument || null,
 						status: 'REGISTERED',
-						capture_method: captureMethod,
-						created_at: new Date().toISOString(),
+						description: `Captura: ${captureMethod}`,
 					};
 
-					const { data, error } = await supabase
-						.from('boletos')
-						.insert(boletoData)
-						.select()
-						.single();
+					const [insertedBoleto] = await db
+						.insert(boletos)
+						.values(boletoData)
+						.returning();
 
-					if (error) {
+					if (!insertedBoleto) {
 						secureLogger.error('Erro ao registrar boleto', {
-							error: error.message,
+							error: 'Insert failed',
 							userId,
 							barcode: `${barcode.substring(0, 10)}***`,
 						});
-						throw new Error(`Erro ao registrar boleto: ${error.message}`);
+						throw new Error('Erro ao registrar boleto: Insert failed');
 					}
 
-					const boleto = data as Boleto;
+					const boleto = insertedBoleto as unknown as Boleto;
 
 					// Log de auditoria
-					await supabase.from('compliance_audit_logs').insert({
-						user_id: userId,
-						event_type: 'boleto_registered',
-						resource_type: 'boletos',
-						resource_id: boleto.id,
-						description: `Boleto registrado no valor de R$ ${boleto.amount.toFixed(2)} - Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
+					await db.insert(complianceAuditLogs).values({
+						userId: userId,
+						eventType: 'consent_granted',
+						resourceType: 'boletos',
+						resourceId: boleto.id,
+						description: `Boleto registrado no valor de R$ ${Number(boleto.amount).toFixed(2)} - Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
 						metadata: {
 							amount: boleto.amount,
 							due_date: boleto.dueDate,
 							capture_method: captureMethod,
-							payee_name: boleto.payeeName,
+							payee_name: boleto.beneficiaryName,
 						},
 					});
 
 					secureLogger.info('Boleto registrado com sucesso', {
 						boletoId: boleto.id,
 						userId,
-						amount: boleto.amount,
+						amount: Number(boleto.amount),
 						dueDate: boleto.dueDate,
 					});
 
@@ -233,7 +224,7 @@ export function createBoletoTools(userId: string) {
 					return {
 						success: true,
 						boleto: filterSensitiveData(boleto),
-						message: `Boleto registrado com sucesso! Valor: R$ ${boleto.amount.toFixed(2)}, Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
+						message: `Boleto registrado com sucesso! Valor: R$ ${Number(boleto.amount).toFixed(2)}, Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
 						daysUntilDue,
 						isOverdue: daysUntilDue < 0,
 						paymentUrgency:
@@ -264,36 +255,40 @@ export function createBoletoTools(userId: string) {
 			execute: async ({ boletoId, paymentDate }) => {
 				try {
 					// Buscar boleto
-					const { data: boleto, error } = await supabase
-						.from('boletos')
-						.select('*')
-						.eq('id', boletoId)
-						.eq('user_id', userId)
-						.single();
+					const [boleto] = await db
+						.select()
+						.from(boletos)
+						.where(and(eq(boletos.id, boletoId), eq(boletos.userId, userId)))
+						.limit(1);
 
-					if (error || !boleto) {
+					if (!boleto) {
 						throw new Error('Boleto não encontrado');
 					}
 
 					const paymentDt = paymentDate ? new Date(paymentDate) : new Date();
-					const dueDate = new Date(boleto.dueDate);
+					const dueDate = new Date(boleto.dueDate!);
 
-					if (boleto.status === 'PAID') {
+					if (boleto.status === 'paid') {
 						throw new Error('Este boleto já está pago');
 					}
 
-					// Calcular juros e multas
-					const calculation = calculateBoletoAmount(boleto, paymentDt);
+					// Calcular juros e multas - convert DB record to Boleto type
+					const boletoForCalc = {
+						...boleto,
+						amount: Number(boleto.amount),
+						dueDate: boleto.dueDate!,
+					} as unknown as Boleto;
+					const calculation = calculateBoletoAmount(boletoForCalc, paymentDt);
 
 					return {
 						boletoId,
-						originalAmount: boleto.amount,
+						originalAmount: Number(boleto.amount),
 						calculation: calculation,
 						paymentDate: paymentDt.toISOString().split('T')[0],
-						dueDate: boleto.dueDate,
+						dueDate: boleto.dueDate!,
 						isOverdue: paymentDt > dueDate,
 						message:
-							`Valor original: R$ ${boleto.amount.toFixed(2)}. ` +
+							`Valor original: R$ ${Number(boleto.amount).toFixed(2)}. ` +
 							`${calculation.fineAmount ? `Multa: R$ ${calculation.fineAmount.toFixed(2)}. ` : ''}` +
 							`${calculation.interestAmount ? `Juros: R$ ${calculation.interestAmount.toFixed(2)}. ` : ''}` +
 							`${calculation.discountAmount ? `Desconto: R$ ${calculation.discountAmount.toFixed(2)}. ` : ''}` +
@@ -340,23 +335,27 @@ export function createBoletoTools(userId: string) {
 			}) => {
 				try {
 					// Buscar boleto
-					const { data: boleto, error } = await supabase
-						.from('boletos')
-						.select('*')
-						.eq('id', boletoId)
-						.eq('user_id', userId)
-						.single();
+					const [boleto] = await db
+						.select()
+						.from(boletos)
+						.where(and(eq(boletos.id, boletoId), eq(boletos.userId, userId)))
+						.limit(1);
 
-					if (error || !boleto) {
+					if (!boleto) {
 						throw new Error('Boleto não encontrado');
 					}
 
-					if (boleto.status === 'PAID') {
+					if (boleto.status === 'paid') {
 						throw new Error('Este boleto já está pago');
 					}
 
 					const paymentDt = paymentDate ? new Date(paymentDate) : new Date();
-					const calculation = calculateBoletoAmount(boleto, paymentDt);
+					const boletoForCalc = {
+						...boleto,
+						amount: Number(boleto.amount),
+						dueDate: boleto.dueDate!,
+					} as unknown as Boleto;
+					const calculation = calculateBoletoAmount(boletoForCalc, paymentDt);
 
 					// Se não houver confirmação, retornar cálculo para confirmação
 					if (!confirmPayment) {
@@ -365,9 +364,9 @@ export function createBoletoTools(userId: string) {
 							boletoId,
 							calculation,
 							message: `Confirma o pagamento do boleto ${boleto.barcode.substring(0, 10)}... no valor total de R$ ${calculation.totalAmount.toFixed(2)}?`,
-							originalAmount: boleto.amount,
+							originalAmount: Number(boleto.amount),
 							totalAmount: calculation.totalAmount,
-							additionalAmount: calculation.totalAmount - boleto.amount,
+							additionalAmount: calculation.totalAmount - Number(boleto.amount),
 						};
 					}
 
@@ -380,40 +379,37 @@ export function createBoletoTools(userId: string) {
 					}
 
 					// Processar pagamento
-					const { data: updatedBoleto, error: updateError } = await supabase
-						.from('boletos')
-						.update({
-							status: 'PAID',
-							paid_at: paymentDt.toISOString(),
-							discount_amount: calculation.discountAmount || null,
-							fine_amount: calculation.fineAmount || null,
-							interest_amount: calculation.interestAmount || null,
-							updated_at: new Date().toISOString(),
+					const [updatedBoleto] = await db
+						.update(boletos)
+						.set({
+							status: 'paid',
+							paymentDate: paymentDt,
+							discountAmount: calculation.discountAmount ? String(calculation.discountAmount) : null,
+							fineAmount: calculation.fineAmount ? String(calculation.fineAmount) : null,
+							interestAmount: calculation.interestAmount ? String(calculation.interestAmount) : null,
+							updatedAt: new Date(),
 						})
-						.eq('id', boletoId)
-						.select()
-						.single();
+						.where(eq(boletos.id, boletoId))
+						.returning();
 
-					if (updateError) {
+					if (!updatedBoleto) {
 						secureLogger.error('Erro ao processar pagamento do boleto', {
-							error: updateError.message,
+							error: 'Update failed',
 							userId,
 							boletoId,
 						});
-						throw new Error(
-							`Erro ao processar pagamento: ${updateError.message}`,
-						);
+						throw new Error('Erro ao processar pagamento: Update failed');
 					}
 
 					// Log de auditoria
-					await supabase.from('compliance_audit_logs').insert({
-						user_id: userId,
-						event_type: 'boleto_paid',
-						resource_type: 'boletos',
-						resource_id: boletoId,
+					await db.insert(complianceAuditLogs).values({
+						userId: userId,
+						eventType: 'consent_granted',
+						resourceType: 'boletos',
+						resourceId: boletoId,
 						description: `Boleto pago no valor de R$ ${calculation.totalAmount.toFixed(2)}`,
 						metadata: {
-							original_amount: boleto.amount,
+							original_amount: Number(boleto.amount),
 							total_paid: calculation.totalAmount,
 							discount: calculation.discountAmount,
 							fine: calculation.fineAmount,
@@ -437,7 +433,7 @@ export function createBoletoTools(userId: string) {
 						paymentConfirmation: {
 							transactionId: `BLT${Date.now()}`,
 							paidAt: paymentDt.toISOString(),
-							originalAmount: boleto.amount,
+							originalAmount: Number(boleto.amount),
 							totalPaid: calculation.totalAmount,
 						},
 					};
@@ -484,57 +480,58 @@ export function createBoletoTools(userId: string) {
 					}
 
 					// Buscar boleto
-					const { data: boleto, error } = await supabase
-						.from('boletos')
-						.select('*')
-						.eq('id', boletoId)
-						.eq('user_id', userId)
-						.single();
+					const [boleto] = await db
+						.select()
+						.from(boletos)
+						.where(and(eq(boletos.id, boletoId), eq(boletos.userId, userId)))
+						.limit(1);
 
-					if (error || !boleto) {
+					if (!boleto) {
 						throw new Error('Boleto não encontrado');
 					}
 
-					if (boleto.status === 'PAID') {
+					if (boleto.status === 'paid') {
 						throw new Error('Este boleto já está pago');
 					}
 
-					// Verificar se já existe agendamento
-					const { data: existingSchedule } = await supabase
-						.from('scheduled_payments')
-						.select('id')
-						.eq('boleto_id', boletoId)
-						.eq('status', 'pending')
+					// Verificar se já existe agendamento (using transaction_schedules table)
+					const existingSchedule = await db
+						.select({ id: transactionSchedules.id })
+						.from(transactionSchedules)
+						.where(
+							and(
+								eq(transactionSchedules.userId, userId),
+								eq(transactionSchedules.description, `boleto:${boletoId}`),
+								eq(transactionSchedules.isActive, true),
+							),
+						)
 						.limit(1);
 
 					if (existingSchedule && existingSchedule.length > 0) {
 						throw new Error('Este boleto já possui um pagamento agendado');
 					}
 
-					// Criar agendamento
-					const { data: schedule, error: scheduleError } = await supabase
-						.from('scheduled_payments')
-						.insert({
-							user_id: userId,
-							boleto_id: boletoId,
-							scheduled_for: scheduledDt.toISOString(),
-							account_id: accountId || null,
-							reminder_days: reminderDays,
-							status: 'pending',
-							created_at: new Date().toISOString(),
+					// Criar agendamento usando transactionSchedules
+					const [schedule] = await db
+						.insert(transactionSchedules)
+						.values({
+							userId: userId,
+							accountId: accountId || null,
+							amount: boleto.amount,
+							description: `boleto:${boletoId}`,
+							scheduledDate: scheduledDt.toISOString().split('T')[0],
+							isActive: true,
+							autoExecute: true,
 						})
-						.select()
-						.single();
+						.returning();
 
-					if (scheduleError) {
+					if (!schedule) {
 						secureLogger.error('Erro ao agendar pagamento do boleto', {
-							error: scheduleError.message,
+							error: 'Insert failed',
 							userId,
 							boletoId,
 						});
-						throw new Error(
-							`Erro ao agendar pagamento: ${scheduleError.message}`,
-						);
+						throw new Error('Erro ao agendar pagamento: Insert failed');
 					}
 
 					// Calcular data do lembrete
@@ -554,9 +551,9 @@ export function createBoletoTools(userId: string) {
 						message: `Pagamento do boleto agendado para ${scheduledDt.toLocaleDateString('pt-BR')}. Lembrente será enviado em ${reminderDate.toLocaleDateString('pt-BR')}.`,
 						boletoSummary: {
 							id: boleto.id,
-							amount: boleto.amount,
+							amount: Number(boleto.amount),
 							dueDate: boleto.dueDate,
-							payeeName: boleto.payeeName,
+							payeeName: boleto.beneficiaryName,
 						},
 						reminderDate: reminderDate.toISOString(),
 						canCancel: true,
@@ -585,19 +582,18 @@ export function createBoletoTools(userId: string) {
 			}),
 			execute: async ({ boletoId, includePaymentCalculation }) => {
 				try {
-					const { data: boleto, error } = await supabase
-						.from('boletos')
-						.select('*')
-						.eq('id', boletoId)
-						.eq('user_id', userId)
-						.single();
+					const [boleto] = await db
+						.select()
+						.from(boletos)
+						.where(and(eq(boletos.id, boletoId), eq(boletos.userId, userId)))
+						.limit(1);
 
-					if (error || !boleto) {
+					if (!boleto) {
 						throw new Error('Boleto não encontrado');
 					}
 
 					const now = new Date();
-					const dueDate = new Date(boleto.dueDate);
+					const dueDate = new Date(boleto.dueDate!);
 					const daysUntilDue = Math.ceil(
 						(dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
 					);
@@ -611,17 +607,22 @@ export function createBoletoTools(userId: string) {
 					};
 
 					let paymentCalculation = null;
-					if (includePaymentCalculation && boleto.status === 'REGISTERED') {
-						paymentCalculation = calculateBoletoAmount(boleto, now);
+					if (includePaymentCalculation && boleto.status === 'pending') {
+						const boletoForCalc = {
+							...boleto,
+							amount: Number(boleto.amount),
+							dueDate: boleto.dueDate!,
+						} as unknown as Boleto;
+						paymentCalculation = calculateBoletoAmount(boletoForCalc, now);
 					}
 
 					return {
 						boleto: details,
 						paymentCalculation,
-						canPay: boleto.status === 'REGISTERED',
-						canSchedule: boleto.status === 'REGISTERED' && daysUntilDue > 0,
+						canPay: boleto.status === 'pending',
+						canSchedule: boleto.status === 'pending' && daysUntilDue > 0,
 						message:
-							`Boleto de R$ ${boleto.amount.toFixed(2)} com vencimento em ${dueDate.toLocaleDateString('pt-BR')}. ` +
+							`Boleto de R$ ${Number(boleto.amount).toFixed(2)} com vencimento em ${dueDate.toLocaleDateString('pt-BR')}. ` +
 							`${daysUntilDue < 0 ? 'Vencido!' : `Vence em ${daysUntilDue} dias`}.`,
 					};
 				} catch (error) {

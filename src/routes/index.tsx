@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
-import { VoiceDashboard } from '@/components/voice/VoiceDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const Route = createFileRoute('/')({

@@ -48,11 +48,15 @@ async function signUpUser(
 			await acceptButton.click();
 		}
 		// Wait for banner to disappear
-		await consentBanner.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+		await consentBanner
+			.waitFor({ state: 'hidden', timeout: 3000 })
+			.catch(() => {});
 	}
 
 	// Toggle to signup mode by clicking the link "Não tem uma conta? Cadastre-se"
-	await page.getByRole('button', { name: /Não tem uma conta\? Cadastre-se/i }).click();
+	await page
+		.getByRole('button', { name: /Não tem uma conta\? Cadastre-se/i })
+		.click();
 	// Now fill the form
 	await page.fill('input[type="email"]', user.email);
 	await page.fill('input[type="password"]', user.password);
@@ -67,7 +71,9 @@ async function signUpUser(
 		// Check if email verification is required
 		const verifyMessage = page.getByText(/Verifique seu email/i);
 		if (await verifyMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
-			console.log('Email verification required - test environment not configured for auto-verify');
+			console.log(
+				'Email verification required - test environment not configured for auto-verify',
+			);
 			return false;
 		}
 		// Check for any error message

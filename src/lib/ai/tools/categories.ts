@@ -1,7 +1,11 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 
-export function createCategoryTools(userId: string, supabase: SupabaseClient) {
+import type { HttpClient } from '@/db';
+
+import { transactionCategories } from '@/db/schema';
+
+export function createCategoryTools(userId: string, db: HttpClient) {
 	const listCategoriesSchema = z.object({
 		includeSystem: z
 			.boolean()
@@ -25,23 +29,32 @@ export function createCategoryTools(userId: string, supabase: SupabaseClient) {
 			parameters: listCategoriesSchema,
 			execute: async (args: z.infer<typeof listCategoriesSchema>) => {
 				const { includeSystem } = args;
-				let query = supabase
-					.from('transaction_categories')
-					.select('id, name, color, icon, is_system, parent_id')
-					.or(`user_id.eq.${userId},user_id.is.null`)
-					.order('name');
+
+				// Get user categories and system categories (userId is null for system)
+				const conditions = or(
+					eq(transactionCategories.userId, userId),
+					isNull(transactionCategories.userId),
+				);
+
+				let data = await db
+					.select({
+						id: transactionCategories.id,
+						name: transactionCategories.name,
+						color: transactionCategories.color,
+						icon: transactionCategories.icon,
+						isSystem: transactionCategories.isSystem,
+						parentId: transactionCategories.parentId,
+					})
+					.from(transactionCategories)
+					.where(conditions);
 
 				if (!includeSystem) {
-					query = query.eq('is_system', false);
+					data = data.filter((c) => !c.isSystem);
 				}
 
-				const { data, error } = await query;
-
-				if (error) throw new Error(`Erro: ${error.message}`);
-
 				return {
-					categories: data ?? [],
-					count: data?.length ?? 0,
+					categories: data,
+					count: data.length,
 				};
 			},
 		},
@@ -51,19 +64,17 @@ export function createCategoryTools(userId: string, supabase: SupabaseClient) {
 			parameters: createCategorySchema,
 			execute: async (args: z.infer<typeof createCategorySchema>) => {
 				const { name, color, icon } = args;
-				const { data, error } = await supabase
-					.from('transaction_categories')
-					.insert({
-						user_id: userId,
+
+				const [data] = await db
+					.insert(transactionCategories)
+					.values({
+						userId,
 						name,
 						color,
 						icon,
-						is_system: false,
+						isSystem: false,
 					})
-					.select()
-					.single();
-
-				if (error) throw new Error(`Erro ao criar categoria: ${error.message}`);
+					.returning();
 
 				return { success: true, category: data };
 			},

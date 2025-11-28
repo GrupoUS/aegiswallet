@@ -7,47 +7,17 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-// Create a chainable query builder mock
-const createQueryBuilder = () => {
-	const queryBuilder = {
-		select: vi.fn().mockReturnThis(),
-		eq: vi.fn().mockReturnThis(),
-		neq: vi.fn().mockReturnThis(),
-		gt: vi.fn().mockReturnThis(),
-		gte: vi.fn().mockReturnThis(),
-		lt: vi.fn().mockReturnThis(),
-		lte: vi.fn().mockReturnThis(),
-		like: vi.fn().mockReturnThis(),
-		ilike: vi.fn().mockReturnThis(),
-		in: vi.fn().mockReturnThis(),
-		contains: vi.fn().mockReturnThis(),
-		order: vi.fn().mockReturnThis(),
-		limit: vi.fn().mockReturnThis(),
-		range: vi.fn().mockReturnThis(),
-		single: vi.fn().mockResolvedValue({ data: null, error: null }),
-		maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-		insert: vi.fn().mockReturnThis(),
-		update: vi.fn().mockReturnThis(),
-		delete: vi.fn().mockReturnThis(),
-		// Make the builder thenable for awaits
-		// biome-ignore lint/suspicious/noThenProperty: Required for Supabase query builder mock to support async/await
-		then: (resolve: (value: { data: []; error: null }) => void) => {
-			resolve({ data: [], error: null });
+// Mock the API client for tests
+vi.mock('@/lib/api-client', () => ({
+	apiClient: {
+		bankAccounts: {
+			list: vi.fn().mockResolvedValue({ data: [], error: null }),
 		},
-	};
-	return queryBuilder;
-};
-
-// Mock Supabase before any imports that use it
-vi.mock('@/integrations/supabase/client', () => ({
-	supabase: {
-		auth: {
-			getUser: vi.fn().mockResolvedValue({
-				data: { user: { id: 'test-user-id' } },
-				error: null,
-			}),
+		users: {
+			me: vi
+				.fn()
+				.mockResolvedValue({ data: { id: 'test-user-id' }, error: null }),
 		},
-		from: vi.fn(() => createQueryBuilder()),
 	},
 }));
 

@@ -3,17 +3,19 @@
  * Custom context types for Hono middleware and routes
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { User as ClerkUser } from '@clerk/backend';
 
-import type { Database } from '@/types/database.types';
+import type { HttpClient } from '@/db/client';
 
 /**
- * User context extracted from authentication
+ * User context extracted from Clerk authentication
  */
 export interface AuthUser {
 	id: string;
 	email: string;
+	fullName: string | null;
 	role?: string;
+	metadata?: Record<string, unknown>;
 }
 
 /**
@@ -21,7 +23,8 @@ export interface AuthUser {
  */
 export interface AuthContext {
 	user: AuthUser;
-	supabase: SupabaseClient<Database>;
+	clerkUser: ClerkUser;
+	db: HttpClient;
 }
 
 /**
@@ -33,12 +36,11 @@ export interface AppVariables {
 }
 
 /**
- * Environment bindings (for Cloudflare Workers compatibility)
+ * Environment bindings (for edge/serverless compatibility)
  */
 export interface AppBindings {
-	SUPABASE_URL: string;
-	SUPABASE_ANON_KEY: string;
-	SUPABASE_SERVICE_ROLE_KEY?: string;
+	DATABASE_URL: string;
+	CLERK_SECRET_KEY: string;
 }
 
 /**
@@ -54,8 +56,9 @@ export interface AppBindings {
  *
  * // Now c.get('auth') is properly typed
  * app.get('/example', (c) => {
- *   const { user, supabase } = c.get('auth');
+ *   const { user, db } = c.get('auth');
  *   // user.id, user.email are typed
+ *   // db is the Drizzle client
  * });
  * ```
  */
@@ -88,6 +91,6 @@ export function hasAuthContext(
 	return (
 		variables.auth !== undefined &&
 		variables.auth.user !== undefined &&
-		variables.auth.supabase !== undefined
+		variables.auth.db !== undefined
 	);
 }

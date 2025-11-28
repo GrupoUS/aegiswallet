@@ -1,12 +1,12 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { and, desc, eq, gte, ilike, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { filterSensitiveData } from '../security/filter';
+import type { HttpClient } from '@/db';
 
-export function createTransactionTools(
-	userId: string,
-	supabase: SupabaseClient,
-) {
+import { filterSensitiveData } from '../security/filter';
+import { transactionCategories, transactions } from '@/db/schema';
+
+export function createTransactionTools(userId: string, db: HttpClient) {
 	const listTransactionsSchema = z.object({
 		startDate: z
 			.string()
@@ -82,13 +82,8 @@ export function createTransactionTools(
 		merchantName: z.string().optional().describe('Novo estabelecimento'),
 	});
 
-	const requestDeleteConfirmationSchema = z.object({
-		transactionId: z.string().uuid().describe('ID da transação a deletar'),
-	});
-
 	const deleteTransactionSchema = z.object({
 		transactionId: z.string().uuid().describe('ID da transação'),
-		confirmationToken: z.string().uuid().describe('Token de confirmação'),
 	});
 
 	const getSpendingSummarySchema = z.object({
@@ -113,40 +108,46 @@ export function createTransactionTools(
 					limit,
 					offset,
 				} = args;
-				let query = supabase
-					.from('transactions')
-					.select(`
-            id,
-            amount,
-            description,
-            merchant_name,
-            transaction_date,
-            status,
-            created_at,
-            category:transaction_categories(id, name, color, icon),
-            account:bank_accounts(id, institution_name, account_type)
-          `)
-					.eq('user_id', userId)
-					.order('transaction_date', { ascending: false })
-					.range(offset, offset + limit - 1);
 
-				if (startDate) query = query.gte('transaction_date', startDate);
-				if (endDate) query = query.lte('transaction_date', endDate);
-				if (categoryId) query = query.eq('category_id', categoryId);
-				if (accountId) query = query.eq('account_id', accountId);
-				if (minAmount) query = query.gte('amount', minAmount);
-				if (maxAmount) query = query.lte('amount', maxAmount);
-				if (searchTerm) query = query.ilike('description', `%${searchTerm}%`);
+				// Build conditions array
+				const conditions = [eq(transactions.userId, userId)];
 
-				const { data, error, count } = await query;
+				if (startDate)
+					conditions.push(
+						gte(transactions.transactionDate, new Date(startDate)),
+					);
+				if (endDate)
+					conditions.push(lte(transactions.transactionDate, new Date(endDate)));
+				if (categoryId)
+					conditions.push(eq(transactions.categoryId, categoryId));
+				if (accountId) conditions.push(eq(transactions.accountId, accountId));
+				if (minAmount)
+					conditions.push(gte(transactions.amount, String(minAmount)));
+				if (maxAmount)
+					conditions.push(lte(transactions.amount, String(maxAmount)));
+				if (searchTerm)
+					conditions.push(ilike(transactions.description, `%${searchTerm}%`));
 
-				if (error)
-					throw new Error(`Erro ao buscar transações: ${error.message}`);
+				const data = await db
+					.select({
+						id: transactions.id,
+						amount: transactions.amount,
+						description: transactions.description,
+						merchantName: transactions.merchantName,
+						transactionDate: transactions.transactionDate,
+						status: transactions.status,
+						createdAt: transactions.createdAt,
+					})
+					.from(transactions)
+					.where(and(...conditions))
+					.orderBy(desc(transactions.transactionDate))
+					.limit(limit)
+					.offset(offset);
 
 				return {
-					transactions: data?.map(filterSensitiveData) ?? [],
-					total: count ?? 0,
-					hasMore: (count ?? 0) > offset + limit,
+					transactions: data.map(filterSensitiveData),
+					total: data.length,
+					hasMore: data.length === limit,
 				};
 			},
 		},
@@ -156,19 +157,20 @@ export function createTransactionTools(
 			parameters: getTransactionSchema,
 			execute: async (args: z.infer<typeof getTransactionSchema>) => {
 				const { transactionId } = args;
-				const { data, error } = await supabase
-					.from('transactions')
-					.select(`
-            *,
-            category:transaction_categories(id, name, color, icon),
-            account:bank_accounts(id, institution_name, account_type)
-          `)
-					.eq('id', transactionId)
-					.eq('user_id', userId)
-					.single();
+				const [data] = await db
+					.select()
+					.from(transactions)
+					.where(
+						and(
+							eq(transactions.id, transactionId),
+							eq(transactions.userId, userId),
+						),
+					)
+					.limit(1);
 
-				if (error)
-					throw new Error(`Transação não encontrada: ${error.message}`);
+				if (!data) {
+					throw new Error('Transação não encontrada');
+				}
 
 				return filterSensitiveData(data);
 			},
@@ -186,22 +188,24 @@ export function createTransactionTools(
 					transactionDate,
 					merchantName,
 				} = args;
-				const { data, error } = await supabase
-					.from('transactions')
-					.insert({
-						user_id: userId,
-						amount,
-						description,
-						category_id: categoryId,
-						account_id: accountId,
-						transaction_date: transactionDate ?? new Date().toISOString(),
-						merchant_name: merchantName,
-						status: 'posted',
-					})
-					.select()
-					.single();
 
-				if (error) throw new Error(`Erro ao criar transação: ${error.message}`);
+				const [data] = await db
+					.insert(transactions)
+					.values({
+						userId,
+						amount: String(amount),
+						description,
+						categoryId,
+						accountId,
+						transactionDate: transactionDate
+							? new Date(transactionDate)
+							: new Date(),
+						merchantName,
+						transactionType: amount >= 0 ? 'credit' : 'debit',
+						status: 'posted',
+						isManualEntry: true,
+					})
+					.returning();
 
 				return { success: true, transaction: filterSensitiveData(data) };
 			},
@@ -212,113 +216,62 @@ export function createTransactionTools(
 			parameters: updateTransactionSchema,
 			execute: async (args: z.infer<typeof updateTransactionSchema>) => {
 				const { transactionId, ...updates } = args;
-				// Remover campos undefined
-				const cleanUpdates = Object.fromEntries(
-					Object.entries(updates).filter(([, v]) => v !== undefined),
-				);
 
-				const { data, error } = await supabase
-					.from('transactions')
-					.update({
-						...cleanUpdates,
-						category_id: updates.categoryId,
-						transaction_date: updates.transactionDate,
-						merchant_name: updates.merchantName,
-						updated_at: new Date().toISOString(),
-					})
-					.eq('id', transactionId)
-					.eq('user_id', userId)
-					.select()
-					.single();
+				// Build update object dynamically
+				const updateData: Record<string, unknown> = {
+					updatedAt: new Date(),
+				};
 
-				if (error) throw new Error(`Erro ao atualizar: ${error.message}`);
+				if (updates.amount !== undefined)
+					updateData.amount = String(updates.amount);
+				if (updates.description !== undefined)
+					updateData.description = updates.description;
+				if (updates.categoryId !== undefined)
+					updateData.categoryId = updates.categoryId;
+				if (updates.transactionDate !== undefined)
+					updateData.transactionDate = new Date(updates.transactionDate);
+				if (updates.merchantName !== undefined)
+					updateData.merchantName = updates.merchantName;
+
+				const [data] = await db
+					.update(transactions)
+					.set(updateData)
+					.where(
+						and(
+							eq(transactions.id, transactionId),
+							eq(transactions.userId, userId),
+						),
+					)
+					.returning();
+
+				if (!data) {
+					throw new Error('Transação não encontrada');
+				}
 
 				return { success: true, transaction: filterSensitiveData(data) };
 			},
 		},
 
-		requestDeleteConfirmation: {
-			description:
-				'Solicita confirmação antes de deletar uma transação. SEMPRE use esta tool antes de deleteTransaction.',
-			parameters: requestDeleteConfirmationSchema,
-			execute: async (
-				args: z.infer<typeof requestDeleteConfirmationSchema>,
-			) => {
-				const { transactionId } = args;
-				const { data, error } = await supabase
-					.from('transactions')
-					.select('id, amount, description, transaction_date')
-					.eq('id', transactionId)
-					.eq('user_id', userId)
-					.single();
-
-				if (error)
-					throw new Error(`Transação não encontrada: ${error.message}`);
-
-				// Gerar token temporário (expira em 60s)
-				const token = crypto.randomUUID();
-				const expiresAt = new Date(Date.now() + 60000).toISOString();
-
-				// Armazenar token (em produção, usar Redis ou similar)
-				await supabase.from('delete_confirmations').insert({
-					token,
-					transaction_id: transactionId,
-					user_id: userId,
-					expires_at: expiresAt,
-				});
-
-				return {
-					requiresConfirmation: true,
-					confirmationToken: token,
-					expiresIn: 60,
-					summary: {
-						id: data.id,
-						description: data.description,
-						amount: data.amount,
-						date: data.transaction_date,
-					},
-					message: `Para confirmar a exclusão da transação "${data.description}" (R$ ${Math.abs(data.amount).toFixed(2)}), peça ao usuário que confirme.`,
-				};
-			},
-		},
-
 		deleteTransaction: {
 			description:
-				'Deleta uma transação. REQUER confirmationToken obtido via requestDeleteConfirmation.',
+				'Deleta uma transação. Use com cuidado, esta ação é irreversível.',
 			parameters: deleteTransactionSchema,
 			execute: async (args: z.infer<typeof deleteTransactionSchema>) => {
-				const { transactionId, confirmationToken } = args;
-				// Verificar token
-				const { data: confirmation, error: tokenError } = await supabase
-					.from('delete_confirmations')
-					.select('*')
-					.eq('token', confirmationToken)
-					.eq('transaction_id', transactionId)
-					.eq('user_id', userId)
-					.gt('expires_at', new Date().toISOString())
-					.single();
+				const { transactionId } = args;
 
-				if (tokenError || !confirmation) {
-					throw new Error(
-						'Token de confirmação inválido ou expirado. Use requestDeleteConfirmation primeiro.',
-					);
+				const [deleted] = await db
+					.delete(transactions)
+					.where(
+						and(
+							eq(transactions.id, transactionId),
+							eq(transactions.userId, userId),
+						),
+					)
+					.returning({ id: transactions.id });
+
+				if (!deleted) {
+					throw new Error('Transação não encontrada');
 				}
-
-				// Deletar transação
-				const { error: deleteError } = await supabase
-					.from('transactions')
-					.delete()
-					.eq('id', transactionId)
-					.eq('user_id', userId);
-
-				if (deleteError)
-					throw new Error(`Erro ao deletar: ${deleteError.message}`);
-
-				// Limpar token usado
-				await supabase
-					.from('delete_confirmations')
-					.delete()
-					.eq('token', confirmationToken);
 
 				return { success: true, message: 'Transação deletada com sucesso.' };
 			},
@@ -329,39 +282,56 @@ export function createTransactionTools(
 			parameters: getSpendingSummarySchema,
 			execute: async (args: z.infer<typeof getSpendingSummarySchema>) => {
 				const { startDate, endDate } = args;
-				const { data, error } = await supabase
-					.from('transactions')
-					.select(`
-            amount,
-            category:transaction_categories(id, name, color)
-          `)
-					.eq('user_id', userId)
-					.lt('amount', 0) // Apenas despesas
-					.gte('transaction_date', startDate)
-					.lte('transaction_date', endDate);
 
-				if (error) throw new Error(`Erro: ${error.message}`);
+				const data = await db
+					.select({
+						amount: transactions.amount,
+						categoryId: transactions.categoryId,
+					})
+					.from(transactions)
+					.where(
+						and(
+							eq(transactions.userId, userId),
+							lte(transactions.amount, '0'), // Only expenses (negative amounts)
+							gte(transactions.transactionDate, new Date(startDate)),
+							lte(transactions.transactionDate, new Date(endDate)),
+						),
+					);
 
-				// Agrupar por categoria
-				const summary = data?.reduce(
+				// Get category info
+				const categoryIds = [
+					...new Set(data.map((t) => t.categoryId).filter(Boolean)),
+				] as string[];
+				const categories = categoryIds.length
+					? await db
+							.select({
+								id: transactionCategories.id,
+								name: transactionCategories.name,
+								color: transactionCategories.color,
+							})
+							.from(transactionCategories)
+							.where(inArray(transactionCategories.id, categoryIds))
+					: [];
+
+				const categoryMap = new Map(categories.map((c) => [c.id, c]));
+
+				// Group by category
+				const summary = data.reduce(
 					(acc, tx) => {
-						const cat = Array.isArray(tx.category)
-							? tx.category[0]
-							: tx.category;
-						const catName = cat?.name ?? 'Sem categoria';
-						const catId = cat?.id ?? 'uncategorized';
+						const catId = tx.categoryId ?? 'uncategorized';
+						const cat = categoryMap.get(tx.categoryId ?? '');
 
 						if (!acc[catId]) {
 							acc[catId] = {
 								categoryId: catId,
-								categoryName: catName,
+								categoryName: cat?.name ?? 'Sem categoria',
 								color: cat?.color ?? '#6B7280',
 								total: 0,
 								count: 0,
 							};
 						}
 
-						acc[catId].total += Math.abs(tx.amount);
+						acc[catId].total += Math.abs(Number(tx.amount));
 						acc[catId].count += 1;
 
 						return acc;
@@ -378,15 +348,18 @@ export function createTransactionTools(
 					>,
 				);
 
-				const categories = Object.values(summary ?? {}).sort(
+				const categorySummary = Object.values(summary).sort(
 					(a, b) => b.total - a.total,
 				);
-				const grandTotal = categories.reduce((sum, cat) => sum + cat.total, 0);
+				const grandTotal = categorySummary.reduce(
+					(sum, cat) => sum + cat.total,
+					0,
+				);
 
 				return {
 					period: { startDate, endDate },
 					grandTotal,
-					categories,
+					categories: categorySummary,
 				};
 			},
 		},

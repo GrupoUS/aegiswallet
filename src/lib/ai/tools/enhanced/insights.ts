@@ -1,7 +1,9 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { tool } from 'ai';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { db } from '@/db/client';
+import { financialEvents, transactionCategories, transactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import type {
 	AnomalyDetection,
@@ -14,13 +16,6 @@ import type {
 } from './types';
 
 export function createInsightsTools(userId: string) {
-	const supabaseUrl =
-		process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-	const supabaseKey =
-		process.env.SUPABASE_SERVICE_ROLE_KEY ||
-		process.env.VITE_SUPABASE_ANON_KEY ||
-		'';
-	const supabase = createClient(supabaseUrl, supabaseKey);
 
 	return {
 		getSpendingAnalysis: tool({
@@ -39,45 +34,60 @@ export function createInsightsTools(userId: string) {
 					const start = new Date(startDate);
 					const end = new Date(endDate);
 
+					// Build conditions
+					const conditions = [
+						eq(transactions.userId, userId),
+						lte(transactions.amount, '0'), // Apenas despesas
+						gte(transactions.transactionDate, new Date(startDate)),
+						lte(transactions.transactionDate, new Date(endDate)),
+					];
+
 					// Buscar transações do período
-					let query = supabase
-						.from('transactions')
-						.select(`
-              amount,
-              transaction_date,
-              category:transaction_categories(id, name, color, icon),
-              description,
-              merchant_name
-            `)
-						.eq('user_id', userId)
-						.lt('amount', 0) // Apenas despesas
-						.gte('transaction_date', startDate)
-						.lte('transaction_date', endDate);
+					const data = await db
+						.select({
+							amount: transactions.amount,
+							transaction_date: transactions.transactionDate,
+							description: transactions.description,
+							merchant_name: transactions.merchantName,
+							category_id: transactions.categoryId,
+						})
+						.from(transactions)
+						.where(and(...conditions));
 
-					if (categoryIds && categoryIds.length > 0) {
-						query = query.in('category_id', categoryIds);
-					}
+					// Fetch categories separately
+					const categoryData = await db
+						.select()
+						.from(transactionCategories)
+						.where(eq(transactionCategories.userId, userId));
 
-					const { data, error } = await query;
+					const categoryMap = new Map(categoryData.map((c) => [c.id, c]));
 
-					if (error) {
-						secureLogger.error('Erro ao buscar transações para análise', {
-							error: error.message,
-							userId,
-						});
-						throw new Error(`Erro ao analisar gastos: ${error.message}`);
-					}
-
-					const transactions = data ?? [];
-					const totalSpending = transactions.reduce(
+					// Map transactions with category info
+					const transactionsList = data.map((tx) => ({
+						amount: Number(tx.amount),
+						transaction_date: tx.transaction_date?.toISOString(),
+						category: tx.category_id
+							? [
+									{
+										id: tx.category_id,
+										name: categoryMap.get(tx.category_id)?.name || 'Sem categoria',
+										color: categoryMap.get(tx.category_id)?.color,
+										icon: categoryMap.get(tx.category_id)?.icon,
+									},
+								]
+							: [],
+						description: tx.description,
+						merchant_name: tx.merchant_name,
+					}));
+					const totalSpending = transactionsList.reduce(
 						(sum, tx) => sum + Math.abs(tx.amount),
 						0,
 					);
 
 					// Análise por categoria
-					const categoryMap = new Map<string, CategorySpending>();
+					const categorySpendingMap = new Map<string, CategorySpending>();
 
-					transactions.forEach((tx) => {
+					transactionsList.forEach((tx) => {
 						// Supabase joins return arrays, so access first element
 						const txCategory = Array.isArray(tx.category)
 							? tx.category[0]
@@ -85,8 +95,8 @@ export function createInsightsTools(userId: string) {
 						const catId = txCategory?.id || 'uncategorized';
 						const catName = txCategory?.name || 'Sem categoria';
 
-						if (!categoryMap.has(catId)) {
-							categoryMap.set(catId, {
+						if (!categorySpendingMap.has(catId)) {
+							categorySpendingMap.set(catId, {
 								categoryId: catId,
 								categoryName: catName,
 								amount: 0,
@@ -96,7 +106,7 @@ export function createInsightsTools(userId: string) {
 							});
 						}
 
-						const catData = categoryMap.get(catId);
+						const catData = categorySpendingMap.get(catId);
 						if (catData) {
 							catData.amount += Math.abs(tx.amount);
 							catData.transactionCount += 1;
@@ -104,7 +114,7 @@ export function createInsightsTools(userId: string) {
 					});
 
 					// Calcular percentuais
-					const categoryBreakdown = Array.from(categoryMap.values()).map(
+					const categoryBreakdown = Array.from(categorySpendingMap.values()).map(
 						(cat) => ({
 							...cat,
 							percentage:
@@ -151,15 +161,15 @@ export function createInsightsTools(userId: string) {
 					return {
 						analysis,
 						summary: {
-							totalTransactions: transactions.length,
+							totalTransactions: transactionsList.length,
 							averageTransaction:
-								transactions.length > 0
-									? totalSpending / transactions.length
+								transactionsList.length > 0
+									? totalSpending / transactionsList.length
 									: 0,
 							topCategory: categoryBreakdown[0]?.categoryName || 'Nenhuma',
 							topCategoryPercentage: categoryBreakdown[0]?.percentage || 0,
 						},
-						message: `Análise completa do período: gastos totais de R$ ${totalSpending.toFixed(2)} em ${transactions.length} transações, distribuídos em ${categoryBreakdown.length} categorias.`,
+						message: `Análise completa do período: gastos totais de R$ ${totalSpending.toFixed(2)} em ${transactionsList.length} transações, distribuídos em ${categoryBreakdown.length} categorias.`,
 					};
 				} catch (error) {
 					secureLogger.error('Falha na análise de gastos', {

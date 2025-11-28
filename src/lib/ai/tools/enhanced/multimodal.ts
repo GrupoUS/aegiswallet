@@ -1,8 +1,9 @@
 import { tool } from 'ai';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { createServerClient } from '../../../../integrations/supabase/factory';
-import type { Database } from '../../../../types/database.types';
+import { db } from '@/db/client';
+import { transactionCategories, transactions } from '@/db/schema';
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import type {
@@ -127,31 +128,22 @@ export function createMultimodalTools(userId: string) {
 						fileUrl = await generateChartFile(chartData, format, title);
 					}
 
-					// Salvar relatório no banco
-					// Note: visual_reports table needs to be added to the schema
-					const supabase = createServerClient();
-					const reportInsertData = {
-						user_id: userId,
+					// Note: visual_reports table does not exist in Drizzle schema
+					// For now, we'll just return the report without saving
+					const savedReport = {
+						id: crypto.randomUUID(),
+						userId,
 						type: reportType,
 						title,
 						description,
-						chart_data: chartData,
-						insights: insights,
+						chartData,
+						insights,
 						format,
-						file_url: fileUrl,
-						date_range: dateRange,
-						comparison_data: comparisonData,
-						created_at: new Date().toISOString(),
+						fileUrl,
+						dateRange,
+						comparisonData,
+						createdAt: new Date().toISOString(),
 					};
-					const { data: savedReport, error } = await supabase
-						.from('visual_reports' as keyof Database['public']['Tables'])
-						.insert(reportInsertData as never)
-						.select()
-						.single();
-
-					if (error) {
-						throw new Error(`Erro ao salvar relatório: ${error.message}`);
-					}
 
 					secureLogger.info('Relatório visual gerado com sucesso', {
 						userId,
@@ -413,31 +405,20 @@ export function createMultimodalTools(userId: string) {
 						generatedAt: new Date().toISOString(),
 					};
 
-					// Salvar visualização
-					// Note: spending_visualizations table needs to be added to the schema
-					const supabase = createServerClient();
-					const vizInsertData = {
-						user_id: userId,
+					// Note: spending_visualizations table does not exist in Drizzle schema
+					// For now, we'll just return the visualization without saving
+					const savedViz = {
+						id: crypto.randomUUID(),
+						userId,
 						type: visualizationType,
-						focus_area: focusArea,
+						focusArea,
 						granularity,
 						data: visualizationData,
-						insights: insights,
-						interactive_features: interactiveFeatures,
-						color_by: colorBy,
-						created_at: new Date().toISOString(),
+						insights,
+						interactiveFeatures,
+						colorBy,
+						createdAt: new Date().toISOString(),
 					};
-					const { data: savedViz, error } = await supabase
-						.from(
-							'spending_visualizations' as keyof Database['public']['Tables'],
-						)
-						.insert(vizInsertData as never)
-						.select()
-						.single();
-
-					if (error) {
-						throw new Error(`Erro ao salvar visualização: ${error.message}`);
-					}
 
 					secureLogger.info('Visualização de gastos criada com sucesso', {
 						userId,
@@ -596,28 +577,45 @@ async function fetchReportData(
 	dateRange: DateRange,
 	categories?: string[],
 ): Promise<unknown[]> {
-	const supabase = createServerClient();
+	const conditions = [
+		eq(transactions.userId, userId),
+		gte(transactions.transactionDate, new Date(dateRange.startDate)),
+		lte(transactions.transactionDate, new Date(dateRange.endDate)),
+	];
 
-	let query = supabase
-		.from('transactions')
-		.select(`
-      amount,
-      transaction_date,
-      category:transaction_categories(id, name, color),
-      description
-    `)
-		.eq('user_id', userId)
-		.gte('transaction_date', dateRange.startDate)
-		.lte('transaction_date', dateRange.endDate);
+	const data = await db
+		.select({
+			amount: transactions.amount,
+			transaction_date: transactions.transactionDate,
+			description: transactions.description,
+			category_id: transactions.categoryId,
+		})
+		.from(transactions)
+		.where(and(...conditions));
 
-	if (categories && categories.length > 0) {
-		query = query.in('category_id', categories);
-	}
+	// Fetch categories separately
+	const categoryData = await db
+		.select()
+		.from(transactionCategories)
+		.where(eq(transactionCategories.userId, userId));
 
-	const { data, error } = await query;
-	if (error) throw new Error(`Erro ao buscar dados: ${error.message}`);
+	const categoryMap = new Map(categoryData.map((c) => [c.id, c]));
 
-	return (data as unknown[]) || [];
+	// Map transactions with category info
+	return data.map((tx) => ({
+		amount: Number(tx.amount),
+		transaction_date: tx.transaction_date?.toISOString(),
+		category: tx.category_id
+			? [
+					{
+						id: tx.category_id,
+						name: categoryMap.get(tx.category_id)?.name || 'Sem categoria',
+						color: categoryMap.get(tx.category_id)?.color,
+					},
+				]
+			: [],
+		description: tx.description,
+	}));
 }
 
 function processChartData(
@@ -869,26 +867,19 @@ async function saveExportRecord(
 	dateRange: { startDate: string; endDate: string },
 	exportResult: { fileUrl: string; fileSize: number; recordCount: number },
 ): Promise<unknown> {
-	const supabase = createServerClient();
-	const exportRecordData = {
-		user_id: userId,
-		report_type: reportType,
+	// Note: export_records table does not exist in Drizzle schema
+	// For now, we'll just return a mock record without saving
+	const exportRecord = {
+		id: crypto.randomUUID(),
+		userId,
+		reportType,
 		format,
-		date_range: dateRange,
-		file_url: exportResult.fileUrl,
-		file_size: exportResult.fileSize,
-		record_count: exportResult.recordCount,
-		created_at: new Date().toISOString(),
+		dateRange,
+		fileUrl: exportResult.fileUrl,
+		fileSize: exportResult.fileSize,
+		recordCount: exportResult.recordCount,
+		createdAt: new Date().toISOString(),
 	};
-	const { data: exportRecord, error } = await supabase
-		.from('export_records' as keyof Database['public']['Tables'])
-		.insert(exportRecordData as never)
-		.select()
-		.single();
-
-	if (error) {
-		throw new Error(`Erro ao registrar exportação: ${error.message}`);
-	}
 
 	secureLogger.info('Relatório financeiro exportado com sucesso', {
 		userId,

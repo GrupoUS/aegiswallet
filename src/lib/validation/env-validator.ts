@@ -2,6 +2,8 @@
  * Environment Variables Validator
  * Validates required environment variables on application startup
  * and provides clear error messages for misconfiguration
+ * 
+ * Updated for Clerk Auth + Neon DB architecture
  */
 
 import { secureLogger } from '@/lib/logging/secure-logger';
@@ -14,34 +16,25 @@ export interface EnvValidationResult {
 }
 
 /**
- * Validates that a string looks like a valid Supabase URL
+ * Validates that a string looks like a valid database URL
  */
-const isValidSupabaseUrl = (url: string | undefined): boolean => {
+const isValidDatabaseUrl = (url: string | undefined): boolean => {
 	if (!url) return false;
 	try {
-		const parsed = new URL(url);
-		return parsed.protocol === 'https:' && parsed.hostname.includes('supabase');
+		// Neon uses postgres:// or postgresql:// protocol
+		return url.startsWith('postgres://') || url.startsWith('postgresql://');
 	} catch {
 		return false;
 	}
 };
 
 /**
- * Validates that a string looks like a valid Supabase anon key (JWT format)
+ * Validates that a string looks like a valid Clerk publishable key
  */
-const isValidSupabaseAnonKey = (key: string | undefined): boolean => {
+const isValidClerkPublishableKey = (key: string | undefined): boolean => {
 	if (!key) return false;
-	// JWT format: header.payload.signature
-	const jwtParts = key.split('.');
-	if (jwtParts.length !== 3) return false;
-
-	try {
-		// Try to decode the payload to verify it's a valid JWT
-		const payload = JSON.parse(atob(jwtParts[1]));
-		return payload.role === 'anon' && payload.iss === 'supabase';
-	} catch {
-		return false;
-	}
+	// Clerk publishable keys start with pk_test_ or pk_live_
+	return key.startsWith('pk_test_') || key.startsWith('pk_live_');
 };
 
 /**
@@ -60,40 +53,43 @@ const getEnvVar = (key: string): string | undefined => {
 };
 
 /**
- * Validates all required environment variables for Supabase integration
+ * Validates all required environment variables for Clerk + Neon integration
  */
-export const validateSupabaseEnv = (): EnvValidationResult => {
+export const validateEnv = (): EnvValidationResult => {
 	const errors: string[] = [];
 	const warnings: string[] = [];
 	const diagnostics: Record<string, unknown> = {};
 
-	// Check Supabase URL
-	const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
-	diagnostics.hasSupabaseUrl = !!supabaseUrl;
-	diagnostics.supabaseUrlValid = isValidSupabaseUrl(supabaseUrl);
+	// Check Clerk Publishable Key
+	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
+	diagnostics.hasClerkPublishableKey = !!clerkPublishableKey;
+	diagnostics.clerkPublishableKeyValid = isValidClerkPublishableKey(clerkPublishableKey);
 
-	if (!supabaseUrl) {
-		errors.push('VITE_SUPABASE_URL não está definida');
-	} else if (!isValidSupabaseUrl(supabaseUrl)) {
-		errors.push(`VITE_SUPABASE_URL inválida: ${supabaseUrl}`);
+	if (!clerkPublishableKey) {
+		errors.push('VITE_CLERK_PUBLISHABLE_KEY não está definida');
+	} else if (!isValidClerkPublishableKey(clerkPublishableKey)) {
+		warnings.push('VITE_CLERK_PUBLISHABLE_KEY formato inválido');
 	}
 
-	// Check Supabase Anon Key
-	const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
-	diagnostics.hasSupabaseAnonKey = !!supabaseAnonKey;
-	diagnostics.supabaseAnonKeyValid = isValidSupabaseAnonKey(supabaseAnonKey);
+	// Check Database URL (server-side only)
+	const databaseUrl = getEnvVar('DATABASE_URL');
+	diagnostics.hasDatabaseUrl = !!databaseUrl;
+	diagnostics.databaseUrlValid = isValidDatabaseUrl(databaseUrl);
 
-	if (!supabaseAnonKey) {
-		errors.push('VITE_SUPABASE_ANON_KEY não está definida');
-	} else if (!isValidSupabaseAnonKey(supabaseAnonKey)) {
-		errors.push('VITE_SUPABASE_ANON_KEY parece inválida');
+	// DATABASE_URL is optional for client-side validation
+	if (typeof window === 'undefined') {
+		if (!databaseUrl) {
+			errors.push('DATABASE_URL não está definida');
+		} else if (!isValidDatabaseUrl(databaseUrl)) {
+			errors.push('DATABASE_URL inválida (deve começar com postgres://)');
+		}
 	}
 
 	// Optional: Check Google Client ID (for OAuth)
 	const googleClientId = getEnvVar('VITE_GOOGLE_CLIENT_ID');
 	diagnostics.hasGoogleClientId = !!googleClientId;
 	if (!googleClientId) {
-		warnings.push('VITE_GOOGLE_CLIENT_ID não definida');
+		warnings.push('VITE_GOOGLE_CLIENT_ID não definida (Google OAuth desabilitado)');
 	}
 
 	const isValid = errors.length === 0;
@@ -116,11 +112,15 @@ export const validateSupabaseEnv = (): EnvValidationResult => {
 	return { diagnostics, errors, isValid, warnings };
 };
 
+// Legacy alias for backward compatibility
+export const validateSupabaseEnv = validateEnv;
+
+
 /**
  * Validates environment and throws if critical vars missing
  */
 export const assertValidEnv = (): void => {
-	const result = validateSupabaseEnv();
+	const result = validateEnv();
 
 	if (!result.isValid) {
 		const msg = `
@@ -136,4 +136,4 @@ ${result.errors.map((e) => `║  ❌ ${e.padEnd(52)}║`).join('\n')}
 	}
 };
 
-export default { assertValidEnv, validateSupabaseEnv };
+export default { assertValidEnv, validateEnv, validateSupabaseEnv };

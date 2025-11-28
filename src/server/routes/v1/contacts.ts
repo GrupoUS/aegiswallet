@@ -1,12 +1,15 @@
 /**
  * Contacts API - Hono RPC Implementation
  * Manages contact CRUD, favorites, and stats
+ * Using Drizzle ORM with Neon serverless
  */
 
 import { zValidator } from '@hono/zod-validator';
+import { and, asc, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { contacts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { validateCPF } from '@/lib/security/financial-validator';
 import type { AppEnv } from '@/server/hono-types';
@@ -95,43 +98,56 @@ contactsRouter.get(
 	'/',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 30, // 30 requests per minute per user
+		windowMs: 60 * 1000,
+		max: 30,
 		message: 'Too many requests, please try again later',
 	}),
 	zValidator('query', getAllContactsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			let query = supabase.from('contacts').select('*').eq('user_id', user.id);
+			// Build where conditions
+			const conditions = [eq(contacts.userId, user.id)];
 
 			if (input.search) {
-				query = query.or(
-					`name.ilike.%${input.search}%,email.ilike.%${input.search}%,phone.ilike.%${input.search}%`,
+				const searchPattern = `%${input.search}%`;
+				const searchCondition = or(
+					ilike(contacts.name, searchPattern),
+					ilike(contacts.email, searchPattern),
+					ilike(contacts.phone, searchPattern),
 				);
+				if (searchCondition) {
+					conditions.push(searchCondition);
+				}
 			}
 
 			if (input.isFavorite !== undefined) {
-				query = query.eq('is_favorite', input.isFavorite);
+				conditions.push(eq(contacts.isFavorite, input.isFavorite));
 			}
 
-			const { data, error, count } = await query
-				.order('is_favorite', { ascending: false })
-				.order('name', { ascending: true })
-				.range(input.offset, input.offset + input.limit - 1);
+			// Get total count
+			const [{ total }] = await db
+				.select({ total: count() })
+				.from(contacts)
+				.where(and(...conditions));
 
-			if (error) {
-				throw new Error(`Erro ao buscar contatos: ${error.message}`);
-			}
+			// Get paginated data
+			const data = await db
+				.select()
+				.from(contacts)
+				.where(and(...conditions))
+				.orderBy(desc(contacts.isFavorite), asc(contacts.name))
+				.limit(input.limit)
+				.offset(input.offset);
 
 			return c.json({
 				data: {
-					contacts: data || [],
-					hasMore: (count || 0) > input.offset + input.limit,
-					total: count || 0,
+					contacts: data,
+					hasMore: total > input.offset + input.limit,
+					total,
 				},
 				meta: {
 					requestId,
@@ -163,34 +179,30 @@ contactsRouter.get(
 	'/:id',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 30, // 30 requests per minute per user
+		windowMs: 60 * 1000,
+		max: 30,
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const contactId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('contacts')
-				.select('*')
-				.eq('id', contactId)
-				.eq('user_id', user.id)
-				.single();
+			const [data] = await db
+				.select()
+				.from(contacts)
+				.where(and(eq(contacts.id, contactId), eq(contacts.userId, user.id)))
+				.limit(1);
 
-			if (error) {
-				if (error.code === 'PGRST116') {
-					return c.json(
-						{
-							code: 'NOT_FOUND',
-							error: 'Contato não encontrado',
-						},
-						404,
-					);
-				}
-				throw new Error(`Erro ao buscar contato: ${error.message}`);
+			if (!data) {
+				return c.json(
+					{
+						code: 'NOT_FOUND',
+						error: 'Contato não encontrado',
+					},
+					404,
+				);
 			}
 
 			return c.json({
@@ -226,47 +238,33 @@ contactsRouter.post(
 	'/',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 20, // 20 creations per minute per user
+		windowMs: 60 * 1000,
+		max: 20,
 		message: 'Too many creation attempts, please try again later',
 	}),
 	zValidator('json', createContactSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
 			const sanitizedInput = sanitizeContactFields(input);
 
-			const { data, error } = await supabase
-				.from('contacts')
-				.insert({
-					cpf: sanitizedInput.cpf ?? null,
-					created_at: new Date().toISOString(),
-					email: sanitizedInput.email ?? null,
-					is_favorite: sanitizedInput.isFavorite,
+			const [data] = await db
+				.insert(contacts)
+				.values({
+					userId: user.id,
 					name: sanitizedInput.name,
-					notes: sanitizedInput.notes ?? null,
+					email: sanitizedInput.email ?? null,
 					phone: sanitizedInput.phone ?? null,
-					updated_at: new Date().toISOString(),
-					user_id: user.id,
+					cpf: sanitizedInput.cpf ?? null,
+					notes: sanitizedInput.notes ?? null,
+					isFavorite: sanitizedInput.isFavorite ?? false,
+					createdAt: new Date(),
+					updatedAt: new Date(),
 				})
-				.select()
-				.single();
-
-			if (error) {
-				if (error.code === '23505') {
-					return c.json(
-						{
-							code: 'CONFLICT',
-							error: 'Email ou telefone já cadastrado para este usuário',
-						},
-						409,
-					);
-				}
-				throw new Error(`Erro ao criar contato: ${error.message}`);
-			}
+				.returning();
 
 			secureLogger.info('Contact created', {
 				contactId: data.id,
@@ -286,6 +284,20 @@ contactsRouter.post(
 				201,
 			);
 		} catch (error) {
+			// Check for unique constraint violation
+			if (
+				error instanceof Error &&
+				error.message.includes('unique constraint')
+			) {
+				return c.json(
+					{
+						code: 'CONFLICT',
+						error: 'Email ou telefone já cadastrado para este usuário',
+					},
+					409,
+				);
+			}
+
 			secureLogger.error('Failed to create contact', {
 				contactName: input.name,
 				error: error instanceof Error ? error.message : 'Unknown error',
@@ -311,13 +323,13 @@ contactsRouter.put(
 	'/:id',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 30, // 30 updates per minute per user
+		windowMs: 60 * 1000,
+		max: 30,
 		message: 'Too many update attempts, please try again later',
 	}),
 	zValidator('json', updateContactSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const contactId = c.req.param('id');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
@@ -326,8 +338,8 @@ contactsRouter.put(
 			const { id: _inputId, ...updateData } = input;
 			const sanitizedData = sanitizeContactFields(updateData);
 
-			const updatePayload: Record<string, unknown> = {
-				updated_at: new Date().toISOString(),
+			const updatePayload: Partial<typeof contacts.$inferInsert> = {
+				updatedAt: new Date(),
 			};
 
 			if (sanitizedData.name !== undefined) {
@@ -346,35 +358,30 @@ contactsRouter.put(
 				updatePayload.notes = sanitizedData.notes ?? null;
 			}
 			if (sanitizedData.isFavorite !== undefined) {
-				updatePayload.is_favorite = sanitizedData.isFavorite;
+				updatePayload.isFavorite = sanitizedData.isFavorite;
 			}
 
-			const { data, error } = await supabase
-				.from('contacts')
-				.update(updatePayload)
-				.eq('id', contactId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
+			const [data] = await db
+				.update(contacts)
+				.set(updatePayload)
+				.where(and(eq(contacts.id, contactId), eq(contacts.userId, user.id)))
+				.returning();
 
-			if (error) {
-				if (error.code === 'PGRST116') {
-					return c.json(
-						{
-							code: 'NOT_FOUND',
-							error: 'Contato não encontrado',
-						},
-						404,
-					);
-				}
-				throw new Error(`Erro ao atualizar contato: ${error.message}`);
+			if (!data) {
+				return c.json(
+					{
+						code: 'NOT_FOUND',
+						error: 'Contato não encontrado',
+					},
+					404,
+				);
 			}
 
 			secureLogger.info('Contact updated', {
 				contactId,
 				requestId,
 				updatedFields: Object.keys(updateData).filter(
-					(field) => field !== 'updated_at',
+					(field) => field !== 'updatedAt',
 				),
 				userId: user.id,
 			});
@@ -412,36 +419,20 @@ contactsRouter.delete(
 	'/:id',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 20, // 20 deletions per minute per user
+		windowMs: 60 * 1000,
+		max: 20,
 		message: 'Too many deletion attempts, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const contactId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('contacts')
-				.delete()
-				.eq('id', contactId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
-
-			if (error) {
-				if (error.code === 'PGRST116') {
-					return c.json(
-						{
-							code: 'NOT_FOUND',
-							error: 'Contato não encontrado',
-						},
-						404,
-					);
-				}
-				throw new Error(`Erro ao deletar contato: ${error.message}`);
-			}
+			const [data] = await db
+				.delete(contacts)
+				.where(and(eq(contacts.id, contactId), eq(contacts.userId, user.id)))
+				.returning();
 
 			if (!data) {
 				return c.json(
@@ -496,41 +487,50 @@ contactsRouter.get(
 	'/search',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 20, // 20 searches per minute per user
+		windowMs: 60 * 1000,
+		max: 20,
 		message: 'Too many search attempts, please try again later',
 	}),
 	zValidator('query', searchContactsSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('contacts')
-				.select('id, name, email, phone, is_favorite')
-				.eq('user_id', user.id)
-				.or(
-					`name.ilike.%${input.query}%,email.ilike.%${input.query}%,phone.ilike.%${input.query}%`,
-				)
-				.order('is_favorite', { ascending: false })
-				.order('name', { ascending: true })
-				.limit(input.limit);
+			const searchPattern = `%${input.query}%`;
 
-			if (error) {
-				throw new Error(`Erro ao buscar contatos: ${error.message}`);
-			}
+			const data = await db
+				.select({
+					id: contacts.id,
+					name: contacts.name,
+					email: contacts.email,
+					phone: contacts.phone,
+					isFavorite: contacts.isFavorite,
+				})
+				.from(contacts)
+				.where(
+					and(
+						eq(contacts.userId, user.id),
+						or(
+							ilike(contacts.name, searchPattern),
+							ilike(contacts.email, searchPattern),
+							ilike(contacts.phone, searchPattern),
+						),
+					),
+				)
+				.orderBy(desc(contacts.isFavorite), asc(contacts.name))
+				.limit(input.limit);
 
 			secureLogger.info('Contacts searched', {
 				requestId,
-				resultsCount: data?.length || 0,
+				resultsCount: data.length,
 				searchQuery: input.query,
 				userId: user.id,
 			});
 
 			return c.json({
-				data: data || [],
+				data,
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),
@@ -562,34 +562,29 @@ contactsRouter.get(
 	'/favorites',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 20, // 20 requests per minute per user
+		windowMs: 60 * 1000,
+		max: 20,
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('contacts')
-				.select('*')
-				.eq('user_id', user.id)
-				.eq('is_favorite', true)
-				.order('name', { ascending: true });
-
-			if (error) {
-				throw new Error(`Erro ao buscar contatos favoritos: ${error.message}`);
-			}
+			const data = await db
+				.select()
+				.from(contacts)
+				.where(and(eq(contacts.userId, user.id), eq(contacts.isFavorite, true)))
+				.orderBy(asc(contacts.name));
 
 			secureLogger.info('Favorite contacts retrieved', {
-				favoritesCount: data?.length || 0,
+				favoritesCount: data.length,
 				requestId,
 				userId: user.id,
 			});
 
 			return c.json({
-				data: data || [],
+				data,
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),
@@ -620,25 +615,24 @@ contactsRouter.post(
 	'/:id/favorite',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 30, // 30 toggles per minute per user
+		windowMs: 60 * 1000,
+		max: 30,
 		message: 'Too many toggle attempts, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const contactId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
 			// First get current contact to check if it exists
-			const { data: currentContact, error: fetchError } = await supabase
-				.from('contacts')
-				.select('is_favorite')
-				.eq('id', contactId)
-				.eq('user_id', user.id)
-				.single();
+			const [currentContact] = await db
+				.select({ isFavorite: contacts.isFavorite })
+				.from(contacts)
+				.where(and(eq(contacts.id, contactId), eq(contacts.userId, user.id)))
+				.limit(1);
 
-			if (fetchError || !currentContact) {
+			if (!currentContact) {
 				return c.json(
 					{
 						code: 'NOT_FOUND',
@@ -649,27 +643,19 @@ contactsRouter.post(
 			}
 
 			// Toggle favorite status
-			const { data, error } = await supabase
-				.from('contacts')
-				.update({
-					is_favorite: !currentContact.is_favorite,
-					updated_at: new Date().toISOString(),
+			const [data] = await db
+				.update(contacts)
+				.set({
+					isFavorite: !currentContact.isFavorite,
+					updatedAt: new Date(),
 				})
-				.eq('id', contactId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
-
-			if (error) {
-				throw new Error(
-					`Erro ao alternar status de favorito: ${error.message}`,
-				);
-			}
+				.where(and(eq(contacts.id, contactId), eq(contacts.userId, user.id)))
+				.returning();
 
 			secureLogger.info('Contact favorite status toggled', {
 				contactId,
-				newStatus: !currentContact.is_favorite,
-				previousStatus: currentContact.is_favorite,
+				newStatus: !currentContact.isFavorite,
+				previousStatus: currentContact.isFavorite,
 				requestId,
 				userId: user.id,
 			});
@@ -711,32 +697,28 @@ contactsRouter.get(
 	'/stats',
 	authMiddleware,
 	userRateLimitMiddleware({
-		windowMs: 60 * 1000, // 1 minute
-		max: 10, // 10 requests per minute per user
+		windowMs: 60 * 1000,
+		max: 10,
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('contacts')
-				.select('is_favorite, email, phone')
-				.eq('user_id', user.id);
+			const data = await db
+				.select({
+					isFavorite: contacts.isFavorite,
+					email: contacts.email,
+					phone: contacts.phone,
+				})
+				.from(contacts)
+				.where(eq(contacts.userId, user.id));
 
-			if (error) {
-				throw new Error(
-					`Erro ao buscar estatísticas de contatos: ${error.message}`,
-				);
-			}
-
-			const contacts = data || [];
-
-			const totalContacts = contacts.length;
-			const favoriteContacts = contacts.filter((c) => c.is_favorite).length;
-			const contactsWithEmail = contacts.filter((c) => c.email).length;
-			const contactsWithPhone = contacts.filter((c) => c.phone).length;
+			const totalContacts = data.length;
+			const favoriteContacts = data.filter((c) => c.isFavorite).length;
+			const contactsWithEmail = data.filter((c) => c.email).length;
+			const contactsWithPhone = data.filter((c) => c.phone).length;
 
 			return c.json({
 				data: {

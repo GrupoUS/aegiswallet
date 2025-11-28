@@ -1,14 +1,17 @@
 /**
  * Bank Accounts API - Hono RPC Implementation
  * Handles all bank account CRUD operations with validation and business logic
+ * Migrated from Supabase to Drizzle ORM
  */
 
 import { randomUUID } from 'node:crypto';
 
 import { zValidator } from '@hono/zod-validator';
+import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { bankAccounts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import {
 	generateManualAccountId,
@@ -102,19 +105,15 @@ bankAccountsRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.select('*')
-				.eq('user_id', user.id)
-				.order('created_at', { ascending: false });
-
-			if (error) {
-				throw new Error(`Erro ao buscar contas bancárias: ${error.message}`);
-			}
+			const data = await db
+				.select()
+				.from(bankAccounts)
+				.where(eq(bankAccounts.userId, user.id))
+				.orderBy(desc(bankAccounts.createdAt));
 
 			return c.json({
 				data: data || [],
@@ -153,19 +152,22 @@ bankAccountsRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.select('balance, currency')
-				.eq('user_id', user.id)
-				.eq('is_active', true);
-
-			if (error) {
-				throw new Error(`Erro ao calcular saldo total: ${error.message}`);
-			}
+			const data = await db
+				.select({
+					balance: bankAccounts.balance,
+					currency: bankAccounts.currency,
+				})
+				.from(bankAccounts)
+				.where(
+					and(
+						eq(bankAccounts.userId, user.id),
+						eq(bankAccounts.isActive, true),
+					),
+				);
 
 			const totals: Record<string, number> = {};
 
@@ -214,29 +216,27 @@ bankAccountsRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const accountId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.select('*')
-				.eq('id', accountId)
-				.eq('user_id', user.id)
-				.single();
+			const [data] = await db
+				.select()
+				.from(bankAccounts)
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				)
+				.limit(1);
 
-			if (error) {
-				if (error.code === 'PGRST116') {
-					return c.json(
-						{
-							code: 'NOT_FOUND',
-							error: 'Conta bancária não encontrada',
-						},
-						404,
-					);
-				}
-				throw new Error(`Erro ao buscar conta bancária: ${error.message}`);
+			if (!data) {
+				return c.json(
+					{
+						code: 'NOT_FOUND',
+						error: 'Conta bancária não encontrada',
+					},
+					404,
+				);
 			}
 
 			return c.json({
@@ -278,7 +278,7 @@ bankAccountsRouter.get(
 	}),
 	zValidator('query', getBalanceHistorySchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const accountId = c.req.param('id');
 		const { days } = c.req.valid('query');
 		const requestId = c.get('requestId');
@@ -295,14 +295,15 @@ bankAccountsRouter.get(
 			}
 
 			// Get current balance
-			const { data: account, error } = await supabase
-				.from('bank_accounts')
-				.select('balance')
-				.eq('id', accountId)
-				.eq('user_id', user.id)
-				.single();
+			const [account] = await db
+				.select({ balance: bankAccounts.balance })
+				.from(bankAccounts)
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				)
+				.limit(1);
 
-			if (error || !account) {
+			if (!account) {
 				return c.json({
 					data: [],
 					meta: {
@@ -364,7 +365,7 @@ bankAccountsRouter.post(
 	}),
 	zValidator('json', createBankAccountSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
@@ -429,13 +430,17 @@ bankAccountsRouter.post(
 			}
 
 			// Check for duplicates
-			const { data: existingAccount } = await supabase
-				.from('bank_accounts')
-				.select('id')
-				.eq('user_id', user.id)
-				.eq('institution_id', institutionId)
-				.eq('account_mask', accountMask)
-				.maybeSingle();
+			const [existingAccount] = await db
+				.select({ id: bankAccounts.id })
+				.from(bankAccounts)
+				.where(
+					and(
+						eq(bankAccounts.userId, user.id),
+						eq(bankAccounts.institutionId, institutionId),
+						eq(bankAccounts.accountMask, accountMask),
+					),
+				)
+				.limit(1);
 
 			if (existingAccount) {
 				return c.json(
@@ -447,43 +452,23 @@ bankAccountsRouter.post(
 				);
 			}
 
-			// Insert into database - assert required fields are present after validation
-			const insertData = {
-				...accountData,
-				account_mask: accountData.account_mask ?? accountMask, // Ensure account_mask is present
-				account_type: accountData.account_type ?? normalizedAccountType,
-				user_id: user.id,
-				institution_name:
-					accountData.institution_name ?? input.institution_name,
-				institution_id: accountData.institution_id ?? institutionId,
-				belvo_account_id: belvoAccountId,
-			} as typeof accountData & {
-				account_mask: string;
-				account_type: string;
-				user_id: string;
-				institution_name: string;
-				institution_id: string;
-				belvo_account_id: string;
-			};
-
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.insert(insertData)
-				.select()
-				.single();
-
-			if (error) {
-				if (error.code === '23505') {
-					return c.json(
-						{
-							code: 'CONFLICT',
-							error: 'Já existe uma conta com a mesma instituição e final',
-						},
-						409,
-					);
-				}
-				throw new Error(`Erro ao criar conta bancária: ${error.message}`);
-			}
+			// Insert into database
+			const [data] = await db
+				.insert(bankAccounts)
+				.values({
+					userId: user.id,
+					institutionName: input.institution_name,
+					institutionId: institutionId,
+					accountType: normalizedAccountType,
+					accountMask: accountMask,
+					balance: String(input.balance),
+					currency: input.currency.toUpperCase(),
+					isPrimary: input.is_primary,
+					isActive: input.is_active,
+					belvoAccountId: belvoAccountId,
+					syncStatus: syncStatus,
+				})
+				.returning();
 
 			secureLogger.info('Bank account created', {
 				accountId: data.id,
@@ -534,21 +519,22 @@ bankAccountsRouter.put(
 	}),
 	zValidator('json', updateBankAccountSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const accountId = c.req.param('id');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
 			// Verify account exists and belongs to user
-			const { data: existingAccount, error: fetchError } = await supabase
-				.from('bank_accounts')
-				.select('id')
-				.eq('id', accountId)
-				.eq('user_id', user.id)
-				.single();
+			const [existingAccount] = await db
+				.select({ id: bankAccounts.id })
+				.from(bankAccounts)
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				)
+				.limit(1);
 
-			if (fetchError || !existingAccount) {
+			if (!existingAccount) {
 				return c.json(
 					{
 						code: 'NOT_FOUND',
@@ -562,15 +548,15 @@ bankAccountsRouter.put(
 			const updateData: Record<string, unknown> = {};
 
 			if (input.institution_name !== undefined) {
-				updateData.institution_name = input.institution_name;
+				updateData.institutionName = input.institution_name;
 			}
 
 			if (input.account_type !== undefined) {
-				updateData.account_type = normalizeAccountType(input.account_type);
+				updateData.accountType = normalizeAccountType(input.account_type);
 			}
 
 			if (input.balance !== undefined) {
-				updateData.balance = input.balance;
+				updateData.balance = String(input.balance);
 			}
 
 			if (input.currency !== undefined) {
@@ -578,11 +564,11 @@ bankAccountsRouter.put(
 			}
 
 			if (input.is_primary !== undefined) {
-				updateData.is_primary = input.is_primary;
+				updateData.isPrimary = input.is_primary;
 			}
 
 			if (input.is_active !== undefined) {
-				updateData.is_active = input.is_active;
+				updateData.isActive = input.is_active;
 			}
 
 			if (input.account_mask !== undefined) {
@@ -596,11 +582,23 @@ bankAccountsRouter.put(
 						400,
 					);
 				}
-				updateData.account_mask = normalizedMask;
+				updateData.accountMask = normalizedMask;
 			}
 
-			// Sanitize and validate
-			const sanitized = sanitizeBankAccountData(updateData);
+			// Sanitize and validate (for snake_case version)
+			const sanitized = sanitizeBankAccountData({
+				institution_name: input.institution_name,
+				account_type: input.account_type
+					? normalizeAccountType(input.account_type)
+					: undefined,
+				balance: input.balance,
+				currency: input.currency?.toUpperCase(),
+				is_primary: input.is_primary,
+				is_active: input.is_active,
+				account_mask: input.account_mask
+					? normalizeAccountMask(input.account_mask)
+					: undefined,
+			});
 			const validation = validateBankAccountForUpdate(sanitized);
 
 			if (!validation.valid) {
@@ -617,26 +615,14 @@ bankAccountsRouter.put(
 				);
 			}
 
-			// Convert null values to undefined for Supabase compatibility
-			const updatePayload = Object.fromEntries(
-				Object.entries(sanitized).map(([key, value]) => [
-					key,
-					value === null ? undefined : value,
-				]),
-			);
-
 			// Update in database
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.update(updatePayload)
-				.eq('id', accountId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
-
-			if (error) {
-				throw new Error(`Erro ao atualizar conta bancária: ${error.message}`);
-			}
+			const [data] = await db
+				.update(bankAccounts)
+				.set(updateData)
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				)
+				.returning();
 
 			return c.json({
 				data,
@@ -677,31 +663,28 @@ bankAccountsRouter.patch(
 	}),
 	zValidator('json', updateBalanceSchema),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const accountId = c.req.param('id');
 		const { balance } = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data, error } = await supabase
-				.from('bank_accounts')
-				.update({ balance })
-				.eq('id', accountId)
-				.eq('user_id', user.id)
-				.select()
-				.single();
+			const [data] = await db
+				.update(bankAccounts)
+				.set({ balance: String(balance) })
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				)
+				.returning();
 
-			if (error) {
-				if (error.code === 'PGRST116') {
-					return c.json(
-						{
-							code: 'NOT_FOUND',
-							error: 'Conta bancária não encontrada',
-						},
-						404,
-					);
-				}
-				throw new Error(`Erro ao atualizar saldo: ${error.message}`);
+			if (!data) {
+				return c.json(
+					{
+						code: 'NOT_FOUND',
+						error: 'Conta bancária não encontrada',
+					},
+					404,
+				);
 			}
 
 			return c.json({
@@ -742,20 +725,16 @@ bankAccountsRouter.delete(
 		message: 'Too many deletion attempts, please try again later',
 	}),
 	async (c) => {
-		const { user, supabase } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const accountId = c.req.param('id');
 		const requestId = c.get('requestId');
 
 		try {
-			const { error } = await supabase
-				.from('bank_accounts')
-				.delete()
-				.eq('id', accountId)
-				.eq('user_id', user.id);
-
-			if (error) {
-				throw new Error(`Erro ao remover conta bancária: ${error.message}`);
-			}
+			await db
+				.delete(bankAccounts)
+				.where(
+					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
+				);
 
 			secureLogger.info('Bank account deleted', {
 				accountId,

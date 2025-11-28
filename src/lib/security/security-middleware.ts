@@ -93,8 +93,8 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://api.openai.com',
 			'https://api.anthropic.com',
 			'https://api.openrouter.ai',
-			'https://ownkoxryswokcdanrdgj.supabase.co', // Replace with env var in production
-			'wss://ownkoxryswokcdanrdgj.supabase.co', // WebSocket connections
+			'https://clerk.aegiswallet.com', // Clerk Auth
+			'https://*.clerk.accounts.dev', // Clerk development
 		],
 		defaultSrc: ["'self'"],
 		fontSrc: [

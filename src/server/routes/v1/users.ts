@@ -1,14 +1,15 @@
 /**
  * Users API - Hono RPC Implementation
  * Handles user profile and preferences management
- * Refactored to use Supabase directly (KISS/YAGNI)
+ * Using Drizzle ORM with Neon serverless
  */
 
 import { zValidator } from '@hono/zod-validator';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { supabase } from '@/integrations/supabase/client';
+import { financialEvents, userPreferences, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import {
@@ -40,66 +41,18 @@ const ALLOWED_PREFERENCE_FIELDS = [
 	// Theme
 	'theme',
 	// Notifications
-	'notifications_email',
-	'notifications_push',
-	'notifications_sms',
-	'email_notifications',
-	'push_notifications',
-	'notifications_enabled',
-	// Notification types
-	'notify_transactions',
-	'notify_budget_exceeded',
-	'notify_bill_reminders',
-	'notify_security',
-	'notify_weekly_summary',
-	'notify_tips',
-	// Quiet hours
-	'quiet_hours_enabled',
-	'quiet_hours_start',
-	'quiet_hours_end',
-	// AI settings
-	'auto_categorize',
-	'budget_alerts',
-	'voice_feedback',
-	'voice_commands_enabled',
-	'autonomy_level',
-	'ai_model',
-	'show_reasoning',
-	'custom_prompt',
-	'chat_history_cleared_at',
+	'notificationsEmail',
+	'notificationsPush',
+	'notificationsSms',
+	// Features
+	'autoCategorize',
+	'budgetAlerts',
+	'voiceFeedback',
 	// Accessibility
-	'accessibility_high_contrast',
-	'accessibility_large_text',
-	'accessibility_screen_reader',
-	'font_size',
-	'reduce_motion',
-	'keyboard_shortcuts',
-	// Regional
-	'language',
-	'timezone',
-	'currency',
+	'accessibilityHighContrast',
+	'accessibilityLargeText',
+	'accessibilityScreenReader',
 ] as const;
-
-/**
- * Build preference data from input, only allowing whitelisted fields
- */
-function buildPreferenceData(
-	input: Record<string, unknown>,
-	userId: string,
-): Record<string, unknown> {
-	const prefData: Record<string, unknown> = {
-		user_id: userId,
-		updated_at: new Date().toISOString(),
-	};
-
-	for (const field of ALLOWED_PREFERENCE_FIELDS) {
-		if (input[field] !== undefined) {
-			prefData[field] = input[field];
-		}
-	}
-
-	return prefData;
-}
 
 const usersRouter = new Hono<AppEnv>();
 
@@ -119,17 +72,15 @@ usersRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data: profile, error } = await supabase
-				.from('users')
-				.select('*')
-				.eq('id', user.id)
-				.single();
-
-			if (error && error.code !== 'PGRST116') throw error;
+			const [profile] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 
 			return c.json({
 				data: profile || null,
@@ -169,27 +120,27 @@ usersRouter.put(
 	}),
 	zValidator('json', updateProfileSchema),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
-			const updateData: Record<string, unknown> = {};
-			if (input.full_name) updateData.full_name = input.full_name;
+			const updateData: Partial<typeof users.$inferInsert> = {
+				updatedAt: new Date(),
+			};
+
+			if (input.full_name) updateData.fullName = input.full_name;
 			if (input.phone) updateData.phone = input.phone;
 			if (input.cpf) updateData.cpf = input.cpf;
-			if (input.birth_date) updateData.birth_date = input.birth_date;
+			if (input.birth_date) updateData.birthDate = input.birth_date;
 			if (input.profile_image_url)
-				updateData.profile_image_url = input.profile_image_url;
+				updateData.profileImageUrl = input.profile_image_url;
 
-			const { data: updatedProfile, error } = await supabase
-				.from('users')
-				.update(updateData)
-				.eq('id', user.id)
-				.select()
-				.single();
-
-			if (error) throw error;
+			const [updatedProfile] = await db
+				.update(users)
+				.set(updateData)
+				.where(eq(users.id, user.id))
+				.returning();
 
 			secureLogger.info('User profile updated', {
 				requestId,
@@ -234,20 +185,56 @@ usersRouter.put(
 	}),
 	zValidator('json', updatePreferencesSchema),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
 		try {
-			const prefData = buildPreferenceData(input, user.id);
+			// Check if preferences exist
+			const [existing] = await db
+				.select({ id: userPreferences.id })
+				.from(userPreferences)
+				.where(eq(userPreferences.userId, user.id))
+				.limit(1);
 
-			const { data: updatedPrefs, error } = await supabase
-				.from('user_preferences')
-				.upsert(prefData)
-				.select()
-				.single();
+			let updatedPrefs: typeof userPreferences.$inferSelect | undefined;
 
-			if (error) throw error;
+			if (existing) {
+				// Update existing preferences
+				const updateFields: Record<string, unknown> = {
+					updatedAt: new Date(),
+				};
+
+				for (const field of ALLOWED_PREFERENCE_FIELDS) {
+					if (input[field] !== undefined) {
+						updateFields[field] = input[field];
+					}
+				}
+
+				[updatedPrefs] = await db
+					.update(userPreferences)
+					.set(updateFields)
+					.where(eq(userPreferences.id, existing.id))
+					.returning();
+			} else {
+				// Insert new preferences
+				const insertFields: Record<string, unknown> = {
+					userId: user.id,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+
+				for (const field of ALLOWED_PREFERENCE_FIELDS) {
+					if (input[field] !== undefined) {
+						insertFields[field] = input[field];
+					}
+				}
+
+				[updatedPrefs] = await db
+					.insert(userPreferences)
+					.values(insertFields as typeof userPreferences.$inferInsert)
+					.returning();
+			}
 
 			secureLogger.info('User preferences updated', {
 				requestId,
@@ -291,14 +278,14 @@ usersRouter.post(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			await supabase
-				.from('users')
-				.update({ last_login: new Date().toISOString() })
-				.eq('id', user.id);
+			await db
+				.update(users)
+				.set({ lastLogin: new Date() })
+				.where(eq(users.id, user.id));
 
 			return c.json({
 				data: { success: true },
@@ -314,6 +301,7 @@ usersRouter.post(
 				userId: user.id,
 			});
 
+			// Still return success - last login update is not critical
 			return c.json({
 				data: { success: true },
 				meta: {
@@ -337,21 +325,22 @@ usersRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data: status, error } = await supabase
-				.from('users')
-				.select('is_active, last_login')
-				.eq('id', user.id)
-				.single();
-
-			if (error && error.code !== 'PGRST116') throw error;
+			const [status] = await db
+				.select({
+					isActive: users.isActive,
+					lastLogin: users.lastLogin,
+				})
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 
 			if (!status) {
 				return c.json({
-					data: { is_active: false, last_login: null },
+					data: { isActive: false, lastLogin: null },
 					meta: {
 						requestId,
 						retrievedAt: new Date().toISOString(),
@@ -361,8 +350,8 @@ usersRouter.get(
 
 			return c.json({
 				data: {
-					is_active: status.is_active,
-					last_login: status.last_login,
+					isActive: status.isActive,
+					lastLogin: status.lastLogin?.toISOString() || null,
 				},
 				meta: {
 					requestId,
@@ -377,7 +366,7 @@ usersRouter.get(
 			});
 
 			return c.json({
-				data: { is_active: false, last_login: null },
+				data: { isActive: false, lastLogin: null },
 				meta: {
 					requestId,
 					retrievedAt: new Date().toISOString(),
@@ -400,24 +389,29 @@ usersRouter.get(
 	}),
 	zValidator('query', getFinancialSummarySchema),
 	async (c) => {
-		const { user } = c.get('auth');
+		const { user, db } = c.get('auth');
 		const { period_start, period_end } = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {
-			const { data: transactions, error } = await supabase
-				.from('financial_events')
-				.select('amount, event_type, is_income')
-				.eq('user_id', user.id)
-				.gte('created_at', period_start)
-				.lte('created_at', period_end);
+			const events = await db
+				.select({
+					amount: financialEvents.amount,
+					isIncome: financialEvents.isIncome,
+				})
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, user.id),
+						gte(financialEvents.createdAt, new Date(period_start)),
+						lte(financialEvents.createdAt, new Date(period_end)),
+					),
+				);
 
-			if (error) throw error;
-
-			const summary = (transactions || []).reduce(
-				(acc: { income: number; expenses: number; balance: number }, t) => {
+			const summary = events.reduce(
+				(acc, t) => {
 					const amount = Number(t.amount);
-					if (t.is_income) {
+					if (t.isIncome) {
 						acc.income += amount;
 						acc.balance += amount;
 					} else {

@@ -71,7 +71,7 @@ aiChat.post(
 
 		try {
 			const model = getModel(provider, tier);
-			const tools = createAllTools(userId, auth.supabase);
+			const tools = createAllTools(userId, auth.db);
 
 			const result = streamText({
 				model,

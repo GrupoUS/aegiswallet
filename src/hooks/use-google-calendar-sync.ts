@@ -1,8 +1,15 @@
+/**
+ * Google Calendar Sync Hook
+ * 
+ * NOTE: Google Calendar sync functionality was implemented using Supabase Edge Functions.
+ * After migration to Neon/Clerk, this feature needs to be re-architected.
+ * 
+ * Current status: DEPRECATED - Returns stub data
+ * TODO: Implement using Vercel Functions or similar serverless platform
+ */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-import { apiClient } from '../lib/api-client';
-import { supabase } from '@/integrations/supabase/client';
 
 type SyncStatus = {
 	googleEmail: string | null;
@@ -27,156 +34,77 @@ type SyncSettings = {
 export function useGoogleCalendarSync() {
 	const queryClient = useQueryClient();
 
+	// Stub sync status - not connected
 	const { data: syncStatus, isLoading: isLoadingStatus } = useQuery({
 		queryKey: ['google-calendar', 'sync-status'],
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: SyncStatus }>(
-				'/v1/google-calendar/sync/status',
-			);
-			return response.data;
+		queryFn: async (): Promise<SyncStatus> => {
+			// Return disconnected status until feature is re-implemented
+			return {
+				googleEmail: null,
+				isConnected: false,
+				isEnabled: false,
+				lastSyncAt: null,
+			};
 		},
 	});
 
 	const { data: syncSettings, isLoading: isLoadingSettings } = useQuery({
 		queryKey: ['google-calendar', 'sync-settings'],
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: SyncSettings | null }>(
-				'/v1/google-calendar/sync/settings',
-			);
-			return response.data;
+		queryFn: async (): Promise<SyncSettings | null> => {
+			// Return null until feature is re-implemented
+			return null;
 		},
 	});
 
 	const updateSettingsMutation = useMutation({
-		mutationFn: async (
-			settings: Partial<{
-				auto_sync_interval_minutes: number;
-				sync_categories: string[] | null;
-				sync_direction:
-					| 'one_way_to_google'
-					| 'one_way_from_google'
-					| 'bidirectional';
-				sync_enabled: boolean;
-				sync_financial_amounts: boolean;
-			}>,
-		) => {
-			const response = await apiClient.put<{ data: SyncSettings }>(
-				'/v1/google-calendar/sync/settings',
-				settings,
-			);
-			return response.data;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ['google-calendar', 'sync-settings'],
-			});
-			queryClient.invalidateQueries({
-				queryKey: ['google-calendar', 'sync-status'],
-			});
-			toast.success('Configurações atualizadas');
+		mutationFn: async (_settings: Partial<{
+			auto_sync_interval_minutes: number;
+			sync_categories: string[] | null;
+			sync_direction: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
+			sync_enabled: boolean;
+			sync_financial_amounts: boolean;
+		}>): Promise<SyncSettings> => {
+			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
 		},
 		onError: (error: Error) => {
-			toast.error(`Erro ao atualizar configurações: ${error.message}`);
+			toast.error(error.message);
 		},
 	});
 
 	const requestFullSyncMutation = useMutation({
 		mutationFn: async () => {
-			const response = await apiClient.post<{
-				data: { message: string; processed: number; success: boolean };
-			}>('/v1/google-calendar/sync/full');
-			return response.data;
-		},
-		onSuccess: (data) => {
-			toast.success(data.message);
-			// Invalidate calendar events to refresh the UI
-			queryClient.invalidateQueries({ queryKey: ['calendar'] });
+			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
 		},
 		onError: (error: Error) => {
-			toast.error(`Erro na sincronização: ${error.message}`);
+			toast.error(error.message);
 		},
 	});
 
 	const syncSingleEventMutation = useMutation({
-		mutationFn: async (params: {
+		mutationFn: async (_params: {
 			direction: 'to_google' | 'from_google';
 			eventId: string;
 		}) => {
-			const response = await apiClient.post<{
-				data: { eventId: string; success: boolean };
-			}>('/v1/google-calendar/sync/event', params);
-			return response.data;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['calendar'] }); // Refresh calendar events
-			toast.success('Evento sincronizado com sucesso');
+			throw new Error('Sincronização com Google Calendar temporariamente indisponível');
 		},
 		onError: (error: Error) => {
-			toast.error(`Erro ao sincronizar evento: ${error.message}`);
+			toast.error(error.message);
 		},
 	});
 
+
 	const startOAuthFlow = async () => {
-		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-auth?action=start`,
-			);
-			const { url } = await response.json();
-			if (url) {
-				window.location.href = url;
-			}
-		} catch (_error) {
-			toast.error('Erro ao iniciar conexão com Google');
-		}
+		toast.error('Conexão com Google Calendar temporariamente indisponível');
 	};
 
 	const disconnect = async () => {
-		// Call revoke endpoint with user's auth token
-		try {
-			// Get the current session to include the access token
-			const {
-				data: { session },
-				error: sessionError,
-			} = await supabase.auth.getSession();
-
-			if (sessionError || !session?.access_token) {
-				toast.error('Sessão expirada. Por favor, faça login novamente.');
-				return;
-			}
-
-			const response = await fetch(
-				`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-auth?action=revoke`,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${session.access_token}`,
-					},
-				},
-			);
-
-			if (response.status === 401) {
-				toast.error('Sessão expirada. Por favor, faça login novamente.');
-				return;
-			}
-
-			if (response.ok) {
-				toast.success('Conexão com Google Calendar removida');
-				// Invalidate all Google Calendar related queries
-				queryClient.invalidateQueries({ queryKey: ['google-calendar'] });
-			} else {
-				throw new Error('Falha ao remover conexão');
-			}
-		} catch (_error) {
-			toast.error('Erro ao remover conexão com Google Calendar');
-		}
+		toast.info('Não há conexão ativa com Google Calendar');
 	};
 
 	// Legacy tRPC compatibility properties
 	const isConnected = syncStatus?.isConnected ?? false;
 	const settings = syncSettings;
-	const isSyncing =
-		requestFullSyncMutation.isPending || syncSingleEventMutation.isPending;
+	const isSyncing = requestFullSyncMutation.isPending || syncSingleEventMutation.isPending;
 
 	return {
 		syncStatus,

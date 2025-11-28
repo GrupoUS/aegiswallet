@@ -48,6 +48,16 @@ bun quality
 
 ---
 
+## 🔐 Authentication Setup
+
+AegisWallet uses Clerk for authentication and user management.
+
+- **Setup Guide**: For complete setup instructions, see [Clerk Setup Guide](docs/auth/clerk-setup.md)
+- **Setup Guide**: For complete setup instructions, see [Clerk Setup Guide](docs/auth/clerk-setup.md)
+- **Quick Start**: Add `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` to `.env` (see `env.example` for details)
+
+---
+
 ## 🎨 Design System
 
 AegisWallet uses a semantic color token system for consistent, accessible UI design.
@@ -87,8 +97,8 @@ git commit -m "feat: add new feature"
 - **API**: Hono RPC (edge-optimized)
 - **ORM**: Drizzle (type-safe, TCP connection)
 - **Server**: Hono (edge-optimized)
-- **Auth**: Supabase Auth
-- **Database**: Supabase (RLS enabled)
+- **Auth**: Clerk (User Management)
+- **Database**: Neon (Serverless Postgres) + Drizzle ORM
 
 ### Quality
 - **Testing**: Vitest (unit) + Playwright (E2E)
@@ -111,7 +121,7 @@ AegisWallet uses Hono for edge-optimized HTTP handling and Drizzle ORM for type-
 - **Middleware**: CORS, authentication, rate limiting, logging
 
 #### Drizzle ORM (Type-Safe Database Layer)
-- **Direct TCP Connection**: Connects to Supabase PostgreSQL via TCP (faster than REST)
+- **Direct Connection**: Connects to Neon PostgreSQL via serverless driver
 - **Type Safety**: Automatic TypeScript types from database schema
 - **Query Builder**: Composable, type-safe query building
 - **Schema Introspection**: Auto-generates schema from existing database
@@ -354,7 +364,8 @@ Built with:
 - [React](https://react.dev/) - UI library
 - [Hono](https://hono.dev/) - Edge-first web framework
 - [Drizzle ORM](https://orm.drizzle.team/) - Type-safe database ORM
-- [Supabase](https://supabase.com/) - Backend platform
+- [Neon](https://neon.tech/) - Serverless Postgres
+- [Clerk](https://clerk.com/) - Authentication
 - [TanStack](https://tanstack.com/) - Router & Query
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [shadcn/ui](https://ui.shadcn.com/) - Component library

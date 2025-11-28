@@ -1,14 +1,15 @@
 /**
  * Avatar Upload Hook
  *
- * Handles uploading user profile images to Supabase Storage
- * with proper error handling and optimistic updates.
+ * NOTE: This hook was previously using Supabase Storage.
+ * After migration to Neon/Clerk, file storage needs to be implemented
+ * with a different provider (Cloudflare R2, AWS S3, etc.)
+ * 
+ * For now, this returns a stub that shows a not implemented message.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-import { supabase } from '@/integrations/supabase/client';
 
 interface UseAvatarUploadReturn {
 	uploadAvatar: (file: File) => void;
@@ -16,12 +17,12 @@ interface UseAvatarUploadReturn {
 	error: Error | null;
 }
 
-const BUCKET_NAME = 'profile-images';
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /**
- * Hook for uploading user avatar images to Supabase Storage
+ * Hook for uploading user avatar images
+ * TODO: Implement with Cloudflare R2, AWS S3, or similar storage
  */
 export function useAvatarUpload(): UseAvatarUploadReturn {
 	const queryClient = useQueryClient();
@@ -42,50 +43,11 @@ export function useAvatarUpload(): UseAvatarUploadReturn {
 				throw new Error('Formato inválido. Use JPG, PNG ou WebP.');
 			}
 
-			// Get current user
-			const {
-				data: { user },
-				error: authError,
-			} = await supabase.auth.getUser();
-			if (authError || !user) {
-				throw new Error('Usuário não autenticado');
-			}
-
-			// Generate unique filename
-			const fileExt = file.name.split('.').pop();
-			const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-			// Upload to Supabase Storage
-			const { error: uploadError } = await supabase.storage
-				.from(BUCKET_NAME)
-				.upload(fileName, file, {
-					cacheControl: '3600',
-					upsert: true,
-				});
-
-			if (uploadError) {
-				throw new Error(`Falha no upload: ${uploadError.message}`);
-			}
-
-			// Get public URL
-			const {
-				data: { publicUrl },
-			} = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-
-			// Update user profile with new image URL
-			const { error: updateError } = await supabase
-				.from('users')
-				.update({ profile_image_url: publicUrl })
-				.eq('id', user.id);
-
-			if (updateError) {
-				throw new Error(`Falha ao atualizar perfil: ${updateError.message}`);
-			}
-
-			return publicUrl;
+			// TODO: Implement file upload to new storage provider
+			// Options: Cloudflare R2, AWS S3, Vercel Blob Storage
+			throw new Error('Upload de avatar temporariamente indisponível. Funcionalidade em migração.');
 		},
 		onSuccess: () => {
-			// Invalidate profile query to refetch with new image
 			queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
 			toast.success('Foto de perfil atualizada!');
 		},

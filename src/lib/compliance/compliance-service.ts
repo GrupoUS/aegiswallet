@@ -338,9 +338,9 @@ export class ComplianceService {
 		try {
 			const data = await this.db
 				.select()
-				.from(dataExportRequests)
-				.where(eq(dataExportRequests.userId, userId))
-				.orderBy(desc(dataExportRequests.createdAt));
+				.from(lgpdExportRequests)
+				.where(eq(lgpdExportRequests.userId, userId))
+				.orderBy(desc(lgpdExportRequests.createdAt));
 
 			return data as unknown as DataExportRequest[];
 		} catch (error) {

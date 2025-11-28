@@ -97,7 +97,7 @@ export function Dashboard() {
 	const pixTransactionsQuery = useTransactions({
 		endDate: today,
 		startDate: today,
-		type: 'pix',
+		transactionType: 'pix',
 	});
 	const pixTransactions = pixTransactionsQuery.data ?? [];
 

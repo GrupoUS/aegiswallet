@@ -226,14 +226,14 @@ export function createBoletoTools(userId: string) {
 
 					// Calcular dias até vencimento
 					const daysUntilDue = Math.ceil(
-						(new Date(boleto.dueDate).getTime() - Date.now()) /
+						(new Date(boletoData.dueDate).getTime() - Date.now()) /
 							(1000 * 60 * 60 * 24),
 					);
 
 					return {
 						success: true,
-						boleto: filterSensitiveData(boleto),
-						message: `Boleto registrado com sucesso! Valor: R$ ${Number(boleto.amount).toFixed(2)}, Vencimento: ${new Date(boleto.dueDate).toLocaleDateString('pt-BR')}`,
+						boleto: filterSensitiveData(boletoData),
+						message: `Boleto registrado com sucesso! Valor: R$ ${Number(boletoData.amount).toFixed(2)}, Vencimento: ${new Date(boletoData.dueDate).toLocaleDateString('pt-BR')}`,
 						daysUntilDue,
 						isOverdue: daysUntilDue < 0,
 						paymentUrgency:

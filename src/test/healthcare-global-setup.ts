@@ -2,8 +2,8 @@ export default async function globalSetup() {
 	// Global healthcare test environment setup
 	process.env.NODE_ENV = 'test';
 	process.env.VITE_ENVIRONMENT = 'test';
-	process.env.VITE_SUPABASE_URL = 'http://localhost:54321';
-	process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+	process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+	process.env.VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
 
 	// Mock global objects that need to be available before tests run
 	const { TextEncoder, TextDecoder } = require('node:util');

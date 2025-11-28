@@ -84,23 +84,26 @@ export function createContactsTools(userId: string) {
 							: [];
 
 					// Combine contacts with payment methods
-					const contactsWithMethods: ContactWithPaymentMethods[] =
-						contactsData.map((contact) => ({
-							...contact,
-							is_favorite: contact.isFavorite ?? false,
-							contact_payment_methods: paymentMethodsData
-								.filter((pm) => pm.contactId === contact.id)
-								.map((pm) => ({
-									...pm,
-									payment_type: pm.methodType,
-									is_favorite:
-										(pm.methodDetails as { is_favorite?: boolean })
-											?.is_favorite ?? false,
-									usage_count:
-										(pm.methodDetails as { usage_count?: number })
-											?.usage_count ?? 0,
-								})),
-						}));
+					const contactsWithMethods = contactsData.map((contact) => ({
+						...contact,
+						// Map camelCase to snake_case for type compatibility
+						created_at: contact.createdAt?.toISOString(),
+						updated_at: contact.updatedAt?.toISOString(),
+						user_id: contact.userId,
+						is_favorite: contact.isFavorite ?? false,
+						contact_payment_methods: paymentMethodsData
+							.filter((pm) => pm.contactId === contact.id)
+							.map((pm) => ({
+								...pm,
+								payment_type: pm.methodType,
+								is_favorite:
+									(pm.methodDetails as { is_favorite?: boolean })
+										?.is_favorite ?? false,
+								usage_count:
+									(pm.methodDetails as { usage_count?: number })
+										?.usage_count ?? 0,
+							})),
+					})) as unknown as ContactWithPaymentMethods[];
 
 					const filteredContacts = filterContactsByPix(
 						contactsWithMethods,
@@ -437,10 +440,14 @@ export function createContactsTools(userId: string) {
 						const { createPixTools } = await import('./pix');
 						const pixTools = createPixTools(userId);
 
-						const pixTransferResult = (await pixTools.sendPixTransfer.execute(
+						const executeFunc = pixTools.sendPixTransfer.execute;
+						if (!executeFunc) {
+							throw new Error('PIX transfer not available');
+						}
+						const pixTransferResult = (await executeFunc(
 							{
 								recipientKey: details.pix_key as string,
-								recipientKeyType: details.pix_key_type as string,
+								recipientKeyType: details.pix_key_type as 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY',
 								recipientName: contact.name,
 								amount,
 								description: finalDescription,
@@ -631,50 +638,6 @@ export function createContactsTools(userId: string) {
 }
 
 // Helper functions for listContacts
-function buildContactsQuery(
-	// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-	supabaseClient: any,
-	userId: string,
-	searchName: string | undefined,
-	favoritesOnly: boolean,
-	limit: number,
-) {
-	let query = supabaseClient
-		.from('contacts')
-		.select(`
-      *,
-      contact_payment_methods(*)
-    `)
-		.eq('user_id', userId)
-		.order('is_favorite', { ascending: false })
-		.order('name', { ascending: true })
-		.limit(limit);
-
-	if (searchName) {
-		query = query.ilike('name', `%${searchName}%`);
-	}
-	if (favoritesOnly) {
-		query = query.eq('is_favorite', true);
-	}
-
-	return query;
-}
-
-// biome-ignore lint/suspicious/noExplicitAny: Query type is dynamic from Supabase builder
-async function fetchContactsData(query: any, userId: string) {
-	const { data, error } = await query;
-
-	if (error) {
-		secureLogger.error('Erro ao listar contatos', {
-			error: error.message,
-			userId,
-		});
-		throw new Error(`Erro ao buscar contatos: ${error.message}`);
-	}
-
-	return (data ?? []) as ContactWithPaymentMethods[];
-}
-
 function filterContactsByPix(
 	contacts: ContactWithPaymentMethods[],
 	hasPix: boolean | undefined,
@@ -746,420 +709,5 @@ function buildContactsResponse(
 			formattedContacts.length > 0
 				? `Encontrados ${totalContacts} contatos (${favoriteContacts} favoritos, ${contactsWithPix} com PIX)`
 				: 'Nenhum contato encontrado',
-	};
-}
-
-// Helper functions for addContact
-async function checkContactExists(
-	// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-	supabaseClient: any,
-	userId: string,
-	name: string,
-	email?: string,
-	phone?: string,
-) {
-	const { data: existingContact } = await supabaseClient
-		.from('contacts')
-		.select('id')
-		.eq('user_id', userId)
-		.or(
-			`name.eq.${name},${email ? `email.eq.${email}` : ''},${phone ? `phone.eq.${phone}` : ''}`,
-		)
-		.limit(1);
-
-	if (existingContact && existingContact.length > 0) {
-		throw new Error('Já existe um contato com essas informações');
-	}
-}
-
-function prepareContactData(
-	userId: string,
-	name: string,
-	email?: string,
-	phone?: string,
-	cpf?: string,
-	isFavorite?: boolean,
-) {
-	return {
-		user_id: userId,
-		name: name.trim(),
-		email: email?.trim() || null,
-		phone: phone?.trim() || null,
-		cpf: cpf?.trim() || null,
-		is_favorite: isFavorite,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-	};
-}
-
-async function insertContact(
-	// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-	supabaseClient: any,
-	// biome-ignore lint/suspicious/noExplicitAny: Contact data type is dynamic
-	contactData: any,
-	userId: string,
-	name: string,
-) {
-	const { data, error } = await supabaseClient
-		.from('contacts')
-		.insert(contactData)
-		.select()
-		.single();
-
-	if (error) {
-		secureLogger.error('Erro ao adicionar contato', {
-			error: error.message,
-			userId,
-			contactName: name,
-		});
-		throw new Error(`Erro ao adicionar contato: ${error.message}`);
-	}
-
-	return data as ContactDbRow;
-}
-
-function logContactCreation(
-	contact: ContactDbRow,
-	userId: string,
-	name: string,
-	isFavorite?: boolean,
-) {
-	secureLogger.info('Contato adicionado com sucesso', {
-		contactId: contact.id,
-		userId,
-		contactName: name,
-		isFavorite,
-	});
-}
-
-function buildAddContactResponse(
-	contact: ContactDbRow,
-	name: string,
-	isFavorite?: boolean,
-) {
-	return {
-		success: true,
-		contact: filterSensitiveData(contact),
-		message: `Contato "${name}" adicionado com sucesso${isFavorite ? ' e marcado como favorito' : ''}`,
-		nextStep:
-			'Adicione métodos de pagamento (PIX, TED, DOC) para facilitar transferências',
-	};
-}
-
-// Helper functions for addContactPaymentMethod
-async function validateContactExists(
-	supabaseClient: SupabaseClient,
-	userId: string,
-	contactId: string,
-) {
-	const { data: contact, error: contactError } = await supabaseClient
-		.from('contacts')
-		.select('name')
-		.eq('id', contactId)
-		.eq('user_id', userId)
-		.single();
-
-	if (contactError || !contact) {
-		throw new Error('Contato não encontrado');
-	}
-
-	return contact;
-}
-
-function validatePaymentFields(
-	paymentType: string,
-	pixKey?: string,
-	pixKeyType?: string,
-	bankCode?: string,
-	agency?: string,
-	accountNumber?: string,
-) {
-	if (paymentType === 'PIX' && (!pixKey || !pixKeyType)) {
-		throw new Error(
-			'Para PIX, é necessário informar a chave e o tipo da chave',
-		);
-	}
-
-	if (
-		['TED', 'DOC'].includes(paymentType) &&
-		(!bankCode || !agency || !accountNumber)
-	) {
-		throw new Error(
-			'Para TED/DOC, é necessário informar dados bancários completos',
-		);
-	}
-}
-
-function preparePaymentMethodData(
-	userId: string,
-	contactId: string,
-	paymentType: string,
-	label?: string,
-	isFavorite?: boolean,
-	pixKey?: string,
-	pixKeyType?: string,
-	bankCode?: string,
-	bankName?: string,
-	agency?: string,
-	accountNumber?: string,
-	accountType?: string,
-) {
-	return {
-		user_id: userId,
-		contact_id: contactId,
-		payment_type: paymentType,
-		pix_key: pixKey || null,
-		pix_key_type: pixKeyType || null,
-		bank_code: bankCode || null,
-		bank_name: bankName || null,
-		agency: agency || null,
-		account_number: accountNumber || null,
-		account_type: accountType || null,
-		label: label || null,
-		is_favorite: isFavorite,
-		is_verified: false, // Por padrão, métodos começam não verificados
-		usage_count: 0,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-	};
-}
-
-async function insertPaymentMethod(
-	// biome-ignore lint/suspicious/noExplicitAny: Supabase client type is dynamic
-	supabaseClient: any,
-	// biome-ignore lint/suspicious/noExplicitAny: Payment method data type is dynamic
-	paymentMethodData: any,
-	userId: string,
-	contactId: string,
-	paymentType: string,
-) {
-	const { data, error } = await supabaseClient
-		.from('contact_payment_methods')
-		.insert(paymentMethodData)
-		.select()
-		.single();
-
-	if (error) {
-		secureLogger.error('Erro ao adicionar método de pagamento', {
-			error: error.message,
-			userId,
-			contactId,
-			paymentType,
-		});
-		throw new Error(`Erro ao adicionar método de pagamento: ${error.message}`);
-	}
-
-	return data as ContactPaymentMethodDbRow;
-}
-
-function logPaymentMethodCreation(
-	paymentMethod: ContactPaymentMethodDbRow,
-	userId: string,
-	contactId: string,
-	paymentType: string,
-	isFavorite?: boolean,
-) {
-	secureLogger.info('Método de pagamento adicionado com sucesso', {
-		paymentMethodId: paymentMethod.id,
-		userId,
-		contactId,
-		paymentType,
-		isFavorite,
-	});
-}
-
-function buildAddPaymentMethodResponse(
-	paymentMethod: ContactPaymentMethodDbRow,
-	contactName: string,
-	paymentType: string,
-	pixKey?: string,
-	pixKeyType?: string,
-	accountType?: string,
-	bankName?: string,
-	bankCode?: string,
-) {
-	const paymentDescription =
-		paymentType === 'PIX'
-			? `chave PIX ${pixKey} (${pixKeyType})`
-			: `conta ${accountType} - ${bankName || `Banco ${bankCode}`}`;
-
-	return {
-		success: true,
-		paymentMethod: filterSensitiveData(paymentMethod),
-		contactName,
-		message: `Método de pagamento ${paymentType} adicionado para "${contactName}": ${paymentDescription}`,
-		isReady: paymentType === 'PIX', // PIX já está pronto para uso
-	};
-}
-
-// Helper functions for sendToContact
-async function fetchContactWithPaymentMethods(
-	supabaseClient: SupabaseClient,
-	userId: string,
-	contactId: string,
-) {
-	const { data: contact, error: contactError } = await supabaseClient
-		.from('contacts')
-		.select(`
-      *,
-      contact_payment_methods(*)
-    `)
-		.eq('id', contactId)
-		.eq('user_id', userId)
-		.single();
-
-	if (contactError || !contact) {
-		throw new Error('Contato não encontrado');
-	}
-
-	const paymentMethods =
-		contact.contact_payment_methods as ContactPaymentMethodDbRow[];
-
-	return { contact, paymentMethods };
-}
-
-function selectPaymentMethod(
-	paymentMethods: ContactPaymentMethodDbRow[],
-	paymentMethodId?: string,
-	requestedPaymentType?: string,
-) {
-	let selectedMethod: ContactPaymentMethodDbRow | undefined;
-
-	if (paymentMethodId) {
-		selectedMethod = paymentMethods.find((pm) => pm.id === paymentMethodId);
-		if (!selectedMethod) {
-			throw new Error('Método de pagamento não encontrado para este contato');
-		}
-	} else {
-		// Usar método favorito ou o mais usado
-		selectedMethod =
-			paymentMethods
-				.filter((pm) => pm.is_favorite)
-				.sort((a, b) => b.usage_count - a.usage_count)[0] ||
-			paymentMethods.sort((a, b) => b.usage_count - a.usage_count)[0];
-
-		if (!selectedMethod) {
-			throw new Error(
-				'Nenhum método de pagamento encontrado para este contato',
-			);
-		}
-	}
-
-	// Validar tipo de pagamento
-	if (
-		requestedPaymentType &&
-		selectedMethod.payment_type !== requestedPaymentType
-	) {
-		throw new Error(
-			`O método selecionado é do tipo ${selectedMethod.payment_type}, mas foi solicitado ${requestedPaymentType}`,
-		);
-	}
-
-	return selectedMethod;
-}
-
-async function incrementPaymentMethodUsage(
-	supabaseClient: SupabaseClient,
-	methodId: string,
-	currentUsage: number,
-) {
-	await supabaseClient
-		.from('contact_payment_methods')
-		.update({
-			usage_count: currentUsage + 1,
-			last_used_at: new Date().toISOString(),
-		})
-		.eq('id', methodId);
-}
-
-async function createTransfer(
-	userId: string,
-	selectedMethod: ContactPaymentMethodDbRow,
-	recipientName: string,
-	amount: number,
-	description?: string,
-): Promise<TransferResult> {
-	const finalDescription = description || `Transferência para ${recipientName}`;
-
-	if (selectedMethod.payment_type === 'PIX') {
-		// Usar PIX tools
-		const { createPixTools } = await import('./pix');
-		const pixTools = createPixTools(userId);
-
-		if (!selectedMethod.pix_key || !selectedMethod.pix_key_type) {
-			throw new Error('Método PIX selecionado não possui chave configurada');
-		}
-
-		// Call the execute function of the sendPixTransfer tool
-		const executeFunc = pixTools.sendPixTransfer.execute;
-		if (!executeFunc) {
-			throw new Error('Função de transferência PIX não disponível');
-		}
-		const pixTransferResult = (await executeFunc(
-			{
-				recipientKey: selectedMethod.pix_key,
-				recipientKeyType: selectedMethod.pix_key_type,
-				recipientName,
-				amount,
-				description: finalDescription,
-			},
-			{} as never,
-		)) as TransferResult;
-		return pixTransferResult;
-	} else {
-		// TED/DOC - simular criação de transferência
-		// Em produção, integrar com serviço bancário
-		return {
-			success: true,
-			transfer: {
-				id: `TRF${Date.now()}`,
-				amount,
-				recipientName,
-				recipientBank: selectedMethod.bank_name,
-				accountInfo: selectedMethod.account_number,
-				status: 'PENDING',
-			},
-			message: `Transferência ${selectedMethod.payment_type} de R$ ${amount.toFixed(2)} agendada para ${recipientName}`,
-		};
-	}
-}
-
-function logTransferSuccess(
-	contactId: string,
-	userId: string,
-	amount: number,
-	selectedMethod: ContactPaymentMethodDbRow,
-) {
-	secureLogger.info('Transferência para contato criada com sucesso', {
-		contactId,
-		userId,
-		amount,
-		paymentType: selectedMethod.payment_type,
-		paymentMethodId: selectedMethod.id,
-	});
-}
-
-function buildSendToContactResponse(
-	transferResult: TransferResult,
-	// biome-ignore lint/suspicious/noExplicitAny: Contact data has dynamic structure from Supabase
-	contact: any,
-	selectedMethod: ContactPaymentMethodDbRow,
-	amount: number,
-) {
-	return {
-		success: true,
-		transfer: transferResult.transfer || transferResult,
-		contact: {
-			id: contact.id,
-			name: contact.name,
-			paymentMethod: {
-				type: selectedMethod.payment_type,
-				label: selectedMethod.label,
-				key: selectedMethod.pix_key || selectedMethod.account_number,
-			},
-		},
-		message:
-			transferResult.message ||
-			`Transferência de R$ ${amount.toFixed(2)} enviada para ${contact.name} com sucesso!`,
 	};
 }

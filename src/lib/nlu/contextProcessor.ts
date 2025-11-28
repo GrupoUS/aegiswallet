@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/lib/logging/logger';
+import { apiClient } from '@/lib/api-client';
 import type { BrazilianContext } from '@/lib/nlu/brazilianPatterns';
 import { BrazilianContextAnalyzer } from '@/lib/nlu/brazilianPatterns';
 import type {

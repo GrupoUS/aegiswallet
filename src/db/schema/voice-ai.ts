@@ -242,6 +242,27 @@ export const chatMessages = pgTable('chat_messages', {
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+/**
+ * Snapshots of financial context for chat history
+ */
+export const chatContextSnapshots = pgTable('chat_context_snapshots', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	conversationId: text('conversation_id').references(() => chatSessions.id, {
+		onDelete: 'cascade',
+	}),
+
+	// Context data
+	recentTransactions: jsonb('recent_transactions'),
+	accountBalances: jsonb('account_balances'),
+	upcomingEvents: jsonb('upcoming_events'),
+	userPreferences: jsonb('user_preferences'),
+
+	// Timestamps
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 // ========================================
 // TYPE EXPORTS
 // ========================================
@@ -266,3 +287,7 @@ export type InsertChatSession = typeof chatSessions.$inferInsert;
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+export type ChatContextSnapshot = typeof chatContextSnapshots.$inferSelect;
+export type InsertChatContextSnapshot =
+	typeof chatContextSnapshots.$inferInsert;

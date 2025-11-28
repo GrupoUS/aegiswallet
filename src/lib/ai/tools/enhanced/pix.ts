@@ -217,7 +217,7 @@ export function createPixTools(userId: string) {
 								and(
 									eq(pixKeys.userId, userId),
 									eq(pixKeys.isActive, true),
-									eq(pixKeys.isDefault, true),
+									eq(pixKeys.isFavorite, true),
 								),
 							)
 							.limit(1);
@@ -252,9 +252,10 @@ export function createPixTools(userId: string) {
 						.insert(pixQrCodes)
 						.values({
 							userId: userId,
-							qrCode: qrCode,
+							qrCodeData: qrCode,
+							pixCopyPaste: qrCode, // PIX copy-paste format
 							amount: amount ? String(amount) : null,
-							recipientKey: targetKey,
+							recipientPixKey: targetKey,
 							description: description ?? null,
 							expiresAt: new Date(expiresAt),
 						})
@@ -427,8 +428,8 @@ export function createPixTools(userId: string) {
 
 					return {
 						transfers: transfers.map(filterSensitiveData),
-						total: count ?? 0,
-						hasMore: (count ?? 0) > offset + limit,
+						total: transfers.length,
+						hasMore: transfers.length === limit,
 						statistics: {
 							totalSent,
 							totalSuccess,
@@ -506,45 +507,41 @@ export function createPixTools(userId: string) {
 					// Gerar endToEndId único
 					const endToEndId = `E${Date.now()}${Math.random().toString(36).substring(2, 15).toUpperCase()}`;
 
-					const transferData = {
-						user_id: userId,
-						amount,
-						recipient_key: recipientKey,
-						recipient_key_type: recipientKeyType,
-						recipient_name: recipientName,
-						description: description ?? null,
-						status: 'SCHEDULED',
-						end_to_end_id: endToEndId,
-						scheduled_for: scheduledFor,
-						created_at: new Date().toISOString(),
-					};
+					const [data] = await db
+						.insert(pixTransactions)
+						.values({
+							userId: userId,
+							amount: String(amount),
+							pixKey: recipientKey,
+							pixKeyType: recipientKeyType,
+							recipientName: recipientName,
+							description: description ?? null,
+							status: 'pending',
+							endToEndId: endToEndId,
+							scheduledFor: new Date(scheduledFor),
+							transactionDate: scheduledDate,
+							transactionType: 'sent',
+						})
+						.returning();
 
-					const { data, error } = await supabase
-						.from('pix_transfers')
-						.insert(transferData)
-						.select()
-						.single();
-
-					if (error) {
+					if (!data) {
 						secureLogger.error('Erro ao agendar transferência PIX', {
-							error: error.message,
+							error: 'Insert failed',
 							userId,
 							amount,
 							recipientKey: `${recipientKey.substring(0, 3)}***`,
 						});
-						throw new Error(
-							`Erro ao agendar transferência PIX: ${error.message}`,
-						);
+						throw new Error('Erro ao agendar transferência PIX: Insert failed');
 					}
 
-					const transfer = data as PixTransfer;
+					const transfer = data as unknown as PixTransfer;
 
 					// Log de auditoria para compliance
-					await supabase.from('compliance_audit_logs').insert({
-						user_id: userId,
-						event_type: 'pix_transfer_scheduled',
-						resource_type: 'pix_transfers',
-						resource_id: transfer.id,
+					await db.insert(complianceAuditLogs).values({
+						userId: userId,
+						eventType: 'consent_granted',
+						resourceType: 'pix_transactions',
+						resourceId: transfer.id,
 						description: `Transferência PIX de R$ ${amount.toFixed(2)} agendada para ${scheduledDate.toLocaleString('pt-BR')}`,
 						metadata: {
 							amount,

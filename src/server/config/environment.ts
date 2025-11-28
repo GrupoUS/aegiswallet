@@ -30,12 +30,6 @@ export const environment = {
 		'',
 	CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || '',
 
-	// Supabase configuration (Deprecated)
-	SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
-	SUPABASE_ANON_KEY:
-		process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '',
-	SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-
 	// API configuration
 	API_URL:
 		process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',

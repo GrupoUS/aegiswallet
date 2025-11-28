@@ -1,20 +1,18 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { asc, desc, eq } from 'drizzle-orm';
+
+import { db, type HttpClient } from '@/db/client';
+import {
+	chatMessages,
+	chatSessions,
+	type ChatMessage as DbChatMessage,
+	type ChatSession,
+	type InsertChatMessage,
+	type InsertChatSession,
+} from '@/db/schema';
+import logger from '@/lib/logging/logger';
 
 import type { FinancialContext, Transaction } from '../context';
 import type { ChatMessage } from '../domain/types';
-import logger from '@/lib/logging/logger';
-import type { Database, Json } from '@/types/database.types';
-
-// Extract table row types from Database for type safety
-type ChatConversationRow =
-	Database['public']['Tables']['chat_conversations']['Row'];
-type ChatConversationInsert =
-	Database['public']['Tables']['chat_conversations']['Insert'];
-type ChatMessageRow = Database['public']['Tables']['chat_messages']['Row'];
-type ChatMessageInsert =
-	Database['public']['Tables']['chat_messages']['Insert'];
-type ChatContextSnapshotInsert =
-	Database['public']['Tables']['chat_context_snapshots']['Insert'];
 
 export interface Conversation {
 	id: string;
@@ -31,11 +29,11 @@ export interface ConversationWithMessages extends Conversation {
 }
 
 export class ChatRepository {
-	private supabase: SupabaseClient<Database>;
-	private contextWindowSize = 20; // Last N messages to keep in context
+	private db: HttpClient;
+	private contextWindowSize = 20;
 
-	constructor(supabase: SupabaseClient<Database>) {
-		this.supabase = supabase;
+	constructor(dbClient: HttpClient = db) {
+		this.db = dbClient;
 	}
 
 	/**
@@ -45,18 +43,20 @@ export class ChatRepository {
 		userId: string,
 		title?: string,
 	): Promise<Conversation> {
-		const insertData: ChatConversationInsert = {
-			user_id: userId,
-			title: title || null,
-		};
+		try {
+			const insertData: InsertChatSession = {
+				userId,
+				title: title || null,
+				isActive: true,
+			};
 
-		const { data, error } = await this.supabase
-			.from('chat_conversations')
-			.insert(insertData)
-			.select()
-			.single();
+			const [data] = await this.db
+				.insert(chatSessions)
+				.values(insertData)
+				.returning();
 
-		if (error) {
+			return this.mapConversation(data);
+		} catch (error) {
 			logger.error('Error creating conversation', {
 				component: 'ChatRepository',
 				action: 'createConversation',
@@ -64,21 +64,21 @@ export class ChatRepository {
 			});
 			throw new Error('Failed to create conversation');
 		}
-
-		return this.mapConversation(data);
 	}
 
 	/**
 	 * Get a conversation by ID
 	 */
 	async getConversation(conversationId: string): Promise<Conversation | null> {
-		const { data, error } = await this.supabase
-			.from('chat_conversations')
-			.select()
-			.eq('id', conversationId)
-			.single();
+		try {
+			const [data] = await this.db
+				.select()
+				.from(chatSessions)
+				.where(eq(chatSessions.id, conversationId))
+				.limit(1);
 
-		if (error) {
+			return data ? this.mapConversation(data) : null;
+		} catch (error) {
 			logger.error('Error fetching conversation', {
 				component: 'ChatRepository',
 				action: 'getConversation',
@@ -86,8 +86,6 @@ export class ChatRepository {
 			});
 			return null;
 		}
-
-		return data ? this.mapConversation(data) : null;
 	}
 
 	/**
@@ -112,14 +110,16 @@ export class ChatRepository {
 	 * List all conversations for a user
 	 */
 	async listConversations(userId: string, limit = 50): Promise<Conversation[]> {
-		const { data, error } = await this.supabase
-			.from('chat_conversations')
-			.select()
-			.eq('user_id', userId)
-			.order('updated_at', { ascending: false })
-			.limit(limit);
+		try {
+			const data = await this.db
+				.select()
+				.from(chatSessions)
+				.where(eq(chatSessions.userId, userId))
+				.orderBy(desc(chatSessions.updatedAt))
+				.limit(limit);
 
-		if (error) {
+			return (data || []).map((d) => this.mapConversation(d));
+		} catch (error) {
 			logger.error('Error listing conversations', {
 				component: 'ChatRepository',
 				action: 'listConversations',
@@ -127,8 +127,6 @@ export class ChatRepository {
 			});
 			return [];
 		}
-
-		return (data || []).map((d) => this.mapConversation(d));
 	}
 
 	/**
@@ -138,35 +136,19 @@ export class ChatRepository {
 		conversationId: string,
 		message: ChatMessage,
 	): Promise<void> {
-		// Prepare metadata without reasoning since it has its own field
-		const metadataWithoutReasoning = message.metadata
-			? {
-					...message.metadata,
-					reasoning: undefined, // Remove reasoning from metadata as it has its own field
-				}
-			: {};
+		try {
+			const insertData: InsertChatMessage = {
+				sessionId: conversationId,
+				role: message.role,
+				content:
+					typeof message.content === 'string'
+						? message.content
+						: JSON.stringify(message.content),
+				context: message.metadata || null,
+			};
 
-		const insertData: ChatMessageInsert = {
-			conversation_id: conversationId,
-			role: message.role,
-			content:
-				typeof message.content === 'string'
-					? message.content
-					: JSON.stringify(message.content),
-			metadata:
-				Object.keys(metadataWithoutReasoning).length > 0
-					? (metadataWithoutReasoning as Json)
-					: null,
-			reasoning: message.metadata?.reasoning
-				? JSON.stringify(message.metadata.reasoning)
-				: null,
-		};
-
-		const { error } = await this.supabase
-			.from('chat_messages')
-			.insert(insertData);
-
-		if (error) {
+			await this.db.insert(chatMessages).values(insertData);
+		} catch (error) {
 			logger.error('Error saving message', {
 				component: 'ChatRepository',
 				action: 'saveMessage',
@@ -183,19 +165,17 @@ export class ChatRepository {
 		conversationId: string,
 		limit?: number,
 	): Promise<ChatMessage[]> {
-		let query = this.supabase
-			.from('chat_messages')
-			.select()
-			.eq('conversation_id', conversationId)
-			.order('created_at', { ascending: true });
+		try {
+			const baseQuery = this.db
+				.select()
+				.from(chatMessages)
+				.where(eq(chatMessages.sessionId, conversationId))
+				.orderBy(asc(chatMessages.createdAt));
 
-		if (limit) {
-			query = query.limit(limit);
-		}
+			const data = limit ? await baseQuery.limit(limit) : await baseQuery;
 
-		const { data, error } = await query;
-
-		if (error) {
+			return (data || []).map((d) => this.mapMessage(d));
+		} catch (error) {
 			logger.error('Error fetching messages', {
 				component: 'ChatRepository',
 				action: 'getMessages',
@@ -203,8 +183,6 @@ export class ChatRepository {
 			});
 			return [];
 		}
-
-		return (data || []).map((d) => this.mapMessage(d));
 	}
 
 	/**
@@ -217,25 +195,29 @@ export class ChatRepository {
 	}
 
 	/**
-	 * Save context snapshot for a conversation
+	 * Save context snapshot for a conversation (stored in session metadata)
 	 */
 	async saveContextSnapshot(
 		conversationId: string,
 		context: FinancialContext,
 	): Promise<void> {
-		const insertData: ChatContextSnapshotInsert = {
-			conversation_id: conversationId,
-			recent_transactions: context.recentTransactions as unknown as Json,
-			account_balances: context.accountBalances as unknown as Json,
-			upcoming_events: context.upcomingEvents as unknown as Json,
-			user_preferences: context.userPreferences as unknown as Json,
-		};
-
-		const { error } = await this.supabase
-			.from('chat_context_snapshots')
-			.insert(insertData);
-
-		if (error) {
+		try {
+			await this.db
+				.update(chatSessions)
+				.set({
+					metadata: {
+						contextSnapshot: {
+							recentTransactions: context.recentTransactions,
+							accountBalances: context.accountBalances,
+							upcomingEvents: context.upcomingEvents,
+							userPreferences: context.userPreferences,
+							savedAt: new Date().toISOString(),
+						},
+					},
+					updatedAt: new Date(),
+				})
+				.where(eq(chatSessions.id, conversationId));
+		} catch (error) {
 			logger.error('Error saving context snapshot', {
 				component: 'ChatRepository',
 				action: 'saveContextSnapshot',
@@ -251,15 +233,39 @@ export class ChatRepository {
 	async getLatestContextSnapshot(
 		conversationId: string,
 	): Promise<FinancialContext | null> {
-		const { data, error } = await this.supabase
-			.from('chat_context_snapshots')
-			.select()
-			.eq('conversation_id', conversationId)
-			.order('created_at', { ascending: false })
-			.limit(1)
-			.single();
+		try {
+			const [data] = await this.db
+				.select({ metadata: chatSessions.metadata })
+				.from(chatSessions)
+				.where(eq(chatSessions.id, conversationId))
+				.limit(1);
 
-		if (error) {
+			if (!data?.metadata) return null;
+
+			const metadata = data.metadata as Record<string, unknown>;
+			const snapshot = metadata.contextSnapshot as Record<string, unknown>;
+
+			if (!snapshot) return null;
+
+			return {
+				recentTransactions:
+					(snapshot.recentTransactions as Transaction[]) || [],
+				accountBalances:
+					(snapshot.accountBalances as FinancialContext['accountBalances']) ||
+					[],
+				upcomingEvents:
+					(snapshot.upcomingEvents as FinancialContext['upcomingEvents']) || [],
+				userPreferences:
+					(snapshot.userPreferences as FinancialContext['userPreferences']) ||
+					{},
+				summary: {
+					totalBalance: 0,
+					monthlyIncome: 0,
+					monthlyExpenses: 0,
+					upcomingBillsCount: 0,
+				},
+			};
+		} catch (error) {
 			logger.error('Error fetching context snapshot', {
 				component: 'ChatRepository',
 				action: 'getLatestContextSnapshot',
@@ -267,28 +273,6 @@ export class ChatRepository {
 			});
 			return null;
 		}
-
-		if (!data) return null;
-
-		return {
-			recentTransactions:
-				(data.recent_transactions as unknown as Transaction[]) || [],
-			accountBalances:
-				(data.account_balances as unknown as FinancialContext['accountBalances']) ||
-				[],
-			upcomingEvents:
-				(data.upcoming_events as unknown as FinancialContext['upcomingEvents']) ||
-				[],
-			userPreferences:
-				(data.user_preferences as unknown as FinancialContext['userPreferences']) ||
-				{},
-			summary: {
-				totalBalance: 0,
-				monthlyIncome: 0,
-				monthlyExpenses: 0,
-				upcomingBillsCount: 0,
-			},
-		};
 	}
 
 	/**
@@ -298,12 +282,12 @@ export class ChatRepository {
 		conversationId: string,
 		title: string,
 	): Promise<void> {
-		const { error } = await this.supabase
-			.from('chat_conversations')
-			.update({ title })
-			.eq('id', conversationId);
-
-		if (error) {
+		try {
+			await this.db
+				.update(chatSessions)
+				.set({ title, updatedAt: new Date() })
+				.where(eq(chatSessions.id, conversationId));
+		} catch (error) {
 			logger.error('Error updating conversation title', {
 				component: 'ChatRepository',
 				action: 'updateConversationTitle',
@@ -317,12 +301,11 @@ export class ChatRepository {
 	 * Delete a conversation
 	 */
 	async deleteConversation(conversationId: string): Promise<void> {
-		const { error } = await this.supabase
-			.from('chat_conversations')
-			.delete()
-			.eq('id', conversationId);
-
-		if (error) {
+		try {
+			await this.db
+				.delete(chatSessions)
+				.where(eq(chatSessions.id, conversationId));
+		} catch (error) {
 			logger.error('Error deleting conversation', {
 				component: 'ChatRepository',
 				action: 'deleteConversation',
@@ -335,34 +318,28 @@ export class ChatRepository {
 	/**
 	 * Map database conversation to domain model
 	 */
-	private mapConversation(data: ChatConversationRow): Conversation {
+	private mapConversation(data: ChatSession): Conversation {
 		return {
 			id: data.id,
-			userId: data.user_id,
+			userId: data.userId || '',
 			title: data.title || 'Nova Conversa',
-			createdAt: data.created_at,
-			updatedAt: data.updated_at,
-			lastMessageAt: data.last_message_at || data.updated_at,
-			messageCount: data.message_count || 0,
+			createdAt: data.createdAt?.toISOString() || new Date().toISOString(),
+			updatedAt: data.updatedAt?.toISOString() || new Date().toISOString(),
+			lastMessageAt: data.updatedAt?.toISOString() || null,
+			messageCount: 0, // Would need separate query to count
 		};
 	}
 
 	/**
 	 * Map database message to domain model
 	 */
-	private mapMessage(data: ChatMessageRow): ChatMessage {
-		const parsedReasoning = data.reasoning
-			? JSON.parse(data.reasoning)
-			: undefined;
+	private mapMessage(data: DbChatMessage): ChatMessage {
 		return {
 			id: data.id,
 			role: data.role as 'user' | 'assistant' | 'system',
 			content: data.content,
-			timestamp: new Date(data.created_at).getTime(),
-			metadata: {
-				...(data.metadata as Record<string, unknown>),
-				reasoning: parsedReasoning,
-			},
+			timestamp: data.createdAt?.getTime() || Date.now(),
+			metadata: (data.context as Record<string, unknown>) || {},
 		};
 	}
 }

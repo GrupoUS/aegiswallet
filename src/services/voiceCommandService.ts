@@ -3,9 +3,6 @@
  * Handles NLU processing for Portuguese voice commands in Brazilian Portuguese
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-import type { Database } from '@/types/database.types';
 import type { ProcessVoiceCommandInput as ServerProcessVoiceCommandInput } from '@/types/server.types';
 
 const MIN_AUTOMATION_CONFIDENCE = 0.8;
@@ -16,7 +13,7 @@ export interface VoiceCommandContext {
 		email: string;
 		role?: string;
 	};
-	supabase: SupabaseClient<Database>;
+	// Database access is now handled via global db client or dependency injection if needed
 }
 
 export interface VoiceCommandEntities {

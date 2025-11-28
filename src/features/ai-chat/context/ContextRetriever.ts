@@ -1,7 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
+import { db } from '@/db/client';
+import { bankAccounts, financialEvents, users } from '@/db/schema';
 import logger from '@/lib/logging/logger';
-import type { Database } from '@/types/database.types';
 
 export interface FinancialContext {
 	recentTransactions: Transaction[];
@@ -48,7 +49,6 @@ interface UserPreferences {
 }
 
 export class ContextRetriever {
-	private supabase: SupabaseClient<Database>;
 	private cacheTimeout = 5 * 60 * 1000; // 5 minutes
 	private cache: Map<
 		string,
@@ -62,10 +62,6 @@ export class ContextRetriever {
 			timestamp: number;
 		}
 	> = new Map();
-
-	constructor(supabase: SupabaseClient<Database>) {
-		this.supabase = supabase;
-	}
 
 	/**
 	 * Fetch complete financial context for the user
@@ -111,38 +107,38 @@ export class ContextRetriever {
 		startDate.setDate(startDate.getDate() - days);
 
 		try {
-			const { data, error } = await this.supabase
-				.from('financial_events')
-				.select(
-					'id, amount, description, category, created_at, event_type, is_income',
+			const data = await db
+				.select({
+					id: financialEvents.id,
+					amount: financialEvents.amount,
+					description: financialEvents.description,
+					title: financialEvents.title,
+					createdAt: financialEvents.createdAt,
+					isIncome: financialEvents.isIncome,
+				})
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, userId),
+						gte(financialEvents.createdAt, startDate),
+					),
 				)
-				.eq('user_id', userId)
-				.gte('created_at', startDate.toISOString())
-				.order('created_at', { ascending: false })
+				.orderBy(desc(financialEvents.createdAt))
 				.limit(50);
-
-			if (error) {
-				logger.error('Error fetching transactions', {
-					component: 'ContextRetriever',
-					action: 'getRecentTransactions',
-					error: String(error),
-				});
-				return [];
-			}
 
 			const transactions: Transaction[] = (data || []).map((t) => ({
 				id: t.id,
-				amount: t.amount,
-				description: t.description || '',
-				category: t.category || 'other',
-				date: t.created_at ?? new Date().toISOString(),
-				type: (t.is_income ? 'income' : 'expense') as 'income' | 'expense',
+				amount: Number(t.amount) || 0,
+				description: t.description || t.title || '',
+				category: 'other', // Would need to join with categories table
+				date: t.createdAt?.toISOString() ?? new Date().toISOString(),
+				type: (t.isIncome ? 'income' : 'expense') as 'income' | 'expense',
 			}));
 
 			this.setCache(cacheKey, transactions);
 			return transactions;
 		} catch (err) {
-			logger.error('Unexpected error fetching transactions', {
+			logger.error('Error fetching transactions', {
 				component: 'ContextRetriever',
 				action: 'getRecentTransactions',
 				error: String(err),
@@ -160,32 +156,32 @@ export class ContextRetriever {
 		if (cached) return cached as AccountBalance[];
 
 		try {
-			const { data, error } = await this.supabase
-				.from('bank_accounts')
-				.select('id, institution_name, balance, currency')
-				.eq('user_id', userId)
-				.eq('is_active', true);
-
-			if (error) {
-				logger.error('Error fetching balances', {
-					component: 'ContextRetriever',
-					action: 'getAccountBalances',
-					error: String(error),
-				});
-				return [];
-			}
+			const data = await db
+				.select({
+					id: bankAccounts.id,
+					institutionName: bankAccounts.institutionName,
+					currentBalance: bankAccounts.currentBalance,
+					currency: bankAccounts.currency,
+				})
+				.from(bankAccounts)
+				.where(
+					and(
+						eq(bankAccounts.userId, userId),
+						eq(bankAccounts.isActive, true),
+					),
+				);
 
 			const balances: AccountBalance[] = (data || []).map((a) => ({
 				accountId: a.id,
-				accountName: a.institution_name || 'Unnamed Account',
-				balance: a.balance || 0,
+				accountName: a.institutionName || 'Unnamed Account',
+				balance: Number(a.currentBalance) || 0,
 				currency: a.currency || 'BRL',
 			}));
 
 			this.setCache(cacheKey, balances);
 			return balances;
 		} catch (err) {
-			logger.error('Unexpected error fetching balances', {
+			logger.error('Error fetching balances', {
 				component: 'ContextRetriever',
 				action: 'getAccountBalances',
 				error: String(err),
@@ -209,36 +205,38 @@ export class ContextRetriever {
 		endDate.setDate(endDate.getDate() + days);
 
 		try {
-			const { data, error } = await this.supabase
-				.from('financial_events')
-				.select('id, title, amount, due_date, event_type_id, status')
-				.eq('user_id', userId)
-				.lte('due_date', endDate.toISOString())
-				.order('due_date', { ascending: true })
+			const data = await db
+				.select({
+					id: financialEvents.id,
+					title: financialEvents.title,
+					amount: financialEvents.amount,
+					dueDate: financialEvents.dueDate,
+					eventTypeId: financialEvents.eventTypeId,
+					status: financialEvents.status,
+				})
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, userId),
+						lte(financialEvents.dueDate, endDate),
+					),
+				)
+				.orderBy(financialEvents.dueDate)
 				.limit(20);
-
-			if (error) {
-				logger.error('Error fetching events', {
-					component: 'ContextRetriever',
-					action: 'getUpcomingEvents',
-					error: String(error),
-				});
-				return [];
-			}
 
 			const events: FinancialEvent[] = (data || []).map((e) => ({
 				id: e.id,
-				title: e.title,
-				amount: e.amount || 0,
-				date: e.due_date || new Date().toISOString(),
-				type: e.event_type_id || 'other',
+				title: e.title || '',
+				amount: Number(e.amount) || 0,
+				date: e.dueDate?.toISOString() || new Date().toISOString(),
+				type: e.eventTypeId || 'other',
 				status: e.status || 'pending',
 			}));
 
 			this.setCache(cacheKey, events);
 			return events;
 		} catch (err) {
-			logger.error('Unexpected error fetching events', {
+			logger.error('Error fetching events', {
 				component: 'ContextRetriever',
 				action: 'getUpcomingEvents',
 				error: String(err),
@@ -256,27 +254,18 @@ export class ContextRetriever {
 		if (cached) return cached as UserPreferences;
 
 		try {
-			const { data, error } = await this.supabase
-				.from('users')
-				.select('language, currency, timezone')
-				.eq('id', userId)
-				.single();
-
-			if (error) {
-				logger.error('Error fetching preferences', {
-					component: 'ContextRetriever',
-					action: 'getUserPreferences',
-					error: String(error),
-				});
-				return {
-					language: 'pt-BR',
-					currency: 'BRL',
-					timezone: 'America/Sao_Paulo',
-				};
-			}
+			const [data] = await db
+				.select({
+					preferredLanguage: users.preferredLanguage,
+					currency: users.currency,
+					timezone: users.timezone,
+				})
+				.from(users)
+				.where(eq(users.id, userId))
+				.limit(1);
 
 			const preferences: UserPreferences = {
-				language: data?.language || 'pt-BR',
+				language: data?.preferredLanguage || 'pt-BR',
 				currency: data?.currency || 'BRL',
 				timezone: data?.timezone || 'America/Sao_Paulo',
 			};
@@ -284,7 +273,7 @@ export class ContextRetriever {
 			this.setCache(cacheKey, preferences);
 			return preferences;
 		} catch (err) {
-			logger.error('Unexpected error fetching preferences', {
+			logger.error('Error fetching preferences', {
 				component: 'ContextRetriever',
 				action: 'getUserPreferences',
 				error: String(err),

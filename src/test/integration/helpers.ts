@@ -1,32 +1,21 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { eq } from 'drizzle-orm';
 
-import type { Database } from '../../types/database.types';
+import { db, getPoolClient, type PoolClient } from '@/db/client';
+import { users } from '@/db/schema';
 
 /**
  * Check if integration test environment variables are configured
  */
 export const hasIntegrationTestEnv = (): boolean => {
-	const url = process.env.SUPABASE_URL;
-	const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-	return Boolean(url && serviceKey);
+	const databaseUrl = process.env.DATABASE_URL;
+	return Boolean(databaseUrl);
 };
 
-export const getSupabaseAdminClient = (): SupabaseClient<Database> => {
-	const url = process.env.SUPABASE_URL;
-	const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-	if (!url || !serviceKey) {
-		throw new Error(
-			'SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são necessários para testes de integração.',
-		);
-	}
-
-	return createClient<Database>(url, serviceKey, {
-		auth: {
-			autoRefreshToken: false,
-			persistSession: false,
-		},
-	});
+/**
+ * Get a Drizzle database client for integration tests
+ */
+export const getTestDbClient = (): PoolClient => {
+	return getPoolClient();
 };
 
 export interface TestUser {
@@ -34,38 +23,43 @@ export interface TestUser {
 	id: string;
 }
 
+/**
+ * Create a test user for integration tests
+ */
 export const createTestUser = async (
-	client: ReturnType<typeof getSupabaseAdminClient>,
-) => {
+	client = db,
+): Promise<TestUser> => {
 	const email = `integration_${Date.now()}_${Math.random().toString(36).slice(2)}@aegiswallet.dev`;
-	const { data, error } = await client.auth.admin.createUser({
+	const id = `test_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+	await client.insert(users).values({
+		id,
 		email,
-		email_confirm: true,
-		user_metadata: {
-			full_name: 'Integration Tester',
-		},
+		fullName: 'Integration Tester',
+		autonomyLevel: 50,
+		isActive: true,
 	});
 
-	if (error || !data.user) {
-		throw new Error(`Falha ao criar usuário de teste: ${error?.message}`);
-	}
-
-	await client.from('users').insert({
-		autonomy_level: 50,
-		email,
-		full_name: 'Integration Tester',
-		id: data.user.id,
-	});
-
-	return { email, id: data.user.id };
+	return { email, id };
 };
 
-export const cleanupUserData = async (
-	client: ReturnType<typeof getSupabaseAdminClient>,
+/**
+ * Clean up test user data after tests
+ */
+export const cleanupTestUser = async (
 	userId: string,
-) => {
-	await client.from('financial_events').delete().eq('user_id', userId);
-	await client.from('bank_accounts').delete().eq('user_id', userId);
-	await client.from('users').delete().eq('id', userId);
-	await client.auth.admin.deleteUser(userId);
+	client = db,
+): Promise<void> => {
+	await client.delete(users).where(eq(users.id, userId));
+};
+
+/**
+ * Clean up all test user data (for test cleanup)
+ */
+export const cleanupUserData = async (
+	userId: string,
+	client = db,
+): Promise<void> => {
+	// Delete user will cascade to related tables due to foreign key constraints
+	await client.delete(users).where(eq(users.id, userId));
 };

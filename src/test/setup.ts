@@ -481,8 +481,6 @@ beforeAll(() => {
 
 	// Mock fetch for remote logging tests
 	global.fetch = vi.fn();
-
-	// Note: Supabase mock is configured at module level below using the comprehensive typed mock
 });
 
 // Clean up mocks after each test

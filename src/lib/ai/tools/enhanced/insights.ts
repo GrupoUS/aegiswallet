@@ -1,5 +1,5 @@
 import { tool } from 'ai';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
@@ -210,7 +210,6 @@ export function createInsightsTools(userId: string) {
 			}) => {
 				try {
 					const { transactions, futureEvents } = await fetchCashFlowData(
-						supabase,
 						userId,
 						forecastMonths,
 						includeScheduledEvents,
@@ -280,7 +279,6 @@ export function createInsightsTools(userId: string) {
 					const { startDate, endDate } =
 						calculateAnalysisPeriod(analysisPeriod);
 					const transactions = await fetchAnomalyTransactions(
-						supabase,
 						userId,
 						startDate,
 						endDate,
@@ -338,7 +336,6 @@ export function createInsightsTools(userId: string) {
 			}) => {
 				try {
 					const { transactions } = await fetchBudgetTransactions(
-						supabase,
 						userId,
 						analysisMonths,
 					);
@@ -744,7 +741,6 @@ function calculateVariance(values: number[]): number {
 
 // Helper functions for getCashFlowForecast
 async function fetchCashFlowData(
-	supabaseClient: SupabaseClient,
 	userId: string,
 	forecastMonths: number,
 	includeScheduledEvents: boolean,
@@ -757,18 +753,24 @@ async function fetchCashFlowData(
 	); // 12 meses de histórico
 
 	// Buscar dados históricos
-	const { data: historicalData, error } = await supabaseClient
-		.from('transactions')
-		.select('amount, transaction_date')
-		.eq('user_id', userId)
-		.gte('transaction_date', startDate.toISOString())
-		.lte('transaction_date', endDate.toISOString());
+	const historicalData = await db
+		.select({
+			amount: transactions.amount,
+			transaction_date: transactions.transactionDate,
+		})
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.userId, userId),
+				gte(transactions.transactionDate, startDate),
+				lte(transactions.transactionDate, endDate),
+			),
+		);
 
-	if (error) {
-		throw new Error(`Erro ao buscar dados históricos: ${error.message}`);
-	}
-
-	const transactions = historicalData ?? [];
+	const transactionsList = historicalData.map((tx) => ({
+		amount: Number(tx.amount),
+		transaction_date: tx.transaction_date?.toISOString(),
+	}));
 
 	// Buscar eventos futuros agendados
 	interface FutureEvent {
@@ -783,17 +785,31 @@ async function fetchCashFlowData(
 		const futureEnd = new Date();
 		futureEnd.setMonth(futureEnd.getMonth() + forecastMonths);
 
-		const { data: events } = await supabaseClient
-			.from('financial_events')
-			.select('amount, start_date, is_income, brazilian_event_type')
-			.eq('user_id', userId)
-			.gte('start_date', futureStart.toISOString())
-			.lte('start_date', futureEnd.toISOString());
+		const events = await db
+			.select({
+				amount: financialEvents.amount,
+				start_date: financialEvents.startDate,
+				is_income: financialEvents.isIncome,
+				brazilian_event_type: financialEvents.brazilianEventType,
+			})
+			.from(financialEvents)
+			.where(
+				and(
+					eq(financialEvents.userId, userId),
+					gte(financialEvents.startDate, futureStart),
+					lte(financialEvents.startDate, futureEnd),
+				),
+			);
 
-		futureEvents = events ?? [];
+		futureEvents = events.map((e) => ({
+			amount: Number(e.amount),
+			start_date: e.start_date!.toISOString(),
+			is_income: e.is_income ?? false,
+			brazilian_event_type: e.brazilian_event_type ?? '',
+		}));
 	}
 
-	return { transactions, futureEvents };
+	return { transactions: transactionsList, futureEvents };
 }
 
 function generateMonthlyBreakdown(
@@ -949,30 +965,50 @@ function calculateAnalysisPeriod(analysisPeriod: string): {
 }
 
 async function fetchAnomalyTransactions(
-	supabaseClient: SupabaseClient,
 	userId: string,
 	startDate: Date,
 	endDate: Date,
 ): Promise<TransactionRecord[]> {
-	const { data: transactions, error } = await supabaseClient
-		.from('transactions')
-		.select(`
-		    amount,
-		    transaction_date,
-		    category:transaction_categories(id, name),
-		    description,
-		    merchant_name
-		  `)
-		.eq('user_id', userId)
-		.gte('transaction_date', startDate.toISOString())
-		.lte('transaction_date', endDate.toISOString())
-		.order('transaction_date', { ascending: false });
+	const data = await db
+		.select({
+			amount: transactions.amount,
+			transaction_date: transactions.transactionDate,
+			description: transactions.description,
+			merchant_name: transactions.merchantName,
+			category_id: transactions.categoryId,
+		})
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.userId, userId),
+				gte(transactions.transactionDate, startDate),
+				lte(transactions.transactionDate, endDate),
+			),
+		)
+		.orderBy(desc(transactions.transactionDate));
 
-	if (error) {
-		throw new Error(`Erro ao buscar transações: ${error.message}`);
-	}
+	// Fetch categories separately
+	const categoryData = await db
+		.select()
+		.from(transactionCategories)
+		.where(eq(transactionCategories.userId, userId));
 
-	return transactions ?? [];
+	const categoryMap = new Map(categoryData.map((c) => [c.id, c]));
+
+	return data.map((tx) => ({
+		amount: Number(tx.amount),
+		transaction_date: tx.transaction_date?.toISOString() ?? '',
+		description: tx.description,
+		merchant_name: tx.merchant_name ?? undefined,
+		category: tx.category_id
+			? [
+					{
+						id: tx.category_id,
+						name: categoryMap.get(tx.category_id)?.name || 'Sem categoria',
+					},
+				]
+			: [],
+	}));
 }
 
 function detectAllAnomalies(
@@ -1090,30 +1126,49 @@ function buildAnomalyDetectionResponse(
 }
 
 // Helper functions for getBudgetRecommendations
-async function fetchBudgetTransactions(
-	supabaseClient: SupabaseClient,
-	userId: string,
-	analysisMonths: number,
-) {
+async function fetchBudgetTransactions(userId: string, analysisMonths: number) {
 	const endDate = new Date();
 	const startDate = new Date();
 	startDate.setMonth(startDate.getMonth() - analysisMonths);
 
-	const { data: transactions, error } = await supabaseClient
-		.from('transactions')
-		.select(`
-		    amount,
-		    category:transaction_categories(id, name, color, icon, is_system)
-		  `)
-		.eq('user_id', userId)
-		.gte('transaction_date', startDate.toISOString())
-		.lte('transaction_date', endDate.toISOString());
+	const data = await db
+		.select({
+			amount: transactions.amount,
+			category_id: transactions.categoryId,
+		})
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.userId, userId),
+				gte(transactions.transactionDate, startDate),
+				lte(transactions.transactionDate, endDate),
+			),
+		);
 
-	if (error) {
-		throw new Error(`Erro ao buscar transações: ${error.message}`);
-	}
+	// Fetch categories separately
+	const categoryData = await db
+		.select()
+		.from(transactionCategories)
+		.where(eq(transactionCategories.userId, userId));
 
-	return { transactions: transactions ?? [], startDate, endDate };
+	const categoryMap = new Map(categoryData.map((c) => [c.id, c]));
+
+	const transactionsList = data.map((tx) => ({
+		amount: Number(tx.amount),
+		category: tx.category_id
+			? [
+					{
+						id: tx.category_id,
+						name: categoryMap.get(tx.category_id)?.name || 'Sem categoria',
+						color: categoryMap.get(tx.category_id)?.color,
+						icon: categoryMap.get(tx.category_id)?.icon,
+						is_system: categoryMap.get(tx.category_id)?.isSystem,
+					},
+				]
+			: [],
+	}));
+
+	return { transactions: transactionsList, startDate, endDate };
 }
 
 function analyzeSpendingPatterns(

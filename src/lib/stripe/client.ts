@@ -45,7 +45,7 @@ export function getStripeWebhookSecret(): string {
  * Stripe SDK configuration
  */
 const STRIPE_CONFIG: Stripe.StripeConfig = {
-	apiVersion: '2025-04-30.basil',
+	apiVersion: '2025-11-17.clover',
 	typescript: true,
 	appInfo: {
 		name: 'AegisWallet',

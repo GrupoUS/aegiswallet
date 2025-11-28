@@ -91,7 +91,7 @@ voiceRouter.post(
 				audioData,
 				commandText: command,
 				userId: user.id,
-				context: { user, db },
+				context: { user },
 				language,
 				requireConfirmation,
 				sessionId,

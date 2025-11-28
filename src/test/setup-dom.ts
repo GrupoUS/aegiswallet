@@ -8,7 +8,6 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // Polyfills for jsdom environment
 global.TextEncoder = TextEncoder;
-// biome-ignore lint/suspicious/noExplicitAny: Polyfill required for jsdom
 global.TextDecoder = TextDecoder as any;
 
 // Mock IntersectionObserver for healthcare components
@@ -98,7 +97,6 @@ global.MediaDevices = {
 		getTracks: () => [{ stop: vi.fn() }],
 		removeEventListener: vi.fn(),
 	}),
-// biome-ignore lint/suspicious/noExplicitAny: Mocking MediaDevices for tests
 } as any;
 
 // Mock navigator for healthcare testing

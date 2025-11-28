@@ -120,25 +120,27 @@ export function useUpdateUserMetadata() {
 	};
 }
 
-// Clerk integration is currently disabled - using Supabase auth instead
-// Re-exports commented out to avoid import errors
+// Re-export Clerk hooks and components
+export {
+	useAuth,
+	useClerk,
+	useSession,
+	useSignIn,
+	useSignUp,
+	useUser,
+} from '@clerk/clerk-react';
 
-// export {
-// 	useAuth,
-// 	useClerk,
-// 	useSession,
-// 	useSignIn,
-// 	useSignUp,
-// 	useUser,
-// } from '@clerk/clerk-react';
-
-// export {
-// 	Protect,
-// 	RedirectToSignIn,
-// 	RedirectToSignUp,
-// 	SignedIn,
-// 	SignedOut,
-// 	SignInButton,
-// 	SignOutButton,
-// 	UserButton,
-// } from '@clerk/clerk-react';
+export {
+	Protect,
+	RedirectToSignIn,
+	RedirectToSignUp,
+	SignedIn,
+	SignedOut,
+	SignIn,
+	SignInButton,
+	SignOutButton,
+	SignUp,
+	SignUpButton,
+	UserButton,
+	UserProfile,
+} from '@clerk/clerk-react';

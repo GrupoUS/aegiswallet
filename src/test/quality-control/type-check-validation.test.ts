@@ -58,7 +58,7 @@ describe('Type Check Validation', () => {
 		it('should have financial_events with new properties', () => {
 			const mockEvent: Partial<FinancialEvent> = {
 				amount: '100',
-				category: 'test-category',
+				categoryId: 'test-category',
 				createdAt: new Date(),
 				description: 'Test description',
 				id: 'test-id',
@@ -75,6 +75,7 @@ describe('Type Check Validation', () => {
 		});
 
 		it('should have transactions with date field', () => {
+			const testDate = new Date('2024-01-01');
 			const mockTransaction: Partial<Transaction> = {
 				accountId: 'account-id',
 				amount: '100',
@@ -82,20 +83,20 @@ describe('Type Check Validation', () => {
 				createdAt: new Date(),
 				description: 'Test Transaction',
 				id: 'test-id',
-				transactionDate: '2024-01-01',
+				transactionDate: testDate,
 				transactionType: 'credit',
 				updatedAt: new Date(),
 				userId: 'user-id',
 			};
 
-			expect(mockTransaction.transactionDate).toBe('2024-01-01');
+			expect(mockTransaction.transactionDate).toEqual(testDate);
 		});
 
 		it('should have voice and audit tables available', () => {
 			// voice_commands table exists
 			const voiceCommandRow: Partial<VoiceCommand> = {
 				commandText: 'test command',
-				wasSuccessful: true,
+				status: 'completed',
 			};
 
 			// audit_logs table exists

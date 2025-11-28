@@ -12,11 +12,13 @@ export type ConsentType =
 	| 'marketing'
 	| 'analytics'
 	| 'third_party'
+	| 'third_party_sharing'
 	| 'voice_data'
 	| 'voice_recording'
 	| 'biometric'
 	| 'financial_data'
-	| 'location';
+	| 'location'
+	| 'open_banking';
 
 export type LegalBasis =
 	| 'consent'
@@ -28,9 +30,13 @@ export type LegalBasis =
 export type CollectionMethod =
 	| 'signup'
 	| 'settings'
+	| 'settings_toggle'
 	| 'prompt'
 	| 'api'
-	| 'import';
+	| 'import'
+	| 'explicit_form'
+	| 'terms_acceptance'
+	| 'voice_command';
 
 export interface LgpdConsent {
 	id: string;
@@ -75,7 +81,10 @@ export type DataExportRequestType =
 	| 'transactions'
 	| 'profile'
 	| 'consents'
-	| 'audit_logs';
+	| 'audit_logs'
+	| 'financial_only'
+	| 'voice_commands'
+	| 'specific_period';
 
 export type DataExportFormat = 'json' | 'csv' | 'pdf';
 
@@ -112,7 +121,9 @@ export type DataDeletionRequestType =
 	| 'full_account'
 	| 'full_deletion'
 	| 'specific_data'
-	| 'anonymization';
+	| 'anonymization'
+	| 'partial_deletion'
+	| 'consent_withdrawal';
 
 export type DataDeletionStatus =
 	| 'pending'
@@ -182,10 +193,15 @@ export interface OpenBankingConsent {
 export type TransactionLimitType =
 	| 'pix_daily'
 	| 'pix_daytime'
+	| 'pix_nighttime'
 	| 'pix_transaction'
+	| 'pix_total_daily'
 	| 'boleto_daily'
+	| 'ted_daily'
 	| 'transfer_daily'
-	| 'withdrawal_daily';
+	| 'withdrawal_daily'
+	| 'total_daily'
+	| 'total_monthly';
 
 export interface TransactionLimit {
 	id: string;

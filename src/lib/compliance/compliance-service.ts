@@ -303,8 +303,8 @@ export class ComplianceService {
 					requestType,
 					format,
 					status: 'pending',
-					dateFrom: dateFrom ? new Date(dateFrom) : null,
-					dateTo: dateTo ? new Date(dateTo) : null,
+					dateFrom: dateFrom ?? null,
+					dateTo: dateTo ?? null,
 					requestedVia: 'app',
 					ipAddress: ipAddress ?? null,
 				})

@@ -34,19 +34,25 @@ export const consentTypeEnum = pgEnum('consent_type', [
 	'marketing',
 	'analytics',
 	'third_party',
+	'third_party_sharing',
 	'voice_data',
 	'voice_recording',
 	'biometric',
 	'financial_data',
 	'location',
+	'open_banking',
 ]);
 
 export const collectionMethodEnum = pgEnum('collection_method', [
 	'signup',
 	'settings',
+	'settings_toggle',
 	'prompt',
 	'api',
 	'import',
+	'explicit_form',
+	'terms_acceptance',
+	'voice_command',
 ]);
 
 export const deletionRequestTypeEnum = pgEnum('deletion_request_type', [
@@ -54,6 +60,8 @@ export const deletionRequestTypeEnum = pgEnum('deletion_request_type', [
 	'full_deletion',
 	'specific_data',
 	'anonymization',
+	'partial_deletion',
+	'consent_withdrawal',
 ]);
 
 export const deletionRequestStatusEnum = pgEnum('deletion_request_status', [
@@ -73,6 +81,9 @@ export const exportRequestTypeEnum = pgEnum('export_request_type', [
 	'profile',
 	'consents',
 	'audit_logs',
+	'financial_only',
+	'voice_commands',
+	'specific_period',
 ]);
 
 export const exportFormatEnum = pgEnum('export_format', ['json', 'csv', 'pdf']);
@@ -88,10 +99,15 @@ export const exportStatusEnum = pgEnum('export_status', [
 export const limitTypeEnum = pgEnum('limit_type', [
 	'pix_daily',
 	'pix_daytime',
+	'pix_nighttime',
 	'pix_transaction',
+	'pix_total_daily',
 	'boleto_daily',
+	'ted_daily',
 	'transfer_daily',
 	'withdrawal_daily',
+	'total_daily',
+	'total_monthly',
 ]);
 
 export const complianceEventTypeEnum = pgEnum('compliance_event_type', [

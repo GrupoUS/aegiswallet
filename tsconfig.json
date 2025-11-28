@@ -17,6 +17,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": ["./src/*"],
       "@test-utils/*": ["./src/test/*"]

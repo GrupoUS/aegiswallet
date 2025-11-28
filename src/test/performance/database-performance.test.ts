@@ -249,7 +249,7 @@ describe('Database Performance Monitoring', () => {
       `;
 
 			const params = [
-				crypto.randomUUID(),
+				`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`,
 				'test_user',
 				'test_org',
 				`E${Date.now()}${Math.random().toString(36).substring(7)}`,
@@ -594,7 +594,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					name: 'pix_transaction_lookup',
 					query: 'SELECT * FROM pix_transactions WHERE id = $1',
-					params: [crypto.randomUUID()],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 					baselineP95: 50, // Expected P95 in milliseconds
 				},
 				{
@@ -649,7 +649,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_insert',
 					query: 'INSERT INTO pix_transactions (id) VALUES ($1)',
-					params: [crypto.randomUUID()],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'pix_select',
@@ -659,7 +659,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_update',
 					query: 'UPDATE pix_transactions SET status = $1 WHERE id = $2',
-					params: ['completed', crypto.randomUUID()],
+					params: ['completed', `test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'complex_join',

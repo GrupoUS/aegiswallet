@@ -7,7 +7,7 @@ import { ChatSuggestions } from '../components/feedback/ChatSuggestions';
 import { ChatPromptInput } from '../components/input/ChatPromptInput';
 import { ChatLayout } from '../components/layout/ChatLayout';
 import { useChatController } from '../hooks/useChatController';
-import { usePaywall } from '@/components/billing';
+import { PaywallModal, usePaywall } from '@/components/billing';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 export default function AiChatPage() {
 	const { data: subscription, isLoading: subLoading } = useSubscription();
-	const { showPaywall, PaywallModal } = usePaywall();
+	const { showPaywall, paywallProps } = usePaywall();
 
 	const backend = useMemo(
 		() => new GeminiBackend({ apiKey: GEMINI_API_KEY }),
@@ -112,7 +112,7 @@ export default function AiChatPage() {
 					streamingReasoning={streamingReasoning}
 				/>
 			</ChatLayout>
-			<PaywallModal />
+			<PaywallModal {...paywallProps} />
 		</div>
 	);
 }

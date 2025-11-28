@@ -15,9 +15,11 @@ export function usePaymentMethods() {
 	return useQuery({
 		queryKey: ['payment-methods'],
 		queryFn: async () => {
-			return apiClient.get<PaymentMethodsResponse>(
-				'/api/v1/billing/payment-methods',
-			);
+			const response = await apiClient.get<{
+				data: PaymentMethodsResponse;
+				meta: { requestId: string };
+			}>('/api/v1/billing/payment-methods');
+			return response.data;
 		},
 		staleTime: 1000 * 60 * 2, // 2 minutes
 		retry: 1,

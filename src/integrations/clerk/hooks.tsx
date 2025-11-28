@@ -183,53 +183,5 @@ export function useUser() {
 	};
 }
 
-// Stub components - render children or nothing
-import type { ReactNode } from 'react';
-
-export function Protect(_props: { children: ReactNode }) {
-	return null;
-}
-
-export function RedirectToSignIn() {
-	return null;
-}
-
-export function RedirectToSignUp() {
-	return null;
-}
-
-export function SignedIn(_props: { children: ReactNode }) {
-	return null;
-}
-
-export function SignedOut({ children }: { children: ReactNode }) {
-	return <>{children}</>;
-}
-
-export function SignIn() {
-	return null;
-}
-
-export function SignInButton({ children }: { children: ReactNode }) {
-	return <>{children}</>;
-}
-
-export function SignOutButton({ children }: { children: ReactNode }) {
-	return <>{children}</>;
-}
-
-export function SignUp() {
-	return null;
-}
-
-export function SignUpButton({ children }: { children: ReactNode }) {
-	return <>{children}</>;
-}
-
-export function UserButton() {
-	return null;
-}
-
-export function UserProfile() {
-	return null;
-}
+// Note: Stub components are defined in ./components.tsx to avoid duplication
+// Import them with: import { SignedIn, SignedOut, ... } from '@/integrations/clerk/components'

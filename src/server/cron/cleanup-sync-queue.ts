@@ -7,6 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 
+import { logger } from '@/lib/logging/logger';
 import type { AppEnv } from '@/server/hono-types';
 
 const app = new Hono<AppEnv>();
@@ -28,7 +29,7 @@ app.get('/', async (c) => {
 	}
 
 	if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-		console.error('Missing Supabase configuration');
+		logger.error('Missing Supabase configuration');
 		return c.json({ error: 'Server configuration error' }, 500);
 	}
 
@@ -49,7 +50,7 @@ app.get('/', async (c) => {
 			.select('id');
 
 		if (completedError) {
-			console.error('Error deleting completed items:', completedError);
+			logger.error('Error deleting completed items', { error: completedError });
 			return c.json(
 				{ error: 'Database error', details: completedError.message },
 				500,
@@ -65,7 +66,7 @@ app.get('/', async (c) => {
 			.select('id');
 
 		if (failedError) {
-			console.error('Error deleting failed items:', failedError);
+			logger.error('Error deleting failed items', { error: failedError });
 			return c.json(
 				{ error: 'Database error', details: failedError.message },
 				500,
@@ -84,7 +85,7 @@ app.get('/', async (c) => {
 			cutoff_date: cutoffIso,
 		});
 	} catch (error) {
-		console.error('Cleanup cron error:', error);
+		logger.error('Cleanup cron error', { error });
 		return c.json(
 			{
 				error: 'Internal server error',

@@ -126,9 +126,9 @@ import { useAuth, useUser } from '@clerk/clerk-react'
 function Dashboard() {
   const { userId, isSignedIn } = useAuth()
   const { user } = useUser()
-  
+
   if (!isSignedIn) return <Loading />
-  
+
   return <h1>Welcome, {user.firstName}!</h1>
 }
 ```
@@ -266,7 +266,7 @@ export const createUserScopedClient = (userId: string) => {
 
   return {
     ...db,
-    
+
     async withUserContext<T>(queryFn: () => Promise<T>): Promise<T> {
       // Set user context for RLS
       await db.execute(
@@ -274,7 +274,7 @@ export const createUserScopedClient = (userId: string) => {
       )
       return queryFn()
     },
-    
+
     getDb: () => db,
     getUserId: () => userId,
   }
@@ -297,14 +297,14 @@ export const createUserScopedPoolClient = async (userId: string) => {
   })
 
   const db = drizzle(pool, { schema })
-  
-  // Set user context for the session
-  await pool.query(`SET LOCAL app.current_user_id = '${userId}'`)
+
+  // Set user context for the session (using parameterized query to prevent SQL injection)
+  await pool.query('SELECT set_config($1, $2, true)', ['app.current_user_id', userId])
 
   return {
     db,
     pool,
-    
+
     async transaction<T>(fn: (tx) => Promise<T>): Promise<T> {
       return db.transaction(async (tx) => {
         await tx.execute(
@@ -313,7 +313,7 @@ export const createUserScopedPoolClient = async (userId: string) => {
         return fn(tx)
       })
     },
-    
+
     async close() {
       await pool.end()
     },
@@ -333,7 +333,7 @@ export const createServiceClient = () => {
 
   return {
     ...db,
-    
+
     async withServiceContext<T>(queryFn: () => Promise<T>): Promise<T> {
       await db.execute(
         sql`SELECT set_config('app.is_service_account', 'true', true)`
@@ -361,7 +361,7 @@ export async function createAuthenticatedDbClient(request: Request) {
   const clerkClient = createClerkClient({
     secretKey: process.env.CLERK_SECRET_KEY,
   })
-  
+
   const requestState = await clerkClient.authenticateRequest(request)
   const authObject = requestState.toAuth()
   const userId = authObject?.userId
@@ -377,7 +377,7 @@ export async function createAuthenticatedDbClient(request: Request) {
   return {
     db,
     userId,
-    
+
     async executeWithContext(query) {
       await sql`SET LOCAL app.current_user_id = ${userId}`
       return db.execute(query)
@@ -399,13 +399,13 @@ const app = new Hono()
 app.get('/api/v1/accounts', async (c) => {
   const auth = c.get('auth')
   const db = createClientFromAuth(auth)
-  
+
   // RLS automatically filters by user_id
   const accounts = await db.getDb()
     .select()
     .from(bankAccounts)
     .where(eq(bankAccounts.isActive, true))
-  
+
   return c.json({ data: accounts })
 })
 ```
@@ -466,7 +466,7 @@ export async function getUserFinancialSummary(userId: string) {
     )
 
   const totalBalance = accounts.reduce(
-    (sum, acc) => sum + Number(acc.balance || 0), 
+    (sum, acc) => sum + Number(acc.balance || 0),
     0
   )
 
@@ -496,8 +496,8 @@ export async function createUserTransaction(userId: string, data: TransactionInp
 }
 
 export async function updateUserTransaction(
-  userId: string, 
-  transactionId: string, 
+  userId: string,
+  transactionId: string,
   data: Partial<TransactionInput>
 ) {
   // Ownership check: only update if user owns the transaction

@@ -1,91 +1,91 @@
 {
-  "buildCommand": "bun run routes:generate && bun run build",
-  "outputDirectory": "dist",
-  "installCommand": "bun install",
-  "framework": null,
-  "functions": {
-    "src/server/vercel.ts": {
-      "maxDuration": 30
-    },
-    "src/server/cron/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard"
-    },
-    {
-      "source": "/dashboard/(.*)",
-      "destination": "/dashboard"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/src/server/vercel.ts"
-    },
-    {
-      "source": "/cron/(.*)",
-      "destination": "/src/server/vercel.ts"
-    },
-    {
-      "source": "/((?!api/|cron/).*)",
-      "destination": "/index.html"
-    }
-  ],
-  "crons": [
-    {
-      "path": "/cron/calendar-channel-renewal",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/cron/sync-queue-processor",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/cron/cleanup-sync-queue",
-      "schedule": "0 2 * * *"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/favicon.ico",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    }
-  ]
+	"buildCommand": "bun run routes:generate && bun run build",
+	"outputDirectory": "dist",
+	"installCommand": "bun install",
+	"framework": null,
+	"functions": {
+		"src/server/vercel.ts": {
+			"maxDuration": 30
+		},
+		"src/server/cron/**/*.ts": {
+			"maxDuration": 30
+		}
+	},
+	"rewrites": [
+		{
+			"source": "/dashboard",
+			"destination": "/dashboard"
+		},
+		{
+			"source": "/dashboard/(.*)",
+			"destination": "/dashboard"
+		},
+		{
+			"source": "/api/(.*)",
+			"destination": "/src/server/vercel.ts"
+		},
+		{
+			"source": "/cron/(.*)",
+			"destination": "/src/server/vercel.ts"
+		},
+		{
+			"source": "/((?!api/|cron/).*)",
+			"destination": "/index.html"
+		}
+	],
+	"crons": [
+		{
+			"path": "/cron/calendar-channel-renewal",
+			"schedule": "0 0 * * *"
+		},
+		{
+			"path": "/cron/sync-queue-processor",
+			"schedule": "0 1 * * *"
+		},
+		{
+			"path": "/cron/cleanup-sync-queue",
+			"schedule": "0 2 * * *"
+		}
+	],
+	"headers": [
+		{
+			"source": "/assets/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "public, max-age=31536000, immutable"
+				}
+			]
+		},
+		{
+			"source": "/favicon.ico",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "public, max-age=31536000, immutable"
+				}
+			]
+		},
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "X-Frame-Options",
+					"value": "DENY"
+				},
+				{
+					"key": "X-Content-Type-Options",
+					"value": "nosniff"
+				},
+				{
+					"key": "X-XSS-Protection",
+					"value": "1; mode=block"
+				},
+				{
+					"key": "Referrer-Policy",
+					"value": "strict-origin-when-cross-origin"
+				}
+			]
+		}
+	]
 }

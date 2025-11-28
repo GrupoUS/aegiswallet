@@ -69,9 +69,9 @@ function SuccessPage() {
 													Recursos Incluídos:
 												</h4>
 												<ul className="space-y-2">
-													{subscription.plan.features.map((feature, index) => (
+													{subscription.plan.features.map((feature) => (
 														<li
-															key={index}
+															key={feature.replace(/\s+/g, '-').toLowerCase()}
 															className="flex items-center gap-2 text-sm"
 														>
 															<CheckCircle className="h-4 w-4 text-green-600" />

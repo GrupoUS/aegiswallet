@@ -2,6 +2,8 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useCallback, useState } from 'react';
 
+import { logger } from '@/lib/logging/logger';
+
 interface UseAIChatOptions {
 	provider?: 'openai' | 'anthropic' | 'google';
 	tier?: 'default' | 'fast';
@@ -21,7 +23,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 		}),
 		onError: (error: Error) => {
 			// TODO: Implement proper error handling
-			console.error('Chat error:', error);
+			logger.error('Chat error', { error: error.message });
 		},
 	});
 

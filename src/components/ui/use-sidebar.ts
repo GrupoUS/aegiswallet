@@ -64,7 +64,7 @@ export function useSidebar(initialState?: Partial<SidebarState>) {
 
 	return {
 		// State
-		isOpen: isOpen as boolean, // Explicit type assertion
+		isOpen,
 		isCollapsed,
 		activeItem,
 		animate: true, // Default to true for non-context usage

@@ -89,9 +89,11 @@ export class BrazilianBackupScheduler {
 		const scheduleBackup = async () => {
 			try {
 				await brazilianBackupManager.executeComplianceBackup();
-			} catch (_error) {
-				// Implement retry logic with exponential backoff
-				setTimeout(scheduleBackup, 5 * 60 * 1000); // Retry in 5 minutes
+			} catch (error) {
+				// Log error for LGPD compliance audit trails
+				console.error('Brazilian compliance backup failed:', error);
+				// Retry after 5 minutes (fixed delay for simplicity)
+				setTimeout(scheduleBackup, 5 * 60 * 1000);
 			}
 		};
 
@@ -109,7 +111,17 @@ export class BrazilianBackupScheduler {
 // ========================================
 
 export class BrazilianComplianceBackupManager {
-	private db = drizzle(neon(process.env.DATABASE_URL ?? ''), { schema });
+	private db = drizzle(
+		neon(
+			process.env.DATABASE_URL ||
+				(() => {
+					throw new Error(
+						'DATABASE_URL is required for Brazilian compliance backup',
+					);
+				})(),
+		),
+		{ schema },
+	);
 
 	/**
 	 * Execute full Brazilian compliance backup

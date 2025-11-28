@@ -7,6 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 
+import { logger } from '@/lib/logging/logger';
 import type { AppEnv } from '@/server/hono-types';
 
 const app = new Hono<AppEnv>();
@@ -29,7 +30,7 @@ app.get('/', async (c) => {
 	}
 
 	if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-		console.error('Missing Supabase configuration');
+		logger.error('Missing Supabase configuration');
 		return c.json({ error: 'Server configuration error' }, 500);
 	}
 
@@ -46,7 +47,7 @@ app.get('/', async (c) => {
 			.limit(MAX_ITEMS_PER_RUN);
 
 		if (fetchError) {
-			console.error('Error fetching sync queue:', fetchError);
+			logger.error('Error fetching sync queue', { error: fetchError });
 			return c.json(
 				{ error: 'Database error', details: fetchError.message },
 				500,
@@ -143,7 +144,7 @@ app.get('/', async (c) => {
 			errors: errors.length > 0 ? errors : undefined,
 		});
 	} catch (error) {
-		console.error('Sync queue processor error:', error);
+		logger.error('Sync queue processor error', { error });
 		return c.json(
 			{
 				error: 'Internal server error',

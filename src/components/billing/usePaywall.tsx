@@ -1,9 +1,21 @@
 import { useState } from 'react';
 
-import { PaywallModal } from './PaywallModal';
-
 /**
  * Hook to control paywall modal
+ *
+ * Returns props to pass to PaywallModal instead of a component,
+ * avoiding React reconciliation issues from returning components in hooks.
+ *
+ * @example
+ * ```tsx
+ * const { paywallProps, showPaywall } = usePaywall();
+ * return (
+ *   <>
+ *     <button onClick={() => showPaywall('AI Chat')}>Upgrade</button>
+ *     <PaywallModal {...paywallProps} />
+ *   </>
+ * );
+ * ```
  */
 export function usePaywall() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -24,8 +36,11 @@ export function usePaywall() {
 		feature,
 		showPaywall,
 		hidePaywall,
-		PaywallModal: () => (
-			<PaywallModal open={isOpen} onOpenChange={setIsOpen} feature={feature} />
-		),
+		/** Props to spread onto PaywallModal component */
+		paywallProps: {
+			open: isOpen,
+			onOpenChange: setIsOpen,
+			feature,
+		},
 	};
 }

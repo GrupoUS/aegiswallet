@@ -53,7 +53,8 @@ export function PricingCard({
 				isCurrent && 'border-green-500',
 			)}
 		>
-			{recommended && (
+			{/* Show only one badge: isCurrent takes precedence over recommended */}
+			{recommended && !isCurrent && (
 				<Badge
 					className="absolute -top-3 left-1/2 -translate-x-1/2"
 					variant="default"

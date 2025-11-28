@@ -41,12 +41,11 @@ DECLARE
 BEGIN
     -- Delete transcriptions that have expired
     DELETE FROM voice_transcriptions
-    WHERE expires_at < NOW()
-    RETURNING 1 INTO deleted_count;
-    
+    WHERE expires_at < NOW();
+
     -- Get the count of deleted records
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
-    
+
     -- Log the cleanup operation
     INSERT INTO audit_logs (
         user_id,
@@ -61,7 +60,7 @@ BEGIN
         json_build_object('deleted_count', deleted_count),
         NOW()
     );
-    
+
     RETURN deleted_count;
 END;
 $$;

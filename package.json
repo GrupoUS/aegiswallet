@@ -10,7 +10,7 @@
 		"dev:full": "bunx concurrently \"bunx vite\" \"bun src/server/server.ts\"",
 		"dev:client": "bunx vite",
 		"dev:server": "bun src/server/server.ts",
-		"build": "bun run build:client && bun run build:server",
+		"build": "bun run build:client",
 		"build:deploy": "vite build --mode production",
 		"build:client": "vite build",
 		"build:server": "echo 'Server build no longer needed - using direct Hono deployment'",

@@ -7,6 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 
+import { logger } from '@/lib/logging/logger';
 import type { AppEnv } from '@/server/hono-types';
 
 const app = new Hono<AppEnv>();
@@ -27,7 +28,7 @@ app.get('/', async (c) => {
 	}
 
 	if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-		console.error('Missing Supabase configuration');
+		logger.error('Missing Supabase configuration');
 		return c.json({ error: 'Server configuration error' }, 500);
 	}
 
@@ -47,7 +48,7 @@ app.get('/', async (c) => {
 			.eq('sync_enabled', true);
 
 		if (fetchError) {
-			console.error('Error fetching expiring channels:', fetchError);
+			logger.error('Error fetching expiring channels', { error: fetchError });
 			return c.json(
 				{ error: 'Database error', details: fetchError.message },
 				500,
@@ -115,7 +116,7 @@ app.get('/', async (c) => {
 			errors: errors.length > 0 ? errors : undefined,
 		});
 	} catch (error) {
-		console.error('Channel renewal cron error:', error);
+		logger.error('Channel renewal cron error', { error });
 		return c.json(
 			{
 				error: 'Internal server error',

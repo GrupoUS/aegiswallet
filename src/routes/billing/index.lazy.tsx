@@ -152,11 +152,11 @@ function BillingPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-6">
-						{faqItems.map((item, index) => (
-							<div key={index} className="space-y-2">
+						{faqItems.map((item, itemIndex) => (
+							<div key={item.question.replace(/\s+/g, '-').toLowerCase()} className="space-y-2">
 								<h3 className="font-medium text-lg">{item.question}</h3>
 								<p className="text-muted-foreground">{item.answer}</p>
-								{index < faqItems.length - 1 && (
+								{itemIndex < faqItems.length - 1 && (
 									<hr className="border-border mt-4" />
 								)}
 							</div>

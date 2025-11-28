@@ -148,6 +148,16 @@
 					"suspicious": { "noExplicitAny": "warn" }
 				}
 			}
+		},
+		{
+			"includes": [".claude/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useComponentExportOnlyModules": "off"
+					}
+				}
+			}
 		}
 	]
 }

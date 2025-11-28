@@ -24,7 +24,7 @@ export const AllTheProviders = ({
 	children,
 	queryClient,
 }: {
-	children: ReactNode;
+	children?: ReactNode;
 	queryClient?: QueryClient;
 }) => {
 	const testQueryClient = queryClient || createTestQueryClient();
@@ -45,7 +45,7 @@ export const customRender = (
 
 	return render(ui, {
 		wrapper: ({ children }) =>
-			React.createElement(AllTheProviders, { queryClient, children }),
+			React.createElement(AllTheProviders, { children, queryClient }),
 		...options,
 	});
 };

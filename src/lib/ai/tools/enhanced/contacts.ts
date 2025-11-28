@@ -446,7 +446,7 @@ export function createContactsTools(userId: string) {
 							throw new Error('CPF inválido para transferência PIX');
 						}
 
-						// Execute PIX transfer with proper async handling
+						// Execute PIX transfer
 						const pixTransferResult = await pixTools.sendPixTransfer.execute(
 							{
 								recipientKey,
@@ -463,17 +463,7 @@ export function createContactsTools(userId: string) {
 							{} as never,
 						);
 
-						// Handle AsyncIterable result properly
-						if (isAsyncIterable(pixTransferResult)) {
-							// Convert AsyncIterable to TransferResult
-							const results: unknown[] = [];
-							for await (const result of pixTransferResult) {
-								results.push(result);
-							}
-							transferResult = results[0] as TransferResult;
-						} else {
-							transferResult = pixTransferResult as TransferResult;
-						}
+						transferResult = pixTransferResult as TransferResult;
 					} else {
 						transferResult = {
 							success: true,
@@ -731,13 +721,6 @@ function buildContactsResponse(
 				? `Encontrados ${totalContacts} contatos (${favoriteContacts} favoritos, ${contactsWithPix} com PIX)`
 				: 'Nenhum contato encontrado',
 	};
-}
-
-// Type guard for AsyncIterable
-function isAsyncIterable(obj: unknown): obj is AsyncIterable<unknown> {
-	return (
-		obj != null && typeof (obj as Record<PropertyKey, unknown>)[Symbol.asyncIterator] === 'function'
-	);
 }
 
 // Brazilian CPF validation for LGPD compliance

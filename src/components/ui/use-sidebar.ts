@@ -1,22 +1,79 @@
-'use client';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-import type React from 'react';
-import { createContext, useContext } from 'react';
-
-export interface SidebarContextProps {
-	open: boolean;
-	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-	animate: boolean;
+export interface SidebarState {
+	isOpen: boolean;
+	isCollapsed: boolean;
+	activeItem?: string;
 }
 
-export const SidebarContext = createContext<SidebarContextProps | undefined>(
+export interface SidebarContextType {
+	open: boolean;
+	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	animate?: boolean;
+}
+
+export const SidebarContext = createContext<SidebarContextType | undefined>(
 	undefined,
 );
 
-export const useSidebar = () => {
+export function useSidebar(initialState?: Partial<SidebarState>) {
+	const [isOpen, setIsOpen] = useState(initialState?.isOpen ?? false);
+	const [isCollapsed, setIsCollapsed] = useState(
+		initialState?.isCollapsed ?? false,
+	);
+	const [activeItem, setActiveItem] = useState<string | undefined>(
+		initialState?.activeItem,
+	);
+
+	const toggle = () => setIsOpen(!isOpen);
+	const openSidebar = () => setIsOpen(true);
+	const close = () => setIsOpen(false);
+	const collapse = () => setIsCollapsed(!isCollapsed);
+	const expand = () => setIsCollapsed(false);
+	const setActive = (item: string) => setActiveItem(item);
+
+	// Auto-close sidebar on mobile when window resizes
+	useEffect(() => {
+		const handleResize = () => {
+			if (window.innerWidth < 768) {
+				setIsCollapsed(true);
+			}
+		};
+
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, []);
+
+	// For sidebar components that use SidebarContext
 	const context = useContext(SidebarContext);
-	if (!context) {
-		throw new Error('useSidebar must be used within a SidebarProvider');
+	if (context) {
+		return {
+			isOpen: context.open,
+			isCollapsed,
+			activeItem,
+			animate: context.animate ?? true, // Default to true if undefined
+			setOpen: context.setOpen,
+			toggle,
+			open: openSidebar,
+			close,
+			collapse,
+			expand,
+			setActive,
+		};
 	}
-	return context;
-};
+
+	return {
+		// State
+		isOpen: isOpen as boolean, // Explicit type assertion
+		isCollapsed,
+		activeItem,
+		animate: true, // Default to true for non-context usage
+		setOpen: setIsOpen, // Use local setter for non-context usage
+		toggle,
+		open: openSidebar,
+		close,
+		collapse,
+		expand,
+		setActive,
+	};
+}

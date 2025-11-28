@@ -5,8 +5,6 @@
  * with authentication, financial operations, and performance optimizations
  */
 
-import type { RouteIds } from '@tanstack/react-router';
-
 // Define custom error type since inferRouterError isn't exported
 export interface FinancialRouterError {
 	message: string;

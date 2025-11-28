@@ -5,7 +5,12 @@
  * with real-time data requirements and Brazilian market compliance.
  */
 
-import type { AnyLocation } from '@tanstack/react-router';
+// Define a location type for route performance monitoring
+interface Location {
+	pathname: string;
+	search?: string;
+	hash?: string;
+}
 
 // Performance thresholds for financial operations (in milliseconds)
 export const PERFORMANCE_THRESHOLDS = {
@@ -176,8 +181,9 @@ export class FinancialRoutePerformanceMonitor {
 			this.metrics.set(pathname, []);
 		}
 
-		const routeMetrics = this.metrics.get(pathname)!;
+		const routeMetrics = this.metrics.get(pathname) ?? [];
 		routeMetrics.push(metric);
+		this.metrics.set(pathname, routeMetrics);
 
 		// Keep only last 100 metrics per route
 		if (routeMetrics.length > 100) {
@@ -199,11 +205,6 @@ export class FinancialRoutePerformanceMonitor {
 			: PERFORMANCE_THRESHOLDS.ROUTE_TRANSITION_NORMAL;
 
 		if (metric.duration > threshold) {
-			console.warn(`🚨 Slow route performance: ${pathname}`, {
-				duration: `${metric.duration}ms`,
-				threshold: `${threshold}ms`,
-				priority,
-			});
 		}
 	}
 
@@ -307,7 +308,9 @@ export class FinancialRoutePerformanceMonitor {
 	 * Cleanup observers
 	 */
 	public destroy() {
-		this.observers.forEach((observer) => observer.disconnect());
+		for (const observer of this.observers) {
+			observer.disconnect();
+		}
 		this.observers = [];
 		this.metrics.clear();
 	}
@@ -335,8 +338,8 @@ export interface PerformanceAverage {
  * Get preload strategy for financial routes
  */
 export function getPreloadStrategy(
-	currentLocation: AnyLocation,
-	targetLocation: AnyLocation,
+	currentLocation: Location,
+	targetLocation: Location,
 ) {
 	const monitor = FinancialRoutePerformanceMonitor.getInstance();
 	const currentPath = currentLocation.pathname;
@@ -358,16 +361,6 @@ export function getPreloadStrategy(
  */
 export function initializePerformanceMonitoring() {
 	const monitor = FinancialRoutePerformanceMonitor.getInstance();
-
-	// Log initialization
-	console.log(
-		'📊 Performance monitoring initialized for AegisWallet financial routes',
-	);
-
-	// Add cleanup on page unload
-	window.addEventListener('beforeunload', () => {
-		monitor.destroy();
-	});
 
 	return monitor;
 }

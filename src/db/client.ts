@@ -85,6 +85,15 @@ export const closePool = async () => {
 	}
 };
 
+/**
+ * Get organization-scoped database client
+ * Returns the pool client for the given organization
+ * @param organizationId - The organization ID (currently unused, reserved for future multi-tenant support)
+ */
+export const getOrganizationClient = (_organizationId: string) => {
+	return getPoolClient();
+};
+
 // ========================================
 // DEFAULT EXPORT
 // ========================================

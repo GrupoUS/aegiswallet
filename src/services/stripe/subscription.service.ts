@@ -164,8 +164,19 @@ export class StripeSubscriptionService {
 			const plan = getPlanByStripePrice(priceId);
 			const planId = plan ? plan.id : 'free';
 
-			// Map status
-			const status = subscription.status as any; // Cast to enum type if needed
+			// Map Stripe status to database-compatible status
+			const stripeStatus = subscription.status;
+			const status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid' =
+				stripeStatus === 'incomplete' ||
+				stripeStatus === 'incomplete_expired' ||
+				stripeStatus === 'paused'
+					? 'canceled'
+					: (stripeStatus as
+							| 'active'
+							| 'canceled'
+							| 'past_due'
+							| 'trialing'
+							| 'unpaid');
 
 			// Get billing period from subscription item (Stripe v20+ change)
 			const subscriptionItem = subscription.items.data[0];

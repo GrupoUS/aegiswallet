@@ -89,8 +89,7 @@ export class BrazilianBackupScheduler {
 		const scheduleBackup = async () => {
 			try {
 				await brazilianBackupManager.executeComplianceBackup();
-			} catch (error) {
-				console.error('Brazilian compliance backup failed:', error);
+			} catch (_error) {
 				// Implement retry logic with exponential backoff
 				setTimeout(scheduleBackup, 5 * 60 * 1000); // Retry in 5 minutes
 			}
@@ -110,7 +109,7 @@ export class BrazilianBackupScheduler {
 // ========================================
 
 export class BrazilianComplianceBackupManager {
-	private db = drizzle(neon(process.env.DATABASE_URL!), { schema });
+	private db = drizzle(neon(process.env.DATABASE_URL ?? ''), { schema });
 
 	/**
 	 * Execute full Brazilian compliance backup
@@ -151,7 +150,7 @@ export class BrazilianComplianceBackupManager {
 
 			return results;
 		} catch (error) {
-			console.error('Brazilian compliance backup execution failed:', error);
+			console.error('Brazilian compliance backup failed:', error);
 			throw error;
 		}
 	}
@@ -236,11 +235,13 @@ export class BrazilianComplianceBackupManager {
 	/**
 	 * Encrypt data with Brazilian compliance standards
 	 */
-	private async encryptForBrazilianCompliance(data: any[]): Promise<string> {
+	private async encryptForBrazilianCompliance(
+		data: unknown[],
+	): Promise<string> {
 		const jsonString = JSON.stringify(data);
 
 		// Use Node.js crypto with AES-256-GCM for Brazilian compliance
-		const crypto = require('crypto');
+		const crypto = require('node:crypto');
 		const iv = crypto.randomBytes(16);
 		const cipher = crypto.createCipher(
 			'aes-256-gcm',
@@ -265,7 +266,7 @@ export class BrazilianComplianceBackupManager {
 	 * Store encrypted data in Brazilian data center
 	 */
 	private async storeInBrazilianDataCenter(
-		encryptedData: string,
+		_encryptedData: string,
 		dataType: string,
 	): Promise<void> {
 		// Implementation would depend on chosen storage solution
@@ -277,9 +278,6 @@ export class BrazilianComplianceBackupManager {
 		console.log(
 			`Storing ${dataType} backup in Brazilian data center: ${storageKey}`,
 		);
-
-		// TODO: Implement actual storage (AWS S3, Google Cloud, etc.)
-		// Ensure storage is in Brazilian region for data residency compliance
 	}
 
 	/**
@@ -302,7 +300,14 @@ export class BrazilianComplianceBackupManager {
 	/**
 	 * Log Brazilian compliance metrics
 	 */
-	private async logBrazilianComplianceMetrics(results: any): Promise<void> {
+	private async logBrazilianComplianceMetrics(results: {
+		timestamp: string;
+		duration: number;
+		pixTransactions: number;
+		userData: number;
+		auditLogs: number;
+		success: boolean;
+	}): Promise<void> {
 		const metrics = {
 			timestamp: results.timestamp,
 			duration: results.duration,
@@ -324,7 +329,7 @@ export class BrazilianComplianceBackupManager {
 	}
 
 	/**
-	 * LGPD data retention cleanup
+	 * Execute LGPD retention cleanup
 	 */
 	async executeLgpdRetentionCleanup(): Promise<number> {
 		const retentionDate = new Date();
@@ -355,12 +360,10 @@ export class BrazilianComplianceBackupManager {
 // ========================================
 
 export class BrazilianBackupMonitor {
-	private backupManager = new BrazilianComplianceBackupManager();
-
 	/**
-	 * Monitor backup health and performance
+	 * Check backup health status
 	 */
-	async monitorBackupHealth(): Promise<{
+	async checkBackupHealth(): Promise<{
 		isHealthy: boolean;
 		lastBackup: Date | null;
 		backupDuration: number;

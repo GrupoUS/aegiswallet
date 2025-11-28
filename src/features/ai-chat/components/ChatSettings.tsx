@@ -1,4 +1,4 @@
-﻿import { Brain, Mic, Settings } from 'lucide-react';
+import { Brain, Mic, Settings } from 'lucide-react';
 import { useId } from 'react';
 
 import {

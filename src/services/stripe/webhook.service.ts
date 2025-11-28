@@ -59,6 +59,20 @@ export class StripeWebhookService {
 		const periodStart = subscriptionItem.current_period_start;
 		const periodEnd = subscriptionItem.current_period_end;
 
+		// Map Stripe status to database-compatible status
+		const stripeStatus = subscription.status;
+		const status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid' =
+			stripeStatus === 'incomplete' ||
+			stripeStatus === 'incomplete_expired' ||
+			stripeStatus === 'paused'
+				? 'canceled'
+				: (stripeStatus as
+						| 'active'
+						| 'canceled'
+						| 'past_due'
+						| 'trialing'
+						| 'unpaid');
+
 		await db.transaction(async (tx) => {
 			// Update subscription record
 			await tx
@@ -67,7 +81,7 @@ export class StripeWebhookService {
 					stripeCustomerId: customerId,
 					stripeSubscriptionId: subscriptionId,
 					planId,
-					status: subscription.status as any,
+					status,
 					currentPeriodStart: new Date(periodStart * 1000),
 					currentPeriodEnd: new Date(periodEnd * 1000),
 					updatedAt: new Date(),
@@ -111,12 +125,26 @@ export class StripeWebhookService {
 		const periodStart = subscriptionItem.current_period_start;
 		const periodEnd = subscriptionItem.current_period_end;
 
+		// Map Stripe status to database-compatible status
+		const stripeStatus = subscription.status;
+		const status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid' =
+			stripeStatus === 'incomplete' ||
+			stripeStatus === 'incomplete_expired' ||
+			stripeStatus === 'paused'
+				? 'canceled'
+				: (stripeStatus as
+						| 'active'
+						| 'canceled'
+						| 'past_due'
+						| 'trialing'
+						| 'unpaid');
+
 		await db
 			.update(subscriptions)
 			.set({
 				stripeSubscriptionId: subscription.id,
 				planId,
-				status: subscription.status as any,
+				status,
 				currentPeriodStart: new Date(periodStart * 1000),
 				currentPeriodEnd: new Date(periodEnd * 1000),
 				cancelAtPeriodEnd: subscription.cancel_at_period_end,

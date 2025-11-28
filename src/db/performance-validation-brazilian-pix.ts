@@ -71,8 +71,6 @@ export class BrazilianPixPerformanceValidator {
 		readReplicaPerformance: PerformanceTestResult;
 		recommendations: string[];
 	}> {
-		console.log('Starting Brazilian PIX performance validation...');
-
 		// Run all performance tests in parallel where possible
 		const [
 			pixQueryPerformance,
@@ -120,7 +118,6 @@ export class BrazilianPixPerformanceValidator {
 	 */
 	private async validatePixQueryPerformance(): Promise<PerformanceTestResult> {
 		console.log('Testing PIX query performance...');
-
 		const testCases = [
 			// Common PIX query patterns
 			{
@@ -216,7 +213,7 @@ export class BrazilianPixPerformanceValidator {
 	private async validateConcurrentCapacity(): Promise<PerformanceTestResult> {
 		console.log('Testing concurrent PIX transaction capacity...');
 
-		const concurrentQueries = [];
+		const concurrentQueries: Promise<unknown[]>[] = [];
 		const targetConcurrency = Math.min(
 			100,
 			BRAZILIAN_PERFORMANCE_TARGETS.maxConcurrentPixTransactions,
@@ -335,7 +332,7 @@ export class BrazilianPixPerformanceValidator {
 	private async runPerformanceTests(
 		testCases: Array<{
 			name: string;
-			query: () => Promise<any[]>;
+			query: () => Promise<unknown[]>;
 			targetLatency: number;
 		}>,
 	): Promise<PerformanceTestResult> {
@@ -350,7 +347,7 @@ export class BrazilianPixPerformanceValidator {
 					await testCase.query();
 					const latency = Date.now() - startTime;
 					latencies.push(latency);
-				} catch (error) {
+				} catch {
 					latencies.push(999999); // High latency for failed queries
 				}
 
@@ -421,13 +418,7 @@ export class BrazilianPixPerformanceValidator {
 	/**
 	 * Calculate overall performance score
 	 */
-	private calculateOverallScore(results: {
-		pixQueryPerformance: PerformanceTestResult;
-		multiTenantPerformance: PerformanceTestResult;
-		concurrentCapacityTest: PerformanceTestResult;
-		businessHoursPerformance: PerformanceTestResult;
-		readReplicaPerformance: PerformanceTestResult;
-	}): number {
+	private calculateOverallScore(results: PerformanceValidationResults): number {
 		const tests = [
 			results.pixQueryPerformance,
 			results.multiTenantPerformance,
@@ -453,7 +444,9 @@ export class BrazilianPixPerformanceValidator {
 	/**
 	 * Generate performance recommendations
 	 */
-	private generateRecommendations(results: any): string[] {
+	private generateRecommendations(
+		results: PerformanceValidationResults,
+	): string[] {
 		const recommendations: string[] = [];
 
 		if (!results.pixQueryPerformance.passed) {
@@ -498,7 +491,16 @@ export class BrazilianPixPerformanceValidator {
 	/**
 	 * Log Brazilian performance results for compliance
 	 */
-	private logBrazilianPerformanceResults(results: any): void {
+	private logBrazilianPerformanceResults(results: {
+		success: boolean;
+		overallScore: number;
+		pixQueryPerformance: PerformanceTestResult;
+		multiTenantPerformance: PerformanceTestResult;
+		concurrentCapacityTest: PerformanceTestResult;
+		businessHoursPerformance: PerformanceTestResult;
+		readReplicaPerformance: PerformanceTestResult;
+		recommendations: string[];
+	}): void {
 		const logEntry = {
 			timestamp: new Date().toISOString(),
 			validationType: 'Brazilian PIX Performance',
@@ -536,6 +538,17 @@ interface PerformanceTestResult {
 	targetLatency: number;
 	throughput: number;
 	error?: string;
+}
+
+/**
+ * Interface for aggregated performance validation results
+ */
+interface PerformanceValidationResults {
+	pixQueryPerformance: PerformanceTestResult;
+	multiTenantPerformance: PerformanceTestResult;
+	concurrentCapacityTest: PerformanceTestResult;
+	businessHoursPerformance: PerformanceTestResult;
+	readReplicaPerformance: PerformanceTestResult;
 }
 
 // ========================================

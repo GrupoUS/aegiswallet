@@ -18,7 +18,6 @@ const BATCH_SIZE = 10;
 const MAX_RETRIES = 3;
 const RATE_LIMIT_DELAY_MS = 100; // 10 requests/second to respect Google API limits
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex queue processing requires multiple nested conditions
 async function processSyncQueue() {
 	const supabaseUrl = process.env.SUPABASE_URL;
 	const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

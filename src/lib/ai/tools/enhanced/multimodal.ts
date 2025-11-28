@@ -82,11 +82,7 @@ export function createMultimodalTools(userId: string) {
 			}) => {
 				try {
 					// Buscar dados baseado no tipo de relatório
-					const data = await fetchReportData(
-						userId,
-						reportType,
-						dateRange,
-					);
+					const data = await fetchReportData(userId, reportType, dateRange);
 
 					// Processar dados para visualização
 					const chartData = processChartData(

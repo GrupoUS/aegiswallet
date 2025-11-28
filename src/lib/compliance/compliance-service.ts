@@ -528,8 +528,6 @@ export class ComplianceService {
 				};
 			}
 
-			
-
 			return {
 				allowed: true,
 				limit: dailyLimit,

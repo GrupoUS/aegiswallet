@@ -12,9 +12,9 @@
  * --report-only: Apenas gera relatório dos testes existentes
  */
 
-import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { performance } from 'perf_hooks';
+import { execSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import { performance } from 'node:perf_hooks';
 
 import PerformanceReporter, {
 	type ConnectionMetrics,
@@ -200,6 +200,7 @@ class PerformanceTestRunner {
 				metrics.connectionMetrics = {
 					maxConcurrentConnections: parseInt(
 						connectionPoolMatch[1].replace(',', ''),
+						10,
 					),
 					connectionAcquisitionTime: parseFloat(connectionPoolMatch[2]),
 					connectionPoolEfficiency: 85 + Math.random() * 10, // 85-95%
@@ -313,7 +314,8 @@ class PerformanceTestRunner {
 		let passedTests = 0;
 		let totalTestTime = 0;
 
-		results.forEach((result, index) => {
+		for (let index = 0; index < results.length; index++) {
+			const result = results[index];
 			const status = result.success ? '✅ PASS' : '❌ FAIL';
 			const duration = result.duration.toFixed(2);
 
@@ -328,7 +330,7 @@ class PerformanceTestRunner {
 			totalTests++;
 			if (result.success) passedTests++;
 			totalTestTime += result.duration;
-		});
+		}
 
 		console.log('='.repeat(80));
 		console.log(`Total Tests: ${passedTests}/${totalTests} passed`);
@@ -378,7 +380,9 @@ class PerformanceTestRunner {
 		const reportFiles = this.reporter.saveReport(report);
 
 		console.log('✅ Performance Report Generated:');
-		reportFiles.forEach((file) => console.log(`   📄 ${file}`));
+		for (const file of reportFiles) {
+			console.log(`   📄 ${file}`);
+		}
 
 		// Print executive summary
 		console.log('\n🎯 Executive Summary:');
@@ -446,7 +450,9 @@ class PerformanceTestRunner {
 		const reportFiles = this.reporter.saveReport(latestReport);
 
 		console.log('✅ Latest Performance Report:');
-		reportFiles.forEach((file) => console.log(`   📄 ${file}`));
+		for (const file of reportFiles) {
+			console.log(`   📄 ${file}`);
+		}
 
 		// Print summary
 		console.log('\n📊 Latest Report Summary:');

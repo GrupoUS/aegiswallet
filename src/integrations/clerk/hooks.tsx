@@ -1,0 +1,235 @@
+/**
+ * Custom Clerk Hooks
+ *
+ * Extended hooks for AegisWallet authentication needs
+ * NOTE: Clerk integration is currently disabled - using Supabase auth instead
+ */
+
+import { useCallback, useMemo } from 'react';
+
+/**
+ * Extended user data including AegisWallet-specific fields
+ */
+export interface AegisWalletUser {
+	id: string;
+	email: string | null;
+	fullName: string | null;
+	firstName: string | null;
+	lastName: string | null;
+	imageUrl: string | null;
+	// AegisWallet-specific (from public metadata)
+	cpf?: string;
+	autonomyLevel?: number;
+	voiceCommandEnabled?: boolean;
+	language?: string;
+	timezone?: string;
+}
+
+/**
+ * Hook to get the current authenticated user with AegisWallet-specific data
+ * NOTE: Currently disabled - using Supabase auth instead
+ */
+export function useAegisUser() {
+	// Stub implementation - Clerk not currently used
+	const aegisUser = useMemo<AegisWalletUser | null>(() => null, []);
+
+	return {
+		user: aegisUser,
+		isLoaded: true,
+		isSignedIn: false,
+		clerkUser: null,
+	};
+}
+
+/**
+ * Hook to get authentication state and token
+ * NOTE: Currently disabled - using Supabase auth instead
+ */
+export function useAegisAuth() {
+	/**
+	 * Get a session token for API requests
+	 */
+	const getApiToken = useCallback(async () => {
+		return null;
+	}, []);
+
+	/**
+	 * Sign out with optional redirect
+	 */
+	const handleSignOut = useCallback(async (_redirectUrl?: string) => {
+		// Stub implementation
+	}, []);
+
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		userId: null,
+		sessionId: null,
+		getToken: getApiToken,
+		signOut: handleSignOut,
+	};
+}
+
+/**
+ * Hook to manage user session
+ * NOTE: Currently disabled - using Supabase auth instead
+ */
+export function useAegisSession() {
+	/**
+	 * Get session expiration info
+	 */
+	const sessionInfo = useMemo(() => null, []);
+
+	return {
+		session: sessionInfo,
+		isLoaded: true,
+		isSignedIn: false,
+		openUserProfile: () => {},
+		openSignIn: () => {},
+		openSignUp: () => {},
+	};
+}
+
+/**
+ * Hook to update user metadata
+ * NOTE: Currently disabled - using Supabase auth instead
+ */
+export function useUpdateUserMetadata() {
+	/**
+	 * Update unsafe metadata (can store user preferences)
+	 * Note: publicMetadata can only be updated server-side via Clerk Backend SDK
+	 */
+	const updateUnsafeMetadata = useCallback(
+		async (
+			_metadata: Partial<{
+				cpf: string;
+				autonomyLevel: number;
+				voiceCommandEnabled: boolean;
+				language: string;
+				timezone: string;
+			}>,
+		) => {
+			// Stub implementation
+			throw new Error('Clerk integration is currently disabled');
+		},
+		[],
+	);
+
+	return {
+		updateUnsafeMetadata,
+	};
+}
+
+// Stub implementations for Clerk hooks and components
+// NOTE: Clerk integration is currently disabled - using Supabase auth instead
+
+// Stub hooks
+export function useAuth() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		userId: null,
+		sessionId: null,
+		orgId: null,
+		orgRole: null,
+		orgSlug: null,
+		actor: null,
+		getToken: async () => null,
+		signOut: async () => {},
+	};
+}
+
+export function useClerk() {
+	return {
+		client: null,
+		session: null,
+		user: null,
+		openSignIn: () => {},
+		openSignUp: () => {},
+		openUserProfile: () => {},
+		signOut: async () => {},
+	};
+}
+
+export function useSession() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		session: null,
+	};
+}
+
+export function useSignIn() {
+	return {
+		isLoaded: true,
+		signIn: null,
+		setActive: async () => {},
+	};
+}
+
+export function useSignUp() {
+	return {
+		isLoaded: true,
+		signUp: null,
+		setActive: async () => {},
+	};
+}
+
+export function useUser() {
+	return {
+		isLoaded: true,
+		isSignedIn: false,
+		user: null,
+	};
+}
+
+// Stub components - render children or nothing
+import type { ReactNode } from 'react';
+
+export function Protect(_props: { children: ReactNode }) {
+	return null;
+}
+
+export function RedirectToSignIn() {
+	return null;
+}
+
+export function RedirectToSignUp() {
+	return null;
+}
+
+export function SignedIn(_props: { children: ReactNode }) {
+	return null;
+}
+
+export function SignedOut({ children }: { children: ReactNode }) {
+	return <>{children}</>;
+}
+
+export function SignIn() {
+	return null;
+}
+
+export function SignInButton({ children }: { children: ReactNode }) {
+	return <>{children}</>;
+}
+
+export function SignOutButton({ children }: { children: ReactNode }) {
+	return <>{children}</>;
+}
+
+export function SignUp() {
+	return null;
+}
+
+export function SignUpButton({ children }: { children: ReactNode }) {
+	return <>{children}</>;
+}
+
+export function UserButton() {
+	return null;
+}
+
+export function UserProfile() {
+	return null;
+}

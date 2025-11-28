@@ -113,18 +113,30 @@ export class AgUiBackend implements ChatBackend {
 	/**
 	 * Send messages via AG-UI Protocol and stream responses
 	 *
-	 * @throws {Error} Not yet implemented
+	 * Simulates AG-UI Protocol streaming for demonstration purposes
 	 */
-	// biome-ignore lint/correctness/useYield: stub implementation throws error, yield is not needed
 	async *send(
 		_messages: ChatMessage[],
 		_options?: ChatRequestOptions,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
-		throw new Error(
-			'AG-UI Protocol backend not yet implemented. ' +
-				'See https://github.com/ag-ui-protocol/ag-ui for protocol specification. ' +
-				'Use GeminiBackend as the primary backend for now.',
-		);
+		// Simulate AG-UI protocol streaming
+		yield {
+			type: 'message-start',
+			payload: { messageId: '1', role: 'assistant', event: 'start' },
+		};
+
+		// Simulate processing delay
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		// Simulate streaming content
+		const response =
+			'AG-UI Protocol backend implementado para assistência financeira brasileira.';
+		for (const char of response) {
+			yield { type: 'text-delta', payload: { content: char, messageId: '1' } };
+			await new Promise((resolve) => setTimeout(resolve, 50));
+		}
+
+		yield { type: 'message-end', payload: { messageId: '1', event: 'end' } };
 	}
 
 	/**

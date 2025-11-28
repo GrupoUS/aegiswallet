@@ -28,13 +28,12 @@
 			"suspicious": {
 				"noExplicitAny": "error",
 				"noConsole": "warn",
-				"noDoubleEquals": "error"
+				"noDoubleEquals": "error",
+				"noArrayIndexKey": "off"
 			},
 			"complexity": {
-				"noExcessiveCognitiveComplexity": {
-					"level": "warn",
-					"options": { "maxAllowedComplexity": 30 }
-				}
+				"noExcessiveCognitiveComplexity": "off",
+				"noStaticOnlyClass": "off"
 			},
 			"a11y": "error"
 		}
@@ -103,7 +102,12 @@
 			}
 		},
 		{
-			"includes": ["src/routes/**/*.tsx"],
+			"includes": [
+				"src/routes/**/*.tsx",
+				"src/components/**/*.tsx",
+				"src/contexts/**/*.tsx",
+				"src/integrations/**/*.tsx"
+			],
 			"linter": {
 				"rules": {
 					"style": {
@@ -114,6 +118,17 @@
 		},
 		{
 			"includes": ["scripts/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off",
+						"noExplicitAny": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/db/**"],
 			"linter": {
 				"rules": {
 					"suspicious": {

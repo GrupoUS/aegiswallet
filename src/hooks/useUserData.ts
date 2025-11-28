@@ -8,10 +8,7 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-	useCreateTransaction,
-	useTransactions,
-} from '@/hooks/use-transactions';
+import { useTransactions } from '@/hooks/use-transactions';
 import { apiClient } from '@/lib/api-client';
 
 // ========================================

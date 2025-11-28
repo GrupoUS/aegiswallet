@@ -46,7 +46,11 @@ export class GoogleCalendarService {
 	private config: GoogleCalendarConfig;
 	private userId: string;
 
-	constructor(config: GoogleCalendarConfig, userId: string, _authToken: string) {
+	constructor(
+		config: GoogleCalendarConfig,
+		userId: string,
+		_authToken: string,
+	) {
 		this.config = config;
 		this.userId = userId;
 		// authToken not used in current implementation

@@ -2,7 +2,7 @@
 
 /**
  * Quick Deployment Fix Script
- * 
+ *
  * Applies the most common fixes for AegisWallet deployment issues
  * This should be run before deploying to production.
  */
@@ -43,7 +43,7 @@ if (apiRewrite) {
 	if (!vercelConfig.rewrites) vercelConfig.rewrites = [];
 	vercelConfig.rewrites.push({
 		source: '/api/(.*)',
-		destination: '/api/index.js'
+		destination: '/api/index.js',
 	});
 }
 
@@ -55,7 +55,7 @@ console.log('\n2️⃣ Building API...');
 try {
 	execSync('bun run build:api', { stdio: 'inherit' });
 	console.log('✅ API built successfully');
-} catch (error) {
+} catch {
 	console.log('❌ API build failed - check logs above');
 }
 
@@ -65,17 +65,20 @@ const envPath = path.join(rootDir, '.env');
 const envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
 
 const requiredVars = ['VITE_CLERK_PUBLISHABLE_KEY', 'CLERK_SECRET_KEY', 'DATABASE_URL'];
-const missingVars = requiredVars.filter(varName => 
-	!envContent.includes(varName) || envContent.includes(`${varName}=YOUR_`) || envContent.includes(`${varName}_HERE`)
+const missingVars = requiredVars.filter(
+	(varName) =>
+		!envContent.includes(varName) ||
+		envContent.includes(`${varName}=YOUR_`) ||
+		envContent.includes(`${varName}_HERE`),
 );
 
 if (missingVars.length > 0) {
 	console.log('⚠️  Missing environment variables:');
-	missingVars.forEach(varName => {
+	missingVars.forEach((varName) => {
 		console.log(`   - ${varName}`);
 	});
 	console.log('\n📝 To fix, run:');
-	missingVars.forEach(varName => {
+	missingVars.forEach((varName) => {
 		console.log(`   vercel env add ${varName} production`);
 	});
 } else {
@@ -92,13 +95,15 @@ const criticalFiles = [
 	'src/server/routes/v1/users.ts',
 ];
 
-const missingFiles = criticalFiles.filter(file => !existsSync(path.join(rootDir, file)));
+const missingFiles = criticalFiles.filter((file) => !existsSync(path.join(rootDir, file)));
 
 if (missingFiles.length === 0) {
 	console.log('✅ All critical files present');
 } else {
 	console.log('❌ Missing critical files:');
-	missingFiles.forEach(file => console.log(`   - ${file}`));
+	for (const file of missingFiles) {
+		console.log(`   - ${file}`);
+	}
 }
 
 console.log('\n🎉 Quick deployment fixes completed!');

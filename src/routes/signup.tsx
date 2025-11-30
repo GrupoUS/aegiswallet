@@ -14,7 +14,7 @@ function SignUpComponent() {
 
 	useEffect(() => {
 		if (isAuthenticated) {
-			navigate({ to: '/dashboard' });
+			void navigate({ to: '/dashboard' });
 		}
 	}, [isAuthenticated, navigate]);
 

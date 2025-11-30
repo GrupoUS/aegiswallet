@@ -32,8 +32,8 @@ const getDatabaseUrl = (): string => {
  * Create database client with schema
  */
 export const createDb = () => {
-	const sql = neon(getDatabaseUrl());
-	return drizzle(sql, { schema });
+	const neonClient = neon(getDatabaseUrl());
+	return drizzle(neonClient, { schema });
 };
 
 /**
@@ -53,7 +53,7 @@ export const db =
 /**
  * Get user's bank accounts
  */
-export async function getUserBankAccounts(userId: string) {
+export function getUserBankAccounts(userId: string) {
 	return db
 		.select()
 		.from(schema.bankAccounts)
@@ -64,7 +64,7 @@ export async function getUserBankAccounts(userId: string) {
 /**
  * Get user's transactions with optional filters
  */
-export async function getUserTransactions(
+export function getUserTransactions(
 	userId: string,
 	options?: {
 		limit?: number;
@@ -105,7 +105,7 @@ export async function getUserTransactions(
 /**
  * Get user's PIX keys
  */
-export async function getUserPixKeys(userId: string) {
+export function getUserPixKeys(userId: string) {
 	return db
 		.select()
 		.from(schema.pixKeys)
@@ -116,7 +116,7 @@ export async function getUserPixKeys(userId: string) {
 /**
  * Get user's PIX transactions
  */
-export async function getUserPixTransactions(userId: string, options?: { limit?: number }) {
+export function getUserPixTransactions(userId: string, options?: { limit?: number }) {
 	let query = db
 		.select()
 		.from(schema.pixTransactions)
@@ -133,7 +133,7 @@ export async function getUserPixTransactions(userId: string, options?: { limit?:
 /**
  * Get user's contacts
  */
-export async function getUserContacts(userId: string) {
+export function getUserContacts(userId: string) {
 	return db
 		.select()
 		.from(schema.contacts)
@@ -144,7 +144,7 @@ export async function getUserContacts(userId: string) {
 /**
  * Get user's boletos
  */
-export async function getUserBoletos(
+export function getUserBoletos(
 	userId: string,
 	options?: { status?: 'pending' | 'paid' | 'overdue' | 'cancelled' },
 ) {
@@ -164,14 +164,14 @@ export async function getUserBoletos(
 /**
  * Get user's LGPD consents
  */
-export async function getUserConsents(userId: string) {
+export function getUserConsents(userId: string) {
 	return db.select().from(schema.lgpdConsents).where(eq(schema.lgpdConsents.userId, userId));
 }
 
 /**
  * Get user's transaction limits
  */
-export async function getUserTransactionLimits(userId: string) {
+export function getUserTransactionLimits(userId: string) {
 	return db
 		.select()
 		.from(schema.transactionLimits)

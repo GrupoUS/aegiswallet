@@ -9,12 +9,9 @@ export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Note: Clerk is currently stubbed, so we warn instead of throwing
 if (!clerkPublishableKey) {
-	console.error(
-		'[Clerk] Critical Error: VITE_CLERK_PUBLISHABLE_KEY is missing in production!',
-	);
 	// biome-ignore lint/suspicious/noConsole: Critical error for production
 	console.error(
-		'[Clerk] Please check your Vercel environment variables and ensure CLERK_PUBLISHABLE_KEY is set correctly.',
+		'[Clerk] Critical Error: VITE_CLERK_PUBLISHABLE_KEY is missing in production! Please check your Vercel environment variables and ensure CLERK_PUBLISHABLE_KEY is set correctly.',
 	);
 }
 

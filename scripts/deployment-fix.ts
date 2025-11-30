@@ -2,16 +2,16 @@
 
 /**
  * Comprehensive Deployment Fix Script
- * 
+ *
  * This script validates and fixes common deployment issues for AegisWallet
  * including API routing, Clerk configuration, and database connections.
- * 
+ *
  * Usage:
  *   bun scripts/deployment-fix.ts
  */
 
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -74,17 +74,17 @@ class DeploymentValidator {
 			if (!this.fileExists(file)) {
 				this.addIssue(
 					`Missing required API file: ${file}`,
-					`Ensure ${file} exists and is properly configured`
+					`Ensure ${file} exists and is properly configured`,
 				);
 			}
 		}
 
 		// Check API index file
 		const apiIndex = this.readFile('api/index.ts');
-		if (apiIndex && !apiIndex.includes("handle(app)")) {
+		if (apiIndex && !apiIndex.includes('handle(app)')) {
 			this.addIssue(
 				'API index file missing Hono handler export',
-				'Ensure api/index.ts exports default handle(app)'
+				'Ensure api/index.ts exports default handle(app)',
 			);
 		}
 
@@ -99,10 +99,7 @@ class DeploymentValidator {
 
 		const vercelConfig = this.readFile('vercel.json');
 		if (!vercelConfig) {
-			this.addIssue(
-				'vercel.json not found',
-				'Create vercel.json with proper configuration'
-			);
+			this.addIssue('vercel.json not found', 'Create vercel.json with proper configuration');
 			return;
 		}
 
@@ -110,35 +107,31 @@ class DeploymentValidator {
 			const config = JSON.parse(vercelConfig);
 
 			// Check build command
-			if (!config.buildCommand || !config.buildCommand.includes('build:api')) {
+			if (!config.buildCommand?.includes('build:api')) {
 				this.addIssue(
 					'Build command missing build:api step',
-					'Add "bun run build:api" to buildCommand'
+					'Add "bun run build:api" to buildCommand',
 				);
 			}
 
 			// Check functions configuration
-			if (!config.functions || !config.functions['api/index.js']) {
+			if (!config.functions?.['api/index.js']) {
 				this.addIssue(
 					'API function not properly configured',
-					'Ensure api/index.js is configured in functions'
+					'Ensure api/index.js is configured in functions',
 				);
 			}
 
 			// Check rewrites for API routing
 			const apiRewrite = config.rewrites?.find((r: any) => r.source === '/api/(.*)');
-			if (!apiRewrite || !apiRewrite.destination.includes('api/index.js')) {
+			if (!apiRewrite?.destination.includes('api/index.js')) {
 				this.addIssue(
 					'API rewrite route incorrect',
-					'Set destination to "/api/index.js" for /api/(.*)'
+					'Set destination to "/api/dist/index" for /api/(.*)',
 				);
 			}
-
-		} catch (error) {
-			this.addIssue(
-				'Invalid JSON in vercel.json',
-				'Fix JSON syntax errors'
-			);
+		} catch {
+			this.addIssue('Invalid JSON in vercel.json', 'Fix JSON syntax errors');
 		}
 
 		console.log('✅ Vercel configuration validation completed');
@@ -152,34 +145,28 @@ class DeploymentValidator {
 
 		const envFile = this.readFile('.env');
 		if (!envFile) {
-			this.addIssue(
-				'.env file not found',
-				'Create .env file with required environment variables'
-			);
+			this.addIssue('.env file not found', 'Create .env file with required environment variables');
 			return;
 		}
 
 		// Check for required Clerk variables
-		const requiredClerkVars = [
-			'VITE_CLERK_PUBLISHABLE_KEY',
-			'CLERK_SECRET_KEY',
-		];
+		const requiredClerkVars = ['VITE_CLERK_PUBLISHABLE_KEY', 'CLERK_SECRET_KEY'];
 
 		for (const varName of requiredClerkVars) {
 			if (!envFile.includes(`${varName}=`) || envFile.includes(`${varName}=YOUR_`)) {
 				this.addIssue(
 					`Missing or incomplete ${varName}`,
-					`Configure proper ${varName} in environment variables`
+					`Configure proper ${varName} in environment variables`,
 				);
 			}
 		}
 
 		// Check Clerk provider configuration
 		const clerkProvider = this.readFile('src/integrations/clerk/provider.tsx');
-		if (clerkProvider && clerkProvider.includes('afterSignInUrl')) {
+		if (clerkProvider?.includes('afterSignInUrl')) {
 			this.addIssue(
 				'Using deprecated Clerk prop: afterSignInUrl',
-				'Replace with fallbackRedirectUrl or forceRedirectUrl'
+				'Replace with fallbackRedirectUrl or forceRedirectUrl',
 			);
 		}
 
@@ -194,10 +181,7 @@ class DeploymentValidator {
 
 		const envFile = this.readFile('.env');
 		if (!envFile) {
-			this.addIssue(
-				'Environment file not found',
-				'Create .env with database configuration'
-			);
+			this.addIssue('Environment file not found', 'Create .env with database configuration');
 			return;
 		}
 
@@ -205,16 +189,16 @@ class DeploymentValidator {
 		if (!envFile.includes('DATABASE_URL=')) {
 			this.addIssue(
 				'DATABASE_URL not configured',
-				'Set DATABASE_URL with Neon PostgreSQL connection string'
+				'Set DATABASE_URL with Neon PostgreSQL connection string',
 			);
 		}
 
 		// Check schema files
-		const schemaFile = this.readFile('src/db/schema.ts');
+		const schemaFile = this.readFile('src/db/schema/index.ts');
 		if (!schemaFile) {
 			this.addIssue(
 				'Database schema not found',
-				'Ensure src/db/schema.ts exists with table definitions'
+				'Ensure src/db/schema/index.ts exists with table definitions',
 			);
 		}
 
@@ -224,17 +208,14 @@ class DeploymentValidator {
 	/**
 	 * Build API for deployment
 	 */
-	async buildApi(): Promise<void> {
+	buildApi(): void {
 		console.log('🔨 Building API for deployment...');
 
 		try {
 			execSync('bun run build:api', { cwd: rootDir, stdio: 'inherit' });
 			console.log('✅ API built successfully');
-		} catch (error) {
-			this.addIssue(
-				'API build failed',
-				'Check build logs and fix build errors'
-			);
+		} catch {
+			this.addIssue('API build failed', 'Check build logs and fix build errors');
 		}
 	}
 
@@ -252,22 +233,22 @@ class DeploymentValidator {
 	/**
 	 * Run complete validation
 	 */
-	async run(): Promise<ValidationResult> {
+	run(): ValidationResult {
 		console.log('🚀 Starting comprehensive deployment validation...\n');
 
 		this.validateApiStructure();
 		this.validateVercelConfig();
 		this.validateClerkConfig();
 		this.validateDatabaseConfig();
-		
+
 		if (this.issues.length === 0) {
-			await this.buildApi();
+			this.buildApi();
 		}
 
 		const report = this.generateReport();
 
 		// Print results
-		console.log('\n' + '='.repeat(60));
+		console.log(`\n${'='.repeat(60)}`);
 		console.log('📊 DEPLOYMENT VALIDATION REPORT');
 		console.log('='.repeat(60));
 
@@ -275,7 +256,7 @@ class DeploymentValidator {
 			console.log('✅ All validations passed! Ready for deployment.');
 		} else {
 			console.log(`❌ Found ${report.issues.length} issue(s):\n`);
-			
+
 			report.issues.forEach((issue, index) => {
 				console.log(`${index + 1}. ${issue}`);
 				console.log(`   💡 Fix: ${report.fixes[index]}\n`);
@@ -296,8 +277,8 @@ class DeploymentValidator {
 // Run validation if this script is executed directly
 if (import.meta.main) {
 	const validator = new DeploymentValidator();
-	const report = await validator.run();
-	
+	const report = validator.run();
+
 	// Exit with error code if validation failed
 	process.exit(report.success ? 0 : 1);
 }

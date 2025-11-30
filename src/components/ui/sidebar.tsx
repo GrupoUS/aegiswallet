@@ -11,6 +11,7 @@ import { SidebarContext, useSidebar } from './use-sidebar';
 
 // Re-export useSidebar for convenience
 export { useSidebar };
+
 import { cn } from '@/lib/utils';
 
 interface Links {

@@ -3,10 +3,13 @@
  *
  * React hooks for fetching user-scoped data with real-time updates
  * using TanStack Query and Clerk authentication.
+ *
+ * NOTE: Bank account hooks have been consolidated into @/hooks/useBankAccounts.ts
+ * NOTE: Contact hooks have been consolidated into @/hooks/useContacts.ts
  */
 
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useTransactions } from '@/hooks/use-transactions';
 import { apiClient } from '@/lib/api-client';
@@ -31,132 +34,6 @@ export const userDataKeys = {
 	limits: () => [...userDataKeys.all, 'limits'] as const,
 	summary: () => [...userDataKeys.all, 'summary'] as const,
 };
-
-// ========================================
-// BANK ACCOUNTS HOOKS
-// ========================================
-
-/**
- * Fetch user's bank accounts
- */
-export function useBankAccounts() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.bankAccounts(),
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>(
-				'/v1/bank-accounts',
-			);
-			return response.data;
-		},
-		enabled: isSignedIn,
-		staleTime: 30 * 1000, // 30 seconds
-		refetchInterval: 60 * 1000, // Refetch every minute for real-time feel
-	});
-}
-
-/**
- * Fetch single bank account
- */
-export function useBankAccount(accountId: string) {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.bankAccount(accountId),
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown }>(
-				`/v1/bank-accounts/${accountId}`,
-			);
-			return response.data;
-		},
-		enabled: isSignedIn && !!accountId,
-	});
-}
-
-/**
- * Fetch total balance across all accounts
- */
-export function useTotalBalance() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: [...userDataKeys.bankAccounts(), 'total'],
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: Record<string, number> }>(
-				'/v1/bank-accounts/total-balance',
-			);
-			return response.data;
-		},
-		enabled: isSignedIn,
-		staleTime: 30 * 1000,
-		refetchInterval: 30 * 1000, // More frequent updates for balance
-	});
-}
-
-/**
- * Create bank account mutation
- */
-export function useCreateBankAccount() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: async (data: {
-			institution_name: string;
-			account_type: string;
-			balance?: number;
-			currency?: string;
-			is_primary?: boolean;
-			account_mask?: string;
-		}) => {
-			const response = await apiClient.post('/v1/bank-accounts', data);
-			return response;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: userDataKeys.bankAccounts() });
-		},
-	});
-}
-
-/**
- * Update bank account mutation
- */
-export function useUpdateBankAccount() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: async ({
-			id,
-			data,
-		}: {
-			id: string;
-			data: Record<string, unknown>;
-		}) => {
-			const response = await apiClient.patch(`/v1/bank-accounts/${id}`, data);
-			return response;
-		},
-		onSuccess: (_, { id }) => {
-			queryClient.invalidateQueries({ queryKey: userDataKeys.bankAccounts() });
-			queryClient.invalidateQueries({ queryKey: userDataKeys.bankAccount(id) });
-		},
-	});
-}
-
-/**
- * Delete bank account mutation
- */
-export function useDeleteBankAccount() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: async (id: string) => {
-			await apiClient.delete(`/v1/bank-accounts/${id}`);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: userDataKeys.bankAccounts() });
-		},
-	});
-}
 
 // ========================================
 // TRANSACTIONS HOOKS
@@ -207,49 +84,6 @@ export function usePixTransactions(limit?: number) {
 		enabled: isSignedIn,
 		staleTime: 15 * 1000, // PIX needs more frequent updates
 		refetchInterval: 30 * 1000,
-	});
-}
-
-// ========================================
-// CONTACTS HOOKS
-// ========================================
-
-/**
- * Fetch user's contacts
- */
-export function useContacts() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.contacts(),
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>('/v1/contacts');
-			return response.data;
-		},
-		enabled: isSignedIn,
-	});
-}
-
-/**
- * Create contact mutation
- */
-export function useCreateContact() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: async (data: {
-			name: string;
-			email?: string;
-			phone?: string;
-			pix_key?: string;
-			pix_key_type?: string;
-		}) => {
-			const response = await apiClient.post('/v1/contacts', data);
-			return response;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: userDataKeys.contacts() });
-		},
 	});
 }
 

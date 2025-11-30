@@ -1,0 +1,294 @@
+/**
+ * Financial Context Service
+ * Aggregates user financial data with caching for AI agent context injection
+ */
+
+import { and, desc, eq, gte, lte, sum } from 'drizzle-orm';
+
+import { db } from '@/db';
+
+import type {
+	CategorySummary,
+	FinancialAlert,
+	FinancialContext,
+	UpcomingPayment,
+} from '../types';
+import {
+	aiInsights,
+	bankAccounts,
+	transactionCategories,
+	transactionSchedules,
+	transactions,
+} from '@/db/schema';
+
+// Cache TTL: 5 minutes
+const CONTEXT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+// In-memory cache (per user)
+const contextCache = new Map<
+	string,
+	{ context: FinancialContext; expiresAt: number }
+>();
+
+/**
+ * Service for building and caching user financial context
+ * Used for system prompt injection in the Financial Agent
+ */
+export class FinancialContextService {
+	private userId: string;
+
+	constructor(userId: string) {
+		this.userId = userId;
+	}
+
+	/**
+	 * Get financial context with caching
+	 * @param forceRefresh - Force cache invalidation
+	 */
+	async getContext(forceRefresh = false): Promise<FinancialContext> {
+		const cacheKey = this.userId;
+		const cached = contextCache.get(cacheKey);
+
+		if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
+			return cached.context;
+		}
+
+		const context = await this.buildContext();
+
+		contextCache.set(cacheKey, {
+			context,
+			expiresAt: Date.now() + CONTEXT_CACHE_TTL_MS,
+		});
+
+		return context;
+	}
+
+	/**
+	 * Invalidate cache (call when user makes financial changes)
+	 */
+	invalidateCache(): void {
+		contextCache.delete(this.userId);
+	}
+
+	/**
+	 * Clear all cache entries (for testing/maintenance)
+	 */
+	static clearAllCache(): void {
+		contextCache.clear();
+	}
+
+	private async buildContext(): Promise<FinancialContext> {
+		const now = new Date();
+		const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+		const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+		// Parallel queries for performance
+		const [
+			accountsData,
+			monthlyTotals,
+			categorySpending,
+			pendingAlerts,
+			upcomingPayments,
+		] = await Promise.all([
+			this.getAccountBalances(),
+			this.getMonthlyTotals(startOfMonth, endOfMonth),
+			this.getCategorySpending(startOfMonth, endOfMonth),
+			this.getPendingAlerts(),
+			this.getUpcomingPayments(30),
+		]);
+
+		// Calculate account totals
+		const totalBalance = accountsData.reduce(
+			(acc, row) => acc + Number(row.balance || 0),
+			0,
+		);
+		const availableBalance = accountsData.reduce(
+			(acc, row) => acc + Number(row.availableBalance || 0),
+			0,
+		);
+
+		return {
+			totalBalance,
+			availableBalance,
+			monthlyIncome: monthlyTotals.income,
+			monthlyExpenses: monthlyTotals.expenses,
+			topCategories: categorySpending,
+			pendingAlerts,
+			upcomingPayments,
+			lastUpdated: now,
+		};
+	}
+
+	private async getAccountBalances() {
+		return db
+			.select({
+				id: bankAccounts.id,
+				balance: bankAccounts.balance,
+				availableBalance: bankAccounts.availableBalance,
+				institutionName: bankAccounts.institutionName,
+			})
+			.from(bankAccounts)
+			.where(
+				and(
+					eq(bankAccounts.userId, this.userId),
+					eq(bankAccounts.isActive, true),
+				),
+			);
+	}
+
+	private async getMonthlyTotals(
+		start: Date,
+		end: Date,
+	): Promise<{ income: number; expenses: number }> {
+		const result = await db
+			.select({
+				transactionType: transactions.transactionType,
+				total: sum(transactions.amount),
+			})
+			.from(transactions)
+			.where(
+				and(
+					eq(transactions.userId, this.userId),
+					gte(transactions.transactionDate, start),
+					lte(transactions.transactionDate, end),
+				),
+			)
+			.groupBy(transactions.transactionType);
+
+		let income = 0;
+		let expenses = 0;
+
+		for (const row of result) {
+			const amount = Math.abs(Number(row.total || 0));
+			if (row.transactionType === 'credit') {
+				income += amount;
+			} else if (row.transactionType === 'debit') {
+				expenses += amount;
+			}
+		}
+
+		return { income, expenses };
+	}
+
+	private async getCategorySpending(
+		start: Date,
+		end: Date,
+	): Promise<CategorySummary[]> {
+		const result = await db
+			.select({
+				categoryId: transactions.categoryId,
+				categoryName: transactionCategories.name,
+				total: sum(transactions.amount),
+			})
+			.from(transactions)
+			.leftJoin(
+				transactionCategories,
+				eq(transactions.categoryId, transactionCategories.id),
+			)
+			.where(
+				and(
+					eq(transactions.userId, this.userId),
+					eq(transactions.transactionType, 'debit'),
+					gte(transactions.transactionDate, start),
+					lte(transactions.transactionDate, end),
+				),
+			)
+			.groupBy(transactions.categoryId, transactionCategories.name)
+			.orderBy(desc(sum(transactions.amount)))
+			.limit(10);
+
+		const totalSpending = result.reduce(
+			(acc, r) => acc + Math.abs(Number(r.total || 0)),
+			0,
+		);
+
+		return result.map((r) => ({
+			categoryId: r.categoryId || 'uncategorized',
+			categoryName: r.categoryName || 'Sem categoria',
+			amount: Math.abs(Number(r.total || 0)),
+			percentage:
+				totalSpending > 0
+					? Math.round((Math.abs(Number(r.total || 0)) / totalSpending) * 100)
+					: 0,
+			trend: 'stable' as const, // TODO: Calculate from historical data in future iteration
+		}));
+	}
+
+	private async getPendingAlerts(): Promise<FinancialAlert[]> {
+		const insights = await db
+			.select({
+				id: aiInsights.id,
+				insightType: aiInsights.insightType,
+				title: aiInsights.title,
+				impactLevel: aiInsights.impactLevel,
+				recommendation: aiInsights.recommendation,
+			})
+			.from(aiInsights)
+			.where(
+				and(eq(aiInsights.userId, this.userId), eq(aiInsights.isRead, false)),
+			)
+			.orderBy(desc(aiInsights.createdAt))
+			.limit(5);
+
+		return insights.map((insight) => ({
+			id: insight.id,
+			type: this.mapInsightTypeToAlertType(insight.insightType),
+			message: insight.title,
+			severity: (insight.impactLevel || 'medium') as 'low' | 'medium' | 'high',
+			actionable: !!insight.recommendation,
+		}));
+	}
+
+	private mapInsightTypeToAlertType(
+		insightType: string,
+	): FinancialAlert['type'] {
+		const mapping: Record<string, FinancialAlert['type']> = {
+			budget_alert: 'budget_exceeded',
+			warning: 'low_balance',
+			spending_pattern: 'unusual_spending',
+			opportunity: 'payment_due',
+		};
+		return mapping[insightType] || 'unusual_spending';
+	}
+
+	private async getUpcomingPayments(
+		daysAhead: number,
+	): Promise<UpcomingPayment[]> {
+		const today = new Date();
+		const futureDate = new Date();
+		futureDate.setDate(today.getDate() + daysAhead);
+
+		// Format dates as YYYY-MM-DD strings for date column comparison
+		const todayStr = today.toISOString().split('T')[0];
+		const futureDateStr = futureDate.toISOString().split('T')[0];
+
+		const schedules = await db
+			.select({
+				id: transactionSchedules.id,
+				description: transactionSchedules.description,
+				amount: transactionSchedules.amount,
+				scheduledDate: transactionSchedules.scheduledDate,
+				recurrenceRule: transactionSchedules.recurrenceRule,
+			})
+			.from(transactionSchedules)
+			.where(
+				and(
+					eq(transactionSchedules.userId, this.userId),
+					eq(transactionSchedules.isActive, true),
+					eq(transactionSchedules.executed, false),
+					gte(transactionSchedules.scheduledDate, todayStr),
+					lte(transactionSchedules.scheduledDate, futureDateStr),
+				),
+			)
+			.orderBy(transactionSchedules.scheduledDate)
+			.limit(10);
+
+		return schedules.map((s) => ({
+			id: s.id,
+			description: s.description,
+			amount: Math.abs(Number(s.amount)),
+			dueDate: new Date(s.scheduledDate),
+			isRecurring: !!s.recurrenceRule,
+		}));
+	}
+}

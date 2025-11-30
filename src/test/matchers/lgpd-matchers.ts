@@ -8,16 +8,6 @@ interface LGPDComplianceResult {
 	severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
-interface _LGPDDataAssessment {
-	hasPersonalData: boolean;
-	hasSensitiveData: boolean;
-	purposeSpecified: boolean;
-	consentObtained: boolean;
-	retentionPolicy: boolean;
-	dataMinimization: boolean;
-	securityMeasures: boolean;
-}
-
 // Brazilian LGPD compliance patterns
 const SENSITIVE_DATA_PATTERNS = {
 	cpf: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/,

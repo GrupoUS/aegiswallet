@@ -4,6 +4,12 @@
  * Extended hooks for AegisWallet authentication needs
  */
 
+import {
+	useClerk,
+	useAuth as useClerkAuth,
+	useSession as useClerkSession,
+	useUser as useClerkUser,
+} from '@clerk/clerk-react';
 import { useCallback, useMemo } from 'react';
 
 /**
@@ -28,14 +34,35 @@ export interface AegisWalletUser {
  * Hook to get the current authenticated user with AegisWallet-specific data
  */
 export function useAegisUser() {
-	// Stub implementation - Clerk not currently used
-	const aegisUser = useMemo<AegisWalletUser | null>(() => null, []);
+	const { user, isLoaded, isSignedIn } = useClerkUser();
+
+	const aegisUser = useMemo<AegisWalletUser | null>(() => {
+		if (!user) return null;
+
+		const publicMetadata = user.publicMetadata as Record<string, unknown>;
+
+		return {
+			id: user.id,
+			email: user.primaryEmailAddress?.emailAddress ?? null,
+			fullName: user.fullName,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			imageUrl: user.imageUrl,
+			cpf: publicMetadata?.cpf as string | undefined,
+			autonomyLevel: publicMetadata?.autonomyLevel as number | undefined,
+			voiceCommandEnabled: publicMetadata?.voiceCommandEnabled as
+				| boolean
+				| undefined,
+			language: publicMetadata?.language as string | undefined,
+			timezone: publicMetadata?.timezone as string | undefined,
+		};
+	}, [user]);
 
 	return {
 		user: aegisUser,
-		isLoaded: true,
-		isSignedIn: false,
-		clerkUser: null,
+		isLoaded,
+		isSignedIn: isSignedIn ?? false,
+		clerkUser: user,
 	};
 }
 
@@ -43,25 +70,31 @@ export function useAegisUser() {
  * Hook to get authentication state and token
  */
 export function useAegisAuth() {
+	const { isLoaded, isSignedIn, userId, sessionId, getToken, signOut } =
+		useClerkAuth();
+
 	/**
 	 * Get a session token for API requests
 	 */
 	const getApiToken = useCallback(async () => {
-		return null;
-	}, []);
+		return getToken();
+	}, [getToken]);
 
 	/**
 	 * Sign out with optional redirect
 	 */
-	const handleSignOut = useCallback(async (_redirectUrl?: string) => {
-		// Stub implementation
-	}, []);
+	const handleSignOut = useCallback(
+		async (redirectUrl?: string) => {
+			await signOut({ redirectUrl });
+		},
+		[signOut],
+	);
 
 	return {
-		isLoaded: true,
-		isSignedIn: false,
-		userId: null,
-		sessionId: null,
+		isLoaded,
+		isSignedIn: isSignedIn ?? false,
+		userId: userId ?? null,
+		sessionId: sessionId ?? null,
 		getToken: getApiToken,
 		signOut: handleSignOut,
 	};
@@ -71,18 +104,31 @@ export function useAegisAuth() {
  * Hook to manage user session
  */
 export function useAegisSession() {
+	const { session, isLoaded, isSignedIn } = useClerkSession();
+	const clerk = useClerk();
+
 	/**
 	 * Get session expiration info
 	 */
-	const sessionInfo = useMemo(() => null, []);
+	const sessionInfo = useMemo(() => {
+		if (!session) return null;
+
+		return {
+			id: session.id,
+			status: session.status,
+			lastActiveAt: session.lastActiveAt,
+			expireAt: session.expireAt,
+			abandonAt: session.abandonAt,
+		};
+	}, [session]);
 
 	return {
 		session: sessionInfo,
-		isLoaded: true,
-		isSignedIn: false,
-		openUserProfile: () => {},
-		openSignIn: () => {},
-		openSignUp: () => {},
+		isLoaded,
+		isSignedIn: isSignedIn ?? false,
+		openUserProfile: () => clerk.openUserProfile(),
+		openSignIn: () => clerk.openSignIn(),
+		openSignUp: () => clerk.openSignUp(),
 	};
 }
 
@@ -90,13 +136,15 @@ export function useAegisSession() {
  * Hook to update user metadata
  */
 export function useUpdateUserMetadata() {
+	const { user } = useClerkUser();
+
 	/**
 	 * Update unsafe metadata (can store user preferences)
 	 * Note: publicMetadata can only be updated server-side via Clerk Backend SDK
 	 */
 	const updateUnsafeMetadata = useCallback(
 		async (
-			_metadata: Partial<{
+			metadata: Partial<{
 				cpf: string;
 				autonomyLevel: number;
 				voiceCommandEnabled: boolean;
@@ -104,10 +152,18 @@ export function useUpdateUserMetadata() {
 				timezone: string;
 			}>,
 		) => {
-			// Stub implementation
-			throw new Error('Clerk integration is currently disabled');
+			if (!user) {
+				throw new Error('User not authenticated');
+			}
+
+			await user.update({
+				unsafeMetadata: {
+					...user.unsafeMetadata,
+					...metadata,
+				},
+			});
 		},
-		[],
+		[user],
 	);
 
 	return {

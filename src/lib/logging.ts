@@ -60,15 +60,19 @@ class Logger {
 
 		switch (level) {
 			case LogLevel.DEBUG:
+				// biome-ignore lint/suspicious/noConsole: Debug logging utility
 				console.debug(logMessage);
 				break;
 			case LogLevel.INFO:
+				// biome-ignore lint/suspicious/noConsole: Info logging utility
 				console.info(logMessage);
 				break;
 			case LogLevel.WARN:
+				// biome-ignore lint/suspicious/noConsole: Warning logging utility
 				console.warn(logMessage);
 				break;
 			case LogLevel.ERROR:
+				// biome-ignore lint/suspicious/noConsole: Error logging utility
 				console.error(logMessage);
 				break;
 		}

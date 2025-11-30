@@ -2,7 +2,7 @@
  * API Client for Hono RPC endpoints
  * Provides type-safe fetch wrapper with authentication and error handling
  *
- * Updated to use Clerk authentication instead of Supabase
+ * Uses Clerk authentication with NeonDB backend
  */
 
 interface ApiResponse<T = unknown> {

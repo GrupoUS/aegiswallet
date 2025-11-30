@@ -9,7 +9,7 @@
  * - LGPD compliance
  * - Data retention policies
  *
- * NOTE: Migrated from Supabase to Clerk authentication
+ * NOTE: Uses Clerk authentication with NeonDB backend
  */
 
 import { logger } from '@/lib/logging/logger';

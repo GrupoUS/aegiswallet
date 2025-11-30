@@ -11,7 +11,7 @@
  * - Session management with timeout
  * - LGPD-compliant authentication data handling
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB
  *
  * @module security/biometricAuth
  */

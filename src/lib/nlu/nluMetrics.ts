@@ -12,7 +12,7 @@ import type { ClassificationLog, NLUMetrics } from './types';
 import { IntentType } from './types';
 
 // ============================================================================
-// In-Memory Metrics Store (Replace with Supabase in production)
+// In-Memory Metrics Store (Replace with NeonDB in production)
 // ============================================================================
 
 class MetricsStore {

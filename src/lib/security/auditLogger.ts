@@ -4,7 +4,7 @@
  * Digitally signed audit logs with 12-month retention
  * LGPD-compliant security logging
  *
- * NOTE: Migrated from Supabase to API-based logging
+ * NOTE: Uses API-based logging with NeonDB
  * The audit log is now sent to the server which handles DB storage via Drizzle
  */
 

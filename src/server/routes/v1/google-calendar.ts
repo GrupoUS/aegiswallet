@@ -1,7 +1,7 @@
 /**
  * Google Calendar Sync API - Stub Implementation
  *
- * NOTE: Google Calendar sync functionality was built on Supabase Edge Functions
+ * NOTE: Google Calendar sync functionality uses NeonDB for persistence
  * and requires migration to a different architecture (e.g., Hono workers, Vercel functions).
  *
  * Current status: Stub returning "not implemented" until architecture is rebuilt.

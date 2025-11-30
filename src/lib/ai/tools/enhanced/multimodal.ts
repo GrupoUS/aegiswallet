@@ -34,7 +34,7 @@ interface PaymentData {
 }
 
 export function createMultimodalTools(userId: string) {
-	// Supabase client will be created through centralized integration layer
+	// Database client will be created through centralized integration layer
 
 	return {
 		generateVisualReport: tool({

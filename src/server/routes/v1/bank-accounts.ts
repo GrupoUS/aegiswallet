@@ -1,7 +1,7 @@
 /**
  * Bank Accounts API - Hono RPC Implementation
  * Handles all bank account CRUD operations with validation and business logic
- * Migrated from Supabase to Drizzle ORM
+ * Uses Drizzle ORM with NeonDB
  */
 
 import { randomUUID } from 'node:crypto';

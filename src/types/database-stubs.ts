@@ -277,7 +277,7 @@ export interface SmsLogUpdate {
 	created_at?: string | null;
 }
 
-// Type map for stub tables (for compatibility with Supabase patterns)
+// Type map for stub tables (for compatibility with Drizzle patterns)
 export interface DatabaseStubs {
 	voice_metrics: {
 		Row: VoiceMetric;

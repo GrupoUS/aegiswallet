@@ -4,7 +4,7 @@
  * Twilio SMS integration for OTP and security notifications
  * LGPD-compliant messaging with Brazilian phone number support
  *
- * NOTE: Migrated from Supabase to API-based logging
+ * NOTE: Uses API-based logging with NeonDB
  */
 
 import { apiClient } from '@/lib/api-client';

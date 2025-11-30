@@ -3,7 +3,7 @@
  * Ensures audit logs are only inserted when user is authenticated
  * and handles errors gracefully to avoid breaking the application
  *
- * NOTE: Migrated from Supabase to API-based logging
+ * NOTE: Uses API-based logging with NeonDB
  */
 
 import { apiClient } from '@/lib/api-client';

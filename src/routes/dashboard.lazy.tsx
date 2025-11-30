@@ -47,7 +47,7 @@ const CalendarLoader = () => (
 import { RouteGuard } from '@/lib/auth/route-guard';
 
 export function Dashboard() {
-	// useEffect for OAuth callback removed as it is handled by the auth callback route and Supabase client
+	// useEffect for OAuth callback removed as it is handled by the auth callback route and Clerk
 
 	// Hooks for data
 	const { totalBRL } = useTotalBalance();

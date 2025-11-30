@@ -7,7 +7,7 @@
  * - Audit logging for compliance
  * - User consent management
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB backend
  *
  * @module audioStorage
  */

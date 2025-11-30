@@ -1,5 +1,5 @@
 // Voice command processor for Brazilian Portuguese
-// Migrated from Supabase to Clerk/Drizzle architecture
+// Uses Clerk/Drizzle architecture with NeonDB
 // Commands are processed via API calls for security
 
 import { logger } from '@/lib/logging/logger';
@@ -69,7 +69,7 @@ const COMMAND_PATTERNS = {
  * Enhanced version with Natural Language Understanding
  *
  * Note: This now requires userId and authToken to be passed from the frontend
- * as we no longer use direct Supabase access
+ * as we use API-based access instead
  */
 export async function processVoiceCommandWithNLU(
 	transcript: string,

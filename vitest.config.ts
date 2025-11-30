@@ -145,7 +145,7 @@ export default defineConfig({
 		// ✅ MELHORIA 16: Timeouts diferenciados
 		testTimeout: 10000,
 		hookTimeout: 10000,
-		// Teardown timeout para cleanup de conexões (Supabase)
+		// Teardown timeout para cleanup de conexões (NeonDB)
 		teardownTimeout: 5000,
 
 		// ✅ MELHORIA 17: Reporters otimizados

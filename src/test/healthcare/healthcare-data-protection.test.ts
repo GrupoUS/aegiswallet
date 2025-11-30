@@ -108,7 +108,7 @@ const HealthcareDataProtection = () => {
 			const testUtils = global.testUtils as TestUtils;
 
 			// Test encryption of health data
-			const encryptedResult = await testUtils.encryptMockData(
+			await testUtils.encryptMockData(
 				JSON.stringify(healthData),
 				'AES-256-GCM',
 			);
@@ -647,8 +647,6 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		it('should handle encryption failures gracefully', async () => {
-			const _testUtils = global.testUtils as TestUtils;
-
 			render(React.createElement(HealthcareDataProtection));
 
 			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-001');

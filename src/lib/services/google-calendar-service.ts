@@ -5,7 +5,7 @@
  * Encapsulates core operations for OAuth, sync, and channel management.
  *
  * NOTE: This service requires external Google Calendar API integration.
- * Database operations have been converted from Supabase to API-based calls.
+ * Database operations use API-based calls with NeonDB.
  */
 
 import { apiClient } from '@/lib/api-client';

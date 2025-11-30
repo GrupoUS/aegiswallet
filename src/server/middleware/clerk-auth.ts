@@ -2,7 +2,7 @@
  * Clerk Authentication Middleware for Hono RPC
  *
  * Handles JWT extraction, user validation, and database client creation
- * Replaces Supabase Auth with Clerk
+ * Uses Clerk for authentication
  */
 
 import {

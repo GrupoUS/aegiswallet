@@ -4,7 +4,7 @@
  * Web Push notification system for authentication and security alerts
  * VAPID authentication with LGPD compliance
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB
  */
 
 import { apiClient } from '@/lib/api-client';

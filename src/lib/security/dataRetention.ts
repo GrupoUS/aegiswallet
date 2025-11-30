@@ -4,7 +4,7 @@
  * This module implements automated data retention and deletion policies
  * in compliance with Brazilian General Data Protection Law (LGPD).
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB
  */
 
 import { apiClient } from '@/lib/api-client';

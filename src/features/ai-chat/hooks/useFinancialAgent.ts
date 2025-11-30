@@ -2,11 +2,7 @@ import { useMemo } from 'react';
 
 import { createFinancialAgentFromEnv } from '../agent';
 import type { ChatBackend, ModelInfo } from '../domain/ChatBackend';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 import {
 	type UseChatControllerOptions,
 	type UseChatControllerReturn,
@@ -28,6 +24,8 @@ class NoopChatBackend implements ChatBackend {
 		_messages: ChatMessage[],
 		_options?: ChatRequestOptions,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		// Await to satisfy async generator requirement
+		await Promise.resolve();
 		yield {
 			type: 'error',
 			payload: {
@@ -57,8 +55,7 @@ class NoopChatBackend implements ChatBackend {
 	}
 }
 
-export interface UseFinancialAgentOptions
-	extends Omit<UseChatControllerOptions, never> {
+export interface UseFinancialAgentOptions extends Omit<UseChatControllerOptions, never> {
 	/** Clerk user ID */
 	userId: string;
 	/** Optional model override */
@@ -85,9 +82,7 @@ export interface UseFinancialAgentOptions
  * });
  * ```
  */
-export function useFinancialAgent(
-	options: UseFinancialAgentOptions,
-): UseChatControllerReturn {
+export function useFinancialAgent(options: UseFinancialAgentOptions): UseChatControllerReturn {
 	const { userId, model, enabled = true, ...chatOptions } = options;
 
 	// Create backend or noop fallback - always returns a valid ChatBackend
@@ -102,9 +97,7 @@ export function useFinancialAgent(
 			return createFinancialAgentFromEnv(userId, model);
 		} catch {
 			// Agent creation failed - likely missing API key
-			return new NoopChatBackend(
-				'Agente financeiro indisponível - chave da API não configurada.',
-			);
+			return new NoopChatBackend('Agente financeiro indisponível - chave da API não configurada.');
 		}
 	}, [userId, model, enabled]);
 

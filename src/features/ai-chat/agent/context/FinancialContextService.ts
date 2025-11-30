@@ -5,12 +5,7 @@
 
 import { and, desc, eq, gte, lte, sum } from 'drizzle-orm';
 
-import type {
-	CategorySummary,
-	FinancialAlert,
-	FinancialContext,
-	UpcomingPayment,
-} from '../types';
+import type { CategorySummary, FinancialAlert, FinancialContext, UpcomingPayment } from '../types';
 import { db } from '@/db/client';
 import {
 	aiInsights,
@@ -43,10 +38,7 @@ function evictOldestCacheEntries(): void {
 		(a, b) => a[1].lastAccess - b[1].lastAccess,
 	);
 
-	const entriesToRemove = entries.slice(
-		0,
-		contextCache.size - MAX_CACHE_ENTRIES,
-	);
+	const entriesToRemove = entries.slice(0, contextCache.size - MAX_CACHE_ENTRIES);
 	for (const [key] of entriesToRemove) {
 		contextCache.delete(key);
 	}
@@ -112,25 +104,17 @@ export class FinancialContextService {
 		const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
 		// Parallel queries for performance
-		const [
-			accountsData,
-			monthlyTotals,
-			categorySpending,
-			pendingAlerts,
-			upcomingPayments,
-		] = await Promise.all([
-			this.getAccountBalances(),
-			this.getMonthlyTotals(startOfMonth, endOfMonth),
-			this.getCategorySpending(startOfMonth, endOfMonth),
-			this.getPendingAlerts(),
-			this.getUpcomingPayments(30),
-		]);
+		const [accountsData, monthlyTotals, categorySpending, pendingAlerts, upcomingPayments] =
+			await Promise.all([
+				this.getAccountBalances(),
+				this.getMonthlyTotals(startOfMonth, endOfMonth),
+				this.getCategorySpending(startOfMonth, endOfMonth),
+				this.getPendingAlerts(),
+				this.getUpcomingPayments(30),
+			]);
 
 		// Calculate account totals
-		const totalBalance = accountsData.reduce(
-			(acc, row) => acc + Number(row.balance || 0),
-			0,
-		);
+		const totalBalance = accountsData.reduce((acc, row) => acc + Number(row.balance || 0), 0);
 		const availableBalance = accountsData.reduce(
 			(acc, row) => acc + Number(row.availableBalance || 0),
 			0,
@@ -149,7 +133,7 @@ export class FinancialContextService {
 	}
 
 	private async getAccountBalances() {
-		return db
+		return await db
 			.select({
 				id: bankAccounts.id,
 				balance: bankAccounts.balance,
@@ -157,12 +141,7 @@ export class FinancialContextService {
 				institutionName: bankAccounts.institutionName,
 			})
 			.from(bankAccounts)
-			.where(
-				and(
-					eq(bankAccounts.userId, this.userId),
-					eq(bankAccounts.isActive, true),
-				),
-			);
+			.where(and(eq(bankAccounts.userId, this.userId), eq(bankAccounts.isActive, true)));
 	}
 
 	private async getMonthlyTotals(
@@ -199,10 +178,7 @@ export class FinancialContextService {
 		return { income, expenses };
 	}
 
-	private async getCategorySpending(
-		start: Date,
-		end: Date,
-	): Promise<CategorySummary[]> {
+	private async getCategorySpending(start: Date, end: Date): Promise<CategorySummary[]> {
 		const result = await db
 			.select({
 				categoryId: transactions.categoryId,
@@ -210,10 +186,7 @@ export class FinancialContextService {
 				total: sum(transactions.amount),
 			})
 			.from(transactions)
-			.leftJoin(
-				transactionCategories,
-				eq(transactions.categoryId, transactionCategories.id),
-			)
+			.leftJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
 			.where(
 				and(
 					eq(transactions.userId, this.userId),
@@ -226,19 +199,14 @@ export class FinancialContextService {
 			.orderBy(desc(sum(transactions.amount)))
 			.limit(10);
 
-		const totalSpending = result.reduce(
-			(acc, r) => acc + Math.abs(Number(r.total || 0)),
-			0,
-		);
+		const totalSpending = result.reduce((acc, r) => acc + Math.abs(Number(r.total || 0)), 0);
 
 		return result.map((r) => ({
 			categoryId: r.categoryId || 'uncategorized',
 			categoryName: r.categoryName || 'Sem categoria',
 			amount: Math.abs(Number(r.total || 0)),
 			percentage:
-				totalSpending > 0
-					? Math.round((Math.abs(Number(r.total || 0)) / totalSpending) * 100)
-					: 0,
+				totalSpending > 0 ? Math.round((Math.abs(Number(r.total || 0)) / totalSpending) * 100) : 0,
 			trend: 'stable' as const, // TODO: Calculate from historical data in future iteration
 		}));
 	}
@@ -253,9 +221,7 @@ export class FinancialContextService {
 				recommendation: aiInsights.recommendation,
 			})
 			.from(aiInsights)
-			.where(
-				and(eq(aiInsights.userId, this.userId), eq(aiInsights.isRead, false)),
-			)
+			.where(and(eq(aiInsights.userId, this.userId), eq(aiInsights.isRead, false)))
 			.orderBy(desc(aiInsights.createdAt))
 			.limit(5);
 
@@ -268,21 +234,17 @@ export class FinancialContextService {
 		}));
 	}
 
-	private mapInsightTypeToAlertType(
-		insightType: string,
-	): FinancialAlert['type'] {
+	private mapInsightTypeToAlertType(insightType: string): FinancialAlert['type'] {
 		const mapping: Record<string, FinancialAlert['type']> = {
-			budget_alert: 'budget_exceeded',
+			budgetAlert: 'budget_exceeded',
 			warning: 'low_balance',
-			spending_pattern: 'unusual_spending',
+			spendingPattern: 'unusual_spending',
 			opportunity: 'payment_due',
 		};
 		return mapping[insightType] || 'unusual_spending';
 	}
 
-	private async getUpcomingPayments(
-		daysAhead: number,
-	): Promise<UpcomingPayment[]> {
+	private async getUpcomingPayments(daysAhead: number): Promise<UpcomingPayment[]> {
 		const today = new Date();
 		const futureDate = new Date();
 		futureDate.setDate(today.getDate() + daysAhead);

@@ -1,9 +1,8 @@
 import { and, desc, eq, gte, ilike, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
-import type { HttpClient } from '@/db';
-
 import { filterSensitiveData } from '../security/filter';
+import type { HttpClient } from '@/db/client';
 import { transactionCategories, transactions } from '@/db/schema';
 
 export function createTransactionTools(userId: string, db: HttpClient) {
@@ -13,38 +12,14 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 			.datetime()
 			.optional()
 			.describe('Data inicial no formato ISO (YYYY-MM-DD)'),
-		endDate: z
-			.string()
-			.datetime()
-			.optional()
-			.describe('Data final no formato ISO (YYYY-MM-DD)'),
-		categoryId: z
-			.string()
-			.uuid()
-			.optional()
-			.describe('ID da categoria para filtrar'),
-		accountId: z
-			.string()
-			.uuid()
-			.optional()
-			.describe('ID da conta para filtrar'),
+		endDate: z.string().datetime().optional().describe('Data final no formato ISO (YYYY-MM-DD)'),
+		categoryId: z.string().uuid().optional().describe('ID da categoria para filtrar'),
+		accountId: z.string().uuid().optional().describe('ID da conta para filtrar'),
 		minAmount: z.number().optional().describe('Valor mínimo da transação'),
 		maxAmount: z.number().optional().describe('Valor máximo da transação'),
-		searchTerm: z
-			.string()
-			.optional()
-			.describe('Termo para buscar na descrição'),
-		limit: z
-			.number()
-			.min(1)
-			.max(100)
-			.default(20)
-			.describe('Número máximo de resultados'),
-		offset: z
-			.number()
-			.min(0)
-			.default(0)
-			.describe('Pular N resultados para paginação'),
+		searchTerm: z.string().optional().describe('Termo para buscar na descrição'),
+		limit: z.number().min(1).max(100).default(20).describe('Número máximo de resultados'),
+		offset: z.number().min(0).default(0).describe('Pular N resultados para paginação'),
 	});
 
 	const getTransactionSchema = z.object({
@@ -54,29 +29,18 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 	const createTransactionSchema = z.object({
 		amount: z
 			.number()
-			.describe(
-				'Valor da transação (positivo para receita, negativo para despesa)',
-			),
+			.describe('Valor da transação (positivo para receita, negativo para despesa)'),
 		description: z.string().min(1).max(255).describe('Descrição da transação'),
 		categoryId: z.string().uuid().optional().describe('ID da categoria'),
 		accountId: z.string().uuid().optional().describe('ID da conta bancária'),
-		transactionDate: z
-			.string()
-			.datetime()
-			.optional()
-			.describe('Data da transação (padrão: agora)'),
+		transactionDate: z.string().datetime().optional().describe('Data da transação (padrão: agora)'),
 		merchantName: z.string().optional().describe('Nome do estabelecimento'),
 	});
 
 	const updateTransactionSchema = z.object({
 		transactionId: z.string().uuid().describe('ID da transação a atualizar'),
 		amount: z.number().optional().describe('Novo valor'),
-		description: z
-			.string()
-			.min(1)
-			.max(255)
-			.optional()
-			.describe('Nova descrição'),
+		description: z.string().min(1).max(255).optional().describe('Nova descrição'),
 		categoryId: z.string().uuid().optional().describe('Nova categoria'),
 		transactionDate: z.string().datetime().optional().describe('Nova data'),
 		merchantName: z.string().optional().describe('Novo estabelecimento'),
@@ -112,21 +76,13 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 				// Build conditions array
 				const conditions = [eq(transactions.userId, userId)];
 
-				if (startDate)
-					conditions.push(
-						gte(transactions.transactionDate, new Date(startDate)),
-					);
-				if (endDate)
-					conditions.push(lte(transactions.transactionDate, new Date(endDate)));
-				if (categoryId)
-					conditions.push(eq(transactions.categoryId, categoryId));
+				if (startDate) conditions.push(gte(transactions.transactionDate, new Date(startDate)));
+				if (endDate) conditions.push(lte(transactions.transactionDate, new Date(endDate)));
+				if (categoryId) conditions.push(eq(transactions.categoryId, categoryId));
 				if (accountId) conditions.push(eq(transactions.accountId, accountId));
-				if (minAmount)
-					conditions.push(gte(transactions.amount, String(minAmount)));
-				if (maxAmount)
-					conditions.push(lte(transactions.amount, String(maxAmount)));
-				if (searchTerm)
-					conditions.push(ilike(transactions.description, `%${searchTerm}%`));
+				if (minAmount) conditions.push(gte(transactions.amount, String(minAmount)));
+				if (maxAmount) conditions.push(lte(transactions.amount, String(maxAmount)));
+				if (searchTerm) conditions.push(ilike(transactions.description, `%${searchTerm}%`));
 
 				const data = await db
 					.select({
@@ -160,12 +116,7 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 				const [data] = await db
 					.select()
 					.from(transactions)
-					.where(
-						and(
-							eq(transactions.id, transactionId),
-							eq(transactions.userId, userId),
-						),
-					)
+					.where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
 					.limit(1);
 
 				if (!data) {
@@ -180,14 +131,7 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 			description: 'Cria uma nova transação manual para o usuário.',
 			parameters: createTransactionSchema,
 			execute: async (args: z.infer<typeof createTransactionSchema>) => {
-				const {
-					amount,
-					description,
-					categoryId,
-					accountId,
-					transactionDate,
-					merchantName,
-				} = args;
+				const { amount, description, categoryId, accountId, transactionDate, merchantName } = args;
 
 				const [data] = await db
 					.insert(transactions)
@@ -197,9 +141,7 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 						description,
 						categoryId,
 						accountId,
-						transactionDate: transactionDate
-							? new Date(transactionDate)
-							: new Date(),
+						transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
 						merchantName,
 						transactionType: amount >= 0 ? 'credit' : 'debit',
 						status: 'posted',
@@ -222,26 +164,17 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 					updatedAt: new Date(),
 				};
 
-				if (updates.amount !== undefined)
-					updateData.amount = String(updates.amount);
-				if (updates.description !== undefined)
-					updateData.description = updates.description;
-				if (updates.categoryId !== undefined)
-					updateData.categoryId = updates.categoryId;
+				if (updates.amount !== undefined) updateData.amount = String(updates.amount);
+				if (updates.description !== undefined) updateData.description = updates.description;
+				if (updates.categoryId !== undefined) updateData.categoryId = updates.categoryId;
 				if (updates.transactionDate !== undefined)
 					updateData.transactionDate = new Date(updates.transactionDate);
-				if (updates.merchantName !== undefined)
-					updateData.merchantName = updates.merchantName;
+				if (updates.merchantName !== undefined) updateData.merchantName = updates.merchantName;
 
 				const [data] = await db
 					.update(transactions)
 					.set(updateData)
-					.where(
-						and(
-							eq(transactions.id, transactionId),
-							eq(transactions.userId, userId),
-						),
-					)
+					.where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
 					.returning();
 
 				if (!data) {
@@ -253,20 +186,14 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 		},
 
 		deleteTransaction: {
-			description:
-				'Deleta uma transação. Use com cuidado, esta ação é irreversível.',
+			description: 'Deleta uma transação. Use com cuidado, esta ação é irreversível.',
 			parameters: deleteTransactionSchema,
 			execute: async (args: z.infer<typeof deleteTransactionSchema>) => {
 				const { transactionId } = args;
 
 				const [deleted] = await db
 					.delete(transactions)
-					.where(
-						and(
-							eq(transactions.id, transactionId),
-							eq(transactions.userId, userId),
-						),
-					)
+					.where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
 					.returning({ id: transactions.id });
 
 				if (!deleted) {
@@ -299,9 +226,7 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 					);
 
 				// Get category info
-				const categoryIds = [
-					...new Set(data.map((t) => t.categoryId).filter(Boolean)),
-				] as string[];
+				const categoryIds = [...new Set(data.map((t) => t.categoryId).filter(Boolean))] as string[];
 				const categories = categoryIds.length
 					? await db
 							.select({
@@ -348,13 +273,8 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 					>,
 				);
 
-				const categorySummary = Object.values(summary).sort(
-					(a, b) => b.total - a.total,
-				);
-				const grandTotal = categorySummary.reduce(
-					(sum, cat) => sum + cat.total,
-					0,
-				);
+				const categorySummary = Object.values(summary).sort((a, b) => b.total - a.total);
+				const grandTotal = categorySummary.reduce((sum, cat) => sum + cat.total, 0);
 
 				return {
 					period: { startDate, endDate },

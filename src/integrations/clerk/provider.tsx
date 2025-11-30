@@ -22,9 +22,28 @@ interface ClerkProviderProps {
  * Configured for Brazilian market with PT-BR localization
  */
 export function ClerkProvider({ children }: ClerkProviderProps) {
-	// If no publishable key is configured, render children without Clerk
-	// This allows the app to work in development without Clerk
+	// If no publishable key is configured, show error in production or bypass in development
 	if (!clerkPublishableKey) {
+		// In production, show explicit error instead of failing silently
+		if (import.meta.env.PROD) {
+			return (
+				<div className="flex min-h-screen items-center justify-center bg-background">
+					<div className="max-w-md rounded-lg border border-destructive/50 bg-destructive/10 p-8 text-center">
+						<h1 className="mb-4 font-bold text-destructive text-xl">
+							Erro de Configuracao
+						</h1>
+						<p className="text-destructive/80">
+							Sistema de autenticacao nao configurado. Por favor, contate o
+							suporte tecnico.
+						</p>
+						<p className="mt-4 font-mono text-destructive/60 text-xs">
+							Codigo: CLERK_KEY_MISSING
+						</p>
+					</div>
+				</div>
+			);
+		}
+		// In development, allow app to work without Clerk
 		return <>{children}</>;
 	}
 

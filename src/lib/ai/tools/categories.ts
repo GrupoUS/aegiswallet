@@ -1,16 +1,12 @@
 import { eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 
-import type { HttpClient } from '@/db';
-
+import type { HttpClient } from '@/db/client';
 import { transactionCategories } from '@/db/schema';
 
 export function createCategoryTools(userId: string, db: HttpClient) {
 	const listCategoriesSchema = z.object({
-		includeSystem: z
-			.boolean()
-			.default(true)
-			.describe('Incluir categorias do sistema'),
+		includeSystem: z.boolean().default(true).describe('Incluir categorias do sistema'),
 	});
 
 	const createCategorySchema = z.object({

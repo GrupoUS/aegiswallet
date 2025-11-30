@@ -32,7 +32,8 @@ function LoginComponent() {
 
 				<div className="flex justify-center">
 					<SignIn
-						routing="hash"
+						routing="path"
+						path="/login"
 						signUpUrl="/signup"
 						afterSignInUrl="/dashboard"
 					/>

@@ -1,25 +1,17 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import type { HttpClient } from '@/db';
-
 import { filterSensitiveData } from '../security/filter';
+import type { HttpClient } from '@/db/client';
 import { bankAccounts } from '@/db/schema';
 
 export function createAccountTools(userId: string, db: HttpClient) {
 	const listAccountsSchema = z.object({
-		includeInactive: z
-			.boolean()
-			.default(false)
-			.describe('Incluir contas inativas'),
+		includeInactive: z.boolean().default(false).describe('Incluir contas inativas'),
 	});
 
 	const getAccountBalanceSchema = z.object({
-		accountId: z
-			.string()
-			.uuid()
-			.optional()
-			.describe('ID da conta (omitir para total)'),
+		accountId: z.string().uuid().optional().describe('ID da conta (omitir para total)'),
 	});
 
 	return {
@@ -50,10 +42,7 @@ export function createAccountTools(userId: string, db: HttpClient) {
 					.where(and(...conditions))
 					.orderBy(desc(bankAccounts.isPrimary));
 
-				const totalBalance = data.reduce(
-					(sum, acc) => sum + Number(acc.balance ?? 0),
-					0,
-				);
+				const totalBalance = data.reduce((sum, acc) => sum + Number(acc.balance ?? 0), 0);
 
 				return {
 					accounts: data.map(filterSensitiveData),
@@ -64,14 +53,13 @@ export function createAccountTools(userId: string, db: HttpClient) {
 		},
 
 		getAccountBalance: {
-			description:
-				'Obtém saldo atual de uma conta específica ou total de todas as contas.',
+			description: 'Obtém saldo atual de uma conta específica ou total de todas as contas.',
 			parameters: getAccountBalanceSchema,
 			execute: async (args: z.infer<typeof getAccountBalanceSchema>) => {
 				const { accountId } = args;
 
 				if (accountId) {
-					const [data] = await db
+					const [accountData] = await db
 						.select({
 							id: bankAccounts.id,
 							institutionName: bankAccounts.institutionName,
@@ -81,19 +69,14 @@ export function createAccountTools(userId: string, db: HttpClient) {
 							lastSync: bankAccounts.lastSync,
 						})
 						.from(bankAccounts)
-						.where(
-							and(
-								eq(bankAccounts.id, accountId),
-								eq(bankAccounts.userId, userId),
-							),
-						)
+						.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, userId)))
 						.limit(1);
 
-					if (!data) {
+					if (!accountData) {
 						throw new Error('Conta não encontrada');
 					}
 
-					return filterSensitiveData(data);
+					return filterSensitiveData(accountData);
 				}
 
 				// Total of all active accounts
@@ -104,17 +87,9 @@ export function createAccountTools(userId: string, db: HttpClient) {
 						currency: bankAccounts.currency,
 					})
 					.from(bankAccounts)
-					.where(
-						and(
-							eq(bankAccounts.userId, userId),
-							eq(bankAccounts.isActive, true),
-						),
-					);
+					.where(and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true)));
 
-				const totalBalance = data.reduce(
-					(sum, acc) => sum + Number(acc.balance ?? 0),
-					0,
-				);
+				const totalBalance = data.reduce((sum, acc) => sum + Number(acc.balance ?? 0), 0);
 				const totalAvailable = data.reduce(
 					(sum, acc) => sum + Number(acc.availableBalance ?? 0),
 					0,

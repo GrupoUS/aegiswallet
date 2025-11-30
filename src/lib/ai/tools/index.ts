@@ -1,8 +1,7 @@
-import type { HttpClient } from '@/db';
-
 import { createAccountTools } from './accounts';
 import { createCategoryTools } from './categories';
 import { createTransactionTools } from './transactions';
+import type { HttpClient } from '@/db/client';
 
 export function createAllTools(userId: string, db: HttpClient) {
 	return {

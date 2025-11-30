@@ -1,13 +1,8 @@
 import { and, eq, gte, lte, sum } from 'drizzle-orm';
 
-import { db } from '@/db';
-
 import type { GetBudgetStatusInput } from '../schemas';
-import {
-	budgetCategories,
-	transactionCategories,
-	transactions,
-} from '@/db/schema';
+import { db } from '@/db/client';
+import { budgetCategories, transactionCategories, transactions } from '@/db/schema';
 
 export interface BudgetStatusResult {
 	budgets: Array<{
@@ -49,10 +44,7 @@ export async function getBudgetStatus(
 			periodType: budgetCategories.periodType,
 		})
 		.from(budgetCategories)
-		.leftJoin(
-			transactionCategories,
-			eq(budgetCategories.categoryId, transactionCategories.id),
-		)
+		.leftJoin(transactionCategories, eq(budgetCategories.categoryId, transactionCategories.id))
 		.where(and(...budgetConditions));
 
 	// Get current month spending per category
@@ -84,8 +76,7 @@ export async function getBudgetStatus(
 		const budgetAmount = Number(b.budgetAmount);
 		const spentAmount = spendingMap.get(b.categoryId) || 0;
 		const remainingAmount = Math.max(0, budgetAmount - spentAmount);
-		const percentageUsed =
-			budgetAmount > 0 ? Math.round((spentAmount / budgetAmount) * 100) : 0;
+		const percentageUsed = budgetAmount > 0 ? Math.round((spentAmount / budgetAmount) * 100) : 0;
 		const threshold = Number(b.alertThreshold || 80);
 
 		let status: 'ok' | 'warning' | 'exceeded';

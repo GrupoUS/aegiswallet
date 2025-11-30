@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useId, useMemo, useState } from 'react';
 
+import type { CalendarView } from './types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,20 +39,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import type { FinancialEvent as DatabaseFinancialEvent } from '@/db/schema';
 import { useCalendarSearch } from '@/hooks/use-calendar-search';
-import type { Database } from '@/types/database.types';
 import type {
 	BrazilianEventType,
 	FinancialEventPriority,
 	InstallmentInfo,
 } from '@/types/financial.interfaces';
 import type { FinancialEvent as CalendarFinancialEvent } from '@/types/financial-events';
-
-// Type for financial events from database (snake_case from Supabase)
-type DatabaseFinancialEvent =
-	Database['public']['Tables']['financial_events']['Row'];
-
-import type { CalendarView } from './types';
 
 // Helper to map database priority to domain priority
 const mapPriority = (dbPriority: string | null): FinancialEventPriority => {

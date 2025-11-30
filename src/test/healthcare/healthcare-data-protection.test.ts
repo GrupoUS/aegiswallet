@@ -345,10 +345,7 @@ const HealthcareDataProtection = () => {
 
 		// Encrypt and store health data
 		const testUtils = global.testUtils as TestUtils;
-		const encryptedData = await testUtils.encryptMockData(
-			JSON.stringify(healthData),
-			'AES-256-GCM',
-		);
+		await testUtils.encryptMockData(JSON.stringify(healthData), 'AES-256-GCM');
 	};
 
 	return React.createElement(
@@ -650,7 +647,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		it('should handle encryption failures gracefully', async () => {
-			const testUtils = global.testUtils as TestUtils;
+			const _testUtils = global.testUtils as TestUtils;
 
 			render(React.createElement(HealthcareDataProtection));
 

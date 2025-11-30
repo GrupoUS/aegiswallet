@@ -8,7 +8,7 @@ interface LGPDComplianceResult {
 	severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
-interface LGPDDataAssessment {
+interface _LGPDDataAssessment {
 	hasPersonalData: boolean;
 	hasSensitiveData: boolean;
 	purposeSpecified: boolean;

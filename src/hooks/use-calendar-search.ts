@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
+import type { FinancialEvent, Transaction } from '@/db/schema';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/types/database.types';
-
-// Type for financial events from database
-type FinancialEvent = Database['public']['Tables']['financial_events']['Row'];
-// Type for transactions from database
-type Transaction = Database['public']['Tables']['transactions']['Row'];
 
 interface SearchFilters {
 	startDate?: string;

@@ -100,7 +100,7 @@ class DatabasePerformanceMonitor {
 				indexUsage,
 			};
 		} catch (error) {
-			const executionTime = performance.now() - startTime;
+			const _executionTime = performance.now() - startTime;
 			throw new Error(`Query analysis failed: ${error}`);
 		}
 	}

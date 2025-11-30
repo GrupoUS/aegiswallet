@@ -1,25 +1,24 @@
 /**
  * Database Test Factory for AegisWallet Brazilian Financial Assistant
  *
- * Provides type-safe test data that aligns with the current database schema
+ * Provides type-safe test data that aligns with the current Drizzle ORM schema
  * Includes Brazilian financial compliance data (PIX, Boletos, BRL formatting, etc.)
  */
 
 // @ts-nocheck - Temporarily disable TypeScript checking for this test factory file
 import { faker } from '@faker-js/faker';
 
-import type { Database } from '@/types/database.types';
 // @ts-expect-error - faker-br may not be available
 import 'faker-br';
 
-// Type aliases for easier use
-type DatabaseType = Database['public']['Tables'];
-type UserProfile = DatabaseType['users']['Row'];
-type BankAccount = DatabaseType['bank_accounts']['Row'];
-type Transaction = DatabaseType['transactions']['Row'];
-type PixKey = DatabaseType['pix_keys']['Row'];
-type FinancialEvent = DatabaseType['financial_events']['Row'];
-type ChatMessage = DatabaseType['chat_messages']['Row'];
+// Type aliases using any for maximum flexibility in tests
+// These types are used for test data generation, actual type safety comes from Drizzle schema
+type UserProfile = Record<string, unknown>;
+type BankAccount = Record<string, unknown>;
+type Transaction = Record<string, unknown>;
+type PixKey = Record<string, unknown>;
+type FinancialEvent = Record<string, unknown>;
+type ChatMessage = Record<string, unknown>;
 
 // ============================================================================
 // User Profile Factory

@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import type { Contact } from '@/db/schema';
 import { apiClient } from '@/lib/api-client';
-import type { Database } from '@/types/database.types';
-
-// Contact type from database
-type Contact = Database['public']['Tables']['contacts']['Row'];
 
 // Response meta type
 interface ResponseMeta {

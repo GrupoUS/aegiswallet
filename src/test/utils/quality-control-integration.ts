@@ -46,7 +46,6 @@ export interface QualityControlPhase {
 }
 
 export class QualityControlTestingFramework {
-	private _testUtils: TestUtils;
 	private currentPhase: QualityControlPhase = {
 		errors: [],
 		phase: 'detection',
@@ -55,8 +54,8 @@ export class QualityControlTestingFramework {
 
 	private phases: Record<string, QualityControlPhase> = {};
 
-	constructor(testUtils: TestUtils) {
-		this._testUtils = testUtils;
+	constructor(_testUtils: TestUtils) {
+		// TestUtils parameter kept for future use
 	}
 
 	// Phase 1: Error Detection & Analysis

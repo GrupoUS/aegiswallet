@@ -5,7 +5,7 @@
  * Supports both HTTP (for simple queries) and WebSocket (for transactions) connections
  */
 
-import { neon, neonConfig, Pool } from '@neondatabase/serverless';
+import { neon, Pool } from '@neondatabase/serverless';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
 
@@ -15,8 +15,7 @@ import * as schema from './schema';
 // CONFIGURATION
 // ========================================
 
-// Configure Neon for serverless environments
-neonConfig.fetchConnectionCache = true;
+// Note: fetchConnectionCache option removed - it's deprecated (now always true)
 
 // Get the database URL from environment
 const getDatabaseUrl = (): string => {

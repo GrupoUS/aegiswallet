@@ -1,8 +1,7 @@
 import { and, desc, eq, gte, lte, sum } from 'drizzle-orm';
 
-import { db } from '@/db';
-
 import type { GetSpendingTrendsInput } from '../schemas';
+import { db } from '@/db/client';
 import { transactionCategories, transactions } from '@/db/schema';
 
 export interface SpendingTrendsResult {
@@ -82,16 +81,13 @@ export async function getSpendingTrends(
 					total: sum(transactions.amount),
 				})
 				.from(transactions)
-				.leftJoin(
-					transactionCategories,
-					eq(transactions.categoryId, transactionCategories.id),
-				)
+				.leftJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
 				.where(and(...conditions))
 				.groupBy(transactions.categoryId, transactionCategories.name)
 				.orderBy(desc(sum(transactions.amount)));
 
 			const totalSpending = spendingData.reduce(
-				(sum, s) => sum + Math.abs(Number(s.total || 0)),
+				(acc, s) => acc + Math.abs(Number(s.total || 0)),
 				0,
 			);
 			const categoryBreakdown = spendingData.slice(0, 5).map((s) => ({
@@ -121,9 +117,7 @@ export async function getSpendingTrends(
 		const previousPeriod = totals[totals.length - 2];
 
 		if (previousPeriod > 0) {
-			trendPercentage = Math.round(
-				((lastPeriod - previousPeriod) / previousPeriod) * 100,
-			);
+			trendPercentage = Math.round(((lastPeriod - previousPeriod) / previousPeriod) * 100);
 			if (trendPercentage > 5) {
 				trend = 'increasing';
 			} else if (trendPercentage < -5) {
@@ -138,8 +132,7 @@ export async function getSpendingTrends(
 		trend = 'stable';
 	}
 
-	const trendEmoji =
-		trend === 'increasing' ? '📈' : trend === 'decreasing' ? '📉' : '➡️';
+	const trendEmoji = trend === 'increasing' ? '📈' : trend === 'decreasing' ? '📉' : '➡️';
 	const trendText =
 		trend === 'increasing'
 			? `aumentaram ${Math.abs(trendPercentage)}%`

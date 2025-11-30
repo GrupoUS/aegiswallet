@@ -1,8 +1,7 @@
 import { and, eq, gte, lte } from 'drizzle-orm';
 
-import { db } from '@/db';
-
 import type { GetUpcomingPaymentsInput } from '../schemas';
+import { db } from '@/db/client';
 import { transactionSchedules } from '@/db/schema';
 
 export interface UpcomingPaymentsResult {

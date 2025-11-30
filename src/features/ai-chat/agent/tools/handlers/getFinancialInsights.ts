@@ -1,8 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 
-import { db } from '@/db';
-
 import type { GetFinancialInsightsInput } from '../schemas';
+import { db } from '@/db/client';
 import { aiInsights } from '@/db/schema';
 
 export interface FinancialInsightsResult {

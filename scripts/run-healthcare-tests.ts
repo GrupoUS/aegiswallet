@@ -110,8 +110,6 @@ function runCommand(
 }
 
 function parseVitestOutput(output: string): TestResult {
-	const _lines = output.split('\n');
-
 	// Extract test results
 	const passedMatch = output.match(/✓ (\d+) test[s]? passed/);
 	const failedMatch = output.match(/✗ (\d+) test[s]? failed/);
@@ -120,7 +118,6 @@ function parseVitestOutput(output: string): TestResult {
 	const passed = passedMatch ? parseInt(passedMatch[1], 10) : 0;
 	const failed = failedMatch ? parseInt(failedMatch[1], 10) : 0;
 	const skipped = skippedMatch ? parseInt(skippedMatch[1], 10) : 0;
-	const _total = passed + failed + skipped;
 
 	// Extract duration
 	const durationMatch = output.match(/Test Files\s+\d+\s+passed\s+\((\d+)\)/);
@@ -206,9 +203,6 @@ function calculateQualityMetrics(
 	results: TestResult[],
 	biomeScore: number,
 ): TestReport['qualityMetrics'] {
-	const _criticalResults = results.filter(
-		(r) => HEALTHCARE_TEST_SUITES.find((s) => s.name === r.name)?.critical,
-	);
 
 	const codeQuality = biomeScore;
 	const security =
@@ -289,7 +283,18 @@ function saveTestReport(report: TestReport): void {
 }
 
 function printSummary(report: TestReport): void {
+	console.log('\n=== Healthcare Test Report ===');
+	console.log(`Total tests: ${report.summary.total}`);
+	console.log(`Passed: ${report.summary.passed}`);
+	console.log(`Failed: ${report.summary.failed}`);
+	console.log(`Skipped: ${report.summary.skipped}`);
+
 	if (report.summary.coverage) {
+		console.log('\nCoverage:');
+		console.log(`  Lines: ${report.summary.coverage.lines}%`);
+		console.log(`  Functions: ${report.summary.coverage.functions}%`);
+		console.log(`  Branches: ${report.summary.coverage.branches}%`);
+		console.log(`  Statements: ${report.summary.coverage.statements}%`);
 	}
 
 	const overallScore = Math.round(
@@ -300,10 +305,20 @@ function printSummary(report: TestReport): void {
 			4,
 	);
 
+	console.log(`\nOverall Quality Score: ${overallScore}%`);
+	console.log(`  Code Quality: ${report.qualityMetrics.codeQuality}%`);
+	console.log(`  Security: ${report.qualityMetrics.security}%`);
+	console.log(`  Performance: ${report.qualityMetrics.performance}%`);
+	console.log(`  Compliance: ${report.qualityMetrics.compliance}%`);
+
 	if (overallScore >= 90) {
+		console.log('\n✅ Excellent quality standards met');
 	} else if (overallScore >= 80) {
+		console.log('\n⚠️  Good quality with room for improvement');
 	} else if (overallScore >= 70) {
+		console.log('\n❌ Quality needs attention');
 	} else {
+		console.log('\n🚨 Critical quality issues detected');
 	}
 }
 
@@ -312,7 +327,8 @@ async function main(): Promise<void> {
 		// 1. Run Biome linting
 		const biomeResult = runBiomeLinting();
 		if (!biomeResult.success) {
-			biomeResult.errors.forEach((_error) => {});
+			console.error('Biome linting errors:');
+			biomeResult.errors.forEach((error) => console.error(`  ${error}`));
 		}
 
 		// 2. Run all healthcare test suites
@@ -323,15 +339,18 @@ async function main(): Promise<void> {
 				const result = runTestSuite(suite);
 				results.push(result);
 
-				const _status =
+				const status =
 					result.status === 'passed'
 						? '✅'
 						: result.status === 'failed'
 							? '❌'
 							: '⏭️';
+				
+				console.log(`${status} ${result.name} (${result.duration}ms)`);
 
 				if (result.errors && result.errors.length > 0) {
-					result.errors.forEach((_error) => {});
+					console.error(`  Errors in ${result.name}:`);
+					result.errors.forEach((error) => console.error(`    ${error}`));
 				}
 			} catch (error) {
 				results.push({

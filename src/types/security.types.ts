@@ -5,8 +5,6 @@
  * with PIN, OTP, session management and fraud detection
  */
 
-import type { Database } from './database.types';
-
 export interface UserPin {
 	id: string;
 	user_id: string;
@@ -155,7 +153,12 @@ export interface UserSecuritySummary {
 // UI State Types
 export interface AuthenticationState {
 	isAuthenticated: boolean;
-	user: Database['public']['Tables']['users']['Row'] | null;
+	user: {
+		id: string;
+		email: string | null;
+		firstName: string | null;
+		lastName: string | null;
+	} | null;
 	sessionToken: string | null;
 	authMethod: 'platform' | 'pin' | 'sms' | 'push' | null;
 	lastActivity: Date | null;

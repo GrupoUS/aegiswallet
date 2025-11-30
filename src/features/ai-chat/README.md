@@ -278,7 +278,7 @@ bun test src/features/ai-chat
 - [ ] Tool/function calling support
 - [ ] Agent orchestration (multi-agent conversations)
 - [ ] RAG integration with knowledge bases (Ottomator)
-- [ ] Conversation persistence (Supabase)
+- [ ] Conversation persistence (NeonDB)
 - [ ] Multi-modal inputs (images, audio)
 - [ ] Conversation branching/forking
 - [ ] Export conversations (PDF, Markdown)

@@ -48,19 +48,28 @@ class Logger {
 		return level >= this.logLevel;
 	}
 
-	private log(level: LogLevel, _message: string, _context?: LogContext): void {
+	private log(level: LogLevel, message: string, context?: LogContext): void {
 		if (!this.shouldLog(level)) {
 			return;
 		}
 
+		const timestamp = new Date().toISOString();
+		const levelName = LogLevel[level];
+		const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+		const logMessage = `[${timestamp}] ${levelName}: ${message}${contextStr}`;
+
 		switch (level) {
 			case LogLevel.DEBUG:
+				console.debug(logMessage);
 				break;
 			case LogLevel.INFO:
+				console.info(logMessage);
 				break;
 			case LogLevel.WARN:
+				console.warn(logMessage);
 				break;
 			case LogLevel.ERROR:
+				console.error(logMessage);
 				break;
 		}
 	}

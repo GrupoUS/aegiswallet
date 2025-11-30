@@ -242,10 +242,7 @@ export class QualityControlTestingFramework {
 		error: QualityControlPhase['errors'][0],
 	): Promise<NonNullable<QualityControlPhase['research']>['sources'][number]> {
 		// Mock research - in real implementation this would use Context7, Tavily, etc.
-		const researchSources: Record<
-			QualityControlPhase['errors'][0]['type'],
-			NonNullable<QualityControlPhase['research']>['sources'][number]
-		> = {
+		const researchSources = {
 			code_quality: {
 				confidence: 0.95,
 				query: `Biome ${error.message} best practices`,
@@ -282,9 +279,9 @@ export class QualityControlTestingFramework {
 				},
 				type: 'tavily' as const,
 			},
-		};
+		} as const;
 
-		return researchSources[error.type] || researchSources.code_quality;
+		return researchSources[error.type as keyof typeof researchSources] || researchSources.code_quality;
 	}
 
 	private compileRecommendations(
@@ -462,7 +459,7 @@ export class QualityControlTestingFramework {
 
 		return {
 			phases: this.phases,
-			recommendations: this.phases.research?.research?.recommendations || [],
+			recommendations: this.phases.research?.recommendations || [],
 			summary: {
 				criticalErrors: allErrors.filter((e) => e.severity === 'critical')
 					.length,

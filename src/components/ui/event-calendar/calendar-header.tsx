@@ -189,13 +189,13 @@ const mapDatabaseEventToCalendarEvent = (
 ): CalendarFinancialEvent => {
 	const basicFields = {
 		id: event.id,
-		userId: event.user_id,
+		userId: event.userId,
 		title: event.title,
 		description: event.description || undefined,
-		amount: event.amount,
-		isIncome: event.is_income ?? false,
-		category: event.category as string | undefined,
-		brazilianEventType: mapBrazilianEventType(event.brazilian_event_type),
+		amount: Number(event.amount),
+		isIncome: event.isIncome ?? false,
+		category: event.categoryId as string | undefined,
+		brazilianEventType: mapBrazilianEventType(event.brazilianEventType),
 	};
 
 	const statusAndPriority = {
@@ -204,15 +204,15 @@ const mapDatabaseEventToCalendarEvent = (
 	};
 
 	const dates = {
-		start: new Date(event.start_date),
-		end: new Date(event.end_date),
-		dueDate: event.due_date || undefined,
-		allDay: event.all_day ?? false,
+		start: new Date(event.startDate),
+		end: new Date(event.endDate),
+		dueDate: event.dueDate || undefined,
+		allDay: event.allDay ?? false,
 	};
 
 	const recurring = {
-		isRecurring: event.is_recurring ?? false,
-		recurrenceRule: event.recurrence_rule || undefined,
+		isRecurring: event.isRecurring ?? false,
+		recurrenceRule: event.recurrenceRule || undefined,
 	};
 
 	const appearance = {
@@ -227,14 +227,26 @@ const mapDatabaseEventToCalendarEvent = (
 	};
 
 	const installment = {
-		installmentInfo: mapInstallmentInfo(event.installment_info),
+		installmentInfo: mapInstallmentInfo(event.installmentInfo),
 	};
 
 	const ids = {
-		parentEventId: event.parent_event_id || undefined,
-		createdAt: event.created_at || '',
-		updatedAt: event.updated_at || '',
-		completedAt: event.completed_at || undefined,
+		parentEventId: event.parentEventId || undefined,
+		createdAt: event.createdAt
+			? event.createdAt instanceof Date
+				? event.createdAt.toISOString()
+				: String(event.createdAt)
+			: '',
+		updatedAt: event.updatedAt
+			? event.updatedAt instanceof Date
+				? event.updatedAt.toISOString()
+				: String(event.updatedAt)
+			: '',
+		completedAt: event.completedAt
+			? event.completedAt instanceof Date
+				? event.completedAt.toISOString()
+				: String(event.completedAt)
+			: undefined,
 	};
 
 	const locationAndNotes = {
@@ -243,10 +255,10 @@ const mapDatabaseEventToCalendarEvent = (
 	};
 
 	const calendarSpecific = {
-		type: (event.is_income ? 'income' : 'expense') as 'income' | 'expense',
-		date: new Date(event.start_date),
+		type: (event.isIncome ? 'income' : 'expense') as 'income' | 'expense',
+		date: new Date(event.startDate),
 		account: undefined,
-		is_expense: !event.is_income,
+		is_expense: !event.isIncome,
 	};
 
 	return {

@@ -88,7 +88,7 @@ src/infrastructure/security/AuditLogger.ts:178 console.log(`[AUDIT] ${auditEvent
 **Severity**: High | **Files Affected**: 8 | **TypeScript Errors**: 12+
 
 **Details**:
-- Database type mismatches in Supabase integration
+- Database type mismatches in Drizzle integration
 - Missing financial event type definitions
 - Incomplete transaction type safety
 - Voice command parameter typing gaps

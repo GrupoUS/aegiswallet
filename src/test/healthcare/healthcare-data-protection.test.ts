@@ -108,7 +108,7 @@ const HealthcareDataProtection = () => {
 			const testUtils = global.testUtils as TestUtils;
 
 			// Test encryption of health data
-			await testUtils.encryptMockData(
+			const encryptedResult = await testUtils.encryptMockData(
 				JSON.stringify(healthData),
 				'AES-256-GCM',
 			);

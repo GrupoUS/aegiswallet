@@ -227,7 +227,7 @@ export function ProfileSettings() {
 		};
 		reader.readAsDataURL(file);
 
-		// Upload to Supabase Storage
+		// Upload to API storage
 		uploadAvatar(file);
 	};
 

@@ -50,7 +50,7 @@ export function CalendarDndProvider({
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	// Use Supabase mutations for persistence
+	// Use API mutations for persistence
 	const { updateEvent } = useFinancialEventMutations();
 
 	// Configure sensors for better drag detection
@@ -156,7 +156,7 @@ export function CalendarDndProvider({
 						start: newStart, // Type-safe color assignment
 					};
 
-					// Persist to Supabase
+					// Persist to database
 					await updateEvent(draggedEvent.id, financialEventUpdate);
 
 					// Call the original callback for local state updates

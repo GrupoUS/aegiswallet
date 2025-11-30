@@ -50,8 +50,6 @@ export const renderHookWithQuery = <T,>(
 	hook: () => T,
 	options?: { client?: QueryClient },
 ) => {
-	const _client = options?.client || createTestQueryClient();
-
 	return renderHook(hook, {
 		wrapper: ({ children }) => (
 			<TestQueryProvider>{children}</TestQueryProvider>

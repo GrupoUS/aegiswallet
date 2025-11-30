@@ -101,6 +101,7 @@ class DatabasePerformanceMonitor {
 			};
 		} catch (error) {
 			const _executionTime = performance.now() - startTime;
+			console.log(`❌ Query analysis failed after ${_executionTime.toFixed(2)}ms: ${error}`);
 			throw new Error(`Query analysis failed: ${error}`);
 		}
 	}

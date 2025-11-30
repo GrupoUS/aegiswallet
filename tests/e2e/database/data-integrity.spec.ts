@@ -2,7 +2,7 @@
  * AegisWallet E2E Tests - Data Integrity & Database Operations
  *
  * Verifies:
- * - RLS policies are working correctly (tested via Supabase)
+ * - RLS policies are working correctly (tested via Drizzle ORM)
  * - Authenticated users can only access their own data
  * - Protected routes redirect properly
  * - Frontend auth guards work correctly

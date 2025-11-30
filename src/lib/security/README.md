@@ -30,9 +30,9 @@ This security system provides:
 └─────────────────────────────────────────────────────────────┘
                               │
                     ┌─────────┴─────────┐
-                    │    Supabase       │
-                    │   (Database &      │
-                    │    Auth)           │
+                    │     NeonDB        │
+                    │   (PostgreSQL &   │
+                    │    Drizzle ORM)   │
                     └───────────────────┘
 ```
 
@@ -516,7 +516,7 @@ describe('Fraud Detection', () => {
 2. **Database Migration**:
    ```bash
    # Run database migrations
-   bunx supabase db push
+   bun run db:push
    ```
 
 3. **Service Worker Setup**:

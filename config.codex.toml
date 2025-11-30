@@ -82,11 +82,6 @@ command = "cmd"
 args = ["/c", "bunx", "shadcn@latest", "mcp"]
 type = "stdio"
 
-[mcp_servers.supabase]
-command = "cmd"
-args = ["/c", "bunx", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_505503d21e6bd415395dcaeed239e1bbf039f6cc"]
-type = "stdio"
-
 [[agents]]
 name = "code"
 enabled = false

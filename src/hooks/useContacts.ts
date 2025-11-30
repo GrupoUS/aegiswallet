@@ -149,7 +149,7 @@ export function useContacts(filters?: {
 					email: contactData.email || undefined,
 					phone: contactData.phone || undefined,
 					notes: contactData.notes || undefined,
-					isFavorite: contactData.is_favorite || false,
+					isFavorite: contactData.isFavorite || false,
 				},
 			);
 
@@ -176,7 +176,7 @@ export function useContacts(filters?: {
 					email: contactData.email,
 					phone: contactData.phone,
 					notes: contactData.notes,
-					isFavorite: contactData.is_favorite,
+					isFavorite: contactData.isFavorite,
 				},
 			);
 
@@ -460,7 +460,7 @@ export function useContactsForTransfer(): UseContactsForTransferReturn {
 				name: contact.name,
 				email: contact.email || undefined,
 				phone: contact.phone || undefined,
-				isFavorite: Boolean(contact.is_favorite),
+				isFavorite: Boolean(contact.isFavorite),
 				// Determinar métodos de pagamento disponíveis
 				availableMethods: [
 					...(contact.email ? ['EMAIL'] : []),
@@ -489,7 +489,7 @@ export function useContactsForPix(): UseContactsForPixReturn {
 				name: contact.name,
 				email: contact.email || undefined,
 				phone: contact.phone || undefined,
-				isFavorite: Boolean(contact.is_favorite),
+				isFavorite: Boolean(contact.isFavorite),
 				// Determinar chaves PIX disponíveis
 				pixKeys: [
 					...(contact.email

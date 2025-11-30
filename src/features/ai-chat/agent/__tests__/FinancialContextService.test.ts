@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock database before importing the service
-vi.mock('@/db', () => {
+vi.mock('@/db/client', () => {
 	// Create chainable mock for Drizzle-style queries that resolves to empty arrays
 	const createChain = (): unknown => {
 		const mockResult = Promise.resolve([]);

@@ -234,14 +234,48 @@ export class FinancialContextService {
 		}));
 	}
 
+	/**
+	 * Maps database insightType values to FinancialAlert types
+	 *
+	 * CRITICAL: Database stores insightType in snake_case format.
+	 * Case values MUST match exactly: 'budget_alert', 'spending_pattern', 'warning', 'opportunity'
+	 * This function normalizes both camelCase and snake_case inputs to handle edge cases defensively.
+	 *
+	 * @see src/db/schema/voice-ai.ts - insightType field comment for valid values
+	 */
 	private mapInsightTypeToAlertType(insightType: string): FinancialAlert['type'] {
-		const mapping: Record<string, FinancialAlert['type']> = {
-			budgetAlert: 'budget_exceeded',
-			warning: 'low_balance',
-			spendingPattern: 'unusual_spending',
-			opportunity: 'payment_due',
-		};
-		return mapping[insightType] || 'unusual_spending';
+		// Normalize to snake_case to handle both formats defensively
+		// Database stores values as snake_case, but normalize in case camelCase is passed
+		const normalized = this.normalizeInsightType(insightType);
+
+		switch (normalized) {
+			case 'budget_alert':
+				return 'budget_exceeded';
+			case 'warning':
+				return 'low_balance';
+			case 'spending_pattern':
+				return 'unusual_spending';
+			case 'opportunity':
+				return 'payment_due';
+			default:
+				return 'unusual_spending';
+		}
+	}
+
+	/**
+	 * Normalize insightType to snake_case format
+	 * Handles both camelCase (budgetAlert, spendingPattern) and snake_case (budget_alert, spending_pattern)
+	 * Database schema expects snake_case: spending_pattern, budget_alert, opportunity, warning
+	 */
+	private normalizeInsightType(insightType: string): string {
+		// If already snake_case, return as-is
+		if (insightType.includes('_')) {
+			return insightType;
+		}
+
+		// Convert camelCase to snake_case
+		// budgetAlert -> budget_alert, spendingPattern -> spending_pattern
+		return insightType.replace(/([A-Z])/g, '_$1').toLowerCase();
 	}
 
 	private async getUpcomingPayments(daysAhead: number): Promise<UpcomingPayment[]> {

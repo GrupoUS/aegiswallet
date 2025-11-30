@@ -51,24 +51,23 @@ If this is your first time deploying:
 
 ### Deployment Strategy
 
-**Option C – Fix critical errors first, then perform incremental deployments**
+**🚀 ALWAYS DEPLOY TO PRODUCTION**
 
-The deployment process will always prioritize fixing the most critical TypeScript errors before attempting a preview or production deploy. After each fix, a quick incremental deploy will be performed to verify that the issue is resolved before moving on to the next set of errors.
+All deployments go directly to production at **https://aegiswallet.vercel.app**.
 
-> ⚠️ This policy supersedes any other deployment option in this command.
+The deployment process will:
+1. Fix all TypeScript errors first (mandatory)
+2. Run type-check, lint, and build locally
+3. Deploy directly to production
 
+> ⚠️ Preview deployments are disabled. All deploys target production.
 
-### Option 2: Production Deployment
-Deploy directly to the production URL:
 ```bash
+# Standard deployment command (always production)
+vercel deploy --prod --yes
+
+# Or using the npm script
 bun deploy:vercel:prod
-```
-
-### Option 3: Manual Deployment
-If you prefer manual control:
-```bash
-vercel deploy --prebuilt          # Preview
-vercel deploy --prod --prebuilt   # Production
 ```
 
 ## Deployment with Continuous Error Verification
@@ -92,16 +91,16 @@ bun run build
 
 If any of these fail, fix the errors before proceeding.
 
-#### 2. Deploy to Preview with Verification
+#### 2. Deploy to Production
 ```bash
-# Deploy to preview
-bun deploy:vercel:preview
+# Deploy directly to production
+vercel deploy --prod --yes
 
-# Or manually:
-vercel deploy --prebuilt
+# Or using npm script:
+bun deploy:vercel:prod
 ```
 
-**Capture the deployment URL** from the output (e.g., `https://aegiswallet-xyz123.vercel.app`)
+**Production URL**: https://aegiswallet.vercel.app
 
 #### 3. Check Deployment Logs for Errors
 ```bash
@@ -168,8 +167,8 @@ After making fixes:
 git add .
 git commit -m "fix: resolve deployment errors"
 
-# Re-deploy
-bun deploy:vercel:preview
+# Re-deploy to production
+vercel deploy --prod --yes
 ```
 
 #### 7. Iterate Until Clean Deployment
@@ -180,18 +179,16 @@ bun deploy:vercel:preview
 - ✅ All critical user flows work
 - ✅ All API endpoints respond correctly
 
-#### 8. Final Production Deployment
-Once preview deployment is verified clean:
+#### 8. Verify Production Deployment
+Once deployment is complete:
 
 ```bash
-# Deploy to production
-bun deploy:vercel:prod
-
 # Verify production deployment
-vercel logs <production-url> --follow
+vercel logs https://aegiswallet.vercel.app --follow
 
 # Run production health checks
-curl https://<production-url>/health
+curl https://aegiswallet.vercel.app/health
+curl https://aegiswallet.vercel.app/api/v1/health
 ```
 
 ### Automated Error Detection Script

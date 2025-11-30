@@ -27,12 +27,15 @@ interface ChatContainerProps {
 	onClose?: () => void;
 	/** Backend type to use for AI chat */
 	backendType?: BackendType;
+	/** Hide the header bar (useful when embedding in custom containers) */
+	hideHeader?: boolean;
 }
 
 export function ChatContainer({
 	isWidget = false,
 	onClose,
 	backendType = 'gemini',
+	hideHeader = false,
 }: ChatContainerProps) {
 	const { user } = useAuth();
 	const [selectedModel, setSelectedModel] = useState<GeminiModel>(
@@ -117,6 +120,7 @@ export function ChatContainer({
 			isWidget={isWidget}
 			onClose={onClose}
 			className="flex-1"
+			hideHeader={hideHeader}
 			modelSelector={
 				!isWidget ? (
 					<ModelSelector

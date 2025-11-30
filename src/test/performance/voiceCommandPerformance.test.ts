@@ -13,20 +13,8 @@ import { createSTTService } from '@/lib/stt/speechToTextService';
 import { createVAD } from '@/lib/stt/voiceActivityDetection';
 
 // Mock Web Speech API
-let _mockSpeechRecognitionInstance = {
-	continuous: false,
-	interimResults: true,
-	lang: 'pt-BR',
-	onend: null as ((event: unknown) => void) | null,
-	onerror: null as ((event: unknown) => void) | null,
-	onresult: null as ((event: unknown) => void) | null,
-	onstart: null as ((event: unknown) => void) | null,
-	start: vi.fn(),
-	stop: vi.fn(),
-};
-
 const createMockSpeechRecognitionInstance = () => {
-	const instance = {
+	return {
 		continuous: false,
 		interimResults: true,
 		lang: 'pt-BR',
@@ -37,8 +25,6 @@ const createMockSpeechRecognitionInstance = () => {
 		start: vi.fn(),
 		stop: vi.fn(),
 	};
-	_mockSpeechRecognitionInstance = instance;
-	return instance;
 };
 
 const mockSpeechRecognition = vi
@@ -96,35 +82,10 @@ describe('Voice Command Performance', () => {
 		vi.useRealTimers();
 		vi.clearAllMocks();
 
-		// Reinitialize the mock instance with fresh spies after clearAllMocks
-		_mockSpeechRecognitionInstance = {
-			continuous: false,
-			interimResults: true,
-			lang: 'pt-BR',
-			onend: null,
-			onerror: null,
-			onresult: null,
-			onstart: null,
-			start: vi.fn(),
-			stop: vi.fn(),
-		};
-
 		// Restore the mockSpeechRecognition implementation after clearAllMocks
-		mockSpeechRecognition.mockImplementation(() => {
-			const instance = {
-				continuous: false,
-				interimResults: true,
-				lang: 'pt-BR',
-				onend: null as ((event: unknown) => void) | null,
-				onerror: null as ((event: unknown) => void) | null,
-				onresult: null as ((event: unknown) => void) | null,
-				onstart: null as ((event: unknown) => void) | null,
-				start: vi.fn(),
-				stop: vi.fn(),
-			};
-			_mockSpeechRecognitionInstance = instance;
-			return instance;
-		});
+		mockSpeechRecognition.mockImplementation(
+			createMockSpeechRecognitionInstance,
+		);
 	});
 
 	describe('useVoiceRecognition Performance', () => {

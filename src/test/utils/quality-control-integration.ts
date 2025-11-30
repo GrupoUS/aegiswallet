@@ -1,5 +1,3 @@
-import type { TestUtils } from '../healthcare-setup';
-
 // Quality Control 4-Phase Integration for Testing
 export interface QualityControlPhase {
 	phase: 'detection' | 'research' | 'planning' | 'execution';
@@ -53,10 +51,6 @@ export class QualityControlTestingFramework {
 	};
 
 	private phases: Record<string, QualityControlPhase> = {};
-
-	constructor(_testUtils: TestUtils) {
-		// TestUtils parameter kept for future use
-	}
 
 	// Phase 1: Error Detection & Analysis
 	async startDetectionPhase(): Promise<QualityControlPhase> {
@@ -281,7 +275,10 @@ export class QualityControlTestingFramework {
 			},
 		} as const;
 
-		return researchSources[error.type as keyof typeof researchSources] || researchSources.code_quality;
+		return (
+			researchSources[error.type as keyof typeof researchSources] ||
+			researchSources.code_quality
+		);
 	}
 
 	private compileRecommendations(
@@ -459,7 +456,7 @@ export class QualityControlTestingFramework {
 
 		return {
 			phases: this.phases,
-			recommendations: this.phases.research?.recommendations || [],
+			recommendations: this.phases.research?.research?.recommendations || [],
 			summary: {
 				criticalErrors: allErrors.filter((e) => e.severity === 'critical')
 					.length,

@@ -13,4 +13,6 @@ export * from './ChatSettings';
 export * from './ChatSuggestions';
 export * from './ChatTasks';
 export * from './ChatWidget';
+export * from './FinancialAgentWidget';
+export * from './FinancialQuickActions';
 export * from './ModelSelector';

@@ -60,14 +60,17 @@ export const validateEnv = (): EnvValidationResult => {
 	const warnings: string[] = [];
 	const diagnostics: Record<string, unknown> = {};
 
-	// Check Clerk Publishable Key
+	// Check Clerk Publishable Key (optional - Clerk is currently stubbed)
 	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
 	diagnostics.hasClerkPublishableKey = !!clerkPublishableKey;
 	diagnostics.clerkPublishableKeyValid =
 		isValidClerkPublishableKey(clerkPublishableKey);
 
 	if (!clerkPublishableKey) {
-		errors.push('VITE_CLERK_PUBLISHABLE_KEY não está definida');
+		// Only warn since Clerk is stubbed
+		warnings.push(
+			'VITE_CLERK_PUBLISHABLE_KEY não está definida (Clerk desabilitado)',
+		);
 	} else if (!isValidClerkPublishableKey(clerkPublishableKey)) {
 		warnings.push('VITE_CLERK_PUBLISHABLE_KEY formato inválido');
 	}

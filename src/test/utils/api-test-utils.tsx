@@ -48,7 +48,7 @@ export const TestQueryProvider: React.FC<{
  */
 export const renderHookWithQuery = <T,>(
 	hook: () => T,
-	options?: { client?: QueryClient },
+	_options?: { client?: QueryClient },
 ) => {
 	return renderHook(hook, {
 		wrapper: ({ children }) => (

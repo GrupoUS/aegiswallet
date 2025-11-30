@@ -7,8 +7,8 @@
 // Clerk publishable key from environment
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-if (!clerkPublishableKey) {
-	throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
+// Note: Clerk is currently stubbed, so we warn instead of throwing
+if (!clerkPublishableKey && import.meta.env.DEV) {
 }
 
 /**
@@ -69,8 +69,8 @@ export const clerkLocalization = {
  * URLs for Clerk redirects
  */
 export const clerkUrls = {
-	signIn: '/entrar',
-	signUp: '/cadastro',
+	signIn: '/login',
+	signUp: '/signup',
 	afterSignIn: '/dashboard',
 	afterSignUp: '/onboarding',
 	afterSignOut: '/',

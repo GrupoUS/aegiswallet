@@ -58,7 +58,6 @@
 		"deploy:vercel:quick:prod": "vercel deploy --prod --prebuilt",
 		"validate:colors": "bun scripts/validate-colors.ts",
 		"export:tokens": "bun scripts/export-design-tokens.ts",
-		"setup:google-calendar": "bun scripts/setup-google-calendar-sync.ts",
 		"sync:process-queue": "bun scripts/process-sync-queue.ts",
 		"sync:channel-renew": "bun scripts/channel-renewal-cron.ts",
 		"dev:sync-worker": "bun --watch scripts/process-sync-queue.ts",

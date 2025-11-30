@@ -117,7 +117,7 @@ function parseVitestOutput(output: string): TestResult {
 
 	const passed = passedMatch ? parseInt(passedMatch[1], 10) : 0;
 	const failed = failedMatch ? parseInt(failedMatch[1], 10) : 0;
-	const skipped = skippedMatch ? parseInt(skippedMatch[1], 10) : 0;
+	const _skipped = skippedMatch ? parseInt(skippedMatch[1], 10) : 0;
 
 	// Extract duration
 	const durationMatch = output.match(/Test Files\s+\d+\s+passed\s+\((\d+)\)/);
@@ -203,7 +203,6 @@ function calculateQualityMetrics(
 	results: TestResult[],
 	biomeScore: number,
 ): TestReport['qualityMetrics'] {
-
 	const codeQuality = biomeScore;
 	const security =
 		results.find((r) => r.name.includes('LGPD'))?.status === 'passed' ? 100 : 0;
@@ -328,7 +327,9 @@ async function main(): Promise<void> {
 		const biomeResult = runBiomeLinting();
 		if (!biomeResult.success) {
 			console.error('Biome linting errors:');
-			biomeResult.errors.forEach((error) => console.error(`  ${error}`));
+			biomeResult.errors.forEach((error) => {
+				console.error(`  ${error}`);
+			});
 		}
 
 		// 2. Run all healthcare test suites
@@ -345,12 +346,14 @@ async function main(): Promise<void> {
 						: result.status === 'failed'
 							? '❌'
 							: '⏭️';
-				
+
 				console.log(`${status} ${result.name} (${result.duration}ms)`);
 
 				if (result.errors && result.errors.length > 0) {
 					console.error(`  Errors in ${result.name}:`);
-					result.errors.forEach((error) => console.error(`    ${error}`));
+					result.errors.forEach((error) => {
+						console.error(`    ${error}`);
+					});
 				}
 			} catch (error) {
 				results.push({

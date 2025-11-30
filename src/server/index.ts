@@ -9,6 +9,7 @@ import { setupApiRoutes } from '@/server/routes/api';
 import { setupHealthRoute } from '@/server/routes/health';
 import { setupStaticRoutes } from '@/server/routes/static';
 import {
+	agentRouter,
 	aiChatRouter,
 	bankAccountsRouter,
 	bankingRouter,
@@ -59,6 +60,7 @@ app.route('/api/v1/google-calendar', googleCalendarRouter);
 app.route('/api/v1/compliance', complianceRouter);
 app.route('/api/v1/billing', billingRouter);
 app.route('/api/v1/ai', aiChatRouter);
+app.route('/api/v1/agent', agentRouter);
 
 // Cron job routes
 app.route('/cron', cronJobs);

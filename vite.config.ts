@@ -4,8 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const esToolkitAliases = {};
-
 export default defineConfig(({ mode }) => {
 	const isProduction = mode === 'production';
 
@@ -46,10 +44,6 @@ export default defineConfig(({ mode }) => {
 			}),
 		},
 		optimizeDeps: {
-			exclude: [
-				// Exclude heavy dependencies from pre-bundling
-				'speech-recognition-polyfill',
-			],
 			include: [
 				'react',
 				'react-dom',
@@ -73,7 +67,6 @@ export default defineConfig(({ mode }) => {
 		resolve: {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
-				...esToolkitAliases,
 			},
 			dedupe: ['@clerk/clerk-react', '@clerk/backend', '@clerk/localizations'],
 		},

@@ -100,8 +100,8 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 		);
 	}
 
-	// Validate Clerk configuration
-	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
+	// Validate Clerk configuration (optional - Clerk is currently stubbed)
+	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY', false);
 	const clerkSecretKey = getEnvVar('CLERK_SECRET_KEY', false); // Optional in client
 
 	if (clerkPublishableKey) {

@@ -1,37 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Create a chainable mock that always resolves to empty array
-const createChainableMock = () => {
-	const mock: Record<string, unknown> = {};
-	const chainMethods = [
-		'select',
-		'from',
-		'leftJoin',
-		'where',
-		'groupBy',
-		'orderBy',
-	];
+// Mock database before importing the service
+vi.mock('@/db', () => {
+	// Create chainable mock for Drizzle-style queries that resolves to empty arrays
+	const createChain = (): unknown => {
+		const mockResult = Promise.resolve([]);
+		// Extend the promise with chainable methods
+		return Object.assign(mockResult, {
+			select: vi.fn(() => createChain()),
+			from: vi.fn(() => createChain()),
+			leftJoin: vi.fn(() => createChain()),
+			where: vi.fn(() => createChain()),
+			groupBy: vi.fn(() => createChain()),
+			orderBy: vi.fn(() => createChain()),
+			limit: vi.fn(() => Promise.resolve([])),
+		});
+	};
 
-	// Make all chain methods return the mock itself
-	for (const method of chainMethods) {
-		mock[method] = vi.fn(() => mock);
-	}
-
-	// `limit` is the terminal method that returns a Promise
-	mock.limit = vi.fn().mockResolvedValue([]);
-
-	// Make the mock itself a Promise-like (for queries without limit)
-	mock.then = vi.fn((resolve: (value: unknown[]) => void) => {
-		return Promise.resolve([]).then(resolve);
-	});
-
-	return mock;
-};
-
-// Mock database
-vi.mock('@/db', () => ({
-	db: createChainableMock(),
-}));
+	return {
+		db: {
+			select: vi.fn(() => createChain()),
+		},
+	};
+});
 
 import { FinancialContextService } from '../context/FinancialContextService';
 

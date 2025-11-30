@@ -1,11 +1,61 @@
 import { useMemo } from 'react';
 
 import { createFinancialAgentFromEnv } from '../agent';
+import type { ChatBackend, ModelInfo } from '../domain/ChatBackend';
+import type {
+	ChatMessage,
+	ChatRequestOptions,
+	ChatStreamChunk,
+} from '../domain/types';
 import {
 	type UseChatControllerOptions,
 	type UseChatControllerReturn,
 	useChatController,
 } from './useChatController';
+
+/**
+ * Noop backend for when agent is unavailable
+ * Returns an error message explaining why the agent is disabled
+ */
+class NoopChatBackend implements ChatBackend {
+	private errorMessage: string;
+
+	constructor(errorMessage: string) {
+		this.errorMessage = errorMessage;
+	}
+
+	async *send(
+		_messages: ChatMessage[],
+		_options?: ChatRequestOptions,
+	): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		yield {
+			type: 'error',
+			payload: {
+				code: 'AGENT_UNAVAILABLE',
+				message: this.errorMessage,
+			},
+		};
+		yield { type: 'done', payload: null };
+	}
+
+	abort(): void {
+		// No-op
+	}
+
+	getModelInfo(): ModelInfo {
+		return {
+			id: 'noop',
+			name: 'Unavailable',
+			provider: 'none',
+			capabilities: {
+				streaming: false,
+				multimodal: false,
+				tools: false,
+				reasoning: false,
+			},
+		};
+	}
+}
 
 export interface UseFinancialAgentOptions
 	extends Omit<UseChatControllerOptions, never> {
@@ -40,23 +90,26 @@ export function useFinancialAgent(
 ): UseChatControllerReturn {
 	const { userId, model, enabled = true, ...chatOptions } = options;
 
-	const backend = useMemo(() => {
-		if (!enabled || !userId) {
-			return null;
+	// Create backend or noop fallback - always returns a valid ChatBackend
+	const backend = useMemo((): ChatBackend => {
+		if (!enabled) {
+			return new NoopChatBackend('O agente financeiro está desativado.');
+		}
+		if (!userId) {
+			return new NoopChatBackend('Usuário não autenticado.');
 		}
 		try {
 			return createFinancialAgentFromEnv(userId, model);
 		} catch {
 			// Agent creation failed - likely missing API key
-			return null;
+			return new NoopChatBackend(
+				'Agente financeiro indisponível - chave da API não configurada.',
+			);
 		}
 	}, [userId, model, enabled]);
 
-	// Use the chat controller with the agent backend
-	// If backend is null, we create a placeholder that will fail gracefully
-	// The component should check if backend is available using isFinancialAgentAvailable()
-	// biome-ignore lint/style/noNonNullAssertion: backend is validated before use
-	return useChatController(backend!, {
+	// Use the chat controller with the agent backend (always called unconditionally)
+	return useChatController(backend, {
 		...chatOptions,
 		systemPrompt: undefined, // Agent has its own system prompt
 	});

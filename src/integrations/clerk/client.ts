@@ -9,6 +9,10 @@ export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Note: Clerk is currently stubbed, so we warn instead of throwing
 if (!clerkPublishableKey && import.meta.env.DEV) {
+	// biome-ignore lint/suspicious/noConsole: Intentional warning for dev environment
+	console.warn(
+		'[Clerk] Missing VITE_CLERK_PUBLISHABLE_KEY - authentication features will be disabled',
+	);
 }
 
 /**

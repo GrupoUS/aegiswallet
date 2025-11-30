@@ -5,14 +5,13 @@
 
 import { and, desc, eq, gte, lte, sum } from 'drizzle-orm';
 
-import { db } from '@/db';
-
 import type {
 	CategorySummary,
 	FinancialAlert,
 	FinancialContext,
 	UpcomingPayment,
 } from '../types';
+import { db } from '@/db/client';
 import {
 	aiInsights,
 	bankAccounts,
@@ -24,11 +23,34 @@ import {
 // Cache TTL: 5 minutes
 const CONTEXT_CACHE_TTL_MS = 5 * 60 * 1000;
 
-// In-memory cache (per user)
+// Maximum cache entries to prevent memory leaks in serverless environments
+const MAX_CACHE_ENTRIES = 100;
+
+// In-memory cache (per user) with LRU eviction
 const contextCache = new Map<
 	string,
-	{ context: FinancialContext; expiresAt: number }
+	{ context: FinancialContext; expiresAt: number; lastAccess: number }
 >();
+
+/**
+ * LRU cache eviction - removes oldest entries when max size is reached
+ */
+function evictOldestCacheEntries(): void {
+	if (contextCache.size <= MAX_CACHE_ENTRIES) return;
+
+	// Sort by lastAccess and remove oldest entries
+	const entries = Array.from(contextCache.entries()).sort(
+		(a, b) => a[1].lastAccess - b[1].lastAccess,
+	);
+
+	const entriesToRemove = entries.slice(
+		0,
+		contextCache.size - MAX_CACHE_ENTRIES,
+	);
+	for (const [key] of entriesToRemove) {
+		contextCache.delete(key);
+	}
+}
 
 /**
  * Service for building and caching user financial context
@@ -48,8 +70,11 @@ export class FinancialContextService {
 	async getContext(forceRefresh = false): Promise<FinancialContext> {
 		const cacheKey = this.userId;
 		const cached = contextCache.get(cacheKey);
+		const now = Date.now();
 
-		if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
+		if (!forceRefresh && cached && cached.expiresAt > now) {
+			// Update last access time for LRU tracking
+			cached.lastAccess = now;
 			return cached.context;
 		}
 
@@ -57,8 +82,12 @@ export class FinancialContextService {
 
 		contextCache.set(cacheKey, {
 			context,
-			expiresAt: Date.now() + CONTEXT_CACHE_TTL_MS,
+			expiresAt: now + CONTEXT_CACHE_TTL_MS,
+			lastAccess: now,
 		});
+
+		// Evict old entries if cache is too large
+		evictOldestCacheEntries();
 
 		return context;
 	}

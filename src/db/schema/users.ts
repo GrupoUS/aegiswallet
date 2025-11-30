@@ -1,9 +1,9 @@
 /**
  * Users Schema - User Management & Authentication
  *
- * Migrated from Supabase to Drizzle ORM with Clerk Auth
- * - User ID is now TEXT (Clerk user_id format: "user_xxx")
- * - RLS policies replaced by application-level authorization
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless) + Clerk Auth
+ * - User ID is TEXT (Clerk user_id format: "user_xxx")
+ * - Authorization handled at application-level via Clerk middleware
  */
 
 import {
@@ -24,7 +24,7 @@ import {
  * Extends Clerk auth with Brazilian-specific fields
  */
 export const users = pgTable('users', {
-	// Clerk user_id (format: "user_xxx") - replaces Supabase auth.users UUID
+	// Clerk user_id (format: "user_xxx")
 	id: text('id').primaryKey(),
 
 	// Basic info

@@ -349,17 +349,6 @@ const HealthcareDataProtection = () => {
 			JSON.stringify(healthData),
 			'AES-256-GCM',
 		);
-
-		const _protectedRecord = {
-			encryptedData: encryptedData?.encryptedData,
-			encryptionMetadata,
-			protectionStatus,
-			patientIdPseudonym: `PAT-${healthData.patientId.slice(-4)}`,
-			createdAt: new Date().toISOString(),
-			retentionPeriod: 2555, // 7 years
-			accessLevel: 'restricted',
-			auditTrail: true,
-		};
 	};
 
 	return React.createElement(
@@ -662,9 +651,6 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
 		it('should handle encryption failures gracefully', async () => {
 			const testUtils = global.testUtils as TestUtils;
-			const _mockEncrypt = vi
-				.spyOn(testUtils, 'encryptMockData')
-				.mockResolvedValue(null);
 
 			render(React.createElement(HealthcareDataProtection));
 
@@ -891,14 +877,6 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		it('should encrypt voice transcriptions', async () => {
-			const _voiceData = {
-				confidence: 0.95,
-				duration: 45,
-				recordingId: 'voice-001',
-				timestamp: new Date().toISOString(),
-				transcription: 'Paciente relata dor no peito',
-			};
-
 			// Mock encryption verification
 			const encryptionVerification = {
 				accessLogged: true,

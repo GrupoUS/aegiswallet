@@ -138,9 +138,6 @@ export class TextToSpeechService {
 	private config: TTSConfig;
 	private cache: AudioCache;
 	private synth: SpeechSynthesis | null = null;
-	/** @internal Tracks current utterance for state management (written during speech operations) */
-	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Used for tracking current utterance state during speech operations
-	private _currentUtterance: SpeechSynthesisUtterance | null = null;
 
 	constructor(
 		config?: Partial<TTSConfig>,
@@ -248,12 +245,10 @@ export class TextToSpeechService {
 
 		return new Promise((resolve, reject) => {
 			const utterance = this.createUtterance(text);
-			this._currentUtterance = utterance;
 			let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
 			if (this.isMockEnvironment()) {
 				fallbackTimer = setTimeout(() => {
-					this._currentUtterance = null;
 					resolve();
 				}, 100);
 			}
@@ -295,7 +290,6 @@ export class TextToSpeechService {
 
 			utterance.onend = () => {
 				clearFallback();
-				this._currentUtterance = null;
 				resolve();
 			};
 
@@ -303,7 +297,6 @@ export class TextToSpeechService {
 				event: SpeechSynthesisErrorEvent | { error?: string },
 			) => {
 				clearFallback();
-				this._currentUtterance = null;
 				const errorMessage =
 					'error' in event && event.error
 						? event.error
@@ -316,7 +309,6 @@ export class TextToSpeechService {
 				synth.speak(utterance as SpeechSynthesisUtterance);
 			} catch (error) {
 				clearFallback();
-				this._currentUtterance = null;
 				reject(
 					error instanceof Error
 						? error
@@ -430,7 +422,6 @@ export class TextToSpeechService {
 			return;
 		}
 		synth.cancel();
-		this._currentUtterance = null;
 	}
 
 	/**

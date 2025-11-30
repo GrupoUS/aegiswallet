@@ -490,9 +490,6 @@ describe('Voice Interface Testing (Portuguese)', () => {
 		});
 
 		it('should provide retry functionality after no-speech errors', async () => {
-			const onCommand = vi.fn();
-			const retryCount = 0;
-
 			const mockVoiceService = {
 				startListening: vi.fn(),
 				stopListening: vi.fn(),
@@ -535,8 +532,6 @@ describe('Voice Interface Testing (Portuguese)', () => {
 		});
 
 		it('should respect max retry attempts', async () => {
-			const onCommand = vi.fn();
-
 			// Test with auto-retry enabled but limited attempts
 			const { result } = renderHook(() =>
 				useVoiceCommand({

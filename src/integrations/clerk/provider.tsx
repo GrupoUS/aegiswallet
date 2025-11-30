@@ -5,7 +5,6 @@
  * Configured for AegisWallet Brazilian market
  */
 
-// Clerk integration is currently disabled - using Supabase auth instead
 // import { ClerkProvider as BaseClerkProvider } from '@clerk/clerk-react';
 // import { ptBR } from '@clerk/localizations';
 import type { ReactNode } from 'react';
@@ -19,7 +18,6 @@ interface ClerkProviderProps {
 /**
  * AegisWallet Clerk Provider
  *
- * NOTE: Clerk integration is currently disabled - using Supabase auth instead
  * This is a stub implementation to maintain API compatibility
  */
 export function ClerkProvider({ children }: ClerkProviderProps) {

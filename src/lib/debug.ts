@@ -18,17 +18,7 @@ class Logger {
 			import.meta.env.DEV || process.env.NODE_ENV === 'development';
 	}
 
-	private formatMessage(
-		level: LogLevel,
-		message: string,
-		context?: DebugContext,
-	): string {
-		const timestamp = new Date().toISOString();
-		const contextStr = context
-			? `[${context.component}${context.action ? `::${context.action}` : ''}]`
-			: '';
-		return `${timestamp} ${level.toUpperCase()}${contextStr}: ${message}`;
-	}
+	
 
 	private log(
 		level: LogLevel,
@@ -39,8 +29,6 @@ class Logger {
 		if (!this.isDevelopment) {
 			return;
 		}
-
-		const _formattedMessage = this.formatMessage(level, message, context);
 
 		switch (level) {
 			case 'debug':

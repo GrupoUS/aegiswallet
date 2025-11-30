@@ -393,7 +393,6 @@ function generateSpendingInsights(
 	if (categories.length === 0) return insights;
 
 	const topCategory = categories[0];
-	const _secondCategory = categories[1];
 
 	// Insight sobre categoria principal
 	insights.push(

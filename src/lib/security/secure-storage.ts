@@ -421,7 +421,6 @@ export class SecureStorageManager {
 					key.startsWith(`${this.config.storageKey}_`) &&
 					!key.endsWith('_access')
 				) {
-					const _storageKey = key.replace(`${this.config.storageKey}_`, '');
 					const accessKey = `${key}_access`;
 
 					const accessTime = localStorage.getItem(accessKey);

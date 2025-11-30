@@ -1,0 +1,2 @@
+$ bunx tsc --noEmit
+src/lib/speech/SpeechRecognitionService.ts(25,1): error TS1128: Declaration or statement expected.

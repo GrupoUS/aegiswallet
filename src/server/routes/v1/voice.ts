@@ -18,7 +18,6 @@ import {
 	processVoiceCommand,
 } from '@/services/voiceCommandService';
 
-const _MIN_AUTOMATION_CONFIDENCE = 0.8;
 const voiceRouter = new Hono<AppEnv>();
 
 // Input validation schemas

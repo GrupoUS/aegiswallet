@@ -446,24 +446,28 @@ export function createContactsTools(userId: string) {
 							throw new Error('CPF inválido para transferência PIX');
 						}
 
-						// Execute PIX transfer
-						const pixTransferResult = await pixTools.sendPixTransfer.execute(
-							{
-								recipientKey,
-								recipientKeyType: recipientKeyType as
-									| 'CPF'
-									| 'CNPJ'
-									| 'EMAIL'
-									| 'PHONE'
-									| 'RANDOM_KEY',
-								recipientName: contact.name,
-								amount,
-								description: finalDescription,
-							},
-							{} as never,
-						);
+						// Execute PIX transfer using the tool's execute method
+						const pixTransferResult = await pixTools.sendPixTransfer.execute({
+							recipientKey,
+							recipientKeyType: recipientKeyType as
+								| 'CPF'
+								| 'CNPJ'
+								| 'EMAIL'
+								| 'PHONE'
+								| 'RANDOM_KEY',
+							recipientName: contact.name,
+							amount,
+							description: finalDescription,
+						});
 
-						transferResult = pixTransferResult as TransferResult;
+						// Map PIX transfer result to TransferResult interface
+						transferResult = {
+							success: pixTransferResult.success,
+							transfer: pixTransferResult.transfer as Record<string, unknown>,
+							message: pixTransferResult.message,
+							endToEndId: pixTransferResult.endToEndId,
+							estimatedCompletion: pixTransferResult.estimatedCompletion,
+						};
 					} else {
 						transferResult = {
 							success: true,

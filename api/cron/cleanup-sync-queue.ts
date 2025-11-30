@@ -4,9 +4,8 @@
  * Purpose: Remove old completed/failed sync queue items
  *
  * @deprecated This cron job is currently disabled.
- * The calendar sync feature was built on Supabase infrastructure which has been
- * migrated to Neon/Drizzle. This functionality needs to be re-implemented
- * using the new database client when Google Calendar sync is prioritized.
+ * This functionality needs to be re-implemented
+ * using the Neon/Drizzle database client when Google Calendar sync is prioritized.
  */
 
 export const config = {
@@ -42,11 +41,11 @@ export default async function handler(
 		return res.status(401).json({ error: 'Unauthorized' });
 	}
 
-	// Feature currently disabled - awaiting migration to Drizzle/Neon
+	// Feature currently disabled - awaiting implementation
 	return res.status(200).json({
 		success: true,
 		message: 'Sync queue cleanup is currently disabled',
-		reason: 'Awaiting migration from Supabase to Neon/Drizzle',
+		reason: 'Awaiting implementation with Neon/Drizzle',
 		deleted: {
 			completed: 0,
 			failed: 0,

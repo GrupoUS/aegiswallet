@@ -1,0 +1,41 @@
+$ bunx tsc --noEmit
+src/lib/ai/tools/enhanced/contacts.ts(450,64): error TS2554: Expected 2 arguments, but got 1.
+src/lib/ai/tools/enhanced/contacts.ts(465,35): error TS2339: Property 'success' does not exist on type '{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletion: string; } |...'.
+  Property 'success' does not exist on type 'AsyncIterable<{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletio...'.
+src/lib/ai/tools/enhanced/contacts.ts(466,36): error TS2339: Property 'transfer' does not exist on type '{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletion: string; } |...'.
+  Property 'transfer' does not exist on type 'AsyncIterable<{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletio...'.
+src/lib/ai/tools/enhanced/contacts.ts(467,35): error TS2339: Property 'message' does not exist on type '{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletion: string; } |...'.
+  Property 'message' does not exist on type 'AsyncIterable<{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletio...'.
+src/lib/ai/tools/enhanced/contacts.ts(468,38): error TS2339: Property 'endToEndId' does not exist on type '{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletion: string; } |...'.
+  Property 'endToEndId' does not exist on type 'AsyncIterable<{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletio...'.
+src/lib/ai/tools/enhanced/contacts.ts(469,47): error TS2339: Property 'estimatedCompletion' does not exist on type '{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletion: string; } |...'.
+  Property 'estimatedCompletion' does not exist on type 'AsyncIterable<{ success: boolean; transfer: Partial<{ id: string; status: string | null; description: string | null; userId: string | null; amount: string; pixKey: string; pixKeyType: string; recipientName: string; ... 13 more ...; feeAmount: string | null; }>; message: string; endToEndId: string; estimatedCompletio...'.
+src/lib/ai/tools/enhanced/multimodal.ts(23,11): error TS6196: 'BrazilianFinancialData' is declared but never used.
+src/lib/ai/tools/enhanced/multimodal.ts(49,10): error TS6133: '_isValidBrazilianCPF' is declared but its value is never read.
+src/lib/ai/tools/enhanced/multimodal.ts(75,10): error TS6133: '_isValidBrazilianCNPJ' is declared but its value is never read.
+src/lib/ai/tools/enhanced/multimodal.ts(340,7): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'PaymentData[]'.
+  Type 'unknown' is not assignable to type 'PaymentData'.
+src/lib/ai/tools/enhanced/multimodal.ts(792,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/ai/tools/enhanced/multimodal.ts(862,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/ai/tools/enhanced/multimodal.ts(868,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/ai/tools/enhanced/multimodal.ts(874,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/ai/tools/enhanced/multimodal.ts(880,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/ai/tools/enhanced/multimodal.ts(886,11): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'ChartData'.
+src/lib/logging.ts(57,9): error TS6133: 'entry' is declared but its value is never read.
+src/lib/logging/simplified-logger.ts(90,10): error TS6133: 'createLogEntry' is declared but its value is never read.
+src/lib/tts/textToSpeechService.ts(143,10): error TS6133: 'currentUtterance' is declared but its value is never read.
+src/routes/dashboard.lazy.tsx(1,16): error TS6133: 'useNavigate' is declared but its value is never read.
+src/test/ai-chat/useChatController.test.ts(163,9): error TS6133: 'firstResponse' is declared but its value is never read.
+src/test/healthcare/api-security-validation.test.ts(455,9): error TS6133: '_apiCall' is declared but its value is never read.
+src/test/healthcare/brazilian-financial-compliance.test.ts(271,9): error TS6133: '_transaction' is declared but its value is never read.
+src/test/healthcare/healthcare-data-protection.test.ts(359,9): error TS6133: '_protectedRecord' is declared but its value is never read.
+src/test/healthcare/healthcare-data-protection.test.ts(665,10): error TS6133: '_mockEncrypt' is declared but its value is never read.
+src/test/healthcare/healthcare-data-protection.test.ts(894,10): error TS6133: '_voiceData' is declared but its value is never read.
+src/test/healthcare/voice-interface.test.ts(485,10): error TS6133: 'onCommand' is declared but its value is never read.
+src/test/healthcare/voice-interface.test.ts(486,10): error TS6133: 'retryCount' is declared but its value is never read.
+src/test/healthcare/voice-interface.test.ts(530,10): error TS6133: 'onCommand' is declared but its value is never read.
+src/test/matchers/lgpd-matchers.ts(11,11): error TS6196: 'LGPDDataAssessment' is declared but never used.
+src/test/performance/database-performance.test.ts(103,10): error TS6133: 'executionTime' is declared but its value is never read.
+src/test/performance/voiceCommandPerformance.test.ts(16,5): error TS6133: 'mockSpeechRecognitionInstance' is declared but its value is never read.
+src/test/utils/api-test-utils.tsx(53,8): error TS6133: 'client' is declared but its value is never read.
+src/test/utils/quality-control-integration.ts(49,10): error TS6133: '_testUtils' is declared but its value is never read.

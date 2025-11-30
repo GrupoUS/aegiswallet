@@ -287,5 +287,5 @@ export function createEncryptionService(
  * Generate and display new encryption key (for initial setup)
  */
 export function generateEncryptionKey(): void {
-	const _key = AudioEncryptionService.generateKey();
+	AudioEncryptionService.generateKey();
 }

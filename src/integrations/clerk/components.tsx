@@ -2,7 +2,6 @@
  * Clerk Stub Components
  *
  * Stub implementations for Clerk components.
- * NOTE: Clerk integration is currently disabled - using Supabase auth instead.
  *
  * These stubs always render as 'signed out' state:
  * - SignedIn: returns null (user is not signed in)

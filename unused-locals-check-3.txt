@@ -1,0 +1,48 @@
+$ bunx tsc --noEmit
+src/lib/logging.ts(56,13): error TS1005: ';' expected.
+src/lib/logging.ts(57,3): error TS1109: Expression expected.
+src/lib/logging.ts(60,4): error TS1128: Declaration or statement expected.
+src/lib/logging.ts(60,23): error TS1005: ';' expected.
+src/lib/logging.ts(62,4): error TS1128: Declaration or statement expected.
+src/lib/logging.ts(62,22): error TS1005: ';' expected.
+src/lib/logging.ts(64,4): error TS1128: Declaration or statement expected.
+src/lib/logging.ts(64,22): error TS1005: ';' expected.
+src/lib/logging.ts(66,4): error TS1128: Declaration or statement expected.
+src/lib/logging.ts(66,23): error TS1005: ';' expected.
+src/lib/logging.ts(71,15): error TS1005: ',' expected.
+src/lib/logging.ts(71,33): error TS1109: Expression expected.
+src/lib/logging.ts(71,46): error TS1005: ';' expected.
+src/lib/logging.ts(72,7): error TS1005: ':' expected.
+src/lib/logging.ts(72,45): error TS1005: ',' expected.
+src/lib/logging.ts(75,14): error TS1005: ',' expected.
+src/lib/logging.ts(75,32): error TS1109: Expression expected.
+src/lib/logging.ts(75,45): error TS1005: ';' expected.
+src/lib/logging.ts(76,7): error TS1005: ':' expected.
+src/lib/logging.ts(76,44): error TS1005: ',' expected.
+src/lib/logging.ts(79,14): error TS1005: ',' expected.
+src/lib/logging.ts(79,32): error TS1109: Expression expected.
+src/lib/logging.ts(79,45): error TS1005: ';' expected.
+src/lib/logging.ts(80,7): error TS1005: ':' expected.
+src/lib/logging.ts(80,44): error TS1005: ',' expected.
+src/lib/logging.ts(83,15): error TS1005: ',' expected.
+src/lib/logging.ts(83,33): error TS1109: Expression expected.
+src/lib/logging.ts(83,46): error TS1005: ';' expected.
+src/lib/logging.ts(84,7): error TS1005: ':' expected.
+src/lib/logging.ts(84,45): error TS1005: ',' expected.
+src/lib/logging.ts(88,18): error TS1005: ',' expected.
+src/lib/logging.ts(88,36): error TS1109: Expression expected.
+src/lib/logging.ts(88,49): error TS1005: ';' expected.
+src/lib/logging.ts(89,7): error TS1005: ':' expected.
+src/lib/logging.ts(89,46): error TS1005: ',' expected.
+src/lib/logging.ts(92,15): error TS1005: ',' expected.
+src/lib/logging.ts(92,33): error TS1109: Expression expected.
+src/lib/logging.ts(92,46): error TS1005: ';' expected.
+src/lib/logging.ts(93,7): error TS1005: ':' expected.
+src/lib/logging.ts(93,43): error TS1005: ',' expected.
+src/lib/logging.ts(96,21): error TS1005: ',' expected.
+src/lib/logging.ts(96,39): error TS1109: Expression expected.
+src/lib/logging.ts(96,52): error TS1005: ';' expected.
+src/lib/logging.ts(97,7): error TS1005: ':' expected.
+src/lib/logging.ts(97,42): error TS1005: ',' expected.
+src/lib/logging.ts(99,1): error TS1128: Declaration or statement expected.
+src/lib/speech/SpeechRecognitionService.ts(23,1): error TS1131: Property or signature expected.

@@ -104,19 +104,6 @@ class SimplifiedLogger {
 	}
 
 	/**
-	 * Format log message for console output
-	 */
-	private formatMessage(entry: LogEntry): string {
-		const time = new Date(entry.timestamp).toLocaleTimeString();
-		const level = LogLevel[entry.level];
-		const component = entry.context?.component
-			? `[${entry.context.component}]`
-			: '';
-
-		return `${time} ${level} ${component} ${entry.message}`.trim();
-	}
-
-	/**
 	 * Core logging method
 	 */
 	private log(level: LogLevel, message: string, context?: LogContext): void {
@@ -124,9 +111,6 @@ class SimplifiedLogger {
 		if (!this.isDevelopment && level === LogLevel.DEBUG) {
 			return;
 		}
-
-		const entry = this.createLogEntry(level, message, context);
-		const _formattedMessage = this.formatMessage(entry);
 
 		// Use appropriate console method
 		switch (level) {

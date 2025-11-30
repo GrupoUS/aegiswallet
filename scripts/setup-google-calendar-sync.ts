@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /**
- * Helper script to configure Google Calendar credentials for local and Supabase environments.
+ * Helper script to configure Google Calendar credentials for local and production environments.
  *
  * Usage:
  *   bun run setup:google-calendar
  */
-import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
@@ -76,20 +75,6 @@ function upsertEnvValues(filePath: string, values: Record<string, string>) {
 	writeFileSync(filePath, content);
 }
 
-function readProjectRef(): string | null {
-	try {
-		const configPath = path.resolve(process.cwd(), 'supabase', 'config.toml');
-		if (!existsSync(configPath)) {
-			return null;
-		}
-		const config = readFileSync(configPath, 'utf8');
-		const match = config.match(/project_id\s*=\s*"([^"]+)"/);
-		return match ? match[1] : null;
-	} catch {
-		return null;
-	}
-}
-
 async function main() {
 	const answers: Record<Question['key'], string> = {
 		GOOGLE_OAUTH_CLIENT_ID: '',
@@ -113,47 +98,12 @@ async function main() {
 	const envPath = path.resolve(process.cwd(), '.env.local');
 	upsertEnvValues(envPath, envUpdates);
 
-	const supabaseEnvPath = path.resolve(
-		process.cwd(),
-		'supabase',
-		'google-calendar.env',
-	);
-	upsertEnvValues(supabaseEnvPath, {
-		GOOGLE_CLIENT_ID: answers.GOOGLE_OAUTH_CLIENT_ID,
-		GOOGLE_CLIENT_SECRET: answers.GOOGLE_OAUTH_CLIENT_SECRET,
-		GOOGLE_REDIRECT_URI: answers.GOOGLE_OAUTH_REDIRECT_URI,
-	});
-
-	const projectRef = readProjectRef();
-	const secretArgs = [
-		'secrets',
-		'set',
-		`GOOGLE_CLIENT_ID=${answers.GOOGLE_OAUTH_CLIENT_ID}`,
-		`GOOGLE_CLIENT_SECRET=${answers.GOOGLE_OAUTH_CLIENT_SECRET}`,
-		`GOOGLE_REDIRECT_URI=${answers.GOOGLE_OAUTH_REDIRECT_URI}`,
-	];
-
-	if (projectRef) {
-		secretArgs.push('--project-ref', projectRef);
-	}
-
-	output.write('\nAtualizando segredos no Supabase...\n');
-	const supabaseResult = spawnSync('supabase', secretArgs, {
-		stdio: 'inherit',
-	});
-
-	if (supabaseResult.status !== 0) {
-		output.write(
-			'\n⚠️  Não foi possível aplicar os segredos automaticamente. Execute manualmente:\n' +
-				`supabase secrets set GOOGLE_CLIENT_ID=${answers.GOOGLE_OAUTH_CLIENT_ID} GOOGLE_CLIENT_SECRET=${answers.GOOGLE_OAUTH_CLIENT_SECRET} GOOGLE_REDIRECT_URI=${answers.GOOGLE_OAUTH_REDIRECT_URI}${
-					projectRef ? ` --project-ref ${projectRef}` : ''
-				}\n`,
-		);
-	}
-
 	output.write('\n✅ Configuração concluída!\n');
 	output.write(`  - Variáveis salvas em ${envPath}\n`);
-	output.write(`  - Arquivo auxiliar gerado em ${supabaseEnvPath}\n`);
+	output.write('  - Configure as variáveis no Vercel Dashboard ou via CLI:\n');
+	output.write('    vercel env add GOOGLE_CLIENT_ID\n');
+	output.write('    vercel env add GOOGLE_CLIENT_SECRET\n');
+	output.write('    vercel env add GOOGLE_REDIRECT_URI\n');
 	output.write(
 		'  - Execute `vercel env set VITE_GOOGLE_CLIENT_ID <valor>` e equivalentes se precisar propagar para previews.\n',
 	);

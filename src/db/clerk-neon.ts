@@ -38,8 +38,13 @@ export const createDb = () => {
 
 /**
  * Default database instance
+ *
+ * Note: In browser context, this will be null. Only use on server-side.
  */
-export const db = createDb();
+export const db =
+	typeof window === 'undefined' && process.env.DATABASE_URL
+		? createDb()
+		: (null as unknown as ReturnType<typeof createDb>);
 
 // ========================================
 // USER-SCOPED QUERY HELPERS
@@ -111,10 +116,7 @@ export async function getUserPixKeys(userId: string) {
 /**
  * Get user's PIX transactions
  */
-export async function getUserPixTransactions(
-	userId: string,
-	options?: { limit?: number },
-) {
+export async function getUserPixTransactions(userId: string, options?: { limit?: number }) {
 	let query = db
 		.select()
 		.from(schema.pixTransactions)
@@ -163,10 +165,7 @@ export async function getUserBoletos(
  * Get user's LGPD consents
  */
 export async function getUserConsents(userId: string) {
-	return db
-		.select()
-		.from(schema.lgpdConsents)
-		.where(eq(schema.lgpdConsents.userId, userId));
+	return db.select().from(schema.lgpdConsents).where(eq(schema.lgpdConsents.userId, userId));
 }
 
 /**
@@ -190,17 +189,9 @@ export async function getUserFinancialSummary(userId: string) {
 			currency: schema.bankAccounts.currency,
 		})
 		.from(schema.bankAccounts)
-		.where(
-			and(
-				eq(schema.bankAccounts.userId, userId),
-				eq(schema.bankAccounts.isActive, true),
-			),
-		);
+		.where(and(eq(schema.bankAccounts.userId, userId), eq(schema.bankAccounts.isActive, true)));
 
-	const totalBalance = accounts.reduce(
-		(sum, acc) => sum + Number(acc.balance || 0),
-		0,
-	);
+	const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
 
 	// Get recent transactions count
 	const thirtyDaysAgo = new Date();
@@ -233,10 +224,7 @@ export async function getUserFinancialSummary(userId: string) {
  */
 export async function createUserTransaction(
 	userId: string,
-	data: Omit<
-		schema.InsertTransaction,
-		'id' | 'userId' | 'createdAt' | 'updatedAt'
-	>,
+	data: Omit<schema.InsertTransaction, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
 ) {
 	const result = await db
 		.insert(schema.transactions)
@@ -263,12 +251,7 @@ export async function updateUserTransaction(
 			...data,
 			updatedAt: new Date(),
 		})
-		.where(
-			and(
-				eq(schema.transactions.id, transactionId),
-				eq(schema.transactions.userId, userId),
-			),
-		)
+		.where(and(eq(schema.transactions.id, transactionId), eq(schema.transactions.userId, userId)))
 		.returning();
 
 	return result[0];
@@ -277,18 +260,10 @@ export async function updateUserTransaction(
 /**
  * Delete a transaction (with ownership check)
  */
-export async function deleteUserTransaction(
-	userId: string,
-	transactionId: string,
-) {
+export async function deleteUserTransaction(userId: string, transactionId: string) {
 	const result = await db
 		.delete(schema.transactions)
-		.where(
-			and(
-				eq(schema.transactions.id, transactionId),
-				eq(schema.transactions.userId, userId),
-			),
-		)
+		.where(and(eq(schema.transactions.id, transactionId), eq(schema.transactions.userId, userId)))
 		.returning();
 
 	return result[0];
@@ -299,10 +274,7 @@ export async function deleteUserTransaction(
  */
 export async function createUserBankAccount(
 	userId: string,
-	data: Omit<
-		schema.InsertBankAccount,
-		'id' | 'userId' | 'createdAt' | 'updatedAt'
-	>,
+	data: Omit<schema.InsertBankAccount, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
 ) {
 	const result = await db
 		.insert(schema.bankAccounts)
@@ -329,12 +301,7 @@ export async function updateUserBankAccountBalance(
 			balance: newBalance,
 			updatedAt: new Date(),
 		})
-		.where(
-			and(
-				eq(schema.bankAccounts.id, accountId),
-				eq(schema.bankAccounts.userId, userId),
-			),
-		)
+		.where(and(eq(schema.bankAccounts.id, accountId), eq(schema.bankAccounts.userId, userId)))
 		.returning();
 
 	return result[0];

@@ -25,18 +25,11 @@ function LoginComponent() {
 					<h1 className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text font-bold text-5xl text-transparent tracking-tight">
 						AegisWallet
 					</h1>
-					<p className="text-lg text-muted-foreground">
-						Seu assistente financeiro inteligente
-					</p>
+					<p className="text-lg text-muted-foreground">Seu assistente financeiro inteligente</p>
 				</div>
 
 				<div className="flex justify-center">
-					<SignIn
-						routing="path"
-						path="/login"
-						signUpUrl="/signup"
-						afterSignInUrl="/dashboard"
-					/>
+					<SignIn routing="path" path="/login" signUpUrl="/signup" forceRedirectUrl="/dashboard" />
 				</div>
 
 				<div className="text-center text-muted-foreground text-sm">

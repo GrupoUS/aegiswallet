@@ -22,7 +22,7 @@ interface ClerkProviderProps {
  * Configured for Brazilian market with PT-BR localization
  */
 export function ClerkProvider({ children }: ClerkProviderProps) {
-	// If no publishable key is configured, show error in production or bypass in development
+	// If no publishable key is configured, show error in production
 	if (!clerkPublishableKey) {
 		// In production, show explicit error instead of failing silently
 		if (import.meta.env.PROD) {
@@ -30,20 +30,28 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
 				<div className="flex min-h-screen items-center justify-center bg-background">
 					<div className="max-w-md rounded-lg border border-destructive/50 bg-destructive/10 p-8 text-center">
 						<h1 className="mb-4 font-bold text-destructive text-xl">
-							Erro de Configuracao
+							Erro de Configuração - AegisWallet
 						</h1>
-						<p className="text-destructive/80">
-							Sistema de autenticacao nao configurado. Por favor, contate o
-							suporte tecnico.
+						<p className="text-destructive/80 mb-4">
+							O sistema de autenticação não está configurado corretamente.
 						</p>
+						<div className="space-y-2 text-left">
+							<p className="text-destructive/60 text-sm">
+								<strong>Possíveis causas:</strong>
+							</p>
+							<ul className="text-destructive/60 text-sm space-y-1">
+								<li>• Variáveis de ambiente não configuradas</li>
+								<li>• Chave do Clerk ausente no ambiente de produção</li>
+								<li>• Configuração de deploy incorreta</li>
+							</ul>
+						</div>
 						<p className="mt-4 font-mono text-destructive/60 text-xs">
-							Codigo: CLERK_KEY_MISSING
+							Código: CLERK_KEY_MISSING_PROD
 						</p>
 					</div>
 				</div>
 			);
 		}
-		// In development, allow app to work without Clerk
 		return <>{children}</>;
 	}
 
@@ -54,9 +62,8 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
 			appearance={clerkAppearance}
 			signInUrl={clerkUrls.signIn}
 			signUpUrl={clerkUrls.signUp}
-			afterSignInUrl={clerkUrls.afterSignIn}
-			afterSignUpUrl={clerkUrls.afterSignUp}
-			afterSignOutUrl={clerkUrls.afterSignOut}
+			signInFallbackRedirectUrl={clerkUrls.afterSignIn}
+			signUpFallbackRedirectUrl={clerkUrls.afterSignUp}
 		>
 			{children}
 		</BaseClerkProvider>

@@ -108,8 +108,13 @@ export const getOrganizationClient = (_organizationId: string) => {
 /**
  * Default database client (HTTP-based for simplicity)
  * Use getPoolClient() when you need transactions
+ *
+ * Note: In browser context, this will be null. Only use on server-side.
  */
-export const db = getHttpClient();
+export const db =
+	typeof window === 'undefined' && process.env.DATABASE_URL
+		? getHttpClient()
+		: (null as unknown as ReturnType<typeof createHttpClient>);
 
 // ========================================
 // TYPE EXPORTS

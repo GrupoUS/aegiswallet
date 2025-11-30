@@ -25,18 +25,11 @@ function SignUpComponent() {
 					<h1 className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text font-bold text-5xl text-transparent tracking-tight">
 						AegisWallet
 					</h1>
-					<p className="text-lg text-muted-foreground">
-						Crie sua conta gratuita
-					</p>
+					<p className="text-lg text-muted-foreground">Crie sua conta gratuita</p>
 				</div>
 
 				<div className="flex justify-center">
-					<SignUp
-						routing="path"
-						path="/signup"
-						signInUrl="/login"
-						afterSignUpUrl="/dashboard"
-					/>
+					<SignUp routing="path" path="/signup" signInUrl="/login" forceRedirectUrl="/dashboard" />
 				</div>
 
 				<div className="text-center text-muted-foreground text-sm">

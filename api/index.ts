@@ -1,15 +1,18 @@
 // Vercel Serverless Function - Hono App Entry Point
-// This file is bundled by esbuild at build time with path aliases resolved
+// Re-exports the Hono app from src/server/vercel.ts
 
-import { handle } from '@hono/node-server/vercel';
+// Using hono/vercel adapter for proper Vercel Edge/Serverless support
+import { handle } from 'hono/vercel';
 
-// Import the configured Hono application
+// Import the configured Hono application using relative path
+// (path aliases @/ are resolved by the bundler in src/)
 import app from '../src/server/index';
 
 export const config = {
-	maxDuration: 10,
+	runtime: 'nodejs',
+	maxDuration: 30,
 };
 
-// Export the Hono app handler for Vercel using the proper adapter
-// This ensures all Hono routes (including /api/v1/google-calendar/*) are served correctly
+// Export the Hono app handler for Vercel
+// All routes under /api/v1/* are handled by the Hono app
 export default handle(app);

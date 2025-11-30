@@ -160,7 +160,6 @@ describe('useChatController', () => {
 		});
 
 		expect(result.current.messages).toHaveLength(2);
-		const firstResponse = result.current.messages[1].content;
 
 		// Regenerate
 		await act(async () => {

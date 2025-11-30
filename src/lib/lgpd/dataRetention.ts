@@ -4,7 +4,7 @@
  * Brazilian General Data Protection Law (LGPD) compliance module
  * Manages data retention policies and subject rights
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB
  */
 
 import { apiClient } from '@/lib/api-client';

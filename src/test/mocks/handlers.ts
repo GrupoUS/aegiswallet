@@ -126,13 +126,13 @@ const updateBankAccountSchema = createBankAccountSchema.partial().extend({
 
 const createTransactionSchema = z.object({
 	amount: z.number(),
-	type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']),
+	type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto'] as const),
 	description: z.string().optional(),
 	category_id: z.string().optional(),
 	account_id: z.string(),
 	to_account_id: z.string().optional(),
 	status: z
-		.enum(['cancelled', 'failed', 'pending', 'posted'])
+		.enum(['cancelled', 'failed', 'pending', 'posted'] as const)
 		.default('posted'),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 });
@@ -318,7 +318,7 @@ export const handlers = [
 		const validated = createContactSchema.parse(body);
 
 		const newContact = createMockContact({
-			...validated,
+			...(validated as Record<string, unknown>),
 			id: `new-contact-${Date.now()}`,
 			created_at: new Date().toISOString(),
 		});

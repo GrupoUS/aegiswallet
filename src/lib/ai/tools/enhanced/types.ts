@@ -108,7 +108,7 @@ export interface Contact {
 	updatedAt: string;
 }
 
-// Database response types (snake_case as returned from Supabase)
+// Database response types (snake_case as returned from NeonDB via Drizzle)
 export interface ContactDbRow {
 	id: string;
 	name: string;

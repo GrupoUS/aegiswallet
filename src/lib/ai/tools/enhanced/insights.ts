@@ -88,7 +88,7 @@ export function createInsightsTools(userId: string) {
 					const categorySpendingMap = new Map<string, CategorySpending>();
 
 					transactionsList.forEach((tx) => {
-						// Supabase joins return arrays, so access first element
+						// Drizzle joins return arrays, so access first element
 						const txCategory = Array.isArray(tx.category)
 							? tx.category[0]
 							: tx.category;
@@ -393,7 +393,6 @@ function generateSpendingInsights(
 	if (categories.length === 0) return insights;
 
 	const topCategory = categories[0];
-	const _secondCategory = categories[1];
 
 	// Insight sobre categoria principal
 	insights.push(
@@ -465,7 +464,7 @@ interface MonthlyPattern {
 	dataPoints: number;
 }
 
-// Helper function to extract category name from Supabase join result (array or object)
+// Helper function to extract category name from Drizzle join result (array or object)
 function getCategoryName(
 	category: TransactionRecord['category'],
 ): string | undefined {
@@ -1172,7 +1171,7 @@ async function fetchBudgetTransactions(userId: string, analysisMonths: number) {
 }
 
 function analyzeSpendingPatterns(
-	// biome-ignore lint/suspicious/noExplicitAny: Transaction data has dynamic structure from Supabase
+	// biome-ignore lint/suspicious/noExplicitAny: Transaction data has dynamic structure from database
 	transactions: any[],
 	analysisMonths: number,
 ) {

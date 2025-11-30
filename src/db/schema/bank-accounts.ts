@@ -1,7 +1,7 @@
 /**
  * Bank Accounts Schema - Banking & Integration
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * Includes Belvo integration support
  */
 

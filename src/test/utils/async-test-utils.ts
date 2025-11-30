@@ -309,23 +309,17 @@ export const simulateBrazilianTransaction = async (
 
 /**
  * Test Brazilian bank account operations
+ * Uses Drizzle ORM with NeonDB
  */
 export const testBankAccountOperation = async (
 	operation: 'create' | 'update' | 'delete',
 	accountData: any,
-	mockSupabase: any,
+	mockDb: any,
 ): Promise<any> => {
 	const operations = {
-		create: () =>
-			mockSupabase.from('bank_accounts').insert(accountData).single(),
-		update: () =>
-			mockSupabase
-				.from('bank_accounts')
-				.update(accountData)
-				.eq('id', accountData.id)
-				.single(),
-		delete: () =>
-			mockSupabase.from('bank_accounts').delete().eq('id', accountData.id),
+		create: () => mockDb.insert('bank_accounts', accountData),
+		update: () => mockDb.update('bank_accounts', accountData, accountData.id),
+		delete: () => mockDb.delete('bank_accounts', accountData.id),
 	};
 
 	const result = await operations[operation]();

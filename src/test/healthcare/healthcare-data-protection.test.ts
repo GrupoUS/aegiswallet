@@ -81,7 +81,7 @@ const HealthcareDataProtection = () => {
 		medication: '',
 		patientId: '',
 		patientName: '',
-	});
+	} as Record<string, string>);
 
 	const [protectionStatus, setProtectionStatus] = React.useState({
 		accessControl: 'pending',
@@ -94,16 +94,10 @@ const HealthcareDataProtection = () => {
 		voiceProtection: 'pending',
 	});
 
-	const [encryptionMetadata, setEncryptionMetadata] = React.useState<{
-		algorithm: string;
-		decryptedData: string | null;
-		encryptionTime: string | null;
-		ivLength: number;
-		keyLength: number;
-	}>({
+	const [encryptionMetadata, setEncryptionMetadata] = React.useState({
 		algorithm: 'AES-256-GCM',
-		decryptedData: null,
-		encryptionTime: null,
+		decryptedData: null as string | null,
+		encryptionTime: null as string | null,
 		ivLength: 12,
 		keyLength: 256,
 	});
@@ -351,21 +345,7 @@ const HealthcareDataProtection = () => {
 
 		// Encrypt and store health data
 		const testUtils = global.testUtils as TestUtils;
-		const encryptedData = await testUtils.encryptMockData(
-			JSON.stringify(healthData),
-			'AES-256-GCM',
-		);
-
-		const _protectedRecord = {
-			encryptedData: encryptedData?.encryptedData,
-			encryptionMetadata,
-			protectionStatus,
-			patientIdPseudonym: `PAT-${healthData.patientId.slice(-4)}`,
-			createdAt: new Date().toISOString(),
-			retentionPeriod: 2555, // 7 years
-			accessLevel: 'restricted',
-			auditTrail: true,
-		};
+		await testUtils.encryptMockData(JSON.stringify(healthData), 'AES-256-GCM');
 	};
 
 	return React.createElement(
@@ -450,7 +430,10 @@ const HealthcareDataProtection = () => {
 							'data-testid': 'medication',
 							key: 'medication-input',
 							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, medication: e.target.value }),
+								setHealthData((prev) => ({
+									...prev,
+									medication: e.target.value,
+								})),
 							placeholder: 'Medicamentos prescritos',
 							type: 'text',
 							value: healthData.medication,
@@ -465,7 +448,10 @@ const HealthcareDataProtection = () => {
 							'data-testid': 'allergies',
 							key: 'allergies-input',
 							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, allergies: e.target.value }),
+								setHealthData((prev) => ({
+									...prev,
+									allergies: e.target.value,
+								})),
 							placeholder: 'Alergias conhecidas',
 							type: 'text',
 							value: healthData.allergies,
@@ -661,11 +647,6 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		it('should handle encryption failures gracefully', async () => {
-			const testUtils = global.testUtils as TestUtils;
-			const _mockEncrypt = vi
-				.spyOn(testUtils, 'encryptMockData')
-				.mockResolvedValue(null);
-
 			render(React.createElement(HealthcareDataProtection));
 
 			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-001');
@@ -891,14 +872,6 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		it('should encrypt voice transcriptions', async () => {
-			const _voiceData = {
-				confidence: 0.95,
-				duration: 45,
-				recordingId: 'voice-001',
-				timestamp: new Date().toISOString(),
-				transcription: 'Paciente relata dor no peito',
-			};
-
 			// Mock encryption verification
 			const encryptionVerification = {
 				accessLogged: true,

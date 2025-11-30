@@ -13,7 +13,7 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "react",
 		"strict": true,
-		"noUnusedLocals": false,
+		"noUnusedLocals": true,
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": true,
 		"baseUrl": ".",

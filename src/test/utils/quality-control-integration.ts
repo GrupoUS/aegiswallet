@@ -46,7 +46,6 @@ export interface QualityControlPhase {
 }
 
 export class QualityControlTestingFramework {
-	private _testUtils: TestUtils;
 	private currentPhase: QualityControlPhase = {
 		errors: [],
 		phase: 'detection',
@@ -55,8 +54,8 @@ export class QualityControlTestingFramework {
 
 	private phases: Record<string, QualityControlPhase> = {};
 
-	constructor(testUtils: TestUtils) {
-		this._testUtils = testUtils;
+	constructor(_testUtils: TestUtils) {
+		// TestUtils parameter kept for future use
 	}
 
 	// Phase 1: Error Detection & Analysis
@@ -243,10 +242,7 @@ export class QualityControlTestingFramework {
 		error: QualityControlPhase['errors'][0],
 	): Promise<NonNullable<QualityControlPhase['research']>['sources'][number]> {
 		// Mock research - in real implementation this would use Context7, Tavily, etc.
-		const researchSources: Record<
-			QualityControlPhase['errors'][0]['type'],
-			NonNullable<QualityControlPhase['research']>['sources'][number]
-		> = {
+		const researchSources = {
 			code_quality: {
 				confidence: 0.95,
 				query: `Biome ${error.message} best practices`,
@@ -283,9 +279,9 @@ export class QualityControlTestingFramework {
 				},
 				type: 'tavily' as const,
 			},
-		};
+		} as const;
 
-		return researchSources[error.type] || researchSources.code_quality;
+		return researchSources[error.type as keyof typeof researchSources] || researchSources.code_quality;
 	}
 
 	private compileRecommendations(
@@ -390,7 +386,7 @@ export class QualityControlTestingFramework {
 				dependencies: ['task-002'],
 				estimatedTime: 25,
 				id: 'task-004',
-				name: 'Setup Supabase RLS testing',
+				name: 'Setup NeonDB RLS testing',
 				priority: 'P0',
 				validationCriteria: [
 					'Patient data access controls',
@@ -463,7 +459,7 @@ export class QualityControlTestingFramework {
 
 		return {
 			phases: this.phases,
-			recommendations: this.phases.research?.research?.recommendations || [],
+			recommendations: this.phases.research?.recommendations || [],
 			summary: {
 				criticalErrors: allErrors.filter((e) => e.severity === 'critical')
 					.length,

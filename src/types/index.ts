@@ -4,14 +4,56 @@
  * Central export point for all type definitions used throughout the application.
  * Ensures type safety and LGPD compliance across all modules.
  *
- * @version 1.0.0
+ * @version 2.0.0 - Updated for NeonDB + Drizzle ORM
  * @since 2025-11-19
  */
 
-// Re-export commonly used types
-export type { Database } from './database.types';
-// Database types
-export * from './database.types';
+// Database types (from Drizzle schema) - exclude UserSession to avoid conflict
+export type {
+	// AI/Voice
+	AiInsight,
+	// Bank Accounts
+	BankAccount,
+	// Contacts
+	Contact,
+	ContactPaymentMethod,
+	EventReminder,
+	EventType,
+	// Calendar
+	FinancialEvent as DrizzleFinancialEvent,
+	InsertAiInsight,
+	InsertBankAccount,
+	InsertContact,
+	InsertContactPaymentMethod,
+	InsertEventReminder,
+	InsertEventType,
+	InsertFinancialEvent,
+	InsertNotification,
+	InsertPixKey,
+	InsertPixTransaction,
+	InsertTransaction,
+	InsertTransactionCategory,
+	InsertTransactionSchedule,
+	InsertUser,
+	InsertUserPreferences,
+	InsertUserSecurity,
+	InsertVoiceCommand,
+	// Notifications
+	Notification,
+	// PIX
+	PixKey,
+	PixTransaction,
+	// Transactions
+	Transaction,
+	TransactionCategory,
+	TransactionSchedule,
+	// Users & Auth
+	User,
+	UserPreferences,
+	UserSecurity,
+	VoiceCommand as DrizzleVoiceCommand,
+} from '../db/schema';
+export * from './database-stubs';
 export * from './financial/chart.types';
 export type { FinancialEvent } from './financial-events';
 // Financial types

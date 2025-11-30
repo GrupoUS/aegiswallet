@@ -6,6 +6,7 @@
 import { aiChat as aiChatRouter } from './ai-chat';
 import bankAccountsRouter from './bank-accounts';
 import bankingRouter from './banking';
+import billingRouter from './billing';
 import calendarRouter from './calendar';
 import complianceRouter from './compliance';
 import contactsRouter from './contacts';
@@ -24,6 +25,7 @@ export {
 	// pixRouter removed - PIX functionality discontinued
 	contactsRouter,
 	bankAccountsRouter,
+	billingRouter,
 	usersRouter,
 	transactionsRouter,
 	calendarRouter,

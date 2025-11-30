@@ -26,7 +26,6 @@ export interface LogEntry {
 
 class SimplifiedLogger {
 	private isDevelopment: boolean;
-	private currentUserId?: string;
 
 	constructor() {
 		this.isDevelopment =
@@ -36,97 +35,13 @@ class SimplifiedLogger {
 	}
 
 	/**
-	 * Set current user context for logging
-	 */
-	setUserId(userId: string): void {
-		this.currentUserId = userId;
-	}
-
-	/**
-	 * Clear user context
-	 */
-	clearUserId(): void {
-		this.currentUserId = undefined;
-	}
-
-	/**
-	 * Sanitize sensitive data for logging
-	 */
-	private sanitizeContext(context?: LogContext): LogContext | undefined {
-		if (!context) {
-			return context;
-		}
-
-		const sensitiveKeys = [
-			'password',
-			'token',
-			'secret',
-			'key',
-			'auth',
-			'session',
-			'email',
-			'phone',
-			'cpf',
-			'account',
-			'balance',
-		];
-
-		const sanitized: LogContext = {};
-
-		for (const [key, value] of Object.entries(context)) {
-			const isSensitive = sensitiveKeys.some((sensitive) =>
-				key.toLowerCase().includes(sensitive.toLowerCase()),
-			);
-
-			sanitized[key] = isSensitive && value ? '[REDACTED]' : value;
-		}
-
-		return sanitized;
-	}
-
-	/**
-	 * Create log entry
-	 */
-	private createLogEntry(
-		level: LogLevel,
-		message: string,
-		context?: LogContext,
-	): LogEntry {
-		return {
-			context: this.sanitizeContext({
-				...context,
-				userId: this.currentUserId || context?.userId,
-			}),
-			level,
-			message,
-			timestamp: new Date().toISOString(),
-		};
-	}
-
-	/**
-	 * Format log message for console output
-	 */
-	private formatMessage(entry: LogEntry): string {
-		const time = new Date(entry.timestamp).toLocaleTimeString();
-		const level = LogLevel[entry.level];
-		const component = entry.context?.component
-			? `[${entry.context.component}]`
-			: '';
-
-		return `${time} ${level} ${component} ${entry.message}`.trim();
-	}
-
-	/**
 	 * Core logging method
 	 */
-	private log(level: LogLevel, message: string, context?: LogContext): void {
+	private log(level: LogLevel, _message: string, _context?: LogContext): void {
 		// Skip debug logs in production
 		if (!this.isDevelopment && level === LogLevel.DEBUG) {
 			return;
 		}
-
-		const entry = this.createLogEntry(level, message, context);
-		const _formattedMessage = this.formatMessage(entry);
 
 		// Use appropriate console method
 		switch (level) {

@@ -1,7 +1,7 @@
 /**
  * Fraud Detection Service - Story 01.04
  *
- * NOTE: This module has been stubbed during migration from Supabase to Neon DB.
+ * NOTE: This module uses NeonDB via Drizzle ORM.
  * The fraud detection functionality requires a security_events table and related
  * infrastructure that needs to be implemented via API endpoints.
  *

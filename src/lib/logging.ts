@@ -48,35 +48,28 @@ class Logger {
 		return level >= this.logLevel;
 	}
 
-	private formatMessage(entry: LogEntry): string {
-		const timestamp = entry.timestamp.toISOString();
-		const level = LogLevel[entry.level].padEnd(5);
-		const context = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
-		return `[${timestamp}] ${level} ${entry.message}${context}`;
-	}
-
 	private log(level: LogLevel, message: string, context?: LogContext): void {
 		if (!this.shouldLog(level)) {
 			return;
 		}
 
-		const entry: LogEntry = {
-			context,
-			level,
-			message,
-			timestamp: new Date(),
-		};
-
-		const _formattedMessage = this.formatMessage(entry);
+		const timestamp = new Date().toISOString();
+		const levelName = LogLevel[level];
+		const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+		const logMessage = `[${timestamp}] ${levelName}: ${message}${contextStr}`;
 
 		switch (level) {
 			case LogLevel.DEBUG:
+				console.debug(logMessage);
 				break;
 			case LogLevel.INFO:
+				console.info(logMessage);
 				break;
 			case LogLevel.WARN:
+				console.warn(logMessage);
 				break;
 			case LogLevel.ERROR:
+				console.error(logMessage);
 				break;
 		}
 	}

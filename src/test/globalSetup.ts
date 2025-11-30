@@ -6,12 +6,15 @@ export default async function setup() {
 
 	// Set up global window/document if they don't exist
 	if (typeof globalThis.window === 'undefined') {
-		(globalThis as any).window = {};
+		Object.defineProperty(globalThis, 'window', { value: {}, writable: true });
 	}
 
 	// Ensure document exists
 	if (typeof globalThis.document === 'undefined') {
-		(globalThis as any).document = {};
+		Object.defineProperty(globalThis, 'document', {
+			value: {},
+			writable: true,
+		});
 	}
 
 	// Ensure navigator exists

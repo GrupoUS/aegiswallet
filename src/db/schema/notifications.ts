@@ -1,7 +1,7 @@
 /**
  * Notifications Schema - Notifications & Alerts
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * User notifications, alert rules, and delivery logs
  */
 

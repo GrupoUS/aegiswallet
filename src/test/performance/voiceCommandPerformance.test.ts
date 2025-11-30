@@ -13,7 +13,7 @@ import { createSTTService } from '@/lib/stt/speechToTextService';
 import { createVAD } from '@/lib/stt/voiceActivityDetection';
 
 // Mock Web Speech API
-let mockSpeechRecognitionInstance = {
+let _mockSpeechRecognitionInstance = {
 	continuous: false,
 	interimResults: true,
 	lang: 'pt-BR',
@@ -37,7 +37,7 @@ const createMockSpeechRecognitionInstance = () => {
 		start: vi.fn(),
 		stop: vi.fn(),
 	};
-	mockSpeechRecognitionInstance = instance;
+	_mockSpeechRecognitionInstance = instance;
 	return instance;
 };
 
@@ -97,7 +97,7 @@ describe('Voice Command Performance', () => {
 		vi.clearAllMocks();
 
 		// Reinitialize the mock instance with fresh spies after clearAllMocks
-		mockSpeechRecognitionInstance = {
+		_mockSpeechRecognitionInstance = {
 			continuous: false,
 			interimResults: true,
 			lang: 'pt-BR',
@@ -122,7 +122,7 @@ describe('Voice Command Performance', () => {
 				start: vi.fn(),
 				stop: vi.fn(),
 			};
-			mockSpeechRecognitionInstance = instance;
+			_mockSpeechRecognitionInstance = instance;
 			return instance;
 		});
 	});

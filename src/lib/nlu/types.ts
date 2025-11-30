@@ -275,7 +275,7 @@ export interface NLUConfig {
 
 	// Logging settings
 	loggingEnabled: boolean;
-	logToSupabase: boolean;
+	logToDatabase: boolean;
 
 	// Feature flags
 	tfidfEnabled: boolean;

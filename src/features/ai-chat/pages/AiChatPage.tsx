@@ -42,7 +42,6 @@ export default function AiChatPage() {
 
 	// Check if user has access to AI
 	const canAccessAI = subscription?.canAccessAI ?? false;
-	const _currentPlan = subscription?.plan?.name || 'Gratuito';
 
 	const handleSendMessage = (message: string) => {
 		if (!canAccessAI) {

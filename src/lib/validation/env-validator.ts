@@ -115,9 +115,6 @@ export const validateEnv = (): EnvValidationResult => {
 	return { diagnostics, errors, isValid, warnings };
 };
 
-// Legacy alias for backward compatibility
-export const validateSupabaseEnv = validateEnv;
-
 /**
  * Validates environment and throws if critical vars missing
  */
@@ -138,4 +135,4 @@ ${result.errors.map((e) => `║  ❌ ${e.padEnd(52)}║`).join('\n')}
 	}
 };
 
-export default { assertValidEnv, validateEnv, validateSupabaseEnv };
+export default { assertValidEnv, validateEnv };

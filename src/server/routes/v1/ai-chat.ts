@@ -3,24 +3,8 @@ import { convertToCoreMessages, streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-// Define interfaces for AI SDK types with Brazilian compliance
-interface AIUsage {
-	totalTokens: number;
-	promptTokens?: number;
-	completionTokens?: number;
-}
-
-interface AIToolCall {
-	toolCallId: string;
-	toolName: string;
-	args: Record<string, unknown>;
-}
-
-interface AIFinishCallback {
-	usage: AIUsage;
-	finishReason: 'stop' | 'length' | 'tool-calls' | 'error';
-	toolCalls?: AIToolCall[];
-}
+// Note: AI SDK types (AIUsage, AIToolCall, AIFinishCallback) are defined inline
+// in the onFinish callback to match the AI SDK's exact signature which may vary between versions
 
 // Brazilian Portuguese AI response validation
 interface AIResponseValidation {
@@ -39,22 +23,6 @@ interface LGPDCompliantMessage {
 	sensitiveDataRedacted: boolean;
 	timestamp: string;
 	sessionId?: string;
-}
-
-// Type guard for LGPD compliance
-function _isLGPDCompliantMessage(
-	message: unknown,
-): message is LGPDCompliantMessage {
-	if (typeof message !== 'object' || message === null) return false;
-
-	const msg = message as Record<string, unknown>;
-	return (
-		typeof msg.role === 'string' &&
-		['user', 'assistant', 'system', 'tool'].includes(msg.role) &&
-		typeof msg.content === 'string' &&
-		typeof msg.sensitiveDataRedacted === 'boolean' &&
-		typeof msg.timestamp === 'string'
-	);
 }
 
 // Brazilian Portuguese content validation
@@ -204,7 +172,26 @@ aiChat.post(
 					usage,
 					finishReason,
 					toolCalls,
-				}: AIFinishCallback) => {
+				}: {
+					usage: {
+						totalTokens: number;
+						promptTokens?: number;
+						completionTokens?: number;
+					};
+					finishReason:
+						| 'stop'
+						| 'length'
+						| 'tool-calls'
+						| 'error'
+						| 'content-filter'
+						| 'cancel'
+						| 'unknown';
+					toolCalls?: Array<{
+						toolCallId: string;
+						toolName: string;
+						args: Record<string, unknown>;
+					}>;
+				}) => {
 					// LGPD-compliant logging with Brazilian Portuguese validation
 					const typedMessages = messages as LGPDCompliantMessage[];
 					const lastMessage = typedMessages[typedMessages.length - 1];
@@ -238,9 +225,7 @@ aiChat.post(
 						provider,
 						model: `${provider}/${tier}`,
 						actionType: toolCalls?.length ? 'tool_call' : 'chat',
-						toolName: toolCalls
-							?.map((tc: AIToolCall) => tc.toolName)
-							.join(', '),
+						toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
 						inputSummary:
 							typeof lastUserContent === 'string'
 								? lastUserContent.slice(0, 100)

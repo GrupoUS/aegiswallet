@@ -50,7 +50,7 @@ const DEFAULT_CONFIG: NLUConfig = {
 	contextEnabled: true,
 	maxContextTurns: 3,
 	loggingEnabled: true,
-	logToSupabase: false,
+	logToDatabase: false,
 	tfidfEnabled: true,
 	ensembleVotingEnabled: true,
 	disambiguationEnabled: true,

@@ -1,7 +1,7 @@
 /**
  * Boletos Schema - Brazilian Payment Slips
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * Brazilian payment slips (boletos)
  */
 

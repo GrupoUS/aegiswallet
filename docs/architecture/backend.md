@@ -26,7 +26,7 @@
 **Funcionalidade Mantida**:
 - ✅ Zero regressões em features do usuário
 - ✅ Type safety preservado via Zod schemas
-- ✅ Real-time subscriptions (Supabase channels)
+- ✅ Real-time via API polling
 - ✅ Todas as validações e autenticações
 
 ---
@@ -164,7 +164,7 @@ import { clerkAuth } from '@/server/middleware/clerk-auth'
 router.use('/*', clerkAuth)
 
 // In route handlers
-const { user, supabase } = c.get('auth')
+const user = c.get('auth')
 ```
 
 ### Validation Pattern
@@ -288,7 +288,7 @@ return new Response(result.toDataStream())
 ## Security & Performance
 
 ### Authentication
-- JWT-based authentication with request-scoped Supabase clients
+- JWT-based authentication with Clerk
 - All protected routes require valid authentication
 - Token validation and user context extraction
 
@@ -386,6 +386,6 @@ GOOGLE_GENERATIVE_AI_API_KEY=...
 
 ---
 
-**Última Atualização**: Novembro 2025  
-**Versão**: Hono RPC v2.0.0 - Performance 50-100x melhor  
+**Última Atualização**: Novembro 2025
+**Versão**: Hono RPC v2.0.0 - Performance 50-100x melhor
 **Status**: Production Ready

@@ -2,7 +2,6 @@
  * Custom Clerk Hooks
  *
  * Extended hooks for AegisWallet authentication needs
- * NOTE: Clerk integration is currently disabled - using Supabase auth instead
  */
 
 import { useCallback, useMemo } from 'react';
@@ -27,7 +26,6 @@ export interface AegisWalletUser {
 
 /**
  * Hook to get the current authenticated user with AegisWallet-specific data
- * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisUser() {
 	// Stub implementation - Clerk not currently used
@@ -43,7 +41,6 @@ export function useAegisUser() {
 
 /**
  * Hook to get authentication state and token
- * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisAuth() {
 	/**
@@ -72,7 +69,6 @@ export function useAegisAuth() {
 
 /**
  * Hook to manage user session
- * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useAegisSession() {
 	/**
@@ -92,7 +88,6 @@ export function useAegisSession() {
 
 /**
  * Hook to update user metadata
- * NOTE: Currently disabled - using Supabase auth instead
  */
 export function useUpdateUserMetadata() {
 	/**
@@ -121,7 +116,6 @@ export function useUpdateUserMetadata() {
 }
 
 // Stub implementations for Clerk hooks and components
-// NOTE: Clerk integration is currently disabled - using Supabase auth instead
 
 // Stub hooks
 export function useAuth() {

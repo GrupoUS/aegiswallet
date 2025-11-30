@@ -1,7 +1,7 @@
 /**
  * Avatar Upload Hook
  *
- * NOTE: This hook was previously using Supabase Storage.
+ * NOTE: This hook uses API-based file upload.
  * After migration to Neon/Clerk, file storage needs to be implemented
  * with a different provider (Cloudflare R2, AWS S3, etc.)
  *

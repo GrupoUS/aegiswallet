@@ -62,8 +62,6 @@ src/
 │   ├── voiceCommandProcessor.ts ⭐ Voice command NLU ⭐
 │   ├── nlu/                   # Natural Language Understanding ⭐
 │   └── stt/                   # Speech-to-Text services ⭐
-├── integrations/
-│   └── supabase/              # Supabase client
 └── types/                     # TypeScript types
 ```
 
@@ -89,7 +87,7 @@ interface VoiceCommandPipeline {
 ### 6 Essential Voice Commands (95% of needs)
 
 1. **"Como está meu saldo?"** - Current balance + available funds
-2. **"Quanto posso gastar esse mês?"** - Budget availability + recommendations  
+2. **"Quanto posso gastar esse mês?"** - Budget availability + recommendations
 3. **"Tem algum boleto programado para pagar?"** - Upcoming bills + payment options
 4. **"Tem algum recebimento programado para entrar?"** - Scheduled income + dates
 5. **"Como ficará meu saldo no final do mês?"** - Month-end projection + trends
@@ -102,7 +100,7 @@ interface VoiceResponseTemplate {
   greeting: string;           // "Claro", "Com certeza", "Entendido"
   acknowledgment: string;     // Echo of user's request
   data: FinancialData;        // Specific financial information
-  context: string;           // Additional relevant information  
+  context: string;           // Additional relevant information
   suggestion: string;        // Optional recommendation
   confirmation: string;      // Action confirmation or question
 }
@@ -122,7 +120,7 @@ interface AutonomyLevel {
 
 **Autonomy Levels:**
 - **0-25**: Learning Phase - Basic balance queries only
-- **26-50**: Assistant Phase - Bill reminders, basic transfers  
+- **26-50**: Assistant Phase - Bill reminders, basic transfers
 - **51-75**: Autonomy Phase - Autonomous bill payments
 - **76-100**: Trust Phase - Full financial management
 
@@ -224,13 +222,13 @@ const { mutate } = useMutation({
   onMutate: async (newTransaction) => {
     // Cancel in-flight queries
     await queryClient.cancelQueries(['transactions'])
-    
+
     // Snapshot previous value
     const previousTransactions = queryClient.getQueryData(['transactions'])
-    
+
     // Optimistically update
     queryClient.setQueryData(['transactions'], old => [...old, newTransaction])
-    
+
     return { previousTransactions }
   },
   onError: (err, newTransaction, context) => {
@@ -332,12 +330,12 @@ const formatters = {
 // Voice Dashboard - Main interface
 export const VoiceDashboard = () => {
   const { isListening, startListening, stopListening } = useVoiceRecognition();
-  
+
   return (
     <div className="voice-dashboard">
       <VoiceIndicator isListening={isListening} />
       <VoiceResponse />
-      <VoiceButton 
+      <VoiceButton
         onPress={isListening ? stopListening : startListening}
       />
     </div>
@@ -347,13 +345,13 @@ export const VoiceDashboard = () => {
 // Voice Feedback Component
 export const VoiceResponse = ({ command, response }: VoiceResponseProps) => {
   const { speak } = useMultimodalResponse();
-  
+
   useEffect(() => {
     if (response) {
       speak(response.message);
     }
   }, [response, speak]);
-  
+
   return (
     <Card className="voice-response">
       <CardContent>
@@ -373,11 +371,11 @@ export const ChatLayout = () => {
   const { messages, sendMessage, isLoading } = useChatController({
     enableReasoningView: process.env.VITE_ENABLE_AI_REASONING === 'true'
   });
-  
+
   return (
     <div className="chat-layout">
       <ChatConversation messages={messages} />
-      <ChatPromptInput 
+      <ChatPromptInput
         onSubmit={sendMessage}
         disabled={isLoading}
         voiceEnabled={true}
@@ -500,6 +498,6 @@ VITE_API_URL=http://localhost:3000
 
 ---
 
-**Última Atualização**: Novembro 2025  
-**Status**: Voice-First MVP Complete  
+**Última Atualização**: Novembro 2025
+**Status**: Voice-First MVP Complete
 **Quality Target**: ≥9.5/10 (Voice + AI + Accessibility)

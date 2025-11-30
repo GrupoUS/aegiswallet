@@ -221,26 +221,11 @@ export class SecureLogger {
 	}
 
 	/**
-	 * Format log entry for console output (development only)
-	 */
-	private formatForConsole(entry: SecureLogEntry): string {
-		const time = new Date(entry.timestamp).toLocaleTimeString();
-		const level = SecureLogLevel[entry.level];
-		const component = entry.context?.component
-			? `[${entry.context.component}]`
-			: '';
-
-		return `${time} ${level} ${component} ${entry.message}`.trim();
-	}
-
-	/**
 	 * Write log entry to appropriate destination
 	 */
 	private writeLog(entry: SecureLogEntry): void {
 		if (this.isDevelopment) {
 			// In development, write to console with appropriate level
-			const _formattedMessage = this.formatForConsole(entry);
-			const _logContext = entry.context || {};
 
 			switch (entry.level) {
 				case SecureLogLevel.DEBUG:
@@ -291,8 +276,8 @@ export class SecureLogger {
 		);
 
 		if (criticalLogs.length > 0) {
-			criticalLogs.forEach((log) => {
-				const _formattedMessage = this.formatForConsole(log);
+			criticalLogs.forEach((_log) => {
+				// Process critical logs
 			});
 		}
 

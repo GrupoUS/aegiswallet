@@ -221,9 +221,7 @@ src/
 ├── hooks/              # Custom React hooks
 ├── lib/                # Utility libraries
 ├── services/           # Business logic services
-├── types/              # TypeScript type definitions
-└── integrations/       # External integrations
-    └── supabase/       # Supabase client
+└── types/              # TypeScript type definitions
 ```
 
 ---
@@ -320,8 +318,8 @@ vercel login
 vercel link
 
 # Add environment variables
-vercel env add VITE_SUPABASE_URL production
-vercel env add VITE_SUPABASE_ANON_KEY production
+vercel env add VITE_CLERK_PUBLISHABLE_KEY production
+vercel env add DATABASE_URL production
 # ... (repeat for all variables)
 
 # Deploy to preview

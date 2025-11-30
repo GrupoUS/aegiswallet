@@ -133,7 +133,6 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: [
 			// Exclude heavy dependencies from optimization during testing
-			'@supabase/supabase-js',
 			'@tanstack/react-query',
 			'@tanstack/react-router',
 		],
@@ -151,7 +150,5 @@ export default defineConfig({
 		'global.POLLY_JS': 'true',
 		'process.env.NODE_ENV': '"test"',
 		'process.env.VITE_ENVIRONMENT': '"test"',
-		'process.env.VITE_SUPABASE_ANON_KEY': '"test-anon-key"',
-		'process.env.VITE_SUPABASE_URL': '"http://localhost:54321"', // Enable mocking for healthcare tests
 	},
 });

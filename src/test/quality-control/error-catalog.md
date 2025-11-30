@@ -127,7 +127,7 @@
 - **Biome Linter**: CSS sorting, code formatting
 
 ### Database & tRPC
-- **Supabase TypeScript Types**: Database schema synchronization
+- **NeonDB + Drizzle ORM**: Database schema synchronization
 - **tRPC v11 Documentation**: Type-safe API development
 - **PostgreSQL Best Practices**: Schema design, RLS policies
 

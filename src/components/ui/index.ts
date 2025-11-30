@@ -168,7 +168,7 @@ export {
 	TooltipProvider,
 	TooltipTrigger,
 } from './tooltip';
-// Voice Components - Temporarily commented out due to Supabase import issues
+// Voice Components - Temporarily commented out due to migration issues
 // export { VoiceDashboard } from '../voice/VoiceDashboard';
 // export { VoiceIndicator } from '../voice/VoiceIndicator';
 // export { VoiceResponse } from '../voice/VoiceResponse';

@@ -9,11 +9,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
-import type {
-	FinancialEventCategory,
-	FinancialEventMetadata,
-	InstallmentInfo,
-} from '@/types/financial.interfaces';
+import type { FinancialEventCategory } from '@/types/financial.interfaces';
 import type {
 	EventColor,
 	EventStatus,
@@ -82,15 +78,7 @@ interface TransactionApiResponse<T> {
 // Mapeamento de campos do backend para frontend
 // biome-ignore lint/suspicious/noExplicitAny: Database response mapping requires flexible types - output is strictly typed via FinancialEvent
 function mapBackendToFrontend(item: any): FinancialEvent {
-	const _transactionType =
-		item.transactionType || (item.amount > 0 ? 'credit' : 'debit');
 	const type: FinancialEventType = item.amount > 0 ? 'income' : 'expense';
-
-	let _metadata: FinancialEventMetadata | undefined;
-	// Handle metadata if it exists in notes or tags, or if backend adds it back
-
-	let _installmentInfo: InstallmentInfo | undefined;
-	// Handle installment info if needed
 
 	return {
 		id: item.id,

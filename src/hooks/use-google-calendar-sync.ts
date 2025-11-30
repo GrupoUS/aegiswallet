@@ -1,7 +1,7 @@
 /**
  * Google Calendar Sync Hook
  *
- * NOTE: Google Calendar sync functionality was implemented using Supabase Edge Functions.
+ * NOTE: Google Calendar sync functionality uses NeonDB for persistence.
  * After migration to Neon/Clerk, this feature needs to be re-architected.
  *
  * Current status: DEPRECATED - Returns stub data

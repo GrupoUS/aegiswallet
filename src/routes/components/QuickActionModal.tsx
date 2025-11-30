@@ -129,8 +129,6 @@ export function QuickActionModal({
 		setIsLoading(true);
 
 		try {
-			const _date = new Date().toISOString();
-
 			if (actionType === 'transfer') {
 				const targetAccount = accountList.find((a) => a.id === targetAccountId);
 				if (!targetAccount) {

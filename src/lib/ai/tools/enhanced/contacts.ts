@@ -17,6 +17,15 @@ interface TransferResult {
 	estimatedCompletion?: string;
 }
 
+// Interface for PIX transfer result
+interface PixTransferResult {
+	success: boolean;
+	transfer: Record<string, unknown>;
+	message: string;
+	endToEndId?: string;
+	estimatedCompletion?: string;
+}
+
 export function createContactsTools(userId: string) {
 	return {
 		listContacts: tool({
@@ -446,8 +455,8 @@ export function createContactsTools(userId: string) {
 							throw new Error('CPF inválido para transferência PIX');
 						}
 
-						// Execute PIX transfer
-						const pixTransferResult = await pixTools.sendPixTransfer.execute(
+						// Execute PIX transfer using the tool's execute method
+						const pixTransferResult = (await pixTools.sendPixTransfer.execute(
 							{
 								recipientKey,
 								recipientKeyType: recipientKeyType as
@@ -460,10 +469,17 @@ export function createContactsTools(userId: string) {
 								amount,
 								description: finalDescription,
 							},
-							{} as never,
-						);
+							{ toolCallId: 'manual-call', messages: [] },
+						)) as PixTransferResult;
 
-						transferResult = pixTransferResult as TransferResult;
+						// Map PIX transfer result to TransferResult interface
+						transferResult = {
+							success: pixTransferResult.success,
+							transfer: pixTransferResult.transfer,
+							message: pixTransferResult.message,
+							endToEndId: pixTransferResult.endToEndId,
+							estimatedCompletion: pixTransferResult.estimatedCompletion,
+						};
 					} else {
 						transferResult = {
 							success: true,

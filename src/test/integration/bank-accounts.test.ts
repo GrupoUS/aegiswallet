@@ -150,6 +150,11 @@ describe.skipIf(!hasIntegrationTestEnv())(
 					accountMask: '**** 2222',
 					accountType: 'CHECKING',
 					belvoAccountId: belvoId, // Same belvo_account_id
+					balance: '0',
+					currency: 'BRL',
+					isPrimary: false,
+					isActive: true,
+					syncStatus: 'manual',
 				});
 				expect.fail('Should have thrown unique constraint error');
 			} catch (error) {

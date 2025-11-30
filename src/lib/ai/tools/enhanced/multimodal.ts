@@ -19,18 +19,6 @@ interface DateRange {
 	endDate: string;
 }
 
-// Brazilian financial data types for LGPD compliance
-interface BrazilianFinancialData {
-	cpf?: string;
-	cnpj?: string;
-	pixKey?: string;
-	pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY';
-	bankCode?: string;
-	agency?: string;
-	accountNumber?: string;
-	accountType?: 'corrente' | 'poupança';
-}
-
 // LGPD-compliant payment data interface
 interface PaymentData {
 	id: string;
@@ -45,90 +33,8 @@ interface PaymentData {
 	sensitiveDataRedacted: boolean;
 }
 
-// Type guard for Brazilian financial data validation
-function _isValidBrazilianFinancialData(
-	data: unknown,
-): data is BrazilianFinancialData {
-	if (typeof data !== 'object' || data === null) return false;
-
-	const d = data as Record<string, unknown>;
-
-	// Validate CPF if present
-	if (d.cpf && typeof d.cpf === 'string') {
-		if (!isValidBrazilianCPF(d.cpf)) return false;
-	}
-
-	// Validate CNPJ if present
-	if (d.cnpj && typeof d.cnpj === 'string') {
-		if (!isValidBrazilianCNPJ(d.cnpj)) return false;
-	}
-
-	// Validate PIX key type consistency
-	if (d.pixKey && d.pixKeyType) {
-		const validTypes = ['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'RANDOM_KEY'];
-		if (!validTypes.includes(d.pixKeyType as string)) return false;
-	}
-
-	return true;
-}
-
-// Brazilian CPF validation
-function isValidBrazilianCPF(cpf: string): boolean {
-	const cleanCPF = cpf.replace(/\D/g, '');
-	if (cleanCPF.length !== 11) return false;
-	if (/^(\d)\1+$/.test(cleanCPF)) return false;
-
-	let sum = 0;
-	for (let i = 0; i < 9; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (10 - i);
-	}
-	let remainder = (sum * 10) % 11;
-	const firstDigit = remainder === 10 ? 0 : remainder;
-
-	sum = 0;
-	for (let i = 0; i < 10; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (11 - i);
-	}
-	remainder = (sum * 10) % 11;
-	const secondDigit = remainder === 10 ? 0 : remainder;
-
-	return (
-		firstDigit === parseInt(cleanCPF.charAt(9), 10) &&
-		secondDigit === parseInt(cleanCPF.charAt(10), 10)
-	);
-}
-
-// Brazilian CNPJ validation
-function isValidBrazilianCNPJ(cnpj: string): boolean {
-	const cleanCNPJ = cnpj.replace(/\D/g, '');
-	if (cleanCNPJ.length !== 14) return false;
-	if (/^(\d)\1+$/.test(cleanCNPJ)) return false;
-
-	const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-	const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
-	let sum = 0;
-	for (let i = 0; i < 12; i++) {
-		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights1[i];
-	}
-	let remainder = sum % 11;
-	const firstDigit = remainder < 2 ? 0 : 11 - remainder;
-
-	sum = 0;
-	for (let i = 0; i < 13; i++) {
-		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights2[i];
-	}
-	remainder = sum % 11;
-	const secondDigit = remainder < 2 ? 0 : 11 - remainder;
-
-	return (
-		firstDigit === parseInt(cleanCNPJ.charAt(12), 10) &&
-		secondDigit === parseInt(cleanCNPJ.charAt(13), 10)
-	);
-}
-
 export function createMultimodalTools(userId: string) {
-	// Supabase client will be created through centralized integration layer
+	// Database client will be created through centralized integration layer
 
 	return {
 		generateVisualReport: tool({
@@ -317,29 +223,36 @@ export function createMultimodalTools(userId: string) {
 					const dateRange = calculateDateRange(period);
 
 					// Buscar dados de pagamentos
-					const paymentsData = await fetchPaymentsData(
+					const paymentsData = (await fetchPaymentsData(
 						userId,
 						dateRange,
 						includeScheduled,
-					);
+					)) as PaymentData[];
 
 					// Buscar pagamentos agendados
-					let scheduledPayments: unknown[] = [];
+					let scheduledPayments: PaymentData[] = [];
 					if (includeScheduled) {
-						scheduledPayments = await fetchScheduledPayments(
+						scheduledPayments = (await fetchScheduledPayments(
 							userId,
 							dateRange.endDate,
-						);
+						)) as PaymentData[];
 					}
 
 					// Agrupar dados conforme solicitado
-					const groupedData = groupPaymentsData(paymentsData, groupBy);
+					const groupedData = groupPaymentsData(
+						paymentsData as PaymentData[],
+						groupBy,
+					);
 
 					// Gerar elementos visuais
 					const visualElementsData: {
-						chart?: unknown;
-						table?: unknown[];
-						timeline?: unknown;
+						chart?: ChartData;
+						table?: PaymentData[];
+						timeline?: {
+							events: PaymentData[];
+							startDate: string;
+							endDate: string;
+						};
 					} = {};
 
 					if (visualElements.includes('chart')) {
@@ -766,11 +679,6 @@ function generateVisualInsights(
 	return insights;
 }
 
-function _getTrendDescription(_data: unknown[]): string {
-	// Simplificação - analisar tendência real dos dados
-	return 'crescente';
-}
-
 // Simplificação de outras funções helper - stubs com assinaturas completas
 async function fetchComparisonData(
 	_userId: string,
@@ -798,37 +706,47 @@ async function fetchPaymentsData(
 async function fetchScheduledPayments(
 	_userId: string,
 	_endDate: string,
-): Promise<unknown[]> {
+): Promise<PaymentData[]> {
 	return [];
 }
 interface GroupedPaymentsData {
-	chart: unknown;
-	table: unknown[];
-	timeline: unknown;
-	byCategory?: unknown;
+	byCategory: Record<string, PaymentData[]>;
+	byDay: Record<string, PaymentData[]>;
+	byWeek: Record<string, PaymentData[]>;
+	byRecipient: Record<string, PaymentData[]>;
 }
 function groupPaymentsData(
-	_data: unknown[],
+	_data: PaymentData[],
 	_groupBy: string,
 ): GroupedPaymentsData {
-	return { chart: {}, table: [], timeline: {} };
+	return { byCategory: {}, byDay: {}, byWeek: {}, byRecipient: {} };
 }
-function generatePaymentChart(_data: unknown[], _groupBy: string): unknown {
-	return {};
+function generatePaymentChart(
+	_data: PaymentData[],
+	_groupBy: string,
+): ChartData {
+	return { labels: [], datasets: [] };
 }
-function generatePaymentTable(_data: unknown[]): unknown[] {
+function generatePaymentTable(_data: PaymentData[]): PaymentData[] {
 	return [];
 }
-function generatePaymentTimeline(_data: unknown[]): unknown {
-	return {};
+function generatePaymentTimeline(_data: PaymentData[]): {
+	events: PaymentData[];
+	startDate: string;
+	endDate: string;
+} {
+	return { events: [], startDate: '', endDate: '' };
 }
 function calculatePaymentStatistics(
-	_data: unknown[],
-	_scheduledPayments: unknown[],
-): unknown {
+	_data: PaymentData[],
+	_scheduledPayments: PaymentData[],
+): Record<string, number | string> {
 	return {};
 }
-function generatePaymentInsights(_data: unknown[], _groupBy: string): string[] {
+function generatePaymentInsights(
+	_data: PaymentData[],
+	_groupBy: string,
+): string[] {
 	return [];
 }
 async function exportPaymentSummary(
@@ -847,18 +765,21 @@ async function fetchSpendingData(
 	_userId: string,
 	_granularity: string,
 	_focusArea: string,
-): Promise<unknown[]> {
+): Promise<PaymentData[]> {
 	return [];
 }
 function processSpendingForVisualization(
-	_data: unknown[],
+	_data: PaymentData[],
 	_groupBy: string,
 	_visualizationType: string,
-): { byCategory?: unknown } {
-	return {};
+): {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+} {
+	return { byCategory: {}, byPeriod: {} };
 }
 async function generateSpendingInsights(
-	_data: unknown[],
+	_data: PaymentData[],
 	_groupBy: string,
 	_visualizationType: string,
 ): Promise<string[]> {
@@ -870,20 +791,35 @@ function configureInteractiveFeatures(
 ): unknown {
 	return {};
 }
-function generateHeatmapData(_data: { byCategory?: unknown }): unknown {
-	return {};
+function generateHeatmapData(_data: {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+}): ChartData {
+	return { labels: [], datasets: [] };
 }
-function generateBubbleChartData(_data: { byCategory?: unknown }): unknown {
-	return {};
+function generateBubbleChartData(_data: {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+}): ChartData {
+	return { labels: [], datasets: [] };
 }
-function generateTreemapData(_data: { byCategory?: unknown }): unknown {
-	return {};
+function generateTreemapData(_data: {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+}): ChartData {
+	return { labels: [], datasets: [] };
 }
-function generateSunburstData(_data: { byCategory?: unknown }): unknown {
-	return {};
+function generateSunburstData(_data: {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+}): ChartData {
+	return { labels: [], datasets: [] };
 }
-function generateSankeyData(_data: { byCategory?: unknown }): unknown {
-	return {};
+function generateSankeyData(_data: {
+	byCategory: Record<string, { amount: number; count: number }>;
+	byPeriod: Record<string, { amount: number; count: number }>;
+}): ChartData {
+	return { labels: [], datasets: [] };
 }
 async function generateFinancialReportData(
 	_userId: string,

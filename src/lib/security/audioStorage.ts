@@ -7,7 +7,7 @@
  * - Audit logging for compliance
  * - User consent management
  *
- * NOTE: Migrated from Supabase to API-based operations
+ * NOTE: Uses API-based operations with NeonDB backend
  *
  * @module audioStorage
  */
@@ -70,7 +70,7 @@ export class AudioStorageService {
 
 	/**
 	 * Store audio with encryption and metadata
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 *
 	 * @param userId - User ID
 	 * @param audioBlob - Audio data
@@ -159,7 +159,7 @@ export class AudioStorageService {
 
 	/**
 	 * Retrieve and decrypt audio
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 *
 	 * @param userId - User ID
 	 * @param audioId - Audio record ID
@@ -197,7 +197,7 @@ export class AudioStorageService {
 
 	/**
 	 * Delete audio and metadata
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 *
 	 * @param userId - User ID
 	 * @param audioId - Audio record ID
@@ -216,7 +216,7 @@ export class AudioStorageService {
 
 	/**
 	 * Check if user has given consent for audio storage
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 */
 	async checkConsent(userId: string): Promise<boolean> {
 		try {
@@ -232,7 +232,7 @@ export class AudioStorageService {
 
 	/**
 	 * Record user consent
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 */
 	async recordConsent(userId: string, consentGiven: boolean): Promise<void> {
 		try {
@@ -249,7 +249,7 @@ export class AudioStorageService {
 
 	/**
 	 * Log audit trail for compliance
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 */
 	private async logAudit(
 		userId: string,
@@ -272,7 +272,7 @@ export class AudioStorageService {
 
 	/**
 	 * Cleanup expired audio files (run periodically)
-	 * NOTE: Migrated to use API calls instead of direct Supabase access
+	 * NOTE: Uses API calls with NeonDB backend
 	 */
 	async cleanupExpiredAudio(): Promise<number> {
 		try {
@@ -295,7 +295,7 @@ export class AudioStorageService {
 
 /**
  * Create audio storage service
- * NOTE: Migrated - no longer requires SupabaseClient parameter
+ * NOTE: Uses NeonDB via Drizzle ORM
  */
 export function createAudioStorageService(
 	encryptionService: AudioEncryptionService,

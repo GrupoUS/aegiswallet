@@ -18,20 +18,6 @@
 // ============================================================================
 
 // Define Web Speech API types that may not be available in all TypeScript configs
-// biome-ignore lint/correctness/noUnusedVariables: Type definition for Web Speech API reference
-interface SpeechRecognitionEventMap {
-	audioend: Event;
-	audiostart: Event;
-	end: Event;
-	error: SpeechRecognitionErrorEventType;
-	nomatch: SpeechRecognitionEventType;
-	result: SpeechRecognitionEventType;
-	soundend: Event;
-	soundstart: Event;
-	speechend: Event;
-	speechstart: Event;
-	start: Event;
-}
 
 interface SpeechRecognitionEventType extends Event {
 	readonly resultIndex: number;

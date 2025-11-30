@@ -1,7 +1,7 @@
 /**
  * PIX Schema - Brazilian Instant Payment System
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * PIX keys, transactions, and QR codes
  */
 

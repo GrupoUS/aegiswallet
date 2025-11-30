@@ -225,9 +225,7 @@ aiChat.post(
 						provider,
 						model: `${provider}/${tier}`,
 						actionType: toolCalls?.length ? 'tool_call' : 'chat',
-						toolName: toolCalls
-							?.map((tc) => tc.toolName)
-							.join(', '),
+						toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
 						inputSummary:
 							typeof lastUserContent === 'string'
 								? lastUserContent.slice(0, 100)

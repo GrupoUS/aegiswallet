@@ -18,13 +18,11 @@ class Logger {
 			import.meta.env.DEV || process.env.NODE_ENV === 'development';
 	}
 
-	
-
 	private log(
 		level: LogLevel,
-		message: string,
+		_message: string,
 		_data?: unknown,
-		context?: DebugContext,
+		_context?: DebugContext,
 	): void {
 		if (!this.isDevelopment) {
 			return;

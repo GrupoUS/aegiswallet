@@ -220,8 +220,6 @@ export class SecureLogger {
 		};
 	}
 
-	
-
 	/**
 	 * Write log entry to appropriate destination
 	 */
@@ -278,7 +276,7 @@ export class SecureLogger {
 		);
 
 		if (criticalLogs.length > 0) {
-			criticalLogs.forEach((log) => {
+			criticalLogs.forEach((_log) => {
 				// Process critical logs
 			});
 		}

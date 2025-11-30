@@ -390,7 +390,7 @@ export class QualityControlTestingFramework {
 				dependencies: ['task-002'],
 				estimatedTime: 25,
 				id: 'task-004',
-				name: 'Setup Supabase RLS testing',
+				name: 'Setup NeonDB RLS testing',
 				priority: 'P0',
 				validationCriteria: [
 					'Patient data access controls',

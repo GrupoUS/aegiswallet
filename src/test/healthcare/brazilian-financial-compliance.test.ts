@@ -59,8 +59,8 @@ const BrazilianFinancialCompliance = () => {
 		riskFactors: string[];
 		riskLevel: string;
 	}>({
-		recommendations: [],
-		riskFactors: [],
+		recommendations: [] as string[],
+		riskFactors: [] as string[],
 		riskLevel: 'low',
 	});
 
@@ -268,16 +268,6 @@ const BrazilianFinancialCompliance = () => {
 		}
 
 		// Process transaction if compliant
-		const _transaction = {
-			...transactionData,
-			amount: parseFloat(transactionData.amount),
-			complianceStatus,
-			riskAssessment,
-			processedAt: new Date().toISOString(),
-			dataLocation: 'Brazil',
-			encryptionLevel: 'TLS-1.3',
-			auditTrail: true,
-		};
 	};
 
 	return React.createElement(
@@ -310,7 +300,7 @@ const BrazilianFinancialCompliance = () => {
 							React.createElement('input', {
 								'data-testid': 'transaction-amount',
 								key: 'amount-input',
-								onChange: (e) =>
+								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 									setTransactionData({
 										...transactionData,
 										amount: e.target.value,
@@ -332,7 +322,7 @@ const BrazilianFinancialCompliance = () => {
 							React.createElement('input', {
 								'data-testid': 'recipient-name',
 								key: 'recipient-name-input',
-								onChange: (e) =>
+								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 									setTransactionData({
 										...transactionData,
 										recipientName: e.target.value,
@@ -351,7 +341,7 @@ const BrazilianFinancialCompliance = () => {
 							React.createElement('input', {
 								'data-testid': 'recipient-document',
 								key: 'recipient-document-input',
-								onChange: (e) =>
+								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 									setTransactionData({
 										...transactionData,
 										recipientDocument: e.target.value,
@@ -484,7 +474,7 @@ const BrazilianFinancialCompliance = () => {
 									checked: transactionData.suspicious,
 									'data-testid': 'suspicious-activity',
 									key: 'suspicious-checkbox',
-									onChange: (e) =>
+									onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
 										setTransactionData({
 											...transactionData,
 											suspicious: e.target.checked,

@@ -1,7 +1,7 @@
 /**
  * Transactions Schema - Financial Data
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * All financial transactions including debits, credits, transfers
  */
 

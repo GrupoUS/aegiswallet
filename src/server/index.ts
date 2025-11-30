@@ -12,6 +12,7 @@ import {
 	aiChatRouter,
 	bankAccountsRouter,
 	bankingRouter,
+	billingRouter,
 	calendarRouter,
 	complianceRouter,
 	contactsRouter,
@@ -56,6 +57,7 @@ app.route('/api/v1/transactions', transactionsRouter);
 app.route('/api/v1/calendar', calendarRouter);
 app.route('/api/v1/google-calendar', googleCalendarRouter);
 app.route('/api/v1/compliance', complianceRouter);
+app.route('/api/v1/billing', billingRouter);
 app.route('/api/v1/ai', aiChatRouter);
 
 // Cron job routes

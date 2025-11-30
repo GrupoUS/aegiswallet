@@ -1,7 +1,7 @@
 /**
  * Contacts Schema - Contacts & Recipients
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * Contact directory for payments and transfers
  */
 

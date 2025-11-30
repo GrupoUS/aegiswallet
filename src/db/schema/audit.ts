@@ -1,7 +1,7 @@
 /**
  * Audit Schema - Audit Logs, Error Logs, and Sessions
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * LGPD compliance: audit trails for all user actions
  */
 

@@ -81,7 +81,7 @@ const HealthcareDataProtection = () => {
 		medication: '',
 		patientId: '',
 		patientName: '',
-	});
+	} as Record<string, string>);
 
 	const [protectionStatus, setProtectionStatus] = React.useState({
 		accessControl: 'pending',
@@ -94,16 +94,10 @@ const HealthcareDataProtection = () => {
 		voiceProtection: 'pending',
 	});
 
-	const [encryptionMetadata, setEncryptionMetadata] = React.useState<{
-		algorithm: string;
-		decryptedData: string | null;
-		encryptionTime: string | null;
-		ivLength: number;
-		keyLength: number;
-	}>({
+	const [encryptionMetadata, setEncryptionMetadata] = React.useState({
 		algorithm: 'AES-256-GCM',
-		decryptedData: null,
-		encryptionTime: null,
+		decryptedData: null as string | null,
+		encryptionTime: null as string | null,
 		ivLength: 12,
 		keyLength: 256,
 	});
@@ -450,7 +444,10 @@ const HealthcareDataProtection = () => {
 							'data-testid': 'medication',
 							key: 'medication-input',
 							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, medication: e.target.value }),
+								setHealthData((prev) => ({
+									...prev,
+									medication: e.target.value,
+								})),
 							placeholder: 'Medicamentos prescritos',
 							type: 'text',
 							value: healthData.medication,
@@ -465,7 +462,10 @@ const HealthcareDataProtection = () => {
 							'data-testid': 'allergies',
 							key: 'allergies-input',
 							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, allergies: e.target.value }),
+								setHealthData((prev) => ({
+									...prev,
+									allergies: e.target.value,
+								})),
 							placeholder: 'Alergias conhecidas',
 							type: 'text',
 							value: healthData.allergies,

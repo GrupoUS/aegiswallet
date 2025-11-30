@@ -187,7 +187,7 @@ beforeAll(() => {
 
 // API Security Component
 const APISecurityValidation = () => {
-	const testUtils = ensureTestUtils();
+	ensureTestUtils();
 	const [apiTestData, setApiTestData] = React.useState({
 		amount: '',
 		email: '',
@@ -452,23 +452,6 @@ const APISecurityValidation = () => {
 		setValidationError('');
 
 		// Make secure API call
-		const _apiCall = {
-			data: {
-				email: apiTestData.email,
-				encryptedData: await testUtils.encryptMockData(
-					JSON.stringify(apiTestData),
-					'AES-256-GCM',
-				),
-				timestamp: new Date().toISOString(),
-			},
-			endpoint: '/api/secure-action',
-			headers: {
-				Authorization: `Bearer session-token-123`,
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': securityMetadata.csrfToken,
-			},
-			method: 'POST',
-		};
 	};
 
 	return React.createElement(

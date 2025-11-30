@@ -48,18 +48,10 @@ class Logger {
 		return level >= this.logLevel;
 	}
 
-	private log(level: LogLevel, message: string, context?: LogContext): void {
+	private log(level: LogLevel, _message: string, _context?: LogContext): void {
 		if (!this.shouldLog(level)) {
 			return;
 		}
-
-		// Create log entry (for potential future use)
-		{
-			context,
-			level,
-			message,
-			timestamp: new Date(),
-		};
 
 		switch (level) {
 			case LogLevel.DEBUG:

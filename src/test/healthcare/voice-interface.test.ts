@@ -141,20 +141,22 @@ describe('Voice Interface Testing (Portuguese)', () => {
 			continuous: false,
 			interimResults: false,
 			lang: 'pt-BR',
-			onend: null,
-			onerror: null,
-			onnomatch: null,
-			onresult: null,
-			onsoundend: null,
-			onsoundstart: null,
-			onspeechend: null,
-			onspeechstart: null,
+			onend: null as ((event: unknown) => void) | null,
+			onerror: null as ((event: unknown) => void) | null,
+			onnomatch: null as ((event: unknown) => void) | null,
+			onresult: null as ((event: unknown) => void) | null,
+			onsoundend: null as ((event: unknown) => void) | null,
+			onsoundstart: null as ((event: unknown) => void) | null,
+			onspeechend: null as ((event: unknown) => void) | null,
+			onspeechstart: null as ((event: unknown) => void) | null,
 			start: vi.fn(),
 			stop: vi.fn(),
 		};
 
-		global.SpeechRecognition = vi.fn(() => mockSpeechRecognition);
-		global.webkitSpeechRecognition = vi.fn(() => mockSpeechRecognition);
+		(global as any).SpeechRecognition = vi.fn(() => mockSpeechRecognition);
+		(global as any).webkitSpeechRecognition = vi.fn(
+			() => mockSpeechRecognition,
+		);
 	});
 
 	afterEach(() => {
@@ -230,7 +232,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
 				start: vi.fn(),
 			};
 
-			global.SpeechRecognition.mockImplementation(() => mockRecognition);
+			(global.SpeechRecognition as Mock).mockImplementation(
+				() => mockRecognition,
+			);
 
 			render(React.createElement(VoiceAssistant, { onCommand }));
 
@@ -301,7 +305,7 @@ describe('Voice Interface Testing (Portuguese)', () => {
 				start: vi.fn(),
 			};
 
-			global.SpeechRecognition.mockImplementation(
+			(global.SpeechRecognition as Mock).mockImplementation(
 				() => lowConfidenceRecognition,
 			);
 
@@ -402,7 +406,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
 				start: vi.fn(),
 			};
 
-			global.SpeechRecognition.mockImplementation(() => errorRecognition);
+			(global.SpeechRecognition as Mock).mockImplementation(
+				() => errorRecognition,
+			);
 
 			render(React.createElement(VoiceAssistant, { onCommand: vi.fn() }));
 
@@ -455,7 +461,9 @@ describe('Voice Interface Testing (Portuguese)', () => {
 				start: vi.fn(),
 			};
 
-			global.SpeechRecognition.mockImplementation(() => errorRecognition);
+			(global.SpeechRecognition as Mock).mockImplementation(
+				() => errorRecognition,
+			);
 
 			render(React.createElement(VoiceAssistant, { onCommand }));
 

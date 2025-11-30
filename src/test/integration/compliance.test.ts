@@ -383,26 +383,31 @@ describe.skipIf(!hasIntegrationTestEnv())(
 
 				expect(log).toBeDefined();
 				expect(log.eventType).toBe('consent_granted');
-				expect(log.metadata).toBeDefined();
+				expect(
+					(log.metadata as Record<string, unknown>)?.description,
+				).toBeDefined();
 			});
 
 			it('should query audit logs by event type', async () => {
-				// Create multiple log entries
+				// Create multiple log entries with correct Drizzle schema property names
 				await db.insert(complianceAuditLogs).values([
 					{
 						userId: testUser.id,
 						eventType: 'consent_granted',
 						resourceType: 'lgpd_consents',
+						resourceId: 'test-consent-1',
 					},
 					{
 						userId: testUser.id,
 						eventType: 'consent_revoked',
 						resourceType: 'lgpd_consents',
+						resourceId: 'test-consent-2',
 					},
 					{
 						userId: testUser.id,
 						eventType: 'data_export_requested',
 						resourceType: 'lgpd_export_requests',
+						resourceId: 'test-export-1',
 					},
 				]);
 

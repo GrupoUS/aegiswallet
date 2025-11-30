@@ -17,6 +17,15 @@ interface TransferResult {
 	estimatedCompletion?: string;
 }
 
+// Interface for PIX transfer result
+interface PixTransferResult {
+	success: boolean;
+	transfer: Record<string, unknown>;
+	message: string;
+	endToEndId?: string;
+	estimatedCompletion?: string;
+}
+
 export function createContactsTools(userId: string) {
 	return {
 		listContacts: tool({
@@ -447,23 +456,26 @@ export function createContactsTools(userId: string) {
 						}
 
 						// Execute PIX transfer using the tool's execute method
-						const pixTransferResult = await pixTools.sendPixTransfer.execute({
-							recipientKey,
-							recipientKeyType: recipientKeyType as
-								| 'CPF'
-								| 'CNPJ'
-								| 'EMAIL'
-								| 'PHONE'
-								| 'RANDOM_KEY',
-							recipientName: contact.name,
-							amount,
-							description: finalDescription,
-						});
+						const pixTransferResult = (await pixTools.sendPixTransfer.execute(
+							{
+								recipientKey,
+								recipientKeyType: recipientKeyType as
+									| 'CPF'
+									| 'CNPJ'
+									| 'EMAIL'
+									| 'PHONE'
+									| 'RANDOM_KEY',
+								recipientName: contact.name,
+								amount,
+								description: finalDescription,
+							},
+							{ toolCallId: 'manual-call', messages: [] },
+						)) as PixTransferResult;
 
 						// Map PIX transfer result to TransferResult interface
 						transferResult = {
 							success: pixTransferResult.success,
-							transfer: pixTransferResult.transfer as Record<string, unknown>,
+							transfer: pixTransferResult.transfer,
 							message: pixTransferResult.message,
 							endToEndId: pixTransferResult.endToEndId,
 							estimatedCompletion: pixTransferResult.estimatedCompletion,

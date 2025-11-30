@@ -129,7 +129,6 @@ export function QuickActionModal({
 		setIsLoading(true);
 
 		try {
-
 			if (actionType === 'transfer') {
 				const targetAccount = accountList.find((a) => a.id === targetAccountId);
 				if (!targetAccount) {

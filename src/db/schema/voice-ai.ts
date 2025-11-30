@@ -1,7 +1,7 @@
 /**
  * Voice & AI Schema - Voice Commands, Intents, and AI Features
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * Voice commands, AI insights, spending patterns, and budgets
  */
 

@@ -69,12 +69,6 @@ const HEALTHCARE_TEST_SUITES = [
 	},
 	{
 		config: 'vitest.healthcare.config.ts',
-		critical: true,
-		name: 'Supabase RLS Tests',
-		pattern: 'src/test/healthcare/supabase-rls.test.ts',
-	},
-	{
-		config: 'vitest.healthcare.config.ts',
 		critical: false,
 		name: 'Quality Control Integration',
 		pattern: 'src/test/utils/quality-control-integration.test.ts',

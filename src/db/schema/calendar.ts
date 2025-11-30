@@ -1,7 +1,7 @@
 /**
  * Calendar Schema - Financial Calendar & Events
  *
- * Migrated from Supabase to Drizzle ORM
+ * Drizzle ORM with NeonDB (PostgreSQL Serverless)
  * Calendar events for bills, payments, and income
  */
 

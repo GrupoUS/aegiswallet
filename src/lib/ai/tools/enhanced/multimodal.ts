@@ -19,18 +19,6 @@ interface DateRange {
 	endDate: string;
 }
 
-// Brazilian financial data types for LGPD compliance
-interface BrazilianFinancialData {
-	cpf?: string;
-	cnpj?: string;
-	pixKey?: string;
-	pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY';
-	bankCode?: string;
-	agency?: string;
-	accountNumber?: string;
-	accountType?: 'corrente' | 'poupança';
-}
-
 // LGPD-compliant payment data interface
 interface PaymentData {
 	id: string;
@@ -43,61 +31,6 @@ interface PaymentData {
 	status: 'completed' | 'pending' | 'failed' | 'cancelled';
 	// LGPD: Minimize data collection
 	sensitiveDataRedacted: boolean;
-}
-
-// Brazilian CPF validation
-function _isValidBrazilianCPF(cpf: string): boolean {
-	const cleanCPF = cpf.replace(/\D/g, '');
-	if (cleanCPF.length !== 11) return false;
-	if (/^(\d)\1+$/.test(cleanCPF)) return false;
-
-	let sum = 0;
-	for (let i = 0; i < 9; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (10 - i);
-	}
-	let remainder = (sum * 10) % 11;
-	const firstDigit = remainder === 10 ? 0 : remainder;
-
-	sum = 0;
-	for (let i = 0; i < 10; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (11 - i);
-	}
-	remainder = (sum * 10) % 11;
-	const secondDigit = remainder === 10 ? 0 : remainder;
-
-	return (
-		firstDigit === parseInt(cleanCPF.charAt(9), 10) &&
-		secondDigit === parseInt(cleanCPF.charAt(10), 10)
-	);
-}
-
-// Brazilian CNPJ validation
-function _isValidBrazilianCNPJ(cnpj: string): boolean {
-	const cleanCNPJ = cnpj.replace(/\D/g, '');
-	if (cleanCNPJ.length !== 14) return false;
-	if (/^(\d)\1+$/.test(cleanCNPJ)) return false;
-
-	const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-	const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
-	let sum = 0;
-	for (let i = 0; i < 12; i++) {
-		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights1[i];
-	}
-	let remainder = sum % 11;
-	const firstDigit = remainder < 2 ? 0 : 11 - remainder;
-
-	sum = 0;
-	for (let i = 0; i < 13; i++) {
-		sum += parseInt(cleanCNPJ.charAt(i), 10) * weights2[i];
-	}
-	remainder = sum % 11;
-	const secondDigit = remainder < 2 ? 0 : 11 - remainder;
-
-	return (
-		firstDigit === parseInt(cleanCNPJ.charAt(12), 10) &&
-		secondDigit === parseInt(cleanCNPJ.charAt(13), 10)
-	);
 }
 
 export function createMultimodalTools(userId: string) {
@@ -290,23 +223,26 @@ export function createMultimodalTools(userId: string) {
 					const dateRange = calculateDateRange(period);
 
 					// Buscar dados de pagamentos
-					const paymentsData = await fetchPaymentsData(
+					const paymentsData = (await fetchPaymentsData(
 						userId,
 						dateRange,
 						includeScheduled,
-					);
+					)) as PaymentData[];
 
 					// Buscar pagamentos agendados
-					let scheduledPayments: unknown[] = [];
+					let scheduledPayments: PaymentData[] = [];
 					if (includeScheduled) {
-						scheduledPayments = await fetchScheduledPayments(
+						scheduledPayments = (await fetchScheduledPayments(
 							userId,
 							dateRange.endDate,
-						);
+						)) as PaymentData[];
 					}
 
 					// Agrupar dados conforme solicitado
-					const groupedData = groupPaymentsData(paymentsData, groupBy);
+					const groupedData = groupPaymentsData(
+						paymentsData as PaymentData[],
+						groupBy,
+					);
 
 					// Gerar elementos visuais
 					const visualElementsData: {
@@ -789,7 +725,7 @@ function generatePaymentChart(
 	_data: PaymentData[],
 	_groupBy: string,
 ): ChartData {
-	return { type: 'bar', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 function generatePaymentTable(_data: PaymentData[]): PaymentData[] {
 	return [];
@@ -859,31 +795,31 @@ function generateHeatmapData(_data: {
 	byCategory: Record<string, { amount: number; count: number }>;
 	byPeriod: Record<string, { amount: number; count: number }>;
 }): ChartData {
-	return { type: 'heatmap', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 function generateBubbleChartData(_data: {
 	byCategory: Record<string, { amount: number; count: number }>;
 	byPeriod: Record<string, { amount: number; count: number }>;
 }): ChartData {
-	return { type: 'bubble', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 function generateTreemapData(_data: {
 	byCategory: Record<string, { amount: number; count: number }>;
 	byPeriod: Record<string, { amount: number; count: number }>;
 }): ChartData {
-	return { type: 'treemap', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 function generateSunburstData(_data: {
 	byCategory: Record<string, { amount: number; count: number }>;
 	byPeriod: Record<string, { amount: number; count: number }>;
 }): ChartData {
-	return { type: 'sunburst', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 function generateSankeyData(_data: {
 	byCategory: Record<string, { amount: number; count: number }>;
 	byPeriod: Record<string, { amount: number; count: number }>;
 }): ChartData {
-	return { type: 'sankey', data: [], labels: [] };
+	return { labels: [], datasets: [] };
 }
 async function generateFinancialReportData(
 	_userId: string,

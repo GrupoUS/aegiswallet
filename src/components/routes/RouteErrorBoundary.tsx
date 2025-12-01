@@ -21,7 +21,7 @@ export function RouteErrorBoundary({ error, reset }: RouteErrorBoundaryProps) {
   };
 
   const handleGoHome = () => {
-    navigate('/dashboard');
+    navigate({ to: '/dashboard' });
   };
 
   return (

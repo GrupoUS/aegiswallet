@@ -1,6 +1,5 @@
 import { SignUp } from '@clerk/clerk-react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -9,14 +8,21 @@ export const Route = createFileRoute('/signup')({
 });
 
 function SignUpComponent() {
-	const { isAuthenticated } = useAuth();
-	const navigate = useNavigate();
+	const { isAuthenticated, isLoading } = useAuth();
 
-	useEffect(() => {
-		if (isAuthenticated) {
-			void navigate({ to: '/dashboard' });
-		}
-	}, [isAuthenticated, navigate]);
+	// Show loading while checking auth
+	if (isLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+				<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
+			</div>
+		);
+	}
+
+	// Redirect authenticated users to dashboard using TanStack Router redirect
+	if (isAuthenticated) {
+		throw redirect({ to: '/dashboard' });
+	}
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">

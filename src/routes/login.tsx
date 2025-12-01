@@ -1,23 +1,11 @@
 import { SignIn } from '@clerk/clerk-react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
-
-import { useAuth } from '@/contexts/AuthContext';
+import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/login')({
 	component: LoginComponent,
 });
 
 function LoginComponent() {
-	const { isAuthenticated } = useAuth();
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (isAuthenticated) {
-			void navigate({ to: '/dashboard' });
-		}
-	}, [isAuthenticated, navigate]);
-
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
 			<div className="w-full max-w-md space-y-8">

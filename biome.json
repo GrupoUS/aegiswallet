@@ -8,6 +8,14 @@
 	},
 	"files": {
 		"includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+		"ignore": [
+			"api/index.js",
+			"dist/**",
+			"node_modules/**",
+			"coverage/**",
+			"playwright-report/**",
+			".vercel/**"
+		],
 		"maxSize": 10485760
 	},
 	"formatter": {
@@ -498,6 +506,7 @@
 				"rules": {
 					"suspicious": {
 						"noConsole": "off"
+					},
 					"nursery": {
 						"noShadow": "off"
 					}

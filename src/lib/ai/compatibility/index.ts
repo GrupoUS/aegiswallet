@@ -1,6 +1,6 @@
 /**
  * AI SDK Compatibility Types
- * 
+ *
  * Provides missing type definitions for AI components
  * that were available in newer SDK versions
  */
@@ -21,6 +21,8 @@ export interface ToolUIPart {
   state: 'call' | 'result' | 'error' | 'input-streaming' | 'output-available' | 'input-available';
   error?: unknown;
   input?: string;
+  output?: unknown;
+  errorText?: string;
 }
 
 /**
@@ -30,6 +32,7 @@ export interface FileUIPart {
   type: 'file';
   data: string | ArrayBuffer;
   mimeType: string;
+  mediaType?: string;
   filename?: string;
   url?: string;
 }
@@ -123,17 +126,17 @@ export const brazilianSchemas = {
     validate: (key: string) => key.length === 36 && /^[0-9a-f-]+$/.test(key),
     error: 'Chave PIX inválida - deve ter 36 caracteres hexadecimais'
   },
-  
+
   cnpj: {
     validate: (cnpj: string) => /^\d{14}$/.test(cnpj),
     error: 'CNPJ inválido - deve ter 14 dígitos numéricos'
   },
-  
+
   cpf: {
     validate: (cpf: string) => /^\d{11}$/.test(cpf),
     error: 'CPF inválido - deve ter 11 dígitos numéricos'
   },
-  
+
   pixAmount: {
     validate: (amount: number) => amount > 0 && amount <= 5000,
     error: 'Valor PIX inválido - deve ser positivo e máximo R$ 5.000,00'
@@ -141,15 +144,15 @@ export const brazilianSchemas = {
 };
 
 export const errorMessages = {
-  pixLimitExceeded: (amount: number) => 
+  pixLimitExceeded: (amount: number) =>
     `Valor R$ ${amount.toFixed(2)} excede o limite diário de PIX (R$ 5.000,00) estabelecido pelo BCB`,
-  
+
   invalidPixKey: (key: string) =>
     `Chave PIX "${key}" é inválida. Verifique o formato e tente novamente.`,
-  
+
   lgpdRequired: (operation: string) =>
     `Operação "${operation}" requer consentimento explícito conforme LGPD`,
-  
+
   authenticationRequired: () =>
     'Esta operação requer autenticação adicional por medida de segurança',
 };

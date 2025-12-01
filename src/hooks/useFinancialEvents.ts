@@ -59,7 +59,7 @@ export interface PaginationOptions {
 export const financialEventsKeys = {
 	all: ['financial-events'] as const,
 	lists: () => [...financialEventsKeys.all, 'list'] as const,
-	list: (filters?: FinancialEventsFilters, pagination?: PaginationOptions) => 
+	list: (filters?: FinancialEventsFilters, pagination?: PaginationOptions) =>
 		[...financialEventsKeys.lists(), filters, pagination] as const,
 	details: () => [...financialEventsKeys.all, 'detail'] as const,
 	detail: (id: string) => [...financialEventsKeys.details(), id] as const,
@@ -116,8 +116,8 @@ export function useFinancialEvents(
 	const [pagination, setPagination] = useState<PaginationOptions>(initialPagination);
 
 	// Memoized query key
-	const queryKey = useMemo(() => 
-		financialEventsKeys.list(filters, pagination), 
+	const queryKey = useMemo(() =>
+		financialEventsKeys.list(filters, pagination),
 		[filters, pagination]
 	);
 
@@ -154,7 +154,7 @@ export function useFinancialEvents(
 			// Executar requisição com tipos corretos
 			const response = await apiClient.get<TransactionApiResponse<BackendTransaction[]>>(
 				'/v1/transactions',
-				{ params }
+				{ params: params as unknown as Record<string, unknown> }
 			);
 
 			const mappedEvents = response.data.map(mapBackendToFrontend);
@@ -269,7 +269,7 @@ export function useFinancialEvents(
 		return createEventMutation.mutateAsync(event);
 	};
 
-	
+
 
 
 
@@ -323,17 +323,19 @@ export function useFinancialEvents(
 	};
 
 	const duplicateEvent = useCallback(
-		async (event: FinancialEvent): Promise<FinancialEvent> => {
+		async (event: FinancialEvent) => {
 			if (!user) {
 				throw new FinancialError('Usuário não autenticado', 'AUTH');
 			}
 
-			const duplicatedEvent = {
-				...event,
-				id: undefined, // Remove ID to create new event
+			// Create a new event without id and with updated title
+			// Exclude id from the spread, keep createdAt/updatedAt as new timestamps
+			const { id: _id, ...eventWithoutId } = event;
+			const duplicatedEvent: Omit<FinancialEvent, 'id'> = {
+				...eventWithoutId,
 				title: `${event.title} (Cópia)`,
-				createdAt: undefined,
-				updatedAt: undefined,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
 			};
 
 			return createEvent(duplicatedEvent);
@@ -411,8 +413,23 @@ export function useFinancialEventMutations() {
 					throw new FinancialError('Usuário não autenticado', 'AUTH');
 				}
 
-				const payload: Partial<TransactionApiPayload> = { ...updates };
-				if (updates.category) payload.categoryId = updates.category;
+				// Map FinancialEvent fields to TransactionApiPayload fields
+				const payload: Partial<TransactionApiPayload> = {};
+
+				if (updates.amount !== undefined) payload.amount = updates.amount;
+				if (updates.title) payload.description = updates.title;
+				if (updates.type) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
+				if (updates.status) {
+					// Map EventStatus to API status
+					payload.status = updates.status === 'completed' || updates.status === 'paid' ? 'posted' : 'pending';
+				}
+				if (updates.start) {
+					payload.transactionDate = updates.start instanceof Date
+						? updates.start.toISOString()
+						: updates.start;
+				}
+				if (updates.category) payload.categoryId = String(updates.category);
+				if (updates.description) payload.notes = updates.description;
 
 				const response = await apiClient.put<TransactionApiResponse<BackendTransaction>>(
 					`/v1/transactions/${id}`,

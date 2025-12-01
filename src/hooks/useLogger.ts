@@ -3,7 +3,7 @@
  * Provides easy access to the AegisWallet logger within React components
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import type { LogEntry } from '@/lib/logging/logger';
 import { logger } from '@/lib/logging/logger';
@@ -39,28 +39,43 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 	const { component = 'Unknown', defaultContext = {} } = options;
 	const contextRef = useRef<LoggerContext>(defaultContext);
 
-	const createLogMethod = useCallback(
-		(baseMethod: (message: string, context?: LoggerContext) => void) => {
-			return (message: string, additionalContext?: LoggerContext) => {
-				const fullContext = {
-					...contextRef.current,
-					...additionalContext,
-					component,
-				};
+	// Memoize log method references with proper dependencies
+	const boundDebug = useCallback(logger.debug.bind(logger), []);
+	const boundInfo = useCallback(logger.info.bind(logger), []);
+	const boundWarn = useCallback(logger.warn.bind(logger), []);
+	const boundError = useCallback(logger.error.bind(logger), []);
 
-				baseMethod(message, fullContext);
-			};
+	const debug = useCallback(
+		(message: string, additionalContext?: LoggerContext) => {
+			const fullContext = { ...contextRef.current, ...additionalContext, component };
+			boundDebug(message, fullContext);
 		},
-		[component],
+		[component, boundDebug],
 	);
 
-	const debug = useCallback(createLogMethod(logger.debug.bind(logger)), []);
+	const info = useCallback(
+		(message: string, additionalContext?: LoggerContext) => {
+			const fullContext = { ...contextRef.current, ...additionalContext, component };
+			boundInfo(message, fullContext);
+		},
+		[component, boundInfo],
+	);
 
-	const info = useCallback(createLogMethod(logger.info.bind(logger)), []);
+	const warn = useCallback(
+		(message: string, additionalContext?: LoggerContext) => {
+			const fullContext = { ...contextRef.current, ...additionalContext, component };
+			boundWarn(message, fullContext);
+		},
+		[component, boundWarn],
+	);
 
-	const warn = useCallback(createLogMethod(logger.warn.bind(logger)), []);
-
-	const error = useCallback(createLogMethod(logger.error.bind(logger)), []);
+	const error = useCallback(
+		(message: string, additionalContext?: LoggerContext) => {
+			const fullContext = { ...contextRef.current, ...additionalContext, component };
+			boundError(message, fullContext);
+		},
+		[component, boundError],
+	);
 
 	// Specialized methods
 	const userAction = useCallback(
@@ -90,14 +105,14 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 	);
 
 	const voiceError = useCallback(
-		(error: string, additionalContext?: LoggerContext) => {
+		(errorMsg: string, additionalContext?: LoggerContext) => {
 			const fullContext = {
 				...contextRef.current,
 				...additionalContext,
 				component,
 			};
 
-			logger.voiceError(error, fullContext);
+			logger.voiceError(errorMsg, fullContext);
 		},
 		[component],
 	);
@@ -141,57 +156,82 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 		return logger.getLogs();
 	}, []);
 
-	return {
-		authEvent,
-		clearContext,
-		debug,
-		error,
-		getLogs,
-		info,
-		securityEvent,
-		setContext,
-		userAction,
-		voiceCommand,
-		voiceError,
-		warn,
-	};
+	return useMemo(
+		() => ({
+			authEvent,
+			clearContext,
+			debug,
+			error,
+			getLogs,
+			info,
+			securityEvent,
+			setContext,
+			userAction,
+			voiceCommand,
+			voiceError,
+			warn,
+		}),
+		[
+			authEvent,
+			clearContext,
+			debug,
+			error,
+			getLogs,
+			info,
+			securityEvent,
+			setContext,
+			userAction,
+			voiceCommand,
+			voiceError,
+			warn,
+		],
+	);
 }
 
 // Convenience hook for common patterns
+// Stable options objects for specialized logger hooks (prevents re-renders)
+const VOICE_LOGGER_OPTIONS: UseLoggerOptions = {
+	component: 'Voice',
+	defaultContext: {
+		module: 'voice-processing',
+	},
+};
+
 export function useVoiceLogger() {
-	return useLogger({
-		component: 'Voice',
-		defaultContext: {
-			module: 'voice-processing',
-		},
-	});
+	return useLogger(VOICE_LOGGER_OPTIONS);
 }
+
+const AUTH_LOGGER_OPTIONS: UseLoggerOptions = {
+	component: 'Auth',
+	defaultContext: {
+		module: 'authentication',
+	},
+};
 
 export function useAuthLogger() {
-	return useLogger({
-		component: 'Auth',
-		defaultContext: {
-			module: 'authentication',
-		},
-	});
+	return useLogger(AUTH_LOGGER_OPTIONS);
 }
+
+const SECURITY_LOGGER_OPTIONS: UseLoggerOptions = {
+	component: 'Security',
+	defaultContext: {
+		module: 'security-compliance',
+	},
+};
 
 export function useSecurityLogger() {
-	return useLogger({
-		component: 'Security',
-		defaultContext: {
-			module: 'security-compliance',
-		},
-	});
+	return useLogger(SECURITY_LOGGER_OPTIONS);
 }
 
+const FINANCIAL_LOGGER_OPTIONS: UseLoggerOptions = {
+	component: 'Financial',
+	defaultContext: {
+		module: 'financial-operations',
+	},
+};
+
 export function useFinancialLogger() {
-	return useLogger({
-		component: 'Financial',
-		defaultContext: {
-			module: 'financial-operations',
-		},
-	});
+	return useLogger(FINANCIAL_LOGGER_OPTIONS);
 }
 
 export default useLogger;

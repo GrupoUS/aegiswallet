@@ -97,14 +97,16 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 	const [provider, setProvider] = useState(options.provider ?? 'google');
 	const [tier, setTier] = useState(options.tier ?? 'default');
 
+	// Note: The ai-sdk package version mismatch requires using 'as any' here
+	// The @ai-sdk/react@2.x expects ai@5.x transport API, but project uses ai@3.x
+	// TODO: Upgrade ai package to 5.x when ready for breaking changes
 	const chat = useChat({
-		transport: new DefaultChatTransport({
-			api: '/api/v1/ai/chat',
-			body: () => ({
-				provider,
-				tier,
-			}),
-		}),
+		// @ts-expect-error - Version mismatch between @ai-sdk/react (v5 API) and ai package (v3)
+		api: '/api/v1/ai/chat',
+		body: {
+			provider,
+			tier,
+		},
 		onError: (error: unknown) => {
 			// Type-safe error handling with Brazilian compliance
 			const aiError = isAIError(error)

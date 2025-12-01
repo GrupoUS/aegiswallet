@@ -279,10 +279,10 @@ export class GoogleCalendarService {
 		if (!mapping) return false;
 
 		const expectedSource = direction === 'to_google' ? 'google' : 'aegis';
-		const lastModified = new Date(mapping.last_modified_at);
+		const lastModified = new Date(mapping.lastModifiedAt);
 		const fiveSecondsAgo = new Date(Date.now() - 5000);
 
-		return mapping.sync_source === expectedSource && lastModified > fiveSecondsAgo;
+		return mapping.syncSource === expectedSource && lastModified > fiveSecondsAgo;
 	}
 
 	/**

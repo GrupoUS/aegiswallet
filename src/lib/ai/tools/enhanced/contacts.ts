@@ -390,7 +390,7 @@ export function createContactsTools(userId: string) {
 								amount,
 								description: finalDescription,
 							},
-							{ toolCallId: 'manual-call', messages: [] },
+							{},
 						)) as PixTransferResult;
 
 						// Map PIX transfer result to TransferResult interface

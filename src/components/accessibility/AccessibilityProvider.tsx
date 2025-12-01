@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAccessibility } from './hooks/useAccessibility';
 
@@ -43,6 +43,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 	});
 
 	const [isKeyboardUser, setIsKeyboardUser] = useState(false);
+	const [showSettings, setShowSettings] = useState(false);
 
 	// Detect user's accessibility preferences from system
 	useEffect(() => {
@@ -156,23 +157,20 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 		}
 	}, [settings]);
 
-	const updateSetting = <K extends keyof AccessibilitySettings>(
-		key: K,
-		newValue: AccessibilitySettings[K],
-	) => {
-		setSettings((prev) => ({ ...prev, [key]: newValue }));
+	const updateSetting = useCallback(
+		<K extends keyof AccessibilitySettings>(key: K, newValue: AccessibilitySettings[K]) => {
+			setSettings((prev) => ({ ...prev, [key]: newValue }));
 
-		// Persist to localStorage
-		try {
-			const saved = localStorage.getItem('aegis-accessibility-settings');
-			const savedSettings = saved ? JSON.parse(saved) : {};
-			savedSettings[key] = newValue;
-			localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
-		} catch (error) {
-			// Log error but don't crash - accessibility settings are optional
-			console.warn('Failed to save accessibility settings:', error);
-		}
-	};
+			// Persist to localStorage
+			try {
+				const saved = localStorage.getItem('aegis-accessibility-settings');
+				const savedSettings = saved ? JSON.parse(saved) : {};
+				savedSettings[key] = newValue;
+				localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
+			} catch (_error) {}
+		},
+		[],
+	);
 
 	// Load settings from localStorage on mount
 	useEffect(() => {
@@ -182,52 +180,51 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 				const parsed = JSON.parse(saved);
 				setSettings((prev) => ({ ...prev, ...parsed }));
 			}
-		} catch (error) {
-			// Log error but don't crash - use default settings if parse fails
-			console.warn('Failed to load accessibility settings:', error);
-		}
+		} catch (error) {}
 	}, []);
 
 	// Screen reader announcements
-	const announceToScreenReader = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
-		if (!(settings.announceChanges && settings.screenReaderMode)) {
-			return;
-		}
-
-		// Create or get announcement element
-		let announcementElement = document.getElementById('screen-reader-announcements');
-		if (!announcementElement) {
-			announcementElement = document.createElement('div');
-			announcementElement.id = 'screen-reader-announcements';
-			announcementElement.setAttribute('aria-live', priority);
-			announcementElement.setAttribute('aria-atomic', 'true');
-			announcementElement.className = 'sr-only';
-			document.body.appendChild(announcementElement);
-		}
-
-		// Update announcement
-		announcementElement.textContent = message;
-
-		// Clear after announcement
-		setTimeout(() => {
-			if (announcementElement) {
-				announcementElement.textContent = '';
+	const announceToScreenReader = useCallback(
+		(message: string, priority: 'polite' | 'assertive' = 'polite') => {
+			// Create or get announcement element
+			let announcementElement = document.getElementById('screen-reader-announcements');
+			if (!announcementElement) {
+				announcementElement = document.createElement('div');
+				announcementElement.id = 'screen-reader-announcements';
+				announcementElement.setAttribute('aria-live', priority);
+				announcementElement.setAttribute('aria-atomic', 'true');
+				announcementElement.className = 'sr-only';
+				document.body.appendChild(announcementElement);
 			}
-		}, 1000);
-	};
 
-	const [showSettings, setShowSettings] = useState(false);
+			// Update announcement
+			announcementElement.textContent = message;
 
-	const contextValue: AccessibilityContextType = {
-		announceToScreenReader,
-		isKeyboardUser,
-		showSettings,
-		setShowSettings,
-		settings,
-		updateSetting,
-	};
+			// Clear after announcement
+			setTimeout(() => {
+				if (announcementElement) {
+					announcementElement.textContent = '';
+				}
+			}, 1000);
+		},
+		[],
+	);
 
-	return <AccessibilityContext.Provider value={contextValue}>{children}</AccessibilityContext.Provider>;
+	const contextValue = useMemo<AccessibilityContextType>(
+		() => ({
+			announceToScreenReader,
+			isKeyboardUser,
+			showSettings,
+			setShowSettings,
+			settings,
+			updateSetting,
+		}),
+		[announceToScreenReader, isKeyboardUser, showSettings, settings, updateSetting],
+	);
+
+	return (
+		<AccessibilityContext.Provider value={contextValue}>{children}</AccessibilityContext.Provider>
+	);
 }
 
 // Utility component for accessibility announcements

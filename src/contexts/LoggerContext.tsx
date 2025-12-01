@@ -4,7 +4,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import type { LogEntry, LoggerConfig } from '@/lib/logging/logger';
 import { LogLevel, logger } from '@/lib/logging/logger';
@@ -65,27 +65,30 @@ export function LoggerProvider({ children, defaultConfig = {} }: LoggerProviderP
 		}
 	}, []);
 
-	const updateConfig = (newConfig: Partial<LoggerConfig>) => {
+	const updateConfig = useCallback((newConfig: Partial<LoggerConfig>) => {
 		setConfig((prev) => ({ ...prev, ...newConfig }));
-	};
+	}, []);
 
-	const clearLogs = () => {
+	const clearLogs = useCallback(() => {
 		logger.clearLogs();
 		setLogs([]);
-	};
+	}, []);
 
-	const exportLogs = () => {
+	const exportLogs = useCallback(() => {
 		return logger.exportLogs();
-	};
+	}, []);
 
-	const value: LoggerContextValue = {
-		clearLogs,
-		config,
-		exportLogs,
-		isDevelopment,
-		logs,
-		updateConfig,
-	};
+	const value = useMemo<LoggerContextValue>(
+		() => ({
+			clearLogs,
+			config,
+			exportLogs,
+			isDevelopment,
+			logs,
+			updateConfig,
+		}),
+		[clearLogs, config, exportLogs, logs, updateConfig],
+	);
 
 	return <LoggerContext.Provider value={value}>{children}</LoggerContext.Provider>;
 }
@@ -146,51 +149,91 @@ export function useLoggingControls() {
 export function useLogger(context?: { component?: string; userId?: string }) {
 	const [currentContext, setCurrentContext] = useState<LogContext>(context || {});
 
-	const setContext = (newContext: LogContext) => {
+	const setContext = useCallback((newContext: LogContext) => {
 		setCurrentContext((prev) => ({ ...prev, ...newContext }));
-	};
+	}, []);
 
-	const clearContext = () => {
+	const clearContext = useCallback(() => {
 		setCurrentContext(context || {});
-	};
+	}, [context]);
 
-	return {
-		clearContext,
-		debug: (message: string, additionalContext?: LogContext) =>
+	const debug = useCallback(
+		(message: string, additionalContext?: LogContext) =>
 			logger.debug(message, { ...currentContext, ...additionalContext }),
-		error: (message: string, additionalContext?: LogContext) =>
+		[currentContext],
+	);
+
+	const error = useCallback(
+		(message: string, additionalContext?: LogContext) =>
 			logger.error(message, { ...currentContext, ...additionalContext }),
-		info: (message: string, additionalContext?: LogContext) =>
+		[currentContext],
+	);
+
+	const info = useCallback(
+		(message: string, additionalContext?: LogContext) =>
 			logger.info(message, { ...currentContext, ...additionalContext }),
-		setContext,
-		warn: (message: string, additionalContext?: LogContext) =>
+		[currentContext],
+	);
+
+	const warn = useCallback(
+		(message: string, additionalContext?: LogContext) =>
 			logger.warn(message, { ...currentContext, ...additionalContext }),
-	};
+		[currentContext],
+	);
+
+	return useMemo(
+		() => ({
+			clearContext,
+			debug,
+			error,
+			info,
+			setContext,
+			warn,
+		}),
+		[clearContext, debug, error, info, setContext, warn],
+	);
 }
+
+// Memoized voice logger functions
+const voiceUserAction = (action: string, component: string, context?: VoiceCommandContext) =>
+	logger.userAction(action, component, { component: 'Voice', ...context });
+
+const voiceVoiceCommand = (command: string, confidence: number, context?: VoiceCommandContext) =>
+	logger.voiceCommand(command, confidence, { component: 'Voice', ...context });
+
+const voiceVoiceError = (errorMsg: string, context?: VoiceCommandContext) =>
+	logger.voiceError(errorMsg, { component: 'Voice', ...context });
+
+// Stable reference for useVoiceLogger
+const VOICE_LOGGER_RESULT = {
+	userAction: voiceUserAction,
+	voiceCommand: voiceVoiceCommand,
+	voiceError: voiceVoiceError,
+};
 
 export function useVoiceLogger() {
-	return {
-		userAction: (action: string, component: string, context?: VoiceCommandContext) =>
-			logger.userAction(action, component, { component: 'Voice', ...context }),
-		voiceCommand: (command: string, confidence: number, context?: VoiceCommandContext) =>
-			logger.voiceCommand(command, confidence, {
-				component: 'Voice',
-				...context,
-			}),
-		voiceError: (error: string, context?: VoiceCommandContext) =>
-			logger.voiceError(error, { component: 'Voice', ...context }),
-	};
+	return VOICE_LOGGER_RESULT;
 }
 
+// Memoized auth logger functions
+const authAuthEvent = (event: string, userId?: string, context?: LogContext) =>
+	logger.authEvent(event, userId, { component: 'Auth', ...context });
+
+const authSecurityEvent = (event: string, context?: LogContext) =>
+	logger.securityEvent(event, { component: 'Auth', ...context });
+
+const authUserAction = (action: string, component: string, context?: LogContext) =>
+	logger.userAction(action, component, { component: 'Auth', ...context });
+
+// Stable reference for useAuthLogger
+const AUTH_LOGGER_RESULT = {
+	authEvent: authAuthEvent,
+	securityEvent: authSecurityEvent,
+	userAction: authUserAction,
+};
+
 export function useAuthLogger() {
-	return {
-		authEvent: (event: string, userId?: string, context?: LogContext) =>
-			logger.authEvent(event, userId, { component: 'Auth', ...context }),
-		securityEvent: (event: string, context?: LogContext) =>
-			logger.securityEvent(event, { component: 'Auth', ...context }),
-		userAction: (action: string, component: string, context?: LogContext) =>
-			logger.userAction(action, component, { component: 'Auth', ...context }),
-	};
+	return AUTH_LOGGER_RESULT;
 }
 
 export default LoggerProvider;

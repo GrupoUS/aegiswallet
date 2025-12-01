@@ -1,5 +1,5 @@
 /**
- * NOTA: useContacts, useContact, useFavoriteContacts, useContactSearch, useContactsStats 
+ * NOTA: useContacts, useContact, useFavoriteContacts, useContactSearch, useContactsStats
  * foram migrados para TanStack Query para melhor cache, retry automático e invalidação.
  * Manter API pública idêntica para backward compatibility.
  */
@@ -33,23 +33,6 @@ interface ResponseMeta {
 	requestId: string;
 	retrievedAt: string;
 }
-
-// Query keys factory for contacts
-export const contactsKeys = {
-	all: ['contacts'] as const,
-	lists: () => [...contactsKeys.all, 'list'] as const,
-	list: (filters?: {
-		search?: string;
-		isFavorite?: boolean;
-		limit?: number;
-		offset?: number;
-	}) => [...contactsKeys.lists(), filters] as const,
-	details: () => [...contactsKeys.all, 'detail'] as const,
-	detail: (id: string) => [...contactsKeys.details(), id] as const,
-	favorites: () => [...contactsKeys.all, 'favorites'] as const,
-	search: (query: string, limit?: number) => [...contactsKeys.all, 'search', query, limit] as const,
-	stats: () => [...contactsKeys.all, 'stats'] as const,
-};
 
 interface UseContactsReturn {
 	contacts: Contact[];
@@ -220,10 +203,10 @@ export function useContacts(filters?: {
 			await queryClient.cancelQueries({ queryKey: contactsKeys.lists() });
 
 			// Snapshot the previous value
-			const previousContacts = queryClient.getQueryData(contactsKeys.lists());
+			const previousContacts = queryClient.getQueryData<Contact[]>(contactsKeys.lists());
 
 			// Optimistically update to the new value
-			if (previousContacts) {
+			if (previousContacts && Array.isArray(previousContacts)) {
 				queryClient.setQueryData(contactsKeys.lists(), [...previousContacts, newContact as Contact]);
 			}
 
@@ -279,18 +262,18 @@ export function useContacts(filters?: {
 			await queryClient.cancelQueries({ queryKey: contactsKeys.favorites() });
 
 			// Snapshot the previous value
-			const previousContacts = queryClient.getQueryData(contactsKeys.lists());
-			const previousFavorites = queryClient.getQueryData(contactsKeys.favorites());
+			const previousContacts = queryClient.getQueryData<Contact[]>(contactsKeys.lists());
+			const previousFavorites = queryClient.getQueryData<Contact[]>(contactsKeys.favorites());
 
 			// Optimistically update to remove the contact
-			if (previousContacts) {
+			if (previousContacts && Array.isArray(previousContacts)) {
 				queryClient.setQueryData(
 					contactsKeys.lists(),
 					previousContacts.filter((contact: Contact) => contact.id !== contactId),
 				);
 			}
 
-			if (previousFavorites) {
+			if (previousFavorites && Array.isArray(previousFavorites)) {
 				queryClient.setQueryData(
 					contactsKeys.favorites(),
 					previousFavorites.filter((contact: Contact) => contact.id !== contactId),
@@ -349,7 +332,7 @@ export function useContacts(filters?: {
 					if (!old) return old;
 					const contact = old.find(c => c.id === contactId);
 					if (!contact) return old;
-					
+
 					if (contact.isFavorite) {
 						// Removing from favorites
 						return old.filter(c => c.id !== contactId);
@@ -395,6 +378,12 @@ export function useContacts(filters?: {
 		return toggleFavoriteMutation.mutateAsync(contactId);
 	};
 
+	// Wrapper for refetch to match the interface
+	const handleRefetch = async (): Promise<Contact[]> => {
+		const result = await refetch();
+		return result.data ?? [];
+	};
+
 	return {
 		contacts,
 		createContact,
@@ -405,7 +394,7 @@ export function useContacts(filters?: {
 		isLoading,
 		isTogglingFavorite: toggleFavoriteMutation.isPending,
 		isUpdating: updateContactMutation.isPending,
-		refetch,
+		refetch: handleRefetch,
 		toggleFavorite,
 		total: contacts.length,
 		updateContact,
@@ -480,7 +469,7 @@ export function useContactSearch(query: string, limit = 10): UseContactSearchRet
 		queryKey: contactsKeys.search(query, limit),
 		queryFn: async () => {
 			if (!query || query.length < 2) return [];
-			
+
 			const response = await apiClient.get<{
 				data: Contact[];
 				meta: ResponseMeta;
@@ -504,7 +493,7 @@ export function useContactSearch(query: string, limit = 10): UseContactSearchRet
  */
 export function useContactsStats(): UseContactsStatsReturn {
 	const {
-		data: statsResponse,
+		data: stats,
 		isLoading,
 		error,
 	} = useQuery({
@@ -519,7 +508,7 @@ export function useContactsStats(): UseContactsStatsReturn {
 	return {
 		error: error instanceof Error ? error.message : null,
 		isLoading,
-		stats: statsResponse?.data || null,
+		stats: stats ?? null,
 	};
 }
 

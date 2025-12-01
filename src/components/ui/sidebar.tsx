@@ -5,7 +5,7 @@ import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import type React from 'react';
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 import { SidebarContext, useSidebar } from './use-sidebar';
 
@@ -36,9 +36,9 @@ export const SidebarProvider = ({
 	const open = openProp !== undefined ? openProp : openState;
 	const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
-	return (
-		<SidebarContext.Provider value={{ animate, open, setOpen }}>{children}</SidebarContext.Provider>
-	);
+	const value = useMemo(() => ({ animate, open, setOpen }), [animate, open, setOpen]);
+
+	return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
 };
 
 export const Sidebar = ({

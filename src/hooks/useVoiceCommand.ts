@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useVoiceLogger } from '@/hooks/useLogger';
@@ -53,7 +53,16 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 	const [canRetry, setCanRetry] = useState(false);
 
 	const logger = useVoiceLogger();
-	logger.setContext({ autoNavigate, enableFeedback, hook: 'useVoiceCommand' });
+	// Use ref to track if context has been set to avoid calling setContext on every render
+	const contextSetRef = useRef(false);
+
+	// Set context only once on mount
+	useEffect(() => {
+		if (!contextSetRef.current) {
+			logger.setContext({ autoNavigate, enableFeedback, hook: 'useVoiceCommand' });
+			contextSetRef.current = true;
+		}
+	}, [logger, autoNavigate, enableFeedback]);
 
 	const voiceService = getVoiceService({
 		autoRetry: autoRetryOnNoSpeech,
@@ -292,19 +301,34 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 		return voiceService.getLastError();
 	}, [voiceService]);
 
-	return {
-		isListening,
-		isSupported,
-		lastCommand,
-		lastTranscript,
-		speak,
-		startListening,
-		stopListening,
-		canRetry,
-		retryCount,
-		retry,
-		getLastError,
-	};
+	return useMemo(
+		() => ({
+			isListening,
+			isSupported,
+			lastCommand,
+			lastTranscript,
+			speak,
+			startListening,
+			stopListening,
+			canRetry,
+			retryCount,
+			retry,
+			getLastError,
+		}),
+		[
+			isListening,
+			isSupported,
+			lastCommand,
+			lastTranscript,
+			speak,
+			startListening,
+			stopListening,
+			canRetry,
+			retryCount,
+			retry,
+			getLastError,
+		],
+	);
 }
 
 /**
@@ -328,7 +352,16 @@ function getDestinationName(path: string): string {
 export function useVoiceFeedback() {
 	const voiceService = getVoiceService();
 	const logger = useVoiceLogger();
-	logger.setContext({ hook: 'useVoiceFeedback' });
+
+	// Use ref to track if context has been set to avoid calling setContext on every render
+	const contextSetRef = useRef(false);
+
+	useEffect(() => {
+		if (!contextSetRef.current) {
+			logger.setContext({ hook: 'useVoiceFeedback' });
+			contextSetRef.current = true;
+		}
+	}, [logger]);
 
 	const speak = useCallback(
 		async (text: string) => {
@@ -353,11 +386,16 @@ export function useVoiceFeedback() {
 		voiceService.stopSpeaking();
 	}, [voiceService]);
 
-	return {
-		isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
-		speak,
-		stopSpeaking,
-	};
+	const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+	return useMemo(
+		() => ({
+			isSupported,
+			speak,
+			stopSpeaking,
+		}),
+		[isSupported, speak, stopSpeaking],
+	);
 }
 
 export default useVoiceCommand;

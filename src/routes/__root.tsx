@@ -12,7 +12,7 @@ import {
 	Sparkles,
 	Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { ConsentBanner } from '@/components/privacy';
@@ -44,65 +44,80 @@ export const Route = createRootRoute({
 	errorComponent: ErrorBoundary,
 });
 
+// Stable array of public pages (defined outside component to prevent re-creation)
+const PUBLIC_PAGES = [
+	'/login',
+	'/signup',
+	'/privacidade',
+	'/politica-de-privacidade',
+	'/termos-de-uso',
+];
+
 function RootComponent() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [open, setOpen] = useState(false);
 	const { isLoading, signOut } = useAuth();
 
-	const publicPages = ['/login', '/signup'];
-	const isPublicPage = publicPages.some((page) => location.pathname.startsWith(page));
+	const isPublicPage = useMemo(
+		() => PUBLIC_PAGES.some((page) => location.pathname.startsWith(page)),
+		[location.pathname],
+	);
 
-	const navigationItems = [
-		{
-			href: '/dashboard',
-			icon: <Home className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Dashboard',
-		},
-		{
-			href: '/saldo',
-			icon: <Wallet className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Saldo',
-		},
-		{
-			href: '/calendario',
-			icon: <Calendar className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Calendário',
-		},
-		{
-			href: '/contas',
-			icon: <FileText className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Contas',
-		},
-		{
-			href: '/contas-bancarias',
-			icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Contas Bancárias',
-		},
-		{
-			href: '/billing',
-			icon: <CreditCard className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Planos',
-		},
-		{
-			href: '/configuracoes',
-			icon: <Settings className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-			label: 'Configurações',
-		},
-	];
+	// Memoize navigation items to prevent re-creation on every render
+	const navigationItems = useMemo(
+		() => [
+			{
+				href: '/dashboard',
+				icon: <Home className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Dashboard',
+			},
+			{
+				href: '/saldo',
+				icon: <Wallet className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Saldo',
+			},
+			{
+				href: '/calendario',
+				icon: <Calendar className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Calendário',
+			},
+			{
+				href: '/contas',
+				icon: <FileText className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Contas',
+			},
+			{
+				href: '/contas-bancarias',
+				icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Contas Bancárias',
+			},
+			{
+				href: '/billing',
+				icon: <CreditCard className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Planos',
+			},
+			{
+				href: '/configuracoes',
+				icon: <Settings className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+				label: 'Configurações',
+			},
+		],
+		[],
+	);
 
-	const handleLogout = async () => {
+	const handleLogout = useCallback(async () => {
 		await signOut();
 		await navigate({
 			search: { error: undefined, redirect: '/dashboard' },
 			to: '/login',
 		});
-	};
+	}, [signOut, navigate]);
 
 	// Handle customize consent preferences - navigate to settings
-	const handleCustomizeConsent = () => {
-		navigate({ to: '/configuracoes' });
-	};
+	const handleCustomizeConsent = useCallback(() => {
+		void navigate({ to: '/configuracoes' });
+	}, [navigate]);
 
 	// Show loading while checking auth
 	if (isLoading) {
@@ -113,17 +128,14 @@ function RootComponent() {
 		);
 	}
 
+	// Public pages: NO CalendarProvider/ChatProvider (they depend on authenticated user)
+	// This prevents infinite re-render loops when Clerk auth state changes
 	if (isPublicPage) {
 		return (
-			<CalendarProvider>
-				<ChatProvider>
-					<div className="min-h-screen bg-background">
-						<Outlet />
-					</div>
-					<ChatWidget />
-					<ConsentBanner onCustomize={handleCustomizeConsent} />
-				</ChatProvider>
-			</CalendarProvider>
+			<div className="min-h-screen bg-background">
+				<Outlet />
+				<ConsentBanner onCustomize={handleCustomizeConsent} />
+			</div>
 		);
 	}
 

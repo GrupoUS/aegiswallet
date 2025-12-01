@@ -1,14 +1,14 @@
 'use client';
 
-import type { FileUIPart, UIMessage } from '@/lib/ai/compatibility';
 import { ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react';
-import { createContext, memo, useContext, useEffect, useState } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Streamdown } from 'streamdown';
 
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { FileUIPart, UIMessage } from '@/lib/ai/compatibility';
 import { cn } from '@/lib/utils';
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -121,29 +121,35 @@ export const MessageBranch = ({
 	const [currentBranch, setCurrentBranch] = useState(defaultBranch);
 	const [branches, setBranches] = useState<ReactElement[]>([]);
 
-	const handleBranchChange = (newBranch: number) => {
-		setCurrentBranch(newBranch);
-		onBranchChange?.(newBranch);
-	};
+	const handleBranchChange = useCallback(
+		(newBranch: number) => {
+			setCurrentBranch(newBranch);
+			onBranchChange?.(newBranch);
+		},
+		[onBranchChange],
+	);
 
-	const goToPrevious = () => {
+	const goToPrevious = useCallback(() => {
 		const newBranch = currentBranch > 0 ? currentBranch - 1 : branches.length - 1;
 		handleBranchChange(newBranch);
-	};
+	}, [currentBranch, branches.length, handleBranchChange]);
 
-	const goToNext = () => {
+	const goToNext = useCallback(() => {
 		const newBranch = currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
 		handleBranchChange(newBranch);
-	};
+	}, [currentBranch, branches.length, handleBranchChange]);
 
-	const contextValue: MessageBranchContextType = {
-		currentBranch,
-		totalBranches: branches.length,
-		goToPrevious,
-		goToNext,
-		branches,
-		setBranches,
-	};
+	const contextValue = useMemo<MessageBranchContextType>(
+		() => ({
+			currentBranch,
+			totalBranches: branches.length,
+			goToPrevious,
+			goToNext,
+			branches,
+			setBranches,
+		}),
+		[currentBranch, branches, goToPrevious, goToNext],
+	);
 
 	return (
 		<MessageBranchContext.Provider value={contextValue}>

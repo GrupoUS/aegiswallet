@@ -17,10 +17,18 @@ const ICON_STROKE_WIDTH = 2;
 
 type ModelId = string;
 
+// Extended usage type that includes all possible token fields
+type ExtendedUsage = LanguageModelUsage & {
+	inputTokens?: number;
+	outputTokens?: number;
+	reasoningTokens?: number;
+	cachedInputTokens?: number;
+};
+
 type ContextSchema = {
 	usedTokens: number;
 	maxTokens: number;
-	usage?: LanguageModelUsage;
+	usage?: ExtendedUsage;
 	modelId?: ModelId;
 };
 

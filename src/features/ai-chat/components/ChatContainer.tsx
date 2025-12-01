@@ -105,11 +105,6 @@ export function ChatContainer({
 
 	const [showReasoning, setShowReasoning] = useState(enableReasoningView);
 
-	// Update showReasoning when prop changes (optional, but good for syncing)
-	useMemo(() => {
-		setShowReasoning(enableReasoningView);
-	}, [enableReasoningView]);
-
 	return (
 		<ChatLayout
 			title="Assistente Financeiro Aegis"

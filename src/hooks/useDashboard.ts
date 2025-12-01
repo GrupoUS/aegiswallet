@@ -1,17 +1,14 @@
 import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
-import { useBankAccounts, useBankAccountsStats, useTotalBalance, createAccount } from '@/hooks/useBankAccounts';
+import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts';
 import {
 	useContacts,
 	useContactsForTransfer,
 	useContactsStats,
 	useFavoriteContacts,
-	createContact,
 } from '@/hooks/useContacts';
 import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
 
-import type { Contact } from '@/db/schema';
-import type { BankAccount } from '@/hooks/useBankAccounts';
 import type { FinancialEvent } from '@/types/financial-events';
 
 /**
@@ -174,33 +171,11 @@ export function useDashboardMetrics() {
 	};
 }
 
-// Interface for safe type handling without assertions
-interface ProfileWithPreferences {
-  data?: {
-    user_preferences?: Array<{
-      accessibility_high_contrast?: boolean;
-      accessibility_large_text?: boolean;
-      accessibility_screen_reader?: boolean;
-      autonomy_level?: number;
-      currency?: string;
-      language?: string;
-      email_notifications?: boolean;
-      notifications_enabled?: boolean;
-      push_notifications?: boolean;
-      theme?: string;
-      timezone?: string;
-      voice_commands_enabled?: boolean;
-      voice_feedback?: boolean;
-    }>;
-  };
-}
-
 export function useDashboardSettings() {
 	const { profile } = useProfile();
 
-	// Safe type narrowing without assertions
-	const profileData = profile?.data;
-	const preferences = profileData?.user_preferences?.[0];
+	// Safe type narrowing - profile directly contains user_preferences
+	const preferences = profile?.user_preferences?.[0];
 
 	const settings = {
 		accessibility: {
@@ -233,13 +208,15 @@ export function useDashboardSettings() {
  */
 export function useDashboardActions() {
 	const { addEvent } = useFinancialEventMutations();
+	const { createAccount } = useBankAccounts();
+	const { createContact } = useContacts();
 
 	const actions = {
-		quickAccount: async (data: Partial<BankAccount>) => {
+		quickAccount: async (data: Parameters<typeof createAccount>[0]) => {
 			// Implementar lógica para conta rápida
 			return createAccount(data);
 		},
-		quickContact: async (data: Partial<Contact>) => {
+		quickContact: async (data: Parameters<typeof createContact>[0]) => {
 			// Implementar lógica para contato rápido
 			return createContact(data);
 		},

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type Theme = 'dark' | 'light' | 'system' | 'tweakcn';
 
@@ -26,7 +26,7 @@ export function ThemeProvider({
 	storageKey = 'aegiswallet-theme',
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(
+	const [theme, setThemeState] = useState<Theme>(
 		() => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
 	);
 
@@ -47,13 +47,21 @@ export function ThemeProvider({
 		root.classList.add(theme);
 	}, [theme]);
 
-	const value = {
-		setTheme: (theme: Theme) => {
-			localStorage.setItem(storageKey, theme);
-			setTheme(theme);
+	const setTheme = useCallback(
+		(newTheme: Theme) => {
+			localStorage.setItem(storageKey, newTheme);
+			setThemeState(newTheme);
 		},
-		theme,
-	};
+		[storageKey],
+	);
+
+	const value = useMemo(
+		() => ({
+			setTheme,
+			theme,
+		}),
+		[setTheme, theme],
+	);
 
 	return (
 		<ThemeProviderContext.Provider {...props} value={value}>

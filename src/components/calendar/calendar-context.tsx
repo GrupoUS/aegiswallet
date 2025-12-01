@@ -5,7 +5,7 @@
 
 import { addDays, addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
 	CalendarCategory,
@@ -267,30 +267,54 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		setFilters((prev) => ({ ...prev, ...newFilters }));
 	}, []);
 
-	const value: CalendarContextType = {
-		addEvent,
-		categories,
-		currentDate,
-		currentView,
-		deleteEvent,
-		events: localEvents,
-		filters,
-		getEventsForDate,
-		getEventsForMonth,
-		getFilteredEvents,
-		goToToday,
-		isColorVisible,
-		navigateDate,
-		searchEvents,
-		setCurrentDate,
-		setCurrentView,
-		setFilters: setFiltersCallback,
-		settings,
-		toggleColorVisibility,
-		updateEvent,
-		updateSettings,
-		visibleColors,
-	};
+	const value = useMemo<CalendarContextType>(
+		() => ({
+			addEvent,
+			categories,
+			currentDate,
+			currentView,
+			deleteEvent,
+			events: localEvents,
+			filters,
+			getEventsForDate,
+			getEventsForMonth,
+			getFilteredEvents,
+			goToToday,
+			isColorVisible,
+			navigateDate,
+			searchEvents,
+			setCurrentDate,
+			setCurrentView,
+			setFilters: setFiltersCallback,
+			settings,
+			toggleColorVisibility,
+			updateEvent,
+			updateSettings,
+			visibleColors,
+		}),
+		[
+			addEvent,
+			categories,
+			currentDate,
+			currentView,
+			deleteEvent,
+			localEvents,
+			filters,
+			getEventsForDate,
+			getEventsForMonth,
+			getFilteredEvents,
+			goToToday,
+			isColorVisible,
+			navigateDate,
+			searchEvents,
+			setFiltersCallback,
+			settings,
+			toggleColorVisibility,
+			updateEvent,
+			updateSettings,
+			visibleColors,
+		],
+	);
 
 	return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>;
 }

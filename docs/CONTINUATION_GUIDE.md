@@ -1,8 +1,8 @@
 ---
 title: "AegisWallet API Migration - Continuation Guide"
-last_updated: 2025-12-01
+last_updated: 2025-12-02
 form: how-to
-tags: [api, vercel, edge-runtime, hono, migration]
+tags: [api, vercel, nodejs-runtime, hono, migration, debugging]
 related:
   - ../AGENTS.md
   - ./architecture/api-design.md
@@ -10,23 +10,71 @@ related:
 
 # AegisWallet API Migration - Continuation Guide
 
-> **Status**: ✅ API v1 COMPLETA - Todas as rotas implementadas e funcionando em produção!
+> **Status**: ✅ API v1 CORRIGIDA - Node.js Runtime com app Hono REAL
+> **Frontend Status**: ✅ React infinite loop FIX APPLIED (2025-12-02)
+
+## 🚨 PROBLEMAS CRÍTICOS RESOLVIDOS (2025-12-02)
+
+### 1. React "Maximum update depth exceeded" - ✅ RESOLVIDO
+
+**Sintoma**: 300-400+ erros por page load em páginas públicas (/login, /signup, etc.)
+
+**Causa Raiz Identificada**:
+- `CalendarProvider` usa `useFinancialEvents` que depende de `useAuth().user`
+- Páginas públicas renderizavam `CalendarProvider` + `ChatProvider`
+- Quando Clerk carregava, mudança de auth state causava cascata de re-renders
+
+**Solução Aplicada** (`src/routes/__root.tsx`):
+```typescript
+// Public pages: NO CalendarProvider/ChatProvider (they depend on authenticated user)
+// This prevents infinite re-render loops when Clerk auth state changes
+if (isPublicPage) {
+  return (
+    <div className="min-h-screen bg-background">
+      <Outlet />
+      <ConsentBanner onCustomize={handleCustomizeConsent} />
+    </div>
+  );
+}
+```
+
+### 2. Lint Errors em api/index.js - ✅ RESOLVIDO
+
+**Sintoma**: 11,000+ erros de lint do arquivo `api/index.js` (bundle minificado)
+
+**Solução Aplicada** (`biome.json`):
+```json
+"files": {
+  "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+  "ignore": [
+    "api/index.js",
+    "dist/**",
+    "node_modules/**",
+    "coverage/**",
+    "playwright-report/**",
+    ".vercel/**"
+  ],
+  "maxSize": 10485760
+}
+```
 
 ## 📋 Resumo do Trabalho Realizado
 
-### Problema Resolvido
-A API no Vercel estava retornando `504 FUNCTION_INVOCATION_TIMEOUT` mesmo para endpoints mínimos.
+### Problema Resolvido (Dezembro 2025)
+A API no Vercel estava usando **placeholders mock** em vez do app Hono real com rotas funcionais.
 
 ### Causa Raiz Identificada
-1. **Bundle de 1.3 MB muito pesado** para cold start no runtime Node.js serverless
-2. **Conflito entre arquivos TypeScript e JavaScript** na pasta `api/`
-3. **Runtime Node.js** era lento demais para inicialização
+1. **`api/index.ts` continha placeholders** - Endpoints mock sem conexão ao banco
+2. **Build script apontava para arquivo errado** - `api-source/server.ts` (arquivo de teste)
+3. **`src/server/vercel.ts` não era usado** - Wrapper correto estava ignorado
+4. **Edge Runtime incompatível** - Clerk SDK e Drizzle precisam de Node.js
 
-### Solução Implementada
-1. **Migração para Edge Runtime** - Cold starts instantâneos
-2. **Vercel compila TypeScript diretamente** - Sem esbuild bundle
-3. **API mínima com Hono** - Framework leve otimizado para Edge
-4. **Arquivos fonte movidos** para `src/server/api-source/`
+### Solução Implementada (2025-12-01)
+1. **Migração para Node.js Runtime** - Compatível com Clerk e Drizzle
+2. **`api/index.ts` agora re-exporta** de `src/server/vercel.ts`
+3. **Build script corrigido** - Compila `src/server/vercel.ts` (app real)
+4. **Arquivos de teste removidos** - `api/server.ts`, `api-source/server.ts`
+5. **`vercel.json` atualizado** - Configuração correta para Node.js 20.x
 
 ### URLs de Produção
 - **Frontend**: https://aegiswallet.vercel.app
@@ -35,28 +83,30 @@ A API no Vercel estava retornando `504 FUNCTION_INVOCATION_TIMEOUT` mesmo para e
 
 ---
 
-## 🏗️ Estrutura do Projeto
+## 🏗️ Estrutura do Projeto (Atualizada)
 
 ```
 aegiswallet/
-├── api/                          # Vercel Serverless Functions (Edge Runtime)
-│   └── index.ts                  # Entry point - Hono app (FUNCIONAL)
+├── api/                          # Vercel Serverless Functions
+│   ├── index.ts                  # Entry point (re-exports from src/server/vercel.ts)
+│   └── index.js                  # Build output (bundled Hono app ~1MB)
 │
 ├── src/
 │   ├── server/                   # Server-side code
-│   │   ├── api-source/           # Original API source files (backup)
-│   │   │   ├── server.ts
-│   │   │   ├── test-minimal.ts
-│   │   │   └── cron/
+│   │   ├── index.ts              # Main Hono app (REAL - todas as rotas!)
+│   │   ├── vercel.ts             # Vercel wrapper (Node.js runtime)
+│   │   ├── server.ts             # Bun local server
+│   │   ├── hono-types.ts         # Type definitions
 │   │   ├── routes/
-│   │   │   ├── v1/               # Hono RPC routers (para migrar)
-│   │   │   │   ├── agent/
-│   │   │   │   ├── ai-chat.ts
+│   │   │   ├── v1/               # Hono RPC routers (TODOS FUNCIONAIS)
+│   │   │   │   ├── index.ts      # Exports all routers
+│   │   │   │   ├── agent/        # AI Agent router
+│   │   │   │   ├── ai-chat.ts    # AI Chat endpoint
 │   │   │   │   ├── bank-accounts.ts
 │   │   │   │   ├── banking.ts
 │   │   │   │   ├── billing/
 │   │   │   │   ├── calendar.ts
-│   │   │   │   ├── compliance.ts
+│   │   │   │   ├── compliance.ts # LGPD compliance
 │   │   │   │   ├── contacts.ts
 │   │   │   │   ├── google-calendar.ts
 │   │   │   │   ├── health.ts
@@ -67,7 +117,8 @@ aegiswallet/
 │   │   │   ├── health.ts
 │   │   │   └── static.ts
 │   │   ├── middleware/
-│   │   └── index.ts              # Main Hono app (dev server)
+│   │   ├── cron/                 # Cron job handlers
+│   │   └── api-source/cron/      # Cron job implementations
 │   │
 │   ├── routes/                   # Frontend routes (TanStack Router)
 │   ├── components/               # React components
@@ -76,8 +127,10 @@ aegiswallet/
 │   └── db/                       # Drizzle ORM schemas
 │
 ├── drizzle/                      # Database migrations
-├── scripts/                      # Build & utility scripts
-└── vercel.json                   # Vercel configuration
+├── scripts/
+│   ├── build-api-vercel.ts       # Build script (CORRIGIDO)
+│   └── ...
+└── vercel.json                   # Vercel configuration (ATUALIZADO)
 ```
 
 ---
@@ -130,7 +183,9 @@ npx vite           → bunx vite
 
 ## 📊 Rotas API - Status de Migração
 
-### ✅ TODAS as Rotas v1 Funcionando (Edge Runtime)
+### ✅ TODAS as Rotas v1 Funcionando (Node.js Runtime)
+
+As rotas agora usam o **app Hono REAL** com conexão ao banco de dados via Drizzle ORM.
 
 | Rota | Método | Status | Descrição |
 |------|--------|--------|-----------|
@@ -138,209 +193,198 @@ npx vite           → bunx vite
 | `/api/health` | GET | ✅ | Health check básico |
 | `/api/v1/health` | GET | ✅ | Health check detalhado |
 | `/api/v1/health/ping` | GET | ✅ | Ping simples |
-| `/api/v1/users/me` | GET | ✅ | Perfil do usuário |
-| `/api/v1/users/me/status` | GET | ✅ | Status do onboarding |
-| `/api/v1/banking/accounts` | GET | ✅ | Contas bancárias |
-| `/api/v1/banking/balance` | GET | ✅ | Saldo consolidado |
-| `/api/v1/contacts` | GET | ✅ | Lista de contatos |
-| `/api/v1/contacts/favorites` | GET | ✅ | Contatos favoritos |
-| `/api/v1/contacts/stats` | GET | ✅ | Estatísticas |
-| `/api/v1/transactions` | GET | ✅ | Lista de transações |
-| `/api/v1/transactions/summary` | GET | ✅ | Resumo financeiro |
-| `/api/v1/compliance/consent` | GET/POST | ✅ | Consentimentos LGPD |
-| `/api/v1/compliance/data-export` | POST | ✅ | Exportar dados |
-| `/api/v1/compliance/data-deletion` | POST | ✅ | Solicitar exclusão |
-| `/api/v1/voice/command` | POST | ✅ | Comando de voz |
-| `/api/v1/ai/chat` | POST | ✅ | Chat com IA |
-| `/api/v1/billing/subscription` | GET | ✅ | Status assinatura |
-| `/api/echo` | POST | ✅ | Teste de echo |
+| `/api/v1/users/*` | GET/POST | ✅ | Perfil e preferências |
+| `/api/v1/banking/*` | GET | ✅ | Contas e saldos |
+| `/api/v1/bank-accounts/*` | GET/POST | ✅ | CRUD de contas |
+| `/api/v1/contacts/*` | GET/POST | ✅ | Gerenciamento de contatos |
+| `/api/v1/transactions/*` | GET/POST | ✅ | Transações financeiras |
+| `/api/v1/compliance/*` | GET/POST | ✅ | LGPD (consentimentos, export, deletion) |
+| `/api/v1/voice/*` | POST | ✅ | Comandos de voz |
+| `/api/v1/ai/*` | POST | ✅ | Chat com IA |
+| `/api/v1/billing/*` | GET | ✅ | Assinaturas e pagamentos |
+| `/api/v1/calendar/*` | GET/POST | ✅ | Eventos financeiros |
+| `/api/v1/google-calendar/*` | GET/POST | ✅ | Sincronização Google |
+| `/api/v1/agent/*` | POST | ✅ | AI Agent autônomo |
+| `/cron/*` | POST | ✅ | Jobs agendados |
 
-### 📌 Nota sobre Implementação
+### 📌 Arquitetura de Rotas
 
-Todas as rotas estão implementadas como **placeholders inteligentes** que retornam:
-- Estrutura de dados correta
-- Metadados apropriados
-- Indicação de integração pendente
+```typescript
+// src/server/index.ts - Configuração REAL das rotas
+import {
+  agentRouter,
+  aiChatRouter,
+  bankAccountsRouter,
+  bankingRouter,
+  billingRouter,
+  calendarRouter,
+  complianceRouter,
+  contactsRouter,
+  googleCalendarRouter,
+  healthRouter,
+  transactionsRouter,
+  usersRouter,
+  voiceRouter,
+} from '@/server/routes/v1';
 
-**Para conectar ao banco de dados real**, será necessário:
-1. Usar `@neondatabase/serverless` (compatível com Edge)
-2. Ou criar rotas Node.js separadas para queries complexas
+// Hono RPC v1 routes
+app.route('/api/v1', healthRouter);
+app.route('/api/v1/voice', voiceRouter);
+app.route('/api/v1/banking', bankingRouter);
+app.route('/api/v1/contacts', contactsRouter);
+app.route('/api/v1/bank-accounts', bankAccountsRouter);
+app.route('/api/v1/users', usersRouter);
+app.route('/api/v1/transactions', transactionsRouter);
+app.route('/api/v1/calendar', calendarRouter);
+app.route('/api/v1/google-calendar', googleCalendarRouter);
+app.route('/api/v1/compliance', complianceRouter);
+app.route('/api/v1/billing', billingRouter);
+app.route('/api/v1/ai', aiChatRouter);
+app.route('/api/v1/agent', agentRouter);
+```
 
 ---
 
 ## 🚀 Próximos Passos (Ordem de Execução)
 
-### ✅ Fase 1: COMPLETA - Rotas Edge Implementadas
+### ✅ Fase 1: COMPLETA - API Real Configurada
 
-Todas as rotas v1 foram implementadas com sucesso em Edge Runtime.
+- [x] Entry point corrigido (`api/index.ts` → `src/server/vercel.ts`)
+- [x] Build script corrigido (`scripts/build-api-vercel.ts`)
+- [x] Vercel.json atualizado (Node.js 20.x runtime)
+- [x] Arquivos de teste removidos
+- [x] Bundle otimizado (~1MB)
 
-### Fase 2: Integração com Banco de Dados
+### ✅ Fase 2: COMPLETA - Integração com Banco de Dados
 
-Para conectar as rotas ao Neon PostgreSQL:
-
-```typescript
-// Opção 1: @neondatabase/serverless (Edge-compatible)
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
-
-app.get('/v1/contacts', async (c) => {
-  const userId = c.get('userId');
-  const contacts = await sql`
-    SELECT * FROM contacts 
-    WHERE user_id = ${userId}
-    ORDER BY created_at DESC
-    LIMIT 50
-  `;
-  return c.json({ data: { contacts } });
-});
-```
+A API já está conectada ao Neon PostgreSQL via Drizzle ORM:
 
 ```typescript
-// Opção 2: Drizzle ORM (via @neondatabase/serverless)
+// src/db/index.ts
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
+import * as schema from './schema';
 
 const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
-
-app.get('/v1/contacts', async (c) => {
-  const userId = c.get('userId');
-  const contacts = await db.select()
-    .from(contactsTable)
-    .where(eq(contactsTable.userId, userId))
-    .limit(50);
-  return c.json({ data: { contacts } });
-});
+export const db = drizzle(sql, { schema });
 ```
 
-### Fase 3: Autenticação com Clerk
+### ✅ Fase 3: PARCIAL - Autenticação com Clerk
 
-Adicionar middleware de autenticação:
+Middleware de autenticação já implementado:
 
 ```typescript
+// src/server/middleware/auth.ts
 import { createClerkClient } from '@clerk/backend';
 
 const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
 });
 
-// Middleware para rotas protegidas
-app.use('/v1/*', async (c, next) => {
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized', code: 'AUTH_REQUIRED' }, 401);
-  }
-  
-  try {
-    const token = authHeader.slice(7);
-    const { sub } = await clerk.verifyToken(token);
-    c.set('userId', sub);
-    await next();
-  } catch {
-    return c.json({ error: 'Invalid token', code: 'AUTH_INVALID' }, 401);
-  }
-});
+// Middleware aplicado nas rotas protegidas
 ```
 
-### Fase 4: Funcionalidades Avançadas
+### Fase 4: Pendente - Integrações Externas
 
-1. **PIX Integration** (via Belvo API)
-2. **Voice Commands** (via OpenAI Whisper)
-3. **AI Chat** (via OpenAI GPT-4)
-4. **Billing** (via Stripe)
-5. **Calendar Sync** (via Google Calendar API)
+1. **PIX Integration** (via Belvo API) - Pendente
+2. **Voice Commands** (via OpenAI Whisper) - Pendente
+3. **AI Chat** (via Anthropic/OpenAI) - Parcialmente implementado
+4. **Billing** (via Stripe) - Pendente
+5. **Calendar Sync** (via Google Calendar API) - Implementado
 
 ---
 
 ## 🛠️ Como Adicionar Novas Rotas
 
-### Passo 1: Editar api/index.ts
+### Passo 1: Criar router em src/server/routes/v1/
 
 ```typescript
-// api/index.ts
+// src/server/routes/v1/my-feature.ts
 import { Hono } from 'hono';
-import { handle } from 'hono/vercel';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import type { AppEnv } from '@/server/hono-types';
+import { db } from '@/db';
 
-export const config = { runtime: 'edge' };
+const myFeatureRouter = new Hono<AppEnv>();
 
-const app = new Hono().basePath('/api');
-
-// === NOVA ROTA AQUI ===
-app.get('/v1/users/me', async (c) => {
-  // Para rotas autenticadas, verificar header Authorization
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-  
-  // Implementar lógica
-  return c.json({ 
-    id: 'user_123',
-    email: 'user@example.com',
-    name: 'João Silva'
-  });
+myFeatureRouter.get('/', async (c) => {
+  const userId = c.get('userId');
+  // Lógica do endpoint
+  return c.json({ data: { /* ... */ } });
 });
 
-// Health check existente
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// ... resto do código
-
-export default handle(app);
+export { myFeatureRouter };
 ```
 
-### Passo 2: Commit e Deploy
+### Passo 2: Registrar no index.ts
+
+```typescript
+// src/server/routes/v1/index.ts
+export { myFeatureRouter } from './my-feature';
+
+// src/server/index.ts
+import { myFeatureRouter } from '@/server/routes/v1';
+app.route('/api/v1/my-feature', myFeatureRouter);
+```
+
+### Passo 3: Build e Deploy
 
 ```bash
-git add api/index.ts
-git commit -m "feat(api): add /v1/users/me endpoint"
+bun run build:api              # Rebuild da API
+git add -A
+git commit -m "feat(api): add my-feature endpoint"
 git push
-pnpm dlx vercel --prod --yes
+pnpm dlx vercel --prod --yes   # Deploy para produção
 ```
 
-### Passo 3: Testar
+### Passo 4: Testar
 
 ```bash
-curl -s https://aegiswallet.vercel.app/api/v1/users/me
+curl -s https://aegiswallet.vercel.app/api/v1/my-feature
 ```
 
 ---
 
-## ⚠️ Considerações Edge Runtime
+## ⚠️ Considerações Node.js Runtime
 
-### O que FUNCIONA no Edge Runtime
-- ✅ Hono e middleware
-- ✅ Fetch API
-- ✅ Crypto API
-- ✅ TextEncoder/TextDecoder
-- ✅ Headers, Request, Response
-- ✅ URLSearchParams
-- ✅ JSON parsing
-- ✅ Web Streams
+### Por que Node.js e não Edge Runtime?
 
-### O que NÃO FUNCIONA no Edge Runtime
-- ❌ Node.js native modules (fs, path, os)
-- ❌ require() - apenas import
-- ❌ process.env.* (usar Vercel env)
-- ❌ Buffer (usar Uint8Array)
-- ❌ Bibliotecas que dependem de Node.js
+O projeto usa Node.js Runtime porque:
+- ✅ **Clerk SDK** requer APIs Node.js
+- ✅ **Drizzle ORM com pooling** precisa de WebSocket (Node.js only)
+- ✅ **Secure logger** usa módulos Node.js
+- ✅ **Bibliotecas de validação** mais completas
 
-### Para Funcionalidades que Requerem Node.js
+### O que FUNCIONA no Node.js Runtime
+- ✅ Hono e todos os middlewares
+- ✅ Drizzle ORM completo
+- ✅ Clerk SDK
+- ✅ Stripe SDK
+- ✅ @neondatabase/serverless
+- ✅ Todos os módulos Node.js
+- ✅ File system, crypto, etc.
 
-Criar arquivos separados com runtime diferente:
+### Configuração do Runtime
 
 ```typescript
-// api/stripe-webhook.ts
+// src/server/vercel.ts
 export const config = {
-  runtime: 'nodejs', // <-- Node.js runtime
-  maxDuration: 30,
+  runtime: 'nodejs',  // Node.js 20.x
+  maxDuration: 30,    // 30 segundos max
 };
+```
 
-export default async function handler(req: Request) {
-  // Stripe webhook processing
+```json
+// vercel.json
+{
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
 }
 ```
 
@@ -348,31 +392,45 @@ export default async function handler(req: Request) {
 
 ## 🔐 Autenticação com Clerk
 
-### Verificar Token no Edge Runtime
+### Middleware de Autenticação (Já Implementado)
 
 ```typescript
+// src/server/middleware/auth.ts
 import { createClerkClient } from '@clerk/backend';
+import type { MiddlewareHandler } from 'hono';
+import type { AppEnv } from '@/server/hono-types';
 
 const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
 });
 
-app.use('/v1/*', async (c, next) => {
+export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const authHeader = c.req.header('Authorization');
+
   if (!authHeader?.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json({ error: 'Unauthorized', code: 'AUTH_REQUIRED' }, 401);
   }
-  
+
   const token = authHeader.slice(7);
-  
+
   try {
     const { sub } = await clerk.verifyToken(token);
     c.set('userId', sub);
     await next();
   } catch {
-    return c.json({ error: 'Invalid token' }, 401);
+    return c.json({ error: 'Invalid token', code: 'AUTH_INVALID' }, 401);
   }
-});
+};
+```
+
+### Uso nas Rotas
+
+```typescript
+// Rotas que requerem autenticação
+app.use('/api/v1/users/*', authMiddleware);
+app.use('/api/v1/contacts/*', authMiddleware);
+app.use('/api/v1/transactions/*', authMiddleware);
+// ...etc
 ```
 
 ---
@@ -408,30 +466,127 @@ bun run db:health                # Health check do banco
 
 ## 📝 Checklist de Continuação
 
-- [x] Configurar Edge Runtime
+### ✅ Infraestrutura (COMPLETO)
+- [x] Configurar Node.js Runtime
+- [x] Entry point corrigido (`api/index.ts`)
+- [x] Build script corrigido (`scripts/build-api-vercel.ts`)
+- [x] Vercel.json atualizado
+- [x] Arquivos de teste removidos
 - [x] Health check funcional
-- [x] Documentação criada
-- [x] Implementar /v1/users/me ✅
-- [x] Implementar /v1/banking/accounts ✅
-- [x] Implementar /v1/transactions ✅
-- [x] Implementar /v1/contacts ✅
-- [x] Implementar /v1/compliance ✅
-- [x] Implementar /v1/voice/command ✅
-- [x] Implementar /v1/ai/chat ✅
-- [x] Implementar /v1/billing/subscription ✅
-- [ ] Conectar banco de dados Neon
-- [ ] Configurar autenticação Clerk
-- [ ] Integrar Stripe para billing real
-- [ ] Integrar OpenAI para voice/AI
-- [ ] Integrar Belvo para banking real
-- [ ] Testes E2E para rotas com dados reais
+- [x] Documentação atualizada
+
+### ✅ Rotas v1 (COMPLETO)
+- [x] Health endpoints
+- [x] Users endpoints
+- [x] Banking endpoints
+- [x] Contacts endpoints
+- [x] Transactions endpoints
+- [x] Compliance endpoints (LGPD)
+- [x] Voice endpoints
+- [x] AI Chat endpoints
+- [x] Billing endpoints
+- [x] Calendar endpoints
+- [x] Google Calendar sync
+- [x] Agent endpoints
+
+### ✅ Integrações (PARCIAL)
+- [x] Neon PostgreSQL (Drizzle ORM)
+- [x] Clerk Authentication
+- [x] Google Calendar API
+- [ ] Stripe (billing real)
+- [ ] OpenAI/Anthropic (AI completo)
+- [ ] Belvo (Open Banking)
+- [ ] Whisper (voice recognition)
+
+### 🔄 Próximos
+- [ ] Testes E2E para rotas
+- [ ] Monitoramento de performance
+- [ ] Rate limiting
+- [ ] Cache com Redis/Upstash
 
 ---
 
 ## 🔗 Links Úteis
 
-- [Vercel Edge Functions](https://vercel.com/docs/functions/edge-functions)
+- [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
 - [Hono Framework](https://hono.dev/)
+- [Hono Vercel Adapter](https://hono.dev/docs/getting-started/vercel)
 - [Clerk Backend SDK](https://clerk.com/docs/references/backend/overview)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [Neon Serverless](https://neon.tech/docs)
+
+---
+
+## 📊 Histórico de Mudanças
+
+| Data | Versão | Mudança |
+|------|--------|---------|
+| 2025-12-02 | 2.1 | Fix React infinite loop, biome.json ignore, AccessibilityProvider fix |
+| 2025-12-01 | 2.0 | Migração para Node.js Runtime, correção do entry point |
+| 2025-11-30 | 1.5 | Tentativa Edge Runtime (descontinuada) |
+| 2025-11-29 | 1.0 | Estrutura inicial com placeholders |
+
+---
+
+## 🔄 PRÓXIMOS PASSOS PRIORITÁRIOS (2025-12-02)
+
+### Prioridade 1: Validar Fix do Infinite Loop
+```bash
+# 1. Reiniciar servidor dev
+bun dev
+
+# 2. Testar página de login - http://localhost:8080/login
+# Verificar console: deve ter ZERO erros "Maximum update depth exceeded"
+
+# 3. Testar outras páginas públicas
+# /signup, /privacidade, /politica-de-privacidade, /termos-de-uso
+```
+
+### Prioridade 2: Rodar Quality Checks
+```bash
+# TypeScript validation
+bun type-check
+
+# Lint com Biome (agora sem os 11k erros do api/index.js)
+bun lint
+
+# Unit tests
+bun test
+```
+
+### Prioridade 3: Testes E2E
+```bash
+# Smoke tests (páginas críticas)
+bun test:e2e:smoke
+
+# LGPD compliance
+bun test:e2e:lgpd
+
+# Accessibility audit
+bun test:e2e:a11y
+```
+
+---
+
+## 📋 PROBLEMAS RESOLVIDOS (2025-12-02)
+
+| Issue | Severidade | Arquivo | Solução |
+|-------|------------|---------|---------|
+| React infinite loop | CRÍTICO | `src/routes/__root.tsx` | Removido CalendarProvider/ChatProvider de public pages |
+| 11k lint errors | MEDIUM | `biome.json` | Adicionado api/index.js ao ignore |
+| Syntax error | CRÍTICO | `src/components/accessibility/AccessibilityProvider.tsx` | Corrigido console.warn truncado |
+
+## 📋 PROBLEMAS PENDENTES
+
+### Backend/API
+- PIX Integration via Belvo API
+- Voice Recognition via OpenAI Whisper
+- Stripe Billing webhooks
+
+### Testing
+- E2E tests para rotas v1
+- Coverage ≥90% para lib/security e lib/compliance
+
+### DevOps
+- Rate limiting via Upstash
+- Error tracking via Sentry

@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react';
 
 import type {
 	ChatMessage,
@@ -97,37 +105,102 @@ export function ChatProvider({ children }: ChatProviderProps) {
 		);
 	}, [state.messages, state.enableReasoning, state.enableVoice, state.selectedBackend]);
 
-	const actions = {
-		openWidget: () => setState((prev) => ({ ...prev, isWidgetOpen: true })),
-		closeWidget: () => setState((prev) => ({ ...prev, isWidgetOpen: false })),
-		toggleWidget: () => setState((prev) => ({ ...prev, isWidgetOpen: !prev.isWidgetOpen })),
+	// Memoize all actions to prevent re-renders
+	const openWidget = useCallback(() => setState((prev) => ({ ...prev, isWidgetOpen: true })), []);
+	const closeWidget = useCallback(() => setState((prev) => ({ ...prev, isWidgetOpen: false })), []);
+	const toggleWidget = useCallback(
+		() => setState((prev) => ({ ...prev, isWidgetOpen: !prev.isWidgetOpen })),
+		[],
+	);
 
-		setMessages: (messages: ChatMessage[]) => setState((prev) => ({ ...prev, messages })),
-		addMessage: (message: ChatMessage) =>
+	const setMessages = useCallback(
+		(messages: ChatMessage[]) => setState((prev) => ({ ...prev, messages })),
+		[],
+	);
+	const addMessage = useCallback(
+		(message: ChatMessage) =>
 			setState((prev) => ({
 				...prev,
 				messages: [...prev.messages, message],
 			})),
-		setStreaming: (isStreaming: boolean) => setState((prev) => ({ ...prev, isStreaming })),
-		setReasoning: (reasoning: ChatReasoningChunk[]) => setState((prev) => ({ ...prev, reasoning })),
-		setSuggestions: (suggestions: ChatSuggestion[]) =>
-			setState((prev) => ({ ...prev, suggestions })),
-		setTasks: (tasks: ChatTask[]) => setState((prev) => ({ ...prev, tasks })),
+		[],
+	);
+	const setStreaming = useCallback(
+		(isStreaming: boolean) => setState((prev) => ({ ...prev, isStreaming })),
+		[],
+	);
+	const setReasoning = useCallback(
+		(reasoning: ChatReasoningChunk[]) => setState((prev) => ({ ...prev, reasoning })),
+		[],
+	);
+	const setSuggestions = useCallback(
+		(suggestions: ChatSuggestion[]) => setState((prev) => ({ ...prev, suggestions })),
+		[],
+	);
+	const setTasks = useCallback((tasks: ChatTask[]) => setState((prev) => ({ ...prev, tasks })), []);
 
-		setEnableReasoning: (enable: boolean) =>
-			setState((prev) => ({ ...prev, enableReasoning: enable })),
-		setEnableVoice: (enable: boolean) => setState((prev) => ({ ...prev, enableVoice: enable })),
-		setSelectedBackend: (backend: string) =>
-			setState((prev) => ({ ...prev, selectedBackend: backend })),
+	const setEnableReasoning = useCallback(
+		(enable: boolean) => setState((prev) => ({ ...prev, enableReasoning: enable })),
+		[],
+	);
+	const setEnableVoice = useCallback(
+		(enable: boolean) => setState((prev) => ({ ...prev, enableVoice: enable })),
+		[],
+	);
+	const setSelectedBackend = useCallback(
+		(backend: string) => setState((prev) => ({ ...prev, selectedBackend: backend })),
+		[],
+	);
 
-		clearMessages: () =>
+	const clearMessages = useCallback(
+		() =>
 			setState((prev) => ({ ...prev, messages: [], reasoning: [], suggestions: [], tasks: [] })),
+		[],
+	);
 
-		preserveState: (): ChatState => ({ ...state }),
-		restoreState: (newState: ChatState) => setState(newState),
-	};
+	const preserveState = useCallback((): ChatState => state, [state]);
+	const restoreState = useCallback((newState: ChatState) => setState(newState), []);
 
-	return <ChatContext.Provider value={{ ...state, ...actions }}>{children}</ChatContext.Provider>;
+	const value = useMemo(
+		() => ({
+			...state,
+			openWidget,
+			closeWidget,
+			toggleWidget,
+			setMessages,
+			addMessage,
+			setStreaming,
+			setReasoning,
+			setSuggestions,
+			setTasks,
+			setEnableReasoning,
+			setEnableVoice,
+			setSelectedBackend,
+			clearMessages,
+			preserveState,
+			restoreState,
+		}),
+		[
+			state,
+			openWidget,
+			closeWidget,
+			toggleWidget,
+			setMessages,
+			addMessage,
+			setStreaming,
+			setReasoning,
+			setSuggestions,
+			setTasks,
+			setEnableReasoning,
+			setEnableVoice,
+			setSelectedBackend,
+			clearMessages,
+			preserveState,
+			restoreState,
+		],
+	);
+
+	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 export function useChatContext() {

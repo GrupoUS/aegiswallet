@@ -2,7 +2,7 @@
 
 import { ChevronDownIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -42,17 +42,23 @@ export const WebPreview = ({
 	const [url, setUrl] = useState(defaultUrl);
 	const [consoleOpen, setConsoleOpen] = useState(false);
 
-	const handleUrlChange = (newUrl: string) => {
-		setUrl(newUrl);
-		onUrlChange?.(newUrl);
-	};
+	const handleUrlChange = useCallback(
+		(newUrl: string) => {
+			setUrl(newUrl);
+			onUrlChange?.(newUrl);
+		},
+		[onUrlChange],
+	);
 
-	const contextValue: WebPreviewContextValue = {
-		url,
-		setUrl: handleUrlChange,
-		consoleOpen,
-		setConsoleOpen,
-	};
+	const contextValue = useMemo<WebPreviewContextValue>(
+		() => ({
+			url,
+			setUrl: handleUrlChange,
+			consoleOpen,
+			setConsoleOpen,
+		}),
+		[url, consoleOpen, handleUrlChange],
+	);
 
 	return (
 		<WebPreviewContext.Provider value={contextValue}>

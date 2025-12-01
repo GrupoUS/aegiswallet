@@ -1,6 +1,6 @@
 import { useAuth as useClerkAuth, useSession, useUser } from '@clerk/clerk-react';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { setAuthTokenGetter } from '@/lib/api-client';
 
@@ -31,9 +31,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setAuthTokenGetter(getToken);
 	}, [getToken]);
 
-	const signOut = async () => {
+	const signOut = useCallback(async () => {
 		await clerkSignOut();
-	};
+	}, [clerkSignOut]);
+
+	const value = useMemo(
+		() => ({
+			getToken,
+			isAuthenticated: !!isSignedIn,
+			isLoading: !isLoaded,
+			signOut,
+			user,
+		}),
+		[getToken, isSignedIn, isLoaded, signOut, user],
+	);
 
 	if (!isLoaded) {
 		return (
@@ -43,19 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		);
 	}
 
-	return (
-		<AuthContext.Provider
-			value={{
-				getToken,
-				isAuthenticated: !!isSignedIn,
-				isLoading: !isLoaded,
-				signOut,
-				user,
-			}}
-		>
-			{children}
-		</AuthContext.Provider>
-	);
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /**

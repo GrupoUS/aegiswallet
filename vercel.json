@@ -1,10 +1,10 @@
 {
-	"buildCommand": "bun run routes:generate && bun run build && bun run build:api",
+	"buildCommand": "bun run routes:generate && bun run build:client",
 	"outputDirectory": "dist",
 	"installCommand": "bun install",
 	"framework": null,
 	"functions": {
-		"api/index.js": {
+		"api/index.ts": {
 			"maxDuration": 30
 		}
 	},

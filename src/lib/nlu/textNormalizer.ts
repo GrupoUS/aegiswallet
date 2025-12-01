@@ -198,10 +198,7 @@ export class TextNormalizer {
 		// 2. Expand contractions
 		const expandedContractions: Record<string, string> = {};
 		if (this.expandContractions) {
-			normalized = this.expandContractionsInText(
-				normalized,
-				expandedContractions,
-			);
+			normalized = this.expandContractionsInText(normalized, expandedContractions);
 		}
 
 		// 3. Remove accents
@@ -252,16 +249,11 @@ export class TextNormalizer {
 	/**
 	 * Expand contractions in text
 	 */
-	private expandContractionsInText(
-		text: string,
-		tracking: Record<string, string>,
-	): string {
+	private expandContractionsInText(text: string, tracking: Record<string, string>): string {
 		let result = text;
 
 		// Sort by length (longest first) to avoid partial replacements
-		const sortedContractions = Object.entries(CONTRACTIONS).sort(
-			([a], [b]) => b.length - a.length,
-		);
+		const sortedContractions = Object.entries(CONTRACTIONS).sort(([a], [b]) => b.length - a.length);
 
 		for (const [contraction, expansion] of sortedContractions) {
 			const regex = new RegExp(`\\b${contraction}\\b`, 'gi');

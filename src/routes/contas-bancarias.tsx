@@ -5,11 +5,9 @@ import { BankAccountsListLoader } from '@/components/routes/contas-bancarias/Ban
 
 export const Route = createFileRoute('/contas-bancarias')({
 	component: lazy(() =>
-		import('@/components/routes/contas-bancarias/ContasBancarias').then(
-			(m) => ({
-				default: m.ContasBancarias,
-			}),
-		),
+		import('@/components/routes/contas-bancarias/ContasBancarias').then((m) => ({
+			default: m.ContasBancarias,
+		})),
 	),
 	pendingComponent: () => <BankAccountsListLoader />,
 });

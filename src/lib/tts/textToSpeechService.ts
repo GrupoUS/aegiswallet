@@ -154,8 +154,7 @@ export class TextToSpeechService {
 		}
 
 		if (dependencies?.SpeechSynthesisUtterance) {
-			this.SpeechSynthesisUtteranceClass =
-				dependencies.SpeechSynthesisUtterance;
+			this.SpeechSynthesisUtteranceClass = dependencies.SpeechSynthesisUtterance;
 		}
 
 		// Initialize Web Speech API if available (supports browser + test environments)
@@ -164,8 +163,7 @@ export class TextToSpeechService {
 				window?: Window;
 				speechSynthesis?: SpeechSynthesis;
 			};
-			const globalWindow =
-				typeof window !== 'undefined' ? window : globalRef.window;
+			const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
 			const speechSynthesisInstance =
 				globalWindow?.speechSynthesis || globalRef.speechSynthesis || null;
@@ -178,9 +176,7 @@ export class TextToSpeechService {
 		}
 	}
 
-	private SpeechSynthesisUtteranceClass:
-		| typeof SpeechSynthesisUtterance
-		| null = null;
+	private SpeechSynthesisUtteranceClass: typeof SpeechSynthesisUtterance | null = null;
 
 	/**
 	 * Speak text with TTS
@@ -203,9 +199,7 @@ export class TextToSpeechService {
 			}
 
 			// Generate speech
-			const processedText = this.config.ssmlEnabled
-				? this.wrapWithSSML(text, options)
-				: text;
+			const processedText = this.config.ssmlEnabled ? this.wrapWithSSML(text, options) : text;
 
 			await this.generateSpeech(processedText);
 
@@ -293,14 +287,9 @@ export class TextToSpeechService {
 				resolve();
 			};
 
-			utterance.onerror = (
-				event: SpeechSynthesisErrorEvent | { error?: string },
-			) => {
+			utterance.onerror = (event: SpeechSynthesisErrorEvent | { error?: string }) => {
 				clearFallback();
-				const errorMessage =
-					'error' in event && event.error
-						? event.error
-						: 'unknown-speech-error';
+				const errorMessage = 'error' in event && event.error ? event.error : 'unknown-speech-error';
 				reject(new Error(`Speech synthesis error: ${errorMessage}`));
 			};
 
@@ -309,11 +298,7 @@ export class TextToSpeechService {
 				synth.speak(utterance as SpeechSynthesisUtterance);
 			} catch (error) {
 				clearFallback();
-				reject(
-					error instanceof Error
-						? error
-						: new Error('Speech synthesis invocation failed'),
-				);
+				reject(error instanceof Error ? error : new Error('Speech synthesis invocation failed'));
 			}
 		});
 	}
@@ -330,17 +315,13 @@ export class TextToSpeechService {
 			window?: Window;
 			SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 		};
-		const globalWindow =
-			typeof window !== 'undefined' ? window : globalRef.window;
+		const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
 		const SpeechSynthesisUtteranceConstructor =
-			globalWindow?.SpeechSynthesisUtterance ||
-			globalRef.SpeechSynthesisUtterance;
+			globalWindow?.SpeechSynthesisUtterance || globalRef.SpeechSynthesisUtterance;
 
 		if (SpeechSynthesisUtteranceConstructor) {
-			return new SpeechSynthesisUtteranceConstructor(
-				text,
-			) as SpeechSynthesisUtterance;
+			return new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance;
 		}
 
 		// Fallback mock for non-browser/test environments
@@ -474,9 +455,7 @@ export class TextToSpeechService {
 			.filter((voice) => voice.lang?.toLowerCase().startsWith('pt'))
 			.filter(
 				(voice, index, arr) =>
-					arr.findIndex(
-						(v) => v.lang === voice.lang && v.name === voice.name,
-					) === index,
+					arr.findIndex((v) => v.lang === voice.lang && v.name === voice.name) === index,
 			);
 
 		if (this.isTestEnvironment()) {
@@ -523,11 +502,9 @@ export class TextToSpeechService {
 			window?: Window;
 			speechSynthesis?: SpeechSynthesis;
 		};
-		const globalWindow =
-			typeof window !== 'undefined' ? window : globalRef.window;
+		const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
-		const instance =
-			globalWindow?.speechSynthesis || globalRef.speechSynthesis || null;
+		const instance = globalWindow?.speechSynthesis || globalRef.speechSynthesis || null;
 
 		if (instance) {
 			this.synth = instance as SpeechSynthesis;
@@ -611,9 +588,7 @@ let ttsServiceInstance: TextToSpeechService | null = null;
 /**
  * Get singleton TTS service instance
  */
-export function getTTSService(
-	config?: Partial<TTSConfig>,
-): TextToSpeechService {
+export function getTTSService(config?: Partial<TTSConfig>): TextToSpeechService {
 	if (!ttsServiceInstance) {
 		ttsServiceInstance = new TextToSpeechService(config);
 	} else if (config) {
@@ -643,10 +618,7 @@ export function createTTSService(
 /**
  * Quick speak without creating service instance
  */
-export async function quickSpeak(
-	text: string,
-	options?: SSMLOptions,
-): Promise<TTSResponse> {
+export async function quickSpeak(text: string, options?: SSMLOptions): Promise<TTSResponse> {
 	const service = getTTSService();
 	return service.speak(text, options);
 }

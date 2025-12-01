@@ -34,16 +34,8 @@ export function MonthView({
 	const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
 	const weeks = useMemo(() => {
-		const startOfMonth = new Date(
-			currentDate.getFullYear(),
-			currentDate.getMonth(),
-			1,
-		);
-		const endOfMonth = new Date(
-			currentDate.getFullYear(),
-			currentDate.getMonth() + 1,
-			0,
-		);
+		const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+		const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
 		const start = new Date(startOfMonth);
 		start.setDate(start.getDate() - start.getDay());
@@ -90,20 +82,10 @@ export function MonthView({
 					{format(currentDate, 'MMMM yyyy', { locale: ptBR })}
 				</h2>
 				<div className="flex gap-1">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={handlePreviousMonth}
-					>
+					<Button type="button" variant="outline" size="sm" onClick={handlePreviousMonth}>
 						<ChevronLeft className="h-4 w-4" />
 					</Button>
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={handleNextMonth}
-					>
+					<Button type="button" variant="outline" size="sm" onClick={handleNextMonth}>
 						<ChevronRight className="h-4 w-4" />
 					</Button>
 				</div>
@@ -130,8 +112,7 @@ export function MonthView({
 								const dayEvents = getDayEvents(date);
 								const isCurrentMonth = isSameMonth(date, currentDate);
 								const isToday = isSameDay(date, new Date());
-								const isSelected =
-									selectedDate !== null && isSameDay(date, selectedDate);
+								const isSelected = selectedDate !== null && isSameDay(date, selectedDate);
 								const dayLabel = format(date, "d 'de' MMMM yyyy", {
 									locale: ptBR,
 								});

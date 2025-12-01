@@ -1,12 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import {
-	LineChart,
-	Mic,
-	PiggyBank,
-	TrendingDown,
-	TrendingUp,
-	Wallet,
-} from 'lucide-react';
+import { LineChart, Mic, PiggyBank, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 
 import { BalanceChart } from './components/BalanceChart';
@@ -14,13 +7,7 @@ import { QuickActionModal } from './components/QuickActionModal';
 import { StatisticsCards } from './components/StatisticsCards';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
@@ -30,10 +17,7 @@ const TransactionsList = lazy(() => import('./components/TransactionsList'));
 
 function TransactionFormLoader() {
 	return (
-		<Card
-			className="border-primary/20 transition-all duration-300 hover:shadow-lg"
-			variant="glass"
-		>
+		<Card className="border-primary/20 transition-all duration-300 hover:shadow-lg" variant="glass">
 			<CardHeader>
 				<CardTitle>
 					<Skeleton className="h-6 w-32" />
@@ -139,16 +123,11 @@ export function Saldo() {
 					</div>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 						{accountsLoading
-							? [1, 2, 3].map((i) => (
-									<Skeleton key={i} className="h-32 w-full rounded-xl" />
-								))
+							? [1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)
 							: accounts.map((account) => {
 									let Icon = Wallet;
 									let color = 'text-primary';
-									if (
-										account.account_type === 'poupanca' ||
-										account.account_type === 'savings'
-									) {
+									if (account.account_type === 'poupanca' || account.account_type === 'savings') {
 										Icon = PiggyBank;
 										color = 'text-accent';
 									}
@@ -168,9 +147,7 @@ export function Saldo() {
 										>
 											<CardHeader className="pb-2">
 												<div className="flex items-center justify-between">
-													<CardDescription>
-														{account.institution_name}
-													</CardDescription>
+													<CardDescription>{account.institution_name}</CardDescription>
 													<Icon className={`h-5 w-5 ${color}`} />
 												</div>
 											</CardHeader>
@@ -238,14 +215,9 @@ export function Saldo() {
 					<div className="flex items-center justify-between">
 						<div>
 							<h2 className="font-semibold text-2xl">Gerenciar Transações</h2>
-							<p className="text-muted-foreground">
-								Adicione e visualize todas as suas transações
-							</p>
+							<p className="text-muted-foreground">Adicione e visualize todas as suas transações</p>
 						</div>
-						<Button
-							onClick={() => setShowCreateForm(!showCreateForm)}
-							withGradient
-						>
+						<Button onClick={() => setShowCreateForm(!showCreateForm)} withGradient>
 							{showCreateForm ? 'Cancelar' : 'Nova Transação'}
 						</Button>
 					</div>

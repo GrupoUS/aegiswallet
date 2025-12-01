@@ -58,7 +58,7 @@ export class VoiceActivityDetector {
 	private analyser: AnalyserNode | null = null;
 	private isListening = false;
 	private speechStartTime: number | null = null;
-	private lastSpeechTime: number = 0;
+	private lastSpeechTime = 0;
 	private animationId: number | null = null;
 	private onSpeechStart?: () => void;
 	private onSpeechEnd?: () => void;
@@ -102,7 +102,7 @@ export class VoiceActivityDetector {
 	 * Start voice activity analysis
 	 */
 	private startAnalysis(): void {
-		if (!this.analyser || !this.isListening) {
+		if (!(this.analyser && this.isListening)) {
 			return;
 		}
 
@@ -110,7 +110,7 @@ export class VoiceActivityDetector {
 		const dataArray = new Uint8Array(bufferLength);
 
 		const analyze = () => {
-			if (!this.isListening || !this.analyser) {
+			if (!(this.isListening && this.analyser)) {
 				return;
 			}
 
@@ -164,9 +164,7 @@ export class VoiceActivityDetector {
 	 */
 	getCurrentState(): VADResult {
 		const currentTime = Date.now();
-		const speechDuration = this.speechStartTime
-			? currentTime - this.speechStartTime
-			: 0;
+		const speechDuration = this.speechStartTime ? currentTime - this.speechStartTime : 0;
 
 		// Default result if not active
 		if (!this.analyser) {
@@ -303,10 +301,7 @@ export async function detectVoiceActivity(
 						const duration = audio.duration * 1000; // Convert to milliseconds
 
 						resolve({
-							confidence: Math.min(
-								1,
-								avgEnergy / (options.energyThreshold || 0.01),
-							),
+							confidence: Math.min(1, avgEnergy / (options.energyThreshold || 0.01)),
 							duration,
 							hasVoice: avgEnergy > (options.energyThreshold || 0.01),
 						});

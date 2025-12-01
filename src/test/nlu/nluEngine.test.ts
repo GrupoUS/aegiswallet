@@ -10,11 +10,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import {
-	createNLUEngine,
-	NLUEngine,
-	processUtterance,
-} from '@/lib/nlu/nluEngine';
+import { createNLUEngine, NLUEngine, processUtterance } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
 
 describe('NLU Engine', () => {
@@ -82,9 +78,7 @@ describe('NLU Engine', () => {
 		});
 
 		it('should handle CHECK_BALANCE with account specification', async () => {
-			const result = await nluEngine.processUtterance(
-				'qual é o saldo da poupança?',
-			);
+			const result = await nluEngine.processUtterance('qual é o saldo da poupança?');
 
 			expect(result.intent).toBe(IntentType.CHECK_BALANCE);
 			expect(result.confidence).toBeGreaterThanOrEqual(0.4);
@@ -208,9 +202,7 @@ describe('NLU Engine', () => {
 
 	describe('Regional Variations - Brazilian Portuguese', () => {
 		it('should handle SP regional variations', async () => {
-			const result = await nluEngine.processUtterance(
-				'quanto de grana eu tenho?',
-			);
+			const result = await nluEngine.processUtterance('quanto de grana eu tenho?');
 			expect(result.intent).toBe(IntentType.CHECK_BALANCE);
 			expect(result.confidence).toBeGreaterThanOrEqual(0.4);
 		});
@@ -222,9 +214,7 @@ describe('NLU Engine', () => {
 		});
 
 		it('should handle informal speech patterns', async () => {
-			const result = await nluEngine.processUtterance(
-				'me mostra quanto eu tenho',
-			);
+			const result = await nluEngine.processUtterance('me mostra quanto eu tenho');
 			expect(result.intent).toBe(IntentType.CHECK_BALANCE);
 			expect(result.confidence).toBeGreaterThanOrEqual(0.4);
 		});
@@ -239,9 +229,7 @@ describe('NLU Engine', () => {
 		});
 
 		it('should require disambiguation for low confidence', async () => {
-			const result = await nluEngine.processUtterance(
-				'quero fazer algo com dinheiro',
-			);
+			const result = await nluEngine.processUtterance('quero fazer algo com dinheiro');
 
 			// If this is being matched with high confidence, the test needs adjustment
 			// For now, let's adjust the expectation based on actual behavior
@@ -255,9 +243,7 @@ describe('NLU Engine', () => {
 		});
 
 		it('should flag missing required slots', async () => {
-			const result = await nluEngine.processUtterance(
-				'quero fazer uma transferência',
-			);
+			const result = await nluEngine.processUtterance('quero fazer uma transferência');
 
 			expect(result.missingSlots.length).toBeGreaterThan(0);
 		});
@@ -271,11 +257,7 @@ describe('NLU Engine', () => {
 		});
 
 		it('should handle batch processing efficiently', async () => {
-			const queries = [
-				'qual é meu saldo?',
-				'quanto posso gastar?',
-				'pagar conta de luz',
-			];
+			const queries = ['qual é meu saldo?', 'quanto posso gastar?', 'pagar conta de luz'];
 
 			const startTime = Date.now();
 
@@ -296,9 +278,7 @@ describe('NLU Engine', () => {
 			const result2 = await nluEngine.processUtterance(query);
 
 			// Second call should be much faster due to cache
-			expect(result2.processingTime).toBeLessThanOrEqual(
-				result1.processingTime,
-			);
+			expect(result2.processingTime).toBeLessThanOrEqual(result1.processingTime);
 		});
 
 		it('should clear cache', () => {
@@ -360,9 +340,7 @@ describe('NLU Engine', () => {
 			const result = await nluEngine.processUtterance('qual é meu saldo?');
 
 			expect(result.metadata).toBeDefined();
-			expect(result.metadata?.classificationMethod).toMatch(
-				/pattern|tfidf|ensemble/,
-			);
+			expect(result.metadata?.classificationMethod).toMatch(/pattern|tfidf|ensemble/);
 		});
 
 		it('should include alternative intents', async () => {

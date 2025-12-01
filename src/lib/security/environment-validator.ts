@@ -39,15 +39,11 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 	const warnings: string[] = [];
 
 	// Helper function to get and validate environment variable
-	const getEnvVar = (
-		key: string,
-		required: boolean = true,
-	): string | undefined => {
+	const getEnvVar = (key: string, required = true): string | undefined => {
 		// Support both Vite (browser) and Node.js (server) environments
 		const value =
 			(typeof import.meta !== 'undefined' && import.meta.env?.[key]) ||
-			(typeof import.meta !== 'undefined' &&
-				import.meta.env?.[`VITE_${key}`]) ||
+			(typeof import.meta !== 'undefined' && import.meta.env?.[`VITE_${key}`]) ||
 			(typeof process !== 'undefined' && process.env?.[key]) ||
 			(typeof process !== 'undefined' && process.env?.[`VITE_${key}`]);
 
@@ -82,9 +78,7 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 		];
 
 		if (suspiciousPatterns.some((pattern) => pattern.test(value))) {
-			warnings.push(
-				`Environment variable ${key} appears to contain placeholder or test values`,
-			);
+			warnings.push(`Environment variable ${key} appears to contain placeholder or test values`);
 		}
 	};
 
@@ -123,8 +117,7 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 	}
 
 	// Validate application configuration
-	const appEnv =
-		getEnvVar('VITE_APP_ENV') || getEnvVar('NODE_ENV') || 'development';
+	const appEnv = getEnvVar('VITE_APP_ENV') || getEnvVar('NODE_ENV') || 'development';
 	const validEnvs = ['development', 'staging', 'production'];
 	if (!validEnvs.includes(appEnv)) {
 		errors.push(`VITE_APP_ENV must be one of: ${validEnvs.join(', ')}`);

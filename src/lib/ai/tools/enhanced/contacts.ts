@@ -32,24 +32,10 @@ export function createContactsTools(userId: string) {
 			description:
 				'Lista todos os contatos do usuário com métodos de pagamento. Use para encontrar contatos para transferências.',
 			inputSchema: z.object({
-				searchName: z
-					.string()
-					.optional()
-					.describe('Buscar por nome do contato'),
-				hasPix: z
-					.boolean()
-					.optional()
-					.describe('Filtrar contatos com chave PIX'),
-				favoritesOnly: z
-					.boolean()
-					.default(false)
-					.describe('Mostrar apenas favoritos'),
-				limit: z
-					.number()
-					.min(1)
-					.max(100)
-					.default(20)
-					.describe('Número máximo de resultados'),
+				searchName: z.string().optional().describe('Buscar por nome do contato'),
+				hasPix: z.boolean().optional().describe('Filtrar contatos com chave PIX'),
+				favoritesOnly: z.boolean().default(false).describe('Mostrar apenas favoritos'),
+				limit: z.number().min(1).max(100).default(20).describe('Número máximo de resultados'),
 			}),
 			execute: async ({ searchName, hasPix, favoritesOnly, limit = 20 }) => {
 				try {
@@ -77,13 +63,7 @@ export function createContactsTools(userId: string) {
 							? await db
 									.select()
 									.from(contactPaymentMethods)
-									.where(
-										or(
-											...contactIds.map((id) =>
-												eq(contactPaymentMethods.contactId, id),
-											),
-										),
-									)
+									.where(or(...contactIds.map((id) => eq(contactPaymentMethods.contactId, id))))
 							: [];
 
 					// Combine contacts with payment methods
@@ -99,19 +79,12 @@ export function createContactsTools(userId: string) {
 							.map((pm) => ({
 								...pm,
 								payment_type: pm.methodType,
-								is_favorite:
-									(pm.methodDetails as { is_favorite?: boolean })
-										?.is_favorite ?? false,
-								usage_count:
-									(pm.methodDetails as { usage_count?: number })?.usage_count ??
-									0,
+								is_favorite: (pm.methodDetails as { is_favorite?: boolean })?.is_favorite ?? false,
+								usage_count: (pm.methodDetails as { usage_count?: number })?.usage_count ?? 0,
 							})),
 					})) as unknown as ContactWithPaymentMethods[];
 
-					const filteredContacts = filterContactsByPix(
-						contactsWithMethods,
-						hasPix,
-					);
+					const filteredContacts = filterContactsByPix(contactsWithMethods, hasPix);
 					const statistics = calculateContactsStatistics(filteredContacts);
 					const formattedContacts = formatContactsResponse(filteredContacts);
 
@@ -184,8 +157,7 @@ export function createContactsTools(userId: string) {
 						success: true,
 						contact: filterSensitiveData(contact),
 						message: `Contato "${name}" adicionado com sucesso${isFavorite ? ' e marcado como favorito' : ''}`,
-						nextStep:
-							'Adicione métodos de pagamento (PIX, TED, DOC) para facilitar transferências',
+						nextStep: 'Adicione métodos de pagamento (PIX, TED, DOC) para facilitar transferências',
 					};
 				} catch (error) {
 					secureLogger.error('Falha ao adicionar contato', {
@@ -199,22 +171,12 @@ export function createContactsTools(userId: string) {
 		}),
 
 		addContactPaymentMethod: tool({
-			description:
-				'Adiciona um método de pagamento PIX/TED/DOC a um contato existente.',
+			description: 'Adiciona um método de pagamento PIX/TED/DOC a um contato existente.',
 			inputSchema: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
-				paymentType: z
-					.enum(['PIX', 'TED', 'DOC'])
-					.describe('Tipo de pagamento'),
-				label: z
-					.string()
-					.max(50)
-					.optional()
-					.describe('Etiqueta para identificar o método'),
-				isFavorite: z
-					.boolean()
-					.default(false)
-					.describe('Marcar como método favorito'),
+				paymentType: z.enum(['PIX', 'TED', 'DOC']).describe('Tipo de pagamento'),
+				label: z.string().max(50).optional().describe('Etiqueta para identificar o método'),
+				isFavorite: z.boolean().default(false).describe('Marcar como método favorito'),
 				// PIX fields
 				pixKey: z.string().optional().describe('Chave PIX'),
 				pixKeyType: PixKeyTypeSchema.optional().describe('Tipo da chave PIX'),
@@ -223,10 +185,7 @@ export function createContactsTools(userId: string) {
 				bankName: z.string().optional().describe('Nome do banco'),
 				agency: z.string().optional().describe('Agência'),
 				accountNumber: z.string().optional().describe('Número da conta'),
-				accountType: z
-					.enum(['corrente', 'poupança'])
-					.optional()
-					.describe('Tipo de conta'),
+				accountType: z.enum(['corrente', 'poupança']).optional().describe('Tipo de conta'),
 			}),
 			execute: async ({
 				contactId,
@@ -254,18 +213,11 @@ export function createContactsTools(userId: string) {
 					}
 
 					// Validate payment fields
-					if (paymentType === 'PIX' && (!pixKey || !pixKeyType)) {
-						throw new Error(
-							'Para PIX, é necessário informar a chave e o tipo da chave',
-						);
+					if (paymentType === 'PIX' && !(pixKey && pixKeyType)) {
+						throw new Error('Para PIX, é necessário informar a chave e o tipo da chave');
 					}
-					if (
-						['TED', 'DOC'].includes(paymentType) &&
-						(!bankCode || !agency || !accountNumber)
-					) {
-						throw new Error(
-							'Para TED/DOC, é necessário informar dados bancários completos',
-						);
+					if (['TED', 'DOC'].includes(paymentType) && !(bankCode && agency && accountNumber)) {
+						throw new Error('Para TED/DOC, é necessário informar dados bancários completos');
 					}
 
 					// Insert payment method
@@ -333,8 +285,7 @@ export function createContactsTools(userId: string) {
 		}),
 
 		sendToContact: tool({
-			description:
-				'Envia transferência para um contato usando método de pagamento salvo.',
+			description: 'Envia transferência para um contato usando método de pagamento salvo.',
 			inputSchema: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
 				paymentMethodId: z
@@ -342,30 +293,14 @@ export function createContactsTools(userId: string) {
 					.uuid()
 					.optional()
 					.describe('ID do método de pagamento (omitir para usar favorito)'),
-				amount: z
-					.number()
-					.positive()
-					.max(50000)
-					.describe('Valor da transferência'),
-				description: z
-					.string()
-					.max(140)
-					.optional()
-					.describe('Descrição da transferência'),
+				amount: z.number().positive().max(50000).describe('Valor da transferência'),
+				description: z.string().max(140).optional().describe('Descrição da transferência'),
 				paymentType: z
 					.enum(['PIX', 'TED', 'DOC'])
 					.optional()
-					.describe(
-						'Tipo de transferência (se não informado, usa o do método)',
-					),
+					.describe('Tipo de transferência (se não informado, usa o do método)'),
 			}),
-			execute: async ({
-				contactId,
-				paymentMethodId,
-				amount,
-				description,
-				paymentType,
-			}) => {
+			execute: async ({ contactId, paymentMethodId, amount, description, paymentType }) => {
 				try {
 					// Fetch contact
 					const [contact] = await db
@@ -387,20 +322,14 @@ export function createContactsTools(userId: string) {
 					// Select payment method
 					let selectedMethod: (typeof paymentMethodsData)[0] | undefined;
 					if (paymentMethodId) {
-						selectedMethod = paymentMethodsData.find(
-							(pm) => pm.id === paymentMethodId,
-						);
+						selectedMethod = paymentMethodsData.find((pm) => pm.id === paymentMethodId);
 						if (!selectedMethod) {
-							throw new Error(
-								'Método de pagamento não encontrado para este contato',
-							);
+							throw new Error('Método de pagamento não encontrado para este contato');
 						}
 					} else {
 						selectedMethod = paymentMethodsData[0];
 						if (!selectedMethod) {
-							throw new Error(
-								'Nenhum método de pagamento encontrado para este contato',
-							);
+							throw new Error('Nenhum método de pagamento encontrado para este contato');
 						}
 					}
 
@@ -413,8 +342,7 @@ export function createContactsTools(userId: string) {
 
 					// Update usage count
 					const currentUsage =
-						(selectedMethod.methodDetails as { usage_count?: number })
-							?.usage_count ?? 0;
+						(selectedMethod.methodDetails as { usage_count?: number })?.usage_count ?? 0;
 					await db
 						.update(contactPaymentMethods)
 						.set({
@@ -428,12 +356,8 @@ export function createContactsTools(userId: string) {
 						.where(eq(contactPaymentMethods.id, selectedMethod.id));
 
 					// Create transfer
-					const details = selectedMethod.methodDetails as Record<
-						string,
-						unknown
-					>;
-					const finalDescription =
-						description || `Transferência para ${contact.name}`;
+					const details = selectedMethod.methodDetails as Record<string, unknown>;
+					const finalDescription = description || `Transferência para ${contact.name}`;
 					let transferResult: TransferResult;
 
 					if (selectedMethod.methodType === 'PIX') {
@@ -448,10 +372,7 @@ export function createContactsTools(userId: string) {
 						const recipientKey = details.pix_key as string;
 						const recipientKeyType = details.pix_key_type as string;
 
-						if (
-							recipientKeyType === 'CPF' &&
-							!isValidBrazilianCPF(recipientKey)
-						) {
+						if (recipientKeyType === 'CPF' && !isValidBrazilianCPF(recipientKey)) {
 							throw new Error('CPF inválido para transferência PIX');
 						}
 
@@ -535,9 +456,7 @@ export function createContactsTools(userId: string) {
 			description: 'Marca ou desmarca um contato como favorito.',
 			inputSchema: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
-				isFavorite: z
-					.boolean()
-					.describe('Marcar como favorito (true) ou remover favorito (false)'),
+				isFavorite: z.boolean().describe('Marcar como favorito (true) ou remover favorito (false)'),
 			}),
 			execute: async ({ contactId, isFavorite }) => {
 				try {
@@ -585,10 +504,7 @@ export function createContactsTools(userId: string) {
 			description: 'Remove um contato e todos os seus métodos de pagamento.',
 			inputSchema: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
-				confirmDeletion: z
-					.boolean()
-					.default(false)
-					.describe('Confirmação final da exclusão'),
+				confirmDeletion: z.boolean().default(false).describe('Confirmação final da exclusão'),
 			}),
 			execute: async ({ contactId, confirmDeletion }) => {
 				try {
@@ -597,9 +513,7 @@ export function createContactsTools(userId: string) {
 						const [contact] = await db
 							.select({ name: contacts.name })
 							.from(contacts)
-							.where(
-								and(eq(contacts.id, contactId), eq(contacts.userId, userId)),
-							)
+							.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)))
 							.limit(1);
 
 						if (!contact) {
@@ -636,9 +550,7 @@ export function createContactsTools(userId: string) {
 					// Excluir contato
 					await db
 						.delete(contacts)
-						.where(
-							and(eq(contacts.id, contactId), eq(contacts.userId, userId)),
-						);
+						.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)));
 
 					secureLogger.info('Contato excluído com sucesso', {
 						contactId,
@@ -665,18 +577,13 @@ export function createContactsTools(userId: string) {
 }
 
 // Helper functions for listContacts
-function filterContactsByPix(
-	contacts: ContactWithPaymentMethods[],
-	hasPix: boolean | undefined,
-) {
+function filterContactsByPix(contacts: ContactWithPaymentMethods[], hasPix: boolean | undefined) {
 	if (hasPix === undefined) return contacts;
 
 	return contacts.filter((contact) =>
 		hasPix
 			? contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
-			: !contact.contact_payment_methods.some(
-					(pm) => pm.payment_type === 'PIX',
-				),
+			: !contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
 	);
 }
 
@@ -703,9 +610,7 @@ function formatContactsResponse(contacts: ContactWithPaymentMethods[]) {
 	return contacts.map((contact) => ({
 		...filterSensitiveData(contact),
 		paymentMethods: contact.contact_payment_methods.map(filterSensitiveData),
-		hasPix: contact.contact_payment_methods.some(
-			(pm) => pm.payment_type === 'PIX',
-		),
+		hasPix: contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
 		favoritePaymentMethod: contact.contact_payment_methods.sort(
 			(a, b) => b.usage_count - a.usage_count,
 		)[0],
@@ -757,7 +662,7 @@ function isValidBrazilianCPF(cpf: string): boolean {
 	// Calculate first verification digit
 	let sum = 0;
 	for (let i = 0; i < 9; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (10 - i);
+		sum += Number.parseInt(cleanCPF.charAt(i), 10) * (10 - i);
 	}
 	let remainder = (sum * 10) % 11;
 	const firstDigit = remainder === 10 ? 0 : remainder;
@@ -765,14 +670,14 @@ function isValidBrazilianCPF(cpf: string): boolean {
 	// Calculate second verification digit
 	sum = 0;
 	for (let i = 0; i < 10; i++) {
-		sum += parseInt(cleanCPF.charAt(i), 10) * (11 - i);
+		sum += Number.parseInt(cleanCPF.charAt(i), 10) * (11 - i);
 	}
 	remainder = (sum * 10) % 11;
 	const secondDigit = remainder === 10 ? 0 : remainder;
 
 	// Check if verification digits match
 	return (
-		firstDigit === parseInt(cleanCPF.charAt(9), 10) &&
-		secondDigit === parseInt(cleanCPF.charAt(10), 10)
+		firstDigit === Number.parseInt(cleanCPF.charAt(9), 10) &&
+		secondDigit === Number.parseInt(cleanCPF.charAt(10), 10)
 	);
 }

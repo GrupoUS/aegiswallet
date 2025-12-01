@@ -58,12 +58,12 @@ export function OriginCompactCalendar({
 		_value: string | number,
 		_e: React.ChangeEventHandler<HTMLSelectElement>,
 	) => {
-		const _event = {
+		const Event = {
 			target: {
 				value: String(_value),
 			},
 		} as React.ChangeEvent<HTMLSelectElement>;
-		_e(_event);
+		_e(Event);
 	};
 
 	const handleSelect = (newDate: Date | undefined) => {
@@ -119,11 +119,7 @@ export function OriginCompactCalendar({
 					},
 					// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition for custom navigation
 					DropdownNav: (props: DropdownNavProps) => {
-						return (
-							<div className="flex w-full items-center gap-2">
-								{props.children}
-							</div>
-						);
+						return <div className="flex w-full items-center gap-2">{props.children}</div>;
 					},
 				}}
 			/>

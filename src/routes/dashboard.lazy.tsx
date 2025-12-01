@@ -4,13 +4,7 @@ import { lazy, Suspense, useMemo } from 'react';
 
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MagicCard } from '@/components/ui/magic-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type Transaction, useTransactions } from '@/hooks/use-transactions';
@@ -33,12 +27,11 @@ const CalendarLoader = () => (
 		</CardHeader>
 		<CardContent>
 			<div className="grid grid-cols-7 gap-1">
-				{Array.from(
-					{ length: 35 },
-					(_, index) => `calendar-skeleton-${index}`,
-				).map((skeletonId) => (
-					<Skeleton key={skeletonId} className="h-8 w-full" />
-				))}
+				{Array.from({ length: 35 }, (_, index) => `calendar-skeleton-${index}`).map(
+					(skeletonId) => (
+						<Skeleton key={skeletonId} className="h-8 w-full" />
+					),
+				)}
 			</div>
 		</CardContent>
 	</Card>
@@ -55,18 +48,10 @@ export function Dashboard() {
 	const { statistics } = useFinancialEvents({ status: 'all' });
 
 	// Get current month date range for financial summary
-	const startOfCurrentMonth = new Date(
-		new Date().getFullYear(),
-		new Date().getMonth(),
-		1,
-	)
+	const startOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 		.toISOString()
 		.split('T')[0];
-	const endOfCurrentMonth = new Date(
-		new Date().getFullYear(),
-		new Date().getMonth() + 1,
-		0,
-	)
+	const endOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
 		.toISOString()
 		.split('T')[0];
 	const { summary, isLoading: summaryLoading } = useFinancialSummary(
@@ -80,11 +65,7 @@ export function Dashboard() {
 	// Calculate Investments Balance
 	const investmentsBalance = useMemo(() => {
 		return accounts
-			.filter(
-				(acc) =>
-					acc.account_type === 'investment' ||
-					acc.account_type === 'investimento',
-			)
+			.filter((acc) => acc.account_type === 'investment' || acc.account_type === 'investimento')
 			.reduce((sum, acc) => sum + Number(acc.balance), 0);
 	}, [accounts]);
 
@@ -105,8 +86,7 @@ export function Dashboard() {
 		return list
 			.filter((transaction: Transaction) => transaction.amount < 0)
 			.reduce(
-				(sum: number, transaction: Transaction) =>
-					sum + Math.abs(Number(transaction.amount)),
+				(sum: number, transaction: Transaction) => sum + Math.abs(Number(transaction.amount)),
 				0,
 			);
 	}, [pixTransactions]);
@@ -155,9 +135,7 @@ export function Dashboard() {
 						<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
 							Dashboard
 						</h1>
-						<p className="text-muted-foreground">
-							Insights inteligentes sobre suas finanças
-						</p>
+						<p className="text-muted-foreground">Insights inteligentes sobre suas finanças</p>
 					</div>
 				</div>
 
@@ -171,9 +149,7 @@ export function Dashboard() {
 								<MagicCard key={card.title} className="p-6">
 									<div className="flex items-center justify-between">
 										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												{card.title}
-											</p>
+											<p className="font-medium text-muted-foreground text-sm">{card.title}</p>
 											<p className="font-bold text-2xl">
 												{card.isCurrency ? (
 													<FinancialAmount
@@ -207,26 +183,19 @@ export function Dashboard() {
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
-								{((recentTransactions as Transaction[] | undefined) ?? []).map(
-									(transaction) => (
-										<div
-											key={transaction.id}
-											className="flex items-center justify-between"
-										>
-											<div>
-												<p className="font-medium truncate max-w-[150px]">
-													{transaction.description}
-												</p>
-												<p className="text-muted-foreground text-sm">
-													{new Date(transaction.created_at).toLocaleDateString(
-														'pt-BR',
-													)}
-												</p>
-											</div>
-											<FinancialAmount amount={Number(transaction.amount)} />
+								{((recentTransactions as Transaction[] | undefined) ?? []).map((transaction) => (
+									<div key={transaction.id} className="flex items-center justify-between">
+										<div>
+											<p className="font-medium truncate max-w-[150px]">
+												{transaction.description}
+											</p>
+											<p className="text-muted-foreground text-sm">
+												{new Date(transaction.created_at).toLocaleDateString('pt-BR')}
+											</p>
 										</div>
-									),
-								)}
+										<FinancialAmount amount={Number(transaction.amount)} />
+									</div>
+								))}
 								{!recentTransactions?.length && (
 									<p className="text-sm text-muted-foreground text-center py-4">
 										Nenhuma transação recente
@@ -269,17 +238,11 @@ export function Dashboard() {
 									<>
 										<div className="flex items-center justify-between">
 											<span className="text-sm">Receitas</span>
-											<FinancialAmount
-												amount={summary?.income ?? 0}
-												size="sm"
-											/>
+											<FinancialAmount amount={summary?.income ?? 0} size="sm" />
 										</div>
 										<div className="flex items-center justify-between">
 											<span className="text-sm">Despesas</span>
-											<FinancialAmount
-												amount={-(summary?.expenses ?? 0)}
-												size="sm"
-											/>
+											<FinancialAmount amount={-(summary?.expenses ?? 0)} size="sm" />
 										</div>
 										{/* Note: Summary now returns { income, expenses, balance } from useProfile.ts
 						  This gives a breakdown for the current month based on the API response.
@@ -300,18 +263,10 @@ export function Dashboard() {
 
 function MonthlySummaryContent() {
 	// Helper component to fetch monthly stats cleanly
-	const startOfMonth = new Date(
-		new Date().getFullYear(),
-		new Date().getMonth(),
-		1,
-	)
+	const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 		.toISOString()
 		.split('T')[0];
-	const endOfMonth = new Date(
-		new Date().getFullYear(),
-		new Date().getMonth() + 1,
-		0,
-	)
+	const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
 		.toISOString()
 		.split('T')[0];
 
@@ -335,10 +290,7 @@ function MonthlySummaryContent() {
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<span className="text-sm">Receitas</span>
-				<FinancialAmount
-					amount={statistics.totalIncome + statistics.pendingIncome}
-					size="sm"
-				/>
+				<FinancialAmount amount={statistics.totalIncome + statistics.pendingIncome} size="sm" />
 			</div>
 			<div className="flex items-center justify-between">
 				<span className="text-sm">Despesas</span>

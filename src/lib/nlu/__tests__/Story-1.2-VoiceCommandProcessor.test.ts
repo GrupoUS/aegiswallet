@@ -14,9 +14,7 @@ vi.mock('@/lib/api-client', () => ({
 			list: vi.fn().mockResolvedValue({ data: [], error: null }),
 		},
 		users: {
-			me: vi
-				.fn()
-				.mockResolvedValue({ data: { id: 'test-user-id' }, error: null }),
+			me: vi.fn().mockResolvedValue({ data: { id: 'test-user-id' }, error: null }),
 		},
 	},
 }));
@@ -237,10 +235,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 
 			for (const command of testCommands) {
 				const result = await nluEngine.processUtterance(command);
-				const expected =
-					expectedClassifications[
-						command as keyof typeof expectedClassifications
-					];
+				const expected = expectedClassifications[command as keyof typeof expectedClassifications];
 				if (result.intent === expected && result.confidence >= 0.7) {
 					correctClassifications++;
 				}
@@ -367,15 +362,10 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 		});
 
 		it('should provide higher confidence for clear, direct commands', async () => {
-			const clearCommand =
-				await nluEngine.processUtterance('qual é meu saldo?');
-			const ambiguousCommand = await nluEngine.processUtterance(
-				'dinheiro conta saldo',
-			);
+			const clearCommand = await nluEngine.processUtterance('qual é meu saldo?');
+			const ambiguousCommand = await nluEngine.processUtterance('dinheiro conta saldo');
 
-			expect(clearCommand.confidence).toBeGreaterThan(
-				ambiguousCommand.confidence,
-			);
+			expect(clearCommand.confidence).toBeGreaterThan(ambiguousCommand.confidence);
 			expect(clearCommand.confidence).toBeGreaterThan(0.8);
 		});
 	});
@@ -387,20 +377,16 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 			});
 
 			// First command
-			const firstResult =
-				await nluEngineWithConversation.processUtterance('qual é meu saldo?');
+			const firstResult = await nluEngineWithConversation.processUtterance('qual é meu saldo?');
 			expect(firstResult.intent).toBe(IntentType.CHECK_BALANCE);
 
 			// Follow-up command
-			const followUpResult = await nluEngineWithConversation.processUtterance(
-				'e quanto posso gastar?',
-			);
+			const followUpResult =
+				await nluEngineWithConversation.processUtterance('e quanto posso gastar?');
 			expect(followUpResult.intent).toBe(IntentType.CHECK_BUDGET);
 
 			// Should maintain conversation context
-			expect(followUpResult.context?.previousIntents).toContain(
-				IntentType.CHECK_BALANCE,
-			);
+			expect(followUpResult.context?.previousIntents).toContain(IntentType.CHECK_BALANCE);
 		});
 
 		it('should handle pronouns and references to previous context', async () => {
@@ -412,9 +398,8 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 			await nluEngineWithConversation.processUtterance('qual é meu saldo?');
 
 			// Follow-up: "quanto sobrou disso?" (referring to the balance)
-			const followUpResult = await nluEngineWithConversation.processUtterance(
-				'quanto sobrou disso?',
-			);
+			const followUpResult =
+				await nluEngineWithConversation.processUtterance('quanto sobrou disso?');
 			expect(followUpResult.confidence).toBeGreaterThan(0.5); // Should recognize it's related to balance
 		});
 	});
@@ -451,11 +436,7 @@ describe('Story 1.2: Voice Command Processor Validation', () => {
 		});
 
 		it('should handle multiple rapid consecutive commands', async () => {
-			const commands = [
-				'qual é meu saldo?',
-				'quanto posso gastar?',
-				'quando vou receber?',
-			];
+			const commands = ['qual é meu saldo?', 'quanto posso gastar?', 'quando vou receber?'];
 
 			const startTime = performance.now();
 

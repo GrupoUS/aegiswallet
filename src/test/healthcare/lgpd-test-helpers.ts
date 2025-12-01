@@ -59,8 +59,7 @@ expect.extend({
 	toBeBrazilianCurrency(received: string) {
 		const isValid = /^R\$\s\d{1,3}(\.\d{3})*,\d{2}$/.test(received);
 		return {
-			message: () =>
-				`expected ${received} to be valid Brazilian currency format`,
+			message: () => `expected ${received} to be valid Brazilian currency format`,
 			pass: isValid,
 		};
 	},
@@ -99,8 +98,7 @@ expect.extend({
 			received.toLowerCase().includes(word.toLowerCase()),
 		);
 		return {
-			message: () =>
-				`expected command "${received}" to contain Portuguese words`,
+			message: () => `expected command "${received}" to contain Portuguese words`,
 			pass: hasPortuguese,
 		};
 	},
@@ -122,15 +120,11 @@ declare module 'vitest' {
 
 // Export healthcare testing utilities
 export const healthcareTestUtils = {
-	createMockPatient: (
-		overrides: Partial<typeof mockHealthcareData.patient> = {},
-	) => ({
+	createMockPatient: (overrides: Partial<typeof mockHealthcareData.patient> = {}) => ({
 		...mockHealthcareData.patient,
 		...overrides,
 	}),
-	createMockTransaction: (
-		overrides: Partial<typeof mockHealthcareData.transaction> = {},
-	) => ({
+	createMockTransaction: (overrides: Partial<typeof mockHealthcareData.transaction> = {}) => ({
 		...mockHealthcareData.transaction,
 		...overrides,
 	}),
@@ -144,7 +138,7 @@ export const healthcareTestUtils = {
 	mockHealthcareData,
 	mockSpeechRecognition,
 	mockSpeechSynthesis,
-	simulateVoiceCommand: (command: string, confidence: number = 0.95) => ({
+	simulateVoiceCommand: (command: string, confidence = 0.95) => ({
 		confidence,
 		language: 'pt-BR',
 		timestamp: new Date().toISOString(),

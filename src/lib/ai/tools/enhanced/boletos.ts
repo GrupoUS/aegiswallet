@@ -6,11 +6,7 @@ import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
 import type { Boleto, BoletoCalculation } from './types';
 import { db } from '@/db/client';
-import {
-	boletos,
-	complianceAuditLogs,
-	transactionSchedules,
-} from '@/db/schema';
+import { boletos, complianceAuditLogs, transactionSchedules } from '@/db/schema';
 
 export function createBoletoTools(userId: string) {
 	return {
@@ -22,29 +18,12 @@ export function createBoletoTools(userId: string) {
 					.enum(['ALL', 'REGISTERED', 'PAID', 'OVERDUE', 'CANCELED'])
 					.default('ALL')
 					.describe('Filtrar por status do boleto'),
-				startDate: z
-					.string()
-					.datetime()
-					.optional()
-					.describe('Data inicial do vencimento'),
-				endDate: z
-					.string()
-					.datetime()
-					.optional()
-					.describe('Data final do vencimento'),
+				startDate: z.string().datetime().optional().describe('Data inicial do vencimento'),
+				endDate: z.string().datetime().optional().describe('Data final do vencimento'),
 				minAmount: z.number().positive().optional().describe('Valor mínimo'),
 				maxAmount: z.number().positive().optional().describe('Valor máximo'),
-				limit: z
-					.number()
-					.min(1)
-					.max(100)
-					.default(20)
-					.describe('Número máximo de resultados'),
-				offset: z
-					.number()
-					.min(0)
-					.default(0)
-					.describe('Pular N resultados para paginação'),
+				limit: z.number().min(1).max(100).default(20).describe('Número máximo de resultados'),
+				offset: z.number().min(0).default(0).describe('Pular N resultados para paginação'),
 			}),
 			execute: async ({
 				status,
@@ -64,10 +43,8 @@ export function createBoletoTools(userId: string) {
 					}
 					if (startDate) conditions.push(gte(boletos.dueDate, startDate));
 					if (endDate) conditions.push(lte(boletos.dueDate, endDate));
-					if (minAmount)
-						conditions.push(gte(boletos.amount, String(minAmount)));
-					if (maxAmount)
-						conditions.push(lte(boletos.amount, String(maxAmount)));
+					if (minAmount) conditions.push(gte(boletos.amount, String(minAmount)));
+					if (maxAmount) conditions.push(lte(boletos.amount, String(maxAmount)));
 
 					const data = await db
 						.select()
@@ -81,19 +58,14 @@ export function createBoletoTools(userId: string) {
 					const now = new Date();
 
 					// Calcular estatísticas e classificações
-					const registered = boletosList.filter(
-						(b) => b.status === 'REGISTERED',
-					);
+					const registered = boletosList.filter((b) => b.status === 'REGISTERED');
 					const paid = boletosList.filter((b) => b.status === 'PAID');
 					const overdue = boletosList.filter(
 						(b) => b.status === 'REGISTERED' && new Date(b.dueDate) < now,
 					);
 
 					const totalAmount = boletosList.reduce((sum, b) => sum + b.amount, 0);
-					const pendingAmount = registered.reduce(
-						(sum, b) => sum + b.amount,
-						0,
-					);
+					const pendingAmount = registered.reduce((sum, b) => sum + b.amount, 0);
 					const overdueAmount = overdue.reduce((sum, b) => sum + b.amount, 0);
 
 					return {
@@ -124,8 +96,7 @@ export function createBoletoTools(userId: string) {
 		}),
 
 		registerBoleto: tool({
-			description:
-				'Registra um novo boleto a partir do código de barras ou linha digitável.',
+			description: 'Registra um novo boleto a partir do código de barras ou linha digitável.',
 			inputSchema: z.object({
 				barcode: z
 					.string()
@@ -136,9 +107,7 @@ export function createBoletoTools(userId: string) {
 					.string()
 					.length(47)
 					.regex(/^[0-9. ]+$/)
-					.describe(
-						'Linha digitável (opcional, será calculada se não informada)',
-					),
+					.describe('Linha digitável (opcional, será calculada se não informada)'),
 				captureMethod: z
 					.enum(['barcode', 'image', 'manual'])
 					.default('manual')
@@ -163,14 +132,11 @@ export function createBoletoTools(userId: string) {
 						.limit(1);
 
 					if (existingBoleto && existingBoleto.length > 0) {
-						throw new Error(
-							'Este boleto já foi pago e está registrado no sistema.',
-						);
+						throw new Error('Este boleto já foi pago e está registrado no sistema.');
 					}
 
 					// Gerar linha digitável se não informada
-					const calculatedDigitableLine =
-						digitableLine || generateDigitableLine(barcode);
+					const calculatedDigitableLine = digitableLine || generateDigitableLine(barcode);
 
 					const boletoData = {
 						userId: userId,
@@ -178,17 +144,13 @@ export function createBoletoTools(userId: string) {
 						lineIdDigitable: calculatedDigitableLine,
 						amount: String(boletoInfo.amount),
 						dueDate: boletoInfo.dueDate,
-						beneficiaryName:
-							boletoInfo.payeeName || 'Beneficiário não identificado',
+						beneficiaryName: boletoInfo.payeeName || 'Beneficiário não identificado',
 						beneficiaryCnpj: boletoInfo.payeeDocument || null,
 						status: 'REGISTERED',
 						description: `Captura: ${captureMethod}`,
 					};
 
-					const [insertedBoleto] = await db
-						.insert(boletos)
-						.values(boletoData)
-						.returning();
+					const [insertedBoleto] = await db.insert(boletos).values(boletoData).returning();
 
 					if (!insertedBoleto) {
 						secureLogger.error('Erro ao registrar boleto', {
@@ -226,8 +188,7 @@ export function createBoletoTools(userId: string) {
 
 					// Calcular dias até vencimento
 					const daysUntilDue = Math.ceil(
-						(new Date(boletoData.dueDate).getTime() - Date.now()) /
-							(1000 * 60 * 60 * 24),
+						(new Date(boletoData.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
 					);
 
 					return {
@@ -236,8 +197,7 @@ export function createBoletoTools(userId: string) {
 						message: `Boleto registrado com sucesso! Valor: R$ ${Number(boletoData.amount).toFixed(2)}, Vencimento: ${new Date(boletoData.dueDate).toLocaleDateString('pt-BR')}`,
 						daysUntilDue,
 						isOverdue: daysUntilDue < 0,
-						paymentUrgency:
-							daysUntilDue <= 3 ? 'high' : daysUntilDue <= 7 ? 'medium' : 'low',
+						paymentUrgency: daysUntilDue <= 3 ? 'high' : daysUntilDue <= 7 ? 'medium' : 'low',
 					};
 				} catch (error) {
 					secureLogger.error('Falha ao registrar boleto', {
@@ -255,11 +215,7 @@ export function createBoletoTools(userId: string) {
 				'Calcula valor total do boleto com juros, multas e descontos baseado na data de pagamento.',
 			inputSchema: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto'),
-				paymentDate: z
-					.string()
-					.datetime()
-					.optional()
-					.describe('Data de pagamento (padrão: hoje)'),
+				paymentDate: z.string().datetime().optional().describe('Data de pagamento (padrão: hoje)'),
 			}),
 			execute: async ({ boletoId, paymentDate }) => {
 				try {
@@ -321,8 +277,7 @@ export function createBoletoTools(userId: string) {
 		}),
 
 		payBoleto: tool({
-			description:
-				'Realiza o pagamento de um boleto. Verifica saldo e processa pagamento.',
+			description: 'Realiza o pagamento de um boleto. Verifica saldo e processa pagamento.',
 			inputSchema: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto a pagar'),
 				accountId: z
@@ -330,24 +285,13 @@ export function createBoletoTools(userId: string) {
 					.uuid()
 					.optional()
 					.describe('ID da conta para débito (omitir para usar padrão)'),
-				paymentDate: z
-					.string()
-					.datetime()
-					.optional()
-					.describe('Data de pagamento (padrão: hoje)'),
+				paymentDate: z.string().datetime().optional().describe('Data de pagamento (padrão: hoje)'),
 				confirmPayment: z
 					.boolean()
 					.default(false)
-					.describe(
-						'Confirmação final do pagamento (depois de calcular valores)',
-					),
+					.describe('Confirmação final do pagamento (depois de calcular valores)'),
 			}),
-			execute: async ({
-				boletoId,
-				accountId: _accountId,
-				paymentDate,
-				confirmPayment,
-			}) => {
+			execute: async ({ boletoId, accountId: _accountId, paymentDate, confirmPayment }) => {
 				try {
 					// Buscar boleto
 					const [boleto] = await db
@@ -405,9 +349,7 @@ export function createBoletoTools(userId: string) {
 							discountAmount: calculation.discountAmount
 								? String(calculation.discountAmount)
 								: null,
-							fineAmount: calculation.fineAmount
-								? String(calculation.fineAmount)
-								: null,
+							fineAmount: calculation.fineAmount ? String(calculation.fineAmount) : null,
 							interestAmount: calculation.interestAmount
 								? String(calculation.interestAmount)
 								: null,
@@ -473,19 +415,11 @@ export function createBoletoTools(userId: string) {
 		}),
 
 		scheduleBoletoPayment: tool({
-			description:
-				'Agenda o pagamento automático de um boleto para data futura.',
+			description: 'Agenda o pagamento automático de um boleto para data futura.',
 			inputSchema: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto'),
-				scheduledDate: z
-					.string()
-					.datetime()
-					.describe('Data para agendamento do pagamento'),
-				accountId: z
-					.string()
-					.uuid()
-					.optional()
-					.describe('ID da conta para débito'),
+				scheduledDate: z.string().datetime().describe('Data para agendamento do pagamento'),
+				accountId: z.string().uuid().optional().describe('ID da conta para débito'),
 				reminderDays: z
 					.number()
 					.min(1)
@@ -629,8 +563,7 @@ export function createBoletoTools(userId: string) {
 						...filterSensitiveData(boleto),
 						daysUntilDue,
 						isOverdue: now > dueDate,
-						paymentUrgency:
-							daysUntilDue <= 3 ? 'high' : daysUntilDue <= 7 ? 'medium' : 'low',
+						paymentUrgency: daysUntilDue <= 3 ? 'high' : daysUntilDue <= 7 ? 'medium' : 'low',
 					};
 
 					let paymentCalculation = null;
@@ -679,15 +612,13 @@ async function extractBoletoInformation(barcode: string): Promise<{
 	// Extrair valor e data do código de barras
 
 	// Valor (posições 9-19)
-	const amountValue = parseInt(barcode.substring(9, 19), 10);
+	const amountValue = Number.parseInt(barcode.substring(9, 19), 10);
 	const amount = amountValue / 100;
 
 	// Data de vencimento (posições 5-9) - dias desde 07/10/1997
-	const dueDateDays = parseInt(barcode.substring(5, 9), 10);
+	const dueDateDays = Number.parseInt(barcode.substring(5, 9), 10);
 	const baseDate = new Date('1997-10-07');
-	const dueDate = new Date(
-		baseDate.getTime() + dueDateDays * 24 * 60 * 60 * 1000,
-	);
+	const dueDate = new Date(baseDate.getTime() + dueDateDays * 24 * 60 * 60 * 1000);
 
 	return {
 		amount,
@@ -714,10 +645,7 @@ function generateDigitableLine(barcode: string): string {
 	return parts.join('.');
 }
 
-function calculateBoletoAmount(
-	boleto: Boleto,
-	paymentDate: Date,
-): BoletoCalculation {
+function calculateBoletoAmount(boleto: Boleto, paymentDate: Date): BoletoCalculation {
 	const dueDate = new Date(boleto.dueDate);
 	const isOverdue = paymentDate > dueDate;
 
@@ -744,8 +672,7 @@ function calculateBoletoAmount(
 		discountAmount = boleto.amount * 0.01; // 1% de desconto para pagamento antecipado
 	}
 
-	const totalAmount =
-		boleto.amount + fineAmount + interestAmount - discountAmount;
+	const totalAmount = boleto.amount + fineAmount + interestAmount - discountAmount;
 
 	return {
 		originalAmount: boleto.amount,
@@ -756,9 +683,7 @@ function calculateBoletoAmount(
 		dueDate: boleto.dueDate,
 		paymentDate: paymentDate.toISOString().split('T')[0],
 		daysOverdue: isOverdue
-			? Math.ceil(
-					(paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
-				)
+			? Math.ceil((paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
 			: undefined,
 	};
 }

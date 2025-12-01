@@ -314,9 +314,7 @@ export const financialValidators = {
 	 * Validate Brazilian date format (DD/MM/YYYY or YYYY-MM-DD)
 	 */
 	date: (date: string): boolean => {
-		return (
-			/^\d{2}\/\d{2}\/\d{4}$/.test(date) || /^\d{4}-\d{2}-\d{2}$/.test(date)
-		);
+		return /^\d{2}\/\d{2}\/\d{4}$/.test(date) || /^\d{4}-\d{2}-\d{2}$/.test(date);
 	},
 
 	/**
@@ -330,8 +328,6 @@ export const financialValidators = {
 	 * Validate Brazilian CNPJ (simplified)
 	 */
 	cnpj: (cnpj: string): boolean => {
-		return (
-			/^\d{14}$/.test(cnpj) || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(cnpj)
-		);
+		return /^\d{14}$/.test(cnpj) || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(cnpj);
 	},
 };

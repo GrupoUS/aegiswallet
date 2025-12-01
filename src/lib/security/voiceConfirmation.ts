@@ -106,9 +106,7 @@ export class VoiceConfirmationService {
 				confidence: voiceResult.confidence,
 				method: this.config.requiresBiometric ? 'voice+biometric' : 'voice',
 				transactionType: params.transactionType,
-				transcription: this.config.enableRecording
-					? voiceResult.transcription
-					: undefined,
+				transcription: this.config.enableRecording ? voiceResult.transcription : undefined,
 				userId: params.userId,
 			});
 
@@ -216,9 +214,7 @@ export class VoiceConfirmationService {
 	/**
 	 * Confirm via biometric (delegated to native APIs)
 	 */
-	private async confirmBiometric(
-		_userId: string,
-	): Promise<{ success: boolean }> {
+	private async confirmBiometric(_userId: string): Promise<{ success: boolean }> {
 		// Check if biometric is available
 		if ('credentials' in navigator) {
 			try {
@@ -262,8 +258,7 @@ export class VoiceConfirmationService {
 
 		// Levenshtein distance for similarity
 		const distance = this.levenshteinDistance(cleanTranscript, cleanExpected);
-		const similarity =
-			1 - distance / Math.max(cleanTranscript.length, cleanExpected.length);
+		const similarity = 1 - distance / Math.max(cleanTranscript.length, cleanExpected.length);
 
 		return similarity > 0.75; // 75% similarity threshold
 	}
@@ -323,25 +318,12 @@ export class VoiceConfirmationService {
 	 */
 	generateConfirmationPhrase(action: string): string {
 		const phrases = {
-			bill: [
-				'Eu autorizo pagar esta conta',
-				'Confirmo o pagamento',
-				'Sim, eu pago',
-			],
-			payment: [
-				'Eu autorizo este pagamento',
-				'Confirmo o pagamento',
-				'Sim, pago a conta',
-			],
-			transfer: [
-				'Eu autorizo esta transferência',
-				'Confirmo a transferência',
-				'Sim, eu autorizo',
-			],
+			bill: ['Eu autorizo pagar esta conta', 'Confirmo o pagamento', 'Sim, eu pago'],
+			payment: ['Eu autorizo este pagamento', 'Confirmo o pagamento', 'Sim, pago a conta'],
+			transfer: ['Eu autorizo esta transferência', 'Confirmo a transferência', 'Sim, eu autorizo'],
 		};
 
-		const actionPhrases =
-			phrases[action as keyof typeof phrases] || phrases.transfer;
+		const actionPhrases = phrases[action as keyof typeof phrases] || phrases.transfer;
 		return actionPhrases[Math.floor(Math.random() * actionPhrases.length)];
 	}
 
@@ -372,10 +354,7 @@ export class VoiceConfirmationService {
 			return FailureScenario.AUDIO_QUALITY;
 		}
 
-		if (
-			errorMessage.includes('timeout') ||
-			errorMessage.includes('timed out')
-		) {
+		if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
 			return FailureScenario.TIMEOUT;
 		}
 

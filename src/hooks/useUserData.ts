@@ -28,8 +28,7 @@ export const userDataKeys = {
 	pixKeys: () => [...userDataKeys.all, 'pixKeys'] as const,
 	pixTransactions: () => [...userDataKeys.all, 'pixTransactions'] as const,
 	contacts: () => [...userDataKeys.all, 'contacts'] as const,
-	boletos: (status?: string) =>
-		[...userDataKeys.all, 'boletos', status] as const,
+	boletos: (status?: string) => [...userDataKeys.all, 'boletos', status] as const,
 	consents: () => [...userDataKeys.all, 'consents'] as const,
 	limits: () => [...userDataKeys.all, 'limits'] as const,
 	summary: () => [...userDataKeys.all, 'summary'] as const,
@@ -75,9 +74,7 @@ export function usePixTransactions(limit?: number) {
 	return useQuery({
 		queryKey: userDataKeys.pixTransactions(),
 		queryFn: async () => {
-			const url = limit
-				? `/v1/pix/transactions?limit=${limit}`
-				: '/v1/pix/transactions';
+			const url = limit ? `/v1/pix/transactions?limit=${limit}` : '/v1/pix/transactions';
 			const response = await apiClient.get<{ data: unknown[] }>(url);
 			return response.data;
 		},
@@ -94,9 +91,7 @@ export function usePixTransactions(limit?: number) {
 /**
  * Fetch user's boletos
  */
-export function useBoletos(
-	status?: 'pending' | 'paid' | 'overdue' | 'cancelled',
-) {
+export function useBoletos(status?: 'pending' | 'paid' | 'overdue' | 'cancelled') {
 	const { isSignedIn } = useAuth();
 
 	return useQuery({
@@ -123,9 +118,7 @@ export function useConsents() {
 	return useQuery({
 		queryKey: userDataKeys.consents(),
 		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>(
-				'/v1/compliance/consents',
-			);
+			const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/consents');
 			return response.data;
 		},
 		enabled: isSignedIn,
@@ -141,9 +134,7 @@ export function useTransactionLimits() {
 	return useQuery({
 		queryKey: userDataKeys.limits(),
 		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>(
-				'/v1/compliance/limits',
-			);
+			const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/limits');
 			return response.data;
 		},
 		enabled: isSignedIn,

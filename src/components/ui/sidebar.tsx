@@ -37,9 +37,7 @@ export const SidebarProvider = ({
 	const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
 	return (
-		<SidebarContext.Provider value={{ animate, open, setOpen }}>
-			{children}
-		</SidebarContext.Provider>
+		<SidebarContext.Provider value={{ animate, open, setOpen }}>{children}</SidebarContext.Provider>
 	);
 };
 
@@ -78,11 +76,7 @@ export const DesktopSidebar = ({
 	const { open: isOpen, setOpen, animate } = useSidebar();
 	const shouldAnimate = animate !== false;
 	const isOpenBool = Boolean(isOpen);
-	const sidebarWidth = shouldAnimate
-		? isOpenBool
-			? '300px'
-			: '60px'
-		: '300px';
+	const sidebarWidth = shouldAnimate ? (isOpenBool ? '300px' : '60px') : '300px';
 	return (
 		<motion.div
 			className={cn(
@@ -100,11 +94,7 @@ export const DesktopSidebar = ({
 	);
 };
 
-export const MobileSidebar = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'div'>) => {
+export const MobileSidebar = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
 	const { open: isOpen, setOpen } = useSidebar();
 	const sidebarContentId = useId();
 
@@ -176,11 +166,7 @@ export const SidebarLink = ({
 	const { open: isOpen, animate } = useSidebar();
 	const shouldAnimate = animate !== false;
 	const isOpenBool = Boolean(isOpen);
-	const spanDisplay = shouldAnimate
-		? isOpenBool
-			? 'inline-block'
-			: 'none'
-		: 'inline-block';
+	const spanDisplay = shouldAnimate ? (isOpenBool ? 'inline-block' : 'none') : 'inline-block';
 	const spanOpacity = shouldAnimate ? (isOpenBool ? 1 : 0) : 1;
 	return (
 		<Link
@@ -204,11 +190,7 @@ export const SidebarLink = ({
 	);
 };
 
-export const SidebarHeader = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'div'>) => {
+export const SidebarHeader = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
 	return (
 		<div
 			className={cn(
@@ -223,29 +205,15 @@ export const SidebarHeader = ({
 	);
 };
 
-export const SidebarContent = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'div'>) => {
+export const SidebarContent = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
 	return (
-		<div
-			className={cn(
-				'flex flex-1 flex-col gap-2 overflow-y-auto py-2',
-				className,
-			)}
-			{...props}
-		>
+		<div className={cn('flex flex-1 flex-col gap-2 overflow-y-auto py-2', className)} {...props}>
 			{children}
 		</div>
 	);
 };
 
-export const SidebarGroup = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'div'>) => {
+export const SidebarGroup = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
 	return (
 		<div className={cn('flex flex-col gap-2 px-2', className)} {...props}>
 			{children}
@@ -260,10 +228,7 @@ export const SidebarGroupLabel = ({
 }: React.ComponentProps<'div'>) => {
 	return (
 		<div
-			className={cn(
-				'px-2 text-xs font-medium text-sidebar-foreground/70',
-				className,
-			)}
+			className={cn('px-2 text-xs font-medium text-sidebar-foreground/70', className)}
 			{...props}
 		>
 			{children}
@@ -271,11 +236,7 @@ export const SidebarGroupLabel = ({
 	);
 };
 
-export const SidebarMenu = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'ul'>) => {
+export const SidebarMenu = ({ className, children, ...props }: React.ComponentProps<'ul'>) => {
 	return (
 		<ul className={cn('flex flex-col gap-1', className)} {...props}>
 			{children}
@@ -283,11 +244,7 @@ export const SidebarMenu = ({
 	);
 };
 
-export const SidebarMenuItem = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'li'>) => {
+export const SidebarMenuItem = ({ className, children, ...props }: React.ComponentProps<'li'>) => {
 	return (
 		<li className={cn('list-none', className)} {...props}>
 			{children}
@@ -330,25 +287,15 @@ export const SidebarMenuButton = ({
 	);
 };
 
-export const SidebarInset = ({
-	className,
-	children,
-	...props
-}: React.ComponentProps<'main'>) => {
+export const SidebarInset = ({ className, children, ...props }: React.ComponentProps<'main'>) => {
 	return (
-		<main
-			className={cn('flex flex-1 flex-col', 'bg-background', className)}
-			{...props}
-		>
+		<main className={cn('flex flex-1 flex-col', 'bg-background', className)} {...props}>
 			{children}
 		</main>
 	);
 };
 
-export const SidebarTrigger = ({
-	className,
-	...props
-}: React.ComponentProps<'button'>) => {
+export const SidebarTrigger = ({ className, ...props }: React.ComponentProps<'button'>) => {
 	const { open: isOpen, setOpen } = useSidebar();
 
 	return (

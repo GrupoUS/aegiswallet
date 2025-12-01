@@ -58,9 +58,7 @@ const BRAZILIAN_BACKUP_CONFIG: BrazilianBackupConfig = {
 export class BrazilianBackupScheduler {
 	public isBrazilianBusinessHours(): boolean {
 		const now = new Date();
-		const brazilianTime = new Date(
-			now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }),
-		);
+		const brazilianTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
 		const hour = brazilianTime.getHours();
 		const day = brazilianTime.getDay();
 
@@ -115,9 +113,7 @@ export class BrazilianComplianceBackupManager {
 		neon(
 			process.env.DATABASE_URL ||
 				(() => {
-					throw new Error(
-						'DATABASE_URL is required for Brazilian compliance backup',
-					);
+					throw new Error('DATABASE_URL is required for Brazilian compliance backup');
 				})(),
 		),
 		{ schema },
@@ -184,8 +180,7 @@ export class BrazilianComplianceBackupManager {
 		if (pixTransactions.length === 0) return 0;
 
 		// Encrypt and store in Brazilian-compliant storage
-		const encryptedData =
-			await this.encryptForBrazilianCompliance(pixTransactions);
+		const encryptedData = await this.encryptForBrazilianCompliance(pixTransactions);
 		await this.storeInBrazilianDataCenter(encryptedData, 'pix_transactions');
 
 		return pixTransactions.length;
@@ -215,8 +210,7 @@ export class BrazilianComplianceBackupManager {
 		}));
 
 		// Encrypt and store with Brazilian data residency
-		const encryptedData =
-			await this.encryptForBrazilianCompliance(lgpdCompliantData);
+		const encryptedData = await this.encryptForBrazilianCompliance(lgpdCompliantData);
 		await this.storeInBrazilianDataCenter(encryptedData, 'user_data');
 
 		return userData.length;
@@ -247,18 +241,13 @@ export class BrazilianComplianceBackupManager {
 	/**
 	 * Encrypt data with Brazilian compliance standards
 	 */
-	private async encryptForBrazilianCompliance(
-		data: unknown[],
-	): Promise<string> {
+	private async encryptForBrazilianCompliance(data: unknown[]): Promise<string> {
 		const jsonString = JSON.stringify(data);
 
 		// Use Node.js crypto with AES-256-GCM for Brazilian compliance
 		const crypto = require('node:crypto');
 		const iv = crypto.randomBytes(16);
-		const cipher = crypto.createCipher(
-			'aes-256-gcm',
-			BRAZILIAN_BACKUP_CONFIG.encryptionKey,
-		);
+		const cipher = crypto.createCipher('aes-256-gcm', BRAZILIAN_BACKUP_CONFIG.encryptionKey);
 
 		let encrypted = cipher.update(jsonString, 'utf8', 'hex');
 		encrypted += cipher.final('hex');
@@ -287,9 +276,7 @@ export class BrazilianComplianceBackupManager {
 		const storageKey = `brazilian-compliance/${dataType}/${new Date().toISOString()}.enc`;
 
 		// Log storage for Brazilian compliance
-		console.log(
-			`Storing ${dataType} backup in Brazilian data center: ${storageKey}`,
-		);
+		console.log(`Storing ${dataType} backup in Brazilian data center: ${storageKey}`);
 	}
 
 	/**
@@ -326,18 +313,14 @@ export class BrazilianComplianceBackupManager {
 			pixTransactionsBackedUp: results.pixTransactions,
 			userDataBackedUp: results.userData,
 			auditLogsBackedUp: results.auditLogs,
-			brazilianBusinessHours:
-				new BrazilianBackupScheduler().isBrazilianBusinessHours(),
+			brazilianBusinessHours: new BrazilianBackupScheduler().isBrazilianBusinessHours(),
 			dataResidencyRegion: BRAZILIAN_BACKUP_CONFIG.dataResidencyRegion,
 			encryptionAlgorithm: BRAZILIAN_BACKUP_CONFIG.encryptionAlgorithm,
 			lgpdCompliant: true,
 		};
 
 		// Store compliance metrics for audit
-		console.log(
-			'Brazilian compliance backup metrics:',
-			JSON.stringify(metrics, null, 2),
-		);
+		console.log('Brazilian compliance backup metrics:', JSON.stringify(metrics, null, 2));
 	}
 
 	/**
@@ -345,14 +328,11 @@ export class BrazilianComplianceBackupManager {
 	 */
 	async executeLgpdRetentionCleanup(): Promise<number> {
 		const retentionDate = new Date();
-		retentionDate.setDate(
-			retentionDate.getDate() - BRAZILIAN_BACKUP_CONFIG.lgpdRetentionDays,
-		);
+		retentionDate.setDate(retentionDate.getDate() - BRAZILIAN_BACKUP_CONFIG.lgpdRetentionDays);
 
 		const anonymizationDate = new Date();
 		anonymizationDate.setDate(
-			anonymizationDate.getDate() -
-				BRAZILIAN_BACKUP_CONFIG.lgpdAnonymizationDays,
+			anonymizationDate.getDate() - BRAZILIAN_BACKUP_CONFIG.lgpdAnonymizationDays,
 		);
 
 		// Implement LGPD retention policies
@@ -456,13 +436,9 @@ export const initializeBrazilianBackupSystem = (): void => {
 	brazilianBackupScheduler.startScheduler();
 
 	console.log('Brazilian compliance backup system initialized');
-	console.log(
-		`Data residency region: ${BRAZILIAN_BACKUP_CONFIG.dataResidencyRegion}`,
-	);
+	console.log(`Data residency region: ${BRAZILIAN_BACKUP_CONFIG.dataResidencyRegion}`);
 	console.log(
 		`Business hours backup frequency: ${BRAZILIAN_BACKUP_CONFIG.brazilianBusinessHoursBackup}`,
 	);
-	console.log(
-		`LGPD retention period: ${BRAZILIAN_BACKUP_CONFIG.lgpdRetentionDays} days`,
-	);
+	console.log(`LGPD retention period: ${BRAZILIAN_BACKUP_CONFIG.lgpdRetentionDays} days`);
 };

@@ -42,8 +42,7 @@ export const requirePlan = (minimumPlan: PlanLevel) => {
 			const isActive = sub?.status === 'active' || sub?.status === 'trialing';
 
 			// If user is on a paid plan but it's not active, treat as free
-			const effectivePlanLevel =
-				currentPlanId !== 'free' && !isActive ? 0 : currentPlanLevel;
+			const effectivePlanLevel = currentPlanId !== 'free' && !isActive ? 0 : currentPlanLevel;
 
 			if (effectivePlanLevel < requiredLevel) {
 				secureLogger.warn('Access denied: Plan upgrade required', {

@@ -24,9 +24,7 @@ type ChatMessage = Record<string, unknown>;
 // User Profile Factory
 // ============================================================================
 
-export function createUserProfile(
-	overrides: Partial<UserProfile> = {},
-): UserProfile {
+export function createUserProfile(overrides: Partial<UserProfile> = {}): UserProfile {
 	const firstName = faker.person.firstName();
 	const lastName = faker.person.lastName();
 	const email = faker.internet.email({ firstName, lastName });
@@ -48,12 +46,7 @@ export function createUserProfile(
 		address: {
 			street: faker.location.street(),
 			number: faker.location.buildingNumber(),
-			complement: faker.helpers.arrayElement([
-				null,
-				'Apto 101',
-				'Casa 2',
-				'Sala 505',
-			]),
+			complement: faker.helpers.arrayElement([null, 'Apto 101', 'Casa 2', 'Sala 505']),
 			neighborhood: faker.location.county(),
 			city: faker.helpers.arrayElement([
 				'São Paulo',
@@ -92,9 +85,7 @@ export function createUserProfile(
 // Bank Account Factory
 // ============================================================================
 
-export function createBankAccount(
-	overrides: Partial<BankAccount> = {},
-): BankAccount {
+export function createBankAccount(overrides: Partial<BankAccount> = {}): BankAccount {
 	const banks = [
 		{ name: 'Banco do Brasil', code: '001', ispb: '00000000' },
 		{ name: 'Caixa Econômica Federal', code: '104', ispb: '00360305' },
@@ -124,7 +115,7 @@ export function createBankAccount(
 		owner_name: faker.person.fullName(),
 		owner_cpf: faker.br.cpf(),
 		is_primary: overrides.is_primary ?? false,
-		balance: parseFloat(faker.finance.amount({ min: 0, max: 50000, dec: 2 })),
+		balance: Number.parseFloat(faker.finance.amount({ min: 0, max: 50000, dec: 2 })),
 		currency: 'BRL',
 		status: 'active',
 		created_at: faker.date.recent().toISOString(),
@@ -137,9 +128,7 @@ export function createBankAccount(
 // Transaction Factory
 // ============================================================================
 
-export function createTransaction(
-	overrides: Partial<Transaction> = {},
-): Transaction {
+export function createTransaction(overrides: Partial<Transaction> = {}): Transaction {
 	const categories = [
 		'mercado',
 		'transporte',
@@ -152,20 +141,20 @@ export function createTransaction(
 		'outros',
 	];
 
-	const types: (
-		| 'credit'
-		| 'debit'
-		| 'transfer_in'
-		| 'transfer_out'
-		| 'pix_in'
-		| 'pix_out'
-	)[] = ['credit', 'debit', 'transfer_in', 'transfer_out', 'pix_in', 'pix_out'];
+	const types: ('credit' | 'debit' | 'transfer_in' | 'transfer_out' | 'pix_in' | 'pix_out')[] = [
+		'credit',
+		'debit',
+		'transfer_in',
+		'transfer_out',
+		'pix_in',
+		'pix_out',
+	];
 
 	return {
 		id: faker.string.uuid(),
 		user_id: faker.string.uuid(),
 		bank_account_id: faker.string.uuid(),
-		amount: parseFloat(faker.finance.amount({ min: 1, max: 10000, dec: 2 })),
+		amount: Number.parseFloat(faker.finance.amount({ min: 1, max: 10000, dec: 2 })),
 		currency: 'BRL',
 		type: faker.helpers.arrayElement(types),
 		category: faker.helpers.arrayElement(categories),
@@ -234,9 +223,7 @@ export function createPixKey(overrides: Partial<PixKey> = {}): PixKey {
 // Financial Event Factory
 // ============================================================================
 
-export function createFinancialEvent(
-	overrides: Partial<FinancialEvent> = {},
-): FinancialEvent {
+export function createFinancialEvent(overrides: Partial<FinancialEvent> = {}): FinancialEvent {
 	const brazilianEventTypes = [
 		'recebimento_salario',
 		'pagamento_conta_energia',
@@ -258,34 +245,22 @@ export function createFinancialEvent(
 		title: faker.lorem.words({ min: 3, max: 6 }),
 		description: faker.lorem.sentence(),
 		event_type: faker.helpers.arrayElement(brazilianEventTypes),
-		amount: parseFloat(faker.finance.amount({ min: 50, max: 5000, dec: 2 })),
+		amount: Number.parseFloat(faker.finance.amount({ min: 50, max: 5000, dec: 2 })),
 		currency: 'BRL',
 		date: faker.date.recent({ days: 60 }).toISOString().split('T')[0],
 		is_recurring: faker.datatype.boolean(),
-		recurring_period: faker.helpers.arrayElement([
-			'daily',
-			'weekly',
-			'monthly',
-			'yearly',
-		]),
+		recurring_period: faker.helpers.arrayElement(['daily', 'weekly', 'monthly', 'yearly']),
 		end_date: faker.helpers.arrayElement([
 			null,
 			faker.date.future({ years: 1 }).toISOString().split('T')[0],
 		]),
-		tags: faker.helpers.arrayElements(
-			['prioritario', 'automatizado', 'fiscal'],
-			{
-				min: 0,
-				max: 2,
-			},
-		),
+		tags: faker.helpers.arrayElements(['prioritario', 'automatizado', 'fiscal'], {
+			min: 0,
+			max: 2,
+		}),
 		metadata: {
 			priority: faker.helpers.arrayElement(['baixa', 'media', 'alta']),
-			category: faker.helpers.arrayElement([
-				'pessoal',
-				'profissional',
-				'familiar',
-			]),
+			category: faker.helpers.arrayElement(['pessoal', 'profissional', 'familiar']),
 		},
 		created_at: faker.date.recent().toISOString(),
 		updated_at: faker.date.recent().toISOString(),
@@ -325,9 +300,7 @@ export function createCalendarEvent(overrides: any = {}): any {
 // Chat Message Factory
 // ============================================================================
 
-export function createChatMessage(
-	overrides: Partial<ChatMessage> = {},
-): ChatMessage {
+export function createChatMessage(overrides: Partial<ChatMessage> = {}): ChatMessage {
 	const roles: ('user' | 'assistant' | 'system')[] = ['user', 'assistant'];
 
 	return {
@@ -345,9 +318,7 @@ export function createChatMessage(
 				'check_income',
 				'financial_projection',
 			]),
-			confidence: parseFloat(
-				faker.number.float({ min: 0.7, max: 1.0, precision: 0.01 }),
-			),
+			confidence: Number.parseFloat(faker.number.float({ min: 0.7, max: 1.0, precision: 0.01 })),
 			entities: {},
 		},
 		created_at: faker.date.recent({ minutes: 60 }).toISOString(),

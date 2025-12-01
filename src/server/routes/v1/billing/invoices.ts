@@ -4,10 +4,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import type { Invoice } from '@/types/billing';
 
 const invoicesRouter = new Hono<AppEnv>();
@@ -26,11 +23,7 @@ invoicesRouter.get(
 	zValidator('query', invoicesQuerySchema),
 	async (c) => {
 		const { user } = c.get('auth');
-		const {
-			limit: _limit,
-			offset: _offset,
-			status: _status,
-		} = c.req.valid('query');
+		const { limit: _limit, offset: _offset, status: _status } = c.req.valid('query');
 		const requestId = c.get('requestId');
 
 		try {

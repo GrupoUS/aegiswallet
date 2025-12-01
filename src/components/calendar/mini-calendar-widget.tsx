@@ -28,8 +28,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 			.filter(
 				(e) =>
 					isFuture(new Date(e.start)) ||
-					format(new Date(e.start), 'yyyy-MM-dd') ===
-						format(new Date(), 'yyyy-MM-dd'),
+					format(new Date(e.start), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'),
 			)
 			.sort((a, b) => compareAsc(new Date(a.start), new Date(b.start)))
 			.slice(0, 5);
@@ -81,9 +80,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 
 				{/* Lista de próximos eventos */}
 				<div>
-					<h4 className="mb-3 font-semibold text-muted-foreground text-sm">
-						Próximos Eventos
-					</h4>
+					<h4 className="mb-3 font-semibold text-muted-foreground text-sm">Próximos Eventos</h4>
 					<div className="space-y-2">
 						{upcomingEvents.length === 0 ? (
 							<p className="py-4 text-center text-muted-foreground text-sm">
@@ -100,9 +97,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 									<div className="flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-accent">
 										<div className="text-xl">{event.icon}</div>
 										<div className="min-w-0 flex-1">
-											<p className="truncate font-medium text-sm">
-												{event.title}
-											</p>
+											<p className="truncate font-medium text-sm">{event.title}</p>
 											<div className="flex items-center gap-2">
 												<p className="text-muted-foreground text-xs">
 													{format(new Date(event.start), 'dd MMM', {
@@ -113,12 +108,9 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 													variant="outline"
 													className={cn(
 														'h-4 px-1 text-[10px]',
-														event.status === 'paid' &&
-															'border-success text-success',
-														event.status === 'pending' &&
-															'border-warning text-warning',
-														event.status === 'scheduled' &&
-															'border-info text-info',
+														event.status === 'paid' && 'border-success text-success',
+														event.status === 'pending' && 'border-warning text-warning',
+														event.status === 'scheduled' && 'border-info text-info',
 													)}
 												>
 													{event.status === 'paid' && 'Pago'}
@@ -127,9 +119,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 												</Badge>
 											</div>
 										</div>
-										<div className="font-semibold text-sm">
-											{formatEventAmount(event.amount)}
-										</div>
+										<div className="font-semibold text-sm">{formatEventAmount(event.amount)}</div>
 									</div>
 								</button>
 							))

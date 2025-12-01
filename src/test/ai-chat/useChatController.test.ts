@@ -4,11 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatBackend } from '../../features/ai-chat/domain/ChatBackend';
 import { createStreamChunk } from '../../features/ai-chat/domain/events';
-import type {
-	ChatError,
-	ChatMessage,
-	ChatStreamChunk,
-} from '../../features/ai-chat/domain/types';
+import type { ChatError, ChatMessage, ChatStreamChunk } from '../../features/ai-chat/domain/types';
 import { useChatController } from '../../features/ai-chat/hooks/useChatController';
 
 // Mock Backend
@@ -20,6 +16,7 @@ class MockBackend implements ChatBackend {
 		messages: ChatMessage[],
 		_options?: unknown,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		await Promise.resolve();
 		this.callCount++;
 		this.lastMessages = messages;
 
@@ -58,10 +55,10 @@ class ErrorBackend implements ChatBackend {
 		_messages: ChatMessage[],
 		_options?: unknown,
 	): AsyncGenerator<ChatStreamChunk, void, unknown> {
-		yield {
+		yield await Promise.resolve({
 			type: 'error',
 			payload: { code: 'TEST_ERROR', message: 'Test error' } as ChatError,
-		};
+		});
 	}
 
 	abort() {}
@@ -110,9 +107,7 @@ describe('useChatController', () => {
 
 	it('collects reasoning chunks', async () => {
 		// enableReasoningView should be passed to the hook, not sendMessage
-		const { result } = renderHook(() =>
-			useChatController(backend, { enableReasoningView: true }),
-		);
+		const { result } = renderHook(() => useChatController(backend, { enableReasoningView: true }));
 
 		await act(async () => {
 			await result.current.sendMessage('Hi');
@@ -188,9 +183,7 @@ describe('useChatController', () => {
 	it('handles errors from backend', async () => {
 		const errorBackend = new ErrorBackend();
 		const onError = vi.fn();
-		const { result } = renderHook(() =>
-			useChatController(errorBackend, { onError }),
-		);
+		const { result } = renderHook(() => useChatController(errorBackend, { onError }));
 
 		await act(async () => {
 			await result.current.sendMessage('Hi');
@@ -203,9 +196,7 @@ describe('useChatController', () => {
 
 	it('calls onMessageSent callback', async () => {
 		const onMessageSent = vi.fn();
-		const { result } = renderHook(() =>
-			useChatController(backend, { onMessageSent }),
-		);
+		const { result } = renderHook(() => useChatController(backend, { onMessageSent }));
 
 		await act(async () => {
 			await result.current.sendMessage('Hello');
@@ -223,8 +214,8 @@ describe('useChatController', () => {
 		const { result } = renderHook(() => useChatController(backend));
 
 		// Start streaming
-		act(() => {
-			result.current.sendMessage('Hi');
+		await act(async () => {
+			await result.current.sendMessage('Hi');
 		});
 
 		// Stop immediately

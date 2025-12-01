@@ -7,22 +7,16 @@
  */
 
 // Generic JSON type for metadata fields
-export type Json =
-	| string
-	| number
-	| boolean
-	| null
-	| { [key: string]: Json | undefined }
-	| Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 // Voice Metrics Table
 export interface VoiceMetric {
 	id: string;
-	user_id: string;
-	session_id: string | null;
-	command_text: string | null;
-	confidence_score: number | null;
-	processing_time_ms: number | null;
+	userId: string;
+	sessionId: string | null;
+	commandText: string | null;
+	confidenceScore: number | null;
+	processingTimeMs: number | null;
 	success: boolean | null;
 	error_type: string | null;
 	language: string | null;

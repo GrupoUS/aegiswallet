@@ -314,5 +314,8 @@ async function main() {
 
 // Run if executed directly
 if (import.meta.main) {
-	main();
+	main().catch((error) => {
+		console.error('Failed to apply RLS policies:', error);
+		process.exit(1);
+	});
 }

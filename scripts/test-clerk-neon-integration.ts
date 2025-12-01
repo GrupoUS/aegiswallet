@@ -38,8 +38,7 @@ async function testDatabaseConnection() {
 	try {
 		console.log('📡 Testing database connection...');
 
-		const result =
-			await sql`SELECT NOW() as current_time, version() as version`;
+		const result = await sql`SELECT NOW() as current_time, version() as version`;
 		console.log('✅ Database connection successful');
 		console.log(`   Server time: ${result[0]?.current_time}`);
 
@@ -93,9 +92,7 @@ async function testRlsPolicies() {
 			console.log('❌ get_current_user_id() function missing');
 		}
 
-		console.log(
-			`📊 RLS Setup: ${rlsEnabledCount}/${tables.length + 1} checks passed`,
-		);
+		console.log(`📊 RLS Setup: ${rlsEnabledCount}/${tables.length + 1} checks passed`);
 		return rlsEnabledCount === tables.length + 1;
 	} catch (error) {
 		console.error('❌ RLS policy test failed:', error);
@@ -123,10 +120,9 @@ async function testUserContext() {
 		if (result && result.current_user_id === testUserId) {
 			console.log('✅ User context setting works correctly');
 			return true;
-		} else {
-			console.log('❌ User context setting failed');
-			return false;
 		}
+		console.log('❌ User context setting failed');
+		return false;
 	} catch (error) {
 		console.error('❌ User context test failed:', error);
 		return false;
@@ -212,23 +208,17 @@ async function testRlsIsolation() {
 			console.log('✅ RLS isolation test passed');
 			console.log(`   User 1 context: ${user1Result[0]?.user_id}`);
 			console.log(`   User 2 context: ${user2Result[0]?.user_id}`);
-			console.log(
-				`   Isolation query returned: ${isolationTest[0]?.count} records`,
-			);
+			console.log(`   Isolation query returned: ${isolationTest[0]?.count} records`);
 
 			return true;
 		} catch (_error) {
 			// Table might not exist, but context isolation still works
-			if (
-				user1Result[0]?.user_id === user1Id &&
-				user2Result[0]?.user_id === user2Id
-			) {
+			if (user1Result[0]?.user_id === user1Id && user2Result[0]?.user_id === user2Id) {
 				console.log('✅ User context isolation works (table test skipped)');
 				return true;
-			} else {
-				console.log('❌ User context isolation failed');
-				return false;
 			}
+			console.log('❌ User context isolation failed');
+			return false;
 		}
 	} catch (error) {
 		console.error('❌ RLS isolation test failed:', error);
@@ -266,9 +256,7 @@ async function testIndexes() {
 			}
 		}
 
-		console.log(
-			`📊 Performance Indexes: ${indexCount}/${indexTests.length} found`,
-		);
+		console.log(`📊 Performance Indexes: ${indexCount}/${indexTests.length} found`);
 		return true; // Non-critical, always pass
 	} catch (error) {
 		console.error('❌ Index test failed:', error);

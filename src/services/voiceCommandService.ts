@@ -37,8 +37,7 @@ export interface VoiceCommandResult {
 	processedAt: string;
 }
 
-export interface VoiceCommandServiceInput
-	extends ServerProcessVoiceCommandInput {
+export interface VoiceCommandServiceInput extends ServerProcessVoiceCommandInput {
 	userId: string;
 	context: VoiceCommandContext;
 }
@@ -106,22 +105,17 @@ function detectIntentAndEntities(command: string): {
 /**
  * Extract entities for transfer commands
  */
-function extractTransferEntities(
-	command: string,
-	entities: VoiceCommandEntities,
-): void {
+function extractTransferEntities(command: string, entities: VoiceCommandEntities): void {
 	// Extract amount entity (simplified regex for demo)
 	const amountMatch = command.match(/r?\$?\s*(\d+(?:,\d{1,2})?)/i);
 	if (amountMatch) {
-		const amount = parseFloat(amountMatch[1].replace(',', '.'));
+		const amount = Number.parseFloat(amountMatch[1].replace(',', '.'));
 		entities.amount = amount;
 		entities.currency = 'BRL';
 	}
 
 	// Extract recipient (simplified - would need NLP in production)
-	const recipientMatch = command.match(
-		/(?:para|para o|para a)\s+([a-zá-ú\s]{2,30})/i,
-	);
+	const recipientMatch = command.match(/(?:para|para o|para a)\s+([a-zá-ú\s]{2,30})/i);
 	if (recipientMatch) {
 		entities.recipient = recipientMatch[1].trim();
 	}
@@ -130,10 +124,7 @@ function extractTransferEntities(
 /**
  * Extract entities for bill payment commands
  */
-function extractBillEntities(
-	lowerCommand: string,
-	entities: VoiceCommandEntities,
-): void {
+function extractBillEntities(lowerCommand: string, entities: VoiceCommandEntities): void {
 	// Extract bill type
 	if (lowerCommand.includes('luz')) {
 		entities.billType = 'electricity';
@@ -149,14 +140,9 @@ function extractBillEntities(
 /**
  * Extract entities for PIX commands
  */
-function extractPixEntities(
-	command: string,
-	entities: VoiceCommandEntities,
-): void {
+function extractPixEntities(command: string, entities: VoiceCommandEntities): void {
 	// Extract PIX key patterns
-	const emailMatch = command.match(
-		/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
-	);
+	const emailMatch = command.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
 	const phoneMatch = command.match(/\(?(\d{2})?\)?\s?(\d{4,5})-?(\d{4})/);
 	const cpfMatch = command.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/);
 
@@ -175,19 +161,15 @@ function extractPixEntities(
 /**
  * Generate response based on intent and entities
  */
-function generateResponse(
-	intent: string | null,
-	entities: VoiceCommandEntities,
-): string {
+function generateResponse(intent: string | null, entities: VoiceCommandEntities): string {
 	switch (intent) {
 		case 'check_balance':
 			return 'Verificando seu saldo...';
 		case 'transfer_money':
 			if (entities.amount && entities.recipient) {
 				return `Preparando transferência de R$ ${entities.amount} para ${entities.recipient}`;
-			} else {
-				return 'Entendi que quer transferir dinheiro. Para quem e quanto?';
 			}
+			return 'Entendi que quer transferir dinheiro. Para quem e quanto?';
 		case 'pay_bill':
 			return 'Buscando suas contas a pagar...';
 		case 'transaction_history':
@@ -212,13 +194,7 @@ function generateResponse(
 export async function processVoiceCommand(
 	input: VoiceCommandServiceInput,
 ): Promise<VoiceCommandResult> {
-	const {
-		commandText,
-		sessionId,
-		language,
-		requireConfirmation,
-		userId: _userId,
-	} = input;
+	const { commandText, sessionId, language, requireConfirmation, userId: _userId } = input;
 	const command = commandText ?? '';
 
 	// Simulate processing delay for realistic UX
@@ -256,11 +232,7 @@ export function getAvailableCommands() {
 		commands: [
 			{
 				description: 'Verificar saldo da conta',
-				examples: [
-					'Qual é o meu saldo?',
-					'Quanto dinheiro eu tenho?',
-					'Mostrar meu saldo',
-				],
+				examples: ['Qual é o meu saldo?', 'Quanto dinheiro eu tenho?', 'Mostrar meu saldo'],
 				name: 'check_balance',
 			},
 			{
@@ -274,11 +246,7 @@ export function getAvailableCommands() {
 			},
 			{
 				description: 'Pagar contas e boletos',
-				examples: [
-					'Pagar conta de luz',
-					'Pagar boleto do cartão',
-					'Quitar conta de telefone',
-				],
+				examples: ['Pagar conta de luz', 'Pagar boleto do cartão', 'Quitar conta de telefone'],
 				name: 'pay_bill',
 			},
 			{
@@ -292,11 +260,7 @@ export function getAvailableCommands() {
 			},
 			{
 				description: 'Ver histórico de transações',
-				examples: [
-					'Mostrar minhas transações',
-					'Ver extrato do mês',
-					'Histórico de compras',
-				],
+				examples: ['Mostrar minhas transações', 'Ver extrato do mês', 'Histórico de compras'],
 				name: 'transaction_history',
 			},
 		],
@@ -307,10 +271,7 @@ export function getAvailableCommands() {
 /**
  * Validate command confidence and automation eligibility
  */
-export function canAutomateCommand(
-	confidence: number,
-	requireConfirmation: boolean,
-): boolean {
+export function canAutomateCommand(confidence: number, requireConfirmation: boolean): boolean {
 	return confidence >= MIN_AUTOMATION_CONFIDENCE && !requireConfirmation;
 }
 

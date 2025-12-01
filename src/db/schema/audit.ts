@@ -5,14 +5,7 @@
  * LGPD compliance: audit trails for all user actions
  */
 
-import {
-	boolean,
-	inet,
-	jsonb,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, inet, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { users } from './users';
 

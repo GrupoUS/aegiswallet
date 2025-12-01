@@ -11,30 +11,12 @@ import {
 	GoogleGenerativeAI,
 } from '@google/generative-ai';
 
-import type {
-	ChatBackend,
-	ChatBackendConfig,
-	ModelInfo,
-} from '../domain/ChatBackend';
-import {
-	ChatEvents,
-	createToolCallEndEvent,
-	createToolCallStartEvent,
-} from '../domain/events';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
+import { ChatEvents, createToolCallEndEvent, createToolCallStartEvent } from '../domain/events';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 import { FinancialContextService } from './context/FinancialContextService';
-import {
-	buildAlertsBlock,
-	buildFinancialContextBlock,
-} from './prompts/context-template';
-import {
-	FINANCIAL_AGENT_NO_DATA_PROMPT,
-	FINANCIAL_AGENT_SYSTEM_PROMPT,
-} from './prompts/system';
+import { buildAlertsBlock, buildFinancialContextBlock } from './prompts/context-template';
+import { FINANCIAL_AGENT_NO_DATA_PROMPT, FINANCIAL_AGENT_SYSTEM_PROMPT } from './prompts/system';
 import { financialToolDefinitions } from './tools/definitions';
 import { executeTool } from './tools/executor';
 
@@ -128,8 +110,7 @@ export class FinancialAgentBackend implements ChatBackend {
 
 				const parts = candidate.content.parts;
 				const functionCalls = parts.filter(
-					(part): part is { functionCall: FunctionCall } =>
-						'functionCall' in part,
+					(part): part is { functionCall: FunctionCall } => 'functionCall' in part,
 				);
 
 				// If no function calls, extract and stream text response
@@ -158,16 +139,10 @@ export class FinancialAgentBackend implements ChatBackend {
 					);
 
 					// Build response object
-					const responseData = result.success
-						? (result.result as object)
-						: { error: result.error };
+					const responseData = result.success ? (result.result as object) : { error: result.error };
 
 					// Emit tool call end
-					yield createToolCallEndEvent(
-						toolCallId,
-						functionCall.name,
-						responseData,
-					);
+					yield createToolCallEndEvent(toolCallId, functionCall.name, responseData);
 
 					functionResponses.push({
 						functionResponse: {
@@ -185,8 +160,7 @@ export class FinancialAgentBackend implements ChatBackend {
 			yield ChatEvents.messageEnd(messageId);
 			yield ChatEvents.done();
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			yield ChatEvents.error({
 				code: 'AGENT_ERROR',
 				message: errorMessage,

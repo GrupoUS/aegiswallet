@@ -115,26 +115,24 @@ function parseVitestOutput(output: string): TestResult {
 	const failedMatch = output.match(/✗ (\d+) test[s]? failed/);
 	const skippedMatch = output.match(/○ (\d+) test[s]? skipped/);
 
-	const passed = passedMatch ? parseInt(passedMatch[1], 10) : 0;
-	const failed = failedMatch ? parseInt(failedMatch[1], 10) : 0;
-	const _skipped = skippedMatch ? parseInt(skippedMatch[1], 10) : 0;
+	const passed = passedMatch ? Number.parseInt(passedMatch[1], 10) : 0;
+	const failed = failedMatch ? Number.parseInt(failedMatch[1], 10) : 0;
+	const _skipped = skippedMatch ? Number.parseInt(skippedMatch[1], 10) : 0;
 
 	// Extract duration
 	const durationMatch = output.match(/Test Files\s+\d+\s+passed\s+\((\d+)\)/);
-	const duration = durationMatch ? parseInt(durationMatch[1], 10) : 0;
+	const duration = durationMatch ? Number.parseInt(durationMatch[1], 10) : 0;
 
 	// Extract coverage if available
-	const coverageMatch = output.match(
-		/All files\s+\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)/,
-	);
+	const coverageMatch = output.match(/All files\s+\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)/);
 	let coverage: TestResult['coverage'] | undefined;
 
 	if (coverageMatch) {
 		coverage = {
-			branches: parseInt(coverageMatch[2], 10),
-			functions: parseInt(coverageMatch[3], 10),
-			lines: parseInt(coverageMatch[4], 10),
-			statements: parseInt(coverageMatch[1], 10),
+			branches: Number.parseInt(coverageMatch[2], 10),
+			functions: Number.parseInt(coverageMatch[3], 10),
+			lines: Number.parseInt(coverageMatch[4], 10),
+			statements: Number.parseInt(coverageMatch[1], 10),
 		};
 	}
 
@@ -204,19 +202,10 @@ function calculateQualityMetrics(
 	biomeScore: number,
 ): TestReport['qualityMetrics'] {
 	const codeQuality = biomeScore;
-	const security =
-		results.find((r) => r.name.includes('LGPD'))?.status === 'passed' ? 100 : 0;
-	const performance =
-		results.find((r) => r.name.includes('Voice'))?.status === 'passed'
-			? 100
-			: 0;
+	const security = results.find((r) => r.name.includes('LGPD'))?.status === 'passed' ? 100 : 0;
+	const performance = results.find((r) => r.name.includes('Voice'))?.status === 'passed' ? 100 : 0;
 	const compliance = results
-		.filter(
-			(r) =>
-				r.name.includes('LGPD') ||
-				r.name.includes('RLS') ||
-				r.name.includes('Voice'),
-		)
+		.filter((r) => r.name.includes('LGPD') || r.name.includes('RLS') || r.name.includes('Voice'))
 		.every((r) => r.status === 'passed')
 		? 100
 		: 0;
@@ -229,10 +218,7 @@ function calculateQualityMetrics(
 	};
 }
 
-function generateTestReport(
-	results: TestResult[],
-	biomeScore: number,
-): TestReport {
+function generateTestReport(results: TestResult[], biomeScore: number): TestReport {
 	const passed = results.filter((r) => r.status === 'passed').length;
 	const failed = results.filter((r) => r.status === 'failed').length;
 	const skipped = results.filter((r) => r.status === 'skipped').length;
@@ -321,7 +307,7 @@ function printSummary(report: TestReport): void {
 	}
 }
 
-async function main(): Promise<void> {
+function main(): Promise<void> {
 	try {
 		// 1. Run Biome linting
 		const biomeResult = runBiomeLinting();
@@ -340,12 +326,7 @@ async function main(): Promise<void> {
 				const result = runTestSuite(suite);
 				results.push(result);
 
-				const status =
-					result.status === 'passed'
-						? '✅'
-						: result.status === 'failed'
-							? '❌'
-							: '⏭️';
+				const status = result.status === 'passed' ? '✅' : result.status === 'failed' ? '❌' : '⏭️';
 
 				console.log(`${status} ${result.name} (${result.duration}ms)`);
 
@@ -395,5 +376,5 @@ async function main(): Promise<void> {
 
 // Run if called directly
 if (import.meta.main) {
-	main();
+	main().catch(console.error);
 }

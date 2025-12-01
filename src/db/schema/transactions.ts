@@ -5,15 +5,7 @@
  * All financial transactions including debits, credits, transfers
  */
 
-import {
-	boolean,
-	date,
-	decimal,
-	jsonb,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, date, decimal, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { bankAccounts } from './bank-accounts';
 import { users } from './users';
@@ -144,9 +136,7 @@ export const transactionSchedules = pgTable('transaction_schedules', {
 	autoExecute: boolean('auto_execute').default(false),
 	notificationSent: boolean('notification_sent').default(false),
 	executed: boolean('executed').default(false),
-	executedTransactionId: text('executed_transaction_id').references(
-		() => transactions.id,
-	),
+	executedTransactionId: text('executed_transaction_id').references(() => transactions.id),
 
 	// Timestamps
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -158,12 +148,10 @@ export const transactionSchedules = pgTable('transaction_schedules', {
 // ========================================
 
 export type TransactionCategory = typeof transactionCategories.$inferSelect;
-export type InsertTransactionCategory =
-	typeof transactionCategories.$inferInsert;
+export type InsertTransactionCategory = typeof transactionCategories.$inferInsert;
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
 
 export type TransactionSchedule = typeof transactionSchedules.$inferSelect;
-export type InsertTransactionSchedule =
-	typeof transactionSchedules.$inferInsert;
+export type InsertTransactionSchedule = typeof transactionSchedules.$inferInsert;

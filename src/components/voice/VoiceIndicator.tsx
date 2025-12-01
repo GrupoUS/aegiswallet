@@ -49,10 +49,7 @@ const CommandHints = React.memo(function CommandHints() {
 			<p className="mb-2 text-gray-500 text-xs">Comandos disponíveis:</p>
 			<div className="flex max-w-xs flex-wrap justify-center gap-1">
 				{COMMAND_HINTS.map((hint) => (
-					<span
-						key={hint}
-						className="rounded-full bg-gray-100 px-2 py-1 text-gray-600 text-xs"
-					>
+					<span key={hint} className="rounded-full bg-gray-100 px-2 py-1 text-gray-600 text-xs">
 						{hint}
 					</span>
 				))}
@@ -162,12 +159,7 @@ export const VoiceIndicator = React.memo(function VoiceIndicator({
 
 	if (!isSupported) {
 		return (
-			<div
-				className={cn(
-					'flex flex-col items-center justify-center p-6',
-					className,
-				)}
-			>
+			<div className={cn('flex flex-col items-center justify-center p-6', className)}>
 				<UnsupportedState />
 			</div>
 		);
@@ -198,7 +190,7 @@ export const VoiceIndicator = React.memo(function VoiceIndicator({
 			{isActive && <VisualFeedback />}
 
 			{/* Voice Command Hints */}
-			{!isActive && !isProcessing && !error && <CommandHints />}
+			{!(isActive || isProcessing || error) && <CommandHints />}
 		</div>
 	);
 });

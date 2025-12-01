@@ -54,9 +54,7 @@ export const createUserScopedClient = (userId: string) => {
 		 */
 		async withUserContext<T>(queryFn: () => Promise<T>): Promise<T> {
 			// Set the user context
-			await db.execute(
-				sql`SELECT set_config('app.current_user_id', ${userId}, true)`,
-			);
+			await db.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
 			return queryFn();
 		},
 
@@ -104,14 +102,10 @@ export const createUserScopedPoolClient = async (userId: string) => {
 		/**
 		 * Execute a transaction with user context
 		 */
-		async transaction<T>(
-			fn: (tx: ReturnType<typeof drizzlePool>) => Promise<T>,
-		): Promise<T> {
+		async transaction<T>(fn: (tx: ReturnType<typeof drizzlePool>) => Promise<T>): Promise<T> {
 			return db.transaction(async (tx) => {
 				// Set user context within transaction
-				await tx.execute(
-					sql`SELECT set_config('app.current_user_id', ${userId}, true)`,
-				);
+				await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
 				return fn(tx as unknown as ReturnType<typeof drizzlePool>);
 			});
 		},
@@ -146,9 +140,7 @@ export const createServiceClient = () => {
 		 * Execute a query with service account context (bypasses RLS)
 		 */
 		async withServiceContext<T>(queryFn: () => Promise<T>): Promise<T> {
-			await db.execute(
-				sql`SELECT set_config('app.is_service_account', 'true', true)`,
-			);
+			await db.execute(sql`SELECT set_config('app.is_service_account', 'true', true)`);
 			return queryFn();
 		},
 

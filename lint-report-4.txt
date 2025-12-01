@@ -1,0 +1,297 @@
+$ bunx biome check --files-ignore-unknown=true --files-max-size=10485760 src scripts
+scripts\lgpd-compliance-validator.ts:169:47 lint/suspicious/noExplicitAny ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    168 Ôöé 		// Validate each personal data column has a clear purpose
+  > 169 Ôöé 		for (const column of personalDataColumns as any[]) {
+        Ôöé 		                                            ^^^
+    170 Ôöé 			const table = column.table_name;
+    171 Ôöé 			const col = column.column_name;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+scripts\lgpd-compliance-validator.ts:234:47 lint/suspicious/noExplicitAny ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    233 Ôöé 			const requiredColumns = ['user_id', 'consent_type', 'granted', 'granted_at', 'version'];
+  > 234 Ôöé 			const existingColumns = (consentColumns as any[]).map((col) => col.column_name);
+        Ôöé 			                                           ^^^
+    235 Ôöé 
+    236 Ôöé 			for (const required of requiredColumns) {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+scripts\lgpd-compliance-validator.ts:367:45 lint/suspicious/noExplicitAny ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    365 Ôöé 				'ip_address',
+    366 Ôöé 			];
+  > 367 Ôöé 			const existingColumns = (auditColumns as any[]).map((col) => col.column_name);
+        Ôöé 			                                         ^^^
+    368 Ôöé 
+    369 Ôöé 			for (const required of requiredColumns) {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+scripts\lgpd-compliance-validator.ts:448:42 lint/suspicious/noExplicitAny ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    446 Ôöé 		// In a real implementation, you would check if these are encrypted
+    447 Ôöé 		// For now, we'll note them for manual review
+  > 448 Ôöé 		for (const field of sensitiveFields as any[]) {
+        Ôöé 		                                       ^^^
+    449 Ôöé 			result.sensitiveDataFields.push({
+    450 Ôöé 				table: field.table_name,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+scripts\lgpd-compliance-validator.ts:642:2 lint/suspicious/useAwait ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This async function lacks an await expression.
+  
+    640 Ôöé 	}
+    641 Ôöé 
+  > 642 Ôöé 	private async mapDataFlows(result: LGPDComplianceResult): Promise<void> {
+        Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 643 Ôöé 		// Map common data flows in a Brazilian fintech application
+         ...
+  > 676 Ôöé 		console.log(`   ­ƒù║´┐¢  Mapped ${commonFlows.length} data flows`);
+  > 677 Ôöé 	}
+        Ôöé 	^
+    678 Ôöé 
+    679 Ôöé 	private async identifySensitiveData(result: LGPDComplianceResult): Promise<void> {
+  
+  i Remove this async modifier, or add an await expression in the function.
+  
+    640 Ôöé 	}
+    641 Ôöé 
+  > 642 Ôöé 	private async mapDataFlows(result: LGPDComplianceResult): Promise<void> {
+        Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 643 Ôöé 		// Map common data flows in a Brazilian fintech application
+         ...
+  > 676 Ôöé 		console.log(`   ­ƒù║´┐¢  Mapped ${commonFlows.length} data flows`);
+  > 677 Ôöé 	}
+        Ôöé 	^
+    678 Ôöé 
+    679 Ôöé 	private async identifySensitiveData(result: LGPDComplianceResult): Promise<void> {
+  
+  i Async functions without await expressions may not need to be declared async.
+  
+
+scripts\run-healthcare-tests.ts:310:1 lint/suspicious/useAwait ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This async function lacks an await expression.
+  
+    308 Ôöé }
+    309 Ôöé 
+  > 310 Ôöé async function main(): Promise<void> {
+        Ôöé ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 311 Ôöé 	try {
+         ...
+  > 374 Ôöé 	}
+  > 375 Ôöé }
+        Ôöé ^
+    376 Ôöé 
+    377 Ôöé // Run if called directly
+  
+  i Remove this async modifier, or add an await expression in the function.
+  
+    308 Ôöé }
+    309 Ôöé 
+  > 310 Ôöé async function main(): Promise<void> {
+        Ôöé ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 311 Ôöé 	try {
+         ...
+  > 374 Ôöé 	}
+  > 375 Ôöé }
+        Ôöé ^
+    376 Ôöé 
+    377 Ôöé // Run if called directly
+  
+  i Async functions without await expressions may not need to be declared async.
+  
+
+scripts\run-healthcare-tests.ts:379:2 lint/nursery/noFloatingPromises ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+  
+    377 Ôöé // Run if called directly
+    378 Ôöé if (import.meta.main) {
+  > 379 Ôöé 	main();
+        Ôöé 	^^^^^^^
+    380 Ôöé }
+    381 Ôöé 
+  
+  i This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  
+
+src\types\security.types.ts:10:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+     8 Ôöé export interface UserPin {
+     9 Ôöé 	id: string;
+  > 10 Ôöé 	user_id: string;
+       Ôöé 	^^^^^^^
+    11 Ôöé 	pin_hash: string;
+    12 Ôöé 	salt: string;
+  
+
+src\types\security.types.ts:11:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+     9 Ôöé 	id: string;
+    10 Ôöé 	user_id: string;
+  > 11 Ôöé 	pin_hash: string;
+       Ôöé 	^^^^^^^^
+    12 Ôöé 	salt: string;
+    13 Ôöé 	created_at: string | null;
+  
+
+src\types\security.types.ts:13:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    11 Ôöé 	pin_hash: string;
+    12 Ôöé 	salt: string;
+  > 13 Ôöé 	created_at: string | null;
+       Ôöé 	^^^^^^^^^^
+    14 Ôöé 	updated_at: string | null;
+    15 Ôöé }
+  
+
+src\types\security.types.ts:14:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    12 Ôöé 	salt: string;
+    13 Ôöé 	created_at: string | null;
+  > 14 Ôöé 	updated_at: string | null;
+       Ôöé 	^^^^^^^^^^
+    15 Ôöé }
+    16 Ôöé 
+  
+
+src\types\security.types.ts:19:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    17 Ôöé export interface AuthAttempt {
+    18 Ôöé 	id: string;
+  > 19 Ôöé 	user_id: string;
+       Ôöé 	^^^^^^^
+    20 Ôöé 	method: 'platform' | 'pin' | 'sms' | 'push';
+    21 Ôöé 	failed_attempts: number;
+  
+
+src\types\security.types.ts:21:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    19 Ôöé 	user_id: string;
+    20 Ôöé 	method: 'platform' | 'pin' | 'sms' | 'push';
+  > 21 Ôöé 	failed_attempts: number;
+       Ôöé 	^^^^^^^^^^^^^^^
+    22 Ôöé 	is_locked: boolean;
+    23 Ôöé 	lockout_until: string | null;
+  
+
+src\types\security.types.ts:22:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    20 Ôöé 	method: 'platform' | 'pin' | 'sms' | 'push';
+    21 Ôöé 	failed_attempts: number;
+  > 22 Ôöé 	is_locked: boolean;
+       Ôöé 	^^^^^^^^^
+    23 Ôöé 	lockout_until: string | null;
+    24 Ôöé 	last_attempt_at: string | null;
+  
+
+src\types\security.types.ts:23:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    21 Ôöé 	failed_attempts: number;
+    22 Ôöé 	is_locked: boolean;
+  > 23 Ôöé 	lockout_until: string | null;
+       Ôöé 	^^^^^^^^^^^^^
+    24 Ôöé 	last_attempt_at: string | null;
+    25 Ôöé 	created_at: string | null;
+  
+
+src\types\security.types.ts:24:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    22 Ôöé 	is_locked: boolean;
+    23 Ôöé 	lockout_until: string | null;
+  > 24 Ôöé 	last_attempt_at: string | null;
+       Ôöé 	^^^^^^^^^^^^^^^
+    25 Ôöé 	created_at: string | null;
+    26 Ôöé }
+  
+
+src\types\security.types.ts:25:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    23 Ôöé 	lockout_until: string | null;
+    24 Ôöé 	last_attempt_at: string | null;
+  > 25 Ôöé 	created_at: string | null;
+       Ôöé 	^^^^^^^^^^
+    26 Ôöé }
+    27 Ôöé 
+  
+
+src\types\security.types.ts:30:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    28 Ôöé export interface OtpCode {
+    29 Ôöé 	id: string;
+  > 30 Ôöé 	user_id: string;
+       Ôöé 	^^^^^^^
+    31 Ôöé 	phone_number: string;
+    32 Ôöé 	otp_code: string;
+  
+
+src\types\security.types.ts:31:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    29 Ôöé 	id: string;
+    30 Ôöé 	user_id: string;
+  > 31 Ôöé 	phone_number: string;
+       Ôöé 	^^^^^^^^^^^^
+    32 Ôöé 	otp_code: string;
+    33 Ôöé 	expires_at: string;
+  
+
+src\types\security.types.ts:32:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This property name should be in camelCase.
+  
+    30 Ôöé 	user_id: string;
+    31 Ôöé 	phone_number: string;
+  > 32 Ôöé 	otp_code: string;
+       Ôöé 	^^^^^^^^
+    33 Ôöé 	expires_at: string;
+    34 Ôöé 	is_used: boolean;
+  
+
+check ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+error: script "lint" exited with code 1

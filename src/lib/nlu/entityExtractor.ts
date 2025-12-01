@@ -73,10 +73,7 @@ const NUMBER_WORDS: Record<string, number> = {
 const NORMALIZE_DIACRITICS_REGEX = /[\u0300-\u036f]/g;
 
 function normalizeText(value: string): string {
-	return value
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(NORMALIZE_DIACRITICS_REGEX, '');
+	return value.toLowerCase().normalize('NFD').replace(NORMALIZE_DIACRITICS_REGEX, '');
 }
 
 const NUMBER_WORD_NORMALIZED_MAP = new Map<string, number>();
@@ -85,9 +82,9 @@ Object.entries(NUMBER_WORDS).forEach(([word, value]) => {
 	NUMBER_WORD_NORMALIZED_MAP.set(normalizeText(word), value);
 });
 
-const NUMBER_WORD_NORMALIZED_KEYS = Array.from(
-	NUMBER_WORD_NORMALIZED_MAP.keys(),
-).sort((a, b) => b.length - a.length);
+const NUMBER_WORD_NORMALIZED_KEYS = Array.from(NUMBER_WORD_NORMALIZED_MAP.keys()).sort(
+	(a, b) => b.length - a.length,
+);
 
 const NUMBER_WORD_AMOUNT_PATTERN = new RegExp(
 	String.raw`\b(${NUMBER_WORD_NORMALIZED_KEYS.join('|')})(?:\s+e\s+(${NUMBER_WORD_NORMALIZED_KEYS.join('|')}))*\b(?:\s+(reais?|real))?`,
@@ -111,16 +108,14 @@ function parseNumberWordPhrase(phrase: string): number {
 		.replace(/\b(reais?|real)\b/gi, '')
 		.trim();
 	if (!cleaned) {
-		return NaN;
+		return Number.NaN;
 	}
 
-	const tokens = cleaned
-		.split(/\s+e\s+|\s+/)
-		.filter((token) => token.length > 0);
+	const tokens = cleaned.split(/\s+e\s+|\s+/).filter((token) => token.length > 0);
 	const values = tokens.map((token) => NUMBER_WORD_NORMALIZED_MAP.get(token));
 
 	if (values.some((value) => typeof value !== 'number')) {
-		return NaN;
+		return Number.NaN;
 	}
 
 	return (values as number[]).reduce((sum, value) => sum + value, 0);
@@ -129,7 +124,7 @@ function parseNumberWordPhrase(phrase: string): number {
 function parseMonetaryValue(raw: string): number {
 	// Check if this is a date reference (e.g., "dia 15")
 	if (/^\s*dia\s+\d+/i.test(raw)) {
-		return NaN;
+		return Number.NaN;
 	}
 
 	const cleaned = raw
@@ -145,7 +140,7 @@ function parseMonetaryValue(raw: string): number {
 	}
 
 	const value = Number(normalized);
-	return Number.isFinite(value) ? value : NaN;
+	return Number.isFinite(value) ? value : Number.NaN;
 }
 
 function daysFromToday(offset: number): Date {
@@ -198,8 +193,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
 	},
 	{
 		normalizer: (match) => parseMonetaryValue(match),
-		pattern:
-			/(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)\s*(reais?|real)/gi,
+		pattern: /(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)\s*(reais?|real)/gi,
 		type: EntityType.AMOUNT,
 	},
 	{
@@ -236,9 +230,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
 	},
 	{
 		normalizer: (match) => {
-			const weekday = match
-				.replace(/^(?:proxima|pr[óóo]xima)\s+/i, '')
-				.replace(/-feira$/i, '');
+			const weekday = match.replace(/^(?:proxima|pr[óóo]xima)\s+/i, '').replace(/-feira$/i, '');
 			return getUpcomingWeekday(weekday, false);
 		},
 		// Enhanced pattern for "próxima semana" with all diacritic variations
@@ -249,8 +241,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
 	{
 		normalizer: (match) => getUpcomingWeekday(match, true),
 		// Enhanced pattern for weekdays with diacritic support
-		pattern:
-			/\b(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(?:-feira)?\b/gi,
+		pattern: /\b(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(?:-feira)?\b/gi,
 		type: EntityType.DATE,
 	},
 	{
@@ -270,8 +261,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
 	{
 		normalizer: () => setMonthOffset(1),
 		// Enhanced pattern for "próximo mês" with diacritic support - simpler, handles end of string
-		pattern:
-			/(pr[oóòôõ]ximo\s+m[eêéèë]s|m[eêéèë]s\s+que\s+vem|proximo\s+mes)/gi,
+		pattern: /(pr[oóòôõ]ximo\s+m[eêéèë]s|m[eêéèë]s\s+que\s+vem|proximo\s+mes)/gi,
 		type: EntityType.DATE,
 	},
 	// Bill types / Categories - Enhanced Brazilian Portuguese patterns
@@ -356,8 +346,7 @@ const ENTITY_PATTERNS: EntityPattern[] = [
 	// Recipient (specific context "para ...") - Enhanced Brazilian patterns
 	// Excludes date expressions like "para o próximo mês"
 	{
-		normalizer: (match) =>
-			match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
+		normalizer: (match) => match.replace(/^(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+/i, '').trim(),
 		pattern:
 			/\b(?:para|pra|pro|a)(?:\s+(?:o|a|os|as))?\s+(?!pr[oó]ximo\s+m[eê]s|m[eê]s\s+que\s+vem|amanh[ãa]|hoje|ontem)([a-zàáâãéêíóôõúç]+(?:\s+[a-zàáâãéêíóôõúç]+)*)\b/gi,
 		type: EntityType.RECIPIENT,
@@ -398,15 +387,9 @@ export class EntityExtractor {
 	/**
 	 * Extract entities using a specific pattern
 	 */
-	private extractWithPattern(
-		text: string,
-		pattern: EntityPattern,
-	): ExtractedEntity[] {
+	private extractWithPattern(text: string, pattern: EntityPattern): ExtractedEntity[] {
 		const entities: ExtractedEntity[] = [];
-		const regex =
-			pattern.pattern instanceof RegExp
-				? pattern.pattern
-				: new RegExp(pattern.pattern);
+		const regex = pattern.pattern instanceof RegExp ? pattern.pattern : new RegExp(pattern.pattern);
 		let match: RegExpExecArray | null;
 
 		// Reset regex lastIndex for global regexes
@@ -423,10 +406,7 @@ export class EntityExtractor {
 					continue;
 				}
 
-				if (
-					typeof normalizedValue === 'number' &&
-					Number.isNaN(normalizedValue)
-				) {
+				if (typeof normalizedValue === 'number' && Number.isNaN(normalizedValue)) {
 					continue;
 				}
 
@@ -444,11 +424,7 @@ export class EntityExtractor {
 				}
 
 				// Adjust confidence based on context
-				const contextConfidence = this.calculateContextConfidence(
-					text,
-					value,
-					pattern.type,
-				);
+				const contextConfidence = this.calculateContextConfidence(text, value, pattern.type);
 				confidence = Math.max(confidence, contextConfidence);
 
 				entities.push({
@@ -489,18 +465,12 @@ export class EntityExtractor {
 	/**
 	 * Calculate confidence based on surrounding context
 	 */
-	private calculateContextConfidence(
-		text: string,
-		value: string,
-		type: EntityType,
-	): number {
+	private calculateContextConfidence(text: string, value: string, type: EntityType): number {
 		const lowerText = text.toLowerCase();
 
 		// Get surrounding context (5 words before and after)
 		const words = lowerText.split(/\s+/);
-		const valueWordIndex = words.findIndex((word) =>
-			value.toLowerCase().includes(word),
-		);
+		const valueWordIndex = words.findIndex((word) => value.toLowerCase().includes(word));
 
 		if (valueWordIndex === -1) return 0.8;
 
@@ -521,9 +491,7 @@ export class EntityExtractor {
 				}
 				break;
 			case EntityType.BILL_TYPE:
-				if (
-					/conta|fatura|boleto|pagar|energia|luz|[áÁ]gua/.test(contextWords)
-				) {
+				if (/conta|fatura|boleto|pagar|energia|luz|[áÁ]gua/.test(contextWords)) {
 					return 0.93;
 				}
 				break;
@@ -551,8 +519,7 @@ export class EntityExtractor {
 
 		// Sort by priority (highest first), then by start index
 		const sorted = entities.sort((a, b) => {
-			const priorityDiff =
-				(typePriority[b.type] ?? 0) - (typePriority[a.type] ?? 0);
+			const priorityDiff = (typePriority[b.type] ?? 0) - (typePriority[a.type] ?? 0);
 			if (priorityDiff !== 0) return priorityDiff;
 			return a.startIndex - b.startIndex;
 		});
@@ -563,14 +530,10 @@ export class EntityExtractor {
 			// Check if overlaps with any existing entity
 			const overlaps = deduplicated.some(
 				(existing) =>
-					(entity.startIndex >= existing.startIndex &&
-						entity.startIndex < existing.endIndex) ||
-					(entity.endIndex > existing.startIndex &&
-						entity.endIndex <= existing.endIndex) ||
-					(existing.startIndex >= entity.startIndex &&
-						existing.startIndex < entity.endIndex) ||
-					(existing.endIndex > entity.startIndex &&
-						existing.endIndex <= entity.endIndex),
+					(entity.startIndex >= existing.startIndex && entity.startIndex < existing.endIndex) ||
+					(entity.endIndex > existing.startIndex && entity.endIndex <= existing.endIndex) ||
+					(existing.startIndex >= entity.startIndex && existing.startIndex < entity.endIndex) ||
+					(existing.endIndex > entity.startIndex && existing.endIndex <= entity.endIndex),
 			);
 
 			if (!overlaps) {

@@ -39,8 +39,7 @@ interface TestConfig {
 const TEST_CONFIGS: TestConfig[] = [
 	{
 		name: 'PIX Load Testing',
-		description:
-			'Multi-tenant PIX transaction load testing (1000+ concurrent ops)',
+		description: 'Multi-tenant PIX transaction load testing (1000+ concurrent ops)',
 		testFile: 'src/test/performance/pix-load.test.ts',
 		duration: 300, // 5 minutes
 		category: 'load',
@@ -100,23 +99,15 @@ class PerformanceTestRunner {
 			const metrics: TestResult['metrics'] = {};
 
 			// Look for performance metrics in the output
-			const pixMetricsMatch = output.match(
-				/INSERT Performance: [\d,]+ ops, P95: ([\d.]+)ms/g,
-			);
-			const selectMetricsMatch = output.match(
-				/SELECT Performance: [\d,]+ ops, P95: ([\d.]+)ms/g,
-			);
-			const updateMetricsMatch = output.match(
-				/UPDATE Performance: [\d,]+ ops, P95: ([\d.]+)ms/g,
-			);
+			const pixMetricsMatch = output.match(/INSERT Performance: [\d,]+ ops, P95: ([\d.]+)ms/g);
+			const selectMetricsMatch = output.match(/SELECT Performance: [\d,]+ ops, P95: ([\d.]+)ms/g);
+			const updateMetricsMatch = output.match(/UPDATE Performance: [\d,]+ ops, P95: ([\d.]+)ms/g);
 
 			if (pixMetricsMatch || selectMetricsMatch || updateMetricsMatch) {
 				metrics.pixMetrics = [];
 
 				if (pixMetricsMatch) {
-					const p95 = parseFloat(
-						pixMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1],
-					);
+					const p95 = Number.parseFloat(pixMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1]);
 					metrics.pixMetrics.push({
 						operationType: 'insert',
 						count: 1000,
@@ -131,9 +122,7 @@ class PerformanceTestRunner {
 				}
 
 				if (selectMetricsMatch) {
-					const p95 = parseFloat(
-						selectMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1],
-					);
+					const p95 = Number.parseFloat(selectMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1]);
 					metrics.pixMetrics.push({
 						operationType: 'select',
 						count: 500,
@@ -148,9 +137,7 @@ class PerformanceTestRunner {
 				}
 
 				if (updateMetricsMatch) {
-					const p95 = parseFloat(
-						updateMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1],
-					);
+					const p95 = Number.parseFloat(updateMetricsMatch[0].match(/P95: ([\d.]+)ms/)![1]);
 					metrics.pixMetrics.push({
 						operationType: 'update',
 						count: 200,
@@ -169,21 +156,17 @@ class PerformanceTestRunner {
 			const dbIndexUsageMatch = output.match(/Index Usage ([\d.]+)%/g);
 			if (dbIndexUsageMatch) {
 				metrics.dbMetrics = dbIndexUsageMatch.map((match, index) => ({
-					queryType:
-						['pix_insert', 'pix_select_rls', 'complex_join'][index] ||
-						'unknown',
+					queryType: ['pix_insert', 'pix_select_rls', 'complex_join'][index] || 'unknown',
 					executionTime: Math.random() * 100 + 20,
-					indexUsage: parseFloat(match.match(/([\d.]+)%/)![1]),
+					indexUsage: Number.parseFloat(match.match(/([\d.]+)%/)![1]),
 					planOptimization: [],
 				}));
 			}
 
 			// Extract RLS metrics
-			const rlsDataIsolationMatch = output.match(
-				/Data Isolation Failure Rate: ([\d.]+)%/,
-			);
+			const rlsDataIsolationMatch = output.match(/Data Isolation Failure Rate: ([\d.]+)%/);
 			if (rlsDataIsolationMatch) {
-				const failureRate = parseFloat(rlsDataIsolationMatch[1]);
+				const failureRate = Number.parseFloat(rlsDataIsolationMatch[1]);
 				metrics.rlsMetrics = {
 					dataIsolationValidRate: 1 - failureRate / 100,
 					crossTenantLeakagePrevented: true,
@@ -198,11 +181,8 @@ class PerformanceTestRunner {
 			);
 			if (connectionPoolMatch) {
 				metrics.connectionMetrics = {
-					maxConcurrentConnections: parseInt(
-						connectionPoolMatch[1].replace(',', ''),
-						10,
-					),
-					connectionAcquisitionTime: parseFloat(connectionPoolMatch[2]),
+					maxConcurrentConnections: Number.parseInt(connectionPoolMatch[1].replace(',', ''), 10),
+					connectionAcquisitionTime: Number.parseFloat(connectionPoolMatch[2]),
 					connectionPoolEfficiency: 85 + Math.random() * 10, // 85-95%
 					connectionFailureRate: Math.random() * 0.001, // 0-0.1%
 				};
@@ -224,14 +204,11 @@ class PerformanceTestRunner {
 
 		try {
 			// Run the test using Vitest
-			const output = execSync(
-				`bun test ${config.testFile} --reporter=dots --no-coverage`,
-				{
-					encoding: 'utf8',
-					timeout: (config.duration + 60) * 1000, // Add 60s buffer
-					maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-				},
-			);
+			const output = execSync(`bun test ${config.testFile} --reporter=dots --no-coverage`, {
+				encoding: 'utf8',
+				timeout: (config.duration + 60) * 1000, // Add 60s buffer
+				maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+			});
 
 			const duration = (performance.now() - startTime) / 1000;
 
@@ -265,7 +242,7 @@ class PerformanceTestRunner {
 
 	public async runTests(
 		mode: 'quick' | 'full' | 'critical' = 'full',
-		parallel: boolean = false,
+		parallel = false,
 	): Promise<void> {
 		const startTime = performance.now();
 
@@ -290,9 +267,7 @@ class PerformanceTestRunner {
 
 		if (parallel) {
 			console.log('\n🔄 Running tests in parallel...');
-			const testPromises = testConfigs.map((config) =>
-				this.runSingleTest(config),
-			);
+			const testPromises = testConfigs.map((config) => this.runSingleTest(config));
 			const parallelResults = await Promise.all(testPromises);
 			results.push(...parallelResults);
 		} else {
@@ -336,9 +311,7 @@ class PerformanceTestRunner {
 		console.log(`Total Tests: ${passedTests}/${totalTests} passed`);
 		console.log(`Total Duration: ${totalDuration.toFixed(2)}s`);
 		console.log(`Test Execution Time: ${totalTestTime.toFixed(2)}s`);
-		console.log(
-			`Overhead Time: ${(totalDuration - totalTestTime).toFixed(2)}s`,
-		);
+		console.log(`Overhead Time: ${(totalDuration - totalTestTime).toFixed(2)}s`);
 
 		// Generate performance report
 		console.log('\n📈 Generating Performance Report...');
@@ -386,9 +359,7 @@ class PerformanceTestRunner {
 
 		// Print executive summary
 		console.log('\n🎯 Executive Summary:');
-		console.log(
-			`Overall Performance: ${report.executiveSummary.overallPerformance.toUpperCase()}`,
-		);
+		console.log(`Overall Performance: ${report.executiveSummary.overallPerformance.toUpperCase()}`);
 		console.log(
 			`Compliance Status: ${report.executiveSummary.complianceStatus.replace('_', ' ').toUpperCase()}`,
 		);
@@ -398,12 +369,8 @@ class PerformanceTestRunner {
 		console.log(
 			`P95 Response Time: ${report.executiveSummary.keyMetrics.p95ResponseTime.toFixed(2)}ms`,
 		);
-		console.log(
-			`Throughput: ${report.executiveSummary.keyMetrics.throughput.toFixed(2)} TPS`,
-		);
-		console.log(
-			`Error Rate: ${(report.executiveSummary.keyMetrics.errorRate * 100).toFixed(3)}%`,
-		);
+		console.log(`Throughput: ${report.executiveSummary.keyMetrics.throughput.toFixed(2)} TPS`);
+		console.log(`Error Rate: ${(report.executiveSummary.keyMetrics.errorRate * 100).toFixed(3)}%`);
 
 		if (report.executiveSummary.recommendations.length > 0) {
 			console.log('\n💡 Recommendations:');
@@ -413,9 +380,7 @@ class PerformanceTestRunner {
 		}
 
 		// Exit with appropriate code
-		const allCriticalPassed = results
-			.filter((r) => r.config.critical)
-			.every((r) => r.success);
+		const allCriticalPassed = results.filter((r) => r.config.critical).every((r) => r.success);
 
 		if (!allCriticalPassed) {
 			console.log('\n❌ Critical tests failed - NOT production ready');
@@ -423,9 +388,7 @@ class PerformanceTestRunner {
 		}
 
 		if (!report.executiveSummary.readinessForProduction) {
-			console.log(
-				'\n⚠️ Performance requirements not met - review recommendations',
-			);
+			console.log('\n⚠️ Performance requirements not met - review recommendations');
 			process.exit(2);
 		}
 
@@ -434,9 +397,7 @@ class PerformanceTestRunner {
 	}
 
 	public async generateReportOnly(): Promise<void> {
-		console.log(
-			'📈 Generating performance report from existing test results...',
-		);
+		console.log('📈 Generating performance report from existing test results...');
 
 		// Try to load existing test results
 		const existingReports = this.reporter.getHistoricalReports();

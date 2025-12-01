@@ -24,9 +24,7 @@ neonConfig.wsProxy = (url) =>
 const getReplicaDatabaseUrl = (): string => {
 	const url = process.env.DATABASE_REPLICA_URL || process.env.DATABASE_URL;
 	if (!url) {
-		throw new Error(
-			'DATABASE_REPLICA_URL or DATABASE_URL environment variable is not set',
-		);
+		throw new Error('DATABASE_REPLICA_URL or DATABASE_URL environment variable is not set');
 	}
 	return url;
 };
@@ -51,8 +49,7 @@ export const createLgpdAnalyticsClient = () => {
 };
 
 // Singleton LGPD analytics client
-let lgpdAnalyticsClient: ReturnType<typeof createLgpdAnalyticsClient> | null =
-	null;
+let lgpdAnalyticsClient: ReturnType<typeof createLgpdAnalyticsClient> | null = null;
 
 export const getLgpdAnalyticsClient = () => {
 	if (!lgpdAnalyticsClient) {
@@ -152,9 +149,7 @@ export const createAuditComplianceClient = () => {
 };
 
 // Singleton audit client
-let auditComplianceClient: ReturnType<
-	typeof createAuditComplianceClient
-> | null = null;
+let auditComplianceClient: ReturnType<typeof createAuditComplianceClient> | null = null;
 
 export const getAuditComplianceClient = () => {
 	if (!auditComplianceClient) {
@@ -231,9 +226,7 @@ export const getLgpdDataSubjectRequests = async (
 					new Date(Date.now() - parseInterval(intervalMap[timeframe])),
 				),
 			),
-		orderBy: (lgpdExportRequests, { desc }) => [
-			desc(lgpdExportRequests.createdAt),
-		],
+		orderBy: (lgpdExportRequests, { desc }) => [desc(lgpdExportRequests.createdAt)],
 	});
 };
 
@@ -263,24 +256,17 @@ export const getBrazilianPixAnalytics = async (
 
 	return client.query.pixTransactions.findMany({
 		where: (pixTransactions, { eq, and, gte }) =>
-			and(
-				eq(pixTransactions.userId, userId),
-				gte(pixTransactions.transactionDate, startDate),
-			),
-		orderBy: (pixTransactions, { desc }) => [
-			desc(pixTransactions.transactionDate),
-		],
+			and(eq(pixTransactions.userId, userId), gte(pixTransactions.transactionDate, startDate)),
+		orderBy: (pixTransactions, { desc }) => [desc(pixTransactions.transactionDate)],
 	});
 };
 
 // Helper function to parse interval strings
 const parseInterval = (interval: string): number => {
-	const match = interval.match(
-		/(\d+)\s*(day|days|week|weeks|month|months|year|years)/i,
-	);
+	const match = interval.match(/(\d+)\s*(day|days|week|weeks|month|months|year|years)/i);
 	if (!match) return 0;
 
-	const value = parseInt(match[1], 10);
+	const value = Number.parseInt(match[1], 10);
 	const unit = match[2].toLowerCase();
 
 	const multipliers: Record<string, number> = {
@@ -302,12 +288,8 @@ const parseInterval = (interval: string): number => {
 // ========================================
 
 export type LgpdAnalyticsClient = ReturnType<typeof createLgpdAnalyticsClient>;
-export type BusinessIntelligenceClient = ReturnType<
-	typeof createBusinessIntelligenceClient
->;
-export type AuditComplianceClient = ReturnType<
-	typeof createAuditComplianceClient
->;
+export type BusinessIntelligenceClient = ReturnType<typeof createBusinessIntelligenceClient>;
+export type AuditComplianceClient = ReturnType<typeof createAuditComplianceClient>;
 
 // Export for use in compliance modules
 export { schema };

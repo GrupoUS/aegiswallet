@@ -29,23 +29,15 @@ export const AllTheProviders = ({
 }) => {
 	const testQueryClient = queryClient || createTestQueryClient();
 
-	return React.createElement(
-		QueryClientProvider,
-		{ client: testQueryClient },
-		children,
-	);
+	return React.createElement(QueryClientProvider, { client: testQueryClient }, children);
 };
 
 // Custom render function
-export const customRender = (
-	ui: ReactElement,
-	options?: Omit<RenderOptions, 'wrapper'>,
-) => {
+export const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) => {
 	const queryClient = createTestQueryClient();
 
 	return render(ui, {
-		wrapper: ({ children }) =>
-			React.createElement(AllTheProviders, { children, queryClient }),
+		wrapper: ({ children }) => React.createElement(AllTheProviders, { children, queryClient }),
 		...options,
 	});
 };
@@ -88,8 +80,7 @@ export const mockBankAccount = {
 };
 
 // Funções utilitárias para testes
-export const waitForLoadingToFinish = () =>
-	new Promise((resolve) => setTimeout(resolve, 0));
+export const waitForLoadingToFinish = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 export const createMockEvent = (type: string) => {
 	const event = new Event(type);

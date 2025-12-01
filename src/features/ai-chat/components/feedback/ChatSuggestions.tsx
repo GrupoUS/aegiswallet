@@ -6,11 +6,7 @@ interface ChatSuggestionsProps {
 	disabled?: boolean;
 }
 
-export function ChatSuggestions({
-	suggestions,
-	onSelect,
-	disabled,
-}: ChatSuggestionsProps) {
+export function ChatSuggestions({ suggestions, onSelect, disabled }: ChatSuggestionsProps) {
 	if (!suggestions.length) return null;
 
 	return (

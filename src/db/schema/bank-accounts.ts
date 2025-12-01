@@ -5,14 +5,7 @@
  * Includes Belvo integration support
  */
 
-import {
-	boolean,
-	decimal,
-	integer,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, decimal, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { users } from './users';
 
@@ -122,8 +115,7 @@ export type BankAccount = typeof bankAccounts.$inferSelect;
 export type InsertBankAccount = typeof bankAccounts.$inferInsert;
 
 export type AccountBalanceHistory = typeof accountBalanceHistory.$inferSelect;
-export type InsertAccountBalanceHistory =
-	typeof accountBalanceHistory.$inferInsert;
+export type InsertAccountBalanceHistory = typeof accountBalanceHistory.$inferInsert;
 
 export type BankSyncLog = typeof bankSyncLogs.$inferSelect;
 export type InsertBankSyncLog = typeof bankSyncLogs.$inferInsert;

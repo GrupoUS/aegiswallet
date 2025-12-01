@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GeminiBackend } from '../../features/ai-chat/backends/GeminiBackend';
-import {
-	DEFAULT_MODEL,
-	GEMINI_MODELS,
-} from '../../features/ai-chat/config/models';
+import { DEFAULT_MODEL, GEMINI_MODELS } from '../../features/ai-chat/config/models';
 import type { ChatMessage } from '../../features/ai-chat/domain/types';
 
 // Mock GoogleGenerativeAI
@@ -52,9 +49,7 @@ describe('GeminiBackend', () => {
 	});
 
 	it('converts messages and sends to Gemini', async () => {
-		const messages: ChatMessage[] = [
-			{ id: '1', role: 'user', content: 'Hello', timestamp: 123 },
-		];
+		const messages: ChatMessage[] = [{ id: '1', role: 'user', content: 'Hello', timestamp: 123 }];
 
 		// Mock stream response
 		mockSendMessageStream.mockResolvedValue({
@@ -77,9 +72,7 @@ describe('GeminiBackend', () => {
 	});
 
 	it('handles errors gracefully', async () => {
-		const messages: ChatMessage[] = [
-			{ id: '1', role: 'user', content: 'Error', timestamp: 123 },
-		];
+		const messages: ChatMessage[] = [{ id: '1', role: 'user', content: 'Error', timestamp: 123 }];
 
 		mockSendMessageStream.mockRejectedValue(new Error('API Error'));
 
@@ -96,9 +89,7 @@ describe('GeminiBackend', () => {
 	});
 
 	it('classifies rate limit errors', async () => {
-		const messages: ChatMessage[] = [
-			{ id: '1', role: 'user', content: 'Test', timestamp: 123 },
-		];
+		const messages: ChatMessage[] = [{ id: '1', role: 'user', content: 'Test', timestamp: 123 }];
 
 		mockSendMessageStream.mockRejectedValue(new Error('Rate limit exceeded'));
 
@@ -114,9 +105,7 @@ describe('GeminiBackend', () => {
 	});
 
 	it('classifies auth errors', async () => {
-		const messages: ChatMessage[] = [
-			{ id: '1', role: 'user', content: 'Test', timestamp: 123 },
-		];
+		const messages: ChatMessage[] = [{ id: '1', role: 'user', content: 'Test', timestamp: 123 }];
 
 		mockSendMessageStream.mockRejectedValue(new Error('Invalid API key'));
 

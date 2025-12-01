@@ -46,8 +46,7 @@ clerkWebhookHandler.post('/', async (c) => {
 		if (eventType === 'user.created') {
 			const { id, email_addresses, first_name, last_name } = event.data;
 			const email = email_addresses[0]?.email_address;
-			const name =
-				[first_name, last_name].filter(Boolean).join(' ') || undefined;
+			const name = [first_name, last_name].filter(Boolean).join(' ') || undefined;
 
 			if (!email) {
 				secureLogger.warn('User created without email', { userId: id });
@@ -55,11 +54,7 @@ clerkWebhookHandler.post('/', async (c) => {
 			}
 
 			// Create Stripe customer
-			const stripeCustomerId = await StripeCustomerService.createCustomer(
-				id,
-				email,
-				name,
-			);
+			const stripeCustomerId = await StripeCustomerService.createCustomer(id, email, name);
 
 			// Update Clerk user metadata with stripeCustomerId
 			await clerkClient.users.updateUserMetadata(id, {
@@ -106,8 +101,7 @@ clerkWebhookHandler.post('/', async (c) => {
 		} else if (eventType === 'user.updated') {
 			const { id, email_addresses, first_name, last_name } = event.data;
 			const email = email_addresses[0]?.email_address;
-			const name =
-				[first_name, last_name].filter(Boolean).join(' ') || undefined;
+			const name = [first_name, last_name].filter(Boolean).join(' ') || undefined;
 
 			// Get user's subscription to find stripeCustomerId
 			const db = getPoolClient();

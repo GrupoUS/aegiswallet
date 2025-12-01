@@ -123,10 +123,8 @@ export function useFinancialEvents(
 	const [events, setEvents] = useState<FinancialEvent[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<FinancialError | null>(null);
-	const [filters, setFilters] =
-		useState<FinancialEventsFilters>(initialFilters);
-	const [pagination, setPagination] =
-		useState<PaginationOptions>(initialPagination);
+	const [filters, setFilters] = useState<FinancialEventsFilters>(initialFilters);
+	const [pagination, setPagination] = useState<PaginationOptions>(initialPagination);
 	const [totalCount, setTotalCount] = useState(0);
 	const cache = useRef<Map<string, CacheEntry>>(new Map());
 
@@ -210,20 +208,16 @@ export function useFinancialEvents(
 
 			if (filters.categoryId) params.categoryId = filters.categoryId;
 			if (filters.type && filters.type !== 'all') params.type = filters.type;
-			if (filters.status && filters.status !== 'all')
-				params.status = filters.status;
+			if (filters.status && filters.status !== 'all') params.status = filters.status;
 			if (filters.startDate) params.startDate = filters.startDate;
 			if (filters.endDate) params.endDate = filters.endDate;
 			if (filters.search) params.search = filters.search;
 
 			// Executar requisição
 			// biome-ignore lint/suspicious/noExplicitAny: Backend transaction response structure is dynamic and mapped via mapBackendToFrontend
-			const response = await apiClient.get<TransactionApiResponse<any[]>>(
-				'/v1/transactions',
-				{
-					params,
-				},
-			);
+			const response = await apiClient.get<TransactionApiResponse<any[]>>('/v1/transactions', {
+				params,
+			});
 
 			const mappedEvents = response.data.map(mapBackendToFrontend);
 			const total = response.meta.total || mappedEvents.length;
@@ -269,10 +263,7 @@ export function useFinancialEvents(
 					description: event.title,
 					transactionType: event.type === 'income' ? 'credit' : 'debit',
 					status: event.status === 'completed' ? 'posted' : 'pending',
-					transactionDate:
-						event.start instanceof Date
-							? event.start.toISOString()
-							: event.start,
+					transactionDate: event.start instanceof Date ? event.start.toISOString() : event.start,
 					categoryId: event.category,
 					notes: event.description,
 				};
@@ -285,7 +276,7 @@ export function useFinancialEvents(
 				const newEvent = mapBackendToFrontend(response.data.data);
 
 				clearCache();
-				fetchEvents();
+				await fetchEvents();
 
 				toast.success('Evento financeiro criado com sucesso!', {
 					description: `${newEvent.title} - R$ ${Math.abs(newEvent.amount).toFixed(2)}`,
@@ -325,7 +316,7 @@ export function useFinancialEvents(
 				const updatedEvent = mapBackendToFrontend(response.data.data);
 
 				clearCache();
-				fetchEvents();
+				await fetchEvents();
 				toast.success('Evento atualizado com sucesso!');
 
 				return updatedEvent;
@@ -420,12 +411,10 @@ export function useFinancialEvents(
 			.reduce((sum, e) => sum + Math.abs(e.amount), 0);
 
 		const overdueCount = events.filter(
-			(e) =>
-				e.status === 'pending' && e.dueDate && new Date(e.dueDate) < new Date(),
+			(e) => e.status === 'pending' && e.dueDate && new Date(e.dueDate) < new Date(),
 		).length;
 
-		const netBalance =
-			totalIncome - totalExpenses + pendingIncome - pendingExpenses;
+		const netBalance = totalIncome - totalExpenses + pendingIncome - pendingExpenses;
 
 		return {
 			totalIncome,

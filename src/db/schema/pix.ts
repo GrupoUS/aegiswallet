@@ -5,15 +5,7 @@
  * PIX keys, transactions, and QR codes
  */
 
-import {
-	boolean,
-	decimal,
-	integer,
-	pgEnum,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, decimal, integer, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { transactions } from './transactions';
 import { users } from './users';
@@ -22,13 +14,7 @@ import { users } from './users';
 // ENUMS
 // ========================================
 
-export const pixKeyTypeEnum = pgEnum('pix_key_type', [
-	'CPF',
-	'CNPJ',
-	'EMAIL',
-	'PHONE',
-	'RANDOM',
-]);
+export const pixKeyTypeEnum = pgEnum('pix_key_type', ['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'RANDOM']);
 export const pixTransactionStatusEnum = pgEnum('pix_transaction_status', [
 	'pending',
 	'processing',

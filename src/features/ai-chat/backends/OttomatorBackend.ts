@@ -71,16 +71,8 @@
  * @module backends/OttomatorBackend
  */
 
-import type {
-	ChatBackend,
-	ChatBackendConfig,
-	ModelInfo,
-} from '../domain/ChatBackend';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 
 /**
  * Configuration for Ottomator backend

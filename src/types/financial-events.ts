@@ -37,12 +37,7 @@ export type EventColor =
 	| 'teal'
 	| 'cyan';
 
-export type EventStatus =
-	| 'pending'
-	| 'paid'
-	| 'scheduled'
-	| 'cancelled'
-	| 'completed';
+export type EventStatus = 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed';
 
 /**
  * Calendar-specific Financial Event interface
@@ -52,13 +47,7 @@ export type EventStatus =
 export interface CalendarFinancialEvent
 	extends Omit<
 		CoreFinancialEvent,
-		| 'startDate'
-		| 'endDate'
-		| 'status'
-		| 'color'
-		| 'category'
-		| 'allDay'
-		| 'isRecurring'
+		'startDate' | 'endDate' | 'status' | 'color' | 'category' | 'allDay' | 'isRecurring'
 	> {
 	// Calendar specific overrides (Date objects instead of ISO strings)
 	start: Date;

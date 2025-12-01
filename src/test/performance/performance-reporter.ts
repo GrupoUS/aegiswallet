@@ -55,12 +55,7 @@ export interface PerformanceReport {
 
 	// Executive Summary
 	executiveSummary: {
-		overallPerformance:
-			| 'excellent'
-			| 'good'
-			| 'acceptable'
-			| 'needs_improvement'
-			| 'critical';
+		overallPerformance: 'excellent' | 'good' | 'acceptable' | 'needs_improvement' | 'critical';
 		complianceStatus: 'compliant' | 'warning' | 'non_compliant';
 		readinessForProduction: boolean;
 		keyMetrics: {
@@ -109,7 +104,7 @@ export class PerformanceReporter {
 	private reportsDir: string;
 	private historicalReports: PerformanceReport[] = [];
 
-	constructor(reportsDir: string = './test-results') {
+	constructor(reportsDir = './test-results') {
 		this.reportsDir = reportsDir;
 		this.ensureReportsDirectory();
 		this.loadHistoricalReports();
@@ -125,10 +120,7 @@ export class PerformanceReporter {
 		try {
 			const files = fs
 				.readdirSync(this.reportsDir)
-				.filter(
-					(file) =>
-						file.includes('performance-report') && file.endsWith('.json'),
-				)
+				.filter((file) => file.includes('performance-report') && file.endsWith('.json'))
 				.sort()
 				.reverse(); // Most recent first
 
@@ -136,9 +128,7 @@ export class PerformanceReporter {
 			files.slice(0, 10).forEach((file) => {
 				const filePath = path.join(this.reportsDir, file);
 				try {
-					const report = JSON.parse(
-						fs.readFileSync(filePath, 'utf-8'),
-					) as PerformanceReport;
+					const report = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as PerformanceReport;
 					this.historicalReports.push(report);
 				} catch (error) {
 					console.warn(`Failed to load report ${file}:`, error);
@@ -154,26 +144,18 @@ export class PerformanceReporter {
 	): 'excellent' | 'good' | 'acceptable' | 'needs_improvement' | 'critical' {
 		if (metrics.length === 0) return 'critical';
 
-		const averageP95 =
-			metrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) / metrics.length;
-		const averageErrorRate =
-			metrics.reduce((sum, m) => sum + m.errorRate, 0) / metrics.length;
-		const averageThroughput =
-			metrics.reduce((sum, m) => sum + m.throughput, 0) / metrics.length;
+		const averageP95 = metrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) / metrics.length;
+		const averageErrorRate = metrics.reduce((sum, m) => sum + m.errorRate, 0) / metrics.length;
+		const averageThroughput = metrics.reduce((sum, m) => sum + m.throughput, 0) / metrics.length;
 
-		if (averageP95 < 100 && averageErrorRate < 0.001 && averageThroughput > 200)
-			return 'excellent';
-		if (averageP95 < 150 && averageErrorRate < 0.005 && averageThroughput > 150)
-			return 'good';
-		if (averageP95 < 200 && averageErrorRate < 0.01 && averageThroughput > 100)
-			return 'acceptable';
+		if (averageP95 < 100 && averageErrorRate < 0.001 && averageThroughput > 200) return 'excellent';
+		if (averageP95 < 150 && averageErrorRate < 0.005 && averageThroughput > 150) return 'good';
+		if (averageP95 < 200 && averageErrorRate < 0.01 && averageThroughput > 100) return 'acceptable';
 		if (averageP95 < 300 && averageErrorRate < 0.05) return 'needs_improvement';
 		return 'critical';
 	}
 
-	private generateRecommendations(
-		report: Partial<PerformanceReport>,
-	): string[] {
+	private generateRecommendations(report: Partial<PerformanceReport>): string[] {
 		const recommendations: string[] = [];
 
 		// Performance recommendations
@@ -212,9 +194,7 @@ export class PerformanceReporter {
 		// RLS recommendations
 		if (report.rlsCompliance) {
 			if (report.rlsCompliance.dataIsolationValidRate < 1) {
-				recommendations.push(
-					'URGENT: Fix RLS data isolation - failures detected',
-				);
+				recommendations.push('URGENT: Fix RLS data isolation - failures detected');
 			}
 			if (!report.rlsCompliance.crossTenantLeakagePrevented) {
 				recommendations.push(
@@ -243,14 +223,10 @@ export class PerformanceReporter {
 		// Brazilian compliance recommendations
 		if (report.brazilianCompliance) {
 			if (!report.brazilianCompliance.bcbResponseTimeCompliance) {
-				recommendations.push(
-					'Improve BCB response time compliance for PIX transactions',
-				);
+				recommendations.push('Improve BCB response time compliance for PIX transactions');
 			}
 			if (!report.brazilianCompliance.lgpdDataProtection) {
-				recommendations.push(
-					'URGENT: Fix LGPD data protection compliance issues',
-				);
+				recommendations.push('URGENT: Fix LGPD data protection compliance issues');
 			}
 		}
 
@@ -265,9 +241,7 @@ export class PerformanceReporter {
 		timezoneHandling: boolean;
 	} {
 		// Simulate business hours performance (would be calculated from actual test data)
-		const businessHoursMetrics = metrics.find(
-			(m) => m.operationType === 'business_hours',
-		) || {
+		const businessHoursMetrics = metrics.find((m) => m.operationType === 'business_hours') || {
 			operationType: 'business_hours',
 			count: 0,
 			successRate: 0,
@@ -279,10 +253,8 @@ export class PerformanceReporter {
 			errorRate: 0,
 		};
 
-		const avgP95 =
-			metrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) / metrics.length;
-		const avgErrorRate =
-			metrics.reduce((sum, m) => sum + m.errorRate, 0) / metrics.length;
+		const avgP95 = metrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) / metrics.length;
+		const avgErrorRate = metrics.reduce((sum, m) => sum + m.errorRate, 0) / metrics.length;
 
 		return {
 			businessHoursPerformance: businessHoursMetrics,
@@ -311,10 +283,8 @@ export class PerformanceReporter {
 		const opportunities: string[] = [];
 
 		if (avgExecutionTime > 200) bottlenecks.push('Query performance');
-		if (connectionMetrics.connectionAcquisitionTime > 50)
-			bottlenecks.push('Connection pooling');
-		if (connectionMetrics.maxConcurrentConnections < 20)
-			bottlenecks.push('Connection limits');
+		if (connectionMetrics.connectionAcquisitionTime > 50) bottlenecks.push('Connection pooling');
+		if (connectionMetrics.maxConcurrentConnections < 20) bottlenecks.push('Connection limits');
 
 		if (avgExecutionTime > 150) opportunities.push('Query optimization');
 		if (connectionMetrics.connectionPoolEfficiency < 80)
@@ -344,13 +314,9 @@ export class PerformanceReporter {
 		const overallPerformance = this.calculateOverallPerformance(pixMetrics);
 
 		// Assess compliance
-		const avgP95 =
-			pixMetrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) /
-			pixMetrics.length;
-		const avgErrorRate =
-			pixMetrics.reduce((sum, m) => sum + m.errorRate, 0) / pixMetrics.length;
-		const avgThroughput =
-			pixMetrics.reduce((sum, m) => sum + m.throughput, 0) / pixMetrics.length;
+		const avgP95 = pixMetrics.reduce((sum, m) => sum + m.p95ExecutionTime, 0) / pixMetrics.length;
+		const avgErrorRate = pixMetrics.reduce((sum, m) => sum + m.errorRate, 0) / pixMetrics.length;
+		const avgThroughput = pixMetrics.reduce((sum, m) => sum + m.throughput, 0) / pixMetrics.length;
 
 		const complianceStatus =
 			rlsMetrics.dataIsolationValidRate === 1 &&
@@ -381,10 +347,7 @@ export class PerformanceReporter {
 		});
 
 		const brazilianCompliance = this.assessBrazilianCompliance(pixMetrics);
-		const capacityPlanning = this.assessCapacityPlanning(
-			pixMetrics,
-			connectionMetrics,
-		);
+		const capacityPlanning = this.assessCapacityPlanning(pixMetrics, connectionMetrics);
 
 		// Trend analysis
 		const previousRun = this.historicalReports[0];
@@ -394,40 +357,26 @@ export class PerformanceReporter {
 
 		if (previousRun) {
 			const currentAvgP95 = avgP95;
-			const previousAvgP95 =
-				previousRun.executiveSummary.keyMetrics.p95ResponseTime;
-			performanceDelta =
-				((previousAvgP95 - currentAvgP95) / previousAvgP95) * 100;
+			const previousAvgP95 = previousRun.executiveSummary.keyMetrics.p95ResponseTime;
+			performanceDelta = ((previousAvgP95 - currentAvgP95) / previousAvgP95) * 100;
 
 			if (currentAvgP95 > previousAvgP95 * 1.2) {
 				regressions.push('Response time regression detected');
 			}
-			if (
-				avgErrorRate >
-				previousRun.executiveSummary.keyMetrics.errorRate * 2
-			) {
+			if (avgErrorRate > previousRun.executiveSummary.keyMetrics.errorRate * 2) {
 				regressions.push('Error rate regression detected');
 			}
-			if (
-				avgThroughput <
-				previousRun.executiveSummary.keyMetrics.throughput * 0.8
-			) {
+			if (avgThroughput < previousRun.executiveSummary.keyMetrics.throughput * 0.8) {
 				regressions.push('Throughput regression detected');
 			}
 
 			if (currentAvgP95 < previousAvgP95 * 0.8) {
 				improvements.push('Response time improvement');
 			}
-			if (
-				avgErrorRate <
-				previousRun.executiveSummary.keyMetrics.errorRate * 0.5
-			) {
+			if (avgErrorRate < previousRun.executiveSummary.keyMetrics.errorRate * 0.5) {
 				improvements.push('Error rate improvement');
 			}
-			if (
-				avgThroughput >
-				previousRun.executiveSummary.keyMetrics.throughput * 1.2
-			) {
+			if (avgThroughput > previousRun.executiveSummary.keyMetrics.throughput * 1.2) {
 				improvements.push('Throughput improvement');
 			}
 		}
@@ -465,14 +414,8 @@ export class PerformanceReporter {
 
 	public saveReport(report: PerformanceReport): string[] {
 		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-		const jsonPath = path.join(
-			this.reportsDir,
-			`pix-performance-report-${timestamp}.json`,
-		);
-		const mdPath = path.join(
-			this.reportsDir,
-			`pix-performance-report-${timestamp}.md`,
-		);
+		const jsonPath = path.join(this.reportsDir, `pix-performance-report-${timestamp}.json`);
+		const mdPath = path.join(this.reportsDir, `pix-performance-report-${timestamp}.md`);
 
 		// Save JSON report
 		fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
@@ -482,14 +425,8 @@ export class PerformanceReporter {
 		fs.writeFileSync(mdPath, markdownReport);
 
 		// Also save the latest report for easy access
-		const latestJsonPath = path.join(
-			this.reportsDir,
-			'latest-performance-report.json',
-		);
-		const latestMdPath = path.join(
-			this.reportsDir,
-			'latest-performance-report.md',
-		);
+		const latestJsonPath = path.join(this.reportsDir, 'latest-performance-report.json');
+		const latestMdPath = path.join(this.reportsDir, 'latest-performance-report.md');
 
 		fs.writeFileSync(latestJsonPath, JSON.stringify(report, null, 2));
 		fs.writeFileSync(latestMdPath, markdownReport);
@@ -639,9 +576,7 @@ ${report.trendAnalysis.improvements.length > 0 ? report.trendAnalysis.improvemen
 				`Response time regressed from ${r1P95.toFixed(2)}ms to ${r2P95.toFixed(2)}ms`,
 			);
 		} else {
-			neutral.push(
-				`Response time stable: ${r1P95.toFixed(2)}ms → ${r2P95.toFixed(2)}ms`,
-			);
+			neutral.push(`Response time stable: ${r1P95.toFixed(2)}ms → ${r2P95.toFixed(2)}ms`);
 		}
 
 		// Compare throughput

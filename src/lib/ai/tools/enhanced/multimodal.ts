@@ -4,12 +4,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '../../../logging/secure-logger';
 import { filterSensitiveData } from '../../security/filter';
-import type {
-	ChartData,
-	ExportedReport,
-	ExportOptions,
-	VisualReport,
-} from './types';
+import type { ChartData, ExportedReport, ExportOptions, VisualReport } from './types';
 import { db } from '@/db/client';
 import { transactionCategories, transactions } from '@/db/schema';
 
@@ -38,8 +33,7 @@ export function createMultimodalTools(userId: string) {
 
 	return {
 		generateVisualReport: tool({
-			description:
-				'Gera relatórios visuais interativos com gráficos e análises financeiras.',
+			description: 'Gera relatórios visuais interativos com gráficos e análises financeiras.',
 			inputSchema: z.object({
 				reportType: z
 					.enum([
@@ -51,11 +45,7 @@ export function createMultimodalTools(userId: string) {
 					])
 					.describe('Tipo do relatório visual'),
 				title: z.string().min(1).max(100).describe('Título do relatório'),
-				description: z
-					.string()
-					.min(1)
-					.max(500)
-					.describe('Descrição do relatório'),
+				description: z.string().min(1).max(500).describe('Descrição do relatório'),
 				dateRange: z
 					.object({
 						startDate: z.string().datetime().describe('Data inicial'),
@@ -74,10 +64,7 @@ export function createMultimodalTools(userId: string) {
 					.boolean()
 					.default(false)
 					.describe('Incluir comparação com período anterior'),
-				format: z
-					.enum(['json', 'svg', 'png'])
-					.default('json')
-					.describe('Formato de saída'),
+				format: z.enum(['json', 'svg', 'png']).default('json').describe('Formato de saída'),
 				colorScheme: z
 					.enum(['default', 'blue', 'green', 'purple', 'orange'])
 					.default('default')
@@ -99,12 +86,7 @@ export function createMultimodalTools(userId: string) {
 					const data = await fetchReportData(userId, reportType, dateRange);
 
 					// Processar dados para visualização
-					const chartData = processChartData(
-						data,
-						reportType,
-						chartType,
-						colorScheme,
-					);
+					const chartData = processChartData(data, reportType, chartType, colorScheme);
 
 					// Gerar insights
 					const insights = generateVisualInsights(data, reportType, chartType);
@@ -112,12 +94,7 @@ export function createMultimodalTools(userId: string) {
 					// Comparação com período anterior se solicitado
 					let comparisonData = null;
 					if (includeComparison) {
-						comparisonData = await fetchComparisonData(
-							userId,
-							reportType,
-							dateRange,
-							categories,
-						);
+						comparisonData = await fetchComparisonData(userId, reportType, dateRange, categories);
 					}
 
 					// Criar objeto do relatório
@@ -187,17 +164,13 @@ export function createMultimodalTools(userId: string) {
 		}),
 
 		generatePaymentSummary: tool({
-			description:
-				'Cria um resumo visual completo de pagamentos e transferências.',
+			description: 'Cria um resumo visual completo de pagamentos e transferências.',
 			inputSchema: z.object({
 				period: z
 					.enum(['this_month', 'last_month', 'last_3_months', 'last_year'])
 					.default('this_month')
 					.describe('Período do resumo'),
-				includeScheduled: z
-					.boolean()
-					.default(true)
-					.describe('Incluir pagamentos agendados'),
+				includeScheduled: z.boolean().default(true).describe('Incluir pagamentos agendados'),
 				groupBy: z
 					.enum(['category', 'day', 'week', 'recipient'])
 					.default('category')
@@ -211,13 +184,7 @@ export function createMultimodalTools(userId: string) {
 					.default('interactive')
 					.describe('Formato de exportação'),
 			}),
-			execute: async ({
-				period,
-				includeScheduled,
-				groupBy,
-				visualElements,
-				exportFormat,
-			}) => {
+			execute: async ({ period, includeScheduled, groupBy, visualElements, exportFormat }) => {
 				try {
 					// Calcular período de datas
 					const dateRange = calculateDateRange(period);
@@ -239,10 +206,7 @@ export function createMultimodalTools(userId: string) {
 					}
 
 					// Agrupar dados conforme solicitado
-					const groupedData = groupPaymentsData(
-						paymentsData as PaymentData[],
-						groupBy,
-					);
+					const groupedData = groupPaymentsData(paymentsData as PaymentData[], groupBy);
 
 					// Gerar elementos visuais
 					const visualElementsData: {
@@ -256,10 +220,7 @@ export function createMultimodalTools(userId: string) {
 					} = {};
 
 					if (visualElements.includes('chart')) {
-						visualElementsData.chart = generatePaymentChart(
-							paymentsData,
-							groupBy,
-						);
+						visualElementsData.chart = generatePaymentChart(paymentsData, groupBy);
 					}
 
 					if (visualElements.includes('table')) {
@@ -271,10 +232,7 @@ export function createMultimodalTools(userId: string) {
 					}
 
 					// Gerar estatísticas e insights
-					const statistics = calculatePaymentStatistics(
-						paymentsData,
-						scheduledPayments,
-					);
+					const statistics = calculatePaymentStatistics(paymentsData, scheduledPayments);
 					const insightsData = generatePaymentInsights(paymentsData, groupBy);
 
 					// Criar resumo completo
@@ -343,9 +301,7 @@ export function createMultimodalTools(userId: string) {
 					.default('detailed')
 					.describe('Nível de insights'),
 				interactiveFeatures: z
-					.array(
-						z.enum(['zoom', 'filter', 'drilldown', 'tooltip', 'animation']),
-					)
+					.array(z.enum(['zoom', 'filter', 'drilldown', 'tooltip', 'animation']))
 					.default(['tooltip', 'animation'])
 					.describe('Recursos interativos'),
 				colorBy: z
@@ -363,11 +319,7 @@ export function createMultimodalTools(userId: string) {
 			}) => {
 				try {
 					// Buscar dados de gastos com granularidade específica
-					const spendingData = await fetchSpendingData(
-						userId,
-						granularity,
-						focusArea,
-					);
+					const spendingData = await fetchSpendingData(userId, granularity, focusArea);
 
 					// Processar dados para o tipo de visualização
 					const processedData = processSpendingForVisualization(
@@ -467,38 +419,21 @@ export function createMultimodalTools(userId: string) {
 		}),
 
 		exportFinancialReport: tool({
-			description:
-				'Exporta relatórios financeiros em diversos formatos para compartilhamento.',
+			description: 'Exporta relatórios financeiros em diversos formatos para compartilhamento.',
 			inputSchema: z.object({
 				reportType: z
-					.enum([
-						'comprehensive_summary',
-						'tax_report',
-						'investment_summary',
-						'expense_report',
-					])
+					.enum(['comprehensive_summary', 'tax_report', 'investment_summary', 'expense_report'])
 					.describe('Tipo do relatório'),
-				format: z
-					.enum(['csv', 'xlsx', 'pdf', 'json'])
-					.describe('Formato de exportação'),
+				format: z.enum(['csv', 'xlsx', 'pdf', 'json']).describe('Formato de exportação'),
 				dateRange: z
 					.object({
 						startDate: z.string().datetime().describe('Data inicial'),
 						endDate: z.string().datetime().describe('Data final'),
 					})
 					.describe('Período do relatório'),
-				includeCharts: z
-					.boolean()
-					.default(false)
-					.describe('Incluir gráficos no relatório'),
-				includeInsights: z
-					.boolean()
-					.default(true)
-					.describe('Incluir insights no relatório'),
-				language: z
-					.enum(['PT-BR', 'EN'])
-					.default('PT-BR')
-					.describe('Idioma do relatório'),
+				includeCharts: z.boolean().default(false).describe('Incluir gráficos no relatório'),
+				includeInsights: z.boolean().default(true).describe('Incluir insights no relatório'),
+				language: z.enum(['PT-BR', 'EN']).default('PT-BR').describe('Idioma do relatório'),
 				branding: z
 					.object({
 						includeLogo: z.boolean().default(true),
@@ -523,20 +458,12 @@ export function createMultimodalTools(userId: string) {
 				branding,
 			}) => {
 				try {
-					const reportData = await generateFinancialReportData(
-						userId,
-						reportType,
-						dateRange,
-					);
+					const reportData = await generateFinancialReportData(userId, reportType, dateRange);
 					const insights = includeInsights
 						? await generateReportInsights(reportData, reportType, language)
 						: [];
 					const charts = includeCharts
-						? await generateReportCharts(
-								reportData,
-								reportType,
-								getCustomColors(branding),
-							)
+						? await generateReportCharts(reportData, reportType, getCustomColors(branding))
 						: [];
 					const exportOptions = buildExportOptions(
 						reportData,
@@ -703,10 +630,7 @@ async function fetchPaymentsData(
 	// LGPD-compliant: Only return necessary data, redact sensitive information
 	return [];
 }
-async function fetchScheduledPayments(
-	_userId: string,
-	_endDate: string,
-): Promise<PaymentData[]> {
+async function fetchScheduledPayments(_userId: string, _endDate: string): Promise<PaymentData[]> {
 	return [];
 }
 interface GroupedPaymentsData {
@@ -715,16 +639,10 @@ interface GroupedPaymentsData {
 	byWeek: Record<string, PaymentData[]>;
 	byRecipient: Record<string, PaymentData[]>;
 }
-function groupPaymentsData(
-	_data: PaymentData[],
-	_groupBy: string,
-): GroupedPaymentsData {
+function groupPaymentsData(_data: PaymentData[], _groupBy: string): GroupedPaymentsData {
 	return { byCategory: {}, byDay: {}, byWeek: {}, byRecipient: {} };
 }
-function generatePaymentChart(
-	_data: PaymentData[],
-	_groupBy: string,
-): ChartData {
+function generatePaymentChart(_data: PaymentData[], _groupBy: string): ChartData {
 	return { labels: [], datasets: [] };
 }
 function generatePaymentTable(_data: PaymentData[]): PaymentData[] {
@@ -743,16 +661,10 @@ function calculatePaymentStatistics(
 ): Record<string, number | string> {
 	return {};
 }
-function generatePaymentInsights(
-	_data: PaymentData[],
-	_groupBy: string,
-): string[] {
+function generatePaymentInsights(_data: PaymentData[], _groupBy: string): string[] {
 	return [];
 }
-async function exportPaymentSummary(
-	_summary: unknown,
-	_exportFormat: string,
-): Promise<unknown> {
+async function exportPaymentSummary(_summary: unknown, _exportFormat: string): Promise<unknown> {
 	return null;
 }
 function calculateDateRange(_period: string): DateRange {
@@ -874,10 +786,9 @@ function getCustomColors(branding?: {
 	customColors?: { primary?: string; secondary?: string };
 }): string[] {
 	if (!branding?.customColors) return [];
-	return [
-		branding.customColors.primary,
-		branding.customColors.secondary,
-	].filter((c): c is string => !!c);
+	return [branding.customColors.primary, branding.customColors.secondary].filter(
+		(c): c is string => !!c,
+	);
 }
 
 function buildExportOptions(

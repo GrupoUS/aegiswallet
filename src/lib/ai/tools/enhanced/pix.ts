@@ -12,12 +12,7 @@ import {
 	PixTransferStatusSchema,
 } from './types';
 import { db } from '@/db/client';
-import {
-	complianceAuditLogs,
-	pixKeys,
-	pixQrCodes,
-	pixTransactions,
-} from '@/db/schema';
+import { complianceAuditLogs, pixKeys, pixQrCodes, pixTransactions } from '@/db/schema';
 
 export function createPixTools(userId: string) {
 	return {
@@ -25,10 +20,7 @@ export function createPixTools(userId: string) {
 			description:
 				'Lista todas as chaves PIX cadastradas pelo usuário. Use para mostrar opções de transferência.',
 			inputSchema: z.object({
-				includeInactive: z
-					.boolean()
-					.default(false)
-					.describe('Incluir chaves inativas'),
+				includeInactive: z.boolean().default(false).describe('Incluir chaves inativas'),
 			}),
 			execute: async ({ includeInactive }) => {
 				try {
@@ -65,26 +57,17 @@ export function createPixTools(userId: string) {
 		}),
 
 		sendPixTransfer: tool({
-			description:
-				'Envia uma transferência PIX. Verifica limites e segurança antes de processar.',
+			description: 'Envia uma transferência PIX. Verifica limites e segurança antes de processar.',
 			inputSchema: z.object({
 				recipientKey: z.string().min(1).describe('Chave PIX do destinatário'),
 				recipientKeyType: PixKeyTypeSchema.describe('Tipo da chave PIX'),
-				recipientName: z
-					.string()
-					.min(1)
-					.max(200)
-					.describe('Nome completo do destinatário'),
+				recipientName: z.string().min(1).max(200).describe('Nome completo do destinatário'),
 				amount: z
 					.number()
 					.positive()
 					.max(50000)
 					.describe('Valor da transferência (máximo R$ 50.000)'),
-				description: z
-					.string()
-					.max(140)
-					.optional()
-					.describe('Descrição da transferência'),
+				description: z.string().max(140).optional().describe('Descrição da transferência'),
 				scheduledFor: z
 					.string()
 					.datetime()
@@ -130,9 +113,7 @@ export function createPixTools(userId: string) {
 							amount,
 							recipientKey: `${recipientKey.substring(0, 3)}***`,
 						});
-						throw new Error(
-							'Erro ao processar transferência PIX: Insert failed',
-						);
+						throw new Error('Erro ao processar transferência PIX: Insert failed');
 					}
 
 					// Log de auditoria para compliance
@@ -182,19 +163,14 @@ export function createPixTools(userId: string) {
 		}),
 
 		requestPixQrCode: tool({
-			description:
-				'Gera um QR Code PIX para receber valores. Útil para cobranças e pagamentos.',
+			description: 'Gera um QR Code PIX para receber valores. Útil para cobranças e pagamentos.',
 			inputSchema: z.object({
 				amount: z
 					.number()
 					.positive()
 					.max(50000)
 					.describe('Valor a receber (opcional, máximo R$ 50.000)'),
-				description: z
-					.string()
-					.max(140)
-					.optional()
-					.describe('Descrição da cobrança'),
+				description: z.string().max(140).optional().describe('Descrição da cobrança'),
 				recipientKey: z
 					.string()
 					.optional()
@@ -206,12 +182,7 @@ export function createPixTools(userId: string) {
 					.default(60)
 					.describe('Tempo de expiração em minutos (padrão: 1 hora)'),
 			}),
-			execute: async ({
-				amount,
-				description,
-				recipientKey,
-				expiresInMinutes,
-			}) => {
+			execute: async ({ amount, description, recipientKey, expiresInMinutes }) => {
 				try {
 					// Se não informar chave, usar a primeira chave ativa do usuário
 					let targetKey = recipientKey;
@@ -232,9 +203,7 @@ export function createPixTools(userId: string) {
 							const anyKey = await db
 								.select({ key: pixKeys.keyValue })
 								.from(pixKeys)
-								.where(
-									and(eq(pixKeys.userId, userId), eq(pixKeys.isActive, true)),
-								)
+								.where(and(eq(pixKeys.userId, userId), eq(pixKeys.isActive, true)))
 								.limit(1);
 
 							if (!anyKey || anyKey.length === 0) {
@@ -248,9 +217,7 @@ export function createPixTools(userId: string) {
 						}
 					}
 
-					const expiresAt = new Date(
-						Date.now() + expiresInMinutes * 60 * 1000,
-					).toISOString();
+					const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000).toISOString();
 
 					// Gerar QR Code (simulação - em produção integrar com API real)
 					const qrCodePayload = `br.gov.bcb.pix${targetKey}${amount ? `${amount.toFixed(2)}` : ''}${description ? description : ''}`;
@@ -312,13 +279,11 @@ export function createPixTools(userId: string) {
 				endToEndId: z
 					.string()
 					.optional()
-					.describe(
-						'ID End-to-End da transferência (alternativo ao transferId)',
-					),
+					.describe('ID End-to-End da transferência (alternativo ao transferId)'),
 			}),
 			execute: async ({ transferId, endToEndId }) => {
 				try {
-					if (!transferId && !endToEndId) {
+					if (!(transferId || endToEndId)) {
 						throw new Error('É necessário informar transferId ou endToEndId');
 					}
 
@@ -353,8 +318,7 @@ export function createPixTools(userId: string) {
 
 					return {
 						transfer: filterSensitiveData(transfer),
-						statusMessage:
-							statusMessages[transfer.status] || 'Status desconhecido',
+						statusMessage: statusMessages[transfer.status] || 'Status desconhecido',
 						isCompleted: transfer.status === 'COMPLETED',
 						isFailed: ['FAILED', 'REVERSED'].includes(transfer.status),
 						isPending: ['PENDING', 'PROCESSING'].includes(transfer.status),
@@ -372,26 +336,15 @@ export function createPixTools(userId: string) {
 		}),
 
 		listPixTransfers: tool({
-			description:
-				'Lista histórico de transferências PIX com filtros opcionais.',
+			description: 'Lista histórico de transferências PIX com filtros opcionais.',
 			inputSchema: z.object({
 				startDate: z.string().datetime().optional().describe('Data inicial'),
 				endDate: z.string().datetime().optional().describe('Data final'),
-				status:
-					PixTransferStatusSchema.optional().describe('Filtrar por status'),
+				status: PixTransferStatusSchema.optional().describe('Filtrar por status'),
 				minAmount: z.number().positive().optional().describe('Valor mínimo'),
 				maxAmount: z.number().positive().optional().describe('Valor máximo'),
-				limit: z
-					.number()
-					.min(1)
-					.max(100)
-					.default(20)
-					.describe('Número de resultados'),
-				offset: z
-					.number()
-					.min(0)
-					.default(0)
-					.describe('Pular resultados para paginação'),
+				limit: z.number().min(1).max(100).default(20).describe('Número de resultados'),
+				offset: z.number().min(0).default(0).describe('Pular resultados para paginação'),
 			}),
 			execute: async ({
 				startDate,
@@ -405,18 +358,11 @@ export function createPixTools(userId: string) {
 				try {
 					const conditions = [eq(pixTransactions.userId, userId)];
 
-					if (startDate)
-						conditions.push(
-							gte(pixTransactions.createdAt, new Date(startDate)),
-						);
-					if (endDate)
-						conditions.push(lte(pixTransactions.createdAt, new Date(endDate)));
-					if (status)
-						conditions.push(eq(pixTransactions.status, status.toLowerCase()));
-					if (minAmount)
-						conditions.push(gte(pixTransactions.amount, String(minAmount)));
-					if (maxAmount)
-						conditions.push(lte(pixTransactions.amount, String(maxAmount)));
+					if (startDate) conditions.push(gte(pixTransactions.createdAt, new Date(startDate)));
+					if (endDate) conditions.push(lte(pixTransactions.createdAt, new Date(endDate)));
+					if (status) conditions.push(eq(pixTransactions.status, status.toLowerCase()));
+					if (minAmount) conditions.push(gte(pixTransactions.amount, String(minAmount)));
+					if (maxAmount) conditions.push(lte(pixTransactions.amount, String(maxAmount)));
 
 					const data = await db
 						.select()
@@ -433,13 +379,8 @@ export function createPixTools(userId: string) {
 
 					// Calcular estatísticas
 					const totalSent = transfers.reduce((sum, tx) => sum + tx.amount, 0);
-					const successfulTransfers = transfers.filter(
-						(tx) => tx.status === 'COMPLETED',
-					);
-					const totalSuccess = successfulTransfers.reduce(
-						(sum, tx) => sum + tx.amount,
-						0,
-					);
+					const successfulTransfers = transfers.filter((tx) => tx.status === 'COMPLETED');
+					const totalSuccess = successfulTransfers.reduce((sum, tx) => sum + tx.amount, 0);
 
 					return {
 						transfers: transfers.map(filterSensitiveData),
@@ -449,8 +390,7 @@ export function createPixTools(userId: string) {
 							totalSent,
 							totalSuccess,
 							successfulCount: successfulTransfers.length,
-							averageAmount:
-								transfers.length > 0 ? totalSent / transfers.length : 0,
+							averageAmount: transfers.length > 0 ? totalSent / transfers.length : 0,
 						},
 						message:
 							transfers.length > 0
@@ -472,29 +412,11 @@ export function createPixTools(userId: string) {
 			inputSchema: z.object({
 				recipientKey: z.string().min(1).describe('Chave PIX do destinatário'),
 				recipientKeyType: PixKeyTypeSchema.describe('Tipo da chave PIX'),
-				recipientName: z
-					.string()
-					.min(1)
-					.max(200)
-					.describe('Nome completo do destinatário'),
-				amount: z
-					.number()
-					.positive()
-					.max(50000)
-					.describe('Valor da transferência'),
-				scheduledFor: z
-					.string()
-					.datetime()
-					.describe('Data e hora para agendamento'),
-				description: z
-					.string()
-					.max(140)
-					.optional()
-					.describe('Descrição da transferência'),
-				recurring: z
-					.boolean()
-					.default(false)
-					.describe('Transferência recorrente'),
+				recipientName: z.string().min(1).max(200).describe('Nome completo do destinatário'),
+				amount: z.number().positive().max(50000).describe('Valor da transferência'),
+				scheduledFor: z.string().datetime().describe('Data e hora para agendamento'),
+				description: z.string().max(140).optional().describe('Descrição da transferência'),
+				recurring: z.boolean().default(false).describe('Transferência recorrente'),
 			}),
 			execute: async ({
 				recipientKey,
@@ -513,9 +435,7 @@ export function createPixTools(userId: string) {
 						throw new Error('A data de agendamento deve ser futura');
 					}
 
-					if (
-						scheduledDate > new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
-					) {
+					if (scheduledDate > new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)) {
 						throw new Error('O agendamento máximo é de 90 dias');
 					}
 

@@ -1,11 +1,6 @@
 import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
 import type { ErrorComponentProps } from '@tanstack/react-router';
-import {
-	createRootRoute,
-	Outlet,
-	useLocation,
-	useNavigate,
-} from '@tanstack/react-router';
+import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import {
 	Building,
 	Calendar,
@@ -13,8 +8,8 @@ import {
 	FileText,
 	Home,
 	LogOut,
-	Mic,
 	Settings,
+	Sparkles,
 	Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -24,16 +19,14 @@ import { ConsentBanner } from '@/components/privacy';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatWidget } from '@/features/ai-chat/components';
+import { ChatProvider, ChatWidget } from '@/features/ai-chat/components';
 import { cn } from '@/lib/utils';
 
 function ErrorBoundary({ error }: ErrorComponentProps) {
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center bg-destructive/10 p-4 text-destructive">
 			<div className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg">
-				<h2 className="mb-4 font-bold text-2xl text-destructive">
-					Oops, something went wrong!
-				</h2>
+				<h2 className="mb-4 font-bold text-2xl text-destructive">Oops, something went wrong!</h2>
 				<p className="mb-4 text-destructive">
 					We encountered an unexpected error. Please try again later.
 				</p>
@@ -58,9 +51,7 @@ function RootComponent() {
 	const { isLoading, signOut } = useAuth();
 
 	const publicPages = ['/login', '/signup'];
-	const isPublicPage = publicPages.some((page) =>
-		location.pathname.startsWith(page),
-	);
+	const isPublicPage = publicPages.some((page) => location.pathname.startsWith(page));
 
 	const navigationItems = [
 		{
@@ -102,7 +93,7 @@ function RootComponent() {
 
 	const handleLogout = async () => {
 		await signOut();
-		navigate({
+		await navigate({
 			search: { error: undefined, redirect: '/dashboard' },
 			to: '/login',
 		});
@@ -125,11 +116,13 @@ function RootComponent() {
 	if (isPublicPage) {
 		return (
 			<CalendarProvider>
-				<div className="min-h-screen bg-background">
-					<Outlet />
-				</div>
-				<ChatWidget />
-				<ConsentBanner onCustomize={handleCustomizeConsent} />
+				<ChatProvider>
+					<div className="min-h-screen bg-background">
+						<Outlet />
+					</div>
+					<ChatWidget />
+					<ConsentBanner onCustomize={handleCustomizeConsent} />
+				</ChatProvider>
 			</CalendarProvider>
 		);
 	}
@@ -141,62 +134,60 @@ function RootComponent() {
 			</SignedOut>
 			<SignedIn>
 				<CalendarProvider>
-					<div
-						className={cn(
-							'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
-							'h-screen',
-						)}
-					>
-						<Sidebar open={open} setOpen={setOpen}>
-							<SidebarBody className="justify-between gap-10">
-								<div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-									<div className="flex flex-col gap-4">
-										<Logo />
-										{navigationItems.map((item) => (
-											<SidebarLink key={item.href} link={item} />
-										))}
+					<ChatProvider>
+						<div
+							className={cn(
+								'mx-auto flex w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-background md:flex-row',
+								'h-screen',
+							)}
+						>
+							<Sidebar open={open} setOpen={setOpen}>
+								<SidebarBody className="justify-between gap-10">
+									<div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+										<div className="flex flex-col gap-4">
+											<Logo />
+											{navigationItems.map((item) => (
+												<SidebarLink key={item.href} link={item} />
+											))}
+										</div>
 									</div>
-								</div>
-								<div className="flex flex-col gap-2">
-									<SidebarLink
-										link={{
-											href: '/ai-chat', // Updated to point to the page, but widget is also available
-											icon: (
-												<Mic className="h-5 w-5 shrink-0 text-sidebar-foreground" />
-											),
-											label: 'Assistente',
-										}}
-									/>
-									<button
-										type="button"
-										onClick={handleLogout}
-										className="w-full cursor-pointer"
-										aria-label="Sair"
-									>
+									<div className="flex flex-col gap-2">
 										<SidebarLink
 											link={{
-												href: '#',
-												icon: (
-													<LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />
-												),
-												label: 'Sair',
+												href: '/ai-chat',
+												icon: <Sparkles className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+												label: 'Assistente IA',
 											}}
 										/>
-									</button>
-									<div className="mt-2 pl-1">
-										<AnimatedThemeToggler />
+										<button
+											type="button"
+											onClick={handleLogout}
+											className="w-full cursor-pointer"
+											aria-label="Sair"
+										>
+											<SidebarLink
+												link={{
+													href: '#',
+													icon: <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
+													label: 'Sair',
+												}}
+											/>
+										</button>
+										<div className="mt-2 pl-1">
+											<AnimatedThemeToggler />
+										</div>
 									</div>
+								</SidebarBody>
+							</Sidebar>
+							<div className="flex flex-1">
+								<div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
+									<Outlet />
 								</div>
-							</SidebarBody>
-						</Sidebar>
-						<div className="flex flex-1">
-							<div className="flex h-full w-full flex-1 flex-col gap-2 overflow-y-auto rounded-tl-2xl border border-border bg-background p-2 md:p-10">
-								<Outlet />
 							</div>
+							<ChatWidget />
+							<ConsentBanner onCustomize={handleCustomizeConsent} />
 						</div>
-						<ChatWidget />
-						<ConsentBanner onCustomize={handleCustomizeConsent} />
-					</div>
+					</ChatProvider>
 				</CalendarProvider>
 			</SignedIn>
 		</>
@@ -207,9 +198,7 @@ export const Logo = () => {
 	return (
 		<div className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm">
 			<div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-			<span className="whitespace-pre font-medium text-foreground opacity-100">
-				AegisWallet
-			</span>
+			<span className="whitespace-pre font-medium text-foreground opacity-100">AegisWallet</span>
 		</div>
 	);
 };

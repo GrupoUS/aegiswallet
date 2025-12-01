@@ -100,27 +100,21 @@ class DatabaseHealthChecker {
 		return result;
 	}
 
-	private async checkConnectionPerformance(
-		result: HealthCheckResult,
-	): Promise<void> {
+	private async checkConnectionPerformance(result: HealthCheckResult): Promise<void> {
 		console.log('📡 Testing connection performance...');
 
 		const startTime = Date.now();
 
 		try {
 			// Test HTTP client
-			const httpResult = await this.db.execute(
-				sql`SELECT 1 as test, version() as pg_version`,
-			);
+			const httpResult = await this.db.execute(sql`SELECT 1 as test, version() as pg_version`);
 			const httpLatency = Date.now() - startTime;
 
 			result.metrics.connection.status = 'healthy';
 			result.metrics.connection.latency = httpLatency;
 
 			console.log(`   ✅ HTTP Connection: ${httpLatency}ms`);
-			console.log(
-				`   ✅ PostgreSQL: ${httpResult[0]?.pg_version?.split(' ')[1] || 'Unknown'}`,
-			);
+			console.log(`   ✅ PostgreSQL: ${httpResult[0]?.pg_version?.split(' ')[1] || 'Unknown'}`);
 
 			// Test pool client for transactions
 			const poolStart = Date.now();
@@ -158,10 +152,7 @@ class DatabaseHealthChecker {
         FROM information_schema.tables
         WHERE table_schema = 'public'
       `);
-			result.metrics.schema.tableCount = parseInt(
-				tableResult[0]?.count || '0',
-				10,
-			);
+			result.metrics.schema.tableCount = Number.parseInt(tableResult[0]?.count || '0', 10);
 
 			// Check for Drizzle schema consistency
 			const schemaTables = Object.keys(schema).length;
@@ -179,9 +170,7 @@ class DatabaseHealthChecker {
 			}
 
 			// Check for missing relations
-			const relationCount = Object.keys(schema).filter((key) =>
-				key.includes('Relations'),
-			).length;
+			const relationCount = Object.keys(schema).filter((key) => key.includes('Relations')).length;
 			result.metrics.schema.relationCount = relationCount;
 
 			console.log(`   🔗 Relation Definitions: ${relationCount}`);
@@ -207,8 +196,8 @@ class DatabaseHealthChecker {
           WHERE mean_exec_time > 100
         `);
 
-				const slowCount = parseInt(slowQueries[0]?.count || '0', 10);
-				const avgTime = parseFloat(slowQueries[0]?.avg_time || '0');
+				const slowCount = Number.parseInt(slowQueries[0]?.count || '0', 10);
+				const avgTime = Number.parseFloat(slowQueries[0]?.avg_time || '0');
 
 				result.metrics.performance.slowQueries = slowCount;
 
@@ -224,9 +213,7 @@ class DatabaseHealthChecker {
 					});
 				}
 			} catch {
-				console.log(
-					'   ℹ️  pg_stat_statements not available - performance metrics limited',
-				);
+				console.log('   ℹ️  pg_stat_statements not available - performance metrics limited');
 			}
 
 			// Check index usage
@@ -237,13 +224,11 @@ class DatabaseHealthChecker {
         FROM pg_stat_user_indexes
       `);
 
-			const totalIndexes = parseInt(indexStats[0]?.total_indexes || '0', 10);
-			const unusedIndexes = parseInt(indexStats[0]?.unused_indexes || '0', 10);
+			const totalIndexes = Number.parseInt(indexStats[0]?.total_indexes || '0', 10);
+			const unusedIndexes = Number.parseInt(indexStats[0]?.unused_indexes || '0', 10);
 
 			const usageRate =
-				totalIndexes > 0
-					? ((totalIndexes - unusedIndexes) / totalIndexes) * 100
-					: 100;
+				totalIndexes > 0 ? ((totalIndexes - unusedIndexes) / totalIndexes) * 100 : 100;
 			result.metrics.performance.indexUsage = Math.round(usageRate);
 
 			console.log(`   📈 Index Usage Rate: ${usageRate.toFixed(1)}%`);
@@ -254,8 +239,7 @@ class DatabaseHealthChecker {
 					severity: 'medium',
 					category: 'performance',
 					description: `Index usage rate is ${(100 - usageRate).toFixed(1)}% below optimal`,
-					recommendation:
-						'Review and remove unused indexes to improve write performance',
+					recommendation: 'Review and remove unused indexes to improve write performance',
 				});
 			}
 		} catch (error) {
@@ -263,8 +247,7 @@ class DatabaseHealthChecker {
 				severity: 'medium',
 				category: 'performance',
 				description: `Performance analysis failed: ${error instanceof Error ? error.message : String(error)}`,
-				recommendation:
-					'Ensure proper database permissions for pg_stat_* tables',
+				recommendation: 'Ensure proper database permissions for pg_stat_* tables',
 			});
 		}
 	}
@@ -281,7 +264,7 @@ class DatabaseHealthChecker {
           WHERE schemaname = 'public'
         `);
 
-				const policyCount = parseInt(rlsStats[0]?.policy_count || '0', 10);
+				const policyCount = Number.parseInt(rlsStats[0]?.policy_count || '0', 10);
 				result.metrics.security.rlsPolicies = policyCount;
 
 				console.log(`   🛡️  RLS Policies: ${policyCount}`);
@@ -296,18 +279,14 @@ class DatabaseHealthChecker {
             AND p.tablename IS NULL
         `);
 
-				const tablesMissingRls = parseInt(
-					tablesWithoutRls[0]?.count || '0',
-					10,
-				);
+				const tablesMissingRls = Number.parseInt(tablesWithoutRls[0]?.count || '0', 10);
 
 				if (tablesMissingRls > 0 && policyCount > 0) {
 					result.issues.push({
 						severity: 'high',
 						category: 'security',
 						description: `${tablesMissingRls} tables missing RLS policies`,
-						recommendation:
-							'Implement Row-Level Security for all user data tables',
+						recommendation: 'Implement Row-Level Security for all user data tables',
 					});
 				}
 			} catch {
@@ -319,8 +298,7 @@ class DatabaseHealthChecker {
 			console.log(`   🔐 Encryption at Rest: enabled (Neon default)`);
 
 			// Check connection security
-			const isSSL =
-				process.env.DATABASE_URL?.includes('sslmode=require') || false;
+			const isSSL = process.env.DATABASE_URL?.includes('sslmode=require');
 			if (!isSSL) {
 				result.issues.push({
 					severity: 'high',
@@ -329,16 +307,13 @@ class DatabaseHealthChecker {
 					recommendation: 'Update DATABASE_URL to include sslmode=require',
 				});
 			}
-			console.log(
-				`   🔒 Connection Security: ${isSSL ? 'SSL enabled' : 'SSL disabled - WARNING'}`,
-			);
+			console.log(`   🔒 Connection Security: ${isSSL ? 'SSL enabled' : 'SSL disabled - WARNING'}`);
 		} catch (error) {
 			result.issues.push({
 				severity: 'medium',
 				category: 'security',
 				description: `Security assessment failed: ${error instanceof Error ? error.message : String(error)}`,
-				recommendation:
-					'Ensure proper database permissions for security analysis',
+				recommendation: 'Ensure proper database permissions for security analysis',
 			});
 		}
 	}
@@ -370,21 +345,15 @@ class DatabaseHealthChecker {
             AND column_name IN ('user_id', 'action', 'created_at', 'ip_address')
         `);
 
-				const auditCoverage = parseInt(
-					auditColumns[0]?.column_count || '0',
-					10,
-				);
-				result.metrics.compliance.auditCoverage = Math.round(
-					(auditCoverage / 4) * 100,
-				);
+				const auditCoverage = Number.parseInt(auditColumns[0]?.column_count || '0', 10);
+				result.metrics.compliance.auditCoverage = Math.round((auditCoverage / 4) * 100);
 
 				if (result.metrics.compliance.auditCoverage < 100) {
 					complianceScore -= 20;
 					result.issues.push({
 						severity: 'medium',
 						category: 'compliance',
-						description:
-							'Audit logs missing required columns for LGPD compliance',
+						description: 'Audit logs missing required columns for LGPD compliance',
 						recommendation:
 							'Ensure audit_logs has user_id, action, created_at, and ip_address columns',
 					});
@@ -394,19 +363,13 @@ class DatabaseHealthChecker {
 				result.issues.push({
 					severity: 'high',
 					category: 'compliance',
-					description:
-						'Audit logs table missing - required for LGPD compliance',
-					recommendation:
-						'Create audit_logs table for comprehensive data access tracking',
+					description: 'Audit logs table missing - required for LGPD compliance',
+					recommendation: 'Create audit_logs table for comprehensive data access tracking',
 				});
 			}
 
 			// Check for LGPD-specific tables
-			const lgpdTables = [
-				'lgpd_consents',
-				'data_export_requests',
-				'data_deletion_requests',
-			];
+			const lgpdTables = ['lgpd_consents', 'data_export_requests', 'data_deletion_requests'];
 			let lgpdTableCount = 0;
 
 			for (const table of lgpdTables) {
@@ -437,9 +400,7 @@ class DatabaseHealthChecker {
 			}
 
 			result.metrics.compliance.lgpdScore = Math.max(0, complianceScore);
-			console.log(
-				`   📊 LGPD Compliance Score: ${result.metrics.compliance.lgpdScore}%`,
-			);
+			console.log(`   📊 LGPD Compliance Score: ${result.metrics.compliance.lgpdScore}%`);
 		} catch (error) {
 			result.issues.push({
 				severity: 'medium',
@@ -502,9 +463,7 @@ async function main() {
 		console.log('🏥 DATABASE HEALTH ASSESSMENT COMPLETE');
 		console.log('='.repeat(60));
 
-		console.log(
-			`\n📊 Overall Status: ${result.status.toUpperCase()} (${result.score}/100)`,
-		);
+		console.log(`\n📊 Overall Status: ${result.status.toUpperCase()} (${result.score}/100)`);
 
 		if (result.issues.length > 0) {
 			console.log('\n⚠️  ISSUES FOUND:');
@@ -518,9 +477,7 @@ async function main() {
 								? '⚡'
 								: '💡';
 
-				console.log(
-					`${index + 1}. ${icon} [${issue.severity.toUpperCase()}] ${issue.category}`,
-				);
+				console.log(`${index + 1}. ${icon} [${issue.severity.toUpperCase()}] ${issue.category}`);
 				console.log(`   📝 ${issue.description}`);
 				console.log(`   💡 ${issue.recommendation}`);
 				console.log('');

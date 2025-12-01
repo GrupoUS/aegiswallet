@@ -188,12 +188,7 @@ export class NLUPerformanceTracker {
 	/**
 	 * Track NLU request performance
 	 */
-	trackRequest(
-		processingTime: number,
-		result: NLUResult,
-		success: boolean,
-		region?: string,
-	): void {
+	trackRequest(processingTime: number, result: NLUResult, success: boolean, region?: string): void {
 		if (!this.config.enabled) {
 			return;
 		}
@@ -246,11 +241,7 @@ export class NLUPerformanceTracker {
 	/**
 	 * Track cache performance
 	 */
-	trackCachePerformance(
-		hitRate: number,
-		size: number,
-		lookupTime: number,
-	): void {
+	trackCachePerformance(hitRate: number, size: number, lookupTime: number): void {
 		if (!this.config.enabled) {
 			return;
 		}
@@ -300,11 +291,7 @@ export class NLUPerformanceTracker {
 	/**
 	 * Track error recovery performance
 	 */
-	trackErrorRecovery(
-		errorType: string,
-		recoveryTime: number,
-		recoverySuccess: boolean,
-	): void {
+	trackErrorRecovery(errorType: string, recoveryTime: number, recoverySuccess: boolean): void {
 		if (!this.config.enabled) {
 			return;
 		}
@@ -319,17 +306,14 @@ export class NLUPerformanceTracker {
 		const totalRecoveries = this.metrics.errors.errorTypes[errorType];
 		if (recoverySuccess) {
 			this.metrics.errors.recoveryRate =
-				(this.metrics.errors.recoveryRate * (totalRecoveries - 1) + 100) /
-				totalRecoveries;
+				(this.metrics.errors.recoveryRate * (totalRecoveries - 1) + 100) / totalRecoveries;
 		} else {
 			this.metrics.errors.recoveryRate =
-				(this.metrics.errors.recoveryRate * (totalRecoveries - 1) + 0) /
-				totalRecoveries;
+				(this.metrics.errors.recoveryRate * (totalRecoveries - 1) + 0) / totalRecoveries;
 		}
 
 		this.metrics.errors.averageRecoveryTime =
-			(this.metrics.errors.averageRecoveryTime * (totalRecoveries - 1) +
-				recoveryTime) /
+			(this.metrics.errors.averageRecoveryTime * (totalRecoveries - 1) + recoveryTime) /
 			totalRecoveries;
 
 		// Log recovery performance
@@ -371,9 +355,7 @@ export class NLUPerformanceTracker {
 		const processingScore = this.calculateProcessingScore();
 		factors.push({
 			impact:
-				processingScore < 70
-					? 'High processing times detected'
-					: 'Processing times within targets',
+				processingScore < 70 ? 'High processing times detected' : 'Processing times within targets',
 			name: 'Processing Performance',
 			score: processingScore,
 			weight: 0.3,
@@ -382,10 +364,7 @@ export class NLUPerformanceTracker {
 		// Accuracy score
 		const accuracyScore = this.calculateAccuracyScore();
 		factors.push({
-			impact:
-				accuracyScore < 80
-					? 'Accuracy below target'
-					: 'Accuracy within acceptable range',
+			impact: accuracyScore < 80 ? 'Accuracy below target' : 'Accuracy within acceptable range',
 			name: 'Accuracy',
 			score: accuracyScore,
 			weight: 0.4,
@@ -394,10 +373,7 @@ export class NLUPerformanceTracker {
 		// System health score
 		const systemScore = this.calculateSystemScore();
 		factors.push({
-			impact:
-				systemScore < 70
-					? 'System resources under stress'
-					: 'System resources healthy',
+			impact: systemScore < 70 ? 'System resources under stress' : 'System resources healthy',
 			name: 'System Health',
 			score: systemScore,
 			weight: 0.2,
@@ -406,20 +382,14 @@ export class NLUPerformanceTracker {
 		// Error handling score
 		const errorScore = this.calculateErrorScore();
 		factors.push({
-			impact:
-				errorScore < 60
-					? 'High error rate detected'
-					: 'Error rate within acceptable range',
+			impact: errorScore < 60 ? 'High error rate detected' : 'Error rate within acceptable range',
 			name: 'Error Handling',
 			score: errorScore,
 			weight: 0.1,
 		});
 
 		// Calculate overall score
-		const overall = factors.reduce(
-			(sum, factor) => sum + factor.score * factor.weight,
-			0,
-		);
+		const overall = factors.reduce((sum, factor) => sum + factor.score * factor.weight, 0);
 
 		return {
 			accuracy: Math.round(accuracyScore),
@@ -445,34 +415,20 @@ export class NLUPerformanceTracker {
 		const metrics = this.getCurrentMetrics();
 
 		// Processing recommendations
-		if (
-			metrics.processing.p95ProcessingTime >
-			this.config.performanceTargets.p95ProcessingTime
-		) {
-			recommendations.push(
-				'Consider optimizing NLU processing pipeline to reduce P95 latency',
-			);
+		if (metrics.processing.p95ProcessingTime > this.config.performanceTargets.p95ProcessingTime) {
+			recommendations.push('Consider optimizing NLU processing pipeline to reduce P95 latency');
 		}
 
 		if (metrics.processing.averageProcessingTime > 300) {
-			recommendations.push(
-				'Average processing time is high, consider performance optimizations',
-			);
+			recommendations.push('Average processing time is high, consider performance optimizations');
 		}
 
 		// Accuracy recommendations
-		if (
-			metrics.accuracy.overallAccuracy <
-			this.config.performanceTargets.averageAccuracy
-		) {
-			recommendations.push(
-				'Overall accuracy is below target, consider improving training data',
-			);
+		if (metrics.accuracy.overallAccuracy < this.config.performanceTargets.averageAccuracy) {
+			recommendations.push('Overall accuracy is below target, consider improving training data');
 		}
 
-		for (const [intent, accuracy] of Object.entries(
-			metrics.accuracy.intentAccuracy,
-		)) {
+		for (const [intent, accuracy] of Object.entries(metrics.accuracy.intentAccuracy)) {
 			if (accuracy < 80) {
 				recommendations.push(
 					`Intent "${intent}" has low accuracy (${accuracy.toFixed(1)}%), consider adding more training examples`,
@@ -482,28 +438,20 @@ export class NLUPerformanceTracker {
 
 		// Cache recommendations
 		if (metrics.cache.hitRate < 70) {
-			recommendations.push(
-				'Cache hit rate is low, consider increasing cache size or TTL',
-			);
+			recommendations.push('Cache hit rate is low, consider increasing cache size or TTL');
 		}
 
 		// System recommendations
 		if (metrics.system.memoryUsage > 400) {
-			recommendations.push(
-				'Memory usage is high, consider optimizing memory management',
-			);
+			recommendations.push('Memory usage is high, consider optimizing memory management');
 		}
 
 		if (metrics.errors.errorRate > 10) {
-			recommendations.push(
-				'Error rate is high, review error patterns and improve error handling',
-			);
+			recommendations.push('Error rate is high, review error patterns and improve error handling');
 		}
 
 		// Regional recommendations
-		for (const [region, accuracy] of Object.entries(
-			metrics.regional.accuracyByRegion,
-		)) {
+		for (const [region, accuracy] of Object.entries(metrics.regional.accuracyByRegion)) {
 			if (accuracy < 75) {
 				recommendations.push(
 					`Regional accuracy for "${region}" is low (${accuracy.toFixed(1)}%), consider adding regional training data`,
@@ -517,9 +465,7 @@ export class NLUPerformanceTracker {
 	/**
 	 * Generate performance report
 	 */
-	generatePerformanceReport(
-		_timeRange: 'hour' | 'day' | 'week' | 'month' = 'day',
-	): {
+	generatePerformanceReport(_timeRange: 'hour' | 'day' | 'week' | 'month' = 'day'): {
 		summary: {
 			totalRequests: number;
 			successRate: number;
@@ -549,18 +495,17 @@ export class NLUPerformanceTracker {
 			overallAccuracy: metrics.accuracy.overallAccuracy,
 			successRate:
 				metrics.processing.totalRequests > 0
-					? (metrics.processing.successfulRequests /
-							metrics.processing.totalRequests) *
-						100
+					? (metrics.processing.successfulRequests / metrics.processing.totalRequests) * 100
 					: 0,
 			totalRequests: metrics.processing.totalRequests,
 		};
 
 		// Calculate trends (simplified)
 		const trends = {
-			accuracy: this.calculateTrend(
-				Object.values(metrics.accuracy.intentAccuracy).slice(-5),
-			) as 'improving' | 'stable' | 'degrading',
+			accuracy: this.calculateTrend(Object.values(metrics.accuracy.intentAccuracy).slice(-5)) as
+				| 'improving'
+				| 'stable'
+				| 'degrading',
 			errorRate: this.calculateTrend([metrics.errors.errorRate]) as
 				| 'improving'
 				| 'stable'
@@ -616,7 +561,7 @@ export class NLUPerformanceTracker {
 				averageProcessingTime: 0,
 				failedRequests: 0,
 				maxProcessingTime: 0,
-				minProcessingTime: Infinity,
+				minProcessingTime: Number.POSITIVE_INFINITY,
 				p95ProcessingTime: 0,
 				p99ProcessingTime: 0,
 				requestsPerSecond: 0,
@@ -709,18 +654,11 @@ export class NLUPerformanceTracker {
 
 		// Update processing time statistics
 		processing.averageProcessingTime =
-			(processing.averageProcessingTime * (processing.totalRequests - 1) +
-				request.processingTime) /
+			(processing.averageProcessingTime * (processing.totalRequests - 1) + request.processingTime) /
 			processing.totalRequests;
 
-		processing.minProcessingTime = Math.min(
-			processing.minProcessingTime,
-			request.processingTime,
-		);
-		processing.maxProcessingTime = Math.max(
-			processing.maxProcessingTime,
-			request.processingTime,
-		);
+		processing.minProcessingTime = Math.min(processing.minProcessingTime, request.processingTime);
+		processing.maxProcessingTime = Math.max(processing.maxProcessingTime, request.processingTime);
 
 		// Calculate percentiles
 		const sortedTimes = [...this.processingTimes].sort((a, b) => a - b);
@@ -732,9 +670,7 @@ export class NLUPerformanceTracker {
 
 		// Calculate requests per second (last minute)
 		const oneMinuteAgo = Date.now() - 60000;
-		const recentRequests = this.requestBuffer.filter(
-			(r) => r.timestamp.getTime() > oneMinuteAgo,
-		);
+		const recentRequests = this.requestBuffer.filter((r) => r.timestamp.getTime() > oneMinuteAgo);
 		processing.requestsPerSecond = recentRequests.length / 60;
 
 		// Update regional metrics
@@ -746,8 +682,7 @@ export class NLUPerformanceTracker {
 				(this.metrics.regional.processingTimeByRegion[request.region] *
 					(this.metrics.regional.requestVolumeByRegion[request.region] || 0) +
 					request.processingTime) /
-				((this.metrics.regional.requestVolumeByRegion[request.region] || 0) +
-					1);
+				((this.metrics.regional.requestVolumeByRegion[request.region] || 0) + 1);
 
 			this.metrics.regional.requestVolumeByRegion[request.region] =
 				(this.metrics.regional.requestVolumeByRegion[request.region] || 0) + 1;
@@ -787,16 +722,12 @@ export class NLUPerformanceTracker {
 			totalIntentRequests;
 
 		// Update overall accuracy
-		const totalRequests = Object.values(accuracy.intentAccuracy).reduce(
-			(sum, acc) => sum + acc,
-			0,
-		);
+		const totalRequests = Object.values(accuracy.intentAccuracy).reduce((sum, acc) => sum + acc, 0);
 		const totalCorrect = Object.values(accuracy.intentAccuracy).reduce(
 			(sum, acc) => sum + (acc * totalRequests) / 100,
 			0,
 		);
-		accuracy.overallAccuracy =
-			totalRequests > 0 ? totalCorrect / totalRequests : 0;
+		accuracy.overallAccuracy = totalRequests > 0 ? totalCorrect / totalRequests : 0;
 
 		// Update regional accuracy
 		if (request.region) {
@@ -804,11 +735,9 @@ export class NLUPerformanceTracker {
 				this.metrics.regional.accuracyByRegion[request.region] = 0;
 			}
 
-			const regionalTotal =
-				this.metrics.regional.requestVolumeByRegion[request.region] || 0;
+			const regionalTotal = this.metrics.regional.requestVolumeByRegion[request.region] || 0;
 			this.metrics.regional.accuracyByRegion[request.region] =
-				(this.metrics.regional.accuracyByRegion[request.region] *
-					(regionalTotal - 1) +
+				(this.metrics.regional.accuracyByRegion[request.region] * (regionalTotal - 1) +
 					(request.success ? 100 : 0)) /
 				regionalTotal;
 		}
@@ -842,10 +771,7 @@ export class NLUPerformanceTracker {
 
 			// Update error rate
 			errors.errorRate =
-				(errors.errorRate *
-					(errors.errorRate > 0
-						? this.metrics.processing.totalRequests - 1
-						: 0) +
+				(errors.errorRate * (errors.errorRate > 0 ? this.metrics.processing.totalRequests - 1 : 0) +
 					1) /
 				this.metrics.processing.totalRequests;
 		}
@@ -858,17 +784,13 @@ export class NLUPerformanceTracker {
 		// Update error rate if not already calculated
 		if (this.metrics.processing.totalRequests > 0) {
 			this.metrics.errors.errorRate =
-				(this.metrics.processing.failedRequests /
-					this.metrics.processing.totalRequests) *
-				100;
+				(this.metrics.processing.failedRequests / this.metrics.processing.totalRequests) * 100;
 		}
 	}
 
 	private checkAlerts(request: NLURequestMetrics): void {
 		// Processing time alert
-		if (
-			request.processingTime > this.config.alertThresholds.maxProcessingTime
-		) {
+		if (request.processingTime > this.config.alertThresholds.maxProcessingTime) {
 			this.createAlert({
 				currentValue: request.processingTime,
 				message: `Processing time of ${request.processingTime}ms exceeds threshold of ${this.config.alertThresholds.maxProcessingTime}ms`,
@@ -920,9 +842,7 @@ export class NLUPerformanceTracker {
 		}
 
 		// Check accuracy
-		if (
-			metrics.accuracy.overallAccuracy < this.config.alertThresholds.minAccuracy
-		) {
+		if (metrics.accuracy.overallAccuracy < this.config.alertThresholds.minAccuracy) {
 			this.createAlert({
 				currentValue: metrics.accuracy.overallAccuracy,
 				message: `Overall accuracy of ${metrics.accuracy.overallAccuracy.toFixed(1)}% is below threshold of ${this.config.alertThresholds.minAccuracy}%`,
@@ -934,9 +854,7 @@ export class NLUPerformanceTracker {
 		}
 	}
 
-	private createAlert(
-		alertData: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>,
-	): void {
+	private createAlert(alertData: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>): void {
 		const alert: PerformanceAlert = {
 			id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 			timestamp: new Date(),
@@ -978,9 +896,7 @@ export class NLUPerformanceTracker {
 
 			// Keep only recent snapshots (last 24 hours)
 			const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-			this.snapshots = this.snapshots.filter(
-				(s) => s.timestamp.getTime() > oneDayAgo,
-			);
+			this.snapshots = this.snapshots.filter((s) => s.timestamp.getTime() > oneDayAgo);
 
 			logger.debug('Performance metrics collected', {
 				averageProcessingTime: this.metrics.processing.averageProcessingTime,
@@ -1022,9 +938,7 @@ export class NLUPerformanceTracker {
 
 		// TODO: Implement performance metrics persistence via API client when database tables are created
 		// For now, metrics are kept in-memory only
-		logger.debug(
-			'Performance metrics tracking (persistence pending table creation)',
-		);
+		logger.debug('Performance metrics tracking (persistence pending table creation)');
 	}
 
 	private calculateProcessingScore(): number {
@@ -1032,10 +946,7 @@ export class NLUPerformanceTracker {
 		let score = 100;
 
 		// P95 processing time score
-		if (
-			processing.p95ProcessingTime >
-			this.config.performanceTargets.p95ProcessingTime
-		) {
+		if (processing.p95ProcessingTime > this.config.performanceTargets.p95ProcessingTime) {
 			score -= 30;
 		}
 
@@ -1063,12 +974,8 @@ export class NLUPerformanceTracker {
 		let score = 100;
 
 		// Overall accuracy score
-		if (
-			accuracy.overallAccuracy < this.config.performanceTargets.averageAccuracy
-		) {
-			score -=
-				this.config.performanceTargets.averageAccuracy -
-				accuracy.overallAccuracy;
+		if (accuracy.overallAccuracy < this.config.performanceTargets.averageAccuracy) {
+			score -= this.config.performanceTargets.averageAccuracy - accuracy.overallAccuracy;
 		}
 
 		// Confidence distribution score
@@ -1124,9 +1031,7 @@ export class NLUPerformanceTracker {
 		return Math.max(0, score);
 	}
 
-	private calculateTrend(
-		values: number[],
-	): 'improving' | 'stable' | 'degrading' {
+	private calculateTrend(values: number[]): 'improving' | 'stable' | 'degrading' {
 		if (values.length < 3) {
 			return 'stable';
 		}

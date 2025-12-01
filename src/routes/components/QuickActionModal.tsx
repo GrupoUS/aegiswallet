@@ -1,9 +1,4 @@
-import {
-	ArrowDownCircle,
-	ArrowRightCircle,
-	ArrowUpCircle,
-	Loader2,
-} from 'lucide-react';
+import { ArrowDownCircle, ArrowRightCircle, ArrowUpCircle, Loader2 } from 'lucide-react';
 import type React from 'react';
 import { useId, useState } from 'react';
 import { toast } from 'sonner';
@@ -139,9 +134,7 @@ export function QuickActionModal({
 				await createTransactionMutation.mutateAsync({
 					accountId,
 					amount: -val,
-					description:
-						description ||
-						`Transferência para ${targetAccount.institution_name}`,
+					description: description || `Transferência para ${targetAccount.institution_name}`,
 					transactionType: 'transfer',
 					status: 'posted',
 				});
@@ -150,8 +143,7 @@ export function QuickActionModal({
 				await createTransactionMutation.mutateAsync({
 					accountId: targetAccountId,
 					amount: val,
-					description:
-						description || `Transferência de ${sourceAccount.institution_name}`,
+					description: description || `Transferência de ${sourceAccount.institution_name}`,
 					transactionType: 'transfer',
 					status: 'posted',
 				});
@@ -214,11 +206,7 @@ export function QuickActionModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent
-				className="sm:max-w-[425px]"
-				role="dialog"
-				aria-modal="true"
-			>
+			<DialogContent className="sm:max-w-[425px]" role="dialog" aria-modal="true">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2" id={titleId}>
 						{getIcon()}
@@ -266,11 +254,7 @@ export function QuickActionModal({
 									<SelectItem key={account.id} value={account.id}>
 										{account.institution_name}
 										{account.account_mask ? ` (${account.account_mask})` : ''} -{' '}
-										<FinancialAmount
-											amount={Number(account.balance)}
-											showSign={false}
-											size="sm"
-										/>
+										<FinancialAmount amount={Number(account.balance)} showSign={false} size="sm" />
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -280,11 +264,7 @@ export function QuickActionModal({
 					{actionType === 'transfer' && (
 						<div className="grid gap-2">
 							<Label htmlFor={targetAccountId_}>Conta de Destino</Label>
-							<Select
-								value={targetAccountId}
-								onValueChange={setTargetAccountId}
-								required
-							>
+							<Select value={targetAccountId} onValueChange={setTargetAccountId} required>
 								<SelectTrigger id={targetAccountId_}>
 									<SelectValue placeholder="Selecione a conta" />
 								</SelectTrigger>
@@ -294,9 +274,7 @@ export function QuickActionModal({
 										.map((account) => (
 											<SelectItem key={account.id} value={account.id}>
 												{account.institution_name}
-												{account.account_mask
-													? ` (${account.account_mask})`
-													: ''}
+												{account.account_mask ? ` (${account.account_mask})` : ''}
 											</SelectItem>
 										))}
 								</SelectContent>
@@ -327,16 +305,10 @@ export function QuickActionModal({
 						<Button
 							type="submit"
 							disabled={isLoading}
-							aria-label={
-								isLoading ? 'Processando operação' : 'Confirmar operação'
-							}
+							aria-label={isLoading ? 'Processando operação' : 'Confirmar operação'}
 							aria-busy={isLoading}
 						>
-							{isLoading ? (
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-							) : (
-								'Confirmar'
-							)}
+							{isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Confirmar'}
 						</Button>
 					</DialogFooter>
 				</form>

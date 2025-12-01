@@ -170,8 +170,7 @@ export const ptBR: Translation = {
 	},
 	errors: {
 		authentication: 'Erro de autenticação. Faça login novamente.',
-		microphoneAccess:
-			'Permissão para microfone negada. Habilite nas configurações do navegador.',
+		microphoneAccess: 'Permissão para microfone negada. Habilite nas configurações do navegador.',
 		network: 'Erro de conexão. Verifique sua internet.',
 		notFound: 'Página não encontrada.',
 		permission: 'Você não tem permissão para realizar esta ação.',
@@ -305,10 +304,7 @@ export const brazilianLocalization = {
 	/**
 	 * Format date to Brazilian format
 	 */
-	formatDate: (
-		date: Date,
-		format: 'full' | 'short' | 'time' = 'full',
-	): string => {
+	formatDate: (date: Date, format: 'full' | 'short' | 'time' = 'full'): string => {
 		switch (format) {
 			case 'full':
 				return date.toLocaleDateString('pt-BR');
@@ -379,27 +375,27 @@ export const brazilianLocalization = {
 		let remainder: number;
 
 		for (let i = 1; i <= 9; i++) {
-			sum += parseInt(cleanedCPF.substring(i - 1, i), 10) * (11 - i);
+			sum += Number.parseInt(cleanedCPF.substring(i - 1, i), 10) * (11 - i);
 		}
 
 		remainder = (sum * 10) % 11;
 		if (remainder === 10 || remainder === 11) {
 			remainder = 0;
 		}
-		if (remainder !== parseInt(cleanedCPF.substring(9, 10), 10)) {
+		if (remainder !== Number.parseInt(cleanedCPF.substring(9, 10), 10)) {
 			return false;
 		}
 
 		sum = 0;
 		for (let i = 1; i <= 10; i++) {
-			sum += parseInt(cleanedCPF.substring(i - 1, i), 10) * (12 - i);
+			sum += Number.parseInt(cleanedCPF.substring(i - 1, i), 10) * (12 - i);
 		}
 
 		remainder = (sum * 10) % 11;
 		if (remainder === 10 || remainder === 11) {
 			remainder = 0;
 		}
-		if (remainder !== parseInt(cleanedCPF.substring(10, 11), 10)) {
+		if (remainder !== Number.parseInt(cleanedCPF.substring(10, 11), 10)) {
 			return false;
 		}
 
@@ -420,7 +416,7 @@ export const brazilianLocalization = {
 		let sum = 0;
 		let weight = 5;
 		for (let i = 0; i < 12; i++) {
-			sum += parseInt(cleanedCNPJ[i], 10) * weight;
+			sum += Number.parseInt(cleanedCNPJ[i], 10) * weight;
 			weight = weight === 2 ? 9 : weight - 1;
 		}
 
@@ -431,7 +427,7 @@ export const brazilianLocalization = {
 		sum = 0;
 		weight = 6;
 		for (let i = 0; i < 13; i++) {
-			sum += parseInt(cleanedCNPJ[i], 10) * weight;
+			sum += Number.parseInt(cleanedCNPJ[i], 10) * weight;
 			weight = weight === 2 ? 9 : weight - 1;
 		}
 
@@ -439,8 +435,8 @@ export const brazilianLocalization = {
 		const digit2 = remainder < 2 ? 0 : 11 - remainder;
 
 		return (
-			digit1 === parseInt(cleanedCNPJ[12], 10) &&
-			digit2 === parseInt(cleanedCNPJ[13], 10)
+			digit1 === Number.parseInt(cleanedCNPJ[12], 10) &&
+			digit2 === Number.parseInt(cleanedCNPJ[13], 10)
 		);
 	},
 

@@ -66,9 +66,7 @@ describe('Voice Component Type Safety', () => {
 
 			expect(screen.getByText('Budget information')).toBeInTheDocument();
 			expect(screen.getByText('Disponível: R$ 500.00')).toBeInTheDocument();
-			expect(
-				screen.getByText('Gasto: R$ 800.00 / R$ 1,300.00'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Gasto: R$ 800.00 / R$ 1,300.00')).toBeInTheDocument();
 			expect(screen.getByText('Utilizado: 61.5%')).toBeInTheDocument();
 			expect(screen.getByText('Categoria: Alimentação')).toBeInTheDocument();
 		});
@@ -178,9 +176,7 @@ describe('Voice Component Type Safety', () => {
 
 			expect(screen.getByText('Incoming information')).toBeInTheDocument();
 			expect(screen.getByText('Recebimentos: R$ 6,200.00')).toBeInTheDocument();
-			expect(
-				screen.getByText('Próximo: Salário - R$ 5,000.00'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Próximo: Salário - R$ 5,000.00')).toBeInTheDocument();
 			expect(screen.getByText('Salário: R$ 5,000.00')).toBeInTheDocument();
 			expect(screen.getByText('Freelance: R$ 1,200.00')).toBeInTheDocument();
 		});
@@ -206,9 +202,7 @@ describe('Voice Component Type Safety', () => {
 			);
 
 			expect(screen.getByText('Projection information')).toBeInTheDocument();
-			expect(
-				screen.getByText('Projeção (mensal): R$ 3,200.00'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Projeção (mensal): R$ 3,200.00')).toBeInTheDocument();
 			expect(screen.getByText('Saldo atual: R$ 1,500.00')).toBeInTheDocument();
 			expect(screen.getByText('Variação: +R$ 1,700.00')).toBeInTheDocument();
 			expect(screen.getByText('Confiança: 85%')).toBeInTheDocument();
@@ -231,15 +225,9 @@ describe('Voice Component Type Safety', () => {
 			);
 
 			expect(screen.getByText('Success')).toBeInTheDocument();
-			expect(
-				screen.getByText('Operação realizada com sucesso'),
-			).toBeInTheDocument();
-			expect(
-				screen.getByText('Ação: Transferência enviada'),
-			).toBeInTheDocument();
-			expect(
-				screen.getByText('O valor será creditado em até 2 dias úteis'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Operação realizada com sucesso')).toBeInTheDocument();
+			expect(screen.getByText('Ação: Transferência enviada')).toBeInTheDocument();
+			expect(screen.getByText('O valor será creditado em até 2 dias úteis')).toBeInTheDocument();
 		});
 
 		it('should handle error responses', () => {
@@ -248,11 +236,7 @@ describe('Voice Component Type Safety', () => {
 				details: 'Saldo insuficiente para completar a operação',
 				message: 'Falha na transferência',
 				recoverable: true,
-				suggestedActions: [
-					'Verificar saldo disponível',
-					'Realizar depósito',
-					'Tentar valor menor',
-				],
+				suggestedActions: ['Verificar saldo disponível', 'Realizar depósito', 'Tentar valor menor'],
 			};
 
 			render(
@@ -265,19 +249,11 @@ describe('Voice Component Type Safety', () => {
 
 			expect(screen.getByText('Error')).toBeInTheDocument();
 			expect(screen.getByText('Falha na transferência')).toBeInTheDocument();
-			expect(
-				screen.getByText('Código: INSUFFICIENT_FUNDS'),
-			).toBeInTheDocument();
-			expect(
-				screen.getByText('Saldo insuficiente para completar a operação'),
-			).toBeInTheDocument();
-			expect(
-				screen.getByText('Este erro pode ser recuperado'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Código: INSUFFICIENT_FUNDS')).toBeInTheDocument();
+			expect(screen.getByText('Saldo insuficiente para completar a operação')).toBeInTheDocument();
+			expect(screen.getByText('Este erro pode ser recuperado')).toBeInTheDocument();
 			expect(screen.getByText('Sugestões:')).toBeInTheDocument();
-			expect(
-				screen.getByText('• Verificar saldo disponível'),
-			).toBeInTheDocument();
+			expect(screen.getByText('• Verificar saldo disponível')).toBeInTheDocument();
 			expect(screen.getByText('• Realizar depósito')).toBeInTheDocument();
 			expect(screen.getByText('• Tentar valor menor')).toBeInTheDocument();
 		});

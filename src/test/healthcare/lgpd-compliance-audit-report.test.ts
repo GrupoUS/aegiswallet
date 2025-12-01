@@ -49,9 +49,7 @@ vi.mock('@/lib/compliance/auditReportGenerator', () => ({
 	}),
 	validateCompliance: vi.fn().mockResolvedValue({
 		criticalIssues: [],
-		nextAuditDate: new Date(
-			Date.now() + 90 * 24 * 60 * 60 * 1000,
-		).toISOString(),
+		nextAuditDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
 		overallScore: 96,
 		recommendations: [],
 	}),
@@ -107,9 +105,7 @@ const LGDComplianceAuditReport = () => {
 	const [reportData, setReportData] = React.useState({
 		auditPeriod: {
 			endDate: new Date().toISOString().split('T')[0],
-			startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-				.toISOString()
-				.split('T')[0],
+			startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 		},
 		auditor: 'Test Auditor',
 		complianceScore: 0,
@@ -186,26 +182,18 @@ const LGDComplianceAuditReport = () => {
 		const identifiedIssues = [
 			{
 				category: 'Data Minimization',
-				deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-					.toISOString()
-					.split('T')[0],
-				description:
-					'Algumas coleta de dados excessivos detectadas em formulários de pacientes',
+				deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+				description: 'Algumas coleta de dados excessivos detectadas em formulários de pacientes',
 				id: 'ISS-001',
-				recommendation:
-					'Revisar formulários para coletar apenas dados essenciais',
+				recommendation: 'Revisar formulários para coletar apenas dados essenciais',
 				severity: 'medium' as const,
 			},
 			{
 				category: 'Data Subject Rights',
-				deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-					.toISOString()
-					.split('T')[0],
-				description:
-					'Tempo de resposta para solicitações de dados pode ser otimizado',
+				deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+				description: 'Tempo de resposta para solicitações de dados pode ser otimizado',
 				id: 'ISS-002',
-				recommendation:
-					'Implementar sistema automatizado para resposta mais rápida',
+				recommendation: 'Implementar sistema automatizado para resposta mais rápida',
 				severity: 'low' as const,
 			},
 		];
@@ -219,26 +207,21 @@ const LGDComplianceAuditReport = () => {
 				description:
 					'Implementar monitoramento em tempo real para tentativas de acesso não autorizadas',
 				id: 'REC-001',
-				impact:
-					'Aumenta detecção de ameaças em 40% e reduz tempo de resposta em 60%',
-				implementation:
-					'Configurar sistema SIEM com alertas automáticos para atividades suspeitas',
+				impact: 'Aumenta detecção de ameaças em 40% e reduz tempo de resposta em 60%',
+				implementation: 'Configurar sistema SIEM com alertas automáticos para atividades suspeitas',
 				priority: 'immediate' as const,
 			},
 			{
 				category: 'Process Optimization',
 				description: 'Automatizar validações de conformidade LGPD',
 				id: 'REC-002',
-				impact:
-					'Reduz erros de conformidade em 95% e melhora eficiência em 80%',
-				implementation:
-					'Implementar validação automatizada em tempo real durante coleta de dados',
+				impact: 'Reduz erros de conformidade em 95% e melhora eficiência em 80%',
+				implementation: 'Implementar validação automatizada em tempo real durante coleta de dados',
 				priority: 'short-term' as const,
 			},
 			{
 				category: 'Privacy Enhancement',
-				description:
-					'Implementar criptografia homomórfica para análises de dados',
+				description: 'Implementar criptografia homomórfica para análises de dados',
 				id: 'REC-003',
 				impact: 'Permite análises avançadas mantendo 100% de privacidade',
 				implementation:
@@ -279,19 +262,10 @@ const LGDComplianceAuditReport = () => {
 			auditTrail: 'Completo e digitalmente assinado',
 			detailedMetrics: complianceMetrics,
 			executiveSummary: {
-				complianceStatus:
-					complianceMetrics.overallCompliance >= 90
-						? 'CONFORME'
-						: 'REQUER ATENÇÃO',
-				criticalIssuesCount: criticalIssues.filter(
-					(issue) => issue.severity === 'critical',
-				).length,
-				highRiskIssuesCount: criticalIssues.filter(
-					(issue) => issue.severity === 'high',
-				).length,
-				nextAuditDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-					.toISOString()
-					.split('T')[0],
+				complianceStatus: complianceMetrics.overallCompliance >= 90 ? 'CONFORME' : 'REQUER ATENÇÃO',
+				criticalIssuesCount: criticalIssues.filter((issue) => issue.severity === 'critical').length,
+				highRiskIssuesCount: criticalIssues.filter((issue) => issue.severity === 'high').length,
+				nextAuditDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 				overallCompliance: `${complianceMetrics.overallCompliance}%`,
 			},
 			header: {
@@ -309,340 +283,183 @@ const LGDComplianceAuditReport = () => {
 		return reportContent;
 	};
 
-	return React.createElement(
-		'div',
-		{ 'data-testid': 'lgpd-compliance-audit-report' },
-		[
-			React.createElement(
-				'h1',
-				{ key: 'title' },
-				'Relatório de Auditoria de Conformidade LGPD',
-			),
+	return React.createElement('div', { 'data-testid': 'lgpd-compliance-audit-report' }, [
+		React.createElement('h1', { key: 'title' }, 'Relatório de Auditoria de Conformidade LGPD'),
 
-			// Report Header
-			React.createElement(
-				'div',
-				{ 'data-testid': 'report-header', key: 'report-header' },
-				[
+		// Report Header
+		React.createElement('div', { 'data-testid': 'report-header', key: 'report-header' }, [
+			React.createElement('h2', { key: 'header-title' }, 'Informações do Relatório'),
+			React.createElement('div', { key: 'report-info' }, [
+				React.createElement(
+					'div',
+					{ 'data-testid': 'report-id', key: 'report-id' },
+					`ID do Relatório: ${reportData.reportId || 'Não gerado'}`,
+				),
+				React.createElement(
+					'div',
+					{ 'data-testid': 'generated-at', key: 'generated-at' },
+					`Gerado em: ${reportData.generatedAt || 'Não gerado'}`,
+				),
+				React.createElement('div', { key: 'version' }, `Versão: ${reportData.version}`),
+				React.createElement('div', { key: 'auditor' }, `Auditor: ${reportData.auditor}`),
+				React.createElement(
+					'div',
+					{ key: 'organization' },
+					`Organização: ${reportData.organization}`,
+				),
+				React.createElement('div', { key: 'audit-period' }, [
+					'Período de Auditoria: ',
 					React.createElement(
-						'h2',
-						{ key: 'header-title' },
-						'Informações do Relatório',
+						'span',
+						{ key: 'period' },
+						`${reportData.auditPeriod.startDate} a ${reportData.auditPeriod.endDate}`,
 					),
-					React.createElement('div', { key: 'report-info' }, [
-						React.createElement(
-							'div',
-							{ 'data-testid': 'report-id', key: 'report-id' },
-							`ID do Relatório: ${reportData.reportId || 'Não gerado'}`,
-						),
-						React.createElement(
-							'div',
-							{ 'data-testid': 'generated-at', key: 'generated-at' },
-							`Gerado em: ${reportData.generatedAt || 'Não gerado'}`,
-						),
-						React.createElement(
-							'div',
-							{ key: 'version' },
-							`Versão: ${reportData.version}`,
-						),
-						React.createElement(
-							'div',
-							{ key: 'auditor' },
-							`Auditor: ${reportData.auditor}`,
-						),
-						React.createElement(
-							'div',
-							{ key: 'organization' },
-							`Organização: ${reportData.organization}`,
-						),
-						React.createElement('div', { key: 'audit-period' }, [
-							'Período de Auditoria: ',
-							React.createElement(
-								'span',
-								{ key: 'period' },
-								`${reportData.auditPeriod.startDate} a ${reportData.auditPeriod.endDate}`,
-							),
-						]),
-					]),
-				],
-			),
+				]),
+			]),
+		]),
 
-			// Executive Summary
-			React.createElement(
-				'div',
-				{ 'data-testid': 'executive-summary', key: 'executive-summary' },
-				[
-					React.createElement(
-						'h2',
-						{ key: 'summary-title' },
-						'Resumo Executivo',
-					),
-					React.createElement('div', { key: 'summary-content' }, [
+		// Executive Summary
+		React.createElement('div', { 'data-testid': 'executive-summary', key: 'executive-summary' }, [
+			React.createElement('h2', { key: 'summary-title' }, 'Resumo Executivo'),
+			React.createElement('div', { key: 'summary-content' }, [
+				React.createElement(
+					'div',
+					{
+						'data-testid': 'overall-compliance-score',
+						key: 'overall-score',
+					},
+					[
+						'Pontuação Geral de Conformidade: ',
 						React.createElement(
-							'div',
+							'span',
 							{
-								'data-testid': 'overall-compliance-score',
-								key: 'overall-score',
+								key: 'score',
+								style: {
+									color:
+										complianceMetrics.overallCompliance >= 90
+											? 'green'
+											: complianceMetrics.overallCompliance >= 70
+												? 'orange'
+												: 'red',
+									fontSize: '1.2em',
+									fontWeight: 'bold',
+								},
 							},
-							[
-								'Pontuação Geral de Conformidade: ',
-								React.createElement(
-									'span',
-									{
-										key: 'score',
-										style: {
-											color:
-												complianceMetrics.overallCompliance >= 90
-													? 'green'
-													: complianceMetrics.overallCompliance >= 70
-														? 'orange'
-														: 'red',
-											fontSize: '1.2em',
-											fontWeight: 'bold',
-										},
-									},
-									`${complianceMetrics.overallCompliance}%`,
-								),
-							],
+							`${complianceMetrics.overallCompliance}%`,
 						),
-						React.createElement(
-							'div',
-							{ 'data-testid': 'compliance-status', key: 'status' },
-							[
-								'Status de Conformidade: ',
-								React.createElement(
-									'span',
-									{
-										key: 'status-value',
-										style: {
-											color:
-												complianceMetrics.overallCompliance >= 90
-													? 'green'
-													: 'red',
-											fontWeight: 'bold',
-										},
-									},
-									complianceMetrics.overallCompliance >= 90
-										? 'CONFORME'
-										: 'REQUER ATENÇÃO',
-								),
-							],
-						),
-						React.createElement(
-							'div',
-							{ 'data-testid': 'next-audit-date', key: 'next-audit' },
-							[
-								'Próxima Auditoria: ',
-								new Date(
-									Date.now() + 90 * 24 * 60 * 60 * 1000,
-								).toLocaleDateString('pt-BR'),
-							],
-						),
-					]),
-				],
-			),
+					],
+				),
+				React.createElement('div', { 'data-testid': 'compliance-status', key: 'status' }, [
+					'Status de Conformidade: ',
+					React.createElement(
+						'span',
+						{
+							key: 'status-value',
+							style: {
+								color: complianceMetrics.overallCompliance >= 90 ? 'green' : 'red',
+								fontWeight: 'bold',
+							},
+						},
+						complianceMetrics.overallCompliance >= 90 ? 'CONFORME' : 'REQUER ATENÇÃO',
+					),
+				]),
+				React.createElement('div', { 'data-testid': 'next-audit-date', key: 'next-audit' }, [
+					'Próxima Auditoria: ',
+					new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+				]),
+			]),
+		]),
 
-			// Compliance Metrics
+		// Compliance Metrics
+		React.createElement('div', { 'data-testid': 'compliance-metrics', key: 'compliance-metrics' }, [
+			React.createElement('h2', { key: 'metrics-title' }, 'Métricas de Conformidade'),
 			React.createElement(
 				'div',
-				{ 'data-testid': 'compliance-metrics', key: 'compliance-metrics' },
-				[
-					React.createElement(
-						'h2',
-						{ key: 'metrics-title' },
-						'Métricas de Conformidade',
-					),
+				{ 'data-testid': 'metrics-grid', key: 'metrics-grid' },
+				Object.entries(complianceMetrics).map(([category, score]) =>
 					React.createElement(
 						'div',
-						{ 'data-testid': 'metrics-grid', key: 'metrics-grid' },
-						Object.entries(complianceMetrics).map(([category, score]) =>
+						{
+							'data-testid': `metric-${category}`,
+							key: category,
+							style: {
+								border: '1px solid #ccc',
+								borderRadius: '5px',
+								margin: '5px',
+								padding: '10px',
+							},
+						},
+						[
+							React.createElement(
+								'div',
+								{ key: 'category', style: { fontWeight: 'bold' } },
+								category,
+							),
 							React.createElement(
 								'div',
 								{
-									'data-testid': `metric-${category}`,
-									key: category,
+									key: 'score',
 									style: {
-										border: '1px solid #ccc',
+										color: score >= 90 ? 'green' : score >= 70 ? 'orange' : 'red',
+										fontSize: '1.5em',
+									},
+								},
+								`${score}%`,
+							),
+							React.createElement(
+								'div',
+								{
+									key: 'progress',
+									style: {
+										backgroundColor: '#e0e0e0',
 										borderRadius: '5px',
-										margin: '5px',
-										padding: '10px',
+										height: '10px',
+										marginTop: '5px',
+										width: '100%',
 									},
 								},
 								[
-									React.createElement(
-										'div',
-										{ key: 'category', style: { fontWeight: 'bold' } },
-										category,
-									),
-									React.createElement(
-										'div',
-										{
-											key: 'score',
-											style: {
-												color:
-													score >= 90
-														? 'green'
-														: score >= 70
-															? 'orange'
-															: 'red',
-												fontSize: '1.5em',
-											},
+									React.createElement('div', {
+										key: 'progress-bar',
+										style: {
+											backgroundColor:
+												score >= 90 ? '#4CAF50' : score >= 70 ? '#FF9800' : '#F44336',
+											borderRadius: '5px',
+											height: '100%',
+											width: `${score}%`,
 										},
-										`${score}%`,
-									),
-									React.createElement(
-										'div',
-										{
-											key: 'progress',
-											style: {
-												backgroundColor: '#e0e0e0',
-												borderRadius: '5px',
-												height: '10px',
-												marginTop: '5px',
-												width: '100%',
-											},
-										},
-										[
-											React.createElement('div', {
-												key: 'progress-bar',
-												style: {
-													backgroundColor:
-														score >= 90
-															? '#4CAF50'
-															: score >= 70
-																? '#FF9800'
-																: '#F44336',
-													borderRadius: '5px',
-													height: '100%',
-													width: `${score}%`,
-												},
-											}),
-										],
-									),
+									}),
 								],
 							),
-						),
+						],
 					),
-				],
+				),
 			),
+		]),
 
-			// Critical Issues
-			React.createElement(
-				'div',
-				{ 'data-testid': 'critical-issues', key: 'critical-issues' },
-				[
-					React.createElement(
-						'h2',
-						{ key: 'issues-title' },
-						'Problemas Críticos Identificados',
-					),
-					criticalIssues.length === 0
-						? React.createElement(
-								'div',
-								{
-									key: 'no-issues',
-									style: { color: 'green', fontWeight: 'bold' },
-								},
-								'Nenhum problema crítico identificado',
-							)
-						: React.createElement(
-								'div',
-								{ key: 'issues-list' },
-								criticalIssues.map((issue) =>
-									React.createElement(
-										'div',
-										{
-											'data-testid': `issue-${issue.id}`,
-											key: issue.id,
-											style: {
-												border: `2px solid ${issue.severity === 'critical' ? 'red' : issue.severity === 'high' ? 'orange' : 'yellow'}`,
-												borderRadius: '5px',
-												margin: '10px 0',
-												padding: '15px',
-											},
-										},
-										[
-											React.createElement(
-												'div',
-												{ key: 'issue-header', style: { fontWeight: 'bold' } },
-												[
-													React.createElement(
-														'span',
-														{ key: 'category' },
-														`${issue.category} - `,
-													),
-													React.createElement(
-														'span',
-														{
-															key: 'severity',
-															style: {
-																color:
-																	issue.severity === 'critical'
-																		? 'red'
-																		: issue.severity === 'high'
-																			? 'orange'
-																			: 'orange',
-															},
-														},
-														issue.severity.toUpperCase(),
-													),
-												],
-											),
-											React.createElement(
-												'div',
-												{ key: 'description' },
-												issue.description,
-											),
-											React.createElement('div', { key: 'recommendation' }, [
-												React.createElement(
-													'strong',
-													{ key: 'rec-label' },
-													'Recomendação: ',
-												),
-												issue.recommendation,
-											]),
-											React.createElement('div', { key: 'deadline' }, [
-												React.createElement(
-													'strong',
-													{ key: 'deadline-label' },
-													'Prazo: ',
-												),
-												new Date(issue.deadline).toLocaleDateString('pt-BR'),
-											]),
-											React.createElement(
-												'div',
-												{ key: 'severity-footer' },
-												`-${issue.severity.toUpperCase()}`,
-											),
-										],
-									),
-								),
-							),
-				],
-			),
-
-			// Recommendations
-			React.createElement(
-				'div',
-				{ 'data-testid': 'recommendations', key: 'recommendations' },
-				[
-					React.createElement(
-						'h2',
-						{ key: 'rec-title' },
-						'Recomendações de Melhoria',
-					),
-					React.createElement(
+		// Critical Issues
+		React.createElement('div', { 'data-testid': 'critical-issues', key: 'critical-issues' }, [
+			React.createElement('h2', { key: 'issues-title' }, 'Problemas Críticos Identificados'),
+			criticalIssues.length === 0
+				? React.createElement(
 						'div',
-						{ 'data-testid': 'recommendations-list', key: 'rec-list' },
-						recommendations.map((rec) =>
+						{
+							key: 'no-issues',
+							style: { color: 'green', fontWeight: 'bold' },
+						},
+						'Nenhum problema crítico identificado',
+					)
+				: React.createElement(
+						'div',
+						{ key: 'issues-list' },
+						criticalIssues.map((issue) =>
 							React.createElement(
 								'div',
 								{
-									'data-testid': `recommendation-${rec.id}`,
-									key: rec.id,
+									'data-testid': `issue-${issue.id}`,
+									key: issue.id,
 									style: {
-										backgroundColor: '#f9f9f9',
-										border: '1px solid #ddd',
+										border: `2px solid ${issue.severity === 'critical' ? 'red' : issue.severity === 'high' ? 'orange' : 'yellow'}`,
 										borderRadius: '5px',
 										margin: '10px 0',
 										padding: '15px',
@@ -651,151 +468,188 @@ const LGDComplianceAuditReport = () => {
 								[
 									React.createElement(
 										'div',
-										{ key: 'rec-header', style: { fontWeight: 'bold' } },
+										{ key: 'issue-header', style: { fontWeight: 'bold' } },
 										[
+											React.createElement('span', { key: 'category' }, `${issue.category} - `),
 											React.createElement(
 												'span',
 												{
-													key: 'priority',
+													key: 'severity',
 													style: {
 														color:
-															rec.priority === 'immediate'
+															issue.severity === 'critical'
 																? 'red'
-																: rec.priority === 'short-term'
+																: issue.severity === 'high'
 																	? 'orange'
-																	: rec.priority === 'medium-term'
-																		? 'blue'
-																		: 'gray',
-														textTransform: 'uppercase',
+																	: 'orange',
 													},
 												},
-												`${rec.priority.toUpperCase()} - `,
+												issue.severity.toUpperCase(),
 											),
-											rec.category,
 										],
 									),
+									React.createElement('div', { key: 'description' }, issue.description),
+									React.createElement('div', { key: 'recommendation' }, [
+										React.createElement('strong', { key: 'rec-label' }, 'Recomendação: '),
+										issue.recommendation,
+									]),
+									React.createElement('div', { key: 'deadline' }, [
+										React.createElement('strong', { key: 'deadline-label' }, 'Prazo: '),
+										new Date(issue.deadline).toLocaleDateString('pt-BR'),
+									]),
 									React.createElement(
 										'div',
-										{ key: 'description' },
-										rec.description,
+										{ key: 'severity-footer' },
+										`-${issue.severity.toUpperCase()}`,
 									),
-									React.createElement('div', { key: 'implementation' }, [
-										React.createElement(
-											'strong',
-											{ key: 'impl-label' },
-											'Implementação: ',
-										),
-										rec.implementation,
-									]),
-									React.createElement('div', { key: 'impact' }, [
-										React.createElement(
-											'strong',
-											{ key: 'impact-label' },
-											'Impacto: ',
-										),
-										rec.impact,
-									]),
 								],
 							),
 						),
 					),
-				],
-			),
+		]),
 
-			// Export Options
+		// Recommendations
+		React.createElement('div', { 'data-testid': 'recommendations', key: 'recommendations' }, [
+			React.createElement('h2', { key: 'rec-title' }, 'Recomendações de Melhoria'),
 			React.createElement(
 				'div',
-				{ 'data-testid': 'export-options', key: 'export-options' },
-				[
+				{ 'data-testid': 'recommendations-list', key: 'rec-list' },
+				recommendations.map((rec) =>
 					React.createElement(
-						'h2',
-						{ key: 'export-title' },
-						'Exportar Relatório',
+						'div',
+						{
+							'data-testid': `recommendation-${rec.id}`,
+							key: rec.id,
+							style: {
+								backgroundColor: '#f9f9f9',
+								border: '1px solid #ddd',
+								borderRadius: '5px',
+								margin: '10px 0',
+								padding: '15px',
+							},
+						},
+						[
+							React.createElement('div', { key: 'rec-header', style: { fontWeight: 'bold' } }, [
+								React.createElement(
+									'span',
+									{
+										key: 'priority',
+										style: {
+											color:
+												rec.priority === 'immediate'
+													? 'red'
+													: rec.priority === 'short-term'
+														? 'orange'
+														: rec.priority === 'medium-term'
+															? 'blue'
+															: 'gray',
+											textTransform: 'uppercase',
+										},
+									},
+									`${rec.priority.toUpperCase()} - `,
+								),
+								rec.category,
+							]),
+							React.createElement('div', { key: 'description' }, rec.description),
+							React.createElement('div', { key: 'implementation' }, [
+								React.createElement('strong', { key: 'impl-label' }, 'Implementação: '),
+								rec.implementation,
+							]),
+							React.createElement('div', { key: 'impact' }, [
+								React.createElement('strong', { key: 'impact-label' }, 'Impacto: '),
+								rec.impact,
+							]),
+						],
 					),
-					React.createElement('div', { key: 'export-buttons' }, [
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'export-pdf',
-								key: 'export-pdf',
-								onClick: () => exportAuditReport('pdf'),
-								style: { margin: '5px', padding: '10px 20px' },
-								type: 'button',
-							},
-							'Exportar como PDF',
-						),
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'export-json',
-								key: 'export-json',
-								onClick: () => exportAuditReport('json'),
-								style: { margin: '5px', padding: '10px 20px' },
-								type: 'button',
-							},
-							'Exportar como JSON',
-						),
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'export-csv',
-								key: 'export-csv',
-								onClick: () => exportAuditReport('csv'),
-								style: { margin: '5px', padding: '10px 20px' },
-								type: 'button',
-							},
-							'Exportar como CSV',
-						),
-					]),
-				],
+				),
 			),
+		]),
 
-			// Actions
-			React.createElement('div', { 'data-testid': 'actions', key: 'actions' }, [
+		// Export Options
+		React.createElement('div', { 'data-testid': 'export-options', key: 'export-options' }, [
+			React.createElement('h2', { key: 'export-title' }, 'Exportar Relatório'),
+			React.createElement('div', { key: 'export-buttons' }, [
 				React.createElement(
 					'button',
 					{
-						'data-testid': 'generate-audit-report',
-						key: 'generate-report',
-						onClick: generateAuditReport,
+						'data-testid': 'export-pdf',
+						key: 'export-pdf',
+						onClick: () => exportAuditReport('pdf'),
+						style: { margin: '5px', padding: '10px 20px' },
+						type: 'button',
+					},
+					'Exportar como PDF',
+				),
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'export-json',
+						key: 'export-json',
+						onClick: () => exportAuditReport('json'),
+						style: { margin: '5px', padding: '10px 20px' },
+						type: 'button',
+					},
+					'Exportar como JSON',
+				),
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'export-csv',
+						key: 'export-csv',
+						onClick: () => exportAuditReport('csv'),
+						style: { margin: '5px', padding: '10px 20px' },
+						type: 'button',
+					},
+					'Exportar como CSV',
+				),
+			]),
+		]),
+
+		// Actions
+		React.createElement('div', { 'data-testid': 'actions', key: 'actions' }, [
+			React.createElement(
+				'button',
+				{
+					'data-testid': 'generate-audit-report',
+					key: 'generate-report',
+					onClick: generateAuditReport,
+					style: {
+						backgroundColor: '#007bff',
+						border: 'none',
+						borderRadius: '5px',
+						color: 'white',
+						cursor: 'pointer',
+						fontSize: '16px',
+						margin: '10px 0',
+						padding: '15px 30px',
+					},
+					type: 'button',
+				},
+				'Gerar Relatório de Auditoria Completo',
+			),
+
+			reportData.reportId &&
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'schedule-next-audit',
+						key: 'schedule-next-audit',
 						style: {
-							backgroundColor: '#007bff',
+							backgroundColor: '#28a745',
 							border: 'none',
 							borderRadius: '5px',
 							color: 'white',
 							cursor: 'pointer',
 							fontSize: '16px',
-							margin: '10px 0',
+							margin: '10px',
 							padding: '15px 30px',
 						},
 						type: 'button',
 					},
-					'Gerar Relatório de Auditoria Completo',
+					'Agendar Próxima Auditoria',
 				),
-
-				reportData.reportId &&
-					React.createElement(
-						'button',
-						{
-							'data-testid': 'schedule-next-audit',
-							key: 'schedule-next-audit',
-							style: {
-								backgroundColor: '#28a745',
-								border: 'none',
-								borderRadius: '5px',
-								color: 'white',
-								cursor: 'pointer',
-								fontSize: '16px',
-								margin: '10px',
-								padding: '15px 30px',
-							},
-							type: 'button',
-						},
-						'Agendar Próxima Auditoria',
-					),
-			]),
-		],
-	);
+		]),
+	]);
 };
 
 describe('Comprehensive LGPD Compliance Audit Report', () => {
@@ -849,7 +703,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 				metrics.forEach((metric) => {
 					const scoreText = metric.textContent;
 					expect(scoreText).toMatch(/\d+%/);
-					const score = parseInt(scoreText?.match(/(\d+)%/)?.[1] || '0', 10);
+					const score = Number.parseInt(scoreText?.match(/(\d+)%/)?.[1] || '0', 10);
 					expect(score).toBeGreaterThanOrEqual(0);
 					expect(score).toBeLessThanOrEqual(100);
 				});
@@ -857,14 +711,9 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 
 			await waitFor(() => {
 				const overallScore = screen.getByTestId('overall-compliance-score');
-				expect(overallScore).toHaveTextContent(
-					/Pontuação Geral de Conformidade: \d+%/,
-				);
+				expect(overallScore).toHaveTextContent(/Pontuação Geral de Conformidade: \d+%/);
 
-				const score = parseInt(
-					overallScore.textContent?.match(/(\d+)%/)?.[1] || '0',
-					10,
-				);
+				const score = Number.parseInt(overallScore.textContent?.match(/(\d+)%/)?.[1] || '0', 10);
 				expect(score).toBeGreaterThanOrEqual(90); // Should pass compliance
 			});
 		});
@@ -919,7 +768,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 
 				metrics.forEach((metric) => {
 					const scoreText = metric.textContent;
-					const score = parseInt(scoreText?.match(/(\d+)%/)?.[1] || '0', 10);
+					const score = Number.parseInt(scoreText?.match(/(\d+)%/)?.[1] || '0', 10);
 
 					// Critical compliance categories should be ≥90%
 					const criticalCategories = [
@@ -927,9 +776,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 						'securityCompliance',
 						'accountabilityCompliance',
 					];
-					const isCritical = criticalCategories.some((cat) =>
-						metric.id.includes(cat),
-					);
+					const isCritical = criticalCategories.some((cat) => metric.id.includes(cat));
 
 					if (isCritical) {
 						expect(score).toBeGreaterThanOrEqual(90);
@@ -955,17 +802,13 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 
 				if (issues.length > 0) {
 					issues.forEach((issue) => {
-						expect(issue).toHaveTextContent(
-							/^(Data Minimization|Data Subject Rights) -/,
-						);
+						expect(issue).toHaveTextContent(/^(Data Minimization|Data Subject Rights) -/);
 						expect(issue).toHaveTextContent(/Recomendação:/);
 						expect(issue).toHaveTextContent(/Prazo:/);
 					});
 				} else {
 					// If no issues, should show appropriate message
-					expect(issuesSection).toHaveTextContent(
-						'Nenhum problema crítico identificado',
-					);
+					expect(issuesSection).toHaveTextContent('Nenhum problema crítico identificado');
 				}
 			});
 		});
@@ -999,9 +842,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 				expect(recommendations.length).toBeGreaterThan(0);
 
 				recommendations.forEach((rec) => {
-					expect(rec).toHaveTextContent(
-						/^(IMMEDIATE|SHORT-TERM|MEDIUM-TERM|LONG-TERM) -/,
-					);
+					expect(rec).toHaveTextContent(/^(IMMEDIATE|SHORT-TERM|MEDIUM-TERM|LONG-TERM) -/);
 					expect(rec).toHaveTextContent('Implementação:');
 					expect(rec).toHaveTextContent('Impacto:');
 				});
@@ -1093,9 +934,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 				const futureDate = new Date();
 				futureDate.setDate(futureDate.getDate() + 90);
 
-				expect(dateText).toContain(
-					futureDate.toLocaleDateString('pt-BR').split('/')[0],
-				);
+				expect(dateText).toContain(futureDate.toLocaleDateString('pt-BR').split('/')[0]);
 			});
 		});
 
@@ -1103,9 +942,7 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 			render(React.createElement(LGDComplianceAuditReport));
 
 			// Button should not be visible initially
-			expect(
-				screen.queryByTestId('schedule-next-audit'),
-			).not.toBeInTheDocument();
+			expect(screen.queryByTestId('schedule-next-audit')).not.toBeInTheDocument();
 
 			await userEvent.click(screen.getByTestId('generate-audit-report'));
 
@@ -1172,15 +1009,9 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 			await waitFor(() => {
 				// Validate executive summary completeness
 				const executiveSummary = screen.getByTestId('executive-summary');
-				expect(executiveSummary).toContainElement(
-					screen.getByTestId('overall-compliance-score'),
-				);
-				expect(executiveSummary).toContainElement(
-					screen.getByTestId('compliance-status'),
-				);
-				expect(executiveSummary).toContainElement(
-					screen.getByTestId('next-audit-date'),
-				);
+				expect(executiveSummary).toContainElement(screen.getByTestId('overall-compliance-score'));
+				expect(executiveSummary).toContainElement(screen.getByTestId('compliance-status'));
+				expect(executiveSummary).toContainElement(screen.getByTestId('next-audit-date'));
 
 				// Validate metrics completeness
 				const metricsGrid = screen.getByTestId('metrics-grid');
@@ -1188,15 +1019,9 @@ describe('Comprehensive LGPD Compliance Audit Report', () => {
 
 				// Validate export functionality availability
 				const exportOptions = screen.getByTestId('export-options');
-				expect(exportOptions).toContainElement(
-					screen.getByTestId('export-pdf'),
-				);
-				expect(exportOptions).toContainElement(
-					screen.getByTestId('export-json'),
-				);
-				expect(exportOptions).toContainElement(
-					screen.getByTestId('export-csv'),
-				);
+				expect(exportOptions).toContainElement(screen.getByTestId('export-pdf'));
+				expect(exportOptions).toContainElement(screen.getByTestId('export-json'));
+				expect(exportOptions).toContainElement(screen.getByTestId('export-csv'));
 			});
 		});
 	});

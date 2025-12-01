@@ -1,0 +1,249 @@
+$ bunx biome check --files-ignore-unknown=true --files-max-size=10485760 src scripts
+scripts\apply-rls-policies.ts:317:2 lint/nursery/noFloatingPromises ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+  
+    315 Ôöé // Run if executed directly
+    316 Ôöé if (import.meta.main) {
+  > 317 Ôöé 	main();
+        Ôöé 	^^^^^^^
+    318 Ôöé }
+    319 Ôöé 
+  
+  i This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  
+
+scripts\demo-orchestration.js:10:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+     8 Ôöé // Defini├º├úo dos triggers baseados no .droid.yaml
+     9 Ôöé const autoRoutingRules = {
+  > 10 Ôöé 	research_triggers: {
+       Ôöé 	^^^^^^^^^^^^^^^^^
+    11 Ôöé 		keywords: [
+    12 Ôöé 			'pesquise',
+  
+
+scripts\demo-orchestration.js:29:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    27 Ôöé 			'document',
+    28 Ôöé 		],
+  > 29 Ôöé 		target_droid: 'apex-researcher',
+       Ôöé 		^^^^^^^^^^^^
+    30 Ôöé 		description: 'Multi-source research specialist with ÔëÑ95% accuracy validation',
+    31 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:33:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    31 Ôöé 	},
+    32 Ôöé 
+  > 33 Ôöé 	implementation_triggers: {
+       Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^
+    34 Ôöé 		keywords: [
+    35 Ôöé 			'implemente',
+  
+
+scripts\demo-orchestration.js:47:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    45 Ôöé 			'write',
+    46 Ôöé 		],
+  > 47 Ôöé 		complexity_routing: {
+       Ôöé 		^^^^^^^^^^^^^^^^^^
+    48 Ôöé 			low_complexity: { target_droid: 'coder', threshold: 6 },
+    49 Ôöé 			high_complexity: { target_droid: 'apex-dev', threshold: 7 },
+  
+
+scripts\demo-orchestration.js:48:4 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    46 Ôöé 		],
+    47 Ôöé 		complexity_routing: {
+  > 48 Ôöé 			low_complexity: { target_droid: 'coder', threshold: 6 },
+       Ôöé 			^^^^^^^^^^^^^^
+    49 Ôöé 			high_complexity: { target_droid: 'apex-dev', threshold: 7 },
+    50 Ôöé 		},
+  
+
+scripts\demo-orchestration.js:48:22 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    46 Ôöé 		],
+    47 Ôöé 		complexity_routing: {
+  > 48 Ôöé 			low_complexity: { target_droid: 'coder', threshold: 6 },
+       Ôöé 			                  ^^^^^^^^^^^^
+    49 Ôöé 			high_complexity: { target_droid: 'apex-dev', threshold: 7 },
+    50 Ôöé 		},
+  
+
+scripts\demo-orchestration.js:49:4 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    47 Ôöé 		complexity_routing: {
+    48 Ôöé 			low_complexity: { target_droid: 'coder', threshold: 6 },
+  > 49 Ôöé 			high_complexity: { target_droid: 'apex-dev', threshold: 7 },
+       Ôöé 			^^^^^^^^^^^^^^^
+    50 Ôöé 		},
+    51 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:49:23 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    47 Ôöé 		complexity_routing: {
+    48 Ôöé 			low_complexity: { target_droid: 'coder', threshold: 6 },
+  > 49 Ôöé 			high_complexity: { target_droid: 'apex-dev', threshold: 7 },
+       Ôöé 			                   ^^^^^^^^^^^^
+    50 Ôöé 		},
+    51 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:53:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    51 Ôöé 	},
+    52 Ôöé 
+  > 53 Ôöé 	testing_triggers: {
+       Ôöé 	^^^^^^^^^^^^^^^^
+    54 Ôöé 		keywords: [
+    55 Ôöé 			'testar',
+  
+
+scripts\demo-orchestration.js:68:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    66 Ôöé 			'check',
+    67 Ôöé 		],
+  > 68 Ôöé 		target_droid: 'test-auditor',
+       Ôöé 		^^^^^^^^^^^^
+    69 Ôöé 		description: 'Comprehensive QA specialist with TDD + Playwright E2E',
+    70 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:72:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    70 Ôöé 	},
+    71 Ôöé 
+  > 72 Ôöé 	security_triggers: {
+       Ôöé 	^^^^^^^^^^^^^^^^^
+    73 Ôöé 		keywords: [
+    74 Ôöé 			'seguran├ºa',
+  
+
+scripts\demo-orchestration.js:85:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    83 Ôöé 			'safety',
+    84 Ôöé 		],
+  > 85 Ôöé 		target_droid: 'code-reviewer',
+       Ôöé 		^^^^^^^^^^^^
+    86 Ôöé 		description: 'Security and Brazilian compliance specialist',
+    87 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:89:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    87 Ôöé 	},
+    88 Ôöé 
+  > 89 Ôöé 	database_triggers: {
+       Ôöé 	^^^^^^^^^^^^^^^^^
+    90 Ôöé 		keywords: [
+    91 Ôöé 			'banco de dados',
+  
+
+scripts\demo-orchestration.js:103:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    101 Ôöé 			'postgres',
+    102 Ôöé 		],
+  > 103 Ôöé 		target_droid: 'database-specialist',
+        Ôöé 		^^^^^^^^^^^^
+    104 Ôöé 		description: 'Multi-database expert with performance optimization',
+    105 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:107:2 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    105 Ôöé 	},
+    106 Ôöé 
+  > 107 Ôöé 	design_triggers: {
+        Ôöé 	^^^^^^^^^^^^^^^
+    108 Ôöé 		keywords: [
+    109 Ôöé 			'design',
+  
+
+scripts\demo-orchestration.js:122:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    120 Ôöé 			'wcag',
+    121 Ôöé 		],
+  > 122 Ôöé 		target_droid: 'apex-ui-ux-designer',
+        Ôöé 		^^^^^^^^^^^^
+    123 Ôöé 		description: 'Accessible UI/UX specialist with WCAG 2.1 AA+ compliance',
+    124 Ôöé 	},
+  
+
+scripts\demo-orchestration.js:238:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    236 Ôöé 		command: 'Pesquise os requisitos de compliance LGPD para sistemas financeiros brasileiros',
+    237 Ôöé 		complexity: 7,
+  > 238 Ôöé 		expected_category: 'Research',
+        Ôöé 		^^^^^^^^^^^^^^^^^
+    239 Ôöé 	},
+    240 Ôöé 	{
+  
+
+scripts\demo-orchestration.js:243:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    241 Ôöé 		command: 'Test a interface do usu├írio para acessibilidade WCAG',
+    242 Ôöé 		complexity: 6,
+  > 243 Ôöé 		expected_category: 'Testing + Accessibility',
+        Ôöé 		^^^^^^^^^^^^^^^^^
+    244 Ôöé 	},
+    245 Ôöé 	{
+  
+
+scripts\demo-orchestration.js:248:3 lint/style/useNamingConvention ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This object property name should be in camelCase.
+  
+    246 Ôöé 		command: 'Implemente um sistema de pagamento PIX com seguran├ºa',
+    247 Ôöé 		complexity: 9,
+  > 248 Ôöé 		expected_category: 'High Complexity Implementation + Security',
+        Ôöé 		^^^^^^^^^^^^^^^^^
+    249 Ôöé 	},
+    250 Ôöé 	{
+  
+
+check ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+error: script "lint" exited with code 1

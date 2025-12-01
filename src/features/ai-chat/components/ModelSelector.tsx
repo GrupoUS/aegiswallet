@@ -19,11 +19,7 @@ interface ModelSelectorProps {
 	className?: string;
 }
 
-export function ModelSelector({
-	selectedModel,
-	onModelChange,
-	className,
-}: ModelSelectorProps) {
+export function ModelSelector({ selectedModel, onModelChange, className }: ModelSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const currentModel = MODEL_OPTIONS.find((m) => m.id === selectedModel);
 
@@ -55,16 +51,12 @@ export function ModelSelector({
 					size="sm"
 					className={cn('h-8 justify-between min-w-[200px]', className)}
 				>
-					<span className="text-xs truncate">
-						{currentModel?.name || 'Select Model'}
-					</span>
+					<span className="text-xs truncate">{currentModel?.name || 'Select Model'}</span>
 					<ChevronDown className="w-3 h-3 ml-2 opacity-50" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-[280px]">
-				<DropdownMenuLabel className="text-xs">
-					Escolher Modelo
-				</DropdownMenuLabel>
+				<DropdownMenuLabel className="text-xs">Escolher Modelo</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				{MODEL_OPTIONS.map((model) => (
 					<DropdownMenuItem
@@ -78,18 +70,14 @@ export function ModelSelector({
 						<div className="flex items-center justify-between w-full">
 							<div className="flex items-center gap-2">
 								<span className="text-sm font-medium">{model.name}</span>
-								{selectedModel === model.id && (
-									<Check className="w-4 h-4 text-primary" />
-								)}
+								{selectedModel === model.id && <Check className="w-4 h-4 text-primary" />}
 							</div>
 							<div className="flex items-center gap-1">
 								{getSpeedIcon(model.speed)}
 								{getCostIcon(model.cost)}
 							</div>
 						</div>
-						<span className="text-xs text-muted-foreground mt-1">
-							{model.description}
-						</span>
+						<span className="text-xs text-muted-foreground mt-1">{model.description}</span>
 					</DropdownMenuItem>
 				))}
 			</DropdownMenuContent>

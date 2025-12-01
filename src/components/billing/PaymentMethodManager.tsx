@@ -1,10 +1,4 @@
-import {
-	CreditCard,
-	MoreHorizontal,
-	Smartphone,
-	Trash2,
-	Wallet,
-} from 'lucide-react';
+import { CreditCard, MoreHorizontal, Smartphone, Trash2, Wallet } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,9 +55,7 @@ const formatPaymentMethodInfo = (method: PaymentMethod) => {
 	}
 };
 
-export function PaymentMethodManager({
-	paymentMethods,
-}: PaymentMethodManagerProps) {
+export function PaymentMethodManager({ paymentMethods }: PaymentMethodManagerProps) {
 	if (paymentMethods.length === 0) {
 		return (
 			<div className="text-center py-12">
@@ -96,27 +88,21 @@ export function PaymentMethodManager({
 											<span className="text-sm font-medium text-gray-900">
 												{getPaymentMethodLabel(method.type)}
 											</span>
-											{method.isDefault && (
-												<Badge variant="default">Padrão</Badge>
-											)}
+											{method.isDefault && <Badge variant="default">Padrão</Badge>}
 										</div>
 
 										<p className="text-sm text-muted-foreground">
 											{formatPaymentMethodInfo(method)}
 										</p>
 
-										{method.type === 'card' &&
-											method.expiryMonth &&
-											method.expiryYear && (
-												<p className="text-xs text-muted-foreground mt-1">
-													Vence em {String(method.expiryMonth).padStart(2, '0')}
-													/{method.expiryYear}
-												</p>
-											)}
+										{method.type === 'card' && method.expiryMonth && method.expiryYear && (
+											<p className="text-xs text-muted-foreground mt-1">
+												Vence em {String(method.expiryMonth).padStart(2, '0')}/{method.expiryYear}
+											</p>
+										)}
 
 										<p className="text-xs text-muted-foreground mt-1">
-											Adicionado em{' '}
-											{new Date(method.createdAt).toLocaleDateString('pt-BR')}
+											Adicionado em {new Date(method.createdAt).toLocaleDateString('pt-BR')}
 										</p>
 									</div>
 								</div>

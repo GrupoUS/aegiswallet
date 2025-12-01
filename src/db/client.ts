@@ -15,13 +15,22 @@ import * as schema from './schema';
 // CONFIGURATION
 // ========================================
 
-// Note: fetchConnectionCache option removed - it's deprecated (now always true)
-
-// Get the database URL from environment
-const getDatabaseUrl = (): string => {
+// Get the pooled database URL from environment (for API operations)
+const getPooledDatabaseUrl = (): string => {
 	const url = process.env.DATABASE_URL;
 	if (!url) {
 		throw new Error('DATABASE_URL environment variable is not set');
+	}
+	return url;
+};
+
+// Get the direct database URL from environment (for admin/migrations)
+const getDirectDatabaseUrl = (): string => {
+	const url = process.env.DATABASE_URL_UNPOOLED;
+	if (!url) {
+		// Fallback to pooled URL if direct URL not set
+		console.warn('DATABASE_URL_UNPOOLED not set, using DATABASE_URL as fallback');
+		return getPooledDatabaseUrl();
 	}
 	return url;
 };
@@ -31,12 +40,12 @@ const getDatabaseUrl = (): string => {
 // ========================================
 
 /**
- * Create an HTTP-based Drizzle client
- * Best for simple, one-shot queries in serverless functions
- * Lower latency but doesn't support transactions
+ * Create an HTTP-based Drizzle client (Pooled Connection)
+ * Best for API endpoints with high concurrency in serverless functions
+ * Uses PgBouncer connection pooling for better resource efficiency
  */
 export const createHttpClient = () => {
-	const sql = neon(getDatabaseUrl());
+	const sql = neon(getPooledDatabaseUrl());
 	return drizzleNeon(sql, { schema });
 };
 
@@ -55,12 +64,13 @@ export const getHttpClient = () => {
 // ========================================
 
 /**
- * Create a Pool-based Drizzle client
- * Required for transactions and session-based operations
- * Uses WebSocket connections under the hood
+ * Create a Pool-based Drizzle client (Direct Connection)
+ * Required for transactions, migrations, and session-based operations
+ * Uses WebSocket connections with direct database access (no pooling)
+ * Full PostgreSQL feature support including SET statements
  */
 export const createPoolClient = () => {
-	const pool = new Pool({ connectionString: getDatabaseUrl() });
+	const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 	return drizzlePool(pool, { schema });
 };
 
@@ -70,7 +80,7 @@ let poolClient: ReturnType<typeof createPoolClient> | null = null;
 
 export const getPoolClient = () => {
 	if (!poolClient) {
-		pool = new Pool({ connectionString: getDatabaseUrl() });
+		pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 		poolClient = drizzlePool(pool, { schema });
 	}
 	return poolClient;
@@ -106,8 +116,8 @@ export const getOrganizationClient = (_organizationId: string) => {
 // ========================================
 
 /**
- * Default database client (HTTP-based for simplicity)
- * Use getPoolClient() when you need transactions
+ * Default database client (Pooled HTTP-based for API endpoints)
+ * Use getPoolClient() when you need transactions or admin operations
  *
  * Note: In browser context, this will be null. Only use on server-side.
  */
@@ -115,6 +125,17 @@ export const db =
 	typeof window === 'undefined' && process.env.DATABASE_URL
 		? getHttpClient()
 		: (null as unknown as ReturnType<typeof createHttpClient>);
+
+/**
+ * Admin database client (Direct connection for migrations/admin)
+ * Use this for database migrations, schema changes, and admin operations
+ *
+ * Note: In browser context, this will be null. Only use on server-side.
+ */
+export const adminDb =
+	typeof window === 'undefined' && process.env.DATABASE_URL_UNPOOLED
+		? getPoolClient()
+		: (null as unknown as ReturnType<typeof createPoolClient>);
 
 // ========================================
 // TYPE EXPORTS

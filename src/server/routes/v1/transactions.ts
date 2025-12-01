@@ -12,10 +12,7 @@ import { z } from 'zod';
 import { transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 // =====================================================
 // Validation Schemas
@@ -38,9 +35,7 @@ const createTransactionSchema = z.object({
 	categoryId: z.string().optional(),
 	description: z.string(),
 	transactionType: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']),
-	status: z
-		.enum(['cancelled', 'failed', 'pending', 'posted'])
-		.default('pending'),
+	status: z.enum(['cancelled', 'failed', 'pending', 'posted']).default('pending'),
 	transactionDate: z.string().optional(),
 	accountId: z.string().optional(),
 	paymentMethod: z.string().optional(),
@@ -98,15 +93,11 @@ transactionsRouter.get(
 			}
 
 			if (filters.startDate) {
-				conditions.push(
-					gte(transactions.transactionDate, new Date(filters.startDate)),
-				);
+				conditions.push(gte(transactions.transactionDate, new Date(filters.startDate)));
 			}
 
 			if (filters.endDate) {
-				conditions.push(
-					lte(transactions.transactionDate, new Date(filters.endDate)),
-				);
+				conditions.push(lte(transactions.transactionDate, new Date(filters.endDate)));
 			}
 
 			if (filters.search) {
@@ -261,9 +252,7 @@ transactionsRouter.post(
 					description: input.description,
 					transactionType: input.transactionType,
 					status: input.status,
-					transactionDate: input.transactionDate
-						? new Date(input.transactionDate)
-						: now,
+					transactionDate: input.transactionDate ? new Date(input.transactionDate) : now,
 					categoryId: input.categoryId,
 					accountId: input.accountId,
 					paymentMethod: input.paymentMethod,
@@ -335,12 +324,7 @@ transactionsRouter.put(
 			const [existing] = await db
 				.select({ id: transactions.id })
 				.from(transactions)
-				.where(
-					and(
-						eq(transactions.id, transactionId),
-						eq(transactions.userId, user.id),
-					),
-				)
+				.where(and(eq(transactions.id, transactionId), eq(transactions.userId, user.id)))
 				.limit(1);
 
 			if (!existing) {
@@ -358,32 +342,21 @@ transactionsRouter.put(
 				updatedAt: new Date(),
 			};
 
-			if (input.description !== undefined)
-				updateData.description = input.description;
-			if (input.amount !== undefined)
-				updateData.amount = input.amount.toString();
-			if (input.transactionType !== undefined)
-				updateData.transactionType = input.transactionType;
+			if (input.description !== undefined) updateData.description = input.description;
+			if (input.amount !== undefined) updateData.amount = input.amount.toString();
+			if (input.transactionType !== undefined) updateData.transactionType = input.transactionType;
 			if (input.status !== undefined) updateData.status = input.status;
-			if (input.categoryId !== undefined)
-				updateData.categoryId = input.categoryId;
+			if (input.categoryId !== undefined) updateData.categoryId = input.categoryId;
 			if (input.accountId !== undefined) updateData.accountId = input.accountId;
-			if (input.paymentMethod !== undefined)
-				updateData.paymentMethod = input.paymentMethod;
-			if (input.merchantName !== undefined)
-				updateData.merchantName = input.merchantName;
+			if (input.paymentMethod !== undefined) updateData.paymentMethod = input.paymentMethod;
+			if (input.merchantName !== undefined) updateData.merchantName = input.merchantName;
 			if (input.notes !== undefined) updateData.notes = input.notes;
 			if (input.tags !== undefined) updateData.tags = input.tags;
 
 			const [updatedTransaction] = await db
 				.update(transactions)
 				.set(updateData)
-				.where(
-					and(
-						eq(transactions.id, transactionId),
-						eq(transactions.userId, user.id),
-					),
-				)
+				.where(and(eq(transactions.id, transactionId), eq(transactions.userId, user.id)))
 				.returning();
 
 			secureLogger.info('Transaction updated', {
@@ -437,12 +410,7 @@ transactionsRouter.delete(
 		try {
 			const deleted = await db
 				.delete(transactions)
-				.where(
-					and(
-						eq(transactions.id, transactionId),
-						eq(transactions.userId, user.id),
-					),
-				)
+				.where(and(eq(transactions.id, transactionId), eq(transactions.userId, user.id)))
 				.returning();
 
 			if (deleted.length === 0) {

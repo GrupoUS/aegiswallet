@@ -9,16 +9,12 @@ describe('ChatSearchBar', () => {
 		const onSearch = vi.fn();
 		render(<ChatSearchBar onSearch={onSearch} />);
 
-		expect(
-			screen.getByPlaceholderText('Pesquisar nas finanças...'),
-		).toBeInTheDocument();
+		expect(screen.getByPlaceholderText('Pesquisar nas finanças...')).toBeInTheDocument();
 	});
 
 	it('renders with custom placeholder', () => {
 		const onSearch = vi.fn();
-		render(
-			<ChatSearchBar onSearch={onSearch} placeholder="Custom search..." />,
-		);
+		render(<ChatSearchBar onSearch={onSearch} placeholder="Custom search..." />);
 
 		expect(screen.getByPlaceholderText('Custom search...')).toBeInTheDocument();
 	});

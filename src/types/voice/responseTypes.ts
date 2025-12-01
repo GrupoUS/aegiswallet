@@ -198,9 +198,7 @@ export function isBillsResponse(data: unknown): data is BillsResponseData {
 	);
 }
 
-export function isIncomingResponse(
-	data: unknown,
-): data is IncomingResponseData {
+export function isIncomingResponse(data: unknown): data is IncomingResponseData {
 	const d = data as IncomingResponseData;
 	return (
 		typeof d === 'object' &&
@@ -210,9 +208,7 @@ export function isIncomingResponse(
 	);
 }
 
-export function isProjectionResponse(
-	data: unknown,
-): data is ProjectionResponseData {
+export function isProjectionResponse(data: unknown): data is ProjectionResponseData {
 	const d = data as ProjectionResponseData;
 	return (
 		typeof d === 'object' &&
@@ -224,9 +220,7 @@ export function isProjectionResponse(
 	);
 }
 
-export function isTransferResponse(
-	data: unknown,
-): data is TransferResponseData {
+export function isTransferResponse(data: unknown): data is TransferResponseData {
 	const d = data as TransferResponseData;
 	return (
 		typeof d === 'object' &&
@@ -271,8 +265,8 @@ export function getResponseDataType(type: VoiceResponseType) {
 		case 'transfer':
 			return 'TransferResponseData' as const;
 		default: {
-			const _exhaustiveCheck: never = type;
-			return _exhaustiveCheck;
+			const ExhaustiveCheck: never = type;
+			return ExhaustiveCheck;
 		}
 	}
 }
@@ -322,8 +316,8 @@ export function createDefaultResponseData(type: VoiceResponseType) {
 				status: 'pending' as const,
 			} as TransferResponseData;
 		default: {
-			const _exhaustiveCheck: never = type;
-			return _exhaustiveCheck;
+			const ExhaustiveCheck: never = type;
+			return ExhaustiveCheck;
 		}
 	}
 }

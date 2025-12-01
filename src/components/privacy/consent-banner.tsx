@@ -14,13 +14,7 @@ import { Cookie, Settings, Shield, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ConsentBannerProps {
 	/** Callback when user accepts all consents */
@@ -104,9 +98,7 @@ export function ConsentBanner({
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
 							<Shield className="h-5 w-5 text-primary" />
-							<CardTitle className="text-lg">
-								Política de Privacidade e Cookies
-							</CardTitle>
+							<CardTitle className="text-lg">Política de Privacidade e Cookies</CardTitle>
 						</div>
 						<Button
 							variant="ghost"
@@ -118,9 +110,8 @@ export function ConsentBanner({
 						</Button>
 					</div>
 					<CardDescription>
-						Utilizamos cookies e tecnologias similares para melhorar sua
-						experiência. Em conformidade com a LGPD (Lei Geral de Proteção de
-						Dados).
+						Utilizamos cookies e tecnologias similares para melhorar sua experiência. Em
+						conformidade com a LGPD (Lei Geral de Proteção de Dados).
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex flex-col sm:flex-row gap-2 pt-0">

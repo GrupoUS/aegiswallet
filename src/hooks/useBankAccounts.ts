@@ -108,9 +108,7 @@ export function useBankAccounts(): UseBankAccountsReturn {
 		queryKey: ['bank-accounts'],
 		queryFn: async () => {
 			const response =
-				await apiClient.get<BankAccountApiResponse<BankAccount[]>>(
-					'/v1/bank-accounts',
-				);
+				await apiClient.get<BankAccountApiResponse<BankAccount[]>>('/v1/bank-accounts');
 			return response.data;
 		},
 	});
@@ -126,24 +124,22 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			account_mask?: string;
 			institution_id?: string;
 		}) => {
-			const response = await apiClient.post<
-				BankAccountApiResponse<BankAccount>
-			>('/v1/bank-accounts', input);
+			const response = await apiClient.post<BankAccountApiResponse<BankAccount>>(
+				'/v1/bank-accounts',
+				input,
+			);
 			return response.data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Erro ao criar conta bancária');
 		},
 		onSuccess: (data) => {
-			queryClient.setQueryData(
-				['bank-accounts'],
-				(old: BankAccount[] | undefined) => {
-					if (!old) {
-						return [data];
-					}
-					return [data, ...old];
-				},
-			);
+			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
+				if (!old) {
+					return [data];
+				}
+				return [data, ...old];
+			});
 			toast.success('Conta bancária criada com sucesso!');
 		},
 	});
@@ -170,17 +166,12 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			toast.error(error.message || 'Erro ao atualizar conta bancária');
 		},
 		onSuccess: (data) => {
-			queryClient.setQueryData(
-				['bank-accounts'],
-				(old: BankAccount[] | undefined) => {
-					if (!old) {
-						return old;
-					}
-					return old.map((account) =>
-						account.id === data.id ? data : account,
-					);
-				},
-			);
+			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
+				if (!old) {
+					return old;
+				}
+				return old.map((account) => (account.id === data.id ? data : account));
+			});
 			toast.success('Conta bancária atualizada com sucesso!');
 		},
 	});
@@ -201,26 +192,22 @@ export function useBankAccounts(): UseBankAccountsReturn {
 
 	const { mutate: updateBalance, isPending: isUpdatingBalance } = useMutation({
 		mutationFn: async (input: { id: string; balance: number }) => {
-			const response = await apiClient.patch<
-				BankAccountApiResponse<BankAccount>
-			>(`/v1/bank-accounts/${input.id}/balance`, { balance: input.balance });
+			const response = await apiClient.patch<BankAccountApiResponse<BankAccount>>(
+				`/v1/bank-accounts/${input.id}/balance`,
+				{ balance: input.balance },
+			);
 			return response.data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Erro ao atualizar saldo');
 		},
 		onSuccess: (data) => {
-			queryClient.setQueryData(
-				['bank-accounts'],
-				(old: BankAccount[] | undefined) => {
-					if (!old) {
-						return old;
-					}
-					return old.map((account) =>
-						account.id === data.id ? data : account,
-					);
-				},
-			);
+			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
+				if (!old) {
+					return old;
+				}
+				return old.map((account) => (account.id === data.id ? data : account));
+			});
 			queryClient.invalidateQueries({
 				queryKey: ['bank-accounts', 'total-balance'],
 			});
@@ -260,9 +247,9 @@ export function useTotalBalance(): UseTotalBalanceReturn {
 	} = useQuery({
 		queryKey: ['bank-accounts', 'total-balance'],
 		queryFn: async () => {
-			const response = await apiClient.get<
-				BankAccountApiResponse<Record<string, number>>
-			>('/v1/bank-accounts/total-balance');
+			const response = await apiClient.get<BankAccountApiResponse<Record<string, number>>>(
+				'/v1/bank-accounts/total-balance',
+			);
 			return response.data;
 		},
 	});
@@ -306,10 +293,7 @@ export function useBankAccount(accountId: string): UseBankAccountReturn {
 /**
  * Hook para obter histórico de saldos
  */
-export function useBalanceHistory(
-	accountId: string,
-	days: number = 30,
-): UseBalanceHistoryReturn {
+export function useBalanceHistory(accountId: string, days = 30): UseBalanceHistoryReturn {
 	const {
 		data: historyResponse,
 		isLoading,
@@ -352,10 +336,7 @@ export function useBankAccountsStats(): UseBankAccountsStatsReturn {
 		activeAccounts: accounts.filter((account) => account.is_active).length,
 		primaryAccounts: accounts.filter((account) => account.is_primary).length,
 		totalAccounts: accounts.length,
-		totalBalance: accounts.reduce(
-			(sum, account) => sum + (Number(account.balance) || 0),
-			0,
-		),
+		totalBalance: accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0),
 	};
 
 	return stats;

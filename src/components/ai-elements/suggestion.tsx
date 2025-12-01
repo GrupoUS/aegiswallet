@@ -19,11 +19,7 @@ export interface SuggestionProps {
  * ai-sdk.dev Elements Suggestion wrapper
  * Provides semantic structure for AI suggestion chips/buttons
  */
-export function Suggestion({
-	suggestions = [],
-	className,
-	children,
-}: SuggestionProps) {
+export function Suggestion({ suggestions = [], className, children }: SuggestionProps) {
 	return (
 		<nav
 			aria-label="Sugestões de perguntas"

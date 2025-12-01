@@ -134,9 +134,7 @@ export class AudioEncryptionService {
 			const authTag = this.base64ToArrayBuffer(encryptedData.authTag);
 
 			// Combine ciphertext and auth tag
-			const encryptedBuffer = new Uint8Array(
-				ciphertext.byteLength + authTag.byteLength,
-			);
+			const encryptedBuffer = new Uint8Array(ciphertext.byteLength + authTag.byteLength);
 			encryptedBuffer.set(new Uint8Array(ciphertext), 0);
 			encryptedBuffer.set(new Uint8Array(authTag), ciphertext.byteLength);
 
@@ -209,16 +207,10 @@ export class AudioEncryptionService {
 		let anonymized = text;
 
 		// Anonymize CPF (format: 123.456.789-01 or 12345678901)
-		anonymized = anonymized.replace(
-			/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g,
-			'***.***.***-**',
-		);
+		anonymized = anonymized.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, '***.***.***-**');
 
 		// Anonymize phone numbers (format: (11) 98765-4321 or 11987654321)
-		anonymized = anonymized.replace(
-			/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g,
-			'(**) *****-****',
-		);
+		anonymized = anonymized.replace(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g, '(**) *****-****');
 
 		// Anonymize email addresses
 		anonymized = anonymized.replace(
@@ -240,8 +232,7 @@ export class AudioEncryptionService {
 	// ============================================================================
 
 	private arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
-		const bytes =
-			buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+		const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
 		let binary = '';
 		for (let i = 0; i < bytes.byteLength; i++) {
 			binary += String.fromCharCode(bytes[i]);
@@ -266,18 +257,11 @@ export class AudioEncryptionService {
 /**
  * Create encryption service with environment configuration
  */
-export function createEncryptionService(
-	masterKey?: string,
-): AudioEncryptionService {
-	const key =
-		masterKey ||
-		import.meta.env.VITE_ENCRYPTION_KEY ||
-		process.env.ENCRYPTION_KEY;
+export function createEncryptionService(masterKey?: string): AudioEncryptionService {
+	const key = masterKey || import.meta.env.VITE_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
 
 	if (!key) {
-		throw new Error(
-			'Encryption key not found. Set VITE_ENCRYPTION_KEY or ENCRYPTION_KEY.',
-		);
+		throw new Error('Encryption key not found. Set VITE_ENCRYPTION_KEY or ENCRYPTION_KEY.');
 	}
 
 	return new AudioEncryptionService({ masterKey: key });

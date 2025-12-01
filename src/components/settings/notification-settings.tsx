@@ -42,8 +42,7 @@ function NotificationSettingsSkeleton() {
 // =============================================================================
 
 export function NotificationSettings() {
-	const { profile, isLoading, updatePreferences, isUpdatingPreferences } =
-		useProfile();
+	const { profile, isLoading, updatePreferences, isUpdatingPreferences } = useProfile();
 	const preferences = profile?.user_preferences?.[0];
 	const quietStartId = useId();
 	const quietEndId = useId();
@@ -81,9 +80,7 @@ export function NotificationSettings() {
 						</div>
 						<Switch
 							checked={preferences?.email_notifications ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('email_notifications', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('email_notifications', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Notificações por email"
 						/>
@@ -96,9 +93,7 @@ export function NotificationSettings() {
 								<Smartphone className="h-5 w-5 text-primary" />
 							</div>
 							<div className="space-y-0.5">
-								<Label className="text-base font-medium">
-									Push (navegador)
-								</Label>
+								<Label className="text-base font-medium">Push (navegador)</Label>
 								<p className="text-sm text-muted-foreground">
 									Notificações em tempo real no seu navegador
 								</p>
@@ -106,9 +101,7 @@ export function NotificationSettings() {
 						</div>
 						<Switch
 							checked={preferences?.push_notifications ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('push_notifications', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('push_notifications', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Notificações push"
 						/>
@@ -134,9 +127,7 @@ export function NotificationSettings() {
 						</div>
 						<Switch
 							checked={preferences?.notifications_enabled ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notifications_enabled', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notifications_enabled', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Notificações por SMS"
 						/>
@@ -156,9 +147,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Transações</Label>
 						<Switch
 							checked={preferences?.notify_transactions ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_transactions', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_transactions', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Notificações de transações"
 						/>
@@ -168,9 +157,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Orçamento excedido</Label>
 						<Switch
 							checked={preferences?.notify_budget_exceeded ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_budget_exceeded', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_budget_exceeded', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Notificações de orçamento excedido"
 						/>
@@ -180,9 +167,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Lembrete de contas</Label>
 						<Switch
 							checked={preferences?.notify_bill_reminders ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_bill_reminders', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_bill_reminders', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Lembretes de contas"
 						/>
@@ -192,9 +177,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Alertas de segurança</Label>
 						<Switch
 							checked={preferences?.notify_security ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_security', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_security', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Alertas de segurança"
 						/>
@@ -204,9 +187,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Resumo semanal</Label>
 						<Switch
 							checked={preferences?.notify_weekly_summary ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_weekly_summary', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_weekly_summary', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Resumo semanal"
 						/>
@@ -216,9 +197,7 @@ export function NotificationSettings() {
 						<Label className="text-sm">Dicas financeiras</Label>
 						<Switch
 							checked={preferences?.notify_tips ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('notify_tips', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('notify_tips', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Dicas financeiras"
 						/>
@@ -243,9 +222,7 @@ export function NotificationSettings() {
 						</div>
 						<Switch
 							checked={preferences?.quiet_hours_enabled ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('quiet_hours_enabled', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('quiet_hours_enabled', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Ativar modo silencioso"
 						/>
@@ -260,9 +237,7 @@ export function NotificationSettings() {
 								type="time"
 								id={quietStartId}
 								value={preferences?.quiet_hours_start ?? '22:00'}
-								onChange={(e) =>
-									handleSwitchChange('quiet_hours_start', e.target.value)
-								}
+								onChange={(e) => handleSwitchChange('quiet_hours_start', e.target.value)}
 								className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								disabled={isUpdatingPreferences}
 							/>
@@ -273,9 +248,7 @@ export function NotificationSettings() {
 								type="time"
 								id={quietEndId}
 								value={preferences?.quiet_hours_end ?? '08:00'}
-								onChange={(e) =>
-									handleSwitchChange('quiet_hours_end', e.target.value)
-								}
+								onChange={(e) => handleSwitchChange('quiet_hours_end', e.target.value)}
 								className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								disabled={isUpdatingPreferences}
 							/>
@@ -283,8 +256,7 @@ export function NotificationSettings() {
 					</div>
 
 					<p className="text-xs text-muted-foreground">
-						Alertas de segurança críticos ainda serão enviados durante o período
-						silencioso.
+						Alertas de segurança críticos ainda serão enviados durante o período silencioso.
 					</p>
 				</div>
 			</SettingsCard>

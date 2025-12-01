@@ -83,8 +83,7 @@ interface NavigatorWithConnection extends Navigator {
 
 export class SpeechToTextService {
 	protected config: Required<STTConfig>;
-	private readonly API_ENDPOINT =
-		'https://api.openai.com/v1/audio/transcriptions';
+	private readonly API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
 	private readonly MAX_RETRIES = 3;
 	private readonly RETRY_DELAY_MS = 1000;
 	private fetchImplementation: typeof fetch;
@@ -98,8 +97,7 @@ export class SpeechToTextService {
 			timeout: config.timeout || 10000, // 10 seconds default
 		};
 
-		this.fetchImplementation =
-			dependencies?.fetch || global.fetch || window.fetch;
+		this.fetchImplementation = dependencies?.fetch || global.fetch || window.fetch;
 
 		if (!this.config.apiKey) {
 			throw new Error('OpenAI API key is required');
@@ -113,10 +111,7 @@ export class SpeechToTextService {
 	 * @param options - Optional transcription options
 	 * @returns STT result with transcription and metadata
 	 */
-	async transcribe(
-		audioBlob: Blob | File,
-		options?: Partial<STTConfig>,
-	): Promise<STTResult> {
+	async transcribe(audioBlob: Blob | File, options?: Partial<STTConfig>): Promise<STTResult> {
 		const startTime = Date.now();
 
 		try {
@@ -127,9 +122,7 @@ export class SpeechToTextService {
 			const formData = this.prepareFormData(audioBlob, options);
 
 			// Execute with retry logic
-			const response = await this.executeWithRetry(() =>
-				this.makeRequest(formData),
-			);
+			const response = await this.executeWithRetry(() => this.makeRequest(formData));
 
 			// Parse response
 			const result = await this.parseResponse(response, startTime);
@@ -160,9 +153,7 @@ export class SpeechToTextService {
 		if (!isTestEnvironment) {
 			const MIN_SIZE = 12000; // Approximate minimum for 0.3s at 16kHz
 			if (audioBlob.size < MIN_SIZE) {
-				throw new Error(
-					`Audio too short: ${audioBlob.size} bytes (min: ${MIN_SIZE})`,
-				);
+				throw new Error(`Audio too short: ${audioBlob.size} bytes (min: ${MIN_SIZE})`);
 			}
 		}
 
@@ -184,10 +175,7 @@ export class SpeechToTextService {
 	/**
 	 * Prepare FormData for API request
 	 */
-	private prepareFormData(
-		audioBlob: Blob | File,
-		options?: Partial<STTConfig>,
-	): FormData {
+	private prepareFormData(audioBlob: Blob | File, options?: Partial<STTConfig>): FormData {
 		const formData = new FormData();
 
 		// Add audio file
@@ -201,10 +189,7 @@ export class SpeechToTextService {
 		formData.append('language', options?.language || this.config.language);
 
 		// Add temperature (0.0 for deterministic results)
-		formData.append(
-			'temperature',
-			String(options?.temperature || this.config.temperature),
-		);
+		formData.append('temperature', String(options?.temperature || this.config.temperature));
 
 		// Request verbose JSON for metadata
 		formData.append('response_format', 'verbose_json');
@@ -250,7 +235,7 @@ export class SpeechToTextService {
 
 			clearTimeout(timeoutId);
 
-			if (!response || !response.ok) {
+			if (!response?.ok) {
 				throw await this.createAPIError(response);
 			}
 
@@ -262,9 +247,7 @@ export class SpeechToTextService {
 				error instanceof Error &&
 				(error.name === 'AbortError' || /aborted/.test(error.message))
 			) {
-				const timeoutError = new Error(
-					'Request timed out. Please try again.',
-				) as ExtendedError;
+				const timeoutError = new Error('Request timed out. Please try again.') as ExtendedError;
 				timeoutError.code = STTErrorCode.TIMEOUT;
 				timeoutError.name = 'AbortError';
 				throw timeoutError;
@@ -274,9 +257,7 @@ export class SpeechToTextService {
 		}
 	}
 
-	private createTestRequest(
-		init: RequestInit & { signal: AbortSignal },
-	): Request {
+	private createTestRequest(init: RequestInit & { signal: AbortSignal }): Request {
 		return {
 			body: init.body as BodyInit,
 			clone: () => this.createTestRequest(init),
@@ -290,10 +271,7 @@ export class SpeechToTextService {
 	/**
 	 * Parse API response and extract transcription
 	 */
-	private async parseResponse(
-		response: Response,
-		startTime: number,
-	): Promise<STTResult> {
+	private async parseResponse(response: Response, startTime: number): Promise<STTResult> {
 		const data = (await response.json()) as WhisperResponse;
 
 		const processingTimeMs = Math.max(1, Date.now() - startTime);
@@ -418,9 +396,7 @@ export class SpeechToTextService {
 	private handleError(error: unknown): STTError {
 		if (error instanceof Error) {
 			const status = (error as ExtendedError).status;
-			const explicitCode = (error as ExtendedError).code as
-				| STTErrorCode
-				| undefined;
+			const explicitCode = (error as ExtendedError).code as STTErrorCode | undefined;
 			const errorMessage = error.message.toLowerCase();
 			const errorName = error.name;
 
@@ -597,13 +573,11 @@ export class SpeechToTextService {
 		} catch (error: unknown) {
 			// If we get an authentication or API error, the service is reachable
 			// Network errors are the only ones that indicate the service is unreachable
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
 			const errorName = error instanceof Error ? error.name : '';
 
 			// Check for STT network error code
-			const isSTTNetworkError =
-				(error as { code?: unknown } | null)?.code === 'NETWORK_ERROR';
+			const isSTTNetworkError = (error as { code?: unknown } | null)?.code === 'NETWORK_ERROR';
 
 			// Check for original network error or wrapped network error
 			const isNetworkError =
@@ -638,10 +612,7 @@ export class AdaptiveSTTService extends SpeechToTextService {
 		return timeouts[connection.effectiveType as string] || 15000;
 	}
 
-	async transcribe(
-		audioBlob: Blob | File,
-		options?: Partial<STTConfig>,
-	): Promise<STTResult> {
+	async transcribe(audioBlob: Blob | File, options?: Partial<STTConfig>): Promise<STTResult> {
 		const originalTimeout = this.config.timeout;
 		if (typeof navigator !== 'undefined') {
 			this.config.timeout = this.getNetworkBasedTimeout();
@@ -666,13 +637,10 @@ export function createSTTService(
 	apiKey?: string,
 	dependencies?: { fetch?: typeof fetch },
 ): SpeechToTextService {
-	const key =
-		apiKey || import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+	const key = apiKey || import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
 	if (!key) {
-		throw new Error(
-			'OpenAI API key not found. Set VITE_OPENAI_API_KEY or OPENAI_API_KEY.',
-		);
+		throw new Error('OpenAI API key not found. Set VITE_OPENAI_API_KEY or OPENAI_API_KEY.');
 	}
 
 	return new AdaptiveSTTService(

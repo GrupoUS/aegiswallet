@@ -182,9 +182,7 @@ export class FraudDetectionService {
 	 *
 	 * NOTE: Stubbed - returns low risk by default
 	 */
-	async analyzeSecurityEvent(
-		event: SecurityEvent,
-	): Promise<FraudDetectionResult> {
+	async analyzeSecurityEvent(event: SecurityEvent): Promise<FraudDetectionResult> {
 		const startTime = Date.now();
 
 		logger.debug('Fraud detection analysis requested (stubbed)', {

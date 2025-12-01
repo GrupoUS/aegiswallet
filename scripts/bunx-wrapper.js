@@ -12,20 +12,20 @@ const { spawn } = require('node:child_process');
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
-  process.exit(1);
+	process.exit(1);
 }
 
 // Execute bun x with all arguments
 const bunPath = process.env.BUN_PATH || 'bun';
 const child = spawn(bunPath, ['x', ...args], {
-  shell: false,
-  stdio: 'inherit',
+	shell: false,
+	stdio: 'inherit',
 });
 
 child.on('error', (_error) => {
-  process.exit(1);
+	process.exit(1);
 });
 
 child.on('exit', (code) => {
-  process.exit(code);
+	process.exit(code);
 });

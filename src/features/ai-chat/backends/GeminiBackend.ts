@@ -1,17 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { DEFAULT_MODEL, type GeminiModel } from '../config/models';
-import type {
-	ChatBackend,
-	ChatBackendConfig,
-	ModelInfo,
-} from '../domain/ChatBackend';
+import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
 import { ChatEvents } from '../domain/events';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 
 /**
  * Configuration for Gemini backend
@@ -128,8 +120,7 @@ export class GeminiBackend implements ChatBackend {
 
 			yield ChatEvents.done();
 		} catch (error: unknown) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error occurred';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 			const errorCode = this.classifyError(error);
 
 			yield ChatEvents.error({

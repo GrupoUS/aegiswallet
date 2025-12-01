@@ -142,22 +142,12 @@ export class BrazilianLearner {
 	 * Detect regional variation in utterance
 	 */
 	detectRegionalVariation(text: string): {
-		region:
-			| 'SP'
-			| 'RJ'
-			| 'Nordeste'
-			| 'Sul'
-			| 'Norte'
-			| 'Centro-Oeste'
-			| 'Unknown';
+		region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
 		confidence: number;
 		indicators: Record<string, number>;
 	} {
 		const normalizedText = text.toLowerCase();
-		const regionScores: Record<
-			string,
-			{ score: number; indicators: string[] }
-		> = {};
+		const regionScores: Record<string, { score: number; indicators: string[] }> = {};
 
 		for (const regionalPattern of BRAZILIAN_REGIONAL_PATTERNS) {
 			let score = 0;
@@ -172,9 +162,7 @@ export class BrazilianLearner {
 			}
 
 			// Check for slang terms
-			for (const [slang, _standard] of Object.entries(
-				regionalPattern.slangTerms,
-			)) {
+			for (const [slang, _standard] of Object.entries(regionalPattern.slangTerms)) {
 				if (normalizedText.includes(slang.toLowerCase())) {
 					score += 2;
 					indicators.push(`slang: ${slang}`);
@@ -203,11 +191,8 @@ export class BrazilianLearner {
 			a[1].score > b[1].score ? a : b,
 		);
 
-		const maxScore = Math.max(
-			...Object.values(regionScores).map((r) => r.score),
-		);
-		const confidence =
-			(Math.min(maxScore / 10, 1.0) * bestRegion[1].score) / 10;
+		const maxScore = Math.max(...Object.values(regionScores).map((r) => r.score));
+		const confidence = (Math.min(maxScore / 10, 1.0) * bestRegion[1].score) / 10;
 
 		const regionKey = bestRegion[0] as
 			| 'SP'
@@ -245,15 +230,7 @@ export class BrazilianLearner {
 		const features: string[] = [];
 
 		// Check for slang indicators
-		const slangIndicators = [
-			'grana',
-			'bufunfa',
-			'tah',
-			'cê',
-			'véi',
-			'mano',
-			'parça',
-		];
+		const slangIndicators = ['grana', 'bufunfa', 'tah', 'cê', 'véi', 'mano', 'parça'];
 		for (const slang of slangIndicators) {
 			if (normalizedText.includes(slang)) {
 				slangCount++;
@@ -262,13 +239,7 @@ export class BrazilianLearner {
 		}
 
 		// Check for formal indicators
-		const formalIndicators = [
-			'gostaria',
-			'poderia',
-			'por favor',
-			'agradeceria',
-			'solicito',
-		];
+		const formalIndicators = ['gostaria', 'poderia', 'por favor', 'agradeceria', 'solicito'];
 		for (const formal of formalIndicators) {
 			if (normalizedText.includes(formal)) {
 				formalCount++;
@@ -277,13 +248,7 @@ export class BrazilianLearner {
 		}
 
 		// Check for colloquial indicators
-		const colloquialIndicators = [
-			'né',
-			'tá bom',
-			'entendeu',
-			'tipo assim',
-			'meu amigo',
-		];
+		const colloquialIndicators = ['né', 'tá bom', 'entendeu', 'tipo assim', 'meu amigo'];
 		for (const colloquial of colloquialIndicators) {
 			if (normalizedText.includes(colloquial)) {
 				colloquialCount++;
@@ -342,21 +307,13 @@ export class BrazilianLearner {
 	 * Suggest pattern improvements based on learning data
 	 */
 	suggestPatternImprovements(intent: IntentType): {
-		type:
-			| 'new_pattern'
-			| 'regional_variant'
-			| 'slang_inclusion'
-			| 'entity_improvement';
+		type: 'new_pattern' | 'regional_variant' | 'slang_inclusion' | 'entity_improvement';
 		suggestion: string;
 		confidence: number;
 		supportingData: number;
 	}[] {
 		const suggestions: {
-			type:
-				| 'new_pattern'
-				| 'regional_variant'
-				| 'slang_inclusion'
-				| 'entity_improvement';
+			type: 'new_pattern' | 'regional_variant' | 'slang_inclusion' | 'entity_improvement';
 			suggestion: string;
 			confidence: number;
 			supportingData: number;
@@ -476,14 +433,7 @@ export class BrazilianLearner {
 	private updateLearningMetrics(
 		log: ClassificationLog,
 		regional: {
-			region:
-				| 'Unknown'
-				| 'SP'
-				| 'RJ'
-				| 'Nordeste'
-				| 'Sul'
-				| 'Norte'
-				| 'Centro-Oeste';
+			region: 'Unknown' | 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
 			confidence: number;
 			indicators: Record<string, number>;
 		},
@@ -495,20 +445,16 @@ export class BrazilianLearner {
 	): void {
 		// Update regional accuracy
 		if (regional.region !== 'Unknown') {
-			const current =
-				this.learningMetrics.regionalAccuracy[regional.region] || 0;
+			const current = this.learningMetrics.regionalAccuracy[regional.region] || 0;
 			const newAccuracy = log.feedback === 'correct' ? 1 : 0;
-			this.learningMetrics.regionalAccuracy[regional.region] =
-				(current + newAccuracy) / 2;
+			this.learningMetrics.regionalAccuracy[regional.region] = (current + newAccuracy) / 2;
 		}
 
 		// Update linguistic style accuracy
 		if (style.style !== 'mixed') {
-			const current =
-				this.learningMetrics.linguisticStyleAccuracy[style.style] || 0;
+			const current = this.learningMetrics.linguisticStyleAccuracy[style.style] || 0;
 			const newAccuracy = log.feedback === 'correct' ? 1 : 0;
-			this.learningMetrics.linguisticStyleAccuracy[style.style] =
-				(current + newAccuracy) / 2;
+			this.learningMetrics.linguisticStyleAccuracy[style.style] = (current + newAccuracy) / 2;
 		}
 
 		// Update temporal patterns
@@ -524,8 +470,7 @@ export class BrazilianLearner {
 
 		if (existing) {
 			existing.frequency++;
-			existing.successRate =
-				(existing.successRate + (log.feedback === 'correct' ? 1 : 0)) / 2;
+			existing.successRate = (existing.successRate + (log.feedback === 'correct' ? 1 : 0)) / 2;
 			existing.lastSeen = new Date();
 
 			// Update trend
@@ -551,14 +496,7 @@ export class BrazilianLearner {
 	private updateUserProfile(
 		log: ClassificationLog,
 		regional: {
-			region:
-				| 'Unknown'
-				| 'SP'
-				| 'RJ'
-				| 'Nordeste'
-				| 'Sul'
-				| 'Norte'
-				| 'Centro-Oeste';
+			region: 'Unknown' | 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste';
 			indicators: Record<string, number>;
 		},
 		style: {
@@ -583,8 +521,7 @@ export class BrazilianLearner {
 		}
 
 		// Update profile
-		profile.accuracyRate =
-			(profile.accuracyRate + (log.feedback === 'correct' ? 1 : 0)) / 2;
+		profile.accuracyRate = (profile.accuracyRate + (log.feedback === 'correct' ? 1 : 0)) / 2;
 		profile.lastActivity = new Date();
 
 		// Track common phrases
@@ -617,9 +554,7 @@ export class BrazilianLearner {
 		}
 	}
 
-	private getFailedClassificationsForIntent(
-		_intent: IntentType,
-	): ClassificationLog[] {
+	private getFailedClassificationsForIntent(_intent: IntentType): ClassificationLog[] {
 		// This would typically query a database
 		// For now, return empty array
 		return [];
@@ -683,9 +618,7 @@ export class BrazilianLearner {
 		}[] = [];
 
 		// Analyze low-performing regions
-		for (const [region, accuracy] of Object.entries(
-			this.learningMetrics.regionalAccuracy,
-		)) {
+		for (const [region, accuracy] of Object.entries(this.learningMetrics.regionalAccuracy)) {
 			if (accuracy < 0.75) {
 				opportunities.push({
 					impact: (0.75 - accuracy) * 100,
@@ -711,9 +644,7 @@ export class BrazilianLearner {
 
 		for (const region of ['SP', 'RJ', 'Nordeste', 'Sul'] as const) {
 			const accuracy = this.learningMetrics.regionalAccuracy[region] || 0;
-			const regionalData = BRAZILIAN_REGIONAL_PATTERNS.find(
-				(p) => p.region === region,
-			);
+			const regionalData = BRAZILIAN_REGIONAL_PATTERNS.find((p) => p.region === region);
 
 			insights[region] = {
 				accuracy,
@@ -732,10 +663,7 @@ export class BrazilianLearner {
 		>;
 	}
 
-	private generateRegionalRecommendations(
-		_region: string,
-		accuracy: number,
-	): string[] {
+	private generateRegionalRecommendations(_region: string, accuracy: number): string[] {
 		const recommendations: string[] = [];
 
 		if (accuracy < 0.8) {

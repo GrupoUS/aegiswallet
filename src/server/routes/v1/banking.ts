@@ -9,10 +9,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 const bankingRouter = new Hono<AppEnv>();
 

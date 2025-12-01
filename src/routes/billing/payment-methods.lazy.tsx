@@ -4,13 +4,7 @@ import { Helmet } from 'react-helmet-async';
 
 import { PaymentMethodManager } from '@/components/billing/PaymentMethodManager';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePaymentMethods } from '@/hooks/billing';
 
@@ -27,12 +21,9 @@ function PaymentMethodsPage() {
 				<div className="max-w-4xl mx-auto">
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-red-600">
-								Erro ao Carregar Métodos de Pagamento
-							</CardTitle>
+							<CardTitle className="text-red-600">Erro ao Carregar Métodos de Pagamento</CardTitle>
 							<CardDescription>
-								Não foi possível carregar seus métodos de pagamento. Tente
-								novamente mais tarde.
+								Não foi possível carregar seus métodos de pagamento. Tente novamente mais tarde.
 							</CardDescription>
 						</CardHeader>
 					</Card>
@@ -64,9 +55,7 @@ function PaymentMethodsPage() {
 									</a>
 								</Button>
 								<div>
-									<h1 className="text-3xl font-bold tracking-tight">
-										Métodos de Pagamento
-									</h1>
+									<h1 className="text-3xl font-bold tracking-tight">Métodos de Pagamento</h1>
 									<p className="text-muted-foreground">
 										Gerencie seus cartões, chaves PIX e contas bancárias
 									</p>
@@ -114,9 +103,7 @@ function PaymentMethodsPage() {
 									))}
 								</div>
 							) : (
-								<PaymentMethodManager
-									paymentMethods={data?.paymentMethods ?? []}
-								/>
+								<PaymentMethodManager paymentMethods={data?.paymentMethods ?? []} />
 							)}
 						</CardContent>
 					</Card>
@@ -124,15 +111,12 @@ function PaymentMethodsPage() {
 					{/* Security Notice */}
 					<Card className="mt-6 border-blue-200 bg-blue-50/50">
 						<CardHeader>
-							<CardTitle className="text-blue-800 text-lg">
-								🔒 Segurança
-							</CardTitle>
+							<CardTitle className="text-blue-800 text-lg">🔒 Segurança</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<p className="text-sm text-blue-700">
-								Seus dados de pagamento são criptografados e processados com
-								total segurança. Armazenamos apenas tokens seguros e nunca
-								compartilhamos suas informações.
+								Seus dados de pagamento são criptografados e processados com total segurança.
+								Armazenamos apenas tokens seguros e nunca compartilhamos suas informações.
 							</p>
 						</CardContent>
 					</Card>

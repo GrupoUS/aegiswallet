@@ -12,7 +12,7 @@
 
 import { act, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { vi } from 'vitest';
+import { expect, vi } from 'vitest';
 
 // ============================================================================
 // Timing Utilities
@@ -38,10 +38,7 @@ export const waitForNextTick = async (): Promise<void> => {
  * Wait for multiple milliseconds with optional jitter
  * Simulates real-world async delays in tests
  */
-export const waitForWithJitter = async (
-	baseMs: number,
-	jitterMs: number = 0,
-): Promise<void> => {
+export const waitForWithJitter = async (baseMs: number, jitterMs = 0): Promise<void> => {
 	const jitter = Math.random() * jitterMs;
 	await waitForMs(baseMs + jitter);
 };
@@ -54,9 +51,7 @@ export const waitForWithJitter = async (
  * Wrapper around Testing Library's act for async operations
  * Ensures React state updates are properly flushed
  */
-export const actAsync = async (
-	callback: () => Promise<void> | void,
-): Promise<void> => {
+export const actAsync = async (callback: () => Promise<void> | void): Promise<void> => {
 	await act(async () => {
 		await callback();
 	});
@@ -95,7 +90,7 @@ export const renderHookAsync = async <T>(
 
 	let hookResult: { result: { current: T } } | undefined;
 
-	await act(async () => {
+	await act(() => {
 		hookResult = renderHook(setup, { initialProps });
 	});
 
@@ -112,11 +107,7 @@ export const renderHookAsync = async <T>(
 /**
  * Create a mock async function that resolves with value
  */
-export const createMockAsyncResolve = <T>(
-	resolveValue: T,
-	delay: number = 0,
-): ReturnType<typeof vi.fn> => {
-	const { vi } = require('vitest');
+export const createMockAsyncResolve = <T>(resolveValue: T, delay = 0): ReturnType<typeof vi.fn> => {
 	const mockFn = vi.fn();
 
 	mockFn.mockImplementation(async () => {
@@ -132,11 +123,7 @@ export const createMockAsyncResolve = <T>(
 /**
  * Create a mock async function that rejects with error
  */
-export const createMockAsyncReject = (
-	error: Error,
-	delay: number = 0,
-): ReturnType<typeof vi.fn> => {
-	const { vi } = require('vitest');
+export const createMockAsyncReject = (error: Error, delay = 0): ReturnType<typeof vi.fn> => {
 	const mockFn = vi.fn();
 
 	mockFn.mockImplementation(async () => {
@@ -155,7 +142,6 @@ export const createMockAsyncReject = (
 export const createMockAsyncSequence = <T>(
 	responses: Array<{ value?: T; error?: Error; delay?: number }>,
 ): ReturnType<typeof vi.fn> => {
-	const { vi } = require('vitest');
 	const mockFn = vi.fn();
 	let callCount = 0;
 
@@ -187,8 +173,8 @@ export const createMockAsyncSequence = <T>(
 export const simulateSpeechRecognition = async (
 	mockRecognition: any,
 	transcript: string,
-	confidence: number = 0.95,
-	delay: number = 100,
+	confidence = 0.95,
+	delay = 100,
 ): Promise<void> => {
 	await waitForMs(delay);
 
@@ -212,7 +198,7 @@ export const simulateSpeechRecognition = async (
 export const simulateSpeechRecognitionError = async (
 	mockRecognition: any,
 	error: string,
-	delay: number = 100,
+	delay = 100,
 ): Promise<void> => {
 	await waitForMs(delay);
 
@@ -226,7 +212,7 @@ export const simulateSpeechRecognitionError = async (
  */
 export const simulateSpeechSynthesis = async (
 	mockSpeechSynthesis: any,
-	delay: number = 200,
+	delay = 200,
 ): Promise<void> => {
 	await waitForMs(delay);
 
@@ -249,12 +235,12 @@ export const testBrazilianVoiceCommand = async (
 	mockRecognition: any,
 	command: string,
 	_expectedIntent: string,
-	delay: number = 100,
+	delay = 100,
 ): Promise<void> => {
 	await simulateSpeechRecognition(mockRecognition, command, 0.9, delay);
 
 	await waitFor(
-		async () => {
+		() => {
 			// Assert intent recognition happened
 			expect(mockRecognition.start).toHaveBeenCalled();
 		},
@@ -274,12 +260,7 @@ export const testBrazilianVoiceCommands = async (
 	}>,
 ): Promise<void> => {
 	for (const command of commands) {
-		await testBrazilianVoiceCommand(
-			mockRecognition,
-			command.text,
-			command.expectedIntent,
-			100,
-		);
+		await testBrazilianVoiceCommand(mockRecognition, command.text, command.expectedIntent, 100);
 
 		// Reset mock for next command
 		mockRecognition.onresult = vi.fn();
@@ -297,7 +278,7 @@ export const testBrazilianVoiceCommands = async (
 export const simulateBrazilianTransaction = async (
 	_transactionType: 'pix' | 'ted' | 'boleto',
 	_amount: number,
-	delay: number = 500,
+	delay = 500,
 ): Promise<{ success: boolean; transactionId: string }> => {
 	await waitForMs(delay);
 
@@ -336,7 +317,7 @@ export const testBankAccountOperation = async (
 export const testAsyncError = async (
 	asyncOperation: () => Promise<any>,
 	expectedError: string | RegExp,
-	timeout: number = 5000,
+	timeout = 5000,
 ): Promise<void> => {
 	let errorCaught: Error | null = null;
 
@@ -365,8 +346,8 @@ export const testAsyncError = async (
  */
 export const testAsyncRetry = async (
 	operation: () => Promise<any>,
-	maxAttempts: number = 3,
-	delayBetweenAttempts: number = 100,
+	maxAttempts = 3,
+	delayBetweenAttempts = 100,
 ): Promise<{ success: boolean; attempts: number; error?: Error }> => {
 	let lastError: Error | undefined;
 	let attempts = 0;
@@ -430,7 +411,6 @@ export const expectAsyncCompletesWithin = async <T>(
  */
 export const cleanupAsyncOperations = (): void => {
 	// Clear all pending timers
-	const vi = require('vitest');
 	vi.clearAllTimers();
 	vi.useRealTimers();
 };
@@ -438,14 +418,12 @@ export const cleanupAsyncOperations = (): void => {
 /**
  * Reset mock functions and async state
  */
-export const resetAsyncMocks = (...mocks: Array<any>): void => {
-	const vi = require('vitest');
-
-	mocks.forEach((mock) => {
+export const resetAsyncMocks = (...mocks: any[]): void => {
+	for (const mock of mocks) {
 		if (mock && typeof mock.mockReset === 'function') {
 			mock.mockReset();
 		}
-	});
+	}
 
 	vi.clearAllMocks();
 };

@@ -55,9 +55,7 @@ export const GetBudgetStatusSchema = z.object({
  * Retrieves AI-generated financial insights and recommendations
  */
 export const GetFinancialInsightsSchema = z.object({
-	type: z
-		.enum(['spending_pattern', 'budget_alert', 'opportunity', 'warning'])
-		.optional(),
+	type: z.enum(['spending_pattern', 'budget_alert', 'opportunity', 'warning']).optional(),
 	onlyUnread: z.boolean().optional().default(true),
 	limit: z.number().min(1).max(20).optional().default(5),
 });
@@ -78,14 +76,8 @@ export const GetSpendingTrendsSchema = z.object({
 
 export type GetAccountBalancesInput = z.infer<typeof GetAccountBalancesSchema>;
 export type GetTransactionsInput = z.infer<typeof GetTransactionsSchema>;
-export type GetSpendingByCategoryInput = z.infer<
-	typeof GetSpendingByCategorySchema
->;
-export type GetUpcomingPaymentsInput = z.infer<
-	typeof GetUpcomingPaymentsSchema
->;
+export type GetSpendingByCategoryInput = z.infer<typeof GetSpendingByCategorySchema>;
+export type GetUpcomingPaymentsInput = z.infer<typeof GetUpcomingPaymentsSchema>;
 export type GetBudgetStatusInput = z.infer<typeof GetBudgetStatusSchema>;
-export type GetFinancialInsightsInput = z.infer<
-	typeof GetFinancialInsightsSchema
->;
+export type GetFinancialInsightsInput = z.infer<typeof GetFinancialInsightsSchema>;
 export type GetSpendingTrendsInput = z.infer<typeof GetSpendingTrendsSchema>;

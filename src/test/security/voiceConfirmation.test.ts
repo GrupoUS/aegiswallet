@@ -7,10 +7,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BiometricAuthService } from '@/lib/security/biometricAuth';
-import {
-	FailureScenario,
-	VoiceConfirmationService,
-} from '@/lib/security/voiceConfirmation';
+import { FailureScenario, VoiceConfirmationService } from '@/lib/security/voiceConfirmation';
 import { VoiceRecognitionService } from '@/lib/security/voiceRecognition';
 
 describe('Voice Recognition Service', () => {
@@ -38,10 +35,7 @@ describe('Voice Recognition Service', () => {
 		});
 
 		it('should normalize accents', () => {
-			const result = service.calculateSimilarity(
-				'transferência',
-				'transferencia',
-			);
+			const result = service.calculateSimilarity('transferência', 'transferencia');
 			expect(result).toBe(1.0);
 		});
 
@@ -131,33 +125,25 @@ describe('Voice Confirmation Service', () => {
 
 	describe('Fallback Strategies', () => {
 		it('should return retry strategy for low confidence', () => {
-			const strategy = service.getFallbackStrategy(
-				FailureScenario.LOW_CONFIDENCE,
-			);
+			const strategy = service.getFallbackStrategy(FailureScenario.LOW_CONFIDENCE);
 			expect(strategy.action).toBe('retry');
 			expect(strategy.maxRetries).toBe(1);
 		});
 
 		it('should return retry strategy for audio quality', () => {
-			const strategy = service.getFallbackStrategy(
-				FailureScenario.AUDIO_QUALITY,
-			);
+			const strategy = service.getFallbackStrategy(FailureScenario.AUDIO_QUALITY);
 			expect(strategy.action).toBe('retry');
 			expect(strategy.maxRetries).toBe(1);
 		});
 
 		it('should return pin fallback for all providers failed', () => {
-			const strategy = service.getFallbackStrategy(
-				FailureScenario.ALL_PROVIDERS_FAILED,
-			);
+			const strategy = service.getFallbackStrategy(FailureScenario.ALL_PROVIDERS_FAILED);
 			expect(strategy.action).toBe('pin_fallback');
 			expect(strategy.maxRetries).toBe(0);
 		});
 
 		it('should return retry strategy for network error', () => {
-			const strategy = service.getFallbackStrategy(
-				FailureScenario.NETWORK_ERROR,
-			);
+			const strategy = service.getFallbackStrategy(FailureScenario.NETWORK_ERROR);
 			expect(strategy.action).toBe('retry');
 			expect(strategy.maxRetries).toBe(2);
 		});
@@ -225,10 +211,7 @@ describe('Biometric Authentication Service', () => {
 		});
 
 		it('should accept valid 6-digit PIN', async () => {
-			const result = await service.authenticateWithPIN(
-				'test-user-id',
-				'123456',
-			);
+			const result = await service.authenticateWithPIN('test-user-id', '123456');
 			expect(result.method).toBe('pin');
 		});
 
@@ -245,10 +228,7 @@ describe('Biometric Authentication Service', () => {
 		});
 
 		it('should reject PIN too long', async () => {
-			const result = await service.authenticateWithPIN(
-				'test-user-id',
-				'1234567',
-			);
+			const result = await service.authenticateWithPIN('test-user-id', '1234567');
 			expect(result.success).toBe(false);
 			expect(result.error).toContain('Invalid PIN format');
 		});
@@ -256,40 +236,24 @@ describe('Biometric Authentication Service', () => {
 
 	describe('SMS OTP Validation', () => {
 		it('should accept valid 6-digit OTP', async () => {
-			const result = await service.authenticateWithSMS(
-				'test-user-id',
-				'123456',
-				'+5511999999999',
-			);
+			const result = await service.authenticateWithSMS('test-user-id', '123456', '+5511999999999');
 			expect(result.method).toBe('sms');
 		});
 
 		it('should reject OTP with letters', async () => {
-			const result = await service.authenticateWithSMS(
-				'test-user-id',
-				'12a456',
-				'+5511999999999',
-			);
+			const result = await service.authenticateWithSMS('test-user-id', '12a456', '+5511999999999');
 			expect(result.success).toBe(false);
 			expect(result.error).toContain('Invalid OTP format');
 		});
 
 		it('should reject OTP too short', async () => {
-			const result = await service.authenticateWithSMS(
-				'test-user-id',
-				'12345',
-				'+5511999999999',
-			);
+			const result = await service.authenticateWithSMS('test-user-id', '12345', '+5511999999999');
 			expect(result.success).toBe(false);
 			expect(result.error).toContain('Invalid OTP format');
 		});
 
 		it('should reject OTP too long', async () => {
-			const result = await service.authenticateWithSMS(
-				'test-user-id',
-				'1234567',
-				'+5511999999999',
-			);
+			const result = await service.authenticateWithSMS('test-user-id', '1234567', '+5511999999999');
 			expect(result.success).toBe(false);
 			expect(result.error).toContain('Invalid OTP format');
 		});
@@ -303,11 +267,7 @@ describe('Biometric Authentication Service', () => {
 		});
 
 		it('should track processing time for SMS authentication', async () => {
-			const result = await service.authenticateWithSMS(
-				'test-user-id',
-				'123456',
-				'+5511999999999',
-			);
+			const result = await service.authenticateWithSMS('test-user-id', '123456', '+5511999999999');
 			expect(result.processingTime).toBeGreaterThanOrEqual(0);
 			expect(result.processingTime).toBeLessThan(1000); // Should be fast
 		});
@@ -331,11 +291,7 @@ describe('Security Integration', () => {
 			const databaseTime = 500;
 
 			const totalTime =
-				voiceTime +
-				transcriptionTime +
-				similarityTime +
-				biometricTime +
-				databaseTime;
+				voiceTime + transcriptionTime + similarityTime + biometricTime + databaseTime;
 
 			expect(totalTime).toBeLessThan(10000);
 		});

@@ -4,13 +4,7 @@ import { Helmet } from 'react-helmet-async';
 
 import { BillingHistory } from '@/components/billing/BillingHistory';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBillingHistory } from '@/hooks/billing';
@@ -28,12 +22,9 @@ function BillingHistoryPage() {
 				<div className="max-w-4xl mx-auto">
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-red-600">
-								Erro ao Carregar Histórico
-							</CardTitle>
+							<CardTitle className="text-red-600">Erro ao Carregar Histórico</CardTitle>
 							<CardDescription>
-								Não foi possível carregar seu histórico de pagamentos. Tente
-								novamente mais tarde.
+								Não foi possível carregar seu histórico de pagamentos. Tente novamente mais tarde.
 							</CardDescription>
 						</CardHeader>
 					</Card>
@@ -65,9 +56,7 @@ function BillingHistoryPage() {
 									</a>
 								</Button>
 								<div>
-									<h1 className="text-3xl font-bold tracking-tight">
-										Histórico de Pagamentos
-									</h1>
+									<h1 className="text-3xl font-bold tracking-tight">Histórico de Pagamentos</h1>
 									<p className="text-muted-foreground">
 										Veja todas as suas transações e pagamentos realizados
 									</p>
@@ -103,9 +92,7 @@ function BillingHistoryPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>Transações</CardTitle>
-							<CardDescription>
-								{data?.total ?? 0} transações encontradas
-							</CardDescription>
+							<CardDescription>{data?.total ?? 0} transações encontradas</CardDescription>
 						</CardHeader>
 						<CardContent>
 							{isLoading ? (

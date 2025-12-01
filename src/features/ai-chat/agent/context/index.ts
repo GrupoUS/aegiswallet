@@ -16,9 +16,7 @@ export { FinancialContextService } from './FinancialContextService';
  * @param userId - User ID to fetch context for
  * @returns Financial context object
  */
-export async function buildFinancialContext(
-	userId: string,
-): Promise<FinancialContext> {
+export async function buildFinancialContext(userId: string): Promise<FinancialContext> {
 	const service = new FinancialContextService(userId);
 	return service.getContext();
 }
@@ -52,11 +50,7 @@ export function formatContextForPrompt(context: FinancialContext): string {
 		lines.push('', '### Alertas Pendentes:');
 		for (const alert of context.pendingAlerts) {
 			const severityIcon =
-				alert.severity === 'high'
-					? '🔴'
-					: alert.severity === 'medium'
-						? '🟡'
-						: '🟢';
+				alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : '🟢';
 			lines.push(`- ${severityIcon} ${alert.message}`);
 		}
 	}
@@ -72,10 +66,7 @@ export function formatContextForPrompt(context: FinancialContext): string {
 		}
 	}
 
-	lines.push(
-		'',
-		`*Última atualização: ${context.lastUpdated.toLocaleString('pt-BR')}*`,
-	);
+	lines.push('', `*Última atualização: ${context.lastUpdated.toLocaleString('pt-BR')}*`);
 
 	return lines.join('\n');
 }

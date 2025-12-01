@@ -89,9 +89,7 @@ export class PushProvider {
 
 	private base64UrlToUint8Array(base64UrlData: string): Uint8Array {
 		const padding = '='.repeat((4 - (base64UrlData.length % 4)) % 4);
-		const base64 = (base64UrlData + padding)
-			.replace(/-/g, '+')
-			.replace(/_/g, '/');
+		const base64 = (base64UrlData + padding).replace(/-/g, '+').replace(/_/g, '/');
 		const rawData = atob(base64);
 		const buffer = new Uint8Array(rawData.length);
 		for (let i = 0; i < rawData.length; ++i) {
@@ -110,16 +108,14 @@ export class PushProvider {
 		const registration = await navigator.serviceWorker.ready;
 		const serverKey = this.base64UrlToUint8Array(this.config.vapidPublicKey);
 		const normalizedServerKey =
-			serverKey.buffer instanceof ArrayBuffer
-				? serverKey.buffer
-				: serverKey.slice().buffer;
+			serverKey.buffer instanceof ArrayBuffer ? serverKey.buffer : serverKey.slice().buffer;
 		const subscription = await registration.pushManager.subscribe({
 			applicationServerKey: normalizedServerKey,
 			userVisibleOnly: true,
 		});
 
 		const subscriptionJson = subscription.toJSON();
-		if (!subscriptionJson.keys?.auth || !subscriptionJson.keys?.p256dh) {
+		if (!(subscriptionJson.keys?.auth && subscriptionJson.keys?.p256dh)) {
 			throw new Error('Push subscription keys are missing');
 		}
 
@@ -175,9 +171,7 @@ export class PushProvider {
 	/**
 	 * Get user's subscription
 	 */
-	async getUserSubscription(
-		userId: string,
-	): Promise<StoredPushSubscription | null> {
+	async getUserSubscription(userId: string): Promise<StoredPushSubscription | null> {
 		// Check in-memory cache first
 		if (this.subscriptions.has(userId)) {
 			return this.subscriptions.get(userId) as StoredPushSubscription;
@@ -216,10 +210,7 @@ export class PushProvider {
 	/**
 	 * Send push notification
 	 */
-	async sendPushNotification(
-		userId: string,
-		message: PushMessage,
-	): Promise<PushResult> {
+	async sendPushNotification(userId: string, message: PushMessage): Promise<PushResult> {
 		const startTime = Date.now();
 
 		try {
@@ -243,8 +234,8 @@ export class PushProvider {
 				},
 				icon: message.icon || '/icon-192x192.png',
 				image: message.image,
-				requireInteraction: message.requireInteraction || false,
-				silent: message.silent || false,
+				requireInteraction: message.requireInteraction,
+				silent: message.silent,
 				tag: message.tag,
 				title: message.title,
 			});
@@ -285,16 +276,9 @@ export class PushProvider {
 				success: true,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-			await this.logPushNotification(
-				userId,
-				message,
-				undefined,
-				'failed',
-				errorMessage,
-			);
+			await this.logPushNotification(userId, message, undefined, 'failed', errorMessage);
 
 			return {
 				error: errorMessage,
@@ -407,11 +391,7 @@ export class PushProvider {
 	/**
 	 * Handle push notification response
 	 */
-	async handlePushResponse(
-		requestId: string,
-		approved: boolean,
-		userId: string,
-	): Promise<void> {
+	async handlePushResponse(requestId: string, approved: boolean, userId: string): Promise<void> {
 		try {
 			await apiClient.post('/v1/security/push-auth-requests/respond', {
 				request_id: requestId,

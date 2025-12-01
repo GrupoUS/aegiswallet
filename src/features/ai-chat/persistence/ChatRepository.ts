@@ -38,10 +38,7 @@ export class ChatRepository {
 	/**
 	 * Create a new conversation
 	 */
-	async createConversation(
-		userId: string,
-		title?: string,
-	): Promise<Conversation> {
+	async createConversation(userId: string, title?: string): Promise<Conversation> {
 		try {
 			const insertData: InsertChatSession = {
 				userId,
@@ -49,10 +46,7 @@ export class ChatRepository {
 				isActive: true,
 			};
 
-			const [data] = await this.db
-				.insert(chatSessions)
-				.values(insertData)
-				.returning();
+			const [data] = await this.db.insert(chatSessions).values(insertData).returning();
 
 			return this.mapConversation(data);
 		} catch (error) {
@@ -131,18 +125,13 @@ export class ChatRepository {
 	/**
 	 * Save a message to a conversation
 	 */
-	async saveMessage(
-		conversationId: string,
-		message: ChatMessage,
-	): Promise<void> {
+	async saveMessage(conversationId: string, message: ChatMessage): Promise<void> {
 		try {
 			const insertData: InsertChatMessage = {
 				sessionId: conversationId,
 				role: message.role,
 				content:
-					typeof message.content === 'string'
-						? message.content
-						: JSON.stringify(message.content),
+					typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
 				context: message.metadata || null,
 			};
 
@@ -160,10 +149,7 @@ export class ChatRepository {
 	/**
 	 * Get messages from a conversation
 	 */
-	async getMessages(
-		conversationId: string,
-		limit?: number,
-	): Promise<ChatMessage[]> {
+	async getMessages(conversationId: string, limit?: number): Promise<ChatMessage[]> {
 		try {
 			const baseQuery = this.db
 				.select()
@@ -187,19 +173,14 @@ export class ChatRepository {
 	/**
 	 * Get messages with context window (last N messages)
 	 */
-	async getMessagesInContextWindow(
-		conversationId: string,
-	): Promise<ChatMessage[]> {
+	async getMessagesInContextWindow(conversationId: string): Promise<ChatMessage[]> {
 		return this.getMessages(conversationId, this.contextWindowSize);
 	}
 
 	/**
 	 * Save context snapshot for a conversation (stored in session metadata)
 	 */
-	async saveContextSnapshot(
-		conversationId: string,
-		context: FinancialContext,
-	): Promise<void> {
+	async saveContextSnapshot(conversationId: string, context: FinancialContext): Promise<void> {
 		try {
 			await this.db
 				.update(chatSessions)
@@ -229,9 +210,7 @@ export class ChatRepository {
 	/**
 	 * Get latest context snapshot for a conversation
 	 */
-	async getLatestContextSnapshot(
-		conversationId: string,
-	): Promise<FinancialContext | null> {
+	async getLatestContextSnapshot(conversationId: string): Promise<FinancialContext | null> {
 		try {
 			const [data] = await this.db
 				.select({ metadata: chatSessions.metadata })
@@ -247,16 +226,10 @@ export class ChatRepository {
 			if (!snapshot) return null;
 
 			return {
-				recentTransactions:
-					(snapshot.recentTransactions as Transaction[]) || [],
-				accountBalances:
-					(snapshot.accountBalances as FinancialContext['accountBalances']) ||
-					[],
-				upcomingEvents:
-					(snapshot.upcomingEvents as FinancialContext['upcomingEvents']) || [],
-				userPreferences:
-					(snapshot.userPreferences as FinancialContext['userPreferences']) ||
-					{},
+				recentTransactions: (snapshot.recentTransactions as Transaction[]) || [],
+				accountBalances: (snapshot.accountBalances as FinancialContext['accountBalances']) || [],
+				upcomingEvents: (snapshot.upcomingEvents as FinancialContext['upcomingEvents']) || [],
+				userPreferences: (snapshot.userPreferences as FinancialContext['userPreferences']) || {},
 				summary: {
 					totalBalance: 0,
 					monthlyIncome: 0,
@@ -277,10 +250,7 @@ export class ChatRepository {
 	/**
 	 * Update conversation title
 	 */
-	async updateConversationTitle(
-		conversationId: string,
-		title: string,
-	): Promise<void> {
+	async updateConversationTitle(conversationId: string, title: string): Promise<void> {
 		try {
 			await this.db
 				.update(chatSessions)
@@ -301,9 +271,7 @@ export class ChatRepository {
 	 */
 	async deleteConversation(conversationId: string): Promise<void> {
 		try {
-			await this.db
-				.delete(chatSessions)
-				.where(eq(chatSessions.id, conversationId));
+			await this.db.delete(chatSessions).where(eq(chatSessions.id, conversationId));
 		} catch (error) {
 			logger.error('Error deleting conversation', {
 				component: 'ChatRepository',

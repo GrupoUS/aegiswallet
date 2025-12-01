@@ -59,14 +59,8 @@ export async function getAccountBalances(
 		lastSync: acc.lastSync,
 	}));
 
-	const totalBalance = mappedAccounts.reduce(
-		(sum, acc) => sum + acc.balance,
-		0,
-	);
-	const totalAvailable = mappedAccounts.reduce(
-		(sum, acc) => sum + acc.availableBalance,
-		0,
-	);
+	const totalBalance = mappedAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+	const totalAvailable = mappedAccounts.reduce((sum, acc) => sum + acc.availableBalance, 0);
 
 	// Generate human-readable summary in Portuguese
 	const summary =

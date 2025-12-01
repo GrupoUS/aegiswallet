@@ -1,9 +1,4 @@
-import type {
-	CategorySummary,
-	FinancialAlert,
-	FinancialContext,
-	UpcomingPayment,
-} from '../types';
+import type { CategorySummary, FinancialAlert, FinancialContext, UpcomingPayment } from '../types';
 
 /**
  * Formata número como moeda brasileira
@@ -44,17 +39,10 @@ function translateTrend(trend: 'up' | 'down' | 'stable'): string {
  * Gera o bloco de contexto financeiro para injeção no system prompt
  */
 export function buildFinancialContextBlock(context: FinancialContext): string {
-	const {
-		totalBalance,
-		availableBalance,
-		monthlyIncome,
-		monthlyExpenses,
-		topCategories,
-	} = context;
+	const { totalBalance, availableBalance, monthlyIncome, monthlyExpenses, topCategories } = context;
 
 	const savings = monthlyIncome - monthlyExpenses;
-	const savingsPercentage =
-		monthlyIncome > 0 ? Math.round((savings / monthlyIncome) * 100) : 0;
+	const savingsPercentage = monthlyIncome > 0 ? Math.round((savings / monthlyIncome) * 100) : 0;
 
 	const topCategoriesText = topCategories
 		.slice(0, 5)
@@ -105,9 +93,7 @@ export function buildAlertsBlock(alerts: FinancialAlert[]): string {
 /**
  * Gera bloco de pagamentos próximos
  */
-export function buildUpcomingPaymentsBlock(
-	payments: UpcomingPayment[],
-): string {
+export function buildUpcomingPaymentsBlock(payments: UpcomingPayment[]): string {
 	if (payments.length === 0) {
 		return 'Nenhum pagamento agendado nos próximos dias.';
 	}

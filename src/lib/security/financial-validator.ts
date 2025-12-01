@@ -292,8 +292,7 @@ export const PIX_PATTERNS = {
 	},
 	RANDOM_KEY: {
 		format: 'XXXX-XXXX-XXXX-XXXX-XXXX',
-		regex:
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+		regex: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
 	},
 };
 
@@ -313,14 +312,7 @@ export const TRANSACTION_CATEGORIES = {
 		'impostos',
 		'outros_gastos',
 	],
-	INCOME: [
-		'salario',
-		'freelancer',
-		'investimentos',
-		'aluguel',
-		'vendas',
-		'outros_recebimentos',
-	],
+	INCOME: ['salario', 'freelancer', 'investimentos', 'aluguel', 'vendas', 'outros_recebimentos'],
 };
 
 /**
@@ -367,28 +359,16 @@ export const financialSchemas = {
 		account: z
 			.string()
 			.regex(/^\d{1,12}$/, 'Account must be 1-12 digits')
-			.refine(
-				(account) => !/^0+$/.test(account),
-				'Account cannot be all zeros',
-			),
-		accountDigit: z
-			.string()
-			.regex(/^\d$/, 'Account digit must be a single digit'),
+			.refine((account) => !/^0+$/.test(account), 'Account cannot be all zeros'),
+		accountDigit: z.string().regex(/^\d$/, 'Account digit must be a single digit'),
 		agency: z
 			.string()
 			.regex(/^\d{1,6}$/, 'Agency must be 1-6 digits')
 			.refine((agency) => !/^0+$/.test(agency), 'Agency cannot be all zeros'),
-		bankCode: z
-			.string()
-			.refine(
-				(code) => BRAZILIAN_BANKS.has(code),
-				'Invalid Brazilian bank code',
-			),
+		bankCode: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid Brazilian bank code'),
 	}),
 	financialInstitution: z.object({
-		code: z
-			.string()
-			.refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid bank code'),
+		code: z.string().refine((code) => BRAZILIAN_BANKS.has(code), 'Invalid bank code'),
 		name: z
 			.string()
 			.min(2, 'Institution name must be at least 2 characters')
@@ -400,8 +380,7 @@ export const financialSchemas = {
 			type: z.enum(['cpf', 'cnpj', 'email', 'phone', 'random']),
 		})
 		.refine((data) => {
-			const pattern =
-				PIX_PATTERNS[data.type.toUpperCase() as keyof typeof PIX_PATTERNS];
+			const pattern = PIX_PATTERNS[data.type.toUpperCase() as keyof typeof PIX_PATTERNS];
 			return pattern.regex.test(data.key.replace(/\D/g, ''));
 		}, 'Invalid PIX key format for the specified type'),
 	transaction: z.object({
@@ -425,9 +404,7 @@ export const financialSchemas = {
 		payment_method: z
 			.enum(['cash', 'debit_card', 'credit_card', 'pix', 'boleto', 'transfer'])
 			.optional(),
-		status: z
-			.enum(['pending', 'posted', 'failed', 'cancelled'])
-			.default('posted'),
+		status: z.enum(['pending', 'posted', 'failed', 'cancelled']).default('posted'),
 		tags: z.array(z.string()).max(10).optional(),
 		transaction_date: z.string().refine((date) => {
 			const parsed = new Date(date);
@@ -461,19 +438,13 @@ export function validateTransactionForFraud(transaction: {
 
 	// Check for high-value transactions
 	if (transaction.amount > FRAUD_PATTERNS.HIGH_VALUE_TRANSACTION) {
-		warnings.push(
-			`High-value transaction: R$ ${transaction.amount.toFixed(2)}`,
-		);
+		warnings.push(`High-value transaction: R$ ${transaction.amount.toFixed(2)}`);
 		riskLevel = 'high';
 	}
 
 	// Check for suspicious descriptions
 	const lowerDesc = transaction.description.toLowerCase();
-	if (
-		FRAUD_PATTERNS.SUSPICIOUS_DESCRIPTIONS.some((pattern) =>
-			lowerDesc.includes(pattern),
-		)
-	) {
+	if (FRAUD_PATTERNS.SUSPICIOUS_DESCRIPTIONS.some((pattern) => lowerDesc.includes(pattern))) {
 		warnings.push('Suspicious transaction description detected');
 		riskLevel = 'high';
 		blocked = true;
@@ -483,22 +454,15 @@ export function validateTransactionForFraud(transaction: {
 	if (transaction.previousTransactions) {
 		const now = Date.now();
 		const recentTransactions = transaction.previousTransactions.filter(
-			(tx) =>
-				now - tx.timestamp < FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.window,
+			(tx) => now - tx.timestamp < FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.window,
 		);
 
-		if (
-			recentTransactions.length >=
-			FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.count
-		) {
+		if (recentTransactions.length >= FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.count) {
 			const smallTransactions = recentTransactions.filter(
 				(tx) => tx.amount < FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.amount,
 			);
 
-			if (
-				smallTransactions.length >=
-				FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.count
-			) {
+			if (smallTransactions.length >= FRAUD_PATTERNS.FREQUENT_SMALL_TRANSACTIONS.count) {
 				warnings.push('Pattern of frequent small transactions detected');
 				riskLevel = 'high';
 				blocked = true;
@@ -510,9 +474,7 @@ export function validateTransactionForFraud(transaction: {
 			(tx) => now - tx.timestamp < FRAUD_PATTERNS.RAPID_SUCCESSION.window,
 		);
 
-		if (
-			veryRecentTransactions.length >= FRAUD_PATTERNS.RAPID_SUCCESSION.count
-		) {
+		if (veryRecentTransactions.length >= FRAUD_PATTERNS.RAPID_SUCCESSION.count) {
 			warnings.push('Rapid succession of transactions detected');
 			riskLevel = 'high';
 			blocked = true;
@@ -549,27 +511,27 @@ export function validateCPF(cpf: string): boolean {
 	let remainder: number;
 
 	for (let i = 1; i <= 9; i++) {
-		sum += parseInt(cleanCPF.substring(i - 1, i), 10) * (11 - i);
+		sum += Number.parseInt(cleanCPF.substring(i - 1, i), 10) * (11 - i);
 	}
 
 	remainder = (sum * 10) % 11;
 	if (remainder === 10 || remainder === 11) {
 		remainder = 0;
 	}
-	if (remainder !== parseInt(cleanCPF.substring(9, 10), 10)) {
+	if (remainder !== Number.parseInt(cleanCPF.substring(9, 10), 10)) {
 		return false;
 	}
 
 	sum = 0;
 	for (let i = 1; i <= 10; i++) {
-		sum += parseInt(cleanCPF.substring(i - 1, i), 10) * (12 - i);
+		sum += Number.parseInt(cleanCPF.substring(i - 1, i), 10) * (12 - i);
 	}
 
 	remainder = (sum * 10) % 11;
 	if (remainder === 10 || remainder === 11) {
 		remainder = 0;
 	}
-	if (remainder !== parseInt(cleanCPF.substring(10, 11), 10)) {
+	if (remainder !== Number.parseInt(cleanCPF.substring(10, 11), 10)) {
 		return false;
 	}
 
@@ -593,14 +555,14 @@ export function validateCNPJ(cnpj: string): boolean {
 	let sum = 0;
 	let pos = 5;
 	for (let i = 0; i < 12; i++) {
-		sum += parseInt(cleanCNPJ[i], 10) * pos;
+		sum += Number.parseInt(cleanCNPJ[i], 10) * pos;
 		pos = pos === 2 ? 9 : pos - 1;
 	}
 
 	let remainder = sum % 11;
 	const firstDigit = remainder < 2 ? 0 : 11 - remainder;
 
-	if (firstDigit !== parseInt(cleanCNPJ[12], 10)) {
+	if (firstDigit !== Number.parseInt(cleanCNPJ[12], 10)) {
 		return false;
 	}
 
@@ -608,14 +570,14 @@ export function validateCNPJ(cnpj: string): boolean {
 	sum = 0;
 	pos = 6;
 	for (let i = 0; i < 13; i++) {
-		sum += parseInt(cleanCNPJ[i], 10) * pos;
+		sum += Number.parseInt(cleanCNPJ[i], 10) * pos;
 		pos = pos === 2 ? 9 : pos - 1;
 	}
 
 	remainder = sum % 11;
 	const secondDigit = remainder < 2 ? 0 : 11 - remainder;
 
-	return secondDigit === parseInt(cleanCNPJ[13], 10);
+	return secondDigit === Number.parseInt(cleanCNPJ[13], 10);
 }
 
 /**
@@ -637,7 +599,7 @@ export function validateAndFormatCurrency(amount: string | number): {
 				.replace(/\./g, '')
 				.replace(/,/g, '.');
 
-			numeric = parseFloat(cleanAmount);
+			numeric = Number.parseFloat(cleanAmount);
 		} else {
 			numeric = amount;
 		}

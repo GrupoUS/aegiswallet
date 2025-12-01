@@ -37,12 +37,7 @@ function getWeekDays(date: Date): WeekDay[] {
 	});
 }
 
-export function WeekView({
-	weekStart,
-	events,
-	onEventUpdate,
-	onEventEdit,
-}: WeekViewProps) {
+export function WeekView({ weekStart, events, onEventUpdate, onEventEdit }: WeekViewProps) {
 	const weekDays = getWeekDays(weekStart);
 
 	return (

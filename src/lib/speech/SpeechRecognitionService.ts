@@ -64,18 +64,9 @@ interface SpeechRecognitionType extends EventTarget {
 	onaudioend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
 	onaudiostart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
 	onend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
-	onerror:
-		| ((
-				this: SpeechRecognitionType,
-				ev: SpeechRecognitionErrorEventType,
-		  ) => void)
-		| null;
-	onnomatch:
-		| ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void)
-		| null;
-	onresult:
-		| ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void)
-		| null;
+	onerror: ((this: SpeechRecognitionType, ev: SpeechRecognitionErrorEventType) => void) | null;
+	onnomatch: ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void) | null;
+	onresult: ((this: SpeechRecognitionType, ev: SpeechRecognitionEventType) => void) | null;
 	onsoundend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
 	onsoundstart: ((this: SpeechRecognitionType, ev: Event) => void) | null;
 	onspeechend: ((this: SpeechRecognitionType, ev: Event) => void) | null;
@@ -138,8 +129,8 @@ export class SpeechRecognitionService {
 	private recognition: SpeechRecognitionType | null = null;
 	private config: SpeechRecognitionConfig;
 	private audioConfig: AudioPreprocessingConfig;
-	private isSupported: boolean = false;
-	private isListening: boolean = false;
+	private isSupported = false;
+	private isListening = false;
 
 	// Performance tracking
 	private performanceMetrics = {
@@ -161,8 +152,7 @@ export class SpeechRecognitionService {
 
 	constructor(config: Partial<SpeechRecognitionConfig> = {}) {
 		// Check Web Speech API support
-		this.isSupported =
-			'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+		this.isSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
 
 		// Default configuration optimized for Brazilian Portuguese
 		this.config = {
@@ -340,11 +330,7 @@ export class SpeechRecognitionService {
 
 		// Get alternatives
 		const alternatives: RecognitionAlternative[] = [];
-		for (
-			let i = 0;
-			i < Math.min(result.length, this.config.maxAlternatives);
-			i++
-		) {
+		for (let i = 0; i < Math.min(result.length, this.config.maxAlternatives); i++) {
 			alternatives.push({
 				confidence: result[i].confidence || 0,
 				transcript: result[i].transcript,
@@ -388,8 +374,7 @@ export class SpeechRecognitionService {
 			},
 			'not-allowed': {
 				isRetryable: false,
-				message:
-					'Microphone access denied. Please enable microphone permissions.',
+				message: 'Microphone access denied. Please enable microphone permissions.',
 			},
 			'service-not-allowed': {
 				isRetryable: true,
@@ -471,10 +456,7 @@ export class SpeechRecognitionService {
 						const speechError: SpeechRecognitionError = {
 							error: 'cloud-fallback-error',
 							isRetryable: false,
-							message:
-								error instanceof Error
-									? error.message
-									: 'Cloud recognition failed',
+							message: error instanceof Error ? error.message : 'Cloud recognition failed',
 							provider: 'cloud-fallback',
 						};
 						options.onError?.(speechError);
@@ -540,8 +522,7 @@ export class SpeechRecognitionService {
 				analyser.getByteFrequencyData(dataArray);
 
 				// Calculate average volume
-				const average =
-					dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+				const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
 
 				// If volume exceeds threshold, we have voice activity
 				if (average > 30) {
@@ -572,13 +553,9 @@ export class SpeechRecognitionService {
 		// Update running averages
 		const total = this.performanceMetrics.totalRecognitions;
 		this.performanceMetrics.averageResponseTime =
-			(this.performanceMetrics.averageResponseTime * (total - 1) +
-				result.processingTime) /
-			total;
+			(this.performanceMetrics.averageResponseTime * (total - 1) + result.processingTime) / total;
 		this.performanceMetrics.averageConfidence =
-			(this.performanceMetrics.averageConfidence * (total - 1) +
-				result.confidence) /
-			total;
+			(this.performanceMetrics.averageConfidence * (total - 1) + result.confidence) / total;
 	}
 
 	/**
@@ -594,8 +571,7 @@ export class SpeechRecognitionService {
 					: 0,
 			fallbackRate:
 				this.performanceMetrics.totalRecognitions > 0
-					? this.performanceMetrics.fallbackUsage /
-						this.performanceMetrics.totalRecognitions
+					? this.performanceMetrics.fallbackUsage / this.performanceMetrics.totalRecognitions
 					: 0,
 		};
 	}
@@ -603,9 +579,7 @@ export class SpeechRecognitionService {
 	/**
 	 * Configure Brazilian Portuguese regional variant
 	 */
-	configureRegionalVariant(
-		variant: keyof typeof this.BRAZILIAN_VARIANTS,
-	): void {
+	configureRegionalVariant(variant: keyof typeof this.BRAZILIAN_VARIANTS): void {
 		if (variant === 'pt-BR') {
 			this.config.language = 'pt-BR';
 		} else {
@@ -623,7 +597,7 @@ export class SpeechRecognitionService {
 	 * Add custom grammar for financial commands
 	 */
 	addFinancialGrammar(): void {
-		if (!this.recognition || !('SpeechGrammarList' in window)) {
+		if (!(this.recognition && 'SpeechGrammarList' in window)) {
 			return;
 		}
 
@@ -643,7 +617,7 @@ export class SpeechRecognitionService {
     `;
 
 		const SpeechGrammarListClass = getSpeechGrammarListConstructor();
-		if (!SpeechGrammarListClass || !this.recognition) {
+		if (!(SpeechGrammarListClass && this.recognition)) {
 			return; // Grammar list not supported
 		}
 		const speechGrammarList = new SpeechGrammarListClass();
@@ -702,9 +676,7 @@ export class SpeechRecognitionService {
  * Get the SpeechRecognition constructor from the browser
  * Works with both standard and webkit-prefixed versions
  */
-function getSpeechRecognitionConstructor():
-	| (new () => SpeechRecognitionType)
-	| undefined {
+function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | undefined {
 	// Type assertion needed for browser APIs
 	const win = window as typeof window & {
 		SpeechRecognition?: (new () => SpeechRecognitionType) | undefined;
@@ -717,9 +689,7 @@ function getSpeechRecognitionConstructor():
  * Get the SpeechGrammarList constructor from the browser
  * Works with both standard and webkit-prefixed versions
  */
-function getSpeechGrammarListConstructor():
-	| (new () => SpeechGrammarListType)
-	| undefined {
+function getSpeechGrammarListConstructor(): (new () => SpeechGrammarListType) | undefined {
 	// Type assertion needed for browser APIs
 	const win = window as typeof window & {
 		SpeechGrammarList?: (new () => SpeechGrammarListType) | undefined;

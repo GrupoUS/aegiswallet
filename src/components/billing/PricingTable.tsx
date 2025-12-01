@@ -6,11 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePlans, useSubscription } from '@/hooks/billing';
 
 export function PricingTable() {
-	const {
-		data: plans,
-		isLoading: plansLoading,
-		error: plansError,
-	} = usePlans();
+	const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
 	const { data: subscription } = useSubscription();
 
 	if (plansLoading) {
@@ -27,9 +23,7 @@ export function PricingTable() {
 		return (
 			<Alert variant="destructive">
 				<AlertCircle className="h-4 w-4" />
-				<AlertDescription>
-					Erro ao carregar os planos. Por favor, tente novamente.
-				</AlertDescription>
+				<AlertDescription>Erro ao carregar os planos. Por favor, tente novamente.</AlertDescription>
 			</Alert>
 		);
 	}

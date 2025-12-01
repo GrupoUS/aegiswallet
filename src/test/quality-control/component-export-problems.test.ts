@@ -15,11 +15,7 @@ const { PopoverAnchor } = PopoverModule;
 const { SheetOverlay, SheetPortal } = SheetModule;
 const { Button, buttonVariants } = ButtonModule;
 
-const componentPaths = [
-	'@/components/ui/button',
-	'@/components/ui/card',
-	'@/components/ui/input',
-];
+const componentPaths = ['@/components/ui/button', '@/components/ui/card', '@/components/ui/input'];
 
 describe('Component Export Problems', () => {
 	describe('UI Component Exports', () => {
@@ -27,8 +23,7 @@ describe('Component Export Problems', () => {
 			expect(PopoverAnchor).toBeDefined();
 			const isReactComponent =
 				typeof PopoverAnchor === 'function' ||
-				(typeof PopoverAnchor === 'object' &&
-					(PopoverAnchor as any).$$typeof !== undefined);
+				(typeof PopoverAnchor === 'object' && (PopoverAnchor as any).$$typeof !== undefined);
 			expect(isReactComponent).toBe(true);
 		});
 
@@ -37,14 +32,12 @@ describe('Component Export Problems', () => {
 			expect(SheetPortal).toBeDefined();
 			const isSheetOverlayComponent =
 				typeof SheetOverlay === 'function' ||
-				(typeof SheetOverlay === 'object' &&
-					(SheetOverlay as any).$$typeof !== undefined);
+				(typeof SheetOverlay === 'object' && (SheetOverlay as any).$$typeof !== undefined);
 			expect(isSheetOverlayComponent).toBe(true);
 
 			const isSheetPortalComponent =
 				typeof SheetPortal === 'function' ||
-				(typeof SheetPortal === 'object' &&
-					(SheetPortal as any).$$typeof !== undefined);
+				(typeof SheetPortal === 'object' && (SheetPortal as any).$$typeof !== undefined);
 			expect(isSheetPortalComponent).toBe(true);
 		});
 	});
@@ -84,8 +77,7 @@ describe('Component Export Problems', () => {
 			expect(Object.keys(uiComponents).length).toBeGreaterThan(0);
 
 			Object.keys(uiComponents).forEach((componentName) => {
-				const Component =
-					uiComponents[componentName as keyof typeof uiComponents];
+				const Component = uiComponents[componentName as keyof typeof uiComponents];
 				expect(Component).toBeDefined();
 			});
 		});
@@ -116,9 +108,7 @@ describe('Component Export Problems', () => {
 			expect(Button).toBeDefined();
 			expect(
 				typeof Button === 'function' ||
-					(typeof Button === 'object' &&
-						Button !== null &&
-						(Button as any).$$typeof !== undefined),
+					(typeof Button === 'object' && Button !== null && (Button as any).$$typeof !== undefined),
 			).toBe(true);
 		});
 	});
@@ -126,9 +116,7 @@ describe('Component Export Problems', () => {
 	describe('Dynamic Import Issues', () => {
 		it('should support dynamic imports of components', async () => {
 			try {
-				const { Button: DynamicButton } = await import(
-					'@/components/ui/button'
-				);
+				const { Button: DynamicButton } = await import('@/components/ui/button');
 				expect(DynamicButton).toBeDefined();
 			} catch (error) {
 				expect.fail(`Dynamic import failed: ${error}`);

@@ -1,10 +1,4 @@
-import {
-	AlertTriangle,
-	CheckCircle,
-	Clock,
-	LogOut,
-	RefreshCw,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, LogOut, RefreshCw } from 'lucide-react';
 import type React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -12,14 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useSessionManager } from '@/hooks/useSessionManager';
 
 export const SessionStatus: React.FC = () => {
-	const {
-		isActive,
-		timeRemainingFormatted,
-		timeRemaining,
-		warningShown,
-		extendSession,
-		logout,
-	} = useSessionManager();
+	const { isActive, timeRemainingFormatted, timeRemaining, warningShown, extendSession, logout } =
+		useSessionManager();
 
 	if (!isActive) {
 		return (
@@ -86,11 +74,7 @@ export const SessionStatus: React.FC = () => {
 			{/* Time Remaining */}
 			<div className="flex items-center gap-1 text-gray-600 text-sm">
 				<Clock className="h-4 w-4" />
-				<span
-					className={
-						warningLevel === 'critical' ? 'font-semibold text-red-600' : ''
-					}
-				>
+				<span className={warningLevel === 'critical' ? 'font-semibold text-red-600' : ''}>
 					{timeRemainingFormatted}
 				</span>
 			</div>
@@ -133,8 +117,7 @@ export const SessionStatus: React.FC = () => {
 
 // Compact version for header/sidebar
 export const SessionStatusCompact: React.FC = () => {
-	const { isActive, timeRemainingFormatted, timeRemaining, extendSession } =
-		useSessionManager();
+	const { isActive, timeRemainingFormatted, timeRemaining, extendSession } = useSessionManager();
 
 	if (!isActive) {
 		return null;
@@ -147,33 +130,20 @@ export const SessionStatusCompact: React.FC = () => {
 		<div className="flex items-center gap-2">
 			<Clock
 				className={`h-4 w-4 ${
-					isCritical
-						? 'text-red-500'
-						: isWarning
-							? 'text-yellow-500'
-							: 'text-gray-500'
+					isCritical ? 'text-red-500' : isWarning ? 'text-yellow-500' : 'text-gray-500'
 				}`}
 			/>
 
 			<span
 				className={`font-medium text-sm ${
-					isCritical
-						? 'text-red-600'
-						: isWarning
-							? 'text-yellow-600'
-							: 'text-gray-600'
+					isCritical ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-gray-600'
 				}`}
 			>
 				{timeRemainingFormatted}
 			</span>
 
 			{(isWarning || isCritical) && (
-				<Button
-					size="sm"
-					variant="ghost"
-					onClick={extendSession}
-					className="h-6 px-2 text-xs"
-				>
+				<Button size="sm" variant="ghost" onClick={extendSession} className="h-6 px-2 text-xs">
 					Estender
 				</Button>
 			)}
@@ -183,13 +153,8 @@ export const SessionStatusCompact: React.FC = () => {
 
 // Session status for mobile/responsive layouts
 export const SessionStatusMobile: React.FC = () => {
-	const {
-		isActive,
-		timeRemainingFormatted,
-		timeRemaining,
-		extendSession,
-		logout,
-	} = useSessionManager();
+	const { isActive, timeRemainingFormatted, timeRemaining, extendSession, logout } =
+		useSessionManager();
 
 	if (!isActive) {
 		return null;
@@ -200,9 +165,7 @@ export const SessionStatusMobile: React.FC = () => {
 	return (
 		<div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3">
 			<div className="flex items-center justify-between">
-				<span className="font-medium text-gray-700 text-sm">
-					Status da Sessão
-				</span>
+				<span className="font-medium text-gray-700 text-sm">Status da Sessão</span>
 				<Badge variant={isActive ? 'default' : 'destructive'}>
 					{isActive ? 'Ativa' : 'Inativa'}
 				</Badge>
@@ -232,12 +195,7 @@ export const SessionStatusMobile: React.FC = () => {
 
 			<div className="flex gap-2">
 				{isWarning && (
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={extendSession}
-						className="flex-1"
-					>
+					<Button size="sm" variant="outline" onClick={extendSession} className="flex-1">
 						Estender Sessão
 					</Button>
 				)}

@@ -11,10 +11,7 @@ interface UseBillingHistoryParams {
 /**
  * Hook to get user payment history with pagination
  */
-export function useBillingHistory({
-	limit = 10,
-	offset = 0,
-}: UseBillingHistoryParams = {}) {
+export function useBillingHistory({ limit = 10, offset = 0 }: UseBillingHistoryParams = {}) {
 	return useQuery({
 		queryKey: ['billing-history', { limit, offset }],
 		queryFn: async () => {

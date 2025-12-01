@@ -128,9 +128,7 @@ class DatabasePerformanceOptimizer {
 		return result;
 	}
 
-	private async analyzeQueryPerformance(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeQueryPerformance(result: PerformanceAnalysisResult): Promise<void> {
 		const metrics = result.metrics.queryPerformance;
 		let score = 100;
 
@@ -148,8 +146,7 @@ class DatabasePerformanceOptimizer {
 				result.recommendations.push({
 					priority: 'high',
 					category: 'query',
-					description:
-						'Install pg_stat_statements extension for query performance monitoring',
+					description: 'Install pg_stat_statements extension for query performance monitoring',
 					impact: 'high',
 					effort: 'low',
 					sql: 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;',
@@ -167,14 +164,12 @@ class DatabasePerformanceOptimizer {
         `);
 
 				const stats = queryStats[0] as any;
-				metrics.slowQueries = parseInt(stats.total_queries, 10);
-				metrics.avgExecutionTime = parseFloat(stats.avg_execution_time);
+				metrics.slowQueries = Number.parseInt(stats.total_queries, 10);
+				metrics.avgExecutionTime = Number.parseFloat(stats.avg_execution_time);
 
 				console.log(`   📊 Total Queries: ${stats.total_queries}`);
 				console.log(`   🐌 Slow Queries (>100ms): ${stats.slow_queries}`);
-				console.log(
-					`   ⏱️  Average Execution Time: ${stats.avg_execution_time}ms`,
-				);
+				console.log(`   ⏱️  Average Execution Time: ${stats.avg_execution_time}ms`);
 				console.log(`   ⚡ Peak Execution Time: ${stats.max_execution_time}ms`);
 
 				// Score based on performance metrics
@@ -214,9 +209,7 @@ class DatabasePerformanceOptimizer {
 				if (slowQueries.length > 0) {
 					console.log('   🐌 Top slow queries:');
 					(slowQueries as any[]).forEach((query, i) => {
-						console.log(
-							`     ${i + 1}. ${query.query_sample}... (${query.mean_exec_time}ms avg)`,
-						);
+						console.log(`     ${i + 1}. ${query.query_sample}... (${query.mean_exec_time}ms avg)`);
 					});
 				}
 			}
@@ -228,9 +221,7 @@ class DatabasePerformanceOptimizer {
 		}
 	}
 
-	private async analyzeIndexEfficiency(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeIndexEfficiency(result: PerformanceAnalysisResult): Promise<void> {
 		const metrics = result.metrics.indexEfficiency;
 		let score = 100;
 
@@ -246,13 +237,11 @@ class DatabasePerformanceOptimizer {
       `);
 
 			const stats = indexStats[0] as any;
-			metrics.unusedIndexes = parseInt(stats.unused_indexes, 10);
+			metrics.unusedIndexes = Number.parseInt(stats.unused_indexes, 10);
 
 			const usageRate =
 				stats.total_indexes > 0
-					? ((stats.total_indexes - stats.unused_indexes) /
-							stats.total_indexes) *
-						100
+					? ((stats.total_indexes - stats.unused_indexes) / stats.total_indexes) * 100
 					: 100;
 
 			console.log(`   📊 Total Indexes: ${stats.total_indexes}`);
@@ -277,13 +266,9 @@ class DatabasePerformanceOptimizer {
 			metrics.missingIndexes = missingIndexes.map((idx) => idx.reason);
 
 			if (missingIndexes.length > 0) {
-				console.log(
-					`   💡 Recommended Missing Indexes: ${missingIndexes.length}`,
-				);
+				console.log(`   💡 Recommended Missing Indexes: ${missingIndexes.length}`);
 				missingIndexes.forEach((idx, i) => {
-					console.log(
-						`     ${i + 1}. ${idx.table}(${idx.columns.join(', ')}) - ${idx.reason}`,
-					);
+					console.log(`     ${i + 1}. ${idx.table}(${idx.columns.join(', ')}) - ${idx.reason}`);
 					score -= 10;
 
 					result.recommendations.push({
@@ -319,9 +304,7 @@ class DatabasePerformanceOptimizer {
       `);
 
 			if (duplicateIndexes.length > 0) {
-				console.log(
-					`   ⚠️  Potentially duplicate indexes: ${duplicateIndexes.length}`,
-				);
+				console.log(`   ⚠️  Potentially duplicate indexes: ${duplicateIndexes.length}`);
 				(duplicateIndexes as any[]).forEach((dup) => {
 					console.log(`     Table ${dup.tablename}: ${dup.duplicate_indexes}`);
 				});
@@ -403,9 +386,7 @@ class DatabasePerformanceOptimizer {
 		return recommendations;
 	}
 
-	private async analyzeConnectionHealth(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeConnectionHealth(result: PerformanceAnalysisResult): Promise<void> {
 		const metrics = result.metrics.connectionHealth;
 		let score = 100;
 
@@ -456,9 +437,7 @@ class DatabasePerformanceOptimizer {
 			console.log(`   🔗 Total Connections: ${stats.total_connections}`);
 			console.log(`   ⚡ Active Connections: ${stats.active_connections}`);
 			console.log(`   💤 Idle Connections: ${stats.idle_connections}`);
-			console.log(
-				`   📊 Pool Utilization: ${metrics.poolUtilization.toFixed(1)}%`,
-			);
+			console.log(`   📊 Pool Utilization: ${metrics.poolUtilization.toFixed(1)}%`);
 
 			if (metrics.poolUtilization > 80) {
 				score -= 20;
@@ -480,7 +459,7 @@ class DatabasePerformanceOptimizer {
           AND query NOT LIKE '%pg_stat_activity%'
       `);
 
-			const longRunningCount = parseInt(longRunning[0]?.count || '0', 10);
+			const longRunningCount = Number.parseInt(longRunning[0]?.count || '0', 10);
 			if (longRunningCount > 0) {
 				score -= 15;
 				result.recommendations.push({
@@ -499,9 +478,7 @@ class DatabasePerformanceOptimizer {
 		}
 	}
 
-	private async analyzeTableOptimization(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeTableOptimization(result: PerformanceAnalysisResult): Promise<void> {
 		const metrics = result.metrics.tableOptimization;
 		let score = 100;
 
@@ -554,7 +531,7 @@ class DatabasePerformanceOptimizer {
 
 			if (bloatStats.length > 0) {
 				const totalBloat = (bloatStats as any[]).reduce(
-					(sum, table) => sum + parseFloat(table.bloat_percentage),
+					(sum, table) => sum + Number.parseFloat(table.bloat_percentage),
 					0,
 				);
 				metrics.bloat = Math.round(totalBloat / bloatStats.length);
@@ -594,9 +571,7 @@ class DatabasePerformanceOptimizer {
 
 			if (statsAge.length > 0) {
 				const oldestAnalyze = Math.max(
-					...(statsAge as any[]).map(
-						(s) => parseFloat(s.hours_since_analyze) || 0,
-					),
+					...(statsAge as any[]).map((s) => Number.parseFloat(s.hours_since_analyze) || 0),
 				);
 
 				if (oldestAnalyze > 24) {
@@ -624,7 +599,7 @@ class DatabasePerformanceOptimizer {
           AND tc.constraint_name IS NULL
       `);
 
-			const missingPKs = parseInt(tablesWithoutPK[0]?.count || '0', 10);
+			const missingPKs = Number.parseInt(tablesWithoutPK[0]?.count || '0', 10);
 			if (missingPKs > 0) {
 				score -= 20;
 				result.recommendations.push({
@@ -644,9 +619,7 @@ class DatabasePerformanceOptimizer {
 		}
 	}
 
-	private async analyzeCaching(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeCaching(result: PerformanceAnalysisResult): Promise<void> {
 		const metrics = result.metrics.caching;
 		let score = 100;
 
@@ -667,7 +640,7 @@ class DatabasePerformanceOptimizer {
       `);
 
 			const stats = bufferStats[0] as any;
-			metrics.hitRate = parseFloat(stats.hit_ratio || '0');
+			metrics.hitRate = Number.parseFloat(stats.hit_ratio || '0');
 
 			console.log(`   💾 Buffer Hit Ratio: ${metrics.hitRate}%`);
 			console.log(`   📊 Blocks Hit: ${stats.blks_hit}`);
@@ -698,7 +671,7 @@ class DatabasePerformanceOptimizer {
         FROM pg_prepared_statements
       `);
 
-			const prepCount = parseInt(prepStmts[0]?.count || '0', 10);
+			const prepCount = Number.parseInt(prepStmts[0]?.count || '0', 10);
 			if (prepCount > 0) {
 				console.log(`   🚀 Prepared Statements: ${prepCount}`);
 			}
@@ -710,9 +683,7 @@ class DatabasePerformanceOptimizer {
 		}
 	}
 
-	private async analyzeBrazilianOptimizations(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async analyzeBrazilianOptimizations(result: PerformanceAnalysisResult): Promise<void> {
 		const optimizations = result.brazilianOptimizations;
 
 		try {
@@ -731,19 +702,14 @@ class DatabasePerformanceOptimizer {
 
 			if (pixStats.length > 0) {
 				const stats = pixStats[0] as any;
-				optimizations.pixTransactions.latency = parseFloat(
+				optimizations.pixTransactions.latency = Number.parseFloat(
 					stats.avg_completion_time_ms || '0',
 				);
-				optimizations.pixTransactions.optimized =
-					optimizations.pixTransactions.latency < 150;
+				optimizations.pixTransactions.optimized = optimizations.pixTransactions.latency < 150;
 
 				console.log(`     📊 PIX Transactions (7 days): ${stats.total_pix}`);
-				console.log(
-					`     ⚡ Average Completion: ${stats.avg_completion_time_ms}ms`,
-				);
-				console.log(
-					`     🚀 Peak Completion: ${stats.max_completion_time_ms}ms`,
-				);
+				console.log(`     ⚡ Average Completion: ${stats.avg_completion_time_ms}ms`);
+				console.log(`     🚀 Peak Completion: ${stats.max_completion_time_ms}ms`);
 
 				if (!optimizations.pixTransactions.optimized) {
 					result.recommendations.push({
@@ -769,18 +735,13 @@ class DatabasePerformanceOptimizer {
 
 			if (voiceStats.length > 0) {
 				const stats = voiceStats[0] as any;
-				optimizations.voiceQueries.responseTime = parseFloat(
+				optimizations.voiceQueries.responseTime = Number.parseFloat(
 					stats.avg_processing_time_ms || '0',
 				);
-				optimizations.voiceQueries.optimized =
-					optimizations.voiceQueries.responseTime < 100;
+				optimizations.voiceQueries.optimized = optimizations.voiceQueries.responseTime < 100;
 
-				console.log(
-					`     🎤 Voice Transcriptions (7 days): ${stats.total_voice}`,
-				);
-				console.log(
-					`     ⚡ Average Processing: ${stats.avg_processing_time_ms}ms`,
-				);
+				console.log(`     🎤 Voice Transcriptions (7 days): ${stats.total_voice}`);
+				console.log(`     ⚡ Average Processing: ${stats.avg_processing_time_ms}ms`);
 
 				if (!optimizations.voiceQueries.optimized) {
 					result.recommendations.push({
@@ -807,16 +768,10 @@ class DatabasePerformanceOptimizer {
 
 			if (businessHourStats.length > 0) {
 				const stats = businessHourStats[0] as any;
-				const totalBusiness = parseInt(
-					stats.business_hour_transactions || '0',
-					10,
-				);
+				const totalBusiness = Number.parseInt(stats.business_hour_transactions || '0', 10);
 
 				if (totalBusiness > 0) {
-					optimizations.businessHours.performance = Math.min(
-						100,
-						100 - totalBusiness / 100,
-					);
+					optimizations.businessHours.performance = Math.min(100, 100 - totalBusiness / 100);
 
 					if (optimizations.businessHours.performance < 80) {
 						optimizations.businessHours.recommendations.push(
@@ -838,9 +793,7 @@ class DatabasePerformanceOptimizer {
 		}
 	}
 
-	private async generateRecommendations(
-		result: PerformanceAnalysisResult,
-	): Promise<void> {
+	private async generateRecommendations(result: PerformanceAnalysisResult): Promise<void> {
 		// Additional recommendations based on combined analysis
 
 		// Connection pooling optimization
@@ -848,8 +801,7 @@ class DatabasePerformanceOptimizer {
 			result.recommendations.push({
 				priority: 'medium',
 				category: 'connection',
-				description:
-					'Optimize connection pool size for better resource utilization',
+				description: 'Optimize connection pool size for better resource utilization',
 				impact: 'medium',
 				effort: 'low',
 			});
@@ -865,8 +817,8 @@ class DatabasePerformanceOptimizer {
 
 		if (readWriteRatio.length > 0) {
 			const stats = readWriteRatio[0] as any;
-			const reads = parseInt(stats.reads || '0', 10);
-			const writes = parseInt(stats.writes || '0', 10);
+			const reads = Number.parseInt(stats.reads || '0', 10);
+			const writes = Number.parseInt(stats.writes || '0', 10);
 
 			if (reads > 0 && writes > 0) {
 				const ratio = reads / writes;
@@ -887,8 +839,7 @@ class DatabasePerformanceOptimizer {
 			const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 			const impactOrder = { high: 0, medium: 1, low: 2 };
 
-			const priorityDiff =
-				priorityOrder[a.priority] - priorityOrder[b.priority];
+			const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
 			if (priorityDiff !== 0) return priorityDiff;
 
 			return impactOrder[a.impact] - impactOrder[b.impact];
@@ -904,9 +855,7 @@ class DatabasePerformanceOptimizer {
 			result.metrics.caching.score,
 		];
 
-		result.overallScore = Math.round(
-			scores.reduce((a, b) => a + b, 0) / scores.length,
-		);
+		result.overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
 		if (result.overallScore >= 90) {
 			result.status = 'excellent';
@@ -941,9 +890,7 @@ async function main() {
 
 		console.log('\n📈 PERFORMANCE METRICS:');
 		Object.entries(result.metrics).forEach(([key, metric]) => {
-			const name = key
-				.replace(/([A-Z])/g, ' $1')
-				.replace(/^./, (str) => str.toUpperCase());
+			const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
 			const score = (metric as any).score || 'N/A';
 			console.log(`   ${name}: ${score}/100`);
 		});
@@ -971,9 +918,7 @@ async function main() {
 								? '💡'
 								: '💭';
 
-				console.log(
-					`${i + 1}. ${icon} [${rec.priority.toUpperCase()}] ${rec.category}`,
-				);
+				console.log(`${i + 1}. ${icon} [${rec.priority.toUpperCase()}] ${rec.category}`);
 				console.log(`   📝 ${rec.description}`);
 				console.log(`   📊 Impact: ${rec.impact} | Effort: ${rec.effort}`);
 
@@ -983,9 +928,7 @@ async function main() {
 				console.log('');
 			});
 		} else {
-			console.log(
-				'\n✅ No optimization recommendations - Database is well-tuned!',
-			);
+			console.log('\n✅ No optimization recommendations - Database is well-tuned!');
 		}
 
 		console.log('\n🚀 NEXT STEPS:');

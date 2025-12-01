@@ -111,10 +111,7 @@ class ApiClient {
 	/**
 	 * Make a GET request with optional query parameters
 	 */
-	async get<T = unknown>(
-		url: string,
-		options?: { params?: Record<string, unknown> },
-	): Promise<T> {
+	async get<T = unknown>(url: string, options?: { params?: Record<string, unknown> }): Promise<T> {
 		const baseFullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
 
 		// Build query string from params, filtering out undefined/null values
@@ -220,10 +217,7 @@ class ApiClient {
 
 		if (additionalData) {
 			Object.entries(additionalData).forEach(([key, value]) => {
-				formData.append(
-					key,
-					typeof value === 'string' ? value : JSON.stringify(value),
-				);
+				formData.append(key, typeof value === 'string' ? value : JSON.stringify(value));
 			});
 		}
 

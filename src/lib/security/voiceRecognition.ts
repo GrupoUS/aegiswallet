@@ -85,15 +85,9 @@ export class VoiceRecognitionService {
 
 		// Try primary provider
 		try {
-			const result = await this.transcribeWithProvider(
-				audioBlob,
-				this.config.primaryProvider,
-			);
+			const result = await this.transcribeWithProvider(audioBlob, this.config.primaryProvider);
 
-			const similarity = this.calculateSimilarity(
-				result.transcription,
-				expectedPhrase,
-			);
+			const similarity = this.calculateSimilarity(result.transcription, expectedPhrase);
 			const isConfirmed = similarity >= this.config.confidenceThreshold;
 
 			return {
@@ -111,10 +105,7 @@ export class VoiceRecognitionService {
 			try {
 				const result = await this.transcribeWithProvider(audioBlob, provider);
 
-				const similarity = this.calculateSimilarity(
-					result.transcription,
-					expectedPhrase,
-				);
+				const similarity = this.calculateSimilarity(result.transcription, expectedPhrase);
 				const isConfirmed = similarity >= this.config.confidenceThreshold;
 
 				return {
@@ -154,9 +145,7 @@ export class VoiceRecognitionService {
 	/**
 	 * Transcribe with OpenAI Whisper API
 	 */
-	private async transcribeWithOpenAI(
-		audioBlob: Blob,
-	): Promise<TranscriptionResult> {
+	private async transcribeWithOpenAI(audioBlob: Blob): Promise<TranscriptionResult> {
 		if (!this.openaiKey) {
 			throw new Error('OpenAI API key not configured');
 		}
@@ -166,16 +155,13 @@ export class VoiceRecognitionService {
 		formData.append('model', 'whisper-1');
 		formData.append('language', 'pt');
 
-		const response = await fetch(
-			'https://api.openai.com/v1/audio/transcriptions',
-			{
-				body: formData,
-				headers: {
-					Authorization: `Bearer ${this.openaiKey}`,
-				},
-				method: 'POST',
+		const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+			body: formData,
+			headers: {
+				Authorization: `Bearer ${this.openaiKey}`,
 			},
-		);
+			method: 'POST',
+		});
 
 		if (!response.ok) {
 			throw new Error(`OpenAI API error: ${response.statusText}`);
@@ -192,18 +178,14 @@ export class VoiceRecognitionService {
 	/**
 	 * Transcribe with Google Gemini API
 	 */
-	private async transcribeWithGemini(
-		audioBlob: Blob,
-	): Promise<TranscriptionResult> {
+	private async transcribeWithGemini(audioBlob: Blob): Promise<TranscriptionResult> {
 		if (!this.geminiKey) {
 			throw new Error('Gemini API key not configured');
 		}
 
 		// Convert audio to base64
 		const arrayBuffer = await audioBlob.arrayBuffer();
-		const base64Audio = btoa(
-			String.fromCharCode(...new Uint8Array(arrayBuffer)),
-		);
+		const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
 		const response = await fetch(
 			`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.geminiKey}`,
@@ -242,9 +224,7 @@ export class VoiceRecognitionService {
 	/**
 	 * Transcribe with ElevenLabs API
 	 */
-	private async transcribeWithElevenLabs(
-		audioBlob: Blob,
-	): Promise<TranscriptionResult> {
+	private async transcribeWithElevenLabs(audioBlob: Blob): Promise<TranscriptionResult> {
 		if (!this.elevenlabsKey) {
 			throw new Error('ElevenLabs API key not configured');
 		}
@@ -252,16 +232,13 @@ export class VoiceRecognitionService {
 		const formData = new FormData();
 		formData.append('audio', audioBlob);
 
-		const response = await fetch(
-			'https://api.elevenlabs.io/v1/speech-to-text',
-			{
-				body: formData,
-				headers: {
-					'xi-api-key': this.elevenlabsKey,
-				},
-				method: 'POST',
+		const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+			body: formData,
+			headers: {
+				'xi-api-key': this.elevenlabsKey,
 			},
-		);
+			method: 'POST',
+		});
 
 		if (!response.ok) {
 			throw new Error(`ElevenLabs API error: ${response.statusText}`);

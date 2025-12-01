@@ -7,14 +7,7 @@ import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
 
 export interface ProcessedCommand {
-	type:
-		| 'balance'
-		| 'budget'
-		| 'bills'
-		| 'incoming'
-		| 'projection'
-		| 'transfer'
-		| 'error';
+	type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
 	message: string;
 	data?: Record<string, unknown>;
 	requiresConfirmation?: boolean;
@@ -26,24 +19,9 @@ const CONFIDENCE_THRESHOLD = 0.7;
 
 // Essential voice commands patterns for Brazilian Portuguese
 const COMMAND_PATTERNS = {
-	balance: [
-		/como está meu saldo/i,
-		/qual meu saldo/i,
-		/saldo atual/i,
-		/quanto tenho/i,
-	],
-	bills: [
-		/boleto.*pagar/i,
-		/contas.*pagar/i,
-		/pagamentos pendentes/i,
-		/próximos vencimentos/i,
-	],
-	budget: [
-		/quanto posso gastar/i,
-		/orçamento disponível/i,
-		/quanto resta/i,
-		/limite de gastos/i,
-	],
+	balance: [/como está meu saldo/i, /qual meu saldo/i, /saldo atual/i, /quanto tenho/i],
+	bills: [/boleto.*pagar/i, /contas.*pagar/i, /pagamentos pendentes/i, /próximos vencimentos/i],
+	budget: [/quanto posso gastar/i, /orçamento disponível/i, /quanto resta/i, /limite de gastos/i],
 	incoming: [
 		/recebimento.*entrar/i,
 		/dinheiro.*entrar/i,
@@ -56,12 +34,7 @@ const COMMAND_PATTERNS = {
 		/como ficará.*saldo/i,
 		/previsão financeira/i,
 	],
-	transfer: [
-		/transferência.*para/i,
-		/enviar.*dinheiro/i,
-		/pagar.*para/i,
-		/transferir.*para/i,
-	],
+	transfer: [/transferência.*para/i, /enviar.*dinheiro/i, /pagar.*para/i, /transferir.*para/i],
 };
 
 /**
@@ -77,7 +50,7 @@ export async function processVoiceCommandWithNLU(
 	authToken?: string,
 ): Promise<ProcessedCommand> {
 	try {
-		if (!userId || !authToken) {
+		if (!(userId && authToken)) {
 			return {
 				confidence: 0,
 				message: 'Você precisa estar logado para usar comandos de voz.',
@@ -99,13 +72,7 @@ export async function processVoiceCommandWithNLU(
 
 		// Process command based on intent via API
 		const commandType = mapIntentToCommandType(nluResult.intent);
-		return executeCommand(
-			commandType,
-			transcript,
-			userId,
-			authToken,
-			nluResult.confidence,
-		);
+		return executeCommand(commandType, transcript, userId, authToken, nluResult.confidence);
 	} catch (error) {
 		logger.voiceError('NLU processing error', {
 			error: error instanceof Error ? error.message : String(error),
@@ -145,7 +112,7 @@ function mapIntentToCommandType(intent: IntentType): string | null {
  */
 export async function processVoiceCommand(
 	transcript: string,
-	confidence: number = 0.8,
+	confidence = 0.8,
 	userId?: string,
 	authToken?: string,
 ): Promise<ProcessedCommand> {
@@ -158,7 +125,7 @@ export async function processVoiceCommand(
 		};
 	}
 
-	if (!userId || !authToken) {
+	if (!(userId && authToken)) {
 		return {
 			confidence,
 			message: 'Você precisa estar logado.',
@@ -193,8 +160,7 @@ async function executeCommand(
 	if (!commandType) {
 		return {
 			confidence,
-			message:
-				'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
+			message: 'Comando não reconhecido. Tente: "Como está meu saldo?" ou "Quanto posso gastar?"',
 			type: 'error',
 		};
 	}

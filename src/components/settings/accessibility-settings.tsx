@@ -9,16 +9,7 @@
  * - Reduced motion
  */
 
-import {
-	Contrast,
-	Eye,
-	Keyboard,
-	Monitor,
-	Moon,
-	MoveHorizontal,
-	Sun,
-	Type,
-} from 'lucide-react';
+import { Contrast, Eye, Keyboard, Monitor, Moon, MoveHorizontal, Sun, Type } from 'lucide-react';
 
 import { SettingsCard } from './settings-card';
 import { Label } from '@/components/ui/label';
@@ -63,12 +54,7 @@ interface ThemePreviewProps {
 	disabled?: boolean;
 }
 
-function ThemePreview({
-	theme,
-	isSelected,
-	onSelect,
-	disabled,
-}: ThemePreviewProps) {
+function ThemePreview({ theme, isSelected, onSelect, disabled }: ThemePreviewProps) {
 	const themes = {
 		light: {
 			label: 'Claro',
@@ -128,12 +114,7 @@ function ThemePreview({
 						aria-hidden="true"
 					>
 						<title>Selecionado</title>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={3}
-							d="M5 13l4 4L19 7"
-						/>
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
 					</svg>
 				</div>
 			)}
@@ -146,8 +127,7 @@ function ThemePreview({
 // =============================================================================
 
 export function AccessibilitySettings() {
-	const { profile, isLoading, updatePreferences, isUpdatingPreferences } =
-		useProfile();
+	const { profile, isLoading, updatePreferences, isUpdatingPreferences } = useProfile();
 	const preferences = profile?.user_preferences?.[0];
 
 	const handleSwitchChange = (key: string, value: boolean) => {
@@ -159,6 +139,7 @@ export function AccessibilitySettings() {
 	};
 
 	const handleFontSizeChange = (value: number[]) => {
+		// biome-ignore lint/style/useNamingConvention: Database field uses snake_case
 		updatePreferences({ font_size: value[0] });
 	};
 
@@ -166,8 +147,8 @@ export function AccessibilitySettings() {
 		return <AccessibilitySettingsSkeleton />;
 	}
 
-	const currentTheme =
-		(preferences?.theme as 'light' | 'dark' | 'system') || 'system';
+	const currentTheme = (preferences?.theme as 'light' | 'dark' | 'system') || 'system';
+	// biome-ignore lint/style/useNamingConvention: Database field uses snake_case
 	const fontSize = (preferences as { font_size?: number })?.font_size ?? 16;
 
 	return (
@@ -217,9 +198,7 @@ export function AccessibilitySettings() {
 							</div>
 							<div className="space-y-0.5">
 								<Label className="text-base">Alto contraste</Label>
-								<p className="text-sm text-muted-foreground">
-									Aumenta o contraste entre elementos
-								</p>
+								<p className="text-sm text-muted-foreground">Aumenta o contraste entre elementos</p>
 							</div>
 						</div>
 						<Switch
@@ -249,9 +228,7 @@ export function AccessibilitySettings() {
 						</div>
 						<Switch
 							checked={preferences?.accessibility_large_text ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('accessibility_large_text', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('accessibility_large_text', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Texto ampliado"
 						/>
@@ -262,9 +239,7 @@ export function AccessibilitySettings() {
 					{/* Font Size Slider */}
 					<div className="space-y-4">
 						<div className="flex items-center justify-between">
-							<Label className="text-base">
-								Tamanho da fonte: {fontSize}px
-							</Label>
+							<Label className="text-base">Tamanho da fonte: {fontSize}px</Label>
 						</div>
 						<Slider
 							value={[fontSize]}
@@ -321,16 +296,12 @@ export function AccessibilitySettings() {
 							</div>
 							<div className="space-y-0.5">
 								<Label className="text-base">Reduzir animações</Label>
-								<p className="text-sm text-muted-foreground">
-									Minimiza movimentos e transições
-								</p>
+								<p className="text-sm text-muted-foreground">Minimiza movimentos e transições</p>
 							</div>
 						</div>
 						<Switch
 							checked={preferences?.reduce_motion ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('reduce_motion', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('reduce_motion', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Reduzir animações"
 						/>
@@ -346,16 +317,12 @@ export function AccessibilitySettings() {
 							</div>
 							<div className="space-y-0.5">
 								<Label className="text-base">Atalhos de teclado</Label>
-								<p className="text-sm text-muted-foreground">
-									Navegação rápida usando o teclado
-								</p>
+								<p className="text-sm text-muted-foreground">Navegação rápida usando o teclado</p>
 							</div>
 						</div>
 						<Switch
 							checked={preferences?.keyboard_shortcuts ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('keyboard_shortcuts', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('keyboard_shortcuts', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Atalhos de teclado"
 						/>
@@ -373,9 +340,8 @@ export function AccessibilitySettings() {
 				<div className="p-4 rounded-lg border bg-muted/30">
 					<p className="text-lg font-semibold mb-2">Exemplo de texto</p>
 					<p className="text-base text-muted-foreground">
-						Este é um exemplo de como o texto aparecerá com suas configurações
-						atuais. O AegisWallet foi projetado para ser acessível a todos os
-						usuários.
+						Este é um exemplo de como o texto aparecerá com suas configurações atuais. O AegisWallet
+						foi projetado para ser acessível a todos os usuários.
 					</p>
 					<div className="mt-4 flex gap-2">
 						<div className="h-8 w-8 rounded bg-primary" />

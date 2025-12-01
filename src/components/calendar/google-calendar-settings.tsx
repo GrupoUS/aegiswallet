@@ -4,36 +4,18 @@ import { useId } from 'react';
 import { useGoogleCalendarSync } from '../../hooks/use-google-calendar-sync';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Switch } from '../ui/switch';
 
 export function GoogleCalendarSettings() {
 	const syncEnabledId = useId();
 	const syncAmountsId = useId();
 
-	const {
-		syncStatus,
-		syncSettings,
-		updateSettings,
-		startOAuthFlow,
-		requestFullSync,
-		isLoading,
-	} = useGoogleCalendarSync();
+	const { syncStatus, syncSettings, updateSettings, startOAuthFlow, requestFullSync, isLoading } =
+		useGoogleCalendarSync();
 
 	if (isLoading) {
 		return (
@@ -62,9 +44,7 @@ export function GoogleCalendarSettings() {
 						<div className="space-y-1">
 							<div className="font-medium">Status da Conexão</div>
 							<div className="text-sm text-muted-foreground">
-								{isConnected
-									? `Conectado como ${syncStatus?.googleEmail}`
-									: 'Não conectado'}
+								{isConnected ? `Conectado como ${syncStatus?.googleEmail}` : 'Não conectado'}
 							</div>
 						</div>
 						{isConnected ? (
@@ -83,9 +63,7 @@ export function GoogleCalendarSettings() {
 								<Switch
 									id={syncEnabledId}
 									checked={syncSettings?.sync_enabled}
-									onCheckedChange={(checked) =>
-										updateSettings({ sync_enabled: checked })
-									}
+									onCheckedChange={(checked) => updateSettings({ sync_enabled: checked })}
 								/>
 							</div>
 
@@ -94,22 +72,15 @@ export function GoogleCalendarSettings() {
 								<Select
 									value={syncSettings?.sync_direction}
 									onValueChange={(
-										value:
-											| 'one_way_to_google'
-											| 'one_way_from_google'
-											| 'bidirectional',
+										value: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional',
 									) => updateSettings({ sync_direction: value })}
 								>
 									<SelectTrigger>
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="one_way_to_google">
-											Aegis → Google
-										</SelectItem>
-										<SelectItem value="one_way_from_google">
-											Google → Aegis
-										</SelectItem>
+										<SelectItem value="one_way_to_google">Aegis → Google</SelectItem>
+										<SelectItem value="one_way_from_google">Google → Aegis</SelectItem>
 										<SelectItem value="bidirectional">Bidirecional</SelectItem>
 									</SelectContent>
 								</Select>
@@ -126,22 +97,15 @@ export function GoogleCalendarSettings() {
 									}
 								/>
 								<div className="grid gap-1.5 leading-none">
-									<Label htmlFor={syncAmountsId}>
-										Sincronizar Valores (LGPD)
-									</Label>
+									<Label htmlFor={syncAmountsId}>Sincronizar Valores (LGPD)</Label>
 									<p className="text-sm text-muted-foreground">
-										Permitir que valores monetários sejam enviados ao Google
-										Calendar.
+										Permitir que valores monetários sejam enviados ao Google Calendar.
 									</p>
 								</div>
 							</div>
 
 							<div className="pt-4">
-								<Button
-									variant="outline"
-									onClick={() => requestFullSync()}
-									className="w-full"
-								>
+								<Button variant="outline" onClick={() => requestFullSync()} className="w-full">
 									<RefreshCw className="mr-2 h-4 w-4" />
 									Sincronizar Agora
 								</Button>

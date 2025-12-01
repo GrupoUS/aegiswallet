@@ -23,11 +23,7 @@ interface PatientData {
 }
 
 // Mock healthcare components (these would be your actual components)
-const PatientForm = ({
-	onSubmit,
-}: {
-	onSubmit: (data: Partial<PatientData>) => void;
-}) => {
+const PatientForm = ({ onSubmit }: { onSubmit: (data: Partial<PatientData>) => void }) => {
 	const [name, setName] = React.useState('');
 	const [email, setEmail] = React.useState('');
 	const [phone, setPhone] = React.useState('');
@@ -106,12 +102,7 @@ const PatientForm = ({
 				I consent to data processing
 			</label>
 
-			<button
-				type="submit"
-				data-testid="submit-patient"
-				disabled={!consent}
-				onClick={handleSubmit}
-			>
+			<button type="submit" data-testid="submit-patient" disabled={!consent} onClick={handleSubmit}>
 				Submit
 			</button>
 		</div>
@@ -163,10 +154,7 @@ describe('LGPD Compliance Testing', () => {
 
 			// Fill form with patient data
 			await userEvent.type(screen.getByTestId('patient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('patient-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('patient-email'), 'joao@example.com');
 			await userEvent.type(screen.getByTestId('patient-phone'), '11987654321');
 			await userEvent.type(screen.getByTestId('patient-cpf'), '12345678900');
 

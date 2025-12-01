@@ -25,7 +25,7 @@ describe('Logger Core Functionality', () => {
 		testLogger.updateConfig({
 			enableConsole: true,
 			enableRemote: false,
-			level: LogLevel.DEBUG,
+			level: LogLevel.Debug,
 			sanitizeData: false,
 		});
 	});
@@ -38,15 +38,15 @@ describe('Logger Core Functionality', () => {
 
 		const logs = testLogger.getLogs();
 		expect(logs).toHaveLength(4);
-		expect(logs[0].level).toBe(LogLevel.DEBUG);
-		expect(logs[1].level).toBe(LogLevel.INFO);
-		expect(logs[2].level).toBe(LogLevel.WARN);
-		expect(logs[3].level).toBe(LogLevel.ERROR);
+		expect(logs[0].level).toBe(LogLevel.Debug);
+		expect(logs[1].level).toBe(LogLevel.Info);
+		expect(logs[2].level).toBe(LogLevel.Warn);
+		expect(logs[3].level).toBe(LogLevel.Error);
 	});
 
 	it('should respect log level configuration', () => {
 		testLogger.clearLogs();
-		testLogger.updateConfig({ level: LogLevel.WARN });
+		testLogger.updateConfig({ level: LogLevel.Warn });
 
 		testLogger.debug('Debug message');
 		testLogger.info('Info message');
@@ -55,8 +55,8 @@ describe('Logger Core Functionality', () => {
 
 		const logs = testLogger.getLogs();
 		expect(logs).toHaveLength(2);
-		expect(logs[0].level).toBe(LogLevel.WARN);
-		expect(logs[1].level).toBe(LogLevel.ERROR);
+		expect(logs[0].level).toBe(LogLevel.Warn);
+		expect(logs[1].level).toBe(LogLevel.Error);
 	});
 
 	it('should include proper metadata in log entries', () => {
@@ -67,13 +67,11 @@ describe('Logger Core Functionality', () => {
 
 		expect(log).toMatchObject({
 			context: { action: 'test', userId: '123' },
-			level: LogLevel.INFO,
+			level: LogLevel.Info,
 			message: 'Test message',
 			sessionId: expect.stringMatching(/^session_\d+_\w+$/),
 		});
-		expect(log.timestamp).toMatch(
-			/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-		);
+		expect(log.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
 	});
 
 	it('should sanitize sensitive data in production mode', () => {
@@ -202,32 +200,28 @@ describe('React Hooks Integration', () => {
 
 	// Skip React hook tests for now due to DOM setup issues
 	// These tests require proper JSDOM configuration for renderHook
-	it.skip('should work with useLogger hook - requires DOM setup', () => {
+	it('should work with useLogger hook - requires DOM setup', () => {
 		// Test will be skipped until DOM issue is resolved
 	});
 
-	it.skip('should work with useVoiceLogger hook - requires DOM setup', () => {
+	it('should work with useVoiceLogger hook - requires DOM setup', () => {
 		// Test will be skipped until DOM issue is resolved
 	});
 
-	it.skip('should work with useAuthLogger hook - requires DOM setup', () => {
+	it('should work with useAuthLogger hook - requires DOM setup', () => {
 		// Test will be skipped until DOM issue is resolved
 	});
 
-	it.skip('should handle context management in hooks - requires DOM setup', () => {
+	it('should handle context management in hooks - requires DOM setup', () => {
 		// Test will be skipped until DOM issue is resolved
 	});
 
 	// Alternative test that doesn't require React hooks
 	// SKIPPED: require('@/contexts/LoggerContext') fails because module uses import.meta.env.DEV
 	// which is not compatible with CommonJS require in Vitest
-	it.skip('should validate LoggerContext functionality directly - requires ESM import', () => {
+	it('should validate LoggerContext functionality directly - requires ESM import', () => {
 		// Test the hooks' underlying functionality without renderHook
-		const {
-			useLogger,
-			useVoiceLogger,
-			useAuthLogger,
-		} = require('@/contexts/LoggerContext');
+		const { useLogger, useVoiceLogger, useAuthLogger } = require('@/contexts/LoggerContext');
 
 		// Verify that the hooks are properly exported
 		expect(typeof useLogger).toBe('function');
@@ -251,7 +245,7 @@ describe('Environment Configuration', () => {
 	it('should use development configuration by default', () => {
 		// Test default configuration without environment mocking
 		const config = testLogger.getConfig();
-		expect(config.level).toBe(LogLevel.DEBUG);
+		expect(config.level).toBe(LogLevel.Debug);
 		expect(config.enableConsole).toBe(true);
 		expect(config.enableRemote).toBe(false);
 		expect(config.sanitizeData).toBe(false);
@@ -262,12 +256,12 @@ describe('Environment Configuration', () => {
 		testLogger.updateConfig({
 			enableConsole: false,
 			enableRemote: true,
-			level: LogLevel.ERROR,
+			level: LogLevel.Error,
 			sanitizeData: true,
 		});
 
 		const config = testLogger.getConfig();
-		expect(config.level).toBe(LogLevel.ERROR);
+		expect(config.level).toBe(LogLevel.Error);
 		expect(config.enableConsole).toBe(false);
 		expect(config.enableRemote).toBe(true);
 		expect(config.sanitizeData).toBe(true);
@@ -278,7 +272,7 @@ describe('Environment Configuration', () => {
 		testLogger.updateConfig({
 			enableConsole: false,
 			enableRemote: false,
-			level: LogLevel.SILENT,
+			level: LogLevel.Silent,
 			sanitizeData: true,
 		});
 
@@ -295,7 +289,7 @@ describe('Error Handling', () => {
 		testLogger.updateConfig({
 			enableConsole: true,
 			enableRemote: false,
-			level: LogLevel.DEBUG,
+			level: LogLevel.Debug,
 			sanitizeData: false,
 		});
 	});
@@ -341,7 +335,7 @@ describe('Performance', () => {
 	beforeEach(() => {
 		testLogger = new Logger();
 		testLogger.updateConfig({
-			level: LogLevel.DEBUG,
+			level: LogLevel.Debug,
 			enableConsole: false, // Disable console for performance tests
 			enableRemote: false,
 			sanitizeData: false,
@@ -388,7 +382,7 @@ describe('Integration Tests', () => {
 		testLogger.updateConfig({
 			enableConsole: true,
 			enableRemote: false,
-			level: LogLevel.DEBUG,
+			level: LogLevel.Debug,
 			sanitizeData: false,
 		});
 	});

@@ -18,19 +18,13 @@ interface CompactCalendarProps {
 	className?: string;
 }
 
-export function CompactCalendar({
-	selectedDate,
-	onDateClick,
-	className,
-}: CompactCalendarProps) {
+export function CompactCalendar({ selectedDate, onDateClick, className }: CompactCalendarProps) {
 	const { currentDate, setCurrentDate, getEventsForMonth } = useCalendar();
 
 	const eventsInMonth = getEventsForMonth(currentDate);
 
 	const getEventsForDay = (date: Date): FinancialEvent[] => {
-		return eventsInMonth.filter((event) =>
-			isSameDay(new Date(event.start), date),
-		);
+		return eventsInMonth.filter((event) => isSameDay(new Date(event.start), date));
 	};
 
 	const handleSelect = (date: Date | undefined) => {
@@ -75,10 +69,7 @@ export function CompactCalendar({
 												key={event.id}
 												className={cn(
 													'h-1 w-1 rounded-full',
-													(
-														EVENT_COLOR_STYLES[event.color] ??
-														EVENT_COLOR_STYLES.blue
-													).dot,
+													(EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue).dot,
 												)}
 											/>
 										))}

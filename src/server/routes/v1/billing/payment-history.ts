@@ -7,10 +7,7 @@ import { getHttpClient } from '@/db/client';
 import { paymentHistory } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 const paymentHistoryRouter = new Hono<AppEnv>();
 

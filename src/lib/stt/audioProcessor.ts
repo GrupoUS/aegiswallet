@@ -91,10 +91,7 @@ export class AudioProcessor {
 			const vadResult = this.detectVoiceActivity(audioBuffer);
 
 			// Normalize volume if needed
-			const normalizedBuffer = this.normalizeVolume(
-				audioBuffer,
-				analysis.averageVolume,
-			);
+			const normalizedBuffer = this.normalizeVolume(audioBuffer, analysis.averageVolume);
 
 			// Convert back to blob
 			const processedBlob = await this.audioBufferToBlob(normalizedBuffer);
@@ -213,10 +210,7 @@ export class AudioProcessor {
 	/**
 	 * Normalize audio volume to optimal range
 	 */
-	private normalizeVolume(
-		audioBuffer: AudioBuffer,
-		currentVolume: number,
-	): AudioBuffer {
+	private normalizeVolume(audioBuffer: AudioBuffer, currentVolume: number): AudioBuffer {
 		const targetVolume = 0.5; // Target 50% of max amplitude
 		const gain = targetVolume / Math.max(currentVolume, 0.01);
 
@@ -396,8 +390,6 @@ export class AudioProcessor {
 /**
  * Create audio processor with default configuration
  */
-export function createAudioProcessor(
-	config?: AudioProcessingConfig,
-): AudioProcessor {
+export function createAudioProcessor(config?: AudioProcessingConfig): AudioProcessor {
 	return new AudioProcessor(config);
 }

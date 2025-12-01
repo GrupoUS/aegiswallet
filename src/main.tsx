@@ -29,8 +29,7 @@ const initializeAccessibility = () => {
 	// Add Brazilian e-MAG compliance metadata
 	const meta = document.createElement('meta');
 	meta.name = 'eMAG-compliance';
-	meta.content =
-		'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
+	meta.content = 'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
 	document.head.appendChild(meta);
 };
 

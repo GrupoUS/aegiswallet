@@ -14,16 +14,10 @@ class Logger {
 	private isDevelopment: boolean;
 
 	constructor() {
-		this.isDevelopment =
-			import.meta.env.DEV || process.env.NODE_ENV === 'development';
+		this.isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development';
 	}
 
-	private log(
-		level: LogLevel,
-		_message: string,
-		_data?: unknown,
-		_context?: DebugContext,
-	): void {
+	private log(level: LogLevel, _message: string, _data?: unknown, _context?: DebugContext): void {
 		if (!this.isDevelopment) {
 			return;
 		}
@@ -119,8 +113,7 @@ class Logger {
 export const logger = new Logger();
 
 // Export convenience functions for common patterns
-export const createComponentLogger = (componentName: string) =>
-	logger.component(componentName);
+export const createComponentLogger = (componentName: string) => logger.component(componentName);
 
 // Development-only assertions
 export const assert = (condition: boolean, message: string): void => {

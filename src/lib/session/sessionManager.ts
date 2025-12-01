@@ -55,17 +55,13 @@ export class SessionManager {
 
 	private initializeState(): SessionState {
 		const now = new Date();
-		const storedActivity = localStorage.getItem(
-			this.STORAGE_KEYS.LAST_ACTIVITY,
-		);
+		const storedActivity = localStorage.getItem(this.STORAGE_KEYS.LAST_ACTIVITY);
 		const storedSessionId = localStorage.getItem(this.STORAGE_KEYS.SESSION_ID);
-		const storedWarningShown =
-			localStorage.getItem(this.STORAGE_KEYS.WARNING_SHOWN) === 'true';
+		const storedWarningShown = localStorage.getItem(this.STORAGE_KEYS.WARNING_SHOWN) === 'true';
 
 		const lastActivity = storedActivity ? new Date(storedActivity) : now;
 		const isExpired =
-			now.getTime() - lastActivity.getTime() >
-			this.config.timeoutMinutes * 60 * 1000;
+			now.getTime() - lastActivity.getTime() > this.config.timeoutMinutes * 60 * 1000;
 
 		if (isExpired) {
 			this.clearStorage();
@@ -178,9 +174,9 @@ export class SessionManager {
 		const ignoredElements = ['script', 'style', 'meta', 'link'];
 		const ignoredClasses = ['session-tracking-ignore'];
 
-		return (
-			!ignoredElements.includes(target.tagName.toLowerCase()) &&
-			!ignoredClasses.some((className) => target.classList.contains(className))
+		return !(
+			ignoredElements.includes(target.tagName.toLowerCase()) ||
+			ignoredClasses.some((className) => target.classList.contains(className))
 		);
 	}
 
@@ -221,8 +217,7 @@ export class SessionManager {
 			clearTimeout(this.expiryTimeout);
 		}
 
-		const timeToWarning =
-			(this.config.timeoutMinutes - this.config.warningMinutes) * 60 * 1000;
+		const timeToWarning = (this.config.timeoutMinutes - this.config.warningMinutes) * 60 * 1000;
 		const timeToExpiry = this.config.timeoutMinutes * 60 * 1000;
 
 		// Set warning timer
@@ -252,8 +247,7 @@ export class SessionManager {
 
 		const now = new Date();
 		const timeSinceActivity = now.getTime() - this.state.lastActivity.getTime();
-		const timeRemaining =
-			this.config.timeoutMinutes * 60 * 1000 - timeSinceActivity;
+		const timeRemaining = this.config.timeoutMinutes * 60 * 1000 - timeSinceActivity;
 
 		this.state.timeRemaining = Math.max(0, timeRemaining);
 
@@ -298,8 +292,7 @@ export class SessionManager {
 
 		// Create modal content using safe DOM methods
 		const modalContent = document.createElement('div');
-		modalContent.className =
-			'bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl';
+		modalContent.className = 'bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl';
 
 		// Header with icon and title
 		const header = document.createElement('div');
@@ -334,9 +327,7 @@ export class SessionManager {
 		messageText.textContent = 'Sua sessão expirará em ';
 		const strong = document.createElement('strong');
 		strong.textContent = this.config.warningMinutes.toString();
-		const restText = document.createTextNode(
-			' minutos por inatividade. Deseja continuar?',
-		);
+		const restText = document.createTextNode(' minutos por inatividade. Deseja continuar?');
 		message.appendChild(messageText);
 		message.appendChild(strong);
 		message.appendChild(restText);
@@ -385,9 +376,7 @@ export class SessionManager {
 		document.body.appendChild(modal);
 
 		// Setup event handlers
-		const countdown = modal.querySelector(
-			'#session-countdown',
-		) as HTMLSpanElement;
+		const countdown = modal.querySelector('#session-countdown') as HTMLSpanElement;
 
 		extendBtn?.addEventListener('click', () => {
 			this.extendSessionPublic();
@@ -431,10 +420,7 @@ export class SessionManager {
 		this.cleanup();
 
 		// Show expiry message
-		this.showToast(
-			'Sua sessão expirou por inatividade. Faça login novamente.',
-			'warning',
-		);
+		this.showToast('Sua sessão expirou por inatividade. Faça login novamente.', 'warning');
 
 		// Redirect to login after a delay
 		setTimeout(() => {
@@ -481,15 +467,9 @@ export class SessionManager {
 	}
 
 	private saveState(): void {
-		localStorage.setItem(
-			this.STORAGE_KEYS.LAST_ACTIVITY,
-			this.state.lastActivity.toISOString(),
-		);
+		localStorage.setItem(this.STORAGE_KEYS.LAST_ACTIVITY, this.state.lastActivity.toISOString());
 		localStorage.setItem(this.STORAGE_KEYS.SESSION_ID, this.state.sessionId);
-		localStorage.setItem(
-			this.STORAGE_KEYS.WARNING_SHOWN,
-			this.state.warningShown.toString(),
-		);
+		localStorage.setItem(this.STORAGE_KEYS.WARNING_SHOWN, this.state.warningShown.toString());
 	}
 
 	private clearStorage(): void {
@@ -509,20 +489,13 @@ export class SessionManager {
 		return crypto.randomUUID();
 	}
 
-	private showToast(
-		message: string,
-		type: 'success' | 'warning' | 'error' = 'success',
-	): void {
+	private showToast(message: string, type: 'success' | 'warning' | 'error' = 'success'): void {
 		// Create toast notification
 		const toast = document.createElement('div');
 		toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm transform transition-all duration-300 translate-x-full`;
 
 		const bgColor =
-			type === 'success'
-				? 'bg-green-500'
-				: type === 'warning'
-					? 'bg-yellow-500'
-					: 'bg-red-500';
+			type === 'success' ? 'bg-green-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
 		toast.classList.add(bgColor, 'text-white');
 
 		// Clear existing content
@@ -534,8 +507,7 @@ export class SessionManager {
 
 		const icon = document.createElement('span');
 		icon.className = 'mr-2';
-		icon.textContent =
-			type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕';
+		icon.textContent = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕';
 
 		const text = document.createElement('span');
 		text.textContent = message;

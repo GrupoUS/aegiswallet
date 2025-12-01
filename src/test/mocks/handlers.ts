@@ -9,17 +9,17 @@ import { z } from 'zod';
 // Mock data generators
 const createMockBankAccount = (overrides = {}) => ({
 	id: 'test-account-id',
-	user_id: 'test-user-id',
-	institution_name: 'Test Bank',
-	institution_id: 'test-institution-id',
-	account_type: 'checking',
-	account_mask: '****1234',
+	userId: 'test-user-id',
+	institutionName: 'Test Bank',
+	institutionId: 'test-institution-id',
+	accountType: 'checking',
+	accountMask: '****1234',
 	balance: 5000.0,
 	currency: 'BRL',
-	is_primary: true,
-	is_active: true,
-	created_at: '2024-01-01T00:00:00Z',
-	updated_at: '2024-01-01T00:00:00Z',
+	isPrimary: true,
+	isActive: true,
+	createdAt: '2024-01-01T00:00:00Z',
+	updatedAt: '2024-01-01T00:00:00Z',
 	...overrides,
 });
 
@@ -131,9 +131,7 @@ const createTransactionSchema = z.object({
 	category_id: z.string().optional(),
 	account_id: z.string(),
 	to_account_id: z.string().optional(),
-	status: z
-		.enum(['cancelled', 'failed', 'pending', 'posted'] as const)
-		.default('posted'),
+	status: z.enum(['cancelled', 'failed', 'pending', 'posted'] as const).default('posted'),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -171,9 +169,7 @@ export const handlers = [
 	}),
 
 	http.post('/api/v1/bank-accounts', async ({ request }) => {
-		const body = (await request.json()) as z.infer<
-			typeof createBankAccountSchema
-		>;
+		const body = (await request.json()) as z.infer<typeof createBankAccountSchema>;
 		const validated = createBankAccountSchema.parse(body);
 		const newAccount = createMockBankAccount({
 			...validated,
@@ -185,9 +181,7 @@ export const handlers = [
 
 	http.put('/api/v1/bank-accounts/:id', async ({ params, request }) => {
 		const { id } = params;
-		const body = (await request.json()) as z.infer<
-			typeof updateBankAccountSchema
-		>;
+		const body = (await request.json()) as z.infer<typeof updateBankAccountSchema>;
 		const validated = updateBankAccountSchema.parse({ ...body, id });
 
 		const updatedAccount = createMockBankAccount({
@@ -203,21 +197,18 @@ export const handlers = [
 		return HttpResponse.json({ success: true, deletedId: id });
 	}),
 
-	http.patch(
-		'/api/v1/bank-accounts/:id/balance',
-		async ({ params, request }) => {
-			const { id } = params;
-			const body = (await request.json()) as { balance: number };
+	http.patch('/api/v1/bank-accounts/:id/balance', async ({ params, request }) => {
+		const { id } = params;
+		const body = (await request.json()) as { balance: number };
 
-			const updatedAccount = createMockBankAccount({
-				id,
-				balance: body.balance,
-				updated_at: new Date().toISOString(),
-			});
+		const updatedAccount = createMockBankAccount({
+			id,
+			balance: body.balance,
+			updated_at: new Date().toISOString(),
+		});
 
-			return HttpResponse.json(createResponse(updatedAccount));
-		},
-	),
+		return HttpResponse.json(createResponse(updatedAccount));
+	}),
 
 	http.get('/api/v1/bank-accounts/total-balance', () => {
 		const balances = {
@@ -235,11 +226,11 @@ export const handlers = [
 		const limit = url.searchParams.get('limit') || '20';
 		const offset = url.searchParams.get('offset') || '0';
 
-		const transactions = Array.from({ length: parseInt(limit, 10) }, (_, i) =>
+		const transactions = Array.from({ length: Number.parseInt(limit, 10) }, (_, i) =>
 			createMockTransaction({
-				id: `transaction-${parseInt(offset, 10) + i}`,
+				id: `transaction-${Number.parseInt(offset, 10) + i}`,
 				amount: Math.random() * 1000,
-				description: `Transaction ${parseInt(offset, 10) + i + 1}`,
+				description: `Transaction ${Number.parseInt(offset, 10) + i + 1}`,
 			}),
 		);
 
@@ -247,9 +238,7 @@ export const handlers = [
 	}),
 
 	http.post('/api/v1/transactions', async ({ request }) => {
-		const body = (await request.json()) as z.infer<
-			typeof createTransactionSchema
-		>;
+		const body = (await request.json()) as z.infer<typeof createTransactionSchema>;
 		const validated = createTransactionSchema.parse(body);
 
 		const newTransaction = createMockTransaction({
@@ -306,11 +295,9 @@ export const handlers = [
 					contact.name.toLowerCase().includes(search.toLowerCase()) ||
 					contact.email?.toLowerCase().includes(search.toLowerCase()),
 			)
-			.slice(0, parseInt(limit, 10));
+			.slice(0, Number.parseInt(limit, 10));
 
-		return HttpResponse.json(
-			createResponse(contacts, { total: contacts.length }),
-		);
+		return HttpResponse.json(createResponse(contacts, { total: contacts.length }));
 	}),
 
 	http.post('/api/v1/contacts', async ({ request }) => {
@@ -346,9 +333,7 @@ export const handlers = [
 
 	// Voice Commands API
 	http.post('/api/v1/voice/process', async ({ request }) => {
-		const body = (await request.json()) as z.infer<
-			typeof processVoiceCommandSchema
-		>;
+		const body = (await request.json()) as z.infer<typeof processVoiceCommandSchema>;
 		const validated = processVoiceCommandSchema.parse(body);
 
 		const result = {
@@ -374,11 +359,7 @@ export const handlers = [
 				{
 					name: 'check_balance',
 					description: 'Verificar saldo da conta',
-					examples: [
-						'Qual é o meu saldo?',
-						'Quanto dinheiro eu tenho?',
-						'Mostrar meu saldo',
-					],
+					examples: ['Qual é o meu saldo?', 'Quanto dinheiro eu tenho?', 'Mostrar meu saldo'],
 				},
 				{
 					name: 'transfer_money',
@@ -392,11 +373,7 @@ export const handlers = [
 				{
 					name: 'pay_bill',
 					description: 'Pagar contas e boletos',
-					examples: [
-						'Pagar conta de luz',
-						'Pagar boleto do cartão',
-						'Quitar conta de telefone',
-					],
+					examples: ['Pagar conta de luz', 'Pagar boleto do cartão', 'Quitar conta de telefone'],
 				},
 				{
 					name: 'pix_transfer',
@@ -410,11 +387,7 @@ export const handlers = [
 				{
 					name: 'transaction_history',
 					description: 'Ver histórico de transações',
-					examples: [
-						'Mostrar minhas transações',
-						'Ver extrato do mês',
-						'Histórico de compras',
-					],
+					examples: ['Mostrar minhas transações', 'Ver extrato do mês', 'Histórico de compras'],
 				},
 			],
 			language: 'pt-BR',
@@ -520,14 +493,11 @@ export const handlers = [
 		]
 			.filter(
 				(transaction) =>
-					!query ||
-					transaction.description?.toLowerCase().includes(query.toLowerCase()),
+					!query || transaction.description?.toLowerCase().includes(query.toLowerCase()),
 			)
 			.slice(0, 20);
 
-		return HttpResponse.json(
-			createResponse(transactions, { total: transactions.length }),
-		);
+		return HttpResponse.json(createResponse(transactions, { total: transactions.length }));
 	}),
 ];
 

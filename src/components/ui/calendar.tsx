@@ -1,8 +1,4 @@
-import {
-	ChevronDownIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from 'lucide-react';
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import type { DayButton } from 'react-day-picker';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
@@ -37,16 +33,12 @@ function Calendar({
 			)}
 			captionLayout={captionLayout}
 			formatters={{
-				formatMonthDropdown: (date) =>
-					date.toLocaleString('default', { month: 'short' }),
+				formatMonthDropdown: (date) => date.toLocaleString('default', { month: 'short' }),
 				...formatters,
 			}}
 			classNames={{
 				root: cn('w-fit', defaultClassNames.root),
-				months: cn(
-					'relative flex flex-col gap-4 md:flex-row',
-					defaultClassNames.months,
-				),
+				months: cn('relative flex flex-col gap-4 md:flex-row', defaultClassNames.months),
 				month: cn('flex w-full flex-col gap-4', defaultClassNames.month),
 				nav: cn(
 					'absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1',
@@ -74,10 +66,7 @@ function Calendar({
 					'has-focus:border-ring border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border',
 					defaultClassNames.dropdown_root,
 				),
-				dropdown: cn(
-					'bg-popover absolute inset-0 opacity-0',
-					defaultClassNames.dropdown,
-				),
+				dropdown: cn('bg-popover absolute inset-0 opacity-0', defaultClassNames.dropdown),
 				caption_label: cn(
 					'select-none font-medium',
 					captionLayout === 'label'
@@ -92,10 +81,7 @@ function Calendar({
 					defaultClassNames.weekday,
 				),
 				week: cn('mt-2 flex w-full', defaultClassNames.week),
-				week_number_header: cn(
-					'w-[--cell-size] select-none',
-					defaultClassNames.week_number_header,
-				),
+				week_number_header: cn('w-[--cell-size] select-none', defaultClassNames.week_number_header),
 				week_number: cn(
 					'text-muted-foreground select-none text-[0.8rem]',
 					defaultClassNames.week_number,
@@ -104,10 +90,7 @@ function Calendar({
 					'group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md',
 					defaultClassNames.day,
 				),
-				range_start: cn(
-					'bg-accent rounded-l-md',
-					defaultClassNames.range_start,
-				),
+				range_start: cn('bg-accent rounded-l-md', defaultClassNames.range_start),
 				range_middle: cn('rounded-none', defaultClassNames.range_middle),
 				range_end: cn('bg-accent rounded-r-md', defaultClassNames.range_end),
 				today: cn(
@@ -118,45 +101,26 @@ function Calendar({
 					'text-muted-foreground aria-selected:text-muted-foreground',
 					defaultClassNames.outside,
 				),
-				disabled: cn(
-					'text-muted-foreground opacity-50',
-					defaultClassNames.disabled,
-				),
+				disabled: cn('text-muted-foreground opacity-50', defaultClassNames.disabled),
 				hidden: cn('invisible', defaultClassNames.hidden),
 				...classNames,
 			}}
 			components={{
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
-					return (
-						<div
-							data-slot="calendar"
-							ref={rootRef}
-							className={cn(className)}
-							{...props}
-						/>
-					);
+					return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />;
 				},
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
-						return (
-							<ChevronLeftIcon className={cn('size-4', className)} {...props} />
-						);
+						return <ChevronLeftIcon className={cn('size-4', className)} {...props} />;
 					}
 
 					if (orientation === 'right') {
-						return (
-							<ChevronRightIcon
-								className={cn('size-4', className)}
-								{...props}
-							/>
-						);
+						return <ChevronRightIcon className={cn('size-4', className)} {...props} />;
 					}
 
-					return (
-						<ChevronDownIcon className={cn('size-4', className)} {...props} />
-					);
+					return <ChevronDownIcon className={cn('size-4', className)} {...props} />;
 				},
 				DayButton: CalendarDayButton,
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
@@ -240,8 +204,7 @@ export const CompactCalendar = ({
 			)}
 			captionLayout={captionLayout}
 			formatters={{
-				formatMonthDropdown: (date) =>
-					date.toLocaleString('default', { month: 'short' }),
+				formatMonthDropdown: (date) => date.toLocaleString('default', { month: 'short' }),
 				...formatters,
 			}}
 			classNames={{
@@ -274,10 +237,7 @@ export const CompactCalendar = ({
 					'has-focus:border-ring border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border',
 					defaultClassNames.dropdown_root,
 				),
-				dropdown: cn(
-					'bg-popover absolute inset-0 opacity-0',
-					defaultClassNames.dropdown,
-				),
+				dropdown: cn('bg-popover absolute inset-0 opacity-0', defaultClassNames.dropdown),
 				caption_label: cn(
 					'select-none font-medium text-xs',
 					captionLayout === 'label'
@@ -292,10 +252,7 @@ export const CompactCalendar = ({
 					defaultClassNames.weekday,
 				),
 				week: cn('mt-1 flex w-full', defaultClassNames.week),
-				week_number_header: cn(
-					'w-[--cell-size] select-none',
-					defaultClassNames.week_number_header,
-				),
+				week_number_header: cn('w-[--cell-size] select-none', defaultClassNames.week_number_header),
 				week_number: cn(
 					'text-muted-foreground select-none text-[0.7rem]',
 					defaultClassNames.week_number,
@@ -304,10 +261,7 @@ export const CompactCalendar = ({
 					'group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md',
 					defaultClassNames.day,
 				),
-				range_start: cn(
-					'bg-accent rounded-l-md',
-					defaultClassNames.range_start,
-				),
+				range_start: cn('bg-accent rounded-l-md', defaultClassNames.range_start),
 				range_middle: cn('rounded-none', defaultClassNames.range_middle),
 				range_end: cn('bg-accent rounded-r-md', defaultClassNames.range_end),
 				today: cn(
@@ -318,45 +272,26 @@ export const CompactCalendar = ({
 					'text-muted-foreground aria-selected:text-muted-foreground',
 					defaultClassNames.outside,
 				),
-				disabled: cn(
-					'text-muted-foreground opacity-50',
-					defaultClassNames.disabled,
-				),
+				disabled: cn('text-muted-foreground opacity-50', defaultClassNames.disabled),
 				hidden: cn('invisible', defaultClassNames.hidden),
 				...classNames,
 			}}
 			components={{
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
-					return (
-						<div
-							data-slot="calendar"
-							ref={rootRef}
-							className={cn(className)}
-							{...props}
-						/>
-					);
+					return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />;
 				},
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
-						return (
-							<ChevronLeftIcon className={cn('size-3', className)} {...props} />
-						);
+						return <ChevronLeftIcon className={cn('size-3', className)} {...props} />;
 					}
 
 					if (orientation === 'right') {
-						return (
-							<ChevronRightIcon
-								className={cn('size-3', className)}
-								{...props}
-							/>
-						);
+						return <ChevronRightIcon className={cn('size-3', className)} {...props} />;
 					}
 
-					return (
-						<ChevronDownIcon className={cn('size-3', className)} {...props} />
-					);
+					return <ChevronDownIcon className={cn('size-3', className)} {...props} />;
 				},
 				DayButton: CompactCalendarDayButton,
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
@@ -440,8 +375,7 @@ export const MiniCalendarWidget = ({
 			)}
 			captionLayout={captionLayout}
 			formatters={{
-				formatMonthDropdown: (date) =>
-					date.toLocaleString('default', { month: 'short' }),
+				formatMonthDropdown: (date) => date.toLocaleString('default', { month: 'short' }),
 				...formatters,
 			}}
 			classNames={{
@@ -474,10 +408,7 @@ export const MiniCalendarWidget = ({
 					'has-focus:border-ring border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border',
 					defaultClassNames.dropdown_root,
 				),
-				dropdown: cn(
-					'bg-popover absolute inset-0 opacity-0',
-					defaultClassNames.dropdown,
-				),
+				dropdown: cn('bg-popover absolute inset-0 opacity-0', defaultClassNames.dropdown),
 				caption_label: cn(
 					'select-none font-medium text-[0.6rem] hidden',
 					captionLayout === 'label'
@@ -492,10 +423,7 @@ export const MiniCalendarWidget = ({
 					defaultClassNames.weekday,
 				),
 				week: cn('mt-1 flex w-full', defaultClassNames.week),
-				week_number_header: cn(
-					'w-[--cell-size] select-none',
-					defaultClassNames.week_number_header,
-				),
+				week_number_header: cn('w-[--cell-size] select-none', defaultClassNames.week_number_header),
 				week_number: cn(
 					'text-muted-foreground select-none text-[0.6rem]',
 					defaultClassNames.week_number,
@@ -504,10 +432,7 @@ export const MiniCalendarWidget = ({
 					'group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md',
 					defaultClassNames.day,
 				),
-				range_start: cn(
-					'bg-accent rounded-l-md',
-					defaultClassNames.range_start,
-				),
+				range_start: cn('bg-accent rounded-l-md', defaultClassNames.range_start),
 				range_middle: cn('rounded-none', defaultClassNames.range_middle),
 				range_end: cn('bg-accent rounded-r-md', defaultClassNames.range_end),
 				today: cn(
@@ -518,48 +443,26 @@ export const MiniCalendarWidget = ({
 					'text-muted-foreground aria-selected:text-muted-foreground opacity-30',
 					defaultClassNames.outside,
 				),
-				disabled: cn(
-					'text-muted-foreground opacity-30',
-					defaultClassNames.disabled,
-				),
+				disabled: cn('text-muted-foreground opacity-30', defaultClassNames.disabled),
 				hidden: cn('invisible', defaultClassNames.hidden),
 				...classNames,
 			}}
 			components={{
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Root: ({ className, rootRef, ...props }) => {
-					return (
-						<div
-							data-slot="calendar"
-							ref={rootRef}
-							className={cn(className)}
-							{...props}
-						/>
-					);
+					return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />;
 				},
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
 				Chevron: ({ className, orientation, ...props }) => {
 					if (orientation === 'left') {
-						return (
-							<ChevronLeftIcon
-								className={cn('size-2.5', className)}
-								{...props}
-							/>
-						);
+						return <ChevronLeftIcon className={cn('size-2.5', className)} {...props} />;
 					}
 
 					if (orientation === 'right') {
-						return (
-							<ChevronRightIcon
-								className={cn('size-2.5', className)}
-								{...props}
-							/>
-						);
+						return <ChevronRightIcon className={cn('size-2.5', className)} {...props} />;
 					}
 
-					return (
-						<ChevronDownIcon className={cn('size-2.5', className)} {...props} />
-					);
+					return <ChevronDownIcon className={cn('size-2.5', className)} {...props} />;
 				},
 				DayButton: MiniCalendarDayButton,
 				// biome-ignore lint/correctness/noNestedComponentDefinitions: react-day-picker requires inline component definition
@@ -624,9 +527,4 @@ Calendar.displayName = 'Calendar';
 CompactCalendar.displayName = 'CompactCalendar';
 MiniCalendarWidget.displayName = 'MiniCalendarWidget';
 
-export {
-	Calendar,
-	CalendarDayButton,
-	CompactCalendarDayButton,
-	MiniCalendarDayButton,
-};
+export { Calendar, CalendarDayButton, CompactCalendarDayButton, MiniCalendarDayButton };

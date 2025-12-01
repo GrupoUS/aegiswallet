@@ -57,9 +57,7 @@ export function useCalendarSearch({
 }: UseCalendarSearchProps = {}): UseCalendarSearchReturn {
 	const [query, setQuery] = useState(initialQuery);
 	const [filters, setFilters] = useState<SearchFilters>(initialFilters);
-	const [searchType, setSearchType] = useState<'events' | 'transactions'>(
-		'events',
-	);
+	const [searchType, setSearchType] = useState<'events' | 'transactions'>('events');
 
 	// Buscar eventos financeiros
 	const eventsQuery = useQuery({
@@ -102,8 +100,7 @@ export function useCalendarSearch({
 			);
 			return response.data;
 		},
-		enabled:
-			enabled && searchType === 'transactions' && query.trim().length > 0,
+		enabled: enabled && searchType === 'transactions' && query.trim().length > 0,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 
@@ -140,12 +137,9 @@ export function useCalendarSearch({
 		setFilters((prev) => ({ ...prev, ...newFilters }));
 	}, []);
 
-	const handleSearchTypeChange = useCallback(
-		(newType: 'events' | 'transactions') => {
-			setSearchType(newType);
-		},
-		[],
-	);
+	const handleSearchTypeChange = useCallback((newType: 'events' | 'transactions') => {
+		setSearchType(newType);
+	}, []);
 
 	const clearSearch = useCallback(() => {
 		setQuery('');
@@ -179,8 +173,7 @@ export function useCalendarSearch({
 
 		// Computed
 		hasResults: results.length > 0,
-		isEmpty:
-			!isLoading && !error && results.length === 0 && query.trim().length > 0,
+		isEmpty: !(isLoading || error) && results.length === 0 && query.trim().length > 0,
 		canSearch: query.trim().length > 0,
 	};
 }

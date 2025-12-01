@@ -62,11 +62,12 @@ export function useTransactions(filters?: {
 	const query = useQuery({
 		queryKey: ['transactions', filters],
 		queryFn: async () => {
-			const response = await apiClient.get<
-				TransactionApiResponse<Transaction[]>
-			>('/v1/transactions', {
-				params: filters,
-			});
+			const response = await apiClient.get<TransactionApiResponse<Transaction[]>>(
+				'/v1/transactions',
+				{
+					params: filters,
+				},
+			);
 			// API returns { data: [...], meta: {...} }, so we access .data
 			return response.data;
 		},
@@ -108,9 +109,10 @@ export function useCreateTransaction(): UseCreateTransactionReturn {
 
 	const mutation = useMutation({
 		mutationFn: async (input: CreateTransactionInput) => {
-			const response = await apiClient.post<
-				TransactionApiResponse<Transaction>
-			>('/v1/transactions', input);
+			const response = await apiClient.post<TransactionApiResponse<Transaction>>(
+				'/v1/transactions',
+				input,
+			);
 			// API returns { data: transaction, meta: {...} }, so we access .data
 			return response.data;
 		},
@@ -171,14 +173,15 @@ export function useTransactionsStats(
 	const query = useQuery({
 		queryKey: ['transactions', 'stats', period, accountId],
 		queryFn: async () => {
-			const response = await apiClient.get<
-				TransactionApiResponse<TransactionStats>
-			>('/v1/transactions/statistics', {
-				params: {
-					period: period || 'month',
-					accountId,
+			const response = await apiClient.get<TransactionApiResponse<TransactionStats>>(
+				'/v1/transactions/statistics',
+				{
+					params: {
+						period: period || 'month',
+						accountId,
+					},
 				},
-			});
+			);
 			// API returns { data: stats, meta: {...} }, so we access .data
 			return response.data;
 		},

@@ -15,14 +15,7 @@ import { EntityType, IntentType } from '@/lib/nlu/types';
 // ============================================================================
 
 export interface RegionalVariation {
-	region:
-		| 'SP'
-		| 'RJ'
-		| 'Nordeste'
-		| 'Sul'
-		| 'Norte'
-		| 'Centro-Oeste'
-		| 'Unknown';
+	region: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
 	patterns: Record<string, string[]>; // Regional alternatives to standard patterns
 	slang: string[];
 	culturalContext: string[];
@@ -31,13 +24,7 @@ export interface RegionalVariation {
 
 export const BRAZILIAN_REGIONS: RegionalVariation[] = [
 	{
-		culturalContext: [
-			'trânsito pesado',
-			'capital',
-			'interior',
-			'litoral',
-			'serra',
-		],
+		culturalContext: ['trânsito pesado', 'capital', 'interior', 'litoral', 'serra'],
 		financialTerminology: {
 			account: 'conta',
 			bill: 'boleta',
@@ -52,18 +39,8 @@ export const BRAZILIAN_REGIONS: RegionalVariation[] = [
 				'como tá minha grana',
 			],
 			how_much: ['quanto que tá', 'qual é o valor', 'quanto custa', 'quanto é'],
-			pay_bill: [
-				'pagar a boleta',
-				'acertar as contas',
-				'quitar a fatura',
-				'liquidar o débito',
-			],
-			transfer: [
-				'mandar grana',
-				'fazer transfer',
-				'passar dinheiro',
-				'depositar na conta',
-			],
+			pay_bill: ['pagar a boleta', 'acertar as contas', 'quitar a fatura', 'liquidar o débito'],
+			transfer: ['mandar grana', 'fazer transfer', 'passar dinheiro', 'depositar na conta'],
 		},
 		region: 'SP',
 		slang: ['meu bem', 'valeu', 'demais', 'massa', 'top', 'sinistro', 'manero'],
@@ -77,29 +54,10 @@ export const BRAZILIAN_REGIONS: RegionalVariation[] = [
 			transfer: 'PIX',
 		},
 		patterns: {
-			check_balance: [
-				'saldo na conta',
-				'quanto tenho de grana',
-				'como tá minha conta',
-			],
-			how_much: [
-				'quanto tá',
-				'qual é o preço',
-				'quanto fica',
-				'quanto é que é',
-			],
-			pay_bill: [
-				'pagar a conta',
-				'acertar as contas',
-				'quitar a fatura',
-				'pagar o boleto',
-			],
-			transfer: [
-				'mandar dinheiro',
-				'fazer PIX',
-				'passar grana',
-				'transferir na hora',
-			],
+			check_balance: ['saldo na conta', 'quanto tenho de grana', 'como tá minha conta'],
+			how_much: ['quanto tá', 'qual é o preço', 'quanto fica', 'quanto é que é'],
+			pay_bill: ['pagar a conta', 'acertar as contas', 'quitar a fatura', 'pagar o boleto'],
+			transfer: ['mandar dinheiro', 'fazer PIX', 'passar grana', 'transferir na hora'],
 		},
 		region: 'RJ',
 		slang: ['maneiro', 'caraca', 'legal', 'sussa', 'nossa', 'véi', 'irmao'],
@@ -113,29 +71,10 @@ export const BRAZILIAN_REGIONS: RegionalVariation[] = [
 			transfer: 'depósito',
 		},
 		patterns: {
-			check_balance: [
-				'meu saldo',
-				'quanto tenho na conta',
-				'como tá minha grana',
-			],
-			how_much: [
-				'quanto é bão',
-				'qual é o preço',
-				'quanto custa meu filho',
-				'quanto que é',
-			],
-			pay_bill: [
-				'pagar a conta',
-				'acertar as dívidas',
-				'quitar o boleto',
-				'pagar as contas',
-			],
-			transfer: [
-				'mandar dinheiro',
-				'fazer depósito',
-				'passar uma grana',
-				'enviar via PIX',
-			],
+			check_balance: ['meu saldo', 'quanto tenho na conta', 'como tá minha grana'],
+			how_much: ['quanto é bão', 'qual é o preço', 'quanto custa meu filho', 'quanto que é'],
+			pay_bill: ['pagar a conta', 'acertar as dívidas', 'quitar o boleto', 'pagar as contas'],
+			transfer: ['mandar dinheiro', 'fazer depósito', 'passar uma grana', 'enviar via PIX'],
 		},
 		region: 'Nordeste',
 		slang: ['oxente', 'arre', 'bão', 'meu rei', 'rapaziada', 'segura o tá'],
@@ -149,29 +88,10 @@ export const BRAZILIAN_REGIONS: RegionalVariation[] = [
 			transfer: 'transferência',
 		},
 		patterns: {
-			check_balance: [
-				'meu saldo',
-				'quanto tenho na conta',
-				'como tá meu dinheiro',
-			],
-			how_much: [
-				'quanto custa',
-				'qual é o valor',
-				'quanto é gurizote',
-				'quanto que tá',
-			],
-			pay_bill: [
-				'pagar a fatura',
-				'acertar as contas',
-				'quitar o boleto',
-				'pagar as contas',
-			],
-			transfer: [
-				'mandar dinheiro',
-				'fazer transferência',
-				'passar grana',
-				'depositar tchê',
-			],
+			check_balance: ['meu saldo', 'quanto tenho na conta', 'como tá meu dinheiro'],
+			how_much: ['quanto custa', 'qual é o valor', 'quanto é gurizote', 'quanto que tá'],
+			pay_bill: ['pagar a fatura', 'acertar as contas', 'quitar o boleto', 'pagar as contas'],
+			transfer: ['mandar dinheiro', 'fazer transferência', 'passar grana', 'depositar tchê'],
 		},
 		region: 'Sul',
 		slang: ['bah', 'tchê', 'guri', 'guria', 'saudades', 'legal', 'bom'],
@@ -187,13 +107,11 @@ export const BRAZILIAN_ENTITY_PATTERNS: EntityPattern[] = [
 	{
 		normalizer: (match: string) => {
 			const cleanMatch = match.replace(/[^\d.,]/g, '').replace(',', '.');
-			return parseFloat(cleanMatch);
+			return Number.parseFloat(cleanMatch);
 		},
-		pattern:
-			/R?\$\s*(\d+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s*(reais|r\$|real|reis)/gi,
+		pattern: /R?\$\s*(\d+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s*(reais|r\$|real|reis)/gi,
 		type: EntityType.AMOUNT,
-		validator: (value: unknown) =>
-			typeof value === 'number' && value > 0 && value <= 1000000,
+		validator: (value: unknown) => typeof value === 'number' && value > 0 && value <= 1000000,
 	},
 
 	// Brazilian bill types
@@ -733,41 +651,14 @@ export class BrazilianContextAnalyzer {
 		return 'Unknown';
 	}
 
-	private detectLinguisticStyle(
-		text: string,
-	): 'formal' | 'colloquial' | 'slang' | 'mixed' {
-		const formalIndicators = [
-			'gostaria',
-			'poderia',
-			'agradeceria',
-			'por favor',
-		];
-		const slangIndicators = [
-			'oxente',
-			'caraca',
-			'meu bem',
-			'bah',
-			'tchê',
-			'maneiro',
-		];
-		const colloquialIndicators = [
-			'meu',
-			'minha',
-			'quero',
-			'vou',
-			'pegar',
-			'tá',
-		];
+	private detectLinguisticStyle(text: string): 'formal' | 'colloquial' | 'slang' | 'mixed' {
+		const formalIndicators = ['gostaria', 'poderia', 'agradeceria', 'por favor'];
+		const slangIndicators = ['oxente', 'caraca', 'meu bem', 'bah', 'tchê', 'maneiro'];
+		const colloquialIndicators = ['meu', 'minha', 'quero', 'vou', 'pegar', 'tá'];
 
-		const hasFormal = formalIndicators.some((indicator) =>
-			text.includes(indicator),
-		);
-		const hasSlang = slangIndicators.some((indicator) =>
-			text.includes(indicator),
-		);
-		const hasColloquial = colloquialIndicators.some((indicator) =>
-			text.includes(indicator),
-		);
+		const hasFormal = formalIndicators.some((indicator) => text.includes(indicator));
+		const hasSlang = slangIndicators.some((indicator) => text.includes(indicator));
+		const hasColloquial = colloquialIndicators.some((indicator) => text.includes(indicator));
 
 		if (hasFormal && !hasSlang) {
 			return 'formal';
@@ -815,9 +706,7 @@ export class BrazilianContextAnalyzer {
 		return markers;
 	}
 
-	private analyzeFinancialContext(
-		text: string,
-	): BrazilianContext['financialContext'] {
+	private analyzeFinancialContext(text: string): BrazilianContext['financialContext'] {
 		const commonBills = [];
 		const paymentMethods = [];
 		const financialHabits = [];

@@ -1,11 +1,6 @@
 import { eq, inArray } from 'drizzle-orm';
 
-import {
-	db,
-	getPoolClient,
-	type HttpClient,
-	type PoolClient,
-} from '@/db/client';
+import { db, getPoolClient, type HttpClient, type PoolClient } from '@/db/client';
 import {
 	bankAccounts,
 	complianceAuditLogs,
@@ -51,9 +46,7 @@ export interface TestUser {
 /**
  * Create a test user for integration tests
  */
-export const createTestUser = async (
-	client: DbClient = db,
-): Promise<TestUser> => {
+export const createTestUser = async (client: DbClient = db): Promise<TestUser> => {
 	const email = `integration_${Date.now()}_${Math.random().toString(36).slice(2)}@aegiswallet.dev`;
 	const id = `test_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -71,10 +64,7 @@ export const createTestUser = async (
 /**
  * Clean up test user data after tests
  */
-export const cleanupTestUser = async (
-	userId: string,
-	client: DbClient = db,
-): Promise<void> => {
+export const cleanupTestUser = async (userId: string, client: DbClient = db): Promise<void> => {
 	await client.delete(users).where(eq(users.id, userId));
 };
 
@@ -82,29 +72,16 @@ export const cleanupTestUser = async (
  * Clean up all test user data including related records (for test cleanup)
  * Deletes in proper order to respect foreign key constraints
  */
-export const cleanupUserData = async (
-	userId: string,
-	client: DbClient = db,
-): Promise<void> => {
+export const cleanupUserData = async (userId: string, client: DbClient = db): Promise<void> => {
 	// Clean up LGPD/compliance related tables first
-	await client
-		.delete(complianceAuditLogs)
-		.where(eq(complianceAuditLogs.userId, userId));
-	await client
-		.delete(lgpdExportRequests)
-		.where(eq(lgpdExportRequests.userId, userId));
-	await client
-		.delete(dataDeletionRequests)
-		.where(eq(dataDeletionRequests.userId, userId));
+	await client.delete(complianceAuditLogs).where(eq(complianceAuditLogs.userId, userId));
+	await client.delete(lgpdExportRequests).where(eq(lgpdExportRequests.userId, userId));
+	await client.delete(dataDeletionRequests).where(eq(dataDeletionRequests.userId, userId));
 	await client.delete(lgpdConsents).where(eq(lgpdConsents.userId, userId));
-	await client
-		.delete(transactionLimits)
-		.where(eq(transactionLimits.userId, userId));
+	await client.delete(transactionLimits).where(eq(transactionLimits.userId, userId));
 
 	// Clean up financial data
-	await client
-		.delete(financialEvents)
-		.where(eq(financialEvents.userId, userId));
+	await client.delete(financialEvents).where(eq(financialEvents.userId, userId));
 	await client.delete(bankAccounts).where(eq(bankAccounts.userId, userId));
 
 	// Finally delete the user (this will also cascade other relations)
@@ -130,9 +107,7 @@ export const cleanupFinancialEvents = async (
 	client: DbClient = db,
 ): Promise<void> => {
 	if (eventIds.length === 0) return;
-	await client
-		.delete(financialEvents)
-		.where(inArray(financialEvents.id, eventIds));
+	await client.delete(financialEvents).where(inArray(financialEvents.id, eventIds));
 };
 
 // Re-export schema tables for tests

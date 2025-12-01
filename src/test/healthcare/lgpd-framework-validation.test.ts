@@ -33,14 +33,7 @@ type UserConsentState = {
 	voiceRecording: boolean;
 };
 
-type UserDataKey =
-	| 'address'
-	| 'birthDate'
-	| 'cpf'
-	| 'email'
-	| 'name'
-	| 'phone'
-	| 'rg';
+type UserDataKey = 'address' | 'birthDate' | 'cpf' | 'email' | 'name' | 'phone' | 'rg';
 type UserDataState = Record<UserDataKey, string>;
 
 // Import healthcare setup to configure test environment
@@ -117,25 +110,15 @@ const LGPDComplianceFramework = () => {
 			'biometricData',
 			'healthData',
 		];
-		const consentPurposes = requiredPurposes.filter(
-			(purpose) => userConsent[purpose],
-		);
+		const consentPurposes = requiredPurposes.filter((purpose) => userConsent[purpose]);
 
 		return consentPurposes.length > 0 ? 'compliant' : 'non-compliant';
 	};
 
 	const validateDataMinimization = () => {
 		const requiredFields: UserDataKey[] = ['name', 'email'];
-		const optionalFields: UserDataKey[] = [
-			'phone',
-			'cpf',
-			'rg',
-			'birthDate',
-			'address',
-		];
-		const hasRequired = requiredFields.every((field) =>
-			Boolean(userData[field]),
-		);
+		const optionalFields: UserDataKey[] = ['phone', 'cpf', 'rg', 'birthDate', 'address'];
+		const hasRequired = requiredFields.every((field) => Boolean(userData[field]));
 		if (!hasRequired) {
 			return 'non-compliant';
 		}
@@ -147,8 +130,7 @@ const LGPDComplianceFramework = () => {
 
 	const validateAccuracy = () => {
 		const hasValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email);
-		const hasValidCPF =
-			/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(userData.cpf) || userData.cpf === '';
+		const hasValidCPF = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(userData.cpf) || userData.cpf === '';
 		return hasValidEmail && hasValidCPF ? 'compliant' : 'non-compliant';
 	};
 
@@ -210,23 +192,15 @@ const LGPDComplianceFramework = () => {
 		e.preventDefault();
 
 		if (!Object.values(userConsent).some(Boolean)) {
-			alert(
-				'É necessário fornecer consentimento para pelo menos uma finalidade.',
-			);
+			alert('É necessário fornecer consentimento para pelo menos uma finalidade.');
 			return;
 		}
 
 		// Mask sensitive data
 		const maskedData = {
 			...userData,
-			cpf: userData.cpf.replace(
-				/(\d{3})\.(\d{3})\.(\d{3})-(\d{2})/,
-				'$1.***.$3-**',
-			),
-			phone: userData.phone.replace(
-				/(\d{2})(\d{1})\d{4}(\d{4})$/,
-				'$1$2****$3',
-			),
+			cpf: userData.cpf.replace(/(\d{3})\.(\d{3})\.(\d{3})-(\d{2})/, '$1.***.$3-**'),
+			phone: userData.phone.replace(/(\d{2})(\d{1})\d{4}(\d{4})$/, '$1$2****$3'),
 			rg: userData.rg.replace(/(\d{2})\d{7}(\d{1})$/, '$1.*******.$2'),
 		};
 
@@ -265,11 +239,7 @@ const LGPDComplianceFramework = () => {
 	};
 
 	return React.createElement('div', { 'data-testid': 'lgpd-framework' }, [
-		React.createElement(
-			'h1',
-			{ key: 'title' },
-			'Validação de Conformidade LGPD - AegisWallet',
-		),
+		React.createElement('h1', { key: 'title' }, 'Validação de Conformidade LGPD - AegisWallet'),
 
 		// User Data Form
 		React.createElement('form', { key: 'form', onSubmit: handleSubmit }, [
@@ -324,8 +294,7 @@ const LGPDComplianceFramework = () => {
 				React.createElement('input', {
 					'data-testid': 'user-birthdate',
 					key: 'birthDate',
-					onChange: (e) =>
-						setUserData({ ...userData, birthDate: e.target.value }),
+					onChange: (e) => setUserData({ ...userData, birthDate: e.target.value }),
 					placeholder: 'Data de Nascimento',
 					type: 'date',
 					value: userData.birthDate,
@@ -432,45 +401,29 @@ const LGPDComplianceFramework = () => {
 			),
 
 			// Compliance Status Display
-			React.createElement(
-				'div',
-				{ 'data-testid': 'compliance-status', key: 'compliance-status' },
-				[
-					React.createElement(
-						'h3',
-						{ key: 'status-title' },
-						'Status de Conformidade LGPD',
-					),
-					...Object.entries(complianceStatus).map(([principle, status]) =>
+			React.createElement('div', { 'data-testid': 'compliance-status', key: 'compliance-status' }, [
+				React.createElement('h3', { key: 'status-title' }, 'Status de Conformidade LGPD'),
+				...Object.entries(complianceStatus).map(([principle, status]) =>
+					React.createElement('div', { 'data-testid': `status-${principle}`, key: principle }, [
+						React.createElement('span', { key: 'principle' }, `${principle}: `),
 						React.createElement(
-							'div',
-							{ 'data-testid': `status-${principle}`, key: principle },
-							[
-								React.createElement(
-									'span',
-									{ key: 'principle' },
-									`${principle}: `,
-								),
-								React.createElement(
-									'span',
-									{
-										key: 'status',
-										style: {
-											color:
-												status === 'compliant'
-													? 'green'
-													: status === 'non-compliant'
-														? 'red'
-														: 'orange',
-										},
-									},
-									status,
-								),
-							],
+							'span',
+							{
+								key: 'status',
+								style: {
+									color:
+										status === 'compliant'
+											? 'green'
+											: status === 'non-compliant'
+												? 'red'
+												: 'orange',
+								},
+							},
+							status,
 						),
-					),
-				],
-			),
+					]),
+				),
+			]),
 
 			// Action Buttons
 			React.createElement('div', { key: 'actions' }, [
@@ -534,10 +487,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			render(React.createElement(LGPDComplianceFramework));
 
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 
 			await userEvent.click(screen.getByTestId('consent-data-processing'));
 			await userEvent.click(screen.getByTestId('consent-voice-recording'));
@@ -565,9 +515,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			await waitFor(() => {
 				const purposeStatus = screen.getByTestId('status-purposeLimitation');
-				expect(purposeStatus).toHaveTextContent(
-					'purposeLimitation: non-compliant',
-				);
+				expect(purposeStatus).toHaveTextContent('purposeLimitation: non-compliant');
 			});
 
 			// Give specific consent
@@ -606,21 +554,14 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			// Fill required fields only
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 
 			await userEvent.click(screen.getByTestId('consent-data-processing'));
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const minimizationStatus = screen.getByTestId(
-					'status-dataMinimization',
-				);
-				expect(minimizationStatus).toHaveTextContent(
-					'dataMinimization: compliant',
-				);
+				const minimizationStatus = screen.getByTestId('status-dataMinimization');
+				expect(minimizationStatus).toHaveTextContent('dataMinimization: compliant');
 			});
 		});
 
@@ -629,10 +570,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			// Fill all optional fields
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 			await userEvent.type(screen.getByTestId('user-phone'), '11987654321');
 			await userEvent.type(screen.getByTestId('user-cpf'), '123.456.789-00');
 			await userEvent.type(screen.getByTestId('user-rg'), '12.345.678-9');
@@ -642,12 +580,8 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const minimizationStatus = screen.getByTestId(
-					'status-dataMinimization',
-				);
-				expect(minimizationStatus).toHaveTextContent(
-					'dataMinimization: review-needed',
-				);
+				const minimizationStatus = screen.getByTestId('status-dataMinimization');
+				expect(minimizationStatus).toHaveTextContent('dataMinimization: review-needed');
 			});
 		});
 	});
@@ -666,10 +600,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			// Correct email
 			await userEvent.clear(screen.getByTestId('user-email'));
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'valid@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'valid@example.com');
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
@@ -683,10 +614,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			await userEvent.type(screen.getByTestId('user-cpf'), '123.456.789-00');
 			await userEvent.type(screen.getByTestId('user-name'), 'Test User');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'test@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'test@example.com');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -704,10 +632,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			render(React.createElement(LGPDComplianceFramework));
 
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 			await userEvent.type(screen.getByTestId('user-phone'), '11987654321');
 			await userEvent.type(screen.getByTestId('user-cpf'), '123.456.789-00');
 
@@ -777,12 +702,8 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			});
 
 			await waitFor(() => {
-				const accountabilityStatus = screen.getByTestId(
-					'status-accountability',
-				);
-				expect(accountabilityStatus).toHaveTextContent(
-					'accountability: compliant',
-				);
+				const accountabilityStatus = screen.getByTestId('status-accountability');
+				expect(accountabilityStatus).toHaveTextContent('accountability: compliant');
 			});
 		});
 	});
@@ -842,27 +763,17 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const transferStatus = screen.getByTestId(
-					'status-internationalTransfer',
-				);
-				expect(transferStatus).toHaveTextContent(
-					'internationalTransfer: compliant',
-				);
+				const transferStatus = screen.getByTestId('status-internationalTransfer');
+				expect(transferStatus).toHaveTextContent('internationalTransfer: compliant');
 			});
 
 			// Should still be compliant with explicit international consent
-			await userEvent.click(
-				screen.getByTestId('consent-international-transfer'),
-			);
+			await userEvent.click(screen.getByTestId('consent-international-transfer'));
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const transferStatus = screen.getByTestId(
-					'status-internationalTransfer',
-				);
-				expect(transferStatus).toHaveTextContent(
-					'internationalTransfer: compliant',
-				);
+				const transferStatus = screen.getByTestId('status-internationalTransfer');
+				expect(transferStatus).toHaveTextContent('internationalTransfer: compliant');
 			});
 		});
 	});
@@ -874,12 +785,8 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const brazilianStatus = screen.getByTestId(
-					'status-brazilianCompliance',
-				);
-				expect(brazilianStatus).toHaveTextContent(
-					'brazilianCompliance: compliant',
-				);
+				const brazilianStatus = screen.getByTestId('status-brazilianCompliance');
+				expect(brazilianStatus).toHaveTextContent('brazilianCompliance: compliant');
 			});
 		});
 
@@ -892,13 +799,11 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 				rateLimiting: '10 requests per minute',
 			};
 
-			Object.entries(pixSecurityRequirements).forEach(
-				([_requirement, implementation]) => {
-					expect(implementation).toBeTruthy();
-					expect(typeof implementation).toBe('string');
-					expect(implementation.length).toBeGreaterThan(0);
-				},
-			);
+			Object.entries(pixSecurityRequirements).forEach(([_requirement, implementation]) => {
+				expect(implementation).toBeTruthy();
+				expect(typeof implementation).toBe('string');
+				expect(implementation.length).toBeGreaterThan(0);
+			});
 		});
 
 		it('should implement Anti-Money Laundering (AML) controls', () => {
@@ -939,13 +844,11 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 				auditLogs: 2555, // 7 years (compliance)
 			};
 
-			Object.entries(healthDataRetention).forEach(
-				([_dataType, retentionDays]) => {
-					expect(typeof retentionDays).toBe('number');
-					expect(retentionDays).toBeGreaterThan(0);
-					expect(retentionDays).toBeLessThan(3650); // Maximum 10 years
-				},
-			);
+			Object.entries(healthDataRetention).forEach(([_dataType, retentionDays]) => {
+				expect(typeof retentionDays).toBe('number');
+				expect(retentionDays).toBeGreaterThan(0);
+				expect(retentionDays).toBeLessThan(3650); // Maximum 10 years
+			});
 		});
 	});
 
@@ -995,10 +898,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 
 			// Fill required fields
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 
 			// Give consent for multiple purposes
 			await userEvent.click(screen.getByTestId('consent-data-processing'));
@@ -1016,9 +916,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 					if (statusText?.includes(':')) {
 						const [_, statusValue] = statusText.split(':');
 						// Should be compliant or review-needed, not non-compliant
-						expect(['compliant', 'review-needed']).toContain(
-							statusValue.trim(),
-						);
+						expect(['compliant', 'review-needed']).toContain(statusValue.trim());
 					}
 				});
 			});
@@ -1031,10 +929,7 @@ describe('Comprehensive LGPD Compliance Framework Validation', () => {
 			render(React.createElement(LGPDComplianceFramework));
 
 			await userEvent.type(screen.getByTestId('user-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('user-email'),
-				'joao@example.com',
-			);
+			await userEvent.type(screen.getByTestId('user-email'), 'joao@example.com');
 
 			// Enable all consent options
 			await userEvent.click(screen.getByTestId('consent-data-processing'));

@@ -110,12 +110,8 @@ const CHARACTER_SETS = {
 /**
  * Check if password contains personal information
  */
-function containsPersonalInfo(
-	password: string,
-	email?: string,
-	name?: string,
-): boolean {
-	if (!email && !name) {
+function containsPersonalInfo(password: string, email?: string, name?: string): boolean {
+	if (!(email || name)) {
 		return false;
 	}
 
@@ -216,15 +212,11 @@ export function validatePassword(
 
 	// Length validation
 	if (password.length < config.minLength) {
-		errors.push(
-			`Password must be at least ${config.minLength} characters long`,
-		);
+		errors.push(`Password must be at least ${config.minLength} characters long`);
 	}
 
 	if (password.length > config.maxLength) {
-		errors.push(
-			`Password must be no more than ${config.maxLength} characters long`,
-		);
+		errors.push(`Password must be no more than ${config.maxLength} characters long`);
 	}
 
 	// Character complexity validation
@@ -241,9 +233,7 @@ export function validatePassword(
 	}
 
 	if (config.requireSpecialChars && !CHARACTER_SETS.special.test(password)) {
-		errors.push(
-			'Password must contain at least one special character (!@#$%^&* etc.)',
-		);
+		errors.push('Password must contain at least one special character (!@#$%^&* etc.)');
 	}
 
 	// Common password validation
@@ -257,9 +247,7 @@ export function validatePassword(
 	// Personal information validation
 	if (config.preventPersonalInfo && context) {
 		if (containsPersonalInfo(password, context.email, context.name)) {
-			errors.push(
-				'Password must not contain personal information (name, email, etc.)',
-			);
+			errors.push('Password must not contain personal information (name, email, etc.)');
 		}
 	}
 
@@ -298,9 +286,7 @@ export function validatePassword(
 		}
 
 		suggestions.push('Avoid common patterns and dictionary words');
-		suggestions.push(
-			'Consider using a passphrase (e.g., "correct-horse-battery-staple")',
-		);
+		suggestions.push('Consider using a passphrase (e.g., "correct-horse-battery-staple")');
 	}
 
 	return {
@@ -315,7 +301,7 @@ export function validatePassword(
 /**
  * Generate secure random password
  */
-export function generateSecurePassword(length: number = 16): string {
+export function generateSecurePassword(length = 16): string {
 	const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 	const lowercase = 'abcdefghijklmnopqrstuvwxyz';
 	const numbers = '0123456789';
@@ -346,13 +332,9 @@ export function generateSecurePassword(length: number = 16): string {
 /**
  * Check if password needs to be changed (e.g., for expired passwords)
  */
-export function shouldChangePassword(
-	lastChanged: Date,
-	maxAge: number = 90,
-): boolean {
+export function shouldChangePassword(lastChanged: Date, maxAge = 90): boolean {
 	const now = new Date();
-	const ageInDays =
-		(now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+	const ageInDays = (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
 	return ageInDays > maxAge;
 }
 

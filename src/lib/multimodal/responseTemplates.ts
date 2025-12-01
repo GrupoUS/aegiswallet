@@ -151,19 +151,12 @@ export function buildBudgetResponse(data: {
 
 	// Voice output - handle invalid types safely
 	const safeSpentPercentage =
-		typeof spentPercentage === 'number' && !Number.isNaN(spentPercentage)
-			? spentPercentage
-			: 0;
-	const safeAvailable =
-		typeof available === 'number' && !Number.isNaN(available) ? available : 0;
-	const safeTotal =
-		typeof total === 'number' && !Number.isNaN(total) ? total : 0;
-	const safeSpent =
-		typeof spent === 'number' && !Number.isNaN(spent) ? spent : 0;
+		typeof spentPercentage === 'number' && !Number.isNaN(spentPercentage) ? spentPercentage : 0;
+	const safeAvailable = typeof available === 'number' && !Number.isNaN(available) ? available : 0;
+	const safeTotal = typeof total === 'number' && !Number.isNaN(total) ? total : 0;
+	const safeSpent = typeof spent === 'number' && !Number.isNaN(spent) ? spent : 0;
 
-	const categoryText = category
-		? `do orçamento de ${category}`
-		: 'do seu orçamento';
+	const categoryText = category ? `do orçamento de ${category}` : 'do seu orçamento';
 	const voice = [
 		`Você ainda pode gastar ${formatCurrencyForVoice(safeAvailable)} ${categoryText}`,
 		`Você já utilizou ${formatPercentage(safeSpentPercentage)} do limite`,
@@ -171,9 +164,7 @@ export function buildBudgetResponse(data: {
 
 	// Text output
 	const percentageText =
-		safeSpentPercentage > 0
-			? ` (${formatPercentage(safeSpentPercentage)} usado)`
-			: '';
+		safeSpentPercentage > 0 ? ` (${formatPercentage(safeSpentPercentage)} usado)` : '';
 	const text = `Orçamento ${category ? `(${category})` : ''}: ${formatCurrency(safeAvailable)} disponíveis${percentageText}`;
 
 	// Visual data - ensure safe values for display
@@ -409,9 +400,7 @@ export function buildTransferResponse(data: {
 			voiceParts.push('Confirme para prosseguir');
 			break;
 		case 'processing':
-			voiceParts.push(
-				`Processando transferência de ${formatCurrencyForVoice(amount)}`,
-			);
+			voiceParts.push(`Processando transferência de ${formatCurrencyForVoice(amount)}`);
 			break;
 		case 'completed':
 			voiceParts.push(
@@ -419,9 +408,7 @@ export function buildTransferResponse(data: {
 			);
 			break;
 		case 'failed':
-			voiceParts.push(
-				`Não foi possível completar a transferência. Tente novamente`,
-			);
+			voiceParts.push(`Não foi possível completar a transferência. Tente novamente`);
 			break;
 	}
 
@@ -439,17 +426,13 @@ export function buildTransferResponse(data: {
 	// Accessibility
 	const accessibility = {
 		'aria-label': `Transferência de ${formatCurrency(amount)} para ${recipient}`,
-		'aria-live':
-			status === 'pending' ? ('assertive' as const) : ('polite' as const),
+		'aria-live': status === 'pending' ? ('assertive' as const) : ('polite' as const),
 		role: status === 'pending' ? ('alertdialog' as const) : ('status' as const),
 	};
 
 	return {
 		accessibility,
-		ssmlOptions:
-			status === 'pending'
-				? { emphasis: 'moderate', pauseDuration: 500 }
-				: undefined,
+		ssmlOptions: status === 'pending' ? { emphasis: 'moderate', pauseDuration: 500 } : undefined,
 		text,
 		visual,
 		voice,
@@ -648,9 +631,7 @@ export function buildMultimodalResponse(
 		const amount =
 			safeData.amount ??
 			safeData.totalAmount ??
-			(Array.isArray(safeData.bills) && safeData.bills[0]?.amount
-				? safeData.bills[0].amount
-				: 0);
+			(Array.isArray(safeData.bills) && safeData.bills[0]?.amount ? safeData.bills[0].amount : 0);
 
 		return {
 			accessibility: {
@@ -714,21 +695,15 @@ export function buildMultimodalResponse(
 									? (safeData.spent / safeData.total) * 100
 									: 0,
 						}
-					: intent === IntentType.FINANCIAL_PROJECTION &&
-							safeData.projectedBalance !== undefined
+					: intent === IntentType.FINANCIAL_PROJECTION && safeData.projectedBalance !== undefined
 						? {
 								...safeData,
 								expectedIncome:
-									safeData.income ??
-									safeData.expectedIncome ??
-									safeData.currentBalance ??
-									0,
-								expectedExpenses:
-									safeData.expenses ?? safeData.expectedExpenses ?? 0,
+									safeData.income ?? safeData.expectedIncome ?? safeData.currentBalance ?? 0,
+								expectedExpenses: safeData.expenses ?? safeData.expectedExpenses ?? 0,
 								variation:
 									safeData.variation ??
-									(safeData.projectedBalance !== undefined &&
-									safeData.currentBalance !== undefined
+									(safeData.projectedBalance !== undefined && safeData.currentBalance !== undefined
 										? safeData.projectedBalance - safeData.currentBalance
 										: 0),
 							}
@@ -744,9 +719,7 @@ export function buildMultimodalResponse(
 													? safeData.nextIncome.date
 													: (safeData.nextIncome.date?.toISOString?.() ?? ''),
 											source:
-												safeData.nextIncome.description ||
-												safeData.nextIncome.source ||
-												'Receita',
+												safeData.nextIncome.description || safeData.nextIncome.source || 'Receita',
 										},
 									],
 									totalExpected:
@@ -757,9 +730,9 @@ export function buildMultimodalResponse(
 								}
 							: safeData;
 
-	const response = (
-		builder as unknown as (data: typeof mappedData) => MultimodalResponse
-	)(mappedData);
+	const response = (builder as unknown as (data: typeof mappedData) => MultimodalResponse)(
+		mappedData,
+	);
 
 	if (!response.accessibility) {
 		return {

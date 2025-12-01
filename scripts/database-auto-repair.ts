@@ -8,16 +8,13 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve as pathResolve } from 'node:path';
 
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-import {
-	DatabaseHealthChecker,
-	type HealthCheckResult,
-} from './database-health-check';
+import { DatabaseHealthChecker, type HealthCheckResult } from './database-health-check';
 
 interface RepairOperation {
 	name: string;
@@ -72,12 +69,9 @@ class DatabaseAutoRepair {
 		try {
 			// Step 1: Run health check
 			console.log('📊 Running comprehensive health check...');
-			const healthResult =
-				await this.healthChecker.runComprehensiveHealthCheck();
+			const healthResult = await this.healthChecker.runComprehensiveHealthCheck();
 
-			console.log(
-				`Health Status: ${healthResult.status} (${healthResult.score}/100)`,
-			);
+			console.log(`Health Status: ${healthResult.status} (${healthResult.score}/100)`);
 			console.log(`Issues Found: ${healthResult.issues.length}\n`);
 
 			if (healthResult.issues.length === 0) {
@@ -86,18 +80,13 @@ class DatabaseAutoRepair {
 			}
 
 			// Step 2: Analyze and prepare repair operations
-			const repairOperations = await this.prepareRepairOperations(
-				healthResult,
-				{
-					fixPerformance,
-					fixSecurity,
-					fixSchema,
-				},
-			);
+			const repairOperations = await this.prepareRepairOperations(healthResult, {
+				fixPerformance,
+				fixSecurity,
+				fixSchema,
+			});
 
-			console.log(
-				`🔧 Identified ${repairOperations.length} repairable issues\n`,
-			);
+			console.log(`🔧 Identified ${repairOperations.length} repairable issues\n`);
 
 			// Step 3: Execute repairs
 			for (const operation of repairOperations) {
@@ -121,11 +110,7 @@ class DatabaseAutoRepair {
 					const success = await operation.execute();
 
 					if (success) {
-						this.logOperation(
-							operation.name,
-							'success',
-							'Operation completed successfully',
-						);
+						this.logOperation(operation.name, 'success', 'Operation completed successfully');
 						console.log(`   ✅ Fixed: ${operation.description}`);
 					} else {
 						this.logOperation(operation.name, 'failed', 'Operation failed');
@@ -137,9 +122,7 @@ class DatabaseAutoRepair {
 						'failed',
 						`Error: ${error instanceof Error ? error.message : String(error)}`,
 					);
-					console.log(
-						`   ❌ Error: ${error instanceof Error ? error.message : String(error)}`,
-					);
+					console.log(`   ❌ Error: ${error instanceof Error ? error.message : String(error)}`);
 				}
 
 				console.log('');
@@ -148,14 +131,11 @@ class DatabaseAutoRepair {
 			// Step 4: Final verification
 			if (!dryRun) {
 				console.log('🔄 Running post-repair health check...');
-				const postRepairHealth =
-					await this.healthChecker.runComprehensiveHealthCheck();
+				const postRepairHealth = await this.healthChecker.runComprehensiveHealthCheck();
 
 				console.log(`\n📊 Pre-Repair Score: ${healthResult.score}/100`);
 				console.log(`📊 Post-Repair Score: ${postRepairHealth.score}/100`);
-				console.log(
-					`📈 Improvement: ${postRepairHealth.score - healthResult.score} points`,
-				);
+				console.log(`📈 Improvement: ${postRepairHealth.score - healthResult.score} points`);
 
 				if (postRepairHealth.score > healthResult.score) {
 					console.log('✅ Auto-repair successful - Database health improved!');
@@ -172,7 +152,8 @@ class DatabaseAutoRepair {
 		}
 	}
 
-	private async prepareRepairOperations(
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex logic required for repair operations
+	private prepareRepairOperations(
 		healthResult: HealthCheckResult,
 		options: {
 			fixPerformance: boolean;
@@ -214,18 +195,19 @@ class DatabaseAutoRepair {
 			}
 		}
 
-		return operations.sort((a, b) => {
-			const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-			return severityOrder[a.severity] - severityOrder[b.severity];
-		});
+		return Promise.resolve(
+			operations.sort((a, b) => {
+				const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+				return severityOrder[a.severity] - severityOrder[b.severity];
+			}),
+		);
 	}
 
 	private prepareSchemaRepair(issue: any): RepairOperation | null {
 		if (issue.description.includes('Schema mismatch')) {
 			return {
 				name: 'Sync Database Schema',
-				description:
-					'Generate and apply Drizzle migrations to sync database with code',
+				description: 'Generate and apply Drizzle migrations to sync database with code',
 				severity: issue.severity,
 				autoFixable: true,
 				execute: async () => {
@@ -279,9 +261,7 @@ class DatabaseAutoRepair {
             `);
 
 						const unusedIndexesList = unusedIndexes.rows ?? [];
-						console.log(
-							`   🗑️  Found ${unusedIndexesList.length} unused indexes`,
-						);
+						console.log(`   🗑️  Found ${unusedIndexesList.length} unused indexes`);
 
 						for (const index of unusedIndexesList) {
 							const indexname = index.indexname as string;
@@ -345,9 +325,7 @@ class DatabaseAutoRepair {
                 `);
 								console.log(`   ✅ Created index: ${query.name}`);
 							} catch {
-								console.log(
-									`   ⚠️  Index ${query.name} already exists or failed to create`,
-								);
+								console.log(`   ⚠️  Index ${query.name} already exists or failed to create`);
 							}
 						}
 
@@ -370,12 +348,12 @@ class DatabaseAutoRepair {
 				description: 'Update database connection to use SSL/TLS encryption',
 				severity: issue.severity,
 				autoFixable: false, // Requires environment variable update
-				execute: async () => {
+				execute: () => {
 					console.log(
 						'   ⚠️  Manual action required: Update DATABASE_URL to include sslmode=require',
 					);
 					console.log('   📝 Current URL lacks SSL encryption - security risk');
-					return false;
+					return Promise.resolve(false);
 				},
 			};
 		}
@@ -383,8 +361,7 @@ class DatabaseAutoRepair {
 		if (issue.description.includes('missing RLS policies')) {
 			return {
 				name: 'Generate RLS Policies',
-				description:
-					'Create Row-Level Security policies for user data isolation',
+				description: 'Create Row-Level Security policies for user data isolation',
 				severity: issue.severity,
 				autoFixable: true,
 				execute: async () => {
@@ -437,9 +414,7 @@ class DatabaseAutoRepair {
                 `);
 								console.log(`   ✅ Created policy: ${policy.name}`);
 							} catch (_policyError) {
-								console.log(
-									`   ⚠️  Policy ${policy.name} already exists or failed to create`,
-								);
+								console.log(`   ⚠️  Policy ${policy.name} already exists or failed to create`);
 							}
 						}
 
@@ -509,9 +484,7 @@ class DatabaseAutoRepair {
 
 		try {
 			// Simple yes/no prompt
-			process.stdout.write(
-				`🔧 ${operation.name} (${operation.severity})? [y/N]: `,
-			);
+			process.stdout.write(`🔧 ${operation.name} (${operation.severity})? [y/N]: `);
 			const answer = await new Promise<string>((resolve) => {
 				process.stdin.once('data', (data) => {
 					resolve(data.toString().trim().toLowerCase());
@@ -543,14 +516,13 @@ class DatabaseAutoRepair {
 			operations: this.repairLog,
 			summary: {
 				total: this.repairLog.length,
-				successful: this.repairLog.filter((op) => op.status === 'success')
-					.length,
+				successful: this.repairLog.filter((op) => op.status === 'success').length,
 				failed: this.repairLog.filter((op) => op.status === 'failed').length,
 				skipped: this.repairLog.filter((op) => op.status === 'skipped').length,
 			},
 		};
 
-		const reportPath = resolve(process.cwd(), 'database-repair-report.json');
+		const reportPath = pathResolve(process.cwd(), 'database-repair-report.json');
 		writeFileSync(reportPath, JSON.stringify(report, null, 2));
 
 		console.log(`\n📄 Repair report saved to: ${reportPath}`);

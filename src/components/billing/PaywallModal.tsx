@@ -13,19 +13,13 @@ interface PaywallModalProps {
 	feature?: string;
 }
 
-export function PaywallModal({
-	open,
-	onOpenChange,
-	feature,
-}: PaywallModalProps) {
+export function PaywallModal({ open, onOpenChange, feature }: PaywallModalProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle className="text-2xl">
-						{feature
-							? `Upgrade para acessar ${feature}`
-							: 'Upgrade para recursos premium'}
+						{feature ? `Upgrade para acessar ${feature}` : 'Upgrade para recursos premium'}
 					</DialogTitle>
 					<DialogDescription>
 						Escolha o plano ideal para suas necessidades financeiras

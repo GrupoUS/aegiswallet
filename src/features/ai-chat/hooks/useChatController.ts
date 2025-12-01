@@ -170,10 +170,7 @@ export function useChatController(
 							break;
 						}
 						case 'suggestion':
-							setSuggestions((prev) => [
-								...prev,
-								chunk.payload as ChatSuggestion,
-							]);
+							setSuggestions((prev) => [...prev, chunk.payload as ChatSuggestion]);
 							break;
 						case 'task':
 							setTasks((prev) => [...prev, chunk.payload as ChatTask]);
@@ -199,10 +196,7 @@ export function useChatController(
 								setMessages((prev) => {
 									const updated = [...prev, assistantMessage];
 									// Trim to maxMessages if configured
-									if (
-										options?.maxMessages &&
-										updated.length > options.maxMessages
-									) {
+									if (options?.maxMessages && updated.length > options.maxMessages) {
 										return updated.slice(-options.maxMessages);
 									}
 									return updated;
@@ -300,9 +294,7 @@ export function useChatController(
 	 */
 	const regenerateLastMessage = useCallback(async () => {
 		// Find the last assistant message
-		const lastAssistantIndex = messages.findLastIndex(
-			(m) => m.role === 'assistant',
-		);
+		const lastAssistantIndex = messages.findLastIndex((m) => m.role === 'assistant');
 
 		if (lastAssistantIndex === -1) {
 			// No assistant message to regenerate

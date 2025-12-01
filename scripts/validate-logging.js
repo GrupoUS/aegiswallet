@@ -8,257 +8,257 @@ import path from 'node:path';
 
 // Simple test runner for Node.js environment
 function runTests() {
-  const tests = [
-    {
-      name: 'Console Statement Replacement',
-      test: validateConsoleReplacement,
-    },
-    {
-      name: 'Environment-based Configuration',
-      test: validateEnvironmentConfig,
-    },
-    {
-      name: 'Data Sanitization',
-      test: validateDataSanitization,
-    },
-    {
-      name: 'Logger Hook Integration',
-      test: validateHookIntegration,
-    },
-    {
-      name: 'Performance Impact',
-      test: validatePerformance,
-    },
-  ];
+	const tests = [
+		{
+			name: 'Console Statement Replacement',
+			test: validateConsoleReplacement,
+		},
+		{
+			name: 'Environment-based Configuration',
+			test: validateEnvironmentConfig,
+		},
+		{
+			name: 'Data Sanitization',
+			test: validateDataSanitization,
+		},
+		{
+			name: 'Logger Hook Integration',
+			test: validateHookIntegration,
+		},
+		{
+			name: 'Performance Impact',
+			test: validatePerformance,
+		},
+	];
 
-  let _passed = 0;
-  let failed = 0;
+	let _passed = 0;
+	let failed = 0;
 
-  tests.forEach(({ name: _name, test }) => {
-    try {
-      test();
-      _passed++;
-    } catch (_error) {
-      failed++;
-    }
-  });
+	tests.forEach(({ name: _name, test }) => {
+		try {
+			test();
+			_passed++;
+		} catch (_error) {
+			failed++;
+		}
+	});
 
-  if (failed === 0) {
-  } else {
-  }
+	if (failed > 0) {
+		process.exit(1);
+	}
 }
 
 function validateConsoleReplacement() {
-  const filesToCheck = [
-    'src/services/voiceService.ts',
-    'src/hooks/useVoiceCommand.ts',
-    'src/hooks/useMultimodalResponse.ts',
-    'src/lib/voiceCommandProcessor.ts',
-    'src/contexts/AuthContext.tsx',
-    'src/lib/banking/securityCompliance.ts',
-  ];
+	const filesToCheck = [
+		'src/services/voiceService.ts',
+		'src/hooks/useVoiceCommand.ts',
+		'src/hooks/useMultimodalResponse.ts',
+		'src/lib/voiceCommandProcessor.ts',
+		'src/contexts/AuthContext.tsx',
+		'src/lib/banking/securityCompliance.ts',
+	];
 
-  filesToCheck.forEach((filePath) => {
-    const fullPath = path.join(process.cwd(), filePath);
+	filesToCheck.forEach((filePath) => {
+		const fullPath = path.join(process.cwd(), filePath);
 
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`File not found: ${filePath}`);
-    }
+		if (!fs.existsSync(fullPath)) {
+			throw new Error(`File not found: ${filePath}`);
+		}
 
-    const content = fs.readFileSync(fullPath, 'utf8');
+		const content = fs.readFileSync(fullPath, 'utf8');
 
-    // Check for direct console statements (excluding logger imports)
-    const consoleMatches = content.match(/console\.(log|error|warn|info|debug)\s*\(/g);
+		// Check for direct console statements (excluding logger imports)
+		const consoleMatches = content.match(/console\.(log|error|warn|info|debug)\s*\(/g);
 
-    if (consoleMatches) {
-      // Filter out logger-related console statements that might be in test files
-      const suspiciousConsole = consoleMatches.filter((_match) => {
-        // This is a simple check - in a real scenario, you might want more sophisticated filtering
-        return !content.includes('logger') || consoleMatches.length > 2;
-      });
+		if (consoleMatches) {
+			// Filter out logger-related console statements that might be in test files
+			const suspiciousConsole = consoleMatches.filter((_match) => {
+				// This is a simple check - in a real scenario, you might want more sophisticated filtering
+				return !content.includes('logger') || consoleMatches.length > 2;
+			});
 
-      if (suspiciousConsole.length > 0) {
-        throw new Error(`Found ${suspiciousConsole.length} console statements in ${filePath}`);
-      }
-    }
+			if (suspiciousConsole.length > 0) {
+				throw new Error(`Found ${suspiciousConsole.length} console statements in ${filePath}`);
+			}
+		}
 
-    // Check for logger import (various patterns)
-    const hasLoggerImport =
-      content.includes("import { logger } from '@/lib/logging/logger'") ||
-      content.includes("import { useLogger } from '@/hooks/useLogger'") ||
-      content.includes("import { useVoiceLogger } from '@/hooks/useLogger'") ||
-      content.includes("import { useAuthLogger } from '@/hooks/useLogger'") ||
-      content.includes("import { useSecurityLogger } from '@/hooks/useLogger'") ||
-      content.includes("import { useFinancialLogger } from '@/hooks/useLogger'");
+		// Check for logger import (various patterns)
+		const hasLoggerImport =
+			content.includes("import { logger } from '@/lib/logging/logger'") ||
+			content.includes("import { useLogger } from '@/hooks/useLogger'") ||
+			content.includes("import { useVoiceLogger } from '@/hooks/useLogger'") ||
+			content.includes("import { useAuthLogger } from '@/hooks/useLogger'") ||
+			content.includes("import { useSecurityLogger } from '@/hooks/useLogger'") ||
+			content.includes("import { useFinancialLogger } from '@/hooks/useLogger'");
 
-    if (!hasLoggerImport) {
-      throw new Error(`Missing logger import in ${filePath}`);
-    }
-  });
+		if (!hasLoggerImport) {
+			throw new Error(`Missing logger import in ${filePath}`);
+		}
+	});
 }
 
 function validateEnvironmentConfig() {
-  // Check if logger configuration is properly set up
-  const mockConfig = {
-    enableConsole: true,
-    enableRemote: false,
-    level: 'debug',
-    sanitizeData: false,
-  };
+	// Check if logger configuration is properly set up
+	const mockConfig = {
+		enableConsole: true,
+		enableRemote: false,
+		level: 'debug',
+		sanitizeData: false,
+	};
 
-  // Simulate environment detection
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isTest = process.env.NODE_ENV === 'test';
+	// Simulate environment detection
+	const isDevelopment = process.env.NODE_ENV === 'development';
+	const isProduction = process.env.NODE_ENV === 'production';
+	const isTest = process.env.NODE_ENV === 'test';
 
-  if (isDevelopment && mockConfig.level !== 'debug') {
-    throw new Error('Development environment should use debug log level');
-  }
+	if (isDevelopment && mockConfig.level !== 'debug') {
+		throw new Error('Development environment should use debug log level');
+	}
 
-  if (isProduction && mockConfig.sanitizeData !== true) {
-    throw new Error('Production environment should enable data sanitization');
-  }
+	if (isProduction && mockConfig.sanitizeData !== true) {
+		throw new Error('Production environment should enable data sanitization');
+	}
 
-  if (isTest && mockConfig.enableConsole !== false) {
-    throw new Error('Test environment should disable console logging');
-  }
+	if (isTest && mockConfig.enableConsole !== false) {
+		throw new Error('Test environment should disable console logging');
+	}
 }
 
 function validateDataSanitization() {
-  // Mock sensitive data
-  const sensitiveData = {
-    accountNumber: '12345-6',
-    balance: 1500.5,
-    cpf: '123.456.789-00',
-    email: 'user@example.com',
-    normalField: 'visible_value',
-    password: 'secret123',
-    secretKey: 'hidden_value',
-    token: 'abc123xyz',
-  };
+	// Mock sensitive data
+	const sensitiveData = {
+		accountNumber: '12345-6',
+		balance: 1500.5,
+		cpf: '123.456.789-00',
+		email: 'user@example.com',
+		normalField: 'visible_value',
+		password: 'secret123',
+		secretKey: 'hidden_value',
+		token: 'abc123xyz',
+	};
 
-  // Mock sanitization function (simplified version)
-  function sanitizeForProduction(data) {
-    if (typeof data !== 'object' || data === null) {
-      return data;
-    }
+	// Mock sanitization function (simplified version)
+	function sanitizeForProduction(data) {
+		if (typeof data !== 'object' || data === null) {
+			return data;
+		}
 
-    const sensitiveKeys = [
-      'password',
-      'token',
-      'secret',
-      'key',
-      'auth',
-      'session',
-      'user',
-      'email',
-      'phone',
-      'cpf',
-      'account',
-      'balance',
-    ];
+		const sensitiveKeys = [
+			'password',
+			'token',
+			'secret',
+			'key',
+			'auth',
+			'session',
+			'user',
+			'email',
+			'phone',
+			'cpf',
+			'account',
+			'balance',
+		];
 
-    const sanitized = Array.isArray(data) ? [...data] : { ...data };
+		const sanitized = Array.isArray(data) ? [...data] : { ...data };
 
-    for (const key in sanitized) {
-      if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive.toLowerCase()))) {
-        sanitized[key] = '[REDACTED]';
-      } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
-        sanitized[key] = sanitizeForProduction(sanitized[key]);
-      }
-    }
+		for (const key in sanitized) {
+			if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive.toLowerCase()))) {
+				sanitized[key] = '[REDACTED]';
+			} else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+				sanitized[key] = sanitizeForProduction(sanitized[key]);
+			}
+		}
 
-    return sanitized;
-  }
+		return sanitized;
+	}
 
-  const sanitized = sanitizeForProduction(sensitiveData);
+	const sanitized = sanitizeForProduction(sensitiveData);
 
-  // Verify sensitive fields are redacted
-  const expectedRedacted = [
-    'email',
-    'password',
-    'token',
-    'balance',
-    'cpf',
-    'accountNumber',
-    'secretKey',
-  ];
-  expectedRedacted.forEach((field) => {
-    if (sanitized[field] !== '[REDACTED]') {
-      throw new Error(`Field '${field}' should be redacted but got: ${sanitized[field]}`);
-    }
-  });
+	// Verify sensitive fields are redacted
+	const expectedRedacted = [
+		'email',
+		'password',
+		'token',
+		'balance',
+		'cpf',
+		'accountNumber',
+		'secretKey',
+	];
+	expectedRedacted.forEach((field) => {
+		if (sanitized[field] !== '[REDACTED]') {
+			throw new Error(`Field '${field}' should be redacted but got: ${sanitized[field]}`);
+		}
+	});
 
-  // Verify normal fields are preserved
-  if (sanitized.normalField !== 'visible_value') {
-    throw new Error(`Normal field should be preserved but got: ${sanitized.normalField}`);
-  }
+	// Verify normal fields are preserved
+	if (sanitized.normalField !== 'visible_value') {
+		throw new Error(`Normal field should be preserved but got: ${sanitized.normalField}`);
+	}
 }
 
 function validateHookIntegration() {
-  // Mock React hook functionality
-  const mockLogger = {
-    debug: (message, context) => ({ context, level: 'debug', message }),
-    error: (message, context) => ({ context, level: 'error', message }),
-    info: (message, context) => ({ context, level: 'info', message }),
-    userAction: (action, component, context) => ({
-      action,
-      component,
-      context,
-      level: 'info',
-      message: 'User action',
-    }),
-    voiceCommand: (command, confidence, context) => ({
-      command,
-      confidence,
-      context,
-      level: 'info',
-      message: 'Voice command processed',
-    }),
-    warn: (message, context) => ({ context, level: 'warn', message }),
-  };
+	// Mock React hook functionality
+	const mockLogger = {
+		debug: (message, context) => ({ context, level: 'debug', message }),
+		error: (message, context) => ({ context, level: 'error', message }),
+		info: (message, context) => ({ context, level: 'info', message }),
+		userAction: (action, component, context) => ({
+			action,
+			component,
+			context,
+			level: 'info',
+			message: 'User action',
+		}),
+		voiceCommand: (command, confidence, context) => ({
+			command,
+			confidence,
+			context,
+			level: 'info',
+			message: 'Voice command processed',
+		}),
+		warn: (message, context) => ({ context, level: 'warn', message }),
+	};
 
-  // Test specialized logger functions
-  const voiceLog = mockLogger.voiceCommand('test command', 0.95, {
-    test: true,
-  });
-  if (voiceLog.level !== 'info' || voiceLog.command !== 'test command') {
-    throw new Error('Voice logging not working correctly');
-  }
+	// Test specialized logger functions
+	const voiceLog = mockLogger.voiceCommand('test command', 0.95, {
+		test: true,
+	});
+	if (voiceLog.level !== 'info' || voiceLog.command !== 'test command') {
+		throw new Error('Voice logging not working correctly');
+	}
 
-  const userActionLog = mockLogger.userAction('button_click', 'TestComponent', {
-    buttonId: 'test',
-  });
-  if (userActionLog.action !== 'button_click' || userActionLog.component !== 'TestComponent') {
-    throw new Error('User action logging not working correctly');
-  }
+	const userActionLog = mockLogger.userAction('button_click', 'TestComponent', {
+		buttonId: 'test',
+	});
+	if (userActionLog.action !== 'button_click' || userActionLog.component !== 'TestComponent') {
+		throw new Error('User action logging not working correctly');
+	}
 }
 
 function validatePerformance() {
-  // Test logging performance with timing
-  const startTime = process.hrtime.bigint();
+	// Test logging performance with timing
+	const startTime = process.hrtime.bigint();
 
-  // Simulate 1000 log operations
-  for (let i = 0; i < 1000; i++) {
-    // Mock logging operation
-    const logEntry = {
-      context: { index: i },
-      level: 'info',
-      message: `Test message ${i}`,
-      timestamp: new Date().toISOString(),
-    };
+	// Simulate 1000 log operations
+	for (let i = 0; i < 1000; i++) {
+		// Mock logging operation
+		const logEntry = {
+			context: { index: i },
+			level: 'info',
+			message: `Test message ${i}`,
+			timestamp: new Date().toISOString(),
+		};
 
-    // Simulate log processing
-    JSON.stringify(logEntry);
-  }
+		// Simulate log processing
+		JSON.stringify(logEntry);
+	}
 
-  const endTime = process.hrtime.bigint();
-  const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+	const endTime = process.hrtime.bigint();
+	const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
 
-  // Should complete within reasonable time (less than 100ms for 1000 operations)
-  if (duration > 100) {
-    throw new Error(`Logging performance too slow: ${duration.toFixed(2)}ms for 1000 operations`);
-  }
+	// Should complete within reasonable time (less than 100ms for 1000 operations)
+	if (duration > 100) {
+		throw new Error(`Logging performance too slow: ${duration.toFixed(2)}ms for 1000 operations`);
+	}
 }
 
 // Run the validation tests

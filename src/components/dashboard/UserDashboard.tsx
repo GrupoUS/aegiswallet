@@ -6,22 +6,10 @@
  */
 
 import { useAuth, useUser } from '@clerk/clerk-react';
-import {
-	ArrowDownLeft,
-	ArrowUpRight,
-	CreditCard,
-	RefreshCw,
-	Wallet,
-} from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CreditCard, RefreshCw, Wallet } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
@@ -79,9 +67,7 @@ function BalanceCard() {
 			</CardHeader>
 			<CardContent>
 				<p className="text-3xl font-bold">{formatCurrency(balance)}</p>
-				<p className="text-sm text-muted-foreground mt-1">
-					Atualizado em tempo real
-				</p>
+				<p className="text-sm text-muted-foreground mt-1">Atualizado em tempo real</p>
 			</CardContent>
 		</Card>
 	);
@@ -129,9 +115,7 @@ function AccountsList() {
 								{account.account_mask} · {account.account_type}
 							</p>
 						</div>
-						<p className="font-semibold">
-							{formatCurrency(Number(account.balance || 0))}
-						</p>
+						<p className="font-semibold">{formatCurrency(Number(account.balance || 0))}</p>
 					</CardContent>
 				</Card>
 			))}
@@ -144,20 +128,13 @@ function AccountsList() {
 // ========================================
 
 function RecentTransactionsList() {
-	const {
-		data: transactions,
-		isLoading,
-		error,
-	} = useTransactions({ limit: 10 });
+	const { data: transactions, isLoading, error } = useTransactions({ limit: 10 });
 
 	if (isLoading) {
 		return (
 			<div className="space-y-2">
 				{[...Array(5)].map((_, i) => (
-					<Skeleton
-						key={`loading-skeleton-${Date.now()}-${i}`}
-						className="h-12"
-					/>
+					<Skeleton key={`loading-skeleton-${Date.now()}-${i}`} className="h-12" />
 				))}
 			</div>
 		);
@@ -205,9 +182,7 @@ function RecentTransactionsList() {
 					</div>
 					<p
 						className={`font-semibold ${
-							tx.transactionType === 'credit' || tx.amount > 0
-								? 'text-green-600'
-								: 'text-red-600'
+							tx.transactionType === 'credit' || tx.amount > 0 ? 'text-green-600' : 'text-red-600'
 						}`}
 					>
 						{tx.amount > 0 ? '+' : '-'}
@@ -238,9 +213,7 @@ export function UserDashboard() {
 		return (
 			<Card>
 				<CardContent className="pt-6 text-center">
-					<p className="text-muted-foreground">
-						Faça login para ver seu dashboard financeiro
-					</p>
+					<p className="text-muted-foreground">Faça login para ver seu dashboard financeiro</p>
 				</CardContent>
 			</Card>
 		);
@@ -251,19 +224,10 @@ export function UserDashboard() {
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-bold">
-						Olá, {user?.fullName?.split(' ')[0] || 'Usuário'}!
-					</h1>
-					<p className="text-muted-foreground">
-						Aqui está seu resumo financeiro
-					</p>
+					<h1 className="text-2xl font-bold">Olá, {user?.fullName?.split(' ')[0] || 'Usuário'}!</h1>
+					<p className="text-muted-foreground">Aqui está seu resumo financeiro</p>
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => invalidateAll()}
-					className="gap-2"
-				>
+				<Button variant="outline" size="sm" onClick={() => invalidateAll()} className="gap-2">
 					<RefreshCw className="h-4 w-4" />
 					Atualizar
 				</Button>

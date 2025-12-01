@@ -100,9 +100,7 @@ async function testRLSIsolation() {
 		console.log(`   User A sees ${userATransactions.length} transaction(s)`);
 
 		// Verify User A can see their transaction
-		const hasOwnTx = userATransactions.some(
-			(t) => t.description === 'Transaction for User A',
-		);
+		const hasOwnTx = userATransactions.some((t) => t.description === 'Transaction for User A');
 		console.log(`   ✅ User A can see their own transaction: ${hasOwnTx}`);
 
 		// ========================================
@@ -122,9 +120,7 @@ async function testRLSIsolation() {
 		console.log(`   User B sees ${userBTransactions.length} transaction(s)`);
 
 		// Verify User B can see their transaction
-		const hasBTx = userBTransactions.some(
-			(t) => t.description === 'Transaction for User B',
-		);
+		const hasBTx = userBTransactions.some((t) => t.description === 'Transaction for User B');
 		console.log(`   ✅ User B can see their own transaction: ${hasBTx}`);
 
 		// ========================================
@@ -158,21 +154,15 @@ async function testRLSIsolation() {
 
 		// Service account should see all transactions
 		const allTransactions = await db.select().from(schema.transactions);
-		console.log(
-			`   Service account sees ${allTransactions.length} total transaction(s)`,
-		);
+		console.log(`   Service account sees ${allTransactions.length} total transaction(s)`);
 
 		// ========================================
 		// CLEANUP
 		// ========================================
 		console.log('\n🧹 Cleaning up test data...');
 
-		await db
-			.delete(schema.transactions)
-			.where(eq(schema.transactions.userId, USER_A));
-		await db
-			.delete(schema.transactions)
-			.where(eq(schema.transactions.userId, USER_B));
+		await db.delete(schema.transactions).where(eq(schema.transactions.userId, USER_A));
+		await db.delete(schema.transactions).where(eq(schema.transactions.userId, USER_B));
 		await db.delete(schema.users).where(eq(schema.users.id, USER_A));
 		await db.delete(schema.users).where(eq(schema.users.id, USER_B));
 
@@ -186,9 +176,7 @@ async function testRLSIsolation() {
 		console.log('   - User isolation: WORKING');
 		console.log('   - Cross-user prevention: CONFIGURED');
 		console.log('   - Service account bypass: AVAILABLE');
-		console.log(
-			'\n💡 Note: Application-level filtering (WHERE user_id = X) is still required',
-		);
+		console.log('\n💡 Note: Application-level filtering (WHERE user_id = X) is still required');
 		console.log('   RLS provides defense-in-depth at the database level.');
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -196,15 +184,13 @@ async function testRLSIsolation() {
 
 		// Attempt cleanup
 		try {
-			await db
-				.delete(schema.transactions)
-				.where(eq(schema.transactions.userId, USER_A));
-			await db
-				.delete(schema.transactions)
-				.where(eq(schema.transactions.userId, USER_B));
+			await db.delete(schema.transactions).where(eq(schema.transactions.userId, USER_A));
+			await db.delete(schema.transactions).where(eq(schema.transactions.userId, USER_B));
 			await db.delete(schema.users).where(eq(schema.users.id, USER_A));
 			await db.delete(schema.users).where(eq(schema.users.id, USER_B));
-		} catch {}
+		} catch {
+			// Ignore cleanup errors
+		}
 
 		process.exit(1);
 	} finally {
@@ -213,4 +199,7 @@ async function testRLSIsolation() {
 	}
 }
 
-testRLSIsolation();
+testRLSIsolation().catch((error) => {
+	console.error('Test failed:', error);
+	process.exit(1);
+});

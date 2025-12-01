@@ -77,8 +77,7 @@ app.notFound((c) => {
 	const requestId = c.get('requestId');
 
 	secureLogger.warn('Route not found', {
-		ip:
-			c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
+		ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
 		method: c.req.method,
 		path: c.req.path,
 		requestId,

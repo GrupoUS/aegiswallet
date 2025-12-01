@@ -31,8 +31,7 @@ export const financialToolDefinitions: FunctionDeclaration[] = [
 			properties: {
 				startDate: {
 					type: SchemaType.STRING,
-					description:
-						'Data inicial no formato ISO 8601 (ex: 2024-01-01T00:00:00Z)',
+					description: 'Data inicial no formato ISO 8601 (ex: 2024-01-01T00:00:00Z)',
 				},
 				endDate: {
 					type: SchemaType.STRING,
@@ -70,8 +69,7 @@ export const financialToolDefinitions: FunctionDeclaration[] = [
 				},
 				compareWithPrevious: {
 					type: SchemaType.BOOLEAN,
-					description:
-						'Se true, inclui comparação com período anterior para mostrar tendências',
+					description: 'Se true, inclui comparação com período anterior para mostrar tendências',
 				},
 			},
 		},
@@ -85,8 +83,7 @@ export const financialToolDefinitions: FunctionDeclaration[] = [
 			properties: {
 				daysAhead: {
 					type: SchemaType.NUMBER,
-					description:
-						'Quantidade de dias à frente para buscar (1-90). Default: 30',
+					description: 'Quantidade de dias à frente para buscar (1-90). Default: 30',
 				},
 			},
 		},
@@ -121,8 +118,7 @@ export const financialToolDefinitions: FunctionDeclaration[] = [
 				},
 				onlyUnread: {
 					type: SchemaType.BOOLEAN,
-					description:
-						'Se true, retorna apenas insights não lidos. Default: true',
+					description: 'Se true, retorna apenas insights não lidos. Default: true',
 				},
 				limit: {
 					type: SchemaType.NUMBER,
@@ -144,8 +140,7 @@ export const financialToolDefinitions: FunctionDeclaration[] = [
 				},
 				periods: {
 					type: SchemaType.NUMBER,
-					description:
-						'Quantidade de períodos para comparar (2-12). Default: 3',
+					description: 'Quantidade de períodos para comparar (2-12). Default: 3',
 				},
 				periodType: {
 					type: SchemaType.STRING,

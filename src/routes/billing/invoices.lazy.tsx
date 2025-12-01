@@ -4,13 +4,7 @@ import { Helmet } from 'react-helmet-async';
 
 import { InvoiceList } from '@/components/billing/InvoiceList';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInvoices } from '@/hooks/billing';
@@ -28,12 +22,9 @@ function InvoicesPage() {
 				<div className="max-w-4xl mx-auto">
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-red-600">
-								Erro ao Carregar Faturas
-							</CardTitle>
+							<CardTitle className="text-red-600">Erro ao Carregar Faturas</CardTitle>
 							<CardDescription>
-								Não foi possível carregar suas faturas. Tente novamente mais
-								tarde.
+								Não foi possível carregar suas faturas. Tente novamente mais tarde.
 							</CardDescription>
 						</CardHeader>
 					</Card>
@@ -46,10 +37,7 @@ function InvoicesPage() {
 		<>
 			<Helmet>
 				<title>Faturas | AegisWallet</title>
-				<meta
-					name="description"
-					content="Visualize e baixe suas faturas e notas fiscais."
-				/>
+				<meta name="description" content="Visualize e baixe suas faturas e notas fiscais." />
 			</Helmet>
 
 			<div className="container mx-auto py-8 px-4">
@@ -96,9 +84,7 @@ function InvoicesPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>Suas Faturas</CardTitle>
-							<CardDescription>
-								{data?.total ?? 0} faturas encontradas
-							</CardDescription>
+							<CardDescription>{data?.total ?? 0} faturas encontradas</CardDescription>
 						</CardHeader>
 						<CardContent>
 							{isLoading ? (
@@ -120,15 +106,12 @@ function InvoicesPage() {
 					{/* Tax Information */}
 					<Card className="mt-6 border-green-200 bg-green-50/50">
 						<CardHeader>
-							<CardTitle className="text-green-800 text-lg">
-								📄 Informações Fiscais
-							</CardTitle>
+							<CardTitle className="text-green-800 text-lg">📄 Informações Fiscais</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<p className="text-sm text-green-700">
-								Todas as faturas emitidas estão em conformidade com a legislação
-								fiscal brasileira e podem ser usadas para fins de declaração de
-								impostos.
+								Todas as faturas emitidas estão em conformidade com a legislação fiscal brasileira e
+								podem ser usadas para fins de declaração de impostos.
 							</p>
 						</CardContent>
 					</Card>

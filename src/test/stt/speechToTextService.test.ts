@@ -10,9 +10,9 @@ let SpeechToTextService: typeof import('@/lib/stt/speechToTextService').SpeechTo
 let STTErrorCode: typeof import('@/lib/stt/speechToTextService').STTErrorCode;
 
 beforeAll(async () => {
-	const module = await vi.importActual<
-		typeof import('@/lib/stt/speechToTextService')
-	>('@/lib/stt/speechToTextService');
+	const module = await vi.importActual<typeof import('@/lib/stt/speechToTextService')>(
+		'@/lib/stt/speechToTextService',
+	);
 	SpeechToTextService = module.SpeechToTextService;
 	STTErrorCode = module.STTErrorCode;
 });
@@ -45,10 +45,7 @@ describe('SpeechToTextService', () => {
 
 		it('should throw error without API key', () => {
 			expect(() => {
-				new SpeechToTextService(
-					{ apiKey: '' },
-					{ fetch: mockFetch as typeof fetch },
-				);
+				new SpeechToTextService({ apiKey: '' }, { fetch: mockFetch as typeof fetch });
 			}).toThrow('OpenAI API key is required');
 		});
 	});
@@ -129,7 +126,7 @@ describe('SpeechToTextService', () => {
 
 		// Skip: Retry logic test has timing issues with exponential backoff (1s, 2s, 4s delays)
 		// The service correctly implements retry but test timeouts make this flaky
-		it.skip('should retry on network errors', async () => {
+		it('should retry on network errors', async () => {
 			const audioBlob = new Blob([new Uint8Array(1024)], {
 				type: 'audio/webm',
 			});
@@ -186,9 +183,7 @@ describe('SpeechToTextService', () => {
 				});
 			});
 
-			await expect(
-				fastTimeoutService.transcribe(audioBlob),
-			).rejects.toMatchObject({
+			await expect(fastTimeoutService.transcribe(audioBlob)).rejects.toMatchObject({
 				code: STTErrorCode.TIMEOUT,
 			});
 		}, 20000);

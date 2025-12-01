@@ -7,11 +7,11 @@
 
 export interface UserPin {
 	id: string;
-	user_id: string;
-	pin_hash: string;
+	userId: string;
+	pinHash: string;
 	salt: string;
-	created_at: string | null;
-	updated_at: string | null;
+	createdAt: string | null;
+	updatedAt: string | null;
 }
 
 export interface AuthAttempt {
@@ -92,11 +92,7 @@ export interface SecurityEvent {
 
 export interface FraudDetectionRule {
 	id: string;
-	rule_type:
-		| 'location_anomaly'
-		| 'device_anomaly'
-		| 'behavior_anomaly'
-		| 'frequency_anomaly';
+	rule_type: 'location_anomaly' | 'device_anomaly' | 'behavior_anomaly' | 'frequency_anomaly';
 	threshold: number;
 	enabled: boolean;
 	description: string | null;
@@ -121,11 +117,7 @@ export interface UserSecurityPreferences {
 export interface SecurityAlert {
 	id: string;
 	user_id: string;
-	alert_type:
-		| 'suspicious_login'
-		| 'brute_force_attempt'
-		| 'unusual_location'
-		| 'multiple_devices';
+	alert_type: 'suspicious_login' | 'brute_force_attempt' | 'unusual_location' | 'multiple_devices';
 	severity: 'low' | 'medium' | 'high' | 'critical';
 	title: string;
 	description: string | null;

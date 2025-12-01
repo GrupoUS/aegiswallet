@@ -26,9 +26,7 @@ interface LGPDCompliantMessage {
 }
 
 // Brazilian Portuguese content validation
-function validateBrazilianPortugueseContent(
-	content: string,
-): AIResponseValidation {
+function validateBrazilianPortugueseContent(content: string): AIResponseValidation {
 	const issues: string[] = [];
 
 	// Check for sensitive data patterns (LGPD compliance)
@@ -38,16 +36,13 @@ function validateBrazilianPortugueseContent(
 		/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/, // Credit card
 	];
 
-	const hasSensitiveData = sensitivePatterns.some((pattern) =>
-		pattern.test(content),
-	);
+	const hasSensitiveData = sensitivePatterns.some((pattern) => pattern.test(content));
 	if (hasSensitiveData) {
 		issues.push('Sensitive data detected in response');
 	}
 
 	// Basic Portuguese validation (could be enhanced)
-	const isPortuguese =
-		/[áéíóúãõâêôûç]/i.test(content) || content.includes('R$');
+	const isPortuguese = /[áéíóúãõâêôûç]/i.test(content) || content.includes('R$');
 
 	return {
 		isValid: issues.length === 0,
@@ -60,11 +55,7 @@ function validateBrazilianPortugueseContent(
 
 import { logAIOperation } from '@/lib/ai/audit/logger';
 import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
-import {
-	AIProviderSchema,
-	getAvailableProviders,
-	getModel,
-} from '@/lib/ai/providers';
+import { AIProviderSchema, getAvailableProviders, getModel } from '@/lib/ai/providers';
 import { checkPromptInjection } from '@/lib/ai/security/injection';
 import { createAllTools } from '@/lib/ai/tools';
 import type { AppEnv } from '@/server/hono-types';
@@ -98,9 +89,7 @@ const chatRequestSchema = z.object({
 		.transform((messages) =>
 			messages
 				.filter(
-					(
-						msg,
-					): msg is typeof msg & { role: 'user' | 'assistant' | 'system' } =>
+					(msg): msg is typeof msg & { role: 'user' | 'assistant' | 'system' } =>
 						msg.role !== 'tool',
 				) // AI SDK doesn't support 'tool' role
 				.map((msg) => ({
@@ -114,159 +103,148 @@ const chatRequestSchema = z.object({
 });
 
 // Endpoint de chat streaming
-aiChat.post(
-	'/chat',
-	authMiddleware,
-	zValidator('json', chatRequestSchema),
-	async (c) => {
-		const startTime = Date.now();
-		const { messages, provider, tier } = c.req.valid('json');
+aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), async (c) => {
+	const startTime = Date.now();
+	const { messages, provider, tier } = c.req.valid('json');
 
-		// Access user from auth context
-		const auth = c.get('auth');
-		if (!auth?.user) {
-			return c.json({ error: 'Unauthorized' }, 401);
-		}
-		const userId = auth.user.id;
+	// Access user from auth context
+	const auth = c.get('auth');
+	if (!auth?.user) {
+		return c.json({ error: 'Unauthorized' }, 401);
+	}
+	const userId = auth.user.id;
 
-		// Generate session ID if not present (we don't persist it in context yet)
-		const sessionId = crypto.randomUUID();
+	// Generate session ID if not present (we don't persist it in context yet)
+	const sessionId = crypto.randomUUID();
 
-		// Verificar prompt injection na última mensagem do usuário
-		// We need to safely extract content from the last message
-		const lastMessage = messages[messages.length - 1];
-		const lastUserContent =
-			lastMessage?.role === 'user' ? lastMessage.content : null;
+	// Verificar prompt injection na última mensagem do usuário
+	// We need to safely extract content from the last message
+	const lastMessage = messages[messages.length - 1];
+	const lastUserContent = lastMessage?.role === 'user' ? lastMessage.content : null;
 
-		if (lastUserContent && typeof lastUserContent === 'string') {
-			const injectionCheck = checkPromptInjection(lastUserContent);
-			if (!injectionCheck.isSafe) {
-				await logAIOperation({
-					userId,
-					sessionId,
-					provider,
-					model: `${provider}/${tier}`,
-					actionType: 'chat',
-					inputSummary: lastUserContent.slice(0, 100),
-					outputSummary: 'Blocked: injection detected',
-					latencyMs: Date.now() - startTime,
-					outcome: 'blocked',
-					errorMessage: injectionCheck.reason,
-				});
-
-				return c.json({ error: 'Invalid input detected' }, 400);
-			}
-		}
-
-		try {
-			const model = getModel(provider, tier);
-			const tools = createAllTools(userId, auth.db);
-
-			const result = streamText({
-				model,
-				system: FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
-				messages: convertToCoreMessages(messages),
-				tools,
-				maxSteps: 5, // Permitir até 5 tool calls encadeadas
-				onFinish: async ({
-					usage,
-					finishReason,
-					toolCalls,
-				}: {
-					usage: {
-						totalTokens: number;
-						promptTokens?: number;
-						completionTokens?: number;
-					};
-					finishReason:
-						| 'stop'
-						| 'length'
-						| 'tool-calls'
-						| 'error'
-						| 'content-filter'
-						| 'cancel'
-						| 'unknown';
-					toolCalls?: Array<{
-						toolCallId: string;
-						toolName: string;
-						args: Record<string, unknown>;
-					}>;
-				}) => {
-					// LGPD-compliant logging with Brazilian Portuguese validation
-					const typedMessages = messages as LGPDCompliantMessage[];
-					const lastMessage = typedMessages[typedMessages.length - 1];
-					const responseContent =
-						lastMessage?.role === 'assistant'
-							? lastMessage.content
-							: finishReason;
-
-					// Validate content for compliance
-					const validation =
-						typeof responseContent === 'string'
-							? validateBrazilianPortugueseContent(responseContent)
-							: {
-									isValid: true,
-									language: 'pt-BR' as const,
-									contentType: 'text' as const,
-									sensitiveDataDetected: false,
-									complianceIssues: [],
-								};
-
-					// Log with compliance information
-					const complianceNote = validation.sensitiveDataDetected
-						? ` [LGPD Warning: Sensitive data detected]`
-						: validation.language === 'pt-BR'
-							? ' [PT-BR]'
-							: ' [EN]';
-
-					await logAIOperation({
-						userId,
-						sessionId,
-						provider,
-						model: `${provider}/${tier}`,
-						actionType: toolCalls?.length ? 'tool_call' : 'chat',
-						toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
-						inputSummary:
-							typeof lastUserContent === 'string'
-								? lastUserContent.slice(0, 100)
-								: 'Multi-modal/Tool input',
-						outputSummary: finishReason + complianceNote,
-						tokensUsed: usage.totalTokens,
-						latencyMs: Date.now() - startTime,
-						outcome: validation.isValid ? 'success' : 'error',
-						errorMessage:
-							validation.complianceIssues.length > 0
-								? `Compliance issues: ${validation.complianceIssues.join('; ')}`
-								: undefined,
-					});
-				},
-				// biome-ignore lint/suspicious/noExplicitAny: AI SDK streamText options type is complex and version-dependent
-			} as any);
-
-			// Cast to any to avoid TS error if types are stale, but toDataStreamResponse should exist
-			// biome-ignore lint/suspicious/noExplicitAny: AI SDK result type changes between versions
-			return (result as any).toDataStreamResponse();
-		} catch (error) {
+	if (lastUserContent && typeof lastUserContent === 'string') {
+		const injectionCheck = checkPromptInjection(lastUserContent);
+		if (!injectionCheck.isSafe) {
 			await logAIOperation({
 				userId,
 				sessionId,
 				provider,
 				model: `${provider}/${tier}`,
 				actionType: 'chat',
-				inputSummary:
-					typeof lastUserContent === 'string'
-						? lastUserContent.slice(0, 100)
-						: '',
-				outputSummary: 'Error',
+				inputSummary: lastUserContent.slice(0, 100),
+				outputSummary: 'Blocked: injection detected',
 				latencyMs: Date.now() - startTime,
-				outcome: 'error',
-				errorMessage: error instanceof Error ? error.message : 'Unknown error',
+				outcome: 'blocked',
+				errorMessage: injectionCheck.reason,
 			});
 
-			return c.json({ error: 'AI service error' }, 500);
+			return c.json({ error: 'Invalid input detected' }, 400);
 		}
-	},
-);
+	}
+
+	try {
+		const model = getModel(provider, tier);
+		const tools = createAllTools(userId, auth.db);
+
+		const result = streamText({
+			model,
+			system: FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
+			messages: convertToCoreMessages(messages),
+			tools,
+			maxSteps: 5, // Permitir até 5 tool calls encadeadas
+			onFinish: async ({
+				usage,
+				finishReason,
+				toolCalls,
+			}: {
+				usage: {
+					totalTokens: number;
+					promptTokens?: number;
+					completionTokens?: number;
+				};
+				finishReason:
+					| 'stop'
+					| 'length'
+					| 'tool-calls'
+					| 'error'
+					| 'content-filter'
+					| 'cancel'
+					| 'unknown';
+				toolCalls?: Array<{
+					toolCallId: string;
+					toolName: string;
+					args: Record<string, unknown>;
+				}>;
+			}) => {
+				// LGPD-compliant logging with Brazilian Portuguese validation
+				const typedMessages = messages as LGPDCompliantMessage[];
+				const lastMessage = typedMessages[typedMessages.length - 1];
+				const responseContent =
+					lastMessage?.role === 'assistant' ? lastMessage.content : finishReason;
+
+				// Validate content for compliance
+				const validation =
+					typeof responseContent === 'string'
+						? validateBrazilianPortugueseContent(responseContent)
+						: {
+								isValid: true,
+								language: 'pt-BR' as const,
+								contentType: 'text' as const,
+								sensitiveDataDetected: false,
+								complianceIssues: [],
+							};
+
+				// Log with compliance information
+				const complianceNote = validation.sensitiveDataDetected
+					? ` [LGPD Warning: Sensitive data detected]`
+					: validation.language === 'pt-BR'
+						? ' [PT-BR]'
+						: ' [EN]';
+
+				await logAIOperation({
+					userId,
+					sessionId,
+					provider,
+					model: `${provider}/${tier}`,
+					actionType: toolCalls?.length ? 'tool_call' : 'chat',
+					toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
+					inputSummary:
+						typeof lastUserContent === 'string'
+							? lastUserContent.slice(0, 100)
+							: 'Multi-modal/Tool input',
+					outputSummary: finishReason + complianceNote,
+					tokensUsed: usage.totalTokens,
+					latencyMs: Date.now() - startTime,
+					outcome: validation.isValid ? 'success' : 'error',
+					errorMessage:
+						validation.complianceIssues.length > 0
+							? `Compliance issues: ${validation.complianceIssues.join('; ')}`
+							: undefined,
+				});
+			},
+			// biome-ignore lint/suspicious/noExplicitAny: AI SDK streamText options type is complex and version-dependent
+		} as any);
+
+		// Cast to any to avoid TS error if types are stale, but toDataStreamResponse should exist
+		// biome-ignore lint/suspicious/noExplicitAny: AI SDK result type changes between versions
+		return (result as any).toDataStreamResponse();
+	} catch (error) {
+		await logAIOperation({
+			userId,
+			sessionId,
+			provider,
+			model: `${provider}/${tier}`,
+			actionType: 'chat',
+			inputSummary: typeof lastUserContent === 'string' ? lastUserContent.slice(0, 100) : '',
+			outputSummary: 'Error',
+			latencyMs: Date.now() - startTime,
+			outcome: 'error',
+			errorMessage: error instanceof Error ? error.message : 'Unknown error',
+		});
+
+		return c.json({ error: 'AI service error' }, 500);
+	}
+});
 
 // Endpoint para listar providers disponíveis
 aiChat.get('/providers', authMiddleware, (c) => {

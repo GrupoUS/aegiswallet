@@ -31,14 +31,7 @@ export interface MultimodalResponse {
 	text: string;
 	speech: string;
 	visual: {
-		type:
-			| 'balance'
-			| 'budget'
-			| 'bills'
-			| 'income'
-			| 'projection'
-			| 'transfer'
-			| 'error';
+		type: 'balance' | 'budget' | 'bills' | 'income' | 'projection' | 'transfer' | 'error';
 		data: Record<string, unknown>;
 	};
 	accessibility: {
@@ -219,9 +212,7 @@ export function generateIncomeResponse(data: {
 		text,
 		visual: {
 			data: {
-				formattedTotalMonth: totalMonth
-					? formatCurrency(totalMonth)
-					: undefined,
+				formattedTotalMonth: totalMonth ? formatCurrency(totalMonth) : undefined,
 				nextIncome: {
 					...nextIncome,
 					formattedAmount: formatCurrency(nextIncome.amount),
@@ -371,15 +362,10 @@ export function generateErrorResponse(error: string): MultimodalResponse {
 /**
  * Generate response based on intent type
  */
-export function generateResponse(
-	intent: IntentType,
-	data: TemplateData,
-): MultimodalResponse {
+export function generateResponse(intent: IntentType, data: TemplateData): MultimodalResponse {
 	switch (intent) {
 		case IntentType.CHECK_BALANCE:
-			return generateBalanceResponse(
-				data as { balance: number; accountName?: string },
-			);
+			return generateBalanceResponse(data as { balance: number; accountName?: string });
 
 		case IntentType.CHECK_BUDGET:
 			return generateBudgetResponse(

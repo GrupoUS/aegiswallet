@@ -44,13 +44,8 @@ interface BankAccountFormProps {
 	onCancel?: () => void;
 }
 
-export function BankAccountForm({
-	account,
-	onSuccess,
-	onCancel,
-}: BankAccountFormProps) {
-	const { createAccount, updateAccount, isCreating, isUpdating } =
-		useBankAccounts();
+export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFormProps) {
+	const { createAccount, updateAccount, isCreating, isUpdating } = useBankAccounts();
 
 	const form = useForm<BankAccountFormValues>({
 		defaultValues: {
@@ -172,12 +167,7 @@ export function BankAccountForm({
 						<FormItem>
 							<FormLabel>Saldo Inicial</FormLabel>
 							<FormControl>
-								<Input
-									type="number"
-									step="0.01"
-									placeholder="0.00"
-									{...field}
-								/>
+								<Input type="number" step="0.01" placeholder="0.00" {...field} />
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -191,16 +181,11 @@ export function BankAccountForm({
 						render={({ field }) => (
 							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
 								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={field.onChange}
-									/>
+									<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 								</FormControl>
 								<div className="space-y-1 leading-none">
 									<FormLabel>Ativa</FormLabel>
-									<FormDescription>
-										A conta aparecerá nas listas
-									</FormDescription>
+									<FormDescription>A conta aparecerá nas listas</FormDescription>
 								</div>
 							</FormItem>
 						)}
@@ -212,10 +197,7 @@ export function BankAccountForm({
 						render={({ field }) => (
 							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
 								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={field.onChange}
-									/>
+									<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 								</FormControl>
 								<div className="space-y-1 leading-none">
 									<FormLabel>Principal</FormLabel>
@@ -231,11 +213,7 @@ export function BankAccountForm({
 						Cancelar
 					</Button>
 					<Button type="submit" disabled={isLoading}>
-						{isLoading
-							? 'Salvando...'
-							: account
-								? 'Atualizar Conta'
-								: 'Criar Conta'}
+						{isLoading ? 'Salvando...' : account ? 'Atualizar Conta' : 'Criar Conta'}
 					</Button>
 				</div>
 			</form>

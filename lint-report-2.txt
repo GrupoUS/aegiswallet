@@ -1,0 +1,376 @@
+$ bunx biome check --files-ignore-unknown=true --files-max-size=10485760 src scripts
+scripts\database-auto-repair.ts:155:2 lint/suspicious/useAwait ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This async function lacks an await expression.
+  
+    153 Ôöé 	}
+    154 Ôöé 
+  > 155 Ôöé 	private async prepareRepairOperations(
+        Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 156 Ôöé 		healthResult: HealthCheckResult,
+         ...
+  > 200 Ôöé 		});
+  > 201 Ôöé 	}
+        Ôöé 	^
+    202 Ôöé 
+    203 Ôöé 	private prepareSchemaRepair(issue: any): RepairOperation | null {
+  
+  i Remove this async modifier, or add an await expression in the function.
+  
+    153 Ôöé 	}
+    154 Ôöé 
+  > 155 Ôöé 	private async prepareRepairOperations(
+        Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 156 Ôöé 		healthResult: HealthCheckResult,
+         ...
+  > 200 Ôöé 		});
+  > 201 Ôöé 	}
+        Ôöé 	^
+    202 Ôöé 
+    203 Ôöé 	private prepareSchemaRepair(issue: any): RepairOperation | null {
+  
+  i Async functions without await expressions may not need to be declared async.
+  
+
+scripts\database-auto-repair.ts:155:16 lint/complexity/noExcessiveCognitiveComplexity ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Excessive complexity of 31 detected (max: 25).
+  
+    153 Ôöé 	}
+    154 Ôöé 
+  > 155 Ôöé 	private async prepareRepairOperations(
+        Ôöé 	              ^^^^^^^^^^^^^^^^^^^^^^^
+    156 Ôöé 		healthResult: HealthCheckResult,
+    157 Ôöé 		options: {
+  
+  i Please refactor this function to reduce its complexity score from 31 to the max allowed complexity 25.
+  
+
+scripts\database-auto-repair.ts:348:14 lint/suspicious/useAwait ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This async function lacks an await expression.
+  
+    346 Ôöé 				severity: issue.severity,
+    347 Ôöé 				autoFixable: false, // Requires environment variable update
+  > 348 Ôöé 				execute: async () => {
+        Ôöé 				         ^^^^^^^^^^^^^
+  > 349 Ôöé 					console.log(
+         ...
+  > 353 Ôöé 					return false;
+  > 354 Ôöé 				},
+        Ôöé 				^
+    355 Ôöé 			};
+    356 Ôöé 		}
+  
+  i Remove this async modifier, or add an await expression in the function.
+  
+    346 Ôöé 				severity: issue.severity,
+    347 Ôöé 				autoFixable: false, // Requires environment variable update
+  > 348 Ôöé 				execute: async () => {
+        Ôöé 				         ^^^^^^^^^^^^^
+  > 349 Ôöé 					console.log(
+         ...
+  > 353 Ôöé 					return false;
+  > 354 Ôöé 				},
+        Ôöé 				^
+    355 Ôöé 			};
+    356 Ôöé 		}
+  
+  i Async functions without await expressions may not need to be declared async.
+  
+
+scripts\database-auto-repair.ts:214:26 lint/nursery/noShadow ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable shadows another variable with the same name in the outer scope.
+  
+    212 Ôöé 						console.log('   ­ƒöä Generating migrations...');
+    213 Ôöé 						const { exec } = await import('node:child_process');
+  > 214 Ôöé 						await new Promise((resolve, reject) => {
+        Ôöé 						                   ^^^^^^^
+    215 Ôöé 							exec('bun db:generate', (error, stdout, _stderr) => {
+    216 Ôöé 								if (error) reject(error);
+  
+  i This is the shadowed variable, which is now inaccessible in the inner scope.
+  
+    10 Ôöé import { writeFileSync } from 'node:fs';
+  > 11 Ôöé import { resolve } from 'node:path';
+       Ôöé          ^^^^^^^
+    12 Ôöé 
+    13 Ôöé import { neon, neonConfig } from '@neondatabase/serverless';
+  
+  i Consider renaming this variable. It's easy to confuse the origin of variables if they share the same name.
+  
+
+scripts\database-auto-repair.ts:222:26 lint/nursery/noShadow ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable shadows another variable with the same name in the outer scope.
+  
+    221 Ôöé 						console.log('   ­ƒöä Applying migrations...');
+  > 222 Ôöé 						await new Promise((resolve, reject) => {
+        Ôöé 						                   ^^^^^^^
+    223 Ôöé 							exec('bun db:migrate', (error, stdout, _stderr) => {
+    224 Ôöé 								if (error) reject(error);
+  
+  i This is the shadowed variable, which is now inaccessible in the inner scope.
+  
+    10 Ôöé import { writeFileSync } from 'node:fs';
+  > 11 Ôöé import { resolve } from 'node:path';
+       Ôöé          ^^^^^^^
+    12 Ôöé 
+    13 Ôöé import { neon, neonConfig } from '@neondatabase/serverless';
+  
+  i Consider renaming this variable. It's easy to confuse the origin of variables if they share the same name.
+  
+
+scripts\database-auto-repair.ts:485:46 lint/nursery/noShadow ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable shadows another variable with the same name in the outer scope.
+  
+    483 Ôöé 			// Simple yes/no prompt
+    484 Ôöé 			process.stdout.write(`­ƒöº ${operation.name} (${operation.severity})? [y/N]: `);
+  > 485 Ôöé 			const answer = await new Promise<string>((resolve) => {
+        Ôöé 			                                          ^^^^^^^
+    486 Ôöé 				process.stdin.once('data', (data) => {
+    487 Ôöé 					resolve(data.toString().trim().toLowerCase());
+  
+  i This is the shadowed variable, which is now inaccessible in the inner scope.
+  
+    10 Ôöé import { writeFileSync } from 'node:fs';
+  > 11 Ôöé import { resolve } from 'node:path';
+       Ôöé          ^^^^^^^
+    12 Ôöé 
+    13 Ôöé import { neon, neonConfig } from '@neondatabase/serverless';
+  
+  i Consider renaming this variable. It's easy to confuse the origin of variables if they share the same name.
+  
+
+scripts\database-specialist-toolkit.ts:251:10 lint/complexity/noExcessiveCognitiveComplexity ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Excessive complexity of 27 detected (max: 25).
+  
+    249 Ôöé 	}
+    250 Ôöé 
+  > 251 Ôöé 	private displayDetailedResults(results: any): void {
+        Ôöé 	        ^^^^^^^^^^^^^^^^^^^^^^
+    252 Ôöé 		console.log(`\n${'='.repeat(60)}`);
+    253 Ôöé 		console.log('­ƒôè ANALYSIS RESULTS SUMMARY');
+  
+  i Please refactor this function to reduce its complexity score from 27 to the max allowed complexity 25.
+  
+
+scripts\demo-orchestration.js:1:1 suppressions/unused ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Suppression comment has no effect. Remove the suppression or make sure you are suppressing the correct rule.
+  
+  > 1 Ôöé // biome-ignore lint/style/useNamingConvention: Demo script uses snake_case for compatibility
+      Ôöé ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    2 Ôöé /**
+    3 Ôöé  * Demonstra├º├úo do Sistema de Orquestra├º├úo Autom├ítica AegisWallet
+  
+
+scripts\list-models.ts:33:1 lint/nursery/noFloatingPromises ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+  
+    31 Ôöé }
+    32 Ôöé 
+  > 33 Ôöé listModels();
+       Ôöé ^^^^^^^^^^^^^
+    34 Ôöé 
+  
+  i This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  
+
+scripts\oxlint-biome-synergy.ts:293:10 lint/complexity/noExcessiveCognitiveComplexity ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Excessive complexity of 28 detected (max: 25).
+  
+    291 Ôöé  * Main execution function
+    292 Ôöé  */
+  > 293 Ôöé function main() {
+        Ôöé          ^^^^
+    294 Ôöé 	const args = process.argv.slice(2);
+    295 Ôöé 	const command = args[0] || 'all';
+  
+  i Please refactor this function to reduce its complexity score from 28 to the max allowed complexity 25.
+  
+
+scripts\performance-benchmark.ts:245:27 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    244 Ôöé 		// Performance classification
+  > 245 Ôöé 		if (improvement >= 100) {
+        Ôöé 		                        ^
+  > 246 Ôöé 		} else if (improvement >= 50) {
+        Ôöé 		^
+    247 Ôöé 		} else if (improvement >= 20) {
+    248 Ôöé 		} else if (improvement >= 5) {
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:246:33 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    244 Ôöé 		// Performance classification
+    245 Ôöé 		if (improvement >= 100) {
+  > 246 Ôöé 		} else if (improvement >= 50) {
+        Ôöé 		                              ^
+  > 247 Ôöé 		} else if (improvement >= 20) {
+        Ôöé 		^
+    248 Ôöé 		} else if (improvement >= 5) {
+    249 Ôöé 		} else {
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:247:33 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    245 Ôöé 		if (improvement >= 100) {
+    246 Ôöé 		} else if (improvement >= 50) {
+  > 247 Ôöé 		} else if (improvement >= 20) {
+        Ôöé 		                              ^
+  > 248 Ôöé 		} else if (improvement >= 5) {
+        Ôöé 		^
+    249 Ôöé 		} else {
+    250 Ôöé 		}
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:248:32 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    246 Ôöé 		} else if (improvement >= 50) {
+    247 Ôöé 		} else if (improvement >= 20) {
+  > 248 Ôöé 		} else if (improvement >= 5) {
+        Ôöé 		                             ^
+  > 249 Ôöé 		} else {
+        Ôöé 		^
+    250 Ôöé 		}
+    251 Ôöé 	}
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:249:10 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    247 Ôöé 		} else if (improvement >= 20) {
+    248 Ôöé 		} else if (improvement >= 5) {
+  > 249 Ôöé 		} else {
+        Ôöé 		       ^
+  > 250 Ôöé 		}
+        Ôöé 		^
+    251 Ôöé 	}
+    252 Ôöé 
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:253:23 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    251 Ôöé 	}
+    252 Ôöé 
+  > 253 Ôöé 	if (report.achieved) {
+        Ôöé 	                     ^
+  > 254 Ôöé 	} else {
+        Ôöé 	^
+    255 Ôöé 	}
+    256 Ôöé 
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:254:9 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    253 Ôöé 	if (report.achieved) {
+  > 254 Ôöé 	} else {
+        Ôöé 	       ^
+  > 255 Ôöé 	}
+        Ôöé 	^
+    256 Ôöé 
+    257 Ôöé 	// Healthcare compliance note
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\performance-benchmark.ts:259:24 lint/suspicious/noEmptyBlockStatements ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected empty block.
+  
+    257 Ôöé 	// Healthcare compliance note
+    258 Ôöé 	const healthcareResult = report.benchmarks.find((b) => b.tool === 'OXLint Healthcare');
+  > 259 Ôöé 	if (healthcareResult) {
+        Ôöé 	                      ^
+  > 260 Ôöé 	}
+        Ôöé 	^
+    261 Ôöé }
+    262 Ôöé 
+  
+  i Empty blocks are usually the result of an incomplete refactoring. Remove the empty block or add a comment inside it if it is intentional.
+  
+
+scripts\quality-gates.ts:263:1 lint/suspicious/useAwait ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This async function lacks an await expression.
+  
+    261 Ôöé }
+    262 Ôöé 
+  > 263 Ôöé async function main() {
+        Ôöé ^^^^^^^^^^^^^^^^^^^^^^^
+  > 264 Ôöé 	console.log('­ƒçº­ƒçÀ Starting AegisWallet Quality Gates Execution...');
+         ...
+  > 283 Ôöé 	process.exit(report.summary.status === 'PASS' ? 0 : 1);
+  > 284 Ôöé }
+        Ôöé ^
+    285 Ôöé 
+    286 Ôöé // Handle uncaught errors
+  
+  i Remove this async modifier, or add an await expression in the function.
+  
+    261 Ôöé }
+    262 Ôöé 
+  > 263 Ôöé async function main() {
+        Ôöé ^^^^^^^^^^^^^^^^^^^^^^^
+  > 264 Ôöé 	console.log('­ƒçº­ƒçÀ Starting AegisWallet Quality Gates Execution...');
+         ...
+  > 283 Ôöé 	process.exit(report.summary.status === 'PASS' ? 0 : 1);
+  > 284 Ôöé }
+        Ôöé ^
+    285 Ôöé 
+    286 Ôöé // Handle uncaught errors
+  
+  i Async functions without await expressions may not need to be declared async.
+  
+
+scripts\quality-gates.ts:299:2 lint/nursery/noFloatingPromises ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+  
+    297 Ôöé // Run the script
+    298 Ôöé if (import.meta.main) {
+  > 299 Ôöé 	main();
+        Ôöé 	^^^^^^^
+    300 Ôöé }
+    301 Ôöé 
+  
+  i This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  
+
+check ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+error: script "lint" exited with code 1

@@ -20,17 +20,10 @@ export interface ResponseProps {
  * ai-sdk.dev Elements Response wrapper
  * Provides semantic structure for AI response content
  */
-export function Response({
-	message,
-	isStreaming = false,
-	className,
-	children,
-}: ResponseProps) {
+export function Response({ message, isStreaming = false, className, children }: ResponseProps) {
 	return (
 		<article
-			aria-label={
-				message?.role === 'assistant' ? 'Resposta do assistente' : 'Mensagem'
-			}
+			aria-label={message?.role === 'assistant' ? 'Resposta do assistente' : 'Mensagem'}
 			className={cn('ai-response', className)}
 			data-streaming={isStreaming}
 			data-role={message?.role}

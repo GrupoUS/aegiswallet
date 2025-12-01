@@ -6,14 +6,7 @@
  * - Authorization handled at application-level via Clerk middleware
  */
 
-import {
-	boolean,
-	date,
-	integer,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, date, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 // ========================================
 // USER PROFILES
@@ -80,13 +73,9 @@ export const userPreferences = pgTable('user_preferences', {
 	voiceFeedback: boolean('voice_feedback').default(true),
 
 	// Accessibility (WCAG 2.1 AA+)
-	accessibilityHighContrast: boolean('accessibility_high_contrast').default(
-		false,
-	),
+	accessibilityHighContrast: boolean('accessibility_high_contrast').default(false),
 	accessibilityLargeText: boolean('accessibility_large_text').default(false),
-	accessibilityScreenReader: boolean('accessibility_screen_reader').default(
-		false,
-	),
+	accessibilityScreenReader: boolean('accessibility_screen_reader').default(false),
 
 	// Timestamps
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

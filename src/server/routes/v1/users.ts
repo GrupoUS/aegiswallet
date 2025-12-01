@@ -12,10 +12,7 @@ import { z } from 'zod';
 import { financialEvents, userPreferences, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 // =====================================================
 // Validation Schemas
@@ -76,11 +73,7 @@ usersRouter.get(
 		const requestId = c.get('requestId');
 
 		try {
-			const [profile] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, user.id))
-				.limit(1);
+			const [profile] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
 
 			return c.json({
 				data: profile || null,
@@ -133,8 +126,7 @@ usersRouter.put(
 			if (input.phone) updateData.phone = input.phone;
 			if (input.cpf) updateData.cpf = input.cpf;
 			if (input.birth_date) updateData.birthDate = input.birth_date;
-			if (input.profile_image_url)
-				updateData.profileImageUrl = input.profile_image_url;
+			if (input.profile_image_url) updateData.profileImageUrl = input.profile_image_url;
 
 			const [updatedProfile] = await db
 				.update(users)
@@ -282,10 +274,7 @@ usersRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
-			await db
-				.update(users)
-				.set({ lastLogin: new Date() })
-				.where(eq(users.id, user.id));
+			await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id));
 
 			return c.json({
 				data: { success: true },

@@ -27,9 +27,7 @@ export interface SafeAuditLogData {
  * Safely insert an audit log entry via API
  * Returns true if successful, false otherwise
  */
-export async function safeInsertAuditLog(
-	data: SafeAuditLogData,
-): Promise<boolean> {
+export async function safeInsertAuditLog(data: SafeAuditLogData): Promise<boolean> {
 	try {
 		// Call the compliance API to log the audit entry
 		await apiClient.post('/v1/compliance/audit-log', {

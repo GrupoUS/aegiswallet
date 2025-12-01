@@ -33,8 +33,7 @@ const buttonVariants = cva(
 				default: 'bg-primary text-primary-foreground hover:bg-primary/90',
 				destructive:
 					'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
-				ghost:
-					'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+				ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
 				gradient: [
 					// Primary gradient: Purple to Pink
 					'bg-gradient-to-br from-[oklch(0.5854_0.2041_277.1173)] to-[oklch(0.9376_0.0260_321.9388)]',
@@ -58,8 +57,7 @@ const buttonVariants = cva(
 				],
 				outline:
 					'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
-				secondary:
-					'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 				success: [
 					// Success gradient: Primary to Secondary (for completed actions)
 					'bg-gradient-to-br from-[oklch(0.5854_0.2041_277.1173)] to-[oklch(0.8687_0.0043_56.3660)]',
@@ -113,8 +111,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 		const Comp = asChild ? Slot : 'button';
 
 		// Helper variables for variant detection
-		const isGradient =
-			variant === 'gradient' || variant === 'trust' || variant === 'success';
+		const isGradient = variant === 'gradient' || variant === 'trust' || variant === 'success';
 		const isNeumorph = variant === 'neumorph';
 
 		// Apply motion effects for neumorph buttons
@@ -169,13 +166,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 		);
 
 		// Apply HoverBorderGradient for non-gradient, non-neumorph buttons
-		if (
-			withGradient &&
-			!disabled &&
-			!isGradient &&
-			!isNeumorph &&
-			variant !== 'link'
-		) {
+		if (withGradient && !disabled && !isGradient && !isNeumorph && variant !== 'link') {
 			return (
 				<HoverBorderGradient
 					as="div"

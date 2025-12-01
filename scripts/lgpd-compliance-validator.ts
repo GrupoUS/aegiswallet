@@ -147,9 +147,7 @@ class LGPDComplianceValidator {
 		return result;
 	}
 
-	private async validateDataMinimization(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateDataMinimization(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.dataMinimization;
 		let score = 100;
 
@@ -165,11 +163,10 @@ class LGPDComplianceValidator {
         OR column_name ILIKE '%full_name%'
     `);
 
-		console.log(
-			`   📊 Found ${personalDataColumns.length} personal data columns`,
-		);
+		console.log(`   📊 Found ${personalDataColumns.length} personal data columns`);
 
 		// Validate each personal data column has a clear purpose
+		// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
 		for (const column of personalDataColumns as any[]) {
 			const table = column.table_name;
 			const col = column.column_name;
@@ -185,12 +182,8 @@ class LGPDComplianceValidator {
 
 			if (!usageCheck[0]?.has_data) {
 				score -= 10;
-				req.issues.push(
-					`Column ${table}.${col} appears unused but collects personal data`,
-				);
-				req.recommendations.push(
-					`Remove ${col} from ${table} or justify its necessity`,
-				);
+				req.issues.push(`Column ${table}.${col} appears unused but collects personal data`);
+				req.recommendations.push(`Remove ${col} from ${table} or justify its necessity`);
 			}
 		}
 
@@ -205,18 +198,14 @@ class LGPDComplianceValidator {
 		if (!hasAnonymization[0]?.exists) {
 			score -= 15;
 			req.issues.push('Missing data anonymization tracking');
-			req.recommendations.push(
-				'Implement data anonymization logs and procedures',
-			);
+			req.recommendations.push('Implement data anonymization logs and procedures');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Data minimization score: ${req.score}/100`);
 	}
 
-	private async validateConsentManagement(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateConsentManagement(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.consentManagement;
 		let score = 100;
 
@@ -231,9 +220,7 @@ class LGPDComplianceValidator {
 		if (!hasConsentTable[0]?.exists) {
 			score -= 40;
 			req.issues.push('Missing LGPD consent tracking table');
-			req.recommendations.push(
-				'Create lgpd_consents table with explicit consent tracking',
-			);
+			req.recommendations.push('Create lgpd_consents table with explicit consent tracking');
 		} else {
 			console.log('   ✅ LGPD consents table exists');
 
@@ -244,24 +231,15 @@ class LGPDComplianceValidator {
         WHERE table_schema = 'public' AND table_name = 'lgpd_consents'
       `);
 
-			const requiredColumns = [
-				'user_id',
-				'consent_type',
-				'granted',
-				'granted_at',
-				'version',
-			];
-			const existingColumns = (consentColumns as any[]).map(
-				(col) => col.column_name,
-			);
+			const requiredColumns = ['user_id', 'consent_type', 'granted', 'granted_at', 'version'];
+			// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
+			const existingColumns = (consentColumns as any[]).map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
 				if (!existingColumns.includes(required)) {
 					score -= 10;
 					req.issues.push(`Consent table missing required column: ${required}`);
-					req.recommendations.push(
-						`Add ${required} column to lgpd_consents table`,
-					);
+					req.recommendations.push(`Add ${required} column to lgpd_consents table`);
 				}
 			}
 
@@ -270,9 +248,7 @@ class LGPDComplianceValidator {
 			if (!hasWithdrawalColumn) {
 				score -= 15;
 				req.issues.push('Missing consent withdrawal tracking');
-				req.recommendations.push(
-					'Add revoked_at column to support consent withdrawal',
-				);
+				req.recommendations.push('Add revoked_at column to support consent withdrawal');
 			}
 		}
 
@@ -287,18 +263,14 @@ class LGPDComplianceValidator {
 		if (!hasConsentTemplates[0]?.exists) {
 			score -= 20;
 			req.issues.push('Missing consent template management');
-			req.recommendations.push(
-				'Create consent_templates table for standardized consent language',
-			);
+			req.recommendations.push('Create consent_templates table for standardized consent language');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Consent management score: ${req.score}/100`);
 	}
 
-	private async validateDataSubjectRights(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateDataSubjectRights(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.dataSubjectRights;
 		let score = 100;
 
@@ -313,9 +285,7 @@ class LGPDComplianceValidator {
 		if (!hasExportRequests[0]?.exists) {
 			score -= 25;
 			req.issues.push('Missing data export request tracking');
-			req.recommendations.push(
-				'Create lgpd_export_requests table for GDPR/LGPD export rights',
-			);
+			req.recommendations.push('Create lgpd_export_requests table for GDPR/LGPD export rights');
 		}
 
 		// Check data deletion capabilities
@@ -329,9 +299,7 @@ class LGPDComplianceValidator {
 		if (!hasDeletionRequests[0]?.exists) {
 			score -= 25;
 			req.issues.push('Missing data deletion request tracking');
-			req.recommendations.push(
-				'Create data_deletion_requests table for right to erasure',
-			);
+			req.recommendations.push('Create data_deletion_requests table for right to erasure');
 		}
 
 		// Check for data access request tracking
@@ -345,9 +313,7 @@ class LGPDComplianceValidator {
 		if (!hasAccessLogs[0]?.exists) {
 			score -= 20;
 			req.issues.push('Missing data access request tracking');
-			req.recommendations.push(
-				'Create data_access_logs table to track access requests',
-			);
+			req.recommendations.push('Create data_access_logs table to track access requests');
 		}
 
 		// Verify soft delete implementation
@@ -360,18 +326,14 @@ class LGPDComplianceValidator {
 		if (userTableColumns.length === 0) {
 			score -= 15;
 			req.issues.push('Missing soft delete implementation for user data');
-			req.recommendations.push(
-				'Add deleted_at column to users table for GDPR/LGPD compliance',
-			);
+			req.recommendations.push('Add deleted_at column to users table for GDPR/LGPD compliance');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Data subject rights score: ${req.score}/100`);
 	}
 
-	private async validateAuditTrails(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateAuditTrails(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.auditTrails;
 		let score = 100;
 
@@ -386,9 +348,7 @@ class LGPDComplianceValidator {
 		if (!hasAuditLogs[0]?.exists) {
 			score -= 50;
 			req.issues.push('Missing comprehensive audit logging table');
-			req.recommendations.push(
-				'Create audit_logs table with complete data access tracking',
-			);
+			req.recommendations.push('Create audit_logs table with complete data access tracking');
 		} else {
 			console.log('   ✅ Audit logs table exists');
 
@@ -406,17 +366,14 @@ class LGPDComplianceValidator {
 				'created_at',
 				'ip_address',
 			];
-			const existingColumns = (auditColumns as any[]).map(
-				(col) => col.column_name,
-			);
+			// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
+			const existingColumns = (auditColumns as any[]).map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
 				if (!existingColumns.includes(required)) {
 					score -= 10;
 					req.issues.push(`Audit table missing required column: ${required}`);
-					req.recommendations.push(
-						`Add ${required} column to audit_logs table`,
-					);
+					req.recommendations.push(`Add ${required} column to audit_logs table`);
 				}
 			}
 		}
@@ -430,12 +387,10 @@ class LGPDComplianceValidator {
         AND column_name IN ('old_values', 'new_values')
     `);
 
-		if (parseInt(hasOldNewValues[0]?.count || '0', 10) < 2) {
+		if (Number.parseInt(hasOldNewValues[0]?.count || '0', 10) < 2) {
 			score -= 20;
 			req.issues.push('Missing data change tracking in audit logs');
-			req.recommendations.push(
-				'Add old_values and new_values JSONB columns to track data changes',
-			);
+			req.recommendations.push('Add old_values and new_values JSONB columns to track data changes');
 		}
 
 		// Check for audit log protection
@@ -451,9 +406,7 @@ class LGPDComplianceValidator {
 			if (!hasAuditProtection[0]?.exists) {
 				score -= 15;
 				req.issues.push('Audit logs lack protection against modification');
-				req.recommendations.push(
-					'Create RLS policies to prevent audit log tampering',
-				);
+				req.recommendations.push('Create RLS policies to prevent audit log tampering');
 			}
 		}
 
@@ -461,28 +414,21 @@ class LGPDComplianceValidator {
 		console.log(`   ✅ Audit trails score: ${req.score}/100`);
 	}
 
-	private async validateDataEncryption(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateDataEncryption(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.dataEncryption;
 		let score = 100;
 
 		// Check connection encryption
-		const isSSLEnabled =
-			process.env.DATABASE_URL?.includes('sslmode=require') || false;
+		const isSSLEnabled = process.env.DATABASE_URL?.includes('sslmode=require');
 		if (!isSSLEnabled) {
 			score -= 30;
 			req.issues.push('Database connection not using SSL/TLS');
-			req.recommendations.push(
-				'Update DATABASE_URL to include sslmode=require',
-			);
+			req.recommendations.push('Update DATABASE_URL to include sslmode=require');
 		}
 
 		// Neon provides encryption at rest by default
 		console.log('   ✅ Encryption at rest: enabled (Neon default)');
-		console.log(
-			`   🔒 Connection encryption: ${isSSLEnabled ? 'enabled' : 'disabled - CRITICAL'}`,
-		);
+		console.log(`   🔒 Connection encryption: ${isSSLEnabled ? 'enabled' : 'disabled - CRITICAL'}`);
 
 		// Check for sensitive field encryption
 		const sensitiveFields = await this.db.execute(sql`
@@ -502,6 +448,7 @@ class LGPDComplianceValidator {
 
 		// In a real implementation, you would check if these are encrypted
 		// For now, we'll note them for manual review
+		// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
 		for (const field of sensitiveFields as any[]) {
 			result.sensitiveDataFields.push({
 				table: field.table_name,
@@ -518,18 +465,14 @@ class LGPDComplianceValidator {
 		}
 
 		if (result.sensitiveDataFields.length > 0) {
-			req.recommendations.push(
-				'Implement column-level encryption for sensitive personal data',
-			);
+			req.recommendations.push('Implement column-level encryption for sensitive personal data');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Data encryption score: ${req.score}/100`);
 	}
 
-	private async validateRetentionPolicies(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateRetentionPolicies(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.retentionPolicies;
 		let score = 100;
 
@@ -544,9 +487,7 @@ class LGPDComplianceValidator {
 		if (!hasRetentionPolicies[0]?.exists) {
 			score -= 40;
 			req.issues.push('Missing data retention policy management');
-			req.recommendations.push(
-				'Create data_retention_policies table to manage data lifecycle',
-			);
+			req.recommendations.push('Create data_retention_policies table to manage data lifecycle');
 		}
 
 		// Check for automated cleanup
@@ -554,12 +495,10 @@ class LGPDComplianceValidator {
       SELECT COUNT(*) as count FROM pg_proc WHERE proname ILIKE '%cleanup%' OR proname ILIKE '%retention%'
     `);
 
-		if (parseInt(cleanupJobs[0]?.count || '0', 10) === 0) {
+		if (Number.parseInt(cleanupJobs[0]?.count || '0', 10) === 0) {
 			score -= 30;
 			req.issues.push('Missing automated data cleanup procedures');
-			req.recommendations.push(
-				'Implement scheduled cleanup jobs for data retention',
-			);
+			req.recommendations.push('Implement scheduled cleanup jobs for data retention');
 		}
 
 		// Check for legal hold capabilities
@@ -573,18 +512,14 @@ class LGPDComplianceValidator {
 		if (!hasLegalHolds[0]?.exists) {
 			score -= 20;
 			req.issues.push('Missing legal hold management for litigation holds');
-			req.recommendations.push(
-				'Create legal_holds table to manage litigation preservation',
-			);
+			req.recommendations.push('Create legal_holds table to manage litigation preservation');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Retention policies score: ${req.score}/100`);
 	}
 
-	private async validateIncidentManagement(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateIncidentManagement(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.incidentManagement;
 		let score = 100;
 
@@ -599,9 +534,7 @@ class LGPDComplianceValidator {
 		if (!hasIncidentLogs[0]?.exists) {
 			score -= 35;
 			req.issues.push('Missing security incident tracking');
-			req.recommendations.push(
-				'Create security_incidents table for breach management',
-			);
+			req.recommendations.push('Create security_incidents table for breach management');
 		}
 
 		// Check for breach notification workflow
@@ -615,9 +548,7 @@ class LGPDComplianceValidator {
 		if (!hasNotificationWorkflow[0]?.exists) {
 			score -= 25;
 			req.issues.push('Missing data breach notification workflow');
-			req.recommendations.push(
-				'Create breach_notifications table for LGPD 72-hour requirement',
-			);
+			req.recommendations.push('Create breach_notifications table for LGPD 72-hour requirement');
 		}
 
 		// Check for data protection officer assignment
@@ -631,18 +562,14 @@ class LGPDComplianceValidator {
 		if (!hasDPOTable[0]?.exists) {
 			score -= 15;
 			req.issues.push('Missing Data Protection Officer assignment tracking');
-			req.recommendations.push(
-				'Create DPO assignment table for compliance oversight',
-			);
+			req.recommendations.push('Create DPO assignment table for compliance oversight');
 		}
 
 		req.score = Math.max(0, score);
 		console.log(`   ✅ Incident management score: ${req.score}/100`);
 	}
 
-	private async validateVoiceDataProtection(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async validateVoiceDataProtection(result: LGPDComplianceResult): Promise<void> {
 		const req = result.requirements.voiceDataProtection;
 		let score = 100;
 
@@ -657,9 +584,7 @@ class LGPDComplianceValidator {
 		if (!hasVoiceTranscriptions[0]?.exists) {
 			score -= 40;
 			req.issues.push('Missing voice transcription data management');
-			req.recommendations.push(
-				'Create voice_transcriptions table with proper consent tracking',
-			);
+			req.recommendations.push('Create voice_transcriptions table with proper consent tracking');
 		}
 
 		// Check for voice biometric data handling
@@ -680,9 +605,7 @@ class LGPDComplianceValidator {
 
 			if (voiceBiometricColumns.length > 0) {
 				// Check for biometric data protection
-				console.log(
-					'   🔍 Voice biometric data detected - requires special protection',
-				);
+				console.log('   🔍 Voice biometric data detected - requires special protection');
 
 				const hasBiometricConsent = await this.db.execute(sql`
           SELECT EXISTS (
@@ -694,12 +617,8 @@ class LGPDComplianceValidator {
 
 				if (!hasBiometricConsent[0]?.exists) {
 					score -= 30;
-					req.issues.push(
-						'Voice biometric data stored without explicit consent',
-					);
-					req.recommendations.push(
-						'Implement biometric data consent collection and management',
-					);
+					req.issues.push('Voice biometric data stored without explicit consent');
+					req.recommendations.push('Implement biometric data consent collection and management');
 				}
 			}
 		}
@@ -724,7 +643,7 @@ class LGPDComplianceValidator {
 		console.log(`   ✅ Voice data protection score: ${req.score}/100`);
 	}
 
-	private async mapDataFlows(result: LGPDComplianceResult): Promise<void> {
+	private mapDataFlows(result: LGPDComplianceResult): Promise<void> {
 		// Map common data flows in a Brazilian fintech application
 		const commonFlows = [
 			{
@@ -758,12 +677,11 @@ class LGPDComplianceValidator {
 		];
 
 		result.dataFlowMapping = commonFlows;
-		console.log(`   🗺️  Mapped ${commonFlows.length} data flows`);
+		console.log(`   ║✅  Mapped ${commonFlows.length} data flows`);
+		return Promise.resolve();
 	}
 
-	private async identifySensitiveData(
-		result: LGPDComplianceResult,
-	): Promise<void> {
+	private async identifySensitiveData(result: LGPDComplianceResult): Promise<void> {
 		// Additional sensitive data identification
 		const additionalSensitiveFields = [
 			{ table: 'users', column: 'cpf', dataType: 'CPF (Brazilian tax ID)' },
@@ -807,16 +725,12 @@ class LGPDComplianceValidator {
 			}
 		}
 
-		console.log(
-			`   🏷️  Identified ${result.sensitiveDataFields.length} sensitive data fields`,
-		);
+		console.log(`   🏷️  Identified ${result.sensitiveDataFields.length} sensitive data fields`);
 	}
 
 	private calculateOverallScore(result: LGPDComplianceResult): void {
 		const scores = Object.values(result.requirements).map((req) => req.score);
-		result.overallScore = Math.round(
-			scores.reduce((a, b) => a + b, 0) / scores.length,
-		);
+		result.overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
 		if (result.overallScore >= 90) {
 			result.status = 'compliant';
@@ -844,9 +758,7 @@ async function main() {
 		console.log('\n📋 REQUIREMENTS BREAKDOWN:');
 		Object.entries(result.requirements).forEach(([key, req]) => {
 			const icon = req.score >= 90 ? '✅' : req.score >= 70 ? '⚠️' : '❌';
-			const name = key
-				.replace(/([A-Z])/g, ' $1')
-				.replace(/^./, (str) => str.toUpperCase());
+			const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
 			console.log(`${icon} ${name}: ${req.score}/100`);
 
 			if (req.issues.length > 0) {

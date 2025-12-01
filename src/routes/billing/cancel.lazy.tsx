@@ -31,15 +31,12 @@ function CancelPage() {
 								<XCircle className="w-10 h-10 text-amber-600" />
 							</div>
 							<CardTitle className="text-2xl">Checkout Cancelado</CardTitle>
-							<CardDescription>
-								Você cancelou o processo de assinatura
-							</CardDescription>
+							<CardDescription>Você cancelou o processo de assinatura</CardDescription>
 						</CardHeader>
 
 						<CardContent className="space-y-4">
 							<p className="text-sm text-muted-foreground text-center">
-								Não se preocupe! Você pode voltar e escolher um plano quando
-								estiver pronto.
+								Não se preocupe! Você pode voltar e escolher um plano quando estiver pronto.
 							</p>
 
 							<div className="bg-muted p-4 rounded-lg">

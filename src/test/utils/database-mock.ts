@@ -21,8 +21,7 @@ const createMockSql = () => {
 
 	return vi.fn().mockImplementation((query: string, _params?: unknown[]) => {
 		// Extract table name from query for simple matching
-		const tableMatch =
-			query.match(/FROM\s+(\w+)/i) || query.match(/INTO\s+(\w+)/i);
+		const tableMatch = query.match(/FROM\s+(\w+)/i) || query.match(/INTO\s+(\w+)/i);
 		const tableName = tableMatch ? tableMatch[1] : 'unknown';
 
 		// Return mock data based on table
@@ -63,11 +62,9 @@ export const createMockDatabase = () => {
 		// Transaction support
 		transaction: vi
 			.fn()
-			.mockImplementation(
-				async <T>(callback: (tx: typeof mockDb) => Promise<T>): Promise<T> => {
-					return callback(mockDb);
-				},
-			),
+			.mockImplementation(async <T>(callback: (tx: typeof mockDb) => Promise<T>): Promise<T> => {
+				return callback(mockDb);
+			}),
 
 		// Insert/Update/Delete operations
 		insert: vi.fn().mockReturnThis(),
@@ -189,9 +186,7 @@ export const createMockTransaction = (
 /**
  * Create mock Brazilian user with CPF matching actual schema
  */
-export const createMockUser = (
-	overrides: Partial<schema.User> = {},
-): schema.User => ({
+export const createMockUser = (overrides: Partial<schema.User> = {}): schema.User => ({
 	id: 'user-123',
 	email: 'joao.silva@email.com',
 	fullName: 'João Silva',

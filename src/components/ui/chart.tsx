@@ -8,7 +8,7 @@ import type { ChartPayload } from '@/types/financial/chart.types';
 const THEMES = { dark: '.dark', light: '' } as const;
 
 export type ChartConfig = {
-	[k in string]: {
+	[Key in string]: {
 		label?: React.ReactNode;
 		icon?: React.ComponentType;
 	} & (
@@ -37,9 +37,7 @@ const ChartContainer = React.forwardRef<
 	HTMLDivElement,
 	React.ComponentProps<'div'> & {
 		config: ChartConfig;
-		children: React.ComponentProps<
-			typeof RechartsPrimitive.ResponsiveContainer
-		>['children'];
+		children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>['children'];
 	}
 >(({ id, className, children, config, ...props }, ref) => {
 	const uniqueId = React.useId();
@@ -57,9 +55,7 @@ const ChartContainer = React.forwardRef<
 				{...props}
 			>
 				<ChartStyle id={chartId} config={config} />
-				<RechartsPrimitive.ResponsiveContainer>
-					{children}
-				</RechartsPrimitive.ResponsiveContainer>
+				<RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
 			</div>
 		</ChartContext.Provider>
 	);
@@ -67,9 +63,7 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = 'Chart';
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-	const colorConfig = Object.entries(config).filter(
-		([, config]) => config.theme || config.color,
-	);
+	const colorConfig = Object.entries(config).filter(([, entry]) => entry.theme || entry.color);
 
 	// Create CSS styles safely without using dangerouslySetInnerHTML
 	React.useEffect(() => {
@@ -79,9 +73,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 		}
 
 		// Create or update style element safely
-		let styleElement = document.getElementById(
-			`chart-styles-${id}`,
-		) as HTMLStyleElement;
+		let styleElement = document.getElementById(`chart-styles-${id}`) as HTMLStyleElement;
 
 		if (!styleElement) {
 			styleElement = document.createElement('style');
@@ -97,8 +89,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 				const colorRules = colorConfig
 					.map(([key, itemConfig]) => {
 						const color =
-							itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-							itemConfig.color;
+							itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
 						return color ? `  --color-${key}: ${color};` : null;
 					})
 					.filter(Boolean)
@@ -137,10 +128,7 @@ const ChartTooltipContent = React.forwardRef<
 		active?: boolean;
 		payload?: ChartPayload[];
 		label?: string;
-		labelFormatter?: (
-			label: React.ReactNode,
-			payload?: ChartPayload[],
-		) => React.ReactNode;
+		labelFormatter?: (label: React.ReactNode, payload?: ChartPayload[]) => React.ReactNode;
 		labelClassName?: string;
 		formatter?: (
 			value: number,
@@ -187,9 +175,7 @@ const ChartTooltipContent = React.forwardRef<
 
 			if (labelFormatter) {
 				return (
-					<div className={cn('font-medium', labelClassName)}>
-						{labelFormatter(value, payload)}
-					</div>
+					<div className={cn('font-medium', labelClassName)}>{labelFormatter(value, payload)}</div>
 				);
 			}
 
@@ -198,17 +184,9 @@ const ChartTooltipContent = React.forwardRef<
 			}
 
 			return <div className={cn('font-medium', labelClassName)}>{value}</div>;
-		}, [
-			label,
-			labelFormatter,
-			payload,
-			hideLabel,
-			labelClassName,
-			config,
-			labelKey,
-		]);
+		}, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
 
-		if (!active || !payload?.length) {
+		if (!(active && payload?.length)) {
 			return null;
 		}
 
@@ -233,13 +211,8 @@ const ChartTooltipContent = React.forwardRef<
 							// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
 							const chartItem = item as any;
 							const key = `${nameKey || chartItem.name || chartItem.dataKey || 'value'}`;
-							const itemConfig = getPayloadConfigFromPayload(
-								config,
-								chartItem,
-								key,
-							);
-							const indicatorColor =
-								color || chartItem.payload?.fill || chartItem.color;
+							const itemConfig = getPayloadConfigFromPayload(config, chartItem, key);
+							const indicatorColor = color || chartItem.payload?.fill || chartItem.color;
 
 							return (
 								<div
@@ -249,16 +222,8 @@ const ChartTooltipContent = React.forwardRef<
 										indicator === 'dot' && 'items-center',
 									)}
 								>
-									{formatter &&
-									chartItem?.value !== undefined &&
-									chartItem.name ? (
-										formatter(
-											chartItem.value,
-											chartItem.name,
-											chartItem,
-											index,
-											chartItem.payload,
-										)
+									{formatter && chartItem?.value !== undefined && chartItem.name ? (
+										formatter(chartItem.value, chartItem.name, chartItem, index, chartItem.payload)
 									) : (
 										<>
 											{itemConfig?.icon ? (
@@ -325,98 +290,80 @@ const ChartLegendContent = React.forwardRef<
 		payload?: unknown[];
 		verticalAlign?: 'top' | 'bottom' | 'middle';
 	}
->(
-	(
-		{ className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey },
-		ref,
-	) => {
-		const { config } = useChart();
+>(({ className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey }, ref) => {
+	const { config } = useChart();
 
-		if (!payload?.length) {
-			return null;
-		}
+	if (!payload?.length) {
+		return null;
+	}
 
-		return (
-			<div
-				ref={ref}
-				className={cn(
-					'flex items-center justify-center gap-4',
-					verticalAlign === 'top' ? 'pb-3' : 'pt-3',
-					className,
-				)}
-			>
-				{payload
-					// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
-					.filter((item: any) => item.type !== 'none')
-					// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
-					.map((item: any) => {
-						const key = `${nameKey || item.dataKey || 'value'}`;
-						const itemConfig = getPayloadConfigFromPayload(config, item, key);
+	return (
+		<div
+			ref={ref}
+			className={cn(
+				'flex items-center justify-center gap-4',
+				verticalAlign === 'top' ? 'pb-3' : 'pt-3',
+				className,
+			)}
+		>
+			{payload
+				// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
+				.filter((item: any) => item.type !== 'none')
+				// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
+				.map((item: any) => {
+					const key = `${nameKey || item.dataKey || 'value'}`;
+					const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
-						return (
-							<div
-								key={item.value}
-								className={cn(
-									'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground',
-								)}
-							>
-								{itemConfig?.icon && !hideIcon ? (
-									<itemConfig.icon />
-								) : (
-									<div
-										className="h-2 w-2 shrink-0 rounded-[2px]"
-										style={{
-											backgroundColor: item.color,
-										}}
-									/>
-								)}
-								{itemConfig?.label}
-							</div>
-						);
-					})}
-			</div>
-		);
-	},
-);
+					return (
+						<div
+							key={item.value}
+							className={cn(
+								'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground',
+							)}
+						>
+							{itemConfig?.icon && !hideIcon ? (
+								<itemConfig.icon />
+							) : (
+								<div
+									className="h-2 w-2 shrink-0 rounded-[2px]"
+									style={{
+										backgroundColor: item.color,
+									}}
+								/>
+							)}
+							{itemConfig?.label}
+						</div>
+					);
+				})}
+		</div>
+	);
+});
 ChartLegendContent.displayName = 'ChartLegend';
 
 // Helper to extract item config from a payload.
-function getPayloadConfigFromPayload(
-	config: ChartConfig,
-	payload: unknown,
-	key: string,
-) {
+function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
 	if (typeof payload !== 'object' || payload === null) {
 		return undefined;
 	}
 
 	const payloadPayload =
-		'payload' in payload &&
-		typeof payload.payload === 'object' &&
-		payload.payload !== null
+		'payload' in payload && typeof payload.payload === 'object' && payload.payload !== null
 			? payload.payload
 			: undefined;
 
 	let configLabelKey: string = key;
 
-	if (
-		key in payload &&
-		typeof payload[key as keyof typeof payload] === 'string'
-	) {
+	if (key in payload && typeof payload[key as keyof typeof payload] === 'string') {
 		configLabelKey = payload[key as keyof typeof payload] as string;
 	} else if (
 		payloadPayload &&
 		key in payloadPayload &&
 		typeof payloadPayload[key as keyof typeof payloadPayload] === 'string'
 	) {
-		configLabelKey = payloadPayload[
-			key as keyof typeof payloadPayload
-		] as string;
+		configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
 	}
 
-	return configLabelKey in config
-		? config[configLabelKey]
-		: config[key as keyof typeof config];
+	return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
 }
 
 export {

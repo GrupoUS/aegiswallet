@@ -4,13 +4,7 @@ import type { VoiceCommand } from './hooks/usePortugueseVoiceAccessibility';
 import { usePortugueseVoiceAccessibility } from './hooks/usePortugueseVoiceAccessibility';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PortugueseVoiceAccessibilityProps {
 	onVoiceCommand?: (command: string, confidence: number) => void;
@@ -32,8 +26,7 @@ type VoiceHistoryProps = {
 	onClear: () => void;
 };
 
-type PortugueseVoiceAccessibilityComponent =
-	React.FC<PortugueseVoiceAccessibilityProps>;
+type PortugueseVoiceAccessibilityComponent = React.FC<PortugueseVoiceAccessibilityProps>;
 
 const VoiceStatusCard: React.FC<VoiceStatusProps> = ({
 	isListening,
@@ -53,19 +46,11 @@ const VoiceStatusCard: React.FC<VoiceStatusProps> = ({
 					className="h-10 w-10 rounded-full"
 					onClick={toggleListening}
 					disabled={isProcessing}
-					aria-label={
-						isListening
-							? 'Parar reconhecimento de voz'
-							: 'Iniciar reconhecimento de voz'
-					}
+					aria-label={isListening ? 'Parar reconhecimento de voz' : 'Iniciar reconhecimento de voz'}
 					aria-live="polite"
 					aria-busy={isProcessing}
 				>
-					{isListening ? (
-						<MicOff className="h-4 w-4" />
-					) : (
-						<Mic className="h-4 w-4" />
-					)}
+					{isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
 				</Button>
 				Assistente por Voz
 				{isProcessing && (
@@ -101,12 +86,10 @@ const VoiceStatusCard: React.FC<VoiceStatusProps> = ({
 					</div>
 				</section>
 			)}
-			{!transcript && !lastResponse && !isProcessing && (
+			{!(transcript || lastResponse || isProcessing) && (
 				<section className="py-6 text-center text-muted-foreground">
 					<Mic className="mx-auto mb-2 h-10 w-10 opacity-40" aria-hidden />
-					<p className="text-sm">
-						Clique no microfone para comandar por voz em português
-					</p>
+					<p className="text-sm">Clique no microfone para comandar por voz em português</p>
 					<div className="mt-4 text-xs">
 						<p className="font-medium">Comandos disponíveis:</p>
 						<ul className="mt-2 space-y-1">
@@ -121,10 +104,7 @@ const VoiceStatusCard: React.FC<VoiceStatusProps> = ({
 	</Card>
 );
 
-const VoiceHistoryCard: React.FC<VoiceHistoryProps> = ({
-	commands,
-	onClear,
-}) => {
+const VoiceHistoryCard: React.FC<VoiceHistoryProps> = ({ commands, onClear }) => {
 	if (commands.length === 0) {
 		return null;
 	}
@@ -152,15 +132,9 @@ const VoiceHistoryCard: React.FC<VoiceHistoryProps> = ({
 										{cmd.category}
 									</Badge>
 									{cmd.confidence >= 0.8 ? (
-										<Volume2
-											className="h-3 w-3 text-green-500"
-											aria-label="Alta confiança"
-										/>
+										<Volume2 className="h-3 w-3 text-green-500" aria-label="Alta confiança" />
 									) : (
-										<VolumeX
-											className="h-3 w-3 text-yellow-500"
-											aria-label="Confiança moderada"
-										/>
+										<VolumeX className="h-3 w-3 text-yellow-500" aria-label="Confiança moderada" />
 									)}
 								</div>
 							</header>

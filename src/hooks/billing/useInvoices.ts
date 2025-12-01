@@ -12,11 +12,7 @@ interface UseInvoicesParams {
 /**
  * Hook to get user invoices with pagination and filtering
  */
-export function useInvoices({
-	limit = 10,
-	offset = 0,
-	status,
-}: UseInvoicesParams = {}) {
+export function useInvoices({ limit = 10, offset = 0, status }: UseInvoicesParams = {}) {
 	return useQuery({
 		queryKey: ['invoices', { limit, offset, status }],
 		queryFn: async () => {
@@ -25,9 +21,7 @@ export function useInvoices({
 			if (offset) params.append('offset', offset.toString());
 			if (status) params.append('status', status);
 
-			return apiClient.get<InvoicesResponse>(
-				`/api/v1/billing/invoices?${params.toString()}`,
-			);
+			return apiClient.get<InvoicesResponse>(`/api/v1/billing/invoices?${params.toString()}`);
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		retry: 1,

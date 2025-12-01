@@ -12,11 +12,7 @@
 import { eq } from 'drizzle-orm';
 
 import { createAuthenticatedDbClientFromToken } from '@/db/auth-client';
-import {
-	type InsertUserPreferences,
-	userPreferences,
-	users,
-} from '@/db/schema';
+import { type InsertUserPreferences, userPreferences, users } from '@/db/schema';
 import logger from '@/lib/logging/logger';
 
 // ========================================
@@ -48,10 +44,7 @@ export async function getUserProfile(token: string) {
  * @param token - Clerk JWT token
  * @param data - Partial preferences data
  */
-export async function updateUserPreferences(
-	token: string,
-	data: Partial<InsertUserPreferences>,
-) {
+export async function updateUserPreferences(token: string, data: Partial<InsertUserPreferences>) {
 	const { db, userId } = await createAuthenticatedDbClientFromToken(token);
 
 	try {

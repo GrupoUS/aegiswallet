@@ -160,10 +160,7 @@ async function seedDatabase() {
 		];
 
 		for (const category of categories) {
-			await db
-				.insert(schema.transactionCategories)
-				.values(category)
-				.onConflictDoNothing();
+			await db.insert(schema.transactionCategories).values(category).onConflictDoNothing();
 		}
 		console.log(`   ✅ ${categories.length} categories created`);
 
@@ -435,4 +432,7 @@ async function seedDatabase() {
 }
 
 // Run seed
-seedDatabase();
+seedDatabase().catch((error) => {
+	console.error('Seed failed:', error);
+	process.exit(1);
+});

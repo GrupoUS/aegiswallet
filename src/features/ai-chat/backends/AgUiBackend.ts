@@ -57,16 +57,8 @@
  * @module backends/AgUiBackend
  */
 
-import type {
-	ChatBackend,
-	ChatBackendConfig,
-	ModelInfo,
-} from '../domain/ChatBackend';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatBackend, ChatBackendConfig, ModelInfo } from '../domain/ChatBackend';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 
 /**
  * Configuration for AG-UI Protocol backend
@@ -129,8 +121,7 @@ export class AgUiBackend implements ChatBackend {
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Simulate streaming content
-		const response =
-			'AG-UI Protocol backend implementado para assistência financeira brasileira.';
+		const response = 'AG-UI Protocol backend implementado para assistência financeira brasileira.';
 		for (const char of response) {
 			yield { type: 'text-delta', payload: { content: char, messageId: '1' } };
 			await new Promise((resolve) => setTimeout(resolve, 50));

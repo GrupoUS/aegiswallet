@@ -21,12 +21,7 @@ export interface RetentionPolicy {
 
 export interface DataSubjectRequest {
 	userId: string;
-	requestType:
-		| 'access'
-		| 'correction'
-		| 'deletion'
-		| 'portability'
-		| 'restriction';
+	requestType: 'access' | 'correction' | 'deletion' | 'portability' | 'restriction';
 	status: 'pending' | 'processing' | 'completed' | 'rejected';
 	requestData?: Record<string, unknown>;
 	response?: Record<string, unknown>;
@@ -110,10 +105,7 @@ export class LGPDDataRetentionManager {
 			const results = [];
 
 			for (const policy of this.RETENTION_POLICIES) {
-				const lastActivity = await this.getLastActivityDate(
-					userId,
-					policy.dataType,
-				);
+				const lastActivity = await this.getLastActivityDate(userId, policy.dataType);
 				const eligible = this.isDataEligibleForDeletion(lastActivity, policy);
 
 				results.push({
@@ -146,9 +138,7 @@ export class LGPDDataRetentionManager {
 				if (eligible && policy.autoDelete && !policy.legalHold) {
 					await this.deleteDataByType(userId, dataType, policy);
 
-					const { safeInsertAuditLog } = await import(
-						'../security/safeAuditLog'
-					);
+					const { safeInsertAuditLog } = await import('../security/safeAuditLog');
 					void safeInsertAuditLog({
 						action: 'automatic_data_deletion',
 						details: {
@@ -211,14 +201,11 @@ export class LGPDDataRetentionManager {
 				user_id: userId,
 			});
 
-			logger.info(
-				`Data subject request created: ${requestId} for user ${userId}`,
-				{
-					request_id: requestId,
-					resource_type: 'lgpd_rights',
-					user_id: userId,
-				},
-			);
+			logger.info(`Data subject request created: ${requestId} for user ${userId}`, {
+				request_id: requestId,
+				resource_type: 'lgpd_rights',
+				user_id: userId,
+			});
 			return requestId;
 		} catch (error) {
 			logger.error('Error creating data subject request:', {
@@ -231,19 +218,13 @@ export class LGPDDataRetentionManager {
 	/**
 	 * Process data deletion request (right to be forgotten)
 	 */
-	async processDeletionRequest(
-		userId: string,
-		requestId: string,
-	): Promise<void> {
+	async processDeletionRequest(userId: string, requestId: string): Promise<void> {
 		try {
-			logger.info(
-				`Processing deletion request ${requestId} for user ${userId}`,
-				{
-					request_id: requestId,
-					resource_type: 'lgpd_rights',
-					user_id: userId,
-				},
-			);
+			logger.info(`Processing deletion request ${requestId} for user ${userId}`, {
+				request_id: requestId,
+				resource_type: 'lgpd_rights',
+				user_id: userId,
+			});
 
 			await apiClient.post('/v1/compliance/data-subject-requests/process', {
 				request_id: requestId,
@@ -315,10 +296,7 @@ export class LGPDDataRetentionManager {
 		}
 	}
 
-	private async getLastActivityDate(
-		userId: string,
-		dataType: string,
-	): Promise<Date> {
+	private async getLastActivityDate(userId: string, dataType: string): Promise<Date> {
 		try {
 			const response = await apiClient.get<{ last_activity: string }>(
 				'/v1/compliance/user/activity',
@@ -326,18 +304,13 @@ export class LGPDDataRetentionManager {
 					params: { user_id: userId, activity_type: dataType },
 				},
 			);
-			return response.last_activity
-				? new Date(response.last_activity)
-				: new Date();
+			return response.last_activity ? new Date(response.last_activity) : new Date();
 		} catch {
 			return new Date();
 		}
 	}
 
-	private isDataEligibleForDeletion(
-		lastActivity: Date,
-		policy: RetentionPolicy,
-	): boolean {
+	private isDataEligibleForDeletion(lastActivity: Date, policy: RetentionPolicy): boolean {
 		const cutoffDate = new Date();
 		cutoffDate.setMonth(cutoffDate.getMonth() - policy.retentionMonths);
 		return lastActivity < cutoffDate;
@@ -380,7 +353,7 @@ export class LGPDDataRetentionManager {
 					params: { user_id: userId },
 				},
 			);
-			return response.hasLegalHold || false;
+			return response.hasLegalHold;
 		} catch (error) {
 			logger.error('Error checking legal holds:', { error: String(error) });
 			return false;

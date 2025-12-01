@@ -3,10 +3,7 @@
  * Creates configured instances of the Financial Agent
  */
 
-import {
-	FinancialAgentBackend,
-	type FinancialAgentConfig,
-} from './FinancialAgentBackend';
+import { FinancialAgentBackend, type FinancialAgentConfig } from './FinancialAgentBackend';
 
 /**
  * Create a new Financial Agent backend instance
@@ -24,9 +21,7 @@ import {
  * });
  * ```
  */
-export function createFinancialAgent(
-	config: FinancialAgentConfig,
-): FinancialAgentBackend {
+export function createFinancialAgent(config: FinancialAgentConfig): FinancialAgentBackend {
 	if (!config.apiKey) {
 		throw new Error('API key is required for Financial Agent');
 	}
@@ -46,10 +41,7 @@ export function createFinancialAgent(
  * @returns Configured FinancialAgentBackend instance
  * @throws Error if VITE_GEMINI_API_KEY environment variable is not set
  */
-export function createFinancialAgentFromEnv(
-	userId: string,
-	model?: string,
-): FinancialAgentBackend {
+export function createFinancialAgentFromEnv(userId: string, model?: string): FinancialAgentBackend {
 	const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 	if (!apiKey) {

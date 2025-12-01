@@ -3,13 +3,7 @@
  * Gerencia estado global do calendário financeiro
  */
 
-import {
-	addDays,
-	addMonths,
-	endOfMonth,
-	startOfMonth,
-	subMonths,
-} from 'date-fns';
+import { addDays, addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useEffect, useState } from 'react';
 
@@ -20,10 +14,7 @@ import type {
 	CalendarView,
 } from '@/components/ui/event-calendar/types';
 import { DEFAULT_CALENDAR_CATEGORIES } from '@/components/ui/event-calendar/types';
-import {
-	useFinancialEventMutations,
-	useFinancialEvents,
-} from '@/hooks/useFinancialEvents';
+import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import type { EventColor, FinancialEvent } from '@/types/financial-events';
 
 interface CalendarContextType {
@@ -51,9 +42,7 @@ interface CalendarContextType {
 	navigateDate: (direction: 'prev' | 'next') => void;
 }
 
-export const CalendarContext = createContext<CalendarContextType | undefined>(
-	undefined,
-);
+export const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
 // Re-export useCalendar for backward compatibility
 export { useCalendar } from './hooks/useCalendar';
@@ -78,9 +67,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 	const [localEvents, setLocalEvents] = useState<FinancialEvent[]>([]);
 	// Enhanced states for view and filtering
 	const [currentView, setCurrentView] = useState<CalendarView>('week');
-	const [categories] = useState<CalendarCategory[]>(
-		DEFAULT_CALENDAR_CATEGORIES,
-	);
+	const [categories] = useState<CalendarCategory[]>(DEFAULT_CALENDAR_CATEGORIES);
 	const [filters, setFilters] = useState<CalendarFilter>({});
 	const [settings, setSettings] = useState<CalendarSettings>({
 		defaultView: 'week',
@@ -271,20 +258,14 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 	);
 
 	// Settings update function
-	const updateSettings = useCallback(
-		(newSettings: Partial<CalendarSettings>) => {
-			setSettings((prev) => ({ ...prev, ...newSettings }));
-		},
-		[],
-	);
+	const updateSettings = useCallback((newSettings: Partial<CalendarSettings>) => {
+		setSettings((prev) => ({ ...prev, ...newSettings }));
+	}, []);
 
 	// Filter update function
-	const setFiltersCallback = useCallback(
-		(newFilters: Partial<CalendarFilter>) => {
-			setFilters((prev) => ({ ...prev, ...newFilters }));
-		},
-		[],
-	);
+	const setFiltersCallback = useCallback((newFilters: Partial<CalendarFilter>) => {
+		setFilters((prev) => ({ ...prev, ...newFilters }));
+	}, []);
 
 	const value: CalendarContextType = {
 		addEvent,
@@ -311,9 +292,5 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		visibleColors,
 	};
 
-	return (
-		<CalendarContext.Provider value={value}>
-			{children}
-		</CalendarContext.Provider>
-	);
+	return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>;
 }

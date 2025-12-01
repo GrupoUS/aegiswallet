@@ -47,12 +47,7 @@ interface SubmitDeps {
 	updateBalance: (input: { balance: number; id: string }) => void;
 }
 
-const debitTypes = new Set<TransactionType>([
-	'debit',
-	'pix',
-	'boleto',
-	'transfer',
-]);
+const debitTypes = new Set<TransactionType>(['debit', 'pix', 'boleto', 'transfer']);
 const typeOptions: { label: string; value: TransactionType }[] = [
 	{ label: 'Débito', value: 'debit' },
 	{ label: 'Crédito', value: 'credit' },
@@ -68,21 +63,15 @@ const initialState: FormState = {
 	type: 'debit',
 };
 
-const computeFinalAmount = (
-	transactionType: TransactionType,
-	numericAmount: number,
-): number => {
+const computeFinalAmount = (transactionType: TransactionType, numericAmount: number): number => {
 	if (debitTypes.has(transactionType) && numericAmount > 0) {
 		return -Math.abs(numericAmount);
 	}
 	return Math.abs(numericAmount);
 };
 
-const validateForm = (
-	state: FormState,
-	accounts: BankAccount[],
-): ValidationResult => {
-	if (!state.amount || !state.date || !state.accountId || !state.type) {
+const validateForm = (state: FormState, accounts: BankAccount[]): ValidationResult => {
+	if (!(state.amount && state.date && state.accountId && state.type)) {
 		return { error: 'Preencha os campos obrigatórios' };
 	}
 	const numericAmount = Number(state.amount);
@@ -93,9 +82,7 @@ const validateForm = (
 	if (Number.isNaN(transactionDate.getTime())) {
 		return { error: 'Data inválida' };
 	}
-	const account = accounts.find(
-		(accountItem) => accountItem.id === state.accountId,
-	);
+	const account = accounts.find((accountItem) => accountItem.id === state.accountId);
 	if (!account) {
 		return { error: 'Conta bancária inválida' };
 	}
@@ -257,12 +244,7 @@ const FormFields = ({
 			value={formState.amount}
 		/>
 		<TypeSelect onChange={onTypeChange} selectedType={formState.type} />
-		<TextField
-			label="Data"
-			onChange={onDateChange}
-			type="date"
-			value={formState.date}
-		/>
+		<TextField label="Data" onChange={onDateChange} type="date" value={formState.date} />
 		<AccountSelect
 			accountId={formState.accountId}
 			accounts={accountList}
@@ -341,11 +323,7 @@ const createSubmitHandler =
 			toast.error(validation.error);
 			return;
 		}
-		const {
-			account,
-			numericAmount,
-			transactionDate: _transactionDate,
-		} = validation;
+		const { account, numericAmount, transactionDate: _transactionDate } = validation;
 		setIsLoading(true);
 		try {
 			const finalAmount = computeFinalAmount(formState.type, numericAmount);
@@ -375,20 +353,14 @@ const createSubmitHandler =
 		}
 	};
 
-const TransactionForm = ({
-	onCancel,
-	onSuccess,
-}: TransactionFormProps): ReactElement => {
+const TransactionForm = ({ onCancel, onSuccess }: TransactionFormProps): ReactElement => {
 	const { mutateAsync: createTransaction } = useCreateTransaction();
 	const { accounts, updateBalance } = useBankAccounts();
 	const [formState, setFormState] = useState<FormState>(initialState);
 	const [isLoading, setIsLoading] = useState(false);
 	const accountList = accounts ?? [];
 
-	const updateField = <Key extends keyof FormState>(
-		key: Key,
-		value: FormState[Key],
-	): void => {
+	const updateField = <Key extends keyof FormState>(key: Key, value: FormState[Key]): void => {
 		setFormState((previous) => ({ ...previous, [key]: value }));
 	};
 
@@ -402,9 +374,7 @@ const TransactionForm = ({
 		updateBalance,
 	});
 
-	const guardedSubmit = async (
-		event: FormEvent<HTMLFormElement>,
-	): Promise<void> => {
+	const guardedSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
 		if (isLoading) {
 			return;
 		}

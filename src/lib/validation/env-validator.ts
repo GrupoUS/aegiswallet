@@ -63,14 +63,11 @@ export const validateEnv = (): EnvValidationResult => {
 	// Check Clerk Publishable Key (optional - Clerk is currently stubbed)
 	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY');
 	diagnostics.hasClerkPublishableKey = !!clerkPublishableKey;
-	diagnostics.clerkPublishableKeyValid =
-		isValidClerkPublishableKey(clerkPublishableKey);
+	diagnostics.clerkPublishableKeyValid = isValidClerkPublishableKey(clerkPublishableKey);
 
 	if (!clerkPublishableKey) {
 		// Only warn since Clerk is stubbed
-		warnings.push(
-			'VITE_CLERK_PUBLISHABLE_KEY não está definida (Clerk desabilitado)',
-		);
+		warnings.push('VITE_CLERK_PUBLISHABLE_KEY não está definida (Clerk desabilitado)');
 	} else if (!isValidClerkPublishableKey(clerkPublishableKey)) {
 		warnings.push('VITE_CLERK_PUBLISHABLE_KEY formato inválido');
 	}
@@ -93,9 +90,7 @@ export const validateEnv = (): EnvValidationResult => {
 	const googleClientId = getEnvVar('VITE_GOOGLE_CLIENT_ID');
 	diagnostics.hasGoogleClientId = !!googleClientId;
 	if (!googleClientId) {
-		warnings.push(
-			'VITE_GOOGLE_CLIENT_ID não definida (Google OAuth desabilitado)',
-		);
+		warnings.push('VITE_GOOGLE_CLIENT_ID não definida (Google OAuth desabilitado)');
 	}
 
 	const isValid = errors.length === 0;

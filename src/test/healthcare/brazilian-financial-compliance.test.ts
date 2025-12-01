@@ -68,11 +68,11 @@ const BrazilianFinancialCompliance = () => {
 	const validatePIXSecurity = () => {
 		const pixSecurityChecks = {
 			recipientValidation: transactionData.recipientDocument.length > 0,
-			amountValidation: parseFloat(transactionData.amount) > 0,
-			descriptionRequired: parseFloat(transactionData.amount) > 5000,
+			amountValidation: Number.parseFloat(transactionData.amount) > 0,
+			descriptionRequired: Number.parseFloat(transactionData.amount) > 5000,
 			businessHours: true, // Simplified for testing
-			dailyLimit: parseFloat(transactionData.amount) <= 10000,
-			monthlyLimit: parseFloat(transactionData.amount) <= 50000,
+			dailyLimit: Number.parseFloat(transactionData.amount) <= 10000,
+			monthlyLimit: Number.parseFloat(transactionData.amount) <= 50000,
 		};
 
 		const allChecksPass = Object.values(pixSecurityChecks).every(Boolean);
@@ -84,14 +84,11 @@ const BrazilianFinancialCompliance = () => {
 		const bacenRequirements = {
 			bankValidation: transactionData.recipientBank.length > 0,
 			customerIdentification: transactionData.recipientName.length > 0,
-			documentValidation: /^\d{11}|\d{14}$/.test(
-				transactionData.recipientDocument,
-			),
+			documentValidation: /^\d{11}|\d{14}$/.test(transactionData.recipientDocument),
 			encryptionEnabled: true,
 			fraudDetection: !transactionData.suspicious,
 			transactionJustification:
-				transactionData.description.length > 0 ||
-				parseFloat(transactionData.amount) <= 1000, // Assume encryption is always enabled
+				transactionData.description.length > 0 || Number.parseFloat(transactionData.amount) <= 1000, // Assume encryption is always enabled
 		};
 
 		const allRequirementsMet = Object.values(bacenRequirements).every(Boolean);
@@ -100,7 +97,7 @@ const BrazilianFinancialCompliance = () => {
 
 	// AML Compliance Validation
 	const validateAMLCompliance = () => {
-		const amount = parseFloat(transactionData.amount);
+		const amount = Number.parseFloat(transactionData.amount);
 		const amlChecks = {
 			customerDueDiligence: amount <= 5000,
 			enhancedDueDiligence: amount > 50000,
@@ -123,9 +120,8 @@ const BrazilianFinancialCompliance = () => {
 		const coafRequirements = {
 			suspiciousActivityDetection: true,
 			automaticReporting:
-				transactionData.suspicious ||
-				parseFloat(transactionData.amount) > 50000,
-			reportingThreshold: parseFloat(transactionData.amount) >= 50000,
+				transactionData.suspicious || Number.parseFloat(transactionData.amount) > 50000,
+			reportingThreshold: Number.parseFloat(transactionData.amount) >= 50000,
 			timingRequirements: true, // Assume timely reporting
 			dataAccuracy: true, // Assume accurate data
 			retentionPeriod: true, // Assume 5-year retention
@@ -146,9 +142,7 @@ const BrazilianFinancialCompliance = () => {
 			auditLocalization: true,
 		};
 
-		const localizationCompliant = Object.values(localizationRequirements).every(
-			Boolean,
-		);
+		const localizationCompliant = Object.values(localizationRequirements).every(Boolean);
 		return localizationCompliant ? 'compliant' : 'non-compliant';
 	};
 
@@ -164,15 +158,13 @@ const BrazilianFinancialCompliance = () => {
 			velocityChecks: true,
 		};
 
-		const monitoringCompliant = Object.values(monitoringRequirements).every(
-			Boolean,
-		);
+		const monitoringCompliant = Object.values(monitoringRequirements).every(Boolean);
 		return monitoringCompliant ? 'compliant' : 'non-compliant';
 	};
 
 	// Risk Assessment
 	const performRiskAssessment = () => {
-		const amount = parseFloat(transactionData.amount);
+		const amount = Number.parseFloat(transactionData.amount);
 		const riskFactors = [];
 		let riskLevel = 'low';
 
@@ -208,11 +200,7 @@ const BrazilianFinancialCompliance = () => {
 
 		const recommendations =
 			riskLevel === 'high'
-				? [
-						'Enhanced verification required',
-						'COAF reporting recommended',
-						'Manual review needed',
-					]
+				? ['Enhanced verification required', 'COAF reporting recommended', 'Manual review needed']
 				: riskLevel === 'medium'
 					? ['Standard monitoring', 'Description recommended']
 					: ['Standard processing'];
@@ -258,9 +246,7 @@ const BrazilianFinancialCompliance = () => {
 		const currentStatus = await runComplianceValidation();
 
 		// Check if all validations pass using the returned status (not stale state)
-		const allCompliant = Object.values(currentStatus).every(
-			(status) => status === 'compliant',
-		);
+		const allCompliant = Object.values(currentStatus).every((status) => status === 'compliant');
 
 		if (!allCompliant) {
 			alert('Transação não atende aos requisitos de conformidade regulatória.');
@@ -270,362 +256,258 @@ const BrazilianFinancialCompliance = () => {
 		// Process transaction if compliant
 	};
 
-	return React.createElement(
-		'div',
-		{ 'data-testid': 'brazilian-financial-compliance' },
-		[
-			React.createElement(
-				'h1',
-				{ key: 'title' },
-				'Conformidade Financeira Brasileira - AegisWallet',
-			),
+	return React.createElement('div', { 'data-testid': 'brazilian-financial-compliance' }, [
+		React.createElement('h1', { key: 'title' }, 'Conformidade Financeira Brasileira - AegisWallet'),
 
-			React.createElement(
-				'form',
-				{ key: 'transaction-form', onSubmit: handleSubmit },
-				[
+		React.createElement('form', { key: 'transaction-form', onSubmit: handleSubmit }, [
+			React.createElement('h2', { key: 'form-title' }, 'Dados da Transação'),
+
+			React.createElement('div', { key: 'transaction-details' }, [
+				React.createElement('div', { key: 'amount-section' }, [
+					React.createElement('label', { key: 'amount-label' }, 'Valor da Transação (R$):'),
+					React.createElement('input', {
+						'data-testid': 'transaction-amount',
+						key: 'amount-input',
+						onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+							setTransactionData({
+								...transactionData,
+								amount: e.target.value,
+							}),
+						placeholder: '0,00',
+						required: true,
+						step: '0.01',
+						type: 'number',
+						value: transactionData.amount,
+					}),
+				]),
+
+				React.createElement('div', { key: 'recipient-section' }, [
+					React.createElement('label', { key: 'recipient-name-label' }, 'Nome do Beneficiário:'),
+					React.createElement('input', {
+						'data-testid': 'recipient-name',
+						key: 'recipient-name-input',
+						onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+							setTransactionData({
+								...transactionData,
+								recipientName: e.target.value,
+							}),
+						placeholder: 'Nome completo',
+						required: true,
+						type: 'text',
+						value: transactionData.recipientName,
+					}),
+
 					React.createElement(
-						'h2',
-						{ key: 'form-title' },
-						'Dados da Transação',
+						'label',
+						{ key: 'recipient-document-label' },
+						'CPF/CNPJ do Beneficiário:',
 					),
-
-					React.createElement('div', { key: 'transaction-details' }, [
-						React.createElement('div', { key: 'amount-section' }, [
-							React.createElement(
-								'label',
-								{ key: 'amount-label' },
-								'Valor da Transação (R$):',
-							),
-							React.createElement('input', {
-								'data-testid': 'transaction-amount',
-								key: 'amount-input',
-								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-									setTransactionData({
-										...transactionData,
-										amount: e.target.value,
-									}),
-								placeholder: '0,00',
-								required: true,
-								step: '0.01',
-								type: 'number',
-								value: transactionData.amount,
+					React.createElement('input', {
+						'data-testid': 'recipient-document',
+						key: 'recipient-document-input',
+						onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+							setTransactionData({
+								...transactionData,
+								recipientDocument: e.target.value,
 							}),
-						]),
+						placeholder: '000.000.000-00 ou 00.000.000/0000-00',
+						required: true,
+						type: 'text',
+						value: transactionData.recipientDocument,
+					}),
 
-						React.createElement('div', { key: 'recipient-section' }, [
-							React.createElement(
-								'label',
-								{ key: 'recipient-name-label' },
-								'Nome do Beneficiário:',
-							),
-							React.createElement('input', {
-								'data-testid': 'recipient-name',
-								key: 'recipient-name-input',
-								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-									setTransactionData({
-										...transactionData,
-										recipientName: e.target.value,
-									}),
-								placeholder: 'Nome completo',
-								required: true,
-								type: 'text',
-								value: transactionData.recipientName,
-							}),
-
-							React.createElement(
-								'label',
-								{ key: 'recipient-document-label' },
-								'CPF/CNPJ do Beneficiário:',
-							),
-							React.createElement('input', {
-								'data-testid': 'recipient-document',
-								key: 'recipient-document-input',
-								onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-									setTransactionData({
-										...transactionData,
-										recipientDocument: e.target.value,
-									}),
-								placeholder: '000.000.000-00 ou 00.000.000/0000-00',
-								required: true,
-								type: 'text',
-								value: transactionData.recipientDocument,
-							}),
-
-							React.createElement(
-								'label',
-								{ key: 'recipient-bank-label' },
-								'Banco do Beneficiário:',
-							),
-							React.createElement(
-								'select',
-								{
-									'data-testid': 'recipient-bank',
-									key: 'recipient-bank-select',
-									onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-										setTransactionData({
-											...transactionData,
-											recipientBank: e.target.value,
-										}),
-									required: true,
-									value: transactionData.recipientBank,
-								},
-								[
-									React.createElement(
-										'option',
-										{ key: 'default', value: '' },
-										'Selecione o banco',
-									),
-									React.createElement(
-										'option',
-										{ key: '001', value: '001' },
-										'Banco do Brasil',
-									),
-									React.createElement(
-										'option',
-										{ key: '033', value: '033' },
-										'Banco Santander',
-									),
-									React.createElement(
-										'option',
-										{ key: '104', value: '104' },
-										'Caixa Econômica Federal',
-									),
-									React.createElement(
-										'option',
-										{ key: '237', value: '237' },
-										'Banco Bradesco',
-									),
-									React.createElement(
-										'option',
-										{ key: '341', value: '341' },
-										'Itaú Unibanco',
-									),
-								],
-							),
-						]),
-
-						React.createElement('div', { key: 'transaction-type-section' }, [
-							React.createElement(
-								'label',
-								{ key: 'transaction-type-label' },
-								'Tipo de Transação:',
-							),
-							React.createElement(
-								'select',
-								{
-									'data-testid': 'transaction-type',
-									key: 'transaction-type-select',
-									onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-										setTransactionData({
-											...transactionData,
-											transactionType: e.target.value,
-										}),
-									value: transactionData.transactionType,
-								},
-								[
-									React.createElement(
-										'option',
-										{ key: 'pix', value: 'pix' },
-										'PIX',
-									),
-									React.createElement(
-										'option',
-										{ key: 'ted', value: 'ted' },
-										'TED',
-									),
-									React.createElement(
-										'option',
-										{ key: 'doc', value: 'doc' },
-										'DOC',
-									),
-									React.createElement(
-										'option',
-										{ key: 'boleto', value: 'boleto' },
-										'Boleto',
-									),
-								],
-							),
-						]),
-
-						React.createElement('div', { key: 'description-section' }, [
-							React.createElement(
-								'label',
-								{ key: 'description-label' },
-								'Descrição (Obrigatório para valores acima de R$ 1.000,00):',
-							),
-							React.createElement('textarea', {
-								'data-testid': 'transaction-description',
-								key: 'description-input',
-								onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-									setTransactionData({
-										...transactionData,
-										description: e.target.value,
-									}),
-								placeholder: 'Descreva o propósito da transação',
-								rows: 3,
-								value: transactionData.description,
-							}),
-						]),
-
-						React.createElement('div', { key: 'suspicious-section' }, [
-							React.createElement('label', { key: 'suspicious-label' }, [
-								React.createElement('input', {
-									checked: transactionData.suspicious,
-									'data-testid': 'suspicious-activity',
-									key: 'suspicious-checkbox',
-									onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-										setTransactionData({
-											...transactionData,
-											suspicious: e.target.checked,
-										}),
-									type: 'checkbox',
+					React.createElement('label', { key: 'recipient-bank-label' }, 'Banco do Beneficiário:'),
+					React.createElement(
+						'select',
+						{
+							'data-testid': 'recipient-bank',
+							key: 'recipient-bank-select',
+							onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+								setTransactionData({
+									...transactionData,
+									recipientBank: e.target.value,
 								}),
-								' Atividade suspeita detectada',
-							]),
-						]),
-					]),
-
-					// Compliance Status
-					React.createElement(
-						'div',
-						{ 'data-testid': 'compliance-status', key: 'compliance-status' },
+							required: true,
+							value: transactionData.recipientBank,
+						},
 						[
+							React.createElement('option', { key: 'default', value: '' }, 'Selecione o banco'),
+							React.createElement('option', { key: '001', value: '001' }, 'Banco do Brasil'),
+							React.createElement('option', { key: '033', value: '033' }, 'Banco Santander'),
 							React.createElement(
-								'h3',
-								{ key: 'status-title' },
-								'Status de Conformidade Regulatória',
+								'option',
+								{ key: '104', value: '104' },
+								'Caixa Econômica Federal',
 							),
-							...Object.entries(complianceStatus).map(([regulation, status]) =>
+							React.createElement('option', { key: '237', value: '237' }, 'Banco Bradesco'),
+							React.createElement('option', { key: '341', value: '341' }, 'Itaú Unibanco'),
+						],
+					),
+				]),
+
+				React.createElement('div', { key: 'transaction-type-section' }, [
+					React.createElement('label', { key: 'transaction-type-label' }, 'Tipo de Transação:'),
+					React.createElement(
+						'select',
+						{
+							'data-testid': 'transaction-type',
+							key: 'transaction-type-select',
+							onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+								setTransactionData({
+									...transactionData,
+									transactionType: e.target.value,
+								}),
+							value: transactionData.transactionType,
+						},
+						[
+							React.createElement('option', { key: 'pix', value: 'pix' }, 'PIX'),
+							React.createElement('option', { key: 'ted', value: 'ted' }, 'TED'),
+							React.createElement('option', { key: 'doc', value: 'doc' }, 'DOC'),
+							React.createElement('option', { key: 'boleto', value: 'boleto' }, 'Boleto'),
+						],
+					),
+				]),
+
+				React.createElement('div', { key: 'description-section' }, [
+					React.createElement(
+						'label',
+						{ key: 'description-label' },
+						'Descrição (Obrigatório para valores acima de R$ 1.000,00):',
+					),
+					React.createElement('textarea', {
+						'data-testid': 'transaction-description',
+						key: 'description-input',
+						onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+							setTransactionData({
+								...transactionData,
+								description: e.target.value,
+							}),
+						placeholder: 'Descreva o propósito da transação',
+						rows: 3,
+						value: transactionData.description,
+					}),
+				]),
+
+				React.createElement('div', { key: 'suspicious-section' }, [
+					React.createElement('label', { key: 'suspicious-label' }, [
+						React.createElement('input', {
+							checked: transactionData.suspicious,
+							'data-testid': 'suspicious-activity',
+							key: 'suspicious-checkbox',
+							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+								setTransactionData({
+									...transactionData,
+									suspicious: e.target.checked,
+								}),
+							type: 'checkbox',
+						}),
+						' Atividade suspeita detectada',
+					]),
+				]),
+			]),
+
+			// Compliance Status
+			React.createElement('div', { 'data-testid': 'compliance-status', key: 'compliance-status' }, [
+				React.createElement('h3', { key: 'status-title' }, 'Status de Conformidade Regulatória'),
+				...Object.entries(complianceStatus).map(([regulation, status]) =>
+					React.createElement('div', { 'data-testid': `status-${regulation}`, key: regulation }, [
+						React.createElement('span', { key: 'regulation' }, `${regulation}: `),
+						React.createElement(
+							'span',
+							{
+								key: 'status',
+								style: {
+									color:
+										status === 'compliant'
+											? 'green'
+											: status === 'non-compliant'
+												? 'red'
+												: 'orange',
+								},
+							},
+							status,
+						),
+					]),
+				),
+			]),
+
+			// Risk Assessment
+			React.createElement('div', { 'data-testid': 'risk-assessment', key: 'risk-assessment' }, [
+				React.createElement('h3', { key: 'risk-title' }, 'Avaliação de Risco'),
+				React.createElement('div', { 'data-testid': 'risk-level-display', key: 'risk-level' }, [
+					'Nível de Risco: ',
+					React.createElement(
+						'span',
+						{
+							key: 'risk-level-value',
+							style: {
+								color:
+									riskAssessment.riskLevel === 'high'
+										? 'red'
+										: riskAssessment.riskLevel === 'medium'
+											? 'orange'
+											: 'green',
+							},
+						},
+						riskAssessment.riskLevel.toUpperCase(),
+					),
+				]),
+
+				riskAssessment.riskFactors.length > 0 &&
+					React.createElement('div', { key: 'risk-factors' }, [
+						React.createElement('h4', { key: 'factors-title' }, 'Fatores de Risco:'),
+						React.createElement(
+							'ul',
+							{ key: 'factors-list' },
+							riskAssessment.riskFactors.map((factor, index) =>
 								React.createElement(
-									'div',
-									{ 'data-testid': `status-${regulation}`, key: regulation },
-									[
-										React.createElement(
-											'span',
-											{ key: 'regulation' },
-											`${regulation}: `,
-										),
-										React.createElement(
-											'span',
-											{
-												key: 'status',
-												style: {
-													color:
-														status === 'compliant'
-															? 'green'
-															: status === 'non-compliant'
-																? 'red'
-																: 'orange',
-												},
-											},
-											status,
-										),
-									],
+									'li',
+									{ 'data-testid': `risk-factor-${index}`, key: index },
+									factor,
 								),
 							),
-						],
-					),
-
-					// Risk Assessment
-					React.createElement(
-						'div',
-						{ 'data-testid': 'risk-assessment', key: 'risk-assessment' },
-						[
-							React.createElement(
-								'h3',
-								{ key: 'risk-title' },
-								'Avaliação de Risco',
-							),
-							React.createElement(
-								'div',
-								{ 'data-testid': 'risk-level-display', key: 'risk-level' },
-								[
-									'Nível de Risco: ',
-									React.createElement(
-										'span',
-										{
-											key: 'risk-level-value',
-											style: {
-												color:
-													riskAssessment.riskLevel === 'high'
-														? 'red'
-														: riskAssessment.riskLevel === 'medium'
-															? 'orange'
-															: 'green',
-											},
-										},
-										riskAssessment.riskLevel.toUpperCase(),
-									),
-								],
-							),
-
-							riskAssessment.riskFactors.length > 0 &&
-								React.createElement('div', { key: 'risk-factors' }, [
-									React.createElement(
-										'h4',
-										{ key: 'factors-title' },
-										'Fatores de Risco:',
-									),
-									React.createElement(
-										'ul',
-										{ key: 'factors-list' },
-										riskAssessment.riskFactors.map((factor, index) =>
-											React.createElement(
-												'li',
-												{ 'data-testid': `risk-factor-${index}`, key: index },
-												factor,
-											),
-										),
-									),
-								]),
-
-							React.createElement(
-								'h4',
-								{ key: 'recommendations-title' },
-								'Recomendações:',
-							),
-							React.createElement(
-								'ul',
-								{ key: 'recommendations-list' },
-								riskAssessment.recommendations.map((rec, index) =>
-									React.createElement(
-										'li',
-										{ 'data-testid': `recommendation-${index}`, key: index },
-										rec,
-									),
-								),
-							),
-						],
-					),
-
-					// Actions
-					React.createElement('div', { key: 'actions' }, [
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'validate-compliance',
-								key: 'validate',
-								onClick: runComplianceValidation,
-								type: 'button',
-							},
-							'Validar Conformidade',
-						),
-
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'process-transaction',
-								key: 'submit',
-								type: 'submit',
-							},
-							'Processar Transação',
 						),
 					]),
-				],
-			),
-		],
-	);
+
+				React.createElement('h4', { key: 'recommendations-title' }, 'Recomendações:'),
+				React.createElement(
+					'ul',
+					{ key: 'recommendations-list' },
+					riskAssessment.recommendations.map((rec, index) =>
+						React.createElement(
+							'li',
+							{ 'data-testid': `recommendation-${index}`, key: index },
+							rec,
+						),
+					),
+				),
+			]),
+
+			// Actions
+			React.createElement('div', { key: 'actions' }, [
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'validate-compliance',
+						key: 'validate',
+						onClick: runComplianceValidation,
+						type: 'button',
+					},
+					'Validar Conformidade',
+				),
+
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'process-transaction',
+						key: 'submit',
+						type: 'submit',
+					},
+					'Processar Transação',
+				),
+			]),
+		]),
+	]);
 };
 
 describe('Brazilian Financial Compliance Testing', () => {
@@ -639,20 +521,14 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 	describe('PIX Payment System Security', () => {
 		// TODO: Refactor after tRPC to Hono migration - component async logic needs update
-		it.skip('should validate PIX transaction security requirements', async () => {
+		it('should validate PIX transaction security requirements', async () => {
 			render(React.createElement(BrazilianFinancialCompliance));
 
 			// Fill transaction data
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -668,14 +544,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// High-value transaction
 			await userEvent.type(screen.getByTestId('transaction-amount'), '15000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -685,9 +555,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 			});
 
 			await waitFor(() => {
-				expect(screen.getByTestId('risk-factor-0')).toHaveTextContent(
-					'High-value transaction',
-				);
+				expect(screen.getByTestId('risk-factor-0')).toHaveTextContent('High-value transaction');
 			});
 		});
 
@@ -697,14 +565,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// Transaction above threshold without description
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1500');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -715,10 +577,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 			});
 
 			// Add description and re-validate
-			await userEvent.type(
-				screen.getByTestId('transaction-description'),
-				'Pagamento de serviços',
-			);
+			await userEvent.type(screen.getByTestId('transaction-description'), 'Pagamento de serviços');
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			// Risk should be reduced
@@ -738,22 +597,14 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// Test daily limit (R$ 10.000)
 			await userEvent.type(screen.getByTestId('transaction-amount'), '11000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
 				const pixSecurityStatus = screen.getByTestId('status-pixSecurity');
-				expect(pixSecurityStatus).toHaveTextContent(
-					'pixSecurity: non-compliant',
-				);
+				expect(pixSecurityStatus).toHaveTextContent('pixSecurity: non-compliant');
 			});
 		});
 	});
@@ -764,14 +615,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 			// Missing recipient name
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -796,28 +641,18 @@ describe('Brazilian Financial Compliance Testing', () => {
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
 			await userEvent.type(screen.getByTestId('recipient-document'), '123'); // Invalid format
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				expect(screen.getByTestId('risk-factor-0')).toHaveTextContent(
-					'Invalid recipient document',
-				);
-				expect(screen.getByTestId('risk-level-display')).toHaveTextContent(
-					'HIGH',
-				);
+				expect(screen.getByTestId('risk-factor-0')).toHaveTextContent('Invalid recipient document');
+				expect(screen.getByTestId('risk-level-display')).toHaveTextContent('HIGH');
 			});
 
 			// Correct document format
 			await userEvent.clear(screen.getByTestId('recipient-document'));
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
@@ -831,10 +666,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
 			// Don't select bank
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -845,10 +677,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 			});
 
 			// Select bank
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
@@ -865,14 +694,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// Normal transaction
 			await userEvent.type(screen.getByTestId('transaction-amount'), '5000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -897,14 +720,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('suspicious-activity'));
 
@@ -928,14 +745,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// Very high transaction (requires enhanced due diligence)
 			await userEvent.type(screen.getByTestId('transaction-amount'), '60000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -957,14 +768,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			// Transaction above COAF reporting threshold (R$ 50.000)
 			await userEvent.type(screen.getByTestId('transaction-amount'), '55000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
@@ -988,14 +793,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 			await userEvent.click(screen.getByTestId('suspicious-activity'));
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -1015,29 +814,19 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 	describe('Data Localization Requirements', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate Brazilian data storage compliance', async () => {
+		it('should validate Brazilian data storage compliance', async () => {
 			render(React.createElement(BrazilianFinancialCompliance));
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const localizationStatus = screen.getByTestId(
-					'status-dataLocalization',
-				);
-				expect(localizationStatus).toHaveTextContent(
-					'dataLocalization: compliant',
-				);
+				const localizationStatus = screen.getByTestId('status-dataLocalization');
+				expect(localizationStatus).toHaveTextContent('dataLocalization: compliant');
 			});
 		});
 
@@ -1061,29 +850,19 @@ describe('Brazilian Financial Compliance Testing', () => {
 
 	describe('Transaction Monitoring', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should implement real-time transaction monitoring', async () => {
+		it('should implement real-time transaction monitoring', async () => {
 			render(React.createElement(BrazilianFinancialCompliance));
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '1000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 
 			await waitFor(() => {
-				const monitoringStatus = screen.getByTestId(
-					'status-transactionMonitoring',
-				);
-				expect(monitoringStatus).toHaveTextContent(
-					'transactionMonitoring: compliant',
-				);
+				const monitoringStatus = screen.getByTestId('status-transactionMonitoring');
+				expect(monitoringStatus).toHaveTextContent('transactionMonitoring: compliant');
 			});
 		});
 
@@ -1094,10 +873,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 			await userEvent.type(screen.getByTestId('transaction-amount'), '45000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'João Silva');
 			await userEvent.type(screen.getByTestId('recipient-document'), '123');
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'001',
-			);
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '001');
 			await userEvent.click(screen.getByTestId('suspicious-activity'));
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
@@ -1126,14 +902,8 @@ describe('Brazilian Financial Compliance Testing', () => {
 			await userEvent.type(screen.getByTestId('transaction-amount'), '5000');
 			await userEvent.type(screen.getByTestId('recipient-name'), 'Maria Silva');
 			// Use digits only for CPF - the validation regex expects /^\d{11}|\d{14}$/
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'341',
-			);
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '341');
 			await userEvent.type(
 				screen.getByTestId('transaction-description'),
 				'Pagamento de consultoria',
@@ -1182,7 +952,7 @@ describe('Brazilian Financial Compliance Testing', () => {
 		});
 
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should prevent non-compliant transactions from processing', async () => {
+		it('should prevent non-compliant transactions from processing', async () => {
 			const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
 			render(React.createElement(BrazilianFinancialCompliance));
@@ -1209,18 +979,9 @@ describe('Brazilian Financial Compliance Testing', () => {
 			render(React.createElement(BrazilianFinancialCompliance));
 
 			await userEvent.type(screen.getByTestId('transaction-amount'), '25000');
-			await userEvent.type(
-				screen.getByTestId('recipient-name'),
-				'Pedro Santos',
-			);
-			await userEvent.type(
-				screen.getByTestId('recipient-document'),
-				'12345678900',
-			);
-			await userEvent.selectOptions(
-				screen.getByTestId('recipient-bank'),
-				'237',
-			);
+			await userEvent.type(screen.getByTestId('recipient-name'), 'Pedro Santos');
+			await userEvent.type(screen.getByTestId('recipient-document'), '12345678900');
+			await userEvent.selectOptions(screen.getByTestId('recipient-bank'), '237');
 
 			await userEvent.click(screen.getByTestId('validate-compliance'));
 

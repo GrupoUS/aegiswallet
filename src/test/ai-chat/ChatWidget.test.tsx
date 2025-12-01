@@ -20,9 +20,7 @@ describe('ChatWidget', () => {
 	it('renders closed by default', () => {
 		render(<ChatWidget />);
 		expect(screen.queryByTestId('chat-container')).not.toBeInTheDocument();
-		expect(
-			screen.getByRole('button', { name: /abrir chat/i }),
-		).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /abrir chat/i })).toBeInTheDocument();
 	});
 
 	it('opens when toggle button is clicked', () => {
@@ -32,9 +30,7 @@ describe('ChatWidget', () => {
 		fireEvent.click(toggleButton);
 
 		expect(screen.getByTestId('chat-container')).toBeInTheDocument();
-		expect(
-			screen.getByRole('button', { name: /fechar chat/i }),
-		).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /fechar chat/i })).toBeInTheDocument();
 	});
 
 	it('closes when close button in container is clicked', () => {

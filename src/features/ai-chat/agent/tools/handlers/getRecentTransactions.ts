@@ -58,10 +58,7 @@ export async function getRecentTransactions(
 			categoryName: transactionCategories.name,
 		})
 		.from(transactions)
-		.leftJoin(
-			transactionCategories,
-			eq(transactions.categoryId, transactionCategories.id),
-		)
+		.leftJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
 		.where(and(...conditions))
 		.orderBy(desc(transactions.transactionDate))
 		.limit(limit);

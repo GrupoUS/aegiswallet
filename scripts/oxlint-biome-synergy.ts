@@ -68,32 +68,20 @@ const CONFIG = {
  */
 const colors = {
 	blue: (text: string) => `${CONFIG.colors.blue}${text}${CONFIG.colors.reset}`,
-	bright: (text: string) =>
-		`${CONFIG.colors.bright}${text}${CONFIG.colors.reset}`,
+	bright: (text: string) => `${CONFIG.colors.bright}${text}${CONFIG.colors.reset}`,
 	cyan: (text: string) => `${CONFIG.colors.cyan}${text}${CONFIG.colors.reset}`,
-	green: (text: string) =>
-		`${CONFIG.colors.green}${text}${CONFIG.colors.reset}`,
+	green: (text: string) => `${CONFIG.colors.green}${text}${CONFIG.colors.reset}`,
 	red: (text: string) => `${CONFIG.colors.red}${text}${CONFIG.colors.reset}`,
-	yellow: (text: string) =>
-		`${CONFIG.colors.yellow}${text}${CONFIG.colors.reset}`,
+	yellow: (text: string) => `${CONFIG.colors.yellow}${text}${CONFIG.colors.reset}`,
 };
 
 /**
  * Log utility with colors
  */
-function log(
-	_message: string,
-	type: 'info' | 'success' | 'warning' | 'error' = 'info',
-) {
+function log(_message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
 	const _timestamp = new Date().toISOString();
 	const _prefix =
-		type === 'success'
-			? '✅'
-			: type === 'warning'
-				? '⚠️'
-				: type === 'error'
-					? '❌'
-					: 'ℹ️';
+		type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️';
 
 	const _colorFn =
 		type === 'success'
@@ -121,10 +109,7 @@ function healthCheck(): HealthCheckResult {
 	Object.entries(results).forEach(([key, value]) => {
 		const status = value ? '✓' : '✗';
 		const message = key.replace(/([A-Z])/g, ' $1').toLowerCase();
-		log(
-			`${status.charAt(0)} ${message}: ${status}`,
-			value ? 'success' : 'error',
-		);
+		log(`${status.charAt(0)} ${message}: ${status}`, value ? 'success' : 'error');
 	});
 
 	const allValid = Object.values(results).every(Boolean);
@@ -171,9 +156,7 @@ function executeWithTiming(
 /**
  * Run OXLint with different configurations
  */
-function runOXLint(
-	config: 'main' | 'healthcare' | 'security' | 'performance' = 'main',
-): number {
+function runOXLint(config: 'main' | 'healthcare' | 'security' | 'performance' = 'main'): number {
 	const configMap = {
 		healthcare: '--config=.oxlintrc.healthcare.json',
 		main: '',
@@ -307,6 +290,7 @@ function validatePerformance(): boolean {
 /**
  * Main execution function
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Main function requires complex logic
 function main() {
 	const args = process.argv.slice(2);
 	const command = args[0] || 'all';
@@ -383,9 +367,7 @@ function main() {
 			log(`  Total Duration: ${totalDuration}ms`, 'info');
 			log(
 				`  Performance Improvement: ${metrics.improvement.toFixed(1)}x`,
-				metrics.improvement >= CONFIG.performanceThreshold
-					? 'success'
-					: 'warning',
+				metrics.improvement >= CONFIG.performanceThreshold ? 'success' : 'warning',
 			);
 			log(
 				`  Healthcare Compliance: ${healthcareValid ? '✓' : '✗'}`,
@@ -417,9 +399,4 @@ if (import.meta.main) {
 	main();
 }
 
-export {
-	main,
-	healthCheck,
-	performanceBenchmark,
-	validateHealthcareCompliance,
-};
+export { main, healthCheck, performanceBenchmark, validateHealthcareCompliance };

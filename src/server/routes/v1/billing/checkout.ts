@@ -4,10 +4,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { StripeSubscriptionService } from '@/services/stripe/subscription.service';
 
 const checkoutRouter = new Hono<AppEnv>();

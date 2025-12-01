@@ -62,18 +62,11 @@ const BillCard = memo<BillCardProps>(({ bill, onEdit, onDelete }) => {
 						</div>
 						<div className="flex-1">
 							<div className="flex items-center gap-2">
-								<h3
-									id={`bill-title-${bill.id}`}
-									className="font-semibold text-lg"
-								>
+								<h3 id={`bill-title-${bill.id}`} className="font-semibold text-lg">
 									{bill.title}
 								</h3>
 								{bill.isRecurring && (
-									<Badge
-										variant="outline"
-										className="text-xs"
-										aria-label="Conta recorrente"
-									>
+									<Badge variant="outline" className="text-xs" aria-label="Conta recorrente">
 										Recorrente
 									</Badge>
 								)}
@@ -81,9 +74,7 @@ const BillCard = memo<BillCardProps>(({ bill, onEdit, onDelete }) => {
 							<div className="mt-1 flex items-center gap-4 text-muted-foreground text-sm">
 								<div className="flex items-center gap-1">
 									<Calendar className="h-4 w-4" aria-hidden="true" />
-									<span>
-										Vencimento: {new Date(bill.end).toLocaleDateString('pt-BR')}
-									</span>
+									<span>Vencimento: {new Date(bill.end).toLocaleDateString('pt-BR')}</span>
 								</div>
 								{bill.status === 'pending' && (
 									<div className="flex items-center gap-1">
@@ -106,10 +97,7 @@ const BillCard = memo<BillCardProps>(({ bill, onEdit, onDelete }) => {
 					>
 						<div className="text-right">
 							<FinancialAmount amount={-Math.abs(bill.amount)} size="lg" />
-							<Badge
-								className={`${status.color} mt-2`}
-								aria-label={`Status: ${status.text}`}
-							>
+							<Badge className={`${status.color} mt-2`} aria-label={`Status: ${status.text}`}>
 								{status.text}
 							</Badge>
 						</div>
@@ -138,19 +126,12 @@ const BillCard = memo<BillCardProps>(({ bill, onEdit, onDelete }) => {
 							</Button>
 						)}
 						{bill.status === 'pending' && (
-							<Button
-								size="sm"
-								type="button"
-								aria-label={`Pagar conta: ${bill.title}`}
-							>
+							<Button size="sm" type="button" aria-label={`Pagar conta: ${bill.title}`}>
 								Pagar
 							</Button>
 						)}
 						{(bill.status === 'paid' || bill.status === 'completed') && (
-							<CheckCircle
-								className="h-6 w-6 text-success"
-								aria-label="Conta paga"
-							/>
+							<CheckCircle className="h-6 w-6 text-success" aria-label="Conta paga" />
 						)}
 					</div>
 				</div>
@@ -168,7 +149,7 @@ function BillsListComponent({ bills, onEdit, onDelete }: BillsListProps) {
 	}, []);
 
 	const handleConfirmDelete = useCallback(async () => {
-		if (!deleteId || !onDelete) {
+		if (!(deleteId && onDelete)) {
 			return;
 		}
 
@@ -198,12 +179,7 @@ function BillsListComponent({ bills, onEdit, onDelete }: BillsListProps) {
 		<section className="space-y-4" aria-label="Lista de contas a pagar">
 			<h2 className="sr-only">Contas Financeiras</h2>
 			{bills.map((bill) => (
-				<BillCard
-					key={bill.id}
-					bill={bill}
-					onEdit={onEdit}
-					onDelete={handleDeleteClick}
-				/>
+				<BillCard key={bill.id} bill={bill} onEdit={onEdit} onDelete={handleDeleteClick} />
 			))}
 
 			<ConfirmDialog

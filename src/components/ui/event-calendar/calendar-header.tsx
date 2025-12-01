@@ -1,12 +1,4 @@
-import {
-	addDays,
-	addMonths,
-	addWeeks,
-	format,
-	subDays,
-	subMonths,
-	subWeeks,
-} from 'date-fns';
+import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
 	Calendar,
@@ -27,11 +19,7 @@ import type { CalendarView } from './types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
 	Select,
 	SelectContent,
@@ -65,9 +53,7 @@ const mapPriority = (dbPriority: string | null): FinancialEventPriority => {
 };
 
 // Helper to map database installment info to domain type
-const mapBrazilianEventType = (
-	dbType: string | null,
-): BrazilianEventType | undefined => {
+const mapBrazilianEventType = (dbType: string | null): BrazilianEventType | undefined => {
 	if (!dbType) return undefined;
 
 	// Valid BrazilianEventType values from the interface
@@ -102,11 +88,8 @@ const mapBrazilianEventType = (
 };
 
 // Helper to map database installment info to domain type
-const mapInstallmentInfo = (
-	dbInstallmentInfo: unknown,
-): InstallmentInfo | undefined => {
-	if (!dbInstallmentInfo || typeof dbInstallmentInfo !== 'object')
-		return undefined;
+const mapInstallmentInfo = (dbInstallmentInfo: unknown): InstallmentInfo | undefined => {
+	if (!dbInstallmentInfo || typeof dbInstallmentInfo !== 'object') return undefined;
 	const info = dbInstallmentInfo as Record<string, unknown>;
 	return {
 		totalInstallments: (info.totalInstallments as number) || 0,
@@ -121,9 +104,13 @@ const mapInstallmentInfo = (
 const mapStatus = (
 	dbStatus: string | null,
 ): 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed' => {
-	const validStatuses: Array<
-		'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'
-	> = ['pending', 'paid', 'scheduled', 'cancelled', 'completed'];
+	const validStatuses: Array<'pending' | 'paid' | 'scheduled' | 'cancelled' | 'completed'> = [
+		'pending',
+		'paid',
+		'scheduled',
+		'cancelled',
+		'completed',
+	];
 	const status = dbStatus as (typeof validStatuses)[number] | null;
 	if (status && validStatuses.includes(status)) return status;
 	return 'pending';
@@ -184,9 +171,7 @@ const mapColor = (
 };
 
 // Helper to map database event to calendar event
-const mapDatabaseEventToCalendarEvent = (
-	event: DatabaseFinancialEvent,
-): CalendarFinancialEvent => {
+const mapDatabaseEventToCalendarEvent = (event: DatabaseFinancialEvent): CalendarFinancialEvent => {
 	const basicFields = {
 		id: event.id,
 		userId: event.userId,
@@ -318,9 +303,7 @@ export function CalendarHeader({
 	// Transform database results to CalendarFinancialEvent format
 	const transformedResults = useMemo(() => {
 		if (searchType === 'events') {
-			return (results as DatabaseFinancialEvent[]).map(
-				mapDatabaseEventToCalendarEvent,
-			);
+			return (results as DatabaseFinancialEvent[]).map(mapDatabaseEventToCalendarEvent);
 		}
 		// For transactions, return empty array for now since the callback expects CalendarFinancialEvent[]
 		return [];
@@ -400,28 +383,13 @@ export function CalendarHeader({
 						{format(currentDate, getDateFormat(view), { locale: ptBR })}
 					</h2>
 					<div className="flex items-center gap-1">
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={handlePrevious}
-							className="h-8 w-8"
-						>
+						<Button variant="outline" size="icon" onClick={handlePrevious} className="h-8 w-8">
 							<ChevronLeft className="h-4 w-4" />
 						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleToday}
-							className="h-8"
-						>
+						<Button variant="outline" size="sm" onClick={handleToday} className="h-8">
 							Hoje
 						</Button>
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={handleNext}
-							className="h-8 w-8"
-						>
+						<Button variant="outline" size="icon" onClick={handleNext} className="h-8 w-8">
 							<ChevronRight className="h-4 w-4" />
 						</Button>
 					</div>
@@ -525,10 +493,7 @@ export function CalendarHeader({
 							<Button variant="outline" size="sm" className="gap-2">
 								<Filter className="h-4 w-4" />
 								Filtros
-								{(filters.startDate ||
-									filters.endDate ||
-									filters.typeId ||
-									filters.categoryId) && (
+								{(filters.startDate || filters.endDate || filters.typeId || filters.categoryId) && (
 									<Badge variant="secondary" className="h-5 px-1 text-xs">
 										{Object.values(filters).filter(Boolean).length}
 									</Badge>
@@ -542,19 +507,14 @@ export function CalendarHeader({
 								{/* Date range filters */}
 								<div className="grid grid-cols-2 gap-2">
 									<div className="space-y-2">
-										<label
-											htmlFor={startDateId}
-											className="font-medium text-sm"
-										>
+										<label htmlFor={startDateId} className="font-medium text-sm">
 											Data Início
 										</label>
 										<Input
 											id={startDateId}
 											type="date"
 											value={filters.startDate || ''}
-											onChange={(e) =>
-												handleFilterChange('startDate', e.target.value)
-											}
+											onChange={(e) => handleFilterChange('startDate', e.target.value)}
 										/>
 									</div>
 									<div className="space-y-2">
@@ -565,9 +525,7 @@ export function CalendarHeader({
 											id={endDateId}
 											type="date"
 											value={filters.endDate || ''}
-											onChange={(e) =>
-												handleFilterChange('endDate', e.target.value)
-											}
+											onChange={(e) => handleFilterChange('endDate', e.target.value)}
 										/>
 									</div>
 								</div>
@@ -580,9 +538,7 @@ export function CalendarHeader({
 										</label>
 										<Select
 											value={filters.typeId || ''}
-											onValueChange={(value) =>
-												handleFilterChange('typeId', value)
-											}
+											onValueChange={(value) => handleFilterChange('typeId', value)}
 										>
 											<SelectTrigger>
 												<SelectValue placeholder="Todos os tipos" />
@@ -602,9 +558,7 @@ export function CalendarHeader({
 									</label>
 									<Select
 										value={filters.categoryId || ''}
-										onValueChange={(value) =>
-											handleFilterChange('categoryId', value)
-										}
+										onValueChange={(value) => handleFilterChange('categoryId', value)}
 									>
 										<SelectTrigger>
 											<SelectValue placeholder="Todas as categorias" />

@@ -7,8 +7,8 @@
 
 import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import React from 'react';
-import { vi } from 'vitest';
+import type React from 'react';
+import { expect, vi } from 'vitest';
 
 // ========================================
 // TEST QUERY CLIENT
@@ -37,23 +37,18 @@ export const createTestQueryClient = () =>
 export const TestQueryProvider: React.FC<{
 	children: React.ReactNode;
 }> = ({ children }) => (
-	<React.Fragment>
+	<>
 		{/* In a real app, this would be QueryClientProvider, but for testing we mock it */}
 		{children}
-	</React.Fragment>
+	</>
 );
 
 /**
  * Render hook with QueryClient wrapper
  */
-export const renderHookWithQuery = <T,>(
-	hook: () => T,
-	_options?: { client?: QueryClient },
-) => {
+export const renderHookWithQuery = <T,>(hook: () => T, _options?: { client?: QueryClient }) => {
 	return renderHook(hook, {
-		wrapper: ({ children }) => (
-			<TestQueryProvider>{children}</TestQueryProvider>
-		),
+		wrapper: ({ children }) => <TestQueryProvider>{children}</TestQueryProvider>,
 	});
 };
 
@@ -216,9 +211,7 @@ export const createMockApiClient = () => ({
 
 	// Boleto operations
 	generateBoleto: vi.fn().mockResolvedValue(mockBoletoResponse),
-	payBoleto: vi
-		.fn()
-		.mockResolvedValue({ status: 'success', data: { id: 'payment-123' } }),
+	payBoleto: vi.fn().mockResolvedValue({ status: 'success', data: { id: 'payment-123' } }),
 
 	// General API methods
 	get: vi.fn(),
@@ -274,10 +267,7 @@ export const waitForQuery = async (_queryKey?: string[]) => {
 /**
  * Test async operation with timeout
  */
-export const withTimeout = <T,>(
-	promise: Promise<T>,
-	timeoutMs = 5000,
-): Promise<T> => {
+export const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 5000): Promise<T> => {
 	return Promise.race([
 		promise,
 		new Promise<never>((_, reject) =>

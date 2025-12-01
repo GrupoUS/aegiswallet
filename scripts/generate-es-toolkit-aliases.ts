@@ -27,14 +27,6 @@ export default ${name};
 
 	fs.writeFileSync(path.join(outputDir, `${name}.ts`), content);
 
-	aliases[`es-toolkit/compat/${name}`] = path.resolve(
-		process.cwd(),
-		outputDir,
-		`${name}.ts`,
-	);
-	aliases[`es-toolkit/compat/${name}.js`] = path.resolve(
-		process.cwd(),
-		outputDir,
-		`${name}.ts`,
-	);
+	aliases[`es-toolkit/compat/${name}`] = path.resolve(process.cwd(), outputDir, `${name}.ts`);
+	aliases[`es-toolkit/compat/${name}.js`] = path.resolve(process.cwd(), outputDir, `${name}.ts`);
 }

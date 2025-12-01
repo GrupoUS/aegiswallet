@@ -27,10 +27,7 @@ interface ChatOpenInChatLinkProps {
 	showProviderMenu?: boolean;
 }
 
-const PROVIDER_CONFIG: Record<
-	ChatProvider,
-	{ name: string; url: string; icon?: string }
-> = {
+const PROVIDER_CONFIG: Record<ChatProvider, { name: string; url: string; icon?: string }> = {
 	chatgpt: {
 		name: 'ChatGPT',
 		url: 'https://chat.openai.com/',
@@ -109,11 +106,7 @@ export function ChatOpenInChatLink({
 			<OpenInChat provider={provider} className={className}>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-7 px-2 text-xs gap-1.5"
-						>
+						<Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1.5">
 							<Share2 className="w-3 h-3" />
 							<span>Abrir em</span>
 						</Button>

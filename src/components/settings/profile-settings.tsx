@@ -8,17 +8,7 @@
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-	Calendar,
-	Camera,
-	Globe,
-	Loader2,
-	Mail,
-	Phone,
-	Save,
-	Shield,
-	User,
-} from 'lucide-react';
+import { Calendar, Camera, Globe, Loader2, Mail, Phone, Save, Shield, User } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -48,18 +38,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import { useProfile } from '@/hooks/useProfile';
-import {
-	formatCPF,
-	formatPhone,
-	isValidCPF,
-} from '@/lib/formatters/brazilianFormatters';
+import { formatCPF, formatPhone, isValidCPF } from '@/lib/formatters/brazilianFormatters';
 
 // =============================================================================
 // Validation Schemas
 // =============================================================================
 
 const profileSchema = z.object({
-	full_name: z
+	fullName: z
 		.string()
 		.min(2, 'Nome deve ter pelo menos 2 caracteres')
 		.max(100, 'Nome muito longo'),
@@ -84,7 +70,7 @@ const profileSchema = z.object({
 			},
 			{ message: 'CPF inválido' },
 		),
-	birth_date: z.string().optional(),
+	birthDate: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -169,20 +155,20 @@ export function ProfileSettings() {
 	const form = useForm<ProfileFormValues>({
 		resolver: zodResolver(profileSchema),
 		defaultValues: {
-			full_name: '',
+			fullName: '',
 			phone: '',
 			cpf: '',
-			birth_date: '',
+			birthDate: '',
 		},
 	});
 
 	useEffect(() => {
 		if (profile) {
 			form.reset({
-				full_name: profile.full_name || '',
+				fullName: profile.full_name || '',
 				phone: profile.phone ? formatPhone(profile.phone) : '',
 				cpf: profile.cpf ? formatCPF(profile.cpf) : '',
-				birth_date: profile.birth_date || '',
+				birthDate: profile.birth_date || '',
 			});
 		}
 	}, [profile, form]);
@@ -190,11 +176,14 @@ export function ProfileSettings() {
 	const onSubmit = (values: ProfileFormValues) => {
 		const cleanedPhone = values.phone?.replace(/\D/g, '') || undefined;
 		const cleanedCpf = values.cpf?.replace(/\D/g, '') || undefined;
+		// API expects snake_case field names
 		updateProfile({
-			full_name: values.full_name,
+			// biome-ignore lint/style/useNamingConvention: API requires snake_case
+			full_name: values.fullName,
 			phone: cleanedPhone,
 			cpf: cleanedCpf,
-			birth_date: values.birth_date || undefined,
+			// biome-ignore lint/style/useNamingConvention: API requires snake_case
+			birth_date: values.birthDate || undefined,
 		});
 	};
 
@@ -251,9 +240,7 @@ export function ProfileSettings() {
 		return <ProfileSettingsSkeleton />;
 	}
 
-	const avatarUrl =
-		avatarPreview ||
-		(profile as { profile_image_url?: string })?.profile_image_url;
+	const avatarUrl = avatarPreview || profile?.profile_image_url;
 	const initials =
 		profile?.full_name
 			?.split(' ')
@@ -265,11 +252,7 @@ export function ProfileSettings() {
 	return (
 		<div className="space-y-6" data-testid="profile-settings">
 			{/* Avatar Section */}
-			<SettingsCard
-				title="Foto do Perfil"
-				icon={Camera}
-				testId="avatar-section"
-			>
+			<SettingsCard title="Foto do Perfil" icon={Camera} testId="avatar-section">
 				<div className="flex items-center gap-6">
 					<Avatar
 						className="h-24 w-24 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/50 transition-all"
@@ -289,12 +272,7 @@ export function ProfileSettings() {
 							onChange={handleFileChange}
 							aria-label="Upload de foto de perfil"
 						/>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleAvatarClick}
-							disabled={isUploading}
-						>
+						<Button variant="outline" size="sm" onClick={handleAvatarClick} disabled={isUploading}>
 							{isUploading ? (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							) : (
@@ -302,9 +280,7 @@ export function ProfileSettings() {
 							)}
 							{isUploading ? 'Enviando...' : 'Alterar foto'}
 						</Button>
-						<p className="text-xs text-muted-foreground">
-							JPG, PNG ou WebP. Máximo 2MB.
-						</p>
+						<p className="text-xs text-muted-foreground">JPG, PNG ou WebP. Máximo 2MB.</p>
 					</div>
 				</div>
 			</SettingsCard>
@@ -319,21 +295,19 @@ export function ProfileSettings() {
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 						<div className="grid gap-4 md:grid-cols-2">
-							<FormField
-								control={form.control}
-								name="full_name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Nome completo</FormLabel>
-										<FormControl>
-											<Input placeholder="Seu nome" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormItem>
+						<FormField
+							control={form.control}
+							name="fullName"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Nome completo</FormLabel>
+									<FormControl>
+										<Input placeholder="Seu nome" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>							<FormItem>
 								<FormLabel>Email</FormLabel>
 								<div className="flex items-center gap-2">
 									<Input
@@ -347,9 +321,7 @@ export function ProfileSettings() {
 										Verificado
 									</Badge>
 								</div>
-								<FormDescription>
-									Email não pode ser alterado por segurança.
-								</FormDescription>
+								<FormDescription>Email não pode ser alterado por segurança.</FormDescription>
 							</FormItem>
 
 							<FormField
@@ -387,11 +359,7 @@ export function ProfileSettings() {
 											</Badge>
 										</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="000.000.000-00"
-												{...field}
-												onChange={handleCPFChange}
-											/>
+											<Input placeholder="000.000.000-00" {...field} onChange={handleCPFChange} />
 										</FormControl>
 										<FormDescription>
 											Seu CPF é criptografado e protegido pela LGPD.
@@ -403,7 +371,7 @@ export function ProfileSettings() {
 
 							<FormField
 								control={form.control}
-								name="birth_date"
+								name="birthDate"
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
@@ -414,18 +382,14 @@ export function ProfileSettings() {
 											<Input
 												type="date"
 												max={
-													new Date(
-														Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000,
-													)
+													new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
 														.toISOString()
 														.split('T')[0]
 												}
 												{...field}
 											/>
 										</FormControl>
-										<FormDescription>
-											Você deve ter pelo menos 18 anos.
-										</FormDescription>
+										<FormDescription>Você deve ter pelo menos 18 anos.</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -462,9 +426,7 @@ export function ProfileSettings() {
 						</label>
 						<Select
 							value={preferences?.language || 'pt-BR'}
-							onValueChange={(value) =>
-								handlePreferenceChange('language', value)
-							}
+							onValueChange={(value) => handlePreferenceChange('language', value)}
 							disabled={isUpdatingPreferences}
 						>
 							<SelectTrigger id={languageId}>
@@ -486,9 +448,7 @@ export function ProfileSettings() {
 						</label>
 						<Select
 							value={preferences?.timezone || 'America/Sao_Paulo'}
-							onValueChange={(value) =>
-								handlePreferenceChange('timezone', value)
-							}
+							onValueChange={(value) => handlePreferenceChange('timezone', value)}
 							disabled={isUpdatingPreferences}
 						>
 							<SelectTrigger id={timezoneId}>
@@ -510,9 +470,7 @@ export function ProfileSettings() {
 						</label>
 						<Select
 							value={preferences?.currency || 'BRL'}
-							onValueChange={(value) =>
-								handlePreferenceChange('currency', value)
-							}
+							onValueChange={(value) => handlePreferenceChange('currency', value)}
 							disabled={isUpdatingPreferences}
 						>
 							<SelectTrigger id={currencyId}>

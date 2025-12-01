@@ -12,10 +12,7 @@ import { z } from 'zod';
 import { financialEvents, transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 const calendarRouter = new Hono<AppEnv>();
 
@@ -76,9 +73,7 @@ calendarRouter.get(
 			}
 
 			if (input.startDate) {
-				conditions.push(
-					gte(financialEvents.startDate, new Date(input.startDate)),
-				);
+				conditions.push(gte(financialEvents.startDate, new Date(input.startDate)));
 			}
 
 			if (input.endDate) {
@@ -160,15 +155,11 @@ calendarRouter.get(
 			}
 
 			if (input.startDate) {
-				conditions.push(
-					gte(transactions.transactionDate, new Date(input.startDate)),
-				);
+				conditions.push(gte(transactions.transactionDate, new Date(input.startDate)));
 			}
 
 			if (input.endDate) {
-				conditions.push(
-					lte(transactions.transactionDate, new Date(input.endDate)),
-				);
+				conditions.push(lte(transactions.transactionDate, new Date(input.endDate)));
 			}
 
 			const data = await db

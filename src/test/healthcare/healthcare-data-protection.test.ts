@@ -15,15 +15,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ensureTestUtils } from '../healthcare/test-utils';
 import type { TestUtils } from '../healthcare-setup';
@@ -32,9 +24,7 @@ import type { TestUtils } from '../healthcare-setup';
 const mockCrypto = {
 	getRandomValues: vi.fn().mockReturnValue(new Uint8Array(16)),
 	subtle: {
-		decrypt: vi
-			.fn()
-			.mockResolvedValue(new TextEncoder().encode('decrypted data')),
+		decrypt: vi.fn().mockResolvedValue(new TextEncoder().encode('decrypted data')),
 		digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
 		encrypt: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
 		generateKey: vi.fn().mockResolvedValue({
@@ -133,44 +123,36 @@ const HealthcareDataProtection = () => {
 	// Pseudonymization Validation
 	const validatePseudonymization = () => {
 		const pseudonymizedData = {
-			allergies: healthData.allergies
-				? `ALLERGY-${btoa(healthData.allergies).slice(0, 4)}***`
-				: '',
+			allergies: healthData.allergies ? `ALLERGY-${btoa(healthData.allergies).slice(0, 4)}***` : '',
 			doctorNotes: healthData.doctorNotes
 				? `NOTES-${btoa(healthData.doctorNotes).slice(0, 10)}***`
 				: '',
 			healthCondition: healthData.healthCondition
 				? `HEALTH-${btoa(healthData.healthCondition).slice(0, 8)}***`
 				: '',
-			medication: healthData.medication
-				? `MED-${btoa(healthData.medication).slice(0, 6)}***`
-				: '',
+			medication: healthData.medication ? `MED-${btoa(healthData.medication).slice(0, 6)}***` : '',
 			originalDataHash: btoa(JSON.stringify(healthData)).slice(0, 16),
-			patientId: healthData.patientId
-				? `PAT-${healthData.patientId.slice(-4)}`
-				: '',
+			patientId: healthData.patientId ? `PAT-${healthData.patientId.slice(-4)}` : '',
 			patientName: healthData.patientName
 				? `*** ${healthData.patientName.split(' ')[healthData.patientName.split(' ').length - 1]}`
 				: '',
 		};
 
-		const isProperlyPseudonymized = Object.entries(pseudonymizedData).every(
-			([key, value]) => {
-				if (key === 'originalDataHash') {
-					return value && value.length > 0;
-				}
-				if (key === 'patientId' && healthData[key]) {
-					return value.includes('PAT-') && value.length === 8;
-				}
-				if (key === 'patientName' && healthData[key]) {
-					return value.includes('***') && value.length > 4;
-				}
-				if (healthData[key] && key !== 'originalDataHash') {
-					return value.includes('***') && value.length > 10;
-				}
-				return !healthData[key] || value.length === 0;
-			},
-		);
+		const isProperlyPseudonymized = Object.entries(pseudonymizedData).every(([key, value]) => {
+			if (key === 'originalDataHash') {
+				return value && value.length > 0;
+			}
+			if (key === 'patientId' && healthData[key]) {
+				return value.includes('PAT-') && value.length === 8;
+			}
+			if (key === 'patientName' && healthData[key]) {
+				return value.includes('***') && value.length > 4;
+			}
+			if (healthData[key] && key !== 'originalDataHash') {
+				return value.includes('***') && value.length > 10;
+			}
+			return !healthData[key] || value.length === 0;
+		});
 
 		return isProperlyPseudonymized ? 'compliant' : 'non-compliant';
 	};
@@ -226,11 +208,9 @@ const HealthcareDataProtection = () => {
 			consentRecords: 2555, // 7 years for consent
 		};
 
-		const retentionValid = Object.entries(retentionPolicies).every(
-			([_dataType, days]) => {
-				return typeof days === 'number' && days > 0 && days <= 3650;
-			},
-		);
+		const retentionValid = Object.entries(retentionPolicies).every(([_dataType, days]) => {
+			return typeof days === 'number' && days > 0 && days <= 3650;
+		});
 
 		return retentionValid ? 'compliant' : 'non-compliant';
 	};
@@ -248,9 +228,7 @@ const HealthcareDataProtection = () => {
 			secureStorage: true, // Assume secure storage location
 		};
 
-		const voiceCompliant = Object.values(voiceProtectionMeasures).every(
-			Boolean,
-		);
+		const voiceCompliant = Object.values(voiceProtectionMeasures).every(Boolean);
 		return voiceCompliant ? 'compliant' : 'non-compliant';
 	};
 
@@ -288,9 +266,7 @@ const HealthcareDataProtection = () => {
 			vulnerabilityScanning: true, // Assume regular vulnerability scanning
 		};
 
-		const breachPreventionCompliant = Object.values(
-			breachPreventionMeasures,
-		).every(Boolean);
+		const breachPreventionCompliant = Object.values(breachPreventionMeasures).every(Boolean);
 		return breachPreventionCompliant ? 'compliant' : 'non-compliant';
 	};
 
@@ -325,7 +301,7 @@ const HealthcareDataProtection = () => {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!healthData.patientId || !healthData.patientName) {
+		if (!(healthData.patientId && healthData.patientName)) {
 			alert('ID do paciente e nome são obrigatórios.');
 			return;
 		}
@@ -334,9 +310,7 @@ const HealthcareDataProtection = () => {
 		await runProtectionValidation();
 
 		// Check if all validations pass
-		const allCompliant = Object.values(protectionStatus).every(
-			(status) => status === 'compliant',
-		);
+		const allCompliant = Object.values(protectionStatus).every((status) => status === 'compliant');
 
 		if (!allCompliant) {
 			alert('Dados de saúde não atendem aos requisitos de proteção.');
@@ -348,236 +322,176 @@ const HealthcareDataProtection = () => {
 		await testUtils.encryptMockData(JSON.stringify(healthData), 'AES-256-GCM');
 	};
 
-	return React.createElement(
-		'div',
-		{ 'data-testid': 'healthcare-data-protection' },
-		[
-			React.createElement(
-				'h1',
-				{ key: 'title' },
-				'Proteção de Dados de Saúde - AegisWallet',
-			),
+	return React.createElement('div', { 'data-testid': 'healthcare-data-protection' }, [
+		React.createElement('h1', { key: 'title' }, 'Proteção de Dados de Saúde - AegisWallet'),
 
+		React.createElement('form', { key: 'health-form', onSubmit: handleSubmit }, [
+			React.createElement('h2', { key: 'form-title' }, 'Dados Médicos do Paciente'),
+
+			React.createElement('div', { key: 'patient-info' }, [
+				React.createElement('label', { key: 'patient-id-label' }, 'ID do Paciente:'),
+				React.createElement('input', {
+					'data-testid': 'patient-id',
+					key: 'patient-id-input',
+					onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+						setHealthData({ ...healthData, patientId: e.target.value }),
+					placeholder: 'ID único do paciente',
+					required: true,
+					type: 'text',
+					value: healthData.patientId,
+				}),
+
+				React.createElement('label', { key: 'patient-name-label' }, 'Nome do Paciente:'),
+				React.createElement('input', {
+					'data-testid': 'patient-name',
+					key: 'patient-name-input',
+					onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+						setHealthData({ ...healthData, patientName: e.target.value }),
+					placeholder: 'Nome completo do paciente',
+					required: true,
+					type: 'text',
+					value: healthData.patientName,
+				}),
+			]),
+
+			React.createElement('div', { key: 'medical-info' }, [
+				React.createElement('label', { key: 'health-condition-label' }, 'Condição de Saúde:'),
+				React.createElement('textarea', {
+					'data-testid': 'health-condition',
+					key: 'health-condition-input',
+					onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+						setHealthData({
+							...healthData,
+							healthCondition: e.target.value,
+						}),
+					placeholder: 'Descrição da condição de saúde',
+					rows: 3,
+					value: healthData.healthCondition,
+				}),
+
+				React.createElement('label', { key: 'medication-label' }, 'Medicação:'),
+				React.createElement('input', {
+					'data-testid': 'medication',
+					key: 'medication-input',
+					onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+						setHealthData((prev) => ({
+							...prev,
+							medication: e.target.value,
+						})),
+					placeholder: 'Medicamentos prescritos',
+					type: 'text',
+					value: healthData.medication,
+				}),
+
+				React.createElement('label', { key: 'allergies-label' }, 'Alergias:'),
+				React.createElement('input', {
+					'data-testid': 'allergies',
+					key: 'allergies-input',
+					onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+						setHealthData((prev) => ({
+							...prev,
+							allergies: e.target.value,
+						})),
+					placeholder: 'Alergias conhecidas',
+					type: 'text',
+					value: healthData.allergies,
+				}),
+
+				React.createElement('label', { key: 'doctor-notes-label' }, 'Notas Médicas:'),
+				React.createElement('textarea', {
+					'data-testid': 'doctor-notes',
+					key: 'doctor-notes-input',
+					onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+						setHealthData({ ...healthData, doctorNotes: e.target.value }),
+					placeholder: 'Anotações do médico',
+					rows: 4,
+					value: healthData.doctorNotes,
+				}),
+			]),
+
+			// Protection Status
+			React.createElement('div', { 'data-testid': 'protection-status', key: 'protection-status' }, [
+				React.createElement('h3', { key: 'status-title' }, 'Status de Proteção de Dados'),
+				...Object.entries(protectionStatus).map(([measure, status]) =>
+					React.createElement('div', { 'data-testid': `status-${measure}`, key: measure }, [
+						React.createElement('span', { key: 'measure' }, `${measure}: `),
+						React.createElement(
+							'span',
+							{
+								key: 'status',
+								style: {
+									color:
+										status === 'compliant'
+											? 'green'
+											: status === 'non-compliant'
+												? 'red'
+												: 'orange',
+								},
+							},
+							status,
+						),
+					]),
+				),
+			]),
+
+			// Encryption Metadata
 			React.createElement(
-				'form',
-				{ key: 'health-form', onSubmit: handleSubmit },
+				'div',
+				{
+					'data-testid': 'encryption-metadata',
+					key: 'encryption-metadata',
+				},
 				[
-					React.createElement(
-						'h2',
-						{ key: 'form-title' },
-						'Dados Médicos do Paciente',
-					),
-
-					React.createElement('div', { key: 'patient-info' }, [
-						React.createElement(
-							'label',
-							{ key: 'patient-id-label' },
-							'ID do Paciente:',
-						),
-						React.createElement('input', {
-							'data-testid': 'patient-id',
-							key: 'patient-id-input',
-							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, patientId: e.target.value }),
-							placeholder: 'ID único do paciente',
-							required: true,
-							type: 'text',
-							value: healthData.patientId,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'patient-name-label' },
-							'Nome do Paciente:',
-						),
-						React.createElement('input', {
-							'data-testid': 'patient-name',
-							key: 'patient-name-input',
-							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData({ ...healthData, patientName: e.target.value }),
-							placeholder: 'Nome completo do paciente',
-							required: true,
-							type: 'text',
-							value: healthData.patientName,
-						}),
-					]),
-
-					React.createElement('div', { key: 'medical-info' }, [
-						React.createElement(
-							'label',
-							{ key: 'health-condition-label' },
-							'Condição de Saúde:',
-						),
-						React.createElement('textarea', {
-							'data-testid': 'health-condition',
-							key: 'health-condition-input',
-							onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-								setHealthData({
-									...healthData,
-									healthCondition: e.target.value,
-								}),
-							placeholder: 'Descrição da condição de saúde',
-							rows: 3,
-							value: healthData.healthCondition,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'medication-label' },
-							'Medicação:',
-						),
-						React.createElement('input', {
-							'data-testid': 'medication',
-							key: 'medication-input',
-							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData((prev) => ({
-									...prev,
-									medication: e.target.value,
-								})),
-							placeholder: 'Medicamentos prescritos',
-							type: 'text',
-							value: healthData.medication,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'allergies-label' },
-							'Alergias:',
-						),
-						React.createElement('input', {
-							'data-testid': 'allergies',
-							key: 'allergies-input',
-							onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-								setHealthData((prev) => ({
-									...prev,
-									allergies: e.target.value,
-								})),
-							placeholder: 'Alergias conhecidas',
-							type: 'text',
-							value: healthData.allergies,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'doctor-notes-label' },
-							'Notas Médicas:',
-						),
-						React.createElement('textarea', {
-							'data-testid': 'doctor-notes',
-							key: 'doctor-notes-input',
-							onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-								setHealthData({ ...healthData, doctorNotes: e.target.value }),
-							placeholder: 'Anotações do médico',
-							rows: 4,
-							value: healthData.doctorNotes,
-						}),
-					]),
-
-					// Protection Status
+					React.createElement('h3', { key: 'metadata-title' }, 'Metadados de Criptografia'),
 					React.createElement(
 						'div',
-						{ 'data-testid': 'protection-status', key: 'protection-status' },
-						[
-							React.createElement(
-								'h3',
-								{ key: 'status-title' },
-								'Status de Proteção de Dados',
-							),
-							...Object.entries(protectionStatus).map(([measure, status]) =>
-								React.createElement(
-									'div',
-									{ 'data-testid': `status-${measure}`, key: measure },
-									[
-										React.createElement(
-											'span',
-											{ key: 'measure' },
-											`${measure}: `,
-										),
-										React.createElement(
-											'span',
-											{
-												key: 'status',
-												style: {
-													color:
-														status === 'compliant'
-															? 'green'
-															: status === 'non-compliant'
-																? 'red'
-																: 'orange',
-												},
-											},
-											status,
-										),
-									],
-								),
-							),
-						],
+						{ key: 'algorithm' },
+						`Algoritmo: ${encryptionMetadata.algorithm}`,
 					),
-
-					// Encryption Metadata
 					React.createElement(
 						'div',
-						{
-							'data-testid': 'encryption-metadata',
-							key: 'encryption-metadata',
-						},
-						[
-							React.createElement(
-								'h3',
-								{ key: 'metadata-title' },
-								'Metadados de Criptografia',
-							),
-							React.createElement(
-								'div',
-								{ key: 'algorithm' },
-								`Algoritmo: ${encryptionMetadata.algorithm}`,
-							),
-							React.createElement(
-								'div',
-								{ key: 'key-length' },
-								`Tamanho da Chave: ${encryptionMetadata.keyLength} bits`,
-							),
-							React.createElement(
-								'div',
-								{ key: 'iv-length' },
-								`Tamanho do IV: ${encryptionMetadata.ivLength} bytes`,
-							),
-							encryptionMetadata.encryptionTime &&
-								React.createElement(
-									'div',
-									{ key: 'encryption-time' },
-									`Hora da Criptografia: ${encryptionMetadata.encryptionTime}`,
-								),
-						],
+						{ key: 'key-length' },
+						`Tamanho da Chave: ${encryptionMetadata.keyLength} bits`,
 					),
-
-					// Actions
-					React.createElement('div', { key: 'actions' }, [
+					React.createElement(
+						'div',
+						{ key: 'iv-length' },
+						`Tamanho do IV: ${encryptionMetadata.ivLength} bytes`,
+					),
+					encryptionMetadata.encryptionTime &&
 						React.createElement(
-							'button',
-							{
-								'data-testid': 'validate-protection',
-								key: 'validate',
-								onClick: runProtectionValidation,
-								type: 'button',
-							},
-							'Validar Proteção de Dados',
+							'div',
+							{ key: 'encryption-time' },
+							`Hora da Criptografia: ${encryptionMetadata.encryptionTime}`,
 						),
-
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'submit-health-data',
-								key: 'submit',
-								type: 'submit',
-							},
-							'Salvar Dados Médicos Protegidos',
-						),
-					]),
 				],
 			),
-		],
-	);
+
+			// Actions
+			React.createElement('div', { key: 'actions' }, [
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'validate-protection',
+						key: 'validate',
+						onClick: runProtectionValidation,
+						type: 'button',
+					},
+					'Validar Proteção de Dados',
+				),
+
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'submit-health-data',
+						key: 'submit',
+						type: 'submit',
+					},
+					'Salvar Dados Médicos Protegidos',
+				),
+			]),
+		]),
+	]);
 };
 
 describe('Healthcare Data Protection and Encryption Validation', () => {
@@ -607,22 +521,17 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 	describe('Data Encryption Validation', () => {
 		it('should encrypt health data using AES-256', async () => {
 			const testUtils = global.testUtils as TestUtils;
-			const mockEncrypt = vi
-				.spyOn(testUtils, 'encryptMockData')
-				.mockResolvedValue({
-					algorithm: 'AES-256-GCM',
-					encryptedData: 'encrypted-health-data',
-					iv: 'mock-iv',
-				});
+			const mockEncrypt = vi.spyOn(testUtils, 'encryptMockData').mockResolvedValue({
+				algorithm: 'AES-256-GCM',
+				encryptedData: 'encrypted-health-data',
+				iv: 'mock-iv',
+			});
 
 			render(React.createElement(HealthcareDataProtection));
 
 			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-001');
 			await userEvent.type(screen.getByTestId('patient-name'), 'João Silva');
-			await userEvent.type(
-				screen.getByTestId('health-condition'),
-				'Hipertensão',
-			);
+			await userEvent.type(screen.getByTestId('health-condition'), 'Hipertensão');
 
 			await userEvent.click(screen.getByTestId('validate-protection'));
 
@@ -640,9 +549,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
 			// Check encryption metadata
 			expect(screen.getByText('Algoritmo: AES-256-GCM')).toBeInTheDocument();
-			expect(
-				screen.getByText('Tamanho da Chave: 256 bits'),
-			).toBeInTheDocument();
+			expect(screen.getByText('Tamanho da Chave: 256 bits')).toBeInTheDocument();
 			expect(screen.getByText('Tamanho do IV: 12 bytes')).toBeInTheDocument();
 		});
 
@@ -666,24 +573,14 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 			render(React.createElement(HealthcareDataProtection));
 
 			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-123456789');
-			await userEvent.type(
-				screen.getByTestId('patient-name'),
-				'João Pereira Silva',
-			);
-			await userEvent.type(
-				screen.getByTestId('health-condition'),
-				'Diabetes Tipo 2',
-			);
+			await userEvent.type(screen.getByTestId('patient-name'), 'João Pereira Silva');
+			await userEvent.type(screen.getByTestId('health-condition'), 'Diabetes Tipo 2');
 
 			await userEvent.click(screen.getByTestId('validate-protection'));
 
 			await waitFor(() => {
-				const pseudonymizationStatus = screen.getByTestId(
-					'status-pseudonymization',
-				);
-				expect(pseudonymizationStatus).toHaveTextContent(
-					'pseudonymization: compliant',
-				);
+				const pseudonymizationStatus = screen.getByTestId('status-pseudonymization');
+				expect(pseudonymizationStatus).toHaveTextContent('pseudonymization: compliant');
 			});
 		});
 
@@ -708,9 +605,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
 			await waitFor(() => {
 				const accessControlStatus = screen.getByTestId('status-accessControl');
-				expect(accessControlStatus).toHaveTextContent(
-					'accessControl: compliant',
-				);
+				expect(accessControlStatus).toHaveTextContent('accessControl: compliant');
 			});
 		});
 
@@ -828,14 +723,12 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 				},
 			};
 
-			Object.entries(retentionRequirements).forEach(
-				([_dataType, requirements]) => {
-					expect(requirements.minDays).toBeGreaterThan(0);
-					expect(requirements.maxDays).toBeGreaterThan(requirements.minDays);
-					expect(requirements.reason).toBeTruthy();
-					expect(requirements.minDays).toBeLessThanOrEqual(3650); // Maximum 10 years
-				},
-			);
+			Object.entries(retentionRequirements).forEach(([_dataType, requirements]) => {
+				expect(requirements.minDays).toBeGreaterThan(0);
+				expect(requirements.maxDays).toBeGreaterThan(requirements.minDays);
+				expect(requirements.reason).toBeTruthy();
+				expect(requirements.minDays).toBeLessThanOrEqual(3650); // Maximum 10 years
+			});
 		});
 
 		it('should handle automatic data expiration', () => {
@@ -862,12 +755,8 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-protection'));
 
 			await waitFor(() => {
-				const voiceProtectionStatus = screen.getByTestId(
-					'status-voiceProtection',
-				);
-				expect(voiceProtectionStatus).toHaveTextContent(
-					'voiceProtection: compliant',
-				);
+				const voiceProtectionStatus = screen.getByTestId('status-voiceProtection');
+				expect(voiceProtectionStatus).toHaveTextContent('voiceProtection: compliant');
 			});
 		});
 
@@ -907,12 +796,8 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-protection'));
 
 			await waitFor(() => {
-				const biometricSecurityStatus = screen.getByTestId(
-					'status-biometricSecurity',
-				);
-				expect(biometricSecurityStatus).toHaveTextContent(
-					'biometricSecurity: compliant',
-				);
+				const biometricSecurityStatus = screen.getByTestId('status-biometricSecurity');
+				expect(biometricSecurityStatus).toHaveTextContent('biometricSecurity: compliant');
 			});
 		});
 
@@ -956,12 +841,8 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 			await userEvent.click(screen.getByTestId('validate-protection'));
 
 			await waitFor(() => {
-				const breachPreventionStatus = screen.getByTestId(
-					'status-breachPrevention',
-				);
-				expect(breachPreventionStatus).toHaveTextContent(
-					'breachPrevention: compliant',
-				);
+				const breachPreventionStatus = screen.getByTestId('status-breachPrevention');
+				expect(breachPreventionStatus).toHaveTextContent('breachPrevention: compliant');
 			});
 		});
 
@@ -1001,27 +882,19 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		it('should validate complete healthcare data protection workflow', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
-			const mockEncrypt = vi
-				.spyOn(testUtils, 'encryptMockData')
-				.mockResolvedValue({
-					algorithm: 'AES-256-GCM',
-					encryptedData: 'encrypted-health-record',
-					iv: 'mock-iv',
-				});
+			const mockEncrypt = vi.spyOn(testUtils, 'encryptMockData').mockResolvedValue({
+				algorithm: 'AES-256-GCM',
+				encryptedData: 'encrypted-health-record',
+				iv: 'mock-iv',
+			});
 
 			render(React.createElement(HealthcareDataProtection));
 
 			// Complete patient data
 			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-2024-001');
 			await userEvent.type(screen.getByTestId('patient-name'), 'Carlos Mendes');
-			await userEvent.type(
-				screen.getByTestId('health-condition'),
-				'Asma moderada',
-			);
-			await userEvent.type(
-				screen.getByTestId('medication'),
-				'Salbutamol 100mcg',
-			);
+			await userEvent.type(screen.getByTestId('health-condition'), 'Asma moderada');
+			await userEvent.type(screen.getByTestId('medication'), 'Salbutamol 100mcg');
 			await userEvent.type(screen.getByTestId('allergies'), 'Penicilina');
 			await userEvent.type(
 				screen.getByTestId('doctor-notes'),
@@ -1072,7 +945,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 		});
 
 		// TODO: Refactor after tRPC to Hono migration - component async logic needs update
-		it.skip('should prevent submission of non-compliant health data', async () => {
+		it('should prevent submission of non-compliant health data', async () => {
 			const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
 			render(React.createElement(HealthcareDataProtection));
@@ -1084,9 +957,7 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 			await userEvent.click(screen.getByTestId('submit-health-data'));
 
 			await waitFor(() => {
-				expect(alertSpy).toHaveBeenCalledWith(
-					'ID do paciente e nome são obrigatórios.',
-				);
+				expect(alertSpy).toHaveBeenCalledWith('ID do paciente e nome são obrigatórios.');
 			});
 			alertSpy.mockRestore();
 		});
@@ -1097,18 +968,9 @@ describe('Healthcare Data Protection and Encryption Validation', () => {
 
 			render(React.createElement(HealthcareDataProtection));
 
-			await userEvent.type(
-				screen.getByTestId('patient-id'),
-				'PAT-EMERGENCY-001',
-			);
-			await userEvent.type(
-				screen.getByTestId('patient-name'),
-				'Emergency Patient',
-			);
-			await userEvent.type(
-				screen.getByTestId('health-condition'),
-				'Chest pain - urgent',
-			);
+			await userEvent.type(screen.getByTestId('patient-id'), 'PAT-EMERGENCY-001');
+			await userEvent.type(screen.getByTestId('patient-name'), 'Emergency Patient');
+			await userEvent.type(screen.getByTestId('health-condition'), 'Chest pain - urgent');
 
 			await userEvent.click(screen.getByTestId('validate-protection'));
 

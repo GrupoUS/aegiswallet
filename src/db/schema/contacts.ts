@@ -5,14 +5,7 @@
  * Contact directory for payments and transfers
  */
 
-import {
-	boolean,
-	jsonb,
-	pgEnum,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { users } from './users';
 
@@ -93,8 +86,7 @@ export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
 
 export type ContactPaymentMethod = typeof contactPaymentMethods.$inferSelect;
-export type InsertContactPaymentMethod =
-	typeof contactPaymentMethods.$inferInsert;
+export type InsertContactPaymentMethod = typeof contactPaymentMethods.$inferInsert;
 
 /**
  * Type for PIX payment method details

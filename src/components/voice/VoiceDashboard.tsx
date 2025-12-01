@@ -1,12 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { ChevronRight, History, Settings, Volume2 } from 'lucide-react';
-import React, {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAccessibility } from '@/components/accessibility/hooks/useAccessibility';
 import { Button } from '@/components/ui/button';
@@ -37,8 +31,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 		stopListening,
 	} = useVoiceRecognition({});
 
-	const [currentResponse, setCurrentResponse] =
-		useState<ProcessedCommand | null>(null);
+	const [currentResponse, setCurrentResponse] = useState<ProcessedCommand | null>(null);
 	const [commandHistory, setCommandHistory] = useState<
 		{
 			id: string;
@@ -195,9 +188,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 				{/* Header */}
 				<div className="space-y-2 text-center">
 					<h1 className="font-bold text-3xl text-foreground">{greeting}! 👋</h1>
-					<p className="text-lg text-muted-foreground">
-						Como posso ajudar com suas finanças hoje?
-					</p>
+					<p className="text-lg text-muted-foreground">Como posso ajudar com suas finanças hoje?</p>
 				</div>
 
 				{/* Main Voice Interface */}
@@ -251,11 +242,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 						<VoiceResponse
 							type={currentResponse.type}
 							message={currentResponse.message}
-							data={
-								currentResponse.data as Parameters<
-									typeof VoiceResponse
-								>[0]['data']
-							}
+							data={currentResponse.data as Parameters<typeof VoiceResponse>[0]['data']}
 						/>
 
 						{currentResponse.requiresConfirmation && (
@@ -314,12 +301,8 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 									>
 										<div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-info" />
 										<div className="min-w-0 flex-1">
-											<p className="font-medium text-gray-900 text-sm">
-												"{item.command}"
-											</p>
-											<p className="mt-1 text-gray-600 text-sm">
-												{item.response.message}
-											</p>
+											<p className="font-medium text-gray-900 text-sm">"{item.command}"</p>
+											<p className="mt-1 text-gray-600 text-sm">{item.response.message}</p>
 											<p className="mt-1 text-gray-400 text-xs">
 												{item.timestamp.toLocaleTimeString('pt-BR', {
 													hour: '2-digit',

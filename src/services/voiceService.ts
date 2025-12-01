@@ -57,12 +57,7 @@ interface SpeechSynthesisVoice {
 // Voice command patterns in Portuguese
 export const VOICE_COMMANDS = {
 	BALANCE: ['qual é meu saldo', 'mostrar saldo', 'ver saldo', 'saldo'],
-	BILLS: [
-		'quais contas tenho que pagar',
-		'contas a pagar',
-		'contas',
-		'pagamentos',
-	],
+	BILLS: ['quais contas tenho que pagar', 'contas a pagar', 'contas', 'pagamentos'],
 	BUDGET: ['como está meu orçamento', 'ver orçamento', 'orçamento', 'gastos'],
 	DASHBOARD: ['ir para dashboard', 'dashboard', 'início', 'home'],
 	PIX: ['fazer um pix', 'transferir', 'enviar dinheiro', 'pix'],
@@ -161,8 +156,8 @@ class VoiceService {
 			this.recognition = this.getSpeechRecognition();
 			if (this.recognition) {
 				this.recognition.lang = this.config.language || 'pt-BR';
-				this.recognition.continuous = this.config.continuous || false;
-				this.recognition.interimResults = this.config.interimResults || false;
+				this.recognition.continuous = this.config.continuous;
+				this.recognition.interimResults = this.config.interimResults;
 				this.recognition.maxAlternatives = this.config.maxAlternatives || 1;
 			}
 		} catch (error) {
@@ -175,8 +170,7 @@ class VoiceService {
 
 	// biome-ignore lint/suspicious/noExplicitAny: Web Speech API SpeechRecognition constructor is not standardized
 	private getSpeechRecognition(): any {
-		const SpeechRecognition =
-			window.SpeechRecognition || window.webkitSpeechRecognition;
+		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 		if (!SpeechRecognition) {
 			throw new Error('Speech recognition not supported in this browser');
 		}
@@ -343,10 +337,7 @@ class VoiceService {
 	/**
 	 * Speak text using Text-to-Speech
 	 */
-	speak(
-		text: string,
-		options?: Partial<SpeechSynthesisUtterance>,
-	): Promise<void> {
+	speak(text: string, options?: Partial<SpeechSynthesisUtterance>): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (!this.synthesis) {
 				reject(new Error('Speech Synthesis not available'));
@@ -421,9 +412,7 @@ class VoiceService {
 	 * Get Portuguese voices
 	 */
 	getPortugueseVoices(): SpeechSynthesisVoice[] {
-		return this.getAvailableVoices().filter((voice) =>
-			voice.lang.startsWith('pt'),
-		);
+		return this.getAvailableVoices().filter((voice) => voice.lang.startsWith('pt'));
 	}
 
 	/**
@@ -463,8 +452,7 @@ export const VOICE_FEEDBACK = {
 	BALANCE_RESPONSE: (amount: number) =>
 		`Seu saldo total é ${new Intl.NumberFormat('pt-BR', { currency: 'BRL', style: 'currency' }).format(amount)}`,
 	BILLS_RESPONSE: (count: number) => `Você tem ${count} contas pendentes`,
-	BUDGET_RESPONSE: (percentage: number) =>
-		`Você utilizou ${percentage}% do seu orçamento mensal`,
+	BUDGET_RESPONSE: (percentage: number) => `Você utilizou ${percentage}% do seu orçamento mensal`,
 	ERROR: 'Desculpe, não entendi o comando',
 	LISTENING: 'Estou ouvindo...',
 	NAVIGATING: (destination: string) => `Navegando para ${destination}`,

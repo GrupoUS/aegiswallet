@@ -20,12 +20,8 @@ export class StripeSubscriptionService {
 
 		try {
 			// Fetch user to get email
-			const [user] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, userId))
-				.limit(1);
-			if (!user || !user.email) {
+			const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+			if (!user?.email) {
 				throw new Error('Usuário não encontrado ou sem email');
 			}
 
@@ -52,9 +48,7 @@ export class StripeSubscriptionService {
 					STRIPE_CONFIG.successUrl ||
 					'https://app.aegiswallet.com.br/billing/success',
 				cancel_url:
-					cancelUrl ||
-					STRIPE_CONFIG.cancelUrl ||
-					'https://app.aegiswallet.com.br/billing/cancel',
+					cancelUrl || STRIPE_CONFIG.cancelUrl || 'https://app.aegiswallet.com.br/billing/cancel',
 				metadata: {
 					clerkUserId: userId,
 				},
@@ -75,10 +69,7 @@ export class StripeSubscriptionService {
 		}
 	}
 
-	static async createPortalSession(
-		stripeCustomerId: string,
-		returnUrl?: string,
-	) {
+	static async createPortalSession(stripeCustomerId: string, returnUrl?: string) {
 		const stripe = getStripeClient();
 		try {
 			const session = await stripe.billingPortal.sessions.create({
@@ -108,10 +99,7 @@ export class StripeSubscriptionService {
 					plan: subscriptionPlans,
 				})
 				.from(subscriptions)
-				.leftJoin(
-					subscriptionPlans,
-					eq(subscriptions.planId, subscriptionPlans.id),
-				)
+				.leftJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
 				.where(eq(subscriptions.userId, userId))
 				.limit(1);
 
@@ -134,11 +122,9 @@ export class StripeSubscriptionService {
 		const db = getPoolClient(); // Use pool for transactions if needed, though here we just upsert
 
 		try {
-			const subscriptionResponse =
-				await stripe.subscriptions.retrieve(stripeSubscriptionId);
+			const subscriptionResponse = await stripe.subscriptions.retrieve(stripeSubscriptionId);
 			// Cast to Stripe.Subscription to access properties correctly
-			const subscription =
-				subscriptionResponse as unknown as Stripe.Subscription;
+			const subscription = subscriptionResponse as unknown as Stripe.Subscription;
 			const customerId =
 				typeof subscription.customer === 'string'
 					? subscription.customer
@@ -152,10 +138,7 @@ export class StripeSubscriptionService {
 				.limit(1);
 
 			if (!subRecord) {
-				secureLogger.warn(
-					'Subscription sync skipped: User not found for customer',
-					{ customerId },
-				);
+				secureLogger.warn('Subscription sync skipped: User not found for customer', { customerId });
 				return null;
 			}
 
@@ -171,12 +154,7 @@ export class StripeSubscriptionService {
 				stripeStatus === 'incomplete_expired' ||
 				stripeStatus === 'paused'
 					? 'canceled'
-					: (stripeStatus as
-							| 'active'
-							| 'canceled'
-							| 'past_due'
-							| 'trialing'
-							| 'unpaid');
+					: (stripeStatus as 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid');
 
 			// Get billing period from subscription item (Stripe v20+ change)
 			const subscriptionItem = subscription.items.data[0];
@@ -193,15 +171,9 @@ export class StripeSubscriptionService {
 					currentPeriodStart: new Date(periodStart * 1000),
 					currentPeriodEnd: new Date(periodEnd * 1000),
 					cancelAtPeriodEnd: subscription.cancel_at_period_end,
-					canceledAt: subscription.canceled_at
-						? new Date(subscription.canceled_at * 1000)
-						: null,
-					trialStart: subscription.trial_start
-						? new Date(subscription.trial_start * 1000)
-						: null,
-					trialEnd: subscription.trial_end
-						? new Date(subscription.trial_end * 1000)
-						: null,
+					canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+					trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+					trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
 					updatedAt: new Date(),
 				})
 				.where(eq(subscriptions.id, subRecord.id))
@@ -223,7 +195,7 @@ export class StripeSubscriptionService {
 		}
 	}
 
-	static async cancelSubscription(userId: string, immediate: boolean = false) {
+	static async cancelSubscription(userId: string, immediate = false) {
 		const stripe = getStripeClient();
 		const db = getHttpClient();
 
@@ -234,7 +206,7 @@ export class StripeSubscriptionService {
 				.where(eq(subscriptions.userId, userId))
 				.limit(1);
 
-			if (!sub || !sub.stripeSubscriptionId) {
+			if (!sub?.stripeSubscriptionId) {
 				throw new Error('Assinatura não encontrada');
 			}
 

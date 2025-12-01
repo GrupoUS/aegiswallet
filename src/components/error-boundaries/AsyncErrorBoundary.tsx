@@ -38,17 +38,11 @@ export class AsyncErrorBoundary extends Component<
 
 	componentDidMount() {
 		// Handle unhandled promise rejections
-		window.addEventListener(
-			'unhandledrejection',
-			this.handleUnhandledRejection,
-		);
+		window.addEventListener('unhandledrejection', this.handleUnhandledRejection);
 	}
 
 	componentWillUnmount() {
-		window.removeEventListener(
-			'unhandledrejection',
-			this.handleUnhandledRejection,
-		);
+		window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
 	}
 
 	private generateErrorId = (): string => {
@@ -58,10 +52,7 @@ export class AsyncErrorBoundary extends Component<
 	handleUnhandledRejection = (event: PromiseRejectionEvent) => {
 		event.preventDefault();
 
-		const error =
-			event.reason instanceof Error
-				? event.reason
-				: new Error(String(event.reason));
+		const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
 
 		this.setState({
 			error,

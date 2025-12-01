@@ -62,12 +62,7 @@ export function FinancialAgentWidget({
 	const hasAlerts = alertCount > 0;
 
 	return (
-		<div
-			className={cn(
-				'fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2',
-				className,
-			)}
-		>
+		<div className={cn('fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2', className)}>
 			{/* Chat Window */}
 			<div
 				className={cn(
@@ -86,17 +81,10 @@ export function FinancialAgentWidget({
 							</div>
 							<div>
 								<h3 className="font-semibold text-sm">Aegis</h3>
-								<p className="text-xs text-muted-foreground">
-									Seu assistente financeiro
-								</p>
+								<p className="text-xs text-muted-foreground">Seu assistente financeiro</p>
 							</div>
 						</div>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={handleClose}
-							className="h-8 w-8"
-						>
+						<Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8">
 							<X className="h-4 w-4" />
 							<span className="sr-only">Fechar</span>
 						</Button>
@@ -106,9 +94,7 @@ export function FinancialAgentWidget({
 					{showQuickActions && (
 						<div className="border-b">
 							<div className="p-3 pb-1">
-								<p className="text-xs text-muted-foreground">
-									Pergunte sobre suas finanças:
-								</p>
+								<p className="text-xs text-muted-foreground">Pergunte sobre suas finanças:</p>
 							</div>
 							<FinancialQuickActions
 								onActionSelect={handleQuickAction}
@@ -119,9 +105,7 @@ export function FinancialAgentWidget({
 
 					{/* Chat Container */}
 					<div className="flex-1 overflow-hidden">
-						{isOpen && (
-							<ChatContainer isWidget onClose={handleClose} hideHeader />
-						)}
+						{isOpen && <ChatContainer isWidget onClose={handleClose} hideHeader />}
 					</div>
 				</div>
 			</div>
@@ -132,19 +116,11 @@ export function FinancialAgentWidget({
 				size="icon"
 				className={cn(
 					'h-14 w-14 rounded-full shadow-lg transition-transform duration-200 hover:scale-105 relative',
-					isOpen
-						? 'bg-destructive hover:bg-destructive/90'
-						: 'bg-primary hover:bg-primary/90',
+					isOpen ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary hover:bg-primary/90',
 				)}
 			>
-				{isOpen ? (
-					<X className="h-6 w-6" />
-				) : (
-					<MessageCircle className="h-6 w-6" />
-				)}
-				<span className="sr-only">
-					{isOpen ? 'Fechar Aegis' : 'Abrir Aegis'}
-				</span>
+				{isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+				<span className="sr-only">{isOpen ? 'Fechar Aegis' : 'Abrir Aegis'}</span>
 
 				{/* Alert Badge */}
 				{!isOpen && hasAlerts && (

@@ -41,9 +41,7 @@ describe('Utterances Dataset', () => {
 		it('should have regional coverage', () => {
 			const expectedRegions = ['SP', 'RJ', 'Nordeste', 'Sul', 'Centro-Oeste'];
 
-			expect(utterancesData.regionalCoverage).toEqual(
-				expect.arrayContaining(expectedRegions),
-			);
+			expect(utterancesData.regionalCoverage).toEqual(expect.arrayContaining(expectedRegions));
 		});
 	});
 
@@ -85,36 +83,36 @@ describe('Utterances Dataset', () => {
 
 	describe('Regional Variations (AC 8)', () => {
 		it('should include SP regional variations', () => {
-			const hasSpVariations = Object.values(utterancesData.intents).some(
-				(intent) => intent.utterances.some((u) => u.region === 'SP'),
+			const hasSpVariations = Object.values(utterancesData.intents).some((intent) =>
+				intent.utterances.some((u) => u.region === 'SP'),
 			);
 			expect(hasSpVariations).toBe(true);
 		});
 
 		it('should include RJ regional variations', () => {
-			const hasRjVariations = Object.values(utterancesData.intents).some(
-				(intent) => intent.utterances.some((u) => u.region === 'RJ'),
+			const hasRjVariations = Object.values(utterancesData.intents).some((intent) =>
+				intent.utterances.some((u) => u.region === 'RJ'),
 			);
 			expect(hasRjVariations).toBe(true);
 		});
 
 		it('should include Nordeste regional variations', () => {
-			const hasNordesteVariations = Object.values(utterancesData.intents).some(
-				(intent) => intent.utterances.some((u) => u.region === 'Nordeste'),
+			const hasNordesteVariations = Object.values(utterancesData.intents).some((intent) =>
+				intent.utterances.some((u) => u.region === 'Nordeste'),
 			);
 			expect(hasNordesteVariations).toBe(true);
 		});
 
 		it('should include formal variations', () => {
-			const hasFormalVariations = Object.values(utterancesData.intents).some(
-				(intent) => intent.utterances.some((u) => u.region === 'formal'),
+			const hasFormalVariations = Object.values(utterancesData.intents).some((intent) =>
+				intent.utterances.some((u) => u.region === 'formal'),
 			);
 			expect(hasFormalVariations).toBe(true);
 		});
 
 		it('should include Sul regional variations', () => {
-			const hasSulVariations = Object.values(utterancesData.intents).some(
-				(intent) => intent.utterances.some((u) => u.region === 'Sul'),
+			const hasSulVariations = Object.values(utterancesData.intents).some((intent) =>
+				intent.utterances.some((u) => u.region === 'Sul'),
 			);
 			expect(hasSulVariations).toBe(true);
 		});
@@ -132,9 +130,7 @@ describe('Utterances Dataset', () => {
 					return;
 				}
 				const utterances = utterancesData.intents[intent].utterances;
-				const texts = utterances.map((u: { text: string }) =>
-					u.text.toLowerCase(),
-				);
+				const texts = utterances.map((u: { text: string }) => u.text.toLowerCase());
 				const uniqueTexts = new Set(texts);
 
 				expect(uniqueTexts.size).toBe(texts.length);
@@ -164,14 +160,7 @@ describe('Utterances Dataset', () => {
 		});
 
 		it('should have valid region tags', () => {
-			const validRegions = [
-				'SP',
-				'RJ',
-				'Nordeste',
-				'Sul',
-				'Centro-Oeste',
-				'formal',
-			];
+			const validRegions = ['SP', 'RJ', 'Nordeste', 'Sul', 'Centro-Oeste', 'formal'];
 			const intents = Object.values(utterancesData.intents);
 
 			intents.forEach((intent) => {
@@ -184,15 +173,10 @@ describe('Utterances Dataset', () => {
 
 	describe('Brazilian Portuguese Specifics', () => {
 		it('should include colloquial expressions', () => {
-			const colloquialExamples = [
-				'tá quanto',
-				'quanto de grana',
-				'dá pra gastar',
-				'vai cair',
-			];
+			const colloquialExamples = ['tá quanto', 'quanto de grana', 'dá pra gastar', 'vai cair'];
 
-			const allUtterances = Object.values(utterancesData.intents).flatMap(
-				(intent) => intent.utterances.map((u) => u.text),
+			const allUtterances = Object.values(utterancesData.intents).flatMap((intent) =>
+				intent.utterances.map((u) => u.text),
 			);
 
 			const hasColloquial = colloquialExamples.some((expr) =>
@@ -203,15 +187,10 @@ describe('Utterances Dataset', () => {
 		});
 
 		it('should include formal expressions', () => {
-			const formalExamples = [
-				'qual é meu',
-				'quanto posso',
-				'projeção',
-				'orçamento',
-			];
+			const formalExamples = ['qual é meu', 'quanto posso', 'projeção', 'orçamento'];
 
-			const allUtterances = Object.values(utterancesData.intents).flatMap(
-				(intent) => intent.utterances.map((u) => u.text),
+			const allUtterances = Object.values(utterancesData.intents).flatMap((intent) =>
+				intent.utterances.map((u) => u.text),
 			);
 
 			const hasFormal = formalExamples.every((expr) =>
@@ -224,8 +203,8 @@ describe('Utterances Dataset', () => {
 		it('should include Brazilian slang', () => {
 			const slangExamples = ['grana', 'bufunfa'];
 
-			const allUtterances = Object.values(utterancesData.intents).flatMap(
-				(intent) => intent.utterances.map((u) => u.text),
+			const allUtterances = Object.values(utterancesData.intents).flatMap((intent) =>
+				intent.utterances.map((u) => u.text),
 			);
 
 			const hasSlang = slangExamples.some((slang) =>
@@ -238,8 +217,8 @@ describe('Utterances Dataset', () => {
 		it('should include contractions', () => {
 			const contractions = ['tá', 'pra', 'pro'];
 
-			const allUtterances = Object.values(utterancesData.intents).flatMap(
-				(intent) => intent.utterances.map((u) => u.text),
+			const allUtterances = Object.values(utterancesData.intents).flatMap((intent) =>
+				intent.utterances.map((u) => u.text),
 			);
 
 			const hasContractions = contractions.some((contraction) =>
@@ -321,10 +300,7 @@ describe('Utterances Dataset', () => {
 	describe('Dataset Statistics', () => {
 		it('should calculate total correctly', () => {
 			const intents = Object.values(utterancesData.intents);
-			const actualTotal = intents.reduce(
-				(sum, intent) => sum + intent.count,
-				0,
-			);
+			const actualTotal = intents.reduce((sum, intent) => sum + intent.count, 0);
 
 			expect(utterancesData.totalUtterances).toBe(actualTotal);
 		});

@@ -3,10 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useVoiceLogger } from '@/hooks/useLogger';
-import type {
-	VoiceRecognitionResult,
-	VoiceServiceErrorInfo,
-} from '@/services/voiceService';
+import type { VoiceRecognitionResult, VoiceServiceErrorInfo } from '@/services/voiceService';
 import { getVoiceService, VOICE_FEEDBACK } from '@/services/voiceService';
 
 export interface UseVoiceCommandOptions {
@@ -37,9 +34,7 @@ export interface UseVoiceCommandReturn {
  * Custom hook for voice command integration
  * Provides voice recognition and text-to-speech capabilities
  */
-export function useVoiceCommand(
-	options: UseVoiceCommandOptions = {},
-): UseVoiceCommandReturn {
+export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
 	const {
 		autoNavigate = true,
 		onCommandDetected,
@@ -103,16 +98,14 @@ export function useVoiceCommand(
 
 					// Navigate after a short delay for feedback
 					setTimeout(() => {
-						navigate({ to: String(result.intent) });
+						void navigate({ to: String(result.intent) });
 					}, 500);
 				}
-			} else {
+			} else if (enableFeedback) {
 				// No command detected
-				if (enableFeedback) {
-					toast.error(VOICE_FEEDBACK.ERROR, {
-						duration: 3000,
-					});
-				}
+				toast.error(VOICE_FEEDBACK.ERROR, {
+					duration: 3000,
+				});
 			}
 		},
 		[navigate, autoNavigate, onCommandDetected, enableFeedback],
@@ -127,15 +120,12 @@ export function useVoiceCommand(
 
 			// Special handling for 'no-speech' error - treat as informational, not critical
 			if (error.isNoSpeech || error.message === 'no-speech') {
-				logger.info(
-					'No speech detected - user did not speak or spoke too quietly',
-					{
-						action: 'handleNoSpeech',
-						enableFeedback,
-						retryCount,
-						maxRetryAttempts,
-					},
-				);
+				logger.info('No speech detected - user did not speak or spoke too quietly', {
+					action: 'handleNoSpeech',
+					enableFeedback,
+					retryCount,
+					maxRetryAttempts,
+				});
 
 				// Update retry state
 				const newRetryCount = retryCount + 1;
@@ -157,18 +147,16 @@ export function useVoiceCommand(
 							setIsListening(true);
 						}
 					}, retryDelay);
-				} else {
+				} else if (enableFeedback) {
 					// Show user feedback and enable manual retry
-					if (enableFeedback) {
-						const retryMessage =
-							newRetryCount <= maxRetryAttempts
-								? `Não detectei sua voz. Tente falar mais alto ou mais perto do microfone. (${newRetryCount}/${maxRetryAttempts})`
-								: 'Não detectei sua voz. Toque para tentar novamente.';
+					const retryMessage =
+						newRetryCount <= maxRetryAttempts
+							? `Não detectei sua voz. Tente falar mais alto ou mais perto do microfone. (${newRetryCount}/${maxRetryAttempts})`
+							: 'Não detectei sua voz. Toque para tentar novamente.';
 
-						toast.info(retryMessage, {
-							duration: 4000,
-						});
-					}
+					toast.info(retryMessage, {
+						duration: 4000,
+					});
 				}
 				// Don't call onError for no-speech - it's a normal use case, not a critical error
 				return;
@@ -234,14 +222,7 @@ export function useVoiceCommand(
 		}
 
 		voiceService.startListening(handleResult, handleError);
-	}, [
-		isSupported,
-		isListening,
-		voiceService,
-		handleResult,
-		handleError,
-		enableFeedback,
-	]);
+	}, [isSupported, isListening, voiceService, handleResult, handleError, enableFeedback]);
 
 	/**
 	 * Stop listening for voice commands

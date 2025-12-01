@@ -8,11 +8,7 @@ interface UpdateData {
 }
 
 export class StripeCustomerService {
-	static async createCustomer(
-		clerkUserId: string,
-		email: string,
-		name?: string,
-	) {
+	static async createCustomer(clerkUserId: string, email: string, name?: string) {
 		const stripe = getStripeClient();
 		try {
 			const customer = await stripe.customers.create({
@@ -38,11 +34,7 @@ export class StripeCustomerService {
 		}
 	}
 
-	static async getOrCreateCustomer(
-		clerkUserId: string,
-		email: string,
-		name?: string,
-	) {
+	static async getOrCreateCustomer(clerkUserId: string, email: string, name?: string) {
 		const stripe = getStripeClient();
 		try {
 			// Search by metadata
@@ -69,11 +61,7 @@ export class StripeCustomerService {
 				return existingByEmail.data[0].id;
 			}
 
-			return await StripeCustomerService.createCustomer(
-				clerkUserId,
-				email,
-				name,
-			);
+			return await StripeCustomerService.createCustomer(clerkUserId, email, name);
 		} catch (error) {
 			secureLogger.error('Failed to get/create Stripe customer', {
 				clerkUserId,

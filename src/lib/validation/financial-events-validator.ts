@@ -6,27 +6,12 @@ import type {
 	FinancialEventMetadata,
 	InstallmentInfo,
 } from '@/types/financial.interfaces';
-import type {
-	FinancialEvent,
-	FinancialEventType,
-} from '@/types/financial-events';
+import type { FinancialEvent, FinancialEventType } from '@/types/financial-events';
 
 export type { FinancialEventCategory };
 
-const EVENT_TYPES = [
-	'income',
-	'expense',
-	'bill',
-	'scheduled',
-	'transfer',
-] as const;
-const EVENT_STATUSES = [
-	'pending',
-	'paid',
-	'scheduled',
-	'cancelled',
-	'completed',
-] as const;
+const EVENT_TYPES = ['income', 'expense', 'bill', 'scheduled', 'transfer'] as const;
+const EVENT_STATUSES = ['pending', 'paid', 'scheduled', 'cancelled', 'completed'] as const;
 const PRIORITIES = ['BAIXA', 'NORMAL', 'ALTA', 'URGENTE'] as const;
 
 const BRAZILIAN_EVENT_TYPES: readonly BrazilianEventType[] = [
@@ -105,9 +90,7 @@ const ensureDate = (value?: Date | string | null): Date | undefined => {
 	return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
-const sanitizeInstallmentInfo = (
-	info?: InstallmentInfo | null,
-): InstallmentInfo | undefined => {
+const sanitizeInstallmentInfo = (info?: InstallmentInfo | null): InstallmentInfo | undefined => {
 	if (!info) {
 		return undefined;
 	}
@@ -190,9 +173,7 @@ const normalizePriority = (value?: string) => {
 		return undefined;
 	}
 	const normalized = value.trim().toUpperCase();
-	return PRIORITIES.includes(normalized as (typeof PRIORITIES)[number])
-		? normalized
-		: undefined;
+	return PRIORITIES.includes(normalized as (typeof PRIORITIES)[number]) ? normalized : undefined;
 };
 
 const normalizeStatus = (value?: string) => {
@@ -216,12 +197,10 @@ const normalizeType = (value?: string) => {
 };
 
 const sanitizeTags = (tags?: string[] | null) => {
-	if (!tags || !Array.isArray(tags)) {
+	if (!(tags && Array.isArray(tags))) {
 		return undefined;
 	}
-	const sanitized = tags
-		.map((tag) => tag?.trim())
-		.filter((tag): tag is string => Boolean(tag));
+	const sanitized = tags.map((tag) => tag?.trim()).filter((tag): tag is string => Boolean(tag));
 
 	return sanitized.length ? Array.from(new Set(sanitized)) : [];
 };
@@ -278,9 +257,7 @@ export const sanitizeFinancialEventData = (
 
 	if (event.category !== undefined) {
 		sanitized.category =
-			typeof event.category === 'string'
-				? event.category.trim()
-				: event.category;
+			typeof event.category === 'string' ? event.category.trim() : event.category;
 	}
 
 	if (event.location !== undefined) {
@@ -329,9 +306,7 @@ export const sanitizeFinancialEventData = (
 	}
 
 	if (event.attachments !== undefined) {
-		sanitized.attachments = Array.isArray(event.attachments)
-			? event.attachments
-			: [];
+		sanitized.attachments = Array.isArray(event.attachments) ? event.attachments : [];
 	}
 
 	const metadata = sanitizeMetadata(event.metadata);
@@ -346,8 +321,7 @@ export const sanitizeFinancialEventData = (
 
 	const brazilianEventType = normalizeBrazilianEventType(
 		(event.brazilianEventType as string) ??
-			(event as unknown as { brazilian_event_type?: string })
-				.brazilian_event_type,
+			(event as unknown as { brazilian_event_type?: string }).brazilian_event_type,
 	);
 	if (brazilianEventType) {
 		sanitized.brazilianEventType = brazilianEventType;
@@ -469,10 +443,7 @@ export const validateFinancialEventForInsert = (
 		});
 	}
 
-	if (
-		event.brazilianEventType &&
-		!validateBrazilianEventType(event.brazilianEventType)
-	) {
+	if (event.brazilianEventType && !validateBrazilianEventType(event.brazilianEventType)) {
 		errors.push({
 			field: 'brazilianEventType',
 			message: 'Tipo brasileiro inválido.',
@@ -522,10 +493,7 @@ export const validateFinancialEventForUpdate = (
 		});
 	}
 
-	if (
-		updates.brazilianEventType &&
-		!validateBrazilianEventType(updates.brazilianEventType)
-	) {
+	if (updates.brazilianEventType && !validateBrazilianEventType(updates.brazilianEventType)) {
 		errors.push({
 			field: 'brazilianEventType',
 			message: 'Tipo brasileiro inválido.',

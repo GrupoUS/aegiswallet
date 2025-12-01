@@ -29,8 +29,7 @@ class SimplifiedLogger {
 
 	constructor() {
 		this.isDevelopment =
-			(typeof process !== 'undefined' &&
-				process.env?.NODE_ENV === 'development') ||
+			(typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ||
 			(typeof import.meta !== 'undefined' && import.meta.env?.DEV);
 	}
 
@@ -74,11 +73,7 @@ class SimplifiedLogger {
 	}
 
 	// Specialized methods for common use cases
-	voiceCommand(
-		command: string,
-		confidence: number,
-		context?: LogContext,
-	): void {
+	voiceCommand(command: string, confidence: number, context?: LogContext): void {
 		this.info('Voice command processed', {
 			...context,
 			command: command.substring(0, 50), // Limit for privacy

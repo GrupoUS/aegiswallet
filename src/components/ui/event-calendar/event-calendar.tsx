@@ -1,11 +1,5 @@
 import type { DragEndEvent } from '@dnd-kit/core';
-import {
-	DndContext,
-	PointerSensor,
-	useDraggable,
-	useSensor,
-	useSensors,
-} from '@dnd-kit/core';
+import { DndContext, PointerSensor, useDraggable, useSensor, useSensors } from '@dnd-kit/core';
 import { useCallback, useMemo, useState } from 'react';
 
 import { CalendarDndProvider } from './calendar-dnd-provider';
@@ -72,12 +66,8 @@ export function EventCalendar({
 	const [currentDate, setCurrentDate] = useState(initialDate);
 	const [view, setView] = useState<CalendarView>(initialView);
 	const [search, setSearch] = useState('');
-	const [statusFilter, setStatusFilter] = useState<
-		'all' | CalendarEvent['status']
-	>('all');
-	const [priorityFilter, setPriorityFilter] = useState<
-		'all' | CalendarEvent['priority']
-	>('all');
+	const [statusFilter, setStatusFilter] = useState<'all' | CalendarEvent['status']>('all');
+	const [priorityFilter, setPriorityFilter] = useState<'all' | CalendarEvent['priority']>('all');
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -92,10 +82,8 @@ export function EventCalendar({
 			const normalizedSearch = search.trim().toLowerCase();
 			if (normalizedSearch) {
 				const titleMatch = event.title.toLowerCase().includes(normalizedSearch);
-				const descriptionMatch = event.description
-					?.toLowerCase()
-					.includes(normalizedSearch);
-				if (!titleMatch && !descriptionMatch) {
+				const descriptionMatch = event.description?.toLowerCase().includes(normalizedSearch);
+				if (!(titleMatch || descriptionMatch)) {
 					return false;
 				}
 			}
@@ -180,11 +168,7 @@ export function EventCalendar({
 		switch (view) {
 			case 'week':
 				return (
-					<WeekView
-						weekStart={currentDate}
-						events={filteredEvents}
-						onEventEdit={handleEventEdit}
-					/>
+					<WeekView weekStart={currentDate} events={filteredEvents} onEventEdit={handleEventEdit} />
 				);
 			case 'day':
 				return (
@@ -202,9 +186,7 @@ export function EventCalendar({
 						events={filteredEvents}
 						onEventEdit={handleEventEdit}
 						onEventClick={handleEventClick}
-						onEventAdd={(date: Date) =>
-							onEventAdd?.({ allDay: true, end: date, start: date })
-						}
+						onEventAdd={(date: Date) => onEventAdd?.({ allDay: true, end: date, start: date })}
 					/>
 				);
 		}
@@ -230,9 +212,7 @@ export function EventCalendar({
 							className="rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							value={statusFilter ?? 'all'}
 							onChange={(event) =>
-								setStatusFilter(
-									event.target.value as 'all' | CalendarEvent['status'],
-								)
+								setStatusFilter(event.target.value as 'all' | CalendarEvent['status'])
 							}
 							aria-label="Filtrar por status dos eventos"
 						>
@@ -245,9 +225,7 @@ export function EventCalendar({
 							className="rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							value={priorityFilter ?? 'all'}
 							onChange={(event) =>
-								setPriorityFilter(
-									event.target.value as 'all' | CalendarEvent['priority'],
-								)
+								setPriorityFilter(event.target.value as 'all' | CalendarEvent['priority'])
 							}
 							aria-label="Filtrar por prioridade dos eventos"
 						>

@@ -36,12 +36,10 @@ export function BillingHistory({ payments }: BillingHistoryProps) {
 		return (
 			<div className="text-center py-12">
 				<Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-				<h3 className="text-lg font-medium mb-2">
-					Nenhuma transação encontrada
-				</h3>
+				<h3 className="text-lg font-medium mb-2">Nenhuma transação encontrada</h3>
 				<p className="text-muted-foreground">
-					Você ainda não realizou nenhuma transação. Comece usando nossos
-					serviços para ver seu histórico aqui.
+					Você ainda não realizou nenhuma transação. Comece usando nossos serviços para ver seu
+					histórico aqui.
 				</p>
 			</div>
 		);
@@ -67,16 +65,13 @@ export function BillingHistory({ payments }: BillingHistoryProps) {
 											<Badge variant={status.variant}>{status.label}</Badge>
 											<span className="text-sm text-muted-foreground">
 												{payment.createdAt
-													? new Date(payment.createdAt).toLocaleDateString(
-															'pt-BR',
-															{
-																day: 'numeric',
-																month: 'long',
-																year: 'numeric',
-																hour: '2-digit',
-																minute: '2-digit',
-															},
-														)
+													? new Date(payment.createdAt).toLocaleDateString('pt-BR', {
+															day: 'numeric',
+															month: 'long',
+															year: 'numeric',
+															hour: '2-digit',
+															minute: '2-digit',
+														})
 													: 'Data não disponível'}
 											</span>
 										</div>
@@ -86,9 +81,7 @@ export function BillingHistory({ payments }: BillingHistoryProps) {
 										</p>
 
 										{payment.failureMessage && (
-											<p className="text-sm text-red-600 mt-1">
-												{payment.failureMessage}
-											</p>
+											<p className="text-sm text-red-600 mt-1">{payment.failureMessage}</p>
 										)}
 									</div>
 								</div>
@@ -98,19 +91,13 @@ export function BillingHistory({ payments }: BillingHistoryProps) {
 										<p className="text-lg font-semibold">
 											{formatCurrency(payment.amountCents / 100)}
 										</p>
-										<p className="text-sm text-muted-foreground">
-											{payment.currency}
-										</p>
+										<p className="text-sm text-muted-foreground">{payment.currency}</p>
 									</div>
 
 									<div className="flex space-x-2">
 										{payment.receiptUrl && (
 											<Button variant="outline" size="sm" asChild>
-												<a
-													href={payment.receiptUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
+												<a href={payment.receiptUrl} target="_blank" rel="noopener noreferrer">
 													Recibo
 												</a>
 											</Button>
@@ -118,11 +105,7 @@ export function BillingHistory({ payments }: BillingHistoryProps) {
 
 										{payment.invoicePdf && (
 											<Button variant="outline" size="sm" asChild>
-												<a
-													href={payment.invoicePdf}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
+												<a href={payment.invoicePdf} target="_blank" rel="noopener noreferrer">
 													PDF
 												</a>
 											</Button>

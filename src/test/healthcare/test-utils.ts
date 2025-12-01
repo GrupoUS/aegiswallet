@@ -60,9 +60,7 @@ export const ensureTestUtils = (): TestUtils => {
 	}
 
 	const testUtils = {
-		checkMockRateLimit: vi
-			.fn()
-			.mockResolvedValue({ allowed: true, remaining: 9 }),
+		checkMockRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 9 }),
 		createMockAuditLog: vi.fn().mockResolvedValue({ id: 'audit-1' }),
 		createMockLGPDConsent: vi.fn().mockReturnValue({
 			consentType: 'treatment',
@@ -71,13 +69,11 @@ export const ensureTestUtils = (): TestUtils => {
 			timestamp: new Date().toISOString(),
 			version: '1.0',
 		}),
-		createMockVoiceCommand: vi
-			.fn()
-			.mockImplementation((command?: string, confidence?: number) => ({
-				command: command ?? 'test command',
-				confidence: confidence ?? 0.95,
-				timestamp: new Date().toISOString(),
-			})),
+		createMockVoiceCommand: vi.fn().mockImplementation((command?: string, confidence?: number) => ({
+			command: command ?? 'test command',
+			confidence: confidence ?? 0.95,
+			timestamp: new Date().toISOString(),
+		})),
 		encryptMockClientData: vi.fn().mockResolvedValue('encrypted-client-data'),
 		encryptMockData: vi.fn().mockResolvedValue({
 			algorithm: 'AES-256-GCM',
@@ -86,9 +82,7 @@ export const ensureTestUtils = (): TestUtils => {
 		}),
 		generateMockCSRFToken: vi.fn().mockReturnValue('csrf-token-123'),
 		generateMockSecureKey: vi.fn().mockResolvedValue('secure-key-123'),
-		validateMockAuthentication: vi
-			.fn()
-			.mockResolvedValue({ isAuthenticated: true }),
+		validateMockAuthentication: vi.fn().mockResolvedValue({ isAuthenticated: true }),
 		validateMockCSRFToken: vi.fn().mockResolvedValue(true),
 		validateMockInput: vi.fn().mockReturnValue({ valid: true }),
 	} as TestUtils;

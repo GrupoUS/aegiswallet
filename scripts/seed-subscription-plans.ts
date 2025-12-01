@@ -18,11 +18,7 @@ async function seedSubscriptionPlans() {
 			interval: null,
 			stripeProductId: null,
 			stripePriceId: null,
-			features: [
-				'Dashboard básico',
-				'1 conta bancária',
-				'Transações limitadas',
-			],
+			features: ['Dashboard básico', '1 conta bancária', 'Transações limitadas'],
 			aiModels: [],
 			maxBankAccounts: 1,
 			maxTransactionsPerMonth: 100,

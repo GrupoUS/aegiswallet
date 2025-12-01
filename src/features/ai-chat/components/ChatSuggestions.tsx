@@ -9,11 +9,7 @@ interface ChatSuggestionsProps {
 	className?: string;
 }
 
-export function ChatSuggestions({
-	suggestions,
-	onSelect,
-	className,
-}: ChatSuggestionsProps) {
+export function ChatSuggestions({ suggestions, onSelect, className }: ChatSuggestionsProps) {
 	if (suggestions.length === 0) return null;
 
 	return (

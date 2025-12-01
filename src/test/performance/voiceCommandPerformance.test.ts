@@ -27,9 +27,7 @@ const createMockSpeechRecognitionInstance = () => {
 	};
 };
 
-const mockSpeechRecognition = vi
-	.fn()
-	.mockImplementation(createMockSpeechRecognitionInstance);
+const mockSpeechRecognition = vi.fn().mockImplementation(createMockSpeechRecognitionInstance);
 
 // Use vi.stubGlobal for proper global mocking across module boundaries
 vi.stubGlobal('SpeechRecognition', mockSpeechRecognition);
@@ -83,18 +81,14 @@ describe('Voice Command Performance', () => {
 		vi.clearAllMocks();
 
 		// Restore the mockSpeechRecognition implementation after clearAllMocks
-		mockSpeechRecognition.mockImplementation(
-			createMockSpeechRecognitionInstance,
-		);
+		mockSpeechRecognition.mockImplementation(createMockSpeechRecognitionInstance);
 	});
 
 	describe('useVoiceRecognition Performance', () => {
 		it('should initialize voice recognition within 100ms', async () => {
 			const startTime = performance.now();
 
-			const { result } = renderHook(() =>
-				useVoiceRecognition({ autoStopTimeoutMs: 200 }),
-			);
+			const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
 			await new Promise((resolve) => setTimeout(resolve, 0));
 			expect(result.current.supported).toBe(true);
@@ -111,9 +105,7 @@ describe('Voice Command Performance', () => {
 			const win = window as any;
 			const windowSpeechRecognition = win.SpeechRecognition;
 
-			const { result } = renderHook(() =>
-				useVoiceRecognition({ autoStopTimeoutMs: 200 }),
-			);
+			const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
 			expect(result.current.supported).toBe(true);
 
@@ -167,9 +159,7 @@ describe('Voice Command Performance', () => {
 		});
 
 		it('should auto-stop listening within 3 seconds', async () => {
-			const { result } = renderHook(() =>
-				useVoiceRecognition({ autoStopTimeoutMs: 250 }),
-			);
+			const { result } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 250 }));
 
 			// Start listening - must await the async function
 			await act(async () => {
@@ -188,9 +178,7 @@ describe('Voice Command Performance', () => {
 		});
 
 		it('should cleanup resources properly on unmount', () => {
-			const { unmount } = renderHook(() =>
-				useVoiceRecognition({ autoStopTimeoutMs: 200 }),
-			);
+			const { unmount } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
 			expect(() => unmount()).not.toThrow();
 		});
@@ -201,8 +189,7 @@ describe('Voice Command Performance', () => {
 			const sttService = createSTTService('test-key');
 
 			// Access private config through type assertion for testing
-			const config = (sttService as unknown as { config: { timeout: number } })
-				.config;
+			const config = (sttService as unknown as { config: { timeout: number } }).config;
 
 			expect(config.timeout).toBe(8000); // Should be 8 seconds
 		});
@@ -215,9 +202,7 @@ describe('Voice Command Performance', () => {
 				type: 'audio/webm',
 			});
 
-			await expect(sttService.transcribe(largeAudio)).rejects.toThrow(
-				'Audio file too large',
-			);
+			await expect(sttService.transcribe(largeAudio)).rejects.toThrow('Audio file too large');
 
 			// Test with acceptable file size
 			const normalAudio = new Blob([new Uint8Array(1024)], {
@@ -310,9 +295,7 @@ describe('Voice Command Performance', () => {
 
 	describe('Memory Leak Prevention', () => {
 		it('should clean up intervals and timeouts properly', () => {
-			const { unmount } = renderHook(() =>
-				useVoiceRecognition({ autoStopTimeoutMs: 200 }),
-			);
+			const { unmount } = renderHook(() => useVoiceRecognition({ autoStopTimeoutMs: 200 }));
 
 			expect(() => unmount()).not.toThrow();
 		});
@@ -344,16 +327,13 @@ describe('Voice Command Performance', () => {
 
 			// Get the created instance from the mock
 			const createdInstance =
-				windowSpeechRecognition.mock.results[
-					windowSpeechRecognition.mock.results.length - 1
-				]?.value;
+				windowSpeechRecognition.mock.results[windowSpeechRecognition.mock.results.length - 1]
+					?.value;
 
 			// 3. Simulate speech recognition (<100ms) using async utility
-			const { waitForMs, actAsync } = await import(
-				'@/test/utils/async-test-utils'
-			);
+			const { waitForMs, actAsync } = await import('@/test/utils/async-test-utils');
 
-			(async () => {
+			await (async () => {
 				await waitForMs(100);
 				await actAsync(() => {
 					if (createdInstance?.onresult) {

@@ -19,11 +19,9 @@ export function CalendarLoader() {
 				</div>
 
 				<div className="grid grid-cols-7 gap-1">
-					{Array.from({ length: 35 }, (_, index) => `day-${index}`).map(
-						(cellKey) => (
-							<Skeleton key={cellKey} className="h-20 w-full" />
-						),
-					)}
+					{Array.from({ length: 35 }, (_, index) => `day-${index}`).map((cellKey) => (
+						<Skeleton key={cellKey} className="h-20 w-full" />
+					))}
 				</div>
 			</div>
 		</div>

@@ -20,11 +20,7 @@ const REQUIRED_VARS = [
 	'VITE_API_URL',
 ] as const;
 
-const OPTIONAL_VARS = [
-	'DATABASE_URL_UNPOOLED',
-	'VITE_APP_ENV',
-	'VITE_APP_VERSION',
-];
+const OPTIONAL_VARS = ['DATABASE_URL_UNPOOLED', 'VITE_APP_ENV', 'VITE_APP_VERSION'];
 
 const envFiles = ['.env.local', '.env'];
 
@@ -79,9 +75,7 @@ if (missing.length > 0) {
 }
 
 if (warnings.length > 0) {
-	process.stdout.write(
-		'⚠️ Optional variables not found (recommended to set):\n',
-	);
+	process.stdout.write('⚠️ Optional variables not found (recommended to set):\n');
 	for (const key of warnings) {
 		process.stdout.write(`  • ${key}\n`);
 	}

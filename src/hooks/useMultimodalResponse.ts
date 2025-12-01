@@ -54,10 +54,7 @@ export interface UseMultimodalResponseReturn {
 	state: MultimodalResponseState;
 
 	// Actions
-	sendResponse: (
-		intent: IntentType | 'error' | 'confirmation',
-		data: unknown,
-	) => Promise<void>;
+	sendResponse: (intent: IntentType | 'error' | 'confirmation', data: unknown) => Promise<void>;
 	stopSpeaking: () => void;
 	pauseSpeaking: () => void;
 	resumeSpeaking: () => void;
@@ -99,9 +96,7 @@ export function useMultimodalResponse(
 
 	const [voiceEnabled, setVoiceEnabled] = useState(enableVoice);
 	const [_visualEnabled, setVisualEnabled] = useState(enableVisual);
-	const [currentResponseId, setCurrentResponseId] = useState<string | null>(
-		null,
-	);
+	const [currentResponseId, setCurrentResponseId] = useState<string | null>(null);
 
 	// TTS Service
 	const ttsService = getTTSService();
@@ -127,10 +122,7 @@ export function useMultimodalResponse(
 
 			try {
 				// Build response from template
-				const response = buildMultimodalResponse(
-					intent,
-					data as Record<string, unknown>,
-				);
+				const response = buildMultimodalResponse(intent, data as Record<string, unknown>);
 
 				// Generate response ID
 				const responseId = `response_${Date.now()}`;
@@ -152,24 +144,18 @@ export function useMultimodalResponse(
 				if (voiceEnabled && autoSpeak) {
 					setState((prev) => ({ ...prev, isSpeaking: true }));
 
-					const ttsResult = await ttsService.speak(
-						response.voice,
-						response.ssmlOptions,
-					);
+					const ttsResult = await ttsService.speak(response.voice, response.ssmlOptions);
 
 					setState((prev) => ({ ...prev, isSpeaking: false }));
 
 					// Track performance
 					if (ttsResult.duration > 800) {
-						logger.warn(
-							`TTS response time exceeded target: ${ttsResult.duration}ms`,
-							{
-								duration: ttsResult.duration,
-								intent: typeof intent === 'string' ? intent : 'unknown',
-								responseId,
-								target: 800,
-							},
-						);
+						logger.warn(`TTS response time exceeded target: ${ttsResult.duration}ms`, {
+							duration: ttsResult.duration,
+							intent: typeof intent === 'string' ? intent : 'unknown',
+							responseId,
+							target: 800,
+						});
 					}
 
 					// Show feedback prompt after speaking
@@ -249,10 +235,7 @@ export function useMultimodalResponse(
 		setState((prev) => ({ ...prev, isSpeaking: true }));
 
 		try {
-			await ttsService.speak(
-				state.currentResponse.voice,
-				state.currentResponse.ssmlOptions,
-			);
+			await ttsService.speak(state.currentResponse.voice, state.currentResponse.ssmlOptions);
 		} catch (error) {
 			logger.error('Error repeating multimodal response', {
 				error: error instanceof Error ? error.message : String(error),
@@ -262,12 +245,7 @@ export function useMultimodalResponse(
 		} finally {
 			setState((prev) => ({ ...prev, isSpeaking: false }));
 		}
-	}, [
-		state.currentResponse,
-		currentResponseId,
-		logger.error,
-		ttsService.speak,
-	]);
+	}, [state.currentResponse, currentResponseId, logger.error, ttsService.speak]);
 
 	/**
 	 * Clear current response
@@ -379,8 +357,7 @@ export function useResponseMetrics() {
 			...prev,
 			totalResponses: prev.totalResponses + 1,
 			averageResponseTime:
-				(prev.averageResponseTime * prev.totalResponses + duration) /
-				(prev.totalResponses + 1),
+				(prev.averageResponseTime * prev.totalResponses + duration) / (prev.totalResponses + 1),
 		}));
 	}, []);
 
@@ -388,9 +365,7 @@ export function useResponseMetrics() {
 		setMetrics((prev) => ({
 			...prev,
 			feedbackCount: prev.feedbackCount + 1,
-			averageRating:
-				(prev.averageRating * prev.feedbackCount + rating) /
-				(prev.feedbackCount + 1),
+			averageRating: (prev.averageRating * prev.feedbackCount + rating) / (prev.feedbackCount + 1),
 		}));
 	}, []);
 

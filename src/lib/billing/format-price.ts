@@ -1,7 +1,7 @@
 /**
  * Format price in Brazilian Real (BRL)
  */
-export function formatPrice(cents: number, currency: string = 'BRL'): string {
+export function formatPrice(cents: number, currency = 'BRL'): string {
 	return new Intl.NumberFormat('pt-BR', {
 		style: 'currency',
 		currency,
@@ -19,11 +19,7 @@ export function formatPriceCustom(
 		showCurrency?: boolean;
 	},
 ): string {
-	const {
-		currency = 'BRL',
-		locale = 'pt-BR',
-		showCurrency = true,
-	} = options || {};
+	const { currency = 'BRL', locale = 'pt-BR', showCurrency = true } = options || {};
 
 	if (!showCurrency) {
 		return new Intl.NumberFormat(locale, {

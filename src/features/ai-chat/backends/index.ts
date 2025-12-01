@@ -1,15 +1,9 @@
 import { GEMINI_MODELS } from '../config/models';
 import type { ChatBackend } from '../domain/ChatBackend';
 import { AgUiBackend, type AgUiBackendConfig } from './AgUiBackend';
-import {
-	CopilotKitBackend,
-	type CopilotKitBackendConfig,
-} from './CopilotKitBackend';
+import { CopilotKitBackend, type CopilotKitBackendConfig } from './CopilotKitBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
-import {
-	OttomatorBackend,
-	type OttomatorBackendConfig,
-} from './OttomatorBackend';
+import { OttomatorBackend, type OttomatorBackendConfig } from './OttomatorBackend';
 
 /**
  * Backend factory and exports
@@ -77,9 +71,7 @@ export function createChatBackend(config: BackendConfig): ChatBackend {
 		}
 
 		default:
-			throw new Error(
-				`Unknown backend type: ${(config as { type: string }).type}`,
-			);
+			throw new Error(`Unknown backend type: ${(config as { type: string }).type}`);
 	}
 }
 

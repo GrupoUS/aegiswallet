@@ -103,16 +103,18 @@ export const ConversationScrollButton = ({
 			<Button
 				className={cn(
 					'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full shadow-lg',
+					'focus:ring-2 focus:ring-primary focus:ring-offset-2',
 					className,
 				)}
 				onClick={handleScrollToBottom}
 				size="icon"
 				type="button"
 				variant="outline"
-				aria-label="Rolar para o final"
+				aria-label="Rolar para a última mensagem"
+				title="Rolar para a última mensagem"
 				{...props}
 			>
-				<ArrowDownIcon className="size-4" />
+				<ArrowDownIcon className="size-4" aria-hidden="true" />
 			</Button>
 		)
 	);

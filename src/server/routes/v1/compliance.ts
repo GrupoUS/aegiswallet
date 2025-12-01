@@ -10,10 +10,7 @@ import { z } from 'zod';
 import { createComplianceService } from '@/lib/compliance';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import type { ConsentType } from '@/types/compliance';
 
 const complianceRouter = new Hono<AppEnv>();
@@ -24,12 +21,7 @@ const complianceRouter = new Hono<AppEnv>();
 
 const grantConsentSchema = z.object({
 	collectionMethod: z
-		.enum([
-			'explicit_form',
-			'voice_command',
-			'terms_acceptance',
-			'settings_toggle',
-		])
+		.enum(['explicit_form', 'voice_command', 'terms_acceptance', 'settings_toggle'])
 		.default('explicit_form'),
 	consentType: z.enum([
 		'data_processing',
@@ -48,25 +40,13 @@ const createExportRequestSchema = z.object({
 	dateTo: z.string().optional(),
 	format: z.enum(['json', 'csv', 'pdf']).default('json'),
 	requestType: z
-		.enum([
-			'full_data',
-			'full_export',
-			'transactions',
-			'profile',
-			'consents',
-			'audit_logs',
-		])
+		.enum(['full_data', 'full_export', 'transactions', 'profile', 'consents', 'audit_logs'])
 		.default('full_export'),
 });
 
 const createDeletionRequestSchema = z.object({
 	reason: z.string().optional(),
-	requestType: z.enum([
-		'full_account',
-		'full_deletion',
-		'specific_data',
-		'anonymization',
-	]),
+	requestType: z.enum(['full_account', 'full_deletion', 'specific_data', 'anonymization']),
 	scope: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -150,10 +130,7 @@ complianceRouter.get(
 				userId: user.id,
 			});
 
-			return c.json(
-				{ code: 'CONSENTS_ERROR', error: 'Erro ao buscar consentimentos' },
-				500,
-			);
+			return c.json({ code: 'CONSENTS_ERROR', error: 'Erro ao buscar consentimentos' }, 500);
 		}
 	},
 );
@@ -167,9 +144,7 @@ complianceRouter.get('/consents/missing', authMiddleware, async (c) => {
 
 	try {
 		const complianceService = createComplianceService(db);
-		const missingConsents = await complianceService.getMissingMandatoryConsents(
-			user.id,
-		);
+		const missingConsents = await complianceService.getMissingMandatoryConsents(user.id);
 
 		return c.json({
 			data: { hasMissing: missingConsents.length > 0, missingConsents },
@@ -210,8 +185,7 @@ complianceRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
-			const ipAddress =
-				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
+			const ipAddress = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 			const userAgent = c.req.header('user-agent');
 
 			const complianceService = createComplianceService(db);
@@ -273,10 +247,7 @@ complianceRouter.delete(
 
 		try {
 			const complianceService = createComplianceService(db);
-			await complianceService.revokeConsent(
-				user.id,
-				consentType as ConsentType,
-			);
+			await complianceService.revokeConsent(user.id, consentType as ConsentType);
 
 			secureLogger.info('Consent revoked', {
 				consentType,
@@ -333,10 +304,7 @@ complianceRouter.get('/export-requests', authMiddleware, async (c) => {
 			userId: user.id,
 		});
 
-		return c.json(
-			{ code: 'EXPORT_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' },
-			500,
-		);
+		return c.json({ code: 'EXPORT_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
 	}
 });
 
@@ -358,8 +326,7 @@ complianceRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
-			const ipAddress =
-				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
+			const ipAddress = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 
 			const complianceService = createComplianceService(db);
 			const request = await complianceService.createExportRequest(
@@ -392,10 +359,7 @@ complianceRouter.post(
 				userId: user.id,
 			});
 
-			return c.json(
-				{ code: 'EXPORT_REQUEST_ERROR', error: 'Erro ao criar solicitação' },
-				500,
-			);
+			return c.json({ code: 'EXPORT_REQUEST_ERROR', error: 'Erro ao criar solicitação' }, 500);
 		}
 	},
 );
@@ -426,10 +390,7 @@ complianceRouter.get('/deletion-requests', authMiddleware, async (c) => {
 			userId: user.id,
 		});
 
-		return c.json(
-			{ code: 'DELETION_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' },
-			500,
-		);
+		return c.json({ code: 'DELETION_REQUESTS_ERROR', error: 'Erro ao buscar solicitações' }, 500);
 	}
 });
 
@@ -451,8 +412,7 @@ complianceRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
-			const ipAddress =
-				c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
+			const ipAddress = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip');
 
 			const complianceService = createComplianceService(db);
 			const request = await complianceService.createDeletionRequest(
@@ -477,8 +437,7 @@ complianceRouter.post(
 				201,
 			);
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			secureLogger.error('Failed to create deletion request', {
 				error: errorMessage,
 				requestId,
@@ -490,10 +449,7 @@ complianceRouter.post(
 				return c.json({ code: 'LEGAL_HOLD', error: errorMessage }, 403);
 			}
 
-			return c.json(
-				{ code: 'DELETION_REQUEST_ERROR', error: 'Erro ao criar solicitação' },
-				500,
-			);
+			return c.json({ code: 'DELETION_REQUEST_ERROR', error: 'Erro ao criar solicitação' }, 500);
 		}
 	},
 );
@@ -524,10 +480,7 @@ complianceRouter.get('/limits', authMiddleware, async (c) => {
 			userId: user.id,
 		});
 
-		return c.json(
-			{ code: 'LIMITS_ERROR', error: 'Erro ao buscar limites' },
-			500,
-		);
+		return c.json({ code: 'LIMITS_ERROR', error: 'Erro ao buscar limites' }, 500);
 	}
 });
 
@@ -569,10 +522,7 @@ complianceRouter.post(
 				userId: user.id,
 			});
 
-			return c.json(
-				{ code: 'LIMIT_CHECK_ERROR', error: 'Erro ao verificar limite' },
-				500,
-			);
+			return c.json({ code: 'LIMIT_CHECK_ERROR', error: 'Erro ao verificar limite' }, 500);
 		}
 	},
 );
@@ -617,10 +567,7 @@ complianceRouter.get(
 				userId: user.id,
 			});
 
-			return c.json(
-				{ code: 'AUDIT_ERROR', error: 'Erro ao buscar histórico' },
-				500,
-			);
+			return c.json({ code: 'AUDIT_ERROR', error: 'Erro ao buscar histórico' }, 500);
 		}
 	},
 );

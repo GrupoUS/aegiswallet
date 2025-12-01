@@ -79,9 +79,7 @@ export function useConsents() {
 	return useQuery({
 		queryKey: complianceKeys.consents(),
 		queryFn: async (): Promise<LgpdConsent[]> => {
-			const response = await apiClient.get<ApiResponse<LgpdConsent[]>>(
-				'/v1/compliance/consents',
-			);
+			const response = await apiClient.get<ApiResponse<LgpdConsent[]>>('/v1/compliance/consents');
 			return response.data;
 		},
 	});
@@ -94,9 +92,9 @@ export function useMissingConsents() {
 	return useQuery({
 		queryKey: complianceKeys.missingConsents(),
 		queryFn: async (): Promise<MissingConsentsResponse> => {
-			const response = await apiClient.get<
-				ApiResponse<MissingConsentsResponse>
-			>('/v1/compliance/consents/missing');
+			const response = await apiClient.get<ApiResponse<MissingConsentsResponse>>(
+				'/v1/compliance/consents/missing',
+			);
 			return response.data;
 		},
 		staleTime: 30 * 1000, // 30 seconds
@@ -114,13 +112,10 @@ export function useGrantConsent() {
 			consentType: ConsentType;
 			collectionMethod?: CollectionMethod;
 		}): Promise<LgpdConsent> => {
-			const response = await apiClient.post<ApiResponse<LgpdConsent>>(
-				'/v1/compliance/consents',
-				{
-					consentType: params.consentType,
-					collectionMethod: params.collectionMethod ?? 'explicit_form',
-				},
-			);
+			const response = await apiClient.post<ApiResponse<LgpdConsent>>('/v1/compliance/consents', {
+				consentType: params.consentType,
+				collectionMethod: params.collectionMethod ?? 'explicit_form',
+			});
 			return response.data;
 		},
 		onSuccess: () => {
@@ -261,15 +256,11 @@ export function useCreateDeletionRequest() {
 			queryClient.invalidateQueries({
 				queryKey: complianceKeys.deletionRequests(),
 			});
-			toast.success(
-				'Solicitação de exclusão criada. Analisaremos em até 15 dias.',
-			);
+			toast.success('Solicitação de exclusão criada. Analisaremos em até 15 dias.');
 		},
 		onError: (error: Error) => {
 			if (error.message.includes('retenção legal')) {
-				toast.error(
-					'Seus dados estão sob retenção legal e não podem ser excluídos.',
-				);
+				toast.error('Seus dados estão sob retenção legal e não podem ser excluídos.');
 			} else {
 				toast.error(`Erro ao solicitar exclusão: ${error.message}`);
 			}
@@ -288,9 +279,8 @@ export function useTransactionLimits() {
 	return useQuery({
 		queryKey: complianceKeys.limits(),
 		queryFn: async (): Promise<TransactionLimit[]> => {
-			const response = await apiClient.get<ApiResponse<TransactionLimit[]>>(
-				'/v1/compliance/limits',
-			);
+			const response =
+				await apiClient.get<ApiResponse<TransactionLimit[]>>('/v1/compliance/limits');
 			return response.data;
 		},
 	});
@@ -324,19 +314,13 @@ export function useCheckTransactionLimit() {
 /**
  * Fetch compliance audit history
  */
-export function useAuditHistory(options?: {
-	limit?: number;
-	eventType?: string;
-}) {
+export function useAuditHistory(options?: { limit?: number; eventType?: string }) {
 	return useQuery({
 		queryKey: complianceKeys.audit(options),
 		queryFn: async (): Promise<unknown[]> => {
-			const response = await apiClient.get<ApiResponse<unknown[]>>(
-				'/v1/compliance/audit',
-				{
-					params: options,
-				},
-			);
+			const response = await apiClient.get<ApiResponse<unknown[]>>('/v1/compliance/audit', {
+				params: options,
+			});
 			return response.data;
 		},
 	});
@@ -383,7 +367,7 @@ export function useRequiredConsentsCheck(requiredTypes: ConsentType[]) {
 
 	const missingTypes = requiredTypes.filter((type) => {
 		const consent = consents?.find((c) => c.consent_type === type);
-		return !consent || !consent.granted || consent.revoked_at;
+		return !consent?.granted || consent.revoked_at;
 	});
 
 	return {

@@ -17,8 +17,7 @@ const SENSITIVE_DATA_PATTERNS = {
 	email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
 	address:
 		/\b(?:Rua|Avenida|Av\.|Alameda|Travessa|Praça|SQN|SQW|SHIN|SHIS|SGAS|CLN|SCLN|CNB|CSE|CSE|CWS|CSW|SGAS|CLN|SCLN|CNB|CSE|CWS|CSW)\s+\d+/i,
-	healthData:
-		/\b(?:doença|tratamento|medicamento|diagnóstico|exame|sintoma)\b/i,
+	healthData: /\b(?:doença|tratamento|medicamento|diagnóstico|exame|sintoma)\b/i,
 };
 
 const REQUIRED_LGPD_ELEMENTS = [
@@ -74,20 +73,16 @@ function assessLGPDCompliance(data: unknown): LGPDComplianceResult {
 		const dataStr = JSON.stringify(data);
 
 		// Check for sensitive data exposure
-		const sensitiveDataFound = Object.entries(SENSITIVE_DATA_PATTERNS).filter(
-			([_type, pattern]) => pattern.test(dataStr),
+		const sensitiveDataFound = Object.entries(SENSITIVE_DATA_PATTERNS).filter(([_type, pattern]) =>
+			pattern.test(dataStr),
 		);
 
 		if (sensitiveDataFound.length > 0) {
 			violations.push(
 				`Sensitive data detected: ${sensitiveDataFound.map(([type]) => type).join(', ')}`,
 			);
-			recommendations.push(
-				'Implement data masking or encryption for sensitive information',
-			);
-			recommendations.push(
-				'Ensure explicit user consent for processing sensitive data',
-			);
+			recommendations.push('Implement data masking or encryption for sensitive information');
+			recommendations.push('Ensure explicit user consent for processing sensitive data');
 			severity = 'critical';
 		}
 
@@ -103,9 +98,7 @@ function assessLGPDCompliance(data: unknown): LGPDComplianceResult {
 		});
 
 		if (missingElements.length > 0) {
-			violations.push(
-				`Missing LGPD required elements: ${missingElements.join(', ')}`,
-			);
+			violations.push(`Missing LGPD required elements: ${missingElements.join(', ')}`);
 			recommendations.push('Include consent mechanism');
 			recommendations.push('Specify data processing purpose');
 			recommendations.push('Define data retention policies');
@@ -116,12 +109,8 @@ function assessLGPDCompliance(data: unknown): LGPDComplianceResult {
 		// Check data minimization
 		const dataKeys = Object.keys(dataObj);
 		if (dataKeys.length > 50) {
-			violations.push(
-				'Excessive data fields - violates data minimization principle',
-			);
-			recommendations.push(
-				'Review and minimize collected data to only necessary fields',
-			);
+			violations.push('Excessive data fields - violates data minimization principle');
+			recommendations.push('Review and minimize collected data to only necessary fields');
 			severity = severity === 'critical' ? 'critical' : 'medium';
 		}
 
@@ -135,9 +124,7 @@ function assessLGPDCompliance(data: unknown): LGPDComplianceResult {
 
 		if (!hasConsent && sensitiveDataFound.length > 0) {
 			violations.push('Missing explicit consent for sensitive data processing');
-			recommendations.push(
-				'Implement explicit consent collection and verification',
-			);
+			recommendations.push('Implement explicit consent collection and verification');
 			severity = 'critical';
 		}
 
@@ -193,9 +180,7 @@ export function toHaveValidConsent(received: unknown): {
 	const data = received as Record<string, unknown>;
 	const hasValidConsent = Object.keys(data).some(
 		(key) =>
-			key.toLowerCase().includes('consent') &&
-			typeof data[key] === 'boolean' &&
-			data[key] === true,
+			key.toLowerCase().includes('consent') && typeof data[key] === 'boolean' && data[key] === true,
 	);
 
 	return {

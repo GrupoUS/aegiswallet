@@ -45,14 +45,10 @@ webhookRouter.post('/', async (c) => {
 				);
 				break;
 			case 'invoice.paid':
-				await StripeWebhookService.handleInvoicePaid(
-					event.data.object as Stripe.Invoice,
-				);
+				await StripeWebhookService.handleInvoicePaid(event.data.object as Stripe.Invoice);
 				break;
 			case 'invoice.payment_failed':
-				await StripeWebhookService.handleInvoicePaymentFailed(
-					event.data.object as Stripe.Invoice,
-				);
+				await StripeWebhookService.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
 				break;
 			default:
 				secureLogger.info('Unhandled webhook event type', { type: event.type });

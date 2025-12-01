@@ -8,16 +8,7 @@
  * - Advanced settings
  */
 
-import {
-	Bot,
-	Lightbulb,
-	Mic,
-	Settings2,
-	Sliders,
-	Sparkles,
-	Trash2,
-	Zap,
-} from 'lucide-react';
+import { Bot, Lightbulb, Mic, Settings2, Sliders, Sparkles, Trash2, Zap } from 'lucide-react';
 import { useId } from 'react';
 
 import { SettingsCard } from './settings-card';
@@ -99,8 +90,7 @@ function getAutonomyLabel(level: number): string {
 // =============================================================================
 
 export function AIAssistantSettings() {
-	const { profile, isLoading, updatePreferences, isUpdatingPreferences } =
-		useProfile();
+	const { profile, isLoading, updatePreferences, isUpdatingPreferences } = useProfile();
 	const preferences = profile?.user_preferences?.[0];
 	const systemPromptId = useId();
 
@@ -131,8 +121,7 @@ export function AIAssistantSettings() {
 		return <AISettingsSkeleton />;
 	}
 
-	const currentModel =
-		(preferences as { ai_model?: string })?.ai_model || 'gemini-2.0-flash-lite';
+	const currentModel = (preferences as { ai_model?: string })?.ai_model || 'gemini-2.0-flash-lite';
 	const autonomyLevel = preferences?.autonomy_level ?? 50;
 
 	return (
@@ -172,9 +161,7 @@ export function AIAssistantSettings() {
 											{speedBadge.icon} {speedBadge.label}
 										</Badge>
 									</div>
-									<p className="text-sm text-muted-foreground">
-										{model.description}
-									</p>
+									<p className="text-sm text-muted-foreground">{model.description}</p>
 								</Label>
 								<div className="text-xs text-muted-foreground">
 									{costBadge.icon} {costBadge.label}
@@ -196,15 +183,11 @@ export function AIAssistantSettings() {
 					<div className="flex items-center justify-between">
 						<div className="space-y-0.5">
 							<Label className="text-base">Ativar comandos de voz</Label>
-							<p className="text-sm text-muted-foreground">
-								Controle o assistente usando sua voz
-							</p>
+							<p className="text-sm text-muted-foreground">Controle o assistente usando sua voz</p>
 						</div>
 						<Switch
 							checked={preferences?.voice_commands_enabled ?? true}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('voice_commands_enabled', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('voice_commands_enabled', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Ativar comandos de voz"
 						/>
@@ -221,9 +204,7 @@ export function AIAssistantSettings() {
 						</div>
 						<Switch
 							checked={preferences?.voice_feedback ?? false}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('voice_feedback', checked)
-							}
+							onCheckedChange={(checked) => handleSwitchChange('voice_feedback', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Ativar feedback por voz"
 						/>
@@ -271,13 +252,8 @@ export function AIAssistantSettings() {
 								<Label className="text-sm">Categorização automática</Label>
 							</div>
 							<Switch
-								checked={
-									(preferences as { auto_categorize?: boolean })
-										?.auto_categorize ?? true
-								}
-								onCheckedChange={(checked) =>
-									handleSwitchChange('auto_categorize', checked)
-								}
+								checked={(preferences as { auto_categorize?: boolean })?.auto_categorize ?? true}
+								onCheckedChange={(checked) => handleSwitchChange('auto_categorize', checked)}
 								disabled={isUpdatingPreferences}
 								aria-label="Categorização automática"
 							/>
@@ -289,13 +265,8 @@ export function AIAssistantSettings() {
 								<Label className="text-sm">Alertas de orçamento</Label>
 							</div>
 							<Switch
-								checked={
-									(preferences as { budget_alerts?: boolean })?.budget_alerts ??
-									true
-								}
-								onCheckedChange={(checked) =>
-									handleSwitchChange('budget_alerts', checked)
-								}
+								checked={(preferences as { budget_alerts?: boolean })?.budget_alerts ?? true}
+								onCheckedChange={(checked) => handleSwitchChange('budget_alerts', checked)}
 								disabled={isUpdatingPreferences}
 								aria-label="Alertas de orçamento"
 							/>
@@ -323,13 +294,8 @@ export function AIAssistantSettings() {
 							</p>
 						</div>
 						<Switch
-							checked={
-								(preferences as { show_reasoning?: boolean })?.show_reasoning ??
-								false
-							}
-							onCheckedChange={(checked) =>
-								handleSwitchChange('show_reasoning', checked)
-							}
+							checked={(preferences as { show_reasoning?: boolean })?.show_reasoning ?? false}
+							onCheckedChange={(checked) => handleSwitchChange('show_reasoning', checked)}
 							disabled={isUpdatingPreferences}
 							aria-label="Mostrar raciocínio"
 						/>
@@ -338,9 +304,7 @@ export function AIAssistantSettings() {
 					<Separator />
 
 					<div className="space-y-2">
-						<Label htmlFor={systemPromptId}>
-							Prompt personalizado (opcional)
-						</Label>
+						<Label htmlFor={systemPromptId}>Prompt personalizado (opcional)</Label>
 						<Textarea
 							id={systemPromptId}
 							placeholder="Ex: Seja mais formal nas respostas, use terminologia financeira..."
@@ -348,8 +312,7 @@ export function AIAssistantSettings() {
 							disabled={isUpdatingPreferences}
 						/>
 						<p className="text-xs text-muted-foreground">
-							Personalize o comportamento do assistente com instruções
-							específicas.
+							Personalize o comportamento do assistente com instruções específicas.
 						</p>
 					</div>
 
@@ -357,12 +320,8 @@ export function AIAssistantSettings() {
 
 					<div className="flex items-center justify-between p-4 rounded-lg border border-destructive/30 bg-destructive/5">
 						<div className="space-y-0.5">
-							<Label className="text-base text-destructive">
-								Limpar histórico
-							</Label>
-							<p className="text-sm text-muted-foreground">
-								Remove todas as conversas anteriores
-							</p>
+							<Label className="text-base text-destructive">Limpar histórico</Label>
+							<p className="text-sm text-muted-foreground">Remove todas as conversas anteriores</p>
 						</div>
 						<Button
 							variant="destructive"

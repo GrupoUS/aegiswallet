@@ -208,12 +208,8 @@ async function createBasicTables() {
 		console.log('   📈 Creating indexes...');
 
 		// Users indexes
-		await db.execute(
-			sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`,
-		);
-		await db.execute(
-			sql`CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`,
-		);
+		await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
+		await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`);
 
 		// Transactions indexes
 		await db.execute(

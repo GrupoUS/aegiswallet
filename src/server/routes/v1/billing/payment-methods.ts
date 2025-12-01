@@ -4,10 +4,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import type { PaymentMethod } from '@/types/billing';
 
 const paymentMethodsRouter = new Hono<AppEnv>();
@@ -93,7 +90,7 @@ paymentMethodsRouter.post(
 					paymentMethod: {
 						id: 'pm_mock_id',
 						type: data.type,
-						isDefault: data.isDefault || false,
+						isDefault: data.isDefault,
 						createdAt: new Date().toISOString(),
 					},
 				},

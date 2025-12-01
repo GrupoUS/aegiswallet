@@ -149,10 +149,7 @@ interface HookParams {
 	onVoiceCommand?: (command: string, confidence: number) => void;
 }
 
-export const usePortugueseVoiceAccessibility = ({
-	enabled,
-	onVoiceCommand,
-}: HookParams) => {
+export const usePortugueseVoiceAccessibility = ({ enabled, onVoiceCommand }: HookParams) => {
 	const { announceToScreenReader, settings } = useAccessibility();
 	const [isListening, setIsListening] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
@@ -167,14 +164,11 @@ export const usePortugueseVoiceAccessibility = ({
 			'audio-capture': 'Erro ao acessar o microfone. Verifique as permissões.',
 			network: 'Erro de conexão. Verifique sua internet.',
 			'no-speech': 'Não foi possível detectar fala. Tente novamente.',
-			'not-allowed':
-				'Acesso ao microfone negado. Permita o acesso nas configurações.',
+			'not-allowed': 'Acesso ao microfone negado. Permita o acesso nas configurações.',
 			'service-not-allowed': 'Serviço de reconhecimento de voz não disponível.',
 		};
 
-		return (
-			errorMessages[error] || 'Erro no reconhecimento de voz. Tente novamente.'
-		);
+		return errorMessages[error] || 'Erro no reconhecimento de voz. Tente novamente.';
 	}, []);
 
 	const speakResponse = useCallback((text: string) => {
@@ -239,12 +233,7 @@ export const usePortugueseVoiceAccessibility = ({
 			onVoiceCommand?.(trimmedCommand, confidence);
 			setIsProcessing(false);
 		},
-		[
-			announceToScreenReader,
-			onVoiceCommand,
-			settings.voiceNavigation,
-			speakResponse,
-		],
+		[announceToScreenReader, onVoiceCommand, settings.voiceNavigation, speakResponse],
 	);
 
 	useEffect(() => {
@@ -252,8 +241,7 @@ export const usePortugueseVoiceAccessibility = ({
 			return;
 		}
 
-		const SpeechRecognition =
-			window.SpeechRecognition || window.webkitSpeechRecognition || null;
+		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 		if (!SpeechRecognition) {
 			return;
 		}
@@ -271,9 +259,7 @@ export const usePortugueseVoiceAccessibility = ({
 		recognition.addEventListener('start', () => {
 			setIsListening(true);
 			setTranscript('');
-			announceToScreenReader(
-				'Microfone ativado. Fale seu comando em português.',
-			);
+			announceToScreenReader('Microfone ativado. Fale seu comando em português.');
 		});
 
 		recognition.onresult = (event: BrowserSpeechRecognitionEvent) => {

@@ -50,9 +50,7 @@ export function useAegisUser() {
 			imageUrl: user.imageUrl,
 			cpf: publicMetadata?.cpf as string | undefined,
 			autonomyLevel: publicMetadata?.autonomyLevel as number | undefined,
-			voiceCommandEnabled: publicMetadata?.voiceCommandEnabled as
-				| boolean
-				| undefined,
+			voiceCommandEnabled: publicMetadata?.voiceCommandEnabled as boolean | undefined,
 			language: publicMetadata?.language as string | undefined,
 			timezone: publicMetadata?.timezone as string | undefined,
 		};
@@ -70,8 +68,7 @@ export function useAegisUser() {
  * Hook to get authentication state and token
  */
 export function useAegisAuth() {
-	const { isLoaded, isSignedIn, userId, sessionId, getToken, signOut } =
-		useClerkAuth();
+	const { isLoaded, isSignedIn, userId, sessionId, getToken, signOut } = useClerkAuth();
 
 	/**
 	 * Get a session token for API requests

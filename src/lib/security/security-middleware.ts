@@ -97,11 +97,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://*.clerk.accounts.dev', // Clerk development
 		],
 		defaultSrc: ["'self'"],
-		fontSrc: [
-			"'self'",
-			'https://fonts.gstatic.com',
-			'https://cdn.jsdelivr.net',
-		],
+		fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
 		formAction: ["'self'"],
 		frameAncestors: ["'none'"],
 		frameSrc: ["'none'"],
@@ -121,11 +117,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://unpkg.com',
 			'https://js.stripe.com', // For future payment integration
 		],
-		styleSrc: [
-			"'self'",
-			'https://fonts.googleapis.com',
-			'https://cdn.jsdelivr.net',
-		],
+		styleSrc: ["'self'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
 		upgradeInsecureRequests: true,
 		workerSrc: ["'self'", 'blob:'],
 	},
@@ -357,20 +349,11 @@ export function corsMiddleware(config?: SecurityConfig['cors']) {
 			res.setHeader('Access-Control-Allow-Credentials', 'true');
 		}
 
-		res.setHeader(
-			'Access-Control-Allow-Methods',
-			corsConfig.methods.join(', '),
-		);
-		res.setHeader(
-			'Access-Control-Allow-Headers',
-			corsConfig.allowedHeaders.join(', '),
-		);
+		res.setHeader('Access-Control-Allow-Methods', corsConfig.methods.join(', '));
+		res.setHeader('Access-Control-Allow-Headers', corsConfig.allowedHeaders.join(', '));
 
 		if (corsConfig.exposedHeaders.length > 0) {
-			res.setHeader(
-				'Access-Control-Expose-Headers',
-				corsConfig.exposedHeaders.join(', '),
-			);
+			res.setHeader('Access-Control-Expose-Headers', corsConfig.exposedHeaders.join(', '));
 		}
 
 		res.setHeader('Access-Control-Max-Age', corsConfig.maxAge.toString());
@@ -395,10 +378,7 @@ export function securityMiddleware(config?: SecurityConfig) {
 			? DEVELOPMENT_SECURITY_CONFIG
 			: DEFAULT_SECURITY_CONFIG);
 
-	return [
-		corsMiddleware(securityConfig.cors),
-		securityHeadersMiddleware(securityConfig),
-	];
+	return [corsMiddleware(securityConfig.cors), securityHeadersMiddleware(securityConfig)];
 }
 
 /**
@@ -434,8 +414,7 @@ export function createHonoSecurityMiddleware(config?: SecurityConfig) {
 		if (origin) {
 			const isAllowedOrigin = Array.isArray(securityConfig.cors.origin)
 				? securityConfig.cors.origin.includes(origin)
-				: securityConfig.cors.origin === origin ||
-					securityConfig.cors.origin === '*';
+				: securityConfig.cors.origin === origin || securityConfig.cors.origin === '*';
 
 			if (isAllowedOrigin || securityConfig.cors.origin === '*') {
 				if (securityConfig.cors.origin !== '*') {
@@ -446,18 +425,9 @@ export function createHonoSecurityMiddleware(config?: SecurityConfig) {
 			}
 
 			if (c.req.method === 'OPTIONS') {
-				c.header(
-					'Access-Control-Allow-Methods',
-					securityConfig.cors.methods.join(', '),
-				);
-				c.header(
-					'Access-Control-Allow-Headers',
-					securityConfig.cors.allowedHeaders.join(', '),
-				);
-				c.header(
-					'Access-Control-Max-Age',
-					securityConfig.cors.maxAge.toString(),
-				);
+				c.header('Access-Control-Allow-Methods', securityConfig.cors.methods.join(', '));
+				c.header('Access-Control-Allow-Headers', securityConfig.cors.allowedHeaders.join(', '));
+				c.header('Access-Control-Max-Age', securityConfig.cors.maxAge.toString());
 				return c.text('', 200);
 			}
 		}

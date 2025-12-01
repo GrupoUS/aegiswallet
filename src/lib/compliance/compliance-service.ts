@@ -99,17 +99,12 @@ export class ComplianceService {
 				.select()
 				.from(consentTemplates)
 				.where(
-					and(
-						eq(consentTemplates.consentType, consentType),
-						eq(consentTemplates.isActive, true),
-					),
+					and(eq(consentTemplates.consentType, consentType), eq(consentTemplates.isActive, true)),
 				)
 				.limit(1);
 
 			if (!template) {
-				throw new Error(
-					`Template de consentimento não encontrado: ${consentType}`,
-				);
+				throw new Error(`Template de consentimento não encontrado: ${consentType}`);
 			}
 
 			// Generate hash of consent text
@@ -119,12 +114,7 @@ export class ComplianceService {
 			const [existing] = await this.db
 				.select()
 				.from(lgpdConsents)
-				.where(
-					and(
-						eq(lgpdConsents.userId, userId),
-						eq(lgpdConsents.consentType, consentType),
-					),
-				)
+				.where(and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.consentType, consentType)))
 				.limit(1);
 
 			if (existing) {
@@ -190,12 +180,7 @@ export class ComplianceService {
 					granted: false,
 					revokedAt: new Date(),
 				})
-				.where(
-					and(
-						eq(lgpdConsents.userId, userId),
-						eq(lgpdConsents.consentType, consentType),
-					),
-				);
+				.where(and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.consentType, consentType)));
 		} catch (error) {
 			secureLogger.error('Failed to revoke consent', {
 				error: error instanceof Error ? error.message : 'Unknown error',
@@ -211,10 +196,7 @@ export class ComplianceService {
 	/**
 	 * Check if user has required consents
 	 */
-	async checkRequiredConsents(
-		userId: string,
-		requiredConsents: ConsentType[],
-	): Promise<boolean> {
+	async checkRequiredConsents(userId: string, requiredConsents: ConsentType[]): Promise<boolean> {
 		try {
 			const data = await this.db
 				.select()
@@ -246,12 +228,7 @@ export class ComplianceService {
 			const templates = await this.db
 				.select()
 				.from(consentTemplates)
-				.where(
-					and(
-						eq(consentTemplates.isMandatory, true),
-						eq(consentTemplates.isActive, true),
-					),
-				);
+				.where(and(eq(consentTemplates.isMandatory, true), eq(consentTemplates.isActive, true)));
 
 			const mandatoryTypes = templates.map((t) => t.consentType as ConsentType);
 
@@ -259,13 +236,9 @@ export class ComplianceService {
 			const grantedConsents = await this.db
 				.select()
 				.from(lgpdConsents)
-				.where(
-					and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.granted, true)),
-				);
+				.where(and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.granted, true)));
 
-			const grantedTypes = grantedConsents.map(
-				(c) => c.consentType as ConsentType,
-			);
+			const grantedTypes = grantedConsents.map((c) => c.consentType as ConsentType);
 
 			// Return missing consents
 			return mandatoryTypes.filter((type) => !grantedTypes.includes(type));
@@ -374,17 +347,12 @@ export class ComplianceService {
 				.select({ legalHold: dataDeletionRequests.legalHold })
 				.from(dataDeletionRequests)
 				.where(
-					and(
-						eq(dataDeletionRequests.userId, userId),
-						eq(dataDeletionRequests.legalHold, true),
-					),
+					and(eq(dataDeletionRequests.userId, userId), eq(dataDeletionRequests.legalHold, true)),
 				)
 				.limit(1);
 
 			if (existingHold?.legalHold) {
-				throw new Error(
-					'Seus dados estão em retenção legal e não podem ser excluídos no momento',
-				);
+				throw new Error('Seus dados estão em retenção legal e não podem ser excluídos no momento');
 			}
 
 			// Calculate review deadline (15 days per LGPD)
@@ -499,9 +467,7 @@ export class ComplianceService {
 
 			const dailyLimit = Number(limit.dailyLimit);
 			const currentUsed = Number(limit.currentDailyUsed ?? 0);
-			const perTransactionLimit = limit.transactionLimit
-				? Number(limit.transactionLimit)
-				: null;
+			const perTransactionLimit = limit.transactionLimit ? Number(limit.transactionLimit) : null;
 			const availableAmount = dailyLimit - currentUsed;
 
 			// Check per-transaction limit
@@ -562,10 +528,7 @@ export class ComplianceService {
 					currentDailyUsed: sql`${transactionLimits.currentDailyUsed} + ${amount}`,
 				})
 				.where(
-					and(
-						eq(transactionLimits.userId, userId),
-						eq(transactionLimits.limitType, limitType),
-					),
+					and(eq(transactionLimits.userId, userId), eq(transactionLimits.limitType, limitType)),
 				);
 		} catch (error) {
 			secureLogger.error('Failed to update limit usage', {
@@ -640,10 +603,7 @@ export class ComplianceService {
 
 			if (options?.eventType) {
 				conditions.push(
-					eq(
-						complianceAuditLogs.eventType,
-						options.eventType as ComplianceEventType,
-					),
+					eq(complianceAuditLogs.eventType, options.eventType as ComplianceEventType),
 				);
 			}
 

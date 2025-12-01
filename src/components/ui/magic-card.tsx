@@ -32,16 +32,13 @@ export const MagicCard = React.forwardRef<HTMLButtonElement, MagicCardProps>(
 		const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 		const [isHovering, setIsHovering] = React.useState(false);
 
-		const handleMouseMove = React.useCallback(
-			(e: React.MouseEvent<HTMLButtonElement>) => {
-				const rect = e.currentTarget.getBoundingClientRect();
-				setMousePosition({
-					x: e.clientX - rect.left,
-					y: e.clientY - rect.top,
-				});
-			},
-			[],
-		);
+		const handleMouseMove = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			setMousePosition({
+				x: e.clientX - rect.left,
+				y: e.clientY - rect.top,
+			});
+		}, []);
 
 		const handleMouseEnter = () => setIsHovering(true);
 		const handleMouseLeave = () => setIsHovering(false);

@@ -79,15 +79,12 @@ export interface PublicAppEnv {
 /**
  * Type helper for getting auth context from Hono context
  */
-export type GetAuth<C extends { get: (key: 'auth') => AuthContext }> =
-	ReturnType<C['get']>;
+export type GetAuth<C extends { get: (key: 'auth') => AuthContext }> = ReturnType<C['get']>;
 
 /**
  * Type guard to check if auth context is present
  */
-export function hasAuthContext(
-	variables: Partial<AppVariables>,
-): variables is AppVariables {
+export function hasAuthContext(variables: Partial<AppVariables>): variables is AppVariables {
 	return (
 		variables.auth !== undefined &&
 		variables.auth.user !== undefined &&

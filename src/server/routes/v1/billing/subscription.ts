@@ -1,16 +1,9 @@
 import { Hono } from 'hono';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
-import {
-	canAccessAI,
-	getAllowedModels,
-	getPlanById,
-} from '@/lib/stripe/config';
+import { canAccessAI, getAllowedModels, getPlanById } from '@/lib/stripe/config';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { StripeSubscriptionService } from '@/services/stripe/subscription.service';
 
 const subscriptionRouter = new Hono<AppEnv>();

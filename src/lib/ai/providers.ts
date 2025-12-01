@@ -24,10 +24,7 @@ const providerConfigs = {
 	},
 } as const;
 
-export function getModel(
-	provider: AIProvider,
-	tier: 'default' | 'fast' = 'default',
-) {
+export function getModel(provider: AIProvider, tier: 'default' | 'fast' = 'default') {
 	const config = providerConfigs[provider];
 	return config[tier]();
 }

@@ -33,10 +33,7 @@ export function AiLoading({
 
 	return (
 		<div
-			className={cn(
-				'flex items-center gap-3 text-muted-foreground animate-in fade-in',
-				className,
-			)}
+			className={cn('flex items-center gap-3 text-muted-foreground animate-in fade-in', className)}
 		>
 			{variant === 'dots' && (
 				<div className={cn('flex items-center', containerClasses[size])}>
@@ -52,22 +49,12 @@ export function AiLoading({
 							sizeClasses[size],
 						)}
 					/>
-					<span
-						className={cn(
-							'bg-current rounded-full animate-bounce',
-							sizeClasses[size],
-						)}
-					/>
+					<span className={cn('bg-current rounded-full animate-bounce', sizeClasses[size])} />
 				</div>
 			)}
 
 			{variant === 'pulse' && (
-				<div
-					className={cn(
-						'bg-current rounded-full animate-pulse',
-						sizeClasses[size],
-					)}
-				/>
+				<div className={cn('bg-current rounded-full animate-pulse', sizeClasses[size])} />
 			)}
 
 			{variant === 'spinner' && (

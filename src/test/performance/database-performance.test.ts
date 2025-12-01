@@ -54,15 +54,10 @@ class DatabasePerformanceMonitor {
 	}
 
 	calculateAverage(queryType: string): number {
-		const queryMetrics = this.getQueryMetrics(queryType).filter(
-			(m) => m.success,
-		);
+		const queryMetrics = this.getQueryMetrics(queryType).filter((m) => m.success);
 		if (queryMetrics.length === 0) return 0;
 
-		return (
-			queryMetrics.reduce((sum, m) => sum + m.executionTime, 0) /
-			queryMetrics.length
-		);
+		return queryMetrics.reduce((sum, m) => sum + m.executionTime, 0) / queryMetrics.length;
 	}
 
 	calculateErrorRate(queryType: string): number {
@@ -100,10 +95,8 @@ class DatabasePerformanceMonitor {
 				indexUsage,
 			};
 		} catch (error) {
-			const _executionTime = performance.now() - startTime;
-			console.log(
-				`❌ Query analysis failed after ${_executionTime.toFixed(2)}ms: ${error}`,
-			);
+			const ExecutionTime = performance.now() - startTime;
+			console.log(`❌ Query analysis failed after ${ExecutionTime.toFixed(2)}ms: ${error}`);
 			throw new Error(`Query analysis failed: ${error}`);
 		}
 	}
@@ -173,11 +166,9 @@ class DatabasePerformanceMonitor {
 		return {
 			summary: {
 				totalQueries: this.metrics.length,
-				successRate:
-					this.metrics.filter((m) => m.success).length / this.metrics.length,
+				successRate: this.metrics.filter((m) => m.success).length / this.metrics.length,
 				averageExecutionTime:
-					this.metrics.reduce((sum, m) => sum + m.executionTime, 0) /
-					this.metrics.length,
+					this.metrics.reduce((sum, m) => sum + m.executionTime, 0) / this.metrics.length,
 			},
 			queryTypes: queryTypes.map((type) => ({
 				type,
@@ -272,11 +263,7 @@ describe('Database Performance Monitoring', () => {
 				new Date(),
 			];
 
-			const analysis = await dbMonitor.analyzeQueryPerformance(
-				db,
-				query,
-				params,
-			);
+			const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 
 			dbMonitor.recordQuery({
 				queryType: 'pix_insert',
@@ -309,18 +296,9 @@ describe('Database Performance Monitoring', () => {
         LIMIT $4
       `;
 
-			const params = [
-				'test_org',
-				new Date(Date.now() - 24 * 60 * 60 * 1000),
-				'completed',
-				50,
-			];
+			const params = ['test_org', new Date(Date.now() - 24 * 60 * 60 * 1000), 'completed', 50];
 
-			const analysis = await dbMonitor.analyzeQueryPerformance(
-				db,
-				query,
-				params,
-			);
+			const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 
 			dbMonitor.recordQuery({
 				queryType: 'pix_select_rls',
@@ -356,17 +334,9 @@ describe('Database Performance Monitoring', () => {
         LIMIT $3
       `;
 
-			const params = [
-				'test_org',
-				new Date(Date.now() - 24 * 60 * 60 * 1000),
-				100,
-			];
+			const params = ['test_org', new Date(Date.now() - 24 * 60 * 60 * 1000), 100];
 
-			const analysis = await dbMonitor.analyzeQueryPerformance(
-				db,
-				query,
-				params,
-			);
+			const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 
 			dbMonitor.recordQuery({
 				queryType: 'complex_join',
@@ -396,11 +366,7 @@ describe('Database Performance Monitoring', () => {
 			const params = ['test_org'];
 
 			// With RLS (normal operation)
-			const rlsAnalysis = await dbMonitor.analyzeQueryPerformance(
-				db,
-				baseQuery,
-				params,
-			);
+			const rlsAnalysis = await dbMonitor.analyzeQueryPerformance(db, baseQuery, params);
 
 			// Bypass RLS for comparison (using superuser if available)
 			let noRlsAnalysis = { executionTime: rlsAnalysis.executionTime };
@@ -413,21 +379,13 @@ describe('Database Performance Monitoring', () => {
         `;
 
 				// This might fail if we don't have superuser privileges
-				noRlsAnalysis = await dbMonitor.analyzeQueryPerformance(
-					db,
-					bypassQuery,
-					params,
-				);
+				noRlsAnalysis = await dbMonitor.analyzeQueryPerformance(db, bypassQuery, params);
 			} catch (error) {
-				console.log(
-					'⚠️ Could not bypass RLS for comparison (expected in production)',
-				);
+				console.log('⚠️ Could not bypass RLS for comparison (expected in production)');
 			}
 
-			const rlsOverhead =
-				rlsAnalysis.executionTime - noRlsAnalysis.executionTime;
-			const overheadPercentage =
-				(rlsOverhead / noRlsAnalysis.executionTime) * 100;
+			const rlsOverhead = rlsAnalysis.executionTime - noRlsAnalysis.executionTime;
+			const overheadPercentage = (rlsOverhead / noRlsAnalysis.executionTime) * 100;
 
 			dbMonitor.recordQuery({
 				queryType: 'rls_overhead',
@@ -465,18 +423,13 @@ describe('Database Performance Monitoring', () => {
 				},
 				{
 					name: 'composite_index',
-					query:
-						'SELECT * FROM pix_transactions WHERE organization_id = $1 AND status = $2',
+					query: 'SELECT * FROM pix_transactions WHERE organization_id = $1 AND status = $2',
 					params: ['test_org', 'completed'],
 				},
 			];
 
 			for (const { name, query, params } of criticalQueries) {
-				const analysis = await dbMonitor.analyzeQueryPerformance(
-					db,
-					query,
-					params,
-				);
+				const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 
 				dbMonitor.recordQuery({
 					queryType: 'index_usage',
@@ -501,9 +454,7 @@ describe('Database Performance Monitoring', () => {
 			expect(stats.tableStats.length).toBeGreaterThan(0);
 
 			// Check for unused indexes (potential optimization opportunities)
-			const unusedIndexes = stats.indexStats.filter(
-				(idx: any) => idx.idx_scan === 0,
-			);
+			const unusedIndexes = stats.indexStats.filter((idx: any) => idx.idx_scan === 0);
 
 			console.log(`📊 Index Analysis:`);
 			console.log(`- Total indexes analyzed: ${stats.indexStats.length}`);
@@ -544,8 +495,7 @@ describe('Database Performance Monitoring', () => {
 			const results = await Promise.all(queryPromises);
 			const totalTime = performance.now() - startTime;
 
-			const averageTime =
-				results.reduce((sum, r) => sum + r.executionTime, 0) / results.length;
+			const averageTime = results.reduce((sum, r) => sum + r.executionTime, 0) / results.length;
 
 			dbMonitor.recordQuery({
 				queryType: 'connection_pool',
@@ -585,9 +535,7 @@ describe('Database Performance Monitoring', () => {
 			// Connection acquisition should be fast
 			expect(averageAcquisitionTime).toBeLessThan(50);
 
-			console.log(
-				`✅ Connection Acquisition: Average ${averageAcquisitionTime.toFixed(2)}ms`,
-			);
+			console.log(`✅ Connection Acquisition: Average ${averageAcquisitionTime.toFixed(2)}ms`);
 		});
 	});
 
@@ -597,9 +545,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					name: 'pix_transaction_lookup',
 					query: 'SELECT * FROM pix_transactions WHERE id = $1',
-					params: [
-						`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-					],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 					baselineP95: 50, // Expected P95 in milliseconds
 				},
 				{
@@ -616,11 +562,7 @@ describe('Database Performance Monitoring', () => {
 				const samples: number[] = [];
 
 				for (let i = 0; i < 10; i++) {
-					const analysis = await dbMonitor.analyzeQueryPerformance(
-						db,
-						query,
-						params,
-					);
+					const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 					samples.push(analysis.executionTime);
 
 					dbMonitor.recordQuery({
@@ -640,9 +582,7 @@ describe('Database Performance Monitoring', () => {
 				const regressionThreshold = baselineP95 * 1.5; // Allow 50% increase
 				expect(p95).toBeLessThan(regressionThreshold);
 
-				console.log(
-					`✅ ${name}: P95 ${p95.toFixed(2)}ms (baseline: ${baselineP95}ms)`,
-				);
+				console.log(`✅ ${name}: P95 ${p95.toFixed(2)}ms (baseline: ${baselineP95}ms)`);
 			}
 		});
 	});
@@ -654,9 +594,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_insert',
 					query: 'INSERT INTO pix_transactions (id) VALUES ($1)',
-					params: [
-						`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-					],
+					params: [`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'pix_select',
@@ -666,10 +604,7 @@ describe('Database Performance Monitoring', () => {
 				{
 					type: 'pix_update',
 					query: 'UPDATE pix_transactions SET status = $1 WHERE id = $2',
-					params: [
-						'completed',
-						`test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-					],
+					params: ['completed', `test-id-${Date.now()}-${Math.random().toString(36).substring(7)}`],
 				},
 				{
 					type: 'complex_join',
@@ -681,11 +616,7 @@ describe('Database Performance Monitoring', () => {
 
 			for (const { type, query, params } of testQueries) {
 				try {
-					const analysis = await dbMonitor.analyzeQueryPerformance(
-						db,
-						query,
-						params,
-					);
+					const analysis = await dbMonitor.analyzeQueryPerformance(db, query, params);
 
 					dbMonitor.recordQuery({
 						queryType: type,

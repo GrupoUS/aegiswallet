@@ -30,4 +30,4 @@ async function listModels() {
 	}
 }
 
-listModels();
+listModels().catch(console.error);

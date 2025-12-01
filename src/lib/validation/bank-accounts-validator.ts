@@ -103,8 +103,7 @@ const isValidInstitutionId = (institutionId?: string) => {
 	return /^[0-9a-f-]{8,}$/i.test(trimmed);
 };
 
-const isValidCurrency = (currency?: string) =>
-	!currency || currency.toUpperCase() === 'BRL';
+const isValidCurrency = (currency?: string) => !currency || currency.toUpperCase() === 'BRL';
 
 const isValidBelvoId = (belvoId?: string | null) => {
 	if (!belvoId) {

@@ -10,14 +10,14 @@ export type SyncQueueStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface GoogleCalendarToken {
 	id: string;
-	user_id: string;
-	access_token: string;
-	refresh_token: string;
-	expiry_timestamp: string;
+	userId: string;
+	accessToken: string;
+	refreshToken: string;
+	expiryTimestamp: string;
 	scope: string;
-	google_user_email: string | null;
-	created_at: string;
-	updated_at: string;
+	googleUserEmail: string | null;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface GoogleCalendarEvent {
@@ -199,14 +199,13 @@ export const mapGoogleEventToFinancial = (
 	if (settings.sync_financial_amounts && googleEvent.description) {
 		const amountMatch = googleEvent.description.match(/Value:\s*([0-9.,]+)/);
 		if (amountMatch) {
-			financialEvent.amount = parseFloat(amountMatch[1].replace(',', ''));
+			financialEvent.amount = Number.parseFloat(amountMatch[1].replace(',', ''));
 		}
 	}
 
 	// Extract category from extended properties
 	if (googleEvent.extendedProperties?.private?.aegis_category) {
-		financialEvent.category =
-			googleEvent.extendedProperties.private.aegis_category;
+		financialEvent.category = googleEvent.extendedProperties.private.aegis_category;
 	}
 
 	return financialEvent;

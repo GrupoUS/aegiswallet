@@ -25,13 +25,7 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
@@ -75,8 +69,7 @@ const CONSENT_OPTIONS: ConsentOption[] = [
 	{
 		type: 'voice_recording',
 		title: 'Comandos de Voz',
-		description:
-			'Permite usar comandos de voz para interagir com o aplicativo.',
+		description: 'Permite usar comandos de voz para interagir com o aplicativo.',
 		icon: <Mic className="h-5 w-5" />,
 		isMandatory: false,
 	},
@@ -104,25 +97,15 @@ const CONSENT_OPTIONS: ConsentOption[] = [
 ];
 
 export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
-	const {
-		consents,
-		isLoading,
-		grantConsent,
-		revokeConsent,
-		isGranting,
-		isRevoking,
-	} = useConsentManagement();
+	const { consents, isLoading, grantConsent, revokeConsent, isGranting, isRevoking } =
+		useConsentManagement();
 	const createExportRequest = useCreateExportRequest();
 	const createDeletionRequest = useCreateDeletionRequest();
-	const [pendingChanges, setPendingChanges] = useState<
-		Partial<Record<ConsentType, boolean>>
-	>({});
+	const [pendingChanges, setPendingChanges] = useState<Partial<Record<ConsentType, boolean>>>({});
 
 	// Check if a consent type is currently granted
 	const isConsentGranted = (type: ConsentType): boolean => {
-		const consent = consents?.find(
-			(c) => c.consent_type === type && c.granted && !c.revoked_at,
-		);
+		const consent = consents?.find((c) => c.consent_type === type && c.granted && !c.revoked_at);
 		return !!consent || pendingChanges[type] === true;
 	};
 
@@ -195,15 +178,10 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
 							{index > 0 && <Separator className="my-4" />}
 							<div className="flex items-start justify-between gap-4">
 								<div className="flex items-start gap-3">
-									<div className="text-muted-foreground mt-0.5">
-										{option.icon}
-									</div>
+									<div className="text-muted-foreground mt-0.5">{option.icon}</div>
 									<div className="space-y-1">
 										<div className="flex items-center gap-2">
-											<Label
-												htmlFor={`consent-${option.type}`}
-												className="text-sm font-medium"
-											>
+											<Label htmlFor={`consent-${option.type}`} className="text-sm font-medium">
 												{option.title}
 											</Label>
 											{option.isMandatory && (
@@ -212,17 +190,13 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
 												</Badge>
 											)}
 										</div>
-										<p className="text-sm text-muted-foreground">
-											{option.description}
-										</p>
+										<p className="text-sm text-muted-foreground">{option.description}</p>
 									</div>
 								</div>
 								<Switch
 									id={`consent-${option.type}`}
 									checked={isConsentGranted(option.type)}
-									onCheckedChange={(checked) =>
-										handleToggle(option.type, checked)
-									}
+									onCheckedChange={(checked) => handleToggle(option.type, checked)}
 									disabled={option.isMandatory || isGranting || isRevoking}
 									data-testid={`consent-toggle-${option.type}`}
 								/>
@@ -237,8 +211,7 @@ export function PrivacyPreferences(_props: PrivacyPreferencesProps) {
 				<CardHeader>
 					<CardTitle>Seus Direitos (LGPD)</CardTitle>
 					<CardDescription>
-						Você tem direito de acessar, exportar e solicitar a exclusão de seus
-						dados.
+						Você tem direito de acessar, exportar e solicitar a exclusão de seus dados.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex flex-col sm:flex-row gap-4">

@@ -27,10 +27,7 @@ export function ChatResponse({ message, isStreaming }: ChatResponseProps) {
 	if (typeof message.content !== 'string') return null;
 
 	return (
-		<Response
-			message={message as unknown as ResponseMessage}
-			isStreaming={isStreaming}
-		>
+		<Response message={message as unknown as ResponseMessage} isStreaming={isStreaming}>
 			<div className="group relative">
 				<div className="markdown-prose prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-pre:bg-transparent">
 					<ReactMarkdown
@@ -52,10 +49,7 @@ export function ChatResponse({ message, isStreaming }: ChatResponseProps) {
 									</div>
 								) : (
 									<code
-										className={cn(
-											'bg-muted px-1.5 py-0.5 rounded-md font-mono text-xs',
-											className,
-										)}
+										className={cn('bg-muted px-1.5 py-0.5 rounded-md font-mono text-xs', className)}
 										{...props}
 									>
 										{children}
@@ -72,17 +66,8 @@ export function ChatResponse({ message, isStreaming }: ChatResponseProps) {
 				</div>
 
 				<div className="absolute -bottom-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-6 w-6"
-						onClick={handleCopy}
-					>
-						{copied ? (
-							<Check className="w-3 h-3 text-green-500" />
-						) : (
-							<Copy className="w-3 h-3" />
-						)}
+					<Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+						{copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
 					</Button>
 				</div>
 			</div>

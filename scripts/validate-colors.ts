@@ -60,10 +60,7 @@ function isAllowedException(content: string, matchIndex: number): boolean {
 /**
  * Get line and column number from string index
  */
-function getLineAndColumn(
-	content: string,
-	index: number,
-): { line: number; column: number } {
+function getLineAndColumn(content: string, index: number): { line: number; column: number } {
 	const lines = content.substring(0, index).split('\n');
 	return {
 		column: lines[lines.length - 1].length + 1,
@@ -121,7 +118,9 @@ async function scanFile(filePath: string): Promise<void> {
 				});
 			}
 		}
-	} catch (_error) {}
+	} catch (_error) {
+		// Ignore parsing errors
+	}
 }
 
 /**
@@ -136,11 +135,7 @@ async function scanDirectory(dir: string): Promise<void> {
 
 			// Skip node_modules, dist, build, etc.
 			if (entry.isDirectory()) {
-				if (
-					['node_modules', 'dist', 'build', 'coverage', '.git'].includes(
-						entry.name,
-					)
-				) {
+				if (['node_modules', 'dist', 'build', 'coverage', '.git'].includes(entry.name)) {
 					continue;
 				}
 				await scanDirectory(fullPath);
@@ -151,7 +146,9 @@ async function scanDirectory(dir: string): Promise<void> {
 				}
 			}
 		}
-	} catch (_error) {}
+	} catch (_error) {
+		// Ignore parsing errors
+	}
 }
 
 /**
@@ -176,6 +173,7 @@ function printViolations(): void {
 
 	for (const [_file, fileViolations] of Object.entries(violationsByFile)) {
 		for (const _violation of fileViolations) {
+			// Iterate to count
 		}
 	}
 }

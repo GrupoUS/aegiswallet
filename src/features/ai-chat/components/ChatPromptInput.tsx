@@ -23,8 +23,7 @@ export function ChatPromptInput({
 	enableAttachments = false,
 	enableVoiceInput = true,
 }: ChatPromptInputProps) {
-	const { isListening, startListening, stopListening, lastTranscript } =
-		useVoiceCommand();
+	const { isListening, startListening, stopListening, lastTranscript } = useVoiceCommand();
 
 	const handleVoiceToggle = () => {
 		if (isListening) {

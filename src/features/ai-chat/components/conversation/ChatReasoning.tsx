@@ -2,21 +2,14 @@ import { BrainCircuit, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ChatReasoningProps {
 	content: string;
 	isOpen?: boolean;
 }
 
-export function ChatReasoning({
-	content,
-	isOpen: defaultOpen = false,
-}: ChatReasoningProps) {
+export function ChatReasoning({ content, isOpen: defaultOpen = false }: ChatReasoningProps) {
 	const [isOpen, setIsOpen] = useState(defaultOpen);
 
 	return (
@@ -29,11 +22,7 @@ export function ChatReasoning({
 				>
 					<BrainCircuit className="h-3 w-3" />
 					{isOpen ? 'Hide reasoning' : 'Show reasoning'}
-					{isOpen ? (
-						<ChevronDown className="h-3 w-3" />
-					) : (
-						<ChevronRight className="h-3 w-3" />
-					)}
+					{isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
 				</Button>
 			</CollapsibleTrigger>
 			<CollapsibleContent className="mt-1">

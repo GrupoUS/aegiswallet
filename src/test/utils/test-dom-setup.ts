@@ -80,10 +80,7 @@ export function setupTestDOM(): void {
 
 		// Ensure DOM elements created by JSDOM also have the methods
 		const originalCreateElement = dom.window.document.createElement;
-		dom.window.document.createElement = function (
-			tagName: string,
-			options?: any,
-		) {
+		dom.window.document.createElement = function (tagName: string, options?: any) {
 			const element = originalCreateElement.call(this, tagName, options) as any;
 			if (!element.scrollIntoView) {
 				element.scrollIntoView = () => {};

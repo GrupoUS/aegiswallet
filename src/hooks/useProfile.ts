@@ -117,8 +117,7 @@ export function useProfile(): UseProfileReturn {
 	} = useQuery({
 		queryKey: ['users', 'me'],
 		queryFn: async () => {
-			const response =
-				await apiClient.get<ProfileApiResponse<UserProfile>>('/v1/users/me');
+			const response = await apiClient.get<ProfileApiResponse<UserProfile>>('/v1/users/me');
 			return response.data;
 		},
 	});
@@ -131,10 +130,7 @@ export function useProfile(): UseProfileReturn {
 			birth_date?: string;
 			profile_image_url?: string;
 		}) => {
-			const response = await apiClient.put<ProfileApiResponse<UserProfile>>(
-				'/v1/users/me',
-				input,
-			);
+			const response = await apiClient.put<ProfileApiResponse<UserProfile>>('/v1/users/me', input);
 			return response.data;
 		},
 		onError: (error: Error) => {
@@ -146,41 +142,37 @@ export function useProfile(): UseProfileReturn {
 		},
 	});
 
-	const { mutate: updatePreferences, isPending: isUpdatingPreferences } =
-		useMutation({
-			mutationFn: async (input: Record<string, unknown>) => {
-				const response = await apiClient.put<
-					ProfileApiResponse<UserPreferences>
-				>('/v1/users/me/preferences', input);
-				return response.data;
-			},
-			onError: (error: Error) => {
-				toast.error(error.message || 'Erro ao atualizar preferências');
-			},
-			onSuccess: (data) => {
-				queryClient.setQueryData(
-					['users', 'me'],
-					(old: UserProfile | undefined) => {
-						if (!old) {
-							return old;
-						}
+	const { mutate: updatePreferences, isPending: isUpdatingPreferences } = useMutation({
+		mutationFn: async (input: Record<string, unknown>) => {
+			const response = await apiClient.put<ProfileApiResponse<UserPreferences>>(
+				'/v1/users/me/preferences',
+				input,
+			);
+			return response.data;
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Erro ao atualizar preferências');
+		},
+		onSuccess: (data) => {
+			queryClient.setQueryData(['users', 'me'], (old: UserProfile | undefined) => {
+				if (!old) {
+					return old;
+				}
 
-						return {
-							...old,
-							user_preferences: data ? [data] : [],
-						};
-					},
-				);
+				return {
+					...old,
+					user_preferences: data ? [data] : [],
+				};
+			});
 
-				toast.success('Preferências atualizadas com sucesso!');
-			},
-		});
+			toast.success('Preferências atualizadas com sucesso!');
+		},
+	});
 
 	const { mutate: updateLastLogin } = useMutation({
 		mutationFn: async () => {
-			const response = await apiClient.post<
-				ProfileApiResponse<{ success: boolean }>
-			>('/v1/users/me/last-login');
+			const response =
+				await apiClient.post<ProfileApiResponse<{ success: boolean }>>('/v1/users/me/last-login');
 			return response.data;
 		},
 	});
@@ -200,10 +192,7 @@ export function useProfile(): UseProfileReturn {
 /**
  * Hook para obter resumo financeiro do usuário
  */
-export function useFinancialSummary(
-	startDate: string,
-	endDate: string,
-): UseFinancialSummaryReturn {
+export function useFinancialSummary(startDate: string, endDate: string): UseFinancialSummaryReturn {
 	const {
 		data: summaryResponse,
 		isLoading,
@@ -246,9 +235,10 @@ export function useUserStatus(): UseUserStatusReturn {
 	} = useQuery({
 		queryKey: ['users', 'status'],
 		queryFn: async () => {
-			const response = await apiClient.get<
-				ProfileApiResponse<{ is_active: boolean; last_login: string | null }>
-			>('/v1/users/me/status');
+			const response =
+				await apiClient.get<ProfileApiResponse<{ is_active: boolean; last_login: string | null }>>(
+					'/v1/users/me/status',
+				);
 			return response.data;
 		},
 	});

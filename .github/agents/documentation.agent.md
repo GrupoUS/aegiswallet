@@ -97,7 +97,3 @@ related:
 - Place under `docs/` with descriptive `kebab-case` names
 - English only; use American spelling consistently
 - Prefer short files; split when sections exceed ~150 lines
-
----
-
-> **📚 Documentation Excellence**: Creating clear, actionable documentation using Diátaxis framework for enhanced developer productivity.

@@ -48,8 +48,7 @@ export function BalanceChart() {
 	// The plan says "Receber accountId como prop ou usar conta primária por padrão".
 
 	const primaryAccount = accounts.find((a) => a.is_primary) || accounts[0];
-	const targetAccountId =
-		selectedAccountId === 'all' ? primaryAccount?.id : selectedAccountId;
+	const targetAccountId = selectedAccountId === 'all' ? primaryAccount?.id : selectedAccountId;
 
 	const { history, isLoading } = useBalanceHistory(targetAccountId || '', days);
 
@@ -78,9 +77,7 @@ export function BalanceChart() {
 		return (
 			<Card className="col-span-4">
 				<CardHeader>
-					<CardTitle className="text-base font-normal">
-						Evolução do Saldo
-					</CardTitle>
+					<CardTitle className="text-base font-normal">Evolução do Saldo</CardTitle>
 				</CardHeader>
 				<CardContent className="flex h-[300px] items-center justify-center text-muted-foreground">
 					Nenhuma conta conectada
@@ -93,13 +90,8 @@ export function BalanceChart() {
 		<Card className="col-span-4">
 			<CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-2">
 				<div className="flex items-center gap-4">
-					<CardTitle className="text-base font-normal">
-						Evolução do Saldo
-					</CardTitle>
-					<Select
-						value={selectedAccountId}
-						onValueChange={setSelectedAccountId}
-					>
+					<CardTitle className="text-base font-normal">Evolução do Saldo</CardTitle>
+					<Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
 						<SelectTrigger className="w-[180px] h-8">
 							<SelectValue placeholder="Selecione a conta" />
 						</SelectTrigger>
@@ -154,9 +146,7 @@ export function BalanceChart() {
 													<span className="text-[0.70rem] uppercase text-muted-foreground">
 														Saldo
 													</span>
-													<span className="font-bold text-primary">
-														R$ {payload[0].value}
-													</span>
+													<span className="font-bold text-primary">R$ {payload[0].value}</span>
 												</div>
 												<div className="mt-2 text-xs text-muted-foreground border-t pt-2">
 													{payload[0].payload.fullDate}

@@ -75,8 +75,7 @@ contextRouter.get('/', authMiddleware, async (c) => {
 		return c.json(
 			{
 				code: 'CONTEXT_ERROR',
-				error:
-					error instanceof Error ? error.message : 'Failed to fetch context',
+				error: error instanceof Error ? error.message : 'Failed to fetch context',
 			},
 			500,
 		);

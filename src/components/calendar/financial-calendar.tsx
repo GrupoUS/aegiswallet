@@ -24,22 +24,14 @@ import {
 } from '@/components/ui/dialog';
 import type { CalendarEvent } from '@/components/ui/event-calendar';
 import { EventCalendar } from '@/components/ui/event-calendar';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
 import { cn } from '@/lib/utils';
 import type { FinancialEvent } from '@/types/financial-events';
 import { formatEventAmount } from '@/types/financial-events';
 
 // Converter FinancialEvent para CalendarEvent
-function toCalendarEvent(
-	event: FinancialEvent,
-	isSynced: boolean,
-): CalendarEvent {
+function toCalendarEvent(event: FinancialEvent, isSynced: boolean): CalendarEvent {
 	return {
 		id: event.id,
 		title: event.title,
@@ -54,16 +46,8 @@ function toCalendarEvent(
 }
 
 export function FinancialCalendar() {
-	const {
-		events: financialEvents,
-		addEvent,
-		updateEvent,
-		categories,
-		filters,
-	} = useCalendar();
-	const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(
-		null,
-	);
+	const { events: financialEvents, addEvent, updateEvent, categories, filters } = useCalendar();
+	const [selectedEvent, setSelectedEvent] = useState<FinancialEvent | null>(null);
 	const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -86,9 +70,7 @@ export function FinancialCalendar() {
 
 		// Aplicar filtros do contexto
 		if (filters.categories && filters.categories.length > 0) {
-			filtered = filtered.filter((event) =>
-				filters.categories?.includes(event.category || ''),
-			);
+			filtered = filtered.filter((event) => filters.categories?.includes(event.category || ''));
 		}
 
 		if (filters.dateRange) {
@@ -127,14 +109,13 @@ export function FinancialCalendar() {
 			}
 
 			// Adicionar informações adicionais
-			const statusMap: Record<string, 'confirmed' | 'tentative' | 'cancelled'> =
-				{
-					cancelled: 'cancelled',
-					completed: 'confirmed',
-					paid: 'confirmed',
-					pending: 'tentative',
-					scheduled: 'confirmed',
-				};
+			const statusMap: Record<string, 'confirmed' | 'tentative' | 'cancelled'> = {
+				cancelled: 'cancelled',
+				completed: 'confirmed',
+				paid: 'confirmed',
+				pending: 'tentative',
+				scheduled: 'confirmed',
+			};
 			calendarEvent.status = statusMap[event.status] || 'confirmed';
 			calendarEvent.priority =
 				event.amount && Math.abs(event.amount) > 1000
@@ -148,9 +129,7 @@ export function FinancialCalendar() {
 		});
 	}, [filteredEvents, categories, isConnected, syncSettings]);
 
-	const handleEventAdd = async (
-		calendarEvent: Partial<CalendarEvent>,
-	): Promise<void> => {
+	const handleEventAdd = async (calendarEvent: Partial<CalendarEvent>): Promise<void> => {
 		try {
 			// Converter CalendarEvent para FinancialEvent
 			const financialEvent: Partial<FinancialEvent> = {
@@ -178,14 +157,10 @@ export function FinancialCalendar() {
 		}
 	};
 
-	const handleEventUpdate = async (
-		calendarEvent: CalendarEvent,
-	): Promise<void> => {
+	const handleEventUpdate = async (calendarEvent: CalendarEvent): Promise<void> => {
 		try {
 			// Encontrar o evento financeiro original e atualizar
-			const financialEvent = financialEvents.find(
-				(e) => e.id === calendarEvent.id,
-			);
+			const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
 			if (financialEvent) {
 				const updatedEvent = await updateEvent({
 					...financialEvent,
@@ -210,9 +185,7 @@ export function FinancialCalendar() {
 
 	const handleEventEdit = (calendarEvent: CalendarEvent): void => {
 		// Encontrar o evento financeiro original para mostrar detalhes completos
-		const financialEvent = financialEvents.find(
-			(e) => e.id === calendarEvent.id,
-		);
+		const financialEvent = financialEvents.find((e) => e.id === calendarEvent.id);
 		if (financialEvent) {
 			setSelectedEvent(financialEvent);
 			setIsEventDialogOpen(true);
@@ -276,22 +249,16 @@ export function FinancialCalendar() {
 						</DialogTitle>
 						<DialogDescription>
 							{selectedEvent &&
-								format(
-									new Date(selectedEvent.start),
-									"d 'de' MMMM 'às' HH:mm",
-									{
-										locale: ptBR,
-									},
-								)}
+								format(new Date(selectedEvent.start), "d 'de' MMMM 'às' HH:mm", {
+									locale: ptBR,
+								})}
 						</DialogDescription>
 					</DialogHeader>
 					{selectedEvent && (
 						<div className="space-y-4">
 							<div>
 								<p className="text-muted-foreground text-sm">Valor</p>
-								<p className="font-bold text-2xl">
-									{formatEventAmount(selectedEvent.amount)}
-								</p>
+								<p className="font-bold text-2xl">{formatEventAmount(selectedEvent.amount)}</p>
 							</div>
 							{selectedEvent.description && (
 								<div>

@@ -146,9 +146,7 @@ export async function createAuthenticatedDbClientFromToken(
  * @param request - Hono request object
  * @returns Database client with user context
  */
-export async function createMiddlewareDb(
-	request: Request,
-): Promise<AuthenticatedDbResult> {
+export async function createMiddlewareDb(request: Request): Promise<AuthenticatedDbResult> {
 	const authHeader = request.headers.get('Authorization');
 	const token = authHeader?.replace('Bearer ', '');
 
@@ -194,9 +192,7 @@ export function createServerActionDb() {
 		/**
 		 * Execute with user context automatically set
 		 */
-		async execute(
-			query: Parameters<NeonHttpDatabase<typeof schema>['execute']>[0],
-		) {
+		async execute(query: Parameters<NeonHttpDatabase<typeof schema>['execute']>[0]) {
 			// Set user context in PostgreSQL session
 			await sql`SET LOCAL app.current_user_id = ${userId}`;
 			return db.execute(query);

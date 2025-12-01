@@ -5,13 +5,7 @@ import { BankAccountForm } from '@/components/bank-accounts/BankAccountForm';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
 	Dialog,
@@ -26,11 +20,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-	type BankAccount,
-	useBankAccounts,
-	useBankAccountsStats,
-} from '@/hooks/useBankAccounts';
+import { type BankAccount, useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 import { RouteGuard } from '@/lib/auth/route-guard';
 
 export const ContasBancarias = () => {
@@ -38,12 +28,8 @@ export const ContasBancarias = () => {
 	const stats = useBankAccountsStats();
 
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
-	const [editingAccount, setEditingAccount] = useState<BankAccount | null>(
-		null,
-	);
-	const [deletingAccount, setDeletingAccount] = useState<BankAccount | null>(
-		null,
-	);
+	const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+	const [deletingAccount, setDeletingAccount] = useState<BankAccount | null>(null);
 
 	const handleEdit = (account: BankAccount) => {
 		setEditingAccount(account);
@@ -70,9 +56,7 @@ export const ContasBancarias = () => {
 						<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text text-3xl font-bold text-transparent">
 							Contas Bancárias
 						</h1>
-						<p className="text-muted-foreground">
-							Gerencie suas contas e saldos
-						</p>
+						<p className="text-muted-foreground">Gerencie suas contas e saldos</p>
 					</div>
 					<Button onClick={() => setIsCreateOpen(true)} className="gap-2">
 						<Plus className="h-4 w-4" />
@@ -98,9 +82,7 @@ export const ContasBancarias = () => {
 									className="text-foreground"
 								/>
 							</div>
-							<p className="text-xs text-muted-foreground">
-								Soma de todas as contas
-							</p>
+							<p className="text-xs text-muted-foreground">Soma de todas as contas</p>
 						</CardContent>
 					</Card>
 					<Card>
@@ -111,9 +93,7 @@ export const ContasBancarias = () => {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">{stats.activeAccounts}</div>
-							<p className="text-xs text-muted-foreground">
-								De um total de {stats.totalAccounts}
-							</p>
+							<p className="text-xs text-muted-foreground">De um total de {stats.totalAccounts}</p>
 						</CardContent>
 					</Card>
 					<Card>
@@ -124,9 +104,7 @@ export const ContasBancarias = () => {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">{stats.primaryAccounts}</div>
-							<p className="text-xs text-muted-foreground">
-								Definidas como principal
-							</p>
+							<p className="text-xs text-muted-foreground">Definidas como principal</p>
 						</CardContent>
 					</Card>
 				</div>
@@ -134,10 +112,7 @@ export const ContasBancarias = () => {
 				{/* Accounts Grid */}
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 					{accounts.map((account) => (
-						<Card
-							key={account.id}
-							className="relative transition-all hover:shadow-md"
-						>
+						<Card key={account.id} className="relative transition-all hover:shadow-md">
 							<CardHeader className="pb-2">
 								<div className="flex items-start justify-between">
 									<div className="flex items-center gap-3">
@@ -145,9 +120,7 @@ export const ContasBancarias = () => {
 											<Building className="h-5 w-5 text-primary" />
 										</div>
 										<div>
-											<CardTitle className="text-base">
-												{account.institution_name}
-											</CardTitle>
+											<CardTitle className="text-base">{account.institution_name}</CardTitle>
 											<CardDescription className="capitalize">
 												{account.account_type}
 											</CardDescription>
@@ -177,9 +150,7 @@ export const ContasBancarias = () => {
 							</CardHeader>
 							<CardContent>
 								<div className="mb-4">
-									<div className="text-sm text-muted-foreground">
-										Saldo Atual
-									</div>
+									<div className="text-sm text-muted-foreground">Saldo Atual</div>
 									<FinancialAmount
 										amount={Number(account.balance)}
 										currency={account.currency || 'BRL'}
@@ -189,12 +160,8 @@ export const ContasBancarias = () => {
 									/>
 								</div>
 								<div className="flex gap-2">
-									{account.is_primary && (
-										<Badge variant="default">Principal</Badge>
-									)}
-									{!account.is_active && (
-										<Badge variant="secondary">Inativa</Badge>
-									)}
+									{account.is_primary && <Badge variant="default">Principal</Badge>}
+									{!account.is_active && <Badge variant="secondary">Inativa</Badge>}
 									<Badge variant="outline" className="uppercase">
 										{account.currency || 'BRL'}
 									</Badge>
@@ -221,16 +188,11 @@ export const ContasBancarias = () => {
 				</Dialog>
 
 				{/* Edit Modal */}
-				<Dialog
-					open={!!editingAccount}
-					onOpenChange={(open) => !open && setEditingAccount(null)}
-				>
+				<Dialog open={!!editingAccount} onOpenChange={(open) => !open && setEditingAccount(null)}>
 					<DialogContent className="sm:max-w-[425px]">
 						<DialogHeader>
 							<DialogTitle>Editar Conta</DialogTitle>
-							<DialogDescription>
-								Atualize os dados da conta bancária.
-							</DialogDescription>
+							<DialogDescription>Atualize os dados da conta bancária.</DialogDescription>
 						</DialogHeader>
 						{editingAccount && (
 							<BankAccountForm

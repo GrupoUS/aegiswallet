@@ -40,14 +40,7 @@ export interface Transaction {
 	amount: string;
 	title: string;
 	description?: string;
-	eventType:
-		| 'income'
-		| 'expense'
-		| 'bill'
-		| 'scheduled'
-		| 'transfer'
-		| 'pix'
-		| 'boleto';
+	eventType: 'income' | 'expense' | 'bill' | 'scheduled' | 'transfer' | 'pix' | 'boleto';
 	status: 'pending' | 'paid' | 'scheduled' | 'cancelled' | 'posted' | 'failed';
 	startDate: string;
 	endDate: string;
@@ -187,10 +180,7 @@ export interface GoogleCalendarSyncSettings {
 export interface UpdateGoogleCalendarSettingsInput {
 	auto_sync_interval_minutes?: number;
 	sync_categories?: string[] | null;
-	sync_direction?:
-		| 'one_way_to_google'
-		| 'one_way_from_google'
-		| 'bidirectional';
+	sync_direction?: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
 	sync_enabled?: boolean;
 	sync_financial_amounts?: boolean;
 }
@@ -215,29 +205,11 @@ export interface SyncHistoryFilters {
 
 // HTTP Method Aliases for API Client
 export interface ApiMethods {
-	get<T = unknown>(
-		url: string,
-		config?: RequestConfig,
-	): Promise<ApiResponse<T>>;
-	post<T = unknown>(
-		url: string,
-		data?: unknown,
-		config?: RequestConfig,
-	): Promise<ApiResponse<T>>;
-	put<T = unknown>(
-		url: string,
-		data?: unknown,
-		config?: RequestConfig,
-	): Promise<ApiResponse<T>>;
-	patch<T = unknown>(
-		url: string,
-		data?: unknown,
-		config?: RequestConfig,
-	): Promise<ApiResponse<T>>;
-	delete<T = unknown>(
-		url: string,
-		config?: RequestConfig,
-	): Promise<ApiResponse<T>>;
+	get<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	post<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>>;
+	put<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>>;
+	patch<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>>;
+	delete<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
 }
 
 export interface RequestConfig {

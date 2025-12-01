@@ -1,8 +1,4 @@
-import type {
-	paymentHistory,
-	subscriptionPlans,
-	subscriptions,
-} from '@/db/schema';
+import type { paymentHistory, subscriptionPlans, subscriptions } from '@/db/schema';
 
 // ========================================
 // INFERRED TYPES FROM DRIZZLE SCHEMA
@@ -141,12 +137,7 @@ export type PaymentStatus = 'succeeded' | 'failed' | 'pending';
 
 export type PaymentMethodType = 'card' | 'pix' | 'bank_account';
 
-export type InvoiceStatus =
-	| 'draft'
-	| 'open'
-	| 'paid'
-	| 'void'
-	| 'uncollectible';
+export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
 
 export type PixKeyType = 'cpf' | 'cnpj' | 'phone' | 'email' | 'random';
 

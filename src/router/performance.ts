@@ -108,8 +108,7 @@ export class FinancialRoutePerformanceMonitor {
 
 	public static getInstance(): FinancialRoutePerformanceMonitor {
 		if (!FinancialRoutePerformanceMonitor.instance) {
-			FinancialRoutePerformanceMonitor.instance =
-				new FinancialRoutePerformanceMonitor();
+			FinancialRoutePerformanceMonitor.instance = new FinancialRoutePerformanceMonitor();
 		}
 		return FinancialRoutePerformanceMonitor.instance;
 	}
@@ -141,8 +140,7 @@ export class FinancialRoutePerformanceMonitor {
 			timestamp: Date.now(),
 			pathname,
 			duration: entry.loadEventEnd - entry.loadEventStart,
-			domContentLoaded:
-				entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
+			domContentLoaded: entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
 			firstPaint: this.getFirstPaint(),
 			firstContentfulPaint: this.getFirstContentfulPaint(),
 		};
@@ -156,9 +154,7 @@ export class FinancialRoutePerformanceMonitor {
 	 */
 	private getFirstPaint(): number | undefined {
 		const paintEntries = performance.getEntriesByType('paint');
-		const firstPaint = paintEntries.find(
-			(entry) => entry.name === 'first-paint',
-		);
+		const firstPaint = paintEntries.find((entry) => entry.name === 'first-paint');
 		return firstPaint?.startTime;
 	}
 
@@ -167,9 +163,7 @@ export class FinancialRoutePerformanceMonitor {
 	 */
 	private getFirstContentfulPaint(): number | undefined {
 		const paintEntries = performance.getEntriesByType('paint');
-		const fcp = paintEntries.find(
-			(entry) => entry.name === 'first-contentful-paint',
-		);
+		const fcp = paintEntries.find((entry) => entry.name === 'first-contentful-paint');
 		return fcp?.startTime;
 	}
 
@@ -194,10 +188,7 @@ export class FinancialRoutePerformanceMonitor {
 	/**
 	 * Check performance against thresholds and log warnings
 	 */
-	private checkPerformanceThresholds(
-		pathname: string,
-		metric: PerformanceMetric,
-	) {
+	private checkPerformanceThresholds(pathname: string, metric: PerformanceMetric) {
 		const priority = ROUTE_PRIORITY_MAP[pathname] || ROUTE_PRIORITIES.MEDIUM;
 		const isCriticalRoute = priority >= ROUTE_PRIORITIES.HIGH;
 		const threshold = isCriticalRoute
@@ -225,10 +216,7 @@ export class FinancialRoutePerformanceMonitor {
 		const totalDuration = metrics.reduce((sum, m) => sum + m.duration, 0);
 		const avgDuration = totalDuration / metrics.length;
 
-		const totalDomContentLoaded = metrics.reduce(
-			(sum, m) => sum + (m.domContentLoaded || 0),
-			0,
-		);
+		const totalDomContentLoaded = metrics.reduce((sum, m) => sum + (m.domContentLoaded || 0), 0);
 		const avgDomContentLoaded = totalDomContentLoaded / metrics.length;
 
 		return {
@@ -250,8 +238,7 @@ export class FinancialRoutePerformanceMonitor {
 		// If current route is slow, suggest preloading related routes
 		if (
 			currentMetrics &&
-			currentMetrics.averageDuration >
-				PERFORMANCE_THRESHOLDS.ROUTE_TRANSITION_NORMAL
+			currentMetrics.averageDuration > PERFORMANCE_THRESHOLDS.ROUTE_TRANSITION_NORMAL
 		) {
 			switch (currentPath) {
 				case '/dashboard':
@@ -273,10 +260,8 @@ export class FinancialRoutePerformanceMonitor {
 	 * Check if route should be preloaded based on user behavior
 	 */
 	public shouldPreload(targetPath: string, currentPath: string): boolean {
-		const targetPriority =
-			ROUTE_PRIORITY_MAP[targetPath] || ROUTE_PRIORITIES.MEDIUM;
-		const currentPriority =
-			ROUTE_PRIORITY_MAP[currentPath] || ROUTE_PRIORITIES.MEDIUM;
+		const targetPriority = ROUTE_PRIORITY_MAP[targetPath] || ROUTE_PRIORITIES.MEDIUM;
+		const currentPriority = ROUTE_PRIORITY_MAP[currentPath] || ROUTE_PRIORITIES.MEDIUM;
 
 		// Always preload critical routes
 		if (targetPriority >= ROUTE_PRIORITIES.CRITICAL) {
@@ -284,10 +269,7 @@ export class FinancialRoutePerformanceMonitor {
 		}
 
 		// Preload if coming from high-priority route
-		if (
-			currentPriority >= ROUTE_PRIORITIES.HIGH &&
-			targetPriority >= ROUTE_PRIORITIES.MEDIUM
-		) {
+		if (currentPriority >= ROUTE_PRIORITIES.HIGH && targetPriority >= ROUTE_PRIORITIES.MEDIUM) {
 			return true;
 		}
 
@@ -295,8 +277,7 @@ export class FinancialRoutePerformanceMonitor {
 		const targetMetrics = this.getAveragePerformance(targetPath);
 		if (
 			targetMetrics &&
-			targetMetrics.averageDuration >
-				PERFORMANCE_THRESHOLDS.ROUTE_TRANSITION_NORMAL
+			targetMetrics.averageDuration > PERFORMANCE_THRESHOLDS.ROUTE_TRANSITION_NORMAL
 		) {
 			return true;
 		}
@@ -337,10 +318,7 @@ export interface PerformanceAverage {
 /**
  * Get preload strategy for financial routes
  */
-export function getPreloadStrategy(
-	currentLocation: Location,
-	targetLocation: Location,
-) {
+export function getPreloadStrategy(currentLocation: Location, targetLocation: Location) {
 	const monitor = FinancialRoutePerformanceMonitor.getInstance();
 	const currentPath = currentLocation.pathname;
 	const targetPath = targetLocation.pathname;
@@ -366,5 +344,4 @@ export function initializePerformanceMonitoring() {
 }
 
 // Export singleton instance
-export const performanceMonitor =
-	FinancialRoutePerformanceMonitor.getInstance();
+export const performanceMonitor = FinancialRoutePerformanceMonitor.getInstance();

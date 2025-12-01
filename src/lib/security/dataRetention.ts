@@ -123,10 +123,7 @@ export class DataRetentionManager {
 		}
 	}
 
-	private async applyRetentionPolicy(
-		dataType: string,
-		policy: RetentionPolicy,
-	): Promise<void> {
+	private async applyRetentionPolicy(dataType: string, policy: RetentionPolicy): Promise<void> {
 		const cutoffDate = this.calculateCutoffDate(policy);
 
 		logger.debug(`Applying retention policy for ${dataType}`, {
@@ -209,15 +206,12 @@ export class DataRetentionManager {
 			const cutoffDate = this.calculateCutoffDate(policy);
 
 			try {
-				const response = await apiClient.get<{ count: number }>(
-					'/v1/compliance/retention/stats',
-					{
-						params: {
-							dataType,
-							cutoffDate: cutoffDate.toISOString(),
-						},
+				const response = await apiClient.get<{ count: number }>('/v1/compliance/retention/stats', {
+					params: {
+						dataType,
+						cutoffDate: cutoffDate.toISOString(),
 					},
-				);
+				});
 
 				stats[dataType] = {
 					cutoffDate: cutoffDate.toISOString(),
@@ -225,8 +219,7 @@ export class DataRetentionManager {
 					policy,
 				};
 			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown error';
+				const message = error instanceof Error ? error.message : 'Unknown error';
 				logger.debug(`Failed to get retention stats for ${dataType}`, {
 					component: 'dataRetention',
 					action: 'getRetentionStatistics',

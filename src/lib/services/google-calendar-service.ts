@@ -46,11 +46,7 @@ export class GoogleCalendarService {
 	private config: GoogleCalendarConfig;
 	private userId: string;
 
-	constructor(
-		config: GoogleCalendarConfig,
-		userId: string,
-		_authToken: string,
-	) {
+	constructor(config: GoogleCalendarConfig, userId: string, _authToken: string) {
 		this.config = config;
 		this.userId = userId;
 		// authToken not used in current implementation
@@ -69,9 +65,7 @@ export class GoogleCalendarService {
 	/**
 	 * Handle OAuth callback and store tokens
 	 */
-	async handleCallback(
-		code: string,
-	): Promise<{ success: boolean; email?: string }> {
+	async handleCallback(code: string): Promise<{ success: boolean; email?: string }> {
 		const response = await this.invokeEdgeFunction('google-calendar-auth', {
 			action: 'callback',
 			code,
@@ -226,10 +220,9 @@ export class GoogleCalendarService {
 	 */
 	async getMappings(): Promise<CalendarSyncMapping[]> {
 		try {
-			const response = await apiClient.get<CalendarSyncMapping[]>(
-				'/v1/google-calendar/mappings',
-				{ params: { user_id: this.userId } },
-			);
+			const response = await apiClient.get<CalendarSyncMapping[]>('/v1/google-calendar/mappings', {
+				params: { user_id: this.userId },
+			});
 			return response ?? [];
 		} catch (error) {
 			throw new Error(
@@ -241,9 +234,7 @@ export class GoogleCalendarService {
 	/**
 	 * Get mapping for a specific financial event
 	 */
-	async getMappingByEventId(
-		eventId: string,
-	): Promise<CalendarSyncMapping | null> {
+	async getMappingByEventId(eventId: string): Promise<CalendarSyncMapping | null> {
 		try {
 			const response = await apiClient.get<CalendarSyncMapping | null>(
 				'/v1/google-calendar/mappings/by-event',
@@ -258,9 +249,7 @@ export class GoogleCalendarService {
 	/**
 	 * Get mapping for a specific Google event
 	 */
-	async getMappingByGoogleEventId(
-		googleEventId: string,
-	): Promise<CalendarSyncMapping | null> {
+	async getMappingByGoogleEventId(googleEventId: string): Promise<CalendarSyncMapping | null> {
 		try {
 			const response = await apiClient.get<CalendarSyncMapping | null>(
 				'/v1/google-calendar/mappings/by-google-event',
@@ -276,10 +265,7 @@ export class GoogleCalendarService {
 	 * Resolve conflict between local and Google event
 	 * Uses "Last Write Wins" strategy based on timestamps
 	 */
-	resolveConflict(
-		localModifiedAt: Date,
-		googleModifiedAt: Date,
-	): 'local_wins' | 'remote_wins' {
+	resolveConflict(localModifiedAt: Date, googleModifiedAt: Date): 'local_wins' | 'remote_wins' {
 		return googleModifiedAt > localModifiedAt ? 'remote_wins' : 'local_wins';
 	}
 
@@ -287,10 +273,7 @@ export class GoogleCalendarService {
 	 * Check if sync should be skipped (loop prevention)
 	 * Skip if change originated from destination within last 5 seconds
 	 */
-	async shouldSkipSync(
-		eventId: string,
-		direction: 'to_google' | 'from_google',
-	): Promise<boolean> {
+	async shouldSkipSync(eventId: string, direction: 'to_google' | 'from_google'): Promise<boolean> {
 		const mapping = await this.getMappingByEventId(eventId);
 
 		if (!mapping) return false;
@@ -299,9 +282,7 @@ export class GoogleCalendarService {
 		const lastModified = new Date(mapping.last_modified_at);
 		const fiveSecondsAgo = new Date(Date.now() - 5000);
 
-		return (
-			mapping.sync_source === expectedSource && lastModified > fiveSecondsAgo
-		);
+		return mapping.sync_source === expectedSource && lastModified > fiveSecondsAgo;
 	}
 
 	/**

@@ -88,12 +88,7 @@ export type DataExportRequestType =
 
 export type DataExportFormat = 'json' | 'csv' | 'pdf';
 
-export type DataExportStatus =
-	| 'pending'
-	| 'processing'
-	| 'completed'
-	| 'failed'
-	| 'expired';
+export type DataExportStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
 
 export interface DataExportRequest {
 	id: string;

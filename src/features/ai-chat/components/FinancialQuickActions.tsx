@@ -1,10 +1,4 @@
-import {
-	Calendar,
-	Lightbulb,
-	PieChart,
-	TrendingDown,
-	Wallet,
-} from 'lucide-react';
+import { Calendar, Lightbulb, PieChart, TrendingDown, Wallet } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,8 +18,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 	{
 		icon: TrendingDown,
 		label: 'Onde estou gastando',
-		query:
-			'Onde estou gastando mais este mês? Mostre as principais categorias.',
+		query: 'Onde estou gastando mais este mês? Mostre as principais categorias.',
 	},
 	{
 		icon: Calendar,
@@ -35,14 +28,12 @@ const QUICK_ACTIONS: QuickAction[] = [
 	{
 		icon: Lightbulb,
 		label: 'Dicas de economia',
-		query:
-			'Me dê dicas personalizadas para economizar este mês baseado nos meus gastos.',
+		query: 'Me dê dicas personalizadas para economizar este mês baseado nos meus gastos.',
 	},
 	{
 		icon: PieChart,
 		label: 'Resumo do mês',
-		query:
-			'Como está minha situação financeira este mês? Faça um resumo completo.',
+		query: 'Como está minha situação financeira este mês? Faça um resumo completo.',
 	},
 ];
 

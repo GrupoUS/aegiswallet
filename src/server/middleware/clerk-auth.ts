@@ -5,11 +5,7 @@
  * Uses Clerk for authentication
  */
 
-import {
-	type User as ClerkUser,
-	createClerkClient,
-	verifyToken,
-} from '@clerk/backend';
+import { type User as ClerkUser, createClerkClient, verifyToken } from '@clerk/backend';
 import type { Context, Next } from 'hono';
 import { createMiddleware } from 'hono/factory';
 
@@ -76,20 +72,41 @@ function getClerkClient() {
  * const { user, db } = c.get('auth');
  * ```
  */
-export const clerkAuthMiddleware = createMiddleware(
-	async (c: Context, next: Next) => {
-		const authHeader = c.req.header('Authorization');
-		const token = authHeader?.startsWith('Bearer ')
-			? authHeader.replace('Bearer ', '').trim()
-			: null;
+export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Next) => {
+	const authHeader = c.req.header('Authorization');
+	const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '').trim() : null;
 
-		// Log authentication attempt
-		const requestId = c.get('requestId') || 'unknown';
-		const clientIP =
-			c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
+	// Log authentication attempt
+	const requestId = c.get('requestId') || 'unknown';
+	const clientIP = c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
 
-		if (!token) {
-			secureLogger.warn('Authentication failed: No token provided', {
+	if (!token) {
+		secureLogger.warn('Authentication failed: No token provided', {
+			ip: clientIP,
+			method: c.req.method,
+			path: c.req.path,
+			requestId,
+			userAgent: c.req.header('User-Agent'),
+		});
+
+		return c.json(
+			{
+				code: 'AUTH_REQUIRED',
+				error: 'Authentication required',
+			},
+			401,
+		);
+	}
+
+	try {
+		const { secretKey } = getClerkConfig();
+		const clerk = getClerkClient();
+
+		// Verify the session token using @clerk/backend verifyToken
+		const payload = await verifyToken(token, { secretKey });
+
+		if (!payload?.sub) {
+			secureLogger.warn('Authentication failed: Invalid token', {
 				ip: clientIP,
 				method: c.req.method,
 				path: c.req.path,
@@ -99,93 +116,65 @@ export const clerkAuthMiddleware = createMiddleware(
 
 			return c.json(
 				{
-					code: 'AUTH_REQUIRED',
-					error: 'Authentication required',
+					code: 'INVALID_TOKEN',
+					error: 'Invalid authentication token',
 				},
 				401,
 			);
 		}
 
-		try {
-			const { secretKey } = getClerkConfig();
-			const clerk = getClerkClient();
+		const userId = payload.sub;
 
-			// Verify the session token using @clerk/backend verifyToken
-			const payload = await verifyToken(token, { secretKey });
+		// Get user details from Clerk
+		const clerkUser = await clerk.users.getUser(userId);
 
-			if (!payload?.sub) {
-				secureLogger.warn('Authentication failed: Invalid token', {
-					ip: clientIP,
-					method: c.req.method,
-					path: c.req.path,
-					requestId,
-					userAgent: c.req.header('User-Agent'),
-				});
+		// Get database client
+		const db = getHttpClient();
 
-				return c.json(
-					{
-						code: 'INVALID_TOKEN',
-						error: 'Invalid authentication token',
-					},
-					401,
-				);
-			}
+		// Attach auth context to request
+		const authContext: AuthContext = {
+			db,
+			clerkUser,
+			user: {
+				id: clerkUser.id,
+				email: clerkUser.emailAddresses[0]?.emailAddress || '',
+				fullName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || null,
+				role: clerkUser.publicMetadata?.role as string | undefined,
+				metadata: clerkUser.publicMetadata as Record<string, unknown>,
+			},
+		};
 
-			const userId = payload.sub;
+		c.set('auth', authContext);
 
-			// Get user details from Clerk
-			const clerkUser = await clerk.users.getUser(userId);
+		// Log successful authentication
+		secureLogger.info('Authentication successful', {
+			ip: clientIP,
+			method: c.req.method,
+			path: c.req.path,
+			requestId,
+			userId: clerkUser.id,
+		});
 
-			// Get database client
-			const db = getHttpClient();
+		await next();
+	} catch (error) {
+		secureLogger.error('Authentication error', {
+			error: error instanceof Error ? error.message : 'Unknown error',
+			ip: clientIP,
+			method: c.req.method,
+			path: c.req.path,
+			requestId,
+			userAgent: c.req.header('User-Agent'),
+		});
 
-			// Attach auth context to request
-			const authContext: AuthContext = {
-				db,
-				clerkUser,
-				user: {
-					id: clerkUser.id,
-					email: clerkUser.emailAddresses[0]?.emailAddress || '',
-					fullName:
-						`${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-						null,
-					role: clerkUser.publicMetadata?.role as string | undefined,
-					metadata: clerkUser.publicMetadata as Record<string, unknown>,
-				},
-			};
-
-			c.set('auth', authContext);
-
-			// Log successful authentication
-			secureLogger.info('Authentication successful', {
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				userId: clerkUser.id,
-			});
-
-			await next();
-		} catch (error) {
-			secureLogger.error('Authentication error', {
-				error: error instanceof Error ? error.message : 'Unknown error',
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				userAgent: c.req.header('User-Agent'),
-			});
-
-			return c.json(
-				{
-					code: 'AUTH_ERROR',
-					error: 'Authentication failed',
-				},
-				500,
-			);
-		}
-	},
-);
+		return c.json(
+			{
+				code: 'AUTH_ERROR',
+				error: 'Authentication failed',
+			},
+			500,
+		);
+	}
+});
 
 // ========================================
 // OPTIONAL AUTH MIDDLEWARE
@@ -197,63 +186,57 @@ export const clerkAuthMiddleware = createMiddleware(
  * Similar to clerkAuthMiddleware but doesn't return 401 if no token is present.
  * Useful for endpoints that work with or without authentication.
  */
-export const optionalClerkAuthMiddleware = createMiddleware(
-	async (c: Context, next: Next) => {
-		const authHeader = c.req.header('Authorization');
-		const token = authHeader?.startsWith('Bearer ')
-			? authHeader.replace('Bearer ', '').trim()
-			: null;
+export const optionalClerkAuthMiddleware = createMiddleware(async (c: Context, next: Next) => {
+	const authHeader = c.req.header('Authorization');
+	const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '').trim() : null;
 
-		if (!token) {
-			// No token provided, continue without auth context
+	if (!token) {
+		// No token provided, continue without auth context
+		await next();
+		return;
+	}
+
+	try {
+		const { secretKey } = getClerkConfig();
+		const clerk = getClerkClient();
+
+		// Verify the session token
+		const payload = await verifyToken(token, { secretKey });
+
+		if (!payload?.sub) {
+			// Invalid token, but don't return error for optional auth
 			await next();
 			return;
 		}
 
-		try {
-			const { secretKey } = getClerkConfig();
-			const clerk = getClerkClient();
+		const userId = payload.sub;
 
-			// Verify the session token
-			const payload = await verifyToken(token, { secretKey });
+		// Get user details from Clerk
+		const clerkUser = await clerk.users.getUser(userId);
 
-			if (!payload?.sub) {
-				// Invalid token, but don't return error for optional auth
-				await next();
-				return;
-			}
+		// Get database client
+		const db = getHttpClient();
 
-			const userId = payload.sub;
+		// Attach auth context to request
+		const authContext: AuthContext = {
+			db,
+			clerkUser,
+			user: {
+				id: clerkUser.id,
+				email: clerkUser.emailAddresses[0]?.emailAddress || '',
+				fullName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || null,
+				role: clerkUser.publicMetadata?.role as string | undefined,
+				metadata: clerkUser.publicMetadata as Record<string, unknown>,
+			},
+		};
 
-			// Get user details from Clerk
-			const clerkUser = await clerk.users.getUser(userId);
-
-			// Get database client
-			const db = getHttpClient();
-
-			// Attach auth context to request
-			const authContext: AuthContext = {
-				db,
-				clerkUser,
-				user: {
-					id: clerkUser.id,
-					email: clerkUser.emailAddresses[0]?.emailAddress || '',
-					fullName:
-						`${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
-						null,
-					role: clerkUser.publicMetadata?.role as string | undefined,
-					metadata: clerkUser.publicMetadata as Record<string, unknown>,
-				},
-			};
-
-			c.set('auth', authContext);
-			await next();
-		} catch {
-			// Error validating token, but don't return error for optional auth
-			await next();
-		}
-	},
-);
+		c.set('auth', authContext);
+		await next();
+	} catch {
+		// Error validating token, but don't return error for optional auth
+		await next();
+	}
+});
 
 // ========================================
 // ROLE-BASED AUTHORIZATION
@@ -286,7 +269,7 @@ export function clerkRoleMiddleware(allowedRoles: string[]) {
 
 		const userRole = auth.user.role;
 
-		if (!userRole || !allowedRoles.includes(userRole)) {
+		if (!(userRole && allowedRoles.includes(userRole))) {
 			secureLogger.warn('Authorization failed: Insufficient role', {
 				method: c.req.method,
 				path: c.req.path,
@@ -333,10 +316,7 @@ export function clerkUserRateLimitMiddleware(options: {
 		const auth = c.get('auth') as AuthContext | undefined;
 
 		const identifier =
-			auth?.user.id ||
-			c.req.header('X-Forwarded-For') ||
-			c.req.header('X-Real-IP') ||
-			'unknown';
+			auth?.user.id || c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
 
 		const now = Date.now();
 		const userRequests = requests.get(identifier);
@@ -373,14 +353,8 @@ export function clerkUserRateLimitMiddleware(options: {
 		const currentRequests = requests.get(identifier);
 		if (currentRequests) {
 			c.header('X-RateLimit-Limit', max.toString());
-			c.header(
-				'X-RateLimit-Remaining',
-				Math.max(0, max - currentRequests.count).toString(),
-			);
-			c.header(
-				'X-RateLimit-Reset',
-				new Date(currentRequests.resetTime).toISOString(),
-			);
+			c.header('X-RateLimit-Remaining', Math.max(0, max - currentRequests.count).toString());
+			c.header('X-RateLimit-Reset', new Date(currentRequests.resetTime).toISOString());
 		}
 
 		await next();

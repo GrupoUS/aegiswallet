@@ -129,9 +129,7 @@ export function EventDialog({
 			color: 'blue',
 			date: format(initialDate || new Date(), 'yyyy-MM-dd'),
 			description: '',
-			endTime: initialStartTime
-				? format(addHours(initialStartTime, 1), 'HH:mm')
-				: '10:00',
+			endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
 			recurrenceRule: '',
 			recurring: false,
 			startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
@@ -144,7 +142,7 @@ export function EventDialog({
 	useEffect(() => {
 		if (event) {
 			form.reset({
-				allDay: event.allDay || false,
+				allDay: event.allDay,
 				color: event.color,
 				date: format(event.start, 'yyyy-MM-dd'),
 				description: event.description || '',
@@ -160,14 +158,10 @@ export function EventDialog({
 				color: 'blue',
 				date: format(initialDate || new Date(), 'yyyy-MM-dd'),
 				description: '',
-				endTime: initialStartTime
-					? format(addHours(initialStartTime, 1), 'HH:mm')
-					: '10:00',
+				endTime: initialStartTime ? format(addHours(initialStartTime, 1), 'HH:mm') : '10:00',
 				recurrenceRule: '',
 				recurring: false,
-				startTime: initialStartTime
-					? format(initialStartTime, 'HH:mm')
-					: '09:00',
+				startTime: initialStartTime ? format(initialStartTime, 'HH:mm') : '09:00',
 				title: '',
 			});
 		}
@@ -201,9 +195,7 @@ export function EventDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
 				<DialogHeader>
-					<DialogTitle>
-						{isEditing ? 'Editar Evento' : 'Novo Evento'}
-					</DialogTitle>
+					<DialogTitle>{isEditing ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
 					<DialogDescription>
 						{isEditing
 							? 'Atualize as informações do evento'
@@ -306,10 +298,7 @@ export function EventDialog({
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Categoria (Cor) *</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										defaultValue={field.value}
-									>
+									<Select onValueChange={field.onChange} defaultValue={field.value}>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue placeholder="Selecione uma categoria" />
@@ -319,9 +308,7 @@ export function EventDialog({
 											{colorOptions.map((option) => (
 												<SelectItem key={option.value} value={option.value}>
 													<div className="flex items-center gap-2">
-														<div
-															className={`h-3 w-3 rounded-full ${option.class}`}
-														/>
+														<div className={`h-3 w-3 rounded-full ${option.class}`} />
 														{option.label}
 													</div>
 												</SelectItem>
@@ -341,15 +328,10 @@ export function EventDialog({
 								<FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
 									<div className="space-y-0.5">
 										<FormLabel className="text-base">Dia inteiro</FormLabel>
-										<FormDescription>
-											Evento sem horário específico
-										</FormDescription>
+										<FormDescription>Evento sem horário específico</FormDescription>
 									</div>
 									<FormControl>
-										<Switch
-											checked={field.value}
-											onCheckedChange={field.onChange}
-										/>
+										<Switch checked={field.value} onCheckedChange={field.onChange} />
 									</FormControl>
 								</FormItem>
 							)}
@@ -362,12 +344,8 @@ export function EventDialog({
 							render={({ field }) => (
 								<FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
 									<div className="space-y-0.5">
-										<FormLabel className="text-base">
-											Evento recorrente
-										</FormLabel>
-										<FormDescription>
-											Repetir este evento periodicamente
-										</FormDescription>
+										<FormLabel className="text-base">Evento recorrente</FormLabel>
+										<FormDescription>Repetir este evento periodicamente</FormDescription>
 									</div>
 									<FormControl>
 										<Switch
@@ -390,10 +368,7 @@ export function EventDialog({
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Frequência de Repetição</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
+										<Select onValueChange={field.onChange} defaultValue={field.value}>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder="Selecione a frequência" />
@@ -407,9 +382,7 @@ export function EventDialog({
 												))}
 											</SelectContent>
 										</Select>
-										<FormDescription>
-											Define quando e como o evento será repetido
-										</FormDescription>
+										<FormDescription>Define quando e como o evento será repetido</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -427,9 +400,7 @@ export function EventDialog({
 							>
 								Cancelar
 							</Button>
-							<Button type="submit">
-								{isEditing ? 'Atualizar' : 'Criar'} Evento
-							</Button>
+							<Button type="submit">{isEditing ? 'Atualizar' : 'Criar'} Evento</Button>
 						</DialogFooter>
 					</form>
 				</Form>

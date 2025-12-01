@@ -23,8 +23,7 @@ export function SubscriptionStatus({ className }: SubscriptionStatusProps) {
 		return <Skeleton className="h-6 w-24" />;
 	}
 
-	const status = (subscription?.subscription?.status ||
-		'free') as keyof typeof statusConfig;
+	const status = (subscription?.subscription?.status || 'free') as keyof typeof statusConfig;
 	const config = statusConfig[status] ?? statusConfig.free;
 
 	return (

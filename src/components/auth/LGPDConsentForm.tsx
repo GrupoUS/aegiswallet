@@ -10,8 +10,8 @@ interface LGPDConsentState {
 	essential: boolean;
 	analytics: boolean;
 	marketing: boolean;
-	voice_data_processing: boolean;
-	biometric_data: boolean;
+	voiceDataProcessing: boolean;
+	biometricData: boolean;
 }
 
 interface LGPDConsentFormProps {
@@ -44,10 +44,10 @@ const LGPDConsentForm = ({
 
 	const [consentState, setConsentState] = useState<LGPDConsentState>({
 		analytics: defaultValues?.analytics ?? false,
-		biometric_data: defaultValues?.biometric_data ?? false,
+		biometricData: defaultValues?.biometricData ?? false,
 		essential: defaultValues?.essential ?? false,
 		marketing: defaultValues?.marketing ?? false,
-		voice_data_processing: defaultValues?.voice_data_processing ?? false,
+		voiceDataProcessing: defaultValues?.voiceDataProcessing ?? false,
 	});
 	const [internalSubmitting, setInternalSubmitting] = useState(false);
 	const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -55,28 +55,25 @@ const LGPDConsentForm = ({
 
 	const busy = isSubmitting ?? internalSubmitting;
 
-	const handleConsentToggle =
-		(field: keyof LGPDConsentState) => (value: CheckedState) => {
-			const isChecked = value === true;
+	const handleConsentToggle = (field: keyof LGPDConsentState) => (value: CheckedState) => {
+		const isChecked = value === true;
 
-			setConsentState((previous) => ({
-				...previous,
-				[field]: isChecked,
-			}));
-			setStatus('idle');
-			if (formError) {
-				setFormError(null);
-			}
-		};
+		setConsentState((previous) => ({
+			...previous,
+			[field]: isChecked,
+		}));
+		setStatus('idle');
+		if (formError) {
+			setFormError(null);
+		}
+	};
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setStatus('idle');
 
 		if (!consentState.essential) {
-			setFormError(
-				'É necessário autorizar o tratamento essencial de dados para continuar.',
-			);
+			setFormError('É necessário autorizar o tratamento essencial de dados para continuar.');
 			setStatus('error');
 			return;
 		}
@@ -113,14 +110,11 @@ const LGPDConsentForm = ({
 		<div className={cn('rounded-lg border bg-card p-6 shadow-sm', className)}>
 			<form onSubmit={handleSubmit} className="space-y-6">
 				<div className="space-y-2">
-					<h2 className="font-semibold text-foreground text-xl">
-						Consentimento LGPD
-					</h2>
+					<h2 className="font-semibold text-foreground text-xl">Consentimento LGPD</h2>
 					<p className="text-muted-foreground text-sm">
-						A Lei Geral de Proteção de Dados (LGPD) exige que obtenhamos o seu
-						consentimento para tratar informações pessoais. Revise as opções
-						abaixo e selecione as permissões que deseja conceder. Você pode
-						alterar suas preferências a qualquer momento.
+						A Lei Geral de Proteção de Dados (LGPD) exige que obtenhamos o seu consentimento para
+						tratar informações pessoais. Revise as opções abaixo e selecione as permissões que
+						deseja conceder. Você pode alterar suas preferências a qualquer momento.
 					</p>
 					{policyUrl && (
 						<a
@@ -148,19 +142,13 @@ const LGPDConsentForm = ({
 							aria-describedby={`${essentialId}-description`}
 						/>
 						<div className="space-y-1">
-							<Label
-								htmlFor={essentialId}
-								className="font-medium text-base text-foreground"
-							>
+							<Label htmlFor={essentialId} className="font-medium text-base text-foreground">
 								Consentimento essencial
 							</Label>
-							<p
-								id={`${essentialId}-description`}
-								className="text-muted-foreground text-sm"
-							>
-								Autorizo o uso dos meus dados para execução do serviço,
-								autenticação, prevenção a fraudes e comunicação obrigatória.
-								Este consentimento é necessário para utilizar a plataforma.
+							<p id={`${essentialId}-description`} className="text-muted-foreground text-sm">
+								Autorizo o uso dos meus dados para execução do serviço, autenticação, prevenção a
+								fraudes e comunicação obrigatória. Este consentimento é necessário para utilizar a
+								plataforma.
 							</p>
 						</div>
 					</label>
@@ -176,18 +164,12 @@ const LGPDConsentForm = ({
 							aria-describedby={`${analyticsId}-description`}
 						/>
 						<div className="space-y-1">
-							<Label
-								htmlFor={analyticsId}
-								className="font-medium text-base text-foreground"
-							>
+							<Label htmlFor={analyticsId} className="font-medium text-base text-foreground">
 								Analytics e personalização
 							</Label>
-							<p
-								id={`${analyticsId}-description`}
-								className="text-muted-foreground text-sm"
-							>
-								Permito o uso dos meus dados para análises de uso, melhoria
-								contínua e personalização da experiência dentro do aplicativo.
+							<p id={`${analyticsId}-description`} className="text-muted-foreground text-sm">
+								Permito o uso dos meus dados para análises de uso, melhoria contínua e
+								personalização da experiência dentro do aplicativo.
 							</p>
 						</div>
 					</label>
@@ -203,18 +185,12 @@ const LGPDConsentForm = ({
 							aria-describedby={`${marketingId}-description`}
 						/>
 						<div className="space-y-1">
-							<Label
-								htmlFor={marketingId}
-								className="font-medium text-base text-foreground"
-							>
+							<Label htmlFor={marketingId} className="font-medium text-base text-foreground">
 								Comunicação personalizada
 							</Label>
-							<p
-								id={`${marketingId}-description`}
-								className="text-muted-foreground text-sm"
-							>
-								Autorizo o envio de comunicações sobre novos recursos, dicas
-								financeiras e ofertas alinhadas aos meus interesses.
+							<p id={`${marketingId}-description`} className="text-muted-foreground text-sm">
+								Autorizo o envio de comunicações sobre novos recursos, dicas financeiras e ofertas
+								alinhadas aos meus interesses.
 							</p>
 						</div>
 					</label>
@@ -225,23 +201,17 @@ const LGPDConsentForm = ({
 					>
 						<Checkbox
 							id={voiceId}
-							checked={consentState.voice_data_processing}
-							onCheckedChange={handleConsentToggle('voice_data_processing')}
+							checked={consentState.voiceDataProcessing}
+							onCheckedChange={handleConsentToggle('voiceDataProcessing')}
 							aria-describedby={`${voiceId}-description`}
 						/>
 						<div className="space-y-1">
-							<Label
-								htmlFor={voiceId}
-								className="font-medium text-base text-foreground"
-							>
+							<Label htmlFor={voiceId} className="font-medium text-base text-foreground">
 								Processamento de voz
 							</Label>
-							<p
-								id={`${voiceId}-description`}
-								className="text-muted-foreground text-sm"
-							>
-								Permito o processamento dos meus comandos de voz para execução
-								de ações financeiras e interação com o assistente.
+							<p id={`${voiceId}-description`} className="text-muted-foreground text-sm">
+								Permito o processamento dos meus comandos de voz para execução de ações financeiras
+								e interação com o assistente.
 							</p>
 						</div>
 					</label>
@@ -252,23 +222,17 @@ const LGPDConsentForm = ({
 					>
 						<Checkbox
 							id={biometricId}
-							checked={consentState.biometric_data}
-							onCheckedChange={handleConsentToggle('biometric_data')}
+							checked={consentState.biometricData}
+							onCheckedChange={handleConsentToggle('biometricData')}
 							aria-describedby={`${biometricId}-description`}
 						/>
 						<div className="space-y-1">
-							<Label
-								htmlFor={biometricId}
-								className="font-medium text-base text-foreground"
-							>
+							<Label htmlFor={biometricId} className="font-medium text-base text-foreground">
 								Dados biométricos de voz
 							</Label>
-							<p
-								id={`${biometricId}-description`}
-								className="text-muted-foreground text-sm"
-							>
-								Autorizo o armazenamento de padrões da minha voz para fins de
-								autenticação e segurança (biometria por voz).
+							<p id={`${biometricId}-description`} className="text-muted-foreground text-sm">
+								Autorizo o armazenamento de padrões da minha voz para fins de autenticação e
+								segurança (biometria por voz).
 							</p>
 						</div>
 					</label>

@@ -25,19 +25,16 @@ export const environment = {
 
 	// Clerk configuration
 	CLERK_PUBLISHABLE_KEY:
-		process.env.VITE_CLERK_PUBLISHABLE_KEY ||
-		process.env.CLERK_PUBLISHABLE_KEY ||
-		'',
+		process.env.VITE_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY || '',
 	CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || '',
 
 	// API configuration
-	API_URL:
-		process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
+	API_URL: process.env.VITE_API_URL || process.env.API_URL || 'http://localhost:3000',
 
 	// CORS origins
-	CORS_ORIGINS: (
-		process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000'
-	).split(','),
+	CORS_ORIGINS: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(
+		',',
+	),
 };
 
 /**

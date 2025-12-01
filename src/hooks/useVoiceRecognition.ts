@@ -95,7 +95,7 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Enhanced voice command processing with performance optimizations
-	const _processVoiceCommand = useCallback(
+	const ProcessVoiceCommand = useCallback(
 		(transcript: string, confidence: number) => {
 			const startTime = performance.now();
 
@@ -194,13 +194,11 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 				recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
 					const result = event.results[0][0];
 					if (result) {
-						_processVoiceCommand(result.transcript, result.confidence);
+						ProcessVoiceCommand(result.transcript, result.confidence);
 					}
 				};
 
-				recognitionRef.current.onerror = (
-					event: SpeechRecognitionErrorEvent,
-				) => {
+				recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
 					setState((prev) => ({
 						...prev,
 						error: `Speech recognition error: ${event.error}`,
@@ -258,18 +256,13 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 		} catch (error) {
 			setState((prev) => ({
 				...prev,
-				error:
-					error instanceof Error
-						? error.message
-						: 'Failed to start recognition',
+				error: error instanceof Error ? error.message : 'Failed to start recognition',
 				isListening: false,
 				isProcessing: false,
 			}));
-			options.onError?.(
-				error instanceof Error ? error.message : 'Failed to start recognition',
-			);
+			options.onError?.(error instanceof Error ? error.message : 'Failed to start recognition');
 		}
-	}, [state.isListening, state.isProcessing, options, _processVoiceCommand]);
+	}, [state.isListening, state.isProcessing, options, ProcessVoiceCommand]);
 
 	// Stop listening with proper cleanup
 	const stopListening = useCallback(() => {
@@ -320,7 +313,6 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}) {
 		...state,
 		startListening,
 		stopListening,
-		toggleListening: () =>
-			state.isListening ? stopListening() : startListening(),
+		toggleListening: () => (state.isListening ? stopListening() : startListening()),
 	};
 }

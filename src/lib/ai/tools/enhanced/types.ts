@@ -1,13 +1,7 @@
 import { z } from 'zod';
 
 // Brazilian Financial Types
-export const PixKeyTypeSchema = z.enum([
-	'CPF',
-	'CNPJ',
-	'EMAIL',
-	'PHONE',
-	'RANDOM_KEY',
-]);
+export const PixKeyTypeSchema = z.enum(['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'RANDOM_KEY']);
 export type PixKeyType = z.infer<typeof PixKeyTypeSchema>;
 
 export const PixTransferStatusSchema = z.enum([
@@ -218,11 +212,7 @@ export interface AnomalyDetection {
 }
 
 export interface FinancialAnomaly {
-	type:
-		| 'unusual_spending'
-		| 'duplicate_transaction'
-		| 'potential_fraud'
-		| 'budget_exceeded';
+	type: 'unusual_spending' | 'duplicate_transaction' | 'potential_fraud' | 'budget_exceeded';
 	severity: 'low' | 'medium' | 'high' | 'critical';
 	description: string;
 	amount?: number;
@@ -250,11 +240,7 @@ export interface RiskFactor {
 
 export interface SecurityAlert {
 	id: string;
-	type:
-		| 'suspicious_login'
-		| 'unusual_transaction'
-		| 'multiple_failed_attempts'
-		| 'data_breach';
+	type: 'suspicious_login' | 'unusual_transaction' | 'multiple_failed_attempts' | 'data_breach';
 	severity: 'low' | 'medium' | 'high' | 'critical';
 	title: string;
 	description: string;

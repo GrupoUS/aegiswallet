@@ -114,10 +114,7 @@ export const logger = Logger.getInstance();
 // Set default log level based on environment
 if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
 	logger.setLogLevel(LogLevel.INFO);
-} else if (
-	typeof process !== 'undefined' &&
-	process.env?.NODE_ENV === 'development'
-) {
+} else if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
 	logger.setLogLevel(LogLevel.DEBUG);
 } else {
 	logger.setLogLevel(LogLevel.INFO);

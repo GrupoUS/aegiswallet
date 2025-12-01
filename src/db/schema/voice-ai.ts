@@ -316,5 +316,4 @@ export type VoiceTranscription = typeof voiceTranscriptions.$inferSelect;
 export type InsertVoiceTranscription = typeof voiceTranscriptions.$inferInsert;
 
 export type ChatContextSnapshot = typeof chatContextSnapshots.$inferSelect;
-export type InsertChatContextSnapshot =
-	typeof chatContextSnapshots.$inferInsert;
+export type InsertChatContextSnapshot = typeof chatContextSnapshots.$inferInsert;

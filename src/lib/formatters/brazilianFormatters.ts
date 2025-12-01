@@ -50,10 +50,7 @@ export function formatCurrency(
 /**
  * Format currency with compact notation (1K, 1M)
  */
-export function formatCompactCurrency(
-	amount: number,
-	showSymbol = true,
-): string {
+export function formatCompactCurrency(amount: number, showSymbol = true): string {
 	const absAmount = Math.abs(amount);
 	const sign = amount < 0 ? '-' : '';
 	const symbol = showSymbol ? 'R$ ' : '';
@@ -116,11 +113,7 @@ export function formatDate(
 		relative?: boolean;
 	},
 ): string {
-	const {
-		showTime = false,
-		showWeekday = false,
-		relative = false,
-	} = options || {};
+	const { showTime = false, showWeekday = false, relative = false } = options || {};
 
 	const dateObj = typeof date === 'string' ? new Date(date) : date;
 
@@ -213,20 +206,16 @@ export function formatDateForVoice(date: Date | string): string {
 /**
  * Format time range (e.g., "das 9h às 17h")
  */
-export function formatTimeRange(
-	start: Date | string,
-	end: Date | string,
-): string {
-	const startTime = (
-		typeof start === 'string' ? new Date(start) : start
-	).toLocaleTimeString('pt-BR', {
-		hour: '2-digit',
-		minute: '2-digit',
-	});
+export function formatTimeRange(start: Date | string, end: Date | string): string {
+	const startTime = (typeof start === 'string' ? new Date(start) : start).toLocaleTimeString(
+		'pt-BR',
+		{
+			hour: '2-digit',
+			minute: '2-digit',
+		},
+	);
 
-	const endTime = (
-		typeof end === 'string' ? new Date(end) : end
-	).toLocaleTimeString('pt-BR', {
+	const endTime = (typeof end === 'string' ? new Date(end) : end).toLocaleTimeString('pt-BR', {
 		hour: '2-digit',
 		minute: '2-digit',
 	});
@@ -285,10 +274,7 @@ export function formatCompactNumber(num: number): string {
 /**
  * Format percentage
  */
-export function formatPercentage(
-	value: number | undefined | null,
-	decimals = 1,
-): string {
+export function formatPercentage(value: number | undefined | null, decimals = 1): string {
 	if (value === undefined || value === null) {
 		return '0%';
 	}
@@ -333,10 +319,7 @@ export function formatCNPJ(cnpj: string): string {
 		return cnpj;
 	}
 
-	return cleaned.replace(
-		/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-		'$1.$2.$3/$4-$5',
-	);
+	return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 }
 
 /**
@@ -376,11 +359,7 @@ export function formatPhone(phone: string): string {
 /**
  * Pluralize word based on count
  */
-export function pluralize(
-	count: number,
-	singular: string,
-	plural?: string,
-): string {
+export function pluralize(count: number, singular: string, plural?: string): string {
 	if (count === 1) {
 		return singular;
 	}
@@ -430,10 +409,7 @@ export function formatFileSize(bytes: number): string {
 /**
  * Ordinal numbers in Portuguese (1º, 2º, 3ª, etc)
  */
-export function ordinal(
-	num: number,
-	gender: 'masculine' | 'feminine' = 'masculine',
-): string {
+export function ordinal(num: number, gender: 'masculine' | 'feminine' = 'masculine'): string {
 	const suffix = gender === 'masculine' ? 'º' : 'ª';
 	return `${num}${suffix}`;
 }
@@ -458,27 +434,27 @@ export function isValidCPF(cpf: string): boolean {
 	// Calculate verification digits
 	let sum = 0;
 	for (let i = 0; i < 9; i++) {
-		sum += parseInt(cleaned.charAt(i), 10) * (10 - i);
+		sum += Number.parseInt(cleaned.charAt(i), 10) * (10 - i);
 	}
 	let digit = 11 - (sum % 11);
 	if (digit >= 10) {
 		digit = 0;
 	}
 
-	if (digit !== parseInt(cleaned.charAt(9), 10)) {
+	if (digit !== Number.parseInt(cleaned.charAt(9), 10)) {
 		return false;
 	}
 
 	sum = 0;
 	for (let i = 0; i < 10; i++) {
-		sum += parseInt(cleaned.charAt(i), 10) * (11 - i);
+		sum += Number.parseInt(cleaned.charAt(i), 10) * (11 - i);
 	}
 	digit = 11 - (sum % 11);
 	if (digit >= 10) {
 		digit = 0;
 	}
 
-	return digit === parseInt(cleaned.charAt(10), 10);
+	return digit === Number.parseInt(cleaned.charAt(10), 10);
 }
 
 /**
@@ -500,7 +476,7 @@ export function isValidCNPJ(cnpj: string): boolean {
 	const calculateDigit = (base: string, weights: number[]): number => {
 		let sum = 0;
 		for (let i = 0; i < base.length; i++) {
-			sum += parseInt(base[i], 10) * weights[i];
+			sum += Number.parseInt(base[i], 10) * weights[i];
 		}
 		const remainder = sum % 11;
 		return remainder < 2 ? 0 : 11 - remainder;
@@ -529,18 +505,7 @@ export function numberToWords(num: number): string {
 		return 'mil';
 	}
 
-	const units = [
-		'zero',
-		'um',
-		'dois',
-		'três',
-		'quatro',
-		'cinco',
-		'seis',
-		'sete',
-		'oito',
-		'nove',
-	];
+	const units = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
 
 	const teens = [
 		'dez',

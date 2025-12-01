@@ -30,9 +30,7 @@ const customRender = (ui: ReactElement) => {
 
 describe('ChatConversation', () => {
 	it('renders empty state when no messages', () => {
-		customRender(
-			<ChatConversation messages={[]} reasoning={[]} isStreaming={false} />,
-		);
+		customRender(<ChatConversation messages={[]} reasoning={[]} isStreaming={false} />);
 		expect(screen.getByText('Como posso ajudar hoje?')).toBeInTheDocument();
 	});
 
@@ -47,13 +45,7 @@ describe('ChatConversation', () => {
 			},
 		];
 
-		customRender(
-			<ChatConversation
-				messages={messages}
-				reasoning={[]}
-				isStreaming={false}
-			/>,
-		);
+		customRender(<ChatConversation messages={messages} reasoning={[]} isStreaming={false} />);
 
 		expect(screen.getByText('Hello')).toBeInTheDocument();
 		expect(screen.getByText('Hi there')).toBeInTheDocument();
@@ -64,13 +56,7 @@ describe('ChatConversation', () => {
 			{ id: '1', role: 'user', content: 'Hello', timestamp: Date.now() },
 		];
 
-		customRender(
-			<ChatConversation
-				messages={messages}
-				reasoning={[]}
-				isStreaming={true}
-			/>,
-		);
+		customRender(<ChatConversation messages={messages} reasoning={[]} isStreaming={true} />);
 
 		// Look for the bouncing dots container or class
 		// Since we can't easily query by class in RTL without setup, we check if the user message is there

@@ -7,8 +7,7 @@ import { flushSync } from 'react-dom';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { cn } from '@/lib/utils';
 
-interface AnimatedThemeTogglerProps
-	extends React.ComponentPropsWithoutRef<'button'> {
+interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<'button'> {
 	duration?: number;
 }
 
@@ -26,9 +25,7 @@ export const AnimatedThemeToggler = ({
 	useEffect(() => {
 		const updateDarkState = () => {
 			if (theme === 'system') {
-				const systemPrefersDark = window.matchMedia(
-					'(prefers-color-scheme: dark)',
-				).matches;
+				const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				setIsDark(systemPrefersDark);
 			} else {
 				setIsDark(theme === 'dark');
@@ -72,8 +69,7 @@ export const AnimatedThemeToggler = ({
 		}).ready;
 
 		// Calculate circle animation origin from button center
-		const { top, left, width, height } =
-			buttonRef.current.getBoundingClientRect();
+		const { top, left, width, height } = buttonRef.current.getBoundingClientRect();
 		const x = left + width / 2;
 		const y = top + height / 2;
 		const maxRadius = Math.hypot(
@@ -84,10 +80,7 @@ export const AnimatedThemeToggler = ({
 		// Animate circular expand from button
 		document.documentElement.animate(
 			{
-				clipPath: [
-					`circle(0px at ${x}px ${y}px)`,
-					`circle(${maxRadius}px at ${x}px ${y}px)`,
-				],
+				clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${maxRadius}px at ${x}px ${y}px)`],
 			},
 			{
 				duration,

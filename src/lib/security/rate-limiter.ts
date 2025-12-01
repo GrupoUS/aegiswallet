@@ -26,11 +26,7 @@ export interface AttemptRecord {
 }
 
 export interface SecurityEvent {
-	type:
-		| 'rate_limit_exceeded'
-		| 'account_locked'
-		| 'account_unlocked'
-		| 'login_attempt';
+	type: 'rate_limit_exceeded' | 'account_locked' | 'account_unlocked' | 'login_attempt';
 	identifier: string; // IP address or user ID
 	timestamp: number;
 	details?: unknown;
@@ -118,10 +114,7 @@ class RateLimiter {
 
 		// Check if rate limit exceeded
 		const windowStart = now - this.config.windowMs;
-		if (
-			record.attempts >= this.config.maxAttempts &&
-			record.lastAttempt > windowStart
-		) {
+		if (record.attempts >= this.config.maxAttempts && record.lastAttempt > windowStart) {
 			if (this.config.progressiveDelay) {
 				const delayMs = this.calculateProgressiveDelay(record.attempts);
 				const timeSinceLastAttempt = now - record.lastAttempt;
@@ -135,9 +128,7 @@ class RateLimiter {
 					};
 				}
 			} else {
-				const retryAfter = Math.ceil(
-					(record.lastAttempt + this.config.windowMs - now) / 1000,
-				);
+				const retryAfter = Math.ceil((record.lastAttempt + this.config.windowMs - now) / 1000);
 				return {
 					allowed: false,
 					reason: 'Rate limit exceeded',
@@ -152,7 +143,7 @@ class RateLimiter {
 	/**
 	 * Record an attempt (successful or failed)
 	 */
-	recordAttempt(identifier: string, success: boolean = true): void {
+	recordAttempt(identifier: string, success = true): void {
 		const now = Date.now();
 		const record = this.getRecord(identifier);
 
@@ -214,10 +205,8 @@ class RateLimiter {
 	/**
 	 * Get recent security events
 	 */
-	getSecurityEvents(limit: number = 100): SecurityEvent[] {
-		return this.securityEvents
-			.sort((a, b) => b.timestamp - a.timestamp)
-			.slice(0, limit);
+	getSecurityEvents(limit = 100): SecurityEvent[] {
+		return this.securityEvents.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
 	}
 
 	/**
@@ -400,11 +389,7 @@ export function checkAuthenticationRateLimit(
 /**
  * Record authentication attempt
  */
-export function recordAuthenticationAttempt(
-	email: string,
-	ip: string,
-	success: boolean,
-): void {
+export function recordAuthenticationAttempt(email: string, ip: string, success: boolean): void {
 	rateLimiters.authentication.recordAttempt(email, success);
 	rateLimiters.apiGeneral.recordAttempt(ip, success);
 }

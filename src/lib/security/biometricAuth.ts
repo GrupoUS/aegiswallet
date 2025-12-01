@@ -150,10 +150,7 @@ function generateSecureRandom(length: number): string {
 	return result;
 }
 
-async function hashPin(
-	pin: string,
-	salt?: string,
-): Promise<{ hash: string; salt: string }> {
+async function hashPin(pin: string, salt?: string): Promise<{ hash: string; salt: string }> {
 	if (!salt) {
 		salt = generateSecureRandom(22);
 	}
@@ -164,9 +161,7 @@ async function hashPin(
 	if (typeof window !== 'undefined' && window.crypto?.subtle) {
 		const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
 		const hashArray = Array.from(new Uint8Array(hashBuffer));
-		const hashHex = hashArray
-			.map((b) => b.toString(16).padStart(2, '0'))
-			.join('');
+		const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
 		return { hash: hashHex, salt };
 	}
@@ -193,8 +188,7 @@ function getUserAgent(): string {
 export class BiometricAuthService {
 	private config: BiometricConfig;
 	private activeSessions: Map<string, AuthSession> = new Map();
-	private rateLimitStore: Map<string, { attempts: number; resetTime: number }> =
-		new Map();
+	private rateLimitStore: Map<string, { attempts: number; resetTime: number }> = new Map();
 
 	private smsProvider?: SMSProvider;
 	private pushProvider?: PushProvider;
@@ -226,9 +220,7 @@ export class BiometricAuthService {
 		if (providers?.push?.config) {
 			this.pushProvider = createPushProvider(providers.push.config);
 		}
-		this.fraudDetectionService = createFraudDetectionService(
-			providers?.fraudDetection?.config,
-		);
+		this.fraudDetectionService = createFraudDetectionService(providers?.fraudDetection?.config);
 		this.deviceFingerprintingService = createDeviceFingerprintingService(
 			providers?.deviceFingerprinting?.config,
 		);
@@ -299,10 +291,7 @@ export class BiometricAuthService {
 		return { allowed: true };
 	}
 
-	private async createSession(
-		userId: string,
-		method: BiometricType,
-	): Promise<string> {
+	private async createSession(userId: string, method: BiometricType): Promise<string> {
 		const sessionToken = generateSecureRandom(32);
 		const expiresAt = new Date(Date.now() + this.config.sessionTimeout);
 
@@ -400,8 +389,7 @@ export class BiometricAuthService {
 		}
 
 		try {
-			const available =
-				await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+			const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
 			return available;
 		} catch {
 			return false;
@@ -433,8 +421,7 @@ export class BiometricAuthService {
 		try {
 			let deviceFingerprint: string | undefined;
 			if (this.deviceFingerprintingService) {
-				const fingerprint =
-					await this.deviceFingerprintingService.generateFingerprint();
+				const fingerprint = await this.deviceFingerprintingService.generateFingerprint();
 				deviceFingerprint = fingerprint.id;
 			}
 
@@ -530,8 +517,7 @@ export class BiometricAuthService {
 				success: true,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			await this.logSecurityEvent({
 				event: 'auth_failure',
@@ -552,10 +538,7 @@ export class BiometricAuthService {
 		}
 	}
 
-	async authenticateWithPIN(
-		userId: string,
-		pin: string,
-	): Promise<BiometricResult> {
+	async authenticateWithPIN(userId: string, pin: string): Promise<BiometricResult> {
 		const startTime = Date.now();
 
 		if (!/^\d{4,6}$/.test(pin)) {
@@ -637,8 +620,7 @@ export class BiometricAuthService {
 				success: false,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			return {
 				error: errorMessage,
@@ -649,11 +631,7 @@ export class BiometricAuthService {
 		}
 	}
 
-	async setupPIN(
-		userId: string,
-		pin: string,
-		confirmPassword: string,
-	): Promise<boolean> {
+	async setupPIN(userId: string, pin: string, confirmPassword: string): Promise<boolean> {
 		if (!/^\d{4,6}$/.test(pin)) {
 			throw new Error('PIN must be 4-6 digits');
 		}
@@ -684,9 +662,7 @@ export class BiometricAuthService {
 				await apiClient.post('/v1/auth/otp', {
 					attempts: 0,
 					created_at: new Date().toISOString(),
-					expires_at: new Date(
-						Date.now() + this.config.otpExpiry,
-					).toISOString(),
+					expires_at: new Date(Date.now() + this.config.otpExpiry).toISOString(),
 					otp_code: otp,
 					phone_number: phoneNumber,
 					user_id: userId,
@@ -792,8 +768,7 @@ export class BiometricAuthService {
 				success: false,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			return {
 				error: errorMessage,
@@ -847,8 +822,7 @@ export class BiometricAuthService {
 				success: false,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			return {
 				error: errorMessage,
@@ -859,10 +833,7 @@ export class BiometricAuthService {
 		}
 	}
 
-	async verifyPushResponse(
-		pushToken: string,
-		approved: boolean,
-	): Promise<BiometricResult> {
+	async verifyPushResponse(pushToken: string, approved: boolean): Promise<BiometricResult> {
 		const startTime = Date.now();
 
 		try {
@@ -901,8 +872,7 @@ export class BiometricAuthService {
 				success: false,
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			return {
 				error: errorMessage,
@@ -992,19 +962,17 @@ export class BiometricAuthService {
 				lockoutUntil?: string;
 			}>('/v1/auth/status', { params: { user_id: userId } });
 
-			const isLocked =
-				response.isLocked &&
-				response.lockoutUntil &&
-				new Date(response.lockoutUntil) > new Date();
+			const isLocked = Boolean(
+				response.isLocked && response.lockoutUntil && new Date(response.lockoutUntil) > new Date(),
+			);
 			const lockoutRemaining =
 				isLocked && response.lockoutUntil
 					? new Date(response.lockoutUntil).getTime() - Date.now()
 					: undefined;
-
 			return {
-				hasBiometric: response.hasBiometric || false,
-				hasPIN: response.hasPIN || false,
-				isLocked: isLocked || false,
+				hasBiometric: response.hasBiometric,
+				hasPIN: response.hasPIN,
+				isLocked: isLocked,
 				lockoutRemaining,
 			};
 		} catch {
@@ -1053,9 +1021,7 @@ export function createBiometricAuthService(
 	return new BiometricAuthService(config);
 }
 
-export async function authenticateBiometric(
-	userId: string,
-): Promise<BiometricResult> {
+export async function authenticateBiometric(userId: string): Promise<BiometricResult> {
 	const service = createBiometricAuthService();
 	return service.authenticate(userId);
 }

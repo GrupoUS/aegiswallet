@@ -14,13 +14,11 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, position, onEdit }: EventCardProps) {
-	const { attributes, listeners, setNodeRef, transform, isDragging } =
-		useDraggable({
-			data: event,
-			id: event.id,
-		});
-	const colorTokens =
-		EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue;
+	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+		data: event,
+		id: event.id,
+	});
+	const colorTokens = EVENT_COLOR_STYLES[event.color] ?? EVENT_COLOR_STYLES.blue;
 
 	const style = {
 		height: `${position.height}px`,

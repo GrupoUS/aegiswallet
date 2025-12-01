@@ -4,11 +4,7 @@ import React from 'react';
 import type { ChatReasoningChunk } from '../domain/types';
 import { Reasoning } from '@/components/ai-elements';
 import { Button } from '@/components/ui/button';
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ChatReasoningProps {
 	reasoning: ChatReasoningChunk[];
@@ -28,11 +24,7 @@ export function ChatReasoning({ reasoning, isStreaming }: ChatReasoningProps) {
 	if (reasoning.length === 0) return null;
 
 	return (
-		<Reasoning
-			reasoning={reasoning}
-			isStreaming={isStreaming}
-			defaultExpanded={isStreaming}
-		>
+		<Reasoning reasoning={reasoning} isStreaming={isStreaming} defaultExpanded={isStreaming}>
 			<Collapsible
 				open={isOpen}
 				onOpenChange={setIsOpen}
@@ -47,9 +39,7 @@ export function ChatReasoning({ reasoning, isStreaming }: ChatReasoningProps) {
 						<div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
 							<Brain className="w-3.5 h-3.5" />
 							<span>Processo de raciocínio</span>
-							{isStreaming && (
-								<span className="animate-pulse text-primary">●</span>
-							)}
+							{isStreaming && <span className="animate-pulse text-primary">●</span>}
 						</div>
 						{isOpen ? (
 							<ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />

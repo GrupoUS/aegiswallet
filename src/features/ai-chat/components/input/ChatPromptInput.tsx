@@ -48,14 +48,10 @@ export function ChatPromptInput({
 			<Button
 				size="icon"
 				onClick={isLoading ? onStop : handleSend}
-				disabled={disabled || (!input.trim() && !isLoading)}
+				disabled={disabled || !(input.trim() || isLoading)}
 				className={isLoading ? 'bg-destructive hover:bg-destructive/90' : ''}
 			>
-				{isLoading ? (
-					<StopCircle className="h-4 w-4" />
-				) : (
-					<Send className="h-4 w-4" />
-				)}
+				{isLoading ? <StopCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
 			</Button>
 		</div>
 	);

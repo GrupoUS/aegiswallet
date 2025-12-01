@@ -17,18 +17,14 @@ async function testDatabaseConnection() {
 	console.log('📡 Teste 1: Conexão básica com NeonDB');
 	try {
 		const db = getHttpClient();
-		const result = await db.execute(
-			sql`SELECT 1 as ping, version() as version`,
-		);
+		const result = await db.execute(sql`SELECT 1 as ping, version() as version`);
 
 		console.log('✅ Conexão NeonDB estabelecida');
 		console.log(`   PostgreSQL: ${result.rows[0]?.version}`);
 		return true;
 	} catch (error) {
 		console.log('❌ Falha na conexão com NeonDB');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -43,9 +39,7 @@ async function testUserScopedConnection() {
 		await userDb.withUserContext(async () => {
 			const result = await userDb
 				.getDb()
-				.execute(
-					sql`SELECT current_setting('app.current_user_id', true) as user_id`,
-				);
+				.execute(sql`SELECT current_setting('app.current_user_id', true) as user_id`);
 
 			if (result.rows[0]?.user_id === testUserId) {
 				console.log('✅ Contexto de usuário configurado corretamente');
@@ -57,9 +51,7 @@ async function testUserScopedConnection() {
 		return true;
 	} catch (error) {
 		console.log('❌ Falha no teste de contexto de usuário');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -97,9 +89,7 @@ async function testRLSPolicies() {
 		throw new Error('RLS não está habilitado');
 	} catch (error) {
 		console.log('❌ Falha na verificação de RLS');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -127,9 +117,7 @@ async function testDataIsolation() {
 					isActive: true,
 				});
 
-				console.log(
-					'⚠️  RLS permitiu inserção com user_id diferente - verificar políticas',
-				);
+				console.log('⚠️  RLS permitiu inserção com user_id diferente - verificar políticas');
 			} catch (_insertError) {
 				console.log('✅ RLS bloqueou inserção com user_id diferente');
 			}
@@ -143,23 +131,17 @@ async function testDataIsolation() {
 				if (allSameUser) {
 					console.log('✅ Isolamento de dados funcionando corretamente');
 				} else {
-					console.log(
-						'⚠️  Possível vazamento de dados - usuários diferentes acessíveis',
-					);
+					console.log('⚠️  Possível vazamento de dados - usuários diferentes acessíveis');
 				}
 			} else {
-				console.log(
-					'ℹ️  Nenhum usuário encontrado (pode ser normal para usuário de teste)',
-				);
+				console.log('ℹ️  Nenhum usuário encontrado (pode ser normal para usuário de teste)');
 			}
 		});
 
 		return true;
 	} catch (error) {
 		console.log('❌ Falha no teste de isolamento de dados');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -175,23 +157,19 @@ async function testRealTimeUpdates() {
 			WHERE name = 'max_connections'
 		`);
 
-		const maxConnections = parseInt(String(result.rows[0]?.setting || '0'), 10);
+		const maxConnections = Number.parseInt(String(result.rows[0]?.setting || '0'), 10);
 		console.log(`   Conexões máximas: ${maxConnections}`);
 
 		if (maxConnections > 0) {
 			console.log('✅ PostgreSQL configurado para conexões concurrentes');
-			console.log(
-				'   Suporte a atualizações em tempo real: Disponível via websockets',
-			);
+			console.log('   Suporte a atualizações em tempo real: Disponível via websockets');
 			return true;
 		}
 
 		throw new Error('Configuração de conexões não encontrada');
 	} catch (error) {
 		console.log('❌ Falha na verificação de capacidade real-time');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -223,9 +201,7 @@ async function testBackendAuthIntegration() {
 		}
 	} catch (error) {
 		console.log('❌ Falha na integração com Clerk');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -236,28 +212,20 @@ async function testDashboardDataAccess() {
 		const db = getHttpClient();
 
 		// Verificar se as tabelas principais do dashboard existem
-		const tables = [
-			'bank_accounts',
-			'transactions',
-			'financial_events',
-			'contacts',
-		];
+		const tables = ['bank_accounts', 'transactions', 'financial_events', 'contacts'];
 		const results = [];
 
 		for (const table of tables) {
 			try {
-				const result = await db.execute(
-					sql`SELECT COUNT(*) as count FROM ${sql.raw(table)}`,
-				);
+				const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${sql.raw(table)}`);
 				results.push({
 					table,
-					count: parseInt(String(result.rows[0]?.count || '0'), 10),
+					count: Number.parseInt(String(result.rows[0]?.count || '0'), 10),
 				});
 			} catch (tableError) {
 				results.push({
 					table,
-					error:
-						tableError instanceof Error ? tableError.message : 'Unknown error',
+					error: tableError instanceof Error ? tableError.message : 'Unknown error',
 				});
 			}
 		}
@@ -274,9 +242,7 @@ async function testDashboardDataAccess() {
 		return true;
 	} catch (error) {
 		console.log('❌ Falha no acesso a dados do dashboard');
-		console.log(
-			`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`,
-		);
+		console.log(`   Erro: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		return false;
 	}
 }
@@ -312,14 +278,10 @@ async function runAllTests() {
 	});
 
 	console.log('='.repeat(50));
-	console.log(
-		`\n🎯 Resultado Final: ${passedTests}/${tests.length} testes passaram`,
-	);
+	console.log(`\n🎯 Resultado Final: ${passedTests}/${tests.length} testes passaram`);
 
 	if (passedTests === tests.length) {
-		console.log(
-			'\n🎉 Todos os testes passaram! O sistema está pronto para uso.',
-		);
+		console.log('\n🎉 Todos os testes passaram! O sistema está pronto para uso.');
 		process.exit(0);
 	} else {
 		console.log('\n⚠️  Alguns testes falharam. Verifique os erros acima.');

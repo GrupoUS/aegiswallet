@@ -3,13 +3,7 @@
 import { useId, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -155,9 +149,7 @@ export function LoginForm({
 									<div className="w-full border border-t" />
 								</div>
 								<div className="relative flex justify-center text-sm">
-									<span className="bg-card px-2 text-muted-foreground">
-										Ou continue com
-									</span>
+									<span className="bg-card px-2 text-muted-foreground">Ou continue com</span>
 								</div>
 							</div>
 
@@ -168,11 +160,7 @@ export function LoginForm({
 								disabled={loading}
 								className="w-full transition-all hover:bg-accent"
 							>
-								<svg
-									className="mr-2 h-5 w-5"
-									viewBox="0 0 24 24"
-									aria-label="Google"
-								>
+								<svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" aria-label="Google">
 									<title>Google</title>
 									<path
 										fill="currentColor"
@@ -204,9 +192,7 @@ export function LoginForm({
 								}}
 								className="text-muted-foreground text-sm transition-colors hover:text-primary"
 							>
-								{isSignUp
-									? 'Já tem uma conta? Entre aqui'
-									: 'Não tem uma conta? Cadastre-se'}
+								{isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem uma conta? Cadastre-se'}
 							</Button>
 						</div>
 					</form>

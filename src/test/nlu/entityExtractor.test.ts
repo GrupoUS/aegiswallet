@@ -36,9 +36,7 @@ describe('Entity Extractor', () => {
 		});
 
 		it('should extract multiple amounts', () => {
-			const entities = extractor.extract(
-				'transferir 100 reais e pagar 50 reais',
-			);
+			const entities = extractor.extract('transferir 100 reais e pagar 50 reais');
 			const amounts = entities.filter((e) => e.type === EntityType.AMOUNT);
 
 			expect(amounts.length).toBeGreaterThanOrEqual(1);
@@ -103,8 +101,7 @@ describe('Entity Extractor', () => {
 			it(`should extract category "${expected}" from "${text}"`, () => {
 				const entities = extractor.extract(text);
 				const categoryEntity = entities.find(
-					(e) =>
-						e.type === EntityType.CATEGORY || e.type === EntityType.BILL_TYPE,
+					(e) => e.type === EntityType.CATEGORY || e.type === EntityType.BILL_TYPE,
 				);
 
 				expect(categoryEntity).toBeDefined();
@@ -176,10 +173,7 @@ describe('Entity Extractor', () => {
 			const amountEntity = entities.find((e) => e.type === EntityType.AMOUNT);
 
 			if (amountEntity) {
-				const extracted = text.substring(
-					amountEntity.startIndex,
-					amountEntity.endIndex,
-				);
+				const extracted = text.substring(amountEntity.startIndex, amountEntity.endIndex);
 				expect(extracted).toContain('150');
 			}
 		});
@@ -218,9 +212,7 @@ describe('Entity Extractor', () => {
 		});
 
 		it('should handle text with multiple entity types', () => {
-			const entities = extractor.extract(
-				'transferir 100 reais para João amanhã',
-			);
+			const entities = extractor.extract('transferir 100 reais para João amanhã');
 
 			const types = new Set(entities.map((e) => e.type));
 			expect(types.size).toBeGreaterThan(1);
@@ -243,20 +235,12 @@ describe('Entity Extractor', () => {
 		});
 
 		it('should recognize Brazilian bill types', () => {
-			const billTypes = [
-				'energia',
-				'água',
-				'luz',
-				'gás',
-				'internet',
-				'telefone',
-			];
+			const billTypes = ['energia', 'água', 'luz', 'gás', 'internet', 'telefone'];
 
 			billTypes.forEach((billType) => {
 				const entities = extractor.extract(`pagar ${billType}`);
 				const categoryEntity = entities.find(
-					(e) =>
-						e.type === EntityType.CATEGORY || e.type === EntityType.BILL_TYPE,
+					(e) => e.type === EntityType.CATEGORY || e.type === EntityType.BILL_TYPE,
 				);
 
 				expect(categoryEntity).toBeDefined();

@@ -92,11 +92,7 @@ export function AiPrompt({
 								: 'text-muted-foreground hover:text-foreground',
 						)}
 					>
-						{isListening ? (
-							<MicOff className="w-4 h-4" />
-						) : (
-							<Mic className="w-4 h-4" />
-						)}
+						{isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
 						<span className="sr-only">Voice input</span>
 					</Button>
 				)}

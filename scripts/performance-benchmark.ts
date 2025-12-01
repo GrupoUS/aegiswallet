@@ -73,10 +73,7 @@ function colorize(text: string, color: keyof typeof colors): string {
 	return `${colors[color]}${text}${colors.reset}`;
 }
 
-function log(
-	message: string,
-	type: 'info' | 'success' | 'warning' | 'error' = 'info',
-): void {
+function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
 	const timestamp = new Date().toISOString();
 
 	let prefix = 'ℹ️';
@@ -106,7 +103,7 @@ function countFiles(): number {
 			'find src scripts -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null | wc -l',
 			{ encoding: 'utf8', stdio: 'pipe' },
 		);
-		return parseInt(result.trim(), 10) || 0;
+		return Number.parseInt(result.trim(), 10) || 0;
 	} catch {
 		// Fallback for Windows
 		try {
@@ -114,7 +111,7 @@ function countFiles(): number {
 				'dir /s /b src\\*.ts src\\*.tsx src\\*.js src\\*.jsx scripts\\*.ts scripts\\*.tsx scripts\\*.js scripts\\*.jsx 2>nul | find /c /v ""',
 				{ encoding: 'utf8', stdio: 'pipe' },
 			);
-			return parseInt(result.trim(), 10) || 0;
+			return Number.parseInt(result.trim(), 10) || 0;
 		} catch {
 			return 0;
 		}
@@ -148,10 +145,7 @@ function runBenchmark(tool: (typeof CONFIG.tools)[0]): BenchmarkResult {
 		const endTime = process.hrtime.bigint();
 		const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
 
-		log(
-			`${tool.name} completed in ${colorize(`${duration.toFixed(2)}ms`, 'green')}`,
-			'success',
-		);
+		log(`${tool.name} completed in ${colorize(`${duration.toFixed(2)}ms`, 'green')}`, 'success');
 
 		return {
 			duration,
@@ -162,10 +156,7 @@ function runBenchmark(tool: (typeof CONFIG.tools)[0]): BenchmarkResult {
 		const endTime = process.hrtime.bigint();
 		const duration = Number(endTime - startTime) / 1000000;
 
-		log(
-			`${tool.name} failed after ${colorize(`${duration.toFixed(2)}ms`, 'red')}`,
-			'error',
-		);
+		log(`${tool.name} failed after ${colorize(`${duration.toFixed(2)}ms`, 'red')}`, 'error');
 
 		return {
 			duration,
@@ -217,10 +208,7 @@ function classifyImprovement(
 /**
  * Generate performance report
  */
-function generateReport(
-	totalFiles: number,
-	benchmarks: BenchmarkResult[],
-): PerformanceReport {
+function generateReport(totalFiles: number, benchmarks: BenchmarkResult[]): PerformanceReport {
 	const improvements = calculateImprovements(benchmarks);
 	const achieved = improvements.vsBiome >= CONFIG.targetImprovement;
 
@@ -240,12 +228,9 @@ function displayResults(report: PerformanceReport): void {
 	const fastest = Math.min(...report.benchmarks.map((b) => b.duration));
 
 	report.benchmarks.forEach((benchmark) => {
-		const _speed =
-			fastest > 0 ? `${(benchmark.duration / fastest).toFixed(1)}x` : 'N/A';
+		const _speed = fastest > 0 ? `${(benchmark.duration / fastest).toFixed(1)}x` : 'N/A';
 		const _status =
-			benchmark.exitCode === 0
-				? colorize('✓ PASS', 'green')
-				: colorize('✗ FAIL', 'red');
+			benchmark.exitCode === 0 ? colorize('✓ PASS', 'green') : colorize('✗ FAIL', 'red');
 		const _duration = colorize(`${benchmark.duration.toFixed(2)}ms`, 'blue');
 	});
 
@@ -258,22 +243,22 @@ function displayResults(report: PerformanceReport): void {
 
 		// Performance classification
 		if (improvement >= 100) {
+			console.log('   🚀 Major improvement (2x+ faster)');
 		} else if (improvement >= 50) {
+			console.log('   ⚡ Significant improvement (50%+ faster)');
 		} else if (improvement >= 20) {
+			console.log('   📈 Moderate improvement (20%+ faster)');
 		} else if (improvement >= 5) {
+			console.log('   ✅ Slight improvement');
 		} else {
+			console.log('   ➖ No significant change');
 		}
 	}
 
-	if (report.achieved) {
-	} else {
-	}
-
 	// Healthcare compliance note
-	const healthcareResult = report.benchmarks.find(
-		(b) => b.tool === 'OXLint Healthcare',
-	);
+	const healthcareResult = report.benchmarks.find((b) => b.tool === 'OXLint Healthcare');
 	if (healthcareResult) {
+		console.log('   🏥 Healthcare compliance checks active');
 	}
 }
 
@@ -301,9 +286,7 @@ function generateJsonReport(report: PerformanceReport): void {
 		log('JSON report saved to oxlint-performance-report.json', 'success');
 	} catch (error) {
 		const message =
-			error instanceof Error
-				? error.message
-				: 'Unknown error while writing JSON report';
+			error instanceof Error ? error.message : 'Unknown error while writing JSON report';
 		log(`Failed to save JSON report: ${message}`, 'error');
 	}
 }

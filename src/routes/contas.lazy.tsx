@@ -6,12 +6,7 @@ import { FinancialEventForm } from '@/components/financial/FinancialEventForm';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import {
 	Dialog,
 	DialogContent,
@@ -34,36 +29,34 @@ const BillsList = lazy(() =>
 function BillsListLoader() {
 	return (
 		<div className="space-y-4">
-			{Array.from({ length: 6 }, (_, index) => `bill-skeleton-${index}`).map(
-				(skeletonId) => (
-					<Card key={skeletonId} className="transition-shadow hover:shadow-lg">
-						<CardContent className="p-6">
-							<div className="flex items-center justify-between">
-								<div className="flex flex-1 items-center gap-4">
-									<Skeleton className="h-12 w-12 rounded-full" />
-									<div className="flex-1">
-										<div className="flex items-center gap-2">
-											<Skeleton className="h-6 w-48" />
-											<Skeleton className="h-4 w-20" />
-										</div>
-										<div className="mt-1 flex items-center gap-4">
-											<Skeleton className="h-4 w-32" />
-											<Skeleton className="h-4 w-24" />
-										</div>
+			{Array.from({ length: 6 }, (_, index) => `bill-skeleton-${index}`).map((skeletonId) => (
+				<Card key={skeletonId} className="transition-shadow hover:shadow-lg">
+					<CardContent className="p-6">
+						<div className="flex items-center justify-between">
+							<div className="flex flex-1 items-center gap-4">
+								<Skeleton className="h-12 w-12 rounded-full" />
+								<div className="flex-1">
+									<div className="flex items-center gap-2">
+										<Skeleton className="h-6 w-48" />
+										<Skeleton className="h-4 w-20" />
 									</div>
-								</div>
-								<div className="flex items-center gap-4">
-									<div className="text-right">
-										<Skeleton className="mb-2 h-8 w-24" />
-										<Skeleton className="h-5 w-16" />
+									<div className="mt-1 flex items-center gap-4">
+										<Skeleton className="h-4 w-32" />
+										<Skeleton className="h-4 w-24" />
 									</div>
-									<Skeleton className="h-10 w-16" />
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-				),
-			)}
+							<div className="flex items-center gap-4">
+								<div className="text-right">
+									<Skeleton className="mb-2 h-8 w-24" />
+									<Skeleton className="h-5 w-16" />
+								</div>
+								<Skeleton className="h-10 w-16" />
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			))}
 		</div>
 	);
 }
@@ -128,9 +121,7 @@ export function Contas() {
 						<h1 className="bg-gradient-to-r from-primary to-accent bg-clip-text font-bold text-3xl text-transparent">
 							Contas
 						</h1>
-						<p className="text-muted-foreground">
-							Gerencie suas contas e pagamentos
-						</p>
+						<p className="text-muted-foreground">Gerencie suas contas e pagamentos</p>
 					</div>
 					<Button
 						onClick={handleVoiceCommand}
@@ -157,16 +148,8 @@ export function Contas() {
 								) : (
 									<FinancialAmount amount={-totalPending} size="lg" />
 								)}
-								<Badge
-									variant="outline"
-									className="border-warning text-warning"
-								>
-									{loading ? (
-										<Skeleton className="h-4 w-8" />
-									) : (
-										pendingBillsCount
-									)}{' '}
-									contas
+								<Badge variant="outline" className="border-warning text-warning">
+									{loading ? <Skeleton className="h-4 w-8" /> : pendingBillsCount} contas
 								</Badge>
 							</div>
 						</CardContent>
@@ -183,12 +166,8 @@ export function Contas() {
 								) : (
 									<FinancialAmount amount={-totalPaid} size="lg" />
 								)}
-								<Badge
-									variant="outline"
-									className="border-success text-success"
-								>
-									{loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount}{' '}
-									contas
+								<Badge variant="outline" className="border-success text-success">
+									{loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount} contas
 								</Badge>
 							</div>
 						</CardContent>
@@ -202,10 +181,7 @@ export function Contas() {
 							{loading ? (
 								<Skeleton className="h-8 w-32" />
 							) : (
-								<FinancialAmount
-									amount={-(totalPending + totalPaid)}
-									size="lg"
-								/>
+								<FinancialAmount amount={-(totalPending + totalPaid)} size="lg" />
 							)}
 						</CardContent>
 					</Card>
@@ -238,11 +214,7 @@ export function Contas() {
 					{loading ? (
 						<BillsListLoader />
 					) : (
-						<BillsList
-							bills={bills}
-							onEdit={handleEdit}
-							onDelete={deleteEvent}
-						/>
+						<BillsList bills={bills} onEdit={handleEdit} onDelete={deleteEvent} />
 					)}
 				</Suspense>
 
@@ -257,9 +229,7 @@ export function Contas() {
 					<DialogContent className="sm:max-w-[600px]">
 						<DialogHeader>
 							<DialogTitle>Nova Conta a Pagar</DialogTitle>
-							<DialogDescription>
-								Adicione uma nova conta ou despesa.
-							</DialogDescription>
+							<DialogDescription>Adicione uma nova conta ou despesa.</DialogDescription>
 						</DialogHeader>
 						<FinancialEventForm
 							onSuccess={() => {

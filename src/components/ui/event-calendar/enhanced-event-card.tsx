@@ -1,14 +1,6 @@
 import { differenceInMinutes, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-	Clock,
-	Cloud,
-	Edit2,
-	MapPin,
-	MoreHorizontal,
-	Trash2,
-	Users,
-} from 'lucide-react';
+import { Clock, Cloud, Edit2, MapPin, MoreHorizontal, Trash2, Users } from 'lucide-react';
 
 import type { CalendarEvent, EventColor } from './types';
 import { EVENT_COLOR_STYLES } from './types';
@@ -114,9 +106,7 @@ export function EnhancedEventCard({
 						aria-label={`Ver evento: ${event.title}`}
 					>
 						<div className="space-y-2">
-							<h4 className={cn('truncate font-semibold', colorClasses.text)}>
-								{event.title}
-							</h4>
+							<h4 className={cn('truncate font-semibold', colorClasses.text)}>{event.title}</h4>
 							{event.description && (
 								<p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
 									{event.description}
@@ -148,15 +138,11 @@ export function EnhancedEventCard({
 							</div>
 
 							<div className="flex flex-wrap items-center gap-1">
-								{event.category && (
-									<Badge className="text-xs">{event.category.name}</Badge>
-								)}
+								{event.category && <Badge className="text-xs">{event.category.name}</Badge>}
 
 								{event.priority && (
 									<Badge
-										variant={
-											event.priority === 'high' ? 'destructive' : 'outline'
-										}
+										variant={event.priority === 'high' ? 'destructive' : 'outline'}
 										className="text-xs"
 									>
 										{event.priority === 'high'
@@ -208,10 +194,7 @@ export function EnhancedEventCard({
 								{onDelete && (
 									<>
 										{onEdit && <DropdownMenuSeparator />}
-										<DropdownMenuItem
-											onClick={handleDelete}
-											className="text-destructive"
-										>
+										<DropdownMenuItem onClick={handleDelete} className="text-destructive">
 											<Trash2 className="mr-2 h-4 w-4" />
 											Excluir
 										</DropdownMenuItem>
@@ -242,21 +225,15 @@ export function EnhancedEventCard({
 			style={position}
 			draggable
 		>
-			<h4 className={cn('truncate font-semibold text-sm', colorClasses.text)}>
-				{event.title}
-			</h4>
+			<h4 className={cn('truncate font-semibold text-sm', colorClasses.text)}>{event.title}</h4>
 
 			<div className="flex items-center text-muted-foreground text-xs">
 				<Clock className="mr-1 h-3 w-3" />
-				{isAllDay
-					? 'Dia inteiro'
-					: format(eventStart, 'HH:mm', { locale: ptBR })}
+				{isAllDay ? 'Dia inteiro' : format(eventStart, 'HH:mm', { locale: ptBR })}
 			</div>
 
 			{event.description && (
-				<p className="line-clamp-2 text-muted-foreground text-xs">
-					{event.description}
-				</p>
+				<p className="line-clamp-2 text-muted-foreground text-xs">{event.description}</p>
 			)}
 		</button>
 	);

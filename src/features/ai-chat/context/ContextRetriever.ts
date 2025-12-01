@@ -95,10 +95,7 @@ export class ContextRetriever {
 	/**
 	 * Get recent transactions (last 30 days)
 	 */
-	async getRecentTransactions(
-		userId: string,
-		days = 30,
-	): Promise<Transaction[]> {
+	async getRecentTransactions(userId: string, days = 30): Promise<Transaction[]> {
 		const cacheKey = `transactions:${userId}:${days}`;
 		const cached = this.getFromCache<Transaction[]>(cacheKey);
 		if (cached) return cached as Transaction[];
@@ -117,12 +114,7 @@ export class ContextRetriever {
 					isIncome: financialEvents.isIncome,
 				})
 				.from(financialEvents)
-				.where(
-					and(
-						eq(financialEvents.userId, userId),
-						gte(financialEvents.createdAt, startDate),
-					),
-				)
+				.where(and(eq(financialEvents.userId, userId), gte(financialEvents.createdAt, startDate)))
 				.orderBy(desc(financialEvents.createdAt))
 				.limit(50);
 
@@ -164,9 +156,7 @@ export class ContextRetriever {
 					currency: bankAccounts.currency,
 				})
 				.from(bankAccounts)
-				.where(
-					and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true)),
-				);
+				.where(and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true)));
 
 			const balances: AccountBalance[] = (data || []).map((a) => ({
 				accountId: a.id,
@@ -190,10 +180,7 @@ export class ContextRetriever {
 	/**
 	 * Get upcoming financial events (next 30 days)
 	 */
-	async getUpcomingEvents(
-		userId: string,
-		days = 30,
-	): Promise<FinancialEvent[]> {
+	async getUpcomingEvents(userId: string, days = 30): Promise<FinancialEvent[]> {
 		const cacheKey = `events:${userId}:${days}`;
 		const cached = this.getFromCache<FinancialEvent[]>(cacheKey);
 		if (cached) return cached as FinancialEvent[];
@@ -212,12 +199,7 @@ export class ContextRetriever {
 					status: financialEvents.status,
 				})
 				.from(financialEvents)
-				.where(
-					and(
-						eq(financialEvents.userId, userId),
-						lte(financialEvents.startDate, endDate),
-					),
-				)
+				.where(and(eq(financialEvents.userId, userId), lte(financialEvents.startDate, endDate)))
 				.orderBy(financialEvents.startDate)
 				.limit(20);
 
@@ -301,9 +283,7 @@ export class ContextRetriever {
 			.filter((t) => t.type === 'expense')
 			.reduce((sum, t) => sum + t.amount, 0);
 
-		const upcomingBillsCount = events.filter(
-			(e) => e.status === 'pending',
-		).length;
+		const upcomingBillsCount = events.filter((e) => e.status === 'pending').length;
 
 		return {
 			totalBalance,
@@ -348,12 +328,7 @@ export class ContextRetriever {
 	 */
 	private setCache(
 		key: string,
-		data:
-			| FinancialContext
-			| Transaction[]
-			| AccountBalance[]
-			| FinancialEvent[]
-			| UserPreferences,
+		data: FinancialContext | Transaction[] | AccountBalance[] | FinancialEvent[] | UserPreferences,
 	) {
 		this.cache.set(key, { data, timestamp: Date.now() });
 	}

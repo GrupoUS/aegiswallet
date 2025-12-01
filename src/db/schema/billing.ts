@@ -31,11 +31,7 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
 	'unpaid',
 ]);
 
-export const paymentStatusEnum = pgEnum('payment_status', [
-	'succeeded',
-	'failed',
-	'pending',
-]);
+export const paymentStatusEnum = pgEnum('payment_status', ['succeeded', 'failed', 'pending']);
 
 // ========================================
 // SUBSCRIPTION PLANS
@@ -181,6 +177,5 @@ export type InsertSubscription = typeof subscriptions.$inferInsert;
 export type PaymentHistory = typeof paymentHistory.$inferSelect;
 export type InsertPaymentHistory = typeof paymentHistory.$inferInsert;
 
-export type SubscriptionStatus =
-	(typeof subscriptionStatusEnum.enumValues)[number];
+export type SubscriptionStatus = (typeof subscriptionStatusEnum.enumValues)[number];
 export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];

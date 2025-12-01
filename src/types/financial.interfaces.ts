@@ -41,12 +41,7 @@ export type Currency = 'BRL';
 /**
  * Brazilian Bank Account Types
  */
-export type BankAccountType =
-	| 'CHECKING'
-	| 'SAVINGS'
-	| 'INVESTMENT'
-	| 'SALARY'
-	| 'DIGITAL_WALLET';
+export type BankAccountType = 'CHECKING' | 'SAVINGS' | 'INVESTMENT' | 'SALARY' | 'DIGITAL_WALLET';
 
 /**
  * Brazilian Financial Institutions
@@ -117,11 +112,7 @@ export interface UserPreferences {
  * LGPD consent records
  */
 export interface UserConsentRecord {
-	consentType:
-		| 'DATA_PROCESSING'
-		| 'MARKETING'
-		| 'ANALYTICS'
-		| 'VOICE_PROCESSING';
+	consentType: 'DATA_PROCESSING' | 'MARKETING' | 'ANALYTICS' | 'VOICE_PROCESSING';
 	consentVersion: string;
 	granted: boolean;
 	consentDate: string;
@@ -405,12 +396,7 @@ export interface Boleto {
 /**
  * Boleto Status
  */
-export type BoletoStatus =
-	| 'PENDENTE'
-	| 'VENCIDO'
-	| 'PAGO'
-	| 'CANCELADO'
-	| 'AGENDADO_PAGAMENTO';
+export type BoletoStatus = 'PENDENTE' | 'VENCIDO' | 'PAGO' | 'CANCELADO' | 'AGENDADO_PAGAMENTO';
 
 /**
  * Boleto Metadata
@@ -736,14 +722,8 @@ export const FinancialEventSchema = z.object({
 		'OUTROS',
 	]),
 	description: z.string().trim().max(500, 'Descrição muito longa').optional(),
-	dueDate: z
-		.string()
-		.datetime({ message: 'Data de vencimento inválida' })
-		.optional(),
-	endDate: z
-		.string()
-		.datetime({ message: 'Data de término inválida' })
-		.optional(),
+	dueDate: z.string().datetime({ message: 'Data de vencimento inválida' }).optional(),
+	endDate: z.string().datetime({ message: 'Data de término inválida' }).optional(),
 	isIncome: z.boolean(),
 	isRecurring: z.boolean(),
 	location: z.string().trim().max(200, 'Localização muito longa').optional(),
@@ -755,11 +735,7 @@ export const FinancialEventSchema = z.object({
 		.optional(),
 	startDate: z.string().datetime({ message: 'Data de início inválida' }),
 	tags: z.array(z.string().trim().max(50, 'Tag muito longa')).optional(),
-	title: z
-		.string()
-		.trim()
-		.min(1, 'Título é obrigatório')
-		.max(100, 'Título muito longo'),
+	title: z.string().trim().min(1, 'Título é obrigatório').max(100, 'Título muito longo'),
 });
 
 /**
@@ -768,11 +744,7 @@ export const FinancialEventSchema = z.object({
 export const PIXTransferSchema = z.object({
 	amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
 	description: z.string().trim().max(200, 'Descrição muito longa').optional(),
-	pixKey: z
-		.string()
-		.trim()
-		.min(1, 'Chave PIX é obrigatória')
-		.max(100, 'Chave PIX muito longa'),
+	pixKey: z.string().trim().min(1, 'Chave PIX é obrigatória').max(100, 'Chave PIX muito longa'),
 	pixKeyType: z.enum(['CPF', 'CNPJ', 'EMAIL', 'TELEFONE', 'CHAVE_ALEATORIA']),
 	recipientName: z
 		.string()
@@ -780,10 +752,7 @@ export const PIXTransferSchema = z.object({
 		.min(1, 'Nome do beneficiário é obrigatório')
 		.max(100, 'Nome muito longo'),
 	requiresConfirmation: z.boolean(),
-	scheduledDate: z
-		.string()
-		.datetime({ message: 'Data agendada inválida' })
-		.optional(),
+	scheduledDate: z.string().datetime({ message: 'Data agendada inválida' }).optional(),
 });
 
 /**
@@ -820,10 +789,7 @@ export const BoletoSchema = z
  * Payment Rule validation schema
  */
 export const PaymentRuleSchema = z.object({
-	autonomyLevel: z
-		.number()
-		.min(50)
-		.max(95, 'Nível de autonomia deve estar entre 50 e 95'),
+	autonomyLevel: z.number().min(50).max(95, 'Nível de autonomia deve estar entre 50 e 95'),
 	category: z.enum([
 		'RECEITA',
 		'DESPESA_FIXA',
@@ -863,26 +829,18 @@ export type PaymentRuleFormKeys = keyof PaymentRuleFormData;
 /**
  * Database insert/update types
  */
-export type FinancialEventInsert = Omit<
-	FinancialEvent,
-	'id' | 'createdAt' | 'updatedAt'
->;
+export type FinancialEventInsert = Omit<FinancialEvent, 'id' | 'createdAt' | 'updatedAt'>;
 export type FinancialEventUpdate = Partial<
 	Omit<FinancialEvent, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 >;
 
-export type PIXTransferInsert = Omit<
-	PIXTransfer,
-	'id' | 'createdAt' | 'updatedAt'
->;
+export type PIXTransferInsert = Omit<PIXTransfer, 'id' | 'createdAt' | 'updatedAt'>;
 export type PIXTransferUpdate = Partial<
 	Omit<PIXTransfer, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 >;
 
 export type BoletoInsert = Omit<Boleto, 'id' | 'createdAt' | 'updatedAt'>;
-export type BoletoUpdate = Partial<
-	Omit<Boleto, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
->;
+export type BoletoUpdate = Partial<Omit<Boleto, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>;
 
 // =============================================================================
 // TYPE GUARDS
@@ -929,19 +887,12 @@ export function isBoleto(obj: unknown): obj is Boleto {
 		typeof boleto.amount === 'number' &&
 		typeof boleto.dueDate === 'string' &&
 		typeof boleto.payeeName === 'string' &&
-		(typeof boleto.barcode === 'string' ||
-			typeof boleto.digitableLine === 'string')
+		(typeof boleto.barcode === 'string' || typeof boleto.digitableLine === 'string')
 	);
 }
 
 export function isValidPIXKeyType(value: string): value is PIXKeyType {
-	const validTypes: PIXKeyType[] = [
-		'CPF',
-		'CNPJ',
-		'EMAIL',
-		'PHONE',
-		'RANDOM_KEY',
-	];
+	const validTypes: PIXKeyType[] = ['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'RANDOM_KEY'];
 	return validTypes.includes(value as PIXKeyType);
 }
 

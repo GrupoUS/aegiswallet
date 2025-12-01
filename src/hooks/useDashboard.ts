@@ -1,22 +1,12 @@
-import {
-	useTransactions,
-	useTransactionsStats,
-} from '@/hooks/use-transactions';
-import {
-	useBankAccounts,
-	useBankAccountsStats,
-	useTotalBalance,
-} from '@/hooks/useBankAccounts';
+import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
+import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts';
 import {
 	useContacts,
 	useContactsForTransfer,
 	useContactsStats,
 	useFavoriteContacts,
 } from '@/hooks/useContacts';
-import {
-	useFinancialEventMutations,
-	useFinancialEvents,
-} from '@/hooks/useFinancialEvents';
+import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
 
 /**
@@ -39,10 +29,8 @@ export function useDashboard() {
 	const { events } = useFinancialEvents();
 
 	// Dados dos contatos
-	const { favoriteContacts, isLoading: contactsLoading } =
-		useFavoriteContacts();
-	const { stats: contactStats, isLoading: contactStatsLoading } =
-		useContactsStats();
+	const { favoriteContacts, isLoading: contactsLoading } = useFavoriteContacts();
+	const { stats: contactStats, isLoading: contactStatsLoading } = useContactsStats();
 	const { contacts: transferContacts } = useContactsForTransfer();
 
 	// Calcular totais e estatísticas
@@ -86,11 +74,7 @@ export function useDashboard() {
 	};
 
 	const isLoading =
-		profileLoading ||
-		accountsLoading ||
-		balancesLoading ||
-		contactsLoading ||
-		contactStatsLoading;
+		profileLoading || accountsLoading || balancesLoading || contactsLoading || contactStatsLoading;
 
 	return {
 		dashboardData,
@@ -189,8 +173,8 @@ export function useDashboardSettings() {
 	const { profile } = useProfile();
 
 	// profile is ProfileApiResponse<UserProfile>, access data.user_preferences
-	const preferences = (profile as { data?: { user_preferences?: unknown[] } })
-		?.data?.user_preferences?.[0] as
+	const preferences = (profile as { data?: { user_preferences?: unknown[] } })?.data
+		?.user_preferences?.[0] as
 		| {
 				accessibility_high_contrast?: boolean;
 				accessibility_large_text?: boolean;

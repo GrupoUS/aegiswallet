@@ -498,19 +498,8 @@
 				"rules": {
 					"suspicious": {
 						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["*.config.ts", "*.config.js", "vite.config.ts", "vitest.*.config.ts"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					},
-					"style": {
-						"useComponentExportOnlyModules": "off"
+					"nursery": {
+						"noShadow": "off"
 					}
 				}
 			}

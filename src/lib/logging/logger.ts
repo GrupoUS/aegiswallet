@@ -3,11 +3,11 @@
  */
 
 export enum LogLevel {
-	DEBUG = 0,
-	INFO = 1,
-	WARN = 2,
-	ERROR = 3,
-	SILENT = 4,
+	Debug = 0,
+	Info = 1,
+	Warn = 2,
+	Error = 3,
+	Silent = 4,
 }
 
 export interface LogContext {
@@ -41,7 +41,7 @@ export class Logger {
 	constructor(config?: Partial<LoggerConfig>) {
 		this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 		this.config = {
-			level: LogLevel.DEBUG,
+			level: LogLevel.Debug,
 			enableConsole: true,
 			enableRemote: false,
 			sanitizeData: false,
@@ -105,17 +105,17 @@ export class Logger {
 		}
 
 		switch (entry.level) {
-			case LogLevel.DEBUG:
+			case LogLevel.Debug:
 				break;
-			case LogLevel.INFO:
+			case LogLevel.Info:
 				// biome-ignore lint/suspicious/noConsole: Logger implementation
 				console.info(msg, context);
 				break;
-			case LogLevel.WARN:
+			case LogLevel.Warn:
 				// biome-ignore lint/suspicious/noConsole: Logger implementation
 				console.warn(msg, context);
 				break;
-			case LogLevel.ERROR:
+			case LogLevel.Error:
 				// biome-ignore lint/suspicious/noConsole: Logger implementation
 				console.error(msg, context);
 				break;
@@ -123,9 +123,7 @@ export class Logger {
 	}
 
 	private log(level: LogLevel, message: string, context?: LogContext): void {
-		const sanitizedContext = this.config.sanitizeData
-			? this.sanitizeContext(context)
-			: context;
+		const sanitizedContext = this.config.sanitizeData ? this.sanitizeContext(context) : context;
 
 		const entry: LogEntry = {
 			context: sanitizedContext,
@@ -168,9 +166,7 @@ export class Logger {
 		const sanitizeValue = (value: unknown, seen = new WeakSet()): unknown => {
 			if (typeof value === 'string') {
 				// Check if the value looks like sensitive data
-				if (
-					sensitiveFields.some((field) => value.toLowerCase().includes(field))
-				) {
+				if (sensitiveFields.some((field) => value.toLowerCase().includes(field))) {
 					return '[REDACTED]';
 				}
 			} else if (typeof value === 'object' && value !== null) {
@@ -187,9 +183,7 @@ export class Logger {
 				}
 				const sanitizedObj: Record<string, unknown> = {};
 				for (const [key, val] of Object.entries(value)) {
-					if (
-						sensitiveFields.some((field) => key.toLowerCase().includes(field))
-					) {
+					if (sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
 						sanitizedObj[key] = '[REDACTED]';
 					} else {
 						sanitizedObj[key] = sanitizeValue(val, seen);
@@ -205,27 +199,23 @@ export class Logger {
 	}
 
 	debug(message: string, context?: LogContext): void {
-		this.log(LogLevel.DEBUG, message, context);
+		this.log(LogLevel.Debug, message, context);
 	}
 
 	info(message: string, context?: LogContext): void {
-		this.log(LogLevel.INFO, message, context);
+		this.log(LogLevel.Info, message, context);
 	}
 
 	warn(message: string, context?: LogContext): void {
-		this.log(LogLevel.WARN, message, context);
+		this.log(LogLevel.Warn, message, context);
 	}
 
 	error(message: string, context?: LogContext): void {
-		this.log(LogLevel.ERROR, message, context);
+		this.log(LogLevel.Error, message, context);
 	}
 
 	// Specialized logging methods
-	voiceCommand(
-		command: string,
-		confidence: number,
-		context?: LogContext,
-	): void {
+	voiceCommand(command: string, confidence: number, context?: LogContext): void {
 		this.info('Voice command processed', { ...context, command, confidence });
 	}
 

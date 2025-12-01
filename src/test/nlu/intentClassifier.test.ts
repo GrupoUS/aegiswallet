@@ -38,9 +38,7 @@ describe('Intent Classifier', () => {
 		});
 
 		it('should handle accents and diacritics', async () => {
-			const result = await classifier.classify(
-				'quanto posso gastar no orçamento?',
-			);
+			const result = await classifier.classify('quanto posso gastar no orçamento?');
 
 			expect(result.intent).toBe(IntentType.CHECK_BUDGET);
 			expect(result.confidence).toBeGreaterThanOrEqual(0.7);
@@ -137,9 +135,7 @@ describe('Intent Classifier', () => {
 		});
 
 		it('should handle queries with numbers', async () => {
-			const result = await classifier.classify(
-				'transferir 100 reais para João',
-			);
+			const result = await classifier.classify('transferir 100 reais para João');
 
 			expect(result.intent).toBe(IntentType.TRANSFER_MONEY);
 		});
@@ -168,9 +164,7 @@ describe('Intent Classifier', () => {
 				'quando vou receber?',
 			];
 
-			const results = await Promise.all(
-				queries.map((q) => classifier.classify(q)),
-			);
+			const results = await Promise.all(queries.map((q) => classifier.classify(q)));
 
 			expect(results).toHaveLength(queries.length);
 			results.forEach((result) => {

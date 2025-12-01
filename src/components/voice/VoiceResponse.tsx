@@ -1,11 +1,4 @@
-import {
-	AlertCircle,
-	ArrowUpRight,
-	CheckCircle,
-	CreditCard,
-	Info,
-	TrendingUp,
-} from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle, CreditCard, Info, TrendingUp } from 'lucide-react';
 import React from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,8 +30,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 	minimumFractionDigits: 2,
 });
 
-const formatCurrency = (value: number): string =>
-	`R$ ${currencyFormatter.format(value)}`;
+const formatCurrency = (value: number): string => `R$ ${currencyFormatter.format(value)}`;
 
 // ============================================================================
 // Typed Data Renderer Components
@@ -46,63 +38,41 @@ const formatCurrency = (value: number): string =>
 
 const BalanceData: React.FC<{ data: BalanceResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
-		<p className="font-medium text-sm">
-			Saldo: {formatCurrency(data.currentBalance)}
-		</p>
+		<p className="font-medium text-sm">Saldo: {formatCurrency(data.currentBalance)}</p>
 		{data.income !== undefined && (
-			<p className="text-muted-foreground text-xs">
-				Receitas: {formatCurrency(data.income)}
-			</p>
+			<p className="text-muted-foreground text-xs">Receitas: {formatCurrency(data.income)}</p>
 		)}
 		{data.expenses !== undefined && (
-			<p className="text-muted-foreground text-xs">
-				Despesas: {formatCurrency(data.expenses)}
-			</p>
+			<p className="text-muted-foreground text-xs">Despesas: {formatCurrency(data.expenses)}</p>
 		)}
-		{data.accountType && (
-			<p className="text-muted-foreground text-xs">Conta: {data.accountType}</p>
-		)}
+		{data.accountType && <p className="text-muted-foreground text-xs">Conta: {data.accountType}</p>}
 	</div>
 );
 
 const BudgetData: React.FC<{ data: BudgetResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
-		<p className="font-medium text-sm">
-			Disponível: {formatCurrency(data.available)}
-		</p>
+		<p className="font-medium text-sm">Disponível: {formatCurrency(data.available)}</p>
 		<p className="text-muted-foreground text-xs">
 			Gasto: {formatCurrency(data.spent)} / {formatCurrency(data.total)}
 		</p>
-		<p className="text-muted-foreground text-xs">
-			Utilizado: {data.spentPercentage.toFixed(1)}%
-		</p>
-		{data.category && (
-			<p className="text-muted-foreground text-xs">
-				Categoria: {data.category}
-			</p>
-		)}
+		<p className="text-muted-foreground text-xs">Utilizado: {data.spentPercentage.toFixed(1)}%</p>
+		{data.category && <p className="text-muted-foreground text-xs">Categoria: {data.category}</p>}
 	</div>
 );
 
 const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
 		<p className="font-medium text-sm">
-			{data.bills.length} {data.bills.length === 1 ? 'conta' : 'contas'} para
-			pagar
+			{data.bills.length} {data.bills.length === 1 ? 'conta' : 'contas'} para pagar
 		</p>
-		<p className="text-muted-foreground text-xs">
-			Total: {formatCurrency(data.totalAmount)}
-		</p>
+		<p className="text-muted-foreground text-xs">Total: {formatCurrency(data.totalAmount)}</p>
 		{data.pastDueCount > 0 && (
 			<p className="text-destructive text-xs">
 				{data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
 			</p>
 		)}
 		{data.bills.slice(0, 3).map((bill) => (
-			<p
-				key={`bill-${bill.name}-${bill.amount}`}
-				className="text-muted-foreground text-xs"
-			>
+			<p key={`bill-${bill.name}-${bill.amount}`} className="text-muted-foreground text-xs">
 				{bill.name}: {formatCurrency(bill.amount)}
 			</p>
 		))}
@@ -111,29 +81,21 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
 
 const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
-		<p className="font-medium text-sm">
-			Recebimentos: {formatCurrency(data.totalExpected)}
-		</p>
+		<p className="font-medium text-sm">Recebimentos: {formatCurrency(data.totalExpected)}</p>
 		{data.nextIncome && (
 			<p className="text-muted-foreground text-xs">
-				Próximo: {data.nextIncome.source} -{' '}
-				{formatCurrency(data.nextIncome.amount)}
+				Próximo: {data.nextIncome.source} - {formatCurrency(data.nextIncome.amount)}
 			</p>
 		)}
 		{data.incoming.slice(0, 3).map((income) => (
-			<p
-				key={`income-${income.source}-${income.amount}`}
-				className="text-muted-foreground text-xs"
-			>
+			<p key={`income-${income.source}-${income.amount}`} className="text-muted-foreground text-xs">
 				{income.source}: {formatCurrency(income.amount)}
 			</p>
 		))}
 	</div>
 );
 
-const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({
-	data,
-}) => {
+const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({ data }) => {
 	const variationSign = data.variation >= 0 ? '+' : '-';
 	const variationValue = formatCurrency(Math.abs(data.variation));
 
@@ -145,12 +107,7 @@ const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({
 			<p className="text-muted-foreground text-xs">
 				Saldo atual: {formatCurrency(data.currentBalance)}
 			</p>
-			<p
-				className={cn(
-					'text-xs',
-					data.variation >= 0 ? 'text-success' : 'text-destructive',
-				)}
-			>
+			<p className={cn('text-xs', data.variation >= 0 ? 'text-success' : 'text-destructive')}>
 				Variação: {variationSign}
 				{variationValue}
 			</p>
@@ -166,9 +123,7 @@ const ProjectionData: React.FC<{ data: ProjectionResponseData }> = ({
 const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
 		<p className="font-medium text-sm">Para: {data.recipient}</p>
-		<p className="text-muted-foreground text-xs">
-			Valor: {formatCurrency(data.amount)}
-		</p>
+		<p className="text-muted-foreground text-xs">Valor: {formatCurrency(data.amount)}</p>
 		<p className="text-muted-foreground text-xs">Método: {data.method}</p>
 		<p
 			className={cn(
@@ -193,14 +148,10 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
 			}
 		</p>
 		{data.estimatedTime && (
-			<p className="text-muted-foreground text-xs">
-				Tempo estimado: {data.estimatedTime}
-			</p>
+			<p className="text-muted-foreground text-xs">Tempo estimado: {data.estimatedTime}</p>
 		)}
 		{data.fees && data.fees > 0 && (
-			<p className="text-muted-foreground text-xs">
-				Taxas: {formatCurrency(data.fees)}
-			</p>
+			<p className="text-muted-foreground text-xs">Taxas: {formatCurrency(data.fees)}</p>
 		)}
 	</div>
 );
@@ -208,27 +159,17 @@ const TransferData: React.FC<{ data: TransferResponseData }> = ({ data }) => (
 const SuccessData: React.FC<{ data: SuccessResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
 		<p className="text-sm text-success">{data.message}</p>
-		{data.action && (
-			<p className="text-muted-foreground text-xs">Ação: {data.action}</p>
-		)}
-		{data.details && (
-			<p className="text-muted-foreground text-xs">{data.details}</p>
-		)}
+		{data.action && <p className="text-muted-foreground text-xs">Ação: {data.action}</p>}
+		{data.details && <p className="text-muted-foreground text-xs">{data.details}</p>}
 	</div>
 );
 
 const ErrorData: React.FC<{ data: ErrorResponseData }> = ({ data }) => (
 	<div className="mt-2 space-y-1">
 		<p className="text-destructive text-sm">{data.message}</p>
-		{data.code && (
-			<p className="text-muted-foreground text-xs">Código: {data.code}</p>
-		)}
-		{data.details && (
-			<p className="text-muted-foreground text-xs">{data.details}</p>
-		)}
-		{data.recoverable && (
-			<p className="text-warning text-xs">Este erro pode ser recuperado</p>
-		)}
+		{data.code && <p className="text-muted-foreground text-xs">Código: {data.code}</p>}
+		{data.details && <p className="text-muted-foreground text-xs">{data.details}</p>}
+		{data.recoverable && <p className="text-warning text-xs">Este erro pode ser recuperado</p>}
 		{data.suggestedActions && data.suggestedActions.length > 0 && (
 			<div className="mt-1">
 				<p className="font-medium text-muted-foreground text-xs">Sugestões:</p>
@@ -384,11 +325,7 @@ export const VoiceResponse = React.memo(function VoiceResponse({
 	return (
 		<Card
 			variant="glass"
-			className={cn(
-				'border-2 transition-all duration-300',
-				cardColor,
-				className,
-			)}
+			className={cn('border-2 transition-all duration-300', cardColor, className)}
 			{...accessibilityProps}
 		>
 			<CardContent className="p-4">

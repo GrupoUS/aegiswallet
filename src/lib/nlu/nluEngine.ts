@@ -29,12 +29,7 @@ import type {
 	PatternEvolution,
 	UserAdaptation,
 } from '@/lib/nlu/types';
-import {
-	type EntityType,
-	IntentType,
-	NLUError,
-	NLUErrorCode,
-} from '@/lib/nlu/types';
+import { type EntityType, IntentType, NLUError, NLUErrorCode } from '@/lib/nlu/types';
 
 // ============================================================================
 // Default Configuration
@@ -102,11 +97,7 @@ export class NLUEngine {
 	 * - Error recovery mechanisms
 	 * - Performance metrics
 	 */
-	async processUtterance(
-		text: string,
-		_userId?: string,
-		_sessionId?: string,
-	): Promise<NLUResult> {
+	async processUtterance(text: string, _userId?: string, _sessionId?: string): Promise<NLUResult> {
 		const startTime = Date.now();
 
 		try {
@@ -141,10 +132,7 @@ export class NLUEngine {
 
 			// Classify intent and boost essential commands confidence when applicable
 			let classification = await this.classifier.classify(text);
-			classification = this.enhanceClassificationConfidence(
-				text,
-				classification,
-			);
+			classification = this.enhanceClassificationConfidence(text, classification);
 
 			// Extract entities
 			const entities = this.extractor.extract(text);
@@ -169,10 +157,7 @@ export class NLUEngine {
 			);
 
 			// Check for missing required slots
-			const missingSlots = this.getMissingSlots(
-				classification.intent,
-				entities,
-			);
+			const missingSlots = this.getMissingSlots(classification.intent, entities);
 
 			// Update context
 			if (this.config.contextEnabled) {
@@ -218,11 +203,7 @@ export class NLUEngine {
 				throw error;
 			}
 
-			throw new NLUError(
-				'NLU processing failed',
-				NLUErrorCode.UNKNOWN_ERROR,
-				error,
-			);
+			throw new NLUError('NLU processing failed', NLUErrorCode.UNKNOWN_ERROR, error);
 		}
 	}
 
@@ -292,10 +273,7 @@ export class NLUEngine {
 	/**
 	 * Get missing required slots for intent
 	 */
-	private getMissingSlots(
-		intent: IntentType,
-		entities: NLUEntity[],
-	): EntityType[] {
+	private getMissingSlots(intent: IntentType, entities: NLUEntity[]): EntityType[] {
 		const definition = INTENT_DEFINITIONS[intent];
 		if (!definition) {
 			return [];
@@ -396,8 +374,7 @@ export class NLUEngine {
 
 		// Calculate hit rate trend (simple moving average of last 100 requests)
 		const recentHitRate = this.calculateRecentHitRate();
-		const hitRateChange =
-			this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0;
+		const hitRateChange = this.cacheStats.totalRequests > 100 ? hitRate - recentHitRate : 0;
 
 		return {
 			hitRate: Math.round(hitRate * 100) / 100,
@@ -493,8 +470,7 @@ export class NLUEngine {
 		// Simplified learning signal extraction
 		return {
 			patternNovelty: Math.random(), // Would be calculated based on pattern frequency
-			confidenceTrend:
-				classification.confidence > 0.8 ? 'high' : 'needs_improvement',
+			confidenceTrend: classification.confidence > 0.8 ? 'high' : 'needs_improvement',
 			adaptationNeeded: classification.confidence < 0.7,
 		};
 	}
@@ -521,15 +497,10 @@ export class NLUEngine {
 		});
 
 		// Count keyword hits to gauge intent strength
-		const keywordMatches = definition.keywords.filter((keyword) =>
-			lowerText.includes(keyword),
-		);
+		const keywordMatches = definition.keywords.filter((keyword) => lowerText.includes(keyword));
 
 		// Determine the minimum confidence required for this intent
-		const requiredConfidence = Math.max(
-			definition.confidence_threshold ?? 0.7,
-			0.7,
-		);
+		const requiredConfidence = Math.max(definition.confidence_threshold ?? 0.7, 0.7);
 
 		let boostedConfidence = classification.confidence;
 		let method = classification.method;
@@ -562,16 +533,9 @@ export class NLUEngine {
 
 		// FALLBACK: If no pattern matched but we have a valid intent, try to reclassify
 		// This handles cases where the classifier picked an intent but with low confidence
-		if (
-			!patternMatched &&
-			keywordMatches.length === 0 &&
-			boostedConfidence < 0.7
-		) {
+		if (!patternMatched && keywordMatches.length === 0 && boostedConfidence < 0.7) {
 			// Try all intents to find a better match based on keywords
-			const betterMatch = this.findBetterIntentMatch(
-				text,
-				classification.intent,
-			);
+			const betterMatch = this.findBetterIntentMatch(text, classification.intent);
 			if (betterMatch) {
 				return betterMatch;
 			}
@@ -622,9 +586,7 @@ export class NLUEngine {
 			}
 
 			// Check keywords
-			const keywordMatches = definition.keywords.filter((keyword) =>
-				lowerText.includes(keyword),
-			);
+			const keywordMatches = definition.keywords.filter((keyword) => lowerText.includes(keyword));
 			if (keywordMatches.length > 0) {
 				const score = 0.7 + keywordMatches.length * 0.05;
 				if (score > bestScore) {
@@ -655,28 +617,11 @@ export class NLUEngine {
 
 		// Brazilian financial slang and expressions
 		const brazilianContext: Record<string, string[]> = {
-			[IntentType.CHECK_BALANCE]: [
-				'grana',
-				'dinheiro',
-				'bufunfa',
-				'tá quanto',
-				'quanto tá',
-			],
-			[IntentType.TRANSFER_MONEY]: [
-				'pix',
-				'mandar',
-				'transferência',
-				'ted',
-				'doc',
-			],
+			[IntentType.CHECK_BALANCE]: ['grana', 'dinheiro', 'bufunfa', 'tá quanto', 'quanto tá'],
+			[IntentType.TRANSFER_MONEY]: ['pix', 'mandar', 'transferência', 'ted', 'doc'],
 			[IntentType.PAY_BILL]: ['conta', 'boleto', 'fatura', 'quitar', 'débito'],
 			[IntentType.CHECK_INCOME]: ['cair', 'entrar', 'recebimento', 'salário'],
-			[IntentType.FINANCIAL_PROJECTION]: [
-				'projeção',
-				'previsão',
-				'balanço',
-				'vai ficar',
-			],
+			[IntentType.FINANCIAL_PROJECTION]: ['projeção', 'previsão', 'balanço', 'vai ficar'],
 			[IntentType.CHECK_BUDGET]: ['orçamento', 'gastar', 'limite', 'teto'],
 		};
 

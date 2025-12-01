@@ -17,11 +17,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
 	Select,
 	SelectContent,
@@ -40,11 +36,7 @@ import type {
 	FinancialEventCategory,
 	FinancialEventPriority,
 } from '@/types/financial.interfaces';
-import type {
-	EventColor,
-	FinancialEvent,
-	FinancialEventType,
-} from '@/types/financial-events';
+import type { EventColor, FinancialEvent, FinancialEventType } from '@/types/financial-events';
 
 // Schema de validação com tipos específicos para o mercado brasileiro
 const financialEventSchema = z.object({
@@ -172,9 +164,7 @@ function FinancialEventFormComponent({
 			tags: [],
 			title: '',
 		},
-		resolver: zodResolver(
-			financialEventSchema,
-		) as Resolver<FinancialEventFormValues>,
+		resolver: zodResolver(financialEventSchema) as Resolver<FinancialEventFormValues>,
 	});
 
 	// Preencher formulário se houver dados iniciais (edição)
@@ -182,20 +172,18 @@ function FinancialEventFormComponent({
 		if (initialData) {
 			form.reset({
 				accountId: '',
-				allDay: initialData.allDay || true,
+				allDay: true,
 				amount: Math.abs(initialData.amount).toString(),
 				attachments: initialData.attachments || [],
 				brazilianEventType: initialData.brazilianEventType || '',
 				category: (initialData.category as string) || '',
 				color: initialData.color || 'blue',
 				description: initialData.description || '',
-				dueDate: initialData.dueDate
-					? new Date(initialData.dueDate)
-					: undefined,
+				dueDate: initialData.dueDate ? new Date(initialData.dueDate) : undefined,
 				endDate: initialData.end,
 				icon: initialData.icon || '',
-				isIncome: initialData.isIncome || false,
-				isRecurring: initialData.isRecurring || false,
+				isIncome: initialData.isIncome,
+				isRecurring: initialData.isRecurring,
 				location: initialData.location || '',
 				notes: initialData.notes || '',
 				priority: initialData.priority || 'NORMAL',
@@ -210,19 +198,15 @@ function FinancialEventFormComponent({
 	const onSubmit: SubmitHandler<FinancialEventFormValues> = async (values) => {
 		setIsSubmitting(true);
 		try {
-			const numericAmount = parseFloat(values.amount.replace(/[^0-9.-]+/g, ''));
+			const numericAmount = Number.parseFloat(values.amount.replace(/[^0-9.-]+/g, ''));
 			// Ajustar sinal baseado no tipo (despesa/conta = negativo, receita = positivo)
-			const finalAmount = values.isIncome
-				? Math.abs(numericAmount)
-				: -Math.abs(numericAmount);
+			const finalAmount = values.isIncome ? Math.abs(numericAmount) : -Math.abs(numericAmount);
 
 			const eventData: Omit<FinancialEvent, 'id'> = {
 				allDay: values.allDay,
 				amount: finalAmount,
 				attachments: values.attachments,
-				brazilianEventType: values.brazilianEventType as
-					| BrazilianEventType
-					| undefined,
+				brazilianEventType: values.brazilianEventType as BrazilianEventType | undefined,
 				category: values.category as FinancialEventCategory,
 				color: values.color as EventColor,
 				description: values.description,
@@ -254,9 +238,6 @@ function FinancialEventFormComponent({
 			onSuccess?.();
 		} catch (_error) {
 			// Error is already handled by the hook with toast notifications
-			// Log for debugging in development
-			if (import.meta.env.DEV) {
-			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -276,10 +257,7 @@ function FinancialEventFormComponent({
 							<FormItem className="col-span-2">
 								<FormLabel>Título</FormLabel>
 								<FormControl>
-									<Input
-										placeholder="Ex: Aluguel, Salário, Supermercado"
-										{...field}
-									/>
+									<Input placeholder="Ex: Aluguel, Salário, Supermercado" {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -294,12 +272,7 @@ function FinancialEventFormComponent({
 							<FormItem>
 								<FormLabel>Valor (R$)</FormLabel>
 								<FormControl>
-									<Input
-										type="number"
-										step="0.01"
-										placeholder="0.00"
-										{...field}
-									/>
+									<Input type="number" step="0.01" placeholder="0.00" {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -421,10 +394,7 @@ function FinancialEventFormComponent({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Categoria</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-								>
+								<Select onValueChange={field.onChange} defaultValue={field.value}>
 									<FormControl>
 										<SelectTrigger>
 											<SelectValue placeholder="Selecione a categoria" />
@@ -450,10 +420,7 @@ function FinancialEventFormComponent({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Conta Associada (Opcional)</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-								>
+								<Select onValueChange={field.onChange} defaultValue={field.value}>
 									<FormControl>
 										<SelectTrigger>
 											<SelectValue placeholder="Selecione uma conta" />
@@ -479,10 +446,7 @@ function FinancialEventFormComponent({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Cor</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-								>
+								<Select onValueChange={field.onChange} defaultValue={field.value}>
 									<FormControl>
 										<SelectTrigger>
 											<SelectValue placeholder="Selecione uma cor" />
@@ -492,9 +456,7 @@ function FinancialEventFormComponent({
 										{COLORS.map((color) => (
 											<SelectItem key={color.value} value={color.value}>
 												<div className="flex items-center gap-2">
-													<div
-														className={cn('h-3 w-3 rounded-full', color.class)}
-													/>
+													<div className={cn('h-3 w-3 rounded-full', color.class)} />
 													{color.label}
 												</div>
 											</SelectItem>
@@ -514,15 +476,10 @@ function FinancialEventFormComponent({
 							<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
 								<div className="space-y-0.5">
 									<FormLabel>Recorrência</FormLabel>
-									<FormDescription>
-										Repetir este evento periodicamente
-									</FormDescription>
+									<FormDescription>Repetir este evento periodicamente</FormDescription>
 								</div>
 								<FormControl>
-									<Switch
-										checked={field.value}
-										onCheckedChange={field.onChange}
-									/>
+									<Switch checked={field.value} onCheckedChange={field.onChange} />
 								</FormControl>
 							</FormItem>
 						)}
@@ -537,10 +494,7 @@ function FinancialEventFormComponent({
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Frequência</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
+										<Select onValueChange={field.onChange} defaultValue={field.value}>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder="Selecione a frequência" />
@@ -565,10 +519,7 @@ function FinancialEventFormComponent({
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Prioridade</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
+										<Select onValueChange={field.onChange} defaultValue={field.value}>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder="Selecione a prioridade" />
@@ -615,11 +566,7 @@ function FinancialEventFormComponent({
 							<FormItem className="col-span-2">
 								<FormLabel>Notas (opcional)</FormLabel>
 								<FormControl>
-									<Textarea
-										placeholder="Notas adicionais..."
-										className="resize-none"
-										{...field}
-									/>
+									<Textarea placeholder="Notas adicionais..." className="resize-none" {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -629,12 +576,7 @@ function FinancialEventFormComponent({
 
 				<div className="flex justify-end gap-2">
 					{onCancel && (
-						<Button
-							type="button"
-							variant="outline"
-							onClick={onCancel}
-							disabled={isSubmitting}
-						>
+						<Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
 							Cancelar
 						</Button>
 					)}

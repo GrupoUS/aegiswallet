@@ -19,25 +19,19 @@ interface AccessibilityContextType {
 		key: K,
 		value: AccessibilitySettings[K],
 	) => void;
-	announceToScreenReader: (
-		message: string,
-		priority?: 'polite' | 'assertive',
-	) => void;
+	announceToScreenReader: (message: string, priority?: 'polite' | 'assertive') => void;
 	isKeyboardUser: boolean;
 	showSettings: boolean;
 	setShowSettings: (value: boolean) => void;
 }
 
-export const AccessibilityContext =
-	createContext<AccessibilityContextType | null>(null);
+export const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
 
 interface AccessibilityProviderProps {
 	children: ReactNode;
 }
 
-export function AccessibilityProvider({
-	children,
-}: AccessibilityProviderProps) {
+export function AccessibilityProvider({ children }: AccessibilityProviderProps) {
 	const [settings, setSettings] = useState<AccessibilitySettings>({
 		announceChanges: true,
 		highContrast: false,
@@ -53,18 +47,14 @@ export function AccessibilityProvider({
 	// Detect user's accessibility preferences from system
 	useEffect(() => {
 		// Detect high contrast mode
-		const highContrastMediaQuery = window.matchMedia(
-			'(prefers-contrast: high)',
-		);
+		const highContrastMediaQuery = window.matchMedia('(prefers-contrast: high)');
 		setSettings((prev) => ({
 			...prev,
 			highContrast: highContrastMediaQuery.matches,
 		}));
 
 		// Detect reduced motion preference
-		const reducedMotionMediaQuery = window.matchMedia(
-			'(prefers-reduced-motion: reduce)',
-		);
+		const reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 		setSettings((prev) => ({
 			...prev,
 			reducedMotion: reducedMotionMediaQuery.matches,
@@ -73,17 +63,9 @@ export function AccessibilityProvider({
 		// Detect if screen reader is being used
 		const detectScreenReader = () => {
 			const userAgent = navigator.userAgent.toLowerCase();
-			const screenReaderPatterns = [
-				/nvda/,
-				/jaws/,
-				/voiceover/,
-				/talkback/,
-				/chromevox/,
-			];
+			const screenReaderPatterns = [/nvda/, /jaws/, /voiceover/, /talkback/, /chromevox/];
 
-			const hasScreenReader = screenReaderPatterns.some((pattern) =>
-				pattern.test(userAgent),
-			);
+			const hasScreenReader = screenReaderPatterns.some((pattern) => pattern.test(userAgent));
 			setSettings((prev) => ({ ...prev, screenReaderMode: hasScreenReader }));
 		};
 
@@ -99,20 +81,11 @@ export function AccessibilityProvider({
 		};
 
 		highContrastMediaQuery.addEventListener('change', handleHighContrastChange);
-		reducedMotionMediaQuery.addEventListener(
-			'change',
-			handleReducedMotionChange,
-		);
+		reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange);
 
 		return () => {
-			highContrastMediaQuery.removeEventListener(
-				'change',
-				handleHighContrastChange,
-			);
-			reducedMotionMediaQuery.removeEventListener(
-				'change',
-				handleReducedMotionChange,
-			);
+			highContrastMediaQuery.removeEventListener('change', handleHighContrastChange);
+			reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange);
 		};
 	}, []);
 
@@ -169,8 +142,7 @@ export function AccessibilityProvider({
 		if (!existingMeta) {
 			const meta = document.createElement('meta');
 			meta.name = 'eMAG-compliance';
-			meta.content =
-				'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
+			meta.content = 'Modelo de Acessibilidade para Governo Eletrônico - Versão 3.1';
 			document.head.appendChild(meta);
 		}
 
@@ -186,49 +158,42 @@ export function AccessibilityProvider({
 
 	const updateSetting = <K extends keyof AccessibilitySettings>(
 		key: K,
-		value: AccessibilitySettings[K],
+		newValue: AccessibilitySettings[K],
 	) => {
-		setSettings((prev) => ({ ...prev, [key]: value }));
+		setSettings((prev) => ({ ...prev, [key]: newValue }));
 
-		// Save to localStorage for persistence
+		// Persist to localStorage
 		try {
-			const savedSettings = JSON.parse(
-				localStorage.getItem('aegis-accessibility-settings') || '{}',
-			);
-			savedSettings[key] = value;
-			localStorage.setItem(
-				'aegis-accessibility-settings',
-				JSON.stringify(savedSettings),
-			);
-		} catch (_error) {}
+			const saved = localStorage.getItem('aegis-accessibility-settings');
+			const savedSettings = saved ? JSON.parse(saved) : {};
+			savedSettings[key] = newValue;
+			localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
+		} catch (_error) {
+			// Ignore storage errors
+		}
 	};
 
-	// Load saved settings from localStorage
+	// Load settings from localStorage on mount
 	useEffect(() => {
 		try {
-			const savedSettings = localStorage.getItem(
-				'aegis-accessibility-settings',
-			);
-			if (savedSettings) {
-				const parsed = JSON.parse(savedSettings);
+			const saved = localStorage.getItem('aegis-accessibility-settings');
+			if (saved) {
+				const parsed = JSON.parse(saved);
 				setSettings((prev) => ({ ...prev, ...parsed }));
 			}
-		} catch (_error) {}
+		} catch (_error) {
+			// Ignore storage errors
+		}
 	}, []);
 
 	// Screen reader announcements
-	const announceToScreenReader = (
-		message: string,
-		priority: 'polite' | 'assertive' = 'polite',
-	) => {
-		if (!settings.announceChanges || !settings.screenReaderMode) {
+	const announceToScreenReader = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+		if (!(settings.announceChanges && settings.screenReaderMode)) {
 			return;
 		}
 
 		// Create or get announcement element
-		let announcementElement = document.getElementById(
-			'screen-reader-announcements',
-		);
+		let announcementElement = document.getElementById('screen-reader-announcements');
 		if (!announcementElement) {
 			announcementElement = document.createElement('div');
 			announcementElement.id = 'screen-reader-announcements';
@@ -260,11 +225,7 @@ export function AccessibilityProvider({
 		updateSetting,
 	};
 
-	return (
-		<AccessibilityContext.Provider value={value}>
-			{children}
-		</AccessibilityContext.Provider>
-	);
+	return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
 }
 
 // Utility component for accessibility announcements

@@ -4,11 +4,7 @@ import {
 	createMessageStartEvent,
 	createStreamChunk,
 } from '../domain/events';
-import type {
-	ChatMessage,
-	ChatRequestOptions,
-	ChatStreamChunk,
-} from '../domain/types';
+import type { ChatMessage, ChatRequestOptions, ChatStreamChunk } from '../domain/types';
 
 export class MockBackend implements ChatBackend {
 	async *send(

@@ -13,13 +13,7 @@ import { useState } from 'react';
 import { FinancialAmount } from '@/components/financial-amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
 	DropdownMenu,
@@ -27,19 +21,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-	type Transaction,
-	useDeleteTransaction,
-	useTransactions,
-} from '@/hooks/use-transactions';
+import { type Transaction, useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 
 export default function TransactionsList() {
-	const {
-		data: transactions,
-		isLoading,
-		refetch,
-	} = useTransactions({ limit: 20 });
+	const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
 	const deleteMutation = useDeleteTransaction();
 	const { updateBalance, accounts } = useBankAccounts();
 
@@ -98,17 +84,10 @@ export default function TransactionsList() {
 	const getStatusBadge = (status: string) => {
 		switch (status) {
 			case 'posted':
-				return (
-					<Badge className="bg-emerald-500 hover:bg-emerald-600">
-						Concluído
-					</Badge>
-				);
+				return <Badge className="bg-emerald-500 hover:bg-emerald-600">Concluído</Badge>;
 			case 'pending':
 				return (
-					<Badge
-						variant="outline"
-						className="text-yellow-600 border-yellow-600"
-					>
+					<Badge variant="outline" className="text-yellow-600 border-yellow-600">
 						Pendente
 					</Badge>
 				);
@@ -155,25 +134,17 @@ export default function TransactionsList() {
 										{getIcon(transaction.transactionType)}
 									</div>
 									<div>
-										<p className="font-medium leading-none">
-											{transaction.description}
-										</p>
+										<p className="font-medium leading-none">{transaction.description}</p>
 										<div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
 											<span>
-												{format(
-													new Date(transaction.created_at),
-													'dd/MM/yyyy',
-													{
-														locale: ptBR,
-													},
-												)}
+												{format(new Date(transaction.created_at), 'dd/MM/yyyy', {
+													locale: ptBR,
+												})}
 											</span>
 											{transaction.transactionType && (
 												<>
 													<span>•</span>
-													<span className="capitalize">
-														{transaction.transactionType}
-													</span>
+													<span className="capitalize">{transaction.transactionType}</span>
 												</>
 											)}
 										</div>
@@ -185,9 +156,7 @@ export default function TransactionsList() {
 										<FinancialAmount
 											amount={Number(transaction.amount)}
 											className={
-												Number(transaction.amount) > 0
-													? 'text-emerald-600'
-													: 'text-rose-600'
+												Number(transaction.amount) > 0 ? 'text-emerald-600' : 'text-rose-600'
 											}
 										/>
 										<div className="flex justify-end mt-1">

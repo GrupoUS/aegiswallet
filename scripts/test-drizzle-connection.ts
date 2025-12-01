@@ -12,10 +12,11 @@
 
 import { sql } from 'drizzle-orm';
 
-import { closePool, db, schema } from '../src/db';
+import { closePool, getHttpClient, schema } from '../src/db/client';
 
 async function testDrizzleConnection() {
 	console.log('🔄 Starting Drizzle ORM connection test...\n');
+	const db = getHttpClient();
 
 	try {
 		// Test 1: Basic connectivity
@@ -30,9 +31,7 @@ async function testDrizzleConnection() {
 
 		// Test 3: Count users (schema validation)
 		console.log('\n📡 Test 3: Schema validation - users table');
-		const userCount = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(schema.users);
+		const userCount = await db.select({ count: sql<number>`count(*)` }).from(schema.users);
 		console.log('   ✅ Users count:', userCount[0]?.count);
 
 		// Test 4: Count transaction_categories
@@ -44,9 +43,7 @@ async function testDrizzleConnection() {
 
 		// Test 5: Count audit_logs (LGPD)
 		console.log('\n📡 Test 5: Schema validation - audit_logs (LGPD)');
-		const auditCount = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(schema.auditLogs);
+		const auditCount = await db.select({ count: sql<number>`count(*)` }).from(schema.auditLogs);
 		console.log('   ✅ Audit logs count:', auditCount[0]?.count);
 
 		// Test 6: List table names in public schema
@@ -57,8 +54,12 @@ async function testDrizzleConnection() {
 			     FROM information_schema.tables
 			     WHERE table_schema = 'public'
 			     ORDER BY table_name
-			   `)) as unknown as Array<{ table_name: string }>;
+			   `)) as unknown as Array<{
+				// biome-ignore lint/style/useNamingConvention: Database result structure
+				table_name: string;
+			}>;
 			console.log('   ✅ Public schema tables:', tablesResult.length);
+			// biome-ignore lint/style/useNamingConvention: Database result structure
 			tablesResult.slice(0, 5).forEach((row: { table_name: string }) => {
 				console.log(`      - ${row.table_name}`);
 			});
@@ -66,10 +67,7 @@ async function testDrizzleConnection() {
 				console.log(`      ... and ${tablesResult.length - 5} more`);
 			}
 		} catch (error) {
-			console.log(
-				'   ⚠️  Could not list tables (may not have permission):',
-				error,
-			);
+			console.log('   ⚠️  Could not list tables (may not have permission):', error);
 		}
 
 		console.log('\n✅ All Drizzle ORM connection tests PASSED!\n');
@@ -90,4 +88,7 @@ async function testDrizzleConnection() {
 }
 
 // Run the test
-testDrizzleConnection();
+testDrizzleConnection().catch((error) => {
+	console.error('Test failed:', error);
+	process.exit(1);
+});

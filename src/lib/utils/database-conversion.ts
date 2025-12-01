@@ -4,17 +4,15 @@
  * Ensures type safety between database schema and application interfaces
  */
 
-export type SnakeCaseToCamelCase<S extends string> =
-	S extends `${infer P1}_${infer P2}${infer P3}`
-		? `${P1}${Capitalize<SnakeCaseToCamelCase<`${P2}${P3}`>>}`
-		: S;
+export type SnakeCaseToCamelCase<S extends string> = S extends `${infer P1}_${infer P2}${infer P3}`
+	? `${P1}${Capitalize<SnakeCaseToCamelCase<`${P2}${P3}`>>}`
+	: S;
 
-export type CamelCaseToSnakeCase<S extends string> =
-	S extends `${infer P1}${infer P2}`
-		? P2 extends Capitalize<P2>
-			? `${P1}_${Lowercase<P2>}`
-			: `${P1}${CamelCaseToSnakeCase<P2>}`
-		: S;
+export type CamelCaseToSnakeCase<S extends string> = S extends `${infer P1}${infer P2}`
+	? P2 extends Capitalize<P2>
+		? `${P1}_${Lowercase<P2>}`
+		: `${P1}${CamelCaseToSnakeCase<P2>}`
+	: S;
 
 /**
  * Converts snake_case database field names to camelCase
@@ -25,9 +23,7 @@ export function snakeToCamel<T extends Record<string, unknown>>(
 	const result: Record<string, unknown> = {};
 
 	for (const [key, value] of Object.entries(obj)) {
-		const camelKey = key.replace(/_([a-z])/g, (_, letter: string) =>
-			letter.toUpperCase(),
-		);
+		const camelKey = key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 		result[camelKey] = value;
 	}
 
@@ -43,10 +39,7 @@ export function camelToSnake<T extends Record<string, unknown>>(
 	const result: Record<string, unknown> = {};
 
 	for (const [key, value] of Object.entries(obj)) {
-		const snakeKey = key.replace(
-			/[A-Z]/g,
-			(letter: string) => `_${letter.toLowerCase()}`,
-		);
+		const snakeKey = key.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
 		result[snakeKey] = value;
 	}
 
@@ -69,9 +62,7 @@ export function deepSnakeToCamel<T>(obj: T): T {
 		const result: Record<string, unknown> = {};
 
 		for (const [key, value] of Object.entries(obj)) {
-			const camelKey = key.replace(/_([a-z])/g, (_, letter: string) =>
-				letter.toUpperCase(),
-			);
+			const camelKey = key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 			result[camelKey] = deepSnakeToCamel(value);
 		}
 
@@ -97,10 +88,7 @@ export function deepCamelToSnake<T>(obj: T): T {
 		const result: Record<string, unknown> = {};
 
 		for (const [key, value] of Object.entries(obj)) {
-			const snakeKey = key.replace(
-				/[A-Z]/g,
-				(letter: string) => `_${letter.toLowerCase()}`,
-			);
+			const snakeKey = key.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
 			result[snakeKey] = deepCamelToSnake(value);
 		}
 

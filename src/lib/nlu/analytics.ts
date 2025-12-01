@@ -7,12 +7,7 @@
  * @module nlu/analytics
  */
 
-import type {
-	ClassificationLog,
-	EntityType,
-	ExtractedEntity,
-	NLUResult,
-} from './types';
+import type { ClassificationLog, EntityType, ExtractedEntity, NLUResult } from './types';
 import { IntentType } from './types';
 import { logger } from '@/lib/logging/logger';
 
@@ -358,9 +353,7 @@ export class NLUAnalytics {
 		}
 
 		try {
-			const logIndex = this.classificationLogs.findIndex(
-				(log) => log.id === logId,
-			);
+			const logIndex = this.classificationLogs.findIndex((log) => log.id === logId);
 			if (logIndex === -1) {
 				return;
 			}
@@ -435,17 +428,14 @@ export class NLUAnalytics {
 			this.hitMissMetrics.averageConfidence <
 			this.config.performanceThresholds.minConfidenceThreshold
 		) {
-			issues.push(
-				`Low confidence: ${this.hitMissMetrics.averageConfidence.toFixed(2)}`,
-			);
+			issues.push(`Low confidence: ${this.hitMissMetrics.averageConfidence.toFixed(2)}`);
 			recommendations.push('Improve training data quality');
 			score -= 15;
 		}
 
 		// Check error rate
 		const errorRate =
-			this.hitMissMetrics.failedClassifications /
-			Math.max(this.hitMissMetrics.totalCommands, 1);
+			this.hitMissMetrics.failedClassifications / Math.max(this.hitMissMetrics.totalCommands, 1);
 		if (errorRate > this.config.performanceThresholds.maxErrorRate) {
 			issues.push(`High error rate: ${(errorRate * 100).toFixed(1)}%`);
 			recommendations.push('Implement error recovery patterns');
@@ -499,48 +489,28 @@ export class NLUAnalytics {
 		}
 
 		// Northeast variations
-		if (
-			lowerText.includes('oxente') ||
-			lowerText.includes('arre') ||
-			lowerText.includes('bão')
-		) {
+		if (lowerText.includes('oxente') || lowerText.includes('arre') || lowerText.includes('bão')) {
 			return 'Nordeste';
 		}
 
 		// Southern variations
-		if (
-			lowerText.includes('bah') ||
-			lowerText.includes('tchê') ||
-			lowerText.includes('guri')
-		) {
+		if (lowerText.includes('bah') || lowerText.includes('tchê') || lowerText.includes('guri')) {
 			return 'Sul';
 		}
 
 		return 'Unknown';
 	}
 
-	private detectLinguisticStyle(
-		text: string,
-	): 'slang' | 'formal' | 'colloquial' | 'mixed' {
+	private detectLinguisticStyle(text: string): 'slang' | 'formal' | 'colloquial' | 'mixed' {
 		const lowerText = text.toLowerCase();
 
-		const slangTerms = [
-			'maneiro',
-			'caraca',
-			'demais',
-			'legal',
-			'bão',
-			'bah',
-			'tchê',
-		];
+		const slangTerms = ['maneiro', 'caraca', 'demais', 'legal', 'bão', 'bah', 'tchê'];
 		const formalTerms = ['gostaria', 'poderia', 'por favor', 'agradeceria'];
 		const colloquialTerms = ['meu', 'minha', 'quero', 'vou', 'pegar'];
 
 		const hasSlang = slangTerms.some((term) => lowerText.includes(term));
 		const hasFormal = formalTerms.some((term) => lowerText.includes(term));
-		const hasColloquial = colloquialTerms.some((term) =>
-			lowerText.includes(term),
-		);
+		const hasColloquial = colloquialTerms.some((term) => lowerText.includes(term));
 
 		if (hasFormal && !hasSlang) {
 			return 'formal';
@@ -565,8 +535,7 @@ export class NLUAnalytics {
 		metrics.totalCommands++;
 
 		// Update success/failure
-		const isSuccessful =
-			log.confidence >= 0.7 && log.predictedIntent !== IntentType.UNKNOWN;
+		const isSuccessful = log.confidence >= 0.7 && log.predictedIntent !== IntentType.UNKNOWN;
 		if (isSuccessful) {
 			metrics.successfulClassifications++;
 		} else {
@@ -574,10 +543,8 @@ export class NLUAnalytics {
 		}
 
 		// Update rates
-		metrics.hitRate =
-			(metrics.successfulClassifications / metrics.totalCommands) * 100;
-		metrics.missRate =
-			(metrics.failedClassifications / metrics.totalCommands) * 100;
+		metrics.hitRate = (metrics.successfulClassifications / metrics.totalCommands) * 100;
+		metrics.missRate = (metrics.failedClassifications / metrics.totalCommands) * 100;
 
 		// Update confidence distribution
 		if (log.confidence > 0.8) {
@@ -589,9 +556,7 @@ export class NLUAnalytics {
 		}
 
 		// Update average confidence
-		const totalConfidence = Object.values(
-			metrics.confidenceDistribution,
-		).reduce(
+		const totalConfidence = Object.values(metrics.confidenceDistribution).reduce(
 			(sum, count) =>
 				sum +
 				count *
@@ -629,8 +594,7 @@ export class NLUAnalytics {
 		// Update average
 		const totalProcessed = this.hitMissMetrics.totalCommands;
 		metrics.averageProcessingTime =
-			(metrics.averageProcessingTime * (totalProcessed - 1) + processingTime) /
-			totalProcessed;
+			(metrics.averageProcessingTime * (totalProcessed - 1) + processingTime) / totalProcessed;
 
 		// Update distribution
 		if (processingTime < 100) {
@@ -642,20 +606,11 @@ export class NLUAnalytics {
 		}
 
 		// Update system health
-		if (
-			metrics.averageProcessingTime < 150 &&
-			this.hitMissMetrics.hitRate > 90
-		) {
+		if (metrics.averageProcessingTime < 150 && this.hitMissMetrics.hitRate > 90) {
 			metrics.systemHealth = 'excellent';
-		} else if (
-			metrics.averageProcessingTime < 250 &&
-			this.hitMissMetrics.hitRate > 80
-		) {
+		} else if (metrics.averageProcessingTime < 250 && this.hitMissMetrics.hitRate > 80) {
 			metrics.systemHealth = 'good';
-		} else if (
-			metrics.averageProcessingTime < 400 &&
-			this.hitMissMetrics.hitRate > 70
-		) {
+		} else if (metrics.averageProcessingTime < 400 && this.hitMissMetrics.hitRate > 70) {
 			metrics.systemHealth = 'fair';
 		} else {
 			metrics.systemHealth = 'poor';
@@ -695,8 +650,7 @@ export class NLUAnalytics {
 		}
 
 		patternEvolution.frequency++;
-		patternEvolution.confidence =
-			(patternEvolution.confidence + log.confidence) / 2;
+		patternEvolution.confidence = (patternEvolution.confidence + log.confidence) / 2;
 		patternEvolution.lastSeen = new Date();
 
 		// Update regional variations
@@ -739,8 +693,7 @@ export class NLUAnalytics {
 		// Update accuracy rate
 		const isCorrect = log.feedback === 'correct' || log.confidence > 0.8;
 		regionLearning.accuracyRate =
-			(regionLearning.accuracyRate * (regionLearning.totalCommands - 1) +
-				(isCorrect ? 1 : 0)) /
+			(regionLearning.accuracyRate * (regionLearning.totalCommands - 1) + (isCorrect ? 1 : 0)) /
 			regionLearning.totalCommands;
 	}
 
@@ -908,9 +861,7 @@ export class NLUAnalytics {
 /**
  * Create NLU analytics instance with default configuration
  */
-export function createNLUAnalytics(
-	config?: Partial<AnalyticsConfig>,
-): NLUAnalytics {
+export function createNLUAnalytics(config?: Partial<AnalyticsConfig>): NLUAnalytics {
 	return new NLUAnalytics(config);
 }
 

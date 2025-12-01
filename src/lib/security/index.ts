@@ -7,15 +7,9 @@
 
 import type { BiometricAuthService, BiometricConfig } from './biometricAuth';
 import { createBiometricAuthService } from './biometricAuth';
-import type {
-	DeviceFingerprintingService,
-	FingerprintConfig,
-} from './deviceFingerprinting';
+import type { DeviceFingerprintingService, FingerprintConfig } from './deviceFingerprinting';
 import { createDeviceFingerprintingService } from './deviceFingerprinting';
-import type {
-	FraudDetectionConfig,
-	FraudDetectionService,
-} from './fraudDetection';
+import type { FraudDetectionConfig, FraudDetectionService } from './fraudDetection';
 import { createFraudDetectionService } from './fraudDetection';
 import type { PushConfig, PushProvider } from './pushProvider';
 import { createPushProvider } from './pushProvider';
@@ -125,8 +119,7 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 		config: {
 			vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
 			vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
-			vapidSubject:
-				process.env.VAPID_SUBJECT || 'mailto:security@aegispay.com.br',
+			vapidSubject: process.env.VAPID_SUBJECT || 'mailto:security@aegispay.com.br',
 			gcmApiKey: process.env.GCM_API_KEY,
 			ttl: 3600, // 1 hour
 			urgency: 'high',
@@ -151,10 +144,7 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 export async function createSecuritySystem(
 	config?: Partial<SecurityConfig>,
 ): Promise<SecuritySystem> {
-	const finalConfig = mergeSecurityConfig(
-		DEFAULT_SECURITY_CONFIG,
-		config || {},
-	);
+	const finalConfig = mergeSecurityConfig(DEFAULT_SECURITY_CONFIG, config || {});
 
 	validateSecurityConfig(finalConfig);
 
@@ -279,10 +269,7 @@ function validateSecurityConfig(config: SecurityConfig): void {
 	if (config.biometric.maxPinAttempts && config.biometric.maxPinAttempts < 3) {
 		errors.push('Max PIN attempts should be at least 3 for security');
 	}
-	if (
-		config.biometric.pinLockoutDuration &&
-		config.biometric.pinLockoutDuration < 5 * 60 * 1000
-	) {
+	if (config.biometric.pinLockoutDuration && config.biometric.pinLockoutDuration < 5 * 60 * 1000) {
 		errors.push('PIN lockout duration should be at least 5 minutes');
 	}
 
@@ -290,9 +277,7 @@ function validateSecurityConfig(config: SecurityConfig): void {
 		const newline = '\n';
 		const details = errors.join(newline);
 
-		throw new Error(
-			`Security configuration validation failed:${newline}${details}`,
-		);
+		throw new Error(`Security configuration validation failed:${newline}${details}`);
 	}
 }
 
@@ -318,9 +303,7 @@ async function initializeSecurityProviders(config: SecurityConfig): Promise<{
 	}
 
 	if (config.fraudDetection.enabled) {
-		providers.fraudDetection = createFraudDetectionService(
-			config.fraudDetection.config,
-		);
+		providers.fraudDetection = createFraudDetectionService(config.fraudDetection.config);
 	}
 
 	if (config.deviceFingerprinting.enabled) {
@@ -439,10 +422,7 @@ export class SecurityMonitor {
 	/**
 	 * Trigger security alert
 	 */
-	private triggerAlert(
-		_alertType: string,
-		_metadata: Record<string, unknown>,
-	): void {
+	private triggerAlert(_alertType: string, _metadata: Record<string, unknown>): void {
 		// In production, this would send alerts to:
 		// - Security team
 		// - Admin dashboard

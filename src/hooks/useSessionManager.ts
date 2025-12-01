@@ -4,9 +4,7 @@ import type { SessionState } from '@/lib/session/sessionManager';
 import { sessionManager } from '@/lib/session/sessionManager';
 
 export const useSessionManager = () => {
-	const [sessionState, setSessionState] = useState<SessionState>(() =>
-		sessionManager.getState(),
-	);
+	const [sessionState, setSessionState] = useState<SessionState>(() => sessionManager.getState());
 	const [isInitialized, setIsInitialized] = useState(false);
 
 	useEffect(() => {

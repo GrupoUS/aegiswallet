@@ -75,16 +75,14 @@ describe('TextToSpeechService', () => {
 			pending: false,
 			removeEventListener: vi.fn(),
 			resume: vi.fn(),
-			speak: vi
-				.fn()
-				.mockImplementation(async (utterance: { onend?: () => void }) => {
-					// Automatically trigger onend for success tests using async utility
-					const { waitForMs } = await import('@/test/utils/async-test-utils');
-					await waitForMs(10);
-					if (utterance.onend) {
-						utterance.onend();
-					}
-				}),
+			speak: vi.fn().mockImplementation(async (utterance: { onend?: () => void }) => {
+				// Automatically trigger onend for success tests using async utility
+				const { waitForMs } = await import('@/test/utils/async-test-utils');
+				await waitForMs(10);
+				if (utterance.onend) {
+					utterance.onend();
+				}
+			}),
 			speaking: false,
 		};
 

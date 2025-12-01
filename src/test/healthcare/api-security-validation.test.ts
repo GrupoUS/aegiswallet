@@ -13,16 +13,7 @@
  * - CORS and security headers
  */
 
-import {
-	afterAll,
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TestUtils } from './test-utils';
 import { ensureTestUtils } from './test-utils';
@@ -106,9 +97,7 @@ const mockLocalStorage = {
 			key.includes('token') || key.includes('auth') || key.includes('patient')
 				? `encrypted:${btoa(value)}`
 				: value;
-		const calls = (
-			mockLocalStorage.setItem as unknown as { mock?: { calls: unknown[][] } }
-		).mock;
+		const calls = (mockLocalStorage.setItem as unknown as { mock?: { calls: unknown[][] } }).mock;
 		if (calls?.calls?.length) {
 			calls.calls[calls.calls.length - 1][1] = storedValue;
 		}
@@ -146,10 +135,7 @@ const ensureDom = async () => {
 			// ignore if not configurable
 		}
 	}
-	if (
-		typeof global.HTMLCanvasElement === 'undefined' &&
-		typeof window !== 'undefined'
-	) {
+	if (typeof global.HTMLCanvasElement === 'undefined' && typeof window !== 'undefined') {
 		global.HTMLCanvasElement = (window as typeof globalThis).HTMLCanvasElement;
 	}
 	await import('../setup-dom');
@@ -159,9 +145,7 @@ const ensureDom = async () => {
 // Initialize DOM and imports in a setup function
 const setupTestEnvironment = async () => {
 	await ensureDom();
-	({ render, screen, waitFor, cleanup } = await import(
-		'@testing-library/react'
-	));
+	({ render, screen, waitFor, cleanup } = await import('@testing-library/react'));
 	userEvent = (await import('@testing-library/user-event')).default;
 	React = await import('react');
 	afterEach(() => cleanup());
@@ -174,14 +158,11 @@ beforeAll(() => {
 	if (typeof vi.useFakeTimers === 'function') {
 		vi.useFakeTimers();
 	}
-	const setSystemTime = (vi as { setSystemTime?: (date: Date) => void })
-		.setSystemTime;
+	const setSystemTime = (vi as { setSystemTime?: (date: Date) => void }).setSystemTime;
 	if (typeof setSystemTime === 'function') {
 		setSystemTime(new Date('2025-01-15T12:00:00Z'));
 	} else {
-		vi.spyOn(Date, 'now').mockReturnValue(
-			new Date('2025-01-15T12:00:00Z').valueOf(),
-		);
+		vi.spyOn(Date, 'now').mockReturnValue(new Date('2025-01-15T12:00:00Z').valueOf());
 	}
 });
 
@@ -220,8 +201,7 @@ const APISecurityValidation = () => {
 	const validateAuthentication = async () => {
 		try {
 			const _testUtils = global.testUtils as TestUtils;
-			const authResult =
-				await _testUtils.validateMockAuthentication(apiTestData);
+			const authResult = await _testUtils.validateMockAuthentication(apiTestData);
 
 			if (authResult?.success ?? authResult?.isAuthenticated) {
 				setSecurityMetadata((prev) => ({
@@ -260,8 +240,7 @@ const APISecurityValidation = () => {
 			];
 
 			const testUtils = global.testUtils as TestUtils;
-			const rateLimitResult =
-				await testUtils.checkMockRateLimit(rateLimitTests);
+			const rateLimitResult = await testUtils.checkMockRateLimit(rateLimitTests);
 
 			if (typeof rateLimitResult?.remaining === 'number') {
 				setSecurityMetadata((prev) => ({
@@ -388,9 +367,7 @@ const APISecurityValidation = () => {
 		};
 
 		const corsValid =
-			corsConfig.allowedOrigins.every((origin) =>
-				origin.startsWith('https://'),
-			) &&
+			corsConfig.allowedOrigins.every((origin) => origin.startsWith('https://')) &&
 			corsConfig.allowedMethods.length > 0 &&
 			corsConfig.credentials;
 
@@ -429,7 +406,7 @@ const APISecurityValidation = () => {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!apiTestData.email || !apiTestData.password) {
+		if (!(apiTestData.email && apiTestData.password)) {
 			alert('Email e senha são obrigatórios.');
 			return;
 		}
@@ -438,13 +415,10 @@ const APISecurityValidation = () => {
 		const newStatus = await runSecurityValidation();
 
 		// Check if all validations pass
-		const allCompliant = Object.values(newStatus).every(
-			(status) => status === 'compliant',
-		);
+		const allCompliant = Object.values(newStatus).every((status) => status === 'compliant');
 
 		if (!allCompliant) {
-			const errorMessage =
-				'Validações de segurança falharam. Não é possível prosseguir.';
+			const errorMessage = 'Validações de segurança falharam. Não é possível prosseguir.';
 			setValidationError(errorMessage);
 			alert(errorMessage);
 			return;
@@ -454,231 +428,179 @@ const APISecurityValidation = () => {
 		// Make secure API call
 	};
 
-	return React.createElement(
-		'div',
-		{ 'data-testid': 'api-security-validation' },
-		[
-			React.createElement(
-				'h1',
-				{ key: 'title' },
-				'Validação de Segurança de API - AegisWallet',
-			),
+	return React.createElement('div', { 'data-testid': 'api-security-validation' }, [
+		React.createElement('h1', { key: 'title' }, 'Validação de Segurança de API - AegisWallet'),
 
-			React.createElement(
-				'form',
-				{ key: 'security-form', onSubmit: handleSubmit },
-				[
-					React.createElement(
-						'h2',
-						{ key: 'form-title' },
-						'Teste de Segurança de API',
-					),
+		React.createElement('form', { key: 'security-form', onSubmit: handleSubmit }, [
+			React.createElement('h2', { key: 'form-title' }, 'Teste de Segurança de API'),
 
-					React.createElement('div', { key: 'auth-inputs' }, [
-						React.createElement('label', { key: 'email-label' }, 'Email:'),
-						React.createElement('input', {
-							'data-testid': 'email-input',
-							key: 'email-input',
-							onChange: (e) =>
-								setApiTestData({
-									...apiTestData,
-									email: (e.target as HTMLInputElement).value,
-								}),
-							placeholder: 'seu@email.com',
-							required: true,
-							type: 'email',
-							value: apiTestData.email,
+			React.createElement('div', { key: 'auth-inputs' }, [
+				React.createElement('label', { key: 'email-label' }, 'Email:'),
+				React.createElement('input', {
+					'data-testid': 'email-input',
+					key: 'email-input',
+					onChange: (e) =>
+						setApiTestData({
+							...apiTestData,
+							email: (e.target as HTMLInputElement).value,
 						}),
+					placeholder: 'seu@email.com',
+					required: true,
+					type: 'email',
+					value: apiTestData.email,
+				}),
 
-						React.createElement('label', { key: 'password-label' }, 'Senha:'),
-						React.createElement('input', {
-							'data-testid': 'password-input',
-							key: 'password-input',
-							onChange: (e) =>
-								setApiTestData({
-									...apiTestData,
-									password: (e.target as HTMLInputElement).value,
-								}),
-							placeholder: 'Senha segura',
-							required: true,
-							type: 'password',
-							value: apiTestData.password,
+				React.createElement('label', { key: 'password-label' }, 'Senha:'),
+				React.createElement('input', {
+					'data-testid': 'password-input',
+					key: 'password-input',
+					onChange: (e) =>
+						setApiTestData({
+							...apiTestData,
+							password: (e.target as HTMLInputElement).value,
 						}),
+					placeholder: 'Senha segura',
+					required: true,
+					type: 'password',
+					value: apiTestData.password,
+				}),
+			]),
+
+			React.createElement('div', { key: 'test-inputs' }, [
+				React.createElement('label', { key: 'patient-id-label' }, 'ID do Paciente (para teste):'),
+				React.createElement('input', {
+					'data-testid': 'patient-id-input',
+					key: 'patient-id-input',
+					onChange: (e) =>
+						setApiTestData({
+							...apiTestData,
+							patientId: (e.target as HTMLInputElement).value,
+						}),
+					placeholder: 'PAT-001',
+					type: 'text',
+					value: apiTestData.patientId,
+				}),
+
+				React.createElement('label', { key: 'amount-label' }, 'Valor (para teste):'),
+				React.createElement('input', {
+					'data-testid': 'amount-input',
+					key: 'amount-input',
+					onChange: (e) =>
+						setApiTestData({
+							...apiTestData,
+							amount: (e.target as HTMLInputElement).value,
+						}),
+					placeholder: '100.00',
+					type: 'number',
+					value: apiTestData.amount,
+				}),
+
+				React.createElement('label', { key: 'notes-label' }, 'Notas (para teste XSS):'),
+				React.createElement('textarea', {
+					'data-testid': 'notes-input',
+					key: 'notes-input',
+					onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+						setApiTestData({ ...apiTestData, notes: e.target.value }),
+					placeholder: 'Notas do paciente',
+					rows: 3,
+					value: apiTestData.notes,
+				}),
+			]),
+
+			// Security Status
+			React.createElement('div', { 'data-testid': 'security-status', key: 'security-status' }, [
+				React.createElement('h3', { key: 'status-title' }, 'Status de Segurança da API'),
+				...Object.entries(securityStatus).map(([measure, status]) =>
+					React.createElement('div', { 'data-testid': `status-${measure}`, key: measure }, [
+						React.createElement('span', { key: 'measure' }, `${measure}: `),
+						React.createElement(
+							'span',
+							{
+								key: 'status',
+								style: {
+									color:
+										status === 'compliant'
+											? 'green'
+											: status === 'non-compliant'
+												? 'red'
+												: 'orange',
+								},
+							},
+							status,
+						),
 					]),
-
-					React.createElement('div', { key: 'test-inputs' }, [
-						React.createElement(
-							'label',
-							{ key: 'patient-id-label' },
-							'ID do Paciente (para teste):',
-						),
-						React.createElement('input', {
-							'data-testid': 'patient-id-input',
-							key: 'patient-id-input',
-							onChange: (e) =>
-								setApiTestData({
-									...apiTestData,
-									patientId: (e.target as HTMLInputElement).value,
-								}),
-							placeholder: 'PAT-001',
-							type: 'text',
-							value: apiTestData.patientId,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'amount-label' },
-							'Valor (para teste):',
-						),
-						React.createElement('input', {
-							'data-testid': 'amount-input',
-							key: 'amount-input',
-							onChange: (e) =>
-								setApiTestData({
-									...apiTestData,
-									amount: (e.target as HTMLInputElement).value,
-								}),
-							placeholder: '100.00',
-							type: 'number',
-							value: apiTestData.amount,
-						}),
-
-						React.createElement(
-							'label',
-							{ key: 'notes-label' },
-							'Notas (para teste XSS):',
-						),
-						React.createElement('textarea', {
-							'data-testid': 'notes-input',
-							key: 'notes-input',
-							onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-								setApiTestData({ ...apiTestData, notes: e.target.value }),
-							placeholder: 'Notas do paciente',
-							rows: 3,
-							value: apiTestData.notes,
-						}),
-					]),
-
-					// Security Status
+				),
+				validationError &&
 					React.createElement(
 						'div',
-						{ 'data-testid': 'security-status', key: 'security-status' },
-						[
-							React.createElement(
-								'h3',
-								{ key: 'status-title' },
-								'Status de Segurança da API',
-							),
-							...Object.entries(securityStatus).map(([measure, status]) =>
-								React.createElement(
-									'div',
-									{ 'data-testid': `status-${measure}`, key: measure },
-									[
-										React.createElement(
-											'span',
-											{ key: 'measure' },
-											`${measure}: `,
-										),
-										React.createElement(
-											'span',
-											{
-												key: 'status',
-												style: {
-													color:
-														status === 'compliant'
-															? 'green'
-															: status === 'non-compliant'
-																? 'red'
-																: 'orange',
-												},
-											},
-											status,
-										),
-									],
-								),
-							),
-							validationError &&
-								React.createElement(
-									'div',
-									{
-										'data-testid': 'validation-error',
-										key: 'validation-error',
-										style: { color: 'red' },
-									},
-									validationError,
-								),
-						],
+						{
+							'data-testid': 'validation-error',
+							key: 'validation-error',
+							style: { color: 'red' },
+						},
+						validationError,
 					),
+			]),
 
-					// Security Metadata
+			// Security Metadata
+			React.createElement('div', { 'data-testid': 'security-metadata', key: 'security-metadata' }, [
+				React.createElement('h3', { key: 'metadata-title' }, 'Metadados de Segurança'),
+				securityMetadata.csrfToken &&
 					React.createElement(
 						'div',
-						{ 'data-testid': 'security-metadata', key: 'security-metadata' },
-						[
-							React.createElement(
-								'h3',
-								{ key: 'metadata-title' },
-								'Metadados de Segurança',
-							),
-							securityMetadata.csrfToken &&
-								React.createElement(
-									'div',
-									{ key: 'csrf-token' },
-									`Token CSRF: ${securityMetadata.csrfToken.slice(0, 8)}...`,
-								),
-							securityMetadata.encryptionKey &&
-								React.createElement(
-									'div',
-									{ key: 'encryption-key' },
-									`Chave de Criptografia: ${securityMetadata.encryptionKey.slice(0, 8)}...`,
-								),
-							React.createElement(
-								'div',
-								{ key: 'rate-limit' },
-								`Limite de Taxa Restante: ${securityMetadata.rateLimitRemaining}`,
-							),
-							securityMetadata.sessionExpiry &&
-								React.createElement(
-									'div',
-									{ key: 'session-expiry' },
-									`Expiração da Sessão: ${securityMetadata.sessionExpiry}`,
-								),
-							securityMetadata.lastValidated &&
-								React.createElement(
-									'div',
-									{ key: 'last-validated' },
-									`Última Validação: ${securityMetadata.lastValidated}`,
-								),
-						],
+						{ key: 'csrf-token' },
+						`Token CSRF: ${securityMetadata.csrfToken.slice(0, 8)}...`,
 					),
+				securityMetadata.encryptionKey &&
+					React.createElement(
+						'div',
+						{ key: 'encryption-key' },
+						`Chave de Criptografia: ${securityMetadata.encryptionKey.slice(0, 8)}...`,
+					),
+				React.createElement(
+					'div',
+					{ key: 'rate-limit' },
+					`Limite de Taxa Restante: ${securityMetadata.rateLimitRemaining}`,
+				),
+				securityMetadata.sessionExpiry &&
+					React.createElement(
+						'div',
+						{ key: 'session-expiry' },
+						`Expiração da Sessão: ${securityMetadata.sessionExpiry}`,
+					),
+				securityMetadata.lastValidated &&
+					React.createElement(
+						'div',
+						{ key: 'last-validated' },
+						`Última Validação: ${securityMetadata.lastValidated}`,
+					),
+			]),
 
-					// Actions
-					React.createElement('div', { key: 'actions' }, [
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'validate-security',
-								key: 'validate',
-								onClick: runSecurityValidation,
-								type: 'button',
-							},
-							'Validar Segurança da API',
-						),
+			// Actions
+			React.createElement('div', { key: 'actions' }, [
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'validate-security',
+						key: 'validate',
+						onClick: runSecurityValidation,
+						type: 'button',
+					},
+					'Validar Segurança da API',
+				),
 
-						React.createElement(
-							'button',
-							{
-								'data-testid': 'test-secure-api',
-								key: 'submit',
-								type: 'submit',
-							},
-							'Testar Chamada Segura da API',
-						),
-					]),
-				],
-			),
-		],
-	);
+				React.createElement(
+					'button',
+					{
+						'data-testid': 'test-secure-api',
+						key: 'submit',
+						type: 'submit',
+					},
+					'Testar Chamada Segura da API',
+				),
+			]),
+		]),
+	]);
 };
 
 describe('API Security, Authentication, and Client-Side Data Protection Validation', () => {
@@ -705,30 +627,22 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 	describe('Authentication Security', () => {
 		// TODO: Refactor these tests after migration from tRPC to Hono RPC
 		// The component's async logic needs to be updated to work with the new API client
-		it.skip('should validate user authentication mechanisms', async () => {
+		it('should validate user authentication mechanisms', async () => {
 			const testUtils = global.testUtils as TestUtils;
-			const mockAuth = vi
-				.spyOn(testUtils, 'validateMockAuthentication')
-				.mockResolvedValue({
-					success: true,
-					user: {
-						email: 'test@example.com',
-						id: 'user-001',
-						role: 'patient',
-						sessionToken: 'session-token-123',
-					},
-				});
+			const mockAuth = vi.spyOn(testUtils, 'validateMockAuthentication').mockResolvedValue({
+				success: true,
+				user: {
+					email: 'test@example.com',
+					id: 'user-001',
+					role: 'patient',
+					sessionToken: 'session-token-123',
+				},
+			});
 
 			render(React.createElement(APISecurityValidation));
 
-			await userEvent.type(
-				screen.getByTestId('email-input'),
-				'test@example.com',
-			);
-			await userEvent.type(
-				screen.getByTestId('password-input'),
-				'SecurePassword123!',
-			);
+			await userEvent.type(screen.getByTestId('email-input'), 'test@example.com');
+			await userEvent.type(screen.getByTestId('password-input'), 'SecurePassword123!');
 
 			await userEvent.click(screen.getByTestId('validate-security'));
 
@@ -745,25 +659,17 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 		});
 
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should handle authentication failures securely', async () => {
+		it('should handle authentication failures securely', async () => {
 			const testUtils = global.testUtils as TestUtils;
-			const mockAuth = vi
-				.spyOn(testUtils, 'validateMockAuthentication')
-				.mockResolvedValue({
-					error: 'Invalid credentials',
-					success: false,
-				});
+			const mockAuth = vi.spyOn(testUtils, 'validateMockAuthentication').mockResolvedValue({
+				error: 'Invalid credentials',
+				success: false,
+			});
 
 			render(React.createElement(APISecurityValidation));
 
-			await userEvent.type(
-				screen.getByTestId('email-input'),
-				'invalid@example.com',
-			);
-			await userEvent.type(
-				screen.getByTestId('password-input'),
-				'wrongpassword',
-			);
+			await userEvent.type(screen.getByTestId('email-input'), 'invalid@example.com');
+			await userEvent.type(screen.getByTestId('password-input'), 'wrongpassword');
 
 			await userEvent.click(screen.getByTestId('validate-security'));
 
@@ -796,16 +702,14 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('Authorization and Access Control', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate role-based access control', async () => {
+		it('should validate role-based access control', async () => {
 			render(React.createElement(APISecurityValidation));
 
 			await userEvent.click(screen.getByTestId('validate-security'));
 
 			await waitFor(() => {
 				const authorizationStatus = screen.getByTestId('status-authorization');
-				expect(authorizationStatus).toHaveTextContent(
-					'authorization: compliant',
-				);
+				expect(authorizationStatus).toHaveTextContent('authorization: compliant');
 			});
 		});
 
@@ -813,11 +717,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 			const rolePermissions = {
 				admin: ['read_all_data', 'write_all_data', 'system_config'],
 				billing: ['read_payment_data', 'process_payments', 'generate_invoices'],
-				doctor: [
-					'read_patient_data',
-					'write_medical_records',
-					'read_appointments',
-				],
+				doctor: ['read_patient_data', 'write_medical_records', 'read_appointments'],
 				patient: ['read_own_data', 'write_own_data', 'delete_own_data'],
 			};
 
@@ -857,7 +757,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('Rate Limiting and Abuse Prevention', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should implement API rate limiting', async () => {
+		it('should implement API rate limiting', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockRateLimit = vi
 				.spyOn(testUtils, 'checkMockRateLimit')
@@ -880,15 +780,13 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 		});
 
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should handle rate limit exceeded scenarios', async () => {
+		it('should handle rate limit exceeded scenarios', async () => {
 			const testUtils = global.testUtils as TestUtils;
-			const mockRateLimit = vi
-				.spyOn(testUtils, 'checkMockRateLimit')
-				.mockResolvedValue({
-					allowed: false,
-					remaining: 0,
-					resetTime: Date.now() + 900000,
-				});
+			const mockRateLimit = vi.spyOn(testUtils, 'checkMockRateLimit').mockResolvedValue({
+				allowed: false,
+				remaining: 0,
+				resetTime: Date.now() + 900000,
+			});
 
 			render(React.createElement(APISecurityValidation));
 
@@ -896,9 +794,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 			await waitFor(() => {
 				const rateLimitStatus = screen.getByTestId('status-rateLimiting');
-				expect(rateLimitStatus).toHaveTextContent(
-					'rateLimiting: non-compliant',
-				);
+				expect(rateLimitStatus).toHaveTextContent('rateLimiting: non-compliant');
 			});
 
 			mockRateLimit.mockRestore();
@@ -928,7 +824,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('Input Validation and Sanitization', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate and sanitize user inputs', async () => {
+		it('should validate and sanitize user inputs', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockValidate = vi
 				.spyOn(testUtils, 'validateMockInput')
@@ -947,32 +843,19 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 			render(React.createElement(APISecurityValidation));
 
 			// Test XSS prevention
-			await userEvent.type(
-				screen.getByTestId('notes-input'),
-				'<script>alert("xss")</script>',
-			);
-			await userEvent.type(
-				screen.getByTestId('email-input'),
-				'test@example.com',
-			);
+			await userEvent.type(screen.getByTestId('notes-input'), '<script>alert("xss")</script>');
+			await userEvent.type(screen.getByTestId('email-input'), 'test@example.com');
 
 			await userEvent.click(screen.getByTestId('validate-security'));
 
 			await waitFor(() => {
-				expect(mockValidate).toHaveBeenCalledWith(
-					'<script>alert("xss")</script>',
-					'sanitization',
-				);
+				expect(mockValidate).toHaveBeenCalledWith('<script>alert("xss")</script>', 'sanitization');
 				expect(mockValidate).toHaveBeenCalledWith('test@example.com', 'email');
 			});
 
 			await waitFor(() => {
-				const inputValidationStatus = screen.getByTestId(
-					'status-inputValidation',
-				);
-				expect(inputValidationStatus).toHaveTextContent(
-					'inputValidation: compliant',
-				);
+				const inputValidationStatus = screen.getByTestId('status-inputValidation');
+				expect(inputValidationStatus).toHaveTextContent('inputValidation: compliant');
 			});
 
 			mockValidate.mockRestore();
@@ -1028,14 +911,12 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('CSRF Protection', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should generate and validate CSRF tokens', async () => {
+		it('should generate and validate CSRF tokens', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockGenerateCSRF = vi
 				.spyOn(testUtils, 'generateMockCSRFToken')
 				.mockReturnValue('csrf-token-abc123');
-			const mockValidateCSRF = vi
-				.spyOn(testUtils, 'validateMockCSRFToken')
-				.mockResolvedValue(true);
+			const mockValidateCSRF = vi.spyOn(testUtils, 'validateMockCSRFToken').mockResolvedValue(true);
 
 			render(React.createElement(APISecurityValidation));
 
@@ -1056,7 +937,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 		});
 
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should reject invalid CSRF tokens', async () => {
+		it('should reject invalid CSRF tokens', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockValidateCSRF = vi
 				.spyOn(testUtils, 'validateMockCSRFToken')
@@ -1077,7 +958,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('HTTPS and Secure Communication', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate HTTPS connection requirements', async () => {
+		it('should validate HTTPS connection requirements', async () => {
 			// Mock secure context
 			render(React.createElement(APISecurityValidation));
 
@@ -1130,7 +1011,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('Client-Side Data Protection', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should implement client-side data encryption', async () => {
+		it('should implement client-side data encryption', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockEncrypt = vi
 				.spyOn(testUtils, 'encryptMockClientData')
@@ -1152,12 +1033,8 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 			});
 
 			await waitFor(() => {
-				const clientEncryptionStatus = screen.getByTestId(
-					'status-clientEncryption',
-				);
-				expect(clientEncryptionStatus).toHaveTextContent(
-					'clientEncryption: compliant',
-				);
+				const clientEncryptionStatus = screen.getByTestId('status-clientEncryption');
+				expect(clientEncryptionStatus).toHaveTextContent('clientEncryption: compliant');
 			});
 
 			mockEncrypt.mockRestore();
@@ -1205,7 +1082,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('CORS and Security Headers', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate CORS configuration', async () => {
+		it('should validate CORS configuration', async () => {
 			render(React.createElement(APISecurityValidation));
 
 			await userEvent.click(screen.getByTestId('validate-security'));
@@ -1251,7 +1128,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 	describe('Integration Testing', () => {
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should validate complete API security workflow', async () => {
+		it('should validate complete API security workflow', async () => {
 			const testUtils = global.testUtils as TestUtils;
 			const mockCreateAuditLog = vi.spyOn(testUtils, 'createMockAuditLog');
 
@@ -1266,33 +1143,17 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 			});
 			vi.spyOn(testUtils, 'generateMockCSRFToken').mockReturnValue('csrf-123');
 			vi.spyOn(testUtils, 'validateMockCSRFToken').mockResolvedValue(true);
-			vi.spyOn(testUtils, 'encryptMockClientData').mockResolvedValue(
-				'encrypted-data',
-			);
-			vi.spyOn(testUtils, 'generateMockSecureKey').mockResolvedValue(
-				'secure-key',
-			);
+			vi.spyOn(testUtils, 'encryptMockClientData').mockResolvedValue('encrypted-data');
+			vi.spyOn(testUtils, 'generateMockSecureKey').mockResolvedValue('secure-key');
 
 			render(React.createElement(APISecurityValidation));
 
 			// Fill test data
-			await userEvent.type(
-				screen.getByTestId('email-input'),
-				'joao.silva@example.com',
-			);
-			await userEvent.type(
-				screen.getByTestId('password-input'),
-				'SecurePassword123!',
-			);
-			await userEvent.type(
-				screen.getByTestId('patient-id-input'),
-				'PAT-2024-001',
-			);
+			await userEvent.type(screen.getByTestId('email-input'), 'joao.silva@example.com');
+			await userEvent.type(screen.getByTestId('password-input'), 'SecurePassword123!');
+			await userEvent.type(screen.getByTestId('patient-id-input'), 'PAT-2024-001');
 			await userEvent.type(screen.getByTestId('amount-input'), '150.50');
-			await userEvent.type(
-				screen.getByTestId('notes-input'),
-				'Consulta de rotina',
-			);
+			await userEvent.type(screen.getByTestId('notes-input'), 'Consulta de rotina');
 
 			await userEvent.click(screen.getByTestId('validate-security'));
 
@@ -1335,7 +1196,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 		});
 
 		// TODO: Refactor after tRPC to Hono migration
-		it.skip('should prevent API calls when security validation fails', async () => {
+		it('should prevent API calls when security validation fails', async () => {
 			// Mock security validation to fail
 			const testUtils = global.testUtils as TestUtils;
 			vi.spyOn(testUtils, 'validateMockAuthentication').mockResolvedValue({
@@ -1345,21 +1206,13 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 
 			render(React.createElement(APISecurityValidation));
 
-			await userEvent.type(
-				screen.getByTestId('email-input'),
-				'invalid@example.com',
-			);
-			await userEvent.type(
-				screen.getByTestId('password-input'),
-				'wrongpassword',
-			);
+			await userEvent.type(screen.getByTestId('email-input'), 'invalid@example.com');
+			await userEvent.type(screen.getByTestId('password-input'), 'wrongpassword');
 
 			await userEvent.click(screen.getByTestId('test-secure-api'));
 
 			expect(
-				screen.getByText(
-					'Validações de segurança falharam. Não é possível prosseguir.',
-				),
+				screen.getByText('Validações de segurança falharam. Não é possível prosseguir.'),
 			).toBeInTheDocument();
 		});
 	});

@@ -8,18 +8,12 @@
  */
 
 import { DatabaseAutoRepair } from './database-auto-repair';
-import {
-	DatabaseHealthChecker,
-	type HealthCheckResult,
-} from './database-health-check';
+import { DatabaseHealthChecker, type HealthCheckResult } from './database-health-check';
 import {
 	DatabasePerformanceOptimizer,
 	type PerformanceAnalysisResult,
 } from './database-performance-optimizer';
-import {
-	type LGPDComplianceResult,
-	LGPDComplianceValidator,
-} from './lgpd-compliance-validator';
+import { type LGPDComplianceResult, LGPDComplianceValidator } from './lgpd-compliance-validator';
 
 interface ToolkitOptions {
 	command: 'health' | 'repair' | 'optimize' | 'compliance' | 'full' | 'quick';
@@ -109,13 +103,12 @@ class DatabaseSpecialistToolkit {
 
 		// Then run auto-repair
 		await this.autoRepair.runAutoRepair({
-			dryRun: options.dryRun || false,
+			dryRun: options.dryRun,
 			interactive: options.interactive !== false,
 		});
 
 		// Run post-repair health check
-		const postRepairHealth =
-			await this.healthChecker.runComprehensiveHealthCheck();
+		const postRepairHealth = await this.healthChecker.runComprehensiveHealthCheck();
 
 		return {
 			health: healthResult,
@@ -153,8 +146,7 @@ class DatabaseSpecialistToolkit {
 
 		// Step 2: Performance Analysis
 		console.log('\n⚡ Step 2/4: Performance Analysis...');
-		results.performance =
-			await this.performanceOptimizer.runPerformanceAnalysis();
+		results.performance = await this.performanceOptimizer.runPerformanceAnalysis();
 
 		// Step 3: LGPD Compliance
 		console.log('\n🇧🇷 Step 3/4: LGPD Compliance...');
@@ -169,8 +161,7 @@ class DatabaseSpecialistToolkit {
 			});
 
 			// Post-repair health check
-			const postRepairHealth =
-				await this.healthChecker.runComprehensiveHealthCheck();
+			const postRepairHealth = await this.healthChecker.runComprehensiveHealthCheck();
 			results.repair = {
 				preScore: results.health.score,
 				postScore: postRepairHealth.score,
@@ -257,6 +248,7 @@ class DatabaseSpecialistToolkit {
 		this.displayDetailedResults(results);
 	}
 
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex logic required for detailed results
 	private displayDetailedResults(results: any): void {
 		console.log(`\n${'='.repeat(60)}`);
 		console.log('📊 ANALYSIS RESULTS SUMMARY');
@@ -265,9 +257,7 @@ class DatabaseSpecialistToolkit {
 		// Health Results
 		if (results.health) {
 			const health = results.health;
-			console.log(
-				`\n🏥 DATABASE HEALTH: ${health.status.toUpperCase()} (${health.score}/100)`,
-			);
+			console.log(`\n🏥 DATABASE HEALTH: ${health.status.toUpperCase()} (${health.score}/100)`);
 
 			if (health.issues.length > 0) {
 				console.log(`⚠️  Issues Found: ${health.issues.length}`);
@@ -283,23 +273,13 @@ class DatabaseSpecialistToolkit {
 		// Performance Results
 		if (results.performance) {
 			const perf = results.performance;
-			console.log(
-				`\n⚡ PERFORMANCE: ${perf.status.toUpperCase()} (${perf.overallScore}/100)`,
-			);
-			console.log(
-				`   📊 Query Performance: ${perf.metrics.queryPerformance.score}/100`,
-			);
-			console.log(
-				`   📈 Index Efficiency: ${perf.metrics.indexEfficiency.score}/100`,
-			);
-			console.log(
-				`   🔗 Connection Health: ${perf.metrics.connectionHealth.score}/100`,
-			);
+			console.log(`\n⚡ PERFORMANCE: ${perf.status.toUpperCase()} (${perf.overallScore}/100)`);
+			console.log(`   📊 Query Performance: ${perf.metrics.queryPerformance.score}/100`);
+			console.log(`   📈 Index Efficiency: ${perf.metrics.indexEfficiency.score}/100`);
+			console.log(`   🔗 Connection Health: ${perf.metrics.connectionHealth.score}/100`);
 
 			if (perf.recommendations.length > 0) {
-				console.log(
-					`   💡 Top Recommendations: ${perf.recommendations.slice(0, 2).length}`,
-				);
+				console.log(`   💡 Top Recommendations: ${perf.recommendations.slice(0, 2).length}`);
 				perf.recommendations.slice(0, 2).forEach((rec: any, i: number) => {
 					console.log(`     ${i + 1}. ${rec.description}`);
 				});
@@ -313,16 +293,12 @@ class DatabaseSpecialistToolkit {
 				`\n🇧🇷 LGPD COMPLIANCE: ${compliance.status.toUpperCase()} (${compliance.overallScore}/100)`,
 			);
 
-			Object.entries(compliance.requirements).forEach(
-				([key, req]: [string, any]) => {
-					const name = key
-						.replace(/([A-Z])/g, ' $1')
-						.replace(/^./, (str) => str.toUpperCase());
-					const score = req.score;
-					const icon = score >= 90 ? '✅' : score >= 70 ? '⚠️' : '❌';
-					console.log(`   ${icon} ${name}: ${score}/100`);
-				},
-			);
+			Object.entries(compliance.requirements).forEach(([key, req]: [string, any]) => {
+				const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+				const score = req.score;
+				const icon = score >= 90 ? '✅' : score >= 70 ? '⚠️' : '❌';
+				console.log(`   ${icon} ${name}: ${score}/100`);
+			});
 		}
 
 		// Repair Results
@@ -353,9 +329,7 @@ class DatabaseSpecialistToolkit {
 		].filter((score) => score > 0);
 
 		if (scores.length > 0) {
-			const overallScore = Math.round(
-				scores.reduce((a, b) => a + b, 0) / scores.length,
-			);
+			const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 			const status =
 				overallScore >= 90
 					? 'EXCELLENT'
@@ -396,21 +370,15 @@ class DatabaseSpecialistToolkit {
 		if (results.performance?.brazilianOptimizations) {
 			const brazilian = results.performance.brazilianOptimizations;
 			if (!brazilian.pixTransactions.optimized) {
-				recommendations.push(
-					'💰 Optimize PIX transaction performance (<150ms target)',
-				);
+				recommendations.push('💰 Optimize PIX transaction performance (<150ms target)');
 			}
 			if (!brazilian.voiceQueries.optimized) {
-				recommendations.push(
-					'🎤 Improve voice query processing (<100ms target)',
-				);
+				recommendations.push('🎤 Improve voice query processing (<100ms target)');
 			}
 		}
 
 		if (recommendations.length === 0) {
-			recommendations.push(
-				'✅ Database is well-optimized - continue monitoring',
-			);
+			recommendations.push('✅ Database is well-optimized - continue monitoring');
 		}
 
 		recommendations.forEach((rec, i) => {
@@ -439,24 +407,18 @@ async function main() {
 	if (args.length === 0) {
 		console.log('🗄️  DATABASE SPECIALIST TOOLKIT');
 		console.log('');
-		console.log(
-			'Usage: bun scripts/database-specialist-toolkit.ts <command> [options]',
-		);
+		console.log('Usage: bun scripts/database-specialist-toolkit.ts <command> [options]');
 		console.log('');
 		console.log('Commands:');
 		console.log('  health     - Comprehensive database health check');
 		console.log('  repair     - Auto-detect and fix database issues');
 		console.log('  optimize   - Performance analysis and optimization');
 		console.log('  compliance - Brazilian LGPD compliance validation');
-		console.log(
-			'  full       - Complete analysis (health + performance + compliance + repair)',
-		);
+		console.log('  full       - Complete analysis (health + performance + compliance + repair)');
 		console.log('  quick      - Quick health check for monitoring');
 		console.log('');
 		console.log('Options:');
-		console.log(
-			'  --dry-run     - Show what would be done without making changes',
-		);
+		console.log('  --dry-run     - Show what would be done without making changes');
 		console.log('  --auto        - Run automatically without prompts');
 		console.log('  --no-interactive - Run without user interaction');
 		console.log('  --output json - Output results in JSON format');
@@ -464,13 +426,9 @@ async function main() {
 		console.log('');
 		console.log('Examples:');
 		console.log('  bun scripts/database-specialist-toolkit.ts health');
-		console.log(
-			'  bun scripts/database-specialist-toolkit.ts repair --dry-run',
-		);
+		console.log('  bun scripts/database-specialist-toolkit.ts repair --dry-run');
 		console.log('  bun scripts/database-specialist-toolkit.ts full --auto');
-		console.log(
-			'  bun scripts/database-specialist-toolkit.ts optimize --output json',
-		);
+		console.log('  bun scripts/database-specialist-toolkit.ts optimize --output json');
 		process.exit(1);
 	}
 
@@ -478,13 +436,9 @@ async function main() {
 	const options: ToolkitOptions = {
 		command,
 		dryRun: args.includes('--dry-run'),
-		interactive: !args.includes('--no-interactive') && !args.includes('--auto'),
+		interactive: !(args.includes('--no-interactive') || args.includes('--auto')),
 		auto: args.includes('--auto'),
-		output: args.includes('--json')
-			? 'json'
-			: args.includes('--both')
-				? 'both'
-				: 'console',
+		output: args.includes('--json') ? 'json' : args.includes('--both') ? 'both' : 'console',
 	};
 
 	const toolkit = new DatabaseSpecialistToolkit();

@@ -113,10 +113,7 @@ export class SecureStorageManager {
 			} else {
 				// Generate new encryption key
 				this.encryptionKey = await this.generateEncryptionKey();
-				localStorage.setItem(
-					`${this.config.storageKey}_key`,
-					this.encryptionKey,
-				);
+				localStorage.setItem(`${this.config.storageKey}_key`, this.encryptionKey);
 			}
 		} catch (_error) {
 			this.config.encryptionEnabled = false;
@@ -173,7 +170,7 @@ export class SecureStorageManager {
 	 * Secure AES-256-GCM encryption for sensitive data
 	 */
 	private async encrypt(data: string): Promise<string> {
-		if (!this.config.encryptionEnabled || !this.encryptionKey) {
+		if (!(this.config.encryptionEnabled && this.encryptionKey)) {
 			return btoa(data); // Base64 fallback for non-secure mode
 		}
 
@@ -185,7 +182,7 @@ export class SecureStorageManager {
 		try {
 			// Convert hex key to Uint8Array
 			const keyBytes = new Uint8Array(
-				this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || [],
+				this.encryptionKey.match(/.{2}/g)?.map((b) => Number.parseInt(b, 16)) || [],
 			);
 
 			// Import the key
@@ -226,7 +223,7 @@ export class SecureStorageManager {
 	 * Secure AES-256-GCM decryption for sensitive data
 	 */
 	private async decrypt(encryptedData: string): Promise<string> {
-		if (!this.config.encryptionEnabled || !this.encryptionKey) {
+		if (!(this.config.encryptionEnabled && this.encryptionKey)) {
 			return atob(encryptedData); // Base64 fallback for non-secure mode
 		}
 
@@ -238,7 +235,7 @@ export class SecureStorageManager {
 		try {
 			// Convert hex key to Uint8Array
 			const keyBytes = new Uint8Array(
-				this.encryptionKey.match(/.{2}/g)?.map((b) => parseInt(b, 16)) || [],
+				this.encryptionKey.match(/.{2}/g)?.map((b) => Number.parseInt(b, 16)) || [],
 			);
 
 			// Import the key
@@ -313,9 +310,7 @@ export class SecureStorageManager {
 		}
 
 		try {
-			const encryptedData = localStorage.getItem(
-				`${this.config.storageKey}_${key}`,
-			);
+			const encryptedData = localStorage.getItem(`${this.config.storageKey}_${key}`);
 
 			if (!encryptedData) {
 				return null;
@@ -379,10 +374,7 @@ export class SecureStorageManager {
 		}
 
 		try {
-			localStorage.setItem(
-				`${this.config.storageKey}_${key}_access`,
-				new Date().toISOString(),
-			);
+			localStorage.setItem(`${this.config.storageKey}_${key}_access`, new Date().toISOString());
 		} catch {
 			// Ignore errors
 		}
@@ -417,10 +409,7 @@ export class SecureStorageManager {
 			const now = Date.now();
 
 			keys.forEach((key) => {
-				if (
-					key.startsWith(`${this.config.storageKey}_`) &&
-					!key.endsWith('_access')
-				) {
+				if (key.startsWith(`${this.config.storageKey}_`) && !key.endsWith('_access')) {
 					const accessKey = `${key}_access`;
 
 					const accessTime = localStorage.getItem(accessKey);
@@ -468,9 +457,7 @@ export class SecureStorageManager {
 		if (this.storageAvailable) {
 			const keys = Object.keys(localStorage);
 			itemCount = keys.filter(
-				(key) =>
-					key.startsWith(`${this.config.storageKey}_`) &&
-					!key.endsWith('_access'),
+				(key) => key.startsWith(`${this.config.storageKey}_`) && !key.endsWith('_access'),
 			).length;
 		}
 

@@ -154,9 +154,7 @@ describe('Brazilian Financial Data Schema Alignment', () => {
 			expect(transaction.amount).toBe('-347.85');
 			expect(transaction.currency).toBe('BRL');
 			expect(transaction.transactionType).toBe('debit');
-			expect(transaction.merchantName).toBe(
-				'Carrefour Comércio e Indústria Ltda',
-			);
+			expect(transaction.merchantName).toBe('Carrefour Comércio e Indústria Ltda');
 		});
 
 		it('should validate transaction type structure', () => {

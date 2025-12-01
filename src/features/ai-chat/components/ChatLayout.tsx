@@ -55,9 +55,7 @@ export function ChatLayout({
 						</div>
 						<div>
 							<h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-							<p className="text-[10px] text-muted-foreground">
-								Powered by Aegis AI
-							</p>
+							<p className="text-[10px] text-muted-foreground">Powered by Aegis AI</p>
 						</div>
 					</div>
 
@@ -75,12 +73,7 @@ export function ChatLayout({
 						</Button>
 
 						{isWidget && onClose && (
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8"
-								onClick={onClose}
-							>
+							<Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
 								<X className="w-4 h-4" />
 								<span className="sr-only">Close</span>
 							</Button>

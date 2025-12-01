@@ -73,9 +73,7 @@ export class QualityControlTestingFramework {
 	}
 
 	// Phase 2: Research-Driven Solution Planning
-	async startResearchPhase(
-		errors: QualityControlPhase['errors'],
-	): Promise<QualityControlPhase> {
+	async startResearchPhase(errors: QualityControlPhase['errors']): Promise<QualityControlPhase> {
 		this.currentPhase = {
 			errors,
 			phase: 'research',
@@ -96,10 +94,8 @@ export class QualityControlTestingFramework {
 
 		// Compile recommendations
 		if (this.currentPhase.research) {
-			this.currentPhase.research.recommendations =
-				this.compileRecommendations(errors);
-			this.currentPhase.research.bestPractices =
-				this.extractBestPractices(errors);
+			this.currentPhase.research.recommendations = this.compileRecommendations(errors);
+			this.currentPhase.research.bestPractices = this.extractBestPractices(errors);
 		}
 
 		this.currentPhase.status = 'completed';
@@ -125,9 +121,7 @@ export class QualityControlTestingFramework {
 		};
 
 		// Decompose research findings into atomic tasks
-		const atomicTasks = researchData
-			? this.decomposeIntoAtomicTasks(researchData)
-			: [];
+		const atomicTasks = researchData ? this.decomposeIntoAtomicTasks(researchData) : [];
 
 		if (this.currentPhase.plan) {
 			this.currentPhase.plan.atomicTasks = atomicTasks;
@@ -140,9 +134,7 @@ export class QualityControlTestingFramework {
 	}
 
 	// Phase 4: Systematic Execution
-	async startExecutionPhase(
-		plan: QualityControlPhase['plan'],
-	): Promise<QualityControlPhase> {
+	async startExecutionPhase(plan: QualityControlPhase['plan']): Promise<QualityControlPhase> {
 		this.currentPhase = {
 			errors: [],
 			execution: {
@@ -276,14 +268,11 @@ export class QualityControlTestingFramework {
 		} as const;
 
 		return (
-			researchSources[error.type as keyof typeof researchSources] ||
-			researchSources.code_quality
+			researchSources[error.type as keyof typeof researchSources] || researchSources.code_quality
 		);
 	}
 
-	private compileRecommendations(
-		errors: QualityControlPhase['errors'],
-	): string[] {
+	private compileRecommendations(errors: QualityControlPhase['errors']): string[] {
 		const recommendations: string[] = [];
 
 		const errorsByType = errors.reduce(
@@ -300,12 +289,8 @@ export class QualityControlTestingFramework {
 		Object.entries(errorsByType).forEach(([type, _typeErrors]) => {
 			switch (type) {
 				case 'code_quality':
-					recommendations.push(
-						'Run `bun lint:fix` to auto-fix code style issues',
-					);
-					recommendations.push(
-						'Increase test coverage with focused unit tests',
-					);
+					recommendations.push('Run `bun lint:fix` to auto-fix code style issues');
+					recommendations.push('Increase test coverage with focused unit tests');
 					break;
 				case 'security':
 					recommendations.push('Implement comprehensive LGPD data masking');
@@ -325,9 +310,7 @@ export class QualityControlTestingFramework {
 		return recommendations;
 	}
 
-	private extractBestPractices(
-		_errors: QualityControlPhase['errors'],
-	): string[] {
+	private extractBestPractices(_errors: QualityControlPhase['errors']): string[] {
 		return [
 			'Use TypeScript strict mode for type safety',
 			'Implement 90%+ test coverage for critical healthcare components',
@@ -350,10 +333,7 @@ export class QualityControlTestingFramework {
 				id: 'task-001',
 				name: 'Configure Biome for healthcare compliance',
 				priority: 'P0',
-				validationCriteria: [
-					'Biome lints test files',
-					'Healthcare rules enabled',
-				],
+				validationCriteria: ['Biome lints test files', 'Healthcare rules enabled'],
 			},
 			{
 				dependencies: ['task-001'],
@@ -424,9 +404,7 @@ export class QualityControlTestingFramework {
 				coverage: Math.round(Math.random() * 20 + 80), // 80-100%
 				performance: Math.round(Math.random() * 30 + 70), // 70-100
 			},
-			notes: passed
-				? 'Task completed successfully'
-				: 'Task requires further investigation',
+			notes: passed ? 'Task completed successfully' : 'Task requires further investigation',
 			passed,
 			taskId: task.id,
 		};
@@ -444,9 +422,7 @@ export class QualityControlTestingFramework {
 		};
 		recommendations: string[];
 	} {
-		const allErrors = Object.values(this.phases).flatMap(
-			(phase) => phase.errors,
-		);
+		const allErrors = Object.values(this.phases).flatMap((phase) => phase.errors);
 		const allTasks = Object.values(this.phases)
 			.filter((phase) => phase.plan)
 			.flatMap((phase) => phase.plan?.atomicTasks);
@@ -458,12 +434,9 @@ export class QualityControlTestingFramework {
 			phases: this.phases,
 			recommendations: this.phases.research?.research?.recommendations || [],
 			summary: {
-				criticalErrors: allErrors.filter((e) => e.severity === 'critical')
-					.length,
+				criticalErrors: allErrors.filter((e) => e.severity === 'critical').length,
 				successRate:
-					allTasks.length > 0
-						? Math.round((completedTasks.length / allTasks.length) * 100)
-						: 0,
+					allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0,
 				tasksCompleted: completedTasks.length,
 				totalErrors: allErrors.length,
 				totalTasks: allTasks.length,

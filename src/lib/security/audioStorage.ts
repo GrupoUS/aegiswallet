@@ -96,12 +96,10 @@ export class AudioStorageService {
 			}
 
 			// Encrypt audio
-			const encryptedAudio =
-				await this.config.encryptionService.encryptAudio(audioBlob);
+			const encryptedAudio = await this.config.encryptionService.encryptAudio(audioBlob);
 
 			// Anonymize transcript
-			const anonymizedTranscript =
-				AudioEncryptionService.anonymizeText(transcript);
+			const anonymizedTranscript = AudioEncryptionService.anonymizeText(transcript);
 
 			// Encrypt transcript
 			const encryptedTranscript =
@@ -116,22 +114,19 @@ export class AudioStorageService {
 			expiresAt.setDate(expiresAt.getDate() + this.config.retentionDays);
 
 			// Store audio and metadata via API
-			const response = await apiClient.post<{ data: { created_at: string } }>(
-				'/v1/voice/audio',
-				{
-					audio_data: JSON.stringify(encryptedAudio),
-					audio_storage_path: storagePath,
-					bucket_name: this.config.bucketName,
-					confidence_score: metadata.confidence,
-					created_at: new Date().toISOString(),
-					expires_at: expiresAt.toISOString(),
-					id: audioId,
-					language: metadata.language,
-					processing_time_ms: metadata.processingTimeMs,
-					transcript: JSON.stringify(encryptedTranscript),
-					user_id: userId,
-				},
-			);
+			const response = await apiClient.post<{ data: { created_at: string } }>('/v1/voice/audio', {
+				audio_data: JSON.stringify(encryptedAudio),
+				audio_storage_path: storagePath,
+				bucket_name: this.config.bucketName,
+				confidence_score: metadata.confidence,
+				created_at: new Date().toISOString(),
+				expires_at: expiresAt.toISOString(),
+				id: audioId,
+				language: metadata.language,
+				processing_time_ms: metadata.processingTimeMs,
+				transcript: JSON.stringify(encryptedTranscript),
+				user_id: userId,
+			});
 
 			// Log audit trail
 			await this.logAudit(userId, 'upload', audioId, {
@@ -141,9 +136,7 @@ export class AudioStorageService {
 
 			return {
 				confidence: metadata.confidence,
-				createdAt: new Date(
-					response.data?.created_at || new Date().toISOString(),
-				),
+				createdAt: new Date(response.data?.created_at || new Date().toISOString()),
 				expiresAt,
 				id: audioId,
 				language: metadata.language,
@@ -175,7 +168,7 @@ export class AudioStorageService {
 				params: { user_id: userId },
 			});
 
-			if (!response || !response.audio_data) {
+			if (!response?.audio_data) {
 				throw new Error('Audio not found or access denied');
 			}
 
@@ -183,8 +176,7 @@ export class AudioStorageService {
 			const encryptedData: EncryptedData = JSON.parse(response.audio_data);
 
 			// Decrypt audio
-			const audioBlob =
-				await this.config.encryptionService.decryptAudio(encryptedData);
+			const audioBlob = await this.config.encryptionService.decryptAudio(encryptedData);
 
 			// Log audit trail
 			await this.logAudit(userId, 'download', audioId);
@@ -277,10 +269,9 @@ export class AudioStorageService {
 	async cleanupExpiredAudio(): Promise<number> {
 		try {
 			// Request cleanup via API
-			const response = await apiClient.post<{ deleted_count: number }>(
-				'/v1/voice/cleanup',
-				{ before: new Date().toISOString() },
-			);
+			const response = await apiClient.post<{ deleted_count: number }>('/v1/voice/cleanup', {
+				before: new Date().toISOString(),
+			});
 
 			return response.deleted_count || 0;
 		} catch (error) {

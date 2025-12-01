@@ -218,14 +218,7 @@ export interface ClassificationLog {
 	feedback?: 'correct' | 'incorrect' | 'ambiguous';
 	timestamp: Date;
 	// Enhanced Brazilian Portuguese learning fields
-	regionalVariation?:
-		| 'SP'
-		| 'RJ'
-		| 'Nordeste'
-		| 'Sul'
-		| 'Norte'
-		| 'Centro-Oeste'
-		| 'Unknown';
+	regionalVariation?: 'SP' | 'RJ' | 'Nordeste' | 'Sul' | 'Norte' | 'Centro-Oeste' | 'Unknown';
 	linguisticStyle?: 'slang' | 'formal' | 'colloquial' | 'mixed';
 	contextualClues?: {
 		previousIntent?: IntentType;
@@ -234,11 +227,7 @@ export interface ClassificationLog {
 		conversationTurn: number;
 	};
 	errorAnalysis?: {
-		errorType:
-			| 'pattern_miss'
-			| 'entity_extraction'
-			| 'intent_confusion'
-			| 'low_confidence';
+		errorType: 'pattern_miss' | 'entity_extraction' | 'intent_confusion' | 'low_confidence';
 		confusedWith?: IntentType;
 		missedEntities?: EntityType[];
 		patternUsed?: string;

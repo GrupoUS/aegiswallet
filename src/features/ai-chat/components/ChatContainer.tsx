@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+// Chat context available for future state sharing between widget and fullscreen
+// import { useChatContext } from '../context/ChatContext';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-	type BackendType,
-	createChatBackend,
-	MockBackend,
-} from '@/features/ai-chat/backends';
+import { type BackendType, createChatBackend, MockBackend } from '@/features/ai-chat/backends';
 import {
 	ChatConversation,
 	ChatLayout,
@@ -15,12 +13,10 @@ import {
 	ChatTasks,
 	ModelSelector,
 } from '@/features/ai-chat/components';
-import {
-	DEFAULT_MODEL,
-	type GeminiModel,
-} from '@/features/ai-chat/config/models';
+import { DEFAULT_MODEL, type GeminiModel } from '@/features/ai-chat/config/models';
 import type { ChatSuggestion } from '@/features/ai-chat/domain/types';
 import { useChatController } from '@/features/ai-chat/hooks/useChatController';
+import './chat-widget.css';
 
 interface ChatContainerProps {
 	isWidget?: boolean;
@@ -38,6 +34,10 @@ export function ChatContainer({
 	hideHeader = false,
 }: ChatContainerProps) {
 	const { user } = useAuth();
+	// Chat context available for future state sharing between widget and fullscreen
+	// const chatContext = useChatContext();
+
+	// Use context state or fallback to local state for widget mode
 	const [selectedModel, setSelectedModel] = useState<GeminiModel>(
 		(import.meta.env.VITE_DEFAULT_AI_MODEL as GeminiModel) || DEFAULT_MODEL,
 	);
@@ -101,11 +101,7 @@ export function ChatContainer({
 	];
 
 	const activeSuggestions =
-		suggestions.length > 0
-			? suggestions
-			: messages.length === 0
-				? defaultSuggestions
-				: [];
+		suggestions.length > 0 ? suggestions : messages.length === 0 ? defaultSuggestions : [];
 
 	const [showReasoning, setShowReasoning] = useState(enableReasoningView);
 
@@ -123,10 +119,7 @@ export function ChatContainer({
 			hideHeader={hideHeader}
 			modelSelector={
 				!isWidget ? (
-					<ModelSelector
-						selectedModel={selectedModel}
-						onModelChange={setSelectedModel}
-					/>
+					<ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
 				) : undefined
 			}
 			enableVoice={enableVoiceInput}
@@ -147,10 +140,7 @@ export function ChatContainer({
 					{/* Suggestions Overlay */}
 					{!isStreaming && activeSuggestions.length > 0 && (
 						<div className="px-4 pb-2 animate-in slide-in-from-bottom-2 fade-in">
-							<ChatSuggestions
-								suggestions={activeSuggestions}
-								onSelect={applySuggestion}
-							/>
+							<ChatSuggestions suggestions={activeSuggestions} onSelect={applySuggestion} />
 						</div>
 					)}
 

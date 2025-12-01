@@ -9,14 +9,8 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
-import {
-	getAvailableCommands,
-	processVoiceCommand,
-} from '@/services/voiceCommandService';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
+import { getAvailableCommands, processVoiceCommand } from '@/services/voiceCommandService';
 
 const voiceRouter = new Hono<AppEnv>();
 
@@ -70,8 +64,7 @@ voiceRouter.post(
 		const input = c.req.valid('json');
 		const requestId = c.get('requestId');
 
-		const { commandText, sessionId, audioData, language, requireConfirmation } =
-			input;
+		const { commandText, sessionId, audioData, language, requireConfirmation } = input;
 
 		// Command text is required for non-audio processing
 		const command = commandText ?? '';

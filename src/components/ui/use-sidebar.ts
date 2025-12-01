@@ -12,18 +12,12 @@ export interface SidebarContextType {
 	animate?: boolean;
 }
 
-export const SidebarContext = createContext<SidebarContextType | undefined>(
-	undefined,
-);
+export const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function useSidebar(initialState?: Partial<SidebarState>) {
 	const [isOpen, setIsOpen] = useState(initialState?.isOpen ?? false);
-	const [isCollapsed, setIsCollapsed] = useState(
-		initialState?.isCollapsed ?? false,
-	);
-	const [activeItem, setActiveItem] = useState<string | undefined>(
-		initialState?.activeItem,
-	);
+	const [isCollapsed, setIsCollapsed] = useState(initialState?.isCollapsed ?? false);
+	const [activeItem, setActiveItem] = useState<string | undefined>(initialState?.activeItem);
 
 	const toggle = () => setIsOpen(!isOpen);
 	const openSidebar = () => setIsOpen(true);

@@ -9,10 +9,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import type {
-	ResponseFeedback,
-	UseMultimodalResponseReturn,
-} from './useMultimodalResponse';
+import type { ResponseFeedback, UseMultimodalResponseReturn } from './useMultimodalResponse';
 import { useMultimodalResponse as useNewMultimodalResponse } from './useMultimodalResponse';
 import type { MultimodalResponse } from '@/lib/multimodal/responseTemplates';
 import type { IntentType } from '@/lib/nlu/types';
@@ -31,10 +28,7 @@ export interface UseMultimodalResponseCompatOptions {
 
 export interface UseMultimodalResponseCompatReturn {
 	// Legacy interface
-	generateAndSpeak: (
-		intent: IntentType | 'error' | 'confirmation',
-		data: unknown,
-	) => Promise<void>;
+	generateAndSpeak: (intent: IntentType | 'error' | 'confirmation', data: unknown) => Promise<void>;
 	response: (MultimodalResponse & { speech: string }) | null;
 	metrics: {
 		totalTime: number;
@@ -69,9 +63,7 @@ export function useMultimodalResponse(
 		collectFeedback: options.collectFeedback !== false,
 		enableVisual: options.enableVisual !== false && !options.textOnlyMode,
 		enableVoice:
-			options.ttsEnabled !== false &&
-			options.enableVoice !== false &&
-			!options.textOnlyMode,
+			options.ttsEnabled !== false && options.enableVoice !== false && !options.textOnlyMode,
 		onFeedback: options.onFeedback,
 		onResponse: options.onResponse,
 	};
@@ -120,27 +112,19 @@ export function useMultimodalResponse(
 		[newHook.sendResponse, options.performanceTracking],
 	);
 
-	const response = useMemo(
-		() => newHook.state.currentResponse,
-		[newHook.state.currentResponse],
-	);
+	const response = useMemo(() => newHook.state.currentResponse, [newHook.state.currentResponse]);
 	const decoratedResponse = useMemo(
 		() =>
 			response
 				? {
 						...response,
 						speech:
-							response.voice && response.voice.length > 0
-								? response.voice
-								: (response.text ?? ''),
+							response.voice && response.voice.length > 0 ? response.voice : (response.text ?? ''),
 					}
 				: null,
 		[response],
 	);
-	const isLoading = useMemo(
-		() => newHook.state.isLoading,
-		[newHook.state.isLoading],
-	);
+	const isLoading = useMemo(() => newHook.state.isLoading, [newHook.state.isLoading]);
 	const error = useMemo(() => newHook.state.error, [newHook.state.error]);
 
 	// Enhanced clearResponse that also clears compatibility metrics

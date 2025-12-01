@@ -258,10 +258,7 @@ export class IntentClassifier {
 
 		if (tfidfResult.intent !== IntentType.UNKNOWN) {
 			const existing = alternatives.get(tfidfResult.intent) || 0;
-			alternatives.set(
-				tfidfResult.intent,
-				Math.max(existing, tfidfResult.confidence),
-			);
+			alternatives.set(tfidfResult.intent, Math.max(existing, tfidfResult.confidence));
 		}
 
 		return Array.from(alternatives.entries())
@@ -321,9 +318,7 @@ export class IntentClassifier {
 		}
 
 		// Normalize vector to unit length
-		const magnitude = Math.sqrt(
-			[...vector.values()].reduce((sum, val) => sum + val * val, 0),
-		);
+		const magnitude = Math.sqrt([...vector.values()].reduce((sum, val) => sum + val * val, 0));
 		if (magnitude > 0) {
 			for (const [token, value] of vector.entries()) {
 				vector.set(token, value / magnitude);
@@ -340,17 +335,7 @@ export class IntentClassifier {
 		let stemmed = token.toLowerCase();
 
 		// Remove common Brazilian Portuguese suffixes
-		const suffixes = [
-			'ando',
-			'ando',
-			'ando',
-			'ar',
-			'er',
-			'ir',
-			'ando',
-			'endo',
-			'indo',
-		];
+		const suffixes = ['ando', 'ando', 'ando', 'ar', 'er', 'ir', 'ando', 'endo', 'indo'];
 		for (const suffix of suffixes) {
 			if (stemmed.endsWith(suffix)) {
 				stemmed = stemmed.slice(0, -suffix.length);
@@ -389,10 +374,7 @@ export class IntentClassifier {
 	/**
 	 * Calculate cosine similarity between two vectors
 	 */
-	private cosineSimilarity(
-		vec1: Map<string, number>,
-		vec2: Map<string, number>,
-	): number {
+	private cosineSimilarity(vec1: Map<string, number>, vec2: Map<string, number>): number {
 		let dotProduct = 0;
 		let mag1 = 0;
 		let mag2 = 0;
@@ -422,10 +404,7 @@ export class IntentClassifier {
 	/**
 	 * Classify with confidence threshold
 	 */
-	async classifyWithThreshold(
-		text: string,
-		threshold: number = 0.7,
-	): Promise<IntentClassificationResult> {
+	async classifyWithThreshold(text: string, threshold = 0.7): Promise<IntentClassificationResult> {
 		const result = await this.classify(text);
 
 		if (result.confidence < threshold) {

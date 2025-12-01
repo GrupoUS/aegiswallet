@@ -5,14 +5,7 @@
  * Brazilian payment slips (boletos)
  */
 
-import {
-	date,
-	decimal,
-	pgEnum,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core';
+import { date, decimal, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { transactions } from './transactions';
 import { users } from './users';

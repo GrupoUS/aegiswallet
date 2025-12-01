@@ -7,18 +7,18 @@ console.log('Testing Clerk module resolution...');
 // Test 1: Import Clerk components
 try {
 	const {
-		ClerkProvider: _ClerkProvider,
-		useAuth: _useAuth,
-		useUser: _useUser,
-		SignIn: _SignIn,
-		SignUp: _SignUp,
+		ClerkProvider,
+		useAuth: UseAuth,
+		useUser: UseUser,
+		SignIn,
+		SignUp,
 	} = await import('@clerk/clerk-react');
 	// Mark imports as used to avoid linting errors
-	void _ClerkProvider;
-	void _useAuth;
-	void _useUser;
-	void _SignIn;
-	void _SignUp;
+	void ClerkProvider;
+	void UseAuth;
+	void UseUser;
+	void SignIn;
+	void SignUp;
 	console.log('✅ Clerk React components imported successfully');
 } catch (error) {
 	console.error('❌ Failed to import Clerk React components:', error);
@@ -27,8 +27,8 @@ try {
 
 // Test 2: Import Clerk localizations
 try {
-	const { ptBR: _ptBR } = await import('@clerk/localizations');
-	void _ptBR;
+	const { ptBR: PtBr } = await import('@clerk/localizations');
+	void PtBr;
 	console.log('✅ Clerk localizations imported successfully');
 	console.log('✅ Portuguese (pt-BR) localization available');
 } catch (error) {

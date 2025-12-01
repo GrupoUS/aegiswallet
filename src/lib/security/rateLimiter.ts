@@ -39,10 +39,7 @@ export class InMemoryRateLimiter {
 		setInterval(() => this.cleanup(), this.config.windowMs);
 	}
 
-	private createEmptyLimitInfo(
-		key: string,
-		windowStart: number,
-	): RateLimitInfo {
+	private createEmptyLimitInfo(key: string, windowStart: number): RateLimitInfo {
 		return {
 			currentAttempts: 0,
 			identifier: key,
@@ -53,13 +50,8 @@ export class InMemoryRateLimiter {
 		};
 	}
 
-	checkLimit(
-		identifier: string,
-		options?: { success?: boolean },
-	): RateLimitResult {
-		const key = this.config.keyGenerator
-			? this.config.keyGenerator(identifier)
-			: identifier;
+	checkLimit(identifier: string, options?: { success?: boolean }): RateLimitResult {
+		const key = this.config.keyGenerator ? this.config.keyGenerator(identifier) : identifier;
 		const now = Date.now();
 		const windowStart = now - this.config.windowMs;
 
@@ -77,9 +69,7 @@ export class InMemoryRateLimiter {
 		}
 
 		// Remove old attempts outside the window
-		const recentAttempts = attempts.filter(
-			(timestamp) => timestamp > windowStart,
-		);
+		const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
 		this.attempts.set(key, recentAttempts);
 
 		// Skip counting based on success/failure settings
@@ -117,9 +107,7 @@ export class InMemoryRateLimiter {
 		if (isBlocked) {
 			// Calculate retry after time
 			const oldestAttempt = Math.min(...recentAttempts);
-			const retryAfter = Math.ceil(
-				(oldestAttempt + this.config.windowMs - now) / 1000,
-			);
+			const retryAfter = Math.ceil((oldestAttempt + this.config.windowMs - now) / 1000);
 
 			const limitInfo: RateLimitInfo = {
 				currentAttempts: recentAttempts.length,
@@ -168,17 +156,13 @@ export class InMemoryRateLimiter {
 	}
 
 	resetLimit(identifier: string): void {
-		const key = this.config.keyGenerator
-			? this.config.keyGenerator(identifier)
-			: identifier;
+		const key = this.config.keyGenerator ? this.config.keyGenerator(identifier) : identifier;
 		this.attempts.delete(key);
 		logger.info('Rate limit reset', { identifier });
 	}
 
 	getLimitInfo(identifier: string): RateLimitInfo | null {
-		const key = this.config.keyGenerator
-			? this.config.keyGenerator(identifier)
-			: identifier;
+		const key = this.config.keyGenerator ? this.config.keyGenerator(identifier) : identifier;
 		const attempts = this.attempts.get(key);
 
 		if (!attempts || attempts.length === 0) {
@@ -187,19 +171,14 @@ export class InMemoryRateLimiter {
 
 		const now = Date.now();
 		const windowStart = now - this.config.windowMs;
-		const recentAttempts = attempts.filter(
-			(timestamp) => timestamp > windowStart,
-		);
+		const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
 
 		return {
 			currentAttempts: recentAttempts.length,
 			identifier: key,
 			isBlocked: recentAttempts.length >= this.config.maxAttempts,
 			maxAttempts: this.config.maxAttempts,
-			remainingAttempts: Math.max(
-				0,
-				this.config.maxAttempts - recentAttempts.length,
-			),
+			remainingAttempts: Math.max(0, this.config.maxAttempts - recentAttempts.length),
 			resetTime: new Date(Math.max(...recentAttempts) + this.config.windowMs),
 		};
 	}
@@ -210,9 +189,7 @@ export class InMemoryRateLimiter {
 		let cleanedUp = 0;
 
 		for (const [key, attempts] of this.attempts.entries()) {
-			const recentAttempts = attempts.filter(
-				(timestamp) => timestamp > windowStart,
-			);
+			const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
 
 			if (recentAttempts.length === 0) {
 				this.attempts.delete(key);
@@ -238,9 +215,7 @@ export class InMemoryRateLimiter {
 		const windowStart = now - this.config.windowMs;
 
 		for (const attempts of this.attempts.values()) {
-			const recentAttempts = attempts.filter(
-				(timestamp) => timestamp > windowStart,
-			);
+			const recentAttempts = attempts.filter((timestamp) => timestamp > windowStart);
 			totalEntries++;
 			if (recentAttempts.length >= this.config.maxAttempts) {
 				blockedRequests++;
@@ -372,14 +347,8 @@ export class RateLimitManager {
 		// - Notify user via email/SMS
 	}
 
-	getAllStats(): Record<
-		string,
-		{ totalEntries: number; blockedRequests: number }
-	> {
-		const stats: Record<
-			string,
-			{ totalEntries: number; blockedRequests: number }
-		> = {};
+	getAllStats(): Record<string, { totalEntries: number; blockedRequests: number }> {
+		const stats: Record<string, { totalEntries: number; blockedRequests: number }> = {};
 
 		for (const [name, limiter] of this.limiters.entries()) {
 			stats[name] = limiter.getStats();

@@ -9,22 +9,13 @@ interface ChatContextProps {
 	className?: string;
 }
 
-export function ChatContext({
-	tokenUsage,
-	contextLimit,
-	className,
-}: ChatContextProps) {
+export function ChatContext({ tokenUsage, contextLimit, className }: ChatContextProps) {
 	const percentage = Math.min((tokenUsage.total / contextLimit) * 100, 100);
 	const isWarning = percentage > 80;
 	const isCritical = percentage > 95;
 
 	return (
-		<div
-			className={cn(
-				'flex flex-col gap-1 text-xs text-muted-foreground',
-				className,
-			)}
-		>
+		<div className={cn('flex flex-col gap-1 text-xs text-muted-foreground', className)}>
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-1">
 					<Database className="w-3 h-3" />
@@ -36,10 +27,7 @@ export function ChatContext({
 			</div>
 			<Progress
 				value={percentage}
-				className={cn(
-					'h-1',
-					isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : '',
-				)}
+				className={cn('h-1', isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : '')}
 			/>
 		</div>
 	);

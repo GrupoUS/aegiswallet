@@ -225,10 +225,8 @@ function getRegionalInfo(region: string): string {
 		nordeste:
 			'Ênfase em Caixa, bancos digitais, transferências PIX para familiares, contexto de menor formalidade bancária.',
 		sul: 'Bancos regionais (Sicredi, Banrisul), maior uso de crédito rural, safras agrícolas.',
-		'centro-oeste':
-			'Foco em agroindústria, bancos estaduais, comércio local forte.',
-		norte:
-			'Banco da Amazônia, Caixa forte, transferências para outras regiões.',
+		'centro-oeste': 'Foco em agroindústria, bancos estaduais, comércio local forte.',
+		norte: 'Banco da Amazônia, Caixa forte, transferências para outras regiões.',
 	};
 
 	return regions[region.toLowerCase()] || 'Perfil bancário padrão brasileiro.';
@@ -244,7 +242,5 @@ function getRiskLevelGuidance(riskLevel: string): string {
 			'Maior tolerância a risco, oportunidades de maior retorno, monitoramento intensivo de carteiras.',
 	};
 
-	return (
-		guidance[riskLevel.toLowerCase()] || 'Perfil financeiro padrão brasileiro.'
-	);
+	return guidance[riskLevel.toLowerCase()] || 'Perfil financeiro padrão brasileiro.';
 }

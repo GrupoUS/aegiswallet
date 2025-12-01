@@ -394,12 +394,7 @@ export const transactionLimits = pgTable(
 		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 	},
-	(table) => [
-		uniqueIndex('transaction_limits_user_type_idx').on(
-			table.userId,
-			table.limitType,
-		),
-	],
+	(table) => [uniqueIndex('transaction_limits_user_type_idx').on(table.userId, table.limitType)],
 );
 
 // ========================================
@@ -492,12 +487,10 @@ export type LgpdConsent = typeof lgpdConsents.$inferSelect;
 export type InsertLgpdConsent = typeof lgpdConsents.$inferInsert;
 
 export type DataRetentionPolicy = typeof dataRetentionPolicies.$inferSelect;
-export type InsertDataRetentionPolicy =
-	typeof dataRetentionPolicies.$inferInsert;
+export type InsertDataRetentionPolicy = typeof dataRetentionPolicies.$inferInsert;
 
 export type DataDeletionRequest = typeof dataDeletionRequests.$inferSelect;
-export type InsertDataDeletionRequest =
-	typeof dataDeletionRequests.$inferInsert;
+export type InsertDataDeletionRequest = typeof dataDeletionRequests.$inferInsert;
 
 export type LgpdExportRequest = typeof lgpdExportRequests.$inferSelect;
 export type InsertLgpdExportRequest = typeof lgpdExportRequests.$inferInsert;

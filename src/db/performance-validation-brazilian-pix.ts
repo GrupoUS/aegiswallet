@@ -9,10 +9,7 @@
 import { and, eq, gte } from 'drizzle-orm';
 
 import { getHttpClient, getPoolClient } from './client';
-import {
-	getBusinessIntelligenceClient,
-	getLgpdAnalyticsClient,
-} from './client-replica';
+import { getBusinessIntelligenceClient, getLgpdAnalyticsClient } from './client-replica';
 import * as schema from './schema';
 
 // ========================================
@@ -146,10 +143,7 @@ export class BrazilianPixPerformanceValidator {
 						.select()
 						.from(schema.pixKeys)
 						.where(
-							and(
-								eq(schema.pixKeys.userId, 'test_user_id'),
-								eq(schema.pixKeys.isActive, true),
-							),
+							and(eq(schema.pixKeys.userId, 'test_user_id'), eq(schema.pixKeys.isActive, true)),
 						),
 				targetLatency: BRAZILIAN_PERFORMANCE_TARGETS.pixQueryP95LatencyMs,
 			},
@@ -173,8 +167,7 @@ export class BrazilianPixPerformanceValidator {
 						.from(schema.transactions)
 						.where(eq(schema.transactions.userId, 'test_clerk_user_id'))
 						.limit(100),
-				targetLatency:
-					BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
+				targetLatency: BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
 			},
 			{
 				name: 'User PIX transactions with clerk_user_id index',
@@ -189,8 +182,7 @@ export class BrazilianPixPerformanceValidator {
 							),
 						)
 						.limit(100),
-				targetLatency:
-					BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
+				targetLatency: BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
 			},
 			{
 				name: 'User profile with clerk_user_id index',
@@ -199,8 +191,7 @@ export class BrazilianPixPerformanceValidator {
 						.select()
 						.from(schema.users)
 						.where(eq(schema.users.id, 'test_clerk_user_id')),
-				targetLatency:
-					BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
+				targetLatency: BRAZILIAN_PERFORMANCE_TARGETS.clerkUserIdIndexP95LatencyMs,
 			},
 		];
 
@@ -318,8 +309,7 @@ export class BrazilianPixPerformanceValidator {
 						.from(schema.transactions)
 						.where(eq(schema.transactions.transactionType, 'pix'))
 						.limit(500),
-				targetLatency:
-					BRAZILIAN_PERFORMANCE_TARGETS.businessIntelligenceP95LatencyMs,
+				targetLatency: BRAZILIAN_PERFORMANCE_TARGETS.businessIntelligenceP95LatencyMs,
 			},
 		];
 
@@ -376,8 +366,7 @@ export class BrazilianPixPerformanceValidator {
 
 		const p95Latency = latencies[p95Index];
 		const p99Latency = latencies[p99Index];
-		const avgLatency =
-			latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+		const avgLatency = latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
 
 		return {
 			testName: testCases[0]?.name || 'Performance Test',
@@ -408,10 +397,7 @@ export class BrazilianPixPerformanceValidator {
 			avgLatency: 999999,
 			targetLatency: 150,
 			throughput: 0,
-			error:
-				result.reason instanceof Error
-					? result.reason.message
-					: 'Unknown error',
+			error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
 		};
 	}
 
@@ -444,9 +430,7 @@ export class BrazilianPixPerformanceValidator {
 	/**
 	 * Generate performance recommendations
 	 */
-	private generateRecommendations(
-		results: PerformanceValidationResults,
-	): string[] {
+	private generateRecommendations(results: PerformanceValidationResults): string[] {
 		const recommendations: string[] = [];
 
 		if (!results.pixQueryPerformance.passed) {
@@ -456,9 +440,7 @@ export class BrazilianPixPerformanceValidator {
 		}
 
 		if (!results.multiTenantPerformance.passed) {
-			recommendations.push(
-				'clerk_user_id indexes need optimization for multi-tenant performance',
-			);
+			recommendations.push('clerk_user_id indexes need optimization for multi-tenant performance');
 		}
 
 		if (!results.concurrentCapacityTest.passed) {
@@ -555,8 +537,7 @@ interface PerformanceValidationResults {
 // EXPORT SINGLETON
 // ========================================
 
-export const brazilianPixPerformanceValidator =
-	new BrazilianPixPerformanceValidator();
+export const brazilianPixPerformanceValidator = new BrazilianPixPerformanceValidator();
 
 // ========================================
 // VALIDATION FUNCTIONS
@@ -565,17 +546,15 @@ export const brazilianPixPerformanceValidator =
 /**
  * Quick performance validation for Brazilian PIX operations
  */
-export const validateBrazilianPixPerformanceQuick =
-	async (): Promise<boolean> => {
-		try {
-			const results =
-				await brazilianPixPerformanceValidator.validateBrazilianPixPerformance();
-			return results.success;
-		} catch (error) {
-			console.error('Brazilian PIX performance validation failed:', error);
-			return false;
-		}
-	};
+export const validateBrazilianPixPerformanceQuick = async (): Promise<boolean> => {
+	try {
+		const results = await brazilianPixPerformanceValidator.validateBrazilianPixPerformance();
+		return results.success;
+	} catch (error) {
+		console.error('Brazilian PIX performance validation failed:', error);
+		return false;
+	}
+};
 
 /**
  * Get current performance metrics for Brazilian PIX operations
@@ -587,8 +566,7 @@ export const getBrazilianPixPerformanceMetrics = async (): Promise<{
 	targetsMet: string[];
 	targetsMissed: string[];
 }> => {
-	const results =
-		await brazilianPixPerformanceValidator.validateBrazilianPixPerformance();
+	const results = await brazilianPixPerformanceValidator.validateBrazilianPixPerformance();
 
 	return {
 		currentP95Latency: Math.max(

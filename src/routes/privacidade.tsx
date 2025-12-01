@@ -36,14 +36,13 @@ function PrivacidadePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-sm">
 					<p>
-						A AegisWallet está comprometida com a proteção da privacidade e dos
-						dados pessoais de seus usuários, em conformidade com a Lei nº
-						13.709/2018 (Lei Geral de Proteção de Dados - LGPD).
+						A AegisWallet está comprometida com a proteção da privacidade e dos dados pessoais de
+						seus usuários, em conformidade com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados
+						- LGPD).
 					</p>
 					<p>
-						Esta política descreve como coletamos, usamos, armazenamos e
-						protegemos suas informações pessoais ao utilizar nosso aplicativo de
-						gestão financeira.
+						Esta política descreve como coletamos, usamos, armazenamos e protegemos suas informações
+						pessoais ao utilizar nosso aplicativo de gestão financeira.
 					</p>
 				</CardContent>
 			</Card>
@@ -54,20 +53,17 @@ function PrivacidadePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-sm">
 					<p>
-						<strong>Dados de identificação:</strong> Nome, e-mail, CPF (quando
-						necessário).
+						<strong>Dados de identificação:</strong> Nome, e-mail, CPF (quando necessário).
 					</p>
 					<p>
-						<strong>Dados financeiros:</strong> Informações de contas bancárias,
-						transações, saldos.
+						<strong>Dados financeiros:</strong> Informações de contas bancárias, transações, saldos.
 					</p>
 					<p>
-						<strong>Dados de uso:</strong> Interações com o aplicativo, comandos
-						de voz (quando habilitado).
+						<strong>Dados de uso:</strong> Interações com o aplicativo, comandos de voz (quando
+						habilitado).
 					</p>
 					<p>
-						<strong>Dados técnicos:</strong> IP, tipo de dispositivo, sistema
-						operacional.
+						<strong>Dados técnicos:</strong> IP, tipo de dispositivo, sistema operacional.
 					</p>
 				</CardContent>
 			</Card>
@@ -96,27 +92,22 @@ function PrivacidadePage() {
 					<p>Você tem direito a:</p>
 					<ul className="list-disc pl-5 space-y-2">
 						<li>
-							<strong>Acesso:</strong> Solicitar uma cópia de seus dados
-							pessoais
+							<strong>Acesso:</strong> Solicitar uma cópia de seus dados pessoais
 						</li>
 						<li>
-							<strong>Correção:</strong> Solicitar a correção de dados
-							incorretos
+							<strong>Correção:</strong> Solicitar a correção de dados incorretos
 						</li>
 						<li>
 							<strong>Exclusão:</strong> Solicitar a exclusão de seus dados
 						</li>
 						<li>
-							<strong>Portabilidade:</strong> Exportar seus dados em formato
-							portátil
+							<strong>Portabilidade:</strong> Exportar seus dados em formato portátil
 						</li>
 						<li>
-							<strong>Revogação:</strong> Revogar consentimentos previamente
-							concedidos
+							<strong>Revogação:</strong> Revogar consentimentos previamente concedidos
 						</li>
 						<li>
-							<strong>Oposição:</strong> Opor-se a determinados tratamentos de
-							dados
+							<strong>Oposição:</strong> Opor-se a determinados tratamentos de dados
 						</li>
 					</ul>
 					<p className="mt-4">
@@ -134,10 +125,7 @@ function PrivacidadePage() {
 					<CardTitle>4. Segurança dos Dados</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4 text-sm">
-					<p>
-						Implementamos medidas técnicas e organizacionais para proteger seus
-						dados:
-					</p>
+					<p>Implementamos medidas técnicas e organizacionais para proteger seus dados:</p>
 					<ul className="list-disc pl-5 space-y-2">
 						<li>Criptografia de dados em trânsito e em repouso</li>
 						<li>Controle de acesso baseado em funções</li>
@@ -154,13 +142,12 @@ function PrivacidadePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-sm">
 					<p>
-						Mantemos seus dados apenas pelo tempo necessário para cumprir as
-						finalidades para as quais foram coletados, incluindo obrigações
-						legais e regulatórias.
+						Mantemos seus dados apenas pelo tempo necessário para cumprir as finalidades para as
+						quais foram coletados, incluindo obrigações legais e regulatórias.
 					</p>
 					<p>
-						Dados financeiros podem ser retidos por períodos mais longos
-						conforme exigido pela legislação fiscal e bancária brasileira.
+						Dados financeiros podem ser retidos por períodos mais longos conforme exigido pela
+						legislação fiscal e bancária brasileira.
 					</p>
 				</CardContent>
 			</Card>

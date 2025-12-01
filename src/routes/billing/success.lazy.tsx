@@ -34,12 +34,8 @@ function SuccessPage() {
 							<div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
 								<CheckCircle className="w-10 h-10 text-green-600" />
 							</div>
-							<CardTitle className="text-2xl text-green-700">
-								Pagamento Confirmado!
-							</CardTitle>
-							<CardDescription>
-								Seu plano foi atualizado com sucesso
-							</CardDescription>
+							<CardTitle className="text-2xl text-green-700">Pagamento Confirmado!</CardTitle>
+							<CardDescription>Seu plano foi atualizado com sucesso</CardDescription>
 						</CardHeader>
 
 						<CardContent className="space-y-6">
@@ -62,25 +58,22 @@ function SuccessPage() {
 										</div>
 									)}
 
-									{subscription.plan.features &&
-										subscription.plan.features.length > 0 && (
-											<div>
-												<h4 className="font-medium mb-2">
-													Recursos Incluídos:
-												</h4>
-												<ul className="space-y-2">
-													{subscription.plan.features.map((feature) => (
-														<li
-															key={feature.replace(/\s+/g, '-').toLowerCase()}
-															className="flex items-center gap-2 text-sm"
-														>
-															<CheckCircle className="h-4 w-4 text-green-600" />
-															{feature}
-														</li>
-													))}
-												</ul>
-											</div>
-										)}
+									{subscription.plan.features && subscription.plan.features.length > 0 && (
+										<div>
+											<h4 className="font-medium mb-2">Recursos Incluídos:</h4>
+											<ul className="space-y-2">
+												{subscription.plan.features.map((feature) => (
+													<li
+														key={feature.replace(/\s+/g, '-').toLowerCase()}
+														className="flex items-center gap-2 text-sm"
+													>
+														<CheckCircle className="h-4 w-4 text-green-600" />
+														{feature}
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
 								</div>
 							)}
 
@@ -89,9 +82,7 @@ function SuccessPage() {
 								<div className="space-y-3">
 									<div className="flex items-start gap-3">
 										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-											<span className="text-primary font-semibold text-sm">
-												1
-											</span>
+											<span className="text-primary font-semibold text-sm">1</span>
 										</div>
 										<div>
 											<p className="font-medium">Explore seus novos recursos</p>
@@ -103,9 +94,7 @@ function SuccessPage() {
 
 									<div className="flex items-start gap-3">
 										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-											<span className="text-primary font-semibold text-sm">
-												2
-											</span>
+											<span className="text-primary font-semibold text-sm">2</span>
 										</div>
 										<div>
 											<p className="font-medium">Configure suas preferências</p>
@@ -117,9 +106,7 @@ function SuccessPage() {
 
 									<div className="flex items-start gap-3">
 										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-											<span className="text-primary font-semibold text-sm">
-												3
-											</span>
+											<span className="text-primary font-semibold text-sm">3</span>
 										</div>
 										<div>
 											<p className="font-medium">Gerencie sua assinatura</p>

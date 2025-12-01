@@ -49,21 +49,18 @@ export class SecureLogger {
 	private currentUserId?: string;
 	private sensitivePatterns: RegExp[];
 	private logBuffer: SecureLogEntry[] = [];
-	private maxBufferSize: number = 1000;
-	private flushInterval: number = 5000; // 5 seconds
+	private maxBufferSize = 1000;
+	private flushInterval = 5000; // 5 seconds
 
 	constructor() {
 		this.isDevelopment = Boolean(
-			(typeof process !== 'undefined' &&
-				process.env?.NODE_ENV === 'development') ||
+			(typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ||
 				(typeof import.meta !== 'undefined' && import.meta.env?.DEV),
 		);
 
 		this.isProduction = Boolean(
-			(typeof process !== 'undefined' &&
-				process.env?.NODE_ENV === 'production') ||
-				(typeof import.meta !== 'undefined' &&
-					import.meta.env?.MODE === 'production'),
+			(typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') ||
+				(typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'production'),
 		);
 
 		// Initialize sensitive data patterns
@@ -193,9 +190,7 @@ export class SecureLogger {
 			'amount',
 		];
 
-		return sensitiveKeys.some((sensitive) =>
-			key.toLowerCase().includes(sensitive.toLowerCase()),
-		);
+		return sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive.toLowerCase()));
 	}
 
 	/**
@@ -206,10 +201,7 @@ export class SecureLogger {
 		message: string,
 		context?: SecureLogContext,
 	): SecureLogEntry {
-		const { sanitizedMessage, sanitizedContext } = this.sanitizeData(
-			message,
-			context,
-		);
+		const { sanitizedMessage, sanitizedContext } = this.sanitizeData(message, context);
 
 		return {
 			context: sanitizedContext,
@@ -271,9 +263,7 @@ export class SecureLogger {
 
 		// In production, this would send to external logging service
 		// For now, we'll just send critical logs to console
-		const criticalLogs = logsToFlush.filter(
-			(log) => log.level >= SecureLogLevel.ERROR,
-		);
+		const criticalLogs = logsToFlush.filter((log) => log.level >= SecureLogLevel.ERROR);
 
 		if (criticalLogs.length > 0) {
 			criticalLogs.forEach((_log) => {
@@ -288,11 +278,7 @@ export class SecureLogger {
 	/**
 	 * Core logging method
 	 */
-	private log(
-		level: SecureLogLevel,
-		message: string,
-		context?: SecureLogContext,
-	): void {
+	private log(level: SecureLogLevel, message: string, context?: SecureLogContext): void {
 		// Skip debug logs in production
 		if (!this.isDevelopment && level === SecureLogLevel.DEBUG) {
 			return;
@@ -328,11 +314,7 @@ export class SecureLogger {
 	}
 
 	// Specialized methods for common use cases
-	voiceCommand(
-		command: string,
-		confidence: number,
-		context?: SecureLogContext,
-	): void {
+	voiceCommand(command: string, confidence: number, context?: SecureLogContext): void {
 		this.info('Voice command processed', {
 			...context,
 			command: command.substring(0, 50), // Limit for privacy
@@ -348,19 +330,11 @@ export class SecureLogger {
 		});
 	}
 
-	userAction(
-		action: string,
-		component: string,
-		context?: SecureLogContext,
-	): void {
+	userAction(action: string, component: string, context?: SecureLogContext): void {
 		this.info('User action', { action, component, ...context });
 	}
 
-	performance(
-		operation: string,
-		duration: number,
-		context?: SecureLogContext,
-	): void {
+	performance(operation: string, duration: number, context?: SecureLogContext): void {
 		this.info('Performance metric', {
 			...context,
 			operation,
@@ -405,16 +379,11 @@ export default secureLogger;
 
 // Export convenience functions for backward compatibility
 export const log = {
-	audit: (message: string, context?: SecureLogContext) =>
-		secureLogger.audit(message, context),
-	debug: (message: string, context?: SecureLogContext) =>
-		secureLogger.debug(message, context),
-	error: (message: string, context?: SecureLogContext) =>
-		secureLogger.error(message, context),
-	info: (message: string, context?: SecureLogContext) =>
-		secureLogger.info(message, context),
+	audit: (message: string, context?: SecureLogContext) => secureLogger.audit(message, context),
+	debug: (message: string, context?: SecureLogContext) => secureLogger.debug(message, context),
+	error: (message: string, context?: SecureLogContext) => secureLogger.error(message, context),
+	info: (message: string, context?: SecureLogContext) => secureLogger.info(message, context),
 	security: (message: string, context?: SecureLogContext) =>
 		secureLogger.security(message, context),
-	warn: (message: string, context?: SecureLogContext) =>
-		secureLogger.warn(message, context),
+	warn: (message: string, context?: SecureLogContext) => secureLogger.warn(message, context),
 };

@@ -31,24 +31,19 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<string> {
 		const signature = await generateSignature(entry);
 
 		// Send to API endpoint
-		const response = await apiClient.post<{ id: string }>(
-			'/v1/compliance/audit-log',
-			{
-				action: entry.action,
-				resourceType: entry.transactionType ? 'transaction' : undefined,
-				details: {
-					...entry.metadata,
-					transactionType: entry.transactionType,
-					amount: entry.amount,
-					method: entry.method,
-					confidence: entry.confidence,
-					transcriptionHash: entry.transcription
-						? await hashText(entry.transcription)
-						: null,
-					signature,
-				},
+		const response = await apiClient.post<{ id: string }>('/v1/compliance/audit-log', {
+			action: entry.action,
+			resourceType: entry.transactionType ? 'transaction' : undefined,
+			details: {
+				...entry.metadata,
+				transactionType: entry.transactionType,
+				amount: entry.amount,
+				method: entry.method,
+				confidence: entry.confidence,
+				transcriptionHash: entry.transcription ? await hashText(entry.transcription) : null,
+				signature,
 			},
-		);
+		});
 
 		return response.id || '';
 	} catch (error) {
@@ -89,11 +84,7 @@ async function generateSignature(entry: AuditLogEntry): Promise<string> {
 			);
 
 			// Sign
-			const signature = await window.crypto.subtle.sign(
-				'HMAC',
-				key,
-				dataBuffer,
-			);
+			const signature = await window.crypto.subtle.sign('HMAC', key, dataBuffer);
 
 			// Convert to hex
 			return Array.from(new Uint8Array(signature))
@@ -142,18 +133,15 @@ export async function queryAuditLogs(params: {
 	limit?: number;
 }): Promise<unknown[]> {
 	try {
-		const response = await apiClient.get<{ data: unknown[] }>(
-			'/v1/compliance/audit-logs',
-			{
-				params: {
-					action: params.action,
-					endDate: params.endDate?.toISOString(),
-					limit: params.limit || 100,
-					startDate: params.startDate?.toISOString(),
-					userId: params.userId,
-				},
+		const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/audit-logs', {
+			params: {
+				action: params.action,
+				endDate: params.endDate?.toISOString(),
+				limit: params.limit || 100,
+				startDate: params.startDate?.toISOString(),
+				userId: params.userId,
 			},
-		);
+		});
 
 		return response.data || [];
 	} catch (error) {

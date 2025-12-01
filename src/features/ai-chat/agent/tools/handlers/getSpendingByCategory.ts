@@ -69,10 +69,7 @@ export async function getSpendingByCategory(
 			transactionCount: count(transactions.id),
 		})
 		.from(transactions)
-		.leftJoin(
-			transactionCategories,
-			eq(transactions.categoryId, transactionCategories.id),
-		)
+		.leftJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
 		.where(
 			and(
 				eq(transactions.userId, userId),
@@ -84,19 +81,14 @@ export async function getSpendingByCategory(
 		.groupBy(transactions.categoryId, transactionCategories.name)
 		.orderBy(desc(sum(transactions.amount)));
 
-	const totalSpending = result.reduce(
-		(sum, r) => sum + Math.abs(Number(r.total || 0)),
-		0,
-	);
+	const totalSpending = result.reduce((sum, r) => sum + Math.abs(Number(r.total || 0)), 0);
 
 	const categories = result.map((r) => ({
 		categoryId: r.categoryId || 'uncategorized',
 		categoryName: r.categoryName || 'Sem categoria',
 		amount: Math.abs(Number(r.total || 0)),
 		percentage:
-			totalSpending > 0
-				? Math.round((Math.abs(Number(r.total || 0)) / totalSpending) * 100)
-				: 0,
+			totalSpending > 0 ? Math.round((Math.abs(Number(r.total || 0)) / totalSpending) * 100) : 0,
 		transactionCount: Number(r.transactionCount || 0),
 	}));
 

@@ -1,13 +1,7 @@
 import { Bell, Settings, Shield, User } from 'lucide-react';
 
 import { PrivacyPreferences } from '@/components/privacy';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RouteGuard } from '@/lib/auth/route-guard';
 
@@ -35,10 +29,7 @@ export function ConfiguracoesPage() {
 							<User className="h-4 w-4" />
 							Perfil
 						</TabsTrigger>
-						<TabsTrigger
-							value="notifications"
-							className="flex items-center gap-2"
-						>
+						<TabsTrigger value="notifications" className="flex items-center gap-2">
 							<Bell className="h-4 w-4" />
 							Notificações
 						</TabsTrigger>
@@ -55,9 +46,7 @@ export function ConfiguracoesPage() {
 									<User className="h-5 w-5" />
 									Informações do Perfil
 								</CardTitle>
-								<CardDescription>
-									Gerencie suas informações pessoais
-								</CardDescription>
+								<CardDescription>Gerencie suas informações pessoais</CardDescription>
 							</CardHeader>
 							<CardContent>
 								<p className="text-muted-foreground">
@@ -74,9 +63,7 @@ export function ConfiguracoesPage() {
 									<Bell className="h-5 w-5" />
 									Preferências de Notificação
 								</CardTitle>
-								<CardDescription>
-									Configure como deseja receber notificações
-								</CardDescription>
+								<CardDescription>Configure como deseja receber notificações</CardDescription>
 							</CardHeader>
 							<CardContent>
 								<p className="text-muted-foreground">

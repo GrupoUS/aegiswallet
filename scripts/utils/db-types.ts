@@ -16,9 +16,7 @@ import type { NeonHttpQueryResult } from 'drizzle-orm/neon-http';
  * const rows = getRows(result);
  * console.log(`Found ${rows.length} users`);
  */
-export function getRows<T extends Record<string, unknown>>(
-	result: NeonHttpQueryResult<T>,
-): T[] {
+export function getRows<T extends Record<string, unknown>>(result: NeonHttpQueryResult<T>): T[] {
 	return result.rows ?? [];
 }
 

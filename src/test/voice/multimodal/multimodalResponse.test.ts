@@ -131,12 +131,8 @@ describe('Multimodal Response Hook', () => {
 				});
 			});
 
-			expect(
-				result.current.response?.accessibility?.['aria-label'],
-			).toBeDefined();
-			expect(result.current.response?.accessibility?.['aria-label']).not.toBe(
-				'',
-			);
+			expect(result.current.response?.accessibility?.['aria-label']).toBeDefined();
+			expect(result.current.response?.accessibility?.['aria-label']).not.toBe('');
 		});
 	});
 

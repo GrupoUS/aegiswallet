@@ -120,10 +120,7 @@ export class SMSProvider {
 	/**
 	 * Replace template variables
 	 */
-	private replaceTemplateVariables(
-		template: string,
-		variables: Record<string, string>,
-	): string {
+	private replaceTemplateVariables(template: string, variables: Record<string, string>): string {
 		let result = template;
 
 		for (const [key, value] of Object.entries(variables)) {
@@ -188,10 +185,7 @@ export class SMSProvider {
 			if (message.template && this.templates.has(message.template)) {
 				const template = this.templates.get(message.template);
 				if (template) {
-					finalBody = this.replaceTemplateVariables(
-						template.body,
-						message.variables || {},
-					);
+					finalBody = this.replaceTemplateVariables(template.body, message.variables || {});
 				}
 			}
 
@@ -236,8 +230,7 @@ export class SMSProvider {
 			await this.logSMSMessage(userId, message, result);
 			return result;
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
 			const result: SMSResult = {
 				error: errorMessage,
@@ -253,11 +246,7 @@ export class SMSProvider {
 	/**
 	 * Send OTP via SMS
 	 */
-	async sendOTP(
-		userId: string,
-		phoneNumber: string,
-		otp: string,
-	): Promise<SMSResult> {
+	async sendOTP(userId: string, phoneNumber: string, otp: string): Promise<SMSResult> {
 		return this.sendMessage(userId, {
 			template: 'otp',
 			to: phoneNumber,
@@ -288,10 +277,7 @@ export class SMSProvider {
 	/**
 	 * Send push approval request
 	 */
-	async sendPushApproval(
-		userId: string,
-		phoneNumber: string,
-	): Promise<SMSResult> {
+	async sendPushApproval(userId: string, phoneNumber: string): Promise<SMSResult> {
 		return this.sendMessage(userId, {
 			template: 'push_approval',
 			to: phoneNumber,

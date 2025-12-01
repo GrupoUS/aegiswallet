@@ -1,8 +1,4 @@
-import type {
-	DragEndEvent,
-	DragStartEvent,
-	UniqueIdentifier,
-} from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core';
 import {
 	DndContext,
 	DragOverlay,
@@ -42,10 +38,7 @@ interface CalendarDndProviderProps {
 	onEventUpdate?: (event: CalendarEvent) => void;
 }
 
-export function CalendarDndProvider({
-	children,
-	onEventUpdate,
-}: CalendarDndProviderProps) {
+export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProviderProps) {
 	const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -124,10 +117,7 @@ export function CalendarDndProvider({
 
 			// Calculate new dates
 			const newStart = addMinutes(draggedEvent.start, minutesMoved);
-			const duration = differenceInMinutes(
-				draggedEvent.end,
-				draggedEvent.start,
-			);
+			const duration = differenceInMinutes(draggedEvent.end, draggedEvent.start);
 			const newEnd = addMinutes(newStart, duration);
 
 			// Only update if the start time has actually changed
@@ -179,11 +169,7 @@ export function CalendarDndProvider({
 	};
 
 	return (
-		<DndContext
-			sensors={sensors}
-			onDragStart={handleDragStart}
-			onDragEnd={handleDragEnd}
-		>
+		<DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 			<CalendarDndContext.Provider
 				value={{
 					activeEvent,

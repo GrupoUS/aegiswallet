@@ -4,13 +4,7 @@ import { PricingTable } from '@/components/billing/PricingTable';
 import { SubscriptionStatus } from '@/components/billing/SubscriptionStatus';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSubscription } from '@/hooks/billing';
 import { RouteGuard } from '@/lib/auth/route-guard';
 
@@ -55,8 +49,7 @@ function BillingPage() {
 						Planos e Assinatura
 					</h1>
 					<p className="mx-auto max-w-2xl text-muted-foreground text-lg">
-						Escolha o plano ideal para gerenciar suas finanças com inteligência
-						e segurança
+						Escolha o plano ideal para gerenciar suas finanças com inteligência e segurança
 					</p>
 				</div>
 
@@ -81,21 +74,17 @@ function BillingPage() {
 							<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 								<div className="space-y-2">
 									<p className="text-sm text-muted-foreground">Plano Atual</p>
-									<p className="font-semibold">
-										{subscription.plan?.name || 'Gratuito'}
-									</p>
+									<p className="font-semibold">{subscription.plan?.name || 'Gratuito'}</p>
 								</div>
 								<div className="space-y-2">
-									<p className="text-sm text-muted-foreground">
-										Próxima cobrança
-									</p>
+									<p className="text-sm text-muted-foreground">Próxima cobrança</p>
 									<p className="font-semibold">
 										{subscription.subscription.cancelAtPeriodEnd
 											? 'Cancela ao final do período'
 											: subscription.subscription.currentPeriodEnd
-												? new Date(
-														subscription.subscription.currentPeriodEnd,
-													).toLocaleDateString('pt-BR')
+												? new Date(subscription.subscription.currentPeriodEnd).toLocaleDateString(
+														'pt-BR',
+													)
 												: 'N/A'}
 									</p>
 								</div>
@@ -114,12 +103,9 @@ function BillingPage() {
 											}
 										>
 											{subscription.subscription.status === 'active' && 'Ativa'}
-											{subscription.subscription.status === 'trialing' &&
-												'Em teste'}
-											{subscription.subscription.status === 'past_due' &&
-												'Pagamento atrasado'}
-											{subscription.subscription.status === 'canceled' &&
-												'Cancelada'}
+											{subscription.subscription.status === 'trialing' && 'Em teste'}
+											{subscription.subscription.status === 'past_due' && 'Pagamento atrasado'}
+											{subscription.subscription.status === 'canceled' && 'Cancelada'}
 											{!subscription.subscription.status && 'Gratuito'}
 										</Badge>
 									</div>
@@ -147,21 +133,14 @@ function BillingPage() {
 							<HelpCircle className="h-5 w-5" />
 							Dúvidas Frequentes
 						</CardTitle>
-						<CardDescription>
-							Tire suas dúvidas sobre planos e assinaturas
-						</CardDescription>
+						<CardDescription>Tire suas dúvidas sobre planos e assinaturas</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-6">
 						{faqItems.map((item, itemIndex) => (
-							<div
-								key={item.question.replace(/\s+/g, '-').toLowerCase()}
-								className="space-y-2"
-							>
+							<div key={item.question.replace(/\s+/g, '-').toLowerCase()} className="space-y-2">
 								<h3 className="font-medium text-lg">{item.question}</h3>
 								<p className="text-muted-foreground">{item.answer}</p>
-								{itemIndex < faqItems.length - 1 && (
-									<hr className="border-border mt-4" />
-								)}
+								{itemIndex < faqItems.length - 1 && <hr className="border-border mt-4" />}
 							</div>
 						))}
 					</CardContent>
@@ -183,9 +162,7 @@ function BillingPage() {
 								</div>
 								<div>
 									<p className="font-medium">E-mail</p>
-									<p className="text-muted-foreground text-sm">
-										suporte@aegiswallet.com.br
-									</p>
+									<p className="text-muted-foreground text-sm">suporte@aegiswallet.com.br</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-3">
@@ -203,9 +180,7 @@ function BillingPage() {
 								</div>
 								<div>
 									<p className="font-medium">Help Center</p>
-									<p className="text-muted-foreground text-sm">
-										ajuda.aegiswallet.com.br
-									</p>
+									<p className="text-muted-foreground text-sm">ajuda.aegiswallet.com.br</p>
 								</div>
 							</div>
 						</div>
@@ -230,15 +205,15 @@ function BillingPage() {
 							<div className="space-y-2">
 								<p className="font-medium">LGPD Compliance</p>
 								<p className="text-muted-foreground text-sm">
-									Suas informações são protegidas de acordo com a Lei Geral de
-									Proteção de Dados brasileira
+									Suas informações são protegidas de acordo com a Lei Geral de Proteção de Dados
+									brasileira
 								</p>
 							</div>
 							<div className="space-y-2">
 								<p className="font-medium">Criptografia Avançada</p>
 								<p className="text-muted-foreground text-sm">
-									Dados criptografados em trânsito e em repouso com padrões
-									internacionais de segurança
+									Dados criptografados em trânsito e em repouso com padrões internacionais de
+									segurança
 								</p>
 							</div>
 							<div className="space-y-2">

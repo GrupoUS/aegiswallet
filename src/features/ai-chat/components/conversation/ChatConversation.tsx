@@ -62,9 +62,7 @@ export function ChatConversation({
 						<div
 							className={cn(
 								'rounded-lg px-4 py-2',
-								msg.role === 'user'
-									? 'bg-primary text-primary-foreground'
-									: 'bg-muted',
+								msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted',
 							)}
 						>
 							{msg.content}
@@ -83,9 +81,7 @@ export function ChatConversation({
 					</Avatar>
 
 					<div className="flex flex-col gap-2 max-w-[80%] items-start">
-						{streamingReasoning && (
-							<ChatReasoning content={streamingReasoning} isOpen={true} />
-						)}
+						{streamingReasoning && <ChatReasoning content={streamingReasoning} isOpen={true} />}
 
 						{streamingContent && (
 							<div className="rounded-lg px-4 py-2 bg-muted animate-pulse-subtle">

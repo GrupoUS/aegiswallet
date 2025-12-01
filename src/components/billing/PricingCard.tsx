@@ -21,12 +21,7 @@ interface PricingCardProps {
 	onSelect?: (plan: SubscriptionPlan) => void;
 }
 
-export function PricingCard({
-	plan,
-	currentPlanId,
-	recommended,
-	onSelect,
-}: PricingCardProps) {
+export function PricingCard({ plan, currentPlanId, recommended, onSelect }: PricingCardProps) {
 	const { mutate: createCheckout, isPending } = useCheckout();
 	const isCurrent = currentPlanId === plan.id;
 	const isFree = plan.id === 'free';
@@ -55,19 +50,13 @@ export function PricingCard({
 		>
 			{/* Show only one badge: isCurrent takes precedence over recommended */}
 			{recommended && !isCurrent && (
-				<Badge
-					className="absolute -top-3 left-1/2 -translate-x-1/2"
-					variant="default"
-				>
+				<Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="default">
 					Recomendado
 				</Badge>
 			)}
 
 			{isCurrent && (
-				<Badge
-					className="absolute -top-3 left-1/2 -translate-x-1/2"
-					variant="outline"
-				>
+				<Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="outline">
 					Plano Atual
 				</Badge>
 			)}
@@ -76,9 +65,7 @@ export function PricingCard({
 				<CardTitle>{plan.name}</CardTitle>
 				<CardDescription>{plan.description}</CardDescription>
 				<div className="mt-4">
-					<span className="text-4xl font-bold">
-						{formatPrice(plan.priceCents, plan.currency)}
-					</span>
+					<span className="text-4xl font-bold">{formatPrice(plan.priceCents, plan.currency)}</span>
 					{!isFree && <span className="text-muted-foreground">/mês</span>}
 				</div>
 			</CardHeader>

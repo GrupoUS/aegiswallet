@@ -7,8 +7,7 @@ import { cn } from '@/lib/utils';
 
 type Direction = 'TOP' | 'LEFT' | 'BOTTOM' | 'RIGHT';
 
-export interface HoverBorderGradientProps
-	extends React.HTMLAttributes<HTMLElement> {
+export interface HoverBorderGradientProps extends React.HTMLAttributes<HTMLElement> {
 	/**
 	 * The content to be wrapped with the hover border gradient effect
 	 */
@@ -58,10 +57,7 @@ export interface HoverBorderGradientProps
  *    - Creates a radial glow effect at cursor location
  *    - Configurable gradient size
  */
-const HoverBorderGradient = React.forwardRef<
-	HTMLElement,
-	HoverBorderGradientProps
->(
+const HoverBorderGradient = React.forwardRef<HTMLElement, HoverBorderGradientProps>(
 	(
 		{
 			children,
@@ -146,17 +142,12 @@ const HoverBorderGradient = React.forwardRef<
 					{...props}
 				>
 					<div
-						className={cn(
-							'z-10 w-auto rounded-[inherit] bg-black px-4 py-2 text-white',
-							className,
-						)}
+						className={cn('z-10 w-auto rounded-[inherit] bg-black px-4 py-2 text-white', className)}
 					>
 						{children}
 					</div>
 					<motion.div
-						className={cn(
-							'absolute inset-0 z-0 flex-none overflow-hidden rounded-[inherit]',
-						)}
+						className={cn('absolute inset-0 z-0 flex-none overflow-hidden rounded-[inherit]')}
 						style={{
 							filter: 'blur(2px)',
 							height: '100%',
@@ -165,9 +156,7 @@ const HoverBorderGradient = React.forwardRef<
 						}}
 						initial={{ background: movingMap[direction] }}
 						animate={{
-							background: hovered
-								? [movingMap[direction], highlight]
-								: movingMap[direction],
+							background: hovered ? [movingMap[direction], highlight] : movingMap[direction],
 						}}
 						transition={{ duration: duration ?? 1, ease: 'linear' }}
 					/>

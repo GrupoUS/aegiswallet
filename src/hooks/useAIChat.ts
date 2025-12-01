@@ -81,10 +81,7 @@ function createAIError(
 		message: messages.message,
 		portugueseMessage: messages.portugueseMessage,
 		details: {
-			originalError:
-				originalError instanceof Error
-					? originalError.message
-					: String(originalError),
+			originalError: originalError instanceof Error ? originalError.message : String(originalError),
 			context,
 		},
 		timestamp,
@@ -128,9 +125,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 				provider,
 				tier,
 				// Redact sensitive details for compliance
-				details: aiError.details
-					? { ...aiError.details, originalError: '[REDACTED]' }
-					: undefined,
+				details: aiError.details ? { ...aiError.details, originalError: '[REDACTED]' } : undefined,
 			});
 
 			// Could emit error event for UI handling
@@ -138,12 +133,9 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 		},
 	});
 
-	const switchProvider = useCallback(
-		(newProvider: 'openai' | 'anthropic' | 'google') => {
-			setProvider(newProvider);
-		},
-		[],
-	);
+	const switchProvider = useCallback((newProvider: 'openai' | 'anthropic' | 'google') => {
+		setProvider(newProvider);
+	}, []);
 
 	const switchTier = useCallback((newTier: 'default' | 'fast') => {
 		setTier(newTier);

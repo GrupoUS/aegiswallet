@@ -251,8 +251,7 @@ export interface ProcedureOutput<T = unknown> {
 /**
  * Paginated procedure output
  */
-export interface PaginatedProcedureOutput<T = unknown>
-	extends ProcedureOutput<T[]> {
+export interface PaginatedProcedureOutput<T = unknown> extends ProcedureOutput<T[]> {
 	pagination: {
 		total: number;
 		limit: number;
@@ -575,9 +574,7 @@ export const UpdatePaymentRuleInputSchema = BaseProcedureInputSchema.extend({
 			maxAmount: z.number().positive().optional(),
 			payeeKey: z.string().optional(),
 			payeeName: z.string().min(1).optional(),
-			payeeType: z
-				.enum(['MERCHANT', 'PERSON', 'INSTITUTION', 'UTILITY'])
-				.optional(),
+			payeeType: z.enum(['MERCHANT', 'PERSON', 'INSTITUTION', 'UTILITY']).optional(),
 			preferredTime: z
 				.string()
 				.regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
@@ -639,49 +636,25 @@ export const GetVoiceHistoryInputSchema = BaseProcedureInputSchema.extend({
 /**
  * Extract input types from schemas
  */
-export type CreateFinancialEventInputType = z.infer<
-	typeof CreateFinancialEventInputSchema
->;
-export type UpdateFinancialEventInputType = z.infer<
-	typeof UpdateFinancialEventInputSchema
->;
-export type GetFinancialEventsInputType = z.infer<
-	typeof GetFinancialEventsInputSchema
->;
-export type DeleteFinancialEventInputType = z.infer<
-	typeof DeleteFinancialEventInputSchema
->;
+export type CreateFinancialEventInputType = z.infer<typeof CreateFinancialEventInputSchema>;
+export type UpdateFinancialEventInputType = z.infer<typeof UpdateFinancialEventInputSchema>;
+export type GetFinancialEventsInputType = z.infer<typeof GetFinancialEventsInputSchema>;
+export type DeleteFinancialEventInputType = z.infer<typeof DeleteFinancialEventInputSchema>;
 
-export type CreatePIXTransferInputType = z.infer<
-	typeof CreatePIXTransferInputSchema
->;
-export type GetPIXTransfersInputType = z.infer<
-	typeof GetPIXTransfersInputSchema
->;
-export type ConfirmPIXTransferInputType = z.infer<
-	typeof ConfirmPIXTransferInputSchema
->;
+export type CreatePIXTransferInputType = z.infer<typeof CreatePIXTransferInputSchema>;
+export type GetPIXTransfersInputType = z.infer<typeof GetPIXTransfersInputSchema>;
+export type ConfirmPIXTransferInputType = z.infer<typeof ConfirmPIXTransferInputSchema>;
 
 export type CreateBoletoInputType = z.infer<typeof CreateBoletoInputSchema>;
 export type GetBoletosInputType = z.infer<typeof GetBoletosInputSchema>;
 export type PayBoletoInputType = z.infer<typeof PayBoletoInputSchema>;
 
-export type CreatePaymentRuleInputType = z.infer<
-	typeof CreatePaymentRuleInputSchema
->;
-export type UpdatePaymentRuleInputType = z.infer<
-	typeof UpdatePaymentRuleInputSchema
->;
-export type GetPaymentRulesInputType = z.infer<
-	typeof GetPaymentRulesInputSchema
->;
+export type CreatePaymentRuleInputType = z.infer<typeof CreatePaymentRuleInputSchema>;
+export type UpdatePaymentRuleInputType = z.infer<typeof UpdatePaymentRuleInputSchema>;
+export type GetPaymentRulesInputType = z.infer<typeof GetPaymentRulesInputSchema>;
 
-export type ProcessVoiceCommandInputType = z.infer<
-	typeof ProcessVoiceCommandInputSchema
->;
-export type GetVoiceHistoryInputType = z.infer<
-	typeof GetVoiceHistoryInputSchema
->;
+export type ProcessVoiceCommandInputType = z.infer<typeof ProcessVoiceCommandInputSchema>;
+export type GetVoiceHistoryInputType = z.infer<typeof GetVoiceHistoryInputSchema>;
 
 /**
  * Generic procedure handler type
@@ -786,14 +759,10 @@ export function isProcedureError(obj: unknown): obj is ProcedureError {
 	);
 }
 
-export function isValidProcedureErrorCode(
-	code: string,
-): code is ProcedureErrorCode {
+export function isValidProcedureErrorCode(code: string): code is ProcedureErrorCode {
 	return Object.values(ProcedureErrorCode).includes(code as ProcedureErrorCode);
 }
 
-export function isValidSecurityEventType(
-	type: string,
-): type is SecurityEventType {
+export function isValidSecurityEventType(type: string): type is SecurityEventType {
 	return Object.values(SecurityEventType).includes(type as SecurityEventType);
 }

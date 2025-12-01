@@ -25,29 +25,23 @@ export function setupStaticRoutes(app: Hono<AppEnv>) {
 		// For non-Vercel production (e.g., running with bun start)
 		// Dynamic import to avoid bundling bun-specific code for Vercel
 		import('hono/bun').then(({ serveStatic }) => {
-			import('@/server/middleware/cache').then(
-				({ htmlCache, staticAssetsCache }) => {
-					// Serve static assets with aggressive caching
-					app.use(
-						'/assets/*',
-						staticAssetsCache(),
-						serveStatic({ root: './dist' }),
-					);
+			import('@/server/middleware/cache').then(({ htmlCache, staticAssetsCache }) => {
+				// Serve static assets with aggressive caching
+				app.use('/assets/*', staticAssetsCache(), serveStatic({ root: './dist' }));
 
-					// Serve HTML files with no-cache
-					app.use('/*.html', htmlCache(), serveStatic({ root: './dist' }));
+				// Serve HTML files with no-cache
+				app.use('/*.html', htmlCache(), serveStatic({ root: './dist' }));
 
-					// Fallback for SPA routing - serve index.html for non-API routes
-					app.use(
-						'/*',
-						htmlCache(),
-						serveStatic({
-							path: './dist/index.html',
-							rewriteRequestPath: (path) => path,
-						}),
-					);
-				},
-			);
+				// Fallback for SPA routing - serve index.html for non-API routes
+				app.use(
+					'/*',
+					htmlCache(),
+					serveStatic({
+						path: './dist/index.html',
+						rewriteRequestPath: (path) => path,
+					}),
+				);
+			});
 		});
 	} else {
 		// Development mode - inform about frontend dev server

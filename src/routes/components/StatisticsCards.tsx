@@ -1,9 +1,4 @@
-import {
-	AlertTriangle,
-	ArrowDownRight,
-	ArrowUpRight,
-	Wallet,
-} from 'lucide-react';
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Wallet } from 'lucide-react';
 
 import { FinancialAmount } from '@/components/financial-amount';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,11 +35,7 @@ export function StatisticsCards({ statistics, loading }: StatisticsCardsProps) {
 				</CardHeader>
 				<CardContent>
 					<div className="text-2xl font-bold">
-						<FinancialAmount
-							amount={statistics.netBalance}
-							currency="BRL"
-							size="xl"
-						/>
+						<FinancialAmount amount={statistics.netBalance} currency="BRL" size="xl" />
 					</div>
 					<p className="text-xs text-muted-foreground mt-1">
 						{statistics.netBalance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}

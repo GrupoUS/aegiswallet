@@ -110,8 +110,7 @@ class MetricsStore {
 		// Calculate accuracy percentages
 		for (const intent of Object.values(IntentType)) {
 			const { total, correct } = intentCounts[intent];
-			this.metrics.accuracyByIntent[intent as IntentType] =
-				total > 0 ? (correct / total) * 100 : 0;
+			this.metrics.accuracyByIntent[intent as IntentType] = total > 0 ? (correct / total) * 100 : 0;
 		}
 	}
 
@@ -130,9 +129,7 @@ class MetricsStore {
 
 		if (filters) {
 			if (filters.intent) {
-				filtered = filtered.filter(
-					(log) => log.predictedIntent === filters.intent,
-				);
+				filtered = filtered.filter((log) => log.predictedIntent === filters.intent);
 			}
 
 			if (filters.feedback) {
@@ -228,10 +225,7 @@ class MetricsStore {
 
 		const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
 		const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
-		const f1Score =
-			precision + recall > 0
-				? (2 * (precision * recall)) / (precision + recall)
-				: 0;
+		const f1Score = precision + recall > 0 ? (2 * (precision * recall)) / (precision + recall) : 0;
 
 		return {
 			f1Score: f1Score * 100,
@@ -283,9 +277,7 @@ const metricsStore = new MetricsStore();
 /**
  * Log a classification for metrics tracking
  */
-export function logClassification(
-	log: Omit<ClassificationLog, 'id' | 'timestamp'>,
-): void {
+export function logClassification(log: Omit<ClassificationLog, 'id' | 'timestamp'>): void {
 	const fullLog: ClassificationLog = {
 		...log,
 		id: generateId(),
@@ -326,9 +318,7 @@ export function getMetrics(): NLUMetrics {
 /**
  * Get classification logs with optional filters
  */
-export function getLogs(
-	filters?: Parameters<typeof metricsStore.getLogs>[0],
-): ClassificationLog[] {
+export function getLogs(filters?: Parameters<typeof metricsStore.getLogs>[0]): ClassificationLog[] {
 	return metricsStore.getLogs(filters);
 }
 
@@ -349,10 +339,7 @@ export function getFalseNegatives(): ClassificationLog[] {
 /**
  * Get confusion matrix
  */
-export function getConfusionMatrix(): Record<
-	IntentType,
-	Record<IntentType, number>
-> {
+export function getConfusionMatrix(): Record<IntentType, Record<IntentType, number>> {
 	return metricsStore.getConfusionMatrix();
 }
 
@@ -388,10 +375,10 @@ export function generateReport(): {
 	};
 } {
 	const metrics = getMetrics();
-	const intentMetrics: Record<
+	const intentMetrics: Record<IntentType, ReturnType<typeof getIntentMetrics>> = {} as Record<
 		IntentType,
 		ReturnType<typeof getIntentMetrics>
-	> = {} as Record<IntentType, ReturnType<typeof getIntentMetrics>>;
+	>;
 
 	for (const intent of Object.values(IntentType)) {
 		if (intent !== IntentType.UNKNOWN) {

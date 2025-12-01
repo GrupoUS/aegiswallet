@@ -9,13 +9,7 @@ import { Component } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ErrorBoundaryState {
 	hasError: boolean;
@@ -37,10 +31,7 @@ export interface ErrorBoundaryProps {
 	showErrorDetails?: boolean;
 }
 
-export class ErrorBoundary extends Component<
-	ErrorBoundaryProps,
-	ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 	private retryTimeouts: NodeJS.Timeout[] = [];
 
 	constructor(props: ErrorBoundaryProps) {
@@ -100,9 +91,7 @@ export class ErrorBoundary extends Component<
 			// errorReportingService.captureException(error, { extra: errorData });
 
 			// For now, store in localStorage for debugging
-			const existingErrors = JSON.parse(
-				localStorage.getItem('error-logs') || '[]',
-			);
+			const existingErrors = JSON.parse(localStorage.getItem('error-logs') || '[]');
 			existingErrors.push(errorData);
 
 			// Keep only last 50 errors
@@ -131,24 +120,13 @@ export class ErrorBoundary extends Component<
 
 	render() {
 		const { hasError, error, errorId, retryCount } = this.state;
-		const {
-			children,
-			fallback,
-			maxRetries = 3,
-			showErrorDetails = false,
-		} = this.props;
+		const { children, fallback, maxRetries = 3, showErrorDetails = false } = this.props;
 
 		if (hasError && error) {
 			// Use custom fallback if provided
 			if (fallback) {
 				const FallbackComponent = fallback;
-				return (
-					<FallbackComponent
-						error={error}
-						errorId={errorId}
-						retry={this.handleRetry}
-					/>
-				);
+				return <FallbackComponent error={error} errorId={errorId} retry={this.handleRetry} />;
 			}
 
 			// Default error UI
@@ -161,12 +139,10 @@ export class ErrorBoundary extends Component<
 							<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
 								<AlertTriangle className="h-6 w-6 text-destructive" />
 							</div>
-							<CardTitle className="text-destructive">
-								Ops! Algo deu errado
-							</CardTitle>
+							<CardTitle className="text-destructive">Ops! Algo deu errado</CardTitle>
 							<CardDescription>
-								Encontramos um erro inesperado. Nossa equipe foi notificada e
-								estamos trabalhando para resolver.
+								Encontramos um erro inesperado. Nossa equipe foi notificada e estamos trabalhando
+								para resolver.
 							</CardDescription>
 						</CardHeader>
 
@@ -174,26 +150,16 @@ export class ErrorBoundary extends Component<
 							<Alert>
 								<AlertTriangle className="h-4 w-4" />
 								<AlertTitle>ID do Erro</AlertTitle>
-								<AlertDescription className="font-mono text-sm">
-									{errorId}
-								</AlertDescription>
+								<AlertDescription className="font-mono text-sm">{errorId}</AlertDescription>
 							</Alert>
 
 							{canRetry ? (
 								<div className="flex flex-col gap-3 sm:flex-row">
-									<Button
-										onClick={this.handleRetry}
-										className="flex-1"
-										variant="default"
-									>
+									<Button onClick={this.handleRetry} className="flex-1" variant="default">
 										<RefreshCw className="mr-2 h-4 w-4" />
 										Tentar Novamente ({retryCount + 1}/{maxRetries})
 									</Button>
-									<Button
-										onClick={this.handleGoHome}
-										className="flex-1"
-										variant="outline"
-									>
+									<Button onClick={this.handleGoHome} className="flex-1" variant="outline">
 										<Home className="mr-2 h-4 w-4" />
 										Página Inicial
 									</Button>
@@ -204,8 +170,8 @@ export class ErrorBoundary extends Component<
 										<AlertTriangle className="h-4 w-4" />
 										<AlertTitle>Máximo de Tentativas Atingido</AlertTitle>
 										<AlertDescription>
-											Você atingiu o número máximo de tentativas. Por favor,
-											recarregue a página ou contate o suporte.
+											Você atingiu o número máximo de tentativas. Por favor, recarregue a página ou
+											contate o suporte.
 										</AlertDescription>
 									</Alert>
 									<div className="flex flex-col gap-3 sm:flex-row">
@@ -217,11 +183,7 @@ export class ErrorBoundary extends Component<
 											<RefreshCw className="mr-2 h-4 w-4" />
 											Recarregar Página
 										</Button>
-										<Button
-											onClick={this.handleGoHome}
-											className="flex-1"
-											variant="outline"
-										>
+										<Button onClick={this.handleGoHome} className="flex-1" variant="outline">
 											<Home className="mr-2 h-4 w-4" />
 											Página Inicial
 										</Button>
@@ -235,20 +197,15 @@ export class ErrorBoundary extends Component<
 										Detalhes Técnicos (Apenas Desenvolvimento)
 									</summary>
 									<div className="mt-2 rounded-md bg-muted p-3">
-										<pre className="overflow-auto whitespace-pre-wrap text-xs">
-											{error.stack}
-										</pre>
+										<pre className="overflow-auto whitespace-pre-wrap text-xs">{error.stack}</pre>
 									</div>
 								</details>
 							)}
 
 							<div className="text-center text-muted-foreground text-sm">
-								<p>
-									Se o problema persistir, entre em contato com nosso suporte.
-								</p>
+								<p>Se o problema persistir, entre em contato com nosso suporte.</p>
 								<p className="mt-1">
-									Mencione o ID do erro:{' '}
-									<span className="font-mono">{errorId}</span>
+									Mencione o ID do erro: <span className="font-mono">{errorId}</span>
 								</p>
 							</div>
 						</CardContent>

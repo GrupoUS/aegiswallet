@@ -24,11 +24,7 @@ interface UseLoggerReturn {
 
 	// Specialized logging methods
 	userAction: (action: string, context?: LoggerContext) => void;
-	voiceCommand: (
-		command: string,
-		confidence: number,
-		context?: LoggerContext,
-	) => void;
+	voiceCommand: (command: string, confidence: number, context?: LoggerContext) => void;
 	voiceError: (error: string, context?: LoggerContext) => void;
 	authEvent: (event: string, userId?: string, context?: LoggerContext) => void;
 	securityEvent: (event: string, context?: LoggerContext) => void;
@@ -81,11 +77,7 @@ export function useLogger(options: UseLoggerOptions = {}): UseLoggerReturn {
 	);
 
 	const voiceCommand = useCallback(
-		(
-			command: string,
-			confidence: number,
-			additionalContext?: LoggerContext,
-		) => {
+		(command: string, confidence: number, additionalContext?: LoggerContext) => {
 			const fullContext = {
 				...contextRef.current,
 				...additionalContext,

@@ -10,15 +10,15 @@ describe('LGPD Compliance Issues', () => {
 		it('should have explicit consent for voice data collection', () => {
 			// This test exposes missing voice data consent mechanisms
 			const mockUserConsent = {
-				data_processing: true,
+				dataProcessing: true,
 				analytics: false,
 				// This should fail because voice consent is missing
-				voice_data_consent: true,
-				biometric_consent: true,
+				voiceDataConsent: true,
+				biometricConsent: true,
 			};
 
-			expect(mockUserConsent.voice_data_consent).toBeDefined();
-			expect(mockUserConsent.biometric_consent).toBeDefined();
+			expect(mockUserConsent.voiceDataConsent).toBeDefined();
+			expect(mockUserConsent.biometricConsent).toBeDefined();
 		});
 
 		it('should have data retention policies for voice data', () => {
@@ -51,9 +51,7 @@ describe('LGPD Compliance Issues', () => {
 			};
 
 			expect(mockDataCollection.voice_fields).toBeDefined();
-			expect(mockDataCollection.voice_fields.required).toContain(
-				'voice_sample',
-			);
+			expect(mockDataCollection.voice_fields.required).toContain('voice_sample');
 		});
 	});
 
@@ -160,9 +158,7 @@ describe('LGPD Compliance Issues', () => {
 			};
 
 			expect(mockEncryptionConfig.field_encryption.voice_samples).toBeDefined();
-			expect(
-				mockEncryptionConfig.field_encryption.voice_patterns,
-			).toBeDefined();
+			expect(mockEncryptionConfig.field_encryption.voice_patterns).toBeDefined();
 		});
 
 		it('should have secure voice data transmission', () => {
@@ -229,9 +225,7 @@ describe('LGPD Compliance Issues', () => {
 			};
 
 			expect(mockDPIA.voice_specific_risks).toBeDefined();
-			expect(
-				mockDPIA.voice_specific_risks.voice_pattern_analysis,
-			).toBeDefined();
+			expect(mockDPIA.voice_specific_risks.voice_pattern_analysis).toBeDefined();
 		});
 	});
 });

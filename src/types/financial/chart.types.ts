@@ -42,11 +42,7 @@ export interface ChartData {
 	) => React.ReactNode;
 
 	/** Optional tooltip formatter */
-	tooltipFormatter?: (
-		value: number,
-		name: string,
-		item: ChartPayload,
-	) => string;
+	tooltipFormatter?: (value: number, name: string, item: ChartPayload) => string;
 
 	/** Optional color scheme */
 	colors?: string[];

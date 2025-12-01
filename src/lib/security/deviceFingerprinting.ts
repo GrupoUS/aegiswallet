@@ -5,10 +5,7 @@
  * LGPD-compliant device tracking with privacy preservation
  */
 
-import type {
-	NavigatorWithExtensions,
-	WindowWithExtensions,
-} from './browser-types';
+import type { NavigatorWithExtensions, WindowWithExtensions } from './browser-types';
 
 export interface DeviceFingerprint {
 	id: string;
@@ -165,12 +162,8 @@ export class DeviceFingerprintingService {
 		}
 
 		// Generate unique ID and calculate confidence
-		fingerprint.id = this.generateFingerprintId(
-			fingerprint as DeviceFingerprint,
-		);
-		fingerprint.confidence = this.calculateConfidence(
-			fingerprint as DeviceFingerprint,
-		);
+		fingerprint.id = this.generateFingerprintId(fingerprint as DeviceFingerprint);
+		fingerprint.confidence = this.calculateConfidence(fingerprint as DeviceFingerprint);
 
 		this.cachedFingerprint = fingerprint as DeviceFingerprint;
 		return fingerprint as DeviceFingerprint;
@@ -233,8 +226,7 @@ export class DeviceFingerprintingService {
 	private getWebGLFingerprint(): DeviceFingerprint['webgl'] {
 		try {
 			const canvas = document.createElement('canvas');
-			const gl =
-				canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+			const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
 			if (!gl) {
 				return { renderer: 'unknown', vendor: 'unknown' };
@@ -423,8 +415,7 @@ export class DeviceFingerprintingService {
 	 */
 	private getConnectionInfo(): DeviceFingerprint['connection'] | undefined {
 		const nav = navigator as NavigatorWithExtensions;
-		const connection =
-			nav.connection || nav.mozConnection || nav.webkitConnection;
+		const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
 
 		if (!connection) {
 			return undefined;
@@ -440,9 +431,7 @@ export class DeviceFingerprintingService {
 	/**
 	 * Get battery information
 	 */
-	private async getBatteryInfo(): Promise<
-		DeviceFingerprint['battery'] | undefined
-	> {
+	private async getBatteryInfo(): Promise<DeviceFingerprint['battery'] | undefined> {
 		try {
 			const nav = navigator as NavigatorWithExtensions;
 			const battery = await nav.getBattery?.();
@@ -538,16 +527,10 @@ export class DeviceFingerprintingService {
 	/**
 	 * Check if component has valid data
 	 */
-	private hasValidData(
-		fingerprint: DeviceFingerprint,
-		component: string,
-	): boolean {
+	private hasValidData(fingerprint: DeviceFingerprint, component: string): boolean {
 		switch (component) {
 			case 'userAgent':
-				return (
-					fingerprint.userAgent !== 'unknown' &&
-					fingerprint.userAgent.length > 10
-				);
+				return fingerprint.userAgent !== 'unknown' && fingerprint.userAgent.length > 10;
 			case 'screen':
 				return fingerprint.screen && fingerprint.screen.width > 0;
 			case 'timezone':
@@ -608,8 +591,7 @@ export class DeviceFingerprintingService {
 			},
 			{
 				compare: () =>
-					fp1.screen.width === fp2.screen.width &&
-					fp1.screen.height === fp2.screen.height,
+					fp1.screen.width === fp2.screen.width && fp1.screen.height === fp2.screen.height,
 				name: 'screen',
 				weight: 0.1,
 			},
@@ -635,8 +617,7 @@ export class DeviceFingerprintingService {
 			},
 			{
 				compare: () =>
-					fp1.webgl.vendor === fp2.webgl.vendor &&
-					fp1.webgl.renderer === fp2.webgl.renderer,
+					fp1.webgl.vendor === fp2.webgl.vendor && fp1.webgl.renderer === fp2.webgl.renderer,
 				name: 'webgl',
 				weight: 0.15,
 			},
@@ -710,10 +691,7 @@ export class DeviceFingerprintingService {
 		let score = 0;
 
 		// Check for privacy/resistance tools
-		if (
-			fingerprint.userAgent.includes('Tor') ||
-			fingerprint.userAgent.includes('VPN')
-		) {
+		if (fingerprint.userAgent.includes('Tor') || fingerprint.userAgent.includes('VPN')) {
 			score += 0.3;
 			reasons.push('Privacy or anonymity tools detected');
 		}

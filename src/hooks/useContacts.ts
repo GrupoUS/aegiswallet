@@ -20,9 +20,7 @@ interface UseContactsReturn {
 	isTogglingFavorite: boolean;
 	total: number;
 	createContact: (contactData: Partial<Contact>) => Promise<Contact>;
-	updateContact: (
-		contactData: Partial<Contact> & { id: string },
-	) => Promise<Contact>;
+	updateContact: (contactData: Partial<Contact> & { id: string }) => Promise<Contact>;
 	deleteContact: (contactId: string) => Promise<void>;
 	toggleFavorite: (contactId: string) => Promise<Contact>;
 	refetch: () => Promise<Contact[]>;
@@ -142,51 +140,39 @@ export function useContacts(filters?: {
 			if (!contactData.name) {
 				throw new Error('Nome do contato é obrigatório');
 			}
-			const response = await apiClient.post<ContactApiResponse>(
-				'/v1/contacts',
-				{
-					name: contactData.name,
-					email: contactData.email || undefined,
-					phone: contactData.phone || undefined,
-					notes: contactData.notes || undefined,
-					isFavorite: contactData.isFavorite || false,
-				},
-			);
+			const response = await apiClient.post<ContactApiResponse>('/v1/contacts', {
+				name: contactData.name,
+				email: contactData.email || undefined,
+				phone: contactData.phone || undefined,
+				notes: contactData.notes || undefined,
+				isFavorite: contactData.isFavorite,
+			});
 
 			toast.success('Contato criado com sucesso!');
 			await refetch(); // Refresh contacts
 			return response.data;
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : 'Falha ao criar contato',
-			);
+			toast.error(error instanceof Error ? error.message : 'Falha ao criar contato');
 			throw error;
 		}
 	};
 
-	const updateContact = async (
-		contactData: Partial<Contact> & { id: string },
-	) => {
+	const updateContact = async (contactData: Partial<Contact> & { id: string }) => {
 		try {
-			const response = await apiClient.put<ContactApiResponse>(
-				`/v1/contacts/${contactData.id}`,
-				{
-					id: contactData.id,
-					name: contactData.name,
-					email: contactData.email,
-					phone: contactData.phone,
-					notes: contactData.notes,
-					isFavorite: contactData.isFavorite,
-				},
-			);
+			const response = await apiClient.put<ContactApiResponse>(`/v1/contacts/${contactData.id}`, {
+				id: contactData.id,
+				name: contactData.name,
+				email: contactData.email,
+				phone: contactData.phone,
+				notes: contactData.notes,
+				isFavorite: contactData.isFavorite,
+			});
 
 			toast.success('Contato atualizado com sucesso!');
 			await refetch(); // Refresh contacts
 			return response.data;
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : 'Falha ao atualizar contato',
-			);
+			toast.error(error instanceof Error ? error.message : 'Falha ao atualizar contato');
 			throw error;
 		}
 	};
@@ -197,9 +183,7 @@ export function useContacts(filters?: {
 			toast.success('Contato removido com sucesso!');
 			await refetch(); // Refresh contacts
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : 'Falha ao remover contato',
-			);
+			toast.error(error instanceof Error ? error.message : 'Falha ao remover contato');
 			throw error;
 		}
 	};
@@ -213,9 +197,7 @@ export function useContacts(filters?: {
 			await refetch(); // Refresh contacts
 			return response.data;
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : 'Falha ao alternar favorito',
-			);
+			toast.error(error instanceof Error ? error.message : 'Falha ao alternar favorito');
 			throw error;
 		}
 	};
@@ -229,10 +211,8 @@ export function useContacts(filters?: {
 			if (defaultFilters.search) params.append('search', defaultFilters.search);
 			if (defaultFilters.isFavorite !== undefined)
 				params.append('isFavorite', String(defaultFilters.isFavorite));
-			if (defaultFilters.limit)
-				params.append('limit', String(defaultFilters.limit));
-			if (defaultFilters.offset)
-				params.append('offset', String(defaultFilters.offset));
+			if (defaultFilters.limit) params.append('limit', String(defaultFilters.limit));
+			if (defaultFilters.offset) params.append('offset', String(defaultFilters.offset));
 
 			const response = await apiClient.get<{
 				data: Contact[];
@@ -242,8 +222,7 @@ export function useContacts(filters?: {
 			setContacts(response.data || []);
 			return response.data || [];
 		} catch (err) {
-			const errorMessage =
-				err instanceof Error ? err.message : 'Erro ao carregar contatos';
+			const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar contatos';
 			setError(errorMessage);
 			toast.error(errorMessage);
 			return [];
@@ -290,14 +269,10 @@ export function useContact(contactId: string): UseContactReturn {
 			setError(null);
 
 			try {
-				const response = await apiClient.get<ContactApiResponse>(
-					`/v1/contacts/${contactId}`,
-				);
+				const response = await apiClient.get<ContactApiResponse>(`/v1/contacts/${contactId}`);
 				setContact(response.data);
 			} catch (err) {
-				setError(
-					err instanceof Error ? err.message : 'Erro ao carregar contato',
-				);
+				setError(err instanceof Error ? err.message : 'Erro ao carregar contato');
 			} finally {
 				setIsLoading(false);
 			}
@@ -332,9 +307,7 @@ export function useFavoriteContacts(): UseFavoriteContactsReturn {
 			}>('/v1/contacts/favorites');
 			setFavoriteContacts(response.data);
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : 'Erro ao carregar favoritos',
-			);
+			setError(err instanceof Error ? err.message : 'Erro ao carregar favoritos');
 		} finally {
 			setIsLoading(false);
 		}
@@ -354,10 +327,7 @@ export function useFavoriteContacts(): UseFavoriteContactsReturn {
 /**
  * Hook para busca de contatos
  */
-export function useContactSearch(
-	query: string,
-	limit: number = 10,
-): UseContactSearchReturn {
+export function useContactSearch(query: string, limit = 10): UseContactSearchReturn {
 	const [searchResults, setSearchResults] = useState<Contact[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -376,9 +346,7 @@ export function useContactSearch(
 				const response = await apiClient.get<{
 					data: Contact[];
 					meta: ResponseMeta;
-				}>(
-					`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`,
-				);
+				}>(`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`);
 				setSearchResults(response.data);
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'Erro na busca');
@@ -413,9 +381,7 @@ export function useContactsStats(): UseContactsStatsReturn {
 			const response = await apiClient.get<StatsResponse>('/v1/contacts/stats');
 			setStats(response.data);
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : 'Erro ao carregar estatísticas',
-			);
+			setError(err instanceof Error ? err.message : 'Erro ao carregar estatísticas');
 		} finally {
 			setIsLoading(false);
 		}
@@ -435,7 +401,7 @@ export function useContactsStats(): UseContactsStatsReturn {
 /**
  * Hook para contatos recentes
  */
-export function useRecentContacts(limit: number = 5): UseRecentContactsReturn {
+export function useRecentContacts(limit = 5): UseRecentContactsReturn {
 	const { contacts, error, isLoading } = useContacts({ limit });
 
 	return {
@@ -492,12 +458,8 @@ export function useContactsForPix(): UseContactsForPixReturn {
 				isFavorite: Boolean(contact.isFavorite),
 				// Determinar chaves PIX disponíveis
 				pixKeys: [
-					...(contact.email
-						? [{ type: 'EMAIL' as const, value: contact.email }]
-						: []),
-					...(contact.phone
-						? [{ type: 'PHONE' as const, value: contact.phone }]
-						: []),
+					...(contact.email ? [{ type: 'EMAIL' as const, value: contact.email }] : []),
+					...(contact.phone ? [{ type: 'PHONE' as const, value: contact.phone }] : []),
 				],
 			}));
 	}, [contacts]);
@@ -510,9 +472,7 @@ export function useContactsForPix(): UseContactsForPixReturn {
 /**
  * Hook para sugestões de contatos baseado no histórico
  */
-export function useContactSuggestions(
-	limit: number = 3,
-): UseContactSuggestionsReturn {
+export function useContactSuggestions(limit = 3): UseContactSuggestionsReturn {
 	const { favoriteContacts } = useFavoriteContacts();
 	const { contacts } = useRecentContacts(limit);
 
@@ -520,8 +480,7 @@ export function useContactSuggestions(
 	const suggestions = useMemo(() => {
 		const allContacts = [...favoriteContacts, ...contacts];
 		const uniqueContacts = allContacts.filter(
-			(contact, index, self) =>
-				index === self.findIndex((c) => c.id === contact.id),
+			(contact, index, self) => index === self.findIndex((c) => c.id === contact.id),
 		);
 		return uniqueContacts.slice(0, limit);
 	}, [favoriteContacts, contacts, limit]);

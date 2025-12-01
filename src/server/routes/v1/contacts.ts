@@ -13,10 +13,7 @@ import { contacts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { validateCPF } from '@/lib/security/financial-validator';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 const brazilPhoneRegex = /^\d{10,11}$/;
 
@@ -57,10 +54,7 @@ const updateContactSchema = z.object({
 	cpf: z
 		.string()
 		.optional()
-		.refine(
-			(cpf) => !cpf || validateCPF(normalizeDigits(cpf) ?? ''),
-			'CPF inválido',
-		),
+		.refine((cpf) => !cpf || validateCPF(normalizeDigits(cpf) ?? ''), 'CPF inválido'),
 	email: z.string().email().optional(),
 	id: z.string().uuid(),
 	isFavorite: z.boolean().optional(),
@@ -285,10 +279,7 @@ contactsRouter.post(
 			);
 		} catch (error) {
 			// Check for unique constraint violation
-			if (
-				error instanceof Error &&
-				error.message.includes('unique constraint')
-			) {
+			if (error instanceof Error && error.message.includes('unique constraint')) {
 				return c.json(
 					{
 						code: 'CONFLICT',
@@ -380,9 +371,7 @@ contactsRouter.put(
 			secureLogger.info('Contact updated', {
 				contactId,
 				requestId,
-				updatedFields: Object.keys(updateData).filter(
-					(field) => field !== 'updatedAt',
-				),
+				updatedFields: Object.keys(updateData).filter((field) => field !== 'updatedAt'),
 				userId: user.id,
 			});
 
@@ -725,8 +714,7 @@ contactsRouter.get(
 					contactsWithEmail,
 					contactsWithPhone,
 					favoriteContacts,
-					favoritePercentage:
-						totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
+					favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
 					totalContacts,
 				},
 				meta: {

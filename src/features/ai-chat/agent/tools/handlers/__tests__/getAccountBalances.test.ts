@@ -98,10 +98,7 @@ describe('getAccountBalances handler', () => {
 			];
 
 			const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-			const totalAvailable = accounts.reduce(
-				(sum, acc) => sum + acc.availableBalance,
-				0,
-			);
+			const totalAvailable = accounts.reduce((sum, acc) => sum + acc.availableBalance, 0);
 
 			expect(totalBalance).toBe(18000);
 			expect(totalAvailable).toBe(17000);
@@ -111,10 +108,7 @@ describe('getAccountBalances handler', () => {
 			const accounts: Array<{ balance: number; availableBalance: number }> = [];
 
 			const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-			const totalAvailable = accounts.reduce(
-				(sum, acc) => sum + acc.availableBalance,
-				0,
-			);
+			const totalAvailable = accounts.reduce((sum, acc) => sum + acc.availableBalance, 0);
 
 			expect(totalBalance).toBe(0);
 			expect(totalAvailable).toBe(0);

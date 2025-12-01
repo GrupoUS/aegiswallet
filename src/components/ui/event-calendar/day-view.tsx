@@ -12,12 +12,7 @@ interface DayViewProps {
 	onEventClick?: (event: CalendarEvent) => void;
 }
 
-export function DayView({
-	currentDate,
-	events,
-	onEventEdit,
-	onEventClick,
-}: DayViewProps) {
+export function DayView({ currentDate, events, onEventEdit, onEventClick }: DayViewProps) {
 	const hours = useMemo(() => {
 		return Array.from({ length: 24 }, (_, i) => i);
 	}, []);

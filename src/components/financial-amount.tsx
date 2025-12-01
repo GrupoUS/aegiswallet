@@ -39,14 +39,7 @@ export function FinancialAmount({
 				: 'text-gray-900';
 
 	return (
-		<span
-			className={cn(
-				'font-mono font-semibold',
-				sizeClasses[size],
-				colorClass,
-				className,
-			)}
-		>
+		<span className={cn('font-mono font-semibold', sizeClasses[size], colorClass, className)}>
 			{sign}
 			{formatted}
 		</span>

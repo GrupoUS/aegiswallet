@@ -19,10 +19,7 @@ export interface AppProvidersProps {
 	defaultConfig?: Partial<Record<string, unknown>>;
 }
 
-export function AppProviders({
-	children,
-	defaultConfig: _defaultConfig = {},
-}: AppProvidersProps) {
+export function AppProviders({ children, defaultConfig: _defaultConfig = {} }: AppProvidersProps) {
 	// Use the singleton client from client.ts to avoid multiple instances
 	// The AuthProvider will use the singleton client internally
 	return (

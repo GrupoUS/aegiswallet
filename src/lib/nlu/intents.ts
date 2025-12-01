@@ -67,15 +67,7 @@ export const INTENT_DEFINITIONS: Record<IntentType, IntentDefinition> = {
 			'quanto falta do orçamento?',
 			'orçamento disponível',
 		],
-		keywords: [
-			'orçamento',
-			'orcamento',
-			'gastar',
-			'limite',
-			'posso',
-			'consigo',
-			'teto',
-		],
+		keywords: ['orçamento', 'orcamento', 'gastar', 'limite', 'posso', 'consigo', 'teto'],
 		name: 'Consultar Orçamento',
 		optionalSlots: [EntityType.CATEGORY, EntityType.PERIOD],
 		patterns: [
@@ -345,10 +337,7 @@ export function getAllPatterns(): {
  */
 export function getAllKeywords(): Record<IntentType, string[]> {
 	const keywords = Object.fromEntries(
-		getValidIntents().map((intent) => [
-			intent,
-			INTENT_DEFINITIONS[intent].keywords,
-		]),
+		getValidIntents().map((intent) => [intent, INTENT_DEFINITIONS[intent].keywords]),
 	) as Record<IntentType, string[]>;
 
 	return keywords;

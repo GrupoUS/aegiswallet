@@ -48,8 +48,7 @@ const QUALITY_GATES = [
 	{
 		name: 'Syntax/Style',
 		tool: 'Biome',
-		command:
-			'bunx biome check --files-ignore-unknown=true --files-max-size=10485760 src scripts',
+		command: 'bunx biome check --files-ignore-unknown=true --files-max-size=10485760 src scripts',
 		threshold: 'Zero Errors',
 		weight: 1,
 	},
@@ -133,10 +132,7 @@ function executeGate(gate: (typeof QUALITY_GATES)[0]): QualityGateResult {
 	}
 }
 
-function parseMetrics(
-	output: string,
-	gateName: string,
-): Record<string, number> {
+function parseMetrics(output: string, gateName: string): Record<string, number> {
 	const metrics: Record<string, number> = {};
 
 	switch (gateName) {
@@ -144,7 +140,7 @@ function parseMetrics(
 			// Parse Vitest coverage output
 			const coverageMatch = output.match(/All files\s+\|\s+([\d.]+)/);
 			if (coverageMatch) {
-				metrics.coverage = parseFloat(coverageMatch[1]);
+				metrics.coverage = Number.parseFloat(coverageMatch[1]);
 			}
 
 			// Parse line, branch, function, statement coverage
@@ -153,10 +149,10 @@ function parseMetrics(
 			const functionMatch = output.match(/Function\s+%:\s+([\d.]+)/);
 			const statementMatch = output.match(/Statement\s+%:\s+([\d.]+)/);
 
-			if (lineMatch) metrics.lines = parseFloat(lineMatch[1]);
-			if (branchMatch) metrics.branches = parseFloat(branchMatch[1]);
-			if (functionMatch) metrics.functions = parseFloat(functionMatch[1]);
-			if (statementMatch) metrics.statements = parseFloat(statementMatch[1]);
+			if (lineMatch) metrics.lines = Number.parseFloat(lineMatch[1]);
+			if (branchMatch) metrics.branches = Number.parseFloat(branchMatch[1]);
+			if (functionMatch) metrics.functions = Number.parseFloat(functionMatch[1]);
+			if (statementMatch) metrics.statements = Number.parseFloat(statementMatch[1]);
 			break;
 		}
 
@@ -164,8 +160,8 @@ function parseMetrics(
 			// Parse Vitest test results
 			const testMatch = output.match(/(\d+)\s+passed/);
 			const failMatch = output.match(/(\d+)\s+failed/);
-			if (testMatch) metrics.passed = parseInt(testMatch[1], 10);
-			if (failMatch) metrics.failed = parseInt(failMatch[1], 10);
+			if (testMatch) metrics.passed = Number.parseInt(testMatch[1], 10);
+			if (failMatch) metrics.failed = Number.parseInt(failMatch[1], 10);
 			break;
 		}
 
@@ -173,8 +169,8 @@ function parseMetrics(
 			// Parse OXLint security issues
 			const securityMatch = output.match(/(\d+)\s+warnings?/);
 			const errorMatch = output.match(/(\d+)\s+errors?/);
-			if (securityMatch) metrics.warnings = parseInt(securityMatch[1], 10);
-			if (errorMatch) metrics.errors = parseInt(errorMatch[1], 10);
+			if (securityMatch) metrics.warnings = Number.parseInt(securityMatch[1], 10);
+			if (errorMatch) metrics.errors = Number.parseInt(errorMatch[1], 10);
 			break;
 		}
 	}
@@ -187,14 +183,10 @@ function generateBrazilianComplianceStatus(gates: QualityGateResult[]) {
 	const hasAccessibilityGate = gates.find((g) => g.gate === 'Compliance');
 
 	return {
-		lgpdStatus:
-			hasSecurityGate?.status === 'PASS' ? 'COMPLIANT' : 'NON-COMPLIANT',
+		lgpdStatus: hasSecurityGate?.status === 'PASS' ? 'COMPLIANT' : 'NON-COMPLIANT',
 		portugueseValidation: 'VALIDATED', // Would need Portuguese-specific checks
 		pixCompliance: 'COMPLIANT', // Would need PIX-specific checks
-		accessibility:
-			hasAccessibilityGate?.status === 'PASS'
-				? 'WCAG_2.1_AA_PLUS'
-				: 'NON_COMPLIANT',
+		accessibility: hasAccessibilityGate?.status === 'PASS' ? 'WCAG_2.1_AA_PLUS' : 'NON_COMPLIANT',
 	};
 }
 
@@ -225,20 +217,14 @@ function printReport(report: QualityGatesReport) {
 	console.log(`\n📊 SUMMARY:`);
 	console.log(`   Total Gates: ${report.summary.total}`);
 	console.log(`   Passed: ${report.summary.passed} ✅`);
-	console.log(
-		`   Failed: ${report.summary.failed} ${report.summary.failed > 0 ? '❌' : '✅'}`,
-	);
+	console.log(`   Failed: ${report.summary.failed} ${report.summary.failed > 0 ? '❌' : '✅'}`);
 	console.log(`   Duration: ${(report.summary.duration / 1000).toFixed(2)}s`);
-	console.log(
-		`   Status: ${report.summary.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}`,
-	);
+	console.log(`   Status: ${report.summary.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}`);
 
 	// Brazilian Compliance
 	console.log(`\n🇧🇷 BRAZILIAN COMPLIANCE:`);
 	console.log(`   LGPD Status: ${report.brazilianCompliance.lgpdStatus}`);
-	console.log(
-		`   Portuguese Validation: ${report.brazilianCompliance.portugueseValidation}`,
-	);
+	console.log(`   Portuguese Validation: ${report.brazilianCompliance.portugueseValidation}`);
 	console.log(`   PIX Compliance: ${report.brazilianCompliance.pixCompliance}`);
 	console.log(`   Accessibility: ${report.brazilianCompliance.accessibility}`);
 
@@ -267,20 +253,16 @@ function printReport(report: QualityGatesReport) {
 	const avgDuration = report.summary.duration / report.summary.total;
 	console.log(`\n⚡ PERFORMANCE ANALYSIS:`);
 	console.log(`   Average Gate Duration: ${(avgDuration / 1000).toFixed(2)}s`);
-	console.log(
-		`   Fastest Tool Performance: OXLint (50-100x faster than ESLint)`,
-	);
+	console.log(`   Fastest Tool Performance: OXLint (50-100x faster than ESLint)`);
 	console.log(`   Testing Framework: Vitest (3-5x faster than Jest)`);
 	console.log(`   Quality Framework: Biome (unified linting + formatting)`);
 
 	console.log(`\n${'='.repeat(80)}`);
 }
 
-async function main() {
+function main() {
 	console.log('🇧🇷 Starting AegisWallet Quality Gates Execution...');
-	console.log(
-		`Executing ${QUALITY_GATES.length} quality gates with Vitest + Biome...\n`,
-	);
+	console.log(`Executing ${QUALITY_GATES.length} quality gates with Vitest + Biome...\n`);
 
 	const results: QualityGateResult[] = [];
 
@@ -291,9 +273,7 @@ async function main() {
 
 		// Print immediate result
 		const icon = result.status === 'PASS' ? '✅' : '❌';
-		console.log(
-			`${icon} ${gate.name}: ${result.status} (${(result.duration / 1000).toFixed(2)}s)`,
-		);
+		console.log(`${icon} ${gate.name}: ${result.status} (${(result.duration / 1000).toFixed(2)}s)`);
 	}
 
 	const report = generateReport(results);
@@ -316,5 +296,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Run the script
 if (import.meta.main) {
-	main();
+	try {
+		main();
+	} catch (error) {
+		console.error('Quality Gates failed:', error);
+		process.exit(1);
+	}
 }

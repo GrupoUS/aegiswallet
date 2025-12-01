@@ -4,10 +4,7 @@ import { z } from 'zod';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 import { StripeSubscriptionService } from '@/services/stripe/subscription.service';
 
 const portalRouter = new Hono<AppEnv>();
@@ -29,7 +26,7 @@ portalRouter.post(
 		try {
 			const subData = await StripeSubscriptionService.getSubscription(user.id);
 
-			if (!subData || !subData.subscription?.stripeCustomerId) {
+			if (!subData?.subscription?.stripeCustomerId) {
 				return c.json({ error: 'Assinatura não encontrada' }, 400);
 			}
 

@@ -97,10 +97,7 @@ function formatAccounts(
 	}>,
 ): string {
 	const accountList = accounts
-		.map(
-			(acc) =>
-				`  - ${acc.accountName}: ${formatCurrency(acc.balance, acc.currency)}`,
-		)
+		.map((acc) => `  - ${acc.accountName}: ${formatCurrency(acc.balance, acc.currency)}`)
 		.join('\n');
 
 	return `
@@ -124,14 +121,9 @@ function formatTransactions(transactions: Transaction[]): string {
 		{} as Record<string, Transaction[]>,
 	);
 
-	const categoryStats = (
-		Object.entries(byCategory) as [string, Transaction[]][]
-	)
+	const categoryStats = (Object.entries(byCategory) as [string, Transaction[]][])
 		.map(([category, txs]) => {
-			const total = txs.reduce(
-				(sum: number, t: Transaction) => sum + t.amount,
-				0,
-			);
+			const total = txs.reduce((sum: number, t: Transaction) => sum + t.amount, 0);
 			return `  - ${getCategoryName(category)}: ${txs.length} transações, total de ${formatCurrency(total, 'BRL')}`;
 		})
 		.join('\n');

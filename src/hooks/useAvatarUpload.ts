@@ -45,9 +45,7 @@ export function useAvatarUpload(): UseAvatarUploadReturn {
 
 			// TODO: Implement file upload to new storage provider
 			// Options: Cloudflare R2, AWS S3, Vercel Blob Storage
-			throw new Error(
-				'Upload de avatar temporariamente indisponível. Funcionalidade em migração.',
-			);
+			throw new Error('Upload de avatar temporariamente indisponível. Funcionalidade em migração.');
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users', 'me'] });

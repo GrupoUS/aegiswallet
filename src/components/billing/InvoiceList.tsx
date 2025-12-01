@@ -51,8 +51,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 				<FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
 				<h3 className="text-lg font-medium mb-2">Nenhuma fatura encontrada</h3>
 				<p className="text-muted-foreground">
-					Você ainda não possui faturas. Elas aparecerão aqui quando você tiver
-					transações.
+					Você ainda não possui faturas. Elas aparecerão aqui quando você tiver transações.
 				</p>
 			</div>
 		);
@@ -112,9 +111,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 										)}
 
 										{invoice.description && (
-											<p className="text-sm text-gray-600 mt-1">
-												{invoice.description}
-											</p>
+											<p className="text-sm text-gray-600 mt-1">{invoice.description}</p>
 										)}
 
 										{/* Invoice Items Preview */}
@@ -134,15 +131,12 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
 										<p className="text-lg font-semibold">
 											{formatCurrency(invoice.amountDue / 100)}
 										</p>
-										{invoice.amountPaid > 0 &&
-											invoice.amountPaid < invoice.amountDue && (
-												<p className="text-sm text-yellow-600">
-													{formatCurrency(invoice.amountPaid / 100)} pago
-												</p>
-											)}
-										<p className="text-sm text-muted-foreground">
-											{invoice.currency}
-										</p>
+										{invoice.amountPaid > 0 && invoice.amountPaid < invoice.amountDue && (
+											<p className="text-sm text-yellow-600">
+												{formatCurrency(invoice.amountPaid / 100)} pago
+											</p>
+										)}
+										<p className="text-sm text-muted-foreground">{invoice.currency}</p>
 									</div>
 
 									<div className="flex space-x-2">

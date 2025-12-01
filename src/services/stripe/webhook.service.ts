@@ -19,28 +19,18 @@ export class StripeWebhookService {
 		if (!STRIPE_CONFIG.webhookSecret) {
 			throw new Error('STRIPE_WEBHOOK_SECRET is not set');
 		}
-		return stripe.webhooks.constructEvent(
-			payload,
-			signature,
-			STRIPE_CONFIG.webhookSecret,
-		);
+		return stripe.webhooks.constructEvent(payload, signature, STRIPE_CONFIG.webhookSecret);
 	}
 
-	static async handleCheckoutSessionCompleted(
-		session: Stripe.Checkout.Session,
-	) {
+	static async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
 		const db = getPoolClient();
 		const clerkUserId = session.metadata?.clerkUserId;
 		const customerId =
-			typeof session.customer === 'string'
-				? session.customer
-				: session.customer?.id;
+			typeof session.customer === 'string' ? session.customer : session.customer?.id;
 		const subscriptionId =
-			typeof session.subscription === 'string'
-				? session.subscription
-				: session.subscription?.id;
+			typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
 
-		if (!clerkUserId || !customerId || !subscriptionId) {
+		if (!(clerkUserId && customerId && subscriptionId)) {
 			secureLogger.warn('Checkout session missing metadata or IDs', {
 				sessionId: session.id,
 			});
@@ -66,12 +56,7 @@ export class StripeWebhookService {
 			stripeStatus === 'incomplete_expired' ||
 			stripeStatus === 'paused'
 				? 'canceled'
-				: (stripeStatus as
-						| 'active'
-						| 'canceled'
-						| 'past_due'
-						| 'trialing'
-						| 'unpaid');
+				: (stripeStatus as 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid');
 
 		await db.transaction(async (tx) => {
 			// Update subscription record
@@ -103,9 +88,7 @@ export class StripeWebhookService {
 	static async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 		const db = getPoolClient();
 		const customerId =
-			typeof subscription.customer === 'string'
-				? subscription.customer
-				: subscription.customer.id;
+			typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
 
 		// Find subscription by customerId
 		const [subRecord] = await db
@@ -132,12 +115,7 @@ export class StripeWebhookService {
 			stripeStatus === 'incomplete_expired' ||
 			stripeStatus === 'paused'
 				? 'canceled'
-				: (stripeStatus as
-						| 'active'
-						| 'canceled'
-						| 'past_due'
-						| 'trialing'
-						| 'unpaid');
+				: (stripeStatus as 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid');
 
 		await db
 			.update(subscriptions)
@@ -148,9 +126,7 @@ export class StripeWebhookService {
 				currentPeriodStart: new Date(periodStart * 1000),
 				currentPeriodEnd: new Date(periodEnd * 1000),
 				cancelAtPeriodEnd: subscription.cancel_at_period_end,
-				canceledAt: subscription.canceled_at
-					? new Date(subscription.canceled_at * 1000)
-					: null,
+				canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
 				updatedAt: new Date(),
 			})
 			.where(eq(subscriptions.id, subRecord.id));
@@ -163,9 +139,7 @@ export class StripeWebhookService {
 	static async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 		const db = getPoolClient();
 		const customerId =
-			typeof subscription.customer === 'string'
-				? subscription.customer
-				: subscription.customer.id;
+			typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
 
 		await db
 			.update(subscriptions)
@@ -186,9 +160,7 @@ export class StripeWebhookService {
 		// Cast to access extended properties
 		const inv = invoice as InvoiceWithDetails;
 		const customerId =
-			typeof inv.customer === 'string'
-				? inv.customer
-				: (inv.customer as { id: string } | null)?.id;
+			typeof inv.customer === 'string' ? inv.customer : (inv.customer as { id: string } | null)?.id;
 
 		if (!customerId) return;
 
@@ -205,12 +177,9 @@ export class StripeWebhookService {
 			userId: subRecord.userId,
 			subscriptionId: subRecord.id,
 			stripePaymentIntentId:
-				typeof inv.payment_intent === 'string'
-					? inv.payment_intent
-					: inv.payment_intent?.id,
+				typeof inv.payment_intent === 'string' ? inv.payment_intent : inv.payment_intent?.id,
 			stripeInvoiceId: inv.id,
-			stripeChargeId:
-				typeof inv.charge === 'string' ? inv.charge : inv.charge?.id,
+			stripeChargeId: typeof inv.charge === 'string' ? inv.charge : inv.charge?.id,
 			amountCents: inv.amount_paid,
 			currency: inv.currency,
 			status: 'succeeded',
@@ -229,9 +198,7 @@ export class StripeWebhookService {
 		// Cast to access extended properties
 		const inv = invoice as InvoiceWithDetails;
 		const customerId =
-			typeof inv.customer === 'string'
-				? inv.customer
-				: (inv.customer as { id: string } | null)?.id;
+			typeof inv.customer === 'string' ? inv.customer : (inv.customer as { id: string } | null)?.id;
 
 		if (!customerId) return;
 
@@ -248,12 +215,9 @@ export class StripeWebhookService {
 			userId: subRecord.userId,
 			subscriptionId: subRecord.id,
 			stripePaymentIntentId:
-				typeof inv.payment_intent === 'string'
-					? inv.payment_intent
-					: inv.payment_intent?.id,
+				typeof inv.payment_intent === 'string' ? inv.payment_intent : inv.payment_intent?.id,
 			stripeInvoiceId: inv.id,
-			stripeChargeId:
-				typeof inv.charge === 'string' ? inv.charge : inv.charge?.id,
+			stripeChargeId: typeof inv.charge === 'string' ? inv.charge : inv.charge?.id,
 			amountCents: inv.amount_due,
 			currency: inv.currency,
 			status: 'failed',

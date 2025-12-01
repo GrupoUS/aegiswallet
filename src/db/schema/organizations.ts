@@ -192,10 +192,7 @@ export const organizationMembers = pgTable(
 		updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 	},
 	(table) => [
-		uniqueIndex('org_members_org_user_idx').on(
-			table.organizationId,
-			table.userId,
-		),
+		uniqueIndex('org_members_org_user_idx').on(table.organizationId, table.userId),
 		uniqueIndex('org_members_invite_token_idx').on(table.inviteToken),
 	],
 );
@@ -225,9 +222,7 @@ export const organizationSettings = pgTable('organization_settings', {
 	// Financial settings
 	defaultTransactionCategory: text('default_transaction_category'),
 	budgetAlertsEnabled: boolean('budget_alerts_enabled').default(true),
-	autoCategorizationEnabled: boolean('auto_categorization_enabled').default(
-		true,
-	),
+	autoCategorizationEnabled: boolean('auto_categorization_enabled').default(true),
 
 	// PIX settings
 	pixDailyLimit: decimal('pix_daily_limit', { precision: 15, scale: 2 }),
@@ -258,18 +253,14 @@ export const organizationSettings = pgTable('organization_settings', {
 	auditLogEnabled: boolean('audit_log_enabled').default(true),
 
 	// Notification settings
-	emailNotificationsEnabled: boolean('email_notifications_enabled').default(
-		true,
-	),
+	emailNotificationsEnabled: boolean('email_notifications_enabled').default(true),
 	smsNotificationsEnabled: boolean('sms_notifications_enabled').default(false),
 	pushNotificationsEnabled: boolean('push_notifications_enabled').default(true),
 
 	// UI/UX settings
 	theme: text('theme').default('light'), // light, dark, system
 	compactMode: boolean('compact_mode').default(false),
-	accessibilityHighContrast: boolean('accessibility_high_contrast').default(
-		false,
-	),
+	accessibilityHighContrast: boolean('accessibility_high_contrast').default(false),
 	accessibilityLargeText: boolean('accessibility_large_text').default(false),
 
 	// Custom branding
@@ -341,12 +332,7 @@ export const organizationPixKeys = pgTable(
 		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 	},
-	(table) => [
-		uniqueIndex('org_pix_keys_org_key_idx').on(
-			table.organizationId,
-			table.keyValue,
-		),
-	],
+	(table) => [uniqueIndex('org_pix_keys_org_key_idx').on(table.organizationId, table.keyValue)],
 );
 
 // ========================================
@@ -356,66 +342,61 @@ export const organizationPixKeys = pgTable(
 /**
  * Custom LGPD consent templates per organization
  */
-export const organizationConsentTemplates = pgTable(
-	'organization_consent_templates',
-	{
-		id: text('id')
-			.primaryKey()
-			.$defaultFn(() => crypto.randomUUID()),
-		organizationId: text('organization_id')
-			.references(() => organizations.id, { onDelete: 'cascade' })
-			.notNull(),
+export const organizationConsentTemplates = pgTable('organization_consent_templates', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	organizationId: text('organization_id')
+		.references(() => organizations.id, { onDelete: 'cascade' })
+		.notNull(),
 
-		// Template details
-		name: text('name').notNull(),
-		version: text('version').notNull().default('1.0'),
-		consentType: text('consent_type').notNull(),
+	// Template details
+	name: text('name').notNull(),
+	version: text('version').notNull().default('1.0'),
+	consentType: text('consent_type').notNull(),
 
-		// Portuguese content (primary for Brazilian market)
-		titlePt: text('title_pt').notNull(),
-		descriptionPt: text('description_pt').notNull(),
-		fullTextPt: text('full_text_pt').notNull(),
+	// Portuguese content (primary for Brazilian market)
+	titlePt: text('title_pt').notNull(),
+	descriptionPt: text('description_pt').notNull(),
+	fullTextPt: text('full_text_pt').notNull(),
 
-		// English fallback
-		titleEn: text('title_en'),
-		descriptionEn: text('description_en'),
-		fullTextEn: text('full_text_en'),
+	// English fallback
+	titleEn: text('title_en'),
+	descriptionEn: text('description_en'),
+	fullTextEn: text('full_text_en'),
 
-		// Template configuration
-		isMandatory: boolean('is_mandatory').default(false),
-		isActive: boolean('is_active').default(true),
-		legalBasis: text('legal_basis'),
-		retentionMonths: integer('retention_months'),
+	// Template configuration
+	isMandatory: boolean('is_mandatory').default(false),
+	isActive: boolean('is_active').default(true),
+	legalBasis: text('legal_basis'),
+	retentionMonths: integer('retention_months'),
 
-		// Display settings
-		displayOnSignup: boolean('display_on_signup').default(false),
-		displayInSettings: boolean('display_in_settings').default(true),
-		requireExplicitAcceptance: boolean('require_explicit_acceptance').default(
-			true,
-		),
+	// Display settings
+	displayOnSignup: boolean('display_on_signup').default(false),
+	displayInSettings: boolean('display_in_settings').default(true),
+	requireExplicitAcceptance: boolean('require_explicit_acceptance').default(true),
 
-		// Categories for granular consent
-		categories: jsonb('categories').default([]), // Data categories this consent covers
-		purposes: jsonb('purposes').default([]), // Specific purposes
+	// Categories for granular consent
+	categories: jsonb('categories').default([]), // Data categories this consent covers
+	purposes: jsonb('purposes').default([]), // Specific purposes
 
-		// Validity
-		effectiveFrom: timestamp('effective_from', {
-			withTimezone: true,
-		}).defaultNow(),
-		effectiveUntil: timestamp('effective_until', { withTimezone: true }),
+	// Validity
+	effectiveFrom: timestamp('effective_from', {
+		withTimezone: true,
+	}).defaultNow(),
+	effectiveUntil: timestamp('effective_until', { withTimezone: true }),
 
-		// Metadata
-		createdBy: text('created_by')
-			.references(() => users.id)
-			.notNull(),
-		approvedBy: text('approved_by').references(() => users.id),
-		approvedAt: timestamp('approved_at', { withTimezone: true }),
+	// Metadata
+	createdBy: text('created_by')
+		.references(() => users.id)
+		.notNull(),
+	approvedBy: text('approved_by').references(() => users.id),
+	approvedAt: timestamp('approved_at', { withTimezone: true }),
 
-		// Timestamps
-		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-		updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-	},
-);
+	// Timestamps
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
 
 // ========================================
 // TYPE EXPORTS
@@ -428,13 +409,10 @@ export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type InsertOrganizationMember = typeof organizationMembers.$inferInsert;
 
 export type OrganizationSetting = typeof organizationSettings.$inferSelect;
-export type InsertOrganizationSetting =
-	typeof organizationSettings.$inferInsert;
+export type InsertOrganizationSetting = typeof organizationSettings.$inferInsert;
 
 export type OrganizationPixKey = typeof organizationPixKeys.$inferSelect;
 export type InsertOrganizationPixKey = typeof organizationPixKeys.$inferInsert;
 
-export type OrganizationConsentTemplate =
-	typeof organizationConsentTemplates.$inferSelect;
-export type InsertOrganizationConsentTemplate =
-	typeof organizationConsentTemplates.$inferInsert;
+export type OrganizationConsentTemplate = typeof organizationConsentTemplates.$inferSelect;
+export type InsertOrganizationConsentTemplate = typeof organizationConsentTemplates.$inferInsert;

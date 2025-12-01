@@ -1,8 +1,4 @@
-import {
-	useAuth as useClerkAuth,
-	useSession,
-	useUser,
-} from '@clerk/clerk-react';
+import { useAuth as useClerkAuth, useSession, useUser } from '@clerk/clerk-react';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect } from 'react';
 
@@ -18,9 +14,7 @@ export interface AuthContextType {
 	getToken: () => Promise<string | null>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-	undefined,
-);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const { user, isLoaded, isSignedIn } = useUser();

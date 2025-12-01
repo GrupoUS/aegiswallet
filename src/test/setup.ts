@@ -64,16 +64,14 @@ if (typeof globalThis.Element === 'undefined') {
 }
 
 if (typeof globalThis.HTMLElement === 'undefined') {
-	const GlobalElement = (globalThis as Record<string, unknown>)
-		.Element as typeof Element;
-	(globalThis as Record<string, unknown>).HTMLElement =
-		class HTMLElement extends GlobalElement {
-			style: Record<string, unknown>;
-			constructor() {
-				super();
-				this.style = {};
-			}
-		};
+	const GlobalElement = (globalThis as Record<string, unknown>).Element as typeof Element;
+	(globalThis as Record<string, unknown>).HTMLElement = class HTMLElement extends GlobalElement {
+		style: Record<string, unknown>;
+		constructor() {
+			super();
+			this.style = {};
+		}
+	};
 }
 
 // Create comprehensive document mock if not available
@@ -95,10 +93,8 @@ if (typeof globalThis.document === 'undefined') {
 	globalThis.Element = dom.window.Element;
 
 	// Set global document for Testing Library
-	(globalThis as unknown as { document: Document }).document =
-		dom.window.document;
-	(globalThis as unknown as { window: Window }).window =
-		dom.window as unknown as Window;
+	(globalThis as unknown as { document: Document }).document = dom.window.document;
+	(globalThis as unknown as { window: Window }).window = dom.window as unknown as Window;
 }
 
 import '@testing-library/jest-dom';
@@ -116,9 +112,7 @@ type MutableGlobal = typeof globalThis & {
 	SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 	speechSynthesis?: SpeechSynthesis;
 	SpeechRecognition?: SpeechRecognitionConstructor | ReturnType<typeof vi.fn>;
-	webkitSpeechRecognition?:
-		| SpeechRecognitionConstructor
-		| ReturnType<typeof vi.fn>;
+	webkitSpeechRecognition?: SpeechRecognitionConstructor | ReturnType<typeof vi.fn>;
 	AudioContext?: typeof AudioContext;
 	webkitAudioContext?: typeof AudioContext;
 	requestAnimationFrame?: typeof requestAnimationFrame;
@@ -177,8 +171,7 @@ if (typeof globalThis.document === 'undefined') {
 	globalThis.Element = dom.window.Element;
 
 	// Set global document for Testing Library
-	(globalThis as unknown as { document: Document }).document =
-		dom.window.document;
+	(globalThis as unknown as { document: Document }).document = dom.window.document;
 	(globalThis as unknown as { window: Window }).window = dom.window;
 }
 
@@ -385,37 +378,31 @@ beforeAll(() => {
 			mockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance;
 	}
 	if (!globalObj.speechSynthesis) {
-		globalObj.speechSynthesis =
-			mockSpeechSynthesis as unknown as SpeechSynthesis;
+		globalObj.speechSynthesis = mockSpeechSynthesis as unknown as SpeechSynthesis;
 	}
 	if (!globalObj.SpeechRecognition) {
-		(globalObj as Record<string, unknown>).SpeechRecognition =
-			mockSpeechRecognition;
+		(globalObj as Record<string, unknown>).SpeechRecognition = mockSpeechRecognition;
 	}
 	if (!globalObj.webkitSpeechRecognition) {
-		(globalObj as Record<string, unknown>).webkitSpeechRecognition =
-			mockSpeechRecognition;
+		(globalObj as Record<string, unknown>).webkitSpeechRecognition = mockSpeechRecognition;
 	}
 
 	// Ensure window object has Speech API
 	if (typeof window !== 'undefined') {
-		(
-			window as unknown as { speechSynthesis: SpeechSynthesis }
-		).speechSynthesis = mockSpeechSynthesis;
+		(window as unknown as { speechSynthesis: SpeechSynthesis }).speechSynthesis =
+			mockSpeechSynthesis;
 		(
 			window as unknown as {
 				SpeechSynthesisUtterance: typeof SpeechSynthesisUtterance;
 			}
 		).SpeechSynthesisUtterance = mockSpeechSynthesisUtterance;
-		(
-			window as unknown as { SpeechRecognition: SpeechRecognitionConstructor }
-		).SpeechRecognition = mockSpeechRecognition as SpeechRecognitionConstructor;
+		(window as unknown as { SpeechRecognition: SpeechRecognitionConstructor }).SpeechRecognition =
+			mockSpeechRecognition as SpeechRecognitionConstructor;
 		(
 			window as unknown as {
 				webkitSpeechRecognition: SpeechRecognitionConstructor;
 			}
-		).webkitSpeechRecognition =
-			mockSpeechRecognition as SpeechRecognitionConstructor;
+		).webkitSpeechRecognition = mockSpeechRecognition as SpeechRecognitionConstructor;
 	}
 
 	// Mock navigator for tests
@@ -491,10 +478,7 @@ beforeAll(() => {
 
 	// Mock requestAnimationFrame for voice activity detection
 	globalObj.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-		return setTimeout(
-			() => callback(performance.now()),
-			16,
-		) as unknown as number;
+		return setTimeout(() => callback(performance.now()), 16) as unknown as number;
 	});
 	globalObj.cancelAnimationFrame = vi.fn((id: number) => {
 		clearTimeout(id);
@@ -524,10 +508,7 @@ afterAll(() => {
 });
 
 // Export mock helpers for tests
-export const createMockSpeechRecognitionEvent = (
-	transcript: string,
-	confidence: number = 0.95,
-) => ({
+export const createMockSpeechRecognitionEvent = (transcript: string, confidence = 0.95) => ({
 	resultIndex: 0,
 	results: [
 		{
@@ -538,18 +519,12 @@ export const createMockSpeechRecognitionEvent = (
 	],
 });
 
-export const createMockSpeechRecognitionError = (
-	error: string,
-	message?: string,
-) => ({
+export const createMockSpeechRecognitionError = (error: string, message?: string) => ({
 	error,
 	message: message || `Speech recognition error: ${error}`,
 });
 
-export const createMockSpeechSynthesisEvent = (
-	name: string,
-	charIndex: number = 0,
-) => ({
+export const createMockSpeechSynthesisEvent = (name: string, charIndex = 0) => ({
 	charIndex,
 	elapsedTime: 0,
 	name,
@@ -595,8 +570,7 @@ expect.extend({
 		if (typeof received !== 'number') {
 			return {
 				pass: false,
-				message: () =>
-					`expected ${this.utils.printReceived(received)} to be a number`,
+				message: () => `expected ${this.utils.printReceived(received)} to be a number`,
 			};
 		}
 
@@ -618,16 +592,14 @@ expect.extend({
 		if (typeof received !== 'string') {
 			return {
 				pass: false,
-				message: () =>
-					`expected ${this.utils.printReceived(received)} to be a string`,
+				message: () => `expected ${this.utils.printReceived(received)} to be a string`,
 			};
 		}
 
 		if (received.length === 0) {
 			return {
 				pass: false,
-				message: () =>
-					`expected ${this.utils.printReceived(received)} to be a non-empty string`,
+				message: () => `expected ${this.utils.printReceived(received)} to be a non-empty string`,
 			};
 		}
 
@@ -649,23 +621,18 @@ expect.extend({
 		if (typeof received !== 'string') {
 			return {
 				pass: false,
-				message: () =>
-					`expected ${this.utils.printReceived(received)} to be a string`,
+				message: () => `expected ${this.utils.printReceived(received)} to be a string`,
 			};
 		}
 
 		if (received.length === 0) {
 			return {
 				pass: false,
-				message: () =>
-					`expected ${this.utils.printReceived(received)} to be a non-empty string`,
+				message: () => `expected ${this.utils.printReceived(received)} to be a non-empty string`,
 			};
 		}
 
-		const testPattern = (
-			pattern: { regex: RegExp; format: string },
-			type: string,
-		) => {
+		const testPattern = (pattern: { regex: RegExp; format: string }, type: string) => {
 			const cleanValue =
 				type === 'CPF' || type === 'CNPJ' || type === 'PHONE'
 					? received.replace(/\D/g, '')
@@ -679,15 +646,13 @@ expect.extend({
 		const phoneMatch = testPattern(PIX_PATTERNS.PHONE, 'PHONE');
 		const randomKeyMatch = testPattern(PIX_PATTERNS.RANDOM_KEY, 'RANDOM_KEY');
 
-		const isValid =
-			cpfMatch || cnpjMatch || emailMatch || phoneMatch || randomKeyMatch;
+		const isValid = cpfMatch || cnpjMatch || emailMatch || phoneMatch || randomKeyMatch;
 
 		const failedPatterns: string[] = [];
 		if (!cpfMatch) failedPatterns.push('CPF (11 digits)');
 		if (!cnpjMatch) failedPatterns.push('CNPJ (14 digits)');
 		if (!emailMatch) failedPatterns.push('Email (valid email format)');
-		if (!phoneMatch)
-			failedPatterns.push('Phone (10-15 digits with optional +)');
+		if (!phoneMatch) failedPatterns.push('Phone (10-15 digits with optional +)');
 		if (!randomKeyMatch) failedPatterns.push('Random Key (UUID v4 format)');
 
 		return {

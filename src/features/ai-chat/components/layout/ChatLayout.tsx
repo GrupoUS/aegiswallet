@@ -1,11 +1,6 @@
 import type React from 'react';
 
-import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
@@ -16,12 +11,7 @@ interface ChatLayoutProps {
 	className?: string;
 }
 
-export function ChatLayout({
-	children,
-	header,
-	footer,
-	className,
-}: ChatLayoutProps) {
+export function ChatLayout({ children, header, footer, className }: ChatLayoutProps) {
 	return (
 		<Card className={`w-full h-[600px] flex flex-col ${className}`}>
 			{header && (

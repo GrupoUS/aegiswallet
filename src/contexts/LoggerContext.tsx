@@ -39,10 +39,7 @@ interface LoggerProviderProps {
 	defaultConfig?: Partial<LoggerConfig>;
 }
 
-export function LoggerProvider({
-	children,
-	defaultConfig = {},
-}: LoggerProviderProps) {
+export function LoggerProvider({ children, defaultConfig = {} }: LoggerProviderProps) {
 	const [logs, setLogs] = useState<LogEntry[]>([]);
 	const [config, setConfig] = useState<LoggerConfig>(() => ({
 		...logger.getConfig(),
@@ -90,9 +87,7 @@ export function LoggerProvider({
 		updateConfig,
 	};
 
-	return (
-		<LoggerContext.Provider value={value}>{children}</LoggerContext.Provider>
-	);
+	return <LoggerContext.Provider value={value}>{children}</LoggerContext.Provider>;
 }
 
 export function useLoggerContext(): LoggerContextValue {
@@ -105,8 +100,7 @@ export function useLoggerContext(): LoggerContextValue {
 
 // Development-only logging controls hook
 export function useLoggingControls() {
-	const { config, updateConfig, logs, clearLogs, exportLogs, isDevelopment } =
-		useLoggerContext();
+	const { config, updateConfig, logs, clearLogs, exportLogs, isDevelopment } = useLoggerContext();
 
 	const setLogLevel = (level: LogLevel) => {
 		updateConfig({ level });
@@ -122,11 +116,11 @@ export function useLoggingControls() {
 
 	const getLogStats = () => {
 		const stats = {
-			debug: logs.filter((log) => log.level === LogLevel.DEBUG).length,
-			error: logs.filter((log) => log.level === LogLevel.ERROR).length,
-			info: logs.filter((log) => log.level === LogLevel.INFO).length,
+			debug: logs.filter((log) => log.level === LogLevel.Debug).length,
+			error: logs.filter((log) => log.level === LogLevel.Error).length,
+			info: logs.filter((log) => log.level === LogLevel.Info).length,
 			total: logs.length,
-			warn: logs.filter((log) => log.level === LogLevel.WARN).length,
+			warn: logs.filter((log) => log.level === LogLevel.Warn).length,
 		};
 		return stats;
 	};
@@ -150,9 +144,7 @@ export function useLoggingControls() {
 
 // Enhanced logging hooks for specific domains
 export function useLogger(context?: { component?: string; userId?: string }) {
-	const [currentContext, setCurrentContext] = useState<LogContext>(
-		context || {},
-	);
+	const [currentContext, setCurrentContext] = useState<LogContext>(context || {});
 
 	const setContext = (newContext: LogContext) => {
 		setCurrentContext((prev) => ({ ...prev, ...newContext }));
@@ -178,17 +170,9 @@ export function useLogger(context?: { component?: string; userId?: string }) {
 
 export function useVoiceLogger() {
 	return {
-		userAction: (
-			action: string,
-			component: string,
-			context?: VoiceCommandContext,
-		) =>
+		userAction: (action: string, component: string, context?: VoiceCommandContext) =>
 			logger.userAction(action, component, { component: 'Voice', ...context }),
-		voiceCommand: (
-			command: string,
-			confidence: number,
-			context?: VoiceCommandContext,
-		) =>
+		voiceCommand: (command: string, confidence: number, context?: VoiceCommandContext) =>
 			logger.voiceCommand(command, confidence, {
 				component: 'Voice',
 				...context,

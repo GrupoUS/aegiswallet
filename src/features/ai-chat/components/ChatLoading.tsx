@@ -18,12 +18,5 @@ export function ChatLoading({
 	variant = 'dots',
 	size = 'md',
 }: ChatLoadingProps) {
-	return (
-		<AiLoading
-			isLoading={isLoading}
-			message={message}
-			variant={variant}
-			size={size}
-		/>
-	);
+	return <AiLoading isLoading={isLoading} message={message} variant={variant} size={size} />;
 }

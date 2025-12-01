@@ -22,10 +22,7 @@ import {
 	validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
 import type { AppEnv } from '@/server/hono-types';
-import {
-	authMiddleware,
-	userRateLimitMiddleware,
-} from '@/server/middleware/auth';
+import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
 // =====================================================
 // Validation Schemas
@@ -46,9 +43,7 @@ const createBankAccountSchema = z.object({
 
 const updateBankAccountSchema = z.object({
 	institution_name: z.string().optional(),
-	account_type: z
-		.enum(['checking', 'savings', 'investment', 'cash'])
-		.optional(),
+	account_type: z.enum(['checking', 'savings', 'investment', 'cash']).optional(),
 	balance: z.number().optional(),
 	currency: z.string().optional(),
 	is_primary: z.boolean().optional(),
@@ -162,20 +157,14 @@ bankAccountsRouter.get(
 					currency: bankAccounts.currency,
 				})
 				.from(bankAccounts)
-				.where(
-					and(
-						eq(bankAccounts.userId, user.id),
-						eq(bankAccounts.isActive, true),
-					),
-				);
+				.where(and(eq(bankAccounts.userId, user.id), eq(bankAccounts.isActive, true)));
 
 			const totals: Record<string, number> = {};
 
 			if (data) {
 				data.forEach((account) => {
 					const currency = account.currency || 'BRL';
-					totals[currency] =
-						(totals[currency] || 0) + Number(account.balance || 0);
+					totals[currency] = (totals[currency] || 0) + Number(account.balance || 0);
 				});
 			}
 
@@ -224,9 +213,7 @@ bankAccountsRouter.get(
 			const [data] = await db
 				.select()
 				.from(bankAccounts)
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				)
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)))
 				.limit(1);
 
 			if (!data) {
@@ -298,9 +285,7 @@ bankAccountsRouter.get(
 			const [account] = await db
 				.select({ balance: bankAccounts.balance })
 				.from(bankAccounts)
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				)
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)))
 				.limit(1);
 
 			if (!account) {
@@ -529,9 +514,7 @@ bankAccountsRouter.put(
 			const [existingAccount] = await db
 				.select({ id: bankAccounts.id })
 				.from(bankAccounts)
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				)
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)))
 				.limit(1);
 
 			if (!existingAccount) {
@@ -588,16 +571,12 @@ bankAccountsRouter.put(
 			// Sanitize and validate (for snake_case version)
 			const sanitized = sanitizeBankAccountData({
 				institution_name: input.institution_name,
-				account_type: input.account_type
-					? normalizeAccountType(input.account_type)
-					: undefined,
+				account_type: input.account_type ? normalizeAccountType(input.account_type) : undefined,
 				balance: input.balance,
 				currency: input.currency?.toUpperCase(),
 				is_primary: input.is_primary,
 				is_active: input.is_active,
-				account_mask: input.account_mask
-					? normalizeAccountMask(input.account_mask)
-					: undefined,
+				account_mask: input.account_mask ? normalizeAccountMask(input.account_mask) : undefined,
 			});
 			const validation = validateBankAccountForUpdate(sanitized);
 
@@ -619,9 +598,7 @@ bankAccountsRouter.put(
 			const [data] = await db
 				.update(bankAccounts)
 				.set(updateData)
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				)
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)))
 				.returning();
 
 			return c.json({
@@ -672,9 +649,7 @@ bankAccountsRouter.patch(
 			const [data] = await db
 				.update(bankAccounts)
 				.set({ balance: String(balance) })
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				)
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)))
 				.returning();
 
 			if (!data) {
@@ -732,9 +707,7 @@ bankAccountsRouter.delete(
 		try {
 			await db
 				.delete(bankAccounts)
-				.where(
-					and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)),
-				);
+				.where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, user.id)));
 
 			secureLogger.info('Bank account deleted', {
 				accountId,

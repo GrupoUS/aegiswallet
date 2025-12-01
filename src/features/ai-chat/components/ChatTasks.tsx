@@ -45,10 +45,7 @@ export function ChatTasks({ tasks, className }: ChatTasksProps) {
 		<Task tasks={tasks} className={className}>
 			<div className={cn('space-y-4')}>
 				{tasks.map((task) => (
-					<Card
-						key={task.id}
-						className="overflow-hidden border-l-4 border-l-primary"
-					>
+					<Card key={task.id} className="overflow-hidden border-l-4 border-l-primary">
 						<CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
 							<CardTitle className="text-sm font-medium flex items-center gap-2">
 								{getStatusIcon(task.status)}
@@ -56,10 +53,7 @@ export function ChatTasks({ tasks, className }: ChatTasksProps) {
 							</CardTitle>
 							<Badge
 								variant="secondary"
-								className={cn(
-									'capitalize text-[10px]',
-									getStatusColor(task.status),
-								)}
+								className={cn('capitalize text-[10px]', getStatusColor(task.status))}
 							>
 								{task.status}
 							</Badge>
@@ -84,10 +78,7 @@ export function ChatTasks({ tasks, className }: ChatTasksProps) {
 										>
 											{getStatusIcon(subtask.status)}
 											<span
-												className={cn(
-													subtask.status === 'completed' &&
-														'line-through opacity-70',
-												)}
+												className={cn(subtask.status === 'completed' && 'line-through opacity-70')}
 											>
 												{subtask.title}
 											</span>

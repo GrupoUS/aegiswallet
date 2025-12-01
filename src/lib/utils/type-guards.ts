@@ -185,8 +185,7 @@ export function isValidBankAccount(account: unknown): account is {
 		typeof acc.account_number === 'string' &&
 		typeof acc.account_type === 'string' &&
 		(acc.balance === undefined || typeof acc.balance === 'number') &&
-		(acc.available_balance === undefined ||
-			typeof acc.available_balance === 'number') &&
+		(acc.available_balance === undefined || typeof acc.available_balance === 'number') &&
 		(acc.is_primary === undefined || typeof acc.is_primary === 'boolean')
 	);
 }
@@ -240,10 +239,7 @@ export function isValidTransaction(transaction: unknown): transaction is {
  * }
  * ```
  */
-export function isValidArray<T>(
-	arr: unknown,
-	guard: (item: unknown) => item is T,
-): arr is T[] {
+export function isValidArray<T>(arr: unknown, guard: (item: unknown) => item is T): arr is T[] {
 	return Array.isArray(arr) && arr.every(guard);
 }
 

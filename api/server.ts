@@ -26,7 +26,7 @@ app.all('*', (c) => {
 });
 
 export const config = {
-  runtime: 'nodejs' as const,
+  runtime: 'nodejs',
 };
 
 export default handle(app);

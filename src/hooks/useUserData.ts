@@ -1,4 +1,9 @@
 /**
+ * NOTA: useConsents e useTransactionLimits são re-exportados de use-compliance.ts
+ * useFinancialSummary é re-exportado de useProfile.ts
+ * Isso evita duplicação e mantém single source of truth
+ */
+/**
  * User Data Hooks - Clerk + Neon Integration
  *
  * React hooks for fetching user-scoped data with real-time updates
@@ -29,9 +34,6 @@ export const userDataKeys = {
 	pixTransactions: () => [...userDataKeys.all, 'pixTransactions'] as const,
 	contacts: () => [...userDataKeys.all, 'contacts'] as const,
 	boletos: (status?: string) => [...userDataKeys.all, 'boletos', status] as const,
-	consents: () => [...userDataKeys.all, 'consents'] as const,
-	limits: () => [...userDataKeys.all, 'limits'] as const,
-	summary: () => [...userDataKeys.all, 'summary'] as const,
 };
 
 // ========================================
@@ -110,34 +112,9 @@ export function useBoletos(status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
 // ========================================
 
 // Re-export compliance hooks from use-compliance.ts for backward compatibility
-export { useConsents, useTransactionLimits } from './use-compliance';
+export { useConsents, useTransactionLimits } from '@/hooks/use-compliance';
+export { useFinancialSummary } from '@/hooks/useProfile';
 
-// ========================================
-// SUMMARY HOOKS
-// ========================================
-
-/**
- * Fetch user's overall financial summary (total balance, account count)
- */
-export function useOverallFinancialSummary() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.summary(),
-		queryFn: async () => {
-			const response = await apiClient.get<{
-				totalBalance: number;
-				accountCount: number;
-				transactionCount: number;
-				currency: string;
-			}>('/v1/summary');
-			return response;
-		},
-		enabled: isSignedIn,
-		staleTime: 60 * 1000,
-		refetchInterval: 60 * 1000,
-	});
-}
 
 // ========================================
 // REAL-TIME UPDATES

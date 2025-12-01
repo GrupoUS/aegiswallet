@@ -38,10 +38,11 @@ export interface BackendTransaction {
 	userId: string;
 	amount: number;
 	description: string;
-	status: 'posted' | 'pending';
-	transactionDate: string;
-	categoryId?: string;
 	notes?: string;
+	transactionDate: string;
+	status: 'posted' | 'pending';
+	categoryId?: string;
+	tags?: string[];
 	createdAt: string;
 	updatedAt: string;
 }

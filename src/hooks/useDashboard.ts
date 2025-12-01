@@ -169,28 +169,32 @@ export function useDashboardMetrics() {
 	};
 }
 
+interface ProfileWithPreferences {
+  data?: {
+    user_preferences?: Array<{
+      accessibility_high_contrast?: boolean;
+      accessibility_large_text?: boolean;
+      accessibility_screen_reader?: boolean;
+      autonomy_level?: number;
+      currency?: string;
+      language?: string;
+      email_notifications?: boolean;
+      notifications_enabled?: boolean;
+      push_notifications?: boolean;
+      theme?: string;
+      timezone?: string;
+      voice_commands_enabled?: boolean;
+      voice_feedback?: boolean;
+    }>;
+  };
+}
+
 export function useDashboardSettings() {
 	const { profile } = useProfile();
 
 	// profile is ProfileApiResponse<UserProfile>, access data.user_preferences
-	const preferences = (profile as { data?: { user_preferences?: unknown[] } })?.data
-		?.user_preferences?.[0] as
-		| {
-				accessibility_high_contrast?: boolean;
-				accessibility_large_text?: boolean;
-				accessibility_screen_reader?: boolean;
-				autonomy_level?: number;
-				currency?: string;
-				language?: string;
-				email_notifications?: boolean;
-				notifications_enabled?: boolean;
-				push_notifications?: boolean;
-				theme?: string;
-				timezone?: string;
-				voice_commands_enabled?: boolean;
-				voice_feedback?: boolean;
-		  }
-		| undefined;
+	const profileData = profile as ProfileWithPreferences;
+	const preferences = profileData?.data?.user_preferences?.[0];
 
 	const settings = {
 		accessibility: {

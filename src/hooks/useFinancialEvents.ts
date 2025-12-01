@@ -153,7 +153,7 @@ export function useFinancialEvents(
 			// Executar requisição com tipos corretos
 			const response = await apiClient.get<TransactionApiResponse<BackendTransaction[]>>(
 				'/v1/transactions',
-				{ params: params as Record<string, unknown> }
+				{ params }
 			);
 
 			const mappedEvents = response.data.map(mapBackendToFrontend);
@@ -205,82 +205,70 @@ export function useFinancialEvents(
 		},
 	});
 
-	// Helper function that uses mutation
+	// Mutation for updating events
+	const updateEventMutation = useMutation({
+		mutationFn: async ({ id, updates }: { id: string; updates: Partial<FinancialEvent> }): Promise<FinancialEvent> => {
+			if (!user) {
+				throw new FinancialError('Usuário não autenticado', 'AUTH');
+			}
+
+			// Convert frontend fields to backend format
+			const payload: Partial<TransactionApiPayload> = {};
+			if (updates.amount !== undefined) payload.amount = Number(updates.amount);
+			if (updates.title !== undefined) payload.description = updates.title;
+			if (updates.type !== undefined) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
+			if (updates.status !== undefined) payload.status = updates.status === 'completed' ? 'posted' : 'pending';
+			if (updates.start !== undefined) payload.transactionDate = updates.start instanceof Date ? updates.start.toISOString() : updates.start;
+			if (updates.category !== undefined) payload.categoryId = updates.category;
+			if (updates.description !== undefined) payload.notes = updates.description;
+
+			const response = await apiClient.put<TransactionApiResponse<BackendTransaction>>(
+				`/v1/transactions/${id}`,
+				payload as Record<string, unknown>,
+			);
+			return mapBackendToFrontend(response.data);
+		},
+		onSuccess: () => {
+			toast.success('Evento atualizado com sucesso!');
+			queryClient.invalidateQueries({ queryKey: financialEventsKeys.lists() });
+		},
+		onError: (error: Error) => {
+			const err = new FinancialError(error.message, 'NETWORK');
+			toast.error('Erro ao atualizar evento financeiro', {
+				description: err.message,
+			});
+			throw err;
+		},
+	});
+
+	// Mutation for deleting events
+	const deleteEventMutation = useMutation({
+		mutationFn: async (id: string): Promise<void> => {
+			if (!user) {
+				throw new FinancialError('Usuário não autenticado', 'AUTH');
+			}
+
+			await apiClient.delete(`/v1/transactions/${id}`);
+		},
+		onSuccess: () => {
+			toast.success('Evento financeiro removido com sucesso!');
+			queryClient.invalidateQueries({ queryKey: financialEventsKeys.lists() });
+		},
+		onError: (error: Error) => {
+			const err = new FinancialError(error.message, 'NETWORK');
+			toast.error('Erro ao remover evento financeiro', {
+				description: err.message,
+			});
+			throw err;
+		},
+	});
+
+	// Helper functions that use mutations
 	const createEvent = async (event: Omit<FinancialEvent, 'id'>) => {
 		return createEventMutation.mutateAsync(event);
 	};
 
-	const updateEvent = useCallback(
-		async (id: string, updates: Partial<FinancialEvent>) => {
-			try {
-				if (!user) {
-					throw new FinancialError('Usuário não autenticado', 'AUTH');
-				}
-
-				// biome-ignore lint/suspicious/noExplicitAny: Payload type is dynamic for partial updates
-				const payload: any = { ...updates };
-				if (updates.category) payload.categoryId = updates.category;
-
-				// biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic
-				const response = await apiClient.put<TransactionApiResponse<any>>(
-					`/v1/transactions/${id}`,
-					payload,
-				);
-				const updatedEvent = mapBackendToFrontend(response.data.data);
-
-				clearCache();
-				await fetchEvents();
-				toast.success('Evento atualizado com sucesso!');
-
-				return updatedEvent;
-			} catch (error) {
-				const err = new FinancialError(
-					error instanceof Error ? error.message : 'Erro ao atualizar evento',
-					'NETWORK',
-				);
-				toast.error('Erro ao atualizar evento financeiro', {
-					description: err.message,
-				});
-				throw err;
-			}
-		},
-		[clearCache, fetchEvents, user],
-	);
-
-	const deleteEvent = useCallback(
-		async (id: string) => {
-			try {
-				if (!user) {
-					throw new FinancialError('Usuário não autenticado', 'AUTH');
-				}
-
-				await apiClient.delete(`/v1/transactions/${id}`);
-
-				// Invalidar cache
-				clearCache();
-				fetchEvents();
-
-				toast.success('Evento financeiro removido com sucesso!');
-			} catch (error) {
-				const err = new FinancialError(
-					error instanceof Error ? error.message : 'Erro ao remover evento',
-					'NETWORK',
-				);
-				toast.error('Erro ao remover evento financeiro', {
-					description: err.message,
-				});
-				throw err;
-			}
-		},
-		[clearCache, fetchEvents, user],
-	);
-
-	const markAsPaid = useCallback(
-		async (id: string) => {
-			return updateEvent(id, { status: 'completed' });
-		},
-		[updateEvent],
-	);
+	
 
 	const duplicateEvent = useCallback(
 		async (id: string) => {
@@ -341,6 +329,20 @@ export function useFinancialEvents(
 	}, [events]);
 
 	const error = queryError instanceof Error ? new FinancialError(queryError.message, 'NETWORK') : null;
+
+	const updateEvent = async (id: string, updates: Partial<FinancialEvent>) => {
+		return updateEventMutation.mutateAsync({ id, updates });
+	};
+
+	const deleteEvent = async (id: string) => {
+		await deleteEventMutation.mutateAsync(id);
+	};
+
+	const markAsPaid = async (id: string) => {
+		return updateEvent(id, { status: 'completed' });
+	};
+
+	
 
 	return {
 		events,

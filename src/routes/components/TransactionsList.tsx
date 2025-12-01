@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type Transaction, useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
+import { logger } from '@/lib/logging';
 
 export default function TransactionsList() {
 	const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
@@ -61,7 +62,16 @@ export default function TransactionsList() {
 
 			setDeletingId(null);
 			refetch();
-		} catch (_error) {}
+		} catch (error) {
+			logger.error('Failed to delete transaction', {
+				error: error instanceof Error ? error.message : String(error),
+				transactionId: deletingId,
+				transactionDescription: transaction?.description,
+				transactionAmount: transaction?.amount,
+				accountId: transaction?.accountId,
+			});
+			// Note: We don't reset deletingId on error to allow user to retry
+		}
 	};
 
 	const getIcon = (type: string) => {

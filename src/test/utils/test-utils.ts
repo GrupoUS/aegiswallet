@@ -48,7 +48,7 @@ export { customRender as render };
 
 // Mocks de dados comuns
 export const mockUser = {
-	autonomy_level: 50,
+	autonomyLevel: 50,
 	email: 'test@example.com',
 	id: 'test-user-id',
 };
@@ -62,21 +62,21 @@ export const mockBalance = {
 export const mockTransaction = {
 	amount: -100.5,
 	category: 'food',
-	created_at: '2024-01-01T00:00:00Z',
+	createdAt: '2024-01-01T00:00:00Z',
 	description: 'Test transaction',
 	id: 'test-transaction-id',
-	transaction_date: '2024-01-01T00:00:00Z',
-	user_id: 'test-user-id',
+	transactionDate: '2024-01-01T00:00:00Z',
+	userId: 'test-user-id',
 };
 
 export const mockBankAccount = {
-	account_mask: '****1234',
+	accountMask: '****1234',
 	balance: 5000.0,
 	id: 'test-account-id',
-	institution_name: 'Test Bank',
-	is_active: true,
-	last_sync: '2024-01-01T00:00:00Z',
-	user_id: 'test-user-id',
+	institutionName: 'Test Bank',
+	isActive: true,
+	lastSync: '2024-01-01T00:00:00Z',
+	userId: 'test-user-id',
 };
 
 // Funções utilitárias para testes

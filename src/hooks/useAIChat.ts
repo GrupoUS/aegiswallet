@@ -1,5 +1,4 @@
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 import { useCallback, useState } from 'react';
 
 import { logger } from '@/lib/logging/logger';

@@ -234,7 +234,7 @@ async function main() {
 
 	for (const test of tests) {
 		try {
-			const success = await test.fn();
+			const success = await Promise.resolve(test.fn());
 			results.push({ name: test.name, success });
 		} catch (error) {
 			console.error(`   ❌ ${test.name} crashed: ${error}`);

@@ -29,26 +29,26 @@ import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/aut
 // =====================================================
 
 const createBankAccountSchema = z.object({
-	institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
-	account_type: z.enum(['checking', 'savings', 'investment', 'cash'], {
+	institutionName: z.string().min(1, 'Nome da instituição é obrigatório'),
+	accountType: z.enum(['checking', 'savings', 'investment', 'cash'], {
 		error: 'Tipo de conta é obrigatório',
 	}),
 	balance: z.number().default(0),
 	currency: z.string().default('BRL'),
-	is_primary: z.boolean().default(false),
-	is_active: z.boolean().default(true),
-	account_mask: z.string().optional(),
-	institution_id: z.string().optional(),
+	isPrimary: z.boolean().default(false),
+	isActive: z.boolean().default(true),
+	accountMask: z.string().optional(),
+	institutionId: z.string().optional(),
 });
 
 const updateBankAccountSchema = z.object({
-	institution_name: z.string().optional(),
-	account_type: z.enum(['checking', 'savings', 'investment', 'cash']).optional(),
+	institutionName: z.string().optional(),
+	accountType: z.enum(['checking', 'savings', 'investment', 'cash']).optional(),
 	balance: z.number().optional(),
 	currency: z.string().optional(),
-	is_primary: z.boolean().optional(),
-	is_active: z.boolean().optional(),
-	account_mask: z.string().optional(),
+	isPrimary: z.boolean().optional(),
+	isActive: z.boolean().optional(),
+	accountMask: z.string().optional(),
 });
 
 const updateBalanceSchema = z.object({
@@ -356,11 +356,11 @@ bankAccountsRouter.post(
 
 		try {
 			// Normalize account type
-			const normalizedAccountType = normalizeAccountType(input.account_type);
+			const normalizedAccountType = normalizeAccountType(input.accountType);
 
-			// Generate account_mask if not provided
-			const accountMask = input.account_mask
-				? normalizeAccountMask(input.account_mask)
+			// Generate accountMask if not provided
+			const accountMask = input.accountMask
+				? normalizeAccountMask(input.accountMask)
 				: generateAccountMask();
 
 			// Validate account mask format
@@ -374,26 +374,26 @@ bankAccountsRouter.post(
 				);
 			}
 
-			// Generate institution_id if not provided
-			const institutionId = input.institution_id || randomUUID();
+			// Generate institutionId if not provided
+			const institutionId = input.institutionId || randomUUID();
 
-			// Always generate manual belvo_account_id
+			// Always generate manual belvoAccountId
 			const belvoAccountId = generateManualAccountId();
 
-			// Always set sync_status as manual
+			// Always set syncStatus as manual
 			const syncStatus = 'manual';
 
 			// Prepare account data
 			const accountData = sanitizeBankAccountData({
 				user_id: user.id,
-				institution_name: input.institution_name,
+				institution_name: input.institutionName,
 				institution_id: institutionId,
 				account_type: normalizedAccountType,
 				account_mask: accountMask,
 				balance: input.balance,
 				currency: input.currency.toUpperCase(),
-				is_primary: input.is_primary,
-				is_active: input.is_active,
+				is_primary: input.isPrimary,
+				is_active: input.isActive,
 				belvo_account_id: belvoAccountId,
 				sync_status: syncStatus,
 			});
@@ -442,14 +442,14 @@ bankAccountsRouter.post(
 				.insert(bankAccounts)
 				.values({
 					userId: user.id,
-					institutionName: input.institution_name,
+					institutionName: input.institutionName,
 					institutionId: institutionId,
 					accountType: normalizedAccountType,
 					accountMask: accountMask,
 					balance: String(input.balance),
 					currency: input.currency.toUpperCase(),
-					isPrimary: input.is_primary,
-					isActive: input.is_active,
+					isPrimary: input.isPrimary,
+					isActive: input.isActive,
 					belvoAccountId: belvoAccountId,
 					syncStatus: syncStatus,
 				})
@@ -457,7 +457,7 @@ bankAccountsRouter.post(
 
 			secureLogger.info('Bank account created', {
 				accountId: data.id,
-				institutionName: input.institution_name,
+				institutionName: input.institutionName,
 				requestId,
 				userId: user.id,
 			});
@@ -475,7 +475,7 @@ bankAccountsRouter.post(
 		} catch (error) {
 			secureLogger.error('Failed to create bank account', {
 				error: error instanceof Error ? error.message : 'Unknown error',
-				institutionName: input.institution_name,
+				institutionName: input.institutionName,
 				requestId,
 				userId: user.id,
 			});
@@ -530,12 +530,12 @@ bankAccountsRouter.put(
 			// Prepare update data
 			const updateData: Record<string, unknown> = {};
 
-			if (input.institution_name !== undefined) {
-				updateData.institutionName = input.institution_name;
+			if (input.institutionName !== undefined) {
+				updateData.institutionName = input.institutionName;
 			}
 
-			if (input.account_type !== undefined) {
-				updateData.accountType = normalizeAccountType(input.account_type);
+			if (input.accountType !== undefined) {
+				updateData.accountType = normalizeAccountType(input.accountType);
 			}
 
 			if (input.balance !== undefined) {
@@ -546,16 +546,16 @@ bankAccountsRouter.put(
 				updateData.currency = input.currency.toUpperCase();
 			}
 
-			if (input.is_primary !== undefined) {
-				updateData.isPrimary = input.is_primary;
+			if (input.isPrimary !== undefined) {
+				updateData.isPrimary = input.isPrimary;
 			}
 
-			if (input.is_active !== undefined) {
-				updateData.isActive = input.is_active;
+			if (input.isActive !== undefined) {
+				updateData.isActive = input.isActive;
 			}
 
-			if (input.account_mask !== undefined) {
-				const normalizedMask = normalizeAccountMask(input.account_mask);
+			if (input.accountMask !== undefined) {
+				const normalizedMask = normalizeAccountMask(input.accountMask);
 				if (!validateAccountMask(normalizedMask)) {
 					return c.json(
 						{
@@ -568,15 +568,15 @@ bankAccountsRouter.put(
 				updateData.accountMask = normalizedMask;
 			}
 
-			// Sanitize and validate (for snake_case version)
+			// Sanitize and validate (for snake_case version used by validator)
 			const sanitized = sanitizeBankAccountData({
-				institution_name: input.institution_name,
-				account_type: input.account_type ? normalizeAccountType(input.account_type) : undefined,
+				institution_name: input.institutionName,
+				account_type: input.accountType ? normalizeAccountType(input.accountType) : undefined,
 				balance: input.balance,
 				currency: input.currency?.toUpperCase(),
-				is_primary: input.is_primary,
-				is_active: input.is_active,
-				account_mask: input.account_mask ? normalizeAccountMask(input.account_mask) : undefined,
+				is_primary: input.isPrimary,
+				is_active: input.isActive,
+				account_mask: input.accountMask ? normalizeAccountMask(input.accountMask) : undefined,
 			});
 			const validation = validateBankAccountForUpdate(sanitized);
 

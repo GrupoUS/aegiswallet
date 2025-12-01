@@ -62,7 +62,7 @@ export const createMockDatabase = () => {
 		// Transaction support
 		transaction: vi
 			.fn()
-			.mockImplementation(async <T>(callback: (tx: typeof mockDb) => Promise<T>): Promise<T> => {
+			.mockImplementation(<T>(callback: (tx: typeof mockDb) => Promise<T>): Promise<T> => {
 				return callback(mockDb);
 			}),
 

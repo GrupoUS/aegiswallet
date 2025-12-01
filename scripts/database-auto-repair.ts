@@ -152,7 +152,67 @@ class DatabaseAutoRepair {
 		}
 	}
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex logic required for repair operations
+	/**
+	 * Sort repair operations by severity
+	 */
+	private sortOperationsBySeverity(operations: RepairOperation[]): RepairOperation[] {
+		const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+		return operations.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+	}
+
+	/**
+	 * Process issues by category and create repair operations
+	 */
+	private processIssueByCategory(
+		issue: any,
+		options: {
+			fixPerformance: boolean;
+			fixSecurity: boolean;
+			fixSchema: boolean;
+		},
+	): RepairOperation | null {
+		switch (issue.category) {
+			case 'schema':
+				return options.fixSchema ? this.prepareSchemaRepair(issue) : null;
+
+			case 'performance':
+				return options.fixPerformance ? this.preparePerformanceRepair(issue) : null;
+
+			case 'security':
+				return options.fixSecurity ? this.prepareSecurityRepair(issue) : null;
+
+			case 'compliance':
+				return options.fixSecurity ? this.prepareComplianceRepair(issue) : null;
+
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Filter and collect valid repair operations
+	 */
+	private collectRepairOperations(
+		issues: any[],
+		options: {
+			fixPerformance: boolean;
+			fixSecurity: boolean;
+			fixSchema: boolean;
+		},
+	): RepairOperation[] {
+		const operations: RepairOperation[] = [];
+
+		for (const issue of issues) {
+			const operation = this.processIssueByCategory(issue, options);
+			if (operation) {
+				operations.push(operation);
+			}
+		}
+
+		return operations;
+	}
+
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
 	private prepareRepairOperations(
 		healthResult: HealthCheckResult,
 		options: {
@@ -161,46 +221,9 @@ class DatabaseAutoRepair {
 			fixSchema: boolean;
 		},
 	): Promise<RepairOperation[]> {
-		const operations: RepairOperation[] = [];
-
-		for (const issue of healthResult.issues) {
-			switch (issue.category) {
-				case 'schema':
-					if (options.fixSchema) {
-						const schemaOp = this.prepareSchemaRepair(issue);
-						if (schemaOp) operations.push(schemaOp);
-					}
-					break;
-
-				case 'performance':
-					if (options.fixPerformance) {
-						const perfOp = this.preparePerformanceRepair(issue);
-						if (perfOp) operations.push(perfOp);
-					}
-					break;
-
-				case 'security':
-					if (options.fixSecurity) {
-						const securityOp = this.prepareSecurityRepair(issue);
-						if (securityOp) operations.push(securityOp);
-					}
-					break;
-
-				case 'compliance':
-					if (options.fixSecurity) {
-						const complianceOp = this.prepareComplianceRepair(issue);
-						if (complianceOp) operations.push(complianceOp);
-					}
-					break;
-			}
-		}
-
-		return Promise.resolve(
-			operations.sort((a, b) => {
-				const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-				return severityOrder[a.severity] - severityOrder[b.severity];
-			}),
-		);
+		const operations = this.collectRepairOperations(healthResult.issues, options);
+		const sortedOperations = this.sortOperationsBySeverity(operations);
+		return Promise.resolve(sortedOperations);
 	}
 
 	private prepareSchemaRepair(issue: any): RepairOperation | null {

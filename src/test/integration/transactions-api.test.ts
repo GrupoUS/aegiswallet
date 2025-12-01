@@ -24,7 +24,7 @@ describe.skipIf(!hasIntegrationTestEnv())('Transactions API Integration', () => 
 	let authToken: string;
 	let testTransactionId: string;
 
-	beforeAll(async () => {
+	beforeAll(() => {
 		// For integration tests, we use a mock token
 		// In a real integration test environment, this would be obtained from Clerk
 		authToken = 'test-integration-token';

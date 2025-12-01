@@ -8,6 +8,7 @@ import type {
 	ChatSuggestion,
 	ChatTask,
 } from '@/features/ai-chat/domain/types';
+import { logger } from '@/lib/logging';
 
 interface ChatState {
 	isWidgetOpen: boolean;
@@ -72,7 +73,14 @@ export function ChatProvider({ children }: ChatProviderProps) {
 					enableVoice: parsed.enableVoice ?? prev.enableVoice,
 					selectedBackend: parsed.selectedBackend ?? prev.selectedBackend,
 				}));
-			} catch (_error) {}
+			} catch (error) {
+				logger.warn('Failed to parse saved chat state from sessionStorage', {
+					error: error instanceof Error ? error.message : String(error),
+					savedStateLength: savedState.length,
+				});
+				// Clear corrupted state from sessionStorage
+				sessionStorage.removeItem('aegis-chat-state');
+			}
 		}
 	}, []);
 

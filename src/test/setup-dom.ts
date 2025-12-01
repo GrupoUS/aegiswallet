@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
 import { TextDecoder, TextEncoder } from 'node:util';
 
-import { act, cleanup } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
-import React from 'react';
+
 
 // Global test setup for healthcare compliance
 

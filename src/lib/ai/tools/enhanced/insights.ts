@@ -20,7 +20,7 @@ export function createInsightsTools(userId: string) {
 		getSpendingAnalysis: tool({
 			description:
 				'Analisa detalhadamente os gastos do usuário por categoria, tendências e padrões.',
-			inputSchema: z.object({
+			parameters: z.object({
 				startDate: z.string().datetime().describe('Data inicial da análise'),
 				endDate: z.string().datetime().describe('Data final da análise'),
 			}),
@@ -163,7 +163,7 @@ export function createInsightsTools(userId: string) {
 
 		getCashFlowForecast: tool({
 			description: 'Prevê o fluxo de caixa futuro baseado no histórico e eventos agendados.',
-			inputSchema: z.object({
+			parameters: z.object({
 				forecastMonths: z.number().min(1).max(12).default(3).describe('Meses para previsão'),
 				includeScheduledEvents: z.boolean().default(true).describe('Incluir eventos agendados'),
 				confidenceLevel: z
@@ -222,7 +222,7 @@ export function createInsightsTools(userId: string) {
 		getAnomalyDetection: tool({
 			description:
 				'Detecta padrões anômalos de gastos que possam indicar fraudes ou problemas financeiros.',
-			inputSchema: z.object({
+			parameters: z.object({
 				analysisPeriod: z.enum(['7d', '30d', '90d']).default('30d').describe('Período de análise'),
 				severityThreshold: z
 					.enum(['low', 'medium', 'high', 'critical'])
@@ -261,7 +261,7 @@ export function createInsightsTools(userId: string) {
 
 		getBudgetRecommendations: tool({
 			description: 'Gera recomendações de orçamento baseado nos padrões de gastos históricos.',
-			inputSchema: z.object({
+			parameters: z.object({
 				targetSavingsRate: z
 					.number()
 					.min(0.05)

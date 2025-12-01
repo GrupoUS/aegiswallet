@@ -97,7 +97,7 @@ export interface UserProfile {
 }
 
 export interface UpdateProfileInput {
-	full_name?: string;
+	fullName?: string;
 	phone?: string;
 }
 
@@ -120,12 +120,12 @@ export interface UserPreferences {
 
 export interface UpdatePreferencesInput {
 	theme?: string;
-	notifications_email?: boolean;
-	notifications_push?: boolean;
-	notifications_sms?: boolean;
-	auto_categorize?: boolean;
-	budget_alerts?: boolean;
-	voice_feedback?: boolean;
+	notificationsEmail?: boolean;
+	notificationsPush?: boolean;
+	notificationsSms?: boolean;
+	autoCategorize?: boolean;
+	budgetAlerts?: boolean;
+	voiceFeedback?: boolean;
 }
 
 // Financial Statistics
@@ -165,24 +165,24 @@ export interface GoogleCalendarSyncStatus {
 }
 
 export interface GoogleCalendarSyncSettings {
-	auto_sync_interval_minutes: number;
-	created_at: string;
-	last_full_sync_at?: string;
-	sync_categories: string[] | null;
-	sync_direction: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
-	sync_enabled: boolean;
-	sync_financial_amounts: boolean;
-	sync_token?: string;
-	updated_at: string;
-	user_id: string;
+	autoSyncIntervalMinutes: number;
+	createdAt: string;
+	lastFullSyncAt?: string;
+	syncCategories: string[] | null;
+	syncDirection: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
+	syncEnabled: boolean;
+	syncFinancialAmounts: boolean;
+	syncToken?: string;
+	updatedAt: string;
+	userId: string;
 }
 
 export interface UpdateGoogleCalendarSettingsInput {
-	auto_sync_interval_minutes?: number;
-	sync_categories?: string[] | null;
-	sync_direction?: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
-	sync_enabled?: boolean;
-	sync_financial_amounts?: boolean;
+	autoSyncIntervalMinutes?: number;
+	syncCategories?: string[] | null;
+	syncDirection?: 'one_way_to_google' | 'one_way_from_google' | 'bidirectional';
+	syncEnabled?: boolean;
+	syncFinancialAmounts?: boolean;
 }
 
 export interface GoogleCalendarSyncEventInput {

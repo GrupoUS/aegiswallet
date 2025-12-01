@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { logger } from '@/lib/logging';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -81,7 +82,15 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 				await createAccount(values);
 			}
 			onSuccess?.();
-		} catch (_error) {}
+		} catch (error) {
+			logger.error('Failed to save bank account', {
+				error: error instanceof Error ? error.message : String(error),
+				accountType: values.account_type,
+				institution: values.institution_name,
+				isUpdate: !!account,
+				accountId: account?.id,
+			});
+		}
 	};
 
 	const isLoading = isCreating || isUpdating;

@@ -10,6 +10,7 @@ import { Component } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/lib/logging';
 
 interface ErrorBoundaryState {
 	hasError: boolean;
@@ -97,7 +98,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 			// Keep only last 50 errors
 			const recentErrors = existingErrors.slice(-50);
 			localStorage.setItem('error-logs', JSON.stringify(recentErrors));
-		} catch (_loggingError) {}
+		} catch (loggingError) {
+			// Silently handle logging errors to prevent infinite loops in error boundary
+			// This is a safety measure - if error logging fails, we don't want to crash the error boundary
+			// In production, this could be monitored separately
+			console.warn('Failed to log error to localStorage:', loggingError);
+		}
 	};
 
 	private handleRetry = () => {

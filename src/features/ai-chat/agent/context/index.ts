@@ -18,7 +18,7 @@ export { FinancialContextService } from './FinancialContextService';
  */
 export async function buildFinancialContext(userId: string): Promise<FinancialContext> {
 	const service = new FinancialContextService(userId);
-	return service.getContext();
+	return await service.getContext();
 }
 
 /**

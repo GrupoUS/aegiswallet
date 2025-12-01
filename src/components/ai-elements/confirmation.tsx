@@ -1,6 +1,6 @@
 'use client';
 
-import type { ToolUIPart } from 'ai';
+import type { ToolUIPart } from '@/lib/ai/compatibility';
 import { type ComponentProps, createContext, type ReactNode, useContext } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';

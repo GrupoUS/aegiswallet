@@ -173,6 +173,9 @@
 	"overrides": {
 		"react-helmet-async": {
 			"react": "$react"
+		},
+		"ai": {
+			"zod": "$zod"
 		}
 	},
 	"devDependencies": {

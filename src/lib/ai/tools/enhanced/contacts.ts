@@ -31,7 +31,7 @@ export function createContactsTools(userId: string) {
 		listContacts: tool({
 			description:
 				'Lista todos os contatos do usuário com métodos de pagamento. Use para encontrar contatos para transferências.',
-			inputSchema: z.object({
+			parameters: z.object({
 				searchName: z.string().optional().describe('Buscar por nome do contato'),
 				hasPix: z.boolean().optional().describe('Filtrar contatos com chave PIX'),
 				favoritesOnly: z.boolean().default(false).describe('Mostrar apenas favoritos'),
@@ -101,7 +101,7 @@ export function createContactsTools(userId: string) {
 
 		addContact: tool({
 			description: 'Adiciona um novo contato para transferências.',
-			inputSchema: z.object({
+			parameters: z.object({
 				name: z.string().min(1).max(100).describe('Nome completo do contato'),
 				email: z.string().email().optional().describe('Email do contato'),
 				phone: z.string().optional().describe('Telefone com DDD'),
@@ -172,7 +172,7 @@ export function createContactsTools(userId: string) {
 
 		addContactPaymentMethod: tool({
 			description: 'Adiciona um método de pagamento PIX/TED/DOC a um contato existente.',
-			inputSchema: z.object({
+			parameters: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
 				paymentType: z.enum(['PIX', 'TED', 'DOC']).describe('Tipo de pagamento'),
 				label: z.string().max(50).optional().describe('Etiqueta para identificar o método'),
@@ -286,7 +286,7 @@ export function createContactsTools(userId: string) {
 
 		sendToContact: tool({
 			description: 'Envia transferência para um contato usando método de pagamento salvo.',
-			inputSchema: z.object({
+			parameters: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
 				paymentMethodId: z
 					.string()
@@ -454,7 +454,7 @@ export function createContactsTools(userId: string) {
 
 		favoriteContact: tool({
 			description: 'Marca ou desmarca um contato como favorito.',
-			inputSchema: z.object({
+			parameters: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
 				isFavorite: z.boolean().describe('Marcar como favorito (true) ou remover favorito (false)'),
 			}),
@@ -502,7 +502,7 @@ export function createContactsTools(userId: string) {
 
 		deleteContact: tool({
 			description: 'Remove um contato e todos os seus métodos de pagamento.',
-			inputSchema: z.object({
+			parameters: z.object({
 				contactId: z.string().uuid().describe('ID do contato'),
 				confirmDeletion: z.boolean().default(false).describe('Confirmação final da exclusão'),
 			}),

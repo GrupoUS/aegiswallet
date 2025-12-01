@@ -46,7 +46,7 @@ vi.mock('@/lib/api-client', () => ({
 			delete: vi.fn(() => Promise.resolve({ data: null, error: null })),
 			me: vi.fn(() =>
 				Promise.resolve({
-					data: { created_at: '2024-01-01T00:00:00Z', id: 'test-user-001' },
+					data: { createdAt: '2024-01-01T00:00:00Z', id: 'test-user-001' },
 					error: null,
 				}),
 			),

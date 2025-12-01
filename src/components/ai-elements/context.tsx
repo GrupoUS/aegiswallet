@@ -179,8 +179,8 @@ export const ContextContentFooter = ({
 		? getUsage({
 				modelId,
 				usage: {
-					input: usage?.inputTokens ?? 0,
-					output: usage?.outputTokens ?? 0,
+					input: usage?.inputTokens ?? usage?.promptTokens ?? 0,
+					output: usage?.outputTokens ?? usage?.completionTokens ?? 0,
 				},
 			}).costUSD?.totalUSD
 		: undefined;
@@ -211,7 +211,7 @@ export type ContextInputUsageProps = ComponentProps<'div'>;
 
 export const ContextInputUsage = ({ className, children, ...props }: ContextInputUsageProps) => {
 	const { usage, modelId } = useContextValue();
-	const inputTokens = usage?.inputTokens ?? 0;
+	const inputTokens = usage?.inputTokens ?? usage?.promptTokens ?? 0;
 
 	if (children) {
 		return children;
@@ -244,7 +244,7 @@ export type ContextOutputUsageProps = ComponentProps<'div'>;
 
 export const ContextOutputUsage = ({ className, children, ...props }: ContextOutputUsageProps) => {
 	const { usage, modelId } = useContextValue();
-	const outputTokens = usage?.outputTokens ?? 0;
+	const outputTokens = usage?.outputTokens ?? usage?.completionTokens ?? 0;
 
 	if (children) {
 		return children;

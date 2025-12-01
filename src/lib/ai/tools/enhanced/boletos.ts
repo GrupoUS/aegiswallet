@@ -13,7 +13,7 @@ export function createBoletoTools(userId: string) {
 		listBoletos: tool({
 			description:
 				'Lista todos os boletos do usuário com filtros opcionais. Use para consultar boletos pendentes, pagos ou vencidos.',
-			inputSchema: z.object({
+			parameters: z.object({
 				status: z
 					.enum(['ALL', 'REGISTERED', 'PAID', 'OVERDUE', 'CANCELED'])
 					.default('ALL')
@@ -97,7 +97,7 @@ export function createBoletoTools(userId: string) {
 
 		registerBoleto: tool({
 			description: 'Registra um novo boleto a partir do código de barras ou linha digitável.',
-			inputSchema: z.object({
+			parameters: z.object({
 				barcode: z
 					.string()
 					.length(44)
@@ -213,7 +213,7 @@ export function createBoletoTools(userId: string) {
 		calculateBoletoPayment: tool({
 			description:
 				'Calcula valor total do boleto com juros, multas e descontos baseado na data de pagamento.',
-			inputSchema: z.object({
+			parameters: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto'),
 				paymentDate: z.string().datetime().optional().describe('Data de pagamento (padrão: hoje)'),
 			}),
@@ -278,7 +278,7 @@ export function createBoletoTools(userId: string) {
 
 		payBoleto: tool({
 			description: 'Realiza o pagamento de um boleto. Verifica saldo e processa pagamento.',
-			inputSchema: z.object({
+			parameters: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto a pagar'),
 				accountId: z
 					.string()
@@ -416,7 +416,7 @@ export function createBoletoTools(userId: string) {
 
 		scheduleBoletoPayment: tool({
 			description: 'Agenda o pagamento automático de um boleto para data futura.',
-			inputSchema: z.object({
+			parameters: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto'),
 				scheduledDate: z.string().datetime().describe('Data para agendamento do pagamento'),
 				accountId: z.string().uuid().optional().describe('ID da conta para débito'),
@@ -531,7 +531,7 @@ export function createBoletoTools(userId: string) {
 		getBoletoDetails: tool({
 			description:
 				'Obtém detalhes completos de um boleto específico incluindo cálculos de juros e multas.',
-			inputSchema: z.object({
+			parameters: z.object({
 				boletoId: z.string().uuid().describe('ID do boleto'),
 				includePaymentCalculation: z
 					.boolean()

@@ -288,9 +288,109 @@ function validatePerformance(): boolean {
 }
 
 /**
+ * Handle single command execution
+ */
+function handleSingleCommand(command: string): number {
+	switch (command) {
+		case 'oxlint':
+			return runOXLint('main');
+
+		case 'healthcare':
+			return validateHealthcareCompliance() ? 0 : 1;
+
+		case 'security':
+			return validateSecurity() ? 0 : 1;
+
+		case 'performance':
+			return validatePerformance() ? 0 : 1;
+
+		case 'benchmark':
+			performanceBenchmark();
+			return 0;
+
+		case 'types':
+			return runTypeAwareLinting();
+
+		default:
+			return 0;
+	}
+}
+
+/**
+ * Run comprehensive validation with all checks
+ */
+function runComprehensiveValidation(): { exitCode: number; metrics: PerformanceMetrics } {
+	log('Running comprehensive validation...');
+
+	// Run performance benchmark first
+	const metrics = performanceBenchmark();
+
+	// Run all validations
+	const oxlintResult = runOXLint('main');
+	const biomeResult = runBiome();
+	const typeResult = runTypeAwareLinting();
+
+	const healthcareValid = validateHealthcareCompliance();
+	const securityValid = validateSecurity();
+	const performanceValid = validatePerformance();
+
+	// Combine exit codes
+	const exitCode = Math.max(
+		oxlintResult,
+		biomeResult,
+		typeResult,
+		healthcareValid ? 0 : 1,
+		securityValid ? 0 : 1,
+	);
+
+	return { exitCode, metrics };
+}
+
+/**
+ * Log comprehensive validation summary
+ */
+function logValidationSummary(
+	exitCode: number,
+	metrics: PerformanceMetrics,
+	startTime: number,
+): void {
+	const totalDuration = Date.now() - startTime;
+	log('');
+	log('📊 Validation Summary:', 'info');
+	log(`  Total Duration: ${totalDuration}ms`, 'info');
+	log(
+		`  Performance Improvement: ${metrics.improvement.toFixed(1)}x`,
+		metrics.improvement >= CONFIG.performanceThreshold ? 'success' : 'warning',
+	);
+	log(
+		`  Healthcare Compliance: ${exitCode === 0 ? '✓' : '✗'}`,
+		exitCode === 0 ? 'success' : 'error',
+	);
+	log(
+		`  Security Validation: ${exitCode === 0 ? '✓' : '✗'}`,
+		exitCode === 0 ? 'success' : 'error',
+	);
+	log(
+		`  Performance Validation: ${exitCode === 0 ? '✓' : '⚠'}`,
+		exitCode === 0 ? 'success' : 'warning',
+	);
+}
+
+/**
+ * Log final result based on exit code
+ */
+function logFinalResult(exitCode: number): void {
+	if (exitCode === 0) {
+		log('🎉 All validations completed successfully!', 'success');
+	} else {
+		log('❌ Some validations failed. Please review the output above.', 'error');
+	}
+}
+
+/**
  * Main execution function
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Main function requires complex logic
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
 function main() {
 	const args = process.argv.slice(2);
 	const command = args[0] || 'all';
@@ -302,95 +402,18 @@ function main() {
 	// Perform health check
 	healthCheck();
 
-	let overallExitCode = 0;
 	const startTime = Date.now();
+	let overallExitCode = 0;
 
-	switch (command) {
-		case 'oxlint':
-			overallExitCode = runOXLint('main');
-			break;
-
-		case 'healthcare':
-			if (!validateHealthcareCompliance()) {
-				overallExitCode = 1;
-			}
-			break;
-
-		case 'security':
-			if (!validateSecurity()) {
-				overallExitCode = 1;
-			}
-			break;
-
-		case 'performance':
-			if (!validatePerformance()) {
-				overallExitCode = 1;
-			}
-			break;
-
-		case 'benchmark':
-			performanceBenchmark();
-			break;
-
-		case 'types':
-			overallExitCode = runTypeAwareLinting();
-			break;
-
-		default: {
-			log('Running comprehensive validation...');
-
-			// Run performance benchmark first
-			const metrics = performanceBenchmark();
-
-			// Run all validations
-			const oxlintResult = runOXLint('main');
-			const biomeResult = runBiome();
-			const typeResult = runTypeAwareLinting();
-
-			const healthcareValid = validateHealthcareCompliance();
-			const securityValid = validateSecurity();
-			const performanceValid = validatePerformance();
-
-			// Combine exit codes
-			overallExitCode = Math.max(
-				oxlintResult,
-				biomeResult,
-				typeResult,
-				healthcareValid ? 0 : 1,
-				securityValid ? 0 : 1,
-			);
-
-			// Log summary
-			const totalDuration = Date.now() - startTime;
-			log('');
-			log('📊 Validation Summary:', 'info');
-			log(`  Total Duration: ${totalDuration}ms`, 'info');
-			log(
-				`  Performance Improvement: ${metrics.improvement.toFixed(1)}x`,
-				metrics.improvement >= CONFIG.performanceThreshold ? 'success' : 'warning',
-			);
-			log(
-				`  Healthcare Compliance: ${healthcareValid ? '✓' : '✗'}`,
-				healthcareValid ? 'success' : 'error',
-			);
-			log(
-				`  Security Validation: ${securityValid ? '✓' : '✗'}`,
-				securityValid ? 'success' : 'error',
-			);
-			log(
-				`  Performance Validation: ${performanceValid ? '✓' : '⚠'}`,
-				performanceValid ? 'success' : 'warning',
-			);
-			break;
-		}
-	}
-
-	if (overallExitCode === 0) {
-		log('🎉 All validations completed successfully!', 'success');
+	if (command === 'all') {
+		const { exitCode, metrics } = runComprehensiveValidation();
+		overallExitCode = exitCode;
+		logValidationSummary(exitCode, metrics, startTime);
 	} else {
-		log('❌ Some validations failed. Please review the output above.', 'error');
+		overallExitCode = handleSingleCommand(command);
 	}
 
+	logFinalResult(overallExitCode);
 	process.exit(overallExitCode);
 }
 

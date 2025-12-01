@@ -106,49 +106,20 @@ export function useBoletos(status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
 }
 
 // ========================================
-// COMPLIANCE HOOKS
+// COMPLIANCE HOOKS (RE-EXPORTS)
 // ========================================
 
-/**
- * Fetch user's LGPD consents
- */
-export function useConsents() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.consents(),
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/consents');
-			return response.data;
-		},
-		enabled: isSignedIn,
-	});
-}
-
-/**
- * Fetch user's transaction limits
- */
-export function useTransactionLimits() {
-	const { isSignedIn } = useAuth();
-
-	return useQuery({
-		queryKey: userDataKeys.limits(),
-		queryFn: async () => {
-			const response = await apiClient.get<{ data: unknown[] }>('/v1/compliance/limits');
-			return response.data;
-		},
-		enabled: isSignedIn,
-	});
-}
+// Re-export compliance hooks from use-compliance.ts for backward compatibility
+export { useConsents, useTransactionLimits } from './use-compliance';
 
 // ========================================
 // SUMMARY HOOKS
 // ========================================
 
 /**
- * Fetch user's financial summary
+ * Fetch user's overall financial summary (total balance, account count)
  */
-export function useFinancialSummary() {
+export function useOverallFinancialSummary() {
 	const { isSignedIn } = useAuth();
 
 	return useQuery({

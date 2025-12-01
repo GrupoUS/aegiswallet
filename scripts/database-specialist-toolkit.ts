@@ -248,79 +248,82 @@ class DatabaseSpecialistToolkit {
 		this.displayDetailedResults(results);
 	}
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex logic required for detailed results
-	private displayDetailedResults(results: any): void {
-		console.log(`\n${'='.repeat(60)}`);
-		console.log('📊 ANALYSIS RESULTS SUMMARY');
-		console.log('='.repeat(60));
+	/**
+	 * Display health results section
+	 */
+	private displayHealthResults(health: any): void {
+		console.log(`\n🏥 DATABASE HEALTH: ${health.status.toUpperCase()} (${health.score}/100)`);
 
-		// Health Results
-		if (results.health) {
-			const health = results.health;
-			console.log(`\n🏥 DATABASE HEALTH: ${health.status.toUpperCase()} (${health.score}/100)`);
-
-			if (health.issues.length > 0) {
-				console.log(`⚠️  Issues Found: ${health.issues.length}`);
-				health.issues.slice(0, 3).forEach((issue: any, i: number) => {
-					console.log(`   ${i + 1}. [${issue.severity}] ${issue.description}`);
-				});
-				if (health.issues.length > 3) {
-					console.log(`   ... and ${health.issues.length - 3} more`);
-				}
+		if (health.issues.length > 0) {
+			console.log(`⚠️  Issues Found: ${health.issues.length}`);
+			health.issues.slice(0, 3).forEach((issue: any, i: number) => {
+				console.log(`   ${i + 1}. [${issue.severity}] ${issue.description}`);
+			});
+			if (health.issues.length > 3) {
+				console.log(`   ... and ${health.issues.length - 3} more`);
 			}
 		}
+	}
 
-		// Performance Results
-		if (results.performance) {
-			const perf = results.performance;
-			console.log(`\n⚡ PERFORMANCE: ${perf.status.toUpperCase()} (${perf.overallScore}/100)`);
-			console.log(`   📊 Query Performance: ${perf.metrics.queryPerformance.score}/100`);
-			console.log(`   📈 Index Efficiency: ${perf.metrics.indexEfficiency.score}/100`);
-			console.log(`   🔗 Connection Health: ${perf.metrics.connectionHealth.score}/100`);
+	/**
+	 * Display performance results section
+	 */
+	private displayPerformanceResults(perf: any): void {
+		console.log(`\n⚡ PERFORMANCE: ${perf.status.toUpperCase()} (${perf.overallScore}/100)`);
+		console.log(`   📊 Query Performance: ${perf.metrics.queryPerformance.score}/100`);
+		console.log(`   📈 Index Efficiency: ${perf.metrics.indexEfficiency.score}/100`);
+		console.log(`   🔗 Connection Health: ${perf.metrics.connectionHealth.score}/100`);
 
-			if (perf.recommendations.length > 0) {
-				console.log(`   💡 Top Recommendations: ${perf.recommendations.slice(0, 2).length}`);
-				perf.recommendations.slice(0, 2).forEach((rec: any, i: number) => {
-					console.log(`     ${i + 1}. ${rec.description}`);
-				});
-			}
-		}
-
-		// LGPD Compliance Results
-		if (results.compliance) {
-			const compliance = results.compliance;
-			console.log(
-				`\n🇧🇷 LGPD COMPLIANCE: ${compliance.status.toUpperCase()} (${compliance.overallScore}/100)`,
-			);
-
-			Object.entries(compliance.requirements).forEach(([key, req]: [string, any]) => {
-				const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-				const score = req.score;
-				const icon = score >= 90 ? '✅' : score >= 70 ? '⚠️' : '❌';
-				console.log(`   ${icon} ${name}: ${score}/100`);
+		if (perf.recommendations.length > 0) {
+			console.log(`   💡 Top Recommendations: ${perf.recommendations.slice(0, 2).length}`);
+			perf.recommendations.slice(0, 2).forEach((rec: any, i: number) => {
+				console.log(`     ${i + 1}. ${rec.description}`);
 			});
 		}
+	}
 
-		// Repair Results
-		if (results.repair) {
-			const repair = results.repair;
-			console.log(`\n🔧 REPAIR RESULTS:`);
-			console.log(`   📊 Pre-Repair Score: ${repair.preScore}/100`);
-			console.log(`   ✅ Post-Repair Score: ${repair.postScore}/100`);
-			console.log(
-				`   📈 Improvement: ${repair.improvement > 0 ? '+' : ''}${repair.improvement} points`,
-			);
-		}
+	/**
+	 * Display LGPD compliance results section
+	 */
+	private displayComplianceResults(compliance: any): void {
+		console.log(
+			`\n🇧🇷 LGPD COMPLIANCE: ${compliance.status.toUpperCase()} (${compliance.overallScore}/100)`,
+		);
 
-		// Quick Check Results
-		if (results.quickCheck) {
-			console.log('\n⚡ QUICK CHECK RESULTS:');
-			results.quickCheck.forEach((check: any) => {
-				console.log(`   ${check.status} ${check.name}: ${check.value}`);
-			});
-		}
+		Object.entries(compliance.requirements).forEach(([key, req]: [string, any]) => {
+			const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+			const score = req.score;
+			const icon = score >= 90 ? '✅' : score >= 70 ? '⚠️' : '❌';
+			console.log(`   ${icon} ${name}: ${score}/100`);
+		});
+	}
 
-		// Overall Assessment
+	/**
+	 * Display repair results section
+	 */
+	private displayRepairResults(repair: any): void {
+		console.log(`\n🔧 REPAIR RESULTS:`);
+		console.log(`   📊 Pre-Repair Score: ${repair.preScore}/100`);
+		console.log(`   ✅ Post-Repair Score: ${repair.postScore}/100`);
+		console.log(
+			`   📈 Improvement: ${repair.improvement > 0 ? '+' : ''}${repair.improvement} points`,
+		);
+	}
+
+	/**
+	 * Display quick check results section
+	 */
+	private displayQuickCheckResults(quickCheck: any[]): void {
+		console.log('\n⚡ QUICK CHECK RESULTS:');
+		quickCheck.forEach((check: any) => {
+			console.log(`   ${check.status} ${check.name}: ${check.value}`);
+		});
+	}
+
+	/**
+	 * Calculate and display overall assessment
+	 */
+	private displayOverallAssessment(results: any): void {
 		console.log('\n🎯 OVERALL ASSESSMENT:');
 		const scores = [
 			results.health?.score || 0,
@@ -342,8 +345,37 @@ class DatabaseSpecialistToolkit {
 			console.log(`   📊 Overall Score: ${overallScore}/100`);
 			console.log(`   📋 Status: ${status}`);
 		}
+	}
 
-		// Recommendations
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
+	private displayDetailedResults(results: any): void {
+		console.log(`\n${'='.repeat(60)}`);
+		console.log('📊 ANALYSIS RESULTS SUMMARY');
+		console.log('='.repeat(60));
+
+		// Display individual sections
+		if (results.health) {
+			this.displayHealthResults(results.health);
+		}
+
+		if (results.performance) {
+			this.displayPerformanceResults(results.performance);
+		}
+
+		if (results.compliance) {
+			this.displayComplianceResults(results.compliance);
+		}
+
+		if (results.repair) {
+			this.displayRepairResults(results.repair);
+		}
+
+		if (results.quickCheck) {
+			this.displayQuickCheckResults(results.quickCheck);
+		}
+
+		// Overall assessment and recommendations
+		this.displayOverallAssessment(results);
 		this.generateFinalRecommendations(results);
 	}
 

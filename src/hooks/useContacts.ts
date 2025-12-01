@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import type { Contact } from '@/db/schema';
@@ -9,6 +10,23 @@ interface ResponseMeta {
 	requestId: string;
 	retrievedAt: string;
 }
+
+// Query keys factory for contacts
+export const contactsKeys = {
+	all: ['contacts'] as const,
+	lists: () => [...contactsKeys.all, 'list'] as const,
+	list: (filters?: {
+		search?: string;
+		isFavorite?: boolean;
+		limit?: number;
+		offset?: number;
+	}) => [...contactsKeys.lists(), filters] as const,
+	details: () => [...contactsKeys.all, 'detail'] as const,
+	detail: (id: string) => [...contactsKeys.details(), id] as const,
+	favorites: () => [...contactsKeys.all, 'favorites'] as const,
+	search: (query: string, limit?: number) => [...contactsKeys.all, 'search', query, limit] as const,
+	stats: () => [...contactsKeys.all, 'stats'] as const,
+};
 
 interface UseContactsReturn {
 	contacts: Contact[];
@@ -119,10 +137,6 @@ export function useContacts(filters?: {
 	limit?: number;
 	offset?: number;
 }): UseContactsReturn {
-	const [contacts, setContacts] = useState<Contact[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
 	// Memoize filters to avoid unnecessary re-renders
 	const defaultFilters = useMemo(
 		() => ({
@@ -133,80 +147,17 @@ export function useContacts(filters?: {
 		[filters],
 	);
 
-	const total = contacts.length;
+	const queryClient = useQueryClient();
 
-	const createContact = async (contactData: Partial<Contact>) => {
-		try {
-			if (!contactData.name) {
-				throw new Error('Nome do contato é obrigatório');
-			}
-			const response = await apiClient.post<ContactApiResponse>('/v1/contacts', {
-				name: contactData.name,
-				email: contactData.email || undefined,
-				phone: contactData.phone || undefined,
-				notes: contactData.notes || undefined,
-				isFavorite: contactData.isFavorite,
-			});
-
-			toast.success('Contato criado com sucesso!');
-			await refetch(); // Refresh contacts
-			return response.data;
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Falha ao criar contato');
-			throw error;
-		}
-	};
-
-	const updateContact = async (contactData: Partial<Contact> & { id: string }) => {
-		try {
-			const response = await apiClient.put<ContactApiResponse>(`/v1/contacts/${contactData.id}`, {
-				id: contactData.id,
-				name: contactData.name,
-				email: contactData.email,
-				phone: contactData.phone,
-				notes: contactData.notes,
-				isFavorite: contactData.isFavorite,
-			});
-
-			toast.success('Contato atualizado com sucesso!');
-			await refetch(); // Refresh contacts
-			return response.data;
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Falha ao atualizar contato');
-			throw error;
-		}
-	};
-
-	const deleteContact = async (contactId: string) => {
-		try {
-			await apiClient.delete(`/v1/contacts/${contactId}`);
-			toast.success('Contato removido com sucesso!');
-			await refetch(); // Refresh contacts
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Falha ao remover contato');
-			throw error;
-		}
-	};
-
-	const toggleFavorite = async (contactId: string) => {
-		try {
-			const response = await apiClient.post<ContactApiResponse>(
-				`/v1/contacts/${contactId}/favorite`,
-			);
-			toast.success('Favorito atualizado com sucesso!');
-			await refetch(); // Refresh contacts
-			return response.data;
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Falha ao alternar favorito');
-			throw error;
-		}
-	};
-
-	const refetch = useCallback(async () => {
-		setIsLoading(true);
-		setError(null);
-
-		try {
+	// Query for fetching contacts
+	const {
+		data: contacts = [],
+		isLoading,
+		error,
+		refetch,
+	} = useQuery({
+		queryKey: contactsKeys.list(defaultFilters),
+		queryFn: async () => {
 			const params = new URLSearchParams();
 			if (defaultFilters.search) params.append('search', defaultFilters.search);
 			if (defaultFilters.isFavorite !== undefined)
@@ -219,36 +170,122 @@ export function useContacts(filters?: {
 				meta: ResponseMeta;
 			}>(`/v1/contacts?${params.toString()}`);
 
-			setContacts(response.data || []);
 			return response.data || [];
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar contatos';
-			setError(errorMessage);
-			toast.error(errorMessage);
-			return [];
-		} finally {
-			setIsLoading(false);
-		}
-	}, [defaultFilters]);
+		},
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
 
-	// Load contacts on mount and when filters change
-	useEffect(() => {
-		refetch();
-	}, [refetch]);
+	// Mutation for creating contacts
+	const createContactMutation = useMutation({
+		mutationFn: async (contactData: Partial<Contact>) => {
+			if (!contactData.name) {
+				throw new Error('Nome do contato é obrigatório');
+			}
+			const response = await apiClient.post<ContactApiResponse>('/v1/contacts', {
+				name: contactData.name,
+				email: contactData.email || undefined,
+				phone: contactData.phone || undefined,
+				notes: contactData.notes || undefined,
+				isFavorite: contactData.isFavorite,
+			});
+			return response.data;
+		},
+		onSuccess: () => {
+			toast.success('Contato criado com sucesso!');
+			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Falha ao criar contato');
+		},
+	});
+
+	// Mutation for updating contacts
+	const updateContactMutation = useMutation({
+		mutationFn: async (contactData: Partial<Contact> & { id: string }) => {
+			const response = await apiClient.put<ContactApiResponse>(`/v1/contacts/${contactData.id}`, {
+				id: contactData.id,
+				name: contactData.name,
+				email: contactData.email,
+				phone: contactData.phone,
+				notes: contactData.notes,
+				isFavorite: contactData.isFavorite,
+			});
+			return response.data;
+		},
+		onSuccess: () => {
+			toast.success('Contato atualizado com sucesso!');
+			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Falha ao atualizar contato');
+		},
+	});
+
+	// Mutation for deleting contacts
+	const deleteContactMutation = useMutation({
+		mutationFn: async (contactId: string) => {
+			await apiClient.delete(`/v1/contacts/${contactId}`);
+		},
+		onSuccess: () => {
+			toast.success('Contato removido com sucesso!');
+			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Falha ao remover contato');
+		},
+	});
+
+	// Mutation for toggling favorite status
+	const toggleFavoriteMutation = useMutation({
+		mutationFn: async (contactId: string) => {
+			const response = await apiClient.post<ContactApiResponse>(
+				`/v1/contacts/${contactId}/favorite`,
+			);
+			return response.data;
+		},
+		onSuccess: () => {
+			toast.success('Favorito atualizado com sucesso!');
+			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Falha ao alternar favorito');
+		},
+	});
+
+	// Helper functions that use mutations
+	const createContact = async (contactData: Partial<Contact>) => {
+		return createContactMutation.mutateAsync(contactData);
+	};
+
+	const updateContact = async (contactData: Partial<Contact> & { id: string }) => {
+		return updateContactMutation.mutateAsync(contactData);
+	};
+
+	const deleteContact = async (contactId: string) => {
+		await deleteContactMutation.mutateAsync(contactId);
+	};
+
+	const toggleFavorite = async (contactId: string) => {
+		return toggleFavoriteMutation.mutateAsync(contactId);
+	};
 
 	return {
 		contacts,
 		createContact,
 		deleteContact,
-		error,
-		isCreating: false,
-		isDeleting: false,
+		error: error instanceof Error ? error.message : null,
+		isCreating: createContactMutation.isPending,
+		isDeleting: deleteContactMutation.isPending,
 		isLoading,
-		isTogglingFavorite: false,
-		isUpdating: false,
+		isTogglingFavorite: toggleFavoriteMutation.isPending,
+		isUpdating: updateContactMutation.isPending,
 		refetch,
 		toggleFavorite,
-		total,
+		total: contacts.length,
 		updateContact,
 	};
 }
@@ -257,33 +294,24 @@ export function useContacts(filters?: {
  * Hook para obter contato específico
  */
 export function useContact(contactId: string): UseContactReturn {
-	const [contact, setContact] = useState<Contact | null>(null);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (!contactId) return;
-
-		const fetchContact = async () => {
-			setIsLoading(true);
-			setError(null);
-
-			try {
-				const response = await apiClient.get<ContactApiResponse>(`/v1/contacts/${contactId}`);
-				setContact(response.data);
-			} catch (err) {
-				setError(err instanceof Error ? err.message : 'Erro ao carregar contato');
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		fetchContact();
-	}, [contactId]);
+	const {
+		data: contact = null,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: contactsKeys.detail(contactId),
+		queryFn: async () => {
+			if (!contactId) return null;
+			const response = await apiClient.get<ContactApiResponse>(`/v1/contacts/${contactId}`);
+			return response.data;
+		},
+		enabled: !!contactId,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
 
 	return {
 		contact,
-		error,
+		error: error instanceof Error ? error.message : null,
 		isLoading,
 	};
 }
@@ -292,33 +320,24 @@ export function useContact(contactId: string): UseContactReturn {
  * Hook para contatos favoritos
  */
 export function useFavoriteContacts(): UseFavoriteContactsReturn {
-	const [favoriteContacts, setFavoriteContacts] = useState<Contact[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
-	const fetchFavoriteContacts = useCallback(async () => {
-		setIsLoading(true);
-		setError(null);
-
-		try {
+	const {
+		data: favoriteContacts = [],
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: contactsKeys.favorites(),
+		queryFn: async () => {
 			const response = await apiClient.get<{
 				data: Contact[];
 				meta: ResponseMeta;
 			}>('/v1/contacts/favorites');
-			setFavoriteContacts(response.data);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Erro ao carregar favoritos');
-		} finally {
-			setIsLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchFavoriteContacts();
-	}, [fetchFavoriteContacts]);
+			return response.data;
+		},
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
 
 	return {
-		error,
+		error: error instanceof Error ? error.message : null,
 		favoriteContacts,
 		isLoading,
 	};
@@ -328,38 +347,27 @@ export function useFavoriteContacts(): UseFavoriteContactsReturn {
  * Hook para busca de contatos
  */
 export function useContactSearch(query: string, limit = 10): UseContactSearchReturn {
-	const [searchResults, setSearchResults] = useState<Contact[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (!query || query.length < 2) {
-			setSearchResults([]);
-			return;
-		}
-
-		const searchContacts = async () => {
-			setIsLoading(true);
-			setError(null);
-
-			try {
-				const response = await apiClient.get<{
-					data: Contact[];
-					meta: ResponseMeta;
-				}>(`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`);
-				setSearchResults(response.data);
-			} catch (err) {
-				setError(err instanceof Error ? err.message : 'Erro na busca');
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		searchContacts();
-	}, [query, limit]);
+	const {
+		data: searchResults = [],
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: contactsKeys.search(query, limit),
+		queryFn: async () => {
+			if (!query || query.length < 2) return [];
+			
+			const response = await apiClient.get<{
+				data: Contact[];
+				meta: ResponseMeta;
+			}>(`/v1/contacts/search?query=${encodeURIComponent(query)}&limit=${limit}`);
+			return response.data;
+		},
+		enabled: !!query && query.length >= 2,
+		staleTime: 2 * 60 * 1000, // 2 minutes for search results
+	});
 
 	return {
-		error,
+		error: error instanceof Error ? error.message : null,
 		isLoading,
 		searchResults,
 	};
@@ -369,32 +377,23 @@ export function useContactSearch(query: string, limit = 10): UseContactSearchRet
  * Hook para estatísticas dos contatos
  */
 export function useContactsStats(): UseContactsStatsReturn {
-	const [stats, setStats] = useState<StatsResponse['data'] | null>(null);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
-	const fetchStats = useCallback(async () => {
-		setIsLoading(true);
-		setError(null);
-
-		try {
+	const {
+		data: statsResponse,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: contactsKeys.stats(),
+		queryFn: async () => {
 			const response = await apiClient.get<StatsResponse>('/v1/contacts/stats');
-			setStats(response.data);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Erro ao carregar estatísticas');
-		} finally {
-			setIsLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchStats();
-	}, [fetchStats]);
+			return response.data;
+		},
+		staleTime: 10 * 60 * 1000, // 10 minutes for stats
+	});
 
 	return {
-		error,
+		error: error instanceof Error ? error.message : null,
 		isLoading,
-		stats,
+		stats: statsResponse?.data || null,
 	};
 }
 

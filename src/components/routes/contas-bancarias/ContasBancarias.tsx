@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type BankAccount, useBankAccounts, useBankAccountsStats } from '@/hooks/useBankAccounts';
 import { RouteGuard } from '@/lib/auth/route-guard';
+import { logger } from '@/lib/logging';
 
 export const ContasBancarias = () => {
 	const { accounts, deleteAccountAsync, isDeleting } = useBankAccounts();
@@ -44,7 +45,15 @@ export const ContasBancarias = () => {
 			try {
 				await deleteAccountAsync({ id: deletingAccount.id });
 				setDeletingAccount(null);
-			} catch (_error) {}
+			} catch (error) {
+				logger.error('Failed to delete bank account', {
+					error: error instanceof Error ? error.message : String(error),
+					accountId: deletingAccount.id,
+					institution: deletingAccount.institution_name,
+					accountType: deletingAccount.account_type,
+				});
+				// Note: We don't reset deletingAccount state on error to allow user to retry
+			}
 		}
 	};
 

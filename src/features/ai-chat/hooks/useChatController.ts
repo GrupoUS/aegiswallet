@@ -103,33 +103,173 @@ export function useChatController(
 	const abortControllerRef = useRef<AbortController | null>(null);
 
 	/**
+	 * Extract text content from a chunk payload
+	 */
+	const extractTextContent = (payload: unknown): string => {
+		return typeof payload === 'string'
+			? payload
+			: payload && 'content' in (payload as object)
+				? (payload as { content: string }).content
+				: '';
+	};
+
+	/**
+	 * Handle text delta chunks
+	 */
+	const handleTextDelta = (
+		chunk: any,
+		fullContent: string,
+		setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
+	): string => {
+		const textContent = extractTextContent(chunk.payload);
+		const newContent = fullContent + textContent;
+		setStreamingContent((prev) => prev + textContent);
+		return newContent;
+	};
+
+	/**
+	 * Handle reasoning delta chunks
+	 */
+	const handleReasoningDelta = (
+		chunk: any,
+		fullReasoning: string,
+		setStreamingReasoning: React.Dispatch<React.SetStateAction<string>>,
+		setReasoning: React.Dispatch<React.SetStateAction<ChatReasoningChunk[]>>,
+		options?: UseChatControllerOptions,
+	): string => {
+		const reasoningText = extractTextContent(chunk.payload);
+		const newReasoning = fullReasoning + reasoningText;
+		setStreamingReasoning((prev) => prev + reasoningText);
+
+		if (options?.enableReasoningView) {
+			setReasoning((prev) => [
+				...prev,
+				{
+					id: crypto.randomUUID(),
+					content: reasoningText,
+					timestamp: Date.now(),
+				},
+			]);
+		}
+
+		return newReasoning;
+	};
+
+	/**
+	 * Handle message completion
+	 */
+	const handleMessageCompletion = (
+		fullContent: string,
+		fullReasoning: string,
+		setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
+		options?: UseChatControllerOptions,
+	): void => {
+		if (!fullContent) return;
+
+		const assistantMessage: ChatMessage = {
+			id: crypto.randomUUID(),
+			role: 'assistant',
+			content: fullContent,
+			reasoning: fullReasoning || undefined,
+			timestamp: Date.now(),
+		};
+
+		setMessages((prev) => {
+			const updated = [...prev, assistantMessage];
+			// Trim to maxMessages if configured
+			if (options?.maxMessages && updated.length > options.maxMessages) {
+				return updated.slice(-options.maxMessages);
+			}
+			return updated;
+		});
+	};
+
+	/**
+	 * Prepare messages with system prompt
+	 */
+	const prepareMessages = (messages: ChatMessage[], options?: UseChatControllerOptions): ChatMessage[] => {
+		return options?.systemPrompt
+			? [
+					{
+						id: 'system',
+						role: 'system' as const,
+						content: options.systemPrompt,
+						timestamp: Date.now(),
+					},
+					...messages,
+				]
+			: messages;
+	};
+
+	/**
+	 * Initialize streaming state
+	 */
+	const initializeStreamingState = (
+		setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+		setIsStreaming: React.Dispatch<React.SetStateAction<boolean>>,
+		setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
+		setStreamingReasoning: React.Dispatch<React.SetStateAction<string>>,
+		setError: React.Dispatch<React.SetStateAction<ChatError | null>>,
+		setReasoning: React.Dispatch<React.SetStateAction<ChatReasoningChunk[]>>,
+	): void => {
+		setIsLoading(true);
+		setIsStreaming(true);
+		setStreamingContent('');
+		setStreamingReasoning('');
+		setError(null);
+		setReasoning([]);
+	};
+
+	/**
+	 * Cleanup streaming state
+	 */
+	const cleanupStreamingState = (
+		setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+		setIsStreaming: React.Dispatch<React.SetStateAction<boolean>>,
+		setStreamingContent: React.Dispatch<React.SetStateAction<string>>,
+		setStreamingReasoning: React.Dispatch<React.SetStateAction<string>>,
+		abortControllerRef: React.MutableRefObject<AbortController | null>,
+	): void => {
+		setIsLoading(false);
+		setIsStreaming(false);
+		setStreamingContent('');
+		setStreamingReasoning('');
+		abortControllerRef.current = null;
+	};
+
+	/**
+	 * Handle streaming errors
+	 */
+	const handleStreamingError = (
+		err: unknown,
+		setError: React.Dispatch<React.SetStateAction<ChatError | null>>,
+		options?: UseChatControllerOptions,
+	): void => {
+		const chatError: ChatError = {
+			code: 'STREAM_ERROR',
+			message: err instanceof Error ? err.message : String(err),
+		};
+		setError(chatError);
+		options?.onError?.(err instanceof Error ? err : chatError);
+	};
+
+	/**
 	 * Internal function to process streaming from backend
 	 */
 	const processStream = useCallback(
 		async (messagesToSend: ChatMessage[]) => {
-			setIsLoading(true);
-			setIsStreaming(true);
-			setStreamingContent('');
-			setStreamingReasoning('');
-			setError(null);
-			setReasoning([]);
+			initializeStreamingState(
+				setIsLoading,
+				setIsStreaming,
+				setStreamingContent,
+				setStreamingReasoning,
+				setError,
+				setReasoning,
+			);
 
 			try {
 				abortControllerRef.current = new AbortController();
-
-				// Add system prompt if configured
-				const messagesWithSystem = options?.systemPrompt
-					? [
-							{
-								id: 'system',
-								role: 'system' as const,
-								content: options.systemPrompt,
-								timestamp: Date.now(),
-							},
-							...messagesToSend,
-						]
-					: messagesToSend;
-
+				const messagesWithSystem = prepareMessages(messagesToSend, options);
 				const stream = backend.send(messagesWithSystem);
 
 				let fullContent = '';
@@ -137,87 +277,51 @@ export function useChatController(
 
 				for await (const chunk of stream) {
 					switch (chunk.type) {
-						case 'text-delta': {
-							const textContent =
-								typeof chunk.payload === 'string'
-									? chunk.payload
-									: chunk.payload && 'content' in chunk.payload
-										? (chunk.payload as { content: string }).content
-										: '';
-							fullContent += textContent;
-							setStreamingContent((prev) => prev + textContent);
+						case 'text-delta':
+							fullContent = handleTextDelta(chunk, fullContent, setStreamingContent);
 							break;
-						}
-						case 'reasoning-delta': {
-							const reasoningText =
-								typeof chunk.payload === 'string'
-									? chunk.payload
-									: chunk.payload && 'content' in chunk.payload
-										? (chunk.payload as { content: string }).content
-										: '';
-							fullReasoning += reasoningText;
-							setStreamingReasoning((prev) => prev + reasoningText);
-							if (options?.enableReasoningView) {
-								setReasoning((prev) => [
-									...prev,
-									{
-										id: crypto.randomUUID(),
-										content: reasoningText,
-										timestamp: Date.now(),
-									},
-								]);
-							}
+
+						case 'reasoning-delta':
+							fullReasoning = handleReasoningDelta(
+								chunk,
+								fullReasoning,
+								setStreamingReasoning,
+								setReasoning,
+								options,
+							);
 							break;
-						}
+
 						case 'suggestion':
 							setSuggestions((prev) => [...prev, chunk.payload as ChatSuggestion]);
 							break;
+
 						case 'task':
 							setTasks((prev) => [...prev, chunk.payload as ChatTask]);
 							break;
+
 						case 'error': {
 							const errorPayload = chunk.payload as ChatError;
 							setError(errorPayload);
 							options?.onError?.(errorPayload);
 							break;
 						}
+
 						case 'done':
 						case 'message-end':
-							// Commit the assistant message
-							if (fullContent) {
-								const assistantMessage: ChatMessage = {
-									id: crypto.randomUUID(),
-									role: 'assistant',
-									content: fullContent,
-									reasoning: fullReasoning || undefined,
-									timestamp: Date.now(),
-								};
-
-								setMessages((prev) => {
-									const updated = [...prev, assistantMessage];
-									// Trim to maxMessages if configured
-									if (options?.maxMessages && updated.length > options.maxMessages) {
-										return updated.slice(-options.maxMessages);
-									}
-									return updated;
-								});
-							}
+							handleMessageCompletion(fullContent, fullReasoning, setMessages, options);
 							break;
 					}
 				}
 			} catch (err) {
-				const chatError: ChatError = {
-					code: 'STREAM_ERROR',
-					message: err instanceof Error ? err.message : String(err),
-				};
-				setError(chatError);
-				options?.onError?.(err instanceof Error ? err : chatError);
+				handleStreamingError(err, setError, options);
 			} finally {
-				setIsLoading(false);
-				setIsStreaming(false);
-				setStreamingContent('');
-				setStreamingReasoning('');
-				abortControllerRef.current = null;
+				cleanupStreamingState(
+					setIsLoading,
+					setIsStreaming,
+					setStreamingContent,
+					setStreamingReasoning,
+					abortControllerRef,
+				);
 			}
 		},
 		[backend, options],

@@ -17,6 +17,8 @@
  * @module security/voiceRecognition
  */
 
+import { logger } from '@/lib/logging';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -98,7 +100,13 @@ export class VoiceRecognitionService {
 				similarity,
 				transcription: result.transcription,
 			};
-		} catch (_error) {}
+		} catch (error) {
+			logger.warn('Primary voice recognition provider failed', {
+				error: error instanceof Error ? error.message : String(error),
+				provider: this.config.primaryProvider,
+				expectedPhrase,
+			});
+		}
 
 		// Try fallback providers
 		for (const provider of this.config.fallbackProviders) {
@@ -116,7 +124,13 @@ export class VoiceRecognitionService {
 					similarity,
 					transcription: result.transcription,
 				};
-			} catch (_error) {}
+			} catch (error) {
+				logger.warn('Fallback voice recognition provider failed', {
+					error: error instanceof Error ? error.message : String(error),
+					provider,
+					expectedPhrase,
+				});
+			}
 		}
 
 		// All providers failed

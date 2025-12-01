@@ -14,6 +14,7 @@ import { createContext, useContext, useState } from 'react';
 
 import type { CalendarEvent, EventColor } from './types';
 import { useFinancialEventMutations } from '@/hooks/useFinancialEvents';
+import { logger } from '@/lib/logging';
 
 // Define the context type
 interface CalendarDndContextType {
@@ -153,14 +154,25 @@ export function CalendarDndProvider({ children, onEventUpdate }: CalendarDndProv
 					if (onEventUpdate) {
 						onEventUpdate(updatedEvent);
 					}
-				} catch (_error) {
+				} catch (error) {
+					logger.error('Failed to update calendar event', {
+						error: error instanceof Error ? error.message : String(error),
+						eventId: draggedEvent.id,
+						newStart: newStart.toISOString(),
+						newEnd: newEnd.toISOString(),
+					});
 					// Here you could show a toast notification to the user
 				} finally {
 					setIsUpdating(false);
 				}
-			} else {
 			}
-		} catch (_error) {
+		} catch (error) {
+			logger.error('Failed to handle calendar drag end', {
+				error: error instanceof Error ? error.message : String(error),
+				activeId: activeId,
+				hasActiveEvent: !!activeEvent,
+				delta: event.delta,
+			});
 		} finally {
 			// Always reset state
 			setActiveEvent(null);

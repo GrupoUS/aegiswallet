@@ -19,7 +19,7 @@ export function createPixTools(userId: string) {
 		listPixKeys: tool({
 			description:
 				'Lista todas as chaves PIX cadastradas pelo usuário. Use para mostrar opções de transferência.',
-			inputSchema: z.object({
+			parameters: z.object({
 				includeInactive: z.boolean().default(false).describe('Incluir chaves inativas'),
 			}),
 			execute: async ({ includeInactive }) => {
@@ -58,7 +58,7 @@ export function createPixTools(userId: string) {
 
 		sendPixTransfer: tool({
 			description: 'Envia uma transferência PIX. Verifica limites e segurança antes de processar.',
-			inputSchema: z.object({
+			parameters: z.object({
 				recipientKey: z.string().min(1).describe('Chave PIX do destinatário'),
 				recipientKeyType: PixKeyTypeSchema.describe('Tipo da chave PIX'),
 				recipientName: z.string().min(1).max(200).describe('Nome completo do destinatário'),
@@ -164,7 +164,7 @@ export function createPixTools(userId: string) {
 
 		requestPixQrCode: tool({
 			description: 'Gera um QR Code PIX para receber valores. Útil para cobranças e pagamentos.',
-			inputSchema: z.object({
+			parameters: z.object({
 				amount: z
 					.number()
 					.positive()
@@ -274,7 +274,7 @@ export function createPixTools(userId: string) {
 
 		getPixTransferStatus: tool({
 			description: 'Consulta o status de uma transferência PIX específica.',
-			inputSchema: z.object({
+			parameters: z.object({
 				transferId: z.string().uuid().describe('ID da transferência PIX'),
 				endToEndId: z
 					.string()
@@ -337,7 +337,7 @@ export function createPixTools(userId: string) {
 
 		listPixTransfers: tool({
 			description: 'Lista histórico de transferências PIX com filtros opcionais.',
-			inputSchema: z.object({
+			parameters: z.object({
 				startDate: z.string().datetime().optional().describe('Data inicial'),
 				endDate: z.string().datetime().optional().describe('Data final'),
 				status: PixTransferStatusSchema.optional().describe('Filtrar por status'),
@@ -409,7 +409,7 @@ export function createPixTools(userId: string) {
 
 		schedulePixTransfer: tool({
 			description: 'Agenda uma transferência PIX para data futura.',
-			inputSchema: z.object({
+			parameters: z.object({
 				recipientKey: z.string().min(1).describe('Chave PIX do destinatário'),
 				recipientKeyType: PixKeyTypeSchema.describe('Tipo da chave PIX'),
 				recipientName: z.string().min(1).max(200).describe('Nome completo do destinatário'),

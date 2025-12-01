@@ -82,7 +82,7 @@ describe('SpeechToTextService', () => {
 				language: 'pt',
 				segments: [
 					{
-						avg_logprob: -0.2,
+						avgLogprob: -0.2,
 					},
 				],
 				text: 'Olá, como vai?',

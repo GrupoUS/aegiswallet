@@ -422,7 +422,12 @@ export class SecureStorageManager {
 					}
 				}
 			});
-		} catch (_error) {}
+		} catch (error) {
+			logger.warn('Failed to cleanup expired secure storage data', {
+				error: error instanceof Error ? error.message : String(error),
+				storageKey: this.config.storageKey,
+			});
+		}
 	}
 
 	/**
@@ -440,7 +445,12 @@ export class SecureStorageManager {
 					localStorage.removeItem(key);
 				}
 			});
-		} catch (_error) {}
+		} catch (error) {
+			logger.warn('Failed to clear all secure storage data', {
+				error: error instanceof Error ? error.message : String(error),
+				storageKey: this.config.storageKey,
+			});
+		}
 	}
 
 	/**

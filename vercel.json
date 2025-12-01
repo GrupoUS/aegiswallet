@@ -4,30 +4,30 @@
 	"installCommand": "bun install",
 	"framework": null,
 	"functions": {
-		"api/dist/index.js": {
+		"api/index.js": {
 			"maxDuration": 30
 		}
 	},
 	"rewrites": [
 		{
-			"source": "/dashboard",
-			"destination": "/dashboard"
+			"source": "/api/:path*",
+			"destination": "/api/index.js"
 		},
 		{
-			"source": "/dashboard/(.*)",
-			"destination": "/dashboard"
+			"source": "/dashboard",
+			"destination": "/index.html"
+		},
+		{
+			"source": "/dashboard/:path*",
+			"destination": "/index.html"
 		},
 		{
 			"source": "/login",
-			"destination": "/login"
+			"destination": "/index.html"
 		},
 		{
 			"source": "/signup",
-			"destination": "/signup"
-		},
-		{
-			"source": "/api/(.*)",
-			"destination": "/api/dist/index"
+			"destination": "/index.html"
 		},
 		{
 			"source": "/((?!api/).*)",

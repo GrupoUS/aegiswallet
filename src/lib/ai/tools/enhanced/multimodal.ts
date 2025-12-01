@@ -34,7 +34,7 @@ export function createMultimodalTools(userId: string) {
 	return {
 		generateVisualReport: tool({
 			description: 'Gera relatórios visuais interativos com gráficos e análises financeiras.',
-			inputSchema: z.object({
+			parameters: z.object({
 				reportType: z
 					.enum([
 						'spending_chart',
@@ -165,7 +165,7 @@ export function createMultimodalTools(userId: string) {
 
 		generatePaymentSummary: tool({
 			description: 'Cria um resumo visual completo de pagamentos e transferências.',
-			inputSchema: z.object({
+			parameters: z.object({
 				period: z
 					.enum(['this_month', 'last_month', 'last_3_months', 'last_year'])
 					.default('this_month')
@@ -284,7 +284,7 @@ export function createMultimodalTools(userId: string) {
 
 		createSpendingVisualization: tool({
 			description: 'Cria visualizações detalhadas de padrões de gastos.',
-			inputSchema: z.object({
+			parameters: z.object({
 				visualizationType: z
 					.enum(['heatmap', 'bubble_chart', 'treemap', 'sunburst', 'sankey'])
 					.describe('Tipo de visualização'),
@@ -420,7 +420,7 @@ export function createMultimodalTools(userId: string) {
 
 		exportFinancialReport: tool({
 			description: 'Exporta relatórios financeiros em diversos formatos para compartilhamento.',
-			inputSchema: z.object({
+			parameters: z.object({
 				reportType: z
 					.enum(['comprehensive_summary', 'tax_report', 'investment_summary', 'expense_report'])
 					.describe('Tipo do relatório'),

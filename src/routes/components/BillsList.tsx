@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { FinancialEvent } from '@/types/financial-events';
+import { logger } from '@/lib/logging';
 
 interface BillsListProps {
 	bills: FinancialEvent[];
@@ -157,11 +158,17 @@ function BillsListComponent({ bills, onEdit, onDelete }: BillsListProps) {
 			setIsDeleting(true);
 			await onDelete(deleteId);
 			setDeleteId(null);
-		} catch (_error) {
+		} catch (error) {
+			logger.error('Failed to delete bill', {
+				error: error instanceof Error ? error.message : String(error),
+				billId: deleteId,
+				billTitle: bills.find((b) => b.id === deleteId)?.title,
+			});
+			// Note: We don't reset deleteId on error to allow user to retry
 		} finally {
 			setIsDeleting(false);
 		}
-	}, [deleteId, onDelete]);
+	}, [deleteId, onDelete, bills]);
 
 	if (bills.length === 0) {
 		return (

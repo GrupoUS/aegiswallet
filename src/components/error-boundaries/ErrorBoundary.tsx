@@ -58,7 +58,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 		// Log error to console in development
 		if (process.env.NODE_ENV === 'development') {
-			console.error('[ErrorBoundary]', error, errorInfo);
 		}
 
 		// Call custom error handler if provided

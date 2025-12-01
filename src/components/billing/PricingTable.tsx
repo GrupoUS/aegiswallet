@@ -4,7 +4,6 @@ import { PricingCard } from './PricingCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlans, useSubscription } from '@/hooks/billing';
-import { cn } from '@/lib/utils';
 
 export function PricingTable() {
 	const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
@@ -44,9 +43,7 @@ export function PricingTable() {
 			<div role="status" aria-live="polite">
 				<Alert>
 					<AlertCircle className="h-4 w-4" aria-hidden="true" />
-					<AlertDescription>
-						Nenhum plano disponível no momento.
-					</AlertDescription>
+					<AlertDescription>Nenhum plano disponível no momento.</AlertDescription>
 				</Alert>
 			</div>
 		);
@@ -57,7 +54,7 @@ export function PricingTable() {
 	return (
 		<div className="space-y-4">
 			{/* Mobile-first horizontal scroll container */}
-			<div 
+			<div
 				className="relative overflow-x-auto pb-4 md:hidden"
 				role="region"
 				aria-label="Seleção de planos de assinatura"
@@ -74,7 +71,7 @@ export function PricingTable() {
 						</div>
 					))}
 				</div>
-				
+
 				{/* Scroll indicator for mobile */}
 				<div className="flex justify-center mt-2">
 					<div className="flex gap-1">
@@ -90,7 +87,7 @@ export function PricingTable() {
 			</div>
 
 			{/* Desktop/Tablet grid layout */}
-			<div 
+			<div
 				className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6"
 				role="region"
 				aria-label="Planos de assinatura"
@@ -105,12 +102,12 @@ export function PricingTable() {
 					/>
 				))}
 			</div>
-			
+
 			{/* Screen reader description */}
 			<div id="pricing-table-description" className="sr-only">
 				<h3>Tabela de planos disponíveis</h3>
 				<p>
-					Use as setas do teclado para navegar entre os planos. 
+					Use as setas do teclado para navegar entre os planos.
 					{plans.length > 0 && ` Existem ${plans.length} planos disponíveis.`}
 				</p>
 			</div>

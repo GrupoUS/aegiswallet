@@ -1,3 +1,5 @@
+import { Check, CreditCard, Loader2, Lock, Shield, Sparkles, Star } from 'lucide-react';
+
 import { FeatureList } from './FeatureList';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,15 +15,6 @@ import { useCheckout } from '@/hooks/billing';
 import { formatPrice } from '@/lib/billing/format-price';
 import { cn } from '@/lib/utils';
 import type { SubscriptionPlan } from '@/types/billing';
-import { 
-	Star, 
-	Check, 
-	CreditCard, 
-	Lock, 
-	Shield, 
-	Loader2,
-	Sparkles
-} from 'lucide-react';
 
 interface PricingCardProps {
 	plan: SubscriptionPlan & { priceFormatted: string };
@@ -31,7 +24,13 @@ interface PricingCardProps {
 	'aria-describedby'?: string;
 }
 
-export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-describedby': ariaDescribedBy }: PricingCardProps) {
+export function PricingCard({
+	plan,
+	currentPlanId,
+	recommended,
+	onSelect,
+	'aria-describedby': ariaDescribedBy,
+}: PricingCardProps) {
 	const { mutate: createCheckout, isPending } = useCheckout();
 	const isCurrent = currentPlanId === plan.id;
 	const isFree = plan.id === 'free';
@@ -62,12 +61,11 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 				'relative flex flex-col h-full transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2',
 				recommended && 'border-primary shadow-lg',
 				isCurrent && 'border-green-500',
-				'focus:outline-none'
+				'focus:outline-none',
 			)}
-			aria-describedby={ariaDescribedBy}
+			aria-describedby={`${ariaDescribedBy} ${cardId}-description ${featuresId}`}
 			role="article"
 			aria-labelledby={`${cardId}-title`}
-			aria-describedby={`${cardId}-description ${featuresId}`}
 		>
 			{/* Trust badges */}
 			<div className="absolute top-4 right-4 flex gap-1">
@@ -78,8 +76,8 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 			{/* Show only one badge: isCurrent takes precedence over recommended */}
 			{recommended && !isCurrent && (
 				<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-					<Badge 
-						className="flex items-center gap-1 shadow-lg" 
+					<Badge
+						className="flex items-center gap-1 shadow-lg"
 						variant="default"
 						aria-label="Plano recomendado"
 					>
@@ -91,11 +89,7 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 
 			{isCurrent && (
 				<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-					<Badge 
-						className="flex items-center gap-1" 
-						variant="outline"
-						aria-label="Seu plano atual"
-					>
+					<Badge className="flex items-center gap-1" variant="outline" aria-label="Seu plano atual">
 						<Check className="h-3 w-3" aria-hidden="true" />
 						Plano Atual
 					</Badge>
@@ -104,23 +98,17 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 
 			<CardHeader className="space-y-4">
 				<div>
-					<CardTitle 
-						id={`${cardId}-title`}
-						className="text-xl font-semibold text-center"
-					>
+					<CardTitle id={`${cardId}-title`} className="text-xl font-semibold text-center">
 						{plan.name}
 					</CardTitle>
-					<CardDescription 
-						id={`${cardId}-description`}
-						className="text-center mt-2"
-					>
+					<CardDescription id={`${cardId}-description`} className="text-center mt-2">
 						{plan.description}
 					</CardDescription>
 				</div>
-				
+
 				<div className="text-center space-y-2">
 					<div className="flex items-baseline justify-center gap-1">
-						<span 
+						<span
 							id={priceId}
 							className="text-4xl font-bold text-primary"
 							aria-live="polite"
@@ -130,7 +118,7 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 						</span>
 						{!isFree && <span className="text-muted-foreground">/mês</span>}
 					</div>
-					
+
 					{/* Payment methods */}
 					<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
 						<CreditCard className="h-3 w-3" aria-label="Aceita cartões" />
@@ -140,12 +128,12 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 			</CardHeader>
 
 			<CardContent className="flex-1 space-y-4">
-				<FeatureList 
-					features={plan.features ?? []} 
+				<FeatureList
+					features={plan.features ?? []}
 					aria-label={`Recursos incluídos no plano ${plan.name}`}
 					aria-describedby={featuresId}
 				/>
-				
+
 				{/* Trust signals for Brazilian market */}
 				<div className="pt-4 border-t border-border/50">
 					<div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -162,9 +150,9 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 			<CardFooter className="pt-4">
 				<Button
 					className={cn(
-						"w-full min-h-[44px] text-base font-medium transition-all duration-200",
-						recommended && "bg-primary hover:bg-primary/90",
-						"focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+						'w-full min-h-[44px] text-base font-medium transition-all duration-200',
+						recommended && 'bg-primary hover:bg-primary/90',
+						'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
 					)}
 					variant={recommended ? 'default' : 'outline'}
 					disabled={isFree || isCurrent || isPending}
@@ -199,14 +187,14 @@ export function PricingCard({ plan, currentPlanId, recommended, onSelect, 'aria-
 							Processando...
 						</>
 					)}
-					{!isCurrent && !isFree && !isPending && (
+					{!(isCurrent || isFree || isPending) && (
 						<>
 							<Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
 							Assinar Agora
 						</>
 					)}
 				</Button>
-				
+
 				{/* Screen reader help text */}
 				<div id={`${cardId}-button-help`} className="sr-only">
 					{isCurrent

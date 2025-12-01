@@ -20,7 +20,9 @@ export class StripeWebhookService {
 			secureLogger.error('Webhook secret not configured', {
 				hasConfig: !!STRIPE_CONFIG.webhookSecret,
 			});
-			throw new Error('STRIPE_WEBHOOK_SECRET não está configurado. Verifique as variáveis de ambiente.');
+			throw new Error(
+				'STRIPE_WEBHOOK_SECRET não está configurado. Verifique as variáveis de ambiente.',
+			);
 		}
 
 		try {
@@ -96,7 +98,7 @@ export class StripeWebhookService {
 			const periodStart = subscriptionItem.current_period_start;
 			const periodEnd = subscriptionItem.current_period_end;
 
-			if (!periodStart || !periodEnd) {
+			if (!(periodStart && periodEnd)) {
 				throw new Error('Datas do período de cobrança não encontradas');
 			}
 
@@ -168,8 +170,8 @@ export class StripeWebhookService {
 
 		const priceId = subscription.items.data[0]?.price?.id;
 		if (!priceId) {
-			secureLogger.error('No price ID found in subscription update', { 
-				subscriptionId: subscription.id 
+			secureLogger.error('No price ID found in subscription update', {
+				subscriptionId: subscription.id,
 			});
 			return;
 		}
@@ -180,8 +182,8 @@ export class StripeWebhookService {
 		// Get billing period from subscription item (Stripe v20+ change)
 		const subscriptionItem = subscription.items.data[0];
 		if (!subscriptionItem) {
-			secureLogger.error('No subscription items found in update', { 
-				subscriptionId: subscription.id 
+			secureLogger.error('No subscription items found in update', {
+				subscriptionId: subscription.id,
 			});
 			return;
 		}
@@ -206,7 +208,7 @@ export class StripeWebhookService {
 				status,
 				currentPeriodStart: new Date(periodStart * 1000),
 				currentPeriodEnd: new Date(periodEnd * 1000),
-				cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+				cancelAtPeriodEnd: subscription.cancel_at_period_end,
 				canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
 				updatedAt: new Date(),
 			})
@@ -340,7 +342,9 @@ export class StripeWebhookService {
 			typeof inv.customer === 'string' ? inv.customer : (inv.customer as { id: string } | null)?.id;
 
 		if (!customerId) {
-			secureLogger.warn('Invoice payment failed webhook missing customer ID', { invoiceId: inv.id });
+			secureLogger.warn('Invoice payment failed webhook missing customer ID', {
+				invoiceId: inv.id,
+			});
 			return;
 		}
 

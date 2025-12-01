@@ -25,7 +25,7 @@ checkoutRouter.post(
 		const { user } = c.get('auth');
 		const { priceId, successUrl, cancelUrl } = c.req.valid('json');
 		const requestId = c.get('requestId');
-		
+
 		// Enhanced authentication validation
 		if (!user?.id) {
 			secureLogger.warn('Checkout request missing user authentication', { requestId });
@@ -33,9 +33,9 @@ checkoutRouter.post(
 		}
 
 		if (!user?.email) {
-			secureLogger.warn('Checkout request missing user email', { 
-				requestId, 
-				userId: user.id 
+			secureLogger.warn('Checkout request missing user email', {
+				requestId,
+				userId: user.id,
 			});
 			return c.json({ error: 'Email do usuário não encontrado' }, 400);
 		}
@@ -43,7 +43,7 @@ checkoutRouter.post(
 		try {
 			// Extract request origin for dynamic URL generation
 			const requestOrigin = c.req.header('origin') || c.req.header('referer')?.replace(/\/$/, '');
-			
+
 			const result = await StripeSubscriptionService.createCheckoutSession(
 				user.id,
 				priceId,
@@ -65,7 +65,7 @@ checkoutRouter.post(
 			});
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-			
+
 			secureLogger.error('Checkout creation failed', {
 				userId: user.id,
 				priceId,
@@ -76,9 +76,11 @@ checkoutRouter.post(
 			// Provide more specific error messages
 			if (errorMessage.includes('Usuário não encontrado')) {
 				return c.json({ error: 'Usuário não encontrado' }, 404);
-			} else if (errorMessage.includes('plano') || errorMessage.includes('price')) {
+			}
+			if (errorMessage.includes('plano') || errorMessage.includes('price')) {
 				return c.json({ error: 'Plano inválido ou não encontrado' }, 400);
-			} else if (errorMessage.includes('Stripe')) {
+			}
+			if (errorMessage.includes('Stripe')) {
 				return c.json({ error: 'Serviço de pagamento temporariamente indisponível' }, 503);
 			}
 

@@ -31,7 +31,9 @@ export function useCheckout() {
 		onSuccess: (data) => {
 			// Validate checkout URL exists before redirect
 			if (!data.checkoutUrl) {
-				toast.error('Erro no checkout: Não foi possível gerar a URL de pagamento. Tente novamente.');
+				toast.error(
+					'Erro no checkout: Não foi possível gerar a URL de pagamento. Tente novamente.',
+				);
 				return;
 			}
 
@@ -46,7 +48,7 @@ export function useCheckout() {
 		onError: (error: Error) => {
 			// Comprehensive error handling with user-friendly messages
 			const errorMessage = error.message || 'Erro desconhecido ao criar checkout';
-			
+
 			let message = 'Não foi possível processar sua solicitação.';
 
 			if (errorMessage.includes('Usuário não encontrado')) {
@@ -62,9 +64,11 @@ export function useCheckout() {
 		// Retry logic for temporary failures
 		retry: (failureCount, error: Error) => {
 			// Don't retry for authentication or validation errors
-			if (error.message?.includes('Usuário não encontrado') || 
+			if (
+				error.message?.includes('Usuário não encontrado') ||
 				error.message?.includes('plano') ||
-				error.message?.includes('não encontrado')) {
+				error.message?.includes('não encontrado')
+			) {
 				return false;
 			}
 			// Retry up to 2 times for network/server errors

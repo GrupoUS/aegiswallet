@@ -34,7 +34,10 @@ export class StripeSubscriptionService {
 			);
 
 			// Generate dynamic URLs based on request origin if not provided
-			const baseUrl = requestOrigin || STRIPE_CONFIG.successUrl?.replace(/\/billing\/success$/, '') || 'https://app.aegiswallet.com.br';
+			const baseUrl =
+				requestOrigin ||
+				STRIPE_CONFIG.successUrl?.replace(/\/billing\/success$/, '') ||
+				'https://app.aegiswallet.com.br';
 			const finalSuccessUrl = successUrl || `${baseUrl}/billing/success`;
 			const finalCancelUrl = cancelUrl || `${baseUrl}/billing/cancel`;
 
@@ -116,7 +119,7 @@ export class StripeSubscriptionService {
 			}
 
 			const { subscription, plan } = result[0];
-			
+
 			// Enhanced validation for subscription data
 			if (!subscription) {
 				secureLogger.warn('Subscription record is null despite query success', { userId });
@@ -165,9 +168,9 @@ export class StripeSubscriptionService {
 				.limit(1);
 
 			if (!subRecord) {
-				secureLogger.warn('Subscription sync skipped: User not found for customer', { 
+				secureLogger.warn('Subscription sync skipped: User not found for customer', {
 					customerId,
-					stripeSubscriptionId 
+					stripeSubscriptionId,
 				});
 				return null;
 			}
@@ -175,9 +178,9 @@ export class StripeSubscriptionService {
 			// Determine plan
 			const priceId = subscription.items.data[0]?.price?.id;
 			if (!priceId) {
-				secureLogger.error('No price ID found in subscription', { 
+				secureLogger.error('No price ID found in subscription', {
 					stripeSubscriptionId,
-					items: subscription.items.data.length 
+					items: subscription.items.data.length,
 				});
 				throw new Error('Preço não encontrado na assinatura do Stripe');
 			}
@@ -204,11 +207,11 @@ export class StripeSubscriptionService {
 			const periodStart = subscriptionItem.current_period_start;
 			const periodEnd = subscriptionItem.current_period_end;
 
-			if (!periodStart || !periodEnd) {
-				secureLogger.error('Missing billing period dates', { 
+			if (!(periodStart && periodEnd)) {
+				secureLogger.error('Missing billing period dates', {
 					stripeSubscriptionId,
 					periodStart,
-					periodEnd 
+					periodEnd,
 				});
 				throw new Error('Datas do período de cobrança não encontradas');
 			}
@@ -226,7 +229,7 @@ export class StripeSubscriptionService {
 				.update(subscriptions)
 				.set({
 					...existingData,
-					cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+					cancelAtPeriodEnd: subscription.cancel_at_period_end,
 					canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
 					trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
 					trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,

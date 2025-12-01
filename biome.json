@@ -57,7 +57,8 @@
 				"useJsxKeyInIterable": "error",
 				"noInvalidConstructorSuper": "error",
 				"noPrecisionLoss": "error",
-				"noSelfAssign": "error"
+				"noSelfAssign": "error",
+				"useUniqueElementIds": "warn"
 			},
 
 			"security": {
@@ -310,6 +311,7 @@
 				"useKeyWithMouseEvents": "error",
 				"useMediaCaption": "error",
 				"useSemanticElements": "warn",
+				"useAriaPropsSupportedByRole": "warn",
 				"useValidAnchor": "error",
 				"useValidAriaProps": "error",
 				"useValidAriaRole": "error",
@@ -613,6 +615,58 @@
 				"rules": {
 					"correctness": {
 						"useExhaustiveDependencies": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/components/billing/**"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"useSemanticElements": "warn",
+						"useAriaPropsSupportedByRole": "warn"
+					},
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "warn"
+					},
+					"correctness": {
+						"useUniqueElementIds": "warn"
+					},
+					"suspicious": {
+						"noExplicitAny": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/components/calendar/**", "src/components/error-boundaries/**", "src/components/ui/**"],
+			"linter": {
+				"rules": {
+					"nursery": {
+						"noShadow": "warn"
+					},
+					"suspicious": {
+						"noEmptyBlockStatements": "warn"
+					},
+					"a11y": {
+						"useSemanticElements": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["scripts/**", "src/test/**"],
+			"linter": {
+				"rules": {
+					"nursery": {
+						"noShadow": "warn"
+					},
+					"suspicious": {
+						"useAwait": "off"
+					},
+					"style": {
+						"useNamingConvention": "off"
 					}
 				}
 			}

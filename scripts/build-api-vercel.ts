@@ -32,35 +32,10 @@ async function buildApi() {
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
 			keepNames: true,
-			// Bundle all dependencies - Node.js built-ins are external (both prefixed and unprefixed)
-			external: [
-				'node:*',
-				// Unprefixed Node.js built-ins that may be dynamically required
-				'util',
-				'events',
-				'stream',
-				'buffer',
-				'crypto',
-				'path',
-				'fs',
-				'os',
-				'http',
-				'https',
-				'net',
-				'tls',
-				'dns',
-				'url',
-				'querystring',
-				'string_decoder',
-				'zlib',
-				'assert',
-				'tty',
-				'child_process',
-				'worker_threads',
-				'cluster',
-				'perf_hooks',
-				'async_hooks',
-			],
+			// Only external Node.js built-ins - bundle everything else
+			external: ['node:*'],
+			// Inject createRequire for CJS modules that need require()
+			inject: [],
 			// Resolve @ alias to src directory
 			alias: {
 				'@': path.join(rootDir, 'src'),
@@ -69,7 +44,11 @@ async function buildApi() {
 				'process.env.NODE_ENV': '"production"',
 			},
 			banner: {
-				js: '// Bundled for Vercel Serverless Functions\n// Generated at: ' + new Date().toISOString(),
+				js: `// Bundled for Vercel Serverless Functions
+// Generated at: ${new Date().toISOString()}
+import { createRequire as __createRequire__ } from 'node:module';
+const require = __createRequire__(import.meta.url);
+`,
 			},
 			metafile: true,
 		});

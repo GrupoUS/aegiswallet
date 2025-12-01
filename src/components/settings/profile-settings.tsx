@@ -45,10 +45,7 @@ import { formatCPF, formatPhone, isValidCPF } from '@/lib/formatters/brazilianFo
 // =============================================================================
 
 const profileSchema = z.object({
-	fullName: z
-		.string()
-		.min(2, 'Nome deve ter pelo menos 2 caracteres')
-		.max(100, 'Nome muito longo'),
+	fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100, 'Nome muito longo'),
 	phone: z
 		.string()
 		.optional()
@@ -178,11 +175,9 @@ export function ProfileSettings() {
 		const cleanedCpf = values.cpf?.replace(/\D/g, '') || undefined;
 		// API expects snake_case field names
 		updateProfile({
-			// biome-ignore lint/style/useNamingConvention: API requires snake_case
 			full_name: values.fullName,
 			phone: cleanedPhone,
 			cpf: cleanedCpf,
-			// biome-ignore lint/style/useNamingConvention: API requires snake_case
 			birth_date: values.birthDate || undefined,
 		});
 	};
@@ -295,19 +290,20 @@ export function ProfileSettings() {
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 						<div className="grid gap-4 md:grid-cols-2">
-						<FormField
-							control={form.control}
-							name="fullName"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome completo</FormLabel>
-									<FormControl>
-										<Input placeholder="Seu nome" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>							<FormItem>
+							<FormField
+								control={form.control}
+								name="fullName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Nome completo</FormLabel>
+										<FormControl>
+											<Input placeholder="Seu nome" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>{' '}
+							<FormItem>
 								<FormLabel>Email</FormLabel>
 								<div className="flex items-center gap-2">
 									<Input
@@ -323,7 +319,6 @@ export function ProfileSettings() {
 								</div>
 								<FormDescription>Email não pode ser alterado por segurança.</FormDescription>
 							</FormItem>
-
 							<FormField
 								control={form.control}
 								name="phone"
@@ -345,7 +340,6 @@ export function ProfileSettings() {
 									</FormItem>
 								)}
 							/>
-
 							<FormField
 								control={form.control}
 								name="cpf"
@@ -368,7 +362,6 @@ export function ProfileSettings() {
 									</FormItem>
 								)}
 							/>
-
 							<FormField
 								control={form.control}
 								name="birthDate"

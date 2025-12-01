@@ -13,10 +13,10 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-http';
 
 interface SchemaColumn {
-  table_name?: string;
-  column_name: string;
-  data_type?: string;
-  is_nullable?: string;
+	table_name?: string;
+	column_name: string;
+	data_type?: string;
+	is_nullable?: string;
 }
 interface LGPDComplianceResult {
 	overallScore: number; // 0-100
@@ -172,11 +172,11 @@ class LGPDComplianceValidator {
 		console.log(`   📊 Found ${personalDataColumns.length} personal data columns`);
 
 		// Validate each personal data column has a clear purpose
-		const personalDataColumnItems = (personalDataColumns as SchemaColumn[])
-			.filter((col): col is SchemaColumn => 
-				col && typeof col.column_name === 'string' && typeof col.table_name === 'string'
-			);
-			
+		const personalDataColumnItems = (personalDataColumns as SchemaColumn[]).filter(
+			(col): col is SchemaColumn =>
+				col && typeof col.column_name === 'string' && typeof col.table_name === 'string',
+		);
+
 		for (const column of personalDataColumnItems) {
 			const table = column.table_name;
 			const col = column.column_name;
@@ -242,18 +242,16 @@ class LGPDComplianceValidator {
       `);
 
 			const requiredColumns = ['user_id', 'consent_type', 'granted', 'granted_at', 'version'];
-			
+
 			// Define proper type for database column metadata
 			interface SchemaColumn {
 				column_name: string;
 				data_type: string;
 				is_nullable: string;
 			}
-			
+
 			const existingColumns = (consentColumns as SchemaColumn[])
-				.filter((col): col is SchemaColumn => 
-					col && typeof col.column_name === 'string'
-				)
+				.filter((col): col is SchemaColumn => col && typeof col.column_name === 'string')
 				.map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
@@ -388,9 +386,7 @@ class LGPDComplianceValidator {
 				'ip_address',
 			];
 			const existingColumns = (auditColumns as SchemaColumn[])
-				.filter((col): col is SchemaColumn => 
-					col && typeof col.column_name === 'string'
-				)
+				.filter((col): col is SchemaColumn => col && typeof col.column_name === 'string')
 				.map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
@@ -472,11 +468,11 @@ class LGPDComplianceValidator {
 
 		// In a real implementation, you would check if these are encrypted
 		// For now, we'll note them for manual review
-		const sensitiveFieldItems = (sensitiveFields as SchemaColumn[])
-			.filter((field): field is SchemaColumn => 
-				field && typeof field.column_name === 'string' && typeof field.table_name === 'string'
-			);
-			
+		const sensitiveFieldItems = (sensitiveFields as SchemaColumn[]).filter(
+			(field): field is SchemaColumn =>
+				field && typeof field.column_name === 'string' && typeof field.table_name === 'string',
+		);
+
 		for (const field of sensitiveFieldItems) {
 			result.sensitiveDataFields.push({
 				table: field.table_name,

@@ -55,11 +55,9 @@ async function testDrizzleConnection() {
 			     WHERE table_schema = 'public'
 			     ORDER BY table_name
 			   `)) as unknown as Array<{
-				// biome-ignore lint/style/useNamingConvention: Database result structure
 				table_name: string;
 			}>;
 			console.log('   ✅ Public schema tables:', tablesResult.length);
-			// biome-ignore lint/style/useNamingConvention: Database result structure
 			tablesResult.slice(0, 5).forEach((row: { table_name: string }) => {
 				console.log(`      - ${row.table_name}`);
 			});

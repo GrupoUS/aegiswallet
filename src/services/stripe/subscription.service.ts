@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 
 import { StripeCustomerService } from './customer.service';
-import { getHttpClient, getPoolClient } from '@/db/client';
+import { getHttpClient } from '@/db/client';
 import { subscriptionPlans, subscriptions, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { getStripeClient } from '@/lib/stripe/client';
@@ -14,6 +14,7 @@ export class StripeSubscriptionService {
 		priceId: string,
 		successUrl?: string,
 		cancelUrl?: string,
+		requestOrigin?: string,
 	) {
 		const stripe = getStripeClient();
 		const db = getHttpClient();
@@ -32,6 +33,11 @@ export class StripeSubscriptionService {
 				user.fullName || undefined,
 			);
 
+			// Generate dynamic URLs based on request origin if not provided
+			const baseUrl = requestOrigin || STRIPE_CONFIG.successUrl?.replace(/\/billing\/success$/, '') || 'https://app.aegiswallet.com.br';
+			const finalSuccessUrl = successUrl || `${baseUrl}/billing/success`;
+			const finalCancelUrl = cancelUrl || `${baseUrl}/billing/cancel`;
+
 			// Create session
 			const session = await stripe.checkout.sessions.create({
 				customer: customerId,
@@ -43,17 +49,17 @@ export class StripeSubscriptionService {
 						quantity: 1,
 					},
 				],
-				success_url:
-					successUrl ||
-					STRIPE_CONFIG.successUrl ||
-					'https://app.aegiswallet.com.br/billing/success',
-				cancel_url:
-					cancelUrl || STRIPE_CONFIG.cancelUrl || 'https://app.aegiswallet.com.br/billing/cancel',
+				success_url: finalSuccessUrl,
+				cancel_url: finalCancelUrl,
 				metadata: {
 					clerkUserId: userId,
 				},
 				allow_promotion_codes: true,
 			});
+
+			if (!session.url) {
+				throw new Error('Stripe não retornou URL de checkout válida');
+			}
 
 			return {
 				sessionId: session.id,
@@ -63,6 +69,7 @@ export class StripeSubscriptionService {
 			secureLogger.error('Failed to create checkout session', {
 				userId,
 				priceId,
+				requestOrigin,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			});
 			throw error;
@@ -104,10 +111,30 @@ export class StripeSubscriptionService {
 				.limit(1);
 
 			if (result.length === 0) {
+				secureLogger.info('No subscription found for user', { userId });
 				return null;
 			}
 
-			return result[0];
+			const { subscription, plan } = result[0];
+			
+			// Enhanced validation for subscription data
+			if (!subscription) {
+				secureLogger.warn('Subscription record is null despite query success', { userId });
+				return null;
+			}
+
+			// Log subscription status for debugging
+			secureLogger.info('Retrieved subscription for user', {
+				userId,
+				subscriptionId: subscription.id,
+				status: subscription.status,
+				planId: subscription.planId,
+			});
+
+			return {
+				subscription,
+				plan: plan || null, // Plan might be null if it was deleted
+			};
 		} catch (error) {
 			secureLogger.error('Failed to get subscription', {
 				userId,
@@ -119,7 +146,7 @@ export class StripeSubscriptionService {
 
 	static async syncSubscriptionFromStripe(stripeSubscriptionId: string) {
 		const stripe = getStripeClient();
-		const db = getPoolClient(); // Use pool for transactions if needed, though here we just upsert
+		const db = getHttpClient(); // Use HTTP client for better performance in read/update operations
 
 		try {
 			const subscriptionResponse = await stripe.subscriptions.retrieve(stripeSubscriptionId);
@@ -138,12 +165,23 @@ export class StripeSubscriptionService {
 				.limit(1);
 
 			if (!subRecord) {
-				secureLogger.warn('Subscription sync skipped: User not found for customer', { customerId });
+				secureLogger.warn('Subscription sync skipped: User not found for customer', { 
+					customerId,
+					stripeSubscriptionId 
+				});
 				return null;
 			}
 
 			// Determine plan
-			const priceId = subscription.items.data[0].price.id;
+			const priceId = subscription.items.data[0]?.price?.id;
+			if (!priceId) {
+				secureLogger.error('No price ID found in subscription', { 
+					stripeSubscriptionId,
+					items: subscription.items.data.length 
+				});
+				throw new Error('Preço não encontrado na assinatura do Stripe');
+			}
+
 			const plan = getPlanByStripePrice(priceId);
 			const planId = plan ? plan.id : 'free';
 
@@ -158,19 +196,37 @@ export class StripeSubscriptionService {
 
 			// Get billing period from subscription item (Stripe v20+ change)
 			const subscriptionItem = subscription.items.data[0];
+			if (!subscriptionItem) {
+				secureLogger.error('No subscription items found', { stripeSubscriptionId });
+				throw new Error('Item da assinatura não encontrado');
+			}
+
 			const periodStart = subscriptionItem.current_period_start;
 			const periodEnd = subscriptionItem.current_period_end;
 
-			// Update subscription
+			if (!periodStart || !periodEnd) {
+				secureLogger.error('Missing billing period dates', { 
+					stripeSubscriptionId,
+					periodStart,
+					periodEnd 
+				});
+				throw new Error('Datas do período de cobrança não encontradas');
+			}
+
+			// Check if subscription already exists with same data (optimistic update)
+			const existingData = {
+				stripeSubscriptionId: subscription.id,
+				planId,
+				status,
+				currentPeriodStart: new Date(periodStart * 1000),
+				currentPeriodEnd: new Date(periodEnd * 1000),
+			};
+
 			const [updated] = await db
 				.update(subscriptions)
 				.set({
-					stripeSubscriptionId: subscription.id,
-					planId,
-					status,
-					currentPeriodStart: new Date(periodStart * 1000),
-					currentPeriodEnd: new Date(periodEnd * 1000),
-					cancelAtPeriodEnd: subscription.cancel_at_period_end,
+					...existingData,
+					cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
 					canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
 					trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
 					trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
@@ -183,6 +239,9 @@ export class StripeSubscriptionService {
 				userId: subRecord.userId,
 				subscriptionId: subscription.id,
 				status,
+				planId,
+				previousStatus: subRecord.status,
+				previousPlanId: subRecord.planId,
 			});
 
 			return updated;
@@ -190,6 +249,7 @@ export class StripeSubscriptionService {
 			secureLogger.error('Failed to sync subscription', {
 				stripeSubscriptionId,
 				error: error instanceof Error ? error.message : 'Unknown error',
+				stack: error instanceof Error ? error.stack : undefined,
 			});
 			throw error;
 		}

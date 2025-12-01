@@ -37,8 +37,6 @@ const CalendarLoader = () => (
 	</Card>
 );
 
-
-
 export function Dashboard() {
 	// useEffect for OAuth callback removed as it is handled by the auth callback route and Clerk
 
@@ -185,9 +183,7 @@ export function Dashboard() {
 							{((recentTransactions as Transaction[] | undefined) ?? []).map((transaction) => (
 								<div key={transaction.id} className="flex items-center justify-between">
 									<div>
-										<p className="font-medium truncate max-w-[150px]">
-											{transaction.description}
-										</p>
+										<p className="font-medium truncate max-w-[150px]">{transaction.description}</p>
 										<p className="text-muted-foreground text-sm">
 											{new Date(transaction.created_at).toLocaleDateString('pt-BR')}
 										</p>

@@ -4,8 +4,8 @@
  * Manter API pública idêntica para backward compatibility.
  */
 
-import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { toast } from 'sonner';
 
 import type { Contact } from '@/db/schema';
@@ -15,12 +15,8 @@ import { apiClient } from '@/lib/api-client';
 export const contactsKeys = {
 	all: ['contacts'] as const,
 	lists: () => [...contactsKeys.all, 'list'] as const,
-	list: (filters?: {
-		search?: string;
-		isFavorite?: boolean;
-		limit?: number;
-		offset?: number;
-	}) => [...contactsKeys.lists(), filters] as const,
+	list: (filters?: { search?: string; isFavorite?: boolean; limit?: number; offset?: number }) =>
+		[...contactsKeys.lists(), filters] as const,
 	details: () => [...contactsKeys.all, 'detail'] as const,
 	detail: (id: string) => [...contactsKeys.details(), id] as const,
 	favorites: () => [...contactsKeys.all, 'favorites'] as const,
@@ -207,12 +203,15 @@ export function useContacts(filters?: {
 
 			// Optimistically update to the new value
 			if (previousContacts && Array.isArray(previousContacts)) {
-				queryClient.setQueryData(contactsKeys.lists(), [...previousContacts, newContact as Contact]);
+				queryClient.setQueryData(contactsKeys.lists(), [
+					...previousContacts,
+					newContact as Contact,
+				]);
 			}
 
 			return { previousContacts };
 		},
-		onError: (err, newContact, context) => {
+		onError: (err, _newContact, context) => {
 			// If the mutation fails, use the context returned from onMutate to roll back
 			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
 			toast.error(err.message || 'Falha ao criar contato');
@@ -282,7 +281,7 @@ export function useContacts(filters?: {
 
 			return { previousContacts, previousFavorites };
 		},
-		onError: (err, contactId, context) => {
+		onError: (err, _contactId, context) => {
 			// If the mutation fails, use the context to roll back
 			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
 			queryClient.setQueryData(contactsKeys.favorites(), context?.previousFavorites);
@@ -319,10 +318,8 @@ export function useContacts(filters?: {
 			if (previousContacts) {
 				queryClient.setQueryData(contactsKeys.lists(), (old: Contact[] | undefined) => {
 					if (!old) return old;
-					return old.map(contact =>
-						contact.id === contactId
-							? { ...contact, isFavorite: !contact.isFavorite }
-							: contact,
+					return old.map((contact) =>
+						contact.id === contactId ? { ...contact, isFavorite: !contact.isFavorite } : contact,
 					);
 				});
 			}
@@ -330,22 +327,21 @@ export function useContacts(filters?: {
 			if (previousFavorites) {
 				queryClient.setQueryData(contactsKeys.favorites(), (old: Contact[] | undefined) => {
 					if (!old) return old;
-					const contact = old.find(c => c.id === contactId);
+					const contact = old.find((c) => c.id === contactId);
 					if (!contact) return old;
 
 					if (contact.isFavorite) {
 						// Removing from favorites
-						return old.filter(c => c.id !== contactId);
-					} else {
-						// Adding to favorites
-						return [...old, { ...contact, isFavorite: true }];
+						return old.filter((c) => c.id !== contactId);
 					}
+					// Adding to favorites
+					return [...old, { ...contact, isFavorite: true }];
 				});
 			}
 
 			return { previousContacts, previousFavorites };
 		},
-		onError: (err, contactId, context) => {
+		onError: (err, _contactId, context) => {
 			// If the mutation fails, use the context to roll back
 			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
 			queryClient.setQueryData(contactsKeys.favorites(), context?.previousFavorites);

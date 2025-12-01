@@ -8,482 +8,466 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermosDeUsoRouteImport } from './routes/termos-de-uso'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SaldoRouteImport } from './routes/saldo'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias'
-import { Route as ContasRouteImport } from './routes/contas'
-import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
-import { Route as CalendarioRouteImport } from './routes/calendario'
-import { Route as BillingRouteImport } from './routes/billing'
-import { Route as AiChatRouteImport } from './routes/ai-chat'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as AiChatRouteImport } from './routes/ai-chat';
+import { Route as BillingRouteImport } from './routes/billing';
+import { Route as CalendarioRouteImport } from './routes/calendario';
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes';
+import { Route as ContasRouteImport } from './routes/contas';
+import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias';
+import { Route as DashboardRouteImport } from './routes/dashboard';
+import { Route as IndexRouteImport } from './routes/index';
+import { Route as LoginRouteImport } from './routes/login';
+import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade';
+import { Route as PrivacidadeRouteImport } from './routes/privacidade';
+import { Route as SaldoRouteImport } from './routes/saldo';
+import { Route as SettingsRouteImport } from './routes/settings';
+import { Route as SignupRouteImport } from './routes/signup';
+import { Route as TermosDeUsoRouteImport } from './routes/termos-de-uso';
 
-const BillingSuccessLazyRouteImport = createFileRoute('/billing/success')()
-const BillingPaymentMethodsLazyRouteImport = createFileRoute(
-  '/billing/payment-methods',
-)()
-const BillingInvoicesLazyRouteImport = createFileRoute('/billing/invoices')()
-const BillingHistoryLazyRouteImport = createFileRoute('/billing/history')()
-const BillingCancelLazyRouteImport = createFileRoute('/billing/cancel')()
+const BillingSuccessLazyRouteImport = createFileRoute('/billing/success')();
+const BillingPaymentMethodsLazyRouteImport = createFileRoute('/billing/payment-methods')();
+const BillingInvoicesLazyRouteImport = createFileRoute('/billing/invoices')();
+const BillingHistoryLazyRouteImport = createFileRoute('/billing/history')();
+const BillingCancelLazyRouteImport = createFileRoute('/billing/cancel')();
 
 const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
-  id: '/termos-de-uso',
-  path: '/termos-de-uso',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/termos-de-uso',
+	path: '/termos-de-uso',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/signup',
+	path: '/signup',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/settings',
+	path: '/settings',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SaldoRoute = SaldoRouteImport.update({
-  id: '/saldo',
-  path: '/saldo',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/saldo',
+	path: '/saldo',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/privacidade',
+	path: '/privacidade',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
-  id: '/politica-de-privacidade',
-  path: '/politica-de-privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/politica-de-privacidade',
+	path: '/politica-de-privacidade',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/login',
+	path: '/login',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/dashboard',
+	path: '/dashboard',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ContasBancariasRoute = ContasBancariasRouteImport.update({
-  id: '/contas-bancarias',
-  path: '/contas-bancarias',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/contas-bancarias.lazy').then((d) => d.Route),
-)
+	id: '/contas-bancarias',
+	path: '/contas-bancarias',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/contas-bancarias.lazy').then((d) => d.Route));
 const ContasRoute = ContasRouteImport.update({
-  id: '/contas',
-  path: '/contas',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/contas',
+	path: '/contas',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
-  id: '/configuracoes',
-  path: '/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/configuracoes',
+	path: '/configuracoes',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const CalendarioRoute = CalendarioRouteImport.update({
-  id: '/calendario',
-  path: '/calendario',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route))
+	id: '/calendario',
+	path: '/calendario',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/calendario.lazy').then((d) => d.Route));
 const BillingRoute = BillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/billing',
+	path: '/billing',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const AiChatRoute = AiChatRouteImport.update({
-  id: '/ai-chat',
-  path: '/ai-chat',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route))
+	id: '/ai-chat',
+	path: '/ai-chat',
+	getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/ai-chat.lazy').then((d) => d.Route));
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: '/',
+	path: '/',
+	getParentRoute: () => rootRouteImport,
+} as any);
 const BillingSuccessLazyRoute = BillingSuccessLazyRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => BillingRoute,
-} as any).lazy(() =>
-  import('./routes/billing/success.lazy').then((d) => d.Route),
-)
-const BillingPaymentMethodsLazyRoute =
-  BillingPaymentMethodsLazyRouteImport.update({
-    id: '/payment-methods',
-    path: '/payment-methods',
-    getParentRoute: () => BillingRoute,
-  } as any).lazy(() =>
-    import('./routes/billing/payment-methods.lazy').then((d) => d.Route),
-  )
+	id: '/success',
+	path: '/success',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() => import('./routes/billing/success.lazy').then((d) => d.Route));
+const BillingPaymentMethodsLazyRoute = BillingPaymentMethodsLazyRouteImport.update({
+	id: '/payment-methods',
+	path: '/payment-methods',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() => import('./routes/billing/payment-methods.lazy').then((d) => d.Route));
 const BillingInvoicesLazyRoute = BillingInvoicesLazyRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
-  getParentRoute: () => BillingRoute,
-} as any).lazy(() =>
-  import('./routes/billing/invoices.lazy').then((d) => d.Route),
-)
+	id: '/invoices',
+	path: '/invoices',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() => import('./routes/billing/invoices.lazy').then((d) => d.Route));
 const BillingHistoryLazyRoute = BillingHistoryLazyRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => BillingRoute,
-} as any).lazy(() =>
-  import('./routes/billing/history.lazy').then((d) => d.Route),
-)
+	id: '/history',
+	path: '/history',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() => import('./routes/billing/history.lazy').then((d) => d.Route));
 const BillingCancelLazyRoute = BillingCancelLazyRouteImport.update({
-  id: '/cancel',
-  path: '/cancel',
-  getParentRoute: () => BillingRoute,
-} as any).lazy(() =>
-  import('./routes/billing/cancel.lazy').then((d) => d.Route),
-)
+	id: '/cancel',
+	path: '/cancel',
+	getParentRoute: () => BillingRoute,
+} as any).lazy(() => import('./routes/billing/cancel.lazy').then((d) => d.Route));
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/billing': typeof BillingRouteWithChildren
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/termos-de-uso': typeof TermosDeUsoRoute
-  '/billing/cancel': typeof BillingCancelLazyRoute
-  '/billing/history': typeof BillingHistoryLazyRoute
-  '/billing/invoices': typeof BillingInvoicesLazyRoute
-  '/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute
-  '/billing/success': typeof BillingSuccessLazyRoute
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/signup': typeof SignupRoute;
+	'/termos-de-uso': typeof TermosDeUsoRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/billing': typeof BillingRouteWithChildren
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/termos-de-uso': typeof TermosDeUsoRoute
-  '/billing/cancel': typeof BillingCancelLazyRoute
-  '/billing/history': typeof BillingHistoryLazyRoute
-  '/billing/invoices': typeof BillingInvoicesLazyRoute
-  '/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute
-  '/billing/success': typeof BillingSuccessLazyRoute
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/signup': typeof SignupRoute;
+	'/termos-de-uso': typeof TermosDeUsoRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/ai-chat': typeof AiChatRoute
-  '/billing': typeof BillingRouteWithChildren
-  '/calendario': typeof CalendarioRoute
-  '/configuracoes': typeof ConfiguracoesRoute
-  '/contas': typeof ContasRoute
-  '/contas-bancarias': typeof ContasBancariasRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/privacidade': typeof PrivacidadeRoute
-  '/saldo': typeof SaldoRoute
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/termos-de-uso': typeof TermosDeUsoRoute
-  '/billing/cancel': typeof BillingCancelLazyRoute
-  '/billing/history': typeof BillingHistoryLazyRoute
-  '/billing/invoices': typeof BillingInvoicesLazyRoute
-  '/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute
-  '/billing/success': typeof BillingSuccessLazyRoute
+	__root__: typeof rootRouteImport;
+	'/': typeof IndexRoute;
+	'/ai-chat': typeof AiChatRoute;
+	'/billing': typeof BillingRouteWithChildren;
+	'/calendario': typeof CalendarioRoute;
+	'/configuracoes': typeof ConfiguracoesRoute;
+	'/contas': typeof ContasRoute;
+	'/contas-bancarias': typeof ContasBancariasRoute;
+	'/dashboard': typeof DashboardRoute;
+	'/login': typeof LoginRoute;
+	'/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute;
+	'/privacidade': typeof PrivacidadeRoute;
+	'/saldo': typeof SaldoRoute;
+	'/settings': typeof SettingsRoute;
+	'/signup': typeof SignupRoute;
+	'/termos-de-uso': typeof TermosDeUsoRoute;
+	'/billing/cancel': typeof BillingCancelLazyRoute;
+	'/billing/history': typeof BillingHistoryLazyRoute;
+	'/billing/invoices': typeof BillingInvoicesLazyRoute;
+	'/billing/payment-methods': typeof BillingPaymentMethodsLazyRoute;
+	'/billing/success': typeof BillingSuccessLazyRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/ai-chat'
-    | '/billing'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/politica-de-privacidade'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/signup'
-    | '/termos-de-uso'
-    | '/billing/cancel'
-    | '/billing/history'
-    | '/billing/invoices'
-    | '/billing/payment-methods'
-    | '/billing/success'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/ai-chat'
-    | '/billing'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/politica-de-privacidade'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/signup'
-    | '/termos-de-uso'
-    | '/billing/cancel'
-    | '/billing/history'
-    | '/billing/invoices'
-    | '/billing/payment-methods'
-    | '/billing/success'
-  id:
-    | '__root__'
-    | '/'
-    | '/ai-chat'
-    | '/billing'
-    | '/calendario'
-    | '/configuracoes'
-    | '/contas'
-    | '/contas-bancarias'
-    | '/dashboard'
-    | '/login'
-    | '/politica-de-privacidade'
-    | '/privacidade'
-    | '/saldo'
-    | '/settings'
-    | '/signup'
-    | '/termos-de-uso'
-    | '/billing/cancel'
-    | '/billing/history'
-    | '/billing/invoices'
-    | '/billing/payment-methods'
-    | '/billing/success'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths:
+		| '/'
+		| '/ai-chat'
+		| '/billing'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/politica-de-privacidade'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/signup'
+		| '/termos-de-uso'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
+	fileRoutesByTo: FileRoutesByTo;
+	to:
+		| '/'
+		| '/ai-chat'
+		| '/billing'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/politica-de-privacidade'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/signup'
+		| '/termos-de-uso'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
+	id:
+		| '__root__'
+		| '/'
+		| '/ai-chat'
+		| '/billing'
+		| '/calendario'
+		| '/configuracoes'
+		| '/contas'
+		| '/contas-bancarias'
+		| '/dashboard'
+		| '/login'
+		| '/politica-de-privacidade'
+		| '/privacidade'
+		| '/saldo'
+		| '/settings'
+		| '/signup'
+		| '/termos-de-uso'
+		| '/billing/cancel'
+		| '/billing/history'
+		| '/billing/invoices'
+		| '/billing/payment-methods'
+		| '/billing/success';
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AiChatRoute: typeof AiChatRoute
-  BillingRoute: typeof BillingRouteWithChildren
-  CalendarioRoute: typeof CalendarioRoute
-  ConfiguracoesRoute: typeof ConfiguracoesRoute
-  ContasRoute: typeof ContasRoute
-  ContasBancariasRoute: typeof ContasBancariasRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
-  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
-  PrivacidadeRoute: typeof PrivacidadeRoute
-  SaldoRoute: typeof SaldoRoute
-  SettingsRoute: typeof SettingsRoute
-  SignupRoute: typeof SignupRoute
-  TermosDeUsoRoute: typeof TermosDeUsoRoute
+	IndexRoute: typeof IndexRoute;
+	AiChatRoute: typeof AiChatRoute;
+	BillingRoute: typeof BillingRouteWithChildren;
+	CalendarioRoute: typeof CalendarioRoute;
+	ConfiguracoesRoute: typeof ConfiguracoesRoute;
+	ContasRoute: typeof ContasRoute;
+	ContasBancariasRoute: typeof ContasBancariasRoute;
+	DashboardRoute: typeof DashboardRoute;
+	LoginRoute: typeof LoginRoute;
+	PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute;
+	PrivacidadeRoute: typeof PrivacidadeRoute;
+	SaldoRoute: typeof SaldoRoute;
+	SettingsRoute: typeof SettingsRoute;
+	SignupRoute: typeof SignupRoute;
+	TermosDeUsoRoute: typeof TermosDeUsoRoute;
 }
 
 declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/termos-de-uso': {
-      id: '/termos-de-uso'
-      path: '/termos-de-uso'
-      fullPath: '/termos-de-uso'
-      preLoaderRoute: typeof TermosDeUsoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saldo': {
-      id: '/saldo'
-      path: '/saldo'
-      fullPath: '/saldo'
-      preLoaderRoute: typeof SaldoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/politica-de-privacidade': {
-      id: '/politica-de-privacidade'
-      path: '/politica-de-privacidade'
-      fullPath: '/politica-de-privacidade'
-      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contas-bancarias': {
-      id: '/contas-bancarias'
-      path: '/contas-bancarias'
-      fullPath: '/contas-bancarias'
-      preLoaderRoute: typeof ContasBancariasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contas': {
-      id: '/contas'
-      path: '/contas'
-      fullPath: '/contas'
-      preLoaderRoute: typeof ContasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/configuracoes': {
-      id: '/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof ConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendario': {
-      id: '/calendario'
-      path: '/calendario'
-      fullPath: '/calendario'
-      preLoaderRoute: typeof CalendarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing': {
-      id: '/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof BillingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai-chat': {
-      id: '/ai-chat'
-      path: '/ai-chat'
-      fullPath: '/ai-chat'
-      preLoaderRoute: typeof AiChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/success': {
-      id: '/billing/success'
-      path: '/success'
-      fullPath: '/billing/success'
-      preLoaderRoute: typeof BillingSuccessLazyRouteImport
-      parentRoute: typeof BillingRoute
-    }
-    '/billing/payment-methods': {
-      id: '/billing/payment-methods'
-      path: '/payment-methods'
-      fullPath: '/billing/payment-methods'
-      preLoaderRoute: typeof BillingPaymentMethodsLazyRouteImport
-      parentRoute: typeof BillingRoute
-    }
-    '/billing/invoices': {
-      id: '/billing/invoices'
-      path: '/invoices'
-      fullPath: '/billing/invoices'
-      preLoaderRoute: typeof BillingInvoicesLazyRouteImport
-      parentRoute: typeof BillingRoute
-    }
-    '/billing/history': {
-      id: '/billing/history'
-      path: '/history'
-      fullPath: '/billing/history'
-      preLoaderRoute: typeof BillingHistoryLazyRouteImport
-      parentRoute: typeof BillingRoute
-    }
-    '/billing/cancel': {
-      id: '/billing/cancel'
-      path: '/cancel'
-      fullPath: '/billing/cancel'
-      preLoaderRoute: typeof BillingCancelLazyRouteImport
-      parentRoute: typeof BillingRoute
-    }
-  }
+	interface FileRoutesByPath {
+		'/termos-de-uso': {
+			id: '/termos-de-uso';
+			path: '/termos-de-uso';
+			fullPath: '/termos-de-uso';
+			preLoaderRoute: typeof TermosDeUsoRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/signup': {
+			id: '/signup';
+			path: '/signup';
+			fullPath: '/signup';
+			preLoaderRoute: typeof SignupRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/settings': {
+			id: '/settings';
+			path: '/settings';
+			fullPath: '/settings';
+			preLoaderRoute: typeof SettingsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/saldo': {
+			id: '/saldo';
+			path: '/saldo';
+			fullPath: '/saldo';
+			preLoaderRoute: typeof SaldoRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/privacidade': {
+			id: '/privacidade';
+			path: '/privacidade';
+			fullPath: '/privacidade';
+			preLoaderRoute: typeof PrivacidadeRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/politica-de-privacidade': {
+			id: '/politica-de-privacidade';
+			path: '/politica-de-privacidade';
+			fullPath: '/politica-de-privacidade';
+			preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/login': {
+			id: '/login';
+			path: '/login';
+			fullPath: '/login';
+			preLoaderRoute: typeof LoginRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/dashboard': {
+			id: '/dashboard';
+			path: '/dashboard';
+			fullPath: '/dashboard';
+			preLoaderRoute: typeof DashboardRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/contas-bancarias': {
+			id: '/contas-bancarias';
+			path: '/contas-bancarias';
+			fullPath: '/contas-bancarias';
+			preLoaderRoute: typeof ContasBancariasRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/contas': {
+			id: '/contas';
+			path: '/contas';
+			fullPath: '/contas';
+			preLoaderRoute: typeof ContasRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/configuracoes': {
+			id: '/configuracoes';
+			path: '/configuracoes';
+			fullPath: '/configuracoes';
+			preLoaderRoute: typeof ConfiguracoesRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/calendario': {
+			id: '/calendario';
+			path: '/calendario';
+			fullPath: '/calendario';
+			preLoaderRoute: typeof CalendarioRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/billing': {
+			id: '/billing';
+			path: '/billing';
+			fullPath: '/billing';
+			preLoaderRoute: typeof BillingRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/ai-chat': {
+			id: '/ai-chat';
+			path: '/ai-chat';
+			fullPath: '/ai-chat';
+			preLoaderRoute: typeof AiChatRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/': {
+			id: '/';
+			path: '/';
+			fullPath: '/';
+			preLoaderRoute: typeof IndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		'/billing/success': {
+			id: '/billing/success';
+			path: '/success';
+			fullPath: '/billing/success';
+			preLoaderRoute: typeof BillingSuccessLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/payment-methods': {
+			id: '/billing/payment-methods';
+			path: '/payment-methods';
+			fullPath: '/billing/payment-methods';
+			preLoaderRoute: typeof BillingPaymentMethodsLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/invoices': {
+			id: '/billing/invoices';
+			path: '/invoices';
+			fullPath: '/billing/invoices';
+			preLoaderRoute: typeof BillingInvoicesLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/history': {
+			id: '/billing/history';
+			path: '/history';
+			fullPath: '/billing/history';
+			preLoaderRoute: typeof BillingHistoryLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+		'/billing/cancel': {
+			id: '/billing/cancel';
+			path: '/cancel';
+			fullPath: '/billing/cancel';
+			preLoaderRoute: typeof BillingCancelLazyRouteImport;
+			parentRoute: typeof BillingRoute;
+		};
+	}
 }
 
 interface BillingRouteChildren {
-  BillingCancelLazyRoute: typeof BillingCancelLazyRoute
-  BillingHistoryLazyRoute: typeof BillingHistoryLazyRoute
-  BillingInvoicesLazyRoute: typeof BillingInvoicesLazyRoute
-  BillingPaymentMethodsLazyRoute: typeof BillingPaymentMethodsLazyRoute
-  BillingSuccessLazyRoute: typeof BillingSuccessLazyRoute
+	BillingCancelLazyRoute: typeof BillingCancelLazyRoute;
+	BillingHistoryLazyRoute: typeof BillingHistoryLazyRoute;
+	BillingInvoicesLazyRoute: typeof BillingInvoicesLazyRoute;
+	BillingPaymentMethodsLazyRoute: typeof BillingPaymentMethodsLazyRoute;
+	BillingSuccessLazyRoute: typeof BillingSuccessLazyRoute;
 }
 
 const BillingRouteChildren: BillingRouteChildren = {
-  BillingCancelLazyRoute: BillingCancelLazyRoute,
-  BillingHistoryLazyRoute: BillingHistoryLazyRoute,
-  BillingInvoicesLazyRoute: BillingInvoicesLazyRoute,
-  BillingPaymentMethodsLazyRoute: BillingPaymentMethodsLazyRoute,
-  BillingSuccessLazyRoute: BillingSuccessLazyRoute,
-}
+	BillingCancelLazyRoute: BillingCancelLazyRoute,
+	BillingHistoryLazyRoute: BillingHistoryLazyRoute,
+	BillingInvoicesLazyRoute: BillingInvoicesLazyRoute,
+	BillingPaymentMethodsLazyRoute: BillingPaymentMethodsLazyRoute,
+	BillingSuccessLazyRoute: BillingSuccessLazyRoute,
+};
 
-const BillingRouteWithChildren =
-  BillingRoute._addFileChildren(BillingRouteChildren)
+const BillingRouteWithChildren = BillingRoute._addFileChildren(BillingRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AiChatRoute: AiChatRoute,
-  BillingRoute: BillingRouteWithChildren,
-  CalendarioRoute: CalendarioRoute,
-  ConfiguracoesRoute: ConfiguracoesRoute,
-  ContasRoute: ContasRoute,
-  ContasBancariasRoute: ContasBancariasRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
-  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
-  PrivacidadeRoute: PrivacidadeRoute,
-  SaldoRoute: SaldoRoute,
-  SettingsRoute: SettingsRoute,
-  SignupRoute: SignupRoute,
-  TermosDeUsoRoute: TermosDeUsoRoute,
-}
+	IndexRoute: IndexRoute,
+	AiChatRoute: AiChatRoute,
+	BillingRoute: BillingRouteWithChildren,
+	CalendarioRoute: CalendarioRoute,
+	ConfiguracoesRoute: ConfiguracoesRoute,
+	ContasRoute: ContasRoute,
+	ContasBancariasRoute: ContasBancariasRoute,
+	DashboardRoute: DashboardRoute,
+	LoginRoute: LoginRoute,
+	PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
+	PrivacidadeRoute: PrivacidadeRoute,
+	SaldoRoute: SaldoRoute,
+	SettingsRoute: SettingsRoute,
+	SignupRoute: SignupRoute,
+	TermosDeUsoRoute: TermosDeUsoRoute,
+};
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();

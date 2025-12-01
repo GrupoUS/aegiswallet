@@ -7,14 +7,18 @@
 		"defaultBranch": "main"
 	},
 	"files": {
-		"includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
-		"ignore": [
-			"api/index.js",
-			"dist/**",
-			"node_modules/**",
-			"coverage/**",
-			"playwright-report/**",
-			".vercel/**"
+		"includes": [
+			"**/*.ts",
+			"**/*.tsx",
+			"**/*.js",
+			"**/*.jsx",
+			"**/*.json",
+			"!api/index.js",
+			"!dist",
+			"!node_modules",
+			"!coverage",
+			"!playwright-report",
+			"!.vercel"
 		],
 		"maxSize": 10485760
 	},
@@ -31,7 +35,8 @@
 		"enabled": true,
 		"domains": {
 			"react": "all",
-			"project": "recommended"
+			"project": "recommended",
+			"test": "recommended"
 		},
 		"rules": {
 			"recommended": true,
@@ -119,7 +124,7 @@
 				"noExcessiveCognitiveComplexity": {
 					"level": "warn",
 					"options": {
-						"maxAllowedComplexity": 25
+						"maxAllowedComplexity": 20
 					}
 				},
 				"noStaticOnlyClass": "off",
@@ -195,7 +200,7 @@
 								"selector": {
 									"kind": "typeLike"
 								},
-								"formats": ["PascalCase"]
+								"formats": ["PascalCase", "CONSTANT_CASE"]
 							},
 							{
 								"selector": {
@@ -214,6 +219,24 @@
 									"kind": "enum"
 								},
 								"formats": ["PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "enumMember"
+								},
+								"formats": ["PascalCase", "CONSTANT_CASE"]
+							},
+							{
+								"selector": {
+									"kind": "objectLiteralProperty"
+								},
+								"formats": ["camelCase", "snake_case", "CONSTANT_CASE"]
+							},
+							{
+								"selector": {
+									"kind": "typeProperty"
+								},
+								"formats": ["camelCase", "snake_case", "CONSTANT_CASE"]
 							}
 						]
 					}
@@ -344,6 +367,9 @@
 		}
 	},
 	"css": {
+		"parser": {
+			"cssModules": false
+		},
 		"formatter": {
 			"enabled": true,
 			"indentStyle": "tab",
@@ -351,7 +377,7 @@
 			"lineWidth": 100
 		},
 		"linter": {
-			"enabled": true
+			"enabled": false
 		}
 	},
 	"overrides": [
@@ -421,10 +447,14 @@
 				"rules": {
 					"suspicious": {
 						"noConsole": "off",
-						"noExplicitAny": "off"
+						"noExplicitAny": "off",
+						"useAwait": "off"
 					},
 					"style": {
 						"useNodejsImportProtocol": "error"
+					},
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "off"
 					}
 				}
 			}
@@ -509,6 +539,80 @@
 					},
 					"nursery": {
 						"noShadow": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"src/types/database-stubs.ts",
+				"src/types/security.types.ts",
+				"src/test/utils/database-mock.ts",
+				"src/integrations/supabase/types.ts"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"useNamingConvention": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/components/calendar/**/*.tsx", "src/components/ai-elements/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useNamingConvention": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/components/ui/calendar.tsx", "src/components/kokonutui/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useNamingConvention": "off"
+					},
+					"nursery": {
+						"noShadow": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/features/ai-chat/**/*.ts", "src/features/ai-chat/**/*.tsx"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"useExhaustiveDependencies": "warn"
+					},
+					"suspicious": {
+						"noExplicitAny": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/lib/security/**/*.ts", "src/lib/stt/**/*.ts", "src/lib/ai/**/*.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useForOf": "off"
+					},
+					"suspicious": {
+						"noExplicitAny": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/hooks/useFinancialEvents.ts"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"useExhaustiveDependencies": "warn"
 					}
 				}
 			}

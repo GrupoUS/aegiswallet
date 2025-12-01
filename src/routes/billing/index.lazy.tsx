@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSubscription } from '@/hooks/billing';
 
-
 // FAQ data with Brazilian Portuguese content
 const faqItems = [
 	{
@@ -149,9 +148,7 @@ function BillingPage() {
 			<Card className="border-2 border-muted">
 				<CardHeader>
 					<CardTitle>Precisa de ajuda?</CardTitle>
-					<CardDescription>
-						Nossa equipe de suporte está sempre pronta para ajudar
-					</CardDescription>
+					<CardDescription>Nossa equipe de suporte está sempre pronta para ajudar</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">

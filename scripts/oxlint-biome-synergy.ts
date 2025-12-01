@@ -332,7 +332,7 @@ function runComprehensiveValidation(): { exitCode: number; metrics: PerformanceM
 
 	const healthcareValid = validateHealthcareCompliance();
 	const securityValid = validateSecurity();
-	const performanceValid = validatePerformance();
+	const _performanceValid = validatePerformance();
 
 	// Combine exit codes
 	const exitCode = Math.max(
@@ -366,10 +366,7 @@ function logValidationSummary(
 		`  Healthcare Compliance: ${exitCode === 0 ? '✓' : '✗'}`,
 		exitCode === 0 ? 'success' : 'error',
 	);
-	log(
-		`  Security Validation: ${exitCode === 0 ? '✓' : '✗'}`,
-		exitCode === 0 ? 'success' : 'error',
-	);
+	log(`  Security Validation: ${exitCode === 0 ? '✓' : '✗'}`, exitCode === 0 ? 'success' : 'error');
 	log(
 		`  Performance Validation: ${exitCode === 0 ? '✓' : '⚠'}`,
 		exitCode === 0 ? 'success' : 'warning',
@@ -390,7 +387,6 @@ function logFinalResult(exitCode: number): void {
 /**
  * Main execution function
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
 function main() {
 	const args = process.argv.slice(2);
 	const command = args[0] || 'all';

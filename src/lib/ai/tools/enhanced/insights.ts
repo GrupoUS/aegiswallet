@@ -311,11 +311,7 @@ export function createInsightsTools(userId: string) {
 }
 
 // Helper functions
-function analyzeSpendingTrends(
-	_userId: string,
-	_startDate: Date,
-	_endDate: Date,
-): SpendingTrend[] {
+function analyzeSpendingTrends(_userId: string, _startDate: Date, _endDate: Date): SpendingTrend[] {
 	// Simplificação - implementar análise comparativa real
 	// Em produção, comparar com período anterior e calcular tendências
 	return [];

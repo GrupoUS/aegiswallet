@@ -347,7 +347,6 @@ class DatabaseSpecialistToolkit {
 		}
 	}
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
 	private displayDetailedResults(results: any): void {
 		console.log(`\n${'='.repeat(60)}`);
 		console.log('📊 ANALYSIS RESULTS SUMMARY');

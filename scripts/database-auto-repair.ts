@@ -212,7 +212,6 @@ class DatabaseAutoRepair {
 		return operations;
 	}
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Refactored to reduce complexity
 	private prepareRepairOperations(
 		healthResult: HealthCheckResult,
 		options: {

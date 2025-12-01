@@ -22,10 +22,7 @@ interface VercelResponse {
 	json: (data: Record<string, unknown>) => void;
 }
 
-export default async function handler(
-	req: VercelRequest,
-	res: VercelResponse,
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
 	// Only allow GET requests (Vercel cron uses GET)
 	if (req.method !== 'GET') {
 		return res.status(405).json({ error: 'Method not allowed' });
@@ -33,11 +30,7 @@ export default async function handler(
 
 	// Verify cron secret in production
 	const cronSecret = req.headers['x-vercel-cron-secret'];
-	if (
-		process.env.VERCEL &&
-		process.env.CRON_SECRET &&
-		cronSecret !== process.env.CRON_SECRET
-	) {
+	if (process.env.VERCEL && process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
 		return res.status(401).json({ error: 'Unauthorized' });
 	}
 

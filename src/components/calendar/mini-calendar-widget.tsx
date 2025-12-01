@@ -38,7 +38,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 	const handleDateClick = useCallback(
 		(date: Date) => {
 			setSelectedDate(date);
-			navigate({
+			void navigate({
 				search: { date: format(date, 'yyyy-MM-dd') },
 				to: '/calendario',
 			});
@@ -48,7 +48,7 @@ export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
 
 	// Otimizar navegação com useCallback
 	const handleNavigateToCalendar = useCallback(() => {
-		navigate({ to: '/calendario' });
+		void navigate({ to: '/calendario' });
 	}, [navigate]);
 
 	return (

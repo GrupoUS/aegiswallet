@@ -75,9 +75,7 @@ export const ContasBancarias = () => {
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<Card>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-muted-foreground">
-							Saldo Total
-						</CardTitle>
+						<CardTitle className="text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold">
@@ -128,9 +126,7 @@ export const ContasBancarias = () => {
 									</div>
 									<div>
 										<CardTitle className="text-base">{account.institution_name}</CardTitle>
-										<CardDescription className="capitalize">
-											{account.account_type}
-										</CardDescription>
+										<CardDescription className="capitalize">{account.account_type}</CardDescription>
 									</div>
 								</div>
 								<DropdownMenu>
@@ -201,13 +197,13 @@ export const ContasBancarias = () => {
 						<DialogTitle>Editar Conta</DialogTitle>
 						<DialogDescription>Atualize os dados da conta bancária.</DialogDescription>
 					</DialogHeader>
-				{editingAccount && (
-					<BankAccountForm
-						account={editingAccount}
-						onSuccess={() => setEditingAccount(null)}
-						onCancel={() => setEditingAccount(null)}
-					/>
-				)}
+					{editingAccount && (
+						<BankAccountForm
+							account={editingAccount}
+							onSuccess={() => setEditingAccount(null)}
+							onCancel={() => setEditingAccount(null)}
+						/>
+					)}
 				</DialogContent>
 			</Dialog>
 

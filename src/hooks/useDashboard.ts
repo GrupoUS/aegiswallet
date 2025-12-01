@@ -8,7 +8,6 @@ import {
 } from '@/hooks/useContacts';
 import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
-
 import type { FinancialEvent } from '@/types/financial-events';
 
 /**

@@ -71,7 +71,7 @@ const BillsData: React.FC<{ data: BillsResponseData }> = ({ data }) => (
 				{data.pastDueCount} {data.pastDueCount === 1 ? 'vencida' : 'vencidas'}
 			</p>
 		)}
-		{data.bills && data.bills.slice(0, 3).map((bill) => (
+		{data.bills?.slice(0, 3).map((bill) => (
 			<p key={`bill-${bill.name}-${bill.amount}`} className="text-muted-foreground text-xs">
 				{bill.name}: {formatCurrency(bill.amount)}
 			</p>
@@ -87,7 +87,7 @@ const IncomingData: React.FC<{ data: IncomingResponseData }> = ({ data }) => (
 				Próximo: {data.nextIncome.source} - {formatCurrency(data.nextIncome.amount)}
 			</p>
 		)}
-		{data.incoming && data.incoming.slice(0, 3).map((income) => (
+		{data.incoming?.slice(0, 3).map((income) => (
 			<p key={`income-${income.source}-${income.amount}`} className="text-muted-foreground text-xs">
 				{income.source}: {formatCurrency(income.amount)}
 			</p>
@@ -170,19 +170,21 @@ const ErrorData: React.FC<{ data: ErrorResponseData }> = ({ data }) => (
 		{data.code && <p className="text-muted-foreground text-xs">Código: {data.code}</p>}
 		{data.details && <p className="text-muted-foreground text-xs">{data.details}</p>}
 		{data.recoverable && <p className="text-warning text-xs">Este erro pode ser recuperado</p>}
-		{data.suggestedActions && Array.isArray(data.suggestedActions) && data.suggestedActions.length > 0 && (
-			<div className="mt-1">
-				<p className="font-medium text-muted-foreground text-xs">Sugestões:</p>
-				{data.suggestedActions.map((action) => (
-					<p
-						key={`suggestion-${action.replace(/\s+/g, '-')}-${action.length}`}
-						className="ml-2 text-muted-foreground text-xs"
-					>
-						• {action}
-					</p>
-				))}
-			</div>
-		)}
+		{data.suggestedActions &&
+			Array.isArray(data.suggestedActions) &&
+			data.suggestedActions.length > 0 && (
+				<div className="mt-1">
+					<p className="font-medium text-muted-foreground text-xs">Sugestões:</p>
+					{data.suggestedActions.map((action) => (
+						<p
+							key={`suggestion-${action.replace(/\s+/g, '-')}-${action.length}`}
+							className="ml-2 text-muted-foreground text-xs"
+						>
+							• {action}
+						</p>
+					))}
+				</div>
+			)}
 	</div>
 );
 

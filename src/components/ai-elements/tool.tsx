@@ -1,6 +1,5 @@
 'use client';
 
-import type { ToolUIPart } from '@/lib/ai/compatibility';
 import {
 	CheckCircleIcon,
 	ChevronDownIcon,
@@ -15,6 +14,7 @@ import { isValidElement } from 'react';
 import { CodeBlock } from './code-block';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import type { ToolUIPart } from '@/lib/ai/compatibility';
 import { cn } from '@/lib/utils';
 
 export type ToolProps = ComponentProps<typeof Collapsible>;

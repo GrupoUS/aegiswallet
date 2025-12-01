@@ -1,5 +1,4 @@
 import type { Experimental_GeneratedImage } from '@/lib/ai/compatibility';
-
 import { cn } from '@/lib/utils';
 
 export type ImageProps = Experimental_GeneratedImage & {

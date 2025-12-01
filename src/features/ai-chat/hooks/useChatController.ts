@@ -187,7 +187,10 @@ export function useChatController(
 	/**
 	 * Prepare messages with system prompt
 	 */
-	const prepareMessages = (messages: ChatMessage[], options?: UseChatControllerOptions): ChatMessage[] => {
+	const prepareMessages = (
+		messages: ChatMessage[],
+		options?: UseChatControllerOptions,
+	): ChatMessage[] => {
 		return options?.systemPrompt
 			? [
 					{
@@ -324,7 +327,17 @@ export function useChatController(
 				);
 			}
 		},
-		[backend, options],
+		[
+			backend,
+			options,
+			cleanupStreamingState,
+			handleMessageCompletion,
+			handleReasoningDelta,
+			handleStreamingError,
+			handleTextDelta,
+			initializeStreamingState,
+			prepareMessages,
+		],
 	);
 
 	/**

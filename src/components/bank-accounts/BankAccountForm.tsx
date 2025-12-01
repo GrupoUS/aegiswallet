@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { logger } from '@/lib/logging';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +23,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { type BankAccount, useBankAccounts } from '@/hooks/useBankAccounts';
+import { logger } from '@/lib/logging';
 
 const accountTypeEnum = z.enum(['checking', 'savings', 'investment', 'cash']);
 type AccountType = z.infer<typeof accountTypeEnum>;

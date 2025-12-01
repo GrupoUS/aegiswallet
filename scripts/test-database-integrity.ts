@@ -70,7 +70,6 @@ async function runTests() {
 	await runTest('PostgreSQL Version Check', async () => {
 		const result = await db.execute(sql`SELECT version() as pg_version`);
 		// Neon HTTP returns { rows: [...] } format
-		// biome-ignore lint/style/useNamingConvention: Database result structure
 		const rows = (result as { rows?: Array<{ pg_version: string }> }).rows || result;
 		const version = Array.isArray(rows) ? rows[0]?.pg_version : undefined;
 		if (!version?.toLowerCase().includes('postgresql')) {
@@ -354,7 +353,6 @@ async function runTests() {
 			FROM users
 			WHERE id IS NULL
 		`);
-		// biome-ignore lint/style/useNamingConvention: Database result structure
 		const nullCount = (nullIds as unknown as Array<{ null_count: number }>)[0]?.null_count;
 		if (nullCount > 0) {
 			throw new Error(`Found ${nullCount} users with null IDs`);

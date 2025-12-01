@@ -139,7 +139,6 @@ export function AccessibilitySettings() {
 	};
 
 	const handleFontSizeChange = (value: number[]) => {
-		// biome-ignore lint/style/useNamingConvention: Database field uses snake_case
 		updatePreferences({ font_size: value[0] });
 	};
 
@@ -148,7 +147,6 @@ export function AccessibilitySettings() {
 	}
 
 	const currentTheme = (preferences?.theme as 'light' | 'dark' | 'system') || 'system';
-	// biome-ignore lint/style/useNamingConvention: Database field uses snake_case
 	const fontSize = (preferences as { font_size?: number })?.font_size ?? 16;
 
 	return (

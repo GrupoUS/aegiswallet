@@ -5,19 +5,19 @@
  * Refatorado para usar API do servidor (Hono) em vez de queries diretas
  */
 
-import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
 import type { FinancialEventCategory } from '@/types/financial.interfaces';
 import type {
+	BackendTransaction,
 	EventColor,
 	EventStatus,
 	FinancialEvent,
 	FinancialEventType,
-	BackendTransaction,
 	TransactionApiPayload,
 	TransactionApiQueryParams,
 	TransactionApiResponse,
@@ -63,7 +63,8 @@ export const financialEventsKeys = {
 		[...financialEventsKeys.lists(), filters, pagination] as const,
 	details: () => [...financialEventsKeys.all, 'detail'] as const,
 	detail: (id: string) => [...financialEventsKeys.details(), id] as const,
-	statistics: (filters?: FinancialEventsFilters) => [...financialEventsKeys.all, 'statistics', filters] as const,
+	statistics: (filters?: FinancialEventsFilters) =>
+		[...financialEventsKeys.all, 'statistics', filters] as const,
 };
 
 // Mapeamento de campos do backend para frontend
@@ -116,9 +117,9 @@ export function useFinancialEvents(
 	const [pagination, setPagination] = useState<PaginationOptions>(initialPagination);
 
 	// Memoized query key
-	const queryKey = useMemo(() =>
-		financialEventsKeys.list(filters, pagination),
-		[filters, pagination]
+	const queryKey = useMemo(
+		() => financialEventsKeys.list(filters, pagination),
+		[filters, pagination],
 	);
 
 	// Query for fetching financial events
@@ -154,7 +155,7 @@ export function useFinancialEvents(
 			// Executar requisição com tipos corretos
 			const response = await apiClient.get<TransactionApiResponse<BackendTransaction[]>>(
 				'/v1/transactions',
-				{ params: params as unknown as Record<string, unknown> }
+				{ params: params as unknown as Record<string, unknown> },
 			);
 
 			const mappedEvents = response.data.map(mapBackendToFrontend);
@@ -208,7 +209,13 @@ export function useFinancialEvents(
 
 	// Mutation for updating events
 	const updateEventMutation = useMutation({
-		mutationFn: async ({ id, updates }: { id: string; updates: Partial<FinancialEvent> }): Promise<FinancialEvent> => {
+		mutationFn: async ({
+			id,
+			updates,
+		}: {
+			id: string;
+			updates: Partial<FinancialEvent>;
+		}): Promise<FinancialEvent> => {
 			if (!user) {
 				throw new FinancialError('Usuário não autenticado', 'AUTH');
 			}
@@ -217,9 +224,13 @@ export function useFinancialEvents(
 			const payload: Partial<TransactionApiPayload> = {};
 			if (updates.amount !== undefined) payload.amount = Number(updates.amount);
 			if (updates.title !== undefined) payload.description = updates.title;
-			if (updates.type !== undefined) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
-			if (updates.status !== undefined) payload.status = updates.status === 'completed' ? 'posted' : 'pending';
-			if (updates.start !== undefined) payload.transactionDate = updates.start instanceof Date ? updates.start.toISOString() : updates.start;
+			if (updates.type !== undefined)
+				payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
+			if (updates.status !== undefined)
+				payload.status = updates.status === 'completed' ? 'posted' : 'pending';
+			if (updates.start !== undefined)
+				payload.transactionDate =
+					updates.start instanceof Date ? updates.start.toISOString() : updates.start;
 			if (updates.category !== undefined) payload.categoryId = updates.category;
 			if (updates.description !== undefined) payload.notes = updates.description;
 
@@ -269,10 +280,6 @@ export function useFinancialEvents(
 		return createEventMutation.mutateAsync(event);
 	};
 
-
-
-
-
 	// Calculate statistics from events
 	const statistics = useMemo(() => {
 		const totalIncome = events
@@ -308,7 +315,8 @@ export function useFinancialEvents(
 		};
 	}, [events]);
 
-	const error = queryError instanceof Error ? new FinancialError(queryError.message, 'NETWORK') : null;
+	const error =
+		queryError instanceof Error ? new FinancialError(queryError.message, 'NETWORK') : null;
 
 	const updateEvent = async (id: string, updates: Partial<FinancialEvent>) => {
 		return updateEventMutation.mutateAsync({ id, updates });
@@ -421,12 +429,12 @@ export function useFinancialEventMutations() {
 				if (updates.type) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
 				if (updates.status) {
 					// Map EventStatus to API status
-					payload.status = updates.status === 'completed' || updates.status === 'paid' ? 'posted' : 'pending';
+					payload.status =
+						updates.status === 'completed' || updates.status === 'paid' ? 'posted' : 'pending';
 				}
 				if (updates.start) {
-					payload.transactionDate = updates.start instanceof Date
-						? updates.start.toISOString()
-						: updates.start;
+					payload.transactionDate =
+						updates.start instanceof Date ? updates.start.toISOString() : updates.start;
 				}
 				if (updates.category) payload.categoryId = String(updates.category);
 				if (updates.description) payload.notes = updates.description;

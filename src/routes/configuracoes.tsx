@@ -10,30 +10,32 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { lazy } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary';
 import { Accessibility, Bell, Bot, Settings, Shield, User } from 'lucide-react';
+import { lazy } from 'react';
 
 import { PrivacyPreferences } from '@/components/privacy';
+import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary';
 import {
 	AccessibilitySettings,
 	AIAssistantSettings,
 	NotificationSettings,
 	ProfileSettings,
 } from '@/components/settings';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ConfiguracoesLoader = () => (
-  <div className="container mx-auto max-w-4xl py-6 space-y-6">
-    <Skeleton className="h-12 w-64" />
-    <Skeleton className="h-96 w-full" />
-  </div>
+	<div className="container mx-auto max-w-4xl py-6 space-y-6">
+		<Skeleton className="h-12 w-64" />
+		<Skeleton className="h-96 w-full" />
+	</div>
 );
 export const Route = createFileRoute('/configuracoes')({
-  component: lazy(() => import('./configuracoes.lazy').then(m => ({ default: m.ConfiguracoesPage }))),
-  pendingComponent: ConfiguracoesLoader,
-  errorComponent: RouteErrorBoundary,
+	component: lazy(() =>
+		import('./configuracoes.lazy').then((m) => ({ default: m.ConfiguracoesPage })),
+	),
+	pendingComponent: ConfiguracoesLoader,
+	errorComponent: RouteErrorBoundary,
 });
 
 function ConfiguracoesPage() {

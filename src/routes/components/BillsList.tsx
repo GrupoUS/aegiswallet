@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import type { FinancialEvent } from '@/types/financial-events';
 import { logger } from '@/lib/logging';
+import type { FinancialEvent } from '@/types/financial-events';
 
 interface BillsListProps {
 	bills: FinancialEvent[];

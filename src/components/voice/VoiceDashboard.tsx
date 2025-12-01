@@ -260,21 +260,22 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
 				{/* Quick Actions */}
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					{Array.isArray(quickActions) && quickActions.map((action) => (
-						<Button
-							key={action.title}
-							variant="outline"
-							className="flex h-20 flex-col gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-							onClick={action.action}
-							aria-label={`${action.title}: ${action.description}`}
-							title={action.description}
-						>
-							<span className="text-2xl" aria-hidden="true">
-								{action.icon}
-							</span>
-							<span className="text-sm">{action.title}</span>
-						</Button>
-					))}
+					{Array.isArray(quickActions) &&
+						quickActions.map((action) => (
+							<Button
+								key={action.title}
+								variant="outline"
+								className="flex h-20 flex-col gap-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+								onClick={action.action}
+								aria-label={`${action.title}: ${action.description}`}
+								title={action.description}
+							>
+								<span className="text-2xl" aria-hidden="true">
+									{action.icon}
+								</span>
+								<span className="text-sm">{action.title}</span>
+							</Button>
+						))}
 				</div>
 
 				{/* Command History */}

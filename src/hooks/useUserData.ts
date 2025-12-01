@@ -6,7 +6,7 @@
  *
  * NOTE: Bank account hooks have been consolidated into @/hooks/useBankAccounts.ts
  * NOTE: Contact hooks have been consolidated into @/hooks/useContacts.ts
- * 
+ *
  * NOTA: useConsents e useTransactionLimits são re-exportados de use-compliance.ts
  * useFinancialSummary é re-exportado de useProfile.ts
  * Isso evita duplicação e mantém single source of truth

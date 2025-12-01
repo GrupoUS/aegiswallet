@@ -106,19 +106,20 @@ function AccountsList() {
 
 	return (
 		<div className="space-y-2">
-			{Array.isArray(accounts) && accounts.map((account) => (
-				<Card key={account.id} className="hover:bg-accent/50 transition-colors">
-					<CardContent className="flex items-center justify-between py-4">
-						<div>
-							<p className="font-medium">{account.institution_name}</p>
-							<p className="text-sm text-muted-foreground">
-								{account.account_mask} · {account.account_type}
-							</p>
-						</div>
-						<p className="font-semibold">{formatCurrency(Number(account.balance || 0))}</p>
-					</CardContent>
-				</Card>
-			))}
+			{Array.isArray(accounts) &&
+				accounts.map((account) => (
+					<Card key={account.id} className="hover:bg-accent/50 transition-colors">
+						<CardContent className="flex items-center justify-between py-4">
+							<div>
+								<p className="font-medium">{account.institution_name}</p>
+								<p className="text-sm text-muted-foreground">
+									{account.account_mask} · {account.account_type}
+								</p>
+							</div>
+							<p className="font-semibold">{formatCurrency(Number(account.balance || 0))}</p>
+						</CardContent>
+					</Card>
+				))}
 		</div>
 	);
 }
@@ -154,42 +155,43 @@ function RecentTransactionsList() {
 
 	return (
 		<div className="space-y-1">
-			{Array.isArray(transactions) && transactions.map((tx) => (
-				<div
-					key={tx.id}
-					className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-accent/50 transition-colors"
-				>
-					<div className="flex items-center gap-3">
-						<div
-							className={`p-2 rounded-full ${
-								tx.transactionType === 'credit' || tx.amount > 0
-									? 'bg-green-100 text-green-600'
-									: 'bg-red-100 text-red-600'
+			{Array.isArray(transactions) &&
+				transactions.map((tx) => (
+					<div
+						key={tx.id}
+						className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-accent/50 transition-colors"
+					>
+						<div className="flex items-center gap-3">
+							<div
+								className={`p-2 rounded-full ${
+									tx.transactionType === 'credit' || tx.amount > 0
+										? 'bg-green-100 text-green-600'
+										: 'bg-red-100 text-red-600'
+								}`}
+							>
+								{tx.amount > 0 ? (
+									<ArrowDownLeft className="h-4 w-4" />
+								) : (
+									<ArrowUpRight className="h-4 w-4" />
+								)}
+							</div>
+							<div>
+								<p className="font-medium">{tx.description}</p>
+								<p className="text-sm text-muted-foreground">
+									{new Date(tx.transaction_date).toLocaleDateString('pt-BR')}
+								</p>
+							</div>
+						</div>
+						<p
+							className={`font-semibold ${
+								tx.transactionType === 'credit' || tx.amount > 0 ? 'text-green-600' : 'text-red-600'
 							}`}
 						>
-							{tx.amount > 0 ? (
-								<ArrowDownLeft className="h-4 w-4" />
-							) : (
-								<ArrowUpRight className="h-4 w-4" />
-							)}
-						</div>
-						<div>
-							<p className="font-medium">{tx.description}</p>
-							<p className="text-sm text-muted-foreground">
-								{new Date(tx.transaction_date).toLocaleDateString('pt-BR')}
-							</p>
-						</div>
+							{tx.amount > 0 ? '+' : '-'}
+							{formatCurrency(Math.abs(Number(tx.amount)))}
+						</p>
 					</div>
-					<p
-						className={`font-semibold ${
-							tx.transactionType === 'credit' || tx.amount > 0 ? 'text-green-600' : 'text-red-600'
-						}`}
-					>
-						{tx.amount > 0 ? '+' : '-'}
-						{formatCurrency(Math.abs(Number(tx.amount)))}
-					</p>
-				</div>
-			))}
+				))}
 		</div>
 	);
 }

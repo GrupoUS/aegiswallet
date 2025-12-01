@@ -167,7 +167,9 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 				const savedSettings = saved ? JSON.parse(saved) : {};
 				savedSettings[key] = newValue;
 				localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
-			} catch (_error) {}
+			} catch (_error) {
+				// Ignore localStorage errors (e.g., private browsing)
+			}
 		},
 		[],
 	);
@@ -180,7 +182,9 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 				const parsed = JSON.parse(saved);
 				setSettings((prev) => ({ ...prev, ...parsed }));
 			}
-		} catch (error) {}
+		} catch (_error) {
+			// Ignore localStorage errors (e.g., private browsing)
+		}
 	}, []);
 
 	// Screen reader announcements

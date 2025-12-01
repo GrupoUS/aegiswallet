@@ -6,6 +6,7 @@
  */
 
 import { config } from 'dotenv';
+
 import { getRequiredEnvVar } from '../src/lib/utils';
 
 config({ path: '.env' });

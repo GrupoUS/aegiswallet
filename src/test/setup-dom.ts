@@ -4,7 +4,6 @@ import { TextDecoder, TextEncoder } from 'node:util';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
-
 // Global test setup for healthcare compliance
 
 // Polyfills for jsdom environment

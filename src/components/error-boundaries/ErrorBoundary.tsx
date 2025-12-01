@@ -58,6 +58,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 		// Log error to console in development
 		if (process.env.NODE_ENV === 'development') {
+			console.error('[ErrorBoundary]', error, errorInfo);
 		}
 
 		// Call custom error handler if provided
@@ -97,11 +98,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 			// Keep only last 50 errors
 			const recentErrors = existingErrors.slice(-50);
 			localStorage.setItem('error-logs', JSON.stringify(recentErrors));
-		} catch (loggingError) {
-			// Silently handle logging errors to prevent infinite loops in error boundary
-			// This is a safety measure - if error logging fails, we don't want to crash the error boundary
-			// In production, this could be monitored separately
-			console.warn('Failed to log error to localStorage:', loggingError);
+		} catch (_loggingError) {
+			// Ignore logging errors to prevent infinite loops
 		}
 	};
 

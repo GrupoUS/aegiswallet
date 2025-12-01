@@ -7,6 +7,7 @@
  */
 
 import { config } from 'dotenv';
+
 import { getRequiredEnvVar } from '../src/lib/utils';
 
 // Load environment variables from .env file
@@ -122,7 +123,10 @@ async function main() {
 	// Test connections with current configuration
 	console.log('\n🚀 Connection Testing:');
 
-	const pooledSuccess = await testEnhancedConnection(getRequiredEnvVar('DATABASE_URL'), 'Pooled Connection');
+	const pooledSuccess = await testEnhancedConnection(
+		getRequiredEnvVar('DATABASE_URL'),
+		'Pooled Connection',
+	);
 
 	let directSuccess = false;
 	if (DATABASE_URL_UNPOOLED) {

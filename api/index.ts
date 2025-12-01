@@ -1,45 +1,61 @@
-// Minimal Vercel Serverless Function (Native TypeScript)
-// Let Vercel compile this directly without esbuild bundling
+// AegisWallet API - Vercel Edge Runtime
+// Minimal Hono-based API for Edge deployment
+
+import { Hono } from 'hono';
+import { handle } from 'hono/vercel';
 
 export const config = {
   runtime: 'edge',
 };
 
-export default async function handler(request: Request): Promise<Response> {
-  const url = new URL(request.url);
-  const path = url.pathname;
+const app = new Hono().basePath('/api');
 
-  // Health check endpoint
-  if (path === '/api/health' || path === '/api') {
-    return new Response(
-      JSON.stringify({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        runtime: 'edge',
-        path: path,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+// Health check endpoint
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    runtime: 'edge',
+    version: '1.0.0',
+  });
+});
+
+// API root
+app.get('/', (c) => {
+  return c.json({
+    name: 'AegisWallet API',
+    version: '1.0.0',
+    runtime: 'edge',
+    documentation: '/api/docs',
+    health: '/api/health',
+  });
+});
+
+// Echo endpoint for debugging
+app.post('/echo', async (c) => {
+  try {
+    const body = await c.req.json();
+    return c.json({
+      received: body,
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
   }
+});
 
-  // 404 for other routes
-  return new Response(
-    JSON.stringify({
-      error: 'Route not found in minimal mode',
-      path: path,
-      method: request.method,
-      note: 'Full API temporarily disabled for debugging',
-    }),
-    {
-      status: 404,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-}
+// Catch-all for unimplemented routes
+app.all('*', (c) => {
+  return c.json({
+    error: 'Route not found',
+    path: c.req.path,
+    method: c.req.method,
+    availableRoutes: [
+      'GET /api',
+      'GET /api/health',
+      'POST /api/echo',
+    ],
+  }, 404);
+});
+
+export default handle(app);

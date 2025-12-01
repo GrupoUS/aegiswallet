@@ -103,7 +103,7 @@ app.get('/v1/health/ping', (c) => {
 
 app.get('/v1/users/me', (c) => {
   const authHeader = c.req.header('Authorization');
-  
+
   if (!authHeader?.startsWith('Bearer ')) {
     return c.json({
       error: 'Unauthorized',
@@ -185,7 +185,7 @@ app.get('/v1/banking/balance', (c) => {
 app.get('/v1/contacts', (c) => {
   const limit = Number(c.req.query('limit')) || 50;
   const offset = Number(c.req.query('offset')) || 0;
-  
+
   return c.json({
     data: {
       contacts: [],
@@ -236,7 +236,7 @@ app.get('/v1/contacts/stats', (c) => {
 app.get('/v1/transactions', (c) => {
   const limit = Number(c.req.query('limit')) || 50;
   const offset = Number(c.req.query('offset')) || 0;
-  
+
   return c.json({
     data: {
       transactions: [],
@@ -310,7 +310,7 @@ app.get('/v1/compliance/consent', (c) => {
 app.post('/v1/compliance/consent', async (c) => {
   try {
     const body = await c.req.json();
-    
+
     return c.json({
       data: {
         success: true,
@@ -371,7 +371,7 @@ app.post('/v1/compliance/data-deletion', (c) => {
 app.post('/v1/voice/command', async (c) => {
   try {
     const body = await c.req.json();
-    
+
     return c.json({
       data: {
         command: body.text || body.command || '',
@@ -401,7 +401,7 @@ app.post('/v1/voice/command', async (c) => {
 app.post('/v1/ai/chat', async (c) => {
   try {
     const body = await c.req.json();
-    
+
     return c.json({
       data: {
         message: body.message || '',

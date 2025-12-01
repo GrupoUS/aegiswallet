@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 
 import { FinancialCalendar } from '@/components/calendar/financial-calendar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RouteGuard } from '@/lib/auth/route-guard';
 
 function CalendarLoader() {
 	return (
@@ -34,12 +33,10 @@ function CalendarLoader() {
 
 export function CalendarioPage() {
 	return (
-		<RouteGuard>
-			<div className="flex h-full flex-col p-6">
-				<Suspense fallback={<CalendarLoader />}>
-					<FinancialCalendar />
-				</Suspense>
-			</div>
-		</RouteGuard>
+		<div className="flex h-full flex-col p-6">
+			<Suspense fallback={<CalendarLoader />}>
+				<FinancialCalendar />
+			</Suspense>
+		</div>
 	);
 }

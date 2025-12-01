@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { lazy } from 'react';
 
 import { CalendarLoader } from '@/components/routes/calendario/CalendarLoader';
+import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary';
 
 export const Route = createFileRoute('/calendario')({
 	component: lazy(() =>
@@ -10,4 +11,5 @@ export const Route = createFileRoute('/calendario')({
 		})),
 	),
 	pendingComponent: () => <CalendarLoader />,
+	errorComponent: RouteErrorBoundary,
 });

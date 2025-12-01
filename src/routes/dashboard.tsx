@@ -58,4 +58,5 @@ const DashboardLoader = () => (
 export const Route = createFileRoute('/dashboard')({
 	component: lazy(() => import('./dashboard.lazy').then((m) => ({ default: m.Dashboard }))),
 	pendingComponent: () => <DashboardLoader />,
+	errorComponent: RouteErrorBoundary,
 });

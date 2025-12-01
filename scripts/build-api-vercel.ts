@@ -25,15 +25,15 @@ async function buildApi() {
 			entryPoints: [path.join(rootDir, 'src', 'server', 'api-source', 'server.ts')],
 			bundle: true,
 			outfile: path.join(rootDir, 'api', 'index.js'),
-			platform: 'node',
-			target: 'node20',
+			platform: 'browser', // Edge runtime uses browser-like APIs
+			target: 'es2022',
 			format: 'esm',
 			sourcemap: false,
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
 			keepNames: true,
-			// Only external Node.js built-ins - bundle everything else
-			external: ['node:*'],
+			// External modules that Edge runtime provides
+			external: [],
 			// Inject createRequire for CJS modules that need require()
 			inject: [],
 			// Resolve @ alias to src directory
@@ -44,10 +44,8 @@ async function buildApi() {
 				'process.env.NODE_ENV': '"production"',
 			},
 			banner: {
-				js: `// Bundled for Vercel Serverless Functions
+				js: `// Bundled for Vercel Edge Runtime
 // Generated at: ${new Date().toISOString()}
-import { createRequire as __createRequire__ } from 'node:module';
-const require = __createRequire__(import.meta.url);
 `,
 			},
 			metafile: true,

@@ -11,7 +11,7 @@ app.get('/health', (c) => {
   return c.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    runtime: 'minimal'
+    runtime: 'edge'
   });
 });
 
@@ -26,7 +26,7 @@ app.all('*', (c) => {
 });
 
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'edge',
 };
 
 export default handle(app);

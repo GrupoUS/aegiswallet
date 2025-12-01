@@ -64,18 +64,19 @@ async function testDrizzleClient() {
 	console.log('\n🥬 Testing Drizzle ORM Client...');
 
 	try {
-		// Import the database client
+		// Import the database client and sql template
 		const { getHttpClient, getPoolClient } = await import('../src/db/client');
+		const { sql } = await import('drizzle-orm');
 
 		// Test HTTP client
 		const httpClient = getHttpClient();
-		const httpResult = await httpClient.execute({ sql: 'SELECT 1 as test' });
-		console.log(`   ✅ HTTP client: Working (${httpResult.length} rows)`);
+		const httpResult = await httpClient.execute(sql`SELECT 1 as test`);
+		console.log(`   ✅ HTTP client: Working (${httpResult.rows.length} rows)`);
 
 		// Test pool client
 		const poolClient = getPoolClient();
-		const poolResult = await poolClient.execute({ sql: 'SELECT 1 as test' });
-		console.log(`   ✅ Pool client: Working (${poolResult.length} rows)`);
+		const poolResult = await poolClient.execute(sql`SELECT 1 as test`);
+		console.log(`   ✅ Pool client: Working (${poolResult.rows.length} rows)`);
 
 		return true;
 	} catch (error) {

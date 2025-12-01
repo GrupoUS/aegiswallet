@@ -38,15 +38,15 @@ export interface GoogleCalendarEvent {
 
 export interface CalendarSyncMapping {
 	id: string;
-	user_id: string;
-	financial_event_id: string; // Updated from aegis_event_id
-	google_event_id: string;
-	google_calendar_id: string;
-	last_synced_at: string;
-	sync_status: SyncStatusEnum;
-	sync_direction: SyncDirectionEnum;
-	sync_source: SyncSource; // NEW: Track origin of change
-	last_modified_at: string; // NEW: For conflict resolution
+	userId: string;
+	financialEventId: string; // Updated from aegis_event_id
+	googleEventId: string;
+	googleCalendarId: string;
+	lastSyncedAt: string;
+	syncStatus: SyncStatusEnum;
+	syncDirection: SyncDirectionEnum;
+	syncSource: SyncSource; // NEW: Track origin of change
+	lastModifiedAt: string; // NEW: For conflict resolution
 	version: number; // NEW: Optimistic locking
 	error_message?: string | null;
 	created_at: string;

@@ -260,7 +260,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 
 				{/* Quick Actions */}
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-					{quickActions.map((action) => (
+					{Array.isArray(quickActions) && quickActions.map((action) => (
 						<Button
 							key={action.title}
 							variant="outline"

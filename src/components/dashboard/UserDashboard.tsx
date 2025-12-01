@@ -106,7 +106,7 @@ function AccountsList() {
 
 	return (
 		<div className="space-y-2">
-			{accounts.map((account) => (
+			{Array.isArray(accounts) && accounts.map((account) => (
 				<Card key={account.id} className="hover:bg-accent/50 transition-colors">
 					<CardContent className="flex items-center justify-between py-4">
 						<div>
@@ -154,7 +154,7 @@ function RecentTransactionsList() {
 
 	return (
 		<div className="space-y-1">
-			{transactions.map((tx) => (
+			{Array.isArray(transactions) && transactions.map((tx) => (
 				<div
 					key={tx.id}
 					className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-accent/50 transition-colors"

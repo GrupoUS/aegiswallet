@@ -168,8 +168,9 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 			const savedSettings = saved ? JSON.parse(saved) : {};
 			savedSettings[key] = newValue;
 			localStorage.setItem('aegis-accessibility-settings', JSON.stringify(savedSettings));
-		} catch (_error) {
-			// Ignore storage errors
+		} catch (error) {
+			// Log error but don't crash - accessibility settings are optional
+			console.warn('Failed to save accessibility settings:', error);
 		}
 	};
 
@@ -181,8 +182,9 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 				const parsed = JSON.parse(saved);
 				setSettings((prev) => ({ ...prev, ...parsed }));
 			}
-		} catch (_error) {
-			// Ignore storage errors
+		} catch (error) {
+			// Log error but don't crash - use default settings if parse fails
+			console.warn('Failed to load accessibility settings:', error);
 		}
 	}, []);
 
@@ -216,7 +218,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 
 	const [showSettings, setShowSettings] = useState(false);
 
-	const value: AccessibilityContextType = {
+	const contextValue: AccessibilityContextType = {
 		announceToScreenReader,
 		isKeyboardUser,
 		showSettings,
@@ -225,7 +227,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 		updateSetting,
 	};
 
-	return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
+	return <AccessibilityContext.Provider value={contextValue}>{children}</AccessibilityContext.Provider>;
 }
 
 // Utility component for accessibility announcements

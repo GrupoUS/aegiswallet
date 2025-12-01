@@ -12,6 +12,12 @@ import { neon, neonConfig } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-http';
 
+interface SchemaColumn {
+  table_name?: string;
+  column_name: string;
+  data_type?: string;
+  is_nullable?: string;
+}
 interface LGPDComplianceResult {
 	overallScore: number; // 0-100
 	status: 'compliant' | 'partial' | 'non_compliant';
@@ -166,8 +172,12 @@ class LGPDComplianceValidator {
 		console.log(`   📊 Found ${personalDataColumns.length} personal data columns`);
 
 		// Validate each personal data column has a clear purpose
-		// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
-		for (const column of personalDataColumns as any[]) {
+		const personalDataColumnItems = (personalDataColumns as SchemaColumn[])
+			.filter((col): col is SchemaColumn => 
+				col && typeof col.column_name === 'string' && typeof col.table_name === 'string'
+			);
+			
+		for (const column of personalDataColumnItems) {
 			const table = column.table_name;
 			const col = column.column_name;
 
@@ -232,8 +242,19 @@ class LGPDComplianceValidator {
       `);
 
 			const requiredColumns = ['user_id', 'consent_type', 'granted', 'granted_at', 'version'];
-			// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
-			const existingColumns = (consentColumns as any[]).map((col) => col.column_name);
+			
+			// Define proper type for database column metadata
+			interface SchemaColumn {
+				column_name: string;
+				data_type: string;
+				is_nullable: string;
+			}
+			
+			const existingColumns = (consentColumns as SchemaColumn[])
+				.filter((col): col is SchemaColumn => 
+					col && typeof col.column_name === 'string'
+				)
+				.map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
 				if (!existingColumns.includes(required)) {
@@ -366,8 +387,11 @@ class LGPDComplianceValidator {
 				'created_at',
 				'ip_address',
 			];
-			// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
-			const existingColumns = (auditColumns as any[]).map((col) => col.column_name);
+			const existingColumns = (auditColumns as SchemaColumn[])
+				.filter((col): col is SchemaColumn => 
+					col && typeof col.column_name === 'string'
+				)
+				.map((col) => col.column_name);
 
 			for (const required of requiredColumns) {
 				if (!existingColumns.includes(required)) {
@@ -448,8 +472,12 @@ class LGPDComplianceValidator {
 
 		// In a real implementation, you would check if these are encrypted
 		// For now, we'll note them for manual review
-		// biome-ignore lint/suspicious/noExplicitAny: Generic type handling for validation
-		for (const field of sensitiveFields as any[]) {
+		const sensitiveFieldItems = (sensitiveFields as SchemaColumn[])
+			.filter((field): field is SchemaColumn => 
+				field && typeof field.column_name === 'string' && typeof field.table_name === 'string'
+			);
+			
+		for (const field of sensitiveFieldItems) {
 			result.sensitiveDataFields.push({
 				table: field.table_name,
 				column: field.column_name,

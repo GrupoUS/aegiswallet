@@ -48,7 +48,7 @@ const CommandHints = React.memo(function CommandHints() {
 		<div className="mt-6 text-center">
 			<p className="mb-2 text-gray-500 text-xs">Comandos disponíveis:</p>
 			<div className="flex max-w-xs flex-wrap justify-center gap-1">
-				{COMMAND_HINTS.map((hint) => (
+				{Array.isArray(COMMAND_HINTS) && COMMAND_HINTS.map((hint) => (
 					<span key={hint} className="rounded-full bg-gray-100 px-2 py-1 text-gray-600 text-xs">
 						{hint}
 					</span>

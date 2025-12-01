@@ -270,28 +270,7 @@ export function useFinancialEvents(
 
 	
 
-	const duplicateEvent = useCallback(
-		async (id: string) => {
-			try {
-				// Find event in local state instead of making an API call
-				const eventToDuplicate = events.find((e) => e.id === id);
-				if (!eventToDuplicate) {
-					throw new Error('Evento não encontrado para duplicar');
-				}
 
-				const { id: _, ...eventData } = eventToDuplicate;
-				await createEvent({
-					...eventData,
-					title: `${eventData.title} (Cópia)`,
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				});
-			} catch {
-				toast.error('Erro ao duplicar evento');
-			}
-		},
-		[createEvent, events],
-	);
 
 	// Calculate statistics from events
 	const statistics = useMemo(() => {

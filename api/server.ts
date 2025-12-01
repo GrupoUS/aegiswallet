@@ -6,7 +6,7 @@ import { handle } from 'hono/vercel';
 
 // Import the configured Hono application using relative path
 // (path aliases @/ are resolved by the bundler in src/)
-import app from '../src/server/index';
+import app from '../src/server/vercel';
 
 export const config = {
 	runtime: 'nodejs',

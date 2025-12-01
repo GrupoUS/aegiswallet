@@ -32,15 +32,34 @@ async function buildApi() {
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
 			keepNames: true,
-			// Mark dependencies as external to reduce bundle size
-			// These are available in Vercel's Node.js runtime
+			// Bundle all dependencies - Node.js built-ins are external (both prefixed and unprefixed)
 			external: [
-				// Node.js built-ins
 				'node:*',
-				// Heavy dependencies available in Vercel
-				'@neondatabase/serverless',
-				'drizzle-orm',
-				'@clerk/backend',
+				// Unprefixed Node.js built-ins that may be dynamically required
+				'util',
+				'events',
+				'stream',
+				'buffer',
+				'crypto',
+				'path',
+				'fs',
+				'os',
+				'http',
+				'https',
+				'net',
+				'tls',
+				'dns',
+				'url',
+				'querystring',
+				'string_decoder',
+				'zlib',
+				'assert',
+				'tty',
+				'child_process',
+				'worker_threads',
+				'cluster',
+				'perf_hooks',
+				'async_hooks',
 			],
 			// Resolve @ alias to src directory
 			alias: {

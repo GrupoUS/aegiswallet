@@ -1,9 +1,4 @@
 /**
- * NOTA: useConsents e useTransactionLimits são re-exportados de use-compliance.ts
- * useFinancialSummary é re-exportado de useProfile.ts
- * Isso evita duplicação e mantém single source of truth
- */
-/**
  * User Data Hooks - Clerk + Neon Integration
  *
  * React hooks for fetching user-scoped data with real-time updates
@@ -11,6 +6,10 @@
  *
  * NOTE: Bank account hooks have been consolidated into @/hooks/useBankAccounts.ts
  * NOTE: Contact hooks have been consolidated into @/hooks/useContacts.ts
+ * 
+ * NOTA: useConsents e useTransactionLimits são re-exportados de use-compliance.ts
+ * useFinancialSummary é re-exportado de useProfile.ts
+ * Isso evita duplicação e mantém single source of truth
  */
 
 import { useAuth, useUser } from '@clerk/clerk-react';
@@ -18,6 +17,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useTransactions } from '@/hooks/use-transactions';
 import { apiClient } from '@/lib/api-client';
+
+// Re-export compliance hooks for backward compatibility
+export { useConsents, useTransactionLimits } from '@/hooks/use-compliance';
+export { useFinancialSummary } from '@/hooks/useProfile';
 
 // ========================================
 // QUERY KEYS
@@ -106,15 +109,6 @@ export function useBoletos(status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
 		enabled: isSignedIn,
 	});
 }
-
-// ========================================
-// COMPLIANCE HOOKS (RE-EXPORTS)
-// ========================================
-
-// Re-export compliance hooks from use-compliance.ts for backward compatibility
-export { useConsents, useTransactionLimits } from '@/hooks/use-compliance';
-export { useFinancialSummary } from '@/hooks/useProfile';
-
 
 // ========================================
 // REAL-TIME UPDATES

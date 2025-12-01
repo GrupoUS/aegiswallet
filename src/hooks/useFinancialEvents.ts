@@ -1,6 +1,7 @@
 /**
  * Hook completo para gerenciamento de eventos financeiros (Contas a Pagar e Receber)
- * Implementa CRUD, filtragem, ordenação, real-time subscriptions e cache local
+ * Migrado para TanStack Query para eliminar cache manual e melhorar performance
+ * Implementa CRUD, filtragem, ordenação, optimistic updates e cache automático
  * Refatorado para usar API do servidor (Hono) em vez de queries diretas
  */
 
@@ -56,7 +57,7 @@ export interface PaginationOptions {
 
 // Query keys factory for financial events
 export const financialEventsKeys = {
-	all: ['financialEvents'] as const,
+	all: ['financial-events'] as const,
 	lists: () => [...financialEventsKeys.all, 'list'] as const,
 	list: (filters?: FinancialEventsFilters, pagination?: PaginationOptions) => 
 		[...financialEventsKeys.lists(), filters, pagination] as const,
@@ -321,7 +322,24 @@ export function useFinancialEvents(
 		return updateEvent(id, { status: 'completed' });
 	};
 
-	
+	const duplicateEvent = useCallback(
+		async (event: FinancialEvent): Promise<FinancialEvent> => {
+			if (!user) {
+				throw new FinancialError('Usuário não autenticado', 'AUTH');
+			}
+
+			const duplicatedEvent = {
+				...event,
+				id: undefined, // Remove ID to create new event
+				title: `${event.title} (Cópia)`,
+				createdAt: undefined,
+				updatedAt: undefined,
+			};
+
+			return createEvent(duplicatedEvent);
+		},
+		[user, createEvent],
+	);
 
 	return {
 		events,
@@ -361,12 +379,11 @@ export function useFinancialEventMutations() {
 					categoryId: event.category,
 				};
 
-				// biome-ignore lint/suspicious/noExplicitAny: Backend transaction response structure is dynamic and mapped via mapBackendToFrontend
-				const response = await apiClient.post<TransactionApiResponse<any>>(
+				const response = await apiClient.post<TransactionApiResponse<BackendTransaction>>(
 					'/v1/transactions',
 					payload,
 				);
-				const newEvent = mapBackendToFrontend(response.data.data);
+				const newEvent = mapBackendToFrontend(response.data);
 
 				toast.success('Evento financeiro criado com sucesso!', {
 					description: `${newEvent.title} - R$ ${Math.abs(newEvent.amount).toFixed(2)}`,
@@ -394,16 +411,14 @@ export function useFinancialEventMutations() {
 					throw new FinancialError('Usuário não autenticado', 'AUTH');
 				}
 
-				// biome-ignore lint/suspicious/noExplicitAny: Payload needs flexible typing for optional field mapping
-				const payload: any = { ...updates };
+				const payload: Partial<TransactionApiPayload> = { ...updates };
 				if (updates.category) payload.categoryId = updates.category;
 
-				// biome-ignore lint/suspicious/noExplicitAny: Backend transaction response structure is dynamic and mapped via mapBackendToFrontend
-				const response = await apiClient.put<TransactionApiResponse<any>>(
+				const response = await apiClient.put<TransactionApiResponse<BackendTransaction>>(
 					`/v1/transactions/${id}`,
 					payload,
 				);
-				const updatedEvent = mapBackendToFrontend(response.data.data);
+				const updatedEvent = mapBackendToFrontend(response.data);
 
 				toast.success('Evento atualizado com sucesso!');
 				return updatedEvent;

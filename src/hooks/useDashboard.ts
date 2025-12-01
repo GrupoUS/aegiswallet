@@ -1,13 +1,18 @@
 import { useTransactions, useTransactionsStats } from '@/hooks/use-transactions';
-import { useBankAccounts, useBankAccountsStats, useTotalBalance } from '@/hooks/useBankAccounts';
+import { useBankAccounts, useBankAccountsStats, useTotalBalance, createAccount } from '@/hooks/useBankAccounts';
 import {
 	useContacts,
 	useContactsForTransfer,
 	useContactsStats,
 	useFavoriteContacts,
+	createContact,
 } from '@/hooks/useContacts';
 import { useFinancialEventMutations, useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useProfile, useUserStatus } from '@/hooks/useProfile';
+
+import type { Contact } from '@/db/schema';
+import type { BankAccount } from '@/hooks/useBankAccounts';
+import type { FinancialEvent } from '@/types/financial-events';
 
 /**
  * Hook principal para o Dashboard - combina dados de todas as fontes
@@ -169,6 +174,7 @@ export function useDashboardMetrics() {
 	};
 }
 
+// Interface for safe type handling without assertions
 interface ProfileWithPreferences {
   data?: {
     user_preferences?: Array<{
@@ -192,9 +198,9 @@ interface ProfileWithPreferences {
 export function useDashboardSettings() {
 	const { profile } = useProfile();
 
-	// profile is ProfileApiResponse<UserProfile>, access data.user_preferences
-	const profileData = profile as ProfileWithPreferences;
-	const preferences = profileData?.data?.user_preferences?.[0];
+	// Safe type narrowing without assertions
+	const profileData = profile?.data;
+	const preferences = profileData?.user_preferences?.[0];
 
 	const settings = {
 		accessibility: {
@@ -227,25 +233,23 @@ export function useDashboardSettings() {
  */
 export function useDashboardActions() {
 	const { addEvent } = useFinancialEventMutations();
-	const { createContact } = useContacts();
-	const { createAccount } = useBankAccounts();
 
 	const actions = {
-		quickAccount: (data: unknown) => {
+		quickAccount: async (data: Partial<BankAccount>) => {
 			// Implementar lógica para conta rápida
-			return createAccount(data as Parameters<typeof createAccount>[0]);
+			return createAccount(data);
 		},
-		quickContact: (data: unknown) => {
+		quickContact: async (data: Partial<Contact>) => {
 			// Implementar lógica para contato rápido
-			return createContact(data as Parameters<typeof createContact>[0]);
+			return createContact(data);
 		},
-		quickEvent: (data: unknown) => {
+		quickEvent: async (data: Omit<FinancialEvent, 'id'>) => {
 			// Implementar lógica para evento rápido
-			return addEvent(data as Parameters<typeof addEvent>[0]);
+			return addEvent(data);
 		},
-		quickTransaction: (data: unknown) => {
+		quickTransaction: async (data: Omit<FinancialEvent, 'id'>) => {
 			// Usar addEvent para criar transações (events financeiros)
-			return addEvent(data as Parameters<typeof addEvent>[0]);
+			return addEvent(data);
 		},
 	};
 

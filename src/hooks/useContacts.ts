@@ -1,9 +1,32 @@
+/**
+ * NOTA: useContacts, useContact, useFavoriteContacts, useContactSearch, useContactsStats 
+ * foram migrados para TanStack Query para melhor cache, retry automático e invalidação.
+ * Manter API pública idêntica para backward compatibility.
+ */
+
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import type { Contact } from '@/db/schema';
 import { apiClient } from '@/lib/api-client';
+
+// Query keys factory for contacts
+export const contactsKeys = {
+	all: ['contacts'] as const,
+	lists: () => [...contactsKeys.all, 'list'] as const,
+	list: (filters?: {
+		search?: string;
+		isFavorite?: boolean;
+		limit?: number;
+		offset?: number;
+	}) => [...contactsKeys.lists(), filters] as const,
+	details: () => [...contactsKeys.all, 'detail'] as const,
+	detail: (id: string) => [...contactsKeys.details(), id] as const,
+	favorites: () => [...contactsKeys.all, 'favorites'] as const,
+	search: (query: string, limit?: number) => [...contactsKeys.all, 'search', query, limit] as const,
+	stats: () => [...contactsKeys.all, 'stats'] as const,
+};
 
 // Response meta type
 interface ResponseMeta {
@@ -130,6 +153,7 @@ interface StatsResponse {
 
 /**
  * Hook para gerenciar contatos
+ * Migrado para TanStack Query para melhor cache, retry automático e invalidação
  */
 export function useContacts(filters?: {
 	search?: string;
@@ -149,7 +173,7 @@ export function useContacts(filters?: {
 
 	const queryClient = useQueryClient();
 
-	// Query for fetching contacts
+	// Query for fetching contacts with TanStack Query
 	const {
 		data: contacts = [],
 		isLoading,
@@ -172,11 +196,11 @@ export function useContacts(filters?: {
 
 			return response.data || [];
 		},
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes
+		staleTime: 30000, // 30 seconds
+		gcTime: 300000, // 5 minutes
 	});
 
-	// Mutation for creating contacts
+	// Mutation for creating contacts with optimistic update
 	const createContactMutation = useMutation({
 		mutationFn: async (contactData: Partial<Contact>) => {
 			if (!contactData.name) {
@@ -191,12 +215,32 @@ export function useContacts(filters?: {
 			});
 			return response.data;
 		},
+		onMutate: async (newContact) => {
+			// Cancel any outgoing refetches
+			await queryClient.cancelQueries({ queryKey: contactsKeys.lists() });
+
+			// Snapshot the previous value
+			const previousContacts = queryClient.getQueryData(contactsKeys.lists());
+
+			// Optimistically update to the new value
+			if (previousContacts) {
+				queryClient.setQueryData(contactsKeys.lists(), [...previousContacts, newContact as Contact]);
+			}
+
+			return { previousContacts };
+		},
+		onError: (err, newContact, context) => {
+			// If the mutation fails, use the context returned from onMutate to roll back
+			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
+			toast.error(err.message || 'Falha ao criar contato');
+		},
+		onSettled: () => {
+			// Always refetch after error or success
+			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
+		},
 		onSuccess: () => {
 			toast.success('Contato criado com sucesso!');
-			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Falha ao criar contato');
 		},
 	});
 
@@ -223,22 +267,55 @@ export function useContacts(filters?: {
 		},
 	});
 
-	// Mutation for deleting contacts
+	// Mutation for deleting contacts with optimistic update
 	const deleteContactMutation = useMutation({
 		mutationFn: async (contactId: string) => {
 			await apiClient.delete(`/v1/contacts/${contactId}`);
+			return contactId;
 		},
-		onSuccess: () => {
-			toast.success('Contato removido com sucesso!');
+		onMutate: async (contactId) => {
+			// Cancel any outgoing refetches
+			await queryClient.cancelQueries({ queryKey: contactsKeys.lists() });
+			await queryClient.cancelQueries({ queryKey: contactsKeys.favorites() });
+
+			// Snapshot the previous value
+			const previousContacts = queryClient.getQueryData(contactsKeys.lists());
+			const previousFavorites = queryClient.getQueryData(contactsKeys.favorites());
+
+			// Optimistically update to remove the contact
+			if (previousContacts) {
+				queryClient.setQueryData(
+					contactsKeys.lists(),
+					previousContacts.filter((contact: Contact) => contact.id !== contactId),
+				);
+			}
+
+			if (previousFavorites) {
+				queryClient.setQueryData(
+					contactsKeys.favorites(),
+					previousFavorites.filter((contact: Contact) => contact.id !== contactId),
+				);
+			}
+
+			return { previousContacts, previousFavorites };
+		},
+		onError: (err, contactId, context) => {
+			// If the mutation fails, use the context to roll back
+			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
+			queryClient.setQueryData(contactsKeys.favorites(), context?.previousFavorites);
+			toast.error(err.message || 'Falha ao remover contato');
+		},
+		onSettled: () => {
+			// Always refetch after error or success
 			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
 			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Falha ao remover contato');
+		onSuccess: () => {
+			toast.success('Contato removido com sucesso!');
 		},
 	});
 
-	// Mutation for toggling favorite status
+	// Mutation for toggling favorite status with optimistic update
 	const toggleFavoriteMutation = useMutation({
 		mutationFn: async (contactId: string) => {
 			const response = await apiClient.post<ContactApiResponse>(
@@ -246,13 +323,58 @@ export function useContacts(filters?: {
 			);
 			return response.data;
 		},
-		onSuccess: () => {
-			toast.success('Favorito atualizado com sucesso!');
+		onMutate: async (contactId) => {
+			// Cancel any outgoing refetches
+			await queryClient.cancelQueries({ queryKey: contactsKeys.lists() });
+			await queryClient.cancelQueries({ queryKey: contactsKeys.favorites() });
+
+			// Snapshot the previous value
+			const previousContacts = queryClient.getQueryData(contactsKeys.lists());
+			const previousFavorites = queryClient.getQueryData(contactsKeys.favorites());
+
+			// Optimistically update to toggle favorite status
+			if (previousContacts) {
+				queryClient.setQueryData(contactsKeys.lists(), (old: Contact[] | undefined) => {
+					if (!old) return old;
+					return old.map(contact =>
+						contact.id === contactId
+							? { ...contact, isFavorite: !contact.isFavorite }
+							: contact,
+					);
+				});
+			}
+
+			if (previousFavorites) {
+				queryClient.setQueryData(contactsKeys.favorites(), (old: Contact[] | undefined) => {
+					if (!old) return old;
+					const contact = old.find(c => c.id === contactId);
+					if (!contact) return old;
+					
+					if (contact.isFavorite) {
+						// Removing from favorites
+						return old.filter(c => c.id !== contactId);
+					} else {
+						// Adding to favorites
+						return [...old, { ...contact, isFavorite: true }];
+					}
+				});
+			}
+
+			return { previousContacts, previousFavorites };
+		},
+		onError: (err, contactId, context) => {
+			// If the mutation fails, use the context to roll back
+			queryClient.setQueryData(contactsKeys.lists(), context?.previousContacts);
+			queryClient.setQueryData(contactsKeys.favorites(), context?.previousFavorites);
+			toast.error(err.message || 'Falha ao alternar favorito');
+		},
+		onSettled: () => {
+			// Always refetch after error or success
 			queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
 			queryClient.invalidateQueries({ queryKey: contactsKeys.favorites() });
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Falha ao alternar favorito');
+		onSuccess: () => {
+			toast.success('Favorito atualizado com sucesso!');
 		},
 	});
 
@@ -292,6 +414,7 @@ export function useContacts(filters?: {
 
 /**
  * Hook para obter contato específico
+ * Migrado para TanStack Query
  */
 export function useContact(contactId: string): UseContactReturn {
 	const {
@@ -306,7 +429,7 @@ export function useContact(contactId: string): UseContactReturn {
 			return response.data;
 		},
 		enabled: !!contactId,
-		staleTime: 5 * 60 * 1000, // 5 minutes
+		staleTime: 60000, // 1 minute
 	});
 
 	return {
@@ -318,6 +441,7 @@ export function useContact(contactId: string): UseContactReturn {
 
 /**
  * Hook para contatos favoritos
+ * Migrado para TanStack Query
  */
 export function useFavoriteContacts(): UseFavoriteContactsReturn {
 	const {
@@ -333,7 +457,7 @@ export function useFavoriteContacts(): UseFavoriteContactsReturn {
 			}>('/v1/contacts/favorites');
 			return response.data;
 		},
-		staleTime: 5 * 60 * 1000, // 5 minutes
+		staleTime: 30000, // 30 seconds
 	});
 
 	return {
@@ -345,6 +469,7 @@ export function useFavoriteContacts(): UseFavoriteContactsReturn {
 
 /**
  * Hook para busca de contatos
+ * Migrado para TanStack Query
  */
 export function useContactSearch(query: string, limit = 10): UseContactSearchReturn {
 	const {
@@ -363,7 +488,7 @@ export function useContactSearch(query: string, limit = 10): UseContactSearchRet
 			return response.data;
 		},
 		enabled: !!query && query.length >= 2,
-		staleTime: 2 * 60 * 1000, // 2 minutes for search results
+		staleTime: 120000, // 2 minutes for search results
 	});
 
 	return {
@@ -375,6 +500,7 @@ export function useContactSearch(query: string, limit = 10): UseContactSearchRet
 
 /**
  * Hook para estatísticas dos contatos
+ * Migrado para TanStack Query
  */
 export function useContactsStats(): UseContactsStatsReturn {
 	const {
@@ -387,7 +513,7 @@ export function useContactsStats(): UseContactsStatsReturn {
 			const response = await apiClient.get<StatsResponse>('/v1/contacts/stats');
 			return response.data;
 		},
-		staleTime: 10 * 60 * 1000, // 10 minutes for stats
+		staleTime: 600000, // 10 minutes for stats
 	});
 
 	return {

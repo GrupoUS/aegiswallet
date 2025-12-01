@@ -17,12 +17,12 @@ const rootDir = path.resolve(currentDir, '..');
 
 async function buildApi() {
 	console.log('🔨 Building API for Vercel...');
-	console.log(`   Entry: api/server.ts`);
+	console.log(`   Entry: src/server/api-source/server.ts`);
 	console.log(`   Output: api/index.js`);
 
 	try {
 		const result = await build({
-			entryPoints: [path.join(rootDir, 'api', 'server.ts')],
+			entryPoints: [path.join(rootDir, 'src', 'server', 'api-source', 'server.ts')],
 			bundle: true,
 			outfile: path.join(rootDir, 'api', 'index.js'),
 			platform: 'node',

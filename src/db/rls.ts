@@ -103,7 +103,7 @@ export const createUserScopedPoolClient = async (userId: string) => {
 		 * Execute a transaction with user context
 		 */
 		async transaction<T>(fn: (tx: ReturnType<typeof drizzlePool>) => Promise<T>): Promise<T> {
-			return db.transaction(async (tx) => {
+			return await db.transaction(async (tx) => {
 				// Set user context within transaction
 				await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
 				return fn(tx as unknown as ReturnType<typeof drizzlePool>);

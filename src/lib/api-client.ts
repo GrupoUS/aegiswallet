@@ -194,9 +194,6 @@ class ApiClient {
 	 */
 	private logApiError(_error: Partial<EnhancedApiError>): void {
 		// In development, log to console for debugging
-		if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-		}
-
 		// In production, you might want to send to error monitoring service
 		// This is where you would integrate with services like Sentry, LogRocket, etc.
 	}

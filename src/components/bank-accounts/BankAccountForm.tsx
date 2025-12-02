@@ -29,12 +29,12 @@ const accountTypeEnum = z.enum(['checking', 'savings', 'investment', 'cash']);
 type AccountType = z.infer<typeof accountTypeEnum>;
 
 const formSchema = z.object({
-	account_type: accountTypeEnum,
+	accountType: accountTypeEnum,
 	balance: z.number(),
 	currency: z.string(),
-	institution_name: z.string().min(1, 'Nome da instituição é obrigatório'),
-	is_active: z.boolean(),
-	is_primary: z.boolean(),
+	institutionName: z.string().min(1, 'Nome da instituição é obrigatório'),
+	isActive: z.boolean(),
+	isPrimary: z.boolean(),
 });
 
 type BankAccountFormValues = z.infer<typeof formSchema>;
@@ -50,12 +50,12 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 
 	const form = useForm<BankAccountFormValues>({
 		defaultValues: {
-			account_type: 'checking',
+			accountType: 'checking',
 			balance: 0,
 			currency: 'BRL',
-			institution_name: '',
-			is_active: true,
-			is_primary: false,
+			institutionName: '',
+			isActive: true,
+			isPrimary: false,
 		},
 		resolver: zodResolver(formSchema) as Resolver<BankAccountFormValues>,
 		mode: 'onSubmit',
@@ -64,12 +64,12 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 	useEffect(() => {
 		if (account) {
 			form.reset({
-				account_type: account.account_type as AccountType,
+				accountType: account.account_type as AccountType,
 				balance: Number(account.balance ?? 0),
 				currency: account.currency ?? 'BRL',
-				institution_name: account.institution_name ?? '',
-				is_active: account.is_active ?? true,
-				is_primary: account.is_primary ?? false,
+				institutionName: account.institution_name ?? '',
+				isActive: account.is_active ?? true,
+				isPrimary: account.is_primary ?? false,
 			});
 		}
 	}, [account, form]);
@@ -85,8 +85,8 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 		} catch (error) {
 			logger.error('Failed to save bank account', {
 				error: error instanceof Error ? error.message : String(error),
-				accountType: values.account_type,
-				institution: values.institution_name,
+				accountType: values.accountType,
+				institution: values.institutionName,
 				isUpdate: !!account,
 				accountId: account?.id,
 			});
@@ -100,7 +100,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 				<FormField
 					control={form.control}
-					name="institution_name"
+					name="institutionName"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Instituição Financeira</FormLabel>
@@ -115,7 +115,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 				<div className="grid grid-cols-2 gap-4">
 					<FormField
 						control={form.control}
-						name="account_type"
+						name="accountType"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Tipo de Conta</FormLabel>
@@ -186,7 +186,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 				<div className="flex gap-4">
 					<FormField
 						control={form.control}
-						name="is_active"
+						name="isActive"
 						render={({ field }) => (
 							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
 								<FormControl>
@@ -202,7 +202,7 @@ export function BankAccountForm({ account, onSuccess, onCancel }: BankAccountFor
 
 					<FormField
 						control={form.control}
-						name="is_primary"
+						name="isPrimary"
 						render={({ field }) => (
 							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
 								<FormControl>

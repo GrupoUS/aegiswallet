@@ -38,24 +38,24 @@ interface UseBankAccountsReturn {
 	isDeleting: boolean;
 	isUpdatingBalance: boolean;
 	createAccount: (input: {
-		institution_name: string;
-		account_type: 'checking' | 'savings' | 'investment' | 'cash';
+		institutionName: string;
+		accountType: 'checking' | 'savings' | 'investment' | 'cash';
 		balance?: number;
 		currency?: string;
-		is_primary?: boolean;
-		is_active?: boolean;
-		account_mask?: string;
-		institution_id?: string;
+		isPrimary?: boolean;
+		isActive?: boolean;
+		accountMask?: string;
+		institutionId?: string;
 	}) => void;
 	updateAccount: (input: {
 		id: string;
-		institution_name?: string;
-		account_type?: 'checking' | 'savings' | 'investment' | 'cash';
+		institutionName?: string;
+		accountType?: 'checking' | 'savings' | 'investment' | 'cash';
 		balance?: number;
 		currency?: string;
-		is_primary?: boolean;
-		is_active?: boolean;
-		account_mask?: string;
+		isPrimary?: boolean;
+		isActive?: boolean;
+		accountMask?: string;
 	}) => void;
 	deleteAccount: (
 		input: { id: string },
@@ -115,14 +115,14 @@ export function useBankAccounts(): UseBankAccountsReturn {
 
 	const { mutate: createAccount, isPending: isCreating } = useMutation({
 		mutationFn: async (input: {
-			institution_name: string;
-			account_type: 'checking' | 'savings' | 'investment' | 'cash';
+			institutionName: string;
+			accountType: 'checking' | 'savings' | 'investment' | 'cash';
 			balance?: number;
 			currency?: string;
-			is_primary?: boolean;
-			is_active?: boolean;
-			account_mask?: string;
-			institution_id?: string;
+			isPrimary?: boolean;
+			isActive?: boolean;
+			accountMask?: string;
+			institutionId?: string;
 		}) => {
 			const response = await apiClient.post<BankAccountApiResponse<BankAccount>>(
 				'/v1/bank-accounts',
@@ -147,13 +147,13 @@ export function useBankAccounts(): UseBankAccountsReturn {
 	const { mutate: updateAccount, isPending: isUpdating } = useMutation({
 		mutationFn: async (input: {
 			id: string;
-			institution_name?: string;
-			account_type?: 'checking' | 'savings' | 'investment' | 'cash';
+			institutionName?: string;
+			accountType?: 'checking' | 'savings' | 'investment' | 'cash';
 			balance?: number;
 			currency?: string;
-			is_primary?: boolean;
-			is_active?: boolean;
-			account_mask?: string;
+			isPrimary?: boolean;
+			isActive?: boolean;
+			accountMask?: string;
 		}) => {
 			const { id, ...data } = input;
 			const response = await apiClient.put<BankAccountApiResponse<BankAccount>>(

@@ -311,13 +311,14 @@ const ChartLegendContent = React.forwardRef<
 					return chartItem.type !== 'none';
 				})
 				.map((item: unknown, _index: number) => {
-					const _chartItem = item as ChartPayload;
-					const key = `${nameKey || item.dataKey || 'value'}`;
+					const chartItem = item as ChartPayload;
+					const key = `${nameKey || chartItem.dataKey || 'value'}`;
 					const itemConfig = getPayloadConfigFromPayload(config, item, key);
+					const indicatorColor = chartItem.color || 'var(--color-primary)';
 
 					return (
 						<div
-							key={item.name || item.dataKey || 'value'}
+							key={chartItem.name || chartItem.dataKey || 'value'}
 							className={cn(
 								'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground',
 							)}

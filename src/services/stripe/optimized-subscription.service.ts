@@ -1,527 +1,502 @@
 // src/services/stripe/optimized-subscription.service.ts
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
 
 import { StripeCustomerService } from './customer.service';
 import { getHttpClient } from '@/db/client';
-import { 
-  subscriptions, 
-  subscriptionPlans, 
-  users, 
-  paymentHistory,
-} from '@/db/schema';
+import { paymentHistory, subscriptionPlans, subscriptions, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { getStripeClient } from '@/lib/stripe/client';
 import { getPlanByStripePrice, STRIPE_CONFIG } from '@/lib/stripe/config';
 
 /**
  * Optimized Stripe Subscription Service
- * 
+ *
  * Performance improvements:
  * - UPSERT patterns para evitar duplicatas
- * - Covering indexes para queries otimizadas  
+ * - Covering indexes para queries otimizadas
  * - LGPD compliance automática
  * - Batch operations para melhor performance
  * - Error handling robusto
  */
 export class OptimizedStripeSubscriptionService {
+	/**
+	 * Get subscription with optimized query using covering indexes
+	 * Performance: 73% faster than original implementation
+	 */
+	static async getSubscription(userId: string, includePlan = true) {
+		const db = getHttpClient();
+		const startTime = Date.now();
 
-  /**
-   * Get subscription with optimized query using covering indexes
-   * Performance: 73% faster than original implementation
-   */
-  static async getSubscription(userId: string, includePlan = true) {
-    const db = getHttpClient();
-    const startTime = Date.now();
-    
-    try {
-      let query = db
-        .select({
-          subscription: {
-            id: subscriptions.id,
-            userId: subscriptions.userId,
-            status: subscriptions.status,
-            planId: subscriptions.planId,
-            currentPeriodStart: subscriptions.currentPeriodStart,
-            currentPeriodEnd: subscriptions.currentPeriodEnd,
-            stripeCustomerId: subscriptions.stripeCustomerId,
-            stripeSubscriptionId: subscriptions.stripeSubscriptionId,
-            cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
-            canceledAt: subscriptions.canceledAt,
-            trialStart: subscriptions.trialStart,
-            trialEnd: subscriptions.trialEnd,
-            createdAt: subscriptions.createdAt,
-            updatedAt: subscriptions.updatedAt,
-            
-          }
-        })
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, userId))
-        .limit(1);
+		try {
+			let query = db
+				.select({
+					subscription: {
+						id: subscriptions.id,
+						userId: subscriptions.userId,
+						status: subscriptions.status,
+						planId: subscriptions.planId,
+						currentPeriodStart: subscriptions.currentPeriodStart,
+						currentPeriodEnd: subscriptions.currentPeriodEnd,
+						stripeCustomerId: subscriptions.stripeCustomerId,
+						stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+						cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+						canceledAt: subscriptions.canceledAt,
+						trialStart: subscriptions.trialStart,
+						trialEnd: subscriptions.trialEnd,
+						createdAt: subscriptions.createdAt,
+						updatedAt: subscriptions.updatedAt,
+					},
+				})
+				.from(subscriptions)
+				.where(eq(subscriptions.userId, userId))
+				.limit(1);
 
-      // Add plan data if requested (uses optimized join)
-      if (includePlan) {
-        query = db
-          .select({
-            subscription: {
-              id: subscriptions.id,
-              userId: subscriptions.userId,
-              status: subscriptions.status,
-              planId: subscriptions.planId,
-              currentPeriodStart: subscriptions.currentPeriodStart,
-              currentPeriodEnd: subscriptions.currentPeriodEnd,
-              stripeCustomerId: subscriptions.stripeCustomerId,
-              stripeSubscriptionId: subscriptions.stripeSubscriptionId,
-              cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
-              canceledAt: subscriptions.canceledAt,
-              trialStart: subscriptions.trialStart,
-              trialEnd: subscriptions.trialEnd,
-              createdAt: subscriptions.createdAt,
-              updatedAt: subscriptions.updatedAt,
-            },
-            plan: {
-              id: subscriptionPlans.id,
-              name: subscriptionPlans.name,
-              description: subscriptionPlans.description,
-              priceCents: subscriptionPlans.priceCents,
-              currency: subscriptionPlans.currency,
-              interval: subscriptionPlans.interval,
-              features: subscriptionPlans.features,
-              aiModels: subscriptionPlans.aiModels,
-              maxBankAccounts: subscriptionPlans.maxBankAccounts,
-              maxTransactionsPerMonth: subscriptionPlans.maxTransactionsPerMonth,
-              isActive: subscriptionPlans.isActive,
-            }
-          })
-          .from(subscriptions)
-          .leftJoin(
-            subscriptionPlans,
-            and(
-              eq(subscriptions.planId, subscriptionPlans.id),
-              eq(subscriptionPlans.isActive, true)
-            )
-          )
-          .where(eq(subscriptions.userId, userId))
-          .limit(1);
-      }
+			// Add plan data if requested (uses optimized join)
+			if (includePlan) {
+				query = db
+					.select({
+						subscription: {
+							id: subscriptions.id,
+							userId: subscriptions.userId,
+							status: subscriptions.status,
+							planId: subscriptions.planId,
+							currentPeriodStart: subscriptions.currentPeriodStart,
+							currentPeriodEnd: subscriptions.currentPeriodEnd,
+							stripeCustomerId: subscriptions.stripeCustomerId,
+							stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+							cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+							canceledAt: subscriptions.canceledAt,
+							trialStart: subscriptions.trialStart,
+							trialEnd: subscriptions.trialEnd,
+							createdAt: subscriptions.createdAt,
+							updatedAt: subscriptions.updatedAt,
+						},
+						plan: {
+							id: subscriptionPlans.id,
+							name: subscriptionPlans.name,
+							description: subscriptionPlans.description,
+							priceCents: subscriptionPlans.priceCents,
+							currency: subscriptionPlans.currency,
+							interval: subscriptionPlans.interval,
+							features: subscriptionPlans.features,
+							aiModels: subscriptionPlans.aiModels,
+							maxBankAccounts: subscriptionPlans.maxBankAccounts,
+							maxTransactionsPerMonth: subscriptionPlans.maxTransactionsPerMonth,
+							isActive: subscriptionPlans.isActive,
+						},
+					})
+					.from(subscriptions)
+					.leftJoin(
+						subscriptionPlans,
+						and(
+							eq(subscriptions.planId, subscriptionPlans.id),
+							eq(subscriptionPlans.isActive, true),
+						),
+					)
+					.where(eq(subscriptions.userId, userId))
+					.limit(1);
+			}
 
-      const result = await query;
-      const executionTime = Date.now() - startTime;
+			const result = await query;
+			const executionTime = Date.now() - startTime;
 
-      if (result.length === 0) {
-        secureLogger.info('No subscription found for user', { 
-          userId, 
-          executionTimeMs: executionTime 
-        });
-        
-        return null;
-      }
+			if (result.length === 0) {
+				secureLogger.info('No subscription found for user', {
+					userId,
+					executionTimeMs: executionTime,
+				});
 
-      const { subscription } = result[0];
+				return null;
+			}
 
-      // Log performance metrics
-      secureLogger.info('Retrieved subscription for user', {
-        userId,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        planId: subscription.planId,
-        executionTimeMs: executionTime,
-        performanceImprovement: '73% faster than legacy implementation'
-      });
+			const { subscription } = result[0];
 
-      return {
-        subscription,
-        plan: null,
-        meta: {
-          executionTimeMs: executionTime,
-          cacheKey: `subscription:${userId}`,
-          lgpdCompliant: true
-        }
-      };
-    } catch (error) {
-      secureLogger.error('Failed to get subscription', {
-        userId,
-        executionTimeMs: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
-  }
+			// Log performance metrics
+			secureLogger.info('Retrieved subscription for user', {
+				userId,
+				subscriptionId: subscription.id,
+				status: subscription.status,
+				planId: subscription.planId,
+				executionTimeMs: executionTime,
+				performanceImprovement: '73% faster than legacy implementation',
+			});
 
-  /**
-   * Sync subscription from Stripe using UPSERT pattern
-   * Performance: 79% faster, prevents duplicates, handles race conditions
-   */
-  static async syncSubscriptionFromStripe(stripeSubscriptionId: string) {
-    const stripe = getStripeClient();
-    const db = getHttpClient();
-    const startTime = Date.now();
+			return {
+				subscription,
+				plan: null,
+				meta: {
+					executionTimeMs: executionTime,
+					cacheKey: `subscription:${userId}`,
+					lgpdCompliant: true,
+				},
+			};
+		} catch (error) {
+			secureLogger.error('Failed to get subscription', {
+				userId,
+				executionTimeMs: Date.now() - startTime,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+			throw error;
+		}
+	}
 
-    try {
-      // Retrieve subscription from Stripe
-      const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-      const subscription = stripeSubscription as unknown as Stripe.Subscription;
-      
-      // Extract customer ID
-      const customerId = typeof subscription.customer === 'string' 
-        ? subscription.customer 
-        : subscription.customer.id;
+	/**
+	 * Sync subscription from Stripe using UPSERT pattern
+	 * Performance: 79% faster, prevents duplicates, handles race conditions
+	 */
+	static async syncSubscriptionFromStripe(stripeSubscriptionId: string) {
+		const stripe = getStripeClient();
+		const db = getHttpClient();
+		const startTime = Date.now();
 
-      // Find existing subscription by Stripe customer ID (uses optimized index)
-      const [existingSub] = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.stripeCustomerId, customerId))
-        .limit(1);
+		try {
+			// Retrieve subscription from Stripe
+			const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+			const subscription = stripeSubscription as unknown as Stripe.Subscription;
 
-      // Determine plan ID from Stripe price
-      const priceId = subscription.items.data[0]?.price?.id;
-      if (!priceId) {
-        throw new Error('No price ID found in subscription');
-      }
+			// Extract customer ID
+			const customerId =
+				typeof subscription.customer === 'string'
+					? subscription.customer
+					: subscription.customer.id;
 
-      const plan = getPlanByStripePrice(priceId);
-      const planId = plan ? plan.id : 'free';
+			// Find existing subscription by Stripe customer ID (uses optimized index)
+			const [existingSub] = await db
+				.select()
+				.from(subscriptions)
+				.where(eq(subscriptions.stripeCustomerId, customerId))
+				.limit(1);
 
-      // Map Stripe status to database-compatible status
-      const status = this.mapStripeStatusToDb(subscription.status);
+			// Determine plan ID from Stripe price
+			const priceId = subscription.items.data[0]?.price?.id;
+			if (!priceId) {
+				throw new Error('No price ID found in subscription');
+			}
 
-      // Get billing period
-      const subscriptionItem = subscription.items.data[0];
-      if (!subscriptionItem) {
-        throw new Error('No subscription items found');
-      }
+			const plan = getPlanByStripePrice(priceId);
+			const planId = plan ? plan.id : 'free';
 
-      const periodStart = new Date(subscriptionItem.current_period_start * 1000);
-      const periodEnd = new Date(subscriptionItem.current_period_end * 1000);
+			// Map Stripe status to database-compatible status
+			const status = OptimizedStripeSubscriptionService.mapStripeStatusToDb(subscription.status);
 
-      // Use UPSERT pattern for conflict resolution
-      const syncData = {
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscription.id,
-        planId,
-        status,
-        currentPeriodStart: periodStart,
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        canceledAt: subscription.canceled_at 
-          ? new Date(subscription.canceled_at * 1000) 
-          : null,
-        trialStart: subscription.trial_start 
-          ? new Date(subscription.trial_start * 1000) 
-          : null,
-        trialEnd: subscription.trial_end 
-          ? new Date(subscription.trial_end * 1000) 
-          : null,
-        updatedAt: new Date(),
-      };
+			// Get billing period
+			const subscriptionItem = subscription.items.data[0];
+			if (!subscriptionItem) {
+				throw new Error('No subscription items found');
+			}
 
-      let result;
-      if (existingSub) {
-        // Update existing subscription
-        [result] = await db
-          .update(subscriptions)
-          .set(syncData)
-          .where(eq(subscriptions.id, existingSub.id))
-          .returning();
-      } else {
-        // Get user from customerId
-        const [userRecord] = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, customerId))
-          .limit(1);
-        
-        if (!userRecord) {
-          throw new Error('User not found for Stripe customer');
-        }
+			const periodStart = new Date(subscriptionItem.current_period_start * 1000);
+			const periodEnd = new Date(subscriptionItem.current_period_end * 1000);
 
-        [result] = await db
-          .insert(subscriptions)
-          .values({
-            ...syncData,
-            userId: userRecord.id,
-            createdAt: new Date(),
-          })
-          .returning();
-      }
+			// Use UPSERT pattern for conflict resolution
+			const syncData = {
+				stripeCustomerId: customerId,
+				stripeSubscriptionId: subscription.id,
+				planId,
+				status,
+				currentPeriodStart: periodStart,
+				currentPeriodEnd: periodEnd,
+				cancelAtPeriodEnd: subscription.cancel_at_period_end,
+				canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+				trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+				trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+				updatedAt: new Date(),
+			};
 
-      const executionTime = Date.now() - startTime;
+			let result: typeof subscriptions.$inferSelect | undefined;
+			if (existingSub) {
+				// Update existing subscription
+				[result] = await db
+					.update(subscriptions)
+					.set(syncData)
+					.where(eq(subscriptions.id, existingSub.id))
+					.returning();
+			} else {
+				// Get user from customerId
+				const [userRecord] = await db.select().from(users).where(eq(users.id, customerId)).limit(1);
 
-      secureLogger.info('Subscription synced from Stripe', {
-        userId: result.userId,
-        subscriptionId: result.id,
-        stripeSubscriptionId: subscription.id,
-        status,
-        planId,
-        executionTimeMs: executionTime,
-        performanceImprovement: '79% faster with UPSERT pattern',
-        lgpdCompliant: true
-      });
+				if (!userRecord) {
+					throw new Error('User not found for Stripe customer');
+				}
 
-      return result;
-    } catch (error) {
-      secureLogger.error('Failed to sync subscription', {
-        stripeSubscriptionId,
-        executionTimeMs: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-      throw error;
-    }
-  }
+				[result] = await db
+					.insert(subscriptions)
+					.values({
+						...syncData,
+						userId: userRecord.id,
+						createdAt: new Date(),
+					})
+					.returning();
+			}
 
-  /**
-   * Get payment history with optimized pagination
-   * Performance: Optimized for large datasets with proper indexing
-   */
-  static async getPaymentHistory(
-    userId: string, 
-    options: {
-      limit?: number;
-      offset?: number;
-      status?: 'succeeded' | 'failed' | 'pending';
-      dateFrom?: Date;
-      dateTo?: Date;
-    } = {}
-  ) {
-    const db = getHttpClient();
-    const {
-      limit = 20,
-      offset = 0,
-      status,
-      dateFrom,
-      dateTo
-    } = options;
+			const executionTime = Date.now() - startTime;
 
-    const startTime = Date.now();
+			secureLogger.info('Subscription synced from Stripe', {
+				userId: result.userId,
+				subscriptionId: result.id,
+				stripeSubscriptionId: subscription.id,
+				status,
+				planId,
+				executionTimeMs: executionTime,
+				performanceImprovement: '79% faster with UPSERT pattern',
+				lgpdCompliant: true,
+			});
 
-    try {
-      // Build dynamic query conditions
-      const conditions = [eq(paymentHistory.userId, userId)];
-      
-      if (status) {
-        conditions.push(eq(paymentHistory.status, status));
-      }
-      
-      if (dateFrom) {
-        conditions.push(sql`${paymentHistory.createdAt} >= ${dateFrom}`);
-      }
-      
-      if (dateTo) {
-        conditions.push(sql`${paymentHistory.createdAt} <= ${dateTo}`);
-      }
+			return result;
+		} catch (error) {
+			secureLogger.error('Failed to sync subscription', {
+				stripeSubscriptionId,
+				executionTimeMs: Date.now() - startTime,
+				error: error instanceof Error ? error.message : 'Unknown error',
+				stack: error instanceof Error ? error.stack : undefined,
+			});
+			throw error;
+		}
+	}
 
-      // Query with optimized indexes
-      const result = await db
-        .select({
-          id: paymentHistory.id,
-          amountCents: paymentHistory.amountCents,
-          currency: paymentHistory.currency,
-          status: paymentHistory.status,
-          description: paymentHistory.description,
-          receiptUrl: paymentHistory.receiptUrl,
-          invoicePdf: paymentHistory.invoicePdf,
-          failureCode: paymentHistory.failureCode,
-          failureMessage: paymentHistory.failureMessage,
-          createdAt: paymentHistory.createdAt,
-          subscriptionId: paymentHistory.subscriptionId,
-        })
-        .from(paymentHistory)
-        .where(and(...conditions))
-        .orderBy(desc(paymentHistory.createdAt))
-        .limit(limit)
-        .offset(offset);
+	/**
+	 * Get payment history with optimized pagination
+	 * Performance: Optimized for large datasets with proper indexing
+	 */
+	static async getPaymentHistory(
+		userId: string,
+		options: {
+			limit?: number;
+			offset?: number;
+			status?: 'succeeded' | 'failed' | 'pending';
+			dateFrom?: Date;
+			dateTo?: Date;
+		} = {},
+	) {
+		const db = getHttpClient();
+		const { limit = 20, offset = 0, status, dateFrom, dateTo } = options;
 
-      const executionTime = Date.now() - startTime;
+		const startTime = Date.now();
 
-      secureLogger.info('Retrieved payment history', {
-        userId,
-        recordCount: result.length,
-        executionTimeMs: executionTime,
-        performanceImprovement: '68% faster with optimized indexes'
-      });
+		try {
+			// Build dynamic query conditions
+			const conditions = [eq(paymentHistory.userId, userId)];
 
-      return {
-        payments: result,
-        meta: {
-          totalCount: result.length,
-          limit,
-          offset,
-          executionTimeMs: executionTime,
-          lgpdCompliant: true
-        }
-      };
-    } catch (error) {
-      secureLogger.error('Failed to get payment history', {
-        userId,
-        executionTimeMs: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
-  }
+			if (status) {
+				conditions.push(eq(paymentHistory.status, status));
+			}
 
-  /**
-   * Create checkout session
-   */
-  static async createCheckoutSession(
-    userId: string,
-    priceId: string,
-    successUrl?: string,
-    cancelUrl?: string,
-    requestOrigin?: string
-  ) {
-    const stripe = getStripeClient();
-    const db = getHttpClient();
+			if (dateFrom) {
+				conditions.push(sql`${paymentHistory.createdAt} >= ${dateFrom}`);
+			}
 
-    try {
-      // Get user
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
+			if (dateTo) {
+				conditions.push(sql`${paymentHistory.createdAt} <= ${dateTo}`);
+			}
 
-      if (!user?.email) {
-        throw new Error('Usuário não encontrado ou sem email');
-      }
+			// Query with optimized indexes
+			const result = await db
+				.select({
+					id: paymentHistory.id,
+					amountCents: paymentHistory.amountCents,
+					currency: paymentHistory.currency,
+					status: paymentHistory.status,
+					description: paymentHistory.description,
+					receiptUrl: paymentHistory.receiptUrl,
+					invoicePdf: paymentHistory.invoicePdf,
+					failureCode: paymentHistory.failureCode,
+					failureMessage: paymentHistory.failureMessage,
+					createdAt: paymentHistory.createdAt,
+					subscriptionId: paymentHistory.subscriptionId,
+				})
+				.from(paymentHistory)
+				.where(and(...conditions))
+				.orderBy(desc(paymentHistory.createdAt))
+				.limit(limit)
+				.offset(offset);
 
-      // Get or create customer
-      const customerId = await StripeCustomerService.getOrCreateCustomer(
-        userId,
-        user.email,
-        user.fullName || undefined,
-      );
+			const executionTime = Date.now() - startTime;
 
-      // Generate URLs
-      const baseUrl = requestOrigin || 
-        STRIPE_CONFIG.successUrl?.replace(/\/billing\/success$/, '') ||
-        'https://app.aegiswallet.com.br';
-      
-      const finalSuccessUrl = successUrl || `${baseUrl}/billing/success`;
-      const finalCancelUrl = cancelUrl || `${baseUrl}/billing/cancel`;
+			secureLogger.info('Retrieved payment history', {
+				userId,
+				recordCount: result.length,
+				executionTimeMs: executionTime,
+				performanceImprovement: '68% faster with optimized indexes',
+			});
 
-      // Create session
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        mode: 'subscription',
-        payment_method_types: ['card'],
-        line_items: [{
-          price: priceId,
-          quantity: 1,
-        }],
-        success_url: finalSuccessUrl,
-        cancel_url: finalCancelUrl,
-        allow_promotion_codes: true,
-      });
+			return {
+				payments: result,
+				meta: {
+					totalCount: result.length,
+					limit,
+					offset,
+					executionTimeMs: executionTime,
+					lgpdCompliant: true,
+				},
+			};
+		} catch (error) {
+			secureLogger.error('Failed to get payment history', {
+				userId,
+				executionTimeMs: Date.now() - startTime,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+			throw error;
+		}
+	}
 
-      if (!session.url) {
-        throw new Error('Stripe não retornou URL de checkout válida');
-      }
+	/**
+	 * Create checkout session
+	 */
+	static async createCheckoutSession(
+		userId: string,
+		priceId: string,
+		successUrl?: string,
+		cancelUrl?: string,
+		requestOrigin?: string,
+	) {
+		const stripe = getStripeClient();
+		const db = getHttpClient();
 
-      return {
-        sessionId: session.id,
-        checkoutUrl: session.url,
-        lgpdCompliant: true,
-      };
-    } catch (error) {
-      secureLogger.error('Failed to create checkout session', {
-        userId,
-        priceId,
-        requestOrigin,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
-  }
+		try {
+			// Get user
+			const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
-  /**
-   * Cancel subscription with audit trail
-   */
-  static async cancelSubscription(userId: string, immediate = false) {
-    const stripe = getStripeClient();
-    const db = getHttpClient();
+			if (!user?.email) {
+				throw new Error('Usuário não encontrado ou sem email');
+			}
 
-    try {
-      // Get subscription
-      const [sub] = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, userId))
-        .limit(1);
+			// Get or create customer
+			const customerId = await StripeCustomerService.getOrCreateCustomer(
+				userId,
+				user.email,
+				user.fullName || undefined,
+			);
 
-      if (!sub?.stripeSubscriptionId) {
-        throw new Error('Assinatura não encontrada');
-      }
+			// Generate URLs
+			const baseUrl =
+				requestOrigin ||
+				STRIPE_CONFIG.successUrl?.replace(/\/billing\/success$/, '') ||
+				'https://app.aegiswallet.com.br';
 
-      // Cancel on Stripe
-      if (immediate) {
-        await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
-      } else {
-        await stripe.subscriptions.update(sub.stripeSubscriptionId, {
-          cancel_at_period_end: true,
-        });
-      }
+			const finalSuccessUrl = successUrl || `${baseUrl}/billing/success`;
+			const finalCancelUrl = cancelUrl || `${baseUrl}/billing/cancel`;
 
-      // Update database (will be synced via webhook, but optimistically update)
-      await db
-        .update(subscriptions)
-        .set({
-          status: immediate ? 'canceled' : sub.status,
-          cancelAtPeriodEnd: !immediate,
-          canceledAt: immediate ? new Date() : sub.canceledAt,
-          updatedAt: new Date()
-        })
-        .where(eq(subscriptions.id, sub.id));
+			// Create session
+			const session = await stripe.checkout.sessions.create({
+				customer: customerId,
+				mode: 'subscription',
+				payment_method_types: ['card'],
+				line_items: [
+					{
+						price: priceId,
+						quantity: 1,
+					},
+				],
+				success_url: finalSuccessUrl,
+				cancel_url: finalCancelUrl,
+				allow_promotion_codes: true,
+			});
 
-      secureLogger.info('Subscription cancellation initiated', {
-        userId,
-        subscriptionId: sub.id,
-        immediate,
-        auditTrail: true
-      });
+			if (!session.url) {
+				throw new Error('Stripe não retornou URL de checkout válida');
+			}
 
-      return true;
-    } catch (error) {
-      secureLogger.error('Failed to cancel subscription', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
-  }
+			return {
+				sessionId: session.id,
+				checkoutUrl: session.url,
+				lgpdCompliant: true,
+			};
+		} catch (error) {
+			secureLogger.error('Failed to create checkout session', {
+				userId,
+				priceId,
+				requestOrigin,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+			throw error;
+		}
+	}
 
-  
+	/**
+	 * Cancel subscription with audit trail
+	 */
+	static async cancelSubscription(userId: string, immediate = false) {
+		const stripe = getStripeClient();
+		const db = getHttpClient();
 
-  /**
-   
+		try {
+			// Get subscription
+			const [sub] = await db
+				.select()
+				.from(subscriptions)
+				.where(eq(subscriptions.userId, userId))
+				.limit(1);
+
+			if (!sub?.stripeSubscriptionId) {
+				throw new Error('Assinatura não encontrada');
+			}
+
+			// Cancel on Stripe
+			if (immediate) {
+				await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
+			} else {
+				await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+					cancel_at_period_end: true,
+				});
+			}
+
+			// Update database (will be synced via webhook, but optimistically update)
+			await db
+				.update(subscriptions)
+				.set({
+					status: immediate ? 'canceled' : sub.status,
+					cancelAtPeriodEnd: !immediate,
+					canceledAt: immediate ? new Date() : sub.canceledAt,
+					updatedAt: new Date(),
+				})
+				.where(eq(subscriptions.id, sub.id));
+
+			secureLogger.info('Subscription cancellation initiated', {
+				userId,
+				subscriptionId: sub.id,
+				immediate,
+				auditTrail: true,
+			});
+
+			return true;
+		} catch (error) {
+			secureLogger.error('Failed to cancel subscription', {
+				userId,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+			throw error;
+		}
+	}
+
+	/**
+
 
   /**
    * Map Stripe status to database-compatible status
    */
-  private static mapStripeStatusToDb(stripeStatus: Stripe.Subscription.Status) {
-    const statusMap: Record<string, 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid'> = {
-      'active': 'active',
-      'trialing': 'trialing',
-      'past_due': 'past_due',
-      'canceled': 'canceled',
-      'unpaid': 'unpaid',
-      'incomplete': 'canceled',
-      'incomplete_expired': 'canceled',
-      'paused': 'canceled'
-    };
+	private static mapStripeStatusToDb(stripeStatus: Stripe.Subscription.Status) {
+		const statusMap: Record<string, 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid'> = {
+			active: 'active',
+			trialing: 'trialing',
+			past_due: 'past_due',
+			canceled: 'canceled',
+			unpaid: 'unpaid',
+			incomplete: 'canceled',
+			incomplete_expired: 'canceled',
+			paused: 'canceled',
+		};
 
-    return statusMap[stripeStatus] || 'canceled';
-  }
+		return statusMap[stripeStatus] || 'canceled';
+	}
 
-  /**
-   * Get performance metrics for monitoring
-   */
-  static async getPerformanceMetrics() {
-    try {
-      const result = await sql`
-        SELECT 
+	/**
+	 * Get performance metrics for monitoring
+	 */
+	static async getPerformanceMetrics() {
+		try {
+			const result = await sql`
+        SELECT
           table_name,
           total_records,
           table_size_bytes,
@@ -530,8 +505,8 @@ export class OptimizedStripeSubscriptionService {
         FROM get_billing_table_stats()
       `;
 
-      const indexUsage = await sql`
-        SELECT 
+			const indexUsage = await sql`
+        SELECT
           indexname,
           idx_scan,
           idx_tup_read,
@@ -541,16 +516,16 @@ export class OptimizedStripeSubscriptionService {
         ORDER BY idx_scan DESC
       `;
 
-      return {
-        tableStats: result,
-        indexUsage: indexUsage,
-        timestamp: new Date()
-      };
-    } catch (error) {
-      secureLogger.error('Failed to get performance metrics', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
-  }
+			return {
+				tableStats: result,
+				indexUsage: indexUsage,
+				timestamp: new Date(),
+			};
+		} catch (error) {
+			secureLogger.error('Failed to get performance metrics', {
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+			throw error;
+		}
+	}
 }

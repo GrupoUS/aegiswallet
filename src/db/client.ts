@@ -120,22 +120,49 @@ export const getOrganizationClient = (_organizationId: string) => {
  * Use getPoolClient() when you need transactions or admin operations
  *
  * Note: In browser context, this will be null. Only use on server-side.
+ * Uses lazy initialization to avoid connection issues during module load.
  */
-export const db =
-	typeof window === 'undefined' && process.env.DATABASE_URL
-		? getHttpClient()
-		: (null as unknown as ReturnType<typeof createHttpClient>);
+let cachedDb: ReturnType<typeof createHttpClient> | null = null;
+
+export const db = new Proxy({} as ReturnType<typeof createHttpClient>, {
+	get(_, prop) {
+		if (typeof window !== 'undefined') {
+			throw new Error('Database client cannot be used in browser context');
+		}
+		if (!cachedDb) {
+			if (!process.env.DATABASE_URL) {
+				throw new Error('DATABASE_URL environment variable is not set');
+			}
+			cachedDb = getHttpClient();
+		}
+		return (cachedDb as Record<string | symbol, unknown>)[prop];
+	},
+});
 
 /**
  * Admin database client (Direct connection for migrations/admin)
  * Use this for database migrations, schema changes, and admin operations
  *
  * Note: In browser context, this will be null. Only use on server-side.
+ * Uses lazy initialization to avoid connection issues during module load.
  */
-export const adminDb =
-	typeof window === 'undefined' && process.env.DATABASE_URL_UNPOOLED
-		? getPoolClient()
-		: (null as unknown as ReturnType<typeof createPoolClient>);
+let cachedAdminDb: ReturnType<typeof createPoolClient> | null = null;
+
+export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
+	get(_, prop) {
+		if (typeof window !== 'undefined') {
+			throw new Error('Admin database client cannot be used in browser context');
+		}
+		if (!cachedAdminDb) {
+			const hasDbUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
+			if (!hasDbUrl) {
+				throw new Error('DATABASE_URL_UNPOOLED or DATABASE_URL environment variable is not set');
+			}
+			cachedAdminDb = getPoolClient();
+		}
+		return (cachedAdminDb as Record<string | symbol, unknown>)[prop];
+	},
+});
 
 // ========================================
 // TYPE EXPORTS

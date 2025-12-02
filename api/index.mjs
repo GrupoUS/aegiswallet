@@ -1,5 +1,5 @@
 // AegisWallet API - Bundled for Vercel Node.js Runtime
-// Generated at: 2025-12-02T21:10:04.657Z
+// Generated at: 2025-12-02T21:14:34.270Z
 // Entry: src/server/vercel.ts
 // Vercel expects: export default app (Hono instance)
 

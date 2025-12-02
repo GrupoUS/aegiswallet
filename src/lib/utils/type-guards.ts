@@ -182,7 +182,7 @@ export function isValidUser(user: unknown): user is { id: string; email: string;
 export function safeTypeAssertion<T>(
 	value: unknown,
 	fallback: T,
-	guardFn: (value: unknown) => value is T,
+	guardFn: (input: unknown) => input is T,
 ): T {
 	if (guardFn(value)) {
 		return value as T;

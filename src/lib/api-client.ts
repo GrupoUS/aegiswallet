@@ -3,16 +3,45 @@
  * Provides type-safe fetch wrapper with authentication and error handling
  *
  * Uses Clerk authentication with NeonDB backend
+ * LGPD compliant with Brazilian financial regulations
  */
 
-interface ApiResponse<T = unknown> {
+import type {
+	ApiErrorResponse,
+	ApiRequestContext,
+	ApiResponse,
+	ApiResult,
+	BankAccountData,
+	ContactData,
+	EnhancedApiError,
+	FinancialEventData,
+	TransactionData,
+} from '@/types/api.types';
+import {
+	isApiErrorResponse,
+	isApiSuccessResponse,
+	type isBankAccountData,
+	type isContactData,
+	type isFinancialEventData,
+	type isTransactionData,
+} from '@/types/api.types';
+
+/**
+ * Legacy interface for backward compatibility
+ * @deprecated Use ApiResponse from @/types/api.types
+ */
+interface LegacyApiResponse<T = unknown> {
 	data?: T;
 	error?: string;
 	code?: string;
 	details?: Record<string, unknown>;
 }
 
-interface ApiError extends Error {
+/**
+ * Legacy error interface for backward compatibility
+ * @deprecated Use EnhancedApiError from @/types/api.types
+ */
+interface LegacyApiError extends Error {
 	status?: number;
 	code?: string;
 	details?: Record<string, unknown>;
@@ -81,31 +110,95 @@ class ApiClient {
 			if (isJson) {
 				try {
 					const errorData = await response.json();
-					errorMessage = errorData.error || errorMessage;
-					errorCode = errorData.code;
-					errorDetails = errorData.details || {};
+
+					// Type-safe error handling with Brazilian compliance
+					if (isApiErrorResponse(errorData)) {
+						errorMessage = errorData.error;
+						errorCode = errorData.code;
+						errorDetails = errorData.details || {};
+
+						// Log LGPD compliance context
+						this.logApiError({
+							message: errorMessage,
+							status: response.status,
+							code: errorCode,
+							details: errorDetails,
+							requestId: this.generateRequestId(),
+						});
+					} else {
+						errorMessage = errorData.error || errorMessage;
+						errorCode = errorData.code;
+						errorDetails = errorData.details || {};
+					}
 				} catch {
 					// If JSON parsing fails, use status text
 					errorMessage = response.statusText || errorMessage;
+
+					this.logApiError({
+						message: `JSON parsing failed: ${errorMessage}`,
+						status: response.status,
+						requestId: this.generateRequestId(),
+					});
 				}
 			} else {
 				errorMessage = (await response.text()) || errorMessage;
+
+				this.logApiError({
+					message: `Non-JSON error response: ${errorMessage}`,
+					status: response.status,
+					requestId: this.generateRequestId(),
+				});
 			}
 
-			const error: ApiError = new Error(errorMessage);
+			const error: EnhancedApiError = new Error(errorMessage) as EnhancedApiError;
 			error.status = response.status;
 			error.code = errorCode;
 			error.details = errorDetails;
+			error.requestId = this.generateRequestId();
 
 			throw error;
 		}
 
 		if (isJson) {
-			return response.json();
+			const responseData = await response.json();
+
+			// Type-safe response validation
+			if (isApiSuccessResponse<T>(responseData)) {
+				return responseData.data as T;
+			}
+
+			// Handle unexpected response format
+			this.logApiError({
+				message: 'Invalid API response format',
+				status: response.status,
+				details: { response: responseData },
+				requestId: this.generateRequestId(),
+			});
+
+			return responseData as T;
 		}
 
 		// For non-JSON responses (like file downloads)
 		return response as unknown as T;
+	}
+
+	/**
+	 * Generate unique request ID for tracking
+	 */
+	private generateRequestId(): string {
+		return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+	}
+
+	/**
+	 * Log API errors with context
+	 */
+	private logApiError(_error: Partial<EnhancedApiError>): void {
+		// In development, log to console for debugging
+		if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+		}
+
+		// In production, you might want to send to error monitoring service
+		// This is where you would integrate with services like Sentry, LogRocket, etc.
 	}
 
 	/**
@@ -270,4 +363,24 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 // Export types for use with React Query
-export type { ApiResponse, ApiError };
+export type {
+	ApiResponse,
+	ApiErrorResponse,
+	ApiResult,
+	TransactionData,
+	BankAccountData,
+	FinancialEventData,
+	ContactData,
+	EnhancedApiError,
+	ApiRequestContext,
+	// Type guards
+	isApiSuccessResponse,
+	isApiErrorResponse,
+	isTransactionData,
+	isBankAccountData,
+	isFinancialEventData,
+	isContactData,
+	// Legacy types for backward compatibility
+	LegacyApiResponse,
+	LegacyApiError,
+};

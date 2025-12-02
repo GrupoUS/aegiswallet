@@ -233,8 +233,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 			return localEvents.filter(
 				(event) =>
 					event.title.toLowerCase().includes(searchLower) ||
-					(event.description && event.description.toLowerCase().includes(searchLower)) ||
-					(event.category && event.category.toLowerCase().includes(searchLower)),
+					event.description?.toLowerCase().includes(searchLower) ||
+					event.category?.toLowerCase().includes(searchLower),
 			);
 		},
 		[localEvents],

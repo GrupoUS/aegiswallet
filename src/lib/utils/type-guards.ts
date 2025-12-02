@@ -26,7 +26,7 @@ export function isValidAmount(value: unknown): value is number {
  * Type guard for valid dates
  */
 export function isValidDate(value: unknown): value is Date {
-	return value instanceof Date && !isNaN(value.getTime());
+	return value instanceof Date && !Number.isNaN(value.getTime());
 }
 
 /**
@@ -182,9 +182,9 @@ export function isValidUser(user: unknown): user is { id: string; email: string;
 export function safeTypeAssertion<T>(
 	value: unknown,
 	fallback: T,
-	validator: (value: unknown) => value is T,
+	guardFn: (value: unknown) => value is T,
 ): T {
-	if (validator(value)) {
+	if (guardFn(value)) {
 		return value as T;
 	}
 	return fallback;
@@ -194,13 +194,16 @@ export function safeTypeAssertion<T>(
  * Type guard for chart items
  */
 export function isValidChartItem(item: unknown): item is { date: string | Date; balance: number } {
+	if (typeof item !== 'object' || item === null || !('date' in item) || !('balance' in item)) {
+		return false;
+	}
+
+	const record = item as Record<string, unknown>;
+	const dateValue = record.date;
+	const balanceValue = record.balance;
+
 	return (
-		typeof item === 'object' &&
-		item !== null &&
-		'date' in item &&
-		'balance' in item &&
-		(typeof (item as any).date === 'string' || (item as any).date instanceof Date) &&
-		typeof (item as any).balance === 'number'
+		(typeof dateValue === 'string' || dateValue instanceof Date) && typeof balanceValue === 'number'
 	);
 }
 

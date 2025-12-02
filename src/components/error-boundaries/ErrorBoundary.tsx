@@ -58,6 +58,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 		// Log error to console in development
 		if (process.env.NODE_ENV === 'development') {
+			// biome-ignore lint/suspicious/noConsole: Intentional console.error for development debugging in error boundary
 			console.error('Error caught by boundary:', error, errorInfo);
 		}
 

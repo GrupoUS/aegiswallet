@@ -195,26 +195,203 @@ parallel_execution:
 - Brazilian compliance requirements assessment
 - Logical reasoning and conclusion formation
 
-## Docker MCP Task Templates
+## Docker MCP Atomic Task Assignment Matrix
 
-### Research Complexity (via Docker MCP)
-
-| Complexity | Time | Parallel | MCP Stack | Brazilian Focus |
-|------------|------|----------|-----------|-----------------|
-| **L1-L3** (Simple) | 15-30 min | Limited | Context7 + Serena | Basic validation |
-| **L4-L6** (Moderate) | 45-90 min | 50% | Context7 + Tavily + Serena | Compliance check |
-| **L7-L8** (Complex) | 2-4 hours | 70% | All MCPs via Docker | Full compliance |
-| **L9-L10** (Mission) | 4-8 hours | 80% | Full MCP stack | Regulatory deep-dive |
-
-### Docker MCP Task Template
+### L1-L3 (Simple Research) - 15-30 min
 ```yaml
-research_task:
-  complexity: "L1-L10"
-  mcps_via_docker: ["context7", "tavily", "sequential-thinking", "neon", "playwright", "fetch"]
-  brazilian_compliance: true
-  parallel_execution: true
-  quality_gate: "≥95% cross-validation"
-  target_latency: "<3ms via Docker Gateway"
+atomic_tasks:
+  task_1_basic_research:
+    primary_agent: "apex-researcher"
+    support_agents: []
+    skills: []
+    mcps: ["context7", "serena"]
+    brazilian_compliance: "basic_check"
+    deliverable: "Quick research summary (≤2 pages)"
+
+  task_2_codebase_validation:
+    primary_agent: "apex-dev"
+    support_agents: []
+    skills: []
+    mcps: ["serena"]
+    brazilian_compliance: "basic_check"
+    deliverable: "Implementation feasibility note"
+```
+
+### L4-L6 (Moderate Research) - 45-90 min
+```yaml
+atomic_tasks:
+  task_1_comprehensive_research:
+    primary_agent: "apex-researcher"
+    support_agents: ["apex-dev"]
+    skills: ["brazilian-fintech-compliance"]
+    mcps: ["context7", "tavily", "serena", "fetch"]
+    brazilian_compliance: "full_validation"
+    deliverable: "Research analysis (≤5 pages)"
+
+  task_2_feasibility_analysis:
+    primary_agent: "apex-dev"
+    support_agents: ["database-specialist"]
+    skills: []
+    mcps: ["serena", "neon"]
+    brazilian_compliance: "compliance_check"
+    deliverable: "Implementation roadmap"
+
+  task_3_security_validation:
+    primary_agent: "code-reviewer"
+    support_agents: []
+    skills: ["webapp-testing"]
+    mcps: ["context7", "tavily"]
+    brazilian_compliance: "full_validation"
+    deliverable: "Security assessment report"
+```
+
+### L7-L8 (Complex Research) - 2-4 hours
+```yaml
+atomic_tasks:
+  task_1_regulatory_deep_dive:
+    primary_agent: "apex-researcher"
+    support_agents: ["code-reviewer", "database-specialist"]
+    skills: ["brazilian-fintech-compliance", "webapp-testing"]
+    mcps: ["context7", "tavily", "serena", "fetch", "sequential-thinking"]
+    brazilian_compliance: "expert_validation"
+    deliverable: "Regulatory compliance document (≤8 pages)"
+
+  task_2_architecture_analysis:
+    primary_agent: "apex-dev"
+    support_agents: ["database-specialist"]
+    skills: ["aegis-architect"]
+    mcps: ["serena", "neon", "context7"]
+    brazilian_compliance: "compliance_check"
+    deliverable: "System architecture blueprint"
+
+  task_3_database_compliance:
+    primary_agent: "database-specialist"
+    support_agents: ["code-reviewer"]
+    skills: ["brazilian-fintech-compliance"]
+    mcps: ["serena", "neon", "context7"]
+    brazilian_compliance: "lgpd_expert_validation"
+    deliverable: "Database compliance matrix"
+
+  task_4_ui_ux_validation:
+    primary_agent: "apex-ui-ux-designer"
+    support_agents: ["code-reviewer"]
+    skills: ["webapp-testing"]
+    mcps: ["serena", "context7", "playwright"]
+    brazilian_compliance: "wcag_aa_plus_validation"
+    deliverable: "Accessibility audit report"
+
+  task_5_integration_testing:
+    primary_agent: "apex-dev"
+    support_agents: ["apex-ui-ux-designer"]
+    skills: ["webapp-testing"]
+    mcps: ["serena", "playwright", "neon"]
+    brazilian_compliance: "end_to_end_validation"
+    deliverable: "Integration test plan"
+```
+
+### L9-L10 (Mission-Critical) - 4-8 hours
+```yaml
+atomic_tasks:
+  task_1_strategic_research:
+    primary_agent: "apex-researcher"
+    support_agents: ["product-architect", "code-reviewer"]
+    skills: ["brazilian-fintech-compliance", "product-management"]
+    mcps: ["context7", "tavily", "serena", "fetch", "sequential-thinking"]
+    brazilian_compliance: "mission_critical_validation"
+    deliverable: "Strategic research intelligence (≤12 pages)"
+
+  task_2_system_architecture:
+    primary_agent: "apex-dev"
+    support_agents: ["database-specialist", "apex-ui-ux-designer"]
+    skills: ["aegis-architect", "ai-data-analyst"]
+    mcps: ["serena", "neon", "context7", "playwright"]
+    brazilian_compliance: "comprehensive_validation"
+    deliverable: "Production-ready architecture spec"
+
+  task_3_security_compliance:
+    primary_agent: "code-reviewer"
+    support_agents: ["database-specialist", "apex-researcher"]
+    skills: ["webapp-testing", "brazilian-fintech-compliance"]
+    mcps: ["context7", "tavily", "serena", "fetch"]
+    brazilian_compliance: "penetration_testing_validation"
+    deliverable: "Security compliance certification"
+
+  task_4_database_operations:
+    primary_agent: "database-specialist"
+    support_agents: ["apex-dev", "code-reviewer"]
+    skills: ["brazilian-fintech-compliance"]
+    mcps: ["serena", "neon", "context7", "fetch"]
+    brazilian_compliance: "data_governance_validation"
+    deliverable: "Database operations manual"
+
+  task_5_user_experience:
+    primary_agent: "apex-ui-ux-designer"
+    support_agents: ["apex-researcher"]
+    skills: ["webapp-testing", "brazilian-fintech-compliance"]
+    mcps: ["serena", "context7", "playwright", "fetch"]
+    brazilian_compliance: "user_testing_validation"
+    deliverable: "UX research & testing report"
+
+  task_6_product_strategy:
+    primary_agent: "product-architect"
+    support_agents: ["apex-researcher"]
+    skills: ["product-management", "brazilian-fintech-compliance"]
+    mcps: ["serena", "sequential-thinking", "tavily"]
+    brazilian_compliance: "market_validation"
+    deliverable: "Product strategy & roadmap"
+
+  task_7_implementation_roadmap:
+    primary_agent: "apex-dev"
+    support_agents: ["database-specialist", "apex-ui-ux-designer"]
+    skills: ["ai-data-analyst"]
+    mcps: ["serena", "neon", "context7", "playwright"]
+    brazilian_compliance: "milestone_validation"
+    deliverable: "Detailed implementation roadmap"
+```
+
+## Brazilian Compliance Skill Matrix
+
+### Automatic Skill Activation by Research Type
+```yaml
+brazilian_fintech_compliance:
+  triggers: ["PIX", "LGPD", "BCB", "fintech", "financial"]
+  agents: ["apex-researcher", "code-reviewer", "database-specialist"]
+  validation_level: "Expert (≥95% accuracy)"
+  
+webapp_testing:
+  triggers: ["testing", "validation", "accessibility", "performance"]
+  agents: ["apex-ui-ux-designer", "code-reviewer", "apex-dev"]
+  validation_level: "WCAG 2.1 AA+ + Brazilian standards"
+
+product_management:
+  triggers: ["market", "competitive", "roadmap", "strategy"]
+  agents: ["apex-researcher", "product-architect"]
+  validation_level: "Market research (≥90% accuracy)"
+
+ai_data_analyst:
+  triggers: ["statistics", "metrics", "performance", "analytics"]
+  agents: ["apex-dev", "database-specialist"]
+  validation_level: "Data analysis (≥85% accuracy)"
+```
+
+## Parallel Execution Coordination
+
+### Phase-Based Task Scheduling
+```yaml
+phase_1_discovery (parallel):
+  - apex-researcher: [context7, tavily, fetch]
+  - database-specialist: [serena, neon] (if database scope)
+  - code-reviewer: [context7] (if security scope)
+
+phase_2_analysis (parallel):
+  - apex-dev: [serena, context7, neon, playwright]
+  - apex-ui-ux-designer: [serena, context7, playwright] (if UI scope)
+  - product-architect: [sequential-thinking, serena] (if strategy scope)
+
+phase_3_validation (parallel):
+  - code-reviewer: [context7, tavily, fetch]
+  - database-specialist: [serena, neon] (if database validation)
+  - apex-ui-ux-designer: [playwright, serena] (if UI validation)
 ```
 
 ## Docker MCP Research Deliverables
@@ -232,42 +409,27 @@ research_task:
 - **Database Compliance**: Neon PostgreSQL validation + security checks
 - **Testing Validation**: Playwright accessibility + performance testing
 
-## Quality Gates
-
-### Research Validation
-- ≥95% cross-source validation required
-- Minimum 3 authoritative sources
-- Explicit confidence scoring
-- Clear identification of research gaps
-
-### Implementation Readiness
-- Serena validated integration complexity
-- Risk assessment with mitigation strategies
-- Timeline and resource requirements
-- Quality validation specifications
-
-## Docker MCP Research Activation
+## Quick Reference Templates
 
 ### Auto-Activation Protocol
 ```yaml
 triggers: ["/research", "/pesquisar", "spec - research"]
 routing: "Docker MCP Gateway orchestration"
-priority: "HIGHEST - bypass all routing"
 mcp_stack: ["context7", "tavily", "sequential-thinking", "neon", "playwright", "fetch"]
-quality_gate: "≥95% cross-validation via Docker Gateway"
-target_latency: "<3ms for all MCP calls"
-brazilian_compliance: "Mandatory via context7 + tavily"
+quality_gate: "≥95% cross-validation"
+target_latency: "<3ms"
+brazilian_compliance: "Mandatory"
 ```
 
-### Quick Reference Template
+### Example Usage
 ```
-/research "[Brazilian fintech topic]"
+/research "PIX transaction validation patterns"
 
-→ Docker MCP Gateway execution:
-- Context7: Official LGPD/BCB docs
-- Tavily: Current market patterns
-- Serena: Codebase analysis
-- Sequential-thinking: Multi-perspective synthesis
-- Fetch: Real-time regulatory updates
-- Output: .factory/docs/[date]-[topic].md (≤400 lines)
+→ Docker MCP execution:
+- Context7: BCB official specs
+- Tavily: Current fintech implementations
+- Serena: Existing codebase patterns
+- Sequential-thinking: Multi-perspective analysis
+- Neon: PostgreSQL transaction patterns
+- Output: .factory/docs/2025-12-02-pix-transaction-validation.md
 ```

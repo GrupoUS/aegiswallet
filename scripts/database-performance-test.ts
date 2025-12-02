@@ -596,14 +596,15 @@ export class BillingDatabasePerformanceTest {
 			for (const user of testUsers) {
 				const startTime = performance.now();
 
-					try {
-						// Test LGPD compliance queries
-						// Note: retentionUntil and dataClassification columns removed from schema
-						const result = await this.db
-							.select()
-							.from(subscriptions)
-							.where(eq(subscriptions.userId, user.id))
-							.limit(1);					const endTime = performance.now();
+				try {
+					// Test LGPD compliance queries
+					// Note: retentionUntil and dataClassification columns removed from schema
+					const result = await this.db
+						.select()
+						.from(subscriptions)
+						.where(eq(subscriptions.userId, user.id))
+						.limit(1);
+					const endTime = performance.now();
 					executionTimes.push(endTime - startTime);
 
 					if (result.length === 0) {

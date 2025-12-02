@@ -21,7 +21,6 @@ interface SpeechRecognition extends EventTarget {
 	onstart: (() => void) | null;
 }
 
-// biome-ignore lint/suspicious/noRedeclare: SpeechRecognition constructor for Web Speech API
 declare let SpeechRecognition: {
 	prototype: SpeechRecognition;
 	new (): SpeechRecognition;
@@ -69,6 +68,7 @@ interface SpeechGrammar {
 }
 
 // Used in src/types/voice.ts for browser speech recognition API
+// biome-ignore lint/correctness/noUnusedVariables: Global Window interface augmentation
 interface Window {
 	// biome-ignore lint/style/useNamingConvention: Web Speech API standard naming
 	SpeechRecognition: {
@@ -100,6 +100,7 @@ interface ImportMetaEnv {
 	readonly SSR: boolean;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Global ImportMeta interface augmentation
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }

@@ -171,29 +171,10 @@ parallel_execution:
 ```
 
 ### Docker MCP Performance Optimization
-- **Target Latency**: <3ms for MCP calls through Docker Gateway
-- **Context Management**: Automatic deduplication via Docker caching
+- **Target Latency**: <3ms via Docker Gateway
+- **Context Management**: Automatic deduplication via Docker
 - **Parallel Execution**: Optimized concurrent MCP calls
 - **Resource Isolation**: Built-in Docker container security
-- **Payload Optimization**: Gateway-level JSON response optimization
-
-### Context7 (Documentation Intelligence)
-- Framework docs and best practices
-- Brazilian LGPD/BCB compliance documentation
-- Security guidelines and requirements
-- Installation and configuration patterns
-
-### Tavily (Web Intelligence)
-- Multi-source information gathering
-- Community best practices validation
-- Real-world implementation experiences
-- Expert insights and tutorials
-
-### Sequential Thinking (Cognitive Analysis)
-- Multi-perspective analysis synthesis
-- Pattern recognition and relationship mapping
-- Brazilian compliance requirements assessment
-- Logical reasoning and conclusion formation
 
 ## Docker MCP Atomic Task Assignment Matrix
 

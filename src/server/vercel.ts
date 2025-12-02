@@ -11,6 +11,6 @@
  * Vercel expects: export default app (Hono instance)
  */
 
-// Re-export the main app directly
-// This is the simplest approach that works with esbuild bundling
-export { default } from './index';
+import app from './index';
+
+export default app;

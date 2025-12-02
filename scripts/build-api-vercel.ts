@@ -38,7 +38,9 @@ async function buildApi() {
 			// Node.js runtime (required for Clerk, Drizzle with pooling)
 			platform: 'node',
 			target: 'node20',
-			format: 'esm', // ESM for Vercel (export default app)
+			// Use CommonJS format to avoid "Dynamic require" errors
+			// Some dependencies like Stripe use CommonJS internally
+			format: 'cjs',
 			sourcemap: false,
 			minify: true,
 			// Keep function names for better debugging in Vercel logs

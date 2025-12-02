@@ -20,6 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useSubscription } from '@/hooks/billing';
 import { RouteGuard } from '@/lib/auth/route-guard';
 import { cn } from '@/lib/utils';
+import type { SubscriptionResponse } from '@/types/billing';
 
 // FAQ data with Brazilian Portuguese content
 const faqItems = [
@@ -130,7 +131,7 @@ const SubscriptionStatusSection = ({
 	subscription,
 	subscriptionStatusId,
 }: {
-	subscription: any;
+	subscription: SubscriptionResponse | undefined;
 	subscriptionStatusId: string;
 }) => (
 	<Card className="border-2 border-primary/20" role="region" aria-labelledby={subscriptionStatusId}>

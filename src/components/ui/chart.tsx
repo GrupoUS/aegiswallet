@@ -207,9 +207,8 @@ const ChartTooltipContent = React.forwardRef<
 							const chartItem = item as { type?: string };
 							return chartItem.type !== 'none';
 						})
-						.map((item: unknown, index: number) => {
-							// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
-							const chartItem = item as any;
+						.map((item: ChartPayload, index: number) => {
+							const chartItem = item;
 							const key = `${nameKey || chartItem.name || chartItem.dataKey || 'value'}`;
 							const itemConfig = getPayloadConfigFromPayload(config, chartItem, key);
 							const indicatorColor = color || chartItem.payload?.fill || chartItem.color;
@@ -223,7 +222,7 @@ const ChartTooltipContent = React.forwardRef<
 									)}
 								>
 									{formatter && chartItem?.value !== undefined && chartItem.name ? (
-										formatter(chartItem.value, chartItem.name, chartItem, index, chartItem.payload)
+										formatter(chartItem.value, chartItem.name, chartItem, index, payload || [])
 									) : (
 										<>
 											{itemConfig?.icon ? (
@@ -307,16 +306,18 @@ const ChartLegendContent = React.forwardRef<
 			)}
 		>
 			{payload
-				// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
-				.filter((item: any) => item.type !== 'none')
-				// biome-ignore lint/suspicious/noExplicitAny: Recharts payload has complex dynamic types
-				.map((item: any) => {
+				.filter((item: unknown) => {
+					const chartItem = item as { type?: string };
+					return chartItem.type !== 'none';
+				})
+				.map((item: unknown, _index: number) => {
+					const _chartItem = item as ChartPayload;
 					const key = `${nameKey || item.dataKey || 'value'}`;
 					const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
 					return (
 						<div
-							key={item.value}
+							key={item.name || item.dataKey || 'value'}
 							className={cn(
 								'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground',
 							)}
@@ -327,7 +328,7 @@ const ChartLegendContent = React.forwardRef<
 								<div
 									className="h-2 w-2 shrink-0 rounded-[2px]"
 									style={{
-										backgroundColor: item.color,
+										backgroundColor: indicatorColor,
 									}}
 								/>
 							)}

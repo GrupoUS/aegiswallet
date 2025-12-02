@@ -1,24 +1,24 @@
 import { Hono } from 'hono';
-import { handle } from 'hono/vercel';
 
 // Minimal Hono app for Vercel diagnostics
-const app = new Hono();
+// Vercel expects: export default app (NOT handle(app))
+const app = new Hono().basePath('/api');
 
-app.get('/api/health', (c) =>
+app.get('/health', (c) =>
 	c.json({
 		status: 'ok',
 		timestamp: new Date().toISOString(),
 		environment: 'vercel',
-	})
+	}),
 );
 
-app.get('/api/v1/health', (c) =>
+app.get('/v1/health', (c) =>
 	c.json({
 		status: 'ok',
 		timestamp: new Date().toISOString(),
 		environment: 'vercel',
 		version: 'v1',
-	})
+	}),
 );
 
 app.all('*', (c) =>
@@ -28,8 +28,8 @@ app.all('*', (c) =>
 			path: c.req.path,
 			method: c.req.method,
 		},
-		404
-	)
+		404,
+	),
 );
 
-export default handle(app);
+export default app;

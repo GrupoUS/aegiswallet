@@ -27,18 +27,18 @@ async function buildApi() {
 	console.log('🔨 Building API for Vercel...');
 	console.log(`   Entry: src/server/vercel.ts`);
 	console.log(`   Output: api/index.js`);
-		console.log(`   Runtime: Node.js 20.x`);
+	console.log(`   Runtime: Node.js 20.x`);
 
-		try {
-			const result = await build({
-				// Use the Vercel wrapper as entry point (includes full Hono app with all routes)
-				entryPoints: [path.join(rootDir, 'src', 'server', 'vercel.ts')],
-				bundle: true,
-				outfile: path.join(rootDir, 'api', 'index.js'),
+	try {
+		const result = await build({
+			// Use the Vercel wrapper as entry point (includes full Hono app with all routes)
+			entryPoints: [path.join(rootDir, 'src', 'server', 'vercel.ts')],
+			bundle: true,
+			outfile: path.join(rootDir, 'api', 'index.js'),
 			// Node.js runtime (required for Clerk, Drizzle with pooling)
 			platform: 'node',
 			target: 'node20',
-			format: 'cjs', // CommonJS for maximum Node.js compatibility
+			format: 'esm', // ESM for Vercel (export default app)
 			sourcemap: false,
 			minify: true,
 			// Keep function names for better debugging in Vercel logs

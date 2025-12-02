@@ -25,8 +25,6 @@ import { getPlanByStripePrice, STRIPE_CONFIG } from '@/lib/stripe/config';
  * - Error handling robusto
  */
 export class OptimizedStripeSubscriptionService {
-  private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-  private static readonly BATCH_SIZE = 100;
 
   /**
    * Get subscription with optimized query using covering indexes
@@ -116,16 +114,10 @@ export class OptimizedStripeSubscriptionService {
           executionTimeMs: executionTime 
         });
         
-        // Track data access for LGPD compliance
-        await this.trackDataAccess('subscriptions', 'no_record', userId, 'read');
-        
         return null;
       }
 
-      const { subscription, plan } = result[0];
-
-      // Update access tracking for LGPD compliance
-      await this.trackDataAccess('subscriptions', subscription.id, userId, 'read');
+      const { subscription } = result[0];
 
       // Log performance metrics
       secureLogger.info('Retrieved subscription for user', {
@@ -139,7 +131,7 @@ export class OptimizedStripeSubscriptionService {
 
       return {
         subscription,
-        plan: plan || null,
+        plan: null,
         meta: {
           executionTimeMs: executionTime,
           cacheKey: `subscription:${userId}`,
@@ -233,11 +225,11 @@ export class OptimizedStripeSubscriptionService {
           .where(eq(subscriptions.id, existingSub.id))
           .returning();
       } else {
-        // Create new subscription
+        // Get user from customerId
         const [userRecord] = await db
           .select()
           .from(users)
-          .where(eq(users.id, existingSub?.userId || 'unknown'))
+          .where(eq(users.id, customerId))
           .limit(1);
         
         if (!userRecord) {
@@ -342,9 +334,6 @@ export class OptimizedStripeSubscriptionService {
         .offset(offset);
 
       const executionTime = Date.now() - startTime;
-
-      // Track data access for LGPD compliance
-      await this.trackBillingDataAccess('payment_history', userId, 'read');
 
       secureLogger.info('Retrieved payment history', {
         userId,
@@ -506,32 +495,7 @@ export class OptimizedStripeSubscriptionService {
   
 
   /**
-   * Track billing data access (batch operation)
-   */
-  private static async trackBillingDataAccess(
-    tableName: string,
-    userId: string,
-    accessType: 'read' | 'write' | 'update' = 'read'
-  ) {
-    try {
-      // Use a simpler approach for batch tracking
-      if (tableName === 'payment_history') {
-        await sql`
-          UPDATE payment_history
-          SET 
-            access_count = access_count + 1,
-            last_accessed_at = now()
-          WHERE user_id = ${userId}
-        `;
-      }
-    } catch (error) {
-      secureLogger.warn('Failed to track billing data access', {
-        tableName,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  }
+   
 
   /**
    * Map Stripe status to database-compatible status
@@ -555,8 +519,6 @@ export class OptimizedStripeSubscriptionService {
    * Get performance metrics for monitoring
    */
   static async getPerformanceMetrics() {
-    const db = getHttpClient();
-    
     try {
       const result = await sql`
         SELECT 

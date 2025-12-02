@@ -1,14 +1,35 @@
+import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 
-console.log('[Vercel] Loading AegisWallet API...');
+// Minimal Hono app for Vercel diagnostics
+const app = new Hono();
 
-import app from './index';
+app.get('/api/health', (c) =>
+	c.json({
+		status: 'ok',
+		timestamp: new Date().toISOString(),
+		environment: 'vercel',
+	})
+);
 
-console.log('[Vercel] App loaded successfully');
+app.get('/api/v1/health', (c) =>
+	c.json({
+		status: 'ok',
+		timestamp: new Date().toISOString(),
+		environment: 'vercel',
+		version: 'v1',
+	})
+);
 
-export const config = {
-	runtime: 'nodejs',
-	maxDuration: 30,
-};
+app.all('*', (c) =>
+	c.json(
+		{
+			error: 'Not Found',
+			path: c.req.path,
+			method: c.req.method,
+		},
+		404
+	)
+);
 
 export default handle(app);

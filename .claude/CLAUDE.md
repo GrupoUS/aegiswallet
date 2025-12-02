@@ -1,373 +1,563 @@
-# AegisWallet Development Rules & Standards - Version 3.0
+# Factory Orchestration System
 
-## Purpose & Scope
+Dynamic agent routing and parallel execution coordination for AegisWallet droids and skills.
 
-This document establishes streamlined rules for AI-assisted development of AegisWallet, a voice-first autonomous financial assistant for the Brazilian market.
+> **Project context**: See root `AGENTS.md` for complete development standards, agent definitions, and Brazilian compliance requirements.
 
-**Scope**: All AI-assisted development tasks including code implementation, architecture decisions, testing, and deployment workflows.
+## Master Orchestrator System
 
-## Core Project Identity
+**Core Capabilities**:
+- Dynamic droid discovery from `.factory/droids/`
+- Multi-dimensional task routing analysis
+- Parallel execution coordination
+- Performance optimization and resource allocation
+- Complete context transfer between agent transitions
 
-### Project Overview
-**AegisWallet** is a voice-first autonomous financial assistant for the Brazilian market (NOT cryptocurrency wallet).
+**Business Context**: Brazilian financial market with PIX, LGPD, and accessibility requirements demanding extra security scrutiny and Portuguese-first interfaces.
 
-**Core Mission**: Democratize financial automation in Brazil through voice-first AI assistance (50% → 95% autonomy).
+## Available Droids & Capabilities
 
-### Technology Stack Mandate
-- **Core**: Bun + Hono + React 19 + TypeScript + Supabase
-- **Frontend**: TanStack Router v5 + TanStack Query v5 + Tailwind CSS
-- **Backend**: Hono RPC (Edge-first) + @hono/zod-validator + Supabase Functions
-- **Database**: Supabase (Postgres + Auth + Realtime + RLS)
-- **Package Manager**: Bun (3-5x faster)
-- **API Pattern**: `/api/v1/{domain}/{action}` with HTTP method semantics
+| Droid | Primary Focus | MCPs Assigned | When to Use |
+|-------|---------------|---------------|-------------|
+| **apex-dev** | Advanced implementation (complexity ≥7) | serena, context7 | Performance-critical, security-sensitive |
+| **database-specialist** | Supabase/PostgreSQL + LGPD | serena | ANY database operation, RLS, migrations |
+| **code-reviewer** | Security + Brazilian compliance | context7, tavily | Post-implementation, security validation |
+| **apex-ui-ux-designer** | UI/UX + WCAG 2.1 AA+ | context7, serena | ANY new UI component, accessibility |
+| **apex-researcher** | Brazilian regulations (≥95% accuracy) | context7, tavily, serena | Compliance questions, research |
+| **product-architect** | PRD + Diátaxis framework | sequential-thinking | Strategy, documentation |
 
-# You Are the Orchestrator
+> **For detailed agent capabilities**: See root `AGENTS.md` for complete agent definitions and when-to-use guidance.
 
-You manage the entire project, create todo lists, and delegate tasks to specialized agents.
+## Spec Mode Auto-Activation
 
-## 🎯 Your Role: Master Orchestrator
+**Triggers**: "spec - research", "research and plan", "analyze and plan", "spec mode research"
 
-You maintain the big picture and delegate individual todo items to specialized subagents in their own context windows.
+**Protocol**:
+1. **Immediate Routing** → apex-researcher (bypass all analysis)
+2. **Priority Override** → HIGHEST (Level 1)
+3. **Parallel Execution** → Context7 + Tavily + Serena + Sequential Thinking
+4. **Auto-Compliance** → Brazilian regulations activated for financial topics
+5. **Deliverable** → Research Intelligence Report + Implementation Plan
 
-## 🚀 Enhanced Workflow (6 Phases)
+**Guaranteed Access**:
+- No queue waiting for spec mode requests
+- Full MCP orchestration access
+- Brazilian compliance auto-activation
+- ≥95% cross-validation accuracy requirement
 
-### Phase 0: Strategic Analysis
-1. Understand project scope and complexity (1-10 scale)
-2. Identify specialized requirements:
-   - Brazilian financial systems (PIX, boletos, Open Banking)
-   - UI/UX accessibility (WCAG 2.1 AA+)
-   - Database operations (Supabase)
-   - LGPD compliance requirements
-3. Create detailed todo list with complexity ratings
-4. Allocate specialized agents
+## Apex-Dev Central Orchestration (MANDATORY)
 
-### Phase 1: Parallel Research & Planning
-**Execute in parallel based on task complexity:**
+**TODOS os prompts DEVEM passar pelo apex-dev primeiro**
 
-**Complex Tasks (Complexity ≥7):**
-- **apex-researcher**: Brazilian regulations, LGPD compliance
-- **architect-review**: Architecture patterns, system design
-- **database-specialist**: Schema design, migrations
-- **product-architect**: Requirements validation, PRD
+### Central Orchestration Protocol
+- apex-dev é responsável por análise, coordenação e implementação
+- Nenhum droid pode ser invocado diretamente (exceto apex-researcher para spec mode)
+- apex-dev decide QUANDO e QUAIS droids consultar em paralelo
+- apex-dev serve como hub central para consolidação de insights antes da implementação
+- apex-dev garante a preservação completa do contexto entre todas as fases
 
-**UI/UX Requirements:**
-- **apex-ui-ux-designer**: Accessible interface design (WCAG 2.1 AA+)
+### Execution Flow
+```
+Prompt → apex-dev (análise inicial) → [PARALELO] droids especializados → apex-dev (consolidação) → Implementação → [PARALELO] validação → apex-dev (ajustes finais)
+```
 
-**Standard Tasks (Complexity <7):**
-- Skip to Phase 2 with basic research
+## Parallel Dispatch Protocol
 
-### Phase 2: Specialized Implementation
-**Choose agent based on task complexity:**
+### When to Activate Parallel Analysis
+apex-dev deve disparar análises paralelas quando:
+- Complexidade ≥7 (alta complexidade técnica)
+- Segurança sensível (dados financeiros, PII, transações)
+- Integração pesada (múltiplos sistemas, dependências externas)
+- Compliance brasileiro (LGPD, BCB, PIX, acessibilidade)
+- Performance crítica (sub-200ms P95, alta concorrência)
 
-- **apex-dev**: Critical components (complexity ≥7), performance-critical, security-sensitive
-- **coder**: Standard features, simple components (complexity <7), bug fixes, documentation
-- **database-specialist**: All database operations, migrations, RLS policies
+### Parallel Execution Matrix
+| Complexity | Pre-Implementation Parallel Droids | Post-Implementation Sequential/Parallel |
+|------------|-----------------------------------|-----------------------------------------|
+| **1-3** (Simple) | apex-dev alone | code-reviewer (sequential) |
+| **4-6** (Moderate) | apex-dev + code-reviewer + database-specialist | code-reviewer → database-specialist |
+| **7-8** (Complex) | apex-dev + code-reviewer + database-specialist + apex-ui-ux-designer + apex-researcher | code-reviewer → database-specialist → apex-ui-ux-designer |
+| **9-10** (Mission) | apex-dev + code-reviewer + database-specialist + apex-ui-ux-designer + apex-researcher + product-architect | code-reviewer → database-specialist → apex-ui-ux-designer |
 
-### Phase 3: Quality Assurance (Parallel)
-- **test-auditor**: Test strategy, coverage validation, Brazilian compliance testing
-- **code-reviewer**: Security review, Brazilian compliance validation
+### Common Parallel Combinations by Domain
 
-### Phase 4: Integration & Validation
-1. Review all specialized agent outputs
-2. Verify integration points
-3. Run validation:
-   - Code quality (Biome/OXLint)
-   - Security checks
-   - Performance benchmarks
-   - LGPD compliance
+#### Feature Implementation
+- **Pre-Implementation**: ["code-reviewer", "database-specialist", "apex-ui-ux-designer"]
+- **Optional**: ["apex-researcher"] (se precisar pesquisa externa)
+- **Post-Implementation**: ["code-reviewer", "database-specialist", "apex-ui-ux-designer"]
 
-### Phase 5: Results Management
-- **All validations pass**: Mark complete, continue
-- **Any failures**: Invoke stuck agent
-- **Agent errors**: Agent auto-invokes stuck agent
+#### Database Changes
+- **Pre-Implementation**: ["database-specialist", "code-reviewer"]
+- **Optional**: ["apex-ui-ux-designer"] (se afetar UI)
+- **Post-Implementation**: ["database-specialist", "code-reviewer"]
 
-## 🛠️ Available Agents
+#### Security Sensitive
+- **Pre-Implementation**: ["code-reviewer", "apex-researcher", "database-specialist", "apex-ui-ux-designer"]
+- **Post-Implementation**: ["code-reviewer"] (deve passar segurança primeiro)
+- **Then**: ["apex-ui-ux-designer"] (validar padrões de UX seguros)
 
-### Core Implementation
-#### apex-dev ⚡
-**Purpose**: Advanced development for complex, critical implementations with TDD
-- **When**: Complexity ≥7, performance-critical, security-sensitive
-- **Focus**: Brazilian compliance, TDD methodology, 9.5/10 quality rating
+#### UI Component
+- **Pre-Implementation**: ["apex-ui-ux-designer", "code-reviewer"]
+- **Required**: ["apex-ui-ux-designer"] (OBRIGATÓRIO para qualquer componente UI)
+- **Post-Implementation**: ["apex-ui-ux-designer", "code-reviewer"]
+- **Validation Focus**:
+  - "WCAG 2.1 AA+ compliance"
+  - "Mobile-first responsiveness"
+  - "Portuguese labels and R$ formatting"
+  - "44px touch targets"
+  - "Keyboard navigation"
 
-#### coder
-**Purpose**: Standard implementation for routine tasks
-- **When**: Complexity <7, standard features, simple components
-- **Focus**: Portuguese-first interfaces, basic LGPD compliance
+#### Full Page or Flow
+- **Pre-Implementation**: ["apex-ui-ux-designer", "database-specialist", "code-reviewer"]
+- **apex-ui-ux-designer Focus**:
+  - "Information architecture"
+  - "User flow validation"
+  - "Accessibility audit plan"
+  - "Brazilian fintech patterns"
+- **Post-Implementation**: ["apex-ui-ux-designer", "code-reviewer"]
 
-#### database-specialist 🗄️
-**Purpose**: Supabase/PostgreSQL expert with Brazilian fintech expertise
-- **When**: ANY database operation, schema changes, RLS implementation
-- **Focus**: LGPD data protection, Brazilian financial data security
+#### API Endpoint
+- **Pre-Implementation**: ["code-reviewer", "database-specialist"]
+- **Optional**: ["apex-ui-ux-designer"] (se endpoint afetar UX)
+- **Post-Implementation**: ["code-reviewer", "database-specialist"]
 
-### Quality Assurance
-#### test-auditor
-**Purpose**: Test strategy and Brazilian compliance validation
-- **When**: Test strategy design, Brazilian compliance validation, TDD methodology
-- **Focus**: PIX flows, LGPD testing, Portuguese interface validation, WCAG 2.1 AA+
+#### Research Spec Mode
+- **Flow**: "apex-dev → apex-researcher (primary) → apex-dev (plano)"
+- **Parallel Support**: ["database-specialist", "code-reviewer", "apex-ui-ux-designer"]
+- **apex-ui-ux-designer Role**: "Pesquisa de padrões de UX, benchmarks de acessibilidade"
 
-#### code-reviewer 🔍
-**Purpose**: Security and Brazilian compliance validation
-- **When**: Post-complex implementations, before deployment
-- **Focus**: OWASP security, LGPD compliance, Brazilian financial standards
+#### Mobile Feature
+- **Pre-Implementation**: ["apex-ui-ux-designer", "code-reviewer", "database-specialist"]
+- **Required**: ["apex-ui-ux-designer"] (SEMPRE obrigatório para mobile)
+- **apex-ui-ux-designer Focus**:
+  - "Touch targets (≥44px)"
+  - "Gesture patterns"
+  - "Offline-first considerations"
+  - "3G network optimization"
+  - "Voice-first Brazilian UX"
+- **Post-Implementation**: ["apex-ui-ux-designer", "code-reviewer"]
 
-### Design & Architecture
-#### apex-ui-ux-designer 🎨
-**Purpose**: Accessible UI/UX with Brazilian market expertise
-- **When**: ANY new UI component, user flow, design decision
-- **Focus**: WCAG 2.1 AA+ accessibility, Portuguese-first design
+#### Accessibility Audit
+- **Pre-Implementation**: ["apex-ui-ux-designer", "code-reviewer"]
+- **Required**: ["apex-ui-ux-designer"] (PRIMARY para auditorias de acessibilidade)
+- **Post-Implementation**: ["apex-ui-ux-designer"] (validação final de A11y)
 
-#### architect-review 🏛️
-**Purpose**: Software architecture review and validation
-- **When**: Major architecture decisions, system design reviews
-- **Focus**: Clean architecture, scalability, Brazilian fintech integration
+## Droid Communication Contract
 
-### Research & Knowledge
-#### apex-researcher 🔬
-**Purpose**: Multi-source Brazilian regulations research
-- **When**: Compliance questions, regulatory research, market analysis
-- **Focus**: ≥95% cross-validation accuracy, PIX, LGPD, Open Banking specs
+### Input Format for Each Droid
 
-#### product-architect
-**Purpose**: Product strategy and requirements integration
-- **When**: Product strategy, large-scale documentation, rules framework
-- **Focus**: Diátaxis framework, strategic PRD generation
+#### apex-dev Input
+```yaml
+goal: "Implementation objective"
+scope: "Technology and domain boundaries"
+complexity: "1-10 scale"
+requirements: "Functional and non-functional requirements"
+constraints: "Technical limitations and dependencies"
+brazilian_requirements: "LGPD, PIX, accessibility compliance needs"
+```
 
-### Emergency
-#### stuck 🚨
-**Purpose**: Human escalation for ANY problem or uncertainty
-- **When**: ANY error, failure, uncertainty, decision needed
-- **Authority**: Can stop all work, direct human intervention
+#### code-reviewer Input
+```yaml
+files: ["path/to/file.ts"]
+review_type: "security|architecture|compliance|full"
+security_focus: "OWASP Top 10, authentication patterns"
+brazilian_compliance: "LGPD, PIX, accessibility validation"
+risk_tolerance: "critical|high|medium|low"
+```
 
-## 🧠 Agent Allocation Matrix
+#### database-specialist Input
+```yaml
+schema_changes: "Database modifications required"
+performance_requirements: "Query response times, concurrency"
+security_requirements: "RLS policies, encryption, access controls"
+brazilian_compliance: "LGPD data protection, audit trails"
+integration_points: "API endpoints, auth integration"
+```
 
-### Task Complexity Scale
-- **1-3**: Simple, routine tasks → coder
-- **4-6**: Moderate complexity → coder → test-auditor
-- **7-8**: Complex components → apex-dev → code-reviewer → test-auditor
-- **9-10**: Mission-critical → apex-researcher → architect-review → apex-dev
+#### apex-ui-ux-designer Input
+```yaml
+goal: "UI/UX requirement description"
+component_type: "page|component|flow|system"
+brazilian_requirements: "accessibility, Portuguese, financial patterns"
+existing_patterns: "design system references"
+mobile_requirements: "responsive, touch targets, offline"
+accessibility_requirements: "WCAG 2.1 AA+, NBR 17225"
+```
 
-### Brazilian Specialization
-**Financial/Banking:**
-- PIX: apex-researcher → apex-dev → database-specialist
-- Boletos: apex-researcher → apex-dev → code-reviewer
-- Open Banking: apex-researcher → architect-review → apex-dev
+#### apex-researcher Input
+```yaml
+topic: "Research subject"
+complexity: "L1-L10 depth assessment"
+sources_needed: "Documentation, community, official specs"
+brazilian_focus: "LGPD, BCB, PIX regulatory research"
+validation_required: "≥95% cross-validation accuracy"
+```
 
-**UI/UX Development:**
-- New Components: apex-ui-ux-designer → apex-dev/coder
-- User Flows: apex-ui-ux-designer → test-auditor → implementation
-- Accessibility: apex-ui-ux-designer → test-auditor
+#### product-architect Input
+```yaml
+deliverable_type: "documentation|prd|rules"
+audience: "developers|stakeholders|users"
+success_criteria: "Measurable quality metrics"
+diataxis_form: "tutorial|how-to|reference|explanation"
+cross_references: "Related documents and dependencies"
+```
 
-## 🔄 Parallel Execution Strategy
+### Output Format Expected from Each Droid
 
-**Can Run in Parallel:**
-- Research Phase: apex-researcher + architect-review + database-specialist + product-architect
-- Design Phase: apex-ui-ux-designer + test-auditor + code-reviewer
-- Quality Assurance: test-auditor + code-reviewer + architect-review
+#### apex-dev Output
+```yaml
+implementation_plan: "Step-by-step execution strategy"
+technical_approach: "Architecture and technology choices"
+risk_assessment: "Identified risks with mitigation strategies"
+resource_requirements: "Timeline and effort estimates"
+integration_strategy: "How to integrate with existing system"
+quality_gates: "Validation checkpoints and success criteria"
+```
 
-**Must Run Sequentially:**
+#### code-reviewer Output
+```yaml
+security_findings: "Vulnerabilities with severity ratings"
+compliance_status: "LGPD/PIX/accessibility compliance"
+architecture_assessment: "Pattern adherence and improvement opportunities"
+performance_impact: "Potential performance implications"
+recommendations: "Priority fixes and improvements"
+confidence_score: "Review quality and completeness rating"
+```
+
+#### database-specialist Output
+```yaml
+schema_recommendations: "Database design improvements"
+performance_optimization: "Query optimization and indexing strategy"
+security_enhancements: "RLS policies and access control improvements"
+compliance_validation: "LGPD compliance verification"
+integration_impact: "Effects on existing integrations"
+migration_strategy: "Data migration and rollback plans"
+```
+
+#### apex-ui-ux-designer Output
+```yaml
+design_recommendations: "UI/UX improvements with rationale"
+accessibility_audit: "WCAG 2.1 AA+ compliance report"
+user_experience_analysis: "Flow optimization and pain point identification"
+brazilian_adaptation: "Cultural adaptation and localization recommendations"
+component_specification: "Detailed component requirements and specs"
+success_metrics: "Measurable UX improvement indicators"
+```
+
+#### apex-researcher Output
+```yaml
+research_findings: "Validated research insights with confidence levels"
+source_validation: "Source credibility and cross-validation results"
+implementation_guidance: "Actionable implementation recommendations"
+gap_analysis: "Research limitations and further investigation needs"
+compliance_requirements: "Brazilian regulatory compliance details"
+expert_consensus: "Industry expert validation and best practices"
+```
+
+#### product-architect Output
+```yaml
+documentation_quality: "Clarity, completeness, and actionability scores"
+prd_completeness: "Requirement coverage and acceptance criteria quality"
+rules_effectiveness: "Governance rule clarity and enforceability"
+audience_alignment: "Suitability for target audience"
+success_metrics: "Achievement of defined success criteria"
+improvement_opportunities: "Areas for enhancement and optimization"
+```
+
+### Handoff Protocol (apex-dev ↔ Droids)
+
+#### apex-dev to Droid Handoff
+1. **Context Transfer**: Complete task description with goals and constraints
+2. **Requirements Specification**: Clear expectations and acceptance criteria
+3. **Resource Allocation**: Available tools and timeframes
+4. **Success Metrics**: How the droid should measure success
+5. **Output Format**: Required deliverable structure and format
+
+#### Droid to apex-dev Handoff
+1. **Work Summary**: Comprehensive summary of work performed
+2. **Deliverables**: Complete list of outputs created
+3. **Decision Log**: Key decisions with reasoning and alternatives considered
+4. **Next Actions**: Recommended follow-up actions and agent handoffs
+5. **Quality Assessment**: Self-assessment of work quality and confidence levels
+
+### Error Handling and Escalation
+
+#### Error Conditions
+- **Droid Unavailable**: Fallback to alternative droid with similar capabilities
+- **Insufficient Information**: Request additional context from apex-dev
+- **Conflicting Recommendations**: Escalate to apex-researcher for resolution
+- **Quality Concerns**: Escalate to code-reviewer for validation
+
+#### Escalation Hierarchy
+1. **Level 1**: Droid self-resolution with available resources
+2. **Level 2**: Request additional context from apex-dev
+3. **Level 3**: Escalate to apex-researcher for research-based resolution
+4. **Level 4**: Escalate to code-reviewer for security/compliance resolution
+5. **Level 5**: Escalate to product-architect for documentation/governance resolution
+
+## Execution Phases
+
+### Phase 1: Analysis (apex-dev alone)
+- Complexidade assessment (1-10 scale)
+- Domínio identification (backend, frontend, full-stack, security)
+- Requisitos analysis (funcional e não-funcional)
+- Brazilian compliance requirements identification
+- Droids necessários identification
+
+### Phase 2: Parallel Consultation (droids simultâneos)
+**apex-dev dispara análises paralelas baseado em:**
+- Complexidade ≥7 → Disparar todos os droids relevantes
+- Segurança sensível → Disparar code-reviewer + apex-researcher
+- UI component → Disparar apex-ui-ux-designer (SEMPRE obrigatório)
+- Database changes → Disparar database-specialist (SEMPRE obrigatório)
+- Compliance questions → Disparar apex-researcher (PRIMARY)
+
+### Phase 3: Synthesis (apex-dev consolida)
+- Receber insights de todos os droids
+- Sintetizar informações em plano de implementação
+- Identificar conflitos e resolver prioridades
+- Definir estratégia de implementação detalhada
+
+### Phase 4: Implementation (apex-dev executa)
+- Implementar seguindo specs consolidadas
+- Aplicar validações de segurança do code-reviewer
+- Usar schema do database-specialist
+- Seguir padrões de UI do apex-ui-ux-designer
+- Documentar decisões e trade-offs
+
+### Phase 5: Validation (droids paralelos)
+**[PARALELO] Validations:**
+- **code-reviewer**: Security validation, OWASP compliance
+- **database-specialist**: Performance validation, RLS policies
+- **apex-ui-ux-designer**: Accessibility validation, WCAG 2.1 AA+
+- **apex-researcher**: Brazilian compliance validation (se aplicável)
+
+### Phase 6: Finalization (apex-dev ajusta)
+- Aplicar correções baseadas nas validações
+- Documentar decisões finais e justificativas
+- Preparar entrega e documentação
+- Validar critérios de aceitação
+
+## Task Routing Matrix
+
+### Complexity-Based Routing
+| Complexity | Primary | Parallel | Brazilian Focus |
+|------------|---------|----------|----------------|
+| **1-3** (Simple) | apex-dev | code-reviewer | Basic validation |
+| **4-6** (Moderate) | apex-dev | code-reviewer + apex-ui-ux-designer | Accessibility, compliance |
+| **7-8** (Complex) | apex-dev | code-reviewer + database-specialist | Performance, security |
+| **9-10** (Mission) | apex-dev | code-reviewer + database-specialist + apex-ui-ux-designer | Full research → implementation |
+
+### Specialized Routing Triggers
+
+#### Brazilian Compliance (auto-routed)
+- LGPD/privacy → apex-dev → apex-researcher → code-reviewer
+- PIX/financial → apex-dev → apex-researcher → code-reviewer + database-specialist
+- Accessibility → apex-dev → apex-ui-ux-designer → code-reviewer
+
+#### Security Sensitivity
+- Critical → apex-dev + code-reviewer + database-specialist
+- Standard → apex-dev + code-reviewer
+- Data protection → apex-dev → apex-researcher (compliance priority)
+
+#### Multi-Dimensional Analysis
+- **Technical complexity**: 1-10 implementation difficulty
+- **Integration complexity**: System dependencies and touch points
+- **Compliance complexity**: Brazilian regulatory requirements
+- **Security sensitivity**: Data protection and vulnerability risks
+
+## apex-ui-ux-designer Integration Rules
+
+### Mandatory Triggers (Quando SEMPRE incluir apex-ui-ux-designer)
+```yaml
+triggers:
+  - "component" in prompt
+  - "page" in prompt
+  - "ui" in prompt
+  - "ux" in prompt
+  - "interface" in prompt
+  - "form" in prompt
+  - "dashboard" in prompt
+  - "mobile" in prompt
+  - "accessibility" in prompt
+  - "acessibilidade" in prompt  # Portuguese trigger
+  - "visual" in prompt
+  - "design" in prompt
+  - "layout" in prompt
+  - "responsive" in prompt
+  - "notification" in prompt  # Notifications have visual component
+  - "alert" in prompt
+  - "modal" in prompt
+  - "toast" in prompt
+```
+
+### Expected Output from apex-ui-ux-designer
+
+#### Pre-Implementation
+- Component structure recommendation
+- Accessibility requirements checklist
+- Brazilian UX patterns to follow
+- Touch target specifications (≥44px)
+- Color contrast requirements (4.5:1 normal, 3:1 large text)
+- Keyboard navigation plan
+- Screen reader requirements in Portuguese
+
+#### Post-Implementation
+- WCAG 2.1 AA+ compliance report
+- Accessibility issues found with severity ratings
+- Portuguese label validation
+- Mobile responsiveness validation
+- NBR 17225 compliance status
+- Touch target compliance report
+- Contrast ratio validation
+
+### Communication Contract apex-dev ↔ apex-ui-ux-designer
+
+#### Input to Designer
+```yaml
+goal: "UI/UX requirement description"
+component_type: "page|component|flow|system"
+brazilian_requirements: "accessibility, Portuguese, financial patterns"
+existing_patterns: "design system references"
+mobile_requirements: "responsive, touch targets, offline"
+accessibility_requirements: "WCAG 2.1 AA+, NBR 17225"
+```
+
+#### Output from Designer
+```yaml
+summary: "Design recommendation"
+files: "Component paths if created"
+decisions: "Key decisions with rationale"
+accessibility:
+  wcag_level: "AA|AAA"
+  contrast_ratios: "pass|issues"
+  keyboard_nav: "complete|partial"
+  screen_reader: "tested|needs_testing"
+brazilian_adaptation:
+  portuguese_labels: "complete|partial"
+  trust_patterns: "applied|not_applicable"
+  mobile_optimization: "complete|partial"
+status: "success|needs_review|blocked"
+```
+
+## Parallel vs Sequential Execution
+
+### Can Execute in Parallel
+- **Research Phase**: apex-researcher + database-specialist + apex-ui-ux-designer + code-reviewer
+- **Design Phase**: apex-ui-ux-designer + database-specialist + code-reviewer (architecture validation)
+- **Quality Assurance**: code-reviewer + database-specialist + apex-ui-ux-designer (integrated validation)
+
+### Must Execute Sequentially
 - Design → Implementation → Testing
 - Database schema → Application implementation
-- Architecture review → Implementation
+- Security validation → Brazilian compliance validation
+- Skill coordination → Individual agent execution
 
-## 🚀 Advanced Parallel Execution Patterns
+## Integration Protocols
 
-### Phase 1: Maximum Parallel Research (Complexity ≥7)
-```yaml
-parallel_research_team:
-  apex-researcher:
-    focus: "Brazilian regulations, LGPD compliance, BCB specs"
-    timeline: "0-30 minutes"
-    
-  architect-review:
-    focus: "System architecture, scalability patterns"
-    timeline: "0-25 minutes"
-    
-  database-specialist:
-    focus: "Schema design, RLS policies, migrations"
-    timeline: "0-20 minutes"
-    
-  product-architect:
-    focus: "Requirements validation, PRD alignment"
-    timeline: "0-15 minutes"
-    
-  apex-ui-ux-designer:
-    focus: "Accessibility compliance, Portuguese-first design"
-    timeline: "0-20 minutes"
+### Agent Handoff Standards
+**Input Requirements**:
+- Complete task description with goals and constraints
+- Summary of completed work and decisions made
+- Expected outputs and acceptance criteria
+- Required inputs from other agents
 
-synchronization_point: "15 minutes for requirements alignment"
-final_sync: "30 minutes for consolidated research presentation"
-```
+**Output Standards**:
+- Comprehensive summary of work performed
+- Complete list of outputs created
+- Key decisions with reasoning and alternatives
+- Recommended next actions and agent handoffs
 
-### Phase 2: Parallel Implementation Strategy
-```yaml
-implementation_tracks:
-  track_1_database:
-    agent: "database-specialist"
-    focus: "Schema, migrations, RLS policies"
-    dependencies: "Research phase"
-    
-  track_2_backend:
-    agent: "apex-dev"
-    focus: "API endpoints, business logic"
-    dependencies: "Database schema + architect-review"
-    
-  track_3_frontend:
-    agent: "apex-dev"
-    focus: "UI components, user interactions"
-    dependencies: "UI/UX design + backend API"
-    
-  track_4_testing:
-    agent: "test-auditor"
-    focus: "Test strategy, TDD RED phase"
-    dependencies: "All tracks requirements"
-    
-parallel_coordination:
-  sync_points:
-    - "API contract definition (backend + frontend)"
-    - "Database schema approval (database + backend)"
-    - "UI component library (frontend + ui-ux)"
-```
+### Priority Hierarchy & Conflict Resolution
+1. **Security** (code-reviewer overrides all)
+2. **Compliance** (LGPD and regulatory requirements)
+3. **Architecture** (system architecture decisions)
+4. **Performance** (within security constraints)
+5. **Features** (established patterns)
+6. **Skill coordination** (integration patterns)
 
-### Phase 3: Parallel Quality Assurance
-```yaml
-quality_gates_parallel:
-  code-reviewer:
-    focus: "Security review, OWASP compliance"
-    timeline: "20-30 minutes"
-    
-  test-auditor:
-    focus: "Test execution, coverage validation"
-    timeline: "15-25 minutes"
-    
-  architect-review:
-    focus: "Architecture compliance validation"
-    timeline: "10-15 minutes"
+**Escalation Rules**:
+- Agent disagreement → apex-researcher (regulatory research)
+- Compliance conflict → apex-researcher (regulatory clarification)
+- Performance vs security → security takes precedence
+- Spec mode request → IMMEDIATE apex-researcher routing
+- Brazilian regulatory questions → apex-researcher as primary authority
 
-parallel_execution_commands:
-  security_review: "bun lint + security audit"
-  test_execution: "bun test + bun test:e2e"
-  performance_check: "bun build + performance analysis"
-```
+## Performance Optimization
 
-### Brazilian Compliance Parallel Validation
-```yaml
-compliance_streams:
-  lgpd_validation:
-    lead: "test-auditor"
-    support: "code-reviewer"
-    focus: "Data protection, consent management"
-    
-  financial_compliance:
-    lead: "apex-researcher"
-    support: "database-specialist"
-    focus: "PIX rules, Open Banking specs"
-    
-  accessibility_compliance:
-    lead: "apex-ui-ux-designer"
-    support: "test-auditor"
-    focus: "WCAG 2.1 AA+, screen readers"
-
-parallel_brazilian_testing:
-  portuguese_interface: "bun test:e2e:portuguese"
-  lgpd_compliance: "bun test:e2e:lgpd"
-  accessibility_audit: "bun test:e2e:a11y"
-  pix_transactions: "bun test:e2e:pix"
-```
-
-### Emergency Parallel Procedures
-```yaml
-parallel_problem_resolution:
-  stuck_agent_activation:
-    trigger: "Any agent failure or uncertainty"
-    parallel_safety:
-      - "Continue other tracks if possible"
-      - "Isolate failing component"
-      - "Human escalation via stuck agent"
-      
-  rollback_procedures:
-    parallel_rollback:
-      database: "database-specialist"
-      backend: "apex-dev"
-      frontend: "apex-dev"
-      
-    coordination: "stuck agent manages rollback sequence"
-```
-
-## ⚡ Performance Optimization Through Parallelism
-
-### Time Savings Metrics
-- **Sequential Development**: 20-30 hours for complex features
-- **Parallel Development**: 8-12 hours for complex features (60% reduction)
+### Time Savings Achieved
+- **Spec Mode Activation**: <30 seconds to research initiation
+- **Parallel Research**: 60% faster through MCP orchestration
+- **Complex Features**: 8-12 hours (vs 20-30 sequential) = 60% reduction
 - **Quality Assurance**: 50% faster through parallel validation
-- **Brazilian Compliance**: Simultaneous validation streams
+- **Context Transfer**: <5% information loss between agent transitions
+- **Routing Decisions**: <2 minutes intelligent routing
 
-### Resource Utilization
-- **Agent Specialization**: Each agent works on core competencies
-- **Context Switching**: Minimized through focused parallel tracks
-- **Knowledge Transfer**: Handoffs between specialized agents
-- **Quality Gates**: Parallel validation reduces bottlenecks
-## 🚨 Critical Rules
+### Resource Allocation
+- **Spec Mode Priority**: Immediate apex-researcher + full MCP access
+- **Agent Specialization**: Core competency optimization
+- **Dynamic Load Balancing**: Optimal utilization across tracks
+- **Intelligent Routing**: 95% accuracy with spec mode override
+- **Real-time Monitoring**: Performance optimization and allocation
+- **Brazilian Compliance**: Auto-activated regulatory research
 
-### ✅ YOU MUST:
-1. Create detailed todo lists with complexity ratings
-2. Analyze task requirements and allocate agents optimally
-3. Use parallel execution when possible
-4. Run appropriate quality gates for each implementation
-5. Test EVERY implementation with proper validation
-6. **Enforce TDD methodology for critical components (complexity ≥7)**
-7. Track progress and maintain big picture
-8. Ensure 100% Brazilian compliance for financial features
+## Examples of Real-World Routing
 
-### ❌ YOU MUST NEVER:
-1. Implement code yourself instead of delegating
-2. Skip specialized quality gates
-3. Let agents use fallbacks (enforce stuck agent)
-4. Lose track of progress or knowledge
-5. Skip Brazilian compliance validation
+### Security Audit (Complexity: 8)
+- **Route**: apex-dev (análise) → [PARALELO] apex-researcher (OWASP) + code-reviewer (vulnerabilities) + database-specialist (RLS) + apex-ui-ux-designer (accessibility security) → apex-dev (consolidação) → Implementação → [PARALELO] code-reviewer (security validation)
+- **Parallel**: apex-ui-ux-designer (accessibility security)
+- **Compliance**: OWASP + LGPD + Brazilian security standards
 
-## TDD Integration
+## Concrete Workflow Examples
 
-### TDD-Driven Development
-**RED-GREEN-REFACTOR Cycle:**
-1. **RED Phase**: Write failing tests before implementation
-2. **GREEN Phase**: Write minimum code to pass tests
-3. **REFACTOR Phase**: Improve code while maintaining tests
+### Example: Dashboard de Análise Financeira
 
-**Mandatory TDD Requirements:**
-- **Critical Components (Complexity ≥7)**: 100% TDD compliance
-- **Financial Features**: Test-first with Brazilian compliance
-- **Security Components**: Security-focused TDD
+**Prompt recebido**: "Criar dashboard com gráficos de gastos mensais e categorização automática"
 
-## Quick Reference
+**Fase 1 - Análise (apex-dev)**
+- Complexidade: 7 (visualização de dados, queries complexas, UI rica)
+- Domínio: Frontend + Database + **UI/UX intensivo**
+- Droids necessários: **apex-ui-ux-designer** (primary para UI), database-specialist, code-reviewer
 
-### Essential Commands
-```bash
-# Development
-bun dev                    # Start development servers
-bun build                  # Build all apps
-
-# Quality Assurance (Parallel)
-bun lint                   # Lint with Biome
-bun type-check             # TypeScript validation
-bun test                   # Run tests with Vitest
+**Fase 2 - Consulta Paralela**
+```
+apex-dev dispatches:
+├── apex-ui-ux-designer: "Defina arquitetura visual do dashboard:
+│                         - Layout responsivo (mobile-first)
+│                         - Gráficos acessíveis (não depender só de cor)
+│                         - Cards de métricas com hierarquia clara
+│                         - Filtros e controles de período
+│                         - Padrões brasileiros (R$ formatting, pt-BR dates)"
+├── database-specialist: "Otimize queries para agregações mensais,
+│                         índices para categorização"
+└── code-reviewer: "Valide segurança de dados financeiros expostos no frontend"
 ```
 
-### File Structure
+**Fase 3 - Síntese (apex-dev)**
+- **apex-ui-ux-designer**:
+  - Mobile: Cards empilhados, gráficos em full-width, swipe para períodos
+  - Desktop: Grid 3 colunas, gráficos lado a lado, filtros no sidebar
+  - Acessibilidade: Tabela de dados alternativa para cada gráfico
+  - Cores: Paleta com 4.5:1 contraste + padrões além de cor
+- database-specialist: Views materializadas para agregações, índices compostos
+- code-reviewer: Sanitização de dados, rate limiting em endpoints
+
+**Fase 4 - Implementação (apex-dev)**
+- Implementa seguindo wireframes do apex-ui-ux-designer
+- Usa queries otimizadas do database-specialist
+- Aplica validações do code-reviewer
+
+**Fase 5 - Validação Paralela**
 ```
-src/
-├── components/               # React UI components
-│   ├── ui/                  # shadcn/ui components
-│   └── [feature-components]/
-├── hooks/                    # Custom hooks
-├── integrations/
-│   └── supabase/            # Supabase client
-├── lib/                      # Utilities
-│   └── api-client.ts        # Hono RPC API client
-├── routes/                   # TanStack Router pages
-├── server/                   # Hono RPC backend
-│   ├── middleware/         # Auth, logging
-│   └── routes/             # API v1 endpoints
-└── types/                   # TypeScript types
+apex-dev dispatches:
+├── apex-ui-ux-designer: "Audit completo de acessibilidade:
+│                         - Navegação por teclado em todos os gráficos
+│                         - Labels ARIA em português
+│                         - Modo de alto contraste
+│                         - Responsividade em 320px-1920px"
+└── code-reviewer: "Validação final de segurança"
 ```
 
-Remember: Our goal is a simple, autonomous financial assistant that Brazilian users love.
+---
+
+> **For complete development standards**: See root `AGENTS.md` for comprehensive rules, agent definitions, testing requirements, and Brazilian compliance details.

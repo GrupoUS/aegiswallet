@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSubscription } from '@/hooks/billing';
 import { cn } from '@/lib/utils';
+import type { SubscriptionResponse } from '@/types/billing';
 
 interface SubscriptionStatusProps {
 	className?: string;
@@ -134,7 +135,7 @@ function getStatusMessage(status: string): string {
 	return messages[status as keyof typeof messages] || 'Status da assinatura desconhecido.';
 }
 
-function getStatusDetails(subscription: any): string | null {
+function getStatusDetails(subscription: SubscriptionResponse | undefined): string | null {
 	if (!subscription?.subscription) return null;
 
 	const details = {

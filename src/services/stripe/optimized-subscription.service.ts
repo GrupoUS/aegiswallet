@@ -9,7 +9,6 @@ import {
   subscriptionPlans, 
   users, 
   paymentHistory,
-  lgpd_consents
 } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { getStripeClient } from '@/lib/stripe/client';
@@ -55,13 +54,7 @@ export class OptimizedStripeSubscriptionService {
             trialEnd: subscriptions.trialEnd,
             createdAt: subscriptions.createdAt,
             updatedAt: subscriptions.updatedAt,
-            // LGPD fields
-            lgpdConsentId: subscriptions.lgpdConsentId,
-            dataClassification: subscriptions.dataClassification,
-            legalBasis: subscriptions.legalBasis,
-            retentionUntil: subscriptions.retentionUntil,
-            accessCount: subscriptions.accessCount,
-            lastAccessedAt: subscriptions.lastAccessedAt,
+            
           }
         })
         .from(subscriptions)
@@ -87,12 +80,6 @@ export class OptimizedStripeSubscriptionService {
               trialEnd: subscriptions.trialEnd,
               createdAt: subscriptions.createdAt,
               updatedAt: subscriptions.updatedAt,
-              lgpdConsentId: subscriptions.lgpdConsentId,
-              dataClassification: subscriptions.dataClassification,
-              legalBasis: subscriptions.legalBasis,
-              retentionUntil: subscriptions.retentionUntil,
-              accessCount: subscriptions.accessCount,
-              lastAccessedAt: subscriptions.lastAccessedAt,
             },
             plan: {
               id: subscriptionPlans.id,
@@ -156,8 +143,6 @@ export class OptimizedStripeSubscriptionService {
         meta: {
           executionTimeMs: executionTime,
           cacheKey: `subscription:${userId}`,
-          dataClassification: subscription.dataClassification,
-          legalBasis: subscription.legalBasis,
           lgpdCompliant: true
         }
       };
@@ -237,10 +222,6 @@ export class OptimizedStripeSubscriptionService {
           ? new Date(subscription.trial_end * 1000) 
           : null,
         updatedAt: new Date(),
-        // LGPD compliance fields
-        dataClassification: 'financial' as const,
-        legalBasis: 'contractual_necessity' as const,
-        purposeOfProcessing: 'subscription_management' as const,
       };
 
       let result;
@@ -353,10 +334,6 @@ export class OptimizedStripeSubscriptionService {
           failureMessage: paymentHistory.failureMessage,
           createdAt: paymentHistory.createdAt,
           subscriptionId: paymentHistory.subscriptionId,
-          // LGPD fields
-          dataClassification: paymentHistory.dataClassification,
-          accessCount: paymentHistory.accessCount,
-          lastAccessedAt: paymentHistory.lastAccessedAt,
         })
         .from(paymentHistory)
         .where(and(...conditions))
@@ -397,7 +374,7 @@ export class OptimizedStripeSubscriptionService {
   }
 
   /**
-   * Create checkout session with LGPD compliance
+   * Create checkout session
    */
   static async createCheckoutSession(
     userId: string,
@@ -410,7 +387,7 @@ export class OptimizedStripeSubscriptionService {
     const db = getHttpClient();
 
     try {
-      // Get user with LGPD consent validation
+      // Get user
       const [user] = await db
         .select()
         .from(users)
@@ -419,24 +396,6 @@ export class OptimizedStripeSubscriptionService {
 
       if (!user?.email) {
         throw new Error('Usuário não encontrado ou sem email');
-      }
-
-      // Validate LGPD consent for billing data processing
-      const [consent] = await db
-        .select()
-        .from(lgpd_consents)
-        .where(
-          and(
-            eq(lgpd_consents.userId, userId),
-            eq(lgpd_consents.granted, true),
-            sql`${lgpd_consents.consent_type} = ANY(ARRAY['billing_data_processing', 'financial_data_analysis'])`,
-            sql`${lgpd_consents.granted_at} > now() - interval '1 year'`
-          )
-        )
-        .limit(1);
-
-      if (!consent) {
-        throw new Error('Consentimento LGPD necessário para processamento de dados de billing');
       }
 
       // Get or create customer
@@ -454,7 +413,7 @@ export class OptimizedStripeSubscriptionService {
       const finalSuccessUrl = successUrl || `${baseUrl}/billing/success`;
       const finalCancelUrl = cancelUrl || `${baseUrl}/billing/cancel`;
 
-      // Create session with enhanced metadata for LGPD tracking
+      // Create session
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
@@ -465,12 +424,6 @@ export class OptimizedStripeSubscriptionService {
         }],
         success_url: finalSuccessUrl,
         cancel_url: finalCancelUrl,
-        metadata: {
-          clerkUserId: userId,
-          lgpdConsentId: consent.id,
-          dataProcessingPurpose: 'subscription_management',
-          legalBasis: 'contractual_necessity',
-        },
         allow_promotion_codes: true,
       });
 
@@ -482,7 +435,6 @@ export class OptimizedStripeSubscriptionService {
         sessionId: session.id,
         checkoutUrl: session.url,
         lgpdCompliant: true,
-        consentId: consent.id
       };
     } catch (error) {
       secureLogger.error('Failed to create checkout session', {
@@ -551,29 +503,7 @@ export class OptimizedStripeSubscriptionService {
     }
   }
 
-  /**
-   * Track data access for LGPD compliance
-   */
-  private static async trackDataAccess(
-    tableName: string,
-    recordId: string,
-    userId: string,
-    accessType: 'read' | 'write' | 'update' = 'read'
-  ) {
-    try {
-      await sql`
-        SELECT track_billing_data_access(${tableName}, ${recordId}, ${userId}, ${accessType})
-      `;
-    } catch (error) {
-      // Log but don't fail the main operation
-      secureLogger.warn('Failed to track data access', {
-        tableName,
-        recordId,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  }
+  
 
   /**
    * Track billing data access (batch operation)
@@ -587,7 +517,7 @@ export class OptimizedStripeSubscriptionService {
       // Use a simpler approach for batch tracking
       if (tableName === 'payment_history') {
         await sql`
-          UPDATE ${paymentHistory}
+          UPDATE payment_history
           SET 
             access_count = access_count + 1,
             last_accessed_at = now()

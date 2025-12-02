@@ -60,6 +60,10 @@ async function buildApi() {
 				js: `// AegisWallet API - Bundled for Vercel Node.js Runtime
 // Generated at: ${new Date().toISOString()}
 // Entry: src/server/vercel.ts
+
+// Polyfill for CommonJS require() in ESM context
+import { createRequire as __createRequire } from 'node:module';
+const require = __createRequire(import.meta.url);
 `,
 			},
 			metafile: true,

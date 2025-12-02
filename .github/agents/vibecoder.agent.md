@@ -19,7 +19,7 @@ handoffs:
     prompt: "Test the implementation visually and functionally."
     send: true
 tools:
-  ['edit', 'search', 'runCommands', 'runTasks', 'context7/*', 'desktop-commander/edit_block', 'desktop-commander/read_multiple_files', 'desktop-commander/read_process_output', 'desktop-commander/start_process', 'desktop-commander/write_file', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'serena/*', 'MCP_DOCKER/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🚀 VIBECODER AGENT

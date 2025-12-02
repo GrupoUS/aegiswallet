@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 // Speech Recognition API types for voice accessibility
+// Used in src/types/voice.ts for speech recognition functionality
+
 interface SpeechRecognition extends EventTarget {
 	continuous: boolean;
 	grammars: SpeechGrammarList;
@@ -18,6 +20,12 @@ interface SpeechRecognition extends EventTarget {
 	onend: (() => void) | null;
 	onstart: (() => void) | null;
 }
+
+// biome-ignore lint/suspicious/noRedeclare: SpeechRecognition constructor for Web Speech API
+declare let SpeechRecognition: {
+	prototype: SpeechRecognition;
+	new (): SpeechRecognition;
+};
 
 interface SpeechRecognitionEvent extends Event {
 	resultIndex: number;
@@ -60,9 +68,13 @@ interface SpeechGrammar {
 	weight: number;
 }
 
+// Used in src/types/voice.ts for browser speech recognition API
 interface Window {
-	SpeechRecognition: typeof SpeechRecognition;
-	webkitSpeechRecognition: typeof SpeechRecognition;
+	// biome-ignore lint/style/useNamingConvention: Web Speech API standard naming
+	SpeechRecognition: {
+		new (): SpeechRecognition;
+		prototype: SpeechRecognition;
+	};
 }
 
 interface ImportMetaEnv {

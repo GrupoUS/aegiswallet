@@ -4,11 +4,10 @@
  * Validates billing database optimizations and benchmarks
  */
 
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
-import { getHttpClient } from '@/db/client';
-import { paymentHistory, subscriptionPlans, subscriptions, users } from '@/db/schema';
-import { secureLogger } from '@/lib/logging/secure-logger';
+import { getHttpClient } from '../src/db/client';
+import { paymentHistory, subscriptionPlans, subscriptions, users } from '../src/db/schema';
 
 interface PerformanceMetrics {
 	queryName: string;
@@ -19,6 +18,18 @@ interface PerformanceMetrics {
 	totalOperations: number;
 	memoryUsedMB: number;
 	cacheHitRate: number;
+}
+
+interface IndexUsageRow {
+	indexname: string;
+	idx_scan: number;
+	idx_tup_read: number;
+	idx_tup_fetch: number;
+	size_bytes: number;
+}
+
+interface IndexUsageResult {
+	rows: IndexUsageRow[];
 }
 
 interface TestResult {
@@ -198,7 +209,7 @@ export class BillingDatabasePerformanceTest {
 
 				try {
 					// Simulate webhook sync operations using UPSERT pattern
-					const result = await this.db
+					const _result = await this.db
 						.update(subscriptions)
 						.set({
 							updatedAt: new Date(),
@@ -413,16 +424,22 @@ export class BillingDatabasePerformanceTest {
 
 		try {
 			// Get index usage statistics
-			const indexUsage = await sql`
-        SELECT 
-          indexname,
-          idx_scan,
-          idx_tup_read,
-          idx_tup_fetch,
-          size_bytes
-        FROM analyze_billing_index_usage()
-        ORDER BY idx_scan DESC
-      `;
+			const indexUsageResult = await sql<IndexUsageRow[]>`
+			     SELECT
+			       indexname,
+			       idx_scan,
+			       idx_tup_read,
+			       idx_tup_fetch,
+			       size_bytes
+			     FROM analyze_billing_index_usage()
+			     ORDER BY idx_scan DESC
+			   `;
+
+			// Convert SQL result to our expected format
+			// Drizzle SQL results are arrays, so we handle them directly
+			const indexUsage: IndexUsageResult = {
+				rows: Array.isArray(indexUsageResult) ? indexUsageResult : [],
+			};
 
 			const criticalIndexes = [
 				'idx_subscriptions_stripe_customer',
@@ -432,7 +449,7 @@ export class BillingDatabasePerformanceTest {
 				'idx_subscription_plans_stripe_price_active',
 			];
 
-			const foundIndexes = indexUsage.rows.map((row: any) => row.indexname);
+			const foundIndexes = indexUsage.rows.map((row: IndexUsageRow) => row.indexname);
 			const missingIndexes = criticalIndexes.filter((idx) => !foundIndexes.includes(idx));
 
 			if (missingIndexes.length > 0) {
@@ -579,19 +596,14 @@ export class BillingDatabasePerformanceTest {
 			for (const user of testUsers) {
 				const startTime = performance.now();
 
-				try {
-					// Test LGPD compliance queries
-					const result = await this.db
-						.select()
-						.from(subscriptions)
-						.where(
-							sql`${subscriptions.userId} = ${user.id} 
-                  AND ${subscriptions.retentionUntil} > now() 
-                  AND ${subscriptions.dataClassification} IS NOT NULL`,
-						)
-						.limit(1);
-
-					const endTime = performance.now();
+					try {
+						// Test LGPD compliance queries
+						// Note: retentionUntil and dataClassification columns removed from schema
+						const result = await this.db
+							.select()
+							.from(subscriptions)
+							.where(eq(subscriptions.userId, user.id))
+							.limit(1);					const endTime = performance.now();
 					executionTimes.push(endTime - startTime);
 
 					if (result.length === 0) {
@@ -666,7 +678,7 @@ export class BillingDatabasePerformanceTest {
 		const averageTime = executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length;
 		const minTime = Math.min(...executionTimes);
 		const maxTime = Math.max(...executionTimes);
-		const totalTime = executionTimes.reduce((a, b) => a + b, 0);
+		const _totalTime = executionTimes.reduce((a, b) => a + b, 0);
 		const operationsPerSecond = 1000 / averageTime;
 
 		return {
@@ -686,7 +698,7 @@ export class BillingDatabasePerformanceTest {
 	 */
 	generatePerformanceReport(): string {
 		const passed = this.testResults.filter((r) => r.passed).length;
-		const failed = this.testResults.filter((r) => !r.passed).length;
+		const _failed = this.testResults.filter((r) => !r.passed).length;
 		const totalTests = this.testResults.length;
 
 		let report = '# Billing Database Performance Test Report\\n\\n';
@@ -728,7 +740,7 @@ if (require.main === module) {
 
 	tester
 		.runAllTests()
-		.then((results) => {
+		.then((_results) => {
 			console.log('\\n🎯 Performance test completed successfully!');
 			console.log('Report:', tester.generatePerformanceReport());
 		})

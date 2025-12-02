@@ -21,8 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const { signOut: clerkSignOut } = useClerkAuth();
 	const { session } = useSession();
 
-	const getToken = useCallback(async (): Promise<string | null> => {
-		if (!session) return null;
+	const getToken = useCallback((): Promise<string | null> => {
+		if (!session) return Promise.resolve(null);
 		return session.getToken();
 	}, [session]);
 

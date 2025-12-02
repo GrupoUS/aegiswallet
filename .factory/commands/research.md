@@ -2,11 +2,11 @@
 
 ## Universal Description
 
-**ENHANCED RESEARCH ORCHESTRATION SYSTEM** - Multi-droid parallel execution with atomic task generation, delivering comprehensive research intelligence through coordinated droid ecosystem and skill integration. ≥95% cross-validation accuracy with Brazilian compliance auto-activation.
+**DOCKER MCP GATEWAY RESEARCH ORCHESTRATION** - Multi-droid parallel execution with Docker MCP Gateway integration, delivering comprehensive research intelligence through coordinated droid ecosystem. ≥95% cross-validation accuracy with Brazilian compliance auto-activation via Docker MCP stack.
 
 ## Purpose
 
-Execute comprehensive research operations through intelligent droid orchestration with atomic task generation, parallel execution capabilities, and skill integration for authoritative multi-source validation and actionable intelligence with Brazilian compliance.
+Execute comprehensive research operations through Docker MCP Gateway orchestration with atomic task generation, parallel execution capabilities, and integrated MCP stack (serena, context7, tavily, sequential-thinking, neon, playwright, fetch) for authoritative multi-source validation and actionable intelligence with Brazilian compliance.
 
 ## Enhanced Research Orchestration System
 
@@ -99,13 +99,24 @@ quality_assurance:
   documentation_standards: "Consistent markdown templates"
 ```
 
-## Context Detection & MCP Routing
+## Docker MCP Gateway Integration
 
-- **Research Operations**: Topic investigation, technology evaluation → Context7 + Tavily
-- **Knowledge Management**: Knowledge base creation, organization → Serena + Sequential Thinking
-- **Intelligence Synthesis**: Multi-source validation → All MCPs parallel
-- **Brazilian Compliance**: LGPD/BCB/PIX research → Tavily + Context7 + Sequential Thinking
-- **Technology Research**: Framework comparison, patterns → Context7 + Tavily
+### Available MCP Stack
+- **serena** (direct) - Codebase intelligence & project management
+- **context7** (via MCP_DOCKER) - Documentation intelligence & official docs
+- **tavily** (via MCP_DOCKER) - Web research & community validation
+- **sequential-thinking** (via MCP_DOCKER) - Multi-perspective synthesis & analysis
+- **neon** (via MCP_DOCKER) - PostgreSQL database operations
+- **playwright** (via MCP_DOCKER) - Browser automation & testing
+- **fetch** (via MCP_DOCKER) - URL content retrieval & web scraping
+
+### MCP Routing via Docker Gateway
+- **Research Operations**: Topic investigation, technology evaluation → Context7 + Tavily (via Docker)
+- **Knowledge Management**: Knowledge base creation, organization → Serena + Sequential Thinking (via Docker)
+- **Database Research**: Schema analysis, performance optimization → Serena + Neon (via Docker)
+- **Web Intelligence**: Real-time data, regulatory updates → Tavily + Fetch (via Docker)
+- **Brazilian Compliance**: LGPD/BCB/PIX research → Context7 + Tavily + Sequential Thinking (via Docker)
+- **Testing & Validation**: Accessibility, performance → Playwright + Serena (via Docker)
 
 ## MCP Serena: Codebase Intelligence
 
@@ -137,24 +148,34 @@ implementation_feasibility:
 
 ## MCP Orchestration Workflow
 
-### Multi-MCP Execution Strategy
+### Docker MCP Multi-Execution Strategy
 ```yaml
 parallel_execution:
   phase_1_discovery:
-    context7: "Official documentation + API references"
-    tavily: "Web research + community validation"
+    context7: "Official documentation + API references (via Docker)"
+    tavily: "Web research + community validation (via Docker)"
     serena: "Codebase analysis + symbol resolution"
+    fetch: "Real-time regulatory data (via Docker)"
 
   phase_2_analysis:
-    sequential_thinking: "Multi-perspective synthesis + logical reasoning"
-    context7: "Deep dive into technical specifics"
-    tavily: "Cross-source verification + credibility assessment"
+    sequential_thinking: "Multi-perspective synthesis + logical reasoning (via Docker)"
+    context7: "Deep dive into technical specifics (via Docker)"
+    tavily: "Cross-source verification + credibility assessment (via Docker)"
+    neon: "Database compliance validation (via Docker)"
 
   phase_3_validation:
     serena: "Implementation feasibility analysis"
-    sequential_thinking: "Pattern recognition + gap identification"
-    all_mcps: "Cross-validation for ≥95% accuracy"
+    sequential_thinking: "Pattern recognition + gap identification (via Docker)"
+    playwright: "Accessibility & testing validation (via Docker)"
+    all_mcps: "Cross-validation for ≥95% accuracy through Docker Gateway"
 ```
+
+### Docker MCP Performance Optimization
+- **Target Latency**: <3ms for MCP calls through Docker Gateway
+- **Context Management**: Automatic deduplication via Docker caching
+- **Parallel Execution**: Optimized concurrent MCP calls
+- **Resource Isolation**: Built-in Docker container security
+- **Payload Optimization**: Gateway-level JSON response optimization
 
 ### Context7 (Documentation Intelligence)
 - Framework docs and best practices
@@ -174,106 +195,42 @@ parallel_execution:
 - Brazilian compliance requirements assessment
 - Logical reasoning and conclusion formation
 
-## Atomic Task Templates
+## Docker MCP Task Templates
 
-### Research Complexity Classification
+### Research Complexity (via Docker MCP)
 
+| Complexity | Time | Parallel | MCP Stack | Brazilian Focus |
+|------------|------|----------|-----------|-----------------|
+| **L1-L3** (Simple) | 15-30 min | Limited | Context7 + Serena | Basic validation |
+| **L4-L6** (Moderate) | 45-90 min | 50% | Context7 + Tavily + Serena | Compliance check |
+| **L7-L8** (Complex) | 2-4 hours | 70% | All MCPs via Docker | Full compliance |
+| **L9-L10** (Mission) | 4-8 hours | 80% | Full MCP stack | Regulatory deep-dive |
+
+### Docker MCP Task Template
 ```yaml
-L1-L3 (Simple Research):
-  estimated_time: "15-30 minutes"
-  parallel_execution: "Limited - mostly sequential"
-  droid_assignment: "apex-researcher + 1 specialist"
-  skill_integration: "Basic domain skills"
-  deliverables: "Quick summary with key findings"
-
-L4-L6 (Moderate Research):
-  estimated_time: "45-90 minutes"
-  parallel_execution: "50% parallelizable"
-  droid_assignment: "apex-researcher + 2-3 specialists"
-  skill_integration: "Domain-specific skills activated"
-  deliverables: "Comprehensive analysis with recommendations"
-
-L7-L8 (Complex Research):
-  estimated_time: "2-4 hours"
-  parallel_execution: "70% parallelizable"
-  droid_assignment: "apex-researcher + 3-4 specialists"
-  skill_integration: "Multiple specialized skills"
-  deliverables: "Detailed report with implementation roadmap"
-
-L9-L10 (Mission-Critical Research):
-  estimated_time: "4-8 hours"
-  parallel_execution: "80% parallelizable"
-  droid_assignment: "All relevant droids + coordination"
-  skill_integration: "Full skill ecosystem activation"
-  deliverables: "Strategic intelligence document with execution plan"
+research_task:
+  complexity: "L1-L10"
+  mcps_via_docker: ["context7", "tavily", "sequential-thinking", "neon", "playwright", "fetch"]
+  brazilian_compliance: true
+  parallel_execution: true
+  quality_gate: "≥95% cross-validation"
+  target_latency: "<3ms via Docker Gateway"
 ```
 
-### Atomic Task Structure Template
+## Docker MCP Research Deliverables
 
-```yaml
-task_id: "research_[date]_[sequence]"
-title: "Specific research task description"
-complexity: "L1-L10"
-estimated_duration: "X hours/minutes"
-assigned_droids: ["primary", "secondary"]
-required_skills: ["skill1", "skill2"]
-parallel_execution: true/false
-dependencies: ["task_id_dependencies"]
-deliverables: ["specific_output_formats"]
-quality_gates: ["validation_criteria"]
-brazilian_compliance: true/false
-confidence_target: "≥95%"
+### Research Intelligence Report (via Docker MCP)
+- **Executive Summary**: Research scope, complexity, Brazilian compliance status
+- **MCP Performance**: Docker Gateway latency (<3ms target), efficiency metrics
+- **Validation Results**: ≥95% cross-source validation via multiple MCPs
+- **Implementation Roadmap**: Technical feasibility with Docker-optimized patterns
+- **Brazilian Compliance**: LGPD/PIX/BCB validation through official docs (context7) + current patterns (tavily)
 
-execution_phases:
-  phase_1:
-    description: "Research discovery"
-    droids: ["parallel_execution_list"]
-    duration: "X minutes"
-    outputs: ["specific_deliverables"]
-
-  phase_2:
-    description: "Analysis and validation"
-    droids: ["parallel_execution_list"]
-    duration: "X minutes"
-    outputs: ["specific_deliverables"]
-```
-
-## Enhanced Deliverables: Comprehensive Research Intelligence
-
-### Executive Summary
-- Research scope and complexity assessment
-- Parallel execution efficiency report
-- Multi-droid validation summary
-- Brazilian compliance status
-- Key recommendations with confidence scores
-- Resource utilization metrics
-
-### Atomic Task Execution Report
-- **Task Decomposition**: Complete breakdown of research into atomic units
-- **Parallel Execution Matrix**: Actual vs planned parallelization efficiency
-- **Droid Performance**: Individual droid contributions and quality metrics
-- **Skill Integration**: Activated skills and their impact on research quality
-- **Time Analysis**: Planned vs actual execution times per task
-
-### Multi-Droid Research Analysis
-**apex-researcher**: Research coordination, synthesis, validation orchestration
-**specialist droids**: Domain-specific expertise and deep analysis
-**code-reviewer**: Security validation and compliance checking
-**skill contributions**: Specialized domain knowledge and frameworks
-
-### Implementation Intelligence Framework
-- **Implementation Feasibility**: Technical viability assessment by apex-dev
-- **Risk Matrix**: Comprehensive risk analysis with mitigation strategies
-- **Resource Planning**: Detailed resource requirements and timelines
-- **Brazilian Compliance**: Full LGPD/PIX/BCB compliance validation
-- **Quality Assurance**: Multi-stage validation with specific test requirements
-
-### Enhanced Execution Workflow
-- **Atomic Task Roadmap**: Prioritized task list with dependencies
-- **Multi-Droid Coordination Plan**: Optimal droid assignment and scheduling
-- **Skill Integration Strategy**: When and how to invoke specialized skills
-- **Quality Validation Gates**: Multi-stage quality assurance checkpoints
-- **Documentation Standards**: Version-controlled, cross-referenced outputs
+### Quality Assurance via Docker MCP
+- **Source Validation**: Context7 (official docs) + Tavily (community validation)
+- **Code Analysis**: Serena symbol resolution + pattern analysis
+- **Database Compliance**: Neon PostgreSQL validation + security checks
+- **Testing Validation**: Playwright accessibility + performance testing
 
 ## Quality Gates
 
@@ -289,104 +246,28 @@ execution_phases:
 - Timeline and resource requirements
 - Quality validation specifications
 
-## Enhanced Command Usage Examples
+## Docker MCP Research Activation
 
-### Technology Research (L7 Complexity)
-```
-/research "React Server Components best practices for Brazilian fintech applications"
-
-→ Enhanced orchestration with atomic tasks:
-- **Atomic Task Generation**: 8 parallelizable tasks identified
-- **Droid Assignment**:
-  - apex-researcher (coordination)
-  - apex-dev (implementation feasibility)
-  - code-reviewer (security validation)
-- **Skill Integration**: frontend-design, webapp-testing
-- **Parallel Execution**: 70% tasks run simultaneously
-- **Output**:
-  - Comprehensive implementation guide (.factory/docs/2025-XX-XX-react-server-components-research.md)
-  - Atomic task execution roadmap
-  - Security validation report
-  - Brazilian compliance checklist
-```
-
-## Enhanced Research Activation Protocol
-
+### Auto-Activation Protocol
 ```yaml
-trigger_detection:
-  command_keywords: ["/research", "/pesquisar", "spec - research"]
-  automatic_routing: "Enhanced orchestration with multi-droid coordination"
-  priority_override: "HIGHEST - bypass all other routing"
-  atomic_task_generation: "Immediate task decomposition and assignment"
-  skill_integration: "Context-aware skill activation"
-
-enhanced_quality_assurance:
-  confidence_threshold: "≥95% before completion approval"
-  multi_droid_validation: "Minimum 3 droids validate critical findings"
-  source_validation: "Cross-source verification across droids and skills"
-  brazilian_compliance: "Mandatory validation for all financial/regulatory topics"
-  implementation_readiness: "Technical feasibility assessment by apex-dev"
-  security_validation: "Comprehensive security review by code-reviewer"
-
-enhanced_output_standards:
-  format: "Comprehensive Research Intelligence Document with Atomic Task Execution Report"
-  location: "Auto-generated in .factory/docs/ with timestamp and unique identifier"
-  structure: "Executive summary + detailed analysis + implementation roadmap + validation reports"
-  confidence_levels: "Explicit scoring with source attribution and validation chain"
-  execution_workflow: "Detailed atomic task breakdown with parallel execution optimization"
-  resource_utilization: "Droid and skill performance metrics and efficiency analysis"
-  gap_identification: "Clear research limitations + follow-up task recommendations"
-  version_control: "Git-friendly format with change tracking and cross-references"
+triggers: ["/research", "/pesquisar", "spec - research"]
+routing: "Docker MCP Gateway orchestration"
+priority: "HIGHEST - bypass all routing"
+mcp_stack: ["context7", "tavily", "sequential-thinking", "neon", "playwright", "fetch"]
+quality_gate: "≥95% cross-validation via Docker Gateway"
+target_latency: "<3ms for all MCP calls"
+brazilian_compliance: "Mandatory via context7 + tavily"
 ```
 
-## Documentation Template System
+### Quick Reference Template
+```
+/research "[Brazilian fintech topic]"
 
-### Standard Research Output Structure
-
-```markdown
-# Research Intelligence: [Topic] - [Date]
-
-## Executive Summary
-- Research scope and complexity assessment
-- Key findings with confidence scores
-- Primary recommendations
-- Brazilian compliance status
-- Resource utilization summary
-
-## Atomic Task Execution Report
-### Task Decomposition
-- Complete list of atomic tasks generated
-- Parallel execution efficiency metrics
-- Droid assignment and performance analysis
-
-### Multi-Droid Coordination
-- Droid collaboration matrix
-- Cross-validation results
-- Skill integration impact
-
-## Detailed Research Analysis
-### [Domain 1] Analysis
-- Comprehensive domain-specific findings
-- Source validation and attribution
-- Confidence scoring methodology
-
-### [Domain 2] Analysis
-- [Continue for all relevant domains]
-
-## Implementation Intelligence
-### Technical Feasibility Assessment
-- Implementation complexity analysis
-- Resource requirements and timelines
-- Risk matrix with mitigation strategies
-
-### Brazilian Compliance Validation
-- LGPD compliance checklist
-- PIX/BCB regulatory requirements
-- Accessibility standards validation
-
-## Appendices
-- Source references and validation chains
-- Droid performance metrics
-- Skill integration details
-- Follow-up research recommendations
+→ Docker MCP Gateway execution:
+- Context7: Official LGPD/BCB docs
+- Tavily: Current market patterns
+- Serena: Codebase analysis
+- Sequential-thinking: Multi-perspective synthesis
+- Fetch: Real-time regulatory updates
+- Output: .factory/docs/[date]-[topic].md (≤400 lines)
 ```

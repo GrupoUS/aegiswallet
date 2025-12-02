@@ -130,68 +130,75 @@ export function validateBrazilianDocument(document: string): {
 
 	// CPF validation (11 digits)
 	if (cleanDoc.length === 11) {
-		// Basic CPF validation algorithm
-		let sum = 0;
-		let remainder: number;
-
-		for (let i = 1; i <= 9; i++) {
-			sum += Number.parseInt(cleanDoc.substring(i - 1, i), 10) * (11 - i);
-		}
-
-		remainder = (sum * 10) % 11;
-		if (remainder === 10 || remainder === 11) remainder = 0;
-		if (remainder !== Number.parseInt(cleanDoc.substring(9, 10), 10)) {
-			return { isValid: false, error: 'CPF inválido' };
-		}
-
-		sum = 0;
-		for (let i = 1; i <= 10; i++) {
-			sum += Number.parseInt(cleanDoc.substring(i - 1, i), 10) * (12 - i);
-		}
-
-		remainder = (sum * 10) % 11;
-		if (remainder === 10 || remainder === 11) remainder = 0;
-		if (remainder !== Number.parseInt(cleanDoc.substring(10, 11), 10)) {
-			return { isValid: false, error: 'CPF inválido' };
-		}
-
-		return { isValid: true, type: 'CPF' };
+		return validateCPF(cleanDoc);
 	}
 
 	// CNPJ validation (14 digits)
 	if (cleanDoc.length === 14) {
-		// Basic CNPJ validation
-		const weightsFirstDigit = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-		const weightsSecondDigit = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
-		let sum = 0;
-		for (let i = 0; i < 12; i++) {
-			sum += Number.parseInt(cleanDoc[i], 10) * weightsFirstDigit[i];
-		}
-
-		let remainder = sum % 11;
-		const firstDigit = remainder < 2 ? 0 : 11 - remainder;
-
-		if (firstDigit !== Number.parseInt(cleanDoc[12], 10)) {
-			return { isValid: false, error: 'CNPJ inválido' };
-		}
-
-		sum = 0;
-		for (let i = 0; i < 13; i++) {
-			sum += Number.parseInt(cleanDoc[i], 10) * weightsSecondDigit[i];
-		}
-
-		remainder = sum % 11;
-		const secondDigit = remainder < 2 ? 0 : 11 - remainder;
-
-		if (secondDigit !== Number.parseInt(cleanDoc[13], 10)) {
-			return { isValid: false, error: 'CNPJ inválido' };
-		}
-
-		return { isValid: true, type: 'CNPJ' };
+		return validateCNPJ(cleanDoc);
 	}
 
 	return { isValid: false, error: 'Documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos' };
+}
+
+function validateCPF(cpf: string): { isValid: boolean; type: 'CPF'; error?: string } {
+	// Basic CPF validation algorithm
+	let sum = 0;
+
+	for (let i = 1; i <= 9; i++) {
+		sum += Number.parseInt(cpf.substring(i - 1, i), 10) * (11 - i);
+	}
+
+	let remainder = (sum * 10) % 11;
+	if (remainder === 10 || remainder === 11) remainder = 0;
+	if (remainder !== Number.parseInt(cpf.substring(9, 10), 10)) {
+		return { isValid: false, error: 'CPF inválido', type: 'CPF' };
+	}
+
+	sum = 0;
+	for (let i = 1; i <= 10; i++) {
+		sum += Number.parseInt(cpf.substring(i - 1, i), 10) * (12 - i);
+	}
+
+	remainder = (sum * 10) % 11;
+	if (remainder === 10 || remainder === 11) remainder = 0;
+	if (remainder !== Number.parseInt(cpf.substring(10, 11), 10)) {
+		return { isValid: false, error: 'CPF inválido', type: 'CPF' };
+	}
+
+	return { isValid: true, type: 'CPF' };
+}
+
+function validateCNPJ(cnpj: string): { isValid: boolean; type: 'CNPJ'; error?: string } {
+	// Basic CNPJ validation
+	const weightsFirstDigit = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+	const weightsSecondDigit = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+	let sum = 0;
+	for (let i = 0; i < 12; i++) {
+		sum += Number.parseInt(cnpj[i], 10) * weightsFirstDigit[i];
+	}
+
+	let remainder = sum % 11;
+	const firstDigit = remainder < 2 ? 0 : 11 - remainder;
+
+	if (firstDigit !== Number.parseInt(cnpj[12], 10)) {
+		return { isValid: false, error: 'CNPJ inválido', type: 'CNPJ' };
+	}
+
+	sum = 0;
+	for (let i = 0; i < 13; i++) {
+		sum += Number.parseInt(cnpj[i], 10) * weightsSecondDigit[i];
+	}
+
+	remainder = sum % 11;
+	const secondDigit = remainder < 2 ? 0 : 11 - remainder;
+
+	if (secondDigit !== Number.parseInt(cnpj[13], 10)) {
+		return { isValid: false, error: 'CNPJ inválido', type: 'CNPJ' };
+	}
+
+	return { isValid: true, type: 'CNPJ' };
 }
 
 /**
@@ -225,6 +232,43 @@ export function validatePixTransferAmount(
 }
 
 /**
+ * Validates basic PIX transaction fields
+ */
+function validateBasicPixFields(m: Record<string, unknown>): boolean {
+	if (!m.transactionId || typeof m.transactionId !== 'string' || m.transactionId.length < 20) {
+		return false;
+	}
+	if (!m.authCode || typeof m.authCode !== 'string' || m.authCode.length !== 8) {
+		return false;
+	}
+	if (!m.bankCode || typeof m.bankCode !== 'string' || !/^\d{3}$/.test(m.bankCode)) {
+		return false;
+	}
+	if (!(m.processedAt && m.processedAt instanceof Date)) {
+		return false;
+	}
+	if (typeof m.lgpdConsent !== 'boolean') {
+		return false;
+	}
+	if (typeof m.transactionAmount !== 'number' || m.transactionAmount <= 0) {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Validates party info (recipient or sender)
+ */
+function validatePartyInfo(party: Record<string, unknown>): boolean {
+	const docValidation = validateBrazilianDocument(party.document as string);
+	if (!docValidation.isValid) return false;
+	if (!party.ispb || typeof party.ispb !== 'string' || !/^\d{8}$/.test(party.ispb)) {
+		return false;
+	}
+	return true;
+}
+
+/**
  * Comprehensive type guard for PIX transaction metadata
  */
 export function isValidPixTransactionMetadata(
@@ -234,30 +278,8 @@ export function isValidPixTransactionMetadata(
 
 	const m = metadata as Record<string, unknown>;
 
-	// Required fields validation
-	if (!m.transactionId || typeof m.transactionId !== 'string' || m.transactionId.length < 20) {
-		return false;
-	}
-
-	if (!m.authCode || typeof m.authCode !== 'string' || m.authCode.length !== 8) {
-		return false;
-	}
-
-	if (!m.bankCode || typeof m.bankCode !== 'string' || !/^\d{3}$/.test(m.bankCode)) {
-		return false;
-	}
-
-	if (!(m.processedAt && m.processedAt instanceof Date)) {
-		return false;
-	}
-
-	if (typeof m.lgpdConsent !== 'boolean') {
-		return false;
-	}
-
-	if (typeof m.transactionAmount !== 'number' || m.transactionAmount <= 0) {
-		return false;
-	}
+	// Validate basic fields
+	if (!validateBasicPixFields(m)) return false;
 
 	// Validate recipient and sender info
 	if (!m.recipientInfo || typeof m.recipientInfo !== 'object') return false;
@@ -266,26 +288,55 @@ export function isValidPixTransactionMetadata(
 	const recipient = m.recipientInfo as Record<string, unknown>;
 	const sender = m.senderInfo as Record<string, unknown>;
 
-	// Recipient validation
-	const recipientDocValidation = validateBrazilianDocument(recipient.document as string);
-	if (!recipientDocValidation.isValid) return false;
-
-	if (!recipient.ispb || typeof recipient.ispb !== 'string' || !/^\d{8}$/.test(recipient.ispb)) {
-		return false;
-	}
-
-	// Sender validation
-	const senderDocValidation = validateBrazilianDocument(sender.document as string);
-	if (!senderDocValidation.isValid) return false;
-
-	if (!sender.ispb || typeof sender.ispb !== 'string' || !/^\d{8}$/.test(sender.ispb)) {
-		return false;
-	}
+	if (!validatePartyInfo(recipient)) return false;
+	if (!validatePartyInfo(sender)) return false;
 
 	// Amount validation against limits
-	const amountValidation = validatePixTransferAmount(m.transactionAmount);
+	const amountValidation = validatePixTransferAmount(m.transactionAmount as number);
 	if (!amountValidation.isValid) return false;
 
+	return true;
+}
+
+/**
+ * Validates basic PIX transfer request fields
+ */
+function validateBasicTransferFields(r: Record<string, unknown>): boolean {
+	if (!r.recipient || typeof r.recipient !== 'string' || r.recipient.length < 3) {
+		return false;
+	}
+	if (typeof r.amount !== 'number' || r.amount <= 0) {
+		return false;
+	}
+	if (!isValidPixTransferType(r.type)) {
+		return false;
+	}
+	if (!(r.createdAt && r.createdAt instanceof Date)) {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Validates security constraints for PIX transfer
+ */
+function validateSecurityConstraints(r: Record<string, unknown>): boolean {
+	if (typeof r.dailyLimit !== 'number' || r.dailyLimit <= 0) {
+		return false;
+	}
+	if (typeof r.transactionLimit !== 'number' || r.transactionLimit <= 0) {
+		return false;
+	}
+	if (typeof r.requiresBiometric !== 'boolean') {
+		return false;
+	}
+	const documentValidation = validateBrazilianDocument(r.recipientDocument as string);
+	if (!documentValidation.isValid) {
+		return false;
+	}
+	if (!r.recipientBank || typeof r.recipientBank !== 'string') {
+		return false;
+	}
 	return true;
 }
 
@@ -299,45 +350,9 @@ export function isValidSecurePixTransferRequest(
 
 	const r = request as Record<string, unknown>;
 
-	// Basic PixTransferRequest validation
-	if (!r.recipient || typeof r.recipient !== 'string' || r.recipient.length < 3) {
-		return false;
-	}
-
-	if (typeof r.amount !== 'number' || r.amount <= 0) {
-		return false;
-	}
-
-	if (!isValidPixTransferType(r.type)) {
-		return false;
-	}
-
-	if (!(r.createdAt && r.createdAt instanceof Date)) {
-		return false;
-	}
-
-	// Security constraints validation
-	if (typeof r.dailyLimit !== 'number' || r.dailyLimit <= 0) {
-		return false;
-	}
-
-	if (typeof r.transactionLimit !== 'number' || r.transactionLimit <= 0) {
-		return false;
-	}
-
-	if (typeof r.requiresBiometric !== 'boolean') {
-		return false;
-	}
-
-	// Document validation
-	const documentValidation = validateBrazilianDocument(r.recipientDocument as string);
-	if (!documentValidation.isValid) {
-		return false;
-	}
-
-	if (!r.recipientBank || typeof r.recipientBank !== 'string') {
-		return false;
-	}
+	// Validate basic and security fields
+	if (!validateBasicTransferFields(r)) return false;
+	if (!validateSecurityConstraints(r)) return false;
 
 	// LGPD consent validation
 	if (!r.lgpdConsent || typeof r.lgpdConsent !== 'object') {

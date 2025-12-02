@@ -83,68 +83,42 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 		}
 	};
 
-	// Validate Database configuration
-	const databaseUrl = getEnvVar('DATABASE_URL');
-	if (databaseUrl) {
-		checkSuspiciousPattern('DATABASE_URL', databaseUrl);
-		validateEnvFormat(
-			'DATABASE_URL',
-			databaseUrl,
-			/^(postgres|postgresql):\/\//,
-			'Must be a valid PostgreSQL connection string',
-		);
-	}
+	// Validate database configuration
+	const databaseConfig = validateDatabaseConfig(
+		getEnvVar,
+		errors,
+		warnings,
+		validateEnvFormat,
+		checkSuspiciousPattern,
+	);
 
-	// Validate Clerk configuration (optional - Clerk is currently stubbed)
-	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY', false);
-	const clerkSecretKey = getEnvVar('CLERK_SECRET_KEY', false); // Optional in client
-
-	if (clerkPublishableKey) {
-		validateEnvFormat(
-			'VITE_CLERK_PUBLISHABLE_KEY',
-			clerkPublishableKey,
-			/^pk_(test|live)_/,
-			'Must be a valid Clerk publishable key (starts with pk_)',
-		);
-	}
-
-	if (clerkSecretKey) {
-		validateEnvFormat(
-			'CLERK_SECRET_KEY',
-			clerkSecretKey,
-			/^sk_(test|live)_/,
-			'Must be a valid Clerk secret key (starts with sk_)',
-		);
-	}
+	// Validate clerk configuration
+	const clerkConfig = validateClerkConfig(getEnvVar, errors, warnings, validateEnvFormat);
 
 	// Validate application configuration
-	const appEnv = getEnvVar('VITE_APP_ENV') || getEnvVar('NODE_ENV') || 'development';
-	const validEnvs = ['development', 'staging', 'production'];
-	if (!validEnvs.includes(appEnv)) {
-		errors.push(`VITE_APP_ENV must be one of: ${validEnvs.join(', ')}`);
-	}
+	const appConfig = validateAppConfig(getEnvVar, errors, warnings);
 
 	// Construct configuration object
 	const config: EnvironmentConfig = {
 		api: {
-			baseUrl: getEnvVar('VITE_API_URL') || 'http://localhost:3000',
-			version: getEnvVar('VITE_APP_VERSION') || '1.0.0',
+			baseUrl: appConfig.api.baseUrl,
+			version: appConfig.api.version,
 		},
 		app: {
-			debug: appEnv === 'development' || getEnvVar('VITE_DEBUG') === 'true',
-			env: appEnv as 'development' | 'staging' | 'production',
+			debug: appConfig.app.debug,
+			env: appConfig.app.env,
 		},
 		security: {
-			auditLogging: getEnvVar('VITE_AUDIT_LOGGING_ENABLED') !== 'false',
-			encryptionEnabled: getEnvVar('VITE_ENCRYPTION_ENABLED') === 'true',
-			lgpdCompliance: getEnvVar('VITE_LGPD_ENABLED') !== 'false',
+			auditLogging: appConfig.security.auditLogging,
+			encryptionEnabled: appConfig.security.encryptionEnabled,
+			lgpdCompliance: appConfig.security.lgpdCompliance,
 		},
 		database: {
-			url: databaseUrl || '',
+			url: databaseConfig.url,
 		},
 		clerk: {
-			publishableKey: clerkPublishableKey || '',
-			secretKey: clerkSecretKey || '',
+			publishableKey: clerkConfig.publishableKey,
+			secretKey: clerkConfig.secretKey,
 		},
 	};
 
@@ -173,39 +147,144 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 		throw new Error(errorMessage);
 	}
 
-	// Combine all warnings
-	const allWarnings = [...warnings];
-
-	// Security warnings for production
-	if (config.app.env === 'production') {
-		if (!config.security.encryptionEnabled) {
-			allWarnings.push('⚠️  Encryption should be enabled in production');
-		}
-
-		if (!config.security.lgpdCompliance) {
-			allWarnings.push('⚠️  LGPD compliance should be enabled in production');
-		}
-
-		if (!config.security.auditLogging) {
-			allWarnings.push('⚠️  Audit logging should be enabled in production');
-		}
-
-		if (config.app.debug) {
-			allWarnings.push('⚠️  Debug mode should be disabled in production');
-		}
-	}
+	// Check for production security warnings
+	checkProductionSecurityWarnings(config, warnings);
 
 	// Display warnings using secure logger if available, otherwise console
-	if (allWarnings.length > 0) {
+	if (warnings.length > 0) {
 		// Use secure logger if available, fallback to console
 		try {
-			logger.warn('Environment validation warnings', { warnings: allWarnings });
+			logger.warn('Environment validation warnings', { warnings });
 		} catch {
 			// Fallback if logger fails
 		}
 	}
 
 	return config;
+}
+
+/**
+ * Validates database configuration
+ */
+function validateDatabaseConfig(
+	getEnvVar: (key: string, required?: boolean) => string | undefined,
+	_errors: string[],
+	_warnings: string[],
+	validateEnvFormat: (key: string, value: string, pattern: RegExp, description: string) => boolean,
+	checkSuspiciousPattern: (key: string, value: string) => void,
+): { url: string } {
+	const databaseUrl = getEnvVar('DATABASE_URL');
+	if (databaseUrl) {
+		checkSuspiciousPattern('DATABASE_URL', databaseUrl);
+		validateEnvFormat(
+			'DATABASE_URL',
+			databaseUrl,
+			/^(postgres|postgresql):\/\//,
+			'Must be a valid PostgreSQL connection string',
+		);
+	}
+
+	return { url: databaseUrl || '' };
+}
+
+/**
+ * Validates clerk configuration
+ */
+function validateClerkConfig(
+	getEnvVar: (key: string, required?: boolean) => string | undefined,
+	_errors: string[],
+	_warnings: string[],
+	validateEnvFormat: (key: string, value: string, pattern: RegExp, description: string) => boolean,
+): { publishableKey: string; secretKey: string } {
+	// Clerk is optional - Clerk is currently stubbed
+	const clerkPublishableKey = getEnvVar('VITE_CLERK_PUBLISHABLE_KEY', false);
+	const clerkSecretKey = getEnvVar('CLERK_SECRET_KEY', false); // Optional in client
+
+	if (clerkPublishableKey) {
+		validateEnvFormat(
+			'VITE_CLERK_PUBLISHABLE_KEY',
+			clerkPublishableKey,
+			/^pk_(test|live)_/,
+			'Must be a valid Clerk publishable key (starts with pk_)',
+		);
+	}
+
+	if (clerkSecretKey) {
+		validateEnvFormat(
+			'CLERK_SECRET_KEY',
+			clerkSecretKey,
+			/^sk_(test|live)_/,
+			'Must be a valid Clerk secret key (starts with sk_)',
+		);
+	}
+
+	return {
+		publishableKey: clerkPublishableKey || '',
+		secretKey: clerkSecretKey || '',
+	};
+}
+
+/**
+ * Validates application configuration
+ */
+function validateAppConfig(
+	getEnvVar: (key: string, required?: boolean) => string | undefined,
+	errors: string[],
+	_warnings: string[],
+): {
+	api: { baseUrl: string; version: string };
+	app: { debug: boolean; env: 'development' | 'staging' | 'production' };
+	security: {
+		auditLogging: boolean;
+		encryptionEnabled: boolean;
+		lgpdCompliance: boolean;
+	};
+} {
+	// Validate application configuration
+	const appEnv = getEnvVar('VITE_APP_ENV') || getEnvVar('NODE_ENV') || 'development';
+	const validEnvs = ['development', 'staging', 'production'];
+	if (!validEnvs.includes(appEnv)) {
+		errors.push(`VITE_APP_ENV must be one of: ${validEnvs.join(', ')}`);
+	}
+
+	return {
+		api: {
+			baseUrl: getEnvVar('VITE_API_URL') || 'http://localhost:3000',
+			version: getEnvVar('VITE_APP_VERSION') || '1.0.0',
+		},
+		app: {
+			debug: appEnv === 'development' || getEnvVar('VITE_DEBUG') === 'true',
+			env: appEnv as 'development' | 'staging' | 'production',
+		},
+		security: {
+			auditLogging: getEnvVar('VITE_AUDIT_LOGGING_ENABLED') !== 'false',
+			encryptionEnabled: getEnvVar('VITE_ENCRYPTION_ENABLED') === 'true',
+			lgpdCompliance: getEnvVar('VITE_LGPD_ENABLED') !== 'false',
+		},
+	};
+}
+
+/**
+ * Checks for production security warnings
+ */
+function checkProductionSecurityWarnings(config: EnvironmentConfig, warnings: string[]): void {
+	if (config.app.env === 'production') {
+		if (!config.security.encryptionEnabled) {
+			warnings.push('⚠️  Encryption should be enabled in production');
+		}
+
+		if (!config.security.lgpdCompliance) {
+			warnings.push('⚠️  LGPD compliance should be enabled in production');
+		}
+
+		if (!config.security.auditLogging) {
+			warnings.push('⚠️  Audit logging should be enabled in production');
+		}
+
+		if (config.app.debug) {
+			warnings.push('⚠️  Debug mode should be disabled in production');
+		}
+	}
 }
 
 /**

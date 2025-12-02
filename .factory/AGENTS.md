@@ -9,7 +9,7 @@ Dynamic agent routing and parallel execution coordination for AegisWallet droids
 **Core Capabilities**:
 - Dynamic droid discovery from `.factory/droids/`
 - Multi-dimensional task routing analysis
-- Parallel execution coordination  
+- Parallel execution coordination
 - Performance optimization and resource allocation
 - Complete context transfer between agent transitions
 
@@ -351,7 +351,7 @@ improvement_opportunities: "Areas for enhancement and optimization"
 ### Specialized Routing Triggers
 
 #### Brazilian Compliance (auto-routed)
-- LGPD/privacy → apex-dev → apex-researcher → code-reviewer  
+- LGPD/privacy → apex-dev → apex-researcher → code-reviewer
 - PIX/financial → apex-dev → apex-researcher → code-reviewer + database-specialist
 - Accessibility → apex-dev → apex-ui-ux-designer → code-reviewer
 
@@ -362,7 +362,7 @@ improvement_opportunities: "Areas for enhancement and optimization"
 
 #### Multi-Dimensional Analysis
 - **Technical complexity**: 1-10 implementation difficulty
-- **Integration complexity**: System dependencies and touch points  
+- **Integration complexity**: System dependencies and touch points
 - **Compliance complexity**: Brazilian regulatory requirements
 - **Security sensitivity**: Data protection and vulnerability risks
 
@@ -449,7 +449,7 @@ status: "success|needs_review|blocked"
 
 ### Must Execute Sequentially
 - Design → Implementation → Testing
-- Database schema → Application implementation  
+- Database schema → Application implementation
 - Security validation → Brazilian compliance validation
 - Skill coordination → Individual agent execution
 
@@ -503,20 +503,60 @@ status: "success|needs_review|blocked"
 
 ## Examples of Real-World Routing
 
-### PIX Payment Feature (Complexity: 9)
-- **Route**: apex-dev (análise) → [PARALELO] apex-researcher (BCB specs) + code-reviewer (security) + database-specialist (schema) + apex-ui-ux-designer (Brazilian UX) → apex-dev (consolidação) → Implementação → [PARALELO] code-reviewer + database-specialist + apex-ui-ux-designer (validação)
-- **Parallel**: code-reviewer (security) + apex-ui-ux-designer (Brazilian UX)
-- **Compliance**: LGPD + BCB specs + accessibility + PIX security
-
-### User Profile Page (Complexity: 4)
-- **Route**: apex-dev (análise) → [PARALELO] database-specialist (fields) + apex-ui-ux-designer (layout) + code-reviewer (security) → apex-dev (consolidação) → Implementação → [PARALELO] code-reviewer (security validation) + apex-ui-ux-designer (accessibility)
-- **Parallel**: code-reviewer (security validation)  
-- **Compliance**: Portuguese interface + LGPD + accessibility
-
 ### Security Audit (Complexity: 8)
 - **Route**: apex-dev (análise) → [PARALELO] apex-researcher (OWASP) + code-reviewer (vulnerabilities) + database-specialist (RLS) + apex-ui-ux-designer (accessibility security) → apex-dev (consolidação) → Implementação → [PARALELO] code-reviewer (security validation)
 - **Parallel**: apex-ui-ux-designer (accessibility security)
 - **Compliance**: OWASP + LGPD + Brazilian security standards
+
+## Concrete Workflow Examples
+
+### Example: Dashboard de Análise Financeira
+
+**Prompt recebido**: "Criar dashboard com gráficos de gastos mensais e categorização automática"
+
+**Fase 1 - Análise (apex-dev)**
+- Complexidade: 7 (visualização de dados, queries complexas, UI rica)
+- Domínio: Frontend + Database + **UI/UX intensivo**
+- Droids necessários: **apex-ui-ux-designer** (primary para UI), database-specialist, code-reviewer
+
+**Fase 2 - Consulta Paralela**
+```
+apex-dev dispatches:
+├── apex-ui-ux-designer: "Defina arquitetura visual do dashboard:
+│                         - Layout responsivo (mobile-first)
+│                         - Gráficos acessíveis (não depender só de cor)
+│                         - Cards de métricas com hierarquia clara
+│                         - Filtros e controles de período
+│                         - Padrões brasileiros (R$ formatting, pt-BR dates)"
+├── database-specialist: "Otimize queries para agregações mensais,
+│                         índices para categorização"
+└── code-reviewer: "Valide segurança de dados financeiros expostos no frontend"
+```
+
+**Fase 3 - Síntese (apex-dev)**
+- **apex-ui-ux-designer**:
+  - Mobile: Cards empilhados, gráficos em full-width, swipe para períodos
+  - Desktop: Grid 3 colunas, gráficos lado a lado, filtros no sidebar
+  - Acessibilidade: Tabela de dados alternativa para cada gráfico
+  - Cores: Paleta com 4.5:1 contraste + padrões além de cor
+- database-specialist: Views materializadas para agregações, índices compostos
+- code-reviewer: Sanitização de dados, rate limiting em endpoints
+
+**Fase 4 - Implementação (apex-dev)**
+- Implementa seguindo wireframes do apex-ui-ux-designer
+- Usa queries otimizadas do database-specialist
+- Aplica validações do code-reviewer
+
+**Fase 5 - Validação Paralela**
+```
+apex-dev dispatches:
+├── apex-ui-ux-designer: "Audit completo de acessibilidade:
+│                         - Navegação por teclado em todos os gráficos
+│                         - Labels ARIA em português
+│                         - Modo de alto contraste
+│                         - Responsividade em 320px-1920px"
+└── code-reviewer: "Validação final de segurança"
+```
 
 ---
 

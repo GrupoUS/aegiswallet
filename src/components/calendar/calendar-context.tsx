@@ -5,7 +5,7 @@
 
 import { addDays, addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useMemo, useState } from 'react';
 
 import type {
 	CalendarCategory,
@@ -63,8 +63,14 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		deleteEvent: deleteEventMutation,
 	} = useFinancialEventMutations();
 
-	// State for events (from database only - no mock data)
-	const [localEvents, setLocalEvents] = useState<FinancialEvent[]>([]);
+	// Use database events directly instead of duplicating in local state
+	// This prevents infinite loops caused by useEffect syncing state
+	const localEvents = useMemo(() => {
+		if (loading) return [];
+		if (error) return [];
+		return databaseEvents ?? [];
+	}, [databaseEvents, loading, error]);
+	
 	// Enhanced states for view and filtering
 	const [currentView, setCurrentView] = useState<CalendarView>('week');
 	const [categories] = useState<CalendarCategory[]>(DEFAULT_CALENDAR_CATEGORIES);
@@ -78,27 +84,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		weekStartsOn: 0,
 	});
 
-	// Initialize with database data only - no mock data fallback
-	useEffect(() => {
-		if (!loading) {
-			if (error) {
-				setLocalEvents([]);
-			} else if (databaseEvents) {
-				// Use only database data, even if empty
-				setLocalEvents(databaseEvents);
-			} else {
-				// Fallback to empty array if no data available
-				setLocalEvents([]);
-			}
-		}
-	}, [databaseEvents, loading, error]);
-
-	// Real-time updates are handled within useFinancialEvents hook
-
 	const addEvent = useCallback(
 		async (event: FinancialEvent) => {
 			const newEvent = await addEventMutation(event);
-			setLocalEvents((prev) => [...prev, newEvent]);
+			// React Query will automatically invalidate and refetch
 			return newEvent;
 		},
 		[addEventMutation],
@@ -107,9 +96,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 	const updateEvent = useCallback(
 		async (updatedEvent: FinancialEvent) => {
 			const result = await updateEventMutation(updatedEvent.id, updatedEvent);
-			setLocalEvents((prev) =>
-				prev.map((event) => (event.id === updatedEvent.id ? result : event)),
-			);
+			// React Query will automatically invalidate and refetch
 			return result;
 		},
 		[updateEventMutation],
@@ -118,7 +105,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 	const deleteEvent = useCallback(
 		async (eventId: string) => {
 			await deleteEventMutation(eventId);
-			setLocalEvents((prev) => prev.filter((event) => event.id !== eventId));
+			// React Query will automatically invalidate and refetch
 		},
 		[deleteEventMutation],
 	);

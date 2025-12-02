@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatEventAmount } from '@/types/financial-events';
 
-export const MiniCalendarWidget = React.memo(function MiniCalendarWidget() {
+export const MiniCalendarWidget = React.memo(function MiniCalendarWidgetComponent() {
 	const { events } = useCalendar();
 	const navigate = useNavigate();
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date());

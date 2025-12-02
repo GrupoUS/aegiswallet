@@ -43,13 +43,11 @@ async function buildApi() {
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
 			keepNames: true,
-			// External modules that Node.js provides or Vercel handles
+			// External modules - only Node.js built-ins
+			// Note: All npm packages must be bundled for Vercel serverless
 			external: [
-				// Node.js built-ins
+				// Node.js built-ins only
 				'node:*',
-				// Vercel-provided at runtime
-				'@neondatabase/serverless',
-				'@clerk/backend',
 			],
 			// Resolve @ alias to src directory
 			alias: {

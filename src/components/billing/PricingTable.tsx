@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react';
+import { useId } from 'react';
 
 import { PricingCard } from './PricingCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,6 +9,7 @@ import { usePlans, useSubscription } from '@/hooks/billing';
 export function PricingTable() {
 	const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
 	const { data: subscription } = useSubscription();
+	const descriptionId = useId();
 
 	if (plansLoading) {
 		return (
@@ -40,12 +42,12 @@ export function PricingTable() {
 
 	if (!plans || plans.length === 0) {
 		return (
-			<div role="status" aria-live="polite">
+			<output aria-live="polite">
 				<Alert>
 					<AlertCircle className="h-4 w-4" aria-hidden="true" />
 					<AlertDescription>Nenhum plano disponível no momento.</AlertDescription>
 				</Alert>
-			</div>
+			</output>
 		);
 	}
 
@@ -54,11 +56,10 @@ export function PricingTable() {
 	return (
 		<div className="space-y-4">
 			{/* Mobile-first horizontal scroll container */}
-			<div
+			<section
 				className="relative overflow-x-auto pb-4 md:hidden"
-				role="region"
 				aria-label="Seleção de planos de assinatura"
-				aria-describedby="pricing-table-description"
+				aria-describedby={descriptionId}
 			>
 				<div className="flex gap-6 min-w-max">
 					{plans.map((plan: (typeof plans)[number], index: number) => (
@@ -84,14 +85,12 @@ export function PricingTable() {
 						))}
 					</div>
 				</div>
-			</div>
-
+			</section>
 			{/* Desktop/Tablet grid layout */}
-			<div
+			<section
 				className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-				role="region"
 				aria-label="Planos de assinatura"
-				aria-describedby="pricing-table-description"
+				aria-describedby={descriptionId}
 			>
 				{plans.map((plan: (typeof plans)[number], index: number) => (
 					<PricingCard
@@ -101,10 +100,10 @@ export function PricingTable() {
 						recommended={index === 1} // Middle plan is recommended
 					/>
 				))}
-			</div>
+			</section>
 
 			{/* Screen reader description */}
-			<div id="pricing-table-description" className="sr-only">
+			<div id={descriptionId} className="sr-only">
 				<h3>Tabela de planos disponíveis</h3>
 				<p>
 					Use as setas do teclado para navegar entre os planos.

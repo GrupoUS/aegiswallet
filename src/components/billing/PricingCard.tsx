@@ -24,6 +24,85 @@ interface PricingCardProps {
 	'aria-describedby'?: string;
 }
 
+function renderBadge(isCurrent: boolean, recommended?: boolean) {
+	if (isCurrent) {
+		return (
+			<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+				<Badge className="flex items-center gap-1" variant="outline" aria-label="Seu plano atual">
+					<Check className="h-3 w-3" aria-hidden="true" />
+					Plano Atual
+				</Badge>
+			</div>
+		);
+	}
+	if (recommended) {
+		return (
+			<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+				<Badge
+					className="flex items-center gap-1 shadow-lg"
+					variant="default"
+					aria-label="Plano recomendado"
+				>
+					<Star className="h-3 w-3" aria-hidden="true" />
+					Recomendado
+				</Badge>
+			</div>
+		);
+	}
+	return null;
+}
+
+function renderButtonContent(isCurrent: boolean, isFree: boolean, isPending: boolean) {
+	if (isCurrent) {
+		return (
+			<>
+				<Check className="h-4 w-4 mr-2" aria-hidden="true" />
+				Plano Atual
+			</>
+		);
+	}
+	if (isFree) {
+		return (
+			<>
+				<Check className="h-4 w-4 mr-2" aria-hidden="true" />
+				Gratuito
+			</>
+		);
+	}
+	if (isPending) {
+		return (
+			<>
+				<Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+				Processando...
+			</>
+		);
+	}
+	return (
+		<>
+			<Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+			Assinar Agora
+		</>
+	);
+}
+
+function getButtonAriaLabel(
+	plan: SubscriptionPlan & { priceFormatted: string },
+	isCurrent: boolean,
+	isFree: boolean,
+	isPending: boolean,
+) {
+	if (isCurrent) {
+		return `Você já possui o ${plan.name}`;
+	}
+	if (isFree) {
+		return `${plan.name} é gratuito`;
+	}
+	if (isPending) {
+		return `Processando assinatura do ${plan.name}`;
+	}
+	return `Assinar o ${plan.name} por ${formatPrice(plan.priceCents, plan.currency)}`;
+}
+
 export function PricingCard({
 	plan,
 	currentPlanId,
@@ -73,28 +152,7 @@ export function PricingCard({
 				<Lock className="h-4 w-4 text-blue-600" aria-label="Dados protegidos por LGPD" />
 			</div>
 
-			{/* Show only one badge: isCurrent takes precedence over recommended */}
-			{recommended && !isCurrent && (
-				<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-					<Badge
-						className="flex items-center gap-1 shadow-lg"
-						variant="default"
-						aria-label="Plano recomendado"
-					>
-						<Star className="h-3 w-3" aria-hidden="true" />
-						Recomendado
-					</Badge>
-				</div>
-			)}
-
-			{isCurrent && (
-				<div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-					<Badge className="flex items-center gap-1" variant="outline" aria-label="Seu plano atual">
-						<Check className="h-3 w-3" aria-hidden="true" />
-						Plano Atual
-					</Badge>
-				</div>
-			)}
+			{renderBadge(isCurrent, recommended)}
 
 			<CardHeader className="space-y-4">
 				<div>
@@ -108,12 +166,7 @@ export function PricingCard({
 
 				<div className="text-center space-y-2">
 					<div className="flex items-baseline justify-center gap-1">
-						<span
-							id={priceId}
-							className="text-4xl font-bold text-primary"
-							aria-live="polite"
-							aria-label={`Preço: ${formatPrice(plan.priceCents, plan.currency)}`}
-						>
+						<span id={priceId} className="text-4xl font-bold text-primary" aria-live="polite">
 							{formatPrice(plan.priceCents, plan.currency)}
 						</span>
 						{!isFree && <span className="text-muted-foreground">/mês</span>}
@@ -157,42 +210,11 @@ export function PricingCard({
 					variant={recommended ? 'default' : 'outline'}
 					disabled={isFree || isCurrent || isPending}
 					onClick={handleSelect}
-					aria-label={
-						isCurrent
-							? `Você já possui o ${plan.name}`
-							: isFree
-								? `${plan.name} é gratuito`
-								: isPending
-									? `Processando assinatura do ${plan.name}`
-									: `Assinar o ${plan.name} por ${formatPrice(plan.priceCents, plan.currency)}`
-					}
+					aria-label={getButtonAriaLabel(plan, isCurrent, isFree, isPending)}
 					role="button"
 					aria-describedby={`${cardId}-button-help`}
 				>
-					{isCurrent && (
-						<>
-							<Check className="h-4 w-4 mr-2" aria-hidden="true" />
-							Plano Atual
-						</>
-					)}
-					{isFree && (
-						<>
-							<Check className="h-4 w-4 mr-2" aria-hidden="true" />
-							Gratuito
-						</>
-					)}
-					{isPending && (
-						<>
-							<Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
-							Processando...
-						</>
-					)}
-					{!(isCurrent || isFree || isPending) && (
-						<>
-							<Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
-							Assinar Agora
-						</>
-					)}
+					{renderButtonContent(isCurrent, isFree, isPending)}
 				</Button>
 
 				{/* Screen reader help text */}

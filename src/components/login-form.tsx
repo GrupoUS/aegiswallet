@@ -38,7 +38,7 @@ export function LoginForm({
 	const loading = externalLoading ?? internalLoading;
 	const error = externalError ?? internalError;
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setInternalError('');
 

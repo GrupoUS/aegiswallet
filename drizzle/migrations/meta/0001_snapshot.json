@@ -6475,13 +6475,7 @@
 		"public.member_role": {
 			"name": "member_role",
 			"schema": "public",
-			"values": [
-				"admin",
-				"member",
-				"viewer",
-				"finance_manager",
-				"compliance_officer"
-			]
+			"values": ["admin", "member", "viewer", "finance_manager", "compliance_officer"]
 		},
 		"public.member_status": {
 			"name": "member_status",
@@ -6496,14 +6490,7 @@
 		"public.organization_type": {
 			"name": "organization_type",
 			"schema": "public",
-			"values": [
-				"individual",
-				"mei",
-				"limited_company",
-				"corporation",
-				"association",
-				"foundation"
-			]
+			"values": ["individual", "mei", "limited_company", "corporation", "association", "foundation"]
 		},
 		"public.payment_method_type": {
 			"name": "payment_method_type",
@@ -6528,14 +6515,7 @@
 		"public.pix_transaction_status": {
 			"name": "pix_transaction_status",
 			"schema": "public",
-			"values": [
-				"pending",
-				"processing",
-				"completed",
-				"failed",
-				"cancelled",
-				"reversed"
-			]
+			"values": ["pending", "processing", "completed", "failed", "cancelled", "reversed"]
 		},
 		"public.pix_transaction_type_enum": {
 			"name": "pix_transaction_type_enum",

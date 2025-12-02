@@ -11,6 +11,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 interface AsyncErrorBoundaryState {
 	hasError: boolean;
 	error: Error | null;
+	errorId: string;
 }
 
 interface AsyncErrorBoundaryProps {
@@ -33,6 +34,7 @@ export class AsyncErrorBoundary extends Component<
 		this.state = {
 			error: null,
 			hasError: false,
+			errorId: '',
 		};
 	}
 
@@ -57,6 +59,7 @@ export class AsyncErrorBoundary extends Component<
 		this.setState({
 			error,
 			hasError: true,
+			errorId: this.generateErrorId(),
 		});
 
 		this.props.onError?.(error);
@@ -66,23 +69,18 @@ export class AsyncErrorBoundary extends Component<
 		this.setState({
 			error: null,
 			hasError: false,
+			errorId: '',
 		});
 	};
 
 	render() {
-		const { hasError, error } = this.state;
+		const { hasError, error, errorId } = this.state;
 		const { children, fallback } = this.props;
 
 		if (hasError && error) {
 			if (fallback) {
 				const FallbackComponent = fallback;
-				return (
-					<FallbackComponent
-						error={error}
-						errorId={this.generateErrorId()}
-						retry={this.handleRetry}
-					/>
-				);
+				return <FallbackComponent error={error} errorId={errorId} retry={this.handleRetry} />;
 			}
 
 			// Default async error UI

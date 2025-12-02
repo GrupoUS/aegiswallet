@@ -22,8 +22,16 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@test-utils/*": ["./src/test/*"]
-		}
+		},
+		"types": ["vitest/globals", "node"]
 	},
 	"include": ["src"],
-	"exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx", "src/test/**"]
+	"exclude": [
+		"node_modules",
+		"src/**/*.test.ts",
+		"src/**/*.test.tsx",
+		"src/**/*.spec.ts",
+		"src/**/*.spec.tsx",
+		"src/test/**"
+	]
 }

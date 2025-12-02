@@ -77,16 +77,12 @@ export const VoiceComponentTemplate: React.FC<VoiceComponentProps> = ({
 			'not-allowed': 'Permissão negada. Permita o acesso ao microfone.',
 		};
 
-		const errorMessage =
-			errorMessages[error] || 'Ocorreu um erro. Tente novamente.';
+		const errorMessage = errorMessages[error] || 'Ocorreu um erro. Tente novamente.';
 		setLastResponse(errorMessage);
 		announceToScreenReader(errorMessage);
 	};
 
-	const processVoiceCommand = (
-		transcript: string,
-		confidence: number,
-	): VoiceCommand => {
+	const processVoiceCommand = (transcript: string, confidence: number): VoiceCommand => {
 		// Brazilian Portuguese text normalization
 		const normalizedTranscript = transcript
 			.toLowerCase()
@@ -102,11 +98,7 @@ export const VoiceComponentTemplate: React.FC<VoiceComponentProps> = ({
 				/como.*está.*minha.*conta/,
 				/quanto.*dinheiro/,
 			],
-			bill_query: [
-				/boleto|conta.*pagar/,
-				/tem.*conta.*programada/,
-				/pagar.*conta/,
-			],
+			bill_query: [/boleto|conta.*pagar/, /tem.*conta.*programada/, /pagar.*conta/],
 			spending_query: [/quanto.*posso.*gastar/, /limite.*gasto/, /orçamento/],
 			transfer_query: [
 				/transfer(e|ir|ência)?.*para/,
@@ -239,9 +231,7 @@ export const VoiceComponentTemplate: React.FC<VoiceComponentProps> = ({
 							? 'bg-gray-400 cursor-not-allowed'
 							: 'bg-primary hover:bg-primary/600 disabled:bg-gray-300',
 					)}
-					aria-label={
-						isListening ? 'Já está ouvindo' : 'Iniciar reconhecimento de voz'
-					}
+					aria-label={isListening ? 'Já está ouvindo' : 'Iniciar reconhecimento de voz'}
 				>
 					{isListening ? 'Ouvindo...' : 'Falar'}
 				</button>
@@ -259,12 +249,7 @@ export const VoiceComponentTemplate: React.FC<VoiceComponentProps> = ({
 			</div>
 
 			{/* Screen Reader Announcements */}
-			<div
-				className="sr-only"
-				role="status"
-				aria-live="assertive"
-				aria-atomic="true"
-			>
+			<div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
 				{lastResponse}
 			</div>
 		</div>

@@ -32,16 +32,12 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 			const exportOption = page.locator('[data-testid="export-data-button"]');
 
 			// Wait for PrivacyPreferences to render (may require auth)
-			const hasExport = await exportOption
-				.isVisible({ timeout: 10000 })
-				.catch(() => false);
+			const hasExport = await exportOption.isVisible({ timeout: 10000 }).catch(() => false);
 
 			// Pass test if export button is visible, skip if auth required
 			if (!hasExport) {
 				// Check if we can see the privacy-settings container
-				const privacySettings = page.locator(
-					'[data-testid="privacy-settings"]',
-				);
+				const privacySettings = page.locator('[data-testid="privacy-settings"]');
 				const hasPrivacySettings = await privacySettings
 					.isVisible({ timeout: 5000 })
 					.catch(() => false);
@@ -60,9 +56,7 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 			const exportButton = page.locator('[data-testid="export-data-button"]');
 
 			// Check for download or confirmation
-			const downloadPromise = page
-				.waitForEvent('download', { timeout: 30000 })
-				.catch(() => null);
+			const downloadPromise = page.waitForEvent('download', { timeout: 30000 }).catch(() => null);
 
 			await exportButton.click().catch(() => {});
 
@@ -92,19 +86,13 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 			}
 
 			// Look for delete account button - matches PrivacyPreferences component
-			const deleteOption = page.locator(
-				'[data-testid="delete-account-button"]',
-			);
+			const deleteOption = page.locator('[data-testid="delete-account-button"]');
 
-			const hasDelete = await deleteOption
-				.isVisible({ timeout: 10000 })
-				.catch(() => false);
+			const hasDelete = await deleteOption.isVisible({ timeout: 10000 }).catch(() => false);
 
 			// Pass test if delete button is visible, or if page loads (may require auth)
 			if (!hasDelete) {
-				const privacySettings = page.locator(
-					'[data-testid="privacy-settings"]',
-				);
+				const privacySettings = page.locator('[data-testid="privacy-settings"]');
 				const hasPrivacySettings = await privacySettings
 					.isVisible({ timeout: 5000 })
 					.catch(() => false);
@@ -117,9 +105,7 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 		test('should require confirmation for data deletion', async ({ page }) => {
 			await page.goto('/configuracoes');
 
-			const deleteButton = page.locator(
-				'[data-testid="delete-account-button"]',
-			);
+			const deleteButton = page.locator('[data-testid="delete-account-button"]');
 
 			// Set up dialog handler before clicking
 			page.on('dialog', async (dialog) => {
@@ -143,9 +129,7 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 			const privacySettings = page.locator('[data-testid="privacy-settings"]');
 
 			// If not visible, try navigating to privacy section
-			if (
-				!(await privacySettings.isVisible({ timeout: 2000 }).catch(() => false))
-			) {
+			if (!(await privacySettings.isVisible({ timeout: 2000 }).catch(() => false))) {
 				const privacyNav = page
 					.locator('button:has-text("Privacidade"), [data-value="privacy"]')
 					.first();
@@ -167,9 +151,7 @@ test.describe('LGPD Compliance - Data Subject Rights', () => {
 				const hasPrivacySettings = await privacySettings
 					.isVisible({ timeout: 5000 })
 					.catch(() => false);
-				expect(
-					hasPrivacySettings || page.url().includes('/configuracoes'),
-				).toBeTruthy();
+				expect(hasPrivacySettings || page.url().includes('/configuracoes')).toBeTruthy();
 			} else {
 				expect(hasToggles).toBe(true);
 			}

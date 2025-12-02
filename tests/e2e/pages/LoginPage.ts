@@ -31,9 +31,7 @@ export class LoginPage {
 	}
 
 	get dashboardIndicator() {
-		return this.page
-			.locator('[data-testid="dashboard"], h1:has-text("Dashboard")')
-			.first();
+		return this.page.locator('[data-testid="dashboard"], h1:has-text("Dashboard")').first();
 	}
 
 	// Action Methods

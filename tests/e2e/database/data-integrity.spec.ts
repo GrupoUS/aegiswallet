@@ -24,9 +24,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 		});
 	});
 
-	test('should redirect to login when accessing protected routes', async ({
-		page,
-	}) => {
+	test('should redirect to login when accessing protected routes', async ({ page }) => {
 		await page.goto('/dashboard');
 
 		// Wait for redirect
@@ -36,9 +34,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 		expect(page.url()).toMatch(/login|auth/i);
 	});
 
-	test('should redirect to login when accessing saldo page', async ({
-		page,
-	}) => {
+	test('should redirect to login when accessing saldo page', async ({ page }) => {
 		await page.goto('/saldo');
 
 		// Wait for redirect
@@ -48,9 +44,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 		expect(page.url()).toMatch(/login|auth/i);
 	});
 
-	test('should redirect to login when accessing calendario page', async ({
-		page,
-	}) => {
+	test('should redirect to login when accessing calendario page', async ({ page }) => {
 		await page.goto('/calendario');
 
 		// Wait for redirect
@@ -60,9 +54,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 		expect(page.url()).toMatch(/login|auth/i);
 	});
 
-	test('should redirect to login when accessing contas page', async ({
-		page,
-	}) => {
+	test('should redirect to login when accessing contas page', async ({ page }) => {
 		await page.goto('/contas');
 
 		// Wait for redirect
@@ -72,9 +64,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 		expect(page.url()).toMatch(/login|auth/i);
 	});
 
-	test('should redirect to login when accessing configuracoes page', async ({
-		page,
-	}) => {
+	test('should redirect to login when accessing configuracoes page', async ({ page }) => {
 		await page.goto('/configuracoes');
 
 		// Wait for redirect
@@ -92,9 +82,7 @@ test.describe('Data Integrity - Frontend Protection', () => {
 
 		// Check for login form elements
 		const hasLoginForm =
-			(await page
-				.locator('input[type="email"], input[type="password"]')
-				.count()) > 0;
+			(await page.locator('input[type="email"], input[type="password"]').count()) > 0;
 		expect(hasLoginForm).toBeTruthy();
 	});
 

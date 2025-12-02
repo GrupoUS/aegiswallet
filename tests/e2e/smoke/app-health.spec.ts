@@ -28,9 +28,7 @@ test.describe('App Health - Smoke Tests', () => {
 		await expect(page).toHaveTitle(/AegisWallet|Aegis/i);
 
 		// Main app container should be visible
-		await expect(
-			page.locator('#root, #app, [data-testid="app-root"]').first(),
-		).toBeVisible();
+		await expect(page.locator('#root, #app, [data-testid="app-root"]').first()).toBeVisible();
 	});
 
 	test('should have no critical JavaScript errors', async ({ page }) => {
@@ -61,7 +59,7 @@ test.describe('App Health - Smoke Tests', () => {
 
 		// Filter out expected 404s (favicon, etc.) if needed
 		const criticalFailures = failedRequests.filter(
-			(req) => !req.includes('favicon') && !req.includes('.map'),
+			(req) => !(req.includes('favicon') || req.includes('.map')),
 		);
 
 		expect(criticalFailures).toHaveLength(0);
@@ -71,9 +69,7 @@ test.describe('App Health - Smoke Tests', () => {
 		await page.goto('/');
 
 		// Check for common navigation elements (adjust selectors as needed)
-		const navElements = page.locator(
-			'nav, [role="navigation"], [data-testid*="nav"]',
-		);
+		const navElements = page.locator('nav, [role="navigation"], [data-testid*="nav"]');
 		await expect(navElements.first()).toBeVisible({ timeout: 10000 });
 	});
 

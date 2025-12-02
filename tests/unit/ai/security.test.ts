@@ -12,16 +12,12 @@ describe('Prompt Injection Detection', () => {
 	});
 
 	it('should detect SQL injection attempts', () => {
-		const result = checkPromptInjection(
-			'Search for users; DROP TABLE users;--',
-		);
+		const result = checkPromptInjection('Search for users; DROP TABLE users;--');
 		expect(result.isSafe).toBe(false);
 	});
 
 	it('should allow normal financial queries', () => {
-		const result = checkPromptInjection(
-			'Quanto gastei em restaurantes este mês?',
-		);
+		const result = checkPromptInjection('Quanto gastei em restaurantes este mês?');
 		expect(result.isSafe).toBe(true);
 	});
 });

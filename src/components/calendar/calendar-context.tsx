@@ -83,9 +83,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		if (!loading) {
 			if (error) {
 				setLocalEvents([]);
-			} else {
+			} else if (databaseEvents) {
 				// Use only database data, even if empty
 				setLocalEvents(databaseEvents);
+			} else {
+				// Fallback to empty array if no data available
+				setLocalEvents([]);
 			}
 		}
 	}, [databaseEvents, loading, error]);
@@ -230,8 +233,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 			return localEvents.filter(
 				(event) =>
 					event.title.toLowerCase().includes(searchLower) ||
-					event.description?.toLowerCase().includes(searchLower) ||
-					event.category?.toLowerCase().includes(searchLower),
+					(event.description && event.description.toLowerCase().includes(searchLower)) ||
+					(event.category && event.category.toLowerCase().includes(searchLower)),
 			);
 		},
 		[localEvents],

@@ -84,11 +84,6 @@
 		]
 	},
 	"enableAllProjectMcpServers": true,
-	"enabledMcpjsonServers": [
-		"context7",
-		"sequential-thinking",
-		"serena",
-		"tavily"
-	],
+	"enabledMcpjsonServers": ["context7", "sequential-thinking", "serena", "tavily"],
 	"outputStyle": "default"
 }

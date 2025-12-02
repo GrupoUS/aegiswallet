@@ -95,6 +95,10 @@ export interface TransactionValidation {
 	};
 	recipient: {
 		required: false;
+		pattern: RegExp;
+	};
+	reference: {
+		required: false;
 		maxLength: 50;
 	};
 }
@@ -102,88 +106,51 @@ export interface TransactionValidation {
 /**
  * Type guard for transaction validation
  */
-export function isValidTransaction(obj: unknown): obj is Transaction {
-	if (!obj || typeof obj !== 'object') {
+export function isValidTransaction(transaction: unknown): transaction is Transaction {
+	if (!transaction || typeof transaction !== 'object') {
 		return false;
 	}
 
-	const transaction = obj as Record<string, unknown>;
+	const tx = transaction as Record<string, unknown>;
 
 	return (
-		typeof transaction.id === 'string' &&
-		typeof transaction.userId === 'string' &&
-		typeof transaction.amount === 'number' &&
-		transaction.currency === 'BRL' &&
-		typeof transaction.categoryId === 'string' &&
-		typeof transaction.description === 'string' &&
-		transaction.date instanceof Date &&
-		Object.values(TransactionStatus).includes(transaction.status as TransactionStatus)
+		typeof tx.id === 'string' &&
+		typeof tx.userId === 'string' &&
+		typeof tx.amount === 'number' &&
+		tx.amount > 0 &&
+		typeof tx.currency === 'string' &&
+		tx.currency === 'BRL' &&
+		typeof tx.categoryId === 'string' &&
+		typeof tx.description === 'string' &&
+		tx.date instanceof Date &&
+		typeof tx.status === 'string' &&
+		Object.values(TransactionStatus).includes(tx.status as TransactionStatus) &&
+		tx.createdAt instanceof Date &&
+		tx.updatedAt instanceof Date
 	);
 }
 
 /**
- * Type guard for create transaction request
+ * Type guard for transaction creation request
  */
-export function isValidCreateTransactionRequest(obj: unknown): obj is CreateTransactionRequest {
-	if (!obj || typeof obj !== 'object') {
+export function isValidCreateTransactionRequest(
+	request: unknown,
+): request is CreateTransactionRequest {
+	if (!request || typeof request !== 'object') {
 		return false;
 	}
 
-	const request = obj as Record<string, unknown>;
+	const req = request as Record<string, unknown>;
 
 	return (
-		typeof request.amount === 'number' &&
-		request.amount > 0 &&
-		typeof request.description === 'string' &&
-		request.description.length > 0 &&
-		typeof request.categoryId === 'string'
+		typeof req.amount === 'number' &&
+		req.amount > 0 &&
+		typeof req.description === 'string' &&
+		req.description.length >= 1 &&
+		req.description.length <= 255 &&
+		typeof req.categoryId === 'string' &&
+		(!('recipient' in req) || typeof req.recipient === 'string') &&
+		(!('reference' in req) || typeof req.reference === 'string') &&
+		(!('date' in req) || req.date instanceof Date)
 	);
-}
-
-/**
- * Transaction metadata interface
- */
-export interface TransactionMetadata {
-	paymentMethod?: string;
-	location?: {
-		name: string;
-		address?: string;
-	};
-	tags?: string[];
-	notes?: string;
-}
-
-/**
- * Transaction statistics interface
- */
-export interface TransactionStatistics {
-	totalAmount: number;
-	transactionCount: number;
-	averageAmount: number;
-	categoryBreakdown: Record<string, number>;
-	monthlyBreakdown: Record<string, number>;
-}
-
-/**
- * Transaction search filters
- */
-export interface TransactionFilters {
-	categoryId?: string;
-	status?: TransactionStatus;
-	dateFrom?: Date;
-	dateTo?: Date;
-	minAmount?: number;
-	maxAmount?: number;
-	searchTerm?: string;
-}
-
-/**
- * Transaction list response
- */
-export interface TransactionListResponse {
-	transactions: Transaction[];
-	total: number;
-	page: number;
-	limit: number;
-	hasMore: boolean;
 }

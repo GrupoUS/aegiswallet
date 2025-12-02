@@ -14,11 +14,7 @@ const TEST_CONFIG = {
 	// Routes where we verify user-specific data
 	dataRoutes: ['/dashboard', '/saldo', '/contas'],
 	// API endpoints to test with JWTs
-	apiEndpoints: [
-		'/api/v1/transactions',
-		'/api/v1/bank-accounts',
-		'/api/v1/contacts',
-	],
+	apiEndpoints: ['/api/v1/transactions', '/api/v1/bank-accounts', '/api/v1/contacts'],
 };
 
 // Helper function to generate unique test user credentials
@@ -48,15 +44,11 @@ async function signUpUser(
 			await acceptButton.click();
 		}
 		// Wait for banner to disappear
-		await consentBanner
-			.waitFor({ state: 'hidden', timeout: 3000 })
-			.catch(() => {});
+		await consentBanner.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
 	}
 
 	// Toggle to signup mode by clicking the link "Não tem uma conta? Cadastre-se"
-	await page
-		.getByRole('button', { name: /Não tem uma conta\? Cadastre-se/i })
-		.click();
+	await page.getByRole('button', { name: /Não tem uma conta\? Cadastre-se/i }).click();
 	// Now fill the form
 	await page.fill('input[type="email"]', user.email);
 	await page.fill('input[type="password"]', user.password);
@@ -71,9 +63,7 @@ async function signUpUser(
 		// Check if email verification is required
 		const verifyMessage = page.getByText(/Verifique seu email/i);
 		if (await verifyMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
-			console.log(
-				'Email verification required - test environment not configured for auto-verify',
-			);
+			console.log('Email verification required - test environment not configured for auto-verify');
 			return false;
 		}
 		// Check for any error message
@@ -147,9 +137,7 @@ async function createContact(
 }
 
 test.describe('Data Isolation & Security', () => {
-	test('should redirect unauthenticated users from protected routes', async ({
-		page,
-	}) => {
+	test('should redirect unauthenticated users from protected routes', async ({ page }) => {
 		for (const route of TEST_CONFIG.protectedRoutes) {
 			console.log(`Testing protection for route: ${route}`);
 			await page.goto(route);
@@ -162,9 +150,7 @@ test.describe('Data Isolation & Security', () => {
 		}
 	});
 
-	test('should not allow access to protected components without auth', async ({
-		page,
-	}) => {
+	test('should not allow access to protected components without auth', async ({ page }) => {
 		// Attempt to access a protected route and verify no protected content is leaked before redirect
 		await page.goto('/dashboard');
 
@@ -175,9 +161,7 @@ test.describe('Data Isolation & Security', () => {
 		await expect(page).toHaveURL(/\/login/);
 	});
 
-	test('should enforce multi-user data isolation for transactions', async ({
-		browser,
-	}) => {
+	test('should enforce multi-user data isolation for transactions', async ({ browser }) => {
 		// Create two separate browser contexts for two different users
 		const contextA = await browser.newContext();
 		const contextB = await browser.newContext();
@@ -195,11 +179,7 @@ test.describe('Data Isolation & Security', () => {
 				test.skip();
 				return;
 			}
-			await createTransaction(
-				pageA,
-				`Transaction_UserA_${timestamp}`,
-				'100.00',
-			);
+			await createTransaction(pageA, `Transaction_UserA_${timestamp}`, '100.00');
 
 			// 2. Sign up User B
 			const userBSignedUp = await signUpUser(pageB, userB);
@@ -210,39 +190,25 @@ test.describe('Data Isolation & Security', () => {
 
 			// 3. Verify User B cannot see User A's transaction
 			await pageB.goto('/saldo');
-			await expect(
-				pageB.getByText(`Transaction_UserA_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageB.getByText(`Transaction_UserA_${timestamp}`)).not.toBeVisible();
 
 			// 4. Create transaction for User B
-			await createTransaction(
-				pageB,
-				`Transaction_UserB_${timestamp}`,
-				'200.00',
-			);
+			await createTransaction(pageB, `Transaction_UserB_${timestamp}`, '200.00');
 
 			// 5. Verify User A cannot see User B's transaction
 			await pageA.reload();
-			await expect(
-				pageA.getByText(`Transaction_UserB_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageA.getByText(`Transaction_UserB_${timestamp}`)).not.toBeVisible();
 
 			// 6. Verify each user sees only their own data
-			await expect(
-				pageA.getByText(`Transaction_UserA_${timestamp}`),
-			).toBeVisible();
-			await expect(
-				pageB.getByText(`Transaction_UserB_${timestamp}`),
-			).toBeVisible();
+			await expect(pageA.getByText(`Transaction_UserA_${timestamp}`)).toBeVisible();
+			await expect(pageB.getByText(`Transaction_UserB_${timestamp}`)).toBeVisible();
 		} finally {
 			await contextA.close();
 			await contextB.close();
 		}
 	});
 
-	test('should enforce multi-user data isolation for bank accounts', async ({
-		browser,
-	}) => {
+	test('should enforce multi-user data isolation for bank accounts', async ({ browser }) => {
 		const contextA = await browser.newContext();
 		const contextB = await browser.newContext();
 		const pageA = await contextA.newPage();
@@ -259,11 +225,7 @@ test.describe('Data Isolation & Security', () => {
 				test.skip();
 				return;
 			}
-			await createBankAccount(
-				pageA,
-				`BankAccount_UserA_${timestamp}`,
-				'5000.00',
-			);
+			await createBankAccount(pageA, `BankAccount_UserA_${timestamp}`, '5000.00');
 
 			// 2. Sign up User B
 			const userBSignedUp = await signUpUser(pageB, userB);
@@ -274,39 +236,25 @@ test.describe('Data Isolation & Security', () => {
 
 			// 3. Verify User B cannot see User A's bank account
 			await pageB.goto('/contas-bancarias');
-			await expect(
-				pageB.getByText(`BankAccount_UserA_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageB.getByText(`BankAccount_UserA_${timestamp}`)).not.toBeVisible();
 
 			// 4. Create bank account for User B
-			await createBankAccount(
-				pageB,
-				`BankAccount_UserB_${timestamp}`,
-				'3000.00',
-			);
+			await createBankAccount(pageB, `BankAccount_UserB_${timestamp}`, '3000.00');
 
 			// 5. Verify User A cannot see User B's bank account
 			await pageA.reload();
-			await expect(
-				pageA.getByText(`BankAccount_UserB_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageA.getByText(`BankAccount_UserB_${timestamp}`)).not.toBeVisible();
 
 			// 6. Verify each user sees only their own bank account
-			await expect(
-				pageA.getByText(`BankAccount_UserA_${timestamp}`),
-			).toBeVisible();
-			await expect(
-				pageB.getByText(`BankAccount_UserB_${timestamp}`),
-			).toBeVisible();
+			await expect(pageA.getByText(`BankAccount_UserA_${timestamp}`)).toBeVisible();
+			await expect(pageB.getByText(`BankAccount_UserB_${timestamp}`)).toBeVisible();
 		} finally {
 			await contextA.close();
 			await contextB.close();
 		}
 	});
 
-	test('should enforce multi-user data isolation for contacts', async ({
-		browser,
-	}) => {
+	test('should enforce multi-user data isolation for contacts', async ({ browser }) => {
 		const contextA = await browser.newContext();
 		const contextB = await browser.newContext();
 		const pageA = await contextA.newPage();
@@ -323,11 +271,7 @@ test.describe('Data Isolation & Security', () => {
 				test.skip();
 				return;
 			}
-			await createContact(
-				pageA,
-				`Contact_UserA_${timestamp}`,
-				`pix_a_${timestamp}@email.com`,
-			);
+			await createContact(pageA, `Contact_UserA_${timestamp}`, `pix_a_${timestamp}@email.com`);
 
 			// 2. Sign up User B
 			const userBSignedUp = await signUpUser(pageB, userB);
@@ -338,22 +282,14 @@ test.describe('Data Isolation & Security', () => {
 
 			// 3. Verify User B cannot see User A's contact
 			await pageB.goto('/contas');
-			await expect(
-				pageB.getByText(`Contact_UserA_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageB.getByText(`Contact_UserA_${timestamp}`)).not.toBeVisible();
 
 			// 4. Create contact for User B
-			await createContact(
-				pageB,
-				`Contact_UserB_${timestamp}`,
-				`pix_b_${timestamp}@email.com`,
-			);
+			await createContact(pageB, `Contact_UserB_${timestamp}`, `pix_b_${timestamp}@email.com`);
 
 			// 5. Verify User A cannot see User B's contact
 			await pageA.reload();
-			await expect(
-				pageA.getByText(`Contact_UserB_${timestamp}`),
-			).not.toBeVisible();
+			await expect(pageA.getByText(`Contact_UserB_${timestamp}`)).not.toBeVisible();
 
 			// 6. Verify each user sees only their own contact
 			await expect(pageA.getByText(`Contact_UserA_${timestamp}`)).toBeVisible();
@@ -480,20 +416,14 @@ test.describe('API-Level Data Isolation', () => {
 				const dataB = await responseB.json();
 
 				// Verify User A's transaction appears in User A's response
-				const userATransactions = Array.isArray(dataA)
-					? dataA
-					: dataA.data || [];
-				const userBTransactions = Array.isArray(dataB)
-					? dataB
-					: dataB.data || [];
+				const userATransactions = Array.isArray(dataA) ? dataA : dataA.data || [];
+				const userBTransactions = Array.isArray(dataB) ? dataB : dataB.data || [];
 
-				const userAHasOwnData = userATransactions.some(
-					(t: { description?: string }) =>
-						t.description?.includes(`API_Test_UserA_${timestamp}`),
+				const userAHasOwnData = userATransactions.some((t: { description?: string }) =>
+					t.description?.includes(`API_Test_UserA_${timestamp}`),
 				);
-				const userBHasUserAData = userBTransactions.some(
-					(t: { description?: string }) =>
-						t.description?.includes(`API_Test_UserA_${timestamp}`),
+				const userBHasUserAData = userBTransactions.some((t: { description?: string }) =>
+					t.description?.includes(`API_Test_UserA_${timestamp}`),
 				);
 
 				// User A should see their own data
@@ -506,12 +436,8 @@ test.describe('API-Level Data Isolation', () => {
 				);
 			} else {
 				// If API endpoints don't exist or return errors, log but don't fail
-				console.log(
-					`API endpoints returned: A=${responseA.status()}, B=${responseB.status()}`,
-				);
-				console.log(
-					'API-level testing skipped - endpoints may not be implemented yet',
-				);
+				console.log(`API endpoints returned: A=${responseA.status()}, B=${responseB.status()}`);
+				console.log('API-level testing skipped - endpoints may not be implemented yet');
 			}
 
 			await requestContextA.dispose();
@@ -522,9 +448,7 @@ test.describe('API-Level Data Isolation', () => {
 		}
 	});
 
-	test('should return 401 for unauthenticated API requests', async ({
-		request,
-	}) => {
+	test('should return 401 for unauthenticated API requests', async ({ request }) => {
 		// Test that API endpoints properly reject unauthenticated requests
 		for (const endpoint of TEST_CONFIG.apiEndpoints) {
 			const response = await request.get(endpoint);
@@ -533,9 +457,7 @@ test.describe('API-Level Data Isolation', () => {
 			const status = response.status();
 			const acceptableStatuses = [401, 403, 500, 502, 503];
 			expect(acceptableStatuses).toContain(status);
-			console.log(
-				`Endpoint ${endpoint} returned ${status} for unauthenticated request`,
-			);
+			console.log(`Endpoint ${endpoint} returned ${status} for unauthenticated request`);
 		}
 	});
 });

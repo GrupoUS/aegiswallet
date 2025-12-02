@@ -2,7 +2,7 @@ import { logger } from '@/lib/logging/logger';
 import { environment } from '@/server/config/environment';
 import app from '@/server/index';
 
-const PORT = environment.PORT || 3001;
+const PORT = environment.PORT || 3000;
 
 logger.info(`🚀 AegisWallet Server starting...`, {
 	environment: environment.NODE_ENV,

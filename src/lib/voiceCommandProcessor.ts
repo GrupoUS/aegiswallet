@@ -2,9 +2,10 @@
 // Uses Clerk/Drizzle architecture with NeonDB
 // Commands are processed via API calls for security
 
-import { logger } from '@/lib/logging/logger';
+import { errorLogger } from '@/lib/error-logger';
 import { createNLUEngine } from '@/lib/nlu/nluEngine';
 import { IntentType } from '@/lib/nlu/types';
+import type { VoiceError } from '@/types/voice';
 
 export interface ProcessedCommand {
 	type: 'balance' | 'budget' | 'bills' | 'incoming' | 'projection' | 'transfer' | 'error';
@@ -74,15 +75,26 @@ export async function processVoiceCommandWithNLU(
 		const commandType = mapIntentToCommandType(nluResult.intent);
 		return executeCommand(commandType, transcript, userId, authToken, nluResult.confidence);
 	} catch (error) {
-		logger.voiceError('NLU processing error', {
-			error: error instanceof Error ? error.message : String(error),
-			transcript: transcript.substring(0, 100),
-			stack: error instanceof Error ? error.stack : undefined,
-			component: 'VoiceCommandProcessor',
-		});
+		const voiceError: VoiceError = {
+			code: 'UNKNOWN_ERROR',
+			message: 'Erro ao processar comando. Tente novamente.',
+			isRetryable: true,
+			suggestion: 'Por favor, fale claramente e tente novamente',
+			timestamp: new Date(),
+			context: {
+				command: transcript.substring(0, 100),
+				confidence: 0,
+			},
+		};
+
+		errorLogger.error(
+			'NLU processing error',
+			error instanceof Error ? error : new Error(String(error)),
+		);
+
 		return {
 			confidence: 0,
-			message: 'Erro ao processar comando. Tente novamente.',
+			message: voiceError.message,
 			type: 'error',
 		};
 	}
@@ -110,7 +122,7 @@ function mapIntentToCommandType(intent: IntentType): string | null {
 /**
  * Legacy function - updated to be async and use API
  */
-export async function processVoiceCommand(
+export function processVoiceCommand(
 	transcript: string,
 	confidence = 0.8,
 	userId?: string,
@@ -118,19 +130,19 @@ export async function processVoiceCommand(
 ): Promise<ProcessedCommand> {
 	// Check confidence threshold
 	if (confidence < CONFIDENCE_THRESHOLD) {
-		return {
+		return Promise.resolve({
 			confidence,
 			message: 'Não entendi bem. Poderia repetir mais claramente?',
 			type: 'error',
-		};
+		});
 	}
 
 	if (!(userId && authToken)) {
-		return {
+		return Promise.resolve({
 			confidence,
 			message: 'Você precisa estar logado.',
 			type: 'error',
-		};
+		});
 	}
 
 	// Match transcript against command patterns
@@ -169,6 +181,7 @@ async function executeCommand(
 		const response = await fetch('/api/v1/voice/command', {
 			method: 'POST',
 			headers: {
+				// biome-ignore lint/style/useNamingConvention: HTTP header requires specific casing
 				Authorization: `Bearer ${authToken}`,
 				'Content-Type': 'application/json',
 			},
@@ -192,10 +205,26 @@ async function executeCommand(
 			requiresConfirmation: result.requiresConfirmation,
 		} as ProcessedCommand;
 	} catch (error) {
-		logger.error('Error executing voice command', { error, commandType });
+		const voiceError: VoiceError = {
+			code: 'NETWORK_ERROR',
+			message: 'Não foi possível processar o comando no momento.',
+			isRetryable: true,
+			suggestion: 'Verifique sua conexão e tente novamente',
+			timestamp: new Date(),
+			context: {
+				command: commandType || 'unknown',
+				confidence,
+			},
+		};
+
+		errorLogger.error(
+			'Error executing voice command',
+			error instanceof Error ? error : new Error(String(error)),
+		);
+
 		return {
 			confidence,
-			message: 'Não foi possível processar o comando no momento.',
+			message: voiceError.message,
 			type: 'error',
 		};
 	}

@@ -243,13 +243,6 @@ class LGPDComplianceValidator {
 
 			const requiredColumns = ['user_id', 'consent_type', 'granted', 'granted_at', 'version'];
 
-			// Define proper type for database column metadata
-			interface SchemaColumn {
-				column_name: string;
-				data_type: string;
-				is_nullable: string;
-			}
-
 			const existingColumns = (consentColumns as SchemaColumn[])
 				.filter((col): col is SchemaColumn => col && typeof col.column_name === 'string')
 				.map((col) => col.column_name);

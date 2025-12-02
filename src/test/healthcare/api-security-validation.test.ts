@@ -152,7 +152,7 @@ const setupTestEnvironment = async () => {
 };
 
 // Call the setup function
-setupTestEnvironment();
+void setupTestEnvironment();
 
 beforeAll(() => {
 	if (typeof vi.useFakeTimers === 'function') {
@@ -614,7 +614,7 @@ describe('API Security, Authentication, and Client-Side Data Protection Validati
 		global.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({ data: {}, success: true }),
 			ok: true,
-		});
+		}) as unknown as typeof fetch;
 	});
 
 	afterAll(() => {

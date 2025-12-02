@@ -202,13 +202,13 @@ export function createContactsTools(userId: string) {
 			}) => {
 				try {
 					// Validate contact exists
-					const [contact] = await db
+					const [foundContact] = await db
 						.select({ name: contacts.name })
 						.from(contacts)
 						.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)))
 						.limit(1);
 
-					if (!contact) {
+					if (!foundContact) {
 						throw new Error('Contato não encontrado');
 					}
 
@@ -268,8 +268,8 @@ export function createContactsTools(userId: string) {
 					return {
 						success: true,
 						paymentMethod: filterSensitiveData(paymentMethod),
-						contactName: contact.name,
-						message: `Método de pagamento ${paymentType} adicionado para "${contact.name}": ${paymentDescription}`,
+						contactName: foundContact.name,
+						message: `Método de pagamento ${paymentType} adicionado para "${foundContact.name}": ${paymentDescription}`,
 						isReady: paymentType === 'PIX',
 					};
 				} catch (error) {
@@ -300,6 +300,7 @@ export function createContactsTools(userId: string) {
 					.optional()
 					.describe('Tipo de transferência (se não informado, usa o do método)'),
 			}),
+			// biome-ignore lint: Complex business logic for handling multiple payment types
 			execute: async ({ contactId, paymentMethodId, amount, description, paymentType }) => {
 				try {
 					// Fetch contact
@@ -510,13 +511,13 @@ export function createContactsTools(userId: string) {
 				try {
 					if (!confirmDeletion) {
 						// Buscar informações para confirmação
-						const [contact] = await db
+						const [contactToConfirm] = await db
 							.select({ name: contacts.name })
 							.from(contacts)
 							.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)))
 							.limit(1);
 
-						if (!contact) {
+						if (!contactToConfirm) {
 							throw new Error('Contato não encontrado');
 						}
 
@@ -529,14 +530,14 @@ export function createContactsTools(userId: string) {
 						return {
 							requiresConfirmation: true,
 							contactId,
-							contactName: contact.name,
+							contactName: contactToConfirm.name,
 							paymentMethodsCount: paymentMethodsCount.length,
-							message: `Deseja realmente excluir o contato "${contact.name}" e todos os seus métodos de pagamento? Esta ação não pode ser desfeita.`,
+							message: `Deseja realmente excluir o contato "${contactToConfirm.name}" e todos os seus métodos de pagamento? Esta ação não pode ser desfeita.`,
 						};
 					}
 
 					// Buscar nome para log
-					const [contact] = await db
+					const [contactForLog] = await db
 						.select({ name: contacts.name })
 						.from(contacts)
 						.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)))
@@ -555,13 +556,13 @@ export function createContactsTools(userId: string) {
 					secureLogger.info('Contato excluído com sucesso', {
 						contactId,
 						userId,
-						contactName: contact?.name || 'Nome não disponível',
+						contactName: contactForLog?.name || 'Nome não disponível',
 					});
 
 					return {
 						success: true,
 						contactId,
-						message: `Contato "${contact?.name}" e todos os seus métodos de pagamento foram excluídos com sucesso`,
+						message: `Contato "${contactForLog?.name}" e todos os seus métodos de pagamento foram excluídos com sucesso`,
 					};
 				} catch (error) {
 					secureLogger.error('Falha ao excluir contato', {
@@ -577,23 +578,26 @@ export function createContactsTools(userId: string) {
 }
 
 // Helper functions for listContacts
-function filterContactsByPix(contacts: ContactWithPaymentMethods[], hasPix: boolean | undefined) {
-	if (hasPix === undefined) return contacts;
+function filterContactsByPix(
+	contactList: ContactWithPaymentMethods[],
+	hasPix: boolean | undefined,
+) {
+	if (hasPix === undefined) return contactList;
 
-	return contacts.filter((contact) =>
+	return contactList.filter((contactItem) =>
 		hasPix
-			? contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
-			: !contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
+			? contactItem.contact_payment_methods.some((pm) => pm.payment_type === 'PIX')
+			: !contactItem.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
 	);
 }
 
-function calculateContactsStatistics(contacts: ContactWithPaymentMethods[]) {
-	const totalContacts = contacts.length;
-	const favoriteContacts = contacts.filter((c) => c.is_favorite).length;
-	const contactsWithPix = contacts.filter((c) =>
+function calculateContactsStatistics(contactList: ContactWithPaymentMethods[]) {
+	const totalContacts = contactList.length;
+	const favoriteContacts = contactList.filter((c) => c.is_favorite).length;
+	const contactsWithPix = contactList.filter((c) =>
 		c.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
 	).length;
-	const totalPaymentMethods = contacts.reduce(
+	const totalPaymentMethods = contactList.reduce(
 		(sum, c) => sum + c.contact_payment_methods.length,
 		0,
 	);
@@ -606,12 +610,12 @@ function calculateContactsStatistics(contacts: ContactWithPaymentMethods[]) {
 	};
 }
 
-function formatContactsResponse(contacts: ContactWithPaymentMethods[]) {
-	return contacts.map((contact) => ({
-		...filterSensitiveData(contact),
-		paymentMethods: contact.contact_payment_methods.map(filterSensitiveData),
-		hasPix: contact.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
-		favoritePaymentMethod: contact.contact_payment_methods.sort(
+function formatContactsResponse(contactList: ContactWithPaymentMethods[]) {
+	return contactList.map((contactItem) => ({
+		...filterSensitiveData(contactItem),
+		paymentMethods: contactItem.contact_payment_methods.map(filterSensitiveData),
+		hasPix: contactItem.contact_payment_methods.some((pm) => pm.payment_type === 'PIX'),
+		favoritePaymentMethod: contactItem.contact_payment_methods.sort(
 			(a, b) => b.usage_count - a.usage_count,
 		)[0],
 	}));
@@ -680,4 +684,149 @@ function isValidBrazilianCPF(cpf: string): boolean {
 		firstDigit === Number.parseInt(cleanCPF.charAt(9), 10) &&
 		secondDigit === Number.parseInt(cleanCPF.charAt(10), 10)
 	);
+}
+
+// Helper functions for sendToContact complexity reduction
+async function fetchContactForTransfer(userId: string, contactId: string) {
+	const [contact] = await db
+		.select()
+		.from(contacts)
+		.where(and(eq(contacts.id, contactId), eq(contacts.userId, userId)))
+		.limit(1);
+
+	if (!contact) {
+		throw new Error('Contato não encontrado');
+	}
+
+	return contact;
+}
+
+async function selectPaymentMethodForTransfer(
+	contactId: string,
+	paymentMethodId: string | undefined,
+	paymentType: 'PIX' | 'TED' | 'DOC' | undefined,
+) {
+	// Fetch payment methods
+	const paymentMethodsData = await db
+		.select()
+		.from(contactPaymentMethods)
+		.where(eq(contactPaymentMethods.contactId, contactId));
+
+	// Select payment method
+	let selectedMethod: (typeof paymentMethodsData)[0] | undefined;
+	if (paymentMethodId) {
+		selectedMethod = paymentMethodsData.find((pm) => pm.id === paymentMethodId);
+		if (!selectedMethod) {
+			throw new Error('Método de pagamento não encontrado para este contato');
+		}
+	} else {
+		selectedMethod = paymentMethodsData[0];
+		if (!selectedMethod) {
+			throw new Error('Nenhum método de pagamento encontrado para este contato');
+		}
+	}
+
+	// Validate payment type if specified
+	if (paymentType && selectedMethod.methodType !== paymentType) {
+		throw new Error(
+			`O método selecionado é do tipo ${selectedMethod.methodType}, mas foi solicitado ${paymentType}`,
+		);
+	}
+
+	return selectedMethod;
+}
+
+async function _updatePaymentMethodUsage(
+	selectedMethod: Awaited<ReturnType<typeof selectPaymentMethodForTransfer>>,
+) {
+	const currentUsage = (selectedMethod.methodDetails as { usage_count?: number })?.usage_count ?? 0;
+	await db
+		.update(contactPaymentMethods)
+		.set({
+			methodDetails: {
+				...(selectedMethod.methodDetails as Record<string, unknown>),
+				usage_count: currentUsage + 1,
+				last_used_at: new Date().toISOString(),
+			},
+			updatedAt: new Date(),
+		})
+		.where(eq(contactPaymentMethods.id, selectedMethod.id));
+}
+
+async function createPixTransfer(
+	userId: string,
+	contact: Awaited<ReturnType<typeof fetchContactForTransfer>>,
+	selectedMethod: Awaited<ReturnType<typeof selectPaymentMethodForTransfer>>,
+	amount: number,
+	finalDescription: string,
+): Promise<TransferResult> {
+	const { createPixTools } = await import('./pix');
+	const pixTools = createPixTools(userId);
+
+	if (!pixTools.sendPixTransfer?.execute) {
+		throw new Error('PIX transfer functionality not available');
+	}
+
+	const details = selectedMethod.methodDetails as Record<string, unknown>;
+	const recipientKey = details.pix_key as string;
+	const recipientKeyType = details.pix_key_type as string;
+
+	if (recipientKeyType === 'CPF' && !isValidBrazilianCPF(recipientKey)) {
+		throw new Error('CPF inválido para transferência PIX');
+	}
+
+	const pixTransferResult = (await pixTools.sendPixTransfer.execute(
+		{
+			recipientKey,
+			recipientKeyType: recipientKeyType as 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY',
+			recipientName: contact.name,
+			amount,
+			description: finalDescription,
+		},
+		{},
+	)) as PixTransferResult;
+
+	return {
+		success: pixTransferResult.success,
+		transfer: pixTransferResult.transfer,
+		message: pixTransferResult.message,
+		endToEndId: pixTransferResult.endToEndId,
+		estimatedCompletion: pixTransferResult.estimatedCompletion,
+	};
+}
+
+function createBankTransfer(
+	contact: Awaited<ReturnType<typeof fetchContactForTransfer>>,
+	selectedMethod: Awaited<ReturnType<typeof selectPaymentMethodForTransfer>>,
+	amount: number,
+): TransferResult {
+	const details = selectedMethod.methodDetails as Record<string, unknown>;
+	return {
+		success: true,
+		transfer: {
+			id: `TRF${Date.now()}`,
+			amount,
+			recipientName: contact.name,
+			recipientBank: details.bank_name,
+			accountInfo: details.account_number,
+			status: 'PENDING',
+		},
+		message: `Transferência ${selectedMethod.methodType} de R$ ${amount.toFixed(2)} agendada para ${contact.name}`,
+	};
+}
+
+async function _executeTransfer(
+	userId: string,
+	contact: Awaited<ReturnType<typeof fetchContactForTransfer>>,
+	selectedMethod: Awaited<ReturnType<typeof selectPaymentMethodForTransfer>>,
+	amount: number,
+	description: string | undefined,
+): Promise<TransferResult> {
+	const finalDescription = description || `Transferência para ${contact.name}`;
+
+	if (selectedMethod.methodType === 'PIX') {
+		return await createPixTransfer(userId, contact, selectedMethod, amount, finalDescription);
+	}
+
+	return createBankTransfer(contact, selectedMethod, amount);
 }

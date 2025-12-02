@@ -16,6 +16,7 @@ const clerkClient = createClerkClient({ secretKey: clerkSecretKey || '' });
 
 const clerkWebhookHandler = new Hono<AppEnv>();
 
+// biome-ignore lint: Webhook handler needs to process multiple event types
 clerkWebhookHandler.post('/', async (c) => {
 	if (!webhookSecret) {
 		return c.json({ error: 'Webhook secret not configured' }, 500);

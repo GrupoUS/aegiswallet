@@ -13,7 +13,7 @@ handoffs:
     prompt: "Document test results, coverage, and findings."
     send: true
 tools:
-  ['edit', 'search', 'runCommands', 'runTasks', 'chrome-devtools/*', 'context7/*', 'sequential-thinking/*', 'serena/*', 'tavily/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'serena/*', 'MCP_DOCKER/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'todos', 'runSubagent']
 ---
 
 # Tester Agent

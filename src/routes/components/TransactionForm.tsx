@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 import { useCreateTransaction } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 
+// Define transaction type locally since it's not exported from transaction types
 type TransactionType = 'credit' | 'debit' | 'pix' | 'boleto' | 'transfer';
+
 interface TransactionFormProps {
 	onCancel: () => void;
 	onSuccess?: () => void;
@@ -32,10 +34,13 @@ type SubmitTransaction = (input: {
 	categoryId?: string;
 	description?: string;
 	accountId: string;
-	toAccountId?: string;
-	transactionType: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
-	status?: 'cancelled' | 'failed' | 'pending' | 'posted';
-	metadata?: Record<string, unknown>;
+	transactionType: 'credit' | 'debit' | 'pix' | 'boleto' | 'transfer';
+	status?: 'pending' | 'posted' | 'failed' | 'cancelled';
+	paymentMethod?: string;
+	merchantName?: string;
+	notes?: string;
+	tags?: string[];
+	transactionDate?: string;
 }) => Promise<unknown>;
 interface SubmitDeps {
 	accountList: BankAccount[];
@@ -71,21 +76,50 @@ const computeFinalAmount = (transactionType: TransactionType, numericAmount: num
 };
 
 const validateForm = (state: FormState, accounts: BankAccount[]): ValidationResult => {
-	if (!(state.amount && state.date && state.accountId && state.type)) {
-		return { error: 'Preencha os campos obrigatórios' };
+	// Required field validation
+	if (!state.amount?.trim()) {
+		return { error: 'Valor é obrigatório' };
 	}
-	const numericAmount = Number(state.amount);
+	if (!state.date?.trim()) {
+		return { error: 'Data é obrigatória' };
+	}
+	if (!state.accountId?.trim()) {
+		return { error: 'Conta bancária é obrigatória' };
+	}
+	if (!state.type?.trim()) {
+		return { error: 'Tipo de transação é obrigatório' };
+	}
+
+	// Amount validation with proper parsing
+	const cleanAmount = state.amount
+		.replace(/[R$\s]/g, '')
+		.replace(/\./g, '')
+		.replace(/,/g, '.');
+	const numericAmount = Number.parseFloat(cleanAmount);
+
 	if (Number.isNaN(numericAmount) || numericAmount <= 0) {
-		return { error: 'Valor inválido' };
+		return { error: 'Valor deve ser um número positivo' };
 	}
+
+	// Date validation with proper parsing
 	const transactionDate = new Date(state.date);
-	if (Number.isNaN(transactionDate.getTime())) {
-		return { error: 'Data inválida' };
+	if (Number.isNaN(transactionDate.getTime()) || transactionDate < new Date('2020-01-01')) {
+		return { error: 'Data inválida ou muito antiga' };
 	}
+
+	// Account validation
 	const account = accounts.find((accountItem) => accountItem.id === state.accountId);
 	if (!account) {
-		return { error: 'Conta bancária inválida' };
+		return { error: 'Conta bancária não encontrada' };
 	}
+
+	// Additional validation for future dates (prevent future-dating)
+	const today = new Date();
+	today.setHours(23, 59, 59, 999); // End of today
+	if (transactionDate > today) {
+		return { error: 'Data não pode ser no futuro' };
+	}
+
 	return { account, numericAmount, transactionDate };
 };
 
@@ -323,7 +357,7 @@ const createSubmitHandler =
 			toast.error(validation.error);
 			return;
 		}
-		const { account, numericAmount, transactionDate: _transactionDate } = validation;
+		const { account, numericAmount } = validation;
 		setIsLoading(true);
 		try {
 			const finalAmount = computeFinalAmount(formState.type, numericAmount);

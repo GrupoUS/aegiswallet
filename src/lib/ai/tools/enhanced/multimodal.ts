@@ -613,6 +613,7 @@ async function fetchComparisonData(
 	_dateRange: { startDate: string; endDate: string },
 	_categories?: string[],
 ): Promise<unknown> {
+	await Promise.resolve();
 	return null;
 }
 async function generateChartFile(
@@ -620,6 +621,7 @@ async function generateChartFile(
 	_format: string,
 	_title: string,
 ): Promise<string | null> {
+	await Promise.resolve();
 	return null;
 }
 async function fetchPaymentsData(
@@ -628,9 +630,11 @@ async function fetchPaymentsData(
 	_includeScheduled: boolean,
 ): Promise<PaymentData[]> {
 	// LGPD-compliant: Only return necessary data, redact sensitive information
+	await Promise.resolve();
 	return [];
 }
 async function fetchScheduledPayments(_userId: string, _endDate: string): Promise<PaymentData[]> {
+	await Promise.resolve();
 	return [];
 }
 interface GroupedPaymentsData {
@@ -665,6 +669,7 @@ function generatePaymentInsights(_data: PaymentData[], _groupBy: string): string
 	return [];
 }
 async function exportPaymentSummary(_summary: unknown, _exportFormat: string): Promise<unknown> {
+	await Promise.resolve();
 	return null;
 }
 function calculateDateRange(_period: string): DateRange {
@@ -678,6 +683,7 @@ async function fetchSpendingData(
 	_granularity: string,
 	_focusArea: string,
 ): Promise<PaymentData[]> {
+	await Promise.resolve();
 	return [];
 }
 function processSpendingForVisualization(
@@ -695,6 +701,7 @@ async function generateSpendingInsights(
 	_groupBy: string,
 	_visualizationType: string,
 ): Promise<string[]> {
+	await Promise.resolve();
 	return [];
 }
 function configureInteractiveFeatures(
@@ -738,6 +745,7 @@ async function generateFinancialReportData(
 	_reportType: string,
 	_dateRange: DateRange,
 ): Promise<unknown> {
+	await Promise.resolve();
 	return {};
 }
 async function generateReportInsights(
@@ -745,6 +753,7 @@ async function generateReportInsights(
 	_reportType: string,
 	_format: string,
 ): Promise<string[]> {
+	await Promise.resolve();
 	return [];
 }
 async function generateReportCharts(
@@ -752,6 +761,7 @@ async function generateReportCharts(
 	_reportType: string,
 	_customColors: string[],
 ): Promise<ChartData[]> {
+	await Promise.resolve();
 	return [];
 }
 async function processExport(
@@ -769,6 +779,7 @@ async function processExport(
 	recordCount: number;
 	expiresAt: string;
 }> {
+	await Promise.resolve();
 	return {
 		fileUrl: 'https://example.com/export.pdf',
 		fileSize: 1024000,
@@ -817,6 +828,7 @@ async function saveExportRecord(
 	dateRange: { startDate: string; endDate: string },
 	exportResult: { fileUrl: string; fileSize: number; recordCount: number },
 ): Promise<unknown> {
+	await Promise.resolve();
 	// Note: export_records table does not exist in Drizzle schema
 	// For now, we'll just return a mock record without saving
 	const exportRecord = {

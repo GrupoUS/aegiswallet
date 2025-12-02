@@ -70,7 +70,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 		if (error) return [];
 		return databaseEvents ?? [];
 	}, [databaseEvents, loading, error]);
-	
+
 	// Enhanced states for view and filtering
 	const [currentView, setCurrentView] = useState<CalendarView>('week');
 	const [categories] = useState<CalendarCategory[]>(DEFAULT_CALENDAR_CATEGORIES);

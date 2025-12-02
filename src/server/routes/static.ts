@@ -12,6 +12,9 @@ import type { AppEnv } from '@/server/hono-types';
 // Check if running on Vercel (VERCEL env var is set by Vercel)
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
+// Check if running in Bun runtime (for static file serving)
+const isBunRuntime = 'Bun' in globalThis;
+
 export function setupStaticRoutes(app: Hono<AppEnv>) {
 	// On Vercel, static files are served by the CDN via vercel.json rewrites
 	// We only need to handle the development/Bun server case
@@ -21,11 +24,13 @@ export function setupStaticRoutes(app: Hono<AppEnv>) {
 		return;
 	}
 
-	if (environment.IS_PRODUCTION) {
+	// Only setup static file serving if running in Bun runtime
+	// This prevents errors when running on Node.js (like Vercel)
+	if (environment.IS_PRODUCTION && isBunRuntime) {
 		// For non-Vercel production (e.g., running with bun start)
-		// Dynamic import to avoid bundling bun-specific code for Vercel
-		import('hono/bun').then(({ serveStatic }) => {
-			import('@/server/middleware/cache').then(({ htmlCache, staticAssetsCache }) => {
+		// Dynamic import to load Bun-specific code only when in Bun runtime
+		void import('hono/bun').then(({ serveStatic }) => {
+			void import('@/server/middleware/cache').then(({ htmlCache, staticAssetsCache }) => {
 				// Serve static assets with aggressive caching
 				app.use('/assets/*', staticAssetsCache(), serveStatic({ root: './dist' }));
 
@@ -43,7 +48,7 @@ export function setupStaticRoutes(app: Hono<AppEnv>) {
 				);
 			});
 		});
-	} else {
+	} else if (!environment.IS_PRODUCTION) {
 		// Development mode - inform about frontend dev server
 		// Only for non-API routes
 		app.get('/*', (c) => {

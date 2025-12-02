@@ -81,6 +81,17 @@ interface SpeechRecognitionType extends EventTarget {
 // Types & Interfaces
 // ============================================================================
 
+interface WebSpeechGlobals {
+	// Use camelCase names in the type to satisfy naming conventions.
+	// At runtime the actual global constructors may be available as PascalCase
+	// (e.g. window.SpeechRecognition), so the helper accessors below check
+	// both variants for compatibility.
+	speechRecognition?: new () => SpeechRecognitionType;
+	webkitSpeechRecognition?: new () => SpeechRecognitionType;
+	speechGrammarList?: new () => SpeechGrammarListType;
+	webkitSpeechGrammarList?: new () => SpeechGrammarListType;
+}
+
 export interface SpeechRecognitionConfig {
 	language: string;
 	confidenceThreshold: number;
@@ -142,7 +153,7 @@ export class SpeechRecognitionService {
 	};
 
 	// Brazilian Portuguese regional variants
-	private readonly BRAZILIAN_VARIANTS = {
+	private readonly brazilianVariants = {
 		'pt-BR': 'Português Brasileiro (Padrão)',
 		'pt-BR-NE': 'Português Nordestino',
 		'pt-BR-RJ': 'Português Carioca',
@@ -227,7 +238,7 @@ export class SpeechRecognitionService {
 			throw new Error('Recognition is already in progress');
 		}
 
-		return new Promise((resolve, reject) => {
+		return await new Promise((resolve, reject) => {
 			if (!this.recognition) {
 				reject(new Error('Speech recognition not initialized'));
 				return;
@@ -427,7 +438,7 @@ export class SpeechRecognitionService {
 			const audioChunks: Blob[] = [];
 			const mediaRecorder = new MediaRecorder(stream);
 
-			return new Promise((resolve, reject) => {
+			return await new Promise((resolve, reject) => {
 				mediaRecorder.ondataavailable = (event) => {
 					if (event.data.size > 0) {
 						audioChunks.push(event.data);
@@ -486,7 +497,7 @@ export class SpeechRecognitionService {
 				}, 5000);
 
 				// Optional: Implement voice activity detection to stop recording earlier
-				this.detectVoiceActivity(stream).then((hasActivity) => {
+				void this.detectVoiceActivity(stream).then((hasActivity) => {
 					if (hasActivity && mediaRecorder.state === 'recording') {
 						// Add small delay to capture the end of the phrase
 						setTimeout(() => {
@@ -506,7 +517,7 @@ export class SpeechRecognitionService {
 	 * Basic voice activity detection
 	 */
 	private async detectVoiceActivity(stream: MediaStream): Promise<boolean> {
-		return new Promise((resolve) => {
+		return await new Promise((resolve) => {
 			const audioContext = new AudioContext();
 			const analyser = audioContext.createAnalyser();
 			const source = audioContext.createMediaStreamSource(stream);
@@ -579,7 +590,7 @@ export class SpeechRecognitionService {
 	/**
 	 * Configure Brazilian Portuguese regional variant
 	 */
-	configureRegionalVariant(variant: keyof typeof this.BRAZILIAN_VARIANTS): void {
+	configureRegionalVariant(variant: keyof typeof this.brazilianVariants): void {
 		if (variant === 'pt-BR') {
 			this.config.language = 'pt-BR';
 		} else {
@@ -677,12 +688,17 @@ export class SpeechRecognitionService {
  * Works with both standard and webkit-prefixed versions
  */
 function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | undefined {
-	// Type assertion needed for browser APIs
-	const win = window as typeof window & {
-		SpeechRecognition?: (new () => SpeechRecognitionType) | undefined;
-		webkitSpeechRecognition?: (new () => SpeechRecognitionType) | undefined;
-	};
-	return win.SpeechRecognition || win.webkitSpeechRecognition;
+	// Support both camelCase typed properties and the actual global constructors
+	// (which are often PascalCase on the window object).
+	const globals = window as unknown as WebSpeechGlobals & Record<string, unknown>;
+	const speechRecognition = globals.speechRecognition as unknown as
+		| (new () => SpeechRecognitionType)
+		| undefined;
+	const SpeechRecognition = (globals as Record<string, unknown>).SpeechRecognition as
+		| (new () => SpeechRecognitionType)
+		| undefined;
+	const webkitSpeechRecognition = globals.webkitSpeechRecognition;
+	return speechRecognition || SpeechRecognition || webkitSpeechRecognition;
 }
 
 /**
@@ -690,12 +706,17 @@ function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionType) | 
  * Works with both standard and webkit-prefixed versions
  */
 function getSpeechGrammarListConstructor(): (new () => SpeechGrammarListType) | undefined {
-	// Type assertion needed for browser APIs
-	const win = window as typeof window & {
-		SpeechGrammarList?: (new () => SpeechGrammarListType) | undefined;
-		webkitSpeechGrammarList?: (new () => SpeechGrammarListType) | undefined;
-	};
-	return win.SpeechGrammarList || win.webkitSpeechGrammarList;
+	// Support both camelCase typed properties and the actual global constructors
+	// (which are often PascalCase on the window object).
+	const globals = window as unknown as WebSpeechGlobals & Record<string, unknown>;
+	const speechGrammarList = globals.speechGrammarList as unknown as
+		| (new () => SpeechGrammarListType)
+		| undefined;
+	const SpeechGrammarList = (globals as Record<string, unknown>).SpeechGrammarList as unknown as
+		| (new () => SpeechGrammarListType)
+		| undefined;
+	const webkitSpeechGrammarList = globals.webkitSpeechGrammarList;
+	return speechGrammarList || SpeechGrammarList || webkitSpeechGrammarList;
 }
 
 // ============================================================================

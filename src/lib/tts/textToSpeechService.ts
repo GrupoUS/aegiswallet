@@ -143,7 +143,7 @@ export class TextToSpeechService {
 		config?: Partial<TTSConfig>,
 		dependencies?: {
 			speechSynthesis?: SpeechSynthesis;
-			SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+			speechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 		},
 	) {
 		this.config = { ...DEFAULT_CONFIG, ...config };
@@ -153,8 +153,8 @@ export class TextToSpeechService {
 			this.synth = dependencies.speechSynthesis;
 		}
 
-		if (dependencies?.SpeechSynthesisUtterance) {
-			this.SpeechSynthesisUtteranceClass = dependencies.SpeechSynthesisUtterance;
+		if (dependencies?.speechSynthesisUtterance) {
+			this.speechSynthesisUtteranceClass = dependencies.speechSynthesisUtterance;
 		}
 
 		// Initialize Web Speech API if available (supports browser + test environments)
@@ -176,7 +176,7 @@ export class TextToSpeechService {
 		}
 	}
 
-	private SpeechSynthesisUtteranceClass: typeof SpeechSynthesisUtterance | null = null;
+	private speechSynthesisUtteranceClass: typeof SpeechSynthesisUtterance | null = null;
 
 	/**
 	 * Speak text with TTS
@@ -228,7 +228,7 @@ export class TextToSpeechService {
 	/**
 	 * Generate speech using Web Speech API
 	 */
-	private async generateSpeech(text: string): Promise<void> {
+	private generateSpeech(text: string): Promise<void> {
 		const synth = this.ensureSynth();
 		if (!synth) {
 			throw new Error('Speech synthesis not supported');
@@ -307,18 +307,18 @@ export class TextToSpeechService {
 	 * Create utterance instance (supports browser + test mocks)
 	 */
 	private createUtterance(text: string): SpeechSynthesisUtterance {
-		if (this.SpeechSynthesisUtteranceClass) {
-			return new this.SpeechSynthesisUtteranceClass(text);
+		if (this.speechSynthesisUtteranceClass) {
+			return new this.speechSynthesisUtteranceClass(text);
 		}
 
 		const globalRef = globalThis as typeof globalThis & {
 			window?: Window;
-			SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+			speechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 		};
 		const globalWindow = typeof window !== 'undefined' ? window : globalRef.window;
 
 		const SpeechSynthesisUtteranceConstructor =
-			globalWindow?.SpeechSynthesisUtterance || globalRef.SpeechSynthesisUtterance;
+			globalWindow?.SpeechSynthesisUtterance || globalRef.speechSynthesisUtterance;
 
 		if (SpeechSynthesisUtteranceConstructor) {
 			return new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance;
@@ -348,7 +348,7 @@ export class TextToSpeechService {
 	private async playAudio(audioData: string): Promise<void> {
 		// For Web Speech API, we just speak again
 		// In production, this would play actual audio data
-		return this.generateSpeech(audioData);
+		return await this.generateSpeech(audioData);
 	}
 
 	/**
@@ -566,6 +566,7 @@ export class TextToSpeechService {
 	 */
 	async healthCheck(): Promise<boolean> {
 		try {
+			await Promise.resolve();
 			if (!this.ensureSynth()) {
 				return false;
 			}
@@ -605,7 +606,7 @@ export function createTTSService(
 	config?: Partial<TTSConfig>,
 	dependencies?: {
 		speechSynthesis?: SpeechSynthesis;
-		SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
+		speechSynthesisUtterance?: typeof SpeechSynthesisUtterance;
 	},
 ): TextToSpeechService {
 	return new TextToSpeechService(config, dependencies);
@@ -620,7 +621,7 @@ export function createTTSService(
  */
 export async function quickSpeak(text: string, options?: SSMLOptions): Promise<TTSResponse> {
 	const service = getTTSService();
-	return service.speak(text, options);
+	return await service.speak(text, options);
 }
 
 /**

@@ -2,276 +2,391 @@
 
 ## Universal Description
 
-**Ultimate Research & Knowledge Management System** - Multi-source intelligence gathering with
-automated knowledge synthesis, progressive depth analysis, and comprehensive knowledge base
-management for any domain or complexity.
+**ENHANCED RESEARCH ORCHESTRATION SYSTEM** - Multi-droid parallel execution with atomic task generation, delivering comprehensive research intelligence through coordinated droid ecosystem and skill integration. ≥95% cross-validation accuracy with Brazilian compliance auto-activation.
 
 ## Purpose
 
-Orchestrate comprehensive research operations with Context7 intelligence chains,
-automated knowledge synthesis, and intelligent knowledge base management, ensuring accurate,
-current, and actionable insights with long-term knowledge preservation.
+Execute comprehensive research operations through intelligent droid orchestration with atomic task generation, parallel execution capabilities, and skill integration for authoritative multi-source validation and actionable intelligence with Brazilian compliance.
 
-## Context Detection
+## Enhanced Research Orchestration System
 
-- **Research Operations**: Topic investigation, technology evaluation, comparative analysis,
-  validation studies
-- **Knowledge Management**: Knowledge base creation, organization, retrieval, and maintenance
-- **Intelligence Synthesis**: Multi-source validation, cross-reference analysis, expert insight
-  compilation
-- **Healthcare Compliance**: LGPD/ANVISA/CFM research and regulatory compliance validation
-- **Technology Research**: Framework comparison, best practices, implementation patterns
-
-## Knowledge Management System
-
-### Knowledge Operations
+### Atomic Task Generation Engine
 
 ```yaml
-knowledge_create:
-  documentation_generation:
-    - "Technical guides, tutorials, and implementation documentation"
-    - "Best practices, methodologies, and standard procedures"
-    - "Troubleshooting guides, FAQs, and problem-solution mapping"
-    - "API documentation and integration guide generation"
+task_generation:
+  complexity_assessment: "L1-L10 automatic scoring based on topic, scope, requirements"
+  atomic_decomposition: "Break research into smallest executable units"
+  dependency_mapping: "Identify parallel vs sequential task relationships"
+  time_estimation: "Realistic duration estimates per task complexity"
+  droid_assignment: "Optimal droid combinations based on task requirements"
+  skill_integration: "Automatic skill invocation for domain-specific needs"
 
-  content_synthesis:
-    - "Multi-source research compilation and synthesis"
-    - "Expert interview integration and knowledge extraction"
-    - "Community knowledge compilation and validation"
-    - "Case study development and lessons learned documentation"
+parallel_execution_matrix:
+  phase_1_discovery:
+    - apex-researcher (primary coordination)
+    - domain_specialist_droids (parallel)
+    - relevant_skills (context invocation)
 
-knowledge_retrieve:
-  search_capabilities:
-    - "Semantic search with natural language query processing"
-    - "Faceted search with advanced filtering and categorization"
-    - "Full-text search with relevance ranking and scoring"
-    - "Tag-based and metadata-driven knowledge discovery"
+  phase_2_analysis:
+    - multiple_droids (simultaneous analysis)
+    - skill_validation (specialized frameworks)
+    - cross_validation (multi-source verification)
 
-  context_awareness:
-    - "User role and permission-based result filtering"
-    - "Project and domain-specific knowledge prioritization"
-    - "Personalized recommendations and intelligent suggestions"
-    - "Recent activity and search history integration"
-
-knowledge_update:
-  modification_strategies:
-    append: "Add new information while preserving existing content"
-    replace: "Substitute outdated information with current data"
-    merge: "Intelligently combine multiple sources and perspectives"
-    synthesize: "Create new knowledge from research findings"
-
-  version_control:
-    - "Change tracking and comprehensive history preservation"
-    - "Rollback capability and recovery options"
-    - "Collaborative editing and conflict resolution"
-    - "Quality gate approval workflows and validation"
-
-knowledge_organize:
-  information_architecture:
-    - "Hierarchical categorization and taxonomic classification"
-    - "Cross-reference mapping and relationship definition"
-    - "Search optimization and keyword integration"
-    - "Learning pathway creation and optimization"
-
-  quality_management:
-    - "Accuracy validation and fact-checking processes"
-    - "Completeness assessment and gap identification"
-    - "Currency monitoring and update scheduling"
-    - "User feedback integration and continuous improvement"
+  phase_3_synthesis:
+    - apex-researcher (consolidation)
+    - code-reviewer (security validation)
+    - brazilian_compliance_skills (LGPD/PIX validation)
 ```
 
-### Knowledge Formats & Structures
-
-### Structured Knowledge
+### Dynamic Droid Coordination
 
 ```yaml
-structured_format:
-  characteristics:
-    - "Formal organization with clear hierarchical structure"
-    - "Consistent formatting and comprehensive style guidelines"
-    - "Machine-readable metadata and intelligent tagging"
-    - "Comprehensive cross-referencing and link management"
+routing_algorithm:
+  research_complexity: "Automatic L1-L10 scoring"
+  brazilian_compliance: "Auto-activation for financial/regulatory topics"
+  security_sensitivity: "Enhanced validation for sensitive research"
+  domain_expertise: "Specialist droid assignment based on research domain"
+  parallel_optimization: "Maximum concurrent task execution"
 
-  optimal_for:
-    - "Technical documentation and detailed specifications"
-    - "Compliance and regulatory guideline documentation"
-    - "Standard operating procedures and workflow documentation"
-    - "API documentation and integration reference materials"
-
-  components:
-    - "Executive summary with key insights and recommendations"
-    - "Detailed sections with logical subsection organization"
-    - "Practical examples, code snippets, and usage demonstrations"
-    - "Comprehensive references and authoritative external links"
+droid_expertise_matrix:
+  apex-researcher: "Research coordination, synthesis, ≥95% validation"
+  database-specialist: "Database architecture, Neon/Drizzle, LGPD compliance"
+  apex-dev: "Implementation feasibility, performance analysis"
+  code-reviewer: "Security validation, compliance checking"
+  apex-ui-ux-designer: "Interface research, accessibility standards"
+  product-architect: "Market analysis, competitive research"
 ```
 
-### Narrative Knowledge
+### Skill Integration System
 
 ```yaml
-narrative_format:
-  characteristics:
-    - "Story-driven explanations with contextual background"
-    - "Conversational tone with accessibility optimization"
-    - "Real-world scenarios and practical examples"
-    - "Progressive disclosure and optimized learning flow"
+skill_mapping:
+  brazilian-fintech-compliance: "Auto-activated for financial/PIX/LGPD research"
+  product-management: "Invoked for market analysis, competitive research"
+  frontend-design: "UI/UX research, accessibility standards"
+  ai-data-analyst: "Statistical analysis, data interpretation"
+  webapp-testing: "Testing methodologies, quality assurance"
 
-  optimal_for:
-    - "Training materials, tutorials, and educational content"
-    - "Onboarding documentation and orientation materials"
-    - "Best practice sharing and detailed case studies"
-    - "Cultural and organizational knowledge preservation"
-
-  components:
-    - "Engaging introduction with clear context setting"
-    - "Step-by-step narrative progression with logical flow"
-    - "Practical illustrations and real-world applications"
-    - "Key takeaways and actionable implementation items"
+integration_points:
+  research_phase: "Skills provide domain-specific expertise"
+  analysis_phase: "Skills offer specialized validation frameworks"
+  documentation_phase: "Skills generate standardized outputs"
+  compliance_phase: "Brazilian compliance skills auto-activated"
 ```
 
-### Reference Knowledge
+## Automatic Enhanced Research Routing
 
 ```yaml
-reference_format:
-  characteristics:
-    - "Quick-access facts with scannable organization"
-    - "Concise explanations with search optimization"
-    - "Frequently updated with current information"
-    - "Cross-referenced with related topics and concepts"
+command_execution:
+  trigger: "/research | /pesquisar"
+  routing: "Enhanced orchestration with multi-droid coordination"
+  atomic_tasks: "Automatic generation with parallel execution planning"
+  skill_integration: "Domain-specific skill invocation"
+  output_format: "Structured markdown in .factory/docs/ with executive summaries"
 
-  optimal_for:
-    - "Quick reference guides and comprehensive cheat sheets"
-    - "Troubleshooting and diagnostic procedure guides"
-    - "Configuration and setup step-by-step procedures"
-    - "Command references and syntax guide collections"
+input_parsing:
+  goal: "Extract from research objective description"
+  scope: "Technology, domain, or regulatory area"
+  complexity: "L1-L10 research depth assessment"
+  brazilian_focus: "LGPD/BCB/PIX requirements auto-detection"
+  parallel_potential: "Automatic identification of parallelizable tasks"
 
-  components:
-    - "Searchable index and comprehensive table of contents"
-    - "Concise definitions with clear explanations"
-    - "Code examples and command syntax demonstrations"
-    - "Cross-references and related topic suggestions"
+quality_assurance:
+  accuracy_threshold: "≥95% cross-validation required"
+  multi_droid_validation: "Minimum 3 droids for critical findings"
+  brazilian_compliance: "Mandatory for financial/regulatory research"
+  confidence_scoring: "Explicit confidence levels with source validation"
+  documentation_standards: "Consistent markdown templates"
 ```
 
-## MCP Integration
+## Context Detection & MCP Routing
 
-### Context7 (Technical Documentation)
+- **Research Operations**: Topic investigation, technology evaluation → Context7 + Tavily
+- **Knowledge Management**: Knowledge base creation, organization → Serena + Sequential Thinking
+- **Intelligence Synthesis**: Multi-source validation → All MCPs parallel
+- **Brazilian Compliance**: LGPD/BCB/PIX research → Tavily + Context7 + Sequential Thinking
+- **Technology Research**: Framework comparison, patterns → Context7 + Tavily
+
+## MCP Serena: Codebase Intelligence
+
+### Core Capabilities
+- **Symbol Resolution**: `find_symbol` - Function/class/interface discovery
+- **Reference Analysis**: `find_referencing_symbols` - Code relationships mapping
+- **Pattern Search**: `search_for_pattern` - Implementation pattern discovery
+- **Code Overview**: `get_symbols_overview` - High-level code structure analysis
+
+### Usage Patterns
+```yaml
+code_analysis:
+  symbol_resolution: "Function/class/interface discovery"
+  pattern_analysis: "Existing implementation patterns"
+  dependency_mapping: "Code relationships + imports"
+  architecture_insights: "Current system structure"
+
+implementation_feasibility:
+  compatibility_check: "Integration with existing codebase"
+  pattern_alignment: "Consistency with current architecture"
+  effort_estimation: "Implementation complexity assessment"
+```
+
+### Memory Management
+- Creates persistent knowledge memories for project insights
+- Stores architectural patterns and implementation decisions
+- Enables cross-session context preservation
+- Supports research-to-implementation knowledge transfer
+
+## MCP Orchestration Workflow
+
+### Multi-MCP Execution Strategy
+```yaml
+parallel_execution:
+  phase_1_discovery:
+    context7: "Official documentation + API references"
+    tavily: "Web research + community validation"
+    serena: "Codebase analysis + symbol resolution"
+
+  phase_2_analysis:
+    sequential_thinking: "Multi-perspective synthesis + logical reasoning"
+    context7: "Deep dive into technical specifics"
+    tavily: "Cross-source verification + credibility assessment"
+
+  phase_3_validation:
+    serena: "Implementation feasibility analysis"
+    sequential_thinking: "Pattern recognition + gap identification"
+    all_mcps: "Cross-validation for ≥95% accuracy"
+```
+
+### Context7 (Documentation Intelligence)
+- Framework docs and best practices
+- Brazilian LGPD/BCB compliance documentation
+- Security guidelines and requirements
+- Installation and configuration patterns
+
+### Tavily (Web Intelligence)
+- Multi-source information gathering
+- Community best practices validation
+- Real-world implementation experiences
+- Expert insights and tutorials
+
+### Sequential Thinking (Cognitive Analysis)
+- Multi-perspective analysis synthesis
+- Pattern recognition and relationship mapping
+- Brazilian compliance requirements assessment
+- Logical reasoning and conclusion formation
+
+## Atomic Task Templates
+
+### Research Complexity Classification
 
 ```yaml
-technical_research:
-  - "Framework documentation and official API references"
-  - "Best practice implementation patterns and guidelines"
-  - "Configuration and setup documentation validation"
-  - "Security standards and compliance requirement research"
+L1-L3 (Simple Research):
+  estimated_time: "15-30 minutes"
+  parallel_execution: "Limited - mostly sequential"
+  droid_assignment: "apex-researcher + 1 specialist"
+  skill_integration: "Basic domain skills"
+  deliverables: "Quick summary with key findings"
+
+L4-L6 (Moderate Research):
+  estimated_time: "45-90 minutes"
+  parallel_execution: "50% parallelizable"
+  droid_assignment: "apex-researcher + 2-3 specialists"
+  skill_integration: "Domain-specific skills activated"
+  deliverables: "Comprehensive analysis with recommendations"
+
+L7-L8 (Complex Research):
+  estimated_time: "2-4 hours"
+  parallel_execution: "70% parallelizable"
+  droid_assignment: "apex-researcher + 3-4 specialists"
+  skill_integration: "Multiple specialized skills"
+  deliverables: "Detailed report with implementation roadmap"
+
+L9-L10 (Mission-Critical Research):
+  estimated_time: "4-8 hours"
+  parallel_execution: "80% parallelizable"
+  droid_assignment: "All relevant droids + coordination"
+  skill_integration: "Full skill ecosystem activation"
+  deliverables: "Strategic intelligence document with execution plan"
 ```
 
-### Sequential Thinking (Analysis & Synthesis)
+### Atomic Task Structure Template
 
 ```yaml
-intelligent_synthesis:
-  - "Multi-perspective analysis and critical evaluation"
-  - "Pattern recognition and trend identification"
-  - "Logical reasoning and conclusion formation"
-  - "Knowledge organization and relationship mapping"
+task_id: "research_[date]_[sequence]"
+title: "Specific research task description"
+complexity: "L1-L10"
+estimated_duration: "X hours/minutes"
+assigned_droids: ["primary", "secondary"]
+required_skills: ["skill1", "skill2"]
+parallel_execution: true/false
+dependencies: ["task_id_dependencies"]
+deliverables: ["specific_output_formats"]
+quality_gates: ["validation_criteria"]
+brazilian_compliance: true/false
+confidence_target: "≥95%"
+
+execution_phases:
+  phase_1:
+    description: "Research discovery"
+    droids: ["parallel_execution_list"]
+    duration: "X minutes"
+    outputs: ["specific_deliverables"]
+
+  phase_2:
+    description: "Analysis and validation"
+    droids: ["parallel_execution_list"]
+    duration: "X minutes"
+    outputs: ["specific_deliverables"]
 ```
 
-### Desktop Commander (Knowledge Management)
+## Enhanced Deliverables: Comprehensive Research Intelligence
+
+### Executive Summary
+- Research scope and complexity assessment
+- Parallel execution efficiency report
+- Multi-droid validation summary
+- Brazilian compliance status
+- Key recommendations with confidence scores
+- Resource utilization metrics
+
+### Atomic Task Execution Report
+- **Task Decomposition**: Complete breakdown of research into atomic units
+- **Parallel Execution Matrix**: Actual vs planned parallelization efficiency
+- **Droid Performance**: Individual droid contributions and quality metrics
+- **Skill Integration**: Activated skills and their impact on research quality
+- **Time Analysis**: Planned vs actual execution times per task
+
+### Multi-Droid Research Analysis
+**apex-researcher**: Research coordination, synthesis, validation orchestration
+**specialist droids**: Domain-specific expertise and deep analysis
+**code-reviewer**: Security validation and compliance checking
+**skill contributions**: Specialized domain knowledge and frameworks
+
+### Implementation Intelligence Framework
+- **Implementation Feasibility**: Technical viability assessment by apex-dev
+- **Risk Matrix**: Comprehensive risk analysis with mitigation strategies
+- **Resource Planning**: Detailed resource requirements and timelines
+- **Brazilian Compliance**: Full LGPD/PIX/BCB compliance validation
+- **Quality Assurance**: Multi-stage validation with specific test requirements
+
+### Enhanced Execution Workflow
+- **Atomic Task Roadmap**: Prioritized task list with dependencies
+- **Multi-Droid Coordination Plan**: Optimal droid assignment and scheduling
+- **Skill Integration Strategy**: When and how to invoke specialized skills
+- **Quality Validation Gates**: Multi-stage quality assurance checkpoints
+- **Documentation Standards**: Version-controlled, cross-referenced outputs
+
+## Quality Gates
+
+### Research Validation
+- ≥95% cross-source validation required
+- Minimum 3 authoritative sources
+- Explicit confidence scoring
+- Clear identification of research gaps
+
+### Implementation Readiness
+- Serena validated integration complexity
+- Risk assessment with mitigation strategies
+- Timeline and resource requirements
+- Quality validation specifications
+
+## Enhanced Command Usage Examples
+
+### Technology Research (L7 Complexity)
+```
+/research "React Server Components best practices for Brazilian fintech applications"
+
+→ Enhanced orchestration with atomic tasks:
+- **Atomic Task Generation**: 8 parallelizable tasks identified
+- **Droid Assignment**:
+  - apex-researcher (coordination)
+  - apex-dev (implementation feasibility)
+  - code-reviewer (security validation)
+- **Skill Integration**: frontend-design, webapp-testing
+- **Parallel Execution**: 70% tasks run simultaneously
+- **Output**:
+  - Comprehensive implementation guide (.factory/docs/2025-XX-XX-react-server-components-research.md)
+  - Atomic task execution roadmap
+  - Security validation report
+  - Brazilian compliance checklist
+```
+
+## Enhanced Research Activation Protocol
 
 ```yaml
-knowledge_operations:
-  - "Knowledge base file management and organization"
-  - "Documentation generation and formatting"
-  - "Search index creation and maintenance"
-  - "Version control and backup management"
+trigger_detection:
+  command_keywords: ["/research", "/pesquisar", "spec - research"]
+  automatic_routing: "Enhanced orchestration with multi-droid coordination"
+  priority_override: "HIGHEST - bypass all other routing"
+  atomic_task_generation: "Immediate task decomposition and assignment"
+  skill_integration: "Context-aware skill activation"
+
+enhanced_quality_assurance:
+  confidence_threshold: "≥95% before completion approval"
+  multi_droid_validation: "Minimum 3 droids validate critical findings"
+  source_validation: "Cross-source verification across droids and skills"
+  brazilian_compliance: "Mandatory validation for all financial/regulatory topics"
+  implementation_readiness: "Technical feasibility assessment by apex-dev"
+  security_validation: "Comprehensive security review by code-reviewer"
+
+enhanced_output_standards:
+  format: "Comprehensive Research Intelligence Document with Atomic Task Execution Report"
+  location: "Auto-generated in .factory/docs/ with timestamp and unique identifier"
+  structure: "Executive summary + detailed analysis + implementation roadmap + validation reports"
+  confidence_levels: "Explicit scoring with source attribution and validation chain"
+  execution_workflow: "Detailed atomic task breakdown with parallel execution optimization"
+  resource_utilization: "Droid and skill performance metrics and efficiency analysis"
+  gap_identification: "Clear research limitations + follow-up task recommendations"
+  version_control: "Git-friendly format with change tracking and cross-references"
 ```
 
-## Deliverables
+## Documentation Template System
 
-### 1. Research Intelligence Report
+### Standard Research Output Structure
 
 ```markdown
-# Research Intelligence Report
+# Research Intelligence: [Topic] - [Date]
 
 ## Executive Summary
+- Research scope and complexity assessment
+- Key findings with confidence scores
+- Primary recommendations
+- Brazilian compliance status
+- Resource utilization summary
 
-- **Research Scope**: [Technology/Domain/Topic comprehensive coverage]
-- **Complexity Level**: [L1-L10 with detailed assessment rationale]
-- **Research Depth**: [Surface/Deep/Comprehensive with methodology]
-- **Sources Validated**: [Count, types, and credibility assessment]
-- **Key Recommendations**: [Top 3-5 actionable insights with rationale]
+## Atomic Task Execution Report
+### Task Decomposition
+- Complete list of atomic tasks generated
+- Parallel execution efficiency metrics
+- Droid assignment and performance analysis
 
-## Multi-Source Findings Analysis
+### Multi-Droid Coordination
+- Droid collaboration matrix
+- Cross-validation results
+- Skill integration impact
 
-### Context7 (Official Documentation Research)
+## Detailed Research Analysis
+### [Domain 1] Analysis
+- Comprehensive domain-specific findings
+- Source validation and attribution
+- Confidence scoring methodology
 
-- **Framework Capabilities**: [Detailed analysis of capabilities and limitations]
-- **Official Best Practices**: [Verified implementation recommendations]
-- **Security & Performance**: [Guidelines and optimization strategies]
-- **Configuration & Setup**: [Step-by-step implementation guidance]
+### [Domain 2] Analysis
+- [Continue for all relevant domains]
 
-## Knowledge Base Integration
+## Implementation Intelligence
+### Technical Feasibility Assessment
+- Implementation complexity analysis
+- Resource requirements and timelines
+- Risk matrix with mitigation strategies
 
-- **Knowledge Articles Created**: [List of structured knowledge entries]
-- **Knowledge Organization**: [Categorization and relationship mapping]
-- **Learning Pathways**: [Recommended learning progression]
-- **Knowledge Gaps**: [Identified areas for future research]
+### Brazilian Compliance Validation
+- LGPD compliance checklist
+- PIX/BCB regulatory requirements
+- Accessibility standards validation
 
-## Implementation & Decision Framework
-
-1. **Primary Recommendation**: [Detailed approach with comprehensive rationale]
-2. **Alternative Options**: [Backup strategies with trade-off analysis]
-3. **Risk Assessment**: [Identified risks with mitigation strategies]
-4. **Quality Considerations**: [Standards and validation requirements]
-5. **Timeline & Resources**: [Implementation planning and resource requirements]
-
-## Knowledge Management Outcomes
-
-- **Knowledge Base Updates**: [New entries and organizational improvements]
-- **Documentation Generated**: [Technical guides and reference materials]
-- **Learning Materials**: [Training content and educational resources]
-- **Quality Validation**: [Accuracy verification and peer review results]
-```
-
-### 2. Knowledge Base Architecture
-
-```yaml
-knowledge_structure:
-  research_findings:
-    - "Structured research reports with comprehensive analysis"
-    - "Comparative analysis matrices with decision frameworks"
-    - "Technology evaluation summaries with recommendations"
-    - "Best practices compilations with implementation guidance"
-
-  knowledge_articles:
-    - "Technical documentation with step-by-step procedures"
-    - "Troubleshooting guides with problem-solution mapping"
-    - "Configuration references with examples and explanations"
-    - "Learning materials with progressive skill development"
-
-  knowledge_organization:
-    - "Hierarchical categorization with tag-based organization"
-    - "Cross-reference mapping with relationship definitions"
-    - "Search optimization with keyword and metadata indexing"
-    - "Version control with change tracking and audit trails"
-```
-
-### 3. Quality Validation Framework
-
-```yaml
-research_quality:
-  source_validation:
-    - "Authority and credibility assessment with scoring"
-    - "Currency and relevance verification with timestamps"
-    - "Bias detection and mitigation with multi-source validation"
-    - "Factual accuracy verification with cross-referencing"
-
-  synthesis_quality:
-    - "Logical consistency and coherence validation"
-    - "Completeness assessment with gap identification"
-    - "Actionability and practical application verification"
-    - "Constitutional compliance with multi-perspective analysis"
-
-knowledge_quality:
-  content_accuracy: "Factual correctness with verification processes"
-  organization_effectiveness: "Logical structure with usability testing"
-  accessibility_optimization: "Multi-audience accessibility with feedback integration"
-  maintenance_sustainability: "Update processes with quality monitoring"
+## Appendices
+- Source references and validation chains
+- Droid performance metrics
+- Skill integration details
+- Follow-up research recommendations
 ```

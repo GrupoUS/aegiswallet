@@ -46,24 +46,14 @@ test.describe('LGPD Compliance - Full Suite', () => {
 	});
 
 	test.describe('Consent Preferences Toggle', () => {
-		test('should have toggles for different consent types', async ({
-			page,
-		}) => {
+		test('should have toggles for different consent types', async ({ page }) => {
 			await page.goto('/configuracoes');
 
 			// Common consent types that should have toggles
-			const consentTypes = [
-				'marketing',
-				'analytics',
-				'cookies',
-				'dados',
-				'notificações',
-			];
+			const consentTypes = ['marketing', 'analytics', 'cookies', 'dados', 'notificações'];
 
 			// Look for any toggle or switch elements
-			const toggles = page.locator(
-				'input[type="checkbox"], [role="switch"], .toggle',
-			);
+			const toggles = page.locator('input[type="checkbox"], [role="switch"], .toggle');
 			const toggleCount = await toggles.count().catch(() => 0);
 
 			// Should have at least some toggle options in settings
@@ -127,9 +117,7 @@ test.describe('LGPD Compliance - Full Suite', () => {
 			await page.goto('/');
 
 			// Check for common legal links in footer
-			const legalLinks = page.locator(
-				'footer a, [data-testid="footer"] a, .footer a',
-			);
+			const legalLinks = page.locator('footer a, [data-testid="footer"] a, .footer a');
 
 			const linkCount = await legalLinks.count().catch(() => 0);
 
@@ -149,18 +137,14 @@ test.describe('LGPD Compliance - Full Suite', () => {
 	});
 
 	test.describe('Accessibility for Privacy Features', () => {
-		test('should have proper aria labels for consent controls', async ({
-			page,
-		}) => {
+		test('should have proper aria labels for consent controls', async ({ page }) => {
 			await page.goto('/');
 
 			// Wait for any consent banner to appear
 			await page.waitForTimeout(2000);
 
 			// Check for aria-labels on interactive elements
-			const ariaElements = page.locator(
-				'[aria-label], [aria-labelledby], [role="dialog"]',
-			);
+			const ariaElements = page.locator('[aria-label], [aria-labelledby], [role="dialog"]');
 			const ariaCount = await ariaElements.count().catch(() => 0);
 
 			// The page should be accessible

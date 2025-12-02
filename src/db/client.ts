@@ -135,7 +135,7 @@ export const db = new Proxy({} as ReturnType<typeof createHttpClient>, {
 			}
 			cachedDb = getHttpClient();
 		}
-		return (cachedDb as Record<string | symbol, unknown>)[prop];
+		return (cachedDb as unknown as Record<string | symbol, unknown>)[prop];
 	},
 });
 
@@ -160,7 +160,7 @@ export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
 			}
 			cachedAdminDb = getPoolClient();
 		}
-		return (cachedAdminDb as Record<string | symbol, unknown>)[prop];
+		return (cachedAdminDb as unknown as Record<string | symbol, unknown>)[prop];
 	},
 });
 

@@ -134,11 +134,7 @@ const lgpdComplianceMiddleware = createMiddleware(async (c, next) => {
 	}
 
 	// Check if user has valid consent for current processing
-	const consentCheck = await checkUserConsent(
-		user.id,
-		c.req.path,
-		c.req.method,
-	);
+	const consentCheck = await checkUserConsent(user.id, c.req.path, c.req.method);
 
 	if (!consentCheck.valid) {
 		return c.json(
@@ -194,9 +190,7 @@ async function checkUserConsent(
 	}
 
 	const grantedPurposes = consents.map((c) => c.purpose);
-	const missingPurposes = requiredPurposes.filter(
-		(p) => !grantedPurposes.includes(p),
-	);
+	const missingPurposes = requiredPurposes.filter((p) => !grantedPurposes.includes(p));
 
 	return {
 		valid: missingPurposes.length === 0,
@@ -224,15 +218,17 @@ function getRequiredPurposes(path: string, method: string): string[] {
 function detectProcessingPurpose(path: string, method: string): string {
 	if (path.includes('/transactions') || path.includes('/pix')) {
 		return 'FINANCIAL_TRANSACTIONS';
-	} else if (path.includes('/profile') || path.includes('/account')) {
-		return 'ACCOUNT_MANAGEMENT';
-	} else if (path.includes('/analytics') || path.includes('/reports')) {
-		return 'ANALYTICS';
-	} else if (path.includes('/marketing') || path.includes('/campaigns')) {
-		return 'MARKETING';
-	} else {
-		return 'ACCOUNT_MANAGEMENT'; // Default
 	}
+	if (path.includes('/profile') || path.includes('/account')) {
+		return 'ACCOUNT_MANAGEMENT';
+	}
+	if (path.includes('/analytics') || path.includes('/reports')) {
+		return 'ANALYTICS';
+	}
+	if (path.includes('/marketing') || path.includes('/campaigns')) {
+		return 'MARKETING';
+	}
+	return 'ACCOUNT_MANAGEMENT'; // Default
 }
 
 // Log data access for LGPD compliance
@@ -292,11 +288,9 @@ lgpdRouter.post(
 				version: '1.0',
 			}));
 
-			const { error } = await supabase
-				.from('lgpd_consents')
-				.upsert(consentRecords, {
-					onConflict: 'user_id,purpose',
-				});
+			const { error } = await supabase.from('lgpd_consents').upsert(consentRecords, {
+				onConflict: 'user_id,purpose',
+			});
 
 			if (error) throw error;
 
@@ -352,8 +346,7 @@ lgpdRouter.get('/consent', async (c) => {
 				(acc, consent) => {
 					if (
 						!acc[consent.purpose] ||
-						new Date(consent.timestamp) >
-							new Date(acc[consent.purpose].timestamp)
+						new Date(consent.timestamp) > new Date(acc[consent.purpose].timestamp)
 					) {
 						acc[consent.purpose] = consent;
 					}
@@ -444,10 +437,7 @@ lgpdRouter.post(
 					requestId: request.id,
 					type: requestData.type,
 					status: processingResult.status,
-					message: getRequestStatusMessage(
-						requestData.type,
-						processingResult.status,
-					),
+					message: getRequestStatusMessage(requestData.type, processingResult.status),
 					estimatedCompletion: getEstimatedCompletion(requestData.type),
 					supportContact: {
 						email: 'lgpd@aegiswallet.com.br',
@@ -598,11 +588,7 @@ async function handleConsentRevocation(userId: string) {
 				revoked_at: new Date().toISOString(),
 			})
 			.eq('user_id', userId)
-			.not(
-				'purpose',
-				'in',
-				`(${essentialPurposes.map((p) => `'${p}'`).join(',')})`,
-			);
+			.not('purpose', 'in', `(${essentialPurposes.map((p) => `'${p}'`).join(',')})`);
 
 		// Schedule data deletion for revoked purposes
 		await scheduleDataCleanup(userId, essentialPurposes);
@@ -626,11 +612,7 @@ async function collectUserData(userId: string) {
 		supabase.from('user_profiles').select('*').eq('user_id', userId).single(),
 		supabase.from('transactions').select('*').eq('user_id', userId),
 		supabase.from('lgpd_consents').select('*').eq('user_id', userId),
-		supabase
-			.from('user_preferences')
-			.select('*')
-			.eq('user_id', userId)
-			.single(),
+		supabase.from('user_preferences').select('*').eq('user_id', userId).single(),
 	]);
 
 	return {
@@ -650,9 +632,7 @@ function maskSensitiveData(userData: any) {
 		masked.transactions = masked.transactions.map((tx: any) => ({
 			...tx,
 			amount: '***',
-			recipient_name: tx.recipient_name
-				? tx.recipient_name.substring(0, 2) + '***'
-				: null,
+			recipient_name: tx.recipient_name ? tx.recipient_name.substring(0, 2) + '***' : null,
 		}));
 	}
 
@@ -663,9 +643,7 @@ function maskSensitiveData(userData: any) {
 			cpf: masked.profile.cpf
 				? masked.profile.cpf.replace(/(\d{3})\d{6}(\d{2})/, '$1******$2')
 				: null,
-			email: masked.profile.email
-				? masked.profile.email.replace(/(.{2}).*@/, '$1***@')
-				: null,
+			email: masked.profile.email ? masked.profile.email.replace(/(.{2}).*@/, '$1***@') : null,
 		};
 	}
 

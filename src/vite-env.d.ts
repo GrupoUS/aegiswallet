@@ -1,5 +1,70 @@
 /// <reference types="vite/client" />
 
+// Speech Recognition API types for voice accessibility
+interface SpeechRecognition extends EventTarget {
+	continuous: boolean;
+	grammars: SpeechGrammarList;
+	interimResults: boolean;
+	lang: string;
+	maxAlternatives: number;
+	serviceURI: string;
+
+	start(): void;
+	stop(): void;
+	abort(): void;
+
+	onresult: ((event: SpeechRecognitionEvent) => void) | null;
+	onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+	onend: (() => void) | null;
+	onstart: (() => void) | null;
+}
+
+interface SpeechRecognitionEvent extends Event {
+	resultIndex: number;
+	results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+	error: string;
+	message?: string;
+}
+
+interface SpeechRecognitionResultList {
+	readonly length: number;
+	item(index: number): SpeechRecognitionResult;
+	[index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+	readonly isFinal: boolean;
+	readonly length: number;
+	item(index: number): SpeechRecognitionAlternative;
+	[index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+	readonly transcript: string;
+	readonly confidence: number;
+}
+
+interface SpeechGrammarList {
+	readonly length: number;
+	addFromString(grammar: string, weight?: number): void;
+	addFromURI(src: string, weight?: number): void;
+	item(index: number): SpeechGrammar;
+	[index: number]: SpeechGrammar;
+}
+
+interface SpeechGrammar {
+	src: string;
+	weight: number;
+}
+
+interface Window {
+	SpeechRecognition: typeof SpeechRecognition;
+	webkitSpeechRecognition: typeof SpeechRecognition;
+}
+
 interface ImportMetaEnv {
 	readonly VITE_CLERK_PUBLISHABLE_KEY: string;
 	readonly VITE_NEON_DATABASE_URL: string;

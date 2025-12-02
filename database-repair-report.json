@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-11-28T18:29:27.740Z",
-  "operations": [
-    {
-      "timestamp": "2025-11-28T18:29:27.357Z",
-      "operation": "Create LGPD Audit Tables",
-      "status": "success",
-      "details": "Operation completed successfully"
-    }
-  ],
-  "summary": {
-    "total": 1,
-    "successful": 1,
-    "failed": 0,
-    "skipped": 0
-  }
+	"timestamp": "2025-11-28T18:29:27.740Z",
+	"operations": [
+		{
+			"timestamp": "2025-11-28T18:29:27.357Z",
+			"operation": "Create LGPD Audit Tables",
+			"status": "success",
+			"details": "Operation completed successfully"
+		}
+	],
+	"summary": {
+		"total": 1,
+		"successful": 1,
+		"failed": 0,
+		"skipped": 0
+	}
 }

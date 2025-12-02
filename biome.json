@@ -640,7 +640,11 @@
 			}
 		},
 		{
-			"includes": ["src/components/calendar/**", "src/components/error-boundaries/**", "src/components/ui/**"],
+			"includes": [
+				"src/components/calendar/**",
+				"src/components/error-boundaries/**",
+				"src/components/ui/**"
+			],
 			"linter": {
 				"rules": {
 					"nursery": {

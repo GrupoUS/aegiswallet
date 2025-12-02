@@ -36,9 +36,7 @@ export class DashboardPage {
 
 	get viewAllTransactionsButton() {
 		return this.page
-			.locator(
-				'button:has-text("Ver Todas as Transações"), a:has-text("Ver Todas as Transações")',
-			)
+			.locator('button:has-text("Ver Todas as Transações"), a:has-text("Ver Todas as Transações")')
 			.first();
 	}
 
@@ -74,13 +72,13 @@ export class DashboardPage {
 
 		// Extract numeric value using regex for BRL format
 		const match = balanceText.match(/R\$\s*([\d.,]+)/);
-		if (!match || !match[1]) {
+		if (!(match && match[1])) {
 			throw new Error(`Could not extract balance from: ${balanceText}`);
 		}
 
 		// Convert Brazilian format to number: "1.234,56" → 1234.56
 		const cleanValue = match[1].replace(/\./g, '').replace(',', '.');
-		const balance = parseFloat(cleanValue);
+		const balance = Number.parseFloat(cleanValue);
 
 		if (Number.isNaN(balance)) {
 			throw new Error(`Could not convert balance to number: ${cleanValue}`);

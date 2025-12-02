@@ -33,11 +33,7 @@ export class TransferPage {
 	get typeSelect() {
 		return this.page
 			.getByLabel('Tipo')
-			.or(
-				this.page
-					.locator('select')
-					.filter({ has: this.page.locator('label:has-text("Tipo")') }),
-			)
+			.or(this.page.locator('select').filter({ has: this.page.locator('label:has-text("Tipo")') }))
 			.first();
 	}
 
@@ -56,11 +52,9 @@ export class TransferPage {
 		return this.page
 			.getByLabel('Conta Bancária')
 			.or(
-				this.page
-					.locator('select')
-					.filter({
-						has: this.page.locator('label:has-text("Conta Bancária")'),
-					}),
+				this.page.locator('select').filter({
+					has: this.page.locator('label:has-text("Conta Bancária")'),
+				}),
 			)
 			.first();
 	}

@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBalanceHistory, useBankAccounts } from '@/hooks/useBankAccounts';
+import { isValidChartItem } from '@/lib/utils/type-guards';
+import type { ChartData } from '@/types/financial/chart.types';
 
 export function BalanceChart() {
 	const [period, setPeriod] = useState<'week' | 'month' | 'quarter'>('month');
@@ -52,21 +54,38 @@ export function BalanceChart() {
 
 	const { history, isLoading } = useBalanceHistory(targetAccountId || '', days);
 
-	const data = useMemo(() => {
+	const data = useMemo((): ChartData[] => {
 		if (isLoading || !history) {
 			return [];
 		}
 
 		// History is expected to be [{ date: string, balance: number }, ...]
 		// We need to format it for the chart
-		return history.map((item: { date: string | Date; balance: number }) => {
-			const dateValue = new Date(item.date);
-			return {
-				balance: Number(item.balance),
-				date: format(dateValue, 'dd/MM'),
-				fullDate: format(dateValue, "dd 'de' MMMM", { locale: ptBR }),
-			};
-		});
+		const chartItems = history
+			.filter((item: unknown): item is { date: string | Date; balance: number } => {
+				return isValidChartItem(item);
+			})
+			.map((item) => {
+				const dateValue = new Date(item.date);
+				return {
+					value: Number(item.balance),
+					name: format(dateValue, 'dd/MM'),
+					dataKey: 'balance',
+					metadata: {
+						fullDate: format(dateValue, "dd 'de' MMMM", { locale: ptBR }),
+						timestamp: dateValue.getTime(),
+						type: 'balance',
+					},
+				};
+			});
+
+		// Return as ChartData array
+		return [
+			{
+				payload: chartItems,
+				label: 'Histórico de Saldo',
+			},
+		];
 	}, [history, isLoading]);
 
 	if (isLoading && accounts.length > 0) {
@@ -140,17 +159,27 @@ export function BalanceChart() {
 							<Tooltip
 								content={({ active, payload }) => {
 									if (active && payload && payload.length) {
+										const firstItem = payload[0];
+										const chartPayload = firstItem.payload as { fullDate?: string }[];
+
 										return (
 											<div className="rounded-lg border bg-background p-2 shadow-sm">
 												<div className="flex flex-col">
 													<span className="text-[0.70rem] uppercase text-muted-foreground">
 														Saldo
 													</span>
-													<span className="font-bold text-primary">R$ {payload[0].value}</span>
+													<span className="font-bold text-primary">
+														R${' '}
+														{typeof firstItem.value === 'number'
+															? firstItem.value.toLocaleString('pt-BR')
+															: '0'}
+													</span>
 												</div>
-												<div className="mt-2 text-xs text-muted-foreground border-t pt-2">
-													{payload[0].payload.fullDate}
-												</div>
+												{chartPayload?.[0]?.fullDate && (
+													<div className="mt-2 text-xs text-muted-foreground border-t pt-2">
+														{chartPayload[0].fullDate}
+													</div>
+												)}
 											</div>
 										);
 									}

@@ -23,6 +23,18 @@ export interface ChartPayload {
 
 	/** Optional metadata for chart interactions */
 	metadata?: Record<string, unknown>;
+
+	/** Optional timestamp for time-series data */
+	timestamp?: Date;
+
+	/** Chart item type for filtering */
+	type?: string;
+
+	/** Optional payload data for nested chart structures */
+	payload?: {
+		fill?: string;
+		[key: string]: unknown;
+	};
 }
 
 export interface ChartData {
@@ -68,6 +80,14 @@ export interface ChartConfig {
 
 	/** LGPD consent requirement for data display */
 	requiresConsent?: boolean;
+}
+
+/**
+ * Type guard for chart item with type property
+ * Used to filter out 'none' type items in chart rendering
+ */
+export function isValidChartItem(item: unknown): item is ChartPayload & { type?: string } {
+	return isValidChartPayload(item) && (!('type' in item) || typeof item.type === 'string');
 }
 
 /**

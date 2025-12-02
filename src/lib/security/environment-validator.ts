@@ -45,7 +45,8 @@ export function validateEnvironmentConfig(): EnvironmentConfig {
 			(typeof import.meta !== 'undefined' && import.meta.env?.[key]) ||
 			(typeof import.meta !== 'undefined' && import.meta.env?.[`VITE_${key}`]) ||
 			(typeof process !== 'undefined' && process.env?.[key]) ||
-			(typeof process !== 'undefined' && process.env?.[`VITE_${key}`]);
+			(typeof process !== 'undefined' && process.env?.[`VITE_${key}`]) ||
+			undefined;
 
 		if (required && !value) {
 			errors.push(`Missing required environment variable: ${key}`);

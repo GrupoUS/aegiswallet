@@ -38,7 +38,7 @@ async function buildApi() {
 			// Node.js runtime (required for Clerk, Drizzle with pooling)
 			platform: 'node',
 			target: 'node20',
-			format: 'esm',
+			format: 'esm', // ESM for Vercel (export default app)
 			sourcemap: false,
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
@@ -60,10 +60,6 @@ async function buildApi() {
 				js: `// AegisWallet API - Bundled for Vercel Node.js Runtime
 // Generated at: ${new Date().toISOString()}
 // Entry: src/server/vercel.ts
-
-// Polyfill for CommonJS require() in ESM context
-import { createRequire as __createRequire } from 'node:module';
-const require = __createRequire(import.meta.url);
 `,
 			},
 			metafile: true,

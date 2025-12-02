@@ -44,22 +44,10 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['mano', 'parça', 'rolê', 'tipo assim', 'cê tá ligado?'],
 		expressions: ['demais', 'massa', 'show', 'sensacional', 'nota mil'],
 		commands: {
-			balance: [
-				'como está meu saldo',
-				'quanto tenho na conta',
-				'me fala quanto tenho de grana',
-			],
+			balance: ['como está meu saldo', 'quanto tenho na conta', 'me fala quanto tenho de grana'],
 			transfer: ['faz um pix pra mim', 'me manda o pix', 'transfere na conta'],
-			bills: [
-				'tem boleta pra pagar',
-				'qualé os boletos',
-				'tem conta pra pagar',
-			],
-			spending: [
-				'quanto posso gastar',
-				'qualé meu limite',
-				'me fala quanto sobra',
-			],
+			bills: ['tem boleta pra pagar', 'qualé os boletos', 'tem conta pra pagar'],
+			spending: ['quanto posso gastar', 'qualé meu limite', 'me fala quanto sobra'],
 		},
 	},
 	RJ: {
@@ -69,11 +57,7 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['maneiro', 'caraca', 'você é brabo', 'sinistro', 'maravilha'],
 		expressions: ['feras', 'pra caramba', 'puta que pariu', 'sarrada'],
 		commands: {
-			balance: [
-				'qualé o saldo da conta',
-				'me fala quanto tenho',
-				'quanto tá grana',
-			],
+			balance: ['qualé o saldo da conta', 'me fala quanto tenho', 'quanto tá grana'],
 			transfer: ['me ajuda com o pix', 'faz a transferência', 'me passa o pix'],
 			bills: ['tem conta pra pagar', 'qualé as contas', 'boletos pra pagar'],
 			spending: ['qualé o limite', 'quanto dá pra gastar', 'me fala do limite'],
@@ -86,18 +70,10 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['arre', 'massa', 'bão demais', 'meu patrao', 'ôxe'],
 		expressions: ['oxente', 'bão demais', 'rapaziada', 'vamos nessa'],
 		commands: {
-			balance: [
-				'oxente, quanto tô tendo',
-				'me diga quanto',
-				'qualé o saldo meu filho',
-			],
+			balance: ['oxente, quanto tô tendo', 'me diga quanto', 'qualé o saldo meu filho'],
 			transfer: ['me faz um pix', 'manda o pix', 'transfere pra cá'],
 			bills: ['oxente, tem conta pra pagar', 'tem boleto', 'qualé os boletos'],
-			spending: [
-				'oxente, dá pra gastar quanto',
-				'me fala do limite',
-				'qualé o saldo',
-			],
+			spending: ['oxente, dá pra gastar quanto', 'me fala do limite', 'qualé o saldo'],
 		},
 	},
 	SUL: {
@@ -107,26 +83,10 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['bah', 'tchê', 'guri', 'legal', 'show', 'cabras'],
 		expressions: ['bah, quelegal', 'tchê, sensacional', 'vamos nessa'],
 		commands: {
-			balance: [
-				'bah, me diz o saldo tchê',
-				'quanto tenho de grana',
-				'qualé o saldo bah',
-			],
-			transfer: [
-				'bah, me manda o pix tchê',
-				'faz transferência',
-				'pix pra mim',
-			],
-			bills: [
-				'tem alguma boleta vencendo',
-				'qualé as contas tchê',
-				'boletos pra pagar',
-			],
-			spending: [
-				'bah, qualé o limite tchê',
-				'quanto posso gastar',
-				'me fala do saldo',
-			],
+			balance: ['bah, me diz o saldo tchê', 'quanto tenho de grana', 'qualé o saldo bah'],
+			transfer: ['bah, me manda o pix tchê', 'faz transferência', 'pix pra mim'],
+			bills: ['tem alguma boleta vencendo', 'qualé as contas tchê', 'boletos pra pagar'],
+			spending: ['bah, qualé o limite tchê', 'quanto posso gastar', 'me fala do saldo'],
 		},
 	},
 	NORTE: {
@@ -136,22 +96,10 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['véio', 'meu irmão', 'rapazola', 'saravá'],
 		expressions: ['é nóis', 'vamos nessa', 'legal pra caramba'],
 		commands: {
-			balance: [
-				'qualé o saldo cara',
-				'quanto tenho na conta',
-				'me fala quanto tem',
-			],
+			balance: ['qualé o saldo cara', 'quanto tenho na conta', 'me fala quanto tem'],
 			transfer: ['me ajuda com o pix', 'faz transferência', 'manda a grana'],
-			bills: [
-				'tem alguma conta pra pagar',
-				'qualé os boletos',
-				'contas vencendo',
-			],
-			spending: [
-				'qualé o meu limite',
-				'quanto posso gastar',
-				'me fala o que sobra',
-			],
+			bills: ['tem alguma conta pra pagar', 'qualé os boletos', 'contas vencendo'],
+			spending: ['qualé o meu limite', 'quanto posso gastar', 'me fala o que sobra'],
 		},
 	},
 	CO: {
@@ -161,18 +109,10 @@ const BRAZILIAN_REGIONS: Record<string, BrazilianRegionalPatterns> = {
 		slang: ['irmão', 'parça', 'legal', 'show', 'sensacional'],
 		expressions: ['vamos nessa', 'é isso aí', 'pra caramba'],
 		commands: {
-			balance: [
-				'qualé o saldo irmão',
-				'me fala quanto tenho',
-				'quanto tá na conta',
-			],
+			balance: ['qualé o saldo irmão', 'me fala quanto tenho', 'quanto tá na conta'],
 			transfer: ['me faz um pix', 'transfere pra mim', 'manda o pix'],
 			bills: ['tem boleto programado', 'qualé as contas', 'contas pra pagar'],
-			spending: [
-				'qualé o limite',
-				'quanto dá pra gastar',
-				'me fala quanto sobra',
-			],
+			spending: ['qualé o limite', 'quanto dá pra gastar', 'me fala quanto sobra'],
 		},
 	},
 };
@@ -241,9 +181,9 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 	const [isListening, setIsListening] = useState(false);
 	const [transcript, setTranscript] = useState('');
 	const [currentRegion, setCurrentRegion] = useState(region);
-	const [voiceState, setVoiceState] = useState<
-		'idle' | 'listening' | 'processing' | 'responding'
-	>('idle');
+	const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'processing' | 'responding'>(
+		'idle',
+	);
 
 	const recognitionRef = useRef<SpeechRecognition | null>(null);
 	const audioContextRef = useRef<AudioContext | null>(null);
@@ -253,17 +193,12 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 	const vadIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Get Brazilian regional patterns
-	const regionalPatterns = useMemo(
-		() => BRAZILIAN_REGIONS[currentRegion],
-		[currentRegion],
-	);
+	const regionalPatterns = useMemo(() => BRAZILIAN_REGIONS[currentRegion], [currentRegion]);
 
 	// Voice Activity Detection
 	const startVAD = useCallback(() => {
 		if (!audioContextRef.current) {
-			audioContextRef.current = new (
-				window.AudioContext || (window as any).webkitAudioContext
-			)();
+			audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
 			analyserRef.current = audioContextRef.current.createAnalyser();
 		}
 
@@ -275,8 +210,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
 				analyserRef.current.getByteFrequencyData(dataArray);
 
-				const average =
-					dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+				const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
 
 				if (average < VAD_CONFIG.SILENCE_THRESHOLD * 255) {
 					silenceCount++;
@@ -301,32 +235,16 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				const normalizedText = normalizeBrazilianPortuguese(text);
 
 				// Detect intent with regional patterns
-				const intent = detectIntentWithRegionalPatterns(
-					normalizedText,
-					regionalPatterns,
-				);
+				const intent = detectIntentWithRegionalPatterns(normalizedText, regionalPatterns);
 
 				// Extract entities
-				const entities = extractFinancialEntities(
-					normalizedText,
-					regionalPatterns,
-				);
+				const entities = extractFinancialEntities(normalizedText, regionalPatterns);
 
 				// Calculate confidence
-				const confidence = calculateConfidence(
-					normalizedText,
-					intent,
-					entities,
-					regionalPatterns,
-				);
+				const confidence = calculateConfidence(normalizedText, intent, entities, regionalPatterns);
 
 				// Generate response
-				const responseText = generateResponse(
-					intent,
-					entities,
-					regionalPatterns,
-					confidence,
-				);
+				const responseText = generateResponse(intent, entities, regionalPatterns, confidence);
 
 				const processingTime = Date.now() - startTime;
 
@@ -381,63 +299,42 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 
 			// Check for balance queries
 			if (
-				patterns.commands.balance.some((pattern) =>
-					normalizedText.includes(pattern.toLowerCase()),
-				)
+				patterns.commands.balance.some((pattern) => normalizedText.includes(pattern.toLowerCase()))
 			) {
 				return 'BALANCE_QUERY';
 			}
 
 			// Check for spending capacity
 			if (
-				patterns.commands.spending.some((pattern) =>
-					normalizedText.includes(pattern.toLowerCase()),
-				)
+				patterns.commands.spending.some((pattern) => normalizedText.includes(pattern.toLowerCase()))
 			) {
 				return 'SPENDING_CAPACITY';
 			}
 
 			// Check for bills inquiry
 			if (
-				patterns.commands.bills.some((pattern) =>
-					normalizedText.includes(pattern.toLowerCase()),
-				)
+				patterns.commands.bills.some((pattern) => normalizedText.includes(pattern.toLowerCase()))
 			) {
 				return 'BILLS_INQUIRY';
 			}
 
 			// Check for transfer requests
 			if (
-				patterns.commands.transfer.some((pattern) =>
-					normalizedText.includes(pattern.toLowerCase()),
-				)
+				patterns.commands.transfer.some((pattern) => normalizedText.includes(pattern.toLowerCase()))
 			) {
 				return 'TRANSFER_REQUEST';
 			}
 
 			// Financial terminology detection
-			if (
-				patterns.financial_terms.some((term) =>
-					normalizedText.includes(term.toLowerCase()),
-				)
-			) {
+			if (patterns.financial_terms.some((term) => normalizedText.includes(term.toLowerCase()))) {
 				// Secondary intent detection based on financial terms
-				if (
-					normalizedText.includes('saldo') ||
-					normalizedText.includes('tenho')
-				) {
+				if (normalizedText.includes('saldo') || normalizedText.includes('tenho')) {
 					return 'BALANCE_QUERY';
 				}
-				if (
-					normalizedText.includes('gast') ||
-					normalizedText.includes('limite')
-				) {
+				if (normalizedText.includes('gast') || normalizedText.includes('limite')) {
 					return 'SPENDING_CAPACITY';
 				}
-				if (
-					normalizedText.includes('cont') ||
-					normalizedText.includes('boleto')
-				) {
+				if (normalizedText.includes('cont') || normalizedText.includes('boleto')) {
 					return 'BILLS_INQUIRY';
 				}
 			}
@@ -464,7 +361,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				const match = text.match(pattern);
 				if (match) {
 					const amountStr = match[0].replace(/[^\d,]/g, '').replace(',', '.');
-					entities.amount = parseFloat(amountStr);
+					entities.amount = Number.parseFloat(amountStr);
 					break;
 				}
 			}
@@ -559,14 +456,9 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 			patterns: BrazilianRegionalPatterns,
 			confidence: number,
 		): string => {
-			const greeting =
-				patterns.greetings[
-					Math.floor(Math.random() * patterns.greetings.length)
-				];
+			const greeting = patterns.greetings[Math.floor(Math.random() * patterns.greetings.length)];
 			const expression =
-				patterns.expressions[
-					Math.floor(Math.random() * patterns.expressions.length)
-				];
+				patterns.expressions[Math.floor(Math.random() * patterns.expressions.length)];
 
 			switch (intent) {
 				case 'BALANCE_QUERY':
@@ -581,18 +473,17 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				case 'TRANSFER_REQUEST':
 					if (entities.recipient) {
 						return `${greeting}! Entendi, quer transferir para ${entities.recipient}. Quanto você quer mandar, ${expression}?`;
-					} else if (entities.amount) {
-						return `${greeting}! Quanto é ${entities.amount} reais? Para quem você quer transferir essa grana?`;
-					} else {
-						return `${greeting}! Para quem e quanto você quer transferir? Fala aí, ${expression}!`;
 					}
+					if (entities.amount) {
+						return `${greeting}! Quanto é ${entities.amount} reais? Para quem você quer transferir essa grana?`;
+					}
+					return `${greeting}! Para quem e quanto você quer transferir? Fala aí, ${expression}!`;
 
 				default:
 					if (confidence < 0.7) {
 						return `${greeting}! Não entendi muito bem. Você pode repetir de outra forma? ${expression}!`;
-					} else {
-						return `${greeting}! Entendi! Vou processar seu pedido agora mesmo, ${expression}!`;
 					}
+					return `${greeting}! Entendi! Vou processar seu pedido agora mesmo, ${expression}!`;
 			}
 		},
 		[],
@@ -601,12 +492,8 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 	// Generate error response
 	const generateErrorResponse = useCallback(
 		(error: any, patterns: BrazilianRegionalPatterns): string => {
-			const greeting =
-				patterns.greetings[
-					Math.floor(Math.random() * patterns.greetings.length)
-				];
-			const slang =
-				patterns.slang[Math.floor(Math.random() * patterns.slang.length)];
+			const greeting = patterns.greetings[Math.floor(Math.random() * patterns.greetings.length)];
+			const slang = patterns.slang[Math.floor(Math.random() * patterns.slang.length)];
 
 			return `${greeting}! Desculpa, deu um erro aqui. Pode tentar de novo? ${slang}!`;
 		},
@@ -615,19 +502,14 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 
 	// Start voice recognition
 	const startListening = useCallback(() => {
-		if (
-			disabled ||
-			!('webkitSpeechRecognition' in window) ||
-			!('SpeechRecognition' in window)
-		) {
+		if (disabled || !('webkitSpeechRecognition' in window) || !('SpeechRecognition' in window)) {
 			onError?.('Seu navegador não suporta reconhecimento de voz');
 			return;
 		}
 
 		try {
 			const SpeechRecognition =
-				(window as any).SpeechRecognition ||
-				(window as any).webkitSpeechRecognition;
+				(window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 			recognitionRef.current = new SpeechRecognition();
 
 			// Configure for Brazilian Portuguese
@@ -674,10 +556,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				setVoiceState('idle');
 				onListeningChange?.(false);
 
-				const errorMessage = getRegionalErrorMessage(
-					event.error,
-					regionalPatterns,
-				);
+				const errorMessage = getRegionalErrorMessage(event.error, regionalPatterns);
 				onError?.(errorMessage);
 			};
 
@@ -748,10 +627,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 				'service-not-allowed': `${patterns.greetings[0]}! Serviço de voz não disponível no seu navegador.`,
 			};
 
-			return (
-				errorMessages[error] ||
-				`${patterns.greetings[0]}! Deu um erro. Tenta de novo.`
-			);
+			return errorMessages[error] || `${patterns.greetings[0]}! Deu um erro. Tenta de novo.`;
 		},
 		[],
 	);
@@ -788,11 +664,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 
 			{/* Voice indicator for accessibility */}
 			{isListening && (
-				<div
-					className="voice-indicator"
-					role="status"
-					aria-label="Ouvindo comando de voz"
-				>
+				<div className="voice-indicator" role="status" aria-label="Ouvindo comando de voz">
 					<span className="voice-pulse" />
 					<span className="voice-text">Ouvindo...</span>
 				</div>
@@ -857,9 +729,7 @@ export const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
 			{/* Performance indicator (for development) */}
 			{process.env.NODE_ENV === 'development' && (
 				<div className="performance-indicator" aria-hidden="true">
-					<span className="perf-label">
-						Target: {VAD_CONFIG.TARGET_RESPONSE_TIME}ms
-					</span>
+					<span className="perf-label">Target: {VAD_CONFIG.TARGET_RESPONSE_TIME}ms</span>
 					<span className="perf-value">Região: {currentRegion}</span>
 				</div>
 			)}

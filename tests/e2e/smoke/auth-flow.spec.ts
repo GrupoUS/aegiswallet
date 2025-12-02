@@ -17,34 +17,24 @@ test.describe('Authentication Flow - Smoke Tests', () => {
 
 		// Login form elements should be visible
 		await expect(
-			page
-				.locator(
-					'input[type="email"], input[name="email"], [data-testid="email-input"]',
-				)
-				.first(),
+			page.locator('input[type="email"], input[name="email"], [data-testid="email-input"]').first(),
 		).toBeVisible({ timeout: 10000 });
 
 		await expect(
 			page
-				.locator(
-					'input[type="password"], input[name="password"], [data-testid="password-input"]',
-				)
+				.locator('input[type="password"], input[name="password"], [data-testid="password-input"]')
 				.first(),
 		).toBeVisible();
 	});
 
-	test('should redirect unauthenticated users from protected routes', async ({
-		page,
-	}) => {
+	test('should redirect unauthenticated users from protected routes', async ({ page }) => {
 		// Try to access a protected route directly
 		await page.goto('/dashboard');
 
 		// Should redirect to auth page or show login prompt
-		await page
-			.waitForURL(/auth|login|signin/i, { timeout: 10000 })
-			.catch(() => {
-				// If no redirect, check for login prompt
-			});
+		await page.waitForURL(/auth|login|signin/i, { timeout: 10000 }).catch(() => {
+			// If no redirect, check for login prompt
+		});
 
 		const currentUrl = page.url();
 		const isOnAuthPage = /auth|login|signin/i.test(currentUrl);
@@ -56,21 +46,15 @@ test.describe('Authentication Flow - Smoke Tests', () => {
 		expect(isOnAuthPage || hasLoginPrompt).toBeTruthy();
 	});
 
-	test('should show validation errors for invalid credentials', async ({
-		page,
-	}) => {
+	test('should show validation errors for invalid credentials', async ({ page }) => {
 		await page.goto('/auth');
 
 		// Fill in invalid credentials
 		const emailInput = page
-			.locator(
-				'input[type="email"], input[name="email"], [data-testid="email-input"]',
-			)
+			.locator('input[type="email"], input[name="email"], [data-testid="email-input"]')
 			.first();
 		const passwordInput = page
-			.locator(
-				'input[type="password"], input[name="password"], [data-testid="password-input"]',
-			)
+			.locator('input[type="password"], input[name="password"], [data-testid="password-input"]')
 			.first();
 
 		await emailInput.fill('invalid@test.com');
@@ -78,9 +62,7 @@ test.describe('Authentication Flow - Smoke Tests', () => {
 
 		// Submit form
 		const submitButton = page
-			.locator(
-				'button[type="submit"], [data-testid="login-button"], button:has-text("Entrar")',
-			)
+			.locator('button[type="submit"], [data-testid="login-button"], button:has-text("Entrar")')
 			.first();
 		await submitButton.click();
 

@@ -68,9 +68,7 @@ test.describe('LGPD Compliance - Consent Banner', () => {
 		await expect(pageTitle).toContainText(/Configurações/i, { timeout: 5000 });
 
 		// Check that the privacy tab exists and is accessible
-		const privacyTab = page.locator(
-			'button[role="tab"]:has-text("Privacidade")',
-		);
+		const privacyTab = page.locator('button[role="tab"]:has-text("Privacidade")');
 		await expect(privacyTab).toBeVisible({ timeout: 5000 });
 	});
 
@@ -87,15 +85,11 @@ test.describe('LGPD Compliance - Consent Banner', () => {
 		await page.waitForURL(/privacidade/i, { timeout: 10000 });
 
 		// Privacy policy page should have LGPD-related heading and content
-		const policyHeading = page.locator(
-			'h1:has-text("Política de Privacidade")',
-		);
+		const policyHeading = page.locator('h1:has-text("Política de Privacidade")');
 		await expect(policyHeading).toBeVisible({ timeout: 5000 });
 
 		// Check for LGPD-specific content
-		const lgpdContent = page.locator(
-			'text=/LGPD|Lei Geral de Proteção de Dados/i',
-		);
+		const lgpdContent = page.locator('text=/LGPD|Lei Geral de Proteção de Dados/i');
 		await expect(lgpdContent.first()).toBeVisible({ timeout: 5000 });
 	});
 

@@ -1,275 +1,219 @@
 /**
- * Type Guards Utility - AegisWallet Quality Control
+ * Type Guards Utility for AegisWallet
  *
- * Provides type-safe validation functions to replace dangerous non-null assertions
- * and ensure runtime type safety throughout the application.
+ * LGPD Compliance: These type guards ensure type safety and prevent runtime errors
+ * that could expose sensitive financial or personal data.
  *
  * @version 1.0.0
- * @since 2025-11-19
+ * @since 2025-12-02
  */
 
-import type { FinancialEvent } from '@/types';
-
-import type { CalendarEvent } from '@/components/ui/event-calendar/types';
-
 /**
- * Generic non-null type guard
- * Replaces dangerous non-null assertions (!) with safe type narrowing
- *
- * @param value - Value to check for null/undefined
- * @returns Type predicate indicating value is not null or undefined
- *
- * @example
- * ```typescript
- * const result = someNullableValue;
- * if (isNonNull(result)) {
- *   // TypeScript now knows result is not null/undefined
- *   console.log(result.toString());
- * }
- * ```
+ * Generic type guard for non-null values
  */
 export function isNonNull<T>(value: T | null | undefined): value is T {
 	return value !== null && value !== undefined;
 }
 
 /**
- * Type guard for valid calendar events
- * Ensures calendar event has required properties for safe rendering
- *
- * @param event - Potential calendar event object
- * @returns Type predicate for valid CalendarEvent
- *
- * @example
- * ```typescript
- * if (isValidCalendarEvent(event)) {
- *   // Safe to access calendar event properties
- *   renderEvent(event.title, event.start, event.end);
- * }
- * ```
+ * Type guard for valid numbers (financial amounts)
  */
-export function isValidCalendarEvent(event: unknown): event is CalendarEvent {
-	if (!event || typeof event !== 'object') {
-		return false;
-	}
-
-	const e = event as Record<string, unknown>;
-
-	// Required properties for calendar events
-	return (
-		typeof e.id === 'string' &&
-		typeof e.title === 'string' &&
-		(e.start instanceof Date || typeof e.start === 'string') &&
-		(e.end instanceof Date || typeof e.end === 'string') &&
-		typeof e.allDay === 'boolean'
-	);
+export function isValidAmount(value: unknown): value is number {
+	return typeof value === 'number' && !Number.isNaN(value) && value >= 0;
 }
 
 /**
- * Type guard for valid financial events
- * Ensures financial event has required properties for safe financial operations
- *
- * @param event - Potential financial event object
- * @returns Type predicate for valid FinancialEvent
- *
- * @example
- * ```typescript
- * if (isValidFinancialEvent(event)) {
- *   // Safe to perform financial calculations
- *   processTransaction(event.amount, event.category);
- * }
- * ```
+ * Type guard for valid dates
  */
-export function isValidFinancialEvent(event: unknown): event is FinancialEvent {
-	if (!event || typeof event !== 'object') {
-		return false;
-	}
-
-	const e = event as Record<string, unknown>;
-
-	// Required properties for financial events
-	return (
-		typeof e.id === 'string' &&
-		typeof e.amount === 'number' &&
-		typeof e.description === 'string' &&
-		(e.date instanceof Date || typeof e.date === 'string') &&
-		typeof e.category === 'string' &&
-		typeof e.type === 'string'
-	);
+export function isValidDate(value: unknown): value is Date {
+	return value instanceof Date && !isNaN(value.getTime());
 }
 
 /**
- * Type guard for PIX key validation
- * Ensures PIX key has required properties for safe payment operations
- *
- * @param pixKey - Potential PIX key object
- * @returns Type predicate for valid PIX key
- *
- * @LGPD This function handles sensitive financial data - ensure proper encryption
+ * Type guard for calendar events
  */
-export function isValidPixKey(pixKey: unknown): pixKey is {
-	id: string;
-	key_type: string;
-	key_value: string;
-	label?: string;
-	is_active?: boolean;
-	is_favorite?: boolean;
+export function isValidCalendarEvent(event: unknown): event is {
+	title: string;
+	start: Date;
+	end: Date;
+	[key: string]: unknown;
 } {
-	if (!pixKey || typeof pixKey !== 'object') {
-		return false;
-	}
-
-	const key = pixKey as Record<string, unknown>;
-
-	return (
-		typeof key.id === 'string' &&
-		typeof key.key_type === 'string' &&
-		typeof key.key_value === 'string' &&
-		(key.label === undefined || typeof key.label === 'string') &&
-		(key.is_active === undefined || typeof key.is_active === 'boolean') &&
-		(key.is_favorite === undefined || typeof key.is_favorite === 'boolean')
+	return !!(
+		event &&
+		typeof event === 'object' &&
+		'title' in event &&
+		typeof event.title === 'string' &&
+		'start' in event &&
+		event.start instanceof Date &&
+		'end' in event &&
+		event.end instanceof Date
 	);
 }
 
 /**
- * Type guard for user profile validation
- * Ensures user object has required properties for authentication
- *
- * @param user - Potential user object
- * @returns Type predicate for valid user profile
+ * Type guard for financial voice parameters
  */
-export function isValidUser(user: unknown): user is {
-	id: string;
-	email: string;
-	name?: string;
-	role?: string;
+export function isValidFinancialVoiceParameters(params: unknown): params is {
+	amount?: number;
+	recipient?: string;
+	category?: string;
+	date?: Date;
+	[key: string]: unknown;
 } {
-	if (!user || typeof user !== 'object') {
-		return false;
-	}
-
-	const u = user as Record<string, unknown>;
-
 	return (
-		typeof u.id === 'string' &&
-		typeof u.email === 'string' &&
-		(u.name === undefined || typeof u.name === 'string') &&
-		(u.role === undefined || typeof u.role === 'string')
+		typeof params === 'object' &&
+		params !== null &&
+		(!('amount' in params) || typeof params.amount === 'number') &&
+		(!('recipient' in params) || typeof params.recipient === 'string') &&
+		(!('category' in params) || typeof params.category === 'string') &&
+		(!('date' in params) || params.date instanceof Date)
 	);
 }
 
 /**
- * Type guard for bank account validation
- * Ensures bank account has required properties for financial operations
- *
- * @param account - Potential bank account object
- * @returns Type predicate for valid bank account
- *
- * @LGPD This function handles sensitive financial data - ensure proper encryption
+ * Type guard for calendar voice parameters
  */
-export function isValidBankAccount(account: unknown): account is {
-	id: string;
-	account_number: string;
-	account_type: string;
-	balance?: number;
-	available_balance?: number;
-	is_primary?: boolean;
+export function isValidCalendarVoiceParameters(params: unknown): params is {
+	title?: string;
+	date?: Date;
+	duration?: number;
+	location?: string;
+	[key: string]: unknown;
 } {
-	if (!account || typeof account !== 'object') {
-		return false;
-	}
-
-	const acc = account as Record<string, unknown>;
-
 	return (
-		typeof acc.id === 'string' &&
-		typeof acc.account_number === 'string' &&
-		typeof acc.account_type === 'string' &&
-		(acc.balance === undefined || typeof acc.balance === 'number') &&
-		(acc.available_balance === undefined || typeof acc.available_balance === 'number') &&
-		(acc.is_primary === undefined || typeof acc.is_primary === 'boolean')
+		typeof params === 'object' &&
+		params !== null &&
+		(!('title' in params) || typeof params.title === 'string') &&
+		(!('date' in params) || params.date instanceof Date) &&
+		(!('duration' in params) || typeof params.duration === 'number') &&
+		(!('location' in params) || typeof params.location === 'string')
 	);
 }
 
 /**
- * Type guard for transaction validation
- * Ensures transaction has required properties for financial tracking
- *
- * @param transaction - Potential transaction object
- * @returns Type predicate for valid transaction
+ * Type guard for strings with minimum length
  */
-export function isValidTransaction(transaction: unknown): transaction is {
-	id: string;
-	amount: number;
-	description: string;
-	date: string | Date;
-	category: string;
-	type: 'income' | 'expense' | 'transfer';
-	account_id?: string;
-} {
-	if (!transaction || typeof transaction !== 'object') {
-		return false;
-	}
+export function isValidString(value: unknown, minLength = 1): value is string {
+	return typeof value === 'string' && value.length >= minLength;
+}
 
-	const tx = transaction as Record<string, unknown>;
+/**
+ * Type guard for email validation
+ */
+export function isValidEmail(email: unknown): email is string {
+	if (typeof email !== 'string') return false;
 
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email);
+}
+
+/**
+ * Type guard for Brazilian CPF validation
+ */
+export function isValidCPF(cpf: unknown): cpf is string {
+	if (typeof cpf !== 'string') return false;
+
+	// Remove non-digit characters for validation
+	const cleanCPF = cpf.replace(/\D/g, '');
+
+	// CPF must have exactly 11 digits
+	if (cleanCPF.length !== 11) return false;
+
+	// All digits must be the same (CPF validation rule)
+	const digits = cleanCPF.split('');
+	if (digits.length !== 11) return false;
+
+	const firstDigit = digits[0];
+	const allSame = digits.every((digit) => digit === firstDigit);
+
+	return allSame;
+}
+
+/**
+ * Type guard for Brazilian phone number validation
+ */
+export function isValidBrazilianPhone(phone: unknown): phone is string {
+	if (typeof phone !== 'string') return false;
+
+	// Remove common formatting characters
+	const cleanPhone = phone.replace(/\D/g, '');
+
+	// Brazilian mobile numbers should have 11 digits (with DDD) or 10 digits (landline)
+	if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
+
+	// Must be all digits
+	return /^\d+$/.test(cleanPhone);
+}
+
+/**
+ * Type guard for API responses
+ */
+export function isValidApiResponse<T>(
+	response: unknown,
+): response is { data: T; success: boolean } {
 	return (
-		typeof tx.id === 'string' &&
-		typeof tx.amount === 'number' &&
-		typeof tx.description === 'string' &&
-		(tx.date instanceof Date || typeof tx.date === 'string') &&
-		typeof tx.category === 'string' &&
-		(tx.type === 'income' || tx.type === 'expense' || tx.type === 'transfer') &&
-		(tx.account_id === undefined || typeof tx.account_id === 'string')
+		typeof response === 'object' &&
+		response !== null &&
+		'data' in response &&
+		'success' in response &&
+		typeof response.success === 'boolean'
 	);
 }
 
 /**
- * Generic array type guard
- * Ensures all elements in array pass the provided type guard
- *
- * @param arr - Array to validate
- * @param guard - Type guard function to apply to each element
- * @returns Type predicate for valid array of specified type
- *
- * @example
- * ```typescript
- * if (isValidArray(events, isValidCalendarEvent)) {
- *   // events is now typed as CalendarEvent[]
- *   events.forEach(event => console.log(event.title));
- * }
- * ```
+ * Type guard for user objects
  */
-export function isValidArray<T>(arr: unknown, guard: (item: unknown) => item is T): arr is T[] {
-	return Array.isArray(arr) && arr.every(guard);
+export function isValidUser(user: unknown): user is { id: string; email: string; name: string } {
+	return (
+		typeof user === 'object' &&
+		user !== null &&
+		'id' in user &&
+		typeof user.id === 'string' &&
+		'email' in user &&
+		typeof user.email === 'string' &&
+		'name' in user &&
+		typeof user.name === 'string'
+	);
 }
 
 /**
- * Safe property accessor with type guard
- * Provides safe access to object properties with type validation
- *
- * @param obj - Object to access
- * @param key - Property key
- * @param guard - Type guard for the property value
- * @returns The property value if valid, undefined otherwise
- *
- * @example
- * ```typescript
- * const amount = getSafeProperty(event, 'amount', (v): v is number => typeof v === 'number');
- * if (amount !== undefined) {
- *   // amount is guaranteed to be a number
- *   console.log(amount * 2);
- * }
- * ```
+ * Safe type assertion with fallback
  */
-export function getSafeProperty<T>(
-	obj: unknown,
-	key: string,
-	guard: (value: unknown) => value is T,
-): T | undefined {
-	if (!obj || typeof obj !== 'object') {
-		return undefined;
+export function safeTypeAssertion<T>(
+	value: unknown,
+	fallback: T,
+	validator: (value: unknown) => value is T,
+): T {
+	if (validator(value)) {
+		return value as T;
 	}
+	return fallback;
+}
 
-	const value = (obj as Record<string, unknown>)[key];
-	return guard(value) ? value : undefined;
+/**
+ * Type guard for chart items
+ */
+export function isValidChartItem(item: unknown): item is { date: string | Date; balance: number } {
+	return (
+		typeof item === 'object' &&
+		item !== null &&
+		'date' in item &&
+		'balance' in item &&
+		(typeof (item as any).date === 'string' || (item as any).date instanceof Date) &&
+		typeof (item as any).balance === 'number'
+	);
+}
+
+/**
+ * Safe property access with fallback
+ */
+export function safePropertyAccess<T extends Record<string, unknown>, K extends keyof T>(
+	obj: T | null | undefined,
+	key: K,
+	fallback: T[K],
+): T[K] {
+	if (obj && obj !== null && key in obj) {
+		return obj[key];
+	}
+	return fallback;
 }

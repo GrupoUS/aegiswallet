@@ -22,49 +22,34 @@ const axeConfig = {
 
 test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 	test.describe('Core Pages Accessibility', () => {
-		test('home page should have no accessibility violations', async ({
-			page,
-		}) => {
+		test('home page should have no accessibility violations', async ({ page }) => {
 			await page.goto('/');
 			await page.waitForLoadState('networkidle');
 
-			const results = await new AxeBuilder({ page })
-				.withTags(axeConfig.tags)
-				.analyze();
+			const results = await new AxeBuilder({ page }).withTags(axeConfig.tags).analyze();
 
 			// Log violations for debugging
 			if (results.violations.length > 0) {
-				console.log(
-					'Accessibility violations:',
-					JSON.stringify(results.violations, null, 2),
-				);
+				console.log('Accessibility violations:', JSON.stringify(results.violations, null, 2));
 			}
 
 			expect(results.violations).toHaveLength(0);
 		});
 
-		test('login page should have no accessibility violations', async ({
-			page,
-		}) => {
+		test('login page should have no accessibility violations', async ({ page }) => {
 			await page.goto('/auth');
 			await page.waitForLoadState('networkidle');
 
-			const results = await new AxeBuilder({ page })
-				.withTags(axeConfig.tags)
-				.analyze();
+			const results = await new AxeBuilder({ page }).withTags(axeConfig.tags).analyze();
 
 			expect(results.violations).toHaveLength(0);
 		});
 
-		test('dashboard page should have no accessibility violations', async ({
-			page,
-		}) => {
+		test('dashboard page should have no accessibility violations', async ({ page }) => {
 			await page.goto('/dashboard');
 			await page.waitForLoadState('networkidle');
 
-			const results = await new AxeBuilder({ page })
-				.withTags(axeConfig.tags)
-				.analyze();
+			const results = await new AxeBuilder({ page }).withTags(axeConfig.tags).analyze();
 
 			expect(results.violations).toHaveLength(0);
 		});
@@ -114,7 +99,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 				if (!el) return false;
 
 				const styles = window.getComputedStyle(el);
-				const outlineWidth = parseInt(styles.outlineWidth) || 0;
+				const outlineWidth = Number.parseInt(styles.outlineWidth) || 0;
 				const boxShadow = styles.boxShadow;
 
 				return outlineWidth > 0 || boxShadow !== 'none';
@@ -128,9 +113,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 
 			// Open a modal (if available)
 			const modalTrigger = page
-				.locator(
-					'[data-testid="open-modal"], button:has-text("Abrir"), [aria-haspopup="dialog"]',
-				)
+				.locator('[data-testid="open-modal"], button:has-text("Abrir"), [aria-haspopup="dialog"]')
 				.first();
 
 			if (await modalTrigger.isVisible().catch(() => false)) {
@@ -178,9 +161,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 			await page.goto('/auth');
 
 			// Check for required field indicators
-			const requiredInputs = await page
-				.locator('input[required], [aria-required="true"]')
-				.count();
+			const requiredInputs = await page.locator('input[required], [aria-required="true"]').count();
 			const ariaInvalid = await page.locator('[aria-invalid]').count();
 
 			// If there are required fields, they should be properly marked
@@ -194,9 +175,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 		test('images should have alt text', async ({ page }) => {
 			await page.goto('/');
 
-			const results = await new AxeBuilder({ page })
-				.options({ runOnly: ['image-alt'] })
-				.analyze();
+			const results = await new AxeBuilder({ page }).options({ runOnly: ['image-alt'] }).analyze();
 
 			expect(results.violations).toHaveLength(0);
 		});
@@ -221,9 +200,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA+', () => {
 			expect(mainLandmark).toBeGreaterThanOrEqual(1);
 
 			// Check for navigation landmark
-			const navLandmark = await page
-				.locator('nav, [role="navigation"]')
-				.count();
+			const navLandmark = await page.locator('nav, [role="navigation"]').count();
 			expect(navLandmark).toBeGreaterThanOrEqual(1);
 		});
 	});

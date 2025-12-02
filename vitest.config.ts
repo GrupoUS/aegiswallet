@@ -149,9 +149,7 @@ export default defineConfig({
 		teardownTimeout: 5000,
 
 		// ✅ MELHORIA 17: Reporters otimizados
-		reporters: process.env.CI
-			? ['default', 'junit', 'github-actions']
-			: ['default'],
+		reporters: process.env.CI ? ['default', 'junit', 'github-actions'] : ['default'],
 		outputFile: {
 			junit: './coverage/junit.xml',
 		},

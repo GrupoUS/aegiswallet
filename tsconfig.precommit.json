@@ -3,12 +3,6 @@
 	"compilerOptions": {
 		"noEmit": true
 	},
-	"include": [
-		"src/components",
-		"src/routes",
-		"src/index.css",
-		"src/App.tsx",
-		"src/main.tsx"
-	],
+	"include": ["src/components", "src/routes", "src/index.css", "src/App.tsx", "src/main.tsx"],
 	"exclude": []
 }

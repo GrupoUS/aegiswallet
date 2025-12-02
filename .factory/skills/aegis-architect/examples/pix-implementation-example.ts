@@ -45,16 +45,10 @@ const MoneySchema = z.object({
 });
 
 // PIX key validation schemas
-const CPFValidator = z
-	.string()
-	.regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido');
-const CNPJValidator = z
-	.string()
-	.regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido');
+const CPFValidator = z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido');
+const CNPJValidator = z.string().regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ inválido');
 const EmailValidator = z.string().email('E-mail inválido');
-const PhoneValidator = z
-	.string()
-	.regex(/^\(\d{2}\)\s*\d{4,5}-\d{4}$/, 'Telefone inválido');
+const PhoneValidator = z.string().regex(/^\(\d{2}\)\s*\d{4,5}-\d{4}$/, 'Telefone inválido');
 const RandomKeyValidator = z.string().uuid('Chave aleatória inválida');
 
 // PIX key schema with validation
@@ -124,7 +118,7 @@ const pixAuthMiddleware = createMiddleware(async (c, next) => {
 	const authHeader = c.req.header('Authorization');
 	const biometricToken = c.req.header('X-Biometric-Token');
 
-	if (!authHeader || !biometricToken) {
+	if (!(authHeader && biometricToken)) {
 		return c.json(
 			{
 				error: 'Autenticação PIX requerida',
@@ -206,26 +200,25 @@ const pixRateLimitMiddleware = createMiddleware(async (c, next) => {
 	const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 	const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-	const [{ count: minuteCount }, { count: hourCount }, { count: dayCount }] =
-		await Promise.all([
-			supabase
-				.from('pix_transactions')
-				.select('*', { count: 'exact', head: true })
-				.eq('user_id', user.id)
-				.gte('created_at', minuteAgo.toISOString()),
+	const [{ count: minuteCount }, { count: hourCount }, { count: dayCount }] = await Promise.all([
+		supabase
+			.from('pix_transactions')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', user.id)
+			.gte('created_at', minuteAgo.toISOString()),
 
-			supabase
-				.from('pix_transactions')
-				.select('*', { count: 'exact', head: true })
-				.eq('user_id', user.id)
-				.gte('created_at', hourAgo.toISOString()),
+		supabase
+			.from('pix_transactions')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', user.id)
+			.gte('created_at', hourAgo.toISOString()),
 
-			supabase
-				.from('pix_transactions')
-				.select('*', { count: 'exact', head: true })
-				.eq('user_id', user.id)
-				.gte('created_at', dayAgo.toISOString()),
-		]);
+		supabase
+			.from('pix_transactions')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', user.id)
+			.gte('created_at', dayAgo.toISOString()),
+	]);
 
 	// Check rate limits
 	if (minuteCount >= PIX_RATE_LIMITS.PER_MINUTE) {
@@ -266,9 +259,7 @@ const pixRateLimitMiddleware = createMiddleware(async (c, next) => {
 				details: {
 					limit: PIX_RATE_LIMITS.PER_DAY,
 					current: dayCount,
-					resetTime: new Date(
-						now.getTime() + 24 * 60 * 60 * 1000,
-					).toISOString(),
+					resetTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
 				},
 			},
 			429,
@@ -321,8 +312,7 @@ const pixValidationMiddleware = createMiddleware(async (c, next) => {
 		.eq('status', 'COMPLETED')
 		.gte('created_at', monthStart.toISOString());
 
-	const monthlyTotal =
-		monthlyTransactions?.reduce((sum, t) => sum + t.amount, 0) || 0;
+	const monthlyTotal = monthlyTransactions?.reduce((sum, t) => sum + t.amount, 0) || 0;
 	if (monthlyTotal + input.amount > PIX_LIMITS.MONTHLY) {
 		return c.json(
 			{
@@ -428,8 +418,7 @@ pixRouter.post(
 					scheduled_date: input.scheduledDate || null,
 					created_at: new Date().toISOString(),
 					// Audit fields
-					ip_address:
-						c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
+					ip_address: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
 					user_agent: c.req.header('User-Agent'),
 					device_info: c.req.header('X-Device-Info'),
 					location_info: c.req.header('X-Location-Info'),
@@ -438,9 +427,7 @@ pixRouter.post(
 				.single();
 
 			if (txError || !transaction) {
-				throw new Error(
-					`Failed to create PIX transaction: ${txError?.message}`,
-				);
+				throw new Error(`Failed to create PIX transaction: ${txError?.message}`);
 			}
 
 			// Save PIX key if requested
@@ -464,8 +451,7 @@ pixRouter.post(
 				pix_key_type: input.pixKey.type,
 				pix_key_masked: maskPixKey(input.pixKey.value, input.pixKey.type),
 				timestamp: new Date().toISOString(),
-				ip_address:
-					c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
+				ip_address: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
 			});
 
 			// Process transaction asynchronously
@@ -506,8 +492,7 @@ pixRouter.post(
 				action: 'PIX_TRANSFER_ERROR',
 				error_message: error.message,
 				timestamp: new Date().toISOString(),
-				ip_address:
-					c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
+				ip_address: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP'),
 			});
 
 			return c.json(
@@ -515,11 +500,9 @@ pixRouter.post(
 					error: 'Erro ao processar transferência PIX',
 					code: 'PIX_TRANSACTION_ERROR',
 					details: {
-						message:
-							'Ocorreu um erro ao processar sua transferência. Tente novamente.',
+						message: 'Ocorreu um erro ao processar sua transferência. Tente novamente.',
 						reference: `TX-${Date.now()}`,
-						supportInfo:
-							'Entre em contato com o suporte se o problema persistir',
+						supportInfo: 'Entre em contato com o suporte se o problema persistir',
 					},
 				},
 				500,
@@ -668,9 +651,7 @@ pixRouter.get('/transactions', pixAuthMiddleware, async (c) => {
 			transactions?.map((tx) => ({
 				...tx,
 				// Mask sensitive data for privacy
-				recipientName: tx.recipient_name
-					? tx.recipient_name.substring(0, 2) + '***'
-					: null,
+				recipientName: tx.recipient_name ? tx.recipient_name.substring(0, 2) + '***' : null,
 			})) || [],
 		meta: {
 			count: transactions?.length || 0,

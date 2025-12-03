@@ -4,7 +4,7 @@ Guia completo para configurar Clerk authentication e webhooks no AegisWallet.
 
 ## Visão Geral
 
-O AegisWallet usa **Clerk + React (Vite)** para autenticação, mantendo **TanStack Router** como roteador (não React Router). O projeto usa `@clerk/clerk-react` (não `@clerk/react-router`).
+O AegisWallet usa **Clerk + React (Vite)** para autenticação, mantendo **TanStack Router** como roteador (nÃO React Router). O projeto usa `@clerk/clerk-react` (nÃO `@clerk/react-router`).
 
 Cada usuário criado no Clerk automaticamente recebe:
 - Uma organização pessoal no banco de dados
@@ -18,6 +18,33 @@ Cada usuário criado no Clerk automaticamente recebe:
 - ❌ NÃO usa `@clerk/react-router` (apenas para React Router)
 - ✅ ClerkProvider configurado em `src/main.tsx`
 - ✅ Rotas protegidas usando `<SignedIn>` e `<SignedOut>` do `@clerk/clerk-react`
+
+### Comparação Detalhada
+
+| Aspecto | React Router | TanStack Router (AegisWallet) |
+|---------|--------------|------------------------------|
+| Package Clerk | `@clerk/react-router` | `@clerk/clerk-react` ✅ |
+| Provider | Requer `loaderData` | Wrapper simples ✅ |
+| Middleware | `clerkMiddleware()` necessário | Não necessário ✅ |
+| Route Guards | Via componentes | Via componentes ✅ |
+| Autenticação | Integrada no router | Independente ✅ |
+| Setup | Mais complexo | Mais simples ✅ |
+
+### Por que TanStack Router é Melhor para este Projeto
+
+1. **Performance**: Roteamento baseado em arquivo mais rápido
+2. **Type Safety**: Melhor inferência de tipos com TypeScript
+3. **Flexibilidade**: Layouts aninhados mais fáceis
+4. **Manutenibilidade**: Código mais limpo e organizado
+
+### ⚠️ Importante: Não existe CLI oficial do Clerk
+
+**Clerk não oferece CLI oficial para validação!** Para validação, use:
+
+1. **Dashboard Web**: https://dashboard.clerk.com
+2. **Backend API**: Via `createClerkClient()` do `@clerk/backend`
+
+Os scripts existentes já usam a abordagem correta via Backend API.
 
 ## Pré-requisitos
 
@@ -264,6 +291,41 @@ bun scripts/check-env.ts
 ```
 
 Todos os scripts devem passar sem erros críticos antes do deploy.
+
+### Checklist Completo de Validação
+
+- [ ] Variáveis de ambiente configuradas
+  - [ ] `VITE_CLERK_PUBLISHABLE_KEY` com formato `pk_test_` ou `pk_live_`
+  - [ ] `CLERK_SECRET_KEY` com formato `sk_test_` ou `sk_live_`
+  - [ ] `CLERK_WEBHOOK_SECRET` com formato `whsec_`
+  - [ ] Consistência: publishable e secret keys do mesmo ambiente (test/live)
+
+- [ ] Configuração do ClerkProvider
+  - [ ] Em `src/main.tsx` envolvendo a aplicação
+  - [ ] Usando `publishableKey` (não `frontendApi`)
+  - [ ] Configurado `afterSignOutUrl`
+  - [ ] Localização PT-BR configurada
+
+- [ ] Componentes Clerk funcionando
+  - [ ] `<SignedIn>` e `<SignedOut>` em rotas protegidas
+  - [ ] `<RedirectToSignIn>` para redirecionamento
+  - [ ] Imports de `@clerk/clerk-react`
+
+- [ ] Webhooks configurados
+  - [ ] Endpoint `/api/webhooks/clerk` acessível
+  - [ ] Eventos: `user.created`, `user.updated`, `user.deleted`
+  - [ ] Verificação de assinatura via svix funcionando
+  - [ ] Idempotência implementada (sem usuários duplicados)
+
+- [ ] Banco de dados validado
+  - [ ] Tabelas `users`, `subscriptions`, `organizations` existem
+  - [ ] RLS policies configuradas para isolamento por organização
+  - [ ] Conexão com Neon funcionando
+
+- [ ] Integração TanStack Router
+  - [ ] Route guards implementados corretamente
+  - [ ] AuthContext usando hooks do Clerk
+  - [ ] Redirecionamento para login quando não autenticado
 
 ## Estrutura de Dados
 

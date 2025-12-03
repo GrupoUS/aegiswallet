@@ -114,6 +114,27 @@ function validateEnvironmentVariables() {
 	} else {
 		addResult('.env.local file', 'pass', '.env.local file exists');
 	}
+
+	// Validate environment consistency
+	if (publishableKey && secretKey) {
+		const pubEnv = publishableKey.startsWith('pk_test_') ? 'test' : 'live';
+		const secEnv = secretKey.startsWith('sk_test_') ? 'test' : 'live';
+
+		if (pubEnv !== secEnv) {
+			addResult(
+				'Environment consistency',
+				'fail',
+				`Keys are from different environments: publishable=${pubEnv}, secret=${secEnv}`,
+				['Ensure both keys are from the same environment (test or live)'],
+			);
+		} else {
+			addResult(
+				'Environment consistency',
+				'pass',
+				`Both keys are from ${pubEnv} environment`,
+			);
+		}
+	}
 }
 
 // Phase 1.2: Validate ClerkProvider Setup
@@ -404,6 +425,7 @@ function printSummary() {
 		{ name: 'Phase 3.1: Webhook Handler', prefix: 'webhook' },
 		{ name: 'Phase 4.1: Route Guards', prefix: 'route' },
 		{ name: 'Phase 4.2: Auth Context', prefix: 'AuthContext' },
+		{ name: 'Phase 1.4: Environment Consistency', prefix: 'Environment consistency' },
 	];
 
 	for (const phase of phases) {

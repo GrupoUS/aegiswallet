@@ -10,7 +10,7 @@
 
 import { createClerkClient } from '@clerk/backend';
 import { eq } from 'drizzle-orm';
-import { getPoolClient } from '@/db/client';
+import { getHttpClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { OrganizationService } from './organization.service';
@@ -51,7 +51,7 @@ export class UserSyncService {
 	 * @throws Error if user cannot be created or Clerk user doesn't exist
 	 */
 	static async ensureUserExists(clerkUserId: string): Promise<typeof users.$inferSelect> {
-		const db = getPoolClient();
+		const db = getHttpClient();
 
 		// Validate Clerk user ID format
 		if (!clerkUserId || !clerkUserId.startsWith('user_')) {
@@ -248,7 +248,7 @@ export class UserSyncService {
 	 * @returns true if user exists, false otherwise
 	 */
 	static async userExists(clerkUserId: string): Promise<boolean> {
-		const db = getPoolClient();
+		const db = getHttpClient();
 		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 		return !!user;
 	}
@@ -260,7 +260,7 @@ export class UserSyncService {
 	 * @param clerkUserId - Clerk user ID
 	 */
 	static async completeUserSetup(clerkUserId: string): Promise<void> {
-		const db = getPoolClient();
+		const db = getHttpClient();
 
 		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 		if (!user) {

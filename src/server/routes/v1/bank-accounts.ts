@@ -11,7 +11,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { bankAccounts, users } from '@/db/schema';
+import { bankAccounts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import {
 	generateManualAccountId,
@@ -21,6 +21,7 @@ import {
 	validateBankAccountForInsert,
 	validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
+import { UserSyncService } from '@/services/user-sync.service';
 import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
@@ -363,52 +364,23 @@ bankAccountsRouter.post(
 
 		try {
 			// Ensure user exists in database before creating bank account
-			// This handles cases where user was created in Clerk but webhook failed
-			const [existingUser] = await db
-				.select({ id: users.id })
-				.from(users)
-				.where(eq(users.id, user.id))
-				.limit(1);
+			// Uses UserSyncService for consistent user creation logic
+			try {
+				await UserSyncService.ensureUserExists(user.id);
+			} catch (syncError) {
+				secureLogger.error('Failed to ensure user exists in database', {
+					userId: user.id,
+					requestId,
+					error: syncError instanceof Error ? syncError.message : 'Unknown error',
+				});
 
-			if (!existingUser) {
-				// User doesn't exist in database, create minimal user record
-				// This is a fallback for cases where Clerk webhook failed
-				try {
-					await db.insert(users).values({
-						id: user.id,
-						email: user.email || '',
-						fullName: user.fullName || null,
-						organizationId: 'default', // Will be updated by webhook or organization service later
-					});
-					secureLogger.info('User created in database during bank account creation', {
-						userId: user.id,
-						requestId,
-					});
-				} catch (createError) {
-					// Check if it's a duplicate key error (user was created by concurrent request)
-					const errorMessage = createError instanceof Error ? createError.message : 'Unknown error';
-					if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
-						secureLogger.debug('User was created by concurrent request', {
-							userId: user.id,
-							requestId,
-						});
-					} else {
-						secureLogger.error('Failed to create user in database', {
-							error: errorMessage,
-							requestId,
-							stack: createError instanceof Error ? createError.stack : undefined,
-							userId: user.id,
-						});
-
-						return c.json(
-							{
-								code: 'USER_CREATE_ERROR',
-								error: 'Failed to verify user account. Please try again.',
-							},
-							500,
-						);
-					}
-				}
+				return c.json(
+					{
+						code: 'USER_SYNC_ERROR',
+						error: 'Failed to verify user account. Please try again.',
+					},
+					500,
+				);
 			}
 
 			// Normalize account type

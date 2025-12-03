@@ -271,6 +271,36 @@ export const createUserScopedClient = async (userId: string): Promise<PoolClient
 };
 
 // ========================================
+// SERVICE ACCOUNT OPERATIONS (Bypasses RLS)
+// ========================================
+
+/**
+ * Run a database operation as service account (bypasses RLS)
+ * Uses single dedicated connection to avoid pool context issues
+ * @param fn - Function to execute within service account context
+ */
+export async function runAsServiceAccount<T>(fn: (tx: any) => Promise<T>): Promise<T> {
+	const pool = getSharedPool();
+	const client = await pool.connect();
+
+	try {
+		await client.query('BEGIN');
+		await client.query("SELECT set_config('app.is_service_account', 'true', false)");
+
+		const tx = drizzlePool(client as any, { schema });
+		const result = await fn(tx);
+
+		await client.query('COMMIT');
+		return result;
+	} catch (error) {
+		await client.query('ROLLBACK');
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
+// ========================================
 // TYPE EXPORTS
 // ========================================
 

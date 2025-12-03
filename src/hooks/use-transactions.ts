@@ -22,17 +22,6 @@ export interface Transaction {
 	currency?: string;
 }
 
-interface TransactionApiResponse<T> {
-	data: T;
-	meta: {
-		requestId: string;
-		retrievedAt?: string;
-		createdAt?: string;
-		deletedAt?: string;
-		total?: number;
-	};
-}
-
 interface TransactionStats {
 	balance: number;
 	expenses: number;
@@ -62,14 +51,11 @@ export function useTransactions(filters?: {
 	const query = useQuery({
 		queryKey: ['transactions', filters],
 		queryFn: async () => {
-			const response = await apiClient.get<TransactionApiResponse<Transaction[]>>(
-				'/v1/transactions',
-				{
-					params: filters,
-				},
-			);
-			// API returns { data: [...], meta: {...} }, so we access .data
-			return response.data;
+			// apiClient already unwraps response.data, so we get Transaction[] directly
+			const data = await apiClient.get<Transaction[]>('/v1/transactions', {
+				params: filters,
+			});
+			return data;
 		},
 		retry: 2,
 		staleTime: 1000 * 60 * 5, // 5 minutes
@@ -109,12 +95,9 @@ export function useCreateTransaction(): UseCreateTransactionReturn {
 
 	const mutation = useMutation({
 		mutationFn: async (input: CreateTransactionInput) => {
-			const response = await apiClient.post<TransactionApiResponse<Transaction>>(
-				'/v1/transactions',
-				input,
-			);
-			// API returns { data: transaction, meta: {...} }, so we access .data
-			return response.data;
+			// apiClient already unwraps response.data, so we get Transaction directly
+			const data = await apiClient.post<Transaction>('/v1/transactions', input);
+			return data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -173,17 +156,14 @@ export function useTransactionsStats(
 	const query = useQuery({
 		queryKey: ['transactions', 'stats', period, accountId],
 		queryFn: async () => {
-			const response = await apiClient.get<TransactionApiResponse<TransactionStats>>(
-				'/v1/transactions/statistics',
-				{
-					params: {
-						period: period || 'month',
-						accountId,
-					},
+			// apiClient already unwraps response.data, so we get TransactionStats directly
+			const data = await apiClient.get<TransactionStats>('/v1/transactions/statistics', {
+				params: {
+					period: period || 'month',
+					accountId,
 				},
-			);
-			// API returns { data: stats, meta: {...} }, so we access .data
-			return response.data;
+			});
+			return data;
 		},
 		retry: 2,
 		staleTime: 1000 * 60 * 10, // 10 minutes for stats

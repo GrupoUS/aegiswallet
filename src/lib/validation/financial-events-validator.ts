@@ -386,10 +386,10 @@ const validateBaseEvent = (
 	{ requireUserId }: { requireUserId?: boolean } = {},
 ): ValidationError[] => {
 	const errors: ValidationError[] = [];
-	const { success, error } = baseEventSchema.safeParse(event);
+	const { success, error: zodError } = baseEventSchema.safeParse(event);
 
-	if (!success && error) {
-		errors.push(...collectValidationErrors(error.issues));
+	if (!success && zodError) {
+		errors.push(...collectValidationErrors(zodError.issues));
 	}
 
 	if (requireUserId && !event.userId) {

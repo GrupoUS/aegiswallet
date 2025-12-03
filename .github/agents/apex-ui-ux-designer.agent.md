@@ -13,7 +13,7 @@ handoffs:
     prompt: "Create test scenarios for the UI components I designed."
     send: true
 tools:
-  ['search', 'runTasks', 'tavily/*', 'desktop-commander/*', 'serena/*', 'sequential-thinking/*', 'context7/*', 'shadcn/*', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runSubagent']
+  ['edit', 'search', 'runCommands', 'runTasks', 'serena/*', 'MCP_DOCKER/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'extensions', 'todos', 'runSubagent']
 ---
 
 # 🎨 APEX UI/UX DESIGNER AGENT

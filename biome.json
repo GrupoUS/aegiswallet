@@ -12,13 +12,16 @@
 			"**/*.tsx",
 			"**/*.js",
 			"**/*.jsx",
-			"**/*.json",
-			"!api/index.js",
-			"!dist",
-			"!node_modules",
-			"!coverage",
-			"!playwright-report",
-			"!.vercel"
+			"**/*.json"
+		],
+		"excludes": [
+			"api/index.js",
+			"api/index.mjs",
+			"dist",
+			"node_modules",
+			"coverage",
+			"playwright-report",
+			".vercel"
 		],
 		"maxSize": 10485760
 	},

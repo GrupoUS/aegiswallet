@@ -60,6 +60,8 @@ async function buildApi() {
 			},
 			define: {
 				'process.env.NODE_ENV': '"production"',
+				// Force VERCEL=1 to prevent dynamic imports of Bun-specific modules
+				'process.env.VERCEL': '"1"',
 			},
 			banner: {
 				js: `// AegisWallet API - Bundled for Vercel Node.js Runtime

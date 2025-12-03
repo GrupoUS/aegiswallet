@@ -1,6 +1,7 @@
 /**
  * Health Check Endpoint for v1 API
  * Used to test Hono RPC patterns and monitor service status
+ * Includes comprehensive database connectivity validation
  */
 
 import type { Context } from 'hono';
@@ -11,6 +12,14 @@ import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 
 const healthRouter = new Hono<AppEnv>();
+
+// Cache health status to avoid overwhelming database
+let cachedDbHealth: {
+	status: 'connected' | 'disconnected' | 'error';
+	latency: number;
+	timestamp: number;
+} | null = null;
+const CACHE_TTL_MS = 10000; // 10 seconds
 
 // Health check response schema (exported for type inference)
 export const healthResponseSchema = z.object({
@@ -25,22 +34,77 @@ export const healthResponseSchema = z.object({
 	version: z.string(),
 });
 
+/**
+ * Check database connectivity with caching
+ */
+async function checkDatabaseConnectivity(): Promise<{
+	status: 'connected' | 'disconnected' | 'error';
+	latency: number;
+}> {
+	// Return cached result if valid
+	if (cachedDbHealth && Date.now() - cachedDbHealth.timestamp < CACHE_TTL_MS) {
+		return { status: cachedDbHealth.status, latency: cachedDbHealth.latency };
+	}
+
+	const dbStartTime = Date.now();
+
+	try {
+		// Import database client
+		const { getHttpClient, schema } = await import('@/db/client');
+		const { sql } = await import('drizzle-orm');
+
+		// Test actual database connectivity
+		const db = getHttpClient();
+
+		// Create a timeout promise (5 seconds)
+		const timeoutPromise = new Promise<never>((_, reject) => {
+			setTimeout(() => reject(new Error('Database query timeout')), 5000);
+		});
+
+		// Execute a simple query with timeout
+		await Promise.race([
+			db.execute(sql`SELECT 1 as health_check`),
+			timeoutPromise,
+		]);
+
+		const latency = Date.now() - dbStartTime;
+
+		// Test schema access (optional, for deeper validation)
+		try {
+			await db.select({ count: sql<number>`count(*)` }).from(schema.users).limit(1);
+		} catch {
+			// Schema access failed, but basic connectivity works
+			secureLogger.warn('Database schema access check failed');
+		}
+
+		// Cache successful result
+		cachedDbHealth = { status: 'connected', latency, timestamp: Date.now() };
+
+		return { status: 'connected', latency };
+	} catch (error) {
+		const latency = Date.now() - dbStartTime;
+		secureLogger.error('Database health check failed', {
+			error: error instanceof Error ? error.message : 'Unknown error',
+			latency
+		});
+
+		// Cache failure briefly
+		cachedDbHealth = { status: 'error', latency, timestamp: Date.now() };
+
+		return { status: 'error', latency };
+	}
+}
+
 // Health check handler function
 // biome-ignore lint/suspicious/noExplicitAny: Hono context type complexity
 async function healthCheckHandler(c: Context<any, any, any>) {
 	const startTime = Date.now();
 
 	try {
-		// Check database connection
-		let databaseStatus: 'connected' | 'disconnected' | 'error' = 'error';
-		try {
-			// Simple health check - in a real implementation,
-			// you might check actual database connectivity
-			databaseStatus = 'connected';
-		} catch (error) {
-			secureLogger.error('Database health check failed', { error });
-			databaseStatus = 'error';
-		}
+		// Check database connection with caching
+		const dbHealth = await checkDatabaseConnectivity();
+		const databaseStatus = dbHealth.status;
+		const databaseLatency = dbHealth.latency;
 
 		// Determine overall status
 		const isHealthy = databaseStatus === 'connected';
@@ -48,13 +112,28 @@ async function healthCheckHandler(c: Context<any, any, any>) {
 		const response = {
 			services: {
 				database: databaseStatus,
-				api: isHealthy ? 'operational' : 'down',
-				auth: isHealthy ? 'operational' : 'down',
+				api: isHealthy ? 'operational' : 'degraded',
+				auth: isHealthy ? 'operational' : 'degraded',
 			},
 			status: isHealthy ? 'ok' : 'error',
 			timestamp: new Date().toISOString(),
 			uptime: process.uptime(),
 			version: '1.0.0',
+			metrics: {
+				databaseLatency: databaseLatency,
+				totalLatency: Date.now() - startTime,
+			},
+			checks: {
+				server: { status: 'ok', uptime: process.uptime() },
+				database: {
+					status: databaseStatus,
+					latency: databaseLatency
+				},
+				memory: {
+					used: process.memoryUsage().heapUsed,
+					total: process.memoryUsage().heapTotal
+				}
+			}
 		};
 
 		// Log health check
@@ -64,7 +143,12 @@ async function healthCheckHandler(c: Context<any, any, any>) {
 			status: response.status,
 		});
 
-		return c.json(response);
+		// Return 503 if database is down
+		if (!isHealthy) {
+			return c.json(response, 503);
+		}
+
+		return c.json(response, 200);
 	} catch (error) {
 		secureLogger.error('Health check error', {
 			duration: Date.now() - startTime,

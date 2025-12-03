@@ -36,7 +36,7 @@ bun install
 bun dev:full
 
 # Or start separately
-bun dev:client  # Vite dev server (port 5173)
+bun dev:client  # Vite dev server (port 8080)
 bun dev:server  # Hono server (port 3000)
 
 # Run tests
@@ -45,6 +45,84 @@ bun test
 # Validate code quality
 bun quality
 ```
+
+---
+
+## 🗄️ Database Setup (Neon PostgreSQL)
+
+### 1. Environment Configuration
+
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit .env and add your Neon connection strings
+# DATABASE_URL=postgresql://... (pooled connection)
+# DATABASE_URL_UNPOOLED=postgresql://... (direct connection)
+```
+
+### 2. Verify Database Connection
+
+```bash
+# Run comprehensive setup verification
+bun run neon:verify
+
+# Quick connection test
+bun run smoke:db
+```
+
+### 3. Apply Database Migrations
+
+```bash
+# Generate migrations from schema changes
+bun db:generate
+
+# Apply migrations to database
+bun db:migrate
+
+# Or push schema directly (development only)
+bun db:push
+```
+
+### 4. Start Development Servers
+
+```bash
+# Start both frontend and backend with validation
+bun dev:full
+
+# Or start separately:
+bun dev:client  # Frontend on http://localhost:8080
+bun dev:server  # Backend on http://localhost:3000
+```
+
+### 5. Validate Integration
+
+```bash
+# Test frontend-backend-database connectivity
+bun run integration:test
+
+# Check health endpoint
+curl http://localhost:3000/api/health
+```
+
+### 📚 Database Documentation
+
+For complete setup instructions, see:
+- [Neon DB Setup & Validation](docs/ops/neon-setup-validation.md)
+- [Database Health Check](scripts/database-health-check.ts)
+
+### 🔧 Available Database Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun neon:verify` | Verify complete Neon DB setup |
+| `bun neon:test` | Quick database connection test |
+| `bun db:generate` | Generate migrations from schema |
+| `bun db:migrate` | Apply migrations |
+| `bun db:push` | Push schema directly (dev) |
+| `bun db:studio` | Open Drizzle Studio |
+| `bun db:health` | Run comprehensive health check |
+| `bun integration:test` | Test full stack integration |
 
 ---
 

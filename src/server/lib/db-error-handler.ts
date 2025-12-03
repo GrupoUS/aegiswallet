@@ -3,8 +3,10 @@
  * Categorizes database errors and returns appropriate HTTP status codes
  */
 
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
+
 export interface DatabaseErrorInfo {
-	statusCode: number;
+	statusCode: ContentfulStatusCode;
 	code: string;
 	message: string;
 	isRetryable: boolean;
@@ -17,7 +19,6 @@ export interface DatabaseErrorInfo {
  */
 export function categorizeDatabaseError(error: unknown): DatabaseErrorInfo {
 	const errorMessage = error instanceof Error ? error.message : String(error);
-	const errorStack = error instanceof Error ? error.stack : undefined;
 
 	// Connection errors (503 Service Unavailable)
 	if (

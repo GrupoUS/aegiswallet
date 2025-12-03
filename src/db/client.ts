@@ -189,7 +189,7 @@ const getSharedPool = (): Pool => {
 		console.log('[DB] Shared pool created with max 10 connections');
 
 		// Handle pool errors to prevent crashes
-		sharedPool.on('error', (err) => {
+		sharedPool.on('error', (err: Error) => {
 			console.error('[DB] Pool error:', err.message);
 			// Don't destroy the pool on transient errors
 		});

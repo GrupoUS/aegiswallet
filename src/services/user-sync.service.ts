@@ -10,7 +10,7 @@
 
 import { createClerkClient } from '@clerk/backend';
 import { eq } from 'drizzle-orm';
-import { getHttpClient } from '@/db/client';
+import { runAsServiceAccount, createUserScopedClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { OrganizationService } from './organization.service';
@@ -46,36 +46,36 @@ export class UserSyncService {
 	 * DESIGN PRINCIPLE: User creation should ALWAYS succeed if the Clerk user exists.
 	 * External service failures (Stripe, Organization) should NOT block user creation.
 	 *
+	 * Uses runAsServiceAccount to bypass RLS for user creation operations.
+	 *
 	 * @param clerkUserId - Clerk user ID (format: "user_xxx")
 	 * @returns User record from database
 	 * @throws Error if user cannot be created or Clerk user doesn't exist
 	 */
 	static async ensureUserExists(clerkUserId: string): Promise<typeof users.$inferSelect> {
-		const db = getHttpClient();
-
 		// Validate Clerk user ID format
 		if (!clerkUserId || !clerkUserId.startsWith('user_')) {
 			throw new Error(`Invalid Clerk user ID format: ${clerkUserId}`);
 		}
 
-		// Check if user already exists in database
-		const [existingUser] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+		// Check if user already exists and create if not (bypasses RLS with service account)
+		return runAsServiceAccount(async (tx) => {
+			// First check if user exists
+			const [existingUser] = await tx.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 
-		if (existingUser) {
-			secureLogger.debug('User already exists in database', {
+			if (existingUser) {
+				secureLogger.debug('User already exists in database', {
+					userId: clerkUserId,
+					email: existingUser.email,
+				});
+				return existingUser;
+			}
+
+			// User doesn't exist - fetch from Clerk and create
+			secureLogger.info('User not found in database, creating from Clerk', {
 				userId: clerkUserId,
-				email: existingUser.email,
 			});
-			return existingUser;
-		}
 
-		// User doesn't exist, fetch from Clerk and create
-		secureLogger.info('User not found in database, creating from Clerk', {
-			userId: clerkUserId,
-		});
-
-		try {
-			// Fetch user from Clerk
 			const clerk = getClerkClient();
 			const clerkUser = await clerk.users.getUser(clerkUserId);
 
@@ -103,7 +103,7 @@ export class UserSyncService {
 			let createdUser: typeof users.$inferSelect;
 
 			try {
-				const [user] = await db
+				const [user] = await tx
 					.insert(users)
 					.values({
 						id: clerkUserId,
@@ -126,12 +126,12 @@ export class UserSyncService {
 			} catch (dbError) {
 				// Check if it's a duplicate key error (user was created by another request)
 				if (dbError instanceof Error && dbError.message.includes('duplicate key')) {
-					const [existingUser] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
-					if (existingUser) {
+					const [concurrentUser] = await tx.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+					if (concurrentUser) {
 						secureLogger.info('User was created by concurrent request', {
 							userId: clerkUserId,
 						});
-						return existingUser;
+						return concurrentUser;
 					}
 				}
 				throw dbError;
@@ -152,7 +152,7 @@ export class UserSyncService {
 
 				// Update user with real organization ID
 				if (organizationId && organizationId !== 'default') {
-					await db
+					await tx
 						.update(users)
 						.set({ organizationId })
 						.where(eq(users.id, clerkUserId));
@@ -192,7 +192,7 @@ export class UserSyncService {
 			// 2c. Try to create free subscription (non-blocking)
 			if (stripeCustomerId) {
 				try {
-					await db.insert(subscriptions).values({
+					await tx.insert(subscriptions).values({
 						userId: clerkUserId,
 						stripeCustomerId,
 						planId: 'free',
@@ -214,7 +214,6 @@ export class UserSyncService {
 			// 2d. Try to update Clerk metadata (non-blocking)
 			if (stripeCustomerId) {
 				try {
-					const clerk = getClerkClient();
 					await clerk.users.updateUserMetadata(clerkUserId, {
 						privateMetadata: {
 							stripeCustomerId,
@@ -230,15 +229,7 @@ export class UserSyncService {
 			}
 
 			return createdUser;
-
-		} catch (error) {
-			secureLogger.error('Failed to sync user from Clerk', {
-				userId: clerkUserId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-				stack: error instanceof Error ? error.stack : undefined,
-			});
-			throw error;
-		}
+		});
 	}
 
 	/**
@@ -248,7 +239,8 @@ export class UserSyncService {
 	 * @returns true if user exists, false otherwise
 	 */
 	static async userExists(clerkUserId: string): Promise<boolean> {
-		const db = getHttpClient();
+		// Use scoped client for RLS-compliant query
+		const db = await createUserScopedClient(clerkUserId);
 		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 		return !!user;
 	}
@@ -260,7 +252,8 @@ export class UserSyncService {
 	 * @param clerkUserId - Clerk user ID
 	 */
 	static async completeUserSetup(clerkUserId: string): Promise<void> {
-		const db = getHttpClient();
+		// Use scoped client for RLS-compliant operations
+		const db = await createUserScopedClient(clerkUserId);
 
 		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 		if (!user) {

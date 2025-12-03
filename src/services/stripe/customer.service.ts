@@ -16,19 +16,9 @@ export class StripeCustomerService {
 		return `clerk_${clerkUserId}_${operation}_${Date.now()}`;
 	}
 
-	static async createCustomer(clerkUserId: string, email: string, name?: string) {
+	static async createCustomer(clerkUserId: string, email: string, name?: string): Promise<string> {
 		const stripe = getStripeClient();
 		try {
-			// First, check if customer already exists
-			const existingCustomerId = await StripeCustomerService.getOrCreateCustomer(
-				clerkUserId,
-				email,
-				name,
-			);
-			if (existingCustomerId) {
-				return existingCustomerId;
-			}
-
 			// Create with idempotency key
 			const idempotencyKey = StripeCustomerService.getIdempotencyKey(
 				clerkUserId,
@@ -64,7 +54,7 @@ export class StripeCustomerService {
 		}
 	}
 
-	static async getOrCreateCustomer(clerkUserId: string, email: string, name?: string) {
+	static async getOrCreateCustomer(clerkUserId: string, email: string, name?: string): Promise<string> {
 		const stripe = getStripeClient();
 		try {
 			// Search by metadata

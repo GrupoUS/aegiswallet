@@ -340,7 +340,7 @@ async function setupWebhook() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
 	setupWebhook().catch(error => {
 		console.error('💥 Setup failed:', error);
 		process.exit(1);

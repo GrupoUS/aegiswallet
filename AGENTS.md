@@ -442,7 +442,3 @@ async function get(x) {
 ---
 
 > **For complete orchestration details**: See `.factory/AGENTS.md` for dynamic agent routing, spec mode protocols, and parallel execution coordination.
-
----
-
-> **For complete orchestration details**: See `.factory/AGENTS.md` for dynamic agent routing, spec mode protocols, and parallel execution coordination.

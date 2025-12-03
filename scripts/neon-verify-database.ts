@@ -326,7 +326,7 @@ async function verifyDatabase() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
 	verifyDatabase().catch(error => {
 		console.error('💥 Verification failed:', error);
 		process.exit(1);

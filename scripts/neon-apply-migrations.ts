@@ -108,9 +108,16 @@ async function applyMigrations() {
 	// Apply migrations using Drizzle migrator
 	console.log('\n🔄 Applying migrations...');
 
+	if (!DATABASE_URL) {
+		throw new Error('DATABASE_URL environment variable is not set');
+	}
+
 	try {
 		const sqlClient = neon(DATABASE_URL);
 		const db = drizzle(sqlClient);
+
+		console.log(`   📁 Migrations folder: ${MIGRATIONS_FOLDER}`);
+		console.log(`   🔌 Database URL: ${DATABASE_URL.substring(0, 20)}...`);
 
 		await migrate(db, {
 			migrationsFolder: MIGRATIONS_FOLDER,
@@ -183,20 +190,23 @@ async function validateSchema() {
  */
 async function main() {
 	try {
+		console.log('🚀 Starting migration process...\n');
 		await applyMigrations();
 		await validateSchema();
 
 		console.log('\n✅ Migration process complete!');
 	} catch (error) {
 		console.error('\n💥 Migration process failed:', error);
+		if (error instanceof Error) {
+			console.error('Error details:', error.message);
+			console.error('Stack:', error.stack);
+		}
 		process.exit(1);
 	}
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-	main();
-}
+main();
 
 export { applyMigrations, validateSchema, getMigrationFiles, getAppliedMigrations };
 

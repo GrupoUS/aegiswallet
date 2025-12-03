@@ -10,7 +10,6 @@ import { getPoolClient } from '@/db/client';
 import { organizations, organizationMembers, organizationSettings } from '@/db/schema/organizations';
 import { users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
-import { memberRoleEnum, organizationTypeEnum } from '@/db/schema/organizations';
 
 export class OrganizationService {
 	/**

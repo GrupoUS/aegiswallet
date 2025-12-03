@@ -224,7 +224,7 @@ async function syncClerkUsers() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
 	syncClerkUsers()
 		.then(() => process.exit(0))
 		.catch(error => {

@@ -128,8 +128,8 @@ export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Nex
 		// Get user details from Clerk
 		const clerkUser = await clerk.users.getUser(userId);
 
-		// Get user-scoped database client
-		const db = createUserScopedClient(userId);
+		// Get user-scoped database client (sets RLS context automatically)
+		const db = await createUserScopedClient(userId);
 
 		// Attach auth context to request
 		const authContext: AuthContext = {

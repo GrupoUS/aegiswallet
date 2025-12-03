@@ -6,7 +6,6 @@
  */
 
 import { neon, Pool } from '@neondatabase/serverless';
-import { sql } from 'drizzle-orm';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
 

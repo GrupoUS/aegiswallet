@@ -122,7 +122,7 @@ async function executeSQL(pool: Pool, sql: string): Promise<void> {
 
 	for (let i = 0; i < statements.length; i++) {
 		const statement = statements[i];
-		
+
 		// Skip empty statements
 		if (!statement || statement.trim().length === 0) {
 			continue;
@@ -135,7 +135,7 @@ async function executeSQL(pool: Pool, sql: string): Promise<void> {
 		} catch (error) {
 			// Some statements might fail if they already exist (idempotent)
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-			
+
 			if (
 				errorMessage.includes('already exists') ||
 				errorMessage.includes('duplicate') ||
@@ -186,7 +186,7 @@ async function verifyRLS(pool: Pool): Promise<void> {
 			`, [table]);
 
 			const row = result.rows[0] as { rowsecurity: boolean } | undefined;
-			
+
 			if (row?.rowsecurity) {
 				console.log(`✅ RLS enabled on ${table}`);
 				enabledCount++;

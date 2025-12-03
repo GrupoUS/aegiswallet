@@ -47,7 +47,9 @@ export const Route = createRootRoute({
 // Stable array of public pages (defined outside component to prevent re-creation)
 const PUBLIC_PAGES = [
 	'/login',
+	'/login/sso-callback',
 	'/signup',
+	'/signup/sso-callback',
 	'/privacidade',
 	'/politica-de-privacidade',
 	'/termos-de-uso',

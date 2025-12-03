@@ -93,6 +93,6 @@ export const clerkUrls = {
 	signIn: '/login',
 	signUp: '/signup',
 	afterSignIn: '/dashboard',
-	afterSignUp: '/onboarding',
+	afterSignUp: '/dashboard',
 	afterSignOut: '/',
 };

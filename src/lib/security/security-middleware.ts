@@ -100,6 +100,8 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://accounts.google.com', // Google OAuth
 			'https://*.google.com', // Google services
 			'https://play.google.com', // Google Play services
+			'https://challenges.cloudflare.com', // Cloudflare Turnstile API
+			'https://*.cloudflare.com', // Cloudflare services
 		],
 		defaultSrc: ["'self'"],
 		fontSrc: [
@@ -117,6 +119,8 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://*.google.com', // Google services iframes
 			'https://*.clerk.accounts.dev', // Clerk iframes
 			'https://clerk.aegiswallet.com', // Clerk production
+			'https://challenges.cloudflare.com', // Cloudflare Turnstile (used by Clerk for bot protection)
+			'https://*.cloudflare.com', // Cloudflare services (captcha, challenges)
 		],
 		imgSrc: [
 			"'self'",

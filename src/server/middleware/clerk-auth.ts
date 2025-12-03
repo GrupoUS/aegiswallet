@@ -9,7 +9,7 @@ import { type User as ClerkUser, createClerkClient, verifyToken } from '@clerk/b
 import type { Context, Next } from 'hono';
 import { createMiddleware } from 'hono/factory';
 
-import { getHttpClient, type HttpClient } from '@/db/client';
+import { createUserScopedClient, type PoolClient } from '@/db/client';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
 // ========================================
@@ -25,7 +25,7 @@ export interface AuthContext {
 		metadata?: Record<string, unknown>;
 	};
 	clerkUser: ClerkUser;
-	db: HttpClient;
+	db: PoolClient; // PoolClient with RLS context set for user-scoped operations
 }
 
 // ========================================
@@ -128,8 +128,8 @@ export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Nex
 		// Get user details from Clerk
 		const clerkUser = await clerk.users.getUser(userId);
 
-		// Get database client
-		const db = getHttpClient();
+		// Get user-scoped database client
+		const db = createUserScopedClient(userId);
 
 		// Attach auth context to request
 		const authContext: AuthContext = {
@@ -214,8 +214,8 @@ export const optionalClerkAuthMiddleware = createMiddleware(async (c: Context, n
 		// Get user details from Clerk
 		const clerkUser = await clerk.users.getUser(userId);
 
-		// Get database client
-		const db = getHttpClient();
+		// Get user-scoped database client (sets RLS context automatically)
+		const db = await createUserScopedClient(userId);
 
 		// Attach auth context to request
 		const authContext: AuthContext = {

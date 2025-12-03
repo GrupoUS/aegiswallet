@@ -6,6 +6,7 @@
  */
 
 import { neon, Pool } from '@neondatabase/serverless';
+import { sql } from 'drizzle-orm';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
 
@@ -163,6 +164,31 @@ export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
 		return (cachedAdminDb as unknown as Record<string | symbol, unknown>)[prop];
 	},
 });
+
+// ========================================
+// USER-SCOPED CLIENT (for RLS)
+// ========================================
+
+/**
+ * Create a user-scoped database client that sets RLS context
+ * Uses Pool client to support SET statements for RLS
+ *
+ * RLS is now enabled, so this client sets app.current_user_id before operations.
+ * Note: The context is set per-connection, so each request gets a fresh connection.
+ *
+ * @param userId - Clerk user ID (format: "user_xxx")
+ * @returns Pool client with user context set
+ */
+export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
+	const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
+	const db = drizzlePool(pool, { schema });
+
+	// Set user context for this connection session
+	// This ensures all queries on this connection use the correct user context
+	await pool.query(`SET LOCAL app.current_user_id = '${userId.replace(/'/g, "''")}'`);
+
+	return db;
+};
 
 // ========================================
 // TYPE EXPORTS

@@ -21,6 +21,7 @@ import {
 	validateBankAccountForInsert,
 	validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
+import { UserSyncService } from '@/services/user-sync.service';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -355,6 +356,31 @@ bankAccountsRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
+			// Ensure user exists in database before creating bank account
+			// This handles cases where user was created in Clerk but webhook failed
+			try {
+				await UserSyncService.ensureUserExists(user.id);
+				secureLogger.debug('User verified in database', {
+					userId: user.id,
+					requestId,
+				});
+			} catch (syncError) {
+				secureLogger.error('Failed to ensure user exists in database', {
+					userId: user.id,
+					requestId,
+					error: syncError instanceof Error ? syncError.message : 'Unknown error',
+					stack: syncError instanceof Error ? syncError.stack : undefined,
+				});
+
+				return c.json(
+					{
+						code: 'USER_SYNC_ERROR',
+						error: 'Failed to verify user account. Please try again.',
+					},
+					500,
+				);
+			}
+
 			// Normalize account type
 			const normalizedAccountType = normalizeAccountType(input.accountType);
 
@@ -473,17 +499,45 @@ bankAccountsRouter.post(
 				201,
 			);
 		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			const errorStack = error instanceof Error ? error.stack : undefined;
+
 			secureLogger.error('Failed to create bank account', {
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
+				errorStack,
 				institutionName: input.institutionName,
 				requestId,
 				userId: user.id,
 			});
 
+			// Check for foreign key constraint violation (user doesn't exist)
+			if (errorMessage.includes('foreign key') || errorMessage.includes('user_id')) {
+				return c.json(
+					{
+						code: 'USER_NOT_FOUND',
+						error: 'User account not found. Please contact support.',
+					},
+					404,
+				);
+			}
+
+			// Check for RLS policy violation
+			if (errorMessage.includes('policy') || errorMessage.includes('RLS')) {
+				return c.json(
+					{
+						code: 'PERMISSION_DENIED',
+						error: 'Permission denied. Please ensure you are authenticated.',
+					},
+					403,
+				);
+			}
+
+			// Generic error
 			return c.json(
 				{
 					code: 'BANK_ACCOUNT_CREATE_ERROR',
 					error: 'Failed to create bank account',
+					details: import.meta.env.DEV ? errorMessage : undefined,
 				},
 				500,
 			);

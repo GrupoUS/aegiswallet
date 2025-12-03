@@ -140,6 +140,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://*.google.com', // Google services scripts
 			'https://*.clerk.accounts.dev', // Clerk scripts
 			'https://clerk.aegiswallet.com', // Clerk production
+			'https://challenges.cloudflare.com', // Cloudflare Turnstile (used by Clerk)
 		],
 		styleSrc: [
 			"'self'",

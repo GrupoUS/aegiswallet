@@ -24,6 +24,7 @@ import {
 	usersRouter,
 	voiceRouter,
 } from '@/server/routes/v1';
+import clerkWebhookHandler from '@/server/webhooks/clerk';
 
 /**
  * Create and configure Hono application with edge-first architecture
@@ -61,6 +62,9 @@ app.route('/api/v1/compliance', complianceRouter);
 app.route('/api/v1/billing', billingRouter);
 app.route('/api/v1/ai', aiChatRouter);
 app.route('/api/v1/agent', agentRouter);
+
+// Webhooks (no auth required - verified by signature)
+app.route('/api/webhooks/clerk', clerkWebhookHandler);
 
 // Cron job routes
 app.route('/cron', cronJobs);

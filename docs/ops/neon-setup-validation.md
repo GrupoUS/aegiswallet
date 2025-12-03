@@ -342,19 +342,44 @@ bun run dev:validate
 
 ### Health Endpoint Testing
 
+AegisWallet provides two types of health endpoints:
+
+| Endpoint | Status Codes | Use Case |
+|----------|-------------|----------|
+| `/api/ping` | Always 200 | Liveness probe for load balancers, uptime monitors |
+| `/api/health` | 200 or 503 | Deep health check including database connectivity |
+
+**Important**: `/api/health` returns HTTP 503 when the database is unavailable (status: "degraded"). This allows monitoring systems to distinguish between server liveness and full system health. For infrastructure health checks that only need to verify the server process is running, use `/api/ping` instead.
+
 ```bash
 # Start the server first
 bun dev:server
 
-# In another terminal, check health
+# Simple liveness check (always 200)
+curl http://localhost:3000/api/ping | jq
+# Response: {"status": "ok", "timestamp": "..."}
+
+# Full health check (may return 503 if DB is down)
 curl http://localhost:3000/api/health | jq
 
-# Expected response:
+# Expected response (healthy):
 {
   "status": "ok",
   "database": {
     "status": "connected",
     "latency": 45
+  },
+  "uptime": 123.456,
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+
+# Response when database is unavailable (503):
+{
+  "status": "degraded",
+  "database": {
+    "status": "disconnected",
+    "latency": 5000,
+    "error": "Database query timeout"
   },
   "uptime": 123.456,
   "timestamp": "2024-01-15T10:30:00.000Z"

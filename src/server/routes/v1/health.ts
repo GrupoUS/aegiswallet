@@ -36,10 +36,12 @@ export const healthResponseSchema = z.object({
 
 /**
  * Check database connectivity with caching
+ * Primary test is SELECT 1, schema check is secondary and logged as warning if it fails
  */
 async function checkDatabaseConnectivity(): Promise<{
 	status: 'connected' | 'disconnected' | 'error';
 	latency: number;
+	schemaAccessible?: boolean;
 }> {
 	// Return cached result if valid
 	if (cachedDbHealth && Date.now() - cachedDbHealth.timestamp < CACHE_TTL_MS) {
@@ -61,7 +63,7 @@ async function checkDatabaseConnectivity(): Promise<{
 			setTimeout(() => reject(new Error('Database query timeout')), 5000);
 		});
 
-		// Execute a simple query with timeout
+		// Execute a simple query with timeout - THIS is the primary connectivity test
 		await Promise.race([
 			db.execute(sql`SELECT 1 as health_check`),
 			timeoutPromise,
@@ -70,17 +72,24 @@ async function checkDatabaseConnectivity(): Promise<{
 		const latency = Date.now() - dbStartTime;
 
 		// Test schema access (optional, for deeper validation)
+		// Failure here should NOT affect overall connectivity status
+		let schemaAccessible = true;
 		try {
 			await db.select({ count: sql<number>`count(*)` }).from(schema.users).limit(1);
-		} catch {
+		} catch (schemaError) {
 			// Schema access failed, but basic connectivity works
-			secureLogger.warn('Database schema access check failed');
+			// This can happen on fresh databases before migrations run
+			schemaAccessible = false;
+			secureLogger.warn('Database schema access check failed (non-critical)', {
+				error: schemaError instanceof Error ? schemaError.message : 'Unknown error',
+				note: 'Basic connectivity succeeded, schema may not be migrated yet'
+			});
 		}
 
-		// Cache successful result
+		// Cache successful result - connectivity is the key metric
 		cachedDbHealth = { status: 'connected', latency, timestamp: Date.now() };
 
-		return { status: 'connected', latency };
+		return { status: 'connected', latency, schemaAccessible };
 	} catch (error) {
 		const latency = Date.now() - dbStartTime;
 		secureLogger.error('Database health check failed', {
@@ -91,7 +100,7 @@ async function checkDatabaseConnectivity(): Promise<{
 		// Cache failure briefly
 		cachedDbHealth = { status: 'error', latency, timestamp: Date.now() };
 
-		return { status: 'error', latency };
+		return { status: 'error', latency, schemaAccessible: false };
 	}
 }
 

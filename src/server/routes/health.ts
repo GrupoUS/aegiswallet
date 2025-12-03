@@ -86,6 +86,23 @@ async function checkDatabaseHealth(): Promise<{
 
 // biome-ignore lint/suspicious/noExplicitAny: Hono app type requires generic env type which is complex to type properly
 export function setupHealthRoute(app: Hono<any>) {
+	/**
+	 * Simple liveness probe - always returns 200
+	 * Use this for load balancers, uptime monitors, and infrastructure health checks
+	 * that only need to know if the server process is running
+	 */
+	app.get('/api/ping', (c) => {
+		return c.json({
+			status: 'ok',
+			timestamp: new Date().toISOString(),
+		}, 200);
+	});
+
+	/**
+	 * Full health check - returns 503 if database is unavailable
+	 * Use this for deep health monitoring that needs to verify all dependencies
+	 * Note: Returns 503 when database is down (not 200)
+	 */
 	app.get('/api/health', async (c) => {
 		const startTime = Date.now();
 

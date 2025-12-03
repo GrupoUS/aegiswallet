@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { Webhook } from 'svix';
 
 import { getPoolClient } from '@/db/client';
-import { subscriptions } from '@/db/schema';
+import { subscriptions, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 import { StripeCustomerService } from '@/services/stripe/customer.service';
@@ -57,6 +57,14 @@ clerkWebhookHandler.post('/', async (c) => {
 			// Create Stripe customer
 			const stripeCustomerId = await StripeCustomerService.createCustomer(id, email, name);
 
+			// Insert user record into users table (required for foreign key constraints)
+			const db = getPoolClient();
+			await db.insert(users).values({
+				id,
+				email,
+				fullName: name,
+			});
+
 			// Update Clerk user metadata with stripeCustomerId
 			await clerkClient.users.updateUserMetadata(id, {
 				privateMetadata: {
@@ -65,7 +73,6 @@ clerkWebhookHandler.post('/', async (c) => {
 			});
 
 			// Create free subscription in database
-			const db = getPoolClient();
 			await db.insert(subscriptions).values({
 				userId: id,
 				stripeCustomerId,

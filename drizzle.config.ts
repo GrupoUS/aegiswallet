@@ -8,8 +8,9 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-	// Schema files location
-	schema: './src/db/schema/index.ts',
+	// Schema files location - glob pattern to include all domain schema files
+	// This ensures all tables are discovered for migration generation
+	schema: './src/db/schema/**/*.ts',
 
 	// Output directory for migrations
 	out: './drizzle/migrations',

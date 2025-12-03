@@ -218,9 +218,20 @@ AegisWallet uses Hono for edge-optimized HTTP handling and Drizzle ORM for type-
 
 #### Hono (Edge-First HTTP Framework)
 - **Static File Serving**: Hosts the built SPA assets
-- **Health Checks**: `/api/health` endpoint for observability
+- **Health Endpoints**: See [Health Check Endpoints](#health-check-endpoints) below
 - **API Routes**: RESTful endpoints under `/api/v1/*`
 - **Middleware**: CORS, authentication, rate limiting, logging
+
+#### Health Check Endpoints
+
+| Endpoint | Status Codes | Purpose |
+|----------|-------------|---------|
+| `/api/ping` | Always 200 | Liveness probe for load balancers and uptime monitors |
+| `/api/health` | 200 or 503 | Deep health check including database connectivity |
+| `/api/v1/ping` | Always 200 | v1 API liveness probe |
+| `/api/v1/health` | 200 or 503 | v1 API deep health check |
+
+**Important**: `/api/health` returns HTTP 503 when the database is unavailable. Use `/api/ping` for infrastructure health checks that only need to verify the server process is running.
 
 #### Drizzle ORM (Type-Safe Database Layer)
 - **Direct Connection**: Connects to Neon PostgreSQL via serverless driver

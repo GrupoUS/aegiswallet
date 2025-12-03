@@ -194,6 +194,41 @@ healthRouter.get('/ping', (c) => {
 	});
 });
 
+// Connection pool monitoring endpoint
+healthRouter.get('/connections', async (c) => {
+	try {
+		const { getConnectionStats } = await import('@/db/client');
+		const stats = getConnectionStats();
+
+		return c.json({
+			pool: stats,
+			status: stats.isInitialized ? 'active' : 'not_initialized',
+			timestamp: new Date().toISOString(),
+			limits: {
+				maxConnections: 10,
+				warningThreshold: 8,
+			},
+			health: {
+				isHealthy: stats.totalCount < 8,
+				warning: stats.totalCount >= 8 ? 'High connection usage detected' : null,
+			},
+		});
+	} catch (error) {
+		secureLogger.error('Connection stats error', {
+			error: error instanceof Error ? error.message : 'Unknown error',
+		});
+
+		return c.json(
+			{
+				error: 'Failed to retrieve connection stats',
+				status: 'error',
+				timestamp: new Date().toISOString(),
+			},
+			500,
+		);
+	}
+});
+
 // Authenticated health check (tests auth middleware)
 healthRouter.get(
 	'/auth',

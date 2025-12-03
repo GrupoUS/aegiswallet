@@ -168,15 +168,64 @@ export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
 // USER-SCOPED CLIENT (for RLS)
 // ========================================
 
+// Singleton shared pool for user-scoped queries
+// This prevents connection exhaustion by reusing connections
+let sharedPool: Pool | null = null;
+
+/**
+ * Get or create a shared connection pool
+ * Uses singleton pattern to avoid creating new pools per request
+ */
+const getSharedPool = (): Pool => {
+	if (!sharedPool) {
+		sharedPool = new Pool({
+			connectionString: getDirectDatabaseUrl(),
+			connectionTimeoutMillis: 15000,
+			idleTimeoutMillis: 30000,
+			max: 10, // Limit total connections
+		});
+
+		// Log pool creation for debugging
+		console.log('[DB] Shared pool created with max 10 connections');
+
+		// Handle pool errors to prevent crashes
+		sharedPool.on('error', (err) => {
+			console.error('[DB] Pool error:', err.message);
+			// Don't destroy the pool on transient errors
+		});
+	}
+	return sharedPool;
+};
+
+/**
+ * Get connection pool statistics for monitoring
+ */
+export const getConnectionStats = () => {
+	if (!sharedPool) {
+		return {
+			totalCount: 0,
+			idleCount: 0,
+			waitingCount: 0,
+			isInitialized: false,
+		};
+	}
+	return {
+		totalCount: sharedPool.totalCount,
+		idleCount: sharedPool.idleCount,
+		waitingCount: sharedPool.waitingCount,
+		isInitialized: true,
+	};
+};
+
 /**
  * Create a user-scoped database client that sets RLS context
- * Uses Pool client to support SET statements for RLS
+ * Uses SINGLETON pool to prevent connection exhaustion
  *
  * RLS is now enabled, so this client sets app.current_user_id before operations.
- * Note: The context is set per-connection, so each request gets a fresh connection.
+ * The user context is set per-query using set_config with local scope.
  *
  * @param userId - Clerk user ID (format: "user_xxx")
- * @returns Pool client with user context set
+ * @returns Pool client (from singleton pool) with user context set
  * @throws Error if connection fails or userId is invalid
  */
 export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
@@ -187,28 +236,18 @@ export const createUserScopedClient = async (userId: string): Promise<PoolClient
 	}
 
 	const maxRetries = 3;
-	const retryDelay = 1000; // 1 second
+	const retryDelay = 500; // 500ms between retries
 	let lastError: Error | null = null;
 
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
-			const pool = new Pool({
-				connectionString: getDirectDatabaseUrl(),
-				connectionTimeoutMillis: 15000, // 15 second timeout
-				max: 1, // Single connection per request
-			});
-
+			// Use singleton shared pool instead of creating new pool per request
+			const pool = getSharedPool();
 			const db = drizzlePool(pool, { schema });
 
-			// Set user context for this connection session
-			// This ensures all queries on this connection use the correct user context
-			// Note: SET LOCAL doesn't support parameterized queries, but we've validated userId format
-			// We escape single quotes to prevent SQL injection
-			const sanitizedUserId = userId.replace(/'/g, "''");
-			await pool.query(`SET LOCAL app.current_user_id = '${sanitizedUserId}'`);
-
-			// Verify connection is working by executing a simple query
-			await pool.query('SELECT 1');
+			// Set user context for RLS using set_config with 'true' for local transaction scope
+			// This is SQL-injection safe because we use parameterized query
+			await pool.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
 
 			return db;
 		} catch (error) {
@@ -218,6 +257,9 @@ export const createUserScopedClient = async (userId: string): Promise<PoolClient
 			if (attempt === maxRetries || (error instanceof Error && error.message.includes('Invalid user ID'))) {
 				throw lastError;
 			}
+
+			// Log retry attempt
+			console.warn(`[DB] Connection attempt ${attempt} failed, retrying...`, lastError.message);
 
 			// Wait before retrying (exponential backoff)
 			await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));

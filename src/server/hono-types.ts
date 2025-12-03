@@ -5,7 +5,7 @@
 
 import type { User as ClerkUser } from '@clerk/backend';
 
-import type { HttpClient } from '@/db/client';
+import type { HttpClient, PoolClient } from '@/db/client';
 
 /**
  * User context extracted from Clerk authentication
@@ -19,12 +19,18 @@ export interface AuthUser {
 }
 
 /**
+ * Database client type - can be either HTTP client or Pool client
+ * Pool client is returned by createUserScopedClient for RLS support
+ */
+export type DbClient = HttpClient | PoolClient;
+
+/**
  * Authentication context set by authMiddleware
  */
 export interface AuthContext {
 	user: AuthUser;
 	clerkUser: ClerkUser;
-	db: HttpClient;
+	db: DbClient;
 }
 
 /**

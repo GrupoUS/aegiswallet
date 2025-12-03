@@ -227,6 +227,7 @@ function FinancialEventFormComponent({
 				userId: user?.id || '',
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
+				account_id: values.accountId || undefined,
 			};
 
 			if (initialData) {
@@ -429,7 +430,7 @@ function FinancialEventFormComponent({
 									<SelectContent>
 										{accounts?.map((account) => (
 											<SelectItem key={account.id} value={account.id}>
-												{account.institution_name} - {account.account_type}
+												{account.institutionName || account.institution_name} - {account.accountType || account.account_type}
 											</SelectItem>
 										))}
 									</SelectContent>

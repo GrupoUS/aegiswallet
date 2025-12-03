@@ -184,6 +184,7 @@ export function useFinancialEvents(
 				transactionDate: event.start instanceof Date ? event.start.toISOString() : event.start,
 				categoryId: event.category,
 				notes: event.description,
+				accountId: event.account_id,
 			};
 
 			const response = await apiClient.post<TransactionApiResponse<BackendTransaction>>(

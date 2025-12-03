@@ -5,16 +5,26 @@ import { apiClient } from '@/lib/api-client';
 
 export interface BankAccount {
 	id: string;
-	user_id: string;
-	institution_name: string;
-	institution_id: string;
-	account_type: string;
-	account_mask: string;
+	userId: string;
+	institutionName: string;
+	institutionId: string;
+	accountType: string;
+	accountMask: string;
 	balance: number;
 	currency: string;
-	is_primary: boolean;
-	is_active: boolean;
-	created_at: string;
+	isPrimary: boolean;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt?: string;
+	// Snake case aliases for compatibility
+	user_id?: string;
+	institution_name?: string;
+	institution_id?: string;
+	account_type?: string;
+	account_mask?: string;
+	is_primary?: boolean;
+	is_active?: boolean;
+	created_at?: string;
 	updated_at?: string;
 }
 
@@ -317,8 +327,8 @@ export function useBankAccountsStats(): UseBankAccountsStatsReturn {
 			},
 			{} as Record<string, number>,
 		),
-		activeAccounts: accounts.filter((account) => account.is_active).length,
-		primaryAccounts: accounts.filter((account) => account.is_primary).length,
+		activeAccounts: accounts.filter((account) => account.isActive || account.is_active).length,
+		primaryAccounts: accounts.filter((account) => account.isPrimary || account.is_primary).length,
 		totalAccounts: accounts.length,
 		totalBalance: accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0),
 	};

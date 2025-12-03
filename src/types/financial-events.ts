@@ -23,70 +23,12 @@ import type {
 export interface TransactionApiPayload {
 	amount: number;
 	description: string;
-	transactionType: 'credit' | 'debit';
-	status: 'posted' | 'pending';
+	transactionType: 'credit' | 'debit' | 'transfer' | 'pix' | 'boleto';
+	status: 'posted' | 'pending' | 'cancelled' | 'failed';
 	transactionDate: string;
 	categoryId?: string;
 	notes?: string;
-}
-
-/**
- * Backend transaction response structure
- */
-export interface BackendTransaction {
-	id: string;
-	userId: string;
-	amount: number;
-	description: string;
-	notes?: string;
-	transactionDate: string;
-	status: 'posted' | 'pending';
-	categoryId?: string;
-	tags?: string[];
-	createdAt: string;
-	updatedAt: string;
-}
-
-/**
- * API Query parameters for transactions endpoint
- */
-export interface TransactionApiQueryParams {
-	limit: number;
-	offset: number;
-	categoryId?: string;
-	type?: 'income' | 'expense';
-	status?: 'posted' | 'pending' | 'all';
-	startDate?: string;
-	endDate?: string;
-	search?: string;
-}
-
-/**
- * Transaction API response wrapper
- */
-export interface TransactionApiResponse<T> {
-	data: T;
-	meta: {
-		requestId: string;
-		retrievedAt?: string;
-		createdAt?: string;
-		updatedAt?: string;
-		deletedAt?: string;
-		total?: number;
-	};
-}
-
-/**
- * Transaction API payload for creating/updating transactions
- */
-export interface TransactionApiPayload {
-	amount: number;
-	description: string;
-	transactionType: 'credit' | 'debit';
-	status: 'posted' | 'pending';
-	transactionDate: string;
-	categoryId?: string;
-	notes?: string;
+	accountId?: string;
 }
 
 /**

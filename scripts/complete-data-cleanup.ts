@@ -1,7 +1,7 @@
 /**
  * Complete Data Cleanup Script
  * Deletes all users from Clerk and truncates all data from Neon PostgreSQL
- * 
+ *
  * CAUTION: This script permanently deletes ALL data!
  */
 
@@ -92,7 +92,7 @@ async function cleanupNeonDatabase() {
 				try {
 					// Check if table exists
 					const exists = await tx.execute(sql`
-						SELECT 1 FROM information_schema.tables 
+						SELECT 1 FROM information_schema.tables
 						WHERE table_schema = 'public' AND table_name = ${table}
 					`);
 

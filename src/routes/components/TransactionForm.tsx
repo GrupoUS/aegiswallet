@@ -5,7 +5,7 @@ import { useId, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCreateTransaction } from '@/hooks/use-transactions';
-import { useBankAccounts } from '@/hooks/useBankAccounts';
+import { useBankAccounts, type BankAccount as HookBankAccount } from '@/hooks/useBankAccounts';
 
 // Define transaction type locally since it's not exported from transaction types
 type TransactionType = 'credit' | 'debit' | 'pix' | 'boleto' | 'transfer';
@@ -17,7 +17,8 @@ interface TransactionFormProps {
 interface BankAccount {
 	balance: number | null;
 	id: string;
-	institution_name: string;
+	institution_name?: string;
+	institutionName?: string;
 }
 interface FormState {
 	accountId: string;
@@ -207,7 +208,7 @@ const AccountSelect = ({
 				<option value="">Selecione a conta</option>
 				{accounts.map((account) => (
 					<option key={account.id} value={account.id}>
-						{account.institution_name}
+						{account.institutionName || account.institution_name}
 					</option>
 				))}
 			</select>

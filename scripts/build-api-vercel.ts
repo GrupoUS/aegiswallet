@@ -53,6 +53,8 @@ async function buildApi() {
 				'node:*',
 				// Bun-specific adapters - not needed on Vercel (Node.js runtime)
 				'hono/bun',
+				// Svix uses dynamic require - must be external
+				'svix',
 			],
 			// Resolve @ alias to src directory
 			alias: {

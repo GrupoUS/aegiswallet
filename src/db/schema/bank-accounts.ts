@@ -20,7 +20,7 @@ export const bankAccounts = pgTable('bank_accounts', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 
 	// Belvo integration
 	belvoAccountId: text('belvo_account_id').unique().notNull(),

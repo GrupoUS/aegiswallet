@@ -8,6 +8,7 @@ node_modules
 .env
 .cache
 .temp
+.serena
 docs/**
 *.md
 !README.md

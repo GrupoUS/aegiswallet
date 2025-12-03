@@ -22,6 +22,13 @@
       "when": 1764760863755,
       "tag": "0002_adorable_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764764196560,
+      "tag": "0003_foamy_landau",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 /**
  * Diagnose Bank Accounts Error
- * 
+ *
  * Script para diagnosticar erros 500 na criação de contas bancárias
  * Verifica: usuários, organizações, contas bancárias, chaves estrangeiras
  */
@@ -27,9 +27,9 @@ async function diagnose() {
 	console.log('📋 1. Verificando tabelas do schema...');
 	try {
 		const tablesResult = await sql`
-			SELECT table_name 
-			FROM information_schema.tables 
-			WHERE table_schema = 'public' 
+			SELECT table_name
+			FROM information_schema.tables
+			WHERE table_schema = 'public'
 			ORDER BY table_name
 		`;
 		console.log('   ✅ Tabelas encontradas:', tablesResult.map((r: any) => r.table_name).join(', '));
@@ -42,7 +42,7 @@ async function diagnose() {
 	try {
 		const usersColumns = await sql`
 			SELECT column_name, data_type, is_nullable, column_default
-			FROM information_schema.columns 
+			FROM information_schema.columns
 			WHERE table_name = 'users' AND table_schema = 'public'
 			ORDER BY ordinal_position
 		`;
@@ -59,7 +59,7 @@ async function diagnose() {
 	try {
 		const bankColumns = await sql`
 			SELECT column_name, data_type, is_nullable, column_default
-			FROM information_schema.columns 
+			FROM information_schema.columns
 			WHERE table_name = 'bank_accounts' AND table_schema = 'public'
 			ORDER BY ordinal_position
 		`;
@@ -103,7 +103,7 @@ async function diagnose() {
 	console.log('\n📋 5. Contando registros...');
 	try {
 		const counts = await sql`
-			SELECT 
+			SELECT
 				(SELECT COUNT(*) FROM users) as users_count,
 				(SELECT COUNT(*) FROM organizations) as orgs_count,
 				(SELECT COUNT(*) FROM bank_accounts) as accounts_count,
@@ -180,7 +180,7 @@ async function diagnose() {
 			SELECT u.id, u.email, u.organization_id
 			FROM users u
 			LEFT JOIN organizations o ON u.organization_id = o.id
-			WHERE u.organization_id IS NULL 
+			WHERE u.organization_id IS NULL
 			   OR u.organization_id = 'default'
 			   OR o.id IS NULL
 		`;
@@ -228,7 +228,7 @@ async function diagnose() {
 			console.log('   📌 Este é provavelmente o motivo do erro 500!');
 		} else {
 			console.log(`   ✅ Usuário existe: ${userExists[0].email}`);
-			
+
 			// Verificar se podemos inserir (sem realmente inserir)
 			console.log('   📌 Testando INSERT simulado...');
 			const testId = crypto.randomUUID();

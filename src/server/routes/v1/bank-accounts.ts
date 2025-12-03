@@ -11,7 +11,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { bankAccounts } from '@/db/schema';
+import { bankAccounts, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import {
 	generateManualAccountId,
@@ -21,7 +21,7 @@ import {
 	validateBankAccountForInsert,
 	validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
-import { UserSyncService } from '@/services/user-sync.service';
+import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -119,18 +119,21 @@ bankAccountsRouter.get(
 				},
 			});
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			secureLogger.error('Failed to get bank accounts', {
 				error: error instanceof Error ? error.message : 'Unknown error',
+				errorCode: dbError.code,
 				requestId,
+				stack: error instanceof Error ? error.stack : undefined,
 				userId: user.id,
 			});
 
 			return c.json(
 				{
-					code: 'BANK_ACCOUNTS_ERROR',
-					error: 'Failed to retrieve bank accounts',
+					code: dbError.code,
+					error: dbError.message,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},
@@ -177,18 +180,21 @@ bankAccountsRouter.get(
 				},
 			});
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			secureLogger.error('Failed to get total balance', {
 				error: error instanceof Error ? error.message : 'Unknown error',
+				errorCode: dbError.code,
 				requestId,
+				stack: error instanceof Error ? error.stack : undefined,
 				userId: user.id,
 			});
 
 			return c.json(
 				{
-					code: 'TOTAL_BALANCE_ERROR',
-					error: 'Failed to calculate total balance',
+					code: dbError.code,
+					error: dbError.message,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},
@@ -358,27 +364,51 @@ bankAccountsRouter.post(
 		try {
 			// Ensure user exists in database before creating bank account
 			// This handles cases where user was created in Clerk but webhook failed
-			try {
-				await UserSyncService.ensureUserExists(user.id);
-				secureLogger.debug('User verified in database', {
-					userId: user.id,
-					requestId,
-				});
-			} catch (syncError) {
-				secureLogger.error('Failed to ensure user exists in database', {
-					userId: user.id,
-					requestId,
-					error: syncError instanceof Error ? syncError.message : 'Unknown error',
-					stack: syncError instanceof Error ? syncError.stack : undefined,
-				});
+			const [existingUser] = await db
+				.select({ id: users.id })
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 
-				return c.json(
-					{
-						code: 'USER_SYNC_ERROR',
-						error: 'Failed to verify user account. Please try again.',
-					},
-					500,
-				);
+			if (!existingUser) {
+				// User doesn't exist in database, create minimal user record
+				// This is a fallback for cases where Clerk webhook failed
+				try {
+					await db.insert(users).values({
+						id: user.id,
+						email: user.email || '',
+						fullName: user.fullName || null,
+						organizationId: 'default', // Will be updated by webhook or organization service later
+					});
+					secureLogger.info('User created in database during bank account creation', {
+						userId: user.id,
+						requestId,
+					});
+				} catch (createError) {
+					// Check if it's a duplicate key error (user was created by concurrent request)
+					const errorMessage = createError instanceof Error ? createError.message : 'Unknown error';
+					if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+						secureLogger.debug('User was created by concurrent request', {
+							userId: user.id,
+							requestId,
+						});
+					} else {
+						secureLogger.error('Failed to create user in database', {
+							error: errorMessage,
+							requestId,
+							stack: createError instanceof Error ? createError.stack : undefined,
+							userId: user.id,
+						});
+
+						return c.json(
+							{
+								code: 'USER_CREATE_ERROR',
+								error: 'Failed to verify user account. Please try again.',
+							},
+							500,
+						);
+					}
+				}
 			}
 
 			// Normalize account type
@@ -499,47 +529,26 @@ bankAccountsRouter.post(
 				201,
 			);
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			const errorStack = error instanceof Error ? error.stack : undefined;
 
 			secureLogger.error('Failed to create bank account', {
 				error: errorMessage,
+				errorCode: dbError.code,
 				errorStack,
 				institutionName: input.institutionName,
 				requestId,
 				userId: user.id,
 			});
 
-			// Check for foreign key constraint violation (user doesn't exist)
-			if (errorMessage.includes('foreign key') || errorMessage.includes('user_id')) {
-				return c.json(
-					{
-						code: 'USER_NOT_FOUND',
-						error: 'User account not found. Please contact support.',
-					},
-					404,
-				);
-			}
-
-			// Check for RLS policy violation
-			if (errorMessage.includes('policy') || errorMessage.includes('RLS')) {
-				return c.json(
-					{
-						code: 'PERMISSION_DENIED',
-						error: 'Permission denied. Please ensure you are authenticated.',
-					},
-					403,
-				);
-			}
-
-			// Generic error
 			return c.json(
 				{
-					code: 'BANK_ACCOUNT_CREATE_ERROR',
-					error: 'Failed to create bank account',
+					code: dbError.code,
+					error: dbError.message,
 					details: import.meta.env.DEV ? errorMessage : undefined,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},

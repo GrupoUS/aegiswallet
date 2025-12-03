@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
+import { validateEnvironmentVariablesOrThrow } from '@/server/config/validate-env';
 import cronJobs from '@/server/cron';
 import type { AppEnv } from '@/server/hono-types';
 import { corsMiddleware } from '@/server/middleware/cors';
@@ -30,6 +31,20 @@ import clerkWebhookHandler from '@/server/webhooks/clerk';
  * Create and configure Hono application with edge-first architecture
  * Now using Hono RPC endpoints exclusively
  */
+
+// Validate environment variables at startup (fail fast)
+// Only validate in non-test environments to allow tests to run without full env setup
+if (process.env.NODE_ENV !== 'test') {
+	try {
+		validateEnvironmentVariablesOrThrow();
+	} catch (error) {
+		// Log error and re-throw to prevent server from starting with invalid config
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		console.error('❌ Environment validation failed:', errorMessage);
+		throw error;
+	}
+}
+
 const app = new Hono<AppEnv>();
 
 // Global middleware

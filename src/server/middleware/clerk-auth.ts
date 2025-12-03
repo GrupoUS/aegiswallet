@@ -157,19 +157,104 @@ export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Nex
 
 		await next();
 	} catch (error) {
-		secureLogger.error('Authentication error', {
-			error: error instanceof Error ? error.message : 'Unknown error',
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorStack = error instanceof Error ? error.stack : undefined;
+
+		// Categorize errors to return appropriate status codes
+		// Authentication errors (401): Invalid token, user not found, token verification failed
+		if (
+			errorMessage.includes('token') ||
+			errorMessage.includes('Token') ||
+			errorMessage.includes('authentication') ||
+			errorMessage.includes('unauthorized') ||
+			errorMessage.includes('user not found') ||
+			errorMessage.includes('Invalid user ID')
+		) {
+			secureLogger.warn('Authentication failed', {
+				error: errorMessage,
+				ip: clientIP,
+				method: c.req.method,
+				path: c.req.path,
+				requestId,
+				userAgent: c.req.header('User-Agent'),
+			});
+
+			return c.json(
+				{
+					code: 'AUTH_ERROR',
+					error: 'Authentication failed',
+				},
+				401,
+			);
+		}
+
+		// Database connection errors (503): Service unavailable
+		if (
+			errorMessage.includes('connection') ||
+			errorMessage.includes('timeout') ||
+			errorMessage.includes('ECONNREFUSED') ||
+			errorMessage.includes('database') ||
+			errorMessage.includes('DATABASE_URL')
+		) {
+			secureLogger.error('Database connection error during authentication', {
+				error: errorMessage,
+				ip: clientIP,
+				method: c.req.method,
+				path: c.req.path,
+				requestId,
+				stack: errorStack,
+				userAgent: c.req.header('User-Agent'),
+			});
+
+			return c.json(
+				{
+					code: 'SERVICE_UNAVAILABLE',
+					error: 'Database service unavailable. Please try again later.',
+				},
+				503,
+			);
+		}
+
+		// Environment configuration errors (500): Server misconfiguration
+		if (
+			errorMessage.includes('CLERK_SECRET_KEY') ||
+			errorMessage.includes('environment variable') ||
+			errorMessage.includes('not set')
+		) {
+			secureLogger.error('Configuration error during authentication', {
+				error: errorMessage,
+				ip: clientIP,
+				method: c.req.method,
+				path: c.req.path,
+				requestId,
+				stack: errorStack,
+				userAgent: c.req.header('User-Agent'),
+			});
+
+			return c.json(
+				{
+					code: 'CONFIGURATION_ERROR',
+					error: 'Server configuration error',
+				},
+				500,
+			);
+		}
+
+		// Unexpected errors (500): Generic server error
+		secureLogger.error('Unexpected authentication error', {
+			error: errorMessage,
 			ip: clientIP,
 			method: c.req.method,
 			path: c.req.path,
 			requestId,
+			stack: errorStack,
 			userAgent: c.req.header('User-Agent'),
 		});
 
 		return c.json(
 			{
-				code: 'AUTH_ERROR',
-				error: 'Authentication failed',
+				code: 'INTERNAL_ERROR',
+				error: 'An unexpected error occurred during authentication',
 			},
 			500,
 		);

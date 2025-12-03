@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { contacts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { validateCPF } from '@/lib/security/financial-validator';
+import { UserSyncService } from '@/services/user-sync.service';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -243,6 +244,25 @@ contactsRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
+			// Ensure user exists in database before creating contact
+			try {
+				await UserSyncService.ensureUserExists(user.id);
+			} catch (syncError) {
+				secureLogger.error('Failed to ensure user exists in database', {
+					userId: user.id,
+					requestId,
+					error: syncError instanceof Error ? syncError.message : 'Unknown error',
+				});
+
+				return c.json(
+					{
+						code: 'USER_SYNC_ERROR',
+						error: 'Failed to verify user account. Please try again.',
+					},
+					500,
+				);
+			}
+
 			const sanitizedInput = sanitizeContactFields(input);
 
 			const [data] = await db

@@ -11,6 +11,8 @@ import { z } from 'zod';
 
 import { financialEvents, userPreferences, users } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import { UserSyncService } from '@/services/user-sync.service';
+import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -182,6 +184,25 @@ usersRouter.put(
 		const requestId = c.get('requestId');
 
 		try {
+			// Ensure user exists in database before updating preferences
+			try {
+				await UserSyncService.ensureUserExists(user.id);
+			} catch (syncError) {
+				secureLogger.error('Failed to ensure user exists in database', {
+					userId: user.id,
+					requestId,
+					error: syncError instanceof Error ? syncError.message : 'Unknown error',
+				});
+
+				return c.json(
+					{
+						code: 'USER_SYNC_ERROR',
+						error: 'Failed to verify user account. Please try again.',
+					},
+					500,
+				);
+			}
+
 			// Check if preferences exist
 			const [existing] = await db
 				.select({ id: userPreferences.id })
@@ -383,6 +404,41 @@ usersRouter.get(
 		const requestId = c.get('requestId');
 
 		try {
+			// Validate date formats
+			const startDate = new Date(period_start);
+			const endDate = new Date(period_end);
+
+			if (isNaN(startDate.getTime())) {
+				return c.json(
+					{
+						code: 'INVALID_DATE',
+						error: 'Invalid period_start format. Expected ISO 8601 date string (e.g., YYYY-MM-DD)',
+					},
+					400,
+				);
+			}
+
+			if (isNaN(endDate.getTime())) {
+				return c.json(
+					{
+						code: 'INVALID_DATE',
+						error: 'Invalid period_end format. Expected ISO 8601 date string (e.g., YYYY-MM-DD)',
+					},
+					400,
+				);
+			}
+
+			// Validate date range
+			if (startDate > endDate) {
+				return c.json(
+					{
+						code: 'INVALID_DATE_RANGE',
+						error: 'period_start must be before or equal to period_end',
+					},
+					400,
+				);
+			}
+
 			const events = await db
 				.select({
 					amount: financialEvents.amount,
@@ -392,8 +448,8 @@ usersRouter.get(
 				.where(
 					and(
 						eq(financialEvents.userId, user.id),
-						gte(financialEvents.createdAt, new Date(period_start)),
-						lte(financialEvents.createdAt, new Date(period_end)),
+						gte(financialEvents.createdAt, startDate),
+						lte(financialEvents.createdAt, endDate),
 					),
 				);
 
@@ -420,18 +476,21 @@ usersRouter.get(
 				},
 			});
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			secureLogger.error('Failed to get financial summary', {
 				error: error instanceof Error ? error.message : 'Unknown error',
+				errorCode: dbError.code,
 				requestId,
+				stack: error instanceof Error ? error.stack : undefined,
 				userId: user.id,
 			});
 
 			return c.json(
 				{
-					code: 'FINANCIAL_SUMMARY_ERROR',
-					error: 'Failed to retrieve financial summary',
+					code: dbError.code,
+					error: dbError.message,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},

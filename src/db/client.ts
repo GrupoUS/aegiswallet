@@ -177,16 +177,55 @@ export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
  *
  * @param userId - Clerk user ID (format: "user_xxx")
  * @returns Pool client with user context set
+ * @throws Error if connection fails or userId is invalid
  */
 export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
-	const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
-	const db = drizzlePool(pool, { schema });
+	// Validate userId format to prevent SQL injection
+	// Clerk user IDs always start with "user_" followed by alphanumeric characters
+	if (!userId || !/^user_[a-zA-Z0-9_]+$/.test(userId)) {
+		throw new Error(`Invalid user ID format: ${userId}`);
+	}
 
-	// Set user context for this connection session
-	// This ensures all queries on this connection use the correct user context
-	await pool.query(`SET LOCAL app.current_user_id = '${userId.replace(/'/g, "''")}'`);
+	const maxRetries = 3;
+	const retryDelay = 1000; // 1 second
+	let lastError: Error | null = null;
 
-	return db;
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
+		try {
+			const pool = new Pool({
+				connectionString: getDirectDatabaseUrl(),
+				connectionTimeoutMillis: 15000, // 15 second timeout
+				max: 1, // Single connection per request
+			});
+
+			const db = drizzlePool(pool, { schema });
+
+			// Set user context for this connection session
+			// This ensures all queries on this connection use the correct user context
+			// Note: SET LOCAL doesn't support parameterized queries, but we've validated userId format
+			// We escape single quotes to prevent SQL injection
+			const sanitizedUserId = userId.replace(/'/g, "''");
+			await pool.query(`SET LOCAL app.current_user_id = '${sanitizedUserId}'`);
+
+			// Verify connection is working by executing a simple query
+			await pool.query('SELECT 1');
+
+			return db;
+		} catch (error) {
+			lastError = error instanceof Error ? error : new Error(String(error));
+
+			// Don't retry on validation errors or if it's the last attempt
+			if (attempt === maxRetries || (error instanceof Error && error.message.includes('Invalid user ID'))) {
+				throw lastError;
+			}
+
+			// Wait before retrying (exponential backoff)
+			await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));
+		}
+	}
+
+	// This should never be reached, but TypeScript needs it
+	throw lastError || new Error('Failed to create user-scoped database client');
 };
 
 // ========================================

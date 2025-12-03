@@ -11,6 +11,8 @@ import { z } from 'zod';
 
 import { transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import { UserSyncService } from '@/services/user-sync.service';
+import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
@@ -93,11 +95,46 @@ transactionsRouter.get(
 			}
 
 			if (filters.startDate) {
-				conditions.push(gte(transactions.transactionDate, new Date(filters.startDate)));
+				const startDate = new Date(filters.startDate);
+				if (isNaN(startDate.getTime())) {
+					return c.json(
+						{
+							code: 'INVALID_DATE',
+							error: 'Invalid startDate format. Expected ISO 8601 date string (e.g., YYYY-MM-DD)',
+						},
+						400,
+					);
+				}
+				conditions.push(gte(transactions.transactionDate, startDate));
 			}
 
 			if (filters.endDate) {
-				conditions.push(lte(transactions.transactionDate, new Date(filters.endDate)));
+				const endDate = new Date(filters.endDate);
+				if (isNaN(endDate.getTime())) {
+					return c.json(
+						{
+							code: 'INVALID_DATE',
+							error: 'Invalid endDate format. Expected ISO 8601 date string (e.g., YYYY-MM-DD)',
+						},
+						400,
+					);
+				}
+				conditions.push(lte(transactions.transactionDate, endDate));
+			}
+
+			// Validate date range (startDate should be before endDate)
+			if (filters.startDate && filters.endDate) {
+				const startDate = new Date(filters.startDate);
+				const endDate = new Date(filters.endDate);
+				if (startDate > endDate) {
+					return c.json(
+						{
+							code: 'INVALID_DATE_RANGE',
+							error: 'startDate must be before or equal to endDate',
+						},
+						400,
+					);
+				}
 			}
 
 			if (filters.search) {
@@ -121,18 +158,21 @@ transactionsRouter.get(
 				},
 			});
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			secureLogger.error('Failed to get transactions', {
 				error: error instanceof Error ? error.message : 'Unknown error',
+				errorCode: dbError.code,
 				requestId,
+				stack: error instanceof Error ? error.stack : undefined,
 				userId: user.id,
 			});
 
 			return c.json(
 				{
-					code: 'TRANSACTIONS_ERROR',
-					error: 'Failed to retrieve transactions',
+					code: dbError.code,
+					error: dbError.message,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},
@@ -207,18 +247,22 @@ transactionsRouter.get(
 				},
 			});
 		} catch (error) {
+			const dbError = categorizeDatabaseError(error);
 			secureLogger.error('Failed to get transaction statistics', {
 				error: error instanceof Error ? error.message : 'Unknown error',
+				errorCode: dbError.code,
+				period,
 				requestId,
+				stack: error instanceof Error ? error.stack : undefined,
 				userId: user.id,
 			});
 
 			return c.json(
 				{
-					code: 'STATISTICS_ERROR',
-					error: 'Failed to retrieve statistics',
+					code: dbError.code,
+					error: dbError.message,
 				},
-				500,
+				dbError.statusCode,
 			);
 		}
 	},
@@ -242,6 +286,25 @@ transactionsRouter.post(
 		const requestId = c.get('requestId');
 
 		try {
+			// Ensure user exists in database before creating transaction
+			try {
+				await UserSyncService.ensureUserExists(user.id);
+			} catch (syncError) {
+				secureLogger.error('Failed to ensure user exists in database', {
+					userId: user.id,
+					requestId,
+					error: syncError instanceof Error ? syncError.message : 'Unknown error',
+				});
+
+				return c.json(
+					{
+						code: 'USER_SYNC_ERROR',
+						error: 'Failed to verify user account. Please try again.',
+					},
+					500,
+				);
+			}
+
 			const now = new Date();
 
 			const [newTransaction] = await db

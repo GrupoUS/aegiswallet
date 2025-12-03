@@ -2,7 +2,10 @@
  * User Sync Service
  *
  * Ensures Clerk users exist in the database before operations
- * Handles user creation, organization assignment, and idempotency
+ * Handles user creation with graceful degradation for external services
+ *
+ * IMPORTANT: User creation should NEVER fail due to Stripe/Organization issues
+ * External service integration is done in background or deferred
  */
 
 import { createClerkClient } from '@clerk/backend';
@@ -14,18 +17,34 @@ import { OrganizationService } from './organization.service';
 import { StripeCustomerService } from './stripe/customer.service';
 import { subscriptions } from '@/db/schema/billing';
 
-const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+// ========================================
+// CLERK CLIENT (lazy initialization)
+// ========================================
 
-if (!clerkSecretKey) {
-	throw new Error('CLERK_SECRET_KEY environment variable is not set');
+let clerkClient: ReturnType<typeof createClerkClient> | null = null;
+
+function getClerkClient() {
+	if (!clerkClient) {
+		const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+		if (!clerkSecretKey) {
+			throw new Error('CLERK_SECRET_KEY environment variable is not set');
+		}
+		clerkClient = createClerkClient({ secretKey: clerkSecretKey });
+	}
+	return clerkClient;
 }
 
-const clerkClient = createClerkClient({ secretKey: clerkSecretKey });
+// ========================================
+// USER SYNC SERVICE
+// ========================================
 
 export class UserSyncService {
 	/**
 	 * Ensure a user exists in the database
 	 * Creates the user if missing, otherwise returns existing user
+	 *
+	 * DESIGN PRINCIPLE: User creation should ALWAYS succeed if the Clerk user exists.
+	 * External service failures (Stripe, Organization) should NOT block user creation.
 	 *
 	 * @param clerkUserId - Clerk user ID (format: "user_xxx")
 	 * @returns User record from database
@@ -57,7 +76,8 @@ export class UserSyncService {
 
 		try {
 			// Fetch user from Clerk
-			const clerkUser = await clerkClient.users.getUser(clerkUserId);
+			const clerk = getClerkClient();
+			const clerkUser = await clerk.users.getUser(clerkUserId);
 
 			if (!clerkUser) {
 				throw new Error(`Clerk user not found: ${clerkUserId}`);
@@ -75,105 +95,142 @@ export class UserSyncService {
 
 			const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
 
-			// Create Stripe customer (with idempotency)
-			let stripeCustomerId: string;
-			try {
-				stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(clerkUserId, email, fullName);
-			} catch (stripeError) {
-				secureLogger.error('Failed to create Stripe customer during user sync', {
-					userId: clerkUserId,
-					email,
-					error: stripeError instanceof Error ? stripeError.message : 'Unknown error',
-				});
-				throw new Error('Failed to create Stripe customer');
-			}
+			// ========================================
+			// PHASE 1: Create user with default organization (CRITICAL)
+			// This MUST succeed for the user to use the app
+			// ========================================
 
-			// Use transaction to ensure atomicity
-			let createdUser: typeof users.$inferSelect | undefined;
+			let createdUser: typeof users.$inferSelect;
+
 			try {
-				await db.transaction(async (tx) => {
-					// 1. Create organization for user
-					const organizationId = await OrganizationService.createUserOrganization(
-						clerkUserId,
+				const [user] = await db
+					.insert(users)
+					.values({
+						id: clerkUserId,
 						email,
 						fullName,
-						tx,
-					);
+						organizationId: 'default', // Start with default, upgrade later
+					})
+					.returning();
 
-					// 2. Insert user record with organizationId
-					const [user] = await tx
-						.insert(users)
-						.values({
-							id: clerkUserId,
-							email,
-							fullName,
-							organizationId,
-						})
-						.returning();
+				if (!user) {
+					throw new Error('Failed to create user record');
+				}
 
-					if (!user) {
-						throw new Error('Failed to create user record');
+				createdUser = user;
+
+				secureLogger.info('User created in database', {
+					userId: clerkUserId,
+					email,
+				});
+			} catch (dbError) {
+				// Check if it's a duplicate key error (user was created by another request)
+				if (dbError instanceof Error && dbError.message.includes('duplicate key')) {
+					const [existingUser] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+					if (existingUser) {
+						secureLogger.info('User was created by concurrent request', {
+							userId: clerkUserId,
+						});
+						return existingUser;
 					}
+				}
+				throw dbError;
+			}
 
-					createdUser = user;
+			// ========================================
+			// PHASE 2: Setup external services (NON-CRITICAL)
+			// Failures here should NOT affect user experience
+			// ========================================
 
-					// 3. Create free subscription in database
-					await tx.insert(subscriptions).values({
+			// 2a. Try to create organization (non-blocking)
+			try {
+				const organizationId = await OrganizationService.createUserOrganization(
+					clerkUserId,
+					email,
+					fullName,
+				);
+
+				// Update user with real organization ID
+				if (organizationId && organizationId !== 'default') {
+					await db
+						.update(users)
+						.set({ organizationId })
+						.where(eq(users.id, clerkUserId));
+
+					createdUser = { ...createdUser, organizationId };
+
+					secureLogger.info('User organization created', {
+						userId: clerkUserId,
+						organizationId,
+					});
+				}
+			} catch (orgError) {
+				// Log but don't fail - user can still use app with default org
+				secureLogger.warn('Failed to create user organization (non-critical)', {
+					userId: clerkUserId,
+					error: orgError instanceof Error ? orgError.message : 'Unknown error',
+				});
+			}
+
+			// 2b. Try to create Stripe customer (non-blocking)
+			let stripeCustomerId: string | null = null;
+			try {
+				stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(clerkUserId, email, fullName);
+
+				secureLogger.info('Stripe customer created', {
+					userId: clerkUserId,
+					stripeCustomerId,
+				});
+			} catch (stripeError) {
+				// Log but don't fail - billing features will show upgrade prompts
+				secureLogger.warn('Failed to create Stripe customer (non-critical)', {
+					userId: clerkUserId,
+					error: stripeError instanceof Error ? stripeError.message : 'Unknown error',
+				});
+			}
+
+			// 2c. Try to create free subscription (non-blocking)
+			if (stripeCustomerId) {
+				try {
+					await db.insert(subscriptions).values({
 						userId: clerkUserId,
 						stripeCustomerId,
 						planId: 'free',
 						status: 'free',
 					});
 
-					secureLogger.info('User created and initialized', {
+					secureLogger.info('Free subscription created', {
 						userId: clerkUserId,
-						email,
-						organizationId,
-						stripeCustomerId,
 					});
-				});
-
-				if (!createdUser) {
-					throw new Error('User was not created in transaction');
+				} catch (subError) {
+					// Log but don't fail - user defaults to free plan anyway
+					secureLogger.warn('Failed to create subscription record (non-critical)', {
+						userId: clerkUserId,
+						error: subError instanceof Error ? subError.message : 'Unknown error',
+					});
 				}
+			}
 
-				// Update Clerk user metadata with stripeCustomerId (outside transaction)
+			// 2d. Try to update Clerk metadata (non-blocking)
+			if (stripeCustomerId) {
 				try {
-					await clerkClient.users.updateUserMetadata(clerkUserId, {
+					const clerk = getClerkClient();
+					await clerk.users.updateUserMetadata(clerkUserId, {
 						privateMetadata: {
 							stripeCustomerId,
 						},
 					});
 				} catch (metadataError) {
 					// Log but don't fail - metadata update is not critical
-					secureLogger.warn('Failed to update Clerk metadata', {
+					secureLogger.warn('Failed to update Clerk metadata (non-critical)', {
 						userId: clerkUserId,
 						error: metadataError instanceof Error ? metadataError.message : 'Unknown error',
 					});
 				}
-
-				return createdUser;
-			} catch (dbError) {
-				secureLogger.error('Database operation failed during user creation', {
-					userId: clerkUserId,
-					email,
-					stripeCustomerId,
-					error: dbError instanceof Error ? dbError.message : 'Unknown error',
-					stack: dbError instanceof Error ? dbError.stack : undefined,
-				});
-
-				// Attempt to rollback Stripe customer creation
-				try {
-					await StripeCustomerService.deleteCustomer(stripeCustomerId);
-				} catch (rollbackError) {
-					secureLogger.error('Failed to rollback Stripe customer', {
-						stripeCustomerId,
-						error: rollbackError instanceof Error ? rollbackError.message : 'Unknown error',
-					});
-				}
-
-				throw new Error(`Failed to create user record: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
 			}
+
+			return createdUser;
+
 		} catch (error) {
 			secureLogger.error('Failed to sync user from Clerk', {
 				userId: clerkUserId,
@@ -194,6 +251,79 @@ export class UserSyncService {
 		const db = getPoolClient();
 		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 		return !!user;
+	}
+
+	/**
+	 * Complete user setup for external services
+	 * Call this in background after user creation to setup Stripe/Organization
+	 *
+	 * @param clerkUserId - Clerk user ID
+	 */
+	static async completeUserSetup(clerkUserId: string): Promise<void> {
+		const db = getPoolClient();
+
+		const [user] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+		if (!user) {
+			secureLogger.warn('Cannot complete setup for non-existent user', { userId: clerkUserId });
+			return;
+		}
+
+		// Check if organization needs setup
+		if (user.organizationId === 'default') {
+			try {
+				const organizationId = await OrganizationService.createUserOrganization(
+					clerkUserId,
+					user.email,
+					user.fullName || undefined,
+				);
+
+				if (organizationId && organizationId !== 'default') {
+					await db
+						.update(users)
+						.set({ organizationId })
+						.where(eq(users.id, clerkUserId));
+
+					secureLogger.info('User organization setup completed', {
+						userId: clerkUserId,
+						organizationId,
+					});
+				}
+			} catch (error) {
+				secureLogger.warn('Background organization setup failed', {
+					userId: clerkUserId,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				});
+			}
+		}
+
+		// Check if subscription exists
+		const [existingSub] = await db.select().from(subscriptions).where(eq(subscriptions.userId, clerkUserId)).limit(1);
+		if (!existingSub) {
+			try {
+				const stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(
+					clerkUserId,
+					user.email,
+					user.fullName || undefined,
+				);
+
+				await db.insert(subscriptions).values({
+					userId: clerkUserId,
+					stripeCustomerId,
+					planId: 'free',
+					status: 'free',
+				});
+
+				secureLogger.info('User subscription setup completed', {
+					userId: clerkUserId,
+					stripeCustomerId,
+				});
+			} catch (error) {
+				secureLogger.warn('Background subscription setup failed', {
+					userId: clerkUserId,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				});
+			}
+		}
 	}
 }
 

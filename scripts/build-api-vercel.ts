@@ -26,7 +26,7 @@ const rootDir = path.resolve(currentDir, '..');
 async function buildApi() {
 	console.log('🔨 Building API for Vercel...');
 	console.log(`   Entry: src/server/vercel.ts`);
-	console.log(`   Output: api/index.mjs (ESM module)`);
+	console.log(`   Output: api/index.mjs (ESM)`);
 	console.log(`   Runtime: Node.js 20.x`);
 
 	try {
@@ -34,27 +34,23 @@ async function buildApi() {
 			// Use the Vercel wrapper as entry point (includes full Hono app with all routes)
 			entryPoints: [path.join(rootDir, 'src', 'server', 'vercel.ts')],
 			bundle: true,
-			// Use .mjs extension to force ESM module resolution
+			// Use .mjs extension for ESM
 			outfile: path.join(rootDir, 'api', 'index.mjs'),
 			// Node.js runtime (required for Clerk, Drizzle with pooling)
 			platform: 'node',
 			target: 'node20',
-			// Use ESM format - modern and compatible with "type": "module"
+			// Use ESM format
 			format: 'esm',
 			sourcemap: false,
 			minify: true,
 			// Keep function names for better debugging in Vercel logs
 			keepNames: true,
 			// External modules - Node.js built-ins and Bun-specific adapters
-			// Note: All npm packages must be bundled for Vercel serverless
-			// except Bun-specific modules that would crash on Node.js
 			external: [
-				// Node.js built-ins only
+				// Node.js built-ins
 				'node:*',
 				// Bun-specific adapters - not needed on Vercel (Node.js runtime)
 				'hono/bun',
-				// Svix uses dynamic require - must be external
-				'svix',
 			],
 			// Resolve @ alias to src directory
 			alias: {
@@ -69,7 +65,11 @@ async function buildApi() {
 				js: `// AegisWallet API - Bundled for Vercel Node.js Runtime
 // Generated at: ${new Date().toISOString()}
 // Entry: src/server/vercel.ts
-// Vercel expects: export default app (Hono instance)
+// Format: ESM for Vercel Node.js 20.x
+
+// Shim for CommonJS modules that use require()
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 `,
 			},
 			metafile: true,

@@ -8,20 +8,50 @@ interface UpdateData {
 }
 
 export class StripeCustomerService {
+	/**
+	 * Generate idempotency key for Stripe operations
+	 * Uses clerkUserId to ensure same key for same user
+	 */
+	private static getIdempotencyKey(clerkUserId: string, operation: string): string {
+		return `clerk_${clerkUserId}_${operation}_${Date.now()}`;
+	}
+
 	static async createCustomer(clerkUserId: string, email: string, name?: string) {
 		const stripe = getStripeClient();
 		try {
-			const customer = await stripe.customers.create({
+			// First, check if customer already exists
+			const existingCustomerId = await StripeCustomerService.getOrCreateCustomer(
+				clerkUserId,
 				email,
 				name,
-				metadata: {
-					clerkUserId,
+			);
+			if (existingCustomerId) {
+				return existingCustomerId;
+			}
+
+			// Create with idempotency key
+			const idempotencyKey = StripeCustomerService.getIdempotencyKey(
+				clerkUserId,
+				'create_customer',
+			);
+
+			const customer = await stripe.customers.create(
+				{
+					email,
+					name,
+					metadata: {
+						clerkUserId,
+					},
 				},
-			});
+				{
+					idempotencyKey,
+				},
+			);
 
 			secureLogger.info('Stripe customer created', {
 				clerkUserId,
 				stripeCustomerId: customer.id,
+				idempotencyKey,
 			});
 
 			return customer.id;
@@ -71,10 +101,24 @@ export class StripeCustomerService {
 		}
 	}
 
-	static async updateCustomer(stripeCustomerId: string, data: UpdateData) {
+	static async updateCustomer(
+		stripeCustomerId: string,
+		data: UpdateData,
+		clerkUserId?: string,
+	) {
 		const stripe = getStripeClient();
 		try {
-			await stripe.customers.update(stripeCustomerId, data);
+			const updateOptions: { idempotencyKey?: string } = {};
+
+			// Add idempotency key if clerkUserId is provided
+			if (clerkUserId) {
+				updateOptions.idempotencyKey = StripeCustomerService.getIdempotencyKey(
+					clerkUserId,
+					'update_customer',
+				);
+			}
+
+			await stripe.customers.update(stripeCustomerId, data, updateOptions);
 		} catch (error) {
 			secureLogger.error('Failed to update Stripe customer', {
 				stripeCustomerId,

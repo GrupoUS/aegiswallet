@@ -21,7 +21,7 @@ export const transactionCategories = pgTable('transaction_categories', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 
 	// Category info
 	name: text('name').notNull(),
@@ -48,7 +48,7 @@ export const transactions = pgTable('transactions', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 	accountId: text('account_id').references(() => bankAccounts.id, {
 		onDelete: 'set null',
 	}),

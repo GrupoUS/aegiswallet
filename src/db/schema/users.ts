@@ -37,6 +37,9 @@ export const users = pgTable('users', {
 	currency: text('currency').default('BRL'),
 	profileImageUrl: text('profile_image_url'),
 
+	// Multi-tenant support
+	organizationId: text('organization_id').notNull().default('default'),
+
 	// Status
 	isActive: boolean('is_active').default(true),
 	lastLogin: timestamp('last_login', { withTimezone: true }),

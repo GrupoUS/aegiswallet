@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "organization_id" text DEFAULT 'default' NOT NULL;

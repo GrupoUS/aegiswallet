@@ -1,7 +1,31 @@
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import type { FinancialContext, Transaction } from './ContextRetriever';
+
+/**
+ * Safely format a date, returning fallback for invalid dates
+ */
+function safeFormatDate(dateValue: string | Date | null | undefined, formatStr: string): string {
+	if (!dateValue) return '-';
+
+	try {
+		let date: Date;
+		if (typeof dateValue === 'string') {
+			date = parseISO(dateValue);
+			if (!isValid(date)) {
+				date = new Date(dateValue);
+			}
+		} else {
+			date = dateValue;
+		}
+
+		if (!isValid(date)) return '-';
+		return format(date, formatStr, { locale: ptBR });
+	} catch {
+		return '-';
+	}
+}
 
 /**
  * Format complete financial context for AI consumption
@@ -132,7 +156,7 @@ function formatTransactions(transactions: Transaction[]): string {
 	const recentList = transactions
 		.slice(0, 5)
 		.map((t) => {
-			const date = format(new Date(t.date), 'dd/MM', { locale: ptBR });
+			const date = safeFormatDate(t.date, 'dd/MM');
 			const type = t.type === 'income' ? '+' : '-';
 			return `  - ${date}: ${type}${formatCurrency(Math.abs(t.amount), 'BRL')} - ${t.description}`;
 		})
@@ -163,7 +187,7 @@ function formatEvents(
 	const eventList = events
 		.slice(0, 10)
 		.map((e) => {
-			const date = format(new Date(e.date), 'dd/MM/yyyy', { locale: ptBR });
+			const date = safeFormatDate(e.date, 'dd/MM/yyyy');
 			const status = e.status === 'pending' ? '⏳' : '✅';
 			return `  - ${status} ${date}: ${e.title} - ${formatCurrency(e.amount, 'BRL')}`;
 		})

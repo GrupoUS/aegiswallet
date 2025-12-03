@@ -2,24 +2,29 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
-// Updated interface to match the actual database schema
+// Updated interface to match the actual database schema (camelCase from Drizzle)
 export interface Transaction {
 	id: string;
-	user_id: string;
+	userId: string;
 	amount: number;
 	transactionType: 'transfer' | 'debit' | 'credit' | 'pix' | 'boleto';
 	status: 'cancelled' | 'failed' | 'pending' | 'posted';
 	description: string;
 	categoryId?: string;
 	accountId?: string;
-	created_at: string;
-	transaction_date: string;
-	posted_date?: string;
+	createdAt: string;
+	transactionDate: string;
+	postedDate?: string;
 	paymentMethod?: string;
 	merchantName?: string;
 	tags?: string[];
 	notes?: string;
 	currency?: string;
+	// Snake case aliases for compatibility with older code
+	user_id?: string;
+	created_at?: string;
+	transaction_date?: string;
+	posted_date?: string;
 }
 
 interface TransactionStats {

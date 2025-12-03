@@ -22,6 +22,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBalanceHistory, useBankAccounts } from '@/hooks/useBankAccounts';
 import { isValidChartItem } from '@/lib/utils/type-guards';
+import { safeParseDate } from '@/lib/utils/date-validation';
 import type { ChartData } from '@/types/financial/chart.types';
 
 export function BalanceChart() {
@@ -66,7 +67,11 @@ export function BalanceChart() {
 				return isValidChartItem(item);
 			})
 			.map((item) => {
-				const dateValue = new Date(item.date);
+				const dateValue = safeParseDate(item.date);
+				if (!dateValue) {
+					// Skip invalid dates
+					return null;
+				}
 				return {
 					value: Number(item.balance),
 					name: format(dateValue, 'dd/MM'),
@@ -77,7 +82,8 @@ export function BalanceChart() {
 						type: 'balance',
 					},
 				};
-			});
+			})
+			.filter((item): item is NonNullable<typeof item> => item !== null);
 
 		// Return as ChartData array
 		return [

@@ -101,8 +101,8 @@ transactionsRouter.get(
 			}
 
 			if (filters.startDate) {
-				const startDate = new Date(filters.startDate);
-				if (isNaN(startDate.getTime())) {
+				const startDate = safeParseDate(filters.startDate);
+				if (!startDate) {
 					return c.json(
 						{
 							code: 'INVALID_DATE',
@@ -115,8 +115,8 @@ transactionsRouter.get(
 			}
 
 			if (filters.endDate) {
-				const endDate = new Date(filters.endDate);
-				if (isNaN(endDate.getTime())) {
+				const endDate = safeParseDate(filters.endDate);
+				if (!endDate) {
 					return c.json(
 						{
 							code: 'INVALID_DATE',

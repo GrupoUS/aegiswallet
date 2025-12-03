@@ -15,6 +15,7 @@ import { useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useInvalidateUserData } from '@/hooks/useUserData';
 import { formatCurrency } from '@/lib/formatters/brazilianFormatters';
+import { safeParseDate } from '@/lib/utils/date-validation';
 
 // ========================================
 // LOADING SKELETON
@@ -178,7 +179,7 @@ function RecentTransactionsList() {
 							<div>
 								<p className="font-medium">{tx.description}</p>
 								<p className="text-sm text-muted-foreground">
-									{new Date(tx.transaction_date).toLocaleDateString('pt-BR')}
+									{safeParseDate(tx.transaction_date || tx.transactionDate)?.toLocaleDateString('pt-BR') || '-'}
 								</p>
 							</div>
 						</div>

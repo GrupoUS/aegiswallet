@@ -24,6 +24,43 @@ import {
 import { type Transaction, useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { logger } from '@/lib/logging';
+import { safeFormatDate, safeParseDate } from '@/lib/utils/date-validation';
+
+/**
+ * Enhanced safe date formatting for transactions with multiple fallback fields
+ */
+function formatTransactionDate(transaction: Transaction): string {
+	// Try multiple date fields in order of preference
+	const dateFields = [
+		transaction.createdAt,
+		transaction.created_at,
+		transaction.transactionDate,
+		transaction.transaction_date,
+	];
+
+	for (const dateValue of dateFields) {
+		const parsedDate = safeParseDate(dateValue);
+		if (parsedDate) {
+			try {
+				return format(parsedDate, 'dd/MM/yyyy', { locale: ptBR });
+			} catch (error) {
+				logger.warn('Failed to format valid date', {
+					dateValue,
+					parsedDate,
+					error: String(error)
+				});
+				continue;
+			}
+		}
+	}
+
+	// If all date fields are invalid, return fallback
+	logger.warn('All date fields invalid for transaction', {
+		transactionId: transaction.id,
+		dateFields
+	});
+	return '-';
+}
 
 export default function TransactionsList() {
 	const { data: transactions, isLoading, refetch } = useTransactions({ limit: 20 });
@@ -146,11 +183,7 @@ export default function TransactionsList() {
 									<div>
 										<p className="font-medium leading-none">{transaction.description}</p>
 										<div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-											<span>
-												{format(new Date(transaction.created_at), 'dd/MM/yyyy', {
-													locale: ptBR,
-												})}
-											</span>
+											<span>{formatTransactionDate(transaction)}</span>
 											{transaction.transactionType && (
 												<>
 													<span>•</span>

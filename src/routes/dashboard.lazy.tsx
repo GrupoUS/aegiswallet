@@ -11,6 +11,7 @@ import { type Transaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts, useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { useFinancialSummary } from '@/hooks/useProfile';
+import { safeParseDate } from '@/lib/utils/date-validation';
 
 // Lazy loaded components
 const LazyMiniCalendarWidget = lazy(() =>
@@ -185,7 +186,7 @@ export function Dashboard() {
 									<div>
 										<p className="font-medium truncate max-w-[150px]">{transaction.description}</p>
 										<p className="text-muted-foreground text-sm">
-											{new Date(transaction.created_at).toLocaleDateString('pt-BR')}
+											{safeParseDate(transaction.created_at || transaction.createdAt)?.toLocaleDateString('pt-BR') || '-'}
 										</p>
 									</div>
 									<FinancialAmount amount={Number(transaction.amount)} />

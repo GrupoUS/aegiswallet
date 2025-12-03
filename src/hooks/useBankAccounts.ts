@@ -18,17 +18,6 @@ export interface BankAccount {
 	updated_at?: string;
 }
 
-interface BankAccountApiResponse<T> {
-	data: T;
-	meta: {
-		requestId: string;
-		retrievedAt?: string;
-		createdAt?: string;
-		updatedAt?: string;
-		deletedAt?: string;
-	};
-}
-
 interface UseBankAccountsReturn {
 	accounts: BankAccount[];
 	isLoading: boolean;
@@ -107,9 +96,9 @@ export function useBankAccounts(): UseBankAccountsReturn {
 	} = useQuery({
 		queryKey: ['bank-accounts'],
 		queryFn: async () => {
-			const response =
-				await apiClient.get<BankAccountApiResponse<BankAccount[]>>('/v1/bank-accounts');
-			return response.data;
+			// apiClient already unwraps the response data, so we get BankAccount[] directly
+			const data = await apiClient.get<BankAccount[]>('/v1/bank-accounts');
+			return data;
 		},
 	});
 
@@ -124,11 +113,9 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			accountMask?: string;
 			institutionId?: string;
 		}) => {
-			const response = await apiClient.post<BankAccountApiResponse<BankAccount>>(
-				'/v1/bank-accounts',
-				input,
-			);
-			return response.data;
+			// apiClient already unwraps the response data, so we get BankAccount directly
+			const data = await apiClient.post<BankAccount>('/v1/bank-accounts', input);
+			return data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Erro ao criar conta bancária');
@@ -155,12 +142,10 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			isActive?: boolean;
 			accountMask?: string;
 		}) => {
-			const { id, ...data } = input;
-			const response = await apiClient.put<BankAccountApiResponse<BankAccount>>(
-				`/v1/bank-accounts/${id}`,
-				data,
-			);
-			return response.data;
+			const { id, ...updateData } = input;
+			// apiClient already unwraps the response data, so we get BankAccount directly
+			const data = await apiClient.put<BankAccount>(`/v1/bank-accounts/${id}`, updateData);
+			return data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Erro ao atualizar conta bancária');
@@ -192,11 +177,12 @@ export function useBankAccounts(): UseBankAccountsReturn {
 
 	const { mutate: updateBalance, isPending: isUpdatingBalance } = useMutation({
 		mutationFn: async (input: { id: string; balance: number }) => {
-			const response = await apiClient.patch<BankAccountApiResponse<BankAccount>>(
+			// apiClient already unwraps the response data, so we get BankAccount directly
+			const data = await apiClient.patch<BankAccount>(
 				`/v1/bank-accounts/${input.id}/balance`,
 				{ balance: input.balance },
 			);
-			return response.data;
+			return data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Erro ao atualizar saldo');
@@ -247,10 +233,9 @@ export function useTotalBalance(): UseTotalBalanceReturn {
 	} = useQuery({
 		queryKey: ['bank-accounts', 'total-balance'],
 		queryFn: async () => {
-			const response = await apiClient.get<BankAccountApiResponse<Record<string, number>>>(
-				'/v1/bank-accounts/total-balance',
-			);
-			return response.data;
+			// apiClient already unwraps the response data
+			const data = await apiClient.get<Record<string, number>>('/v1/bank-accounts/total-balance');
+			return data;
 		},
 	});
 
@@ -275,10 +260,9 @@ export function useBankAccount(accountId: string): UseBankAccountReturn {
 	} = useQuery({
 		queryKey: ['bank-accounts', accountId],
 		queryFn: async () => {
-			const response = await apiClient.get<BankAccountApiResponse<BankAccount>>(
-				`/v1/bank-accounts/${accountId}`,
-			);
-			return response.data;
+			// apiClient already unwraps the response data
+			const data = await apiClient.get<BankAccount>(`/v1/bank-accounts/${accountId}`);
+			return data;
 		},
 		enabled: !!accountId,
 	});
@@ -301,12 +285,12 @@ export function useBalanceHistory(accountId: string, days = 30): UseBalanceHisto
 	} = useQuery({
 		queryKey: ['bank-accounts', accountId, 'history', days],
 		queryFn: async () => {
-			const response = await apiClient.get<
-				BankAccountApiResponse<Array<{ date: string; balance: number }>>
-			>(`/v1/bank-accounts/${accountId}/balance-history`, {
-				params: { days },
-			});
-			return response.data;
+			// apiClient already unwraps the response data
+			const data = await apiClient.get<Array<{ date: string; balance: number }>>(
+				`/v1/bank-accounts/${accountId}/balance-history`,
+				{ params: { days } },
+			);
+			return data;
 		},
 		enabled: !!accountId,
 	});

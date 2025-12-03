@@ -25,7 +25,7 @@ const listTransactionsSchema = z.object({
 	offset: z.coerce.number().int().min(0).default(0),
 	categoryId: z.string().optional(),
 	accountId: z.string().optional(),
-	type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto']).optional(),
+	type: z.enum(['transfer', 'debit', 'credit', 'pix', 'boleto', 'expense', 'income']).optional(),
 	status: z.enum(['cancelled', 'failed', 'pending', 'posted']).optional(),
 	startDate: z.string().optional(),
 	endDate: z.string().optional(),
@@ -87,7 +87,13 @@ transactionsRouter.get(
 			}
 
 			if (filters.type) {
-				conditions.push(eq(transactions.transactionType, filters.type));
+				// Map frontend filter terms to backend transaction types
+				const typeMap: Record<string, string> = {
+					expense: 'debit',
+					income: 'credit',
+				};
+				const backendType = typeMap[filters.type] || filters.type;
+				conditions.push(eq(transactions.transactionType, backendType));
 			}
 
 			if (filters.status) {

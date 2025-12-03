@@ -95,12 +95,19 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://api.openrouter.ai',
 			'https://clerk.aegiswallet.com', // Clerk Auth
 			'https://*.clerk.accounts.dev', // Clerk development
+			'https://accounts.google.com', // Google OAuth
+			'https://*.google.com', // Google services
+			'https://play.google.com', // Google Play services
 		],
 		defaultSrc: ["'self'"],
 		fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-		formAction: ["'self'"],
+		formAction: ["'self'", 'https://accounts.google.com'], // Google OAuth forms
 		frameAncestors: ["'none'"],
-		frameSrc: ["'none'"],
+		frameSrc: [
+			"'self'",
+			'https://accounts.google.com', // Google OAuth iframe
+			'https://*.google.com', // Google services iframes
+		],
 		imgSrc: [
 			"'self'",
 			'data:',
@@ -116,6 +123,8 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://cdn.jsdelivr.net',
 			'https://unpkg.com',
 			'https://js.stripe.com', // For future payment integration
+			'https://accounts.google.com', // Google OAuth scripts
+			'https://*.google.com', // Google services scripts
 		],
 		styleSrc: ["'self'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
 		upgradeInsecureRequests: true,

@@ -12,8 +12,8 @@ import { join } from 'path';
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
 const WEBHOOK_URL = process.env.WEBHOOK_URL || process.env.VERCEL_URL
-	? `https://${process.env.VERCEL_URL}/api/v1/webhooks/clerk`
-	: 'http://localhost:3000/api/v1/webhooks/clerk';
+	? `https://${process.env.VERCEL_URL}/api/webhooks/clerk`
+	: 'http://localhost:3000/api/webhooks/clerk';
 
 const REQUIRED_EVENTS = ['user.created', 'user.updated', 'user.deleted'];
 

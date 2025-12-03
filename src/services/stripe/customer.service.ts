@@ -121,6 +121,18 @@ export class StripeCustomerService {
 	static async deleteCustomer(stripeCustomerId: string) {
 		const stripe = getStripeClient();
 		try {
+			// Check if customer exists first
+			try {
+				await stripe.customers.retrieve(stripeCustomerId);
+			} catch (retrieveError: any) {
+				// If customer doesn't exist (404), that's fine - already deleted
+				if (retrieveError?.statusCode === 404) {
+					secureLogger.info('Stripe customer already deleted', { stripeCustomerId });
+					return;
+				}
+				throw retrieveError;
+			}
+
 			// Cancel active subscriptions first
 			const subscriptions = await stripe.subscriptions.list({
 				customer: stripeCustomerId,
@@ -128,16 +140,32 @@ export class StripeCustomerService {
 			});
 
 			for (const sub of subscriptions.data) {
-				await stripe.subscriptions.cancel(sub.id);
+				try {
+					await stripe.subscriptions.cancel(sub.id);
+					secureLogger.info('Stripe subscription canceled', { subscriptionId: sub.id, customerId: stripeCustomerId });
+				} catch (subError) {
+					// Log but continue - subscription might already be canceled
+					secureLogger.warn('Failed to cancel subscription, continuing', {
+						subscriptionId: sub.id,
+						error: subError instanceof Error ? subError.message : 'Unknown error',
+					});
+				}
 			}
 
 			await stripe.customers.del(stripeCustomerId);
 
 			secureLogger.info('Stripe customer deleted', { stripeCustomerId });
-		} catch (error) {
+		} catch (error: any) {
+			// If customer is already deleted (404), that's acceptable
+			if (error?.statusCode === 404) {
+				secureLogger.info('Stripe customer already deleted', { stripeCustomerId });
+				return;
+			}
+
 			secureLogger.error('Failed to delete Stripe customer', {
 				stripeCustomerId,
 				error: error instanceof Error ? error.message : 'Unknown error',
+				statusCode: error?.statusCode,
 			});
 			throw error;
 		}

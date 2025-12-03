@@ -4,10 +4,20 @@ Guia completo para configurar Clerk authentication e webhooks no AegisWallet.
 
 ## Visão Geral
 
-O AegisWallet usa Clerk para autenticação e gerencia usuários através de webhooks. Cada usuário criado no Clerk automaticamente recebe:
+O AegisWallet usa **Clerk + React (Vite)** para autenticação, mantendo **TanStack Router** como roteador (não React Router). O projeto usa `@clerk/clerk-react` (não `@clerk/react-router`).
+
+Cada usuário criado no Clerk automaticamente recebe:
 - Uma organização pessoal no banco de dados
 - Um cliente Stripe associado
 - Uma assinatura gratuita inicial
+
+## Diferenças Importantes: Clerk + React Router vs Clerk + TanStack Router
+
+**Este projeto usa TanStack Router**, então:
+- ✅ Usa `@clerk/clerk-react` (correto para React + Vite)
+- ❌ NÃO usa `@clerk/react-router` (apenas para React Router)
+- ✅ ClerkProvider configurado em `src/main.tsx`
+- ✅ Rotas protegidas usando `<SignedIn>` e `<SignedOut>` do `@clerk/clerk-react`
 
 ## Pré-requisitos
 
@@ -40,18 +50,19 @@ bun scripts/validate-clerk-webhook-setup.ts
 
 1. Acesse o [Clerk Dashboard](https://dashboard.clerk.com)
 2. Selecione ou crie uma aplicação
-3. Vá para **API Keys** e copie:
-   - `CLERK_SECRET_KEY` (formato: `sk_test_xxx` ou `sk_live_xxx`)
-   - `VITE_CLERK_PUBLISHABLE_KEY` (formato: `pk_test_xxx` ou `pk_live_xxx`)
+3. Vá para **API Keys** e escolha **React** no Quick Copy
+4. Copie as chaves:
+   - `VITE_CLERK_PUBLISHABLE_KEY` (formato: `pk_test_xxx` ou `pk_live_xxx`) - **IMPORTANTE**: Deve ter prefixo `VITE_` para Vite expor ao cliente
+   - `CLERK_SECRET_KEY` (formato: `sk_test_xxx` ou `sk_live_xxx`) - Server-side apenas
 
 #### Passo 2: Configurar Webhook
 
 1. No Clerk Dashboard, vá para **Webhooks**
 2. Clique em **Add Endpoint**
 3. Configure:
-   - **URL**: `https://your-domain.com/api/v1/webhooks/clerk`
+   - **URL**: `https://your-domain.com/api/webhooks/clerk`
      - Para desenvolvimento local: use ngrok ou similar
-     - Para produção: use sua URL do Vercel/deploy
+     - Para produção: use sua URL do Vercel/deploy (ex: `https://aegiswallet.vercel.app/api/webhooks/clerk`)
    - **Events**: Selecione:
      - `user.created`
      - `user.updated`
@@ -99,15 +110,29 @@ Este script irá:
 
 ## Verificação
 
-### Testar Webhook Localmente
+### Validação Completa da Integração
+
+Execute o script de validação completo que verifica todos os aspectos da integração:
 
 ```bash
+# Validação completa (recomendado)
+bun scripts/validate-clerk-integration.ts
+
+# Validação específica de webhook
+bun scripts/validate-clerk-webhook-setup.ts
+
 # Testar webhook endpoint
 bun scripts/test-clerk-webhook.ts
-
-# Validar configuração completa
-bun scripts/validate-clerk-webhook-setup.ts
 ```
+
+O script de validação completa verifica:
+- ✅ Variáveis de ambiente (`VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`)
+- ✅ ClerkProvider setup em `src/main.tsx`
+- ✅ Componentes Clerk (`SignedIn`, `SignedOut`, etc.)
+- ✅ Conexão com Clerk API
+- ✅ Webhook handler e eventos
+- ✅ Route guards com TanStack Router
+- ✅ AuthContext e hooks do Clerk
 
 ### Verificar Banco de Dados
 
@@ -146,7 +171,7 @@ Quando um novo usuário se cadastra no Clerk:
 1. **Verifique a URL do webhook**:
    ```bash
    # Teste manualmente
-   curl -X POST https://your-domain.com/api/v1/webhooks/clerk \
+   curl -X POST https://your-domain.com/api/webhooks/clerk \
      -H "Content-Type: application/json" \
      -d '{"test": true}'
    ```
@@ -200,6 +225,9 @@ O sistema usa idempotência para evitar duplicatas. Se ainda ocorrer:
 ## Comandos Úteis
 
 ```bash
+# Validação completa da integração (RECOMENDADO PRIMEIRO)
+bun scripts/validate-clerk-integration.ts
+
 # Setup completo
 bun scripts/clerk-setup-webhook.ts && \
 bun scripts/clerk-sync-users.ts && \
@@ -216,6 +244,26 @@ bun scripts/neon-apply-migrations.ts
 bun scripts/neon-verify-database.ts
 bun scripts/validate-clerk-webhook-setup.ts
 ```
+
+## Validação Pré-Deploy
+
+Antes de fazer deploy, execute a validação completa:
+
+```bash
+# 1. Validar integração Clerk
+bun scripts/validate-clerk-integration.ts
+
+# 2. Validar webhooks
+bun scripts/validate-clerk-webhook-setup.ts
+
+# 3. Validar banco de dados
+bun scripts/neon-verify-database.ts
+
+# 4. Verificar variáveis de ambiente
+bun scripts/check-env.ts
+```
+
+Todos os scripts devem passar sem erros críticos antes do deploy.
 
 ## Estrutura de Dados
 
@@ -253,10 +301,55 @@ O usuário é automaticamente adicionado como admin:
 - Transações garantem atomicidade (tudo ou nada)
 - RLS (Row Level Security) isola dados por organização
 
+## Troubleshooting Adicional
+
+### Erro: "VITE_CLERK_PUBLISHABLE_KEY is missing"
+
+**Causa**: A variável de ambiente não está configurada ou não tem o prefixo `VITE_`.
+
+**Solução**:
+1. Verifique que a variável está em `.env.local` ou `.env`
+2. Certifique-se de que o nome é exatamente `VITE_CLERK_PUBLISHABLE_KEY` (com prefixo `VITE_`)
+3. Reinicie o servidor de desenvolvimento após adicionar
+
+### Erro: "Invalid VITE_CLERK_PUBLISHABLE_KEY format"
+
+**Causa**: A chave não está no formato correto.
+
+**Solução**:
+- A chave deve começar com `pk_test_` (desenvolvimento) ou `pk_live_` (produção)
+- Obtenha a chave correta do Clerk Dashboard > API Keys > React
+
+### Componentes Clerk não funcionam
+
+**Causa**: ClerkProvider não está configurado corretamente ou não envolve a aplicação.
+
+**Solução**:
+1. Verifique que `ClerkProvider` está em `src/main.tsx` envolvendo `<App />`
+2. Execute `bun scripts/validate-clerk-integration.ts` para diagnóstico completo
+
+### Rotas não estão protegidas
+
+**Causa**: Route guards não estão configurados corretamente.
+
+**Solução**:
+1. Verifique `src/routes/__root.tsx` usa `<SignedIn>` e `<SignedOut>`
+2. Certifique-se de que rotas públicas estão na lista `PUBLIC_PAGES`
+3. Use `RedirectToSignIn` para redirecionar usuários não autenticados
+
 ## Referências
 
-- [Clerk Documentation](https://clerk.com/docs)
+- [Clerk React Quickstart](https://clerk.com/docs/quickstarts/react) - Guia oficial para React + Vite
+- [Clerk React Reference](https://clerk.com/docs/reference/react/overview) - Documentação completa do SDK
 - [Clerk Webhooks Guide](https://clerk.com/docs/integrations/webhooks/overview)
+- [TanStack Router Documentation](https://tanstack.com/router/latest) - Roteador usado no projeto
 - [Neon Database Setup](./neon-setup-validation.md)
 - [Stripe Integration](../architecture/billing.md)
+
+## Notas Importantes
+
+- ⚠️ **NÃO migrar para React Router** - Este projeto usa TanStack Router
+- ⚠️ **NÃO usar @clerk/react-router** - Use apenas `@clerk/clerk-react`
+- ✅ **Sempre use prefixo `VITE_`** para variáveis de ambiente expostas ao cliente
+- ✅ **Valide antes de fazer deploy** usando `bun scripts/validate-clerk-integration.ts`
 

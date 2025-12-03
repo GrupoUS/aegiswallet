@@ -7,20 +7,29 @@
 // Clerk publishable key from environment
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-// Note: Clerk is currently stubbed, so we warn instead of throwing
-if (!clerkPublishableKey) {
-	// biome-ignore lint/suspicious/noConsole: Critical error for production
-	console.error(
-		'[Clerk] Critical Error: VITE_CLERK_PUBLISHABLE_KEY is missing in production! Please check your Vercel environment variables and ensure CLERK_PUBLISHABLE_KEY is set correctly.',
-	);
+// Validate publishable key format if present
+if (clerkPublishableKey) {
+	if (!clerkPublishableKey.startsWith('pk_test_') && !clerkPublishableKey.startsWith('pk_live_')) {
+		// biome-ignore lint/suspicious/noConsole: Critical error for invalid format
+		console.error(
+			'[Clerk] Invalid VITE_CLERK_PUBLISHABLE_KEY format! Must start with pk_test_ or pk_live_',
+		);
+	}
 }
 
-// Note: Development warning only if key is missing
-if (!clerkPublishableKey && import.meta.env.DEV) {
-	// biome-ignore lint/suspicious/noConsole: Intentional warning for dev environment
-	console.warn(
-		'[Clerk] Missing VITE_CLERK_PUBLISHABLE_KEY - authentication features will be disabled',
-	);
+// Note: Clerk is currently stubbed, so we warn instead of throwing
+if (!clerkPublishableKey) {
+	if (import.meta.env.PROD) {
+		// biome-ignore lint/suspicious/noConsole: Critical error for production
+		console.error(
+			'[Clerk] Critical Error: VITE_CLERK_PUBLISHABLE_KEY is missing in production! Please check your Vercel environment variables and ensure VITE_CLERK_PUBLISHABLE_KEY is set correctly.',
+		);
+	} else {
+		// biome-ignore lint/suspicious/noConsole: Intentional warning for dev environment
+		console.warn(
+			'[Clerk] Missing VITE_CLERK_PUBLISHABLE_KEY - authentication features will be disabled',
+		);
+	}
 }
 
 /**

@@ -6,10 +6,20 @@
  */
 
 import { eq } from 'drizzle-orm';
+import type { ExtractTablesWithRelations } from 'drizzle-orm';
+import type { PgTransaction } from 'drizzle-orm/pg-core';
+import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import { getPoolClient } from '@/db/client';
+import * as schema from '@/db/schema';
 import { organizations, organizationMembers, organizationSettings } from '@/db/schema/organizations';
 import { users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
+
+type Transaction = PgTransaction<
+	PostgresJsQueryResultHKT,
+	typeof schema,
+	ExtractTablesWithRelations<typeof schema>
+>;
 
 export class OrganizationService {
 	/**
@@ -22,14 +32,16 @@ export class OrganizationService {
 	 * @param userId - Clerk user ID
 	 * @param email - User email
 	 * @param name - User full name (optional)
+	 * @param tx - Optional database transaction (if provided, uses it instead of creating a new transaction)
 	 * @returns Organization ID
 	 */
 	static async createUserOrganization(
 		userId: string,
 		email: string,
 		name?: string,
+		tx?: Transaction,
 	): Promise<string> {
-		const db = getPoolClient();
+		const db = tx || getPoolClient();
 
 		try {
 			// Check if user already has an organization
@@ -69,9 +81,9 @@ export class OrganizationService {
 			// Create organization name from user name or email
 			const orgName = name || email.split('@')[0] || `User ${userId.slice(-8)}`;
 
-			// Use transaction to ensure atomicity
-			await db.transaction(async (tx) => {
-				// 1. Create organization
+			// If transaction is provided, use it directly; otherwise create a new transaction
+			if (tx) {
+				// Use provided transaction
 				await tx.insert(organizations).values({
 					id: organizationId,
 					name: orgName,
@@ -82,7 +94,6 @@ export class OrganizationService {
 					memberLimit: 1, // Personal organization
 				});
 
-				// 2. Create organization member (user as admin)
 				await tx.insert(organizationMembers).values({
 					organizationId,
 					userId,
@@ -90,7 +101,6 @@ export class OrganizationService {
 					status: 'active',
 				});
 
-				// 3. Create default organization settings
 				await tx.insert(organizationSettings).values({
 					organizationId,
 					defaultLanguage: 'pt-BR',
@@ -98,13 +108,44 @@ export class OrganizationService {
 					currency: 'BRL',
 					dateFormat: 'dd/MM/yyyy',
 				});
+			} else {
+				// Create new transaction
+				await db.transaction(async (transaction) => {
+					// 1. Create organization
+					await transaction.insert(organizations).values({
+						id: organizationId,
+						name: orgName,
+						fantasyName: orgName,
+						email,
+						organizationType: 'individual',
+						status: 'active',
+						memberLimit: 1, // Personal organization
+					});
 
-				secureLogger.info('Organization created for user', {
-					userId,
-					organizationId,
-					email,
-					name: orgName,
+					// 2. Create organization member (user as admin)
+					await transaction.insert(organizationMembers).values({
+						organizationId,
+						userId,
+						role: 'admin',
+						status: 'active',
+					});
+
+					// 3. Create default organization settings
+					await transaction.insert(organizationSettings).values({
+						organizationId,
+						defaultLanguage: 'pt-BR',
+						timezone: 'America/Sao_Paulo',
+						currency: 'BRL',
+						dateFormat: 'dd/MM/yyyy',
+					});
 				});
+			}
+
+			secureLogger.info('Organization created for user', {
+				userId,
+				organizationId,
+				email,
+				name: orgName,
 			});
 
 			return organizationId;

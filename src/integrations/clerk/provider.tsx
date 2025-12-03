@@ -64,6 +64,7 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
 			signUpUrl={clerkUrls.signUp}
 			signInFallbackRedirectUrl={clerkUrls.afterSignIn}
 			signUpFallbackRedirectUrl={clerkUrls.afterSignUp}
+			afterSignOutUrl={clerkUrls.afterSignOut}
 		>
 			{children}
 		</BaseClerkProvider>

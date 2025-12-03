@@ -92,7 +92,9 @@
 		"db:repair": "bun scripts/database-auto-repair.ts",
 		"db:optimize": "bun scripts/database-performance-optimizer.ts",
 		"db:compliance": "bun scripts/lgpd-compliance-validator.ts",
-		"db:toolkit": "bun scripts/database-specialist-toolkit.ts"
+		"db:toolkit": "bun scripts/database-specialist-toolkit.ts",
+		"validate:clerk": "bun scripts/validate-clerk-integration.ts",
+		"validate:clerk:webhook": "bun scripts/validate-clerk-webhook-setup.ts"
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^2.0.50",

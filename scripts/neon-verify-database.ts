@@ -62,7 +62,9 @@ async function validateSchema() {
 				AND table_name = ${table.name};
 			`);
 
-			const existingColumns = result.map((r: any) => r.column_name);
+			// Handle Neon response format (array or object)
+			const resultArray = Array.isArray(result) ? result : (result.rows || [result] || []);
+			const existingColumns = resultArray.map((r: any) => r.column_name || r.column_name);
 			const missingColumns = table.requiredColumns.filter(
 				col => !existingColumns.includes(col),
 			);
@@ -76,7 +78,7 @@ async function validateSchema() {
 		}
 
 		// Check constraints
-		const constraints = await db.execute(sql`
+		const constraintsResult = await db.execute(sql`
 			SELECT
 				tc.table_name,
 				tc.constraint_name,
@@ -87,10 +89,11 @@ async function validateSchema() {
 			ORDER BY tc.table_name, tc.constraint_type;
 		`);
 
-		console.log(`   📊 Found ${constraints.length} constraints`);
+		const constraintsArray = Array.isArray(constraintsResult) ? constraintsResult : (constraintsResult.rows || [constraintsResult] || []);
+		console.log(`   📊 Found ${constraintsArray.length} constraints`);
 
 		// Check for NOT NULL constraints on critical columns
-		const notNullChecks = await db.execute(sql`
+		const notNullResult = await db.execute(sql`
 			SELECT
 				table_name,
 				column_name
@@ -101,7 +104,8 @@ async function validateSchema() {
 			AND column_name IN ('id', 'email', 'organization_id', 'user_id');
 		`);
 
-		console.log(`   ✅ ${notNullChecks.length} critical columns have NOT NULL constraints`);
+		const notNullArray = Array.isArray(notNullResult) ? notNullResult : (notNullResult.rows || [notNullResult] || []);
+		console.log(`   ✅ ${notNullArray.length} critical columns have NOT NULL constraints`);
 
 		if (issues.length > 0) {
 			console.log('\n⚠️  Schema issues found:');
@@ -127,7 +131,7 @@ async function verifyRLSPolicies() {
 
 	try {
 		// Check if RLS is enabled on critical tables
-		const rlsTables = await db.execute(sql`
+		const rlsTablesResult = await db.execute(sql`
 			SELECT
 				schemaname,
 				tablename,
@@ -137,6 +141,7 @@ async function verifyRLSPolicies() {
 			AND tablename IN ('users', 'organizations', 'transactions', 'bank_accounts');
 		`);
 
+		const rlsTables = Array.isArray(rlsTablesResult) ? rlsTablesResult : (rlsTablesResult.rows || [rlsTablesResult] || []);
 		let rlsEnabledCount = 0;
 		for (const table of rlsTables) {
 			if (table.rowsecurity) {
@@ -148,7 +153,7 @@ async function verifyRLSPolicies() {
 		}
 
 		// Check for RLS policies
-		const policies = await db.execute(sql`
+		const policiesResult = await db.execute(sql`
 			SELECT
 				schemaname,
 				tablename,
@@ -158,6 +163,7 @@ async function verifyRLSPolicies() {
 			AND tablename IN ('users', 'organizations', 'transactions', 'bank_accounts');
 		`);
 
+		const policies = Array.isArray(policiesResult) ? policiesResult : (policiesResult.rows || [policiesResult] || []);
 		console.log(`   📊 Found ${policies.length} RLS policies`);
 
 		if (rlsEnabledCount === rlsTables.length && policies.length > 0) {
@@ -184,14 +190,15 @@ async function identifyOrphanedData() {
 
 	try {
 		// Users without organization (except default)
-		const usersWithoutOrg = await db.execute(sql`
+		const usersWithoutOrgResult = await db.execute(sql`
 			SELECT COUNT(*) as count
 			FROM users
 			WHERE organization_id IS NULL
 			OR organization_id = 'default';
 		`);
 
-		const orphanedUsers = Number(usersWithoutOrg[0]?.count || 0);
+		const usersWithoutOrgArray = Array.isArray(usersWithoutOrgResult) ? usersWithoutOrgResult : (usersWithoutOrgResult.rows || [usersWithoutOrgResult] || []);
+		const orphanedUsers = Number(usersWithoutOrgArray[0]?.count || 0);
 		if (orphanedUsers > 0) {
 			issues.push(`${orphanedUsers} users without valid organization`);
 			console.log(`   ⚠️  Found ${orphanedUsers} users without valid organization`);
@@ -200,14 +207,15 @@ async function identifyOrphanedData() {
 		}
 
 		// Organization members without organization
-		const membersWithoutOrg = await db.execute(sql`
+		const membersWithoutOrgResult = await db.execute(sql`
 			SELECT COUNT(*) as count
 			FROM organization_members om
 			LEFT JOIN organizations o ON om.organization_id = o.id
 			WHERE o.id IS NULL;
 		`);
 
-		const orphanedMembers = Number(membersWithoutOrg[0]?.count || 0);
+		const membersWithoutOrgArray = Array.isArray(membersWithoutOrgResult) ? membersWithoutOrgResult : (membersWithoutOrgResult.rows || [membersWithoutOrgResult] || []);
+		const orphanedMembers = Number(membersWithoutOrgArray[0]?.count || 0);
 		if (orphanedMembers > 0) {
 			issues.push(`${orphanedMembers} organization members without valid organization`);
 			console.log(`   ⚠️  Found ${orphanedMembers} organization members without valid organization`);
@@ -216,14 +224,15 @@ async function identifyOrphanedData() {
 		}
 
 		// Subscriptions without users
-		const subsWithoutUsers = await db.execute(sql`
+		const subsWithoutUsersResult = await db.execute(sql`
 			SELECT COUNT(*) as count
 			FROM subscriptions s
 			LEFT JOIN users u ON s.user_id = u.id
 			WHERE u.id IS NULL;
 		`);
 
-		const orphanedSubs = Number(subsWithoutUsers[0]?.count || 0);
+		const subsWithoutUsersArray = Array.isArray(subsWithoutUsersResult) ? subsWithoutUsersResult : (subsWithoutUsersResult.rows || [subsWithoutUsersResult] || []);
+		const orphanedSubs = Number(subsWithoutUsersArray[0]?.count || 0);
 		if (orphanedSubs > 0) {
 			issues.push(`${orphanedSubs} subscriptions without valid users`);
 			console.log(`   ⚠️  Found ${orphanedSubs} subscriptions without valid users`);
@@ -232,7 +241,7 @@ async function identifyOrphanedData() {
 		}
 
 		// Organizations without members
-		const orgsWithoutMembers = await db.execute(sql`
+		const orgsWithoutMembersResult = await db.execute(sql`
 			SELECT o.id, o.name, COUNT(om.id) as member_count
 			FROM organizations o
 			LEFT JOIN organization_members om ON o.id = om.organization_id
@@ -240,7 +249,8 @@ async function identifyOrphanedData() {
 			HAVING COUNT(om.id) = 0;
 		`);
 
-		const orphanedOrgs = orgsWithoutMembers.length;
+		const orgsWithoutMembersArray = Array.isArray(orgsWithoutMembersResult) ? orgsWithoutMembersResult : (orgsWithoutMembersResult.rows || [orgsWithoutMembersResult] || []);
+		const orphanedOrgs = orgsWithoutMembersArray.length;
 		if (orphanedOrgs > 0) {
 			issues.push(`${orphanedOrgs} organizations without members`);
 			console.log(`   ⚠️  Found ${orphanedOrgs} organizations without members`);
@@ -271,7 +281,7 @@ async function getDatabaseStats() {
 	const db = getPoolClient();
 
 	try {
-		const stats = await db.execute(sql`
+		const statsResult = await db.execute(sql`
 			SELECT
 				(SELECT COUNT(*) FROM users) as user_count,
 				(SELECT COUNT(*) FROM organizations) as org_count,
@@ -279,11 +289,14 @@ async function getDatabaseStats() {
 				(SELECT COUNT(*) FROM organization_members) as member_count;
 		`);
 
-		const statsData = stats[0] as any;
-		console.log(`   👥 Users: ${statsData.user_count}`);
-		console.log(`   🏢 Organizations: ${statsData.org_count}`);
-		console.log(`   💳 Subscriptions: ${statsData.subscription_count}`);
-		console.log(`   👤 Organization Members: ${statsData.member_count}`);
+		const statsArray = Array.isArray(statsResult) ? statsResult : (statsResult.rows || [statsResult] || []);
+		const statsData = statsArray[0] as any;
+		if (statsData) {
+			console.log(`   👥 Users: ${statsData.user_count || 0}`);
+			console.log(`   🏢 Organizations: ${statsData.org_count || 0}`);
+			console.log(`   💳 Subscriptions: ${statsData.subscription_count || 0}`);
+			console.log(`   👤 Organization Members: ${statsData.member_count || 0}`);
+		}
 	} catch (error) {
 		console.log(`   ⚠️  Could not retrieve statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
 	}

@@ -82,15 +82,16 @@ async function validateDatabase() {
 
 		// Check users table structure
 		console.log('👤 Checking users table schema...');
-		const usersTableInfo = await db.execute(`
+		const usersTableInfoResult = await db.execute(`
 			SELECT column_name, data_type, is_nullable, column_default
 			FROM information_schema.columns
 			WHERE table_name = 'users'
 			ORDER BY ordinal_position
 		`);
 
+		const usersTableInfo = Array.isArray(usersTableInfoResult) ? usersTableInfoResult : (usersTableInfoResult.rows || [usersTableInfoResult] || []);
 		const requiredUserColumns = ['id', 'email', 'full_name'];
-		const existingUserColumns = usersTableInfo.map(row => row.column_name);
+		const existingUserColumns = usersTableInfo.map((row: any) => row.column_name);
 
 		for (const column of requiredUserColumns) {
 			if (existingUserColumns.includes(column)) {
@@ -103,15 +104,16 @@ async function validateDatabase() {
 
 		// Check subscriptions table structure
 		console.log('💳 Checking subscriptions table schema...');
-		const subscriptionsTableInfo = await db.execute(`
+		const subscriptionsTableInfoResult = await db.execute(`
 			SELECT column_name, data_type, is_nullable, column_default
 			FROM information_schema.columns
 			WHERE table_name = 'subscriptions'
 			ORDER BY ordinal_position
 		`);
 
+		const subscriptionsTableInfo = Array.isArray(subscriptionsTableInfoResult) ? subscriptionsTableInfoResult : (subscriptionsTableInfoResult.rows || [subscriptionsTableInfoResult] || []);
 		const requiredSubscriptionColumns = ['id', 'user_id', 'stripe_customer_id', 'plan_id', 'status'];
-		const existingSubscriptionColumns = subscriptionsTableInfo.map(row => row.column_name);
+		const existingSubscriptionColumns = subscriptionsTableInfo.map((row: any) => row.column_name);
 
 		for (const column of requiredSubscriptionColumns) {
 			if (existingSubscriptionColumns.includes(column)) {
@@ -166,7 +168,7 @@ function validateWebhookHandler() {
 	console.log('\n📁 Checking webhook handler file...');
 
 	const webhookFilePath = join(process.cwd(), 'src/server/webhooks/clerk.ts');
-	
+
 	try {
 		const fileContent = readFileSync(webhookFilePath, 'utf-8');
 
@@ -228,7 +230,7 @@ async function validateStripe() {
 		// Check if Stripe service exists
 		const stripeServicePath = join(process.cwd(), 'src/services/stripe/customer.service.ts');
 		const stripeServiceContent = readFileSync(stripeServicePath, 'utf-8');
-		
+
 		if (stripeServiceContent.includes('createCustomer') && stripeServiceContent.includes('deleteCustomer')) {
 			console.log('   ✅ Stripe customer service methods found');
 		} else {
@@ -248,7 +250,7 @@ async function validateStripe() {
 async function validateWebhookEndpoint() {
 	console.log('\n🌐 Checking webhook endpoint accessibility...');
 
-	const webhookUrl = process.env.WEBHOOK_URL || 'http://localhost:3000/api/v1/webhooks/clerk';
+	const webhookUrl = process.env.WEBHOOK_URL || 'http://localhost:3000/api/webhooks/clerk';
 
 	try {
 		// Basic connectivity test
@@ -332,7 +334,13 @@ async function runValidation() {
 }
 
 // Check if running directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
+	runValidation().catch(error => {
+		console.error('💥 Validation failed:', error);
+		process.exit(1);
+	});
+} else {
+	// Also run if called via bun directly
 	runValidation().catch(error => {
 		console.error('💥 Validation failed:', error);
 		process.exit(1);

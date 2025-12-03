@@ -16,6 +16,22 @@ import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
 
+/**
+ * Safely parse a date string, returning null for invalid dates
+ */
+function safeParseDate(dateString: string | null | undefined): Date | null {
+	if (!dateString) return null;
+
+	const date = new Date(dateString);
+
+	// Check if date is valid
+	if (Number.isNaN(date.getTime())) {
+		return null;
+	}
+
+	return date;
+}
+
 // =====================================================
 // Validation Schemas
 // =====================================================

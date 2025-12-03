@@ -24,7 +24,7 @@ import {
 import { type Transaction, useDeleteTransaction, useTransactions } from '@/hooks/use-transactions';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { logger } from '@/lib/logging';
-import { safeFormatDate, safeParseDate } from '@/lib/utils/date-validation';
+import { safeParseDate } from '@/lib/utils/date-validation';
 
 /**
  * Enhanced safe date formatting for transactions with multiple fallback fields

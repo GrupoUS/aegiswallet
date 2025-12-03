@@ -93,20 +93,30 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https://api.openai.com',
 			'https://api.anthropic.com',
 			'https://api.openrouter.ai',
+			'https://generativelanguage.googleapis.com', // Google Gemini API
 			'https://clerk.aegiswallet.com', // Clerk Auth
 			'https://*.clerk.accounts.dev', // Clerk development
+			'https://*.clerk.com', // Clerk services
 			'https://accounts.google.com', // Google OAuth
 			'https://*.google.com', // Google services
 			'https://play.google.com', // Google Play services
 		],
 		defaultSrc: ["'self'"],
-		fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-		formAction: ["'self'", 'https://accounts.google.com'], // Google OAuth forms
+		fontSrc: [
+			"'self'",
+			'https://fonts.gstatic.com',
+			'https://cdn.jsdelivr.net',
+			'https://r2cdn.perplexity.ai', // Perplexity fonts
+			'https://*.clerk.accounts.dev', // Clerk fonts
+		],
+		formAction: ["'self'", 'https://accounts.google.com', 'https://*.clerk.accounts.dev'], // Google OAuth and Clerk forms
 		frameAncestors: ["'none'"],
 		frameSrc: [
 			"'self'",
 			'https://accounts.google.com', // Google OAuth iframe
 			'https://*.google.com', // Google services iframes
+			'https://*.clerk.accounts.dev', // Clerk iframes
+			'https://clerk.aegiswallet.com', // Clerk production
 		],
 		imgSrc: [
 			"'self'",
@@ -114,19 +124,29 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 			'https:',
 			'https://avatars.githubusercontent.com',
 			'https://ui-avatars.com',
+			'https://img.clerk.com', // Clerk images
+			'https://*.clerk.com', // Clerk images
 		],
 		manifestSrc: ["'self'"],
 		mediaSrc: ["'self'"],
 		objectSrc: ["'none'"],
 		scriptSrc: [
 			"'self'",
+			"'unsafe-inline'", // Required for Clerk SDK
 			'https://cdn.jsdelivr.net',
 			'https://unpkg.com',
 			'https://js.stripe.com', // For future payment integration
 			'https://accounts.google.com', // Google OAuth scripts
 			'https://*.google.com', // Google services scripts
+			'https://*.clerk.accounts.dev', // Clerk scripts
+			'https://clerk.aegiswallet.com', // Clerk production
 		],
-		styleSrc: ["'self'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+		styleSrc: [
+			"'self'",
+			'https://fonts.googleapis.com',
+			'https://cdn.jsdelivr.net',
+			"'unsafe-inline'", // Required for React/Vite inline styles
+		],
 		upgradeInsecureRequests: true,
 		workerSrc: ["'self'", 'blob:'],
 	},

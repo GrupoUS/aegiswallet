@@ -16,6 +16,15 @@ export {
 	type RecentTransaction,
 } from './ai-context.service';
 export {
+	clearAllContextCaches,
+	FinancialContextCache,
+	getCachedFinancialContext,
+	getContextCacheStats,
+	hasContextCache,
+	invalidateFinancialContextCache,
+	invalidateMultipleContextCaches,
+} from './context-cache';
+export {
 	detectSpendingAnomalies,
 	type FinancialAlert,
 	generateFinancialAlerts,

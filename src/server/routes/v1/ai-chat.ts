@@ -51,8 +51,9 @@ function validateBrazilianPortugueseContent(content: string): AIResponseValidati
 }
 
 import { logAIOperation } from '@/lib/ai/audit/logger';
+import { buildAnalysisPrompt, PROMPT_CONFIG } from '@/lib/ai/config/prompt-config';
 import { verifyAIConsent } from '@/lib/ai/consent';
-import { formatContextForPrompt, getAIFinancialContext } from '@/lib/ai/context';
+import { formatContextForPrompt, getCachedFinancialContext } from '@/lib/ai/context';
 import { AI_SECURITY_PROMPT } from '@/lib/ai/prompts/security-prompt';
 import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
 import { AIProviderSchema, getAvailableProviders, getModel } from '@/lib/ai/providers';
@@ -161,16 +162,38 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 		const model = getModel(provider, tier);
 		const tools = createAllTools(userId, auth.db);
 
-		// Get user's financial context for AI
-		const financialContext = await getAIFinancialContext(
+		// Get user's financial context for AI (with caching)
+		const financialContext = await getCachedFinancialContext(
 			userId,
 			auth.db,
 			auth.user.fullName?.split(' ')[0] ?? 'Usuário',
 		);
 		const formattedContext = formatContextForPrompt(financialContext);
 
-		// Build enhanced system prompt with security layer
-		const enhancedSystemPrompt = `${FINANCIAL_ASSISTANT_SYSTEM_PROMPT}\n\n${AI_SECURITY_PROMPT}`;
+		// Build enhanced system prompt with security layer from config
+		// Using PROMPT_CONFIG for centralized prompt management
+		const baseSystemPrompt = FINANCIAL_ASSISTANT_SYSTEM_PROMPT;
+		const securityPrompt = AI_SECURITY_PROMPT;
+
+		// Check if user is requesting a specific analysis type
+		const analysisMatch = lastUserContent?.match(
+			/\b(spending_analysis|budget_tracking|goal_progress|financial_health|savings_opportunities|investment_readiness)\b/i,
+		);
+		const analysisType = analysisMatch ? analysisMatch[1].toLowerCase() : null;
+
+		// Compose the system prompt based on context and analysis type
+		let enhancedSystemPrompt: string;
+		if (analysisType) {
+			// Use buildAnalysisPrompt for specific analysis requests
+			enhancedSystemPrompt = `${buildAnalysisPrompt(baseSystemPrompt, analysisType, formattedContext)}\n\n${securityPrompt}`;
+		} else {
+			// Standard prompt composition
+			enhancedSystemPrompt = `${baseSystemPrompt}\n\n${securityPrompt}`;
+		}
+
+		// Apply security limits from config
+		const maxHistory = PROMPT_CONFIG.securityLimits.maxConversationHistory;
+		const truncatedMessages = messages.slice(-maxHistory);
 
 		// Prepare messages with context injection
 		const messagesWithContext = [
@@ -184,8 +207,8 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 				content:
 					'Entendi o contexto financeiro. Estou pronto para ajudar com suas finanças. Como posso auxiliá-lo?',
 			},
-			// Add user's actual messages
-			...messages,
+			// Add user's actual messages (truncated per security config)
+			...truncatedMessages,
 		];
 
 		const result = streamText({

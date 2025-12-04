@@ -34,6 +34,7 @@ interface GoalProgress {
 	progressPercent: number;
 	targetDate: Date | null;
 	status: 'overdue' | 'urgent' | 'on_track' | 'completed';
+	daysRemaining: number | null;
 }
 
 interface AccountSummary {

@@ -88,6 +88,12 @@ export {
 	type PixPaymentMethodDetails,
 	paymentMethodTypeEnum,
 } from './contacts';
+// Financial Goals
+export {
+	type FinancialGoal,
+	financialGoals,
+	type InsertFinancialGoal,
+} from './financial-goals';
 // Google Calendar Sync
 export {
 	// Types
@@ -282,6 +288,7 @@ export {
 	eventRemindersRelations,
 	eventTypesRelations,
 	financialEventsRelations,
+	financialGoalsRelations,
 	googleCalendarTokensRelations,
 	legalHoldsRelations,
 	lgpdConsentLogsRelations,

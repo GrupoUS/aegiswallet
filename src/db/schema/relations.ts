@@ -12,6 +12,7 @@ import { paymentHistory, subscriptionPlans, subscriptions } from './billing';
 import { boletoPayments, boletos } from './boletos';
 import { eventReminders, eventTypes, financialEvents } from './calendar';
 import { contactPaymentMethods, contacts } from './contacts';
+import { financialGoals } from './financial-goals';
 import {
 	calendarSyncAudit,
 	calendarSyncMappings,
@@ -95,6 +96,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 	// Billing & Subscriptions
 	subscriptions: many(subscriptions),
 	paymentHistory: many(paymentHistory),
+	// Financial Goals
+	financialGoals: many(financialGoals),
 	// Google Calendar Sync
 	googleCalendarTokens: many(googleCalendarTokens),
 	calendarSyncSettings: many(calendarSyncSettings),
@@ -602,6 +605,17 @@ export const calendarSyncQueueRelations = relations(calendarSyncQueue, ({ one })
 export const calendarSyncAuditRelations = relations(calendarSyncAudit, ({ one }) => ({
 	user: one(users, {
 		fields: [calendarSyncAudit.userId],
+		references: [users.id],
+	}),
+}));
+
+// ========================================
+// FINANCIAL GOALS RELATIONS
+// ========================================
+
+export const financialGoalsRelations = relations(financialGoals, ({ one }) => ({
+	user: one(users, {
+		fields: [financialGoals.userId],
 		references: [users.id],
 	}),
 }));

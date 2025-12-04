@@ -13,6 +13,7 @@ import {
 	bankAccounts,
 	budgetCategories,
 	financialEvents,
+	financialGoals,
 	transactionCategories,
 	transactions,
 } from '@/db/schema';
@@ -59,6 +60,7 @@ export interface GoalProgress {
 	progressPercent: number;
 	targetDate: Date | null;
 	status: 'overdue' | 'urgent' | 'on_track' | 'completed';
+	daysRemaining: number | null;
 }
 
 export interface RecentTransaction {
@@ -74,6 +76,7 @@ export interface FinancialContext {
 	summary: FinancialSummary;
 	monthlySpending: CategorySpending[];
 	budgets: BudgetStatus[];
+	goals: GoalProgress[];
 	upcomingPayments: { description: string; amount: number; dueDate: Date }[];
 	recentTransactions: RecentTransaction[];
 	alerts: FinancialAlert[];
@@ -96,84 +99,98 @@ export async function getAIFinancialContext(
 	const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
 	// Fetch all data in parallel for performance
-	const [accounts, monthlyTxns, budgetData, upcoming, recent, categories] = await Promise.all([
-		// 1. Account balances
-		db
-			.select({
-				accountType: bankAccounts.accountType,
-				balance: bankAccounts.balance,
-				availableBalance: bankAccounts.availableBalance,
-			})
-			.from(bankAccounts)
-			.where(and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true))),
+	const [accounts, monthlyTxns, budgetData, upcoming, recent, categories, goalsData] =
+		await Promise.all([
+			// 1. Account balances
+			db
+				.select({
+					accountType: bankAccounts.accountType,
+					balance: bankAccounts.balance,
+					availableBalance: bankAccounts.availableBalance,
+				})
+				.from(bankAccounts)
+				.where(and(eq(bankAccounts.userId, userId), eq(bankAccounts.isActive, true))),
 
-		// 2. Monthly transactions for spending summary
-		db
-			.select({
-				categoryId: transactions.categoryId,
-				amount: transactions.amount,
-			})
-			.from(transactions)
-			.where(
-				and(
-					eq(transactions.userId, userId),
-					gte(transactions.transactionDate, startOfMonth),
-					lte(transactions.transactionDate, endOfMonth),
-					lte(transactions.amount, '0'), // Only expenses
+			// 2. Monthly transactions for spending summary
+			db
+				.select({
+					categoryId: transactions.categoryId,
+					amount: transactions.amount,
+				})
+				.from(transactions)
+				.where(
+					and(
+						eq(transactions.userId, userId),
+						gte(transactions.transactionDate, startOfMonth),
+						lte(transactions.transactionDate, endOfMonth),
+						lte(transactions.amount, '0'), // Only expenses
+					),
 				),
-			),
 
-		// 3. Budget categories
-		db
-			.select({
-				categoryId: budgetCategories.categoryId,
-				budgetAmount: budgetCategories.budgetAmount,
-			})
-			.from(budgetCategories)
-			.where(and(eq(budgetCategories.userId, userId), eq(budgetCategories.isActive, true))),
+			// 3. Budget categories
+			db
+				.select({
+					categoryId: budgetCategories.categoryId,
+					budgetAmount: budgetCategories.budgetAmount,
+				})
+				.from(budgetCategories)
+				.where(and(eq(budgetCategories.userId, userId), eq(budgetCategories.isActive, true))),
 
-		// 4. Upcoming financial events (next 30 days)
-		db
-			.select({
-				description: financialEvents.title,
-				amount: financialEvents.amount,
-				dueDate: financialEvents.startDate,
-			})
-			.from(financialEvents)
-			.where(
-				and(
-					eq(financialEvents.userId, userId),
-					gte(financialEvents.startDate, now),
-					lte(financialEvents.startDate, new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)),
-				),
-			)
-			.orderBy(financialEvents.startDate)
-			.limit(10),
+			// 4. Upcoming financial events (next 30 days)
+			db
+				.select({
+					description: financialEvents.title,
+					amount: financialEvents.amount,
+					dueDate: financialEvents.startDate,
+				})
+				.from(financialEvents)
+				.where(
+					and(
+						eq(financialEvents.userId, userId),
+						gte(financialEvents.startDate, now),
+						lte(financialEvents.startDate, new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)),
+					),
+				)
+				.orderBy(financialEvents.startDate)
+				.limit(10),
 
-		// 5. Recent transactions (last 20)
-		db
-			.select({
-				id: transactions.id,
-				amount: transactions.amount,
-				description: transactions.description,
-				categoryId: transactions.categoryId,
-				transactionDate: transactions.transactionDate,
-				type: transactions.transactionType,
-			})
-			.from(transactions)
-			.where(eq(transactions.userId, userId))
-			.orderBy(desc(transactions.transactionDate))
-			.limit(20),
+			// 5. Recent transactions (last 20)
+			db
+				.select({
+					id: transactions.id,
+					amount: transactions.amount,
+					description: transactions.description,
+					categoryId: transactions.categoryId,
+					transactionDate: transactions.transactionDate,
+					type: transactions.transactionType,
+				})
+				.from(transactions)
+				.where(eq(transactions.userId, userId))
+				.orderBy(desc(transactions.transactionDate))
+				.limit(20),
 
-		// 6. Category names
-		db
-			.select({
-				id: transactionCategories.id,
-				name: transactionCategories.name,
-			})
-			.from(transactionCategories)
-			.where(eq(transactionCategories.userId, userId)),
-	]);
+			// 6. Category names
+			db
+				.select({
+					id: transactionCategories.id,
+					name: transactionCategories.name,
+				})
+				.from(transactionCategories)
+				.where(eq(transactionCategories.userId, userId)),
+
+			// 7. Financial goals
+			db
+				.select({
+					id: financialGoals.id,
+					name: financialGoals.name,
+					targetAmount: financialGoals.targetAmount,
+					currentAmount: financialGoals.currentAmount,
+					targetDate: financialGoals.targetDate,
+					isCompleted: financialGoals.isCompleted,
+				})
+				.from(financialGoals)
+				.where(and(eq(financialGoals.userId, userId), eq(financialGoals.isActive, true))),
+		]);
 
 	// Process account summary
 	const accountsByType = {
@@ -263,17 +280,50 @@ export async function getAIFinancialContext(
 		type: tx.type ?? 'debit',
 	}));
 
-	// Generate alerts
-	const alerts = generateFinancialAlerts(
-		{ totalBalance, availableBalance },
-		budgets,
-		[], // Goals would be fetched if we had a goals table
-	);
+	// Process financial goals with status computation
+	const goals: GoalProgress[] = goalsData.map((g) => {
+		const target = Number(g.targetAmount);
+		const current = Number(g.currentAmount ?? 0);
+		const progressPercent = target > 0 ? (current / target) * 100 : 0;
+		const targetDate = g.targetDate as Date | null;
+
+		// Calculate days remaining
+		let daysRemaining: number | null = null;
+		if (targetDate) {
+			const msRemaining = targetDate.getTime() - now.getTime();
+			daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+		}
+
+		// Determine goal status
+		let status: 'overdue' | 'urgent' | 'on_track' | 'completed' = 'on_track';
+		if (g.isCompleted || progressPercent >= 100) {
+			status = 'completed';
+		} else if (targetDate && daysRemaining !== null && daysRemaining < 0) {
+			status = 'overdue';
+		} else if (targetDate && daysRemaining !== null && daysRemaining <= 30) {
+			status = 'urgent';
+		}
+
+		return {
+			id: g.id,
+			name: g.name,
+			targetAmount: target,
+			currentAmount: current,
+			progressPercent: Math.min(progressPercent, 100), // Cap at 100%
+			targetDate,
+			status,
+			daysRemaining: daysRemaining !== null ? Math.max(daysRemaining, 0) : null,
+		};
+	});
+
+	// Generate alerts with goals data
+	const alerts = generateFinancialAlerts({ totalBalance, availableBalance }, budgets, goals);
 
 	return {
 		summary,
 		monthlySpending,
 		budgets,
+		goals,
 		upcomingPayments,
 		recentTransactions,
 		alerts,
@@ -289,7 +339,7 @@ export async function getAIFinancialContext(
  * XML format provides clear structure for LLM parsing
  */
 export function formatContextForPrompt(context: FinancialContext): string {
-	const { summary, monthlySpending, budgets, upcomingPayments, recentTransactions, alerts } =
+	const { summary, monthlySpending, budgets, goals, upcomingPayments, recentTransactions, alerts } =
 		context;
 
 	const formatCurrency = (value: number): string =>
@@ -297,6 +347,26 @@ export function formatContextForPrompt(context: FinancialContext): string {
 
 	const formatDate = (date: Date): string =>
 		date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+	// Format goals section
+	const goalsXml =
+		goals.length > 0
+			? goals
+					.map((g) => {
+						const attrs = [
+							`name="${g.name}"`,
+							`target="${formatCurrency(g.targetAmount)}"`,
+							`current="${formatCurrency(g.currentAmount)}"`,
+							`progress="${g.progressPercent.toFixed(0)}%"`,
+							`status="${g.status}"`,
+						];
+						if (g.daysRemaining !== null) {
+							attrs.push(`days_remaining="${g.daysRemaining}"`);
+						}
+						return `<goal ${attrs.join(' ')}/>`;
+					})
+					.join('\n    ')
+			: '<empty>Nenhuma meta cadastrada</empty>';
 
 	return `
 <user_financial_data>
@@ -332,6 +402,10 @@ export function formatContextForPrompt(context: FinancialContext): string {
 			)
 			.join('\n    ')}
   </budgets>
+
+  <financial_goals>
+    ${goalsXml}
+  </financial_goals>
 
   <upcoming_payments>
     ${upcomingPayments

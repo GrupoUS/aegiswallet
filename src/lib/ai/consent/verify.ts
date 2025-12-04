@@ -1,21 +1,14 @@
-/**
- * AI Consent Verification
- *
- * LGPD-compliant consent management for AI financial analysis.
- * Uses the 'financial_data' consent type from the existing LGPD schema.
- */
-
 import { and, eq } from 'drizzle-orm';
 
+import {
+	AI_CONSENT_LEGAL_BASIS,
+	AI_CONSENT_PURPOSE,
+	AI_CONSENT_TYPE,
+	AI_CONSENT_VERSION,
+} from './constants';
+import type { DbClient } from '@/db/client';
 import { lgpdConsents } from '@/db/schema';
 import { logger } from '@/lib/logging';
-import type { DbClient } from '@/server/hono-types';
-
-// Use existing consent type for AI financial analysis
-const AI_CONSENT_TYPE = 'financial_data' as const;
-const AI_CONSENT_VERSION = '1.0';
-const AI_CONSENT_PURPOSE = 'AI financial analysis and personalized recommendations';
-const AI_CONSENT_LEGAL_BASIS = 'consent'; // LGPD Art. 7, I
 
 export interface AIConsentStatus {
 	hasConsent: boolean;
@@ -178,26 +171,3 @@ export async function revokeAIConsent(
 		};
 	}
 }
-
-/**
- * Consent information for display to users
- */
-export const AI_CONSENT_INFO = {
-	title: 'Assistente Financeiro Inteligente',
-	description:
-		'Nosso assistente de IA analisa seus dados financeiros para fornecer sugestões personalizadas de economia, controle de gastos e planejamento financeiro.',
-	dataAccessed: [
-		'Saldos das suas contas',
-		'Histórico de transações',
-		'Orçamentos e limites definidos',
-		'Metas financeiras cadastradas',
-		'Pagamentos futuros agendados',
-	],
-	userRights: [
-		'Revogar este consentimento a qualquer momento',
-		'Seus dados não são compartilhados com terceiros',
-		'Conversas não são armazenadas permanentemente',
-		'Solicitar exclusão dos seus dados a qualquer momento',
-	],
-	version: AI_CONSENT_VERSION,
-} as const;

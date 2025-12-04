@@ -326,6 +326,7 @@ export async function runAsServiceAccount<T>(
 
 export type HttpClient = ReturnType<typeof createHttpClient>;
 export type PoolClient = ReturnType<typeof createPoolClient>;
+export type DbClient = HttpClient | PoolClient;
 
 // Re-export schema for convenience
 export { schema };

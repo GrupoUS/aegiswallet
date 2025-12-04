@@ -7,6 +7,8 @@
 
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
+import { type FinancialAlert, generateFinancialAlerts } from './financial-alerts';
+import type { DbClient } from '@/db/client';
 import {
 	bankAccounts,
 	budgetCategories,
@@ -14,8 +16,6 @@ import {
 	transactionCategories,
 	transactions,
 } from '@/db/schema';
-import type { DbClient } from '@/server/hono-types';
-import { generateFinancialAlerts, type FinancialAlert } from './financial-alerts';
 
 // ========================================
 // TYPES

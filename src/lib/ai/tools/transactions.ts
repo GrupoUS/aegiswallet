@@ -2,8 +2,8 @@ import { and, desc, eq, gte, ilike, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { filterSensitiveData } from '../security/filter';
+import type { DbClient } from '@/db/client';
 import { transactionCategories, transactions } from '@/db/schema';
-import type { DbClient } from '@/server/hono-types';
 
 export function createTransactionTools(userId: string, db: DbClient) {
 	const listTransactionsSchema = z.object({

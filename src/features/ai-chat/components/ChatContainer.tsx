@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { type BackendType, createChatBackend, MockBackend } from '@/features/ai-chat/backends';
 import {
+	AIConsentModal,
 	ChatConversation,
 	ChatLayout,
 	ChatPromptInput,
@@ -30,12 +31,14 @@ interface ChatContainerProps {
 export function ChatContainer({
 	isWidget = false,
 	onClose,
-	backendType = 'gemini',
+	backendType = 'aegis', // Default to Aegis backend
 	hideHeader = false,
 }: ChatContainerProps) {
 	const { user } = useAuth();
 	// Chat context available for future state sharing between widget and fullscreen
 	// const chatContext = useChatContext();
+
+	const [showConsentModal, setShowConsentModal] = useState(false);
 
 	// Use context state or fallback to local state for widget mode
 	const [selectedModel, setSelectedModel] = useState<GeminiModel>(
@@ -51,10 +54,6 @@ export function ChatContainer({
 			toast.error('API Key not found', {
 				description: 'Using Mock Backend. Please set VITE_GEMINI_API_KEY.',
 			});
-			// Dynamically import or use the class directly if imported
-			// Since we are inside the component, we can just return a new MockBackend
-			// We need to import it first. For now, let's assume it's available via the index export we just updated.
-			// But wait, we need to update imports in this file too.
 			return new MockBackend();
 		}
 
@@ -65,6 +64,13 @@ export function ChatContainer({
 				apiKey: apiKey || '',
 				model: selectedModel,
 				userId: user?.id,
+			});
+		}
+
+		if (backendType === 'aegis') {
+			return createChatBackend({
+				type: 'aegis' as const,
+				endpoint: '/api/v1/ai/chat',
 			});
 		}
 
@@ -87,6 +93,12 @@ export function ChatContainer({
 		enableVoiceFeedback: true,
 		enableReasoningView: import.meta.env.VITE_ENABLE_AI_REASONING === 'true',
 		onError: (err) => {
+			// Check for consent requirement
+			if ('code' in err && err.code === 'CONSENT_REQUIRED') {
+				setShowConsentModal(true);
+				return;
+			}
+
 			toast.error('Erro na conversa', {
 				description: err.message,
 			});
@@ -106,59 +118,71 @@ export function ChatContainer({
 	const [showReasoning, setShowReasoning] = useState(enableReasoningView);
 
 	return (
-		<ChatLayout
-			title="Assistente Financeiro Aegis"
-			isWidget={isWidget}
-			onClose={onClose}
-			className="flex-1"
-			hideHeader={hideHeader}
-			modelSelector={
-				!isWidget ? (
-					<ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
-				) : undefined
-			}
-			enableVoice={enableVoiceInput}
-			onVoiceToggle={setEnableVoiceInput}
-			enableReasoning={showReasoning}
-			onReasoningToggle={setShowReasoning}
-		>
-			<div className="flex flex-1 h-full overflow-hidden">
-				{/* Main Chat Area */}
-				<div className="flex-1 flex flex-col min-w-0">
-					<ChatConversation
-						messages={messages}
-						reasoning={reasoning}
-						isStreaming={isStreaming}
-						showReasoning={showReasoning}
-					/>
+		<>
+			<ChatLayout
+				title="Assistente Financeiro Aegis"
+				isWidget={isWidget}
+				onClose={onClose}
+				className="flex-1"
+				hideHeader={hideHeader}
+				modelSelector={
+					!isWidget ? (
+						<ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
+					) : undefined
+				}
+				enableVoice={enableVoiceInput}
+				onVoiceToggle={setEnableVoiceInput}
+				enableReasoning={showReasoning}
+				onReasoningToggle={setShowReasoning}
+			>
+				<div className="flex flex-1 h-full overflow-hidden">
+					{/* Main Chat Area */}
+					<div className="flex-1 flex flex-col min-w-0">
+						<ChatConversation
+							messages={messages}
+							reasoning={reasoning}
+							isStreaming={isStreaming}
+							showReasoning={showReasoning}
+						/>
 
-					{/* Suggestions Overlay */}
-					{!isStreaming && activeSuggestions.length > 0 && (
-						<div className="px-4 pb-2 animate-in slide-in-from-bottom-2 fade-in">
-							<ChatSuggestions suggestions={activeSuggestions} onSelect={applySuggestion} />
+						{/* Suggestions Overlay */}
+						{!isStreaming && activeSuggestions.length > 0 && (
+							<div className="px-4 pb-2 animate-in slide-in-from-bottom-2 fade-in">
+								<ChatSuggestions suggestions={activeSuggestions} onSelect={applySuggestion} />
+							</div>
+						)}
+
+						<ChatPromptInput
+							onSend={(content) => sendMessage(content)}
+							onStop={stopStreaming}
+							isStreaming={isStreaming}
+							placeholder="Pergunte sobre suas finanças..."
+							enableVoiceInput={enableVoiceInput}
+							enableAttachments={false} // Disabled for MVP
+						/>
+					</div>
+
+					{/* Sidebar for Tasks (Desktop only, hidden in widget mode) */}
+					{!isWidget && tasks.length > 0 && (
+						<div className="hidden lg:block w-80 border-l bg-muted/10 p-4 overflow-y-auto">
+							<h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
+								Tarefas Ativas
+							</h3>
+							<ChatTasks tasks={tasks} />
 						</div>
 					)}
-
-					<ChatPromptInput
-						onSend={(content) => sendMessage(content)}
-						onStop={stopStreaming}
-						isStreaming={isStreaming}
-						placeholder="Pergunte sobre suas finanças..."
-						enableVoiceInput={enableVoiceInput}
-						enableAttachments={false} // Disabled for MVP
-					/>
 				</div>
+			</ChatLayout>
 
-				{/* Sidebar for Tasks (Desktop only, hidden in widget mode) */}
-				{!isWidget && tasks.length > 0 && (
-					<div className="hidden lg:block w-80 border-l bg-muted/10 p-4 overflow-y-auto">
-						<h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
-							Tarefas Ativas
-						</h3>
-						<ChatTasks tasks={tasks} />
-					</div>
-				)}
-			</div>
-		</ChatLayout>
+			<AIConsentModal
+				open={showConsentModal}
+				onOpenChange={setShowConsentModal}
+				onConsentGranted={() => {
+					setShowConsentModal(false);
+					// Optionally retry the last message or just let user type again
+					toast.success('Agora você pode usar o assistente!');
+				}}
+			/>
+		</>
 	);
 }

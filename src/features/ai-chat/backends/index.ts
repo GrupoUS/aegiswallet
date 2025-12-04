@@ -1,5 +1,5 @@
-import { GEMINI_MODELS } from '../config/models';
 import type { ChatBackend } from '../domain/ChatBackend';
+import { AegisBackend, type AegisBackendConfig } from './AegisBackend';
 import { AgUiBackend, type AgUiBackendConfig } from './AgUiBackend';
 import { CopilotKitBackend, type CopilotKitBackendConfig } from './CopilotKitBackend';
 import { GeminiBackend, type GeminiBackendConfig } from './GeminiBackend';
@@ -9,7 +9,8 @@ import { OttomatorBackend, type OttomatorBackendConfig } from './OttomatorBacken
  * Backend factory and exports
  *
  * Supported backends:
- * - **gemini** (Primary): Google Gemini API - fully implemented
+ * - **aegis** (Primary): Server-side AI endpoint with consent & context
+ * - **gemini** (Legacy): Direct Google Gemini API
  * - **copilotkit** (Stub): CopilotKit integration - planned
  * - **ag-ui** (Stub): Direct AG-UI Protocol - planned
  * - **ottomator** (Stub): Ottomator RAG Agents - planned
@@ -20,7 +21,7 @@ import { OttomatorBackend, type OttomatorBackendConfig } from './OttomatorBacken
 /**
  * Supported backend types
  */
-export type BackendType = 'gemini' | 'copilotkit' | 'ag-ui' | 'ottomator';
+export type BackendType = 'gemini' | 'copilotkit' | 'ag-ui' | 'ottomator' | 'aegis';
 
 /**
  * Backend configuration union type with discriminator
@@ -29,7 +30,8 @@ export type BackendConfig =
 	| ({ type: 'gemini' } & GeminiBackendConfig)
 	| ({ type: 'copilotkit' } & CopilotKitBackendConfig)
 	| ({ type: 'ag-ui' } & AgUiBackendConfig)
-	| ({ type: 'ottomator' } & OttomatorBackendConfig);
+	| ({ type: 'ottomator' } & OttomatorBackendConfig)
+	| ({ type: 'aegis' } & AegisBackendConfig);
 
 /**
  * Create a chat backend based on the specified configuration
@@ -40,15 +42,18 @@ export type BackendConfig =
  *
  * @example
  * ```typescript
- * const geminiBackend = createChatBackend({
- *   type: 'gemini',
- *   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
- *   model: 'gemini-pro',
+ * const backend = createChatBackend({
+ *   type: 'aegis',
+ *   endpoint: '/api/v1/ai/chat'
  * });
  * ```
  */
 export function createChatBackend(config: BackendConfig): ChatBackend {
 	switch (config.type) {
+		case 'aegis': {
+			return new AegisBackend(config);
+		}
+
 		case 'gemini': {
 			if (!config.apiKey || config.apiKey.trim() === '') {
 				throw new Error(
@@ -78,33 +83,18 @@ export function createChatBackend(config: BackendConfig): ChatBackend {
 /**
  * Get default backend using environment configuration
  *
- * @returns Configured GeminiBackend instance
- * @throws {Error} When VITE_GEMINI_API_KEY is not configured
- *
- * @example
- * ```typescript
- * const backend = getDefaultBackend();
- * const chat = useChatController(backend);
- * ```
+ * @returns Configured ChatBackend instance
  */
 export function getDefaultBackend(): ChatBackend {
-	const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-	if (!apiKey || apiKey.trim() === '') {
-		throw new Error(
-			'VITE_GEMINI_API_KEY is not configured. Please set this environment variable in your .env file. ' +
-				'Example: VITE_GEMINI_API_KEY=your-api-key-here',
-		);
-	}
-
-	return new GeminiBackend({
-		apiKey,
-		model: import.meta.env.VITE_DEFAULT_AI_MODEL || GEMINI_MODELS.FLASH_LITE,
+	// Default to Aegis backend for full app integration
+	return new AegisBackend({
+		type: 'aegis',
 	});
 }
 
 // Re-export all backend classes and types
 export * from '../domain/ChatBackend';
+export * from './AegisBackend';
 export * from './AgUiBackend';
 export * from './CopilotKitBackend';
 export * from './GeminiBackend';

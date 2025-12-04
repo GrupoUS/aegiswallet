@@ -1,5 +1,6 @@
 export type { ChatContextType, ChatState } from '../context/ChatContext';
 export { ChatProvider, useChatContext } from '../context/ChatContext';
+export * from './AIConsentModal';
 export * from './ChatContainer';
 export * from './ChatConversation';
 export * from './ChatImage';

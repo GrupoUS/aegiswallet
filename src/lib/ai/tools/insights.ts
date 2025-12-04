@@ -4,12 +4,10 @@
  * Tools for AI to query financial insights, budgets, and recommendations.
  * All queries are scoped to the authenticated user.
  */
-
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { filterSensitiveData } from '../security/filter';
-import type { DbClient } from '@/server/hono-types';
+import type { DbClient } from '@/db/client';
 import {
 	aiInsights,
 	bankAccounts,
@@ -19,6 +17,7 @@ import {
 	transactionCategories,
 	transactions,
 } from '@/db/schema';
+import { filterSensitiveData } from '@/lib/ai/security/filter';
 
 export function createInsightTools(userId: string, db: DbClient) {
 	// ========================================

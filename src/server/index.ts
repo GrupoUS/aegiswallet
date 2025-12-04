@@ -20,6 +20,7 @@ import {
 	contactsRouter,
 	googleCalendarRouter,
 	healthRouter,
+	importRouter,
 	// pixRouter removed - PIX functionality discontinued
 	transactionsRouter,
 	usersRouter,
@@ -77,6 +78,7 @@ app.route('/api/v1/compliance', complianceRouter);
 app.route('/api/v1/billing', billingRouter);
 app.route('/api/v1/ai', aiChatRouter);
 app.route('/api/v1/agent', agentRouter);
+app.route('/api/v1/import', importRouter);
 
 // Webhooks (no auth required - verified by signature)
 app.route('/api/webhooks/clerk', clerkWebhookHandler);

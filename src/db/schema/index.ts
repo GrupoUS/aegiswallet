@@ -88,6 +88,23 @@ export {
 	type PixPaymentMethodDetails,
 	paymentMethodTypeEnum,
 } from './contacts';
+// Import Sessions
+export {
+	type ExtractedTransaction,
+	type ExtractedTransactionType,
+	extractedTransactions,
+	extractedTransactionsRelations,
+	extractedTransactionTypeEnum,
+	type ImportFileType,
+	type ImportSession,
+	type ImportSessionStatus,
+	type InsertExtractedTransaction,
+	type InsertImportSession,
+	importFileTypeEnum,
+	importSessionStatusEnum,
+	importSessions,
+	importSessionsRelations,
+} from './import-sessions';
 // LGPD Compliance
 export {
 	// Tables

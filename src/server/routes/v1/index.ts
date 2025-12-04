@@ -13,6 +13,7 @@ import complianceRouter from './compliance';
 import contactsRouter from './contacts';
 import googleCalendarRouter from './google-calendar';
 import healthRouter from './health';
+import importRouter from './import';
 // PIX functionality removed
 import transactionsRouter from './transactions';
 import usersRouter from './users';
@@ -34,4 +35,5 @@ export {
 	googleCalendarRouter,
 	complianceRouter,
 	aiChatRouter,
+	importRouter,
 };

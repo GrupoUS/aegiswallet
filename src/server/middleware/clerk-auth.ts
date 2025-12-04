@@ -28,6 +28,108 @@ export interface AuthContext {
 	db: PoolClient; // PoolClient with RLS context set for user-scoped operations
 }
 
+interface RequestLogContext {
+	ip: string;
+	method: string;
+	path: string;
+	requestId: string;
+	userAgent?: string;
+}
+
+type AuthErrorCategory = 'auth' | 'database' | 'config' | 'unknown';
+
+// ========================================
+// ERROR CATEGORIZATION HELPERS
+// ========================================
+
+const AUTH_ERROR_PATTERNS = [
+	'token',
+	'Token',
+	'authentication',
+	'unauthorized',
+	'user not found',
+	'Invalid user ID',
+];
+const DATABASE_ERROR_PATTERNS = [
+	'connection',
+	'timeout',
+	'ECONNREFUSED',
+	'database',
+	'DATABASE_URL',
+];
+const CONFIG_ERROR_PATTERNS = ['CLERK_SECRET_KEY', 'environment variable', 'not set'];
+
+/**
+ * Categorize error message to determine appropriate response
+ */
+function categorizeAuthError(errorMessage: string): AuthErrorCategory {
+	if (AUTH_ERROR_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+		return 'auth';
+	}
+	if (DATABASE_ERROR_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+		return 'database';
+	}
+	if (CONFIG_ERROR_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+		return 'config';
+	}
+	return 'unknown';
+}
+
+/**
+ * Get request context for logging
+ */
+function getRequestLogContext(c: Context): RequestLogContext {
+	return {
+		ip: c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown',
+		method: c.req.method,
+		path: c.req.path,
+		requestId: c.get('requestId') || 'unknown',
+		userAgent: c.req.header('User-Agent'),
+	};
+}
+
+/**
+ * Handle authentication errors and return appropriate response
+ */
+function handleAuthError(c: Context, error: unknown, logContext: RequestLogContext) {
+	const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+	const errorStack = error instanceof Error ? error.stack : undefined;
+	const category = categorizeAuthError(errorMessage);
+
+	const logData = {
+		error: errorMessage,
+		...logContext,
+		stack: errorStack,
+	};
+
+	switch (category) {
+		case 'auth':
+			secureLogger.warn('Authentication failed', logData);
+			return c.json({ code: 'AUTH_ERROR', error: 'Authentication failed' }, 401);
+
+		case 'database':
+			secureLogger.error('Database connection error during authentication', logData);
+			return c.json(
+				{
+					code: 'SERVICE_UNAVAILABLE',
+					error: 'Database service unavailable. Please try again later.',
+				},
+				503,
+			);
+
+		case 'config':
+			secureLogger.error('Configuration error during authentication', logData);
+			return c.json({ code: 'CONFIGURATION_ERROR', error: 'Server configuration error' }, 500);
+
+		default:
+			secureLogger.error('Unexpected authentication error', logData);
+			return c.json(
+				{ code: 'INTERNAL_ERROR', error: 'An unexpected error occurred during authentication' },
+				500,
+			);
+	}
+}
+
 // ========================================
 // CLERK CLIENT
 // ========================================
@@ -75,27 +177,11 @@ function getClerkClient() {
 export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Next) => {
 	const authHeader = c.req.header('Authorization');
 	const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '').trim() : null;
-
-	// Log authentication attempt
-	const requestId = c.get('requestId') || 'unknown';
-	const clientIP = c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || 'unknown';
+	const logContext = getRequestLogContext(c);
 
 	if (!token) {
-		secureLogger.warn('Authentication failed: No token provided', {
-			ip: clientIP,
-			method: c.req.method,
-			path: c.req.path,
-			requestId,
-			userAgent: c.req.header('User-Agent'),
-		});
-
-		return c.json(
-			{
-				code: 'AUTH_REQUIRED',
-				error: 'Authentication required',
-			},
-			401,
-		);
+		secureLogger.warn('Authentication failed: No token provided', logContext);
+		return c.json({ code: 'AUTH_REQUIRED', error: 'Authentication required' }, 401);
 	}
 
 	try {
@@ -106,21 +192,8 @@ export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Nex
 		const payload = await verifyToken(token, { secretKey });
 
 		if (!payload?.sub) {
-			secureLogger.warn('Authentication failed: Invalid token', {
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				userAgent: c.req.header('User-Agent'),
-			});
-
-			return c.json(
-				{
-					code: 'INVALID_TOKEN',
-					error: 'Invalid authentication token',
-				},
-				401,
-			);
+			secureLogger.warn('Authentication failed: Invalid token', logContext);
+			return c.json({ code: 'INVALID_TOKEN', error: 'Invalid authentication token' }, 401);
 		}
 
 		const userId = payload.sub;
@@ -147,117 +220,11 @@ export const clerkAuthMiddleware = createMiddleware(async (c: Context, next: Nex
 		c.set('auth', authContext);
 
 		// Log successful authentication
-		secureLogger.info('Authentication successful', {
-			ip: clientIP,
-			method: c.req.method,
-			path: c.req.path,
-			requestId,
-			userId: clerkUser.id,
-		});
+		secureLogger.info('Authentication successful', { ...logContext, userId: clerkUser.id });
 
 		await next();
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		const errorStack = error instanceof Error ? error.stack : undefined;
-
-		// Categorize errors to return appropriate status codes
-		// Authentication errors (401): Invalid token, user not found, token verification failed
-		if (
-			errorMessage.includes('token') ||
-			errorMessage.includes('Token') ||
-			errorMessage.includes('authentication') ||
-			errorMessage.includes('unauthorized') ||
-			errorMessage.includes('user not found') ||
-			errorMessage.includes('Invalid user ID')
-		) {
-			secureLogger.warn('Authentication failed', {
-				error: errorMessage,
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				userAgent: c.req.header('User-Agent'),
-			});
-
-			return c.json(
-				{
-					code: 'AUTH_ERROR',
-					error: 'Authentication failed',
-				},
-				401,
-			);
-		}
-
-		// Database connection errors (503): Service unavailable
-		if (
-			errorMessage.includes('connection') ||
-			errorMessage.includes('timeout') ||
-			errorMessage.includes('ECONNREFUSED') ||
-			errorMessage.includes('database') ||
-			errorMessage.includes('DATABASE_URL')
-		) {
-			secureLogger.error('Database connection error during authentication', {
-				error: errorMessage,
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				stack: errorStack,
-				userAgent: c.req.header('User-Agent'),
-			});
-
-			return c.json(
-				{
-					code: 'SERVICE_UNAVAILABLE',
-					error: 'Database service unavailable. Please try again later.',
-				},
-				503,
-			);
-		}
-
-		// Environment configuration errors (500): Server misconfiguration
-		if (
-			errorMessage.includes('CLERK_SECRET_KEY') ||
-			errorMessage.includes('environment variable') ||
-			errorMessage.includes('not set')
-		) {
-			secureLogger.error('Configuration error during authentication', {
-				error: errorMessage,
-				ip: clientIP,
-				method: c.req.method,
-				path: c.req.path,
-				requestId,
-				stack: errorStack,
-				userAgent: c.req.header('User-Agent'),
-			});
-
-			return c.json(
-				{
-					code: 'CONFIGURATION_ERROR',
-					error: 'Server configuration error',
-				},
-				500,
-			);
-		}
-
-		// Unexpected errors (500): Generic server error
-		secureLogger.error('Unexpected authentication error', {
-			error: errorMessage,
-			ip: clientIP,
-			method: c.req.method,
-			path: c.req.path,
-			requestId,
-			stack: errorStack,
-			userAgent: c.req.header('User-Agent'),
-		});
-
-		return c.json(
-			{
-				code: 'INTERNAL_ERROR',
-				error: 'An unexpected error occurred during authentication',
-			},
-			500,
-		);
+		return handleAuthError(c, error, logContext);
 	}
 });
 

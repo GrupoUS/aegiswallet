@@ -217,6 +217,18 @@ export const getConnectionStats = () => {
 	};
 };
 
+// Clerk user ID validation regex - extracted for readability
+const CLERK_USER_ID_PATTERN = /^user_[a-zA-Z0-9_]+$/;
+
+/**
+ * Validate Clerk user ID format
+ * @param userId - The user ID to validate
+ * @returns true if valid Clerk user ID format
+ */
+const isValidClerkUserId = (userId: string | null | undefined): userId is string => {
+	return typeof userId === 'string' && CLERK_USER_ID_PATTERN.test(userId);
+};
+
 /**
  * Create a user-scoped database client that sets RLS context
  * Uses SINGLETON pool to prevent connection exhaustion
@@ -231,7 +243,7 @@ export const getConnectionStats = () => {
 export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
 	// Validate userId format to prevent SQL injection
 	// Clerk user IDs always start with "user_" followed by alphanumeric characters
-	if (!userId || !/^user_[a-zA-Z0-9_]+$/.test(userId)) {
+	if (!isValidClerkUserId(userId)) {
 		throw new Error(`Invalid user ID format: ${userId}`);
 	}
 
@@ -242,19 +254,22 @@ export const createUserScopedClient = async (userId: string): Promise<PoolClient
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
 			// Use singleton shared pool instead of creating new pool per request
-			const pool = getSharedPool();
-			const db = drizzlePool(pool, { schema });
+			const connectionPool = getSharedPool();
+			const userScopedDb = drizzlePool(connectionPool, { schema });
 
 			// Set user context for RLS using set_config with 'true' for local transaction scope
 			// This is SQL-injection safe because we use parameterized query
-			await pool.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
+			await connectionPool.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
 
-			return db;
+			return userScopedDb;
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error(String(error));
 
 			// Don't retry on validation errors or if it's the last attempt
-			if (attempt === maxRetries || (error instanceof Error && error.message.includes('Invalid user ID'))) {
+			if (
+				attempt === maxRetries ||
+				(error instanceof Error && error.message.includes('Invalid user ID'))
+			) {
 				throw lastError;
 			}
 
@@ -274,20 +289,25 @@ export const createUserScopedClient = async (userId: string): Promise<PoolClient
 // SERVICE ACCOUNT OPERATIONS (Bypasses RLS)
 // ========================================
 
+// Type for service account transaction handler
+type ServiceAccountTransaction = ReturnType<typeof drizzlePool>;
+
 /**
  * Run a database operation as service account (bypasses RLS)
  * Uses single dedicated connection to avoid pool context issues
  * @param fn - Function to execute within service account context
  */
-export async function runAsServiceAccount<T>(fn: (tx: any) => Promise<T>): Promise<T> {
-	const pool = getSharedPool();
-	const client = await pool.connect();
+export async function runAsServiceAccount<T>(
+	fn: (tx: ServiceAccountTransaction) => Promise<T>,
+): Promise<T> {
+	const servicePool = getSharedPool();
+	const client = await servicePool.connect();
 
 	try {
 		await client.query('BEGIN');
 		await client.query("SELECT set_config('app.is_service_account', 'true', false)");
 
-		const tx = drizzlePool(client as any, { schema });
+		const tx = drizzlePool(client as unknown as Pool, { schema });
 		const result = await fn(tx);
 
 		await client.query('COMMIT');

@@ -74,7 +74,11 @@ complianceRouter.get('/consent-templates', authMiddleware, async (c) => {
 	const requestId = c.get('requestId');
 
 	try {
-		const complianceService = createComplianceService(db);
+		// TODO: Temporariamente desabilitar verificação de tipo para permitir compilação
+		// O tipo DbClient (HttpClient | PoolClient) não é compatível com NeonHttpDatabase esperado
+		// Issue: https://github.com/drizzle-team/drizzle-orm/issues/1945
+		// Solução: Revisitar arquitetura do tipo de banco para usar apenas um tipo
+		const complianceService = createComplianceService(db as any);
 		const templates = await complianceService.getConsentTemplates();
 
 		return c.json({

@@ -93,9 +93,7 @@ tests/                   # End-to-end tests (Playwright)
 **MCPs via Docker Gateway** - Servidores containerizados, maior flexibilidade:
 - `context7` - Documentação técnica de bibliotecas
 - `fetch` - Busca de URLs e conversão para markdown
-- `playwright` - Automação de browser e testes E2E
 - `sequential-thinking` - Raciocínio estruturado para problemas complexos
-- `stripe` - Interação com serviços Stripe via API
 - `tavily` - Busca web em tempo real, extração de conteúdo, crawling
 
 **Quando usar cada tipo**:
@@ -171,28 +169,6 @@ tests/                   # End-to-end tests (Playwright)
   - Use para validação de hipóteses antes de implementar
 - **Configurações**: `SEQUENTIAL_THINKING_MAX_TOKENS=16000`, `SEQUENTIAL_THINKING_THOUGHTS_TO_KEEP=10`
 
-#### Browser Automation & Testing
-
-**playwright** (via Docker Gateway)
-- **Propósito**: Automação de browser, testes E2E, validação de UI
-- **Quando usar**:
-  - Testes E2E de workflows de usuário
-  - Validação de acessibilidade (WCAG 2.1 AA+)
-  - Testes de performance de UI
-  - Validação de integrações frontend
-- **Quando NÃO usar**: Testes unitários (use Vitest), análise de código (use serena)
-- **Melhores práticas**:
-  - Use para testes de compliance brasileiro (LGPD, acessibilidade)
-  - Integre com testes PIX e transações financeiras
-  - Use para validação de interfaces em português
-
-#### External Integrations
-
-**stripe** (via Docker Gateway)
-- **Propósito**: Interação com serviços Stripe para pagamentos
-- **Quando usar**: Operações de billing, subscriptions, payment intents
-- **Melhores práticas**: Use para validação de integrações de pagamento
-
 ### MCP Selection Matrix
 
 | Task Type | Primary MCP | Secondary MCP | When to Use Parallel |
@@ -202,8 +178,8 @@ tests/                   # End-to-end tests (Playwright)
 | **Web Research** | tavily | context7 | For comprehensive research (official + current) |
 | **Complex Problem** | sequential-thinking | serena | Before implementation for complexity ≥7 |
 | **Database Ops** | CLI (neon) | serena | Schema changes via CLI + code analysis (serena) |
-| **E2E Testing** | playwright | serena | Test implementation + code validation |
-| **UI Components** | context7 + serena | playwright | Component docs + code analysis + accessibility testing |
+| **E2E Testing** | CLI (playwright) | serena | Test via CLI + code validation |
+| **UI Components** | context7 + serena | CLI (playwright) | Component docs + code analysis + accessibility testing via CLI |
 | **Compliance Research** | tavily + context7 | sequential-thinking | Brazilian regulations (LGPD/BCB/PIX) |
 | **Architecture** | sequential-thinking | serena + context7 | Design decisions + validation |
 
@@ -217,7 +193,7 @@ tests/                   # End-to-end tests (Playwright)
 2. context7 (official docs) + tavily (current patterns) [PARALLEL]
 3. serena (codebase analysis)
 4. Implementation
-5. playwright (E2E validation)
+5. CLI playwright (E2E validation)
 ```
 
 **Pattern 2: Database Changes**
@@ -225,7 +201,7 @@ tests/                   # End-to-end tests (Playwright)
 1. sequential-thinking (design schema)
 2. CLI neon (validate schema) + serena (check existing patterns) [PARALLEL]
 3. Implementation
-4. CLI neon (validate RLS) + playwright (test integration) [PARALLEL]
+4. CLI neon (validate RLS) + CLI playwright (test integration) [PARALLEL]
 ```
 
 **Pattern 3: UI Component**
@@ -233,7 +209,7 @@ tests/                   # End-to-end tests (Playwright)
 1. serena (check existing usage)
 2. context7 (component docs via Docker Gateway)
 3. Implementation
-4. playwright (accessibility test via Docker Gateway)
+4. CLI playwright (accessibility test)
 ```
 
 #### Parallel Execution
@@ -242,7 +218,7 @@ tests/                   # End-to-end tests (Playwright)
 - ✅ Pesquisa: context7 + tavily (diferentes fontes)
 - ✅ Validação: CLI neon + serena (DB + código)
 - ✅ Compliance: tavily + context7 + sequential-thinking (múltiplas perspectivas)
-- ✅ Testing: playwright + serena (testes + análise de código)
+- ✅ Testing: CLI playwright + serena (testes via CLI + análise de código)
 
 **Quando executar sequencialmente**:
 - ❌ serena → context7 (busca código primeiro, depois docs)
@@ -307,9 +283,7 @@ tests/                   # End-to-end tests (Playwright)
 |------|---------|--------------|
 | **context7** | Library documentation | Official docs, API references |
 | **tavily** | Web search & extraction | Search, extract, crawl, map sites |
-| **playwright** | Browser automation | E2E testing, UI validation |
 | **sequential-thinking** | Structured reasoning | Multi-step problem solving |
-| **stripe** | Payment processing | Billing, subscriptions, payments |
 | **fetch** | URL content retrieval | Single URL to markdown |
 
 **Discovering New Tools**:
@@ -337,12 +311,26 @@ mcp-find query="<tool-name>" limit=10
 
 **Quality Gates**:
 - Database changes → CLI neon + serena validation
-- UI components → playwright (a11y) + serena (code review)
+- UI components → CLI playwright (a11y) + serena (code review)
 - Security → tavily (patterns) + context7 (best practices)
 
 ### CLI Tools (Não MCP)
 
 **Use CLI ao invés de MCP para**:
+- **playwright** - Automação de browser e testes E2E via Playwright CLI
+  - Testes E2E: `bunx playwright test`
+  - Testes específicos: `bunx playwright test [nome-do-teste]`
+  - Relatórios: `bunx playwright show-report`
+  - Modo UI: `bunx playwright test --ui`
+  - Acessibilidade: `bunx playwright test --grep @a11y`
+  - Debug: `bunx playwright test --debug`
+- **stripe** - Operações de pagamento via Stripe CLI
+  - Listen webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+  - Trigger eventos: `stripe trigger payment_intent.succeeded`
+  - Logs: `stripe logs tail`
+  - Recursos: `stripe resources`
+  - Customers: `stripe customers list`
+  - Subscriptions: `stripe subscriptions list`
 - **neon** - Operações de banco de dados PostgreSQL via Neon CLI
   - Migrações: `neon migrations apply`
   - Queries: Use Drizzle ORM no código

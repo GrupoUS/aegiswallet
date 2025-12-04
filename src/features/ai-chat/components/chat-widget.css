@@ -1,7 +1,23 @@
-/* 
+/*
  * Chat Widget Mobile & Desktop Fixes
  * Resolves viewport, scrolling, and responsive issues
  */
+
+/* Root variables for consistent height management */
+:root {
+	--chat-widget-height: min(600px, 80dvh);
+	--chat-widget-width: min(400px, 90vw);
+	--chat-fullscreen-offset: 4rem;
+	--chat-header-height: 3.5rem;
+}
+
+@media (max-width: 640px) {
+	:root {
+		--chat-widget-height: 85dvh;
+		--chat-widget-width: 95vw;
+		--chat-fullscreen-offset: 3rem;
+	}
+}
 
 /* Root container fixes */
 .chat-widget-container {
@@ -14,10 +30,9 @@
 
 /* Widget specific fixes */
 .chat-widget-window {
-	/* Ensure proper positioning and z-index layering */
-	position: fixed;
-	z-index: 9999;
+	/* position: fixed REMOVED - handled by parent container */
 	contain: layout style paint;
+	/* z-index controlled by parent */
 }
 
 /* Mobile viewport fixes */
@@ -28,9 +43,7 @@
 	}
 
 	.chat-widget-window {
-		width: 95vw;
-		height: 85vh;
-		height: 85dvh;
+		/* Dimensions handled by inline styles/Tailwind classes using var() */
 		max-height: -webkit-fill-available;
 	}
 }
@@ -48,41 +61,44 @@
 
 /* Scroll behavior improvements */
 .chat-conversation-scroll {
-	scroll-behavior: smooth;
+	/* StickToBottom manages scroll behavior internally */
 	overscroll-behavior: contain;
 	-webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+	scrollbar-gutter: stable; /* Reserves space for scrollbar */
+}
+
+/* Viewport specific padding for StickToBottom */
+.chat-conversation-scroll [data-stick-to-bottom-viewport] {
 	scroll-padding-top: 1rem;
 	scroll-padding-bottom: 1rem;
 }
 
-/* Hide scrollbars but maintain functionality */
+/* Scrollbar styling - Always visible and usable */
 .chat-conversation-scroll::-webkit-scrollbar {
-	width: 6px;
+	width: 8px;
+	height: 8px;
 }
 
 .chat-conversation-scroll::-webkit-scrollbar-track {
-	background: transparent;
+	background: hsl(var(--muted) / 0.3);
+	border-radius: 4px;
 }
 
 .chat-conversation-scroll::-webkit-scrollbar-thumb {
-	background-color: rgba(0, 0, 0, 0.2);
-	border-radius: 3px;
-	border: transparent;
+	background-color: hsl(var(--muted-foreground) / 0.3);
+	border-radius: 4px;
+	border: 2px solid transparent;
+	background-clip: content-box;
 }
 
 .chat-conversation-scroll::-webkit-scrollbar-thumb:hover {
-	background-color: rgba(0, 0, 0, 0.3);
+	background-color: hsl(var(--muted-foreground) / 0.5);
 }
 
-/* Dark mode scrollbar fixes */
-@media (prefers-color-scheme: dark) {
-	.chat-conversation-scroll::-webkit-scrollbar-thumb {
-		background-color: rgba(255, 255, 255, 0.2);
-	}
-
-	.chat-conversation-scroll::-webkit-scrollbar-thumb:hover {
-		background-color: rgba(255, 255, 255, 0.3);
-	}
+/* Firefox scrollbar */
+.chat-conversation-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted) / 0.3);
 }
 
 /* Keyboard navigation focus improvements */
@@ -93,16 +109,9 @@
 
 /* Fullscreen mode fixes */
 .chat-fullscreen-container {
-	height: calc(100vh - 4rem); /* Account for header */
-	height: calc(100dvh - 4rem);
+	/* Consolidated height using custom properties */
+	height: calc(100dvh - var(--chat-fullscreen-offset));
 	max-height: -webkit-fill-available;
-}
-
-@media (max-width: 640px) {
-	.chat-fullscreen-container {
-		height: calc(100vh - 3rem);
-		height: calc(100dvh - 3rem);
-	}
 }
 
 /* Loading states */
@@ -128,13 +137,6 @@
 
 	.chat-loading-indicator {
 		animation: none;
-	}
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-	.chat-conversation-scroll::-webkit-scrollbar-thumb {
-		background-color: ButtonText;
 	}
 }
 

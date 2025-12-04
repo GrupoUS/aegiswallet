@@ -39,16 +39,19 @@ export function ChatLayout({
 	return (
 		<Card
 			className={cn(
-				'flex flex-col w-full overflow-hidden shadow-xl bg-background',
+				'flex flex-col w-full overflow-hidden bg-background',
 				isWidget
-					? 'h-full border-0 rounded-none sm:rounded-lg shadow-none'
-					: 'h-[calc(100vh-2rem)] max-w-5xl mx-auto',
+					? 'h-full border-0 shadow-none' // Widget: herda altura do pai
+					: 'h-full max-w-5xl mx-auto shadow-xl', // Fullscreen: preenche container
 				className,
 			)}
 		>
 			{/* Header */}
 			{!hideHeader && (
-				<div className="flex items-center justify-between px-4 py-3 bg-background border-b shrink-0">
+				<div
+					className="flex items-center justify-between px-4 py-3 bg-background border-b shrink-0"
+					style={{ height: 'var(--chat-header-height)' }}
+				>
 					<div className="flex items-center gap-3">
 						<div className="p-2 bg-primary/10 rounded-lg">
 							<MessageSquare className="w-5 h-5 text-primary" />
@@ -82,7 +85,7 @@ export function ChatLayout({
 				</div>
 			)}
 
-			{/* Main Content Area */}
+			{/* Main Content Area - CRÍTICO: min-h-0 para flex shrink funcionar */}
 			<div className="flex-1 flex flex-col min-h-0 relative bg-slate-50/50 dark:bg-slate-950/50">
 				{children}
 			</div>

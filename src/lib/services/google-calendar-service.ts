@@ -7,12 +7,12 @@
  * @file src/lib/services/google-calendar-service.ts
  */
 
-import { and, eq, isNull, lt, or } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lt, or } from 'drizzle-orm';
 import { type calendar_v3, google } from 'googleapis';
 
-import { db } from '@/db';
 import { env } from '@/env';
 
+import { db } from '@/db/client';
 import { type FinancialEvent, financialEvents } from '@/db/schema/calendar';
 import {
 	type CalendarSyncMapping,
@@ -328,9 +328,10 @@ export async function disconnectGoogleCalendar(userId: string): Promise<void> {
  * Get or create sync settings for user
  */
 export async function getSyncSettings(userId: string): Promise<CalendarSyncSettings | null> {
-	return await db.query.calendarSyncSettings.findFirst({
+	const result = await db.query.calendarSyncSettings.findFirst({
 		where: eq(calendarSyncSettings.userId, userId),
 	});
+	return result ?? null;
 }
 
 /**
@@ -567,7 +568,7 @@ export async function processSyncQueue(limit = 10): Promise<void> {
 			eq(calendarSyncQueue.status, 'pending'),
 			or(isNull(calendarSyncQueue.scheduledFor), lt(calendarSyncQueue.scheduledFor, now)),
 		),
-		orderBy: (queue, { desc, asc }) => [desc(queue.priority), asc(queue.createdAt)],
+		orderBy: [desc(calendarSyncQueue.priority), asc(calendarSyncQueue.createdAt)],
 		limit,
 	});
 
@@ -1027,12 +1028,28 @@ export async function deleteGoogleEvent(userId: string, financialEventId: string
 // ========================================
 
 /**
+ * Required fields for creating a financial event from Google Calendar
+ */
+interface GoogleEventConversionResult {
+	title: string;
+	description: string | undefined;
+	startDate: Date;
+	endDate: Date;
+	allDay: boolean;
+	amount: string;
+	categoryId: string | undefined;
+	isIncome: boolean;
+	isRecurring: boolean;
+	recurrenceRule: string | undefined;
+}
+
+/**
  * Convert Google Calendar event to financial event data
  */
 function convertGoogleToFinancialEvent(
 	googleEvent: calendar_v3.Schema$Event,
 	settings: CalendarSyncSettings,
-): Partial<FinancialEvent> {
+): GoogleEventConversionResult {
 	// Parse start/end dates
 	const startDate = googleEvent.start?.dateTime
 		? new Date(googleEvent.start.dateTime)
@@ -1070,8 +1087,8 @@ function convertGoogleToFinancialEvent(
 		startDate,
 		endDate,
 		allDay: isAllDay,
-		amount: amount,
-		category: category || 'other',
+		amount: amount || '0',
+		categoryId: category || undefined,
 		isIncome,
 		isRecurring: false, // Google recurrence is complex, handle separately
 		recurrenceRule: undefined,
@@ -1111,7 +1128,7 @@ function convertFinancialToGoogleEvent(
 		extendedProperties: {
 			private: {
 				aegis_id: event.id,
-				aegis_category: event.category || '',
+				aegis_category: event.categoryId || '',
 				aegis_type: event.isIncome ? 'income' : 'expense',
 			},
 		},

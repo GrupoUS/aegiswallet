@@ -20,5 +20,8 @@ export { schema };
 
 // Type-only exports for database clients (no runtime import)
 export type { HttpClient, PoolClient } from './client';
+// Re-export db client for backwards compatibility with dynamic imports
+// WARNING: This should only be imported in server-side code
+export { db } from './client';
 // Re-export all schema types and definitions
 export * from './schema';

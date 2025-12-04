@@ -9,7 +9,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import {
 	AlertCircle,
 	Calendar,
@@ -24,19 +23,13 @@ import {
 	Unlink,
 	Zap,
 } from 'lucide-react';
+import { useId, useState } from 'react';
 
-import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	Dialog,
 	DialogContent,
@@ -45,15 +38,18 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
 import { cn } from '@/lib/utils';
 
 // ========================================
@@ -79,6 +75,7 @@ function LgpdConsentDialog({
 	onIncludeAmountsChange,
 	isLoading,
 }: LgpdConsentDialogProps) {
+	const includeAmountsId = useId();
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-lg">
@@ -95,8 +92,7 @@ function LgpdConsentDialog({
 				<div className="space-y-4 py-4">
 					<div className="text-sm text-muted-foreground space-y-3">
 						<p>
-							Ao habilitar a sincronização com o Google Calendar, você autoriza o
-							AegisWallet a:
+							Ao habilitar a sincronização com o Google Calendar, você autoriza o AegisWallet a:
 						</p>
 
 						<ul className="list-disc list-inside space-y-1 ml-2">
@@ -116,27 +112,26 @@ function LgpdConsentDialog({
 									</p>
 								</div>
 								<Switch
-									id="include-amounts"
+									id={includeAmountsId}
 									checked={includeAmounts}
 									onCheckedChange={onIncludeAmountsChange}
 								/>
 							</div>
 
 							{includeAmounts && (
-								<Alert variant="warning" className="mt-3">
+								<Alert variant="destructive" className="mt-3">
 									<AlertCircle className="h-4 w-4" />
 									<AlertDescription className="text-xs">
-										⚠️ Os valores financeiros serão visíveis para qualquer pessoa
-										com acesso ao seu Google Calendar.
+										⚠️ Os valores financeiros serão visíveis para qualquer pessoa com acesso ao seu
+										Google Calendar.
 									</AlertDescription>
 								</Alert>
 							)}
 						</div>
 
 						<p className="text-xs mt-4">
-							Você pode revogar este consentimento a qualquer momento desconectando
-							sua conta do Google Calendar. Seus dados serão tratados de acordo com
-							nossa{' '}
+							Você pode revogar este consentimento a qualquer momento desconectando sua conta do
+							Google Calendar. Seus dados serão tratados de acordo com nossa{' '}
 							<a href="/privacidade" className="text-primary hover:underline">
 								Política de Privacidade
 							</a>
@@ -170,12 +165,7 @@ interface DisconnectDialogProps {
 	isLoading: boolean;
 }
 
-function DisconnectDialog({
-	open,
-	onOpenChange,
-	onConfirm,
-	isLoading,
-}: DisconnectDialogProps) {
+function DisconnectDialog({ open, onOpenChange, onConfirm, isLoading }: DisconnectDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
@@ -187,9 +177,7 @@ function DisconnectDialog({
 				</DialogHeader>
 
 				<div className="py-4">
-					<p className="text-sm text-muted-foreground">
-						Ao desconectar:
-					</p>
+					<p className="text-sm text-muted-foreground">Ao desconectar:</p>
 					<ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
 						<li>A sincronização será interrompida</li>
 						<li>Os eventos já sincronizados permanecerão em ambas as plataformas</li>
@@ -396,8 +384,8 @@ export function GoogleCalendarSettings() {
 							<Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
 							<h3 className="font-medium mb-2">Conecte seu Google Calendar</h3>
 							<p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
-								Sincronize automaticamente seus eventos financeiros com o Google Calendar
-								para manter tudo organizado em um só lugar.
+								Sincronize automaticamente seus eventos financeiros com o Google Calendar para
+								manter tudo organizado em um só lugar.
 							</p>
 							<Button onClick={handleConnect} disabled={isConnecting}>
 								{isConnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -420,9 +408,7 @@ export function GoogleCalendarSettings() {
 										<p className="font-medium text-sm">
 											{status?.googleEmail || 'Google Calendar'}
 										</p>
-										<p className="text-xs text-muted-foreground">
-											Conta conectada
-										</p>
+										<p className="text-xs text-muted-foreground">Conta conectada</p>
 									</div>
 								</div>
 								<Button
@@ -434,7 +420,6 @@ export function GoogleCalendarSettings() {
 									<Unlink className="h-4 w-4" />
 								</Button>
 							</div>
-
 							{/* Warnings */}
 							{isChannelExpiringSoon && (
 								<Alert>
@@ -448,26 +433,21 @@ export function GoogleCalendarSettings() {
 									</AlertDescription>
 								</Alert>
 							)}
-
 							{hasConflicts && (
-								<Alert variant="warning">
+								<Alert variant="default">
 									<AlertCircle className="h-4 w-4" />
 									<AlertTitle>Conflitos detectados</AlertTitle>
 									<AlertDescription>
-										Alguns eventos têm conflitos de sincronização. Verifique a seção de
-										histórico para mais detalhes.
+										Alguns eventos têm conflitos de sincronização. Verifique a seção de histórico
+										para mais detalhes.
 									</AlertDescription>
 								</Alert>
-							)}
-
+							)}{' '}
 							<Separator />
-
 							{/* Main Toggle */}
 							<div className="flex items-center justify-between">
 								<div className="space-y-0.5">
-									<Label className="text-base font-medium">
-										Sincronização automática
-									</Label>
+									<Label className="text-base font-medium">Sincronização automática</Label>
 									<p className="text-sm text-muted-foreground">
 										{isEnabled
 											? 'Eventos são sincronizados automaticamente'
@@ -486,12 +466,10 @@ export function GoogleCalendarSettings() {
 									disabled={isUpdatingSettings}
 								/>
 							</div>
-
 							{/* Settings (only when enabled) */}
 							{isEnabled && (
 								<>
 									<Separator />
-
 									{/* Sync Direction */}
 									<div className="space-y-2">
 										<Label>Direção da sincronização</Label>
@@ -504,9 +482,7 @@ export function GoogleCalendarSettings() {
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent>
-												<SelectItem value="bidirectional">
-													↔️ Bidirecional (recomendado)
-												</SelectItem>
+												<SelectItem value="bidirectional">↔️ Bidirecional (recomendado)</SelectItem>
 												<SelectItem value="one_way_to_google">
 													➡️ Apenas para o Google Calendar
 												</SelectItem>
@@ -524,7 +500,6 @@ export function GoogleCalendarSettings() {
 												'Apenas eventos do Google vêm para o AegisWallet'}
 										</p>
 									</div>
-
 									{/* Include Amounts */}
 									<div className="flex items-center justify-between">
 										<div className="space-y-0.5">
@@ -534,12 +509,11 @@ export function GoogleCalendarSettings() {
 											</p>
 										</div>
 										<Switch
-											checked={settings?.syncFinancialAmounts || false}
+											checked={Boolean(settings?.syncFinancialAmounts)}
 											onCheckedChange={handleAmountsChange}
 											disabled={isUpdatingSettings}
 										/>
-									</div>
-
+									</div>{' '}
 									{/* Manual Sync Actions */}
 									<div className="flex gap-2">
 										<Button
@@ -567,7 +541,6 @@ export function GoogleCalendarSettings() {
 									</div>
 								</>
 							)}
-
 							{/* Advanced Settings */}
 							<Collapsible
 								open={isAdvancedOpen}
@@ -581,10 +554,7 @@ export function GoogleCalendarSettings() {
 											Configurações avançadas
 										</span>
 										<ChevronDown
-											className={cn(
-												'h-4 w-4 transition-transform',
-												isAdvancedOpen && 'rotate-180',
-											)}
+											className={cn('h-4 w-4 transition-transform', isAdvancedOpen && 'rotate-180')}
 										/>
 									</Button>
 								</CollapsibleTrigger>

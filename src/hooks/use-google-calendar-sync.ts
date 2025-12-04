@@ -10,7 +10,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { api } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 
 // ========================================
 // TYPES
@@ -64,7 +64,7 @@ export interface SyncAuditEntry {
 	googleEventId: string | null;
 	success: boolean;
 	errorMessage: string | null;
-	details: Record<string, any> | null;
+	details: Record<string, unknown> | null;
 	createdAt: string;
 }
 
@@ -96,21 +96,21 @@ export const googleCalendarKeys = {
 // ========================================
 
 async function fetchStatus(): Promise<GoogleCalendarStatus> {
-	const response = await api.get<{ data: GoogleCalendarStatus }>(
+	const response = await apiClient.get<{ data: GoogleCalendarStatus }>(
 		'/v1/google-calendar/sync/status',
 	);
 	return response.data;
 }
 
 async function fetchSettings(): Promise<GoogleCalendarSettings | null> {
-	const response = await api.get<{ data: GoogleCalendarSettings | null }>(
+	const response = await apiClient.get<{ data: GoogleCalendarSettings | null }>(
 		'/v1/google-calendar/sync/settings',
 	);
 	return response.data;
 }
 
 async function updateSettings(input: UpdateSettingsInput): Promise<GoogleCalendarSettings> {
-	const response = await api.put<{ data: GoogleCalendarSettings }>(
+	const response = await apiClient.put<{ data: GoogleCalendarSettings }>(
 		'/v1/google-calendar/sync/settings',
 		input,
 	);
@@ -118,26 +118,30 @@ async function updateSettings(input: UpdateSettingsInput): Promise<GoogleCalenda
 }
 
 async function initiateConnect(): Promise<{ authUrl: string }> {
-	const response = await api.get<{ data: { authUrl: string } }>('/v1/google-calendar/connect');
+	const response = await apiClient.get<{ data: { authUrl: string } }>(
+		'/v1/google-calendar/connect',
+	);
 	return response.data;
 }
 
 async function disconnect(): Promise<void> {
-	await api.post('/v1/google-calendar/disconnect');
+	await apiClient.post('/v1/google-calendar/disconnect');
 }
 
 async function performFullSync(): Promise<SyncResult> {
-	const response = await api.post<{ data: SyncResult }>('/v1/google-calendar/sync/full');
+	const response = await apiClient.post<{ data: SyncResult }>('/v1/google-calendar/sync/full');
 	return response.data;
 }
 
 async function performIncrementalSync(): Promise<SyncResult> {
-	const response = await api.post<{ data: SyncResult }>('/v1/google-calendar/sync/incremental');
+	const response = await apiClient.post<{ data: SyncResult }>(
+		'/v1/google-calendar/sync/incremental',
+	);
 	return response.data;
 }
 
 async function syncEvent(eventId: string): Promise<{ synced: boolean; eventId: string }> {
-	const response = await api.post<{ data: { synced: boolean; eventId: string } }>(
+	const response = await apiClient.post<{ data: { synced: boolean; eventId: string } }>(
 		'/v1/google-calendar/sync/event',
 		{ eventId },
 	);
@@ -145,7 +149,7 @@ async function syncEvent(eventId: string): Promise<{ synced: boolean; eventId: s
 }
 
 async function renewChannel(): Promise<{ renewed: boolean; channelExpiresAt: string }> {
-	const response = await api.post<{
+	const response = await apiClient.post<{
 		data: { renewed: boolean; channelExpiresAt: string };
 	}>('/v1/google-calendar/sync/channel/renew');
 	return response.data;
@@ -159,14 +163,14 @@ async function fetchHistory(params?: {
 	if (params?.limit) searchParams.set('limit', params.limit.toString());
 	if (params?.offset) searchParams.set('offset', params.offset.toString());
 
-	const response = await api.get<{ data: SyncAuditEntry[] }>(
+	const response = await apiClient.get<{ data: SyncAuditEntry[] }>(
 		`/v1/google-calendar/sync/history?${searchParams.toString()}`,
 	);
 	return response.data;
 }
 
 async function fetchConflicts(): Promise<SyncConflict[]> {
-	const response = await api.get<{ data: SyncConflict[] }>(
+	const response = await apiClient.get<{ data: SyncConflict[] }>(
 		'/v1/google-calendar/sync/conflicts',
 	);
 	return response.data;
@@ -212,9 +216,9 @@ export function useUpdateGoogleCalendarSettings() {
 			queryClient.invalidateQueries({ queryKey: googleCalendarKeys.status() });
 			toast.success('Configurações atualizadas');
 		},
-		onError: (error: any) => {
-			const message =
-				error?.response?.data?.message || 'Erro ao atualizar configurações';
+		onError: (error: unknown) => {
+			const apiError = error as { response?: { data?: { message?: string } } };
+			const message = apiError?.response?.data?.message || 'Erro ao atualizar configurações';
 			toast.error(message);
 		},
 	});
@@ -230,9 +234,9 @@ export function useConnectGoogleCalendar() {
 			// Redirect to Google OAuth
 			window.location.href = data.authUrl;
 		},
-		onError: (error: any) => {
-			const message =
-				error?.response?.data?.message || 'Erro ao conectar com Google Calendar';
+		onError: (error: unknown) => {
+			const apiError = error as { response?: { data?: { message?: string } } };
+			const message = apiError?.response?.data?.message || 'Erro ao conectar com Google Calendar';
 			toast.error(message);
 		},
 	});
@@ -250,9 +254,10 @@ export function useDisconnectGoogleCalendar() {
 			queryClient.invalidateQueries({ queryKey: googleCalendarKeys.all });
 			toast.success('Google Calendar desconectado');
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			const message =
-				error?.response?.data?.message || 'Erro ao desconectar do Google Calendar';
+				(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Erro ao desconectar do Google Calendar';
 			toast.error(message);
 		},
 	});
@@ -276,9 +281,10 @@ export function useFullSync() {
 				toast.warning(`Sincronização parcial: ${data.errors.length} erros`);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			const message =
-				error?.response?.data?.message || 'Erro na sincronização completa';
+				(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Erro na sincronização completa';
 			toast.error(message);
 		},
 	});
@@ -300,9 +306,10 @@ export function useIncrementalSync() {
 				toast.success(`${data.syncedCount} eventos sincronizados`);
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			const message =
-				error?.response?.data?.message || 'Erro na sincronização';
+				(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Erro na sincronização';
 			toast.error(message);
 		},
 	});
@@ -320,9 +327,10 @@ export function useSyncEvent() {
 			queryClient.invalidateQueries({ queryKey: googleCalendarKeys.status() });
 			toast.success('Evento sincronizado');
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			const message =
-				error?.response?.data?.message || 'Erro ao sincronizar evento';
+				(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Erro ao sincronizar evento';
 			toast.error(message);
 		},
 	});
@@ -340,9 +348,10 @@ export function useRenewChannel() {
 			queryClient.invalidateQueries({ queryKey: googleCalendarKeys.status() });
 			toast.success('Canal de notificações renovado');
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			const message =
-				error?.response?.data?.message || 'Erro ao renovar canal';
+				(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Erro ao renovar canal';
 			toast.error(message);
 		},
 	});
@@ -394,8 +403,7 @@ export function useGoogleCalendarSync() {
 	// Computed values
 	const isConnected = statusQuery.data?.isConnected ?? false;
 	const isEnabled = statusQuery.data?.isEnabled ?? false;
-	const isSyncing =
-		fullSyncMutation.isPending || incrementalSyncMutation.isPending;
+	const isSyncing = fullSyncMutation.isPending || incrementalSyncMutation.isPending;
 	const hasConflicts = (conflictsQuery.data?.length ?? 0) > 0;
 
 	// Channel expiry warning (< 24 hours)
@@ -455,13 +463,13 @@ export function useGoogleCalendarSync() {
  * Use this in components that modify financial events
  */
 export function useAutoSyncToGoogle() {
-	const { isEnabled, syncEvent } = useGoogleCalendarSync();
+	const { isEnabled, syncEvent: performSyncEvent } = useGoogleCalendarSync();
 
 	const triggerSync = (eventId: string) => {
 		if (isEnabled) {
 			// Delay sync slightly to allow local DB to update
 			setTimeout(() => {
-				syncEvent(eventId);
+				performSyncEvent(eventId);
 			}, 500);
 		}
 	};

@@ -289,7 +289,7 @@ export async function disconnectGoogleCalendar(userId: string): Promise<void> {
  * Get or create sync settings for user
  */
 export async function getSyncSettings(userId: string): Promise<CalendarSyncSettings | null> {
-	return db.query.calendarSyncSettings.findFirst({
+	return await db.query.calendarSyncSettings.findFirst({
 		where: eq(calendarSyncSettings.userId, userId),
 	});
 }

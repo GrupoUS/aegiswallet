@@ -75,7 +75,7 @@ const syncEventSchema = z.object({
  * Initiate OAuth 2.0 flow
  * GET /v1/google-calendar/connect
  */
-googleCalendarRouter.get('/connect', authMiddleware, rateLimitMiddleware, async (c) => {
+googleCalendarRouter.get('/connect', authMiddleware, rateLimitMiddleware, (c) => {
 	const { user } = c.get('auth');
 	const requestId = c.get('requestId');
 

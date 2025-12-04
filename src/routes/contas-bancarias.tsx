@@ -1,15 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { lazy } from 'react';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { BankAccountsListLoader } from '@/components/routes/contas-bancarias/BankAccountsListLoader';
-import { RouteErrorBoundary } from '@/components/routes/RouteErrorBoundary';
-
+/**
+ * @deprecated This route is deprecated. Bank accounts management has been consolidated into /saldo
+ * The drawer can be opened from the /saldo page by clicking on the Total Balance card
+ * or the accounts carousel
+ */
 export const Route = createFileRoute('/contas-bancarias')({
-	component: lazy(() =>
-		import('@/components/routes/contas-bancarias/ContasBancarias').then((m) => ({
-			default: m.ContasBancarias,
-		})),
-	),
-	pendingComponent: () => <BankAccountsListLoader />,
-	errorComponent: RouteErrorBoundary,
+	beforeLoad: () => {
+		// Redirect to /saldo - user can open drawer from there
+		throw redirect({
+			to: '/saldo',
+		});
+	},
 });

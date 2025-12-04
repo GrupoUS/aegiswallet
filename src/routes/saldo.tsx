@@ -110,7 +110,15 @@ function SaldoLoader() {
 	);
 }
 
+import { z } from 'zod';
+
+// Search params schema for the route
+const saldoSearchSchema = z.object({
+	tab: z.enum(['overview', 'transactions', 'bills']).optional().catch(undefined),
+});
+
 export const Route = createFileRoute('/saldo')({
 	component: lazy(() => import('./saldo.lazy').then((m) => ({ default: m.Saldo }))),
 	pendingComponent: () => <SaldoLoader />,
+	validateSearch: saldoSearchSchema,
 });

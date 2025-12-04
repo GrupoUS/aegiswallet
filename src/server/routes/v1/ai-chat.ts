@@ -223,9 +223,9 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 			}) => {
 				// LGPD-compliant logging with Brazilian Portuguese validation
 				const typedMessages = messages as LGPDCompliantMessage[];
-				const lastMessage = typedMessages[typedMessages.length - 1];
+				const callbackLastMessage = typedMessages[typedMessages.length - 1];
 				const responseContent =
-					lastMessage?.role === 'assistant' ? lastMessage.content : finishReason;
+					callbackLastMessage?.role === 'assistant' ? callbackLastMessage.content : finishReason;
 
 				// Validate content for compliance
 				const validation =

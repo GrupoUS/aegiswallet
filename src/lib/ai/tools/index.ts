@@ -2,9 +2,9 @@ import { createAccountTools } from './accounts';
 import { createCategoryTools } from './categories';
 import { createInsightTools } from './insights';
 import { createTransactionTools } from './transactions';
-import type { HttpClient } from '@/db/client';
+import type { DbClient } from '@/server/hono-types';
 
-export function createAllTools(userId: string, db: HttpClient) {
+export function createAllTools(userId: string, db: DbClient) {
 	return {
 		...createTransactionTools(userId, db),
 		...createAccountTools(userId, db),

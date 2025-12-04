@@ -8,7 +8,7 @@
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
 import { type FinancialAlert, generateFinancialAlerts } from './financial-alerts';
-import type { HttpClient } from '@/db/client';
+import type { DbClient } from '@/server/hono-types';
 import {
 	bankAccounts,
 	budgetCategories,
@@ -88,7 +88,7 @@ export interface FinancialContext {
  */
 export async function getAIFinancialContext(
 	userId: string,
-	db: HttpClient,
+	db: DbClient,
 	userName = 'Usuário',
 ): Promise<FinancialContext> {
 	const now = new Date();

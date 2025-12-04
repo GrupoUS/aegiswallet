@@ -13,11 +13,8 @@ interface PortalParams {
 export function useBillingPortal() {
 	return useMutation({
 		mutationFn: async (params: PortalParams = {}) => {
-			const response = await apiClient.post<{
-				data: PortalSessionResponse;
-				meta: { requestId: string };
-			}>('/api/v1/billing/portal', params);
-			return response.data;
+			const response = await apiClient.post<PortalSessionResponse>('/v1/billing/portal', params);
+			return response;
 		},
 		onSuccess: (data) => {
 			// Redirect to Stripe portal

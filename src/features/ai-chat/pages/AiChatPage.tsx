@@ -55,7 +55,7 @@ export default function AiChatPage() {
 	}
 
 	return (
-		<div className="flex-1 flex flex-col h-[calc(100vh-4rem)] p-4 chat-fullscreen-container">
+		<div className="flex-1 flex flex-col p-4 chat-fullscreen-container">
 			{/* Fullscreen Header Actions */}
 			<div className="absolute top-20 right-8 z-10">
 				<Tooltip>

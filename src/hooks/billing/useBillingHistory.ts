@@ -15,13 +15,10 @@ export function useBillingHistory({ limit = 10, offset = 0 }: UseBillingHistoryP
 	return useQuery({
 		queryKey: ['billing-history', { limit, offset }],
 		queryFn: async () => {
-			const response = await apiClient.get<{
-				data: PaymentHistoryResponse;
-				meta: { requestId: string };
-			}>('/api/v1/billing/payment-history', {
+			const response = await apiClient.get<PaymentHistoryResponse>('/v1/billing/payment-history', {
 				params: { limit: limit.toString(), offset: offset.toString() },
 			});
-			return response.data;
+			return response;
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		retry: 1,

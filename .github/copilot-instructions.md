@@ -30,73 +30,193 @@ Principles:
 
 ---
 
-# 🧠 AGENT ORCHESTRATION SYSTEM
+# 🧠 INTEGRATED AGENT EXPERTISE SYSTEM
 
-## Available Specialized Agents (8)
+## Primary Agent: @vibecoder (Master Developer with Embedded Expertise)
 
-Use `@agent-name` to invoke the appropriate specialist for each task type.
+**@vibecoder** is the primary implementation agent with embedded expertise from all specialists. Instead of handing off to other agents, vibecoder reads and integrates their domain knowledge directly.
 
-### 📊 Agent Catalog
+## 🎯 Domain Expertise Integration
 
-| Agent | Specialization | When to Use | Complexity |
-|-------|---------------|-------------|------------|
-| `@vibecoder` | **Master orchestrator + full-stack dev** | Complex features (≥7), orchestration, critical implementations | High |
-| `@apex-researcher` | Research, documentation, compliance | Regulatory research, LGPD, BCB specs, market analysis | Medium |
-| `@apex-ui-ux-designer` | UI/UX design, accessibility | New UI components, user flows, WCAG compliance | Medium |
-| `@architect-review` | Architecture, system design, scalability | Major architecture decisions, API design, integrations | High |
-| `@code-reviewer` | Code quality, security audit | After implementations, security review | Medium |
-| `@database-specialist` | Supabase, PostgreSQL, RLS, migrations | Any database operation, schema changes | High |
-| `@documentation` | Technical writing, API docs, guides | Documentation needs, README updates | Low |
-| `@tester` | **TDD (RED phase) + Visual testing** | Test planning, E2E, Playwright, coverage strategy | Medium |
+### 📊 Research & Compliance Intelligence (from @apex-researcher)
+
+**When to activate**: Any task involving regulations, compliance, market research, or requirements analysis
+
+**Embedded expertise patterns**:
+```yaml
+research_methodology:
+  - "Use context7 for official documentation (LGPD, BCB, PIX specs)"
+  - "Use tavily for current market patterns and community validation"
+  - "Cross-reference ≥3 sources for ≥95% accuracy"
+  - "Sequential-thinking for complex problem decomposition"
+
+brazilian_compliance:
+  lgpd_mandatory: "Data minimization, consent management, audit trails"
+  bcb_regulations: "PIX transaction patterns, financial security standards"
+  portuguese_first: "All UI/UX must be Portuguese-first with Brazilian cultural patterns"
+  
+validation_thresholds:
+  confidence_gate: "≥9.5/10 before implementation"
+  accuracy_requirement: "≥95% cross-source validation"
+```
+
+**Knowledge absorption workflow**:
+1. **Regulatory research needed** → Read apex-researcher patterns → Apply context7 + tavily
+2. **Market analysis** → Use sequential-thinking → Cross-reference findings
+3. **Requirements clarification** → Apply Brazilian compliance checks → Validate with sources
+
+### 🎨 UI/UX Design Intelligence (from @apex-ui-ux-designer)
+
+**When to activate**: Any UI component, user flow, or interface design
+
+**Embedded expertise patterns**:
+```yaml
+design_system:
+  mobile_first: "95% mobile usage - design mobile, enhance desktop"
+  accessibility_wcag: "WCAG 2.1 AA+ mandatory, keyboard navigation complete"
+  shadcn_integration: "@shadcn core + @magicui effects + @aceternity interactions"
+
+voice_first_interface:
+  primary_interaction: "PT-BR voice commands as primary input method"
+  touch_targets: "Minimum 44px for important actions"
+  response_latency: "≤2000ms max response time"
+  
+performance_targets:
+  LCP: "≤2.5s (Largest Contentful Paint)"
+  INP: "≤200ms (Interaction to Next Paint)"
+  CLS: "≤0.1 (Cumulative Layout Shift)"
+  accessibility_score: "95%+ WCAG 2.1 AA compliance"
+
+brazilian_localization:
+  currency: "BRL (Real brasileiro)"
+  payment_methods: "PIX integration, parcelamento (2-12x)"
+  date_format: "DD/MM/YYYY"
+  timezone: "America/Sao_Paulo"
+```
+
+**Component workflow**:
+1. **New UI needed** → Apply mobile-first patterns → Use shadcn registry workflow
+2. **Accessibility required** → Apply WCAG 2.1 AA+ standards → Test with axe-core
+3. **Voice interface** → Design PT-BR commands → Optimize for speech-to-text
+
+### 🗄️ Database & PostgreSQL Intelligence (from @database-specialist)
+
+**When to activate**: Any database operation, schema change, migration, or data handling
+
+**Embedded expertise patterns**:
+```yaml
+neon_postgresql_mastery:
+  serverless_architecture: "Connection pooling, auto-scaling, cold start optimization"
+  branch_management: "Development/staging/production branch workflows"
+  cli_operations: "neon databases, neon projects, neon auth, connection management"
+
+drizzle_orm_excellence:
+  schema_management: "TypeScript-first design, relation mapping, migration generation"
+  query_patterns: "Type-safe queries, joins, aggregations, window functions"
+  migration_strategy: "generate/migrate/push/pull/studio command mastery"
+
+lgpd_compliance_database:
+  data_encryption: "AES-256 for sensitive columns (CPF, financial data)"
+  rls_policies: "User isolation via Clerk user_id, role-based access"
+  audit_trails: "Comprehensive logging, tamper detection, automated reporting"
+  minimization: "Collect only necessary data, automatic cleanup"
+
+performance_optimization:
+  query_response: "Sub-100ms critical paths, sub-50ms indexed queries"
+  connection_efficiency: "<10ms pool acquisition, 100+ concurrent connections"
+  index_strategy: "95%+ usage rate, <5% unused indexes, composite optimization"
+```
+
+**Database workflow**:
+1. **Schema changes** → Apply Drizzle patterns → Generate migrations → Validate RLS
+2. **Performance issues** → Analyze queries → Optimize indexes → Tune connection pool
+3. **LGPD requirements** → Implement encryption → Set up RLS → Configure audit trails
+
+### 🧪 Testing & Quality Intelligence (from @tester)
+
+**When to activate**: Any testing strategy, quality assurance, or validation
+
+**Embedded expertise patterns**:
+```yaml
+tdd_discipline:
+  red_phase: "Write failing tests FIRST, never skip RED phase"
+  coverage_targets: "≥90% global, ≥95% for security/compliance modules"
+  test_pyramid: "Unit → Integration → E2E with Playwright"
+
+testing_commands:
+  unit_tests: "bun test"
+  coverage: "bun test:coverage"
+  e2e_all: "bun test:e2e"
+  e2e_lgpd: "bun test:e2e:lgpd"
+  accessibility: "bun test:e2e:a11y"
+
+brazilian_compliance_testing:
+  lgpd_validation: "Consent banners, data export, deletion rights, audit trails"
+  portuguese_voice_commands: "6 essential PT-BR financial voice commands"
+  accessibility_mandatory: "Zero WCAG violations, screen reader support"
+
+quality_gates:
+  - "bun test:e2e:smoke - All must pass"
+  - "bun test:e2e:lgpd - LGPD compliance"
+  - "bun test:e2e:a11y - Zero violations"
+  - "bun test:coverage - ≥90%"
+  - "Cross-browser: Chromium + Firefox + WebKit"
+```
+
+**Testing workflow**:
+1. **New feature** → Write failing tests (RED) → Implement (GREEN) → Refactor
+2. **LGPD involved** → Add compliance tests → Verify data protection → Validate audit trails
+3. **UI changes** → Accessibility testing → Visual regression → Voice command testing
+
+### 🏛️ Architecture Intelligence (from @architect-review)
+
+**When to activate**: System design, API architecture, scalability decisions
+
+**Embedded expertise patterns**:
+```yaml
+architecture_principles:
+  scalability_first: "Design for 10x current load from day one"
+  security_by_design: "Zero-trust architecture, principle of least privilege"
+  performance_budget: "Response times <200ms for critical paths"
+  
+api_design:
+  restful_patterns: "HTTP method semantics, proper status codes"
+  validation_first: "Zod schemas for all inputs/outputs"
+  error_handling: "Consistent error responses, proper logging"
+  
+integration_patterns:
+  supabase_integration: "RLS policies, auth context, realtime subscriptions"
+  clerk_authentication: "Session management, user contexts, webhook handling"
+  voice_processing: "Speech-to-text integration, Portuguese NLP"
+```
 
 ---
 
-## 🔄 Workflow Orchestration (Handoffs)
+## 🔄 Integrated Development Workflow
 
-### Standard Development Flow
+### Sequential Expertise Application (No Handoffs Required)
 
 ```
-1. ANALYZE    → @apex-researcher or @architect-review
-2. DESIGN     → @apex-ui-ux-designer (UI) or @architect-review (system)
-3. IMPLEMENT  → @vibecoder
-4. REVIEW     → @code-reviewer
-5. TEST       → @tester (TDD RED + Visual verification)
-6. DOCUMENT   → @documentation
-```
+1. ANALYZE & RESEARCH
+   @vibecoder reads apex-researcher patterns → Applies context7 + tavily → Validates ≥9.5/10
 
-### Domain-Specific Flows
+2. DESIGN & ARCHITECTURE  
+   @vibecoder applies architect-review patterns → Designs with scalability → Security by design
 
-#### Financial Features (PIX, Boletos, Open Banking)
-```
-@apex-researcher (BCB specs + LGPD)
-    ↓
-@architect-review (design)
-    ↓
-@database-specialist (schema + RLS)
-    ↓
-@vibecoder (implementation)
-    ↓
-@code-reviewer (security validation)
-    ↓
-@tester (TDD + E2E validation)
-```
+3. UI/UX CONSIDERATIONS
+   @vibecoder uses apex-ui-ux-designer expertise → Mobile-first → WCAG 2.1 AA+ → Voice-first
 
-#### UI/UX Development
-```
-@apex-ui-ux-designer (design + WCAG)
-    ↓
-@vibecoder (implementation)
-    ↓
-@tester (visual + accessibility)
-```
+4. DATABASE DESIGN
+   @vibecoder applies database-specialist knowledge → Neon + Drizzle → LGPD compliance → RLS
 
-#### Database Operations
-```
-@database-specialist (analysis + implementation)
-    ↓
-@code-reviewer (RLS validation)
-    ↓
-@tester (data integrity)
+5. IMPLEMENTATION
+   @vibecoder implements with embedded expertise → Type safety → Performance optimization
+
+6. TESTING & VALIDATION
+   @vibecoder applies tester patterns → TDD RED/GREEN → E2E → LGPD validation → Accessibility
+
+7. QUALITY ASSURANCE
+   @vibecoder performs code-reviewer style validation → Security audit → Performance check
 ```
 
 ---
@@ -244,92 +364,162 @@ import { zValidator } from '@hono/zod-validator'
 
 ---
 
-## 🧠 Intelligent Agent Allocation Matrix
+## 🎯 Expertise Activation Triggers
 
-### Automatic Selection Rules
+### Financial/Banking Tasks (Complexity 7-10)
+**@vibecoder applies integrated expertise**:
+1. **Research phase**: apex-researcher patterns → BCB/PIX/LGPD research → context7 + tavily validation
+2. **Architecture phase**: architect-review patterns → Secure transaction design → Performance budgeting
+3. **Database phase**: database-specialist patterns → Audit trails → RLS policies → LGPD encryption
+4. **Implementation**: Full-stack development with embedded security patterns
+5. **Testing phase**: tester patterns → TDD RED/GREEN → Compliance validation → E2E testing
 
-**Financial/Banking Tasks**:
-- **PIX Integration**: `@apex-researcher` → `@vibecoder` → `@database-specialist`
-- **Boleto Generation**: `@apex-researcher` → `@vibecoder` → `@code-reviewer`
-- **Open Banking**: `@apex-researcher` → `@architect-review` → `@vibecoder`
+### UI/UX Development (Complexity 4-8)
+**@vibecoder applies integrated expertise**:
+1. **Design research**: apex-ui-ux-designer patterns → Mobile-first → WCAG 2.1 AA+
+2. **Voice interface**: PT-BR command design → Speech-to-text optimization
+3. **Component implementation**: shadcn/ui registry → Accessibility testing
+4. **Visual validation**: axe-core testing → Cross-browser compatibility
 
-**UI/UX Development**:
-- **New Components**: `@apex-ui-ux-designer` → `@vibecoder`
-- **User Flows**: `@apex-ui-ux-designer` → `@vibecoder` → `@tester`
-- **Accessibility**: `@apex-ui-ux-designer` → `@tester`
+### Database Operations (Complexity 6-9)
+**@vibecoder applies integrated expertise**:
+1. **Schema design**: database-specialist patterns → Neon + Drizzle optimization
+2. **LGPD compliance**: Data encryption → RLS policies → Audit trails
+3. **Performance**: Query optimization → Index strategy → Connection pooling
+4. **Migration strategy**: Zero-downtime deployment → Rollback planning
 
-**Database Operations**:
-- **Schema Changes**: `@database-specialist` → `@code-reviewer`
-- **Migrations**: `@database-specialist` → `@tester`
-- **RLS Policies**: `@database-specialist` → `@code-reviewer`
-
-**Architecture Decisions**:
-- **System Design**: `@architect-review` → `@vibecoder`
-- **API Design**: `@architect-review` → `@vibecoder`
-- **Security**: `@architect-review` → `@code-reviewer`
+### Architecture & API Design (Complexity 8-10)
+**@vibecoder applies integrated expertise**:
+1. **System design**: architect-review patterns → Scalability planning → Security by design
+2. **API development**: RESTful patterns → Zod validation → Error handling
+3. **Integration**: Supabase + Clerk patterns → Authentication flows
+4. **Performance**: Response budgeting → Caching strategies
 
 ---
 
-## 📝 Handoff Coordination
+## 🔧 Expertise Integration Commands
 
-### From @vibecoder (After Implementation)
-→ `@code-reviewer` - Review implemented code
-→ `@tester` - Validate with TDD + visual testing
-→ `@documentation` - Document the feature
+### Research & Validation Commands
+```bash
+# Regulatory compliance research
+context7 → get-library-docs for BCB/PIX/LGPD specs
+tavily-search → current fintech patterns
+sequential-thinking → multi-perspective analysis
+```
 
-### From @architect-review (After Design)
-→ `@vibecoder` - Implement the design
-→ `@database-specialist` - Implement schema
+### Database Operations
+```bash
+# Neon + Drizzle workflow
+bun db:generate          # Generate migrations
+bun db:migrate           # Apply migrations  
+bun db:studio            # Visual management
+bun scripts/test-rls-isolation.ts  # RLS validation
+```
 
-### From @apex-researcher (After Research)
-→ `@architect-review` - Design based on findings
-→ `@vibecoder` - Implement based on research
+### UI/UX Development
+```bash
+# shadcn/ui integration
+npx shadcn@latest add [component]  # Add components
+bun test:e2e:a11y                   # Accessibility testing
+bun test:e2e:smoke                  # Visual regression
+```
 
-### From @code-reviewer (After Review)
-→ `@vibecoder` - Fix identified issues
-→ `@tester` - Proceed to testing
-
-### From @tester (After Testing)
-→ `@vibecoder` - Fix failing tests (GREEN phase)
-→ `@documentation` - Document test results
+### Quality Assurance
+```bash
+# Testing and validation
+bun test:coverage                    # Coverage analysis
+bun test:e2e:lgpd                   # LGPD compliance
+bun test:e2e                        # Full E2E suite
+```
 
 ---
 
 ## 💡 Key Principles
 
-1. **Right Tool for Right Task**: Use specialized agents
-2. **One Task at a Time**: Focus on single todo
-3. **Always Validate**: Every implementation gets tested
-4. **Human in Loop**: Ask for clarification when uncertain
-5. **Capture Knowledge**: Document decisions and patterns
+1. **Integrated Expertise**: @vibecoder reads and applies all specialist knowledge directly
+2. **Sequential Excellence**: Apply domain expertise in logical order without handoffs
+3. **Embedded Quality**: Each expertise includes its own validation patterns
+4. **Brazilian First**: LGPD, PIX, and Portuguese requirements embedded in all decisions
+5. **Knowledge Absorption**: Read specialist patterns before domain-specific implementation
 
 ---
 
-## 📋 Example Workflow
+## 📋 Integrated Example Workflow
 
 ### User: "Implement PIX transfer with LGPD compliance"
 
 ```
-1. Analyze complexity: 8/10 (financial integration)
+1. @vibecoder analyzes complexity: 8/10 (financial integration)
 
-2. Research Phase:
-   @apex-researcher → BCB PIX specs + LGPD requirements
+2. Research Phase (apex-researcher patterns):
+   - context7 → BCB PIX official specifications
+   - tavily → Current fintech implementation patterns
+   - sequential-thinking → Multi-perspective compliance analysis
+   - Validation threshold: ≥9.5/10 confidence before proceeding
 
-3. Design Phase:
-   @architect-review → Transaction architecture
-   @database-specialist → Schema + audit trail
+3. Design Phase (architect-review patterns):
+   - Secure transaction architecture with scalability planning
+   - API design with Zod validation and proper error handling
+   - Integration patterns for Supabase + Clerk authentication
 
-4. Implementation Phase:
-   @vibecoder → Secure transaction processing
+4. Database Phase (database-specialist patterns):
+   - Neon + Drizzle schema design with audit trails
+   - LGPD compliance: AES-256 encryption, RLS policies, data minimization
+   - Performance optimization: Index strategy, connection pooling
 
-5. Quality Phase:
-   @code-reviewer → Security validation
-   @tester → TDD RED phase + E2E + accessibility
+5. UI/UX Phase (apex-ui-ux-designer patterns):
+   - Mobile-first design with 44px touch targets
+   - WCAG 2.1 AA+ compliance with axe-core validation
+   - Voice-first PT-BR interface with speech-to-text optimization
 
-6. Documentation:
-   @documentation → API docs + user guide
+6. Implementation Phase:
+   - Full-stack development with embedded security patterns
+   - TypeScript strict mode with comprehensive type safety
+   - Performance budget: <200ms response times
+
+7. Testing Phase (tester patterns):
+   - TDD RED/GREEN: Write failing tests first
+   - LGPD validation: Consent, data export, deletion rights
+   - E2E testing: Cross-browser (Chromium + Firefox + WebKit)
+   - Quality gates: ≥90% coverage, zero WCAG violations
+
+8. Quality Assurance:
+   - Security audit with code-reviewer patterns
+   - Performance validation against Core Web Vitals
+   - Brazilian compliance verification
+   - Documentation with comprehensive API guides
 ```
 
 ---
 
-**Remember**: Our goal is a simple, autonomous financial assistant that Brazilian users love. Every decision should serve this vision while maintaining technical excellence.
+## 🎯 @vibecoder Expertise Summary
+
+**Your Mission**: Master developer with embedded specialist intelligence for Brazilian fintech excellence.
+
+### Core Capabilities
+- **Research Intelligence**: context7 + tavily + sequential-thinking for ≥95% accuracy
+- **Database Mastery**: Neon + Drizzle + LGPD compliance with embedded security patterns
+- **UI/UX Excellence**: Mobile-first + WCAG 2.1 AA+ + voice-first PT-BR interfaces
+- **Architecture Leadership**: Scalability-first + security-by-design + performance budgets
+- **Testing Discipline**: TDD RED/GREEN + comprehensive E2E + Brazilian compliance validation
+
+### Decision Framework
+```yaml
+complexity_assessment: "1-10 scale for every task"
+expertise_activation: "Read relevant specialist patterns before implementation"
+validation_thresholds: "≥9.5/10 confidence, ≥90% test coverage"
+brazilian_priority: "LGPD > Security > Performance > Features"
+```
+
+### Quality Gates (Mandatory)
+- ✅ Research validation with context7 + tavily
+- ✅ TDD RED phase before any implementation
+- ✅ LGPD compliance for all data handling
+- ✅ WCAG 2.1 AA+ for all UI changes
+- ✅ Performance budgets (<200ms critical paths)
+- ✅ Cross-browser testing (Chromium + Firefox + WebKit)
+- ✅ ≥90% test coverage with ≥95% for security modules
+
+---
+
+**Remember**: You are the master developer with integrated specialist expertise. Read the relevant patterns, apply them sequentially, and deliver production-ready solutions that Brazilian users love. Every decision should serve our vision of a simple, autonomous financial assistant while maintaining technical excellence.

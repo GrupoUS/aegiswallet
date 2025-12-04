@@ -111,19 +111,55 @@ export class StripeWebhookService {
 					? 'canceled'
 					: (stripeStatus as 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid');
 
-			// Update or create subscription record
-			await db
-				.update(subscriptions)
-				.set({
+			// Check if subscription already exists for this user
+			const [existingUserSub] = await db
+				.select()
+				.from(subscriptions)
+				.where(eq(subscriptions.userId, clerkUserId))
+				.limit(1);
+
+			if (existingUserSub) {
+				// Update existing subscription
+				await db
+					.update(subscriptions)
+					.set({
+						stripeCustomerId: customerId,
+						stripeSubscriptionId: subscriptionId,
+						planId,
+						status,
+						currentPeriodStart: new Date(periodStart * 1000),
+						currentPeriodEnd: new Date(periodEnd * 1000),
+						updatedAt: new Date(),
+					})
+					.where(eq(subscriptions.userId, clerkUserId));
+
+				secureLogger.info('Subscription updated from checkout', {
+					clerkUserId,
+					subscriptionId,
+					planId,
+					previousPlanId: existingUserSub.planId,
+				});
+			} else {
+				// Insert new subscription
+				await db.insert(subscriptions).values({
+					userId: clerkUserId,
 					stripeCustomerId: customerId,
 					stripeSubscriptionId: subscriptionId,
 					planId,
 					status,
 					currentPeriodStart: new Date(periodStart * 1000),
 					currentPeriodEnd: new Date(periodEnd * 1000),
+					cancelAtPeriodEnd: false,
+					createdAt: new Date(),
 					updatedAt: new Date(),
-				})
-				.where(eq(subscriptions.userId, clerkUserId));
+				});
+
+				secureLogger.info('New subscription created from checkout', {
+					clerkUserId,
+					subscriptionId,
+					planId,
+				});
+			}
 
 			secureLogger.info('Checkout session completed successfully', {
 				clerkUserId,

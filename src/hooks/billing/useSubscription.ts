@@ -10,11 +10,8 @@ export function useSubscription() {
 	return useQuery({
 		queryKey: ['subscription'],
 		queryFn: async () => {
-			const response = await apiClient.get<{
-				data: SubscriptionResponse;
-				meta: { requestId: string };
-			}>('/api/v1/billing/subscription');
-			return response.data;
+			const response = await apiClient.get<SubscriptionResponse>('/v1/billing/subscription');
+			return response;
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		retry: 1,

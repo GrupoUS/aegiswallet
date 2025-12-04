@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChatWidget } from '../../features/ai-chat/components/ChatWidget';

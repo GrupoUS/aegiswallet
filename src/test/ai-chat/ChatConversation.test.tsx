@@ -6,6 +6,8 @@ import { setupTestDOM } from '../utils/test-dom-setup';
 setupTestDOM();
 
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -18,13 +20,14 @@ const customRender = (ui: ReactElement) => {
 	document.body.appendChild(container);
 
 	// Patch scrollIntoView for any elements that might need it
-	const originalScrollIntoView = Element.prototype.scrollIntoView;
-	Element.prototype.scrollIntoView = () => {};
+	// Patch scrollIntoView for any elements that might need it
+	const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+	window.HTMLElement.prototype.scrollIntoView = () => {};
 
 	try {
 		return render(ui, { container });
 	} finally {
-		Element.prototype.scrollIntoView = originalScrollIntoView;
+		window.HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
 	}
 };
 

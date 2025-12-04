@@ -10,7 +10,7 @@ export function usePlans() {
 	return useQuery({
 		queryKey: ['plans'],
 		queryFn: async () => {
-			const response = await apiClient.get<PlansResponse>('/api/v1/billing/plans');
+			const response = await apiClient.get<PlansResponse>('/v1/billing/plans');
 			return response.plans;
 		},
 		staleTime: 1000 * 60 * 10, // 10 minutes - plans don't change often

@@ -105,6 +105,27 @@ export function setupTestDOM(): void {
 			const body = dom.window.document.createElement('body');
 			dom.window.document.body = body;
 		}
+
+		// Polyfill ResizeObserver
+		global.ResizeObserver = class ResizeObserver {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		};
+
+		// Polyfill getComputedStyle
+		if (!dom.window.getComputedStyle) {
+			dom.window.getComputedStyle = (_elt: Element) => {
+				return {
+					getPropertyValue: (_prop: string) => '',
+				} as CSSStyleDeclaration;
+			};
+		}
+
+		// Ensure it's on global
+		if (!global.getComputedStyle) {
+			global.getComputedStyle = dom.window.getComputedStyle as any;
+		}
 	}
 }
 

@@ -15,11 +15,8 @@ export function usePaymentMethods() {
 	return useQuery({
 		queryKey: ['payment-methods'],
 		queryFn: async () => {
-			const response = await apiClient.get<{
-				data: PaymentMethodsResponse;
-				meta: { requestId: string };
-			}>('/api/v1/billing/payment-methods');
-			return response.data;
+			const response = await apiClient.get<PaymentMethodsResponse>('/v1/billing/payment-methods');
+			return response;
 		},
 		staleTime: 1000 * 60 * 2, // 2 minutes
 		retry: 1,
@@ -34,11 +31,8 @@ export function useAddPaymentMethod() {
 
 	return useMutation({
 		mutationFn: async (data: AddPaymentMethodRequest) => {
-			const response = await apiClient.post<{
-				data: { paymentMethod: PaymentMethod };
-				meta: { requestId: string };
-			}>('/api/v1/billing/payment-methods', data);
-			return response.data;
+			const response = await apiClient.post<{ paymentMethod: PaymentMethod }>('/v1/billing/payment-methods', data);
+			return response;
 		},
 		onSuccess: () => {
 			// Invalidate payment methods query to refetch
@@ -61,11 +55,8 @@ export function useUpdatePaymentMethod() {
 			paymentMethodId: string;
 			data: UpdatePaymentMethodRequest;
 		}) => {
-			const response = await apiClient.put<{
-				data: { paymentMethod: PaymentMethod };
-				meta: { requestId: string };
-			}>(`/api/v1/billing/payment-methods/${paymentMethodId}`, data);
-			return response.data;
+			const response = await apiClient.put<{ paymentMethod: PaymentMethod }>(`/v1/billing/payment-methods/${paymentMethodId}`, data);
+			return response;
 		},
 		onSuccess: () => {
 			// Invalidate payment methods query to refetch
@@ -82,11 +73,8 @@ export function useRemovePaymentMethod() {
 
 	return useMutation({
 		mutationFn: async (paymentMethodId: string) => {
-			const response = await apiClient.delete<{
-				data: { success: boolean };
-				meta: { requestId: string };
-			}>(`/api/v1/billing/payment-methods/${paymentMethodId}`);
-			return response.data;
+			const response = await apiClient.delete<{ success: boolean }>(`/v1/billing/payment-methods/${paymentMethodId}`);
+			return response;
 		},
 		onSuccess: () => {
 			// Invalidate payment methods query to refetch

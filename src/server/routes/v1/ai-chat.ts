@@ -3,9 +3,6 @@ import { convertToCoreMessages, streamText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-// Note: AI SDK types (AIUsage, AIToolCall, AIFinishCallback) are defined inline
-// in the onFinish callback to match the AI SDK's exact signature which may vary between versions
-
 // Brazilian Portuguese AI response validation
 interface AIResponseValidation {
 	isValid: boolean;
@@ -192,38 +189,17 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 		];
 
 		const result = streamText({
-			model,
+			// biome-ignore lint/suspicious/noExplicitAny: AI SDK model types vary between versions, safe cast required
+			model: model as any,
 			system: enhancedSystemPrompt,
 			messages: convertToCoreMessages(messagesWithContext),
 			tools,
 			maxSteps: 5, // Permitir até 5 tool calls encadeadas
-			onFinish: async ({
-				usage,
-				finishReason,
-				toolCalls,
-			}: {
-				usage: {
-					totalTokens: number;
-					promptTokens?: number;
-					completionTokens?: number;
-				};
-				finishReason:
-					| 'stop'
-					| 'length'
-					| 'tool-calls'
-					| 'error'
-					| 'content-filter'
-					| 'cancel'
-					| 'unknown';
-				toolCalls?: Array<{
-					toolCallId: string;
-					toolName: string;
-					args: Record<string, unknown>;
-				}>;
-			}) => {
+			onFinish: async (finishResult) => {
 				// LGPD-compliant logging with Brazilian Portuguese validation
 				const typedMessages = messages as LGPDCompliantMessage[];
 				const callbackLastMessage = typedMessages[typedMessages.length - 1];
+				const finishReason = finishResult.finishReason;
 				const responseContent =
 					callbackLastMessage?.role === 'assistant' ? callbackLastMessage.content : finishReason;
 
@@ -251,14 +227,14 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 					sessionId,
 					provider,
 					model: `${provider}/${tier}`,
-					actionType: toolCalls?.length ? 'tool_call' : 'chat',
-					toolName: toolCalls?.map((tc) => tc.toolName).join(', '),
+					actionType: finishResult.toolCalls?.length ? 'tool_call' : 'chat',
+					toolName: finishResult.toolCalls?.map((tc) => tc.toolName).join(', '),
 					inputSummary:
 						typeof lastUserContent === 'string'
 							? lastUserContent.slice(0, 100)
 							: 'Multi-modal/Tool input',
 					outputSummary: finishReason + complianceNote,
-					tokensUsed: usage.totalTokens,
+					tokensUsed: finishResult.usage.totalTokens,
 					latencyMs: Date.now() - startTime,
 					outcome: validation.isValid ? 'success' : 'error',
 					errorMessage:
@@ -267,10 +243,8 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 							: undefined,
 				});
 			},
-			// biome-ignore lint/suspicious/noExplicitAny: AI SDK streamText options type is complex and version-dependent
-		} as any);
+		});
 
-		// Cast to any to avoid TS error if types are stale, but toDataStreamResponse should exist
 		// biome-ignore lint/suspicious/noExplicitAny: AI SDK result type changes between versions
 		return (result as any).toDataStreamResponse();
 	} catch (error) {

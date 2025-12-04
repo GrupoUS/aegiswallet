@@ -7,7 +7,6 @@
 
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
-import { type FinancialAlert, generateFinancialAlerts } from './financial-alerts';
 import {
 	bankAccounts,
 	budgetCategories,
@@ -16,6 +15,7 @@ import {
 	transactions,
 } from '@/db/schema';
 import type { DbClient } from '@/server/hono-types';
+import { generateFinancialAlerts, type FinancialAlert } from './financial-alerts';
 
 // ========================================
 // TYPES
@@ -250,7 +250,7 @@ export async function getAIFinancialContext(
 	const upcomingPayments = upcoming.map((u) => ({
 		description: u.description ?? 'Pagamento',
 		amount: Number(u.amount ?? 0),
-		dueDate: u.dueDate ?? new Date(),
+		dueDate: u.dueDate as Date,
 	}));
 
 	// Format recent transactions
@@ -259,7 +259,7 @@ export async function getAIFinancialContext(
 		amount: Number(tx.amount),
 		description: tx.description,
 		categoryName: categoryMap.get(tx.categoryId ?? '') ?? null,
-		transactionDate: tx.transactionDate ?? new Date(),
+		transactionDate: tx.transactionDate as Date,
 		type: tx.type ?? 'debit',
 	}));
 

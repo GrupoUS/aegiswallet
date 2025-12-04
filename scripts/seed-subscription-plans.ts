@@ -12,14 +12,20 @@ async function seedSubscriptionPlans() {
 		{
 			id: 'free',
 			name: 'Gratuito',
-			description: 'Dashboard básico e recursos limitados',
+			description: 'Gerencie suas finanças manualmente',
 			priceCents: 0,
 			currency: 'BRL',
 			interval: null,
 			stripeProductId: null,
 			stripePriceId: null,
-			features: ['Dashboard básico', '1 conta bancária', 'Transações limitadas'],
-			aiModels: [],
+			features: [
+				'Dashboard completo',
+				'Adicionar transações manualmente',
+				'Categorização de gastos',
+				'Relatórios básicos',
+				'1 conta bancária',
+			],
+			aiModels: [], // Sem acesso a IA
 			maxBankAccounts: 1,
 			maxTransactionsPerMonth: 100,
 			isActive: true,
@@ -28,19 +34,21 @@ async function seedSubscriptionPlans() {
 		{
 			id: 'basic',
 			name: 'Básico',
-			description: 'Chat IA e automações básicas',
-			priceCents: 5900,
+			description: 'Assistente financeiro com IA básica',
+			priceCents: 1990, // R$ 19,90 (conforme Stripe)
 			currency: 'BRL',
 			interval: 'month',
-			stripeProductId: null, // Set from Stripe Dashboard
+			stripeProductId: 'prod_SMort0etshvwat',
 			stripePriceId: process.env.STRIPE_PRICE_BASIC_MONTHLY || null,
 			features: [
-				'Chat IA (Gemini Flash)',
+				'Tudo do plano Gratuito',
+				'Chat com IA (Gemini Flash)',
+				'Insights automáticos',
 				'3 contas bancárias',
-				'Automações básicas',
+				'Transações ilimitadas',
 				'Relatórios mensais',
 			],
-			aiModels: ['gemini-flash'],
+			aiModels: ['gemini-flash', 'gemini-flash-lite'], // Modelos de IA mais econômicos
 			maxBankAccounts: 3,
 			maxTransactionsPerMonth: null, // unlimited
 			isActive: true,
@@ -49,20 +57,22 @@ async function seedSubscriptionPlans() {
 		{
 			id: 'advanced',
 			name: 'Avançado',
-			description: 'Todos os modelos de IA e recursos premium',
-			priceCents: 11900,
+			description: 'Todos os recursos premium com IAs avançadas',
+			priceCents: 9900, // R$ 99,00 (conforme Stripe)
 			currency: 'BRL',
 			interval: 'month',
-			stripeProductId: null, // Set from Stripe Dashboard
+			stripeProductId: 'prod_SMort0etshvwat',
 			stripePriceId: process.env.STRIPE_PRICE_ADVANCED_MONTHLY || null,
 			features: [
-				'Todas as IAs (GPT-4, Claude, Gemini Pro)',
+				'Tudo do plano Básico',
+				'IAs Avançadas (Claude Sonnet, Gemini Pro)',
+				'Análises preditivas',
 				'Contas ilimitadas',
-				'API access',
 				'Suporte prioritário',
+				'API access',
 				'Automações avançadas',
 			],
-			aiModels: ['gpt-4o', 'claude-sonnet', 'gemini-pro', 'gemini-flash'],
+			aiModels: ['claude-sonnet', 'gemini-pro', 'gemini-flash', 'gemini-flash-lite', 'gpt-4o'], // Todos os modelos
 			maxBankAccounts: null, // unlimited
 			maxTransactionsPerMonth: null, // unlimited
 			isActive: true,

@@ -48,22 +48,40 @@ export const PLANS = [
 		id: 'free',
 		name: 'Gratuito',
 		priceCents: 0,
-		features: ['Dashboard básico', '1 conta bancária', 'Transações limitadas'],
-		aiModels: [],
+		features: [
+			'Dashboard completo',
+			'Adicionar transações manualmente',
+			'Categorização de gastos',
+			'Relatórios básicos',
+			'1 conta bancária',
+		],
+		aiModels: [], // Sem acesso a IA
 	},
 	{
 		id: 'basic',
 		name: 'Básico',
-		priceCents: 5900,
-		features: ['Chat IA (Gemini Flash)', '3 contas bancárias', 'Automações básicas'],
-		aiModels: ['gemini-flash'],
+		priceCents: 1990, // R$ 19,90
+		features: [
+			'Tudo do plano Gratuito',
+			'Chat com IA (Gemini Flash)',
+			'Insights automáticos',
+			'3 contas bancárias',
+			'Transações ilimitadas',
+		],
+		aiModels: ['gemini-flash', 'gemini-flash-lite'], // Modelos econômicos
 	},
 	{
 		id: 'advanced',
 		name: 'Avançado',
-		priceCents: 11900,
-		features: ['Todas as IAs', 'Contas ilimitadas', 'API access', 'Suporte prioritário'],
-		aiModels: ['gpt-4o', 'claude-sonnet', 'gemini-pro', 'gemini-flash'],
+		priceCents: 9900, // R$ 99,00
+		features: [
+			'Tudo do plano Básico',
+			'IAs Avançadas (Claude Sonnet, Gemini Pro)',
+			'Análises preditivas',
+			'Contas ilimitadas',
+			'Suporte prioritário',
+		],
+		aiModels: ['claude-sonnet', 'gemini-pro', 'gemini-flash', 'gemini-flash-lite', 'gpt-4o'], // Todos os modelos
 	},
 ];
 

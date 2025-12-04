@@ -5,7 +5,7 @@
  */
 
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, CheckCircle, Loader2, Upload, X } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle, Loader2, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -20,7 +20,16 @@ import {
 } from '@/components/import';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { type ExtractedTransaction, useImportFlow } from '@/hooks/use-import';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
 
 // ============================================================================
 // Types
@@ -43,6 +52,9 @@ function ImportPage() {
 
 	// Use the combined import flow hook
 	const importFlow = useImportFlow();
+
+	// Get user's bank accounts for selection
+	const { accounts: bankAccounts, isLoading: isLoadingAccounts } = useBankAccounts();
 
 	// Sync step with import flow status
 	useEffect(() => {
@@ -120,7 +132,7 @@ function ImportPage() {
 		return {
 			sessionId: session.sessionId,
 			fileName: uploadedFileName || session.fileName || 'arquivo.pdf',
-			fileType: (session.fileType as 'PDF' | 'CSV' | 'OFX') || 'PDF',
+			fileType: session.fileType || 'PDF',
 			bankName: session.bankDetected || undefined,
 			totalTransactions: transactions.length,
 			selectedTransactions: selectedIds.size,
@@ -132,7 +144,8 @@ function ImportPage() {
 			confidence: session.averageConfidence
 				? Number.parseFloat(session.averageConfidence)
 				: undefined,
-			status: session.status as ImportSummaryData['status'],
+			// Status is already typed correctly from backend (matches ImportSummaryData['status'])
+			status: session.status,
 			errorMessage: session.errorMessage || undefined,
 		};
 	}, [importFlow.session, transactions, selectedIds, uploadedFileName]);
@@ -273,7 +286,7 @@ function ImportPage() {
 					<div>
 						<h1 className="text-2xl font-bold tracking-tight">Importar Extrato</h1>
 						<p className="text-muted-foreground">
-							Importe transações de arquivos PDF, CSV ou OFX do seu banco
+							Importe transações de arquivos PDF ou CSV do seu banco
 						</p>
 					</div>
 				</div>
@@ -288,8 +301,8 @@ function ImportPage() {
 							Enviar Arquivo
 						</CardTitle>
 						<CardDescription>
-							Arraste e solte seu extrato bancário ou clique para selecionar. Suportamos PDF, CSV e
-							OFX dos principais bancos brasileiros.
+							Arraste e solte seu extrato bancário ou clique para selecionar. Suportamos PDF e CSV
+							dos principais bancos brasileiros.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -325,6 +338,59 @@ function ImportPage() {
 							{/* Summary */}
 							{summaryData && <ImportSummary data={summaryData} />}
 
+							{/* Bank Account Selection */}
+							<Card variant="glass">
+								<CardHeader>
+									<CardTitle className="flex items-center gap-2">
+										<Building2 className="h-5 w-5" />
+										Conta Bancária de Destino
+									</CardTitle>
+									<CardDescription>
+										Selecione a conta onde as transações serão importadas
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="space-y-2">
+										<Label htmlFor="bank-account-select">Conta Bancária</Label>
+										{isLoadingAccounts ? (
+											<div className="flex items-center gap-2 text-muted-foreground">
+												<Loader2 className="h-4 w-4 animate-spin" />
+												<span>Carregando contas...</span>
+											</div>
+										) : bankAccounts.length === 0 ? (
+											<div className="text-sm text-muted-foreground">
+												Nenhuma conta bancária cadastrada.{' '}
+												<Button
+													variant="link"
+													className="h-auto p-0"
+													onClick={() => void navigate({ to: '/saldo' })}
+												>
+													Cadastre uma conta
+												</Button>{' '}
+												antes de importar.
+											</div>
+										) : (
+											<Select
+												value={selectedBankAccountId ?? ''}
+												onValueChange={(value) => setSelectedBankAccountIdLocal(value || null)}
+											>
+												<SelectTrigger id="bank-account-select" className="w-full">
+													<SelectValue placeholder="Selecione uma conta bancária" />
+												</SelectTrigger>
+												<SelectContent>
+													{bankAccounts.map((account) => (
+														<SelectItem key={account.id} value={account.id}>
+															{account.institutionName}
+															{account.accountMask && ` (${account.accountMask})`}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+									</div>
+								</CardContent>
+							</Card>
+
 							{/* Duplicate Warning */}
 							{duplicates.length > 0 && (
 								<DuplicateWarning
@@ -359,7 +425,11 @@ function ImportPage() {
 									<X className="h-4 w-4 mr-2" />
 									Cancelar
 								</Button>
-								<Button onClick={handleConfirm} disabled={selectedIds.size === 0} className="gap-2">
+								<Button
+									onClick={handleConfirm}
+									disabled={selectedIds.size === 0 || !selectedBankAccountId}
+									className="gap-2"
+								>
 									<CheckCircle className="h-4 w-4" />
 									Importar {selectedIds.size} Transações
 								</Button>

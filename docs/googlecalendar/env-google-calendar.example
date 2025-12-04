@@ -1,0 +1,117 @@
+# =====================================================
+# GOOGLE CALENDAR INTEGRATION - ENVIRONMENT VARIABLES
+# =====================================================
+#
+# Add these to your .env.local file and Vercel environment variables
+#
+
+# =====================================================
+# GOOGLE OAUTH 2.0 CREDENTIALS
+# =====================================================
+# Get these from Google Cloud Console:
+# https://console.cloud.google.com/apis/credentials
+
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+
+# Redirect URI for OAuth callback
+# Production: https://your-domain.vercel.app/api/v1/google-calendar/callback
+# Development: http://localhost:3000/api/v1/google-calendar/callback
+GOOGLE_REDIRECT_URI=https://aegiswallet.vercel.app/api/v1/google-calendar/callback
+
+# =====================================================
+# APPLICATION URL
+# =====================================================
+# Used for webhook URLs and redirects
+# Will default to VERCEL_URL if not set
+
+APP_URL=https://aegiswallet.vercel.app
+
+# =====================================================
+# CRON JOB SECRET
+# =====================================================
+# Used to authenticate cron job requests
+# Generate with: openssl rand -hex 32
+
+CRON_SECRET=your-cron-secret-here
+
+
+# =====================================================
+# GOOGLE CLOUD CONSOLE SETUP GUIDE
+# =====================================================
+#
+# 1. Go to https://console.cloud.google.com
+#
+# 2. Create a new project or select existing one
+#
+# 3. Enable Google Calendar API:
+#    - Go to "APIs & Services" > "Library"
+#    - Search for "Google Calendar API"
+#    - Click "Enable"
+#
+# 4. Configure OAuth Consent Screen:
+#    - Go to "APIs & Services" > "OAuth consent screen"
+#    - Choose "External" user type
+#    - Fill in:
+#      - App name: AegisWallet
+#      - User support email: your-email@example.com
+#      - Developer contact: your-email@example.com
+#    - Add scopes:
+#      - https://www.googleapis.com/auth/calendar.events
+#      - https://www.googleapis.com/auth/calendar.readonly
+#      - https://www.googleapis.com/auth/userinfo.email
+#    - Add test users (while in testing mode)
+#
+# 5. Create OAuth 2.0 Credentials:
+#    - Go to "APIs & Services" > "Credentials"
+#    - Click "Create Credentials" > "OAuth client ID"
+#    - Application type: "Web application"
+#    - Name: "AegisWallet Web"
+#    - Authorized JavaScript origins:
+#      - https://aegiswallet.vercel.app
+#      - http://localhost:3000 (for development)
+#    - Authorized redirect URIs:
+#      - https://aegiswallet.vercel.app/api/v1/google-calendar/callback
+#      - http://localhost:3000/api/v1/google-calendar/callback (for development)
+#
+# 6. Copy Client ID and Client Secret to environment variables
+#
+# 7. For production, submit app for verification:
+#    - Complete the OAuth consent screen configuration
+#    - Submit for review (required for public apps)
+#
+# =====================================================
+# WEBHOOK DOMAIN VERIFICATION
+# =====================================================
+#
+# Google requires domain verification for webhooks:
+#
+# 1. Go to Google Search Console: https://search.google.com/search-console
+#
+# 2. Add your domain: aegiswallet.vercel.app
+#
+# 3. Verify ownership using one of these methods:
+#    - HTML file upload (recommended for Vercel)
+#    - DNS record
+#    - HTML tag
+#
+# 4. For Vercel HTML file verification:
+#    - Create file: public/google[verification-code].html
+#    - Content: google-site-verification: google[verification-code].html
+#
+# =====================================================
+# TESTING CHECKLIST
+# =====================================================
+#
+# [ ] Google Cloud project created
+# [ ] Calendar API enabled
+# [ ] OAuth consent screen configured
+# [ ] OAuth credentials created
+# [ ] Environment variables set in .env.local
+# [ ] Environment variables set in Vercel dashboard
+# [ ] Domain verified in Google Search Console
+# [ ] Test user added (if app not yet verified)
+# [ ] Database migrations run
+# [ ] Webhook endpoint accessible (test with curl)
+# [ ] Cron jobs configured in vercel.json
+#

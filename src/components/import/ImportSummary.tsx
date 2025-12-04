@@ -31,7 +31,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 export interface ImportSummaryData {
 	sessionId: string;
 	fileName: string;
-	fileType: 'PDF' | 'CSV' | 'OFX';
+	fileType: 'PDF' | 'CSV';
 	bankName?: string;
 	totalTransactions: number;
 	selectedTransactions: number;
@@ -52,7 +52,8 @@ export interface ImportSummaryData {
 	};
 	processingTime?: number;
 	confidence?: number;
-	status: 'PENDING' | 'PROCESSING' | 'READY' | 'CONFIRMED' | 'FAILED' | 'CANCELLED';
+	/** Status values match backend import_session_status enum */
+	status: 'PROCESSING' | 'REVIEW' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'FAILED';
 	errorMessage?: string;
 }
 
@@ -139,12 +140,12 @@ export function ImportSummary({ data, className }: ImportSummaryProps) {
 	// Get status badge
 	const statusBadge = useMemo(() => {
 		const statusConfig = {
-			PENDING: { label: 'Aguardando', variant: 'secondary' as const, icon: FileText },
 			PROCESSING: { label: 'Processando', variant: 'default' as const, icon: Sparkles },
-			READY: { label: 'Pronto', variant: 'default' as const, icon: CheckCircle2 },
+			REVIEW: { label: 'Pronto para Revisão', variant: 'default' as const, icon: CheckCircle2 },
 			CONFIRMED: { label: 'Confirmado', variant: 'default' as const, icon: CheckCircle2 },
-			FAILED: { label: 'Erro', variant: 'destructive' as const, icon: XCircle },
 			CANCELLED: { label: 'Cancelado', variant: 'secondary' as const, icon: XCircle },
+			COMPLETED: { label: 'Concluído', variant: 'default' as const, icon: CheckCircle2 },
+			FAILED: { label: 'Erro', variant: 'destructive' as const, icon: XCircle },
 		};
 
 		const config = statusConfig[status];

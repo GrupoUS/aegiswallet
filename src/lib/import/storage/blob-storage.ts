@@ -265,15 +265,21 @@ export async function deleteTemporaryFile(urlOrPathname: string): Promise<void> 
 /**
  * Delete all temporary files for a session
  *
- * @param userId - User ID
- * @param sessionId - Session ID
+ * NOTE: Vercel Blob doesn't support directory listing/deletion directly.
+ * Files are now cleaned up explicitly by:
+ * 1. Calling deleteTemporaryFile() on confirm/cancel in the confirm router
+ * 2. The BLOB_TTL_SECONDS constant (3600s = 1 hour) serves as documentation
+ *    for expected retention period, but actual deletion is explicit.
+ *
+ * @param userId - User ID (for logging)
+ * @param sessionId - Session ID (for logging)
  */
 export function deleteSessionFiles(userId: string, sessionId: string): void {
-	// Note: Vercel Blob doesn't support directory deletion directly
-	// Files will be cleaned up by TTL or individually
-	// This is a placeholder for potential future implementation
+	// This function is intentionally a no-op
+	// File cleanup is handled explicitly via deleteTemporaryFile() in the confirm router
+	// when sessions are confirmed or cancelled
 
-	secureLogger.info('Session file cleanup requested', {
+	secureLogger.info('Session file cleanup requested (handled by confirm/cancel flow)', {
 		component: 'blob-storage',
 		action: 'cleanup-session',
 		userId,

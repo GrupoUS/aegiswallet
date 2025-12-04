@@ -106,7 +106,8 @@ export const importSessions = pgTable('import_sessions', {
 
 /**
  * Extracted transactions - temporary storage before user confirmation
- * These are deleted after import is confirmed or cancelled
+ * These are automatically deleted when the import session is confirmed or cancelled
+ * via the confirm/cancel API endpoints in /api/v1/import/confirm
  */
 export const extractedTransactions = pgTable('extracted_transactions', {
 	id: text('id')
@@ -168,7 +169,13 @@ export type InsertImportSession = typeof importSessions.$inferInsert;
 export type ExtractedTransaction = typeof extractedTransactions.$inferSelect;
 export type InsertExtractedTransaction = typeof extractedTransactions.$inferInsert;
 
-// Status type helper
-export type ImportSessionStatus = 'PROCESSING' | 'REVIEW' | 'COMPLETED' | 'FAILED';
+// Status type helper (matches importSessionStatusEnum)
+export type ImportSessionStatus =
+	| 'PROCESSING'
+	| 'REVIEW'
+	| 'CONFIRMED'
+	| 'CANCELLED'
+	| 'COMPLETED'
+	| 'FAILED';
 export type ImportFileType = 'PDF' | 'CSV';
 export type ExtractedTransactionType = 'CREDIT' | 'DEBIT';

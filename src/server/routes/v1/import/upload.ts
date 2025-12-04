@@ -8,7 +8,11 @@ import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 
 import { extractedTransactions, importSessions } from '@/db/schema';
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/import/constants/bank-patterns';
+import {
+	ALLOWED_MIME_TYPES,
+	MAX_FILE_SIZE,
+	PROCESSING_TIMEOUT_MS,
+} from '@/lib/import/constants/bank-patterns';
 import {
 	detectBankFromCSV,
 	extractDataFromCSV,
@@ -237,6 +241,18 @@ async function processImportAsync(
 	db: DbClient,
 ): Promise<void> {
 	const startTime = Date.now();
+
+	// Helper to check if timeout has been exceeded
+	const checkTimeout = (): void => {
+		const elapsed = Date.now() - startTime;
+		if (elapsed >= PROCESSING_TIMEOUT_MS) {
+			throw new Error(
+				`Tempo limite de processamento excedido (${Math.round(elapsed / 1000)}s). ` +
+					'O arquivo pode ser muito grande ou complexo.',
+			);
+		}
+	};
+
 	const updateProcessingStep = async (step: string, success: boolean, error?: string) => {
 		try {
 			const currentSession = await db.query.importSessions.findFirst({
@@ -286,6 +302,7 @@ async function processImportAsync(
 		});
 
 		// Step 1: Extract text from file
+		checkTimeout();
 		let extractedText: string;
 		let bankHint: string | null = null;
 
@@ -305,6 +322,7 @@ async function processImportAsync(
 		}
 
 		await updateProcessingStep('extraction', true);
+		checkTimeout();
 
 		// Step 2: Detect bank (combined method)
 		const bankResult = detectBankCombined(extractedText, fileName, fileType);
@@ -316,6 +334,7 @@ async function processImportAsync(
 			.where(eq(importSessions.id, sessionId));
 
 		await updateProcessingStep('bank-detection', true);
+		checkTimeout();
 
 		// Step 3: Process with Gemini
 		const geminiResult = await processExtractWithGemini(
@@ -325,6 +344,7 @@ async function processImportAsync(
 		);
 
 		await updateProcessingStep('ai-extraction', true);
+		checkTimeout();
 
 		// Step 4: Check for duplicates
 		const transactionsForCheck = geminiResult.transactions.map((t, index) => ({
@@ -338,6 +358,7 @@ async function processImportAsync(
 		const duplicateResults = await checkForDuplicates(transactionsForCheck, userId, db);
 
 		await updateProcessingStep('duplicate-check', true);
+		checkTimeout();
 
 		// Step 5: Save extracted transactions
 		const transactionsToInsert = geminiResult.transactions.map((t, index) => {

@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { extractedTransactions, importSessions, transactions } from '@/db/schema';
+import { deleteTemporaryFile } from '@/lib/import/storage/blob-storage';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import type { AppEnv } from '@/server/hono-types';
 
@@ -116,13 +117,13 @@ confirmRouter.post('/', zValidator('json', confirmSchema), async (c) => {
 		const transactionsToCreate = selectedTxns.map((t) => ({
 			id: crypto.randomUUID(),
 			userId: user.id,
-			bankAccountId,
+			accountId: bankAccountId,
 			transactionDate: t.date,
 			description: t.description,
 			amount: t.amount,
 			transactionType: t.type,
 			category: 'OUTROS' as const, // Default category - can be improved with AI categorization later
-			source: 'IMPORT' as const,
+			externalSource: 'IMPORT' as const,
 			metadata: {
 				importSessionId: sessionId,
 				extractedTransactionId: t.id,
@@ -131,32 +132,75 @@ confirmRouter.post('/', zValidator('json', confirmSchema), async (c) => {
 			},
 		}));
 
-		// Insert transactions
-		await db.insert(transactions).values(transactionsToCreate);
+		// Insert transactions with deduplication handling
+		// Uses onConflictDoNothing to silently skip duplicate transactions
+		// This works with the idx_transactions_import_dedup unique index
+		const insertResult = await db
+			.insert(transactions)
+			.values(transactionsToCreate)
+			.onConflictDoNothing();
 
-		// Update extracted transactions as confirmed
-		await db
-			.update(extractedTransactions)
-			.set({ isSelected: true })
-			.where(inArray(extractedTransactions.id, selectedTransactionIds));
+		// Note: If some transactions were duplicates, the count might differ
+		// from selectedTxns.length, but we still mark the session as confirmed
+		const actualInserted =
+			(insertResult as unknown as { rowCount?: number }).rowCount ?? selectedTxns.length;
 
-		// Update session status
+		// Update session status with actual number of inserted transactions
 		await db
 			.update(importSessions)
 			.set({
 				status: 'CONFIRMED',
-				transactionsImported: selectedTxns.length,
+				transactionsImported: actualInserted,
 			})
 			.where(eq(importSessions.id, sessionId));
 
+		// Cleanup: Delete extracted transactions after successful confirmation
+		// This maintains the "temporary" design - they are no longer needed
+		await db.delete(extractedTransactions).where(eq(extractedTransactions.sessionId, sessionId));
+
+		// Cleanup: Delete the source file from blob storage
+		if (session.fileUrl) {
+			try {
+				await deleteTemporaryFile(session.fileUrl);
+				secureLogger.info('Source file deleted after confirmation', {
+					component: 'import-confirm',
+					action: 'cleanup',
+					requestId,
+					sessionId,
+				});
+			} catch (cleanupError) {
+				// Log but don't fail - cleanup is best-effort
+				secureLogger.warn('Failed to delete source file', {
+					component: 'import-confirm',
+					action: 'cleanup',
+					requestId,
+					sessionId,
+					error: cleanupError instanceof Error ? cleanupError.message : 'Unknown error',
+				});
+			}
+		}
+
 		const processingTime = Date.now() - startTime;
+
+		// Log if some transactions were skipped due to deduplication
+		if (actualInserted < selectedTxns.length) {
+			secureLogger.info('Some transactions skipped due to deduplication', {
+				component: 'import-confirm',
+				action: 'confirm',
+				requestId,
+				sessionId,
+				requested: selectedTxns.length,
+				actualInserted,
+				skipped: selectedTxns.length - actualInserted,
+			});
+		}
 
 		secureLogger.info('Import confirmed', {
 			component: 'import-confirm',
 			action: 'confirm',
 			requestId,
 			sessionId,
-			transactionsCreated: selectedTxns.length,
+			transactionsCreated: actualInserted,
 			bankAccountId,
 			processingTimeMs: processingTime,
 		});
@@ -164,7 +208,7 @@ confirmRouter.post('/', zValidator('json', confirmSchema), async (c) => {
 		return c.json({
 			data: {
 				sessionId,
-				transactionsCreated: selectedTxns.length,
+				transactionsCreated: actualInserted,
 				transactionIds: transactionsToCreate.map((t) => t.id),
 				bankAccountId,
 			},
@@ -363,6 +407,28 @@ confirmRouter.delete('/:sessionId', async (c) => {
 			.update(importSessions)
 			.set({ status: 'CANCELLED' })
 			.where(eq(importSessions.id, sessionId));
+
+		// Cleanup: Delete the source file from blob storage
+		if (session.fileUrl) {
+			try {
+				await deleteTemporaryFile(session.fileUrl);
+				secureLogger.info('Source file deleted after cancellation', {
+					component: 'import-confirm',
+					action: 'cleanup',
+					requestId,
+					sessionId,
+				});
+			} catch (cleanupError) {
+				// Log but don't fail - cleanup is best-effort
+				secureLogger.warn('Failed to delete source file on cancellation', {
+					component: 'import-confirm',
+					action: 'cleanup',
+					requestId,
+					sessionId,
+					error: cleanupError instanceof Error ? cleanupError.message : 'Unknown error',
+				});
+			}
+		}
 
 		secureLogger.info('Import cancelled', {
 			component: 'import-confirm',

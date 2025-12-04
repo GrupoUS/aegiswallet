@@ -122,7 +122,7 @@ export function ChatContainer({
 			enableReasoning={showReasoning}
 			onReasoningToggle={setShowReasoning}
 		>
-			<div className="flex flex-1 overflow-hidden">
+			<div className="flex flex-1 h-full overflow-hidden">
 				{/* Main Chat Area */}
 				<div className="flex-1 flex flex-col min-w-0">
 					<ChatConversation

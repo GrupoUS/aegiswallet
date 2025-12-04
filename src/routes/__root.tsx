@@ -1,23 +1,14 @@
 import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import {
-	Building,
-	Calendar,
-	CreditCard,
-	FileText,
-	Home,
-	LogOut,
-	Settings,
-	Sparkles,
-	Wallet,
-} from 'lucide-react';
+import { Calendar, CreditCard, Home, LogOut, Settings, Sparkles, Wallet } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useCallback, useMemo } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { ConsentBanner } from '@/components/privacy';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
-import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatProvider, ChatWidget } from '@/features/ai-chat/components';
 import { cn } from '@/lib/utils';
@@ -82,16 +73,6 @@ function RootComponent() {
 				href: '/calendario',
 				icon: <Calendar className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
 				label: 'Calendário',
-			},
-			{
-				href: '/contas',
-				icon: <FileText className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-				label: 'Contas',
-			},
-			{
-				href: '/contas-bancarias',
-				icon: <Building className="h-5 w-5 shrink-0 text-sidebar-foreground" />,
-				label: 'Contas Bancárias',
 			},
 			{
 				href: '/billing',
@@ -208,10 +189,21 @@ function RootComponent() {
 }
 
 export const Logo = () => {
+	const { open, animate } = useSidebar();
+	const shouldAnimate = animate !== false;
+	const isOpenBool = Boolean(open);
+	const spanDisplay = shouldAnimate ? (isOpenBool ? 'inline-block' : 'none') : 'inline-block';
+	const spanOpacity = shouldAnimate ? (isOpenBool ? 1 : 0) : 1;
+
 	return (
 		<div className="relative z-20 flex items-center space-x-2 py-1 font-normal text-foreground text-sm">
 			<div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
-			<span className="whitespace-pre font-medium text-foreground opacity-100">AegisWallet</span>
+			<motion.span
+				animate={{ display: spanDisplay, opacity: spanOpacity }}
+				className="whitespace-pre font-medium text-foreground"
+			>
+				AegisWallet
+			</motion.span>
 		</div>
 	);
 };

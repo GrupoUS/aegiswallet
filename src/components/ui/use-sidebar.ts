@@ -42,13 +42,13 @@ export function useSidebar(initialState?: Partial<SidebarState>) {
 	const context = useContext(SidebarContext);
 	if (context) {
 		return {
-			isOpen: context.open,
+			open: context.open,
 			isCollapsed,
 			activeItem,
 			animate: context.animate ?? true, // Default to true if undefined
 			setOpen: context.setOpen,
 			toggle,
-			open: openSidebar,
+			openSidebar,
 			close,
 			collapse,
 			expand,
@@ -58,13 +58,13 @@ export function useSidebar(initialState?: Partial<SidebarState>) {
 
 	return {
 		// State
-		isOpen,
+		open: isOpen,
 		isCollapsed,
 		activeItem,
 		animate: true, // Default to true for non-context usage
 		setOpen: setIsOpen, // Use local setter for non-context usage
 		toggle,
-		open: openSidebar,
+		openSidebar,
 		close,
 		collapse,
 		expand,

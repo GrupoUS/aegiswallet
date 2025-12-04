@@ -7,8 +7,9 @@
 
 import { and, eq } from 'drizzle-orm';
 
-import type { HttpClient } from '@/db/client';
 import { lgpdConsents } from '@/db/schema';
+import { logger } from '@/lib/logging';
+import type { DbClient } from '@/server/hono-types';
 
 // Use existing consent type for AI financial analysis
 const AI_CONSENT_TYPE = 'financial_data' as const;
@@ -25,7 +26,7 @@ export interface AIConsentStatus {
 /**
  * Verify if user has granted AI financial analysis consent
  */
-export async function verifyAIConsent(userId: string, db: HttpClient): Promise<boolean> {
+export async function verifyAIConsent(userId: string, db: DbClient): Promise<boolean> {
 	try {
 		const [consent] = await db
 			.select({
@@ -43,7 +44,7 @@ export async function verifyAIConsent(userId: string, db: HttpClient): Promise<b
 			.limit(1);
 
 		return !!consent;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }
@@ -51,7 +52,7 @@ export async function verifyAIConsent(userId: string, db: HttpClient): Promise<b
 /**
  * Get detailed consent status
  */
-export async function getAIConsentStatus(userId: string, db: HttpClient): Promise<AIConsentStatus> {
+export async function getAIConsentStatus(userId: string, db: DbClient): Promise<AIConsentStatus> {
 	try {
 		const [consent] = await db
 			.select({
@@ -76,8 +77,12 @@ export async function getAIConsentStatus(userId: string, db: HttpClient): Promis
 			consentedAt: consent.grantedAt,
 			version: consent.consentVersion,
 		};
-	} catch (error) {
-		console.error('[
+	} catch (err) {
+		logger.error('[AI Consent] Failed to get consent status', {
+			error: err instanceof Error ? err.message : String(err),
+			userId,
+		});
+		return {
 			hasConsent: false,
 			consentedAt: null,
 			version: null,
@@ -90,7 +95,7 @@ export async function getAIConsentStatus(userId: string, db: HttpClient): Promis
  */
 export async function grantAIConsent(
 	userId: string,
-	db: HttpClient,
+	db: DbClient,
 	options?: {
 		ipAddress?: string;
 		userAgent?: string;
@@ -133,9 +138,13 @@ export async function grantAIConsent(
 		}
 
 		return { success: true };
-	} catch (error) {
-		console.error('[AI Consent] Failed to grant consent:', error);
+	} catch (err) {
+		logger.error('[AI Consent] Failed to grant consent', {
+			error: err instanceof Error ? err.message : String(err),
+			userId,
+		});
 		return {
+			success: false,
 			error: 'Falha ao registrar consentimento. Tente novamente.',
 		};
 	}
@@ -146,7 +155,7 @@ export async function grantAIConsent(
  */
 export async function revokeAIConsent(
 	userId: string,
-	db: HttpClient,
+	db: DbClient,
 ): Promise<{ success: boolean; error?: string }> {
 	try {
 		await db
@@ -159,8 +168,11 @@ export async function revokeAIConsent(
 			.where(and(eq(lgpdConsents.userId, userId), eq(lgpdConsents.consentType, AI_CONSENT_TYPE)));
 
 		return { success: true };
-	} catch (error) {
-		console.error('[AI Consent] Failed to revoke consent:', error);
+	} catch (err) {
+		logger.error('[AI Consent] Failed to revoke consent', {
+			error: err instanceof Error ? err.message : String(err),
+			userId,
+		});
 		return {
 			success: false,
 		};

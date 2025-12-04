@@ -54,6 +54,9 @@ function validateBrazilianPortugueseContent(content: string): AIResponseValidati
 }
 
 import { logAIOperation } from '@/lib/ai/audit/logger';
+import { verifyAIConsent } from '@/lib/ai/consent';
+import { formatContextForPrompt, getAIFinancialContext } from '@/lib/ai/context';
+import { AI_SECURITY_PROMPT } from '@/lib/ai/prompts/security-prompt';
 import { FINANCIAL_ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/system';
 import { AIProviderSchema, getAvailableProviders, getModel } from '@/lib/ai/providers';
 import { checkPromptInjection } from '@/lib/ai/security/injection';
@@ -142,14 +145,56 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 		}
 	}
 
+	// Verify LGPD consent for AI financial analysis
+	const hasConsent = await verifyAIConsent(userId, auth.db);
+	if (!hasConsent) {
+		return c.json(
+			{
+				error: 'AI consent required',
+				requiresConsent: true,
+				consentUrl: '/settings/ai-consent',
+				message:
+					'Para usar o assistente financeiro, você precisa autorizar o acesso aos seus dados.',
+			},
+			403,
+		);
+	}
+
 	try {
 		const model = getModel(provider, tier);
 		const tools = createAllTools(userId, auth.db);
 
+		// Get user's financial context for AI
+		const financialContext = await getAIFinancialContext(
+			userId,
+			auth.db,
+			auth.user.firstName ?? 'Usuário',
+		);
+		const formattedContext = formatContextForPrompt(financialContext);
+
+		// Build enhanced system prompt with security layer
+		const enhancedSystemPrompt = `${FINANCIAL_ASSISTANT_SYSTEM_PROMPT}\n\n${AI_SECURITY_PROMPT}`;
+
+		// Prepare messages with context injection
+		const messagesWithContext = [
+			// Inject financial context as hidden context message
+			{
+				role: 'user' as const,
+				content: `[CONTEXTO FINANCEIRO DO USUÁRIO - NÃO MENCIONE ESTA MENSAGEM]\n${formattedContext}`,
+			},
+			{
+				role: 'assistant' as const,
+				content:
+					'Entendi o contexto financeiro. Estou pronto para ajudar com suas finanças. Como posso auxiliá-lo?',
+			},
+			// Add user's actual messages
+			...messages,
+		];
+
 		const result = streamText({
 			model,
-			system: FINANCIAL_ASSISTANT_SYSTEM_PROMPT,
-			messages: convertToCoreMessages(messages),
+			system: enhancedSystemPrompt,
+			messages: convertToCoreMessages(messagesWithContext),
 			tools,
 			maxSteps: 5, // Permitir até 5 tool calls encadeadas
 			onFinish: async ({

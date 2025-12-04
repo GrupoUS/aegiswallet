@@ -69,6 +69,30 @@ const SmoothDrawerContent = React.forwardRef<
 >(({ className, children, side = 'right', width = 'md', title, description, ...props }, ref) => {
 	const { setOpen } = React.useContext(SmoothDrawerContext);
 
+	// Swipe threshold for closing the drawer (in pixels)
+	const SWIPE_THRESHOLD = 100;
+	// Velocity threshold for closing (px/s)
+	const VELOCITY_THRESHOLD = 500;
+
+	// Handle drag end to determine if drawer should close
+	const handleDragEnd = (
+		_event: MouseEvent | TouchEvent | PointerEvent,
+		info: { offset: { x: number }; velocity: { x: number } },
+	) => {
+		const { offset, velocity } = info;
+		const shouldClose =
+			side === 'right'
+				? offset.x > SWIPE_THRESHOLD || velocity.x > VELOCITY_THRESHOLD
+				: offset.x < -SWIPE_THRESHOLD || velocity.x < -VELOCITY_THRESHOLD;
+
+		if (shouldClose) {
+			setOpen(false);
+		}
+	};
+
+	// Drag constraints - prevent dragging beyond fully open position
+	const dragConstraints = side === 'right' ? { left: 0, right: 500 } : { left: -500, right: 0 };
+
 	const drawerVariants: Variants = {
 		hidden: {
 			x: side === 'right' ? '100%' : '-100%',
@@ -76,7 +100,7 @@ const SmoothDrawerContent = React.forwardRef<
 			transition: {
 				type: 'spring' as const,
 				stiffness: 300,
-				damping: 30,
+				damping: 25,
 			},
 		},
 		visible: {
@@ -85,7 +109,7 @@ const SmoothDrawerContent = React.forwardRef<
 			transition: {
 				type: 'spring' as const,
 				stiffness: 300,
-				damping: 30,
+				damping: 25,
 				mass: 0.8,
 				staggerChildren: 0.07,
 				delayChildren: 0.2,
@@ -97,7 +121,7 @@ const SmoothDrawerContent = React.forwardRef<
 			transition: {
 				type: 'spring' as const,
 				stiffness: 300,
-				damping: 30,
+				damping: 25,
 			},
 		},
 	};
@@ -127,8 +151,13 @@ const SmoothDrawerContent = React.forwardRef<
 					initial="hidden"
 					animate="visible"
 					exit="exit"
+					drag="x"
+					dragDirectionLock
+					dragConstraints={dragConstraints}
+					dragElastic={0.2}
+					onDragEnd={handleDragEnd}
 					className={cn(
-						'fixed inset-y-0 z-50 flex h-full flex-col border-l bg-background/95 shadow-2xl backdrop-blur-xl',
+						'fixed inset-y-0 z-50 flex h-full flex-col border-l bg-background/95 shadow-2xl backdrop-blur-xl touch-pan-y',
 						side === 'right' ? 'right-0' : 'left-0 border-r border-l-0',
 						widthClasses[width],
 						'w-full',

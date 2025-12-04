@@ -1,13 +1,27 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, FileText, LayoutDashboard } from 'lucide-react';
+import { BarChart3, FileText, LayoutDashboard, Plus } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 
+import { EditTransactionDialog } from '@/components/financial/EditTransactionDialog';
+import { FinancialEventForm } from '@/components/financial/FinancialEventForm';
+import { FinancialAmount } from '@/components/financial-amount';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { cn } from '@/lib/utils';
+import type { FinancialEvent } from '@/types/financial-events';
 
 // Lazy load heavy components
 const BalanceChart = lazy(() =>
@@ -115,8 +129,10 @@ const tabs = [
 type TabId = (typeof tabs)[number]['id'];
 
 interface FinancialTabsProps {
-	/** Default active tab */
+	/** Default active tab (uncontrolled mode) */
 	defaultTab?: TabId;
+	/** Controlled active tab - when provided, component is controlled */
+	activeTab?: TabId;
 	/** Callback when tab changes */
 	onTabChange?: (tab: TabId) => void;
 	/** Show transaction form state */
@@ -131,17 +147,25 @@ interface FinancialTabsProps {
 
 export function FinancialTabs({
 	defaultTab = 'overview',
+	activeTab: controlledActiveTab,
 	onTabChange,
 	showTransactionForm,
 	onToggleTransactionForm,
 	quickActionsSlot,
 	className,
 }: FinancialTabsProps) {
-	const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
+	// Support both controlled and uncontrolled modes
+	const [internalTab, setInternalTab] = useState<TabId>(defaultTab);
+
+	// Use controlled activeTab when provided, otherwise use internal state
+	const isControlled = controlledActiveTab !== undefined;
+	const activeTab = isControlled ? controlledActiveTab : internalTab;
 
 	const handleTabChange = (value: string) => {
 		const newTab = value as TabId;
-		setActiveTab(newTab);
+		if (!isControlled) {
+			setInternalTab(newTab);
+		}
 		onTabChange?.(newTab);
 	};
 
@@ -226,13 +250,18 @@ export function FinancialTabs({
 // Separated Bills Tab Content for better code organization
 function BillsTabContent() {
 	const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
+	const [editingBill, setEditingBill] = useState<FinancialEvent | null>(null);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
 	const statusFilter = filter === 'all' ? 'all' : filter === 'pending' ? 'pending' : 'completed';
 
 	const {
 		events: bills,
 		loading,
+		statistics,
 		deleteEvent,
+		refresh,
 	} = useFinancialEvents(
 		{
 			type: 'expense',
@@ -240,48 +269,129 @@ function BillsTabContent() {
 		},
 		{
 			page: 1,
-			limit: 50,
+			limit: 100,
 			sortBy: 'due_date',
 			sortOrder: 'asc',
 		},
 	);
 
+	// Handle edit action
+	const handleEdit = (bill: FinancialEvent) => {
+		setEditingBill(bill);
+		setIsEditModalOpen(true);
+	};
+
+	// Calculate counts based on loaded events
+	const pendingBillsCount = bills.filter((b) => b.status === 'pending').length;
+	const paidBillsCount = bills.filter(
+		(b) => b.status === 'paid' || b.status === 'completed',
+	).length;
+
+	// Use statistics from hook for monetary values
+	const totalPending = statistics.pendingExpenses;
+	const totalPaid = statistics.totalExpenses;
+
 	return (
-		<div className="space-y-4">
-			{/* Filter Buttons */}
-			<div className="flex gap-2">
-				<button
-					type="button"
-					onClick={() => setFilter('all')}
-					className={cn(
-						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-						filter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80',
-					)}
-				>
-					Todas
-				</button>
-				<button
-					type="button"
-					onClick={() => setFilter('pending')}
-					className={cn(
-						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-						filter === 'pending'
-							? 'bg-primary text-primary-foreground'
-							: 'bg-muted hover:bg-muted/80',
-					)}
-				>
-					Pendentes
-				</button>
-				<button
-					type="button"
-					onClick={() => setFilter('paid')}
-					className={cn(
-						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-						filter === 'paid' ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80',
-					)}
-				>
-					Pagas
-				</button>
+		<div className="space-y-6">
+			{/* Summary Cards */}
+			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+				<Card className="border-2 border-warning/20">
+					<CardHeader className="pb-2">
+						<CardDescription>Contas Pendentes</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="flex items-center justify-between">
+							{loading ? (
+								<Skeleton className="h-8 w-32" />
+							) : (
+								<FinancialAmount amount={-totalPending} size="lg" />
+							)}
+							<Badge variant="outline" className="border-warning text-warning">
+								{loading ? <Skeleton className="h-4 w-8" /> : pendingBillsCount} contas
+							</Badge>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="border-2 border-success/20">
+					<CardHeader className="pb-2">
+						<CardDescription>Contas Pagas</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="flex items-center justify-between">
+							{loading ? (
+								<Skeleton className="h-8 w-32" />
+							) : (
+								<FinancialAmount amount={-totalPaid} size="lg" />
+							)}
+							<Badge variant="outline" className="border-success text-success">
+								{loading ? <Skeleton className="h-4 w-8" /> : paidBillsCount} contas
+							</Badge>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="border-2 border-primary/20">
+					<CardHeader className="pb-2">
+						<CardDescription>Total do Mês</CardDescription>
+					</CardHeader>
+					<CardContent>
+						{loading ? (
+							<Skeleton className="h-8 w-32" />
+						) : (
+							<FinancialAmount amount={-(totalPending + totalPaid)} size="lg" />
+						)}
+					</CardContent>
+				</Card>
+			</div>
+
+			{/* Actions Row */}
+			<div className="flex items-center justify-between">
+				{/* Filter Buttons */}
+				<div className="flex gap-2">
+					<button
+						type="button"
+						onClick={() => setFilter('all')}
+						className={cn(
+							'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+							filter === 'all'
+								? 'bg-primary text-primary-foreground'
+								: 'bg-muted hover:bg-muted/80',
+						)}
+					>
+						Todas
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('pending')}
+						className={cn(
+							'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+							filter === 'pending'
+								? 'bg-primary text-primary-foreground'
+								: 'bg-muted hover:bg-muted/80',
+						)}
+					>
+						Pendentes
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('paid')}
+						className={cn(
+							'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+							filter === 'paid'
+								? 'bg-primary text-primary-foreground'
+								: 'bg-muted hover:bg-muted/80',
+						)}
+					>
+						Pagas
+					</button>
+				</div>
+
+				{/* Create Button */}
+				<Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+					<Plus className="h-4 w-4" />
+					Nova Conta a Pagar
+				</Button>
 			</div>
 
 			{/* Bills List */}
@@ -289,9 +399,33 @@ function BillsTabContent() {
 				<BillsListSkeleton />
 			) : (
 				<Suspense fallback={<BillsListSkeleton />}>
-					<BillsList bills={bills} filter={filter} onDelete={deleteEvent} />
+					<BillsList bills={bills} filter={filter} onEdit={handleEdit} onDelete={deleteEvent} />
 				</Suspense>
 			)}
+
+			{/* Edit Transaction Dialog */}
+			<EditTransactionDialog
+				open={isEditModalOpen}
+				onOpenChange={setIsEditModalOpen}
+				transaction={editingBill}
+			/>
+
+			{/* Create Bill Modal */}
+			<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+				<DialogContent className="sm:max-w-[600px]">
+					<DialogHeader>
+						<DialogTitle>Nova Conta a Pagar</DialogTitle>
+						<DialogDescription>Adicione uma nova conta ou despesa.</DialogDescription>
+					</DialogHeader>
+					<FinancialEventForm
+						onSuccess={() => {
+							setIsCreateModalOpen(false);
+							refresh();
+						}}
+						onCancel={() => setIsCreateModalOpen(false)}
+					/>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

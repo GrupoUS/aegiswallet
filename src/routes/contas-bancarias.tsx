@@ -7,9 +7,10 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
  */
 export const Route = createFileRoute('/contas-bancarias')({
 	beforeLoad: () => {
-		// Redirect to /saldo - user can open drawer from there
+		// Redirect to /saldo with drawer param to auto-open bank accounts drawer
 		throw redirect({
 			to: '/saldo',
+			search: { drawer: 'accounts' },
 		});
 	},
 });

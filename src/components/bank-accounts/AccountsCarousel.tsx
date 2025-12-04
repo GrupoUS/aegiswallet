@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, LineChart, PiggyBank, Plus, Wallet } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FinancialAmount } from '@/components/financial-amount';
 import { Button } from '@/components/ui/button';
@@ -153,7 +153,7 @@ export function AccountsCarousel({
 	const { accounts, isLoading } = useBankAccounts();
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const [canScrollLeft, setCanScrollLeft] = useState(false);
-	const [canScrollRight, setCanScrollRight] = useState(true);
+	const [canScrollRight, setCanScrollRight] = useState(false);
 
 	// Check scroll position to show/hide navigation arrows
 	const updateScrollState = useCallback(() => {
@@ -167,6 +167,33 @@ export function AccountsCarousel({
 			setCanScrollRight(currentScrollLeft < scrollWidth - clientWidth - 10);
 		}
 	}, []);
+
+	// Initialize scroll state on mount and when accounts change
+	// accounts.length is intentionally in deps to recalculate when accounts load
+	// biome-ignore lint/correctness/useExhaustiveDependencies: accounts.length triggers scroll recalculation when data loads
+	useEffect(() => {
+		updateScrollState();
+	}, [accounts.length, updateScrollState]);
+
+	// Add resize observer to update scroll state when container size changes
+	useEffect(() => {
+		const container = scrollContainerRef.current;
+		if (!container) return;
+
+		const resizeObserver = new ResizeObserver(() => {
+			updateScrollState();
+		});
+
+		resizeObserver.observe(container);
+
+		// Also listen for window resize as a fallback
+		window.addEventListener('resize', updateScrollState);
+
+		return () => {
+			resizeObserver.disconnect();
+			window.removeEventListener('resize', updateScrollState);
+		};
+	}, [updateScrollState]);
 
 	// Scroll handlers
 	const handleScrollLeft = useCallback(() => {

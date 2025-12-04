@@ -1,9 +1,9 @@
 'use client';
 
-import { useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { Mic, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { FinancialTabs } from './components/FinancialTabs';
 import { QuickActionModal } from './components/QuickActionModal';
@@ -18,10 +18,15 @@ import { useTotalBalance } from '@/hooks/useBankAccounts';
 import { useFinancialEvents } from '@/hooks/useFinancialEvents';
 import { RouteGuard } from '@/lib/auth/route-guard';
 
+type TabId = 'overview' | 'transactions' | 'bills';
+
 export function Saldo() {
-	// Get the tab from URL search params (for redirects from deprecated routes)
+	// Get tab and drawer from URL search params (for redirects from deprecated routes)
 	const search = useSearch({ from: '/saldo' });
-	const defaultTab = search.tab || 'overview';
+	const navigate = useNavigate({ from: '/saldo' });
+
+	// Derive active tab from URL, with fallback to 'overview'
+	const activeTab: TabId = (search.tab as TabId) || 'overview';
 
 	const [isListening, setIsListening] = useState(false);
 	const [showTransactionForm, setShowTransactionForm] = useState(false);
@@ -29,6 +34,20 @@ export function Saldo() {
 		'transfer' | 'deposit' | 'withdraw' | null
 	>(null);
 	const [isAccountsDrawerOpen, setIsAccountsDrawerOpen] = useState(false);
+
+	// Comment 3: Open drawer if search.drawer === 'accounts' on mount
+	useEffect(() => {
+		if (search.drawer === 'accounts') {
+			setIsAccountsDrawerOpen(true);
+			// Clear the drawer param after opening to avoid unexpected behavior on reload
+			void navigate({ search: (prev) => ({ ...prev, drawer: undefined }), replace: true });
+		}
+	}, [search.drawer, navigate]);
+
+	// Comment 2: Handle tab change by updating URL search params
+	const handleTabChange = (tab: TabId) => {
+		void navigate({ search: (prev) => ({ ...prev, tab }), replace: true });
+	};
 
 	const handleVoiceCommand = () => {
 		setIsListening(!isListening);
@@ -97,7 +116,16 @@ export function Saldo() {
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
-							onClick={() => setShowTransactionForm(!showTransactionForm)}
+							onClick={() => {
+								// Navigate to transactions tab and show form
+								if (!showTransactionForm) {
+									void navigate({
+										search: (prev) => ({ ...prev, tab: 'transactions' }),
+										replace: true,
+									});
+								}
+								setShowTransactionForm(!showTransactionForm);
+							}}
 							variant="outline"
 							size="sm"
 						>
@@ -170,7 +198,8 @@ export function Saldo() {
 					transition={{ delay: 0.3 }}
 				>
 					<FinancialTabs
-						defaultTab={defaultTab}
+						activeTab={activeTab}
+						onTabChange={handleTabChange}
 						showTransactionForm={showTransactionForm}
 						onToggleTransactionForm={() => setShowTransactionForm(false)}
 						quickActionsSlot={quickActionsSlot}

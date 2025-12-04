@@ -115,6 +115,7 @@ import { z } from 'zod';
 // Search params schema for the route
 const saldoSearchSchema = z.object({
 	tab: z.enum(['overview', 'transactions', 'bills']).optional().catch(undefined),
+	drawer: z.enum(['accounts']).optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/saldo')({

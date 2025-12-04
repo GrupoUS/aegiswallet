@@ -5,7 +5,7 @@ import { QueryClient } from '@tanstack/react-query';
  * 4xx errors (client errors) should not be retried
  * 5xx errors (server errors) may be retried
  */
-function isRetryableError(error: unknown, failureCount: number): boolean {
+function isRetryableError(failureCount: number, error: unknown): boolean {
 	// Don't retry if we've already tried too many times
 	if (failureCount >= 2) {
 		return false;

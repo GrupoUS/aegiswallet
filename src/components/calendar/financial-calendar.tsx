@@ -25,7 +25,7 @@ import {
 import type { CalendarEvent } from '@/components/ui/event-calendar';
 import { EventCalendar } from '@/components/ui/event-calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
+import { useAutoSyncToGoogle, useGoogleCalendarSync } from '@/hooks/use-google-calendar-sync';
 import { cn } from '@/lib/utils';
 import type { FinancialEvent } from '@/types/financial-events';
 import { formatEventAmount } from '@/types/financial-events';
@@ -51,12 +51,8 @@ export function FinancialCalendar() {
 	const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-	const {
-		isConnected,
-		settings: syncSettings,
-		syncSingleEvent,
-		isSyncing,
-	} = useGoogleCalendarSync();
+	const { isConnected, settings: syncSettings, isSyncing } = useGoogleCalendarSync();
+	const { triggerSync } = useAutoSyncToGoogle();
 
 	// Mock check for synced events (In real app, we'd check 'calendar_sync_mapping' via a query or prop on event)
 	// Since FinancialEvent doesn't have 'isSynced' prop yet, we assume we fetch it or pass it.
@@ -97,7 +93,7 @@ export function FinancialCalendar() {
 	const calendarEvents = useMemo(() => {
 		return filteredEvents.map((event) => {
 			// Check sync status (TODO: real check)
-			const isSynced = isConnected && syncSettings?.sync_enabled;
+			const isSynced = isConnected && syncSettings?.syncEnabled;
 
 			const calendarEvent = toCalendarEvent(event, !!isSynced);
 
@@ -147,10 +143,9 @@ export function FinancialCalendar() {
 
 			const newEvent = await addEvent(financialEvent as FinancialEvent);
 
-			// Sync if enabled
-			if (isConnected && syncSettings?.sync_enabled && newEvent?.id) {
-				toast.info('Sincronizando com Google Calendar...');
-				await syncSingleEvent({ eventId: newEvent.id, direction: 'to_google' });
+			// Sync if enabled using the auto-sync hook
+			if (newEvent?.id) {
+				triggerSync(newEvent.id);
 			}
 		} catch (_error) {
 			toast.error('Erro ao criar evento');
@@ -172,10 +167,9 @@ export function FinancialCalendar() {
 					allDay: calendarEvent.allDay,
 				});
 
-				// Sync if enabled
-				if (isConnected && syncSettings?.sync_enabled && updatedEvent?.id) {
-					// Debounce could be useful here to avoid too many API calls on drag
-					syncSingleEvent({ eventId: updatedEvent.id, direction: 'to_google' });
+				// Sync if enabled using the auto-sync hook
+				if (updatedEvent?.id) {
+					triggerSync(updatedEvent.id);
 				}
 			}
 		} catch (_error) {
@@ -231,7 +225,7 @@ export function FinancialCalendar() {
 						<DialogTitle className="flex items-center gap-2">
 							<span className="text-2xl">{selectedEvent?.icon}</span>
 							{selectedEvent?.title}
-							{isConnected && syncSettings?.sync_enabled && (
+							{isConnected && syncSettings?.syncEnabled && (
 								<TooltipProvider>
 									<Tooltip>
 										<TooltipTrigger>

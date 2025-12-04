@@ -111,6 +111,45 @@ export async function exchangeCodeForTokens(code: string): Promise<OAuthTokens> 
 }
 
 /**
+ * Handle OAuth callback - exchanges code for tokens, fetches user info, and persists tokens
+ * This consolidates the OAuth callback logic in the service layer
+ */
+export async function handleOAuthCallback(
+	code: string,
+	userId: string,
+): Promise<{ googleEmail?: string; googleUserId?: string }> {
+	// Exchange code for tokens
+	const tokens = await exchangeCodeForTokens(code);
+
+	// Get Google user info using the access token
+	const tempOauth2Client = new google.auth.OAuth2();
+	tempOauth2Client.setCredentials({ access_token: tokens.accessToken });
+
+	const oauth2 = google.oauth2({ version: 'v2', auth: tempOauth2Client });
+	const userInfo = await oauth2.userinfo.get();
+
+	const googleEmail = userInfo.data.email || undefined;
+	const googleUserId = userInfo.data.id || undefined;
+
+	// Save tokens
+	await saveTokens(userId, tokens, googleEmail, googleUserId);
+
+	// Initialize sync settings if not exists
+	await updateSyncSettings(userId, {
+		syncEnabled: false, // User must explicitly enable
+		syncDirection: 'bidirectional',
+		syncFinancialAmounts: false,
+	});
+
+	secureLogger.info('Google Calendar OAuth completed via service', {
+		userId,
+		googleEmail,
+	});
+
+	return { googleEmail, googleUserId };
+}
+
+/**
  * Get valid access token, refreshing if necessary
  */
 export async function getValidAccessToken(userId: string): Promise<string> {

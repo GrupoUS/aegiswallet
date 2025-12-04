@@ -11,16 +11,17 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { env } from '@/env';
+
 import { secureLogger } from '@/lib/logging/secure-logger';
 import {
 	disconnectGoogleCalendar,
-	exchangeCodeForTokens,
 	getAuthUrl,
 	getConnectionStatus,
 	getSyncSettings,
+	handleOAuthCallback,
 	processWebhook,
 	renewExpiringChannels,
-	saveTokens,
 	setupPushNotifications,
 	stopPushNotifications,
 	syncEventToGoogle,
@@ -152,36 +153,13 @@ googleCalendarRouter.get('/callback', async (c) => {
 			return c.redirect('/calendario?error=state_expired');
 		}
 
-		// Exchange code for tokens
-		const tokens = await exchangeCodeForTokens(code);
-
-		// Get Google user info
-		const { google } = await import('googleapis');
-		const oauth2Client = new google.auth.OAuth2();
-		oauth2Client.setCredentials({ access_token: tokens.accessToken });
-
-		const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-		const userInfo = await oauth2.userinfo.get();
-
-		// Save tokens
-		await saveTokens(
-			userId,
-			tokens,
-			userInfo.data.email || undefined,
-			userInfo.data.id || undefined,
-		);
-
-		// Initialize sync settings if not exists
-		await updateSyncSettings(userId, {
-			syncEnabled: false, // User must explicitly enable
-			syncDirection: 'bidirectional',
-			syncFinancialAmounts: false,
-		});
+		// Delegate to service layer for token exchange, user info fetch, and persistence
+		const { googleEmail } = await handleOAuthCallback(code, userId);
 
 		secureLogger.info('Google Calendar OAuth completed', {
 			requestId,
 			userId,
-			googleEmail: userInfo.data.email,
+			googleEmail,
 		});
 
 		return c.redirect('/calendario?success=google_connected');
@@ -808,7 +786,7 @@ googleCalendarRouter.post('/cron/renew-channels', async (c) => {
 
 	// Verify cron secret
 	const cronSecret = c.req.header('Authorization');
-	const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
+	const expectedSecret = `Bearer ${env.CRON_SECRET}`;
 
 	if (cronSecret !== expectedSecret) {
 		return c.json({ error: 'Unauthorized' }, 401);
@@ -848,7 +826,7 @@ googleCalendarRouter.post('/cron/process-queue', async (c) => {
 
 	// Verify cron secret
 	const cronSecret = c.req.header('Authorization');
-	const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
+	const expectedSecret = `Bearer ${env.CRON_SECRET}`;
 
 	if (cronSecret !== expectedSecret) {
 		return c.json({ error: 'Unauthorized' }, 401);

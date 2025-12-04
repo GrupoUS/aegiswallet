@@ -644,6 +644,95 @@ export async function processSyncQueue(limit = 10): Promise<void> {
 // ========================================
 
 /**
+ * Build initial sync parameters for Google Calendar API
+ */
+function buildSyncParams(
+	calendarId: string,
+	syncToken: string | null,
+): calendar_v3.Params$Resource$Events$List {
+	const params: calendar_v3.Params$Resource$Events$List = {
+		calendarId,
+		singleEvents: true,
+		maxResults: 100,
+	};
+
+	if (syncToken) {
+		params.syncToken = syncToken;
+	} else {
+		// Full sync - get events from last 30 days to 1 year in future
+		const now = new Date();
+		params.timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+		params.timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+	}
+
+	return params;
+}
+
+/**
+ * Reset params for full sync (when sync token is invalid)
+ */
+function resetParamsForFullSync(params: calendar_v3.Params$Resource$Events$List): void {
+	params.syncToken = undefined;
+	const now = new Date();
+	params.timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+	params.timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * Fetch events from Google Calendar, handling expired sync tokens
+ */
+async function fetchGoogleEvents(
+	calendar: calendar_v3.Calendar,
+	params: calendar_v3.Params$Resource$Events$List,
+	userId: string,
+): Promise<calendar_v3.Schema$Events> {
+	try {
+		const result = await calendar.events.list(params);
+		return result.data;
+	} catch (listError: unknown) {
+		// Handle invalid sync token (410 Gone)
+		const apiError = listError as { code?: number };
+		if (apiError?.code === 410) {
+			secureLogger.info('Sync token expired, performing full sync', { userId });
+
+			// Clear sync token and retry with full sync
+			await updateSyncSettings(userId, { syncToken: null });
+			resetParamsForFullSync(params);
+
+			const result = await calendar.events.list(params);
+			return result.data;
+		}
+		throw listError;
+	}
+}
+
+/**
+ * Process all events from a single page response
+ */
+async function processEventPage(
+	userId: string,
+	events: calendar_v3.Schema$Event[],
+	settings: CalendarSyncSettings,
+	errors: Array<{ eventId: string; error: string }>,
+): Promise<number> {
+	let syncedCount = 0;
+
+	for (const googleEvent of events) {
+		try {
+			await processGoogleEvent(userId, googleEvent, settings);
+			syncedCount++;
+		} catch (error) {
+			errors.push({
+				eventId: googleEvent.id || 'unknown',
+				error: error instanceof Error ? error.message : 'Unknown error',
+			});
+		}
+	}
+
+	return syncedCount;
+}
+
+/**
  * Perform incremental sync from Google Calendar
  */
 export async function syncFromGoogle(userId: string): Promise<SyncResult> {
@@ -661,23 +750,7 @@ export async function syncFromGoogle(userId: string): Promise<SyncResult> {
 	await logSyncAudit(userId, 'sync_started', true, { direction: 'from_google' });
 
 	try {
-		// Build request parameters
-		const params: calendar_v3.Params$Resource$Events$List = {
-			calendarId,
-			singleEvents: true,
-			maxResults: 100,
-		};
-
-		// Use sync token if available for incremental sync
-		if (settings.syncToken) {
-			params.syncToken = settings.syncToken;
-		} else {
-			// Full sync - get events from last 30 days to 1 year in future
-			const now = new Date();
-			params.timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-			params.timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
-		}
-
+		const params = buildSyncParams(calendarId, settings.syncToken);
 		let pageToken: string | undefined;
 		let nextSyncToken: string | undefined;
 
@@ -686,45 +759,8 @@ export async function syncFromGoogle(userId: string): Promise<SyncResult> {
 				params.pageToken = pageToken;
 			}
 
-			let response: calendar_v3.Schema$Events;
-
-			try {
-				const result = await calendar.events.list(params);
-				response = result.data;
-			} catch (listError: unknown) {
-				// Handle invalid sync token (410 Gone)
-				const apiError = listError as { code?: number };
-				if (apiError?.code === 410) {
-					secureLogger.info('Sync token expired, performing full sync', { userId });
-
-					// Clear sync token and retry with full sync
-					await updateSyncSettings(userId, { syncToken: null });
-
-					// Reset params for full sync
-					params.syncToken = undefined;
-					const now = new Date();
-					params.timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-					params.timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
-
-					const result = await calendar.events.list(params);
-					response = result.data;
-				} else {
-					throw listError;
-				}
-			}
-
-			// Process events
-			for (const googleEvent of response.items || []) {
-				try {
-					await processGoogleEvent(userId, googleEvent, settings);
-					syncedCount++;
-				} catch (error) {
-					errors.push({
-						eventId: googleEvent.id || 'unknown',
-						error: error instanceof Error ? error.message : 'Unknown error',
-					});
-				}
-			}
+			const response = await fetchGoogleEvents(calendar, params, userId);
+			syncedCount += await processEventPage(userId, response.items || [], settings, errors);
 
 			pageToken = response.nextPageToken || undefined;
 			nextSyncToken = response.nextSyncToken || undefined;

@@ -103,4 +103,11 @@ export const seedDatabase = async () => {
 };
 
 // Run if executed directly
-seedDatabase();
+(async () => {
+	try {
+		await seedDatabase();
+	} catch (error) {
+		console.error('Seed failed:', error);
+		process.exit(1);
+	}
+})();

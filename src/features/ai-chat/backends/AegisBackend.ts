@@ -125,6 +125,9 @@ export class AegisBackend implements ChatBackend {
 	}
 
 	private async *handleError(error: unknown): AsyncGenerator<ChatStreamChunk, void, unknown> {
+		// Minimal await to satisfy useAwait rule while maintaining yield* compatibility
+		await Promise.resolve();
+
 		if (error instanceof Error && error.name === 'AbortError') {
 			return;
 		}

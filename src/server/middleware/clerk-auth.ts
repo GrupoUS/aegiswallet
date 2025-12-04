@@ -34,6 +34,7 @@ interface RequestLogContext {
 	path: string;
 	requestId: string;
 	userAgent?: string;
+	[key: string]: unknown;
 }
 
 type AuthErrorCategory = 'auth' | 'database' | 'config' | 'unknown';

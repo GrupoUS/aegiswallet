@@ -13,6 +13,13 @@ import { boletoPayments, boletos } from './boletos';
 import { eventReminders, eventTypes, financialEvents } from './calendar';
 import { contactPaymentMethods, contacts } from './contacts';
 import {
+	calendarSyncAudit,
+	calendarSyncMappings,
+	calendarSyncQueue,
+	calendarSyncSettings,
+	googleCalendarTokens,
+} from './google-calendar-sync';
+import {
 	complianceAuditLogs,
 	consentTemplates,
 	dataDeletionRequests,
@@ -88,6 +95,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 	// Billing & Subscriptions
 	subscriptions: many(subscriptions),
 	paymentHistory: many(paymentHistory),
+	// Google Calendar Sync
+	googleCalendarTokens: many(googleCalendarTokens),
+	calendarSyncSettings: many(calendarSyncSettings),
+	calendarSyncMappings: many(calendarSyncMappings),
+	calendarSyncQueue: many(calendarSyncQueue),
+	calendarSyncAudit: many(calendarSyncAudit),
 }));
 
 export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
@@ -547,5 +560,48 @@ export const paymentHistoryRelations = relations(paymentHistory, ({ one }) => ({
 	subscription: one(subscriptions, {
 		fields: [paymentHistory.subscriptionId],
 		references: [subscriptions.id],
+	}),
+}));
+
+// ========================================
+// GOOGLE CALENDAR SYNC RELATIONS
+// ========================================
+
+export const googleCalendarTokensRelations = relations(googleCalendarTokens, ({ one }) => ({
+	user: one(users, {
+		fields: [googleCalendarTokens.userId],
+		references: [users.id],
+	}),
+}));
+
+export const calendarSyncSettingsRelations = relations(calendarSyncSettings, ({ one }) => ({
+	user: one(users, {
+		fields: [calendarSyncSettings.userId],
+		references: [users.id],
+	}),
+}));
+
+export const calendarSyncMappingsRelations = relations(calendarSyncMappings, ({ one }) => ({
+	user: one(users, {
+		fields: [calendarSyncMappings.userId],
+		references: [users.id],
+	}),
+	financialEvent: one(financialEvents, {
+		fields: [calendarSyncMappings.financialEventId],
+		references: [financialEvents.id],
+	}),
+}));
+
+export const calendarSyncQueueRelations = relations(calendarSyncQueue, ({ one }) => ({
+	user: one(users, {
+		fields: [calendarSyncQueue.userId],
+		references: [users.id],
+	}),
+}));
+
+export const calendarSyncAuditRelations = relations(calendarSyncAudit, ({ one }) => ({
+	user: one(users, {
+		fields: [calendarSyncAudit.userId],
+		references: [users.id],
 	}),
 }));

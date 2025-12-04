@@ -88,6 +88,33 @@ export {
 	type PixPaymentMethodDetails,
 	paymentMethodTypeEnum,
 } from './contacts';
+// Google Calendar Sync
+export {
+	// Types
+	type CalendarSyncAuditLog,
+	type CalendarSyncMapping,
+	type CalendarSyncQueueItem,
+	type CalendarSyncSettings,
+	// Tables
+	calendarSyncAudit,
+	calendarSyncMappings,
+	calendarSyncQueue,
+	calendarSyncSettings,
+	type GoogleCalendarToken,
+	googleCalendarTokens,
+	type InsertCalendarSyncAuditLog,
+	type InsertCalendarSyncMapping,
+	type InsertCalendarSyncQueueItem,
+	type InsertCalendarSyncSettings,
+	type InsertGoogleCalendarToken,
+	// Enums
+	syncAuditActionEnum,
+	syncDirectionEnum,
+	syncQueueDirectionEnum,
+	syncQueueStatusEnum,
+	syncSourceEnum,
+	syncStatusEnum,
+} from './google-calendar-sync';
 // Import Sessions
 export {
 	type ExtractedTransaction,
@@ -238,6 +265,10 @@ export {
 	boletoPaymentsRelations,
 	boletosRelations,
 	budgetCategoriesRelations,
+	calendarSyncAuditRelations,
+	calendarSyncMappingsRelations,
+	calendarSyncQueueRelations,
+	calendarSyncSettingsRelations,
 	chatMessagesRelations,
 	chatSessionsRelations,
 	complianceAuditLogsRelations,
@@ -251,6 +282,7 @@ export {
 	eventRemindersRelations,
 	eventTypesRelations,
 	financialEventsRelations,
+	googleCalendarTokensRelations,
 	legalHoldsRelations,
 	lgpdConsentLogsRelations,
 	lgpdConsentsRelations,

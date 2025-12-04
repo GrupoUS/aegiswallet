@@ -1,8 +1,19 @@
 {
+	"$schema": "https://openapi.vercel.sh/vercel.json",
 	"buildCommand": "bun run routes:generate && bun run build:client && bun run build:api",
 	"outputDirectory": "dist",
 	"installCommand": "bun install",
 	"framework": null,
+	"crons": [
+		{
+			"path": "/api/v1/google-calendar/cron/renew-channels",
+			"schedule": "0 */6 * * *"
+		},
+		{
+			"path": "/api/v1/google-calendar/cron/process-queue",
+			"schedule": "*/5 * * * *"
+		}
+	],
 	"functions": {
 		"api/index.mjs": {
 			"maxDuration": 30,

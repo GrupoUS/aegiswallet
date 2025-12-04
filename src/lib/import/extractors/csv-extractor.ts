@@ -53,7 +53,7 @@ export interface CSVBankDetectionResult {
  * @param buffer - CSV file as Buffer
  * @returns Parsed CSV data with headers and rows
  */
-export async function extractDataFromCSV(buffer: Buffer): Promise<CSVExtractionResult> {
+export function extractDataFromCSV(buffer: Buffer): CSVExtractionResult {
 	const startTime = Date.now();
 
 	try {
@@ -163,6 +163,7 @@ export async function extractDataFromCSV(buffer: Buffer): Promise<CSVExtractionR
  * @param rows - First few rows of data for content analysis
  * @returns Detection result with bank and column mapping
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Bank detection requires multiple pattern and column mapping checks
 export function detectBankFromCSV(
 	headers: string[],
 	rows: Record<string, string>[] = [],

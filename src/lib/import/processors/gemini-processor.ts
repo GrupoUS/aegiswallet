@@ -113,6 +113,7 @@ function getGeminiClient(): GoogleGenerativeAI {
  * @param bankHint - Optional hint about detected bank
  * @returns Structured extraction response
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: AI processing requires retry logic, error handling, and response parsing
 export async function processExtractWithGemini(
 	text: string,
 	fileType: 'PDF' | 'CSV',

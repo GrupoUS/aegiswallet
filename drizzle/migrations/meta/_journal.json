@@ -43,6 +43,13 @@
       "when": 1764766971433,
       "tag": "0005_past_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764868039498,
+      "tag": "0006_living_nuke",
+      "breakpoints": true
     }
   ]
 }

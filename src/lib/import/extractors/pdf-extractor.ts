@@ -147,6 +147,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFExtractionR
  * @param text - Extracted PDF text
  * @returns Detection result with bank name and confidence
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Bank detection requires multiple pattern checks
 export function detectBankFromPDF(text: string): BankDetectionResult {
 	const normalizedText = text.toLowerCase();
 	const firstChunk = normalizedText.substring(0, 2000); // Focus on header area

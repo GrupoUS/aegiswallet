@@ -18,6 +18,7 @@ import { Route as SaldoRouteImport } from './routes/saldo'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContasBancariasRouteImport } from './routes/contas-bancarias'
 import { Route as ContasRouteImport } from './routes/contas'
@@ -72,6 +73,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/import.lazy').then((d) => d.Route))
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/contas': typeof ContasRoute
   '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRouteWithChildren
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/contas': typeof ContasRoute
   '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRouteWithChildren
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/contas': typeof ContasRoute
   '/contas-bancarias': typeof ContasBancariasRoute
   '/dashboard': typeof DashboardRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRouteWithChildren
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/contas'
     | '/contas-bancarias'
     | '/dashboard'
+    | '/import'
     | '/login'
     | '/politica-de-privacidade'
     | '/privacidade'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/contas'
     | '/contas-bancarias'
     | '/dashboard'
+    | '/import'
     | '/login'
     | '/politica-de-privacidade'
     | '/privacidade'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/contas'
     | '/contas-bancarias'
     | '/dashboard'
+    | '/import'
     | '/login'
     | '/politica-de-privacidade'
     | '/privacidade'
@@ -318,6 +330,7 @@ export interface RootRouteChildren {
   ContasRoute: typeof ContasRoute
   ContasBancariasRoute: typeof ContasBancariasRoute
   DashboardRoute: typeof DashboardRoute
+  ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRouteWithChildren
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -535,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContasRoute: ContasRoute,
   ContasBancariasRoute: ContasBancariasRoute,
   DashboardRoute: DashboardRoute,
+  ImportRoute: ImportRoute,
   LoginRoute: LoginRouteWithChildren,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   PrivacidadeRoute: PrivacidadeRoute,

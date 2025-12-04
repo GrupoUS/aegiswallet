@@ -2,10 +2,10 @@ import { and, desc, eq, gte, ilike, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { filterSensitiveData } from '../security/filter';
-import type { HttpClient } from '@/db/client';
 import { transactionCategories, transactions } from '@/db/schema';
+import type { DbClient } from '@/server/hono-types';
 
-export function createTransactionTools(userId: string, db: HttpClient) {
+export function createTransactionTools(userId: string, db: DbClient) {
 	const listTransactionsSchema = z.object({
 		startDate: z
 			.string()
@@ -194,7 +194,7 @@ export function createTransactionTools(userId: string, db: HttpClient) {
 				const [deleted] = await db
 					.delete(transactions)
 					.where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
-					.returning({ id: transactions.id });
+					.returning();
 
 				if (!deleted) {
 					throw new Error('Transação não encontrada');

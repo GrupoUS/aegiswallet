@@ -5,7 +5,7 @@
 
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
-import type { HttpClient } from '@/db/client';
+import type { DbClient } from '@/server/hono-types';
 import {
 	complianceAuditLogs,
 	consentTemplates,
@@ -32,7 +32,7 @@ import type {
 } from '@/types/compliance';
 
 export class ComplianceService {
-	constructor(private db: HttpClient) {}
+	constructor(private db: DbClient) {}
 
 	// ========================================
 	// CONSENT MANAGEMENT
@@ -651,6 +651,6 @@ export class ComplianceService {
 }
 
 // Factory function
-export function createComplianceService(db: HttpClient): ComplianceService {
+export function createComplianceService(db: DbClient): ComplianceService {
 	return new ComplianceService(db);
 }

@@ -1,10 +1,10 @@
 import { eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 
-import type { HttpClient } from '@/db/client';
 import { transactionCategories } from '@/db/schema';
+import type { DbClient } from '@/server/hono-types';
 
-export function createCategoryTools(userId: string, db: HttpClient) {
+export function createCategoryTools(userId: string, db: DbClient) {
 	const listCategoriesSchema = z.object({
 		includeSystem: z.boolean().default(true).describe('Incluir categorias do sistema'),
 	});

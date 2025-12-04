@@ -2,10 +2,10 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { filterSensitiveData } from '../security/filter';
-import type { HttpClient } from '@/db/client';
 import { bankAccounts } from '@/db/schema';
+import type { DbClient } from '@/server/hono-types';
 
-export function createAccountTools(userId: string, db: HttpClient) {
+export function createAccountTools(userId: string, db: DbClient) {
 	const listAccountsSchema = z.object({
 		includeInactive: z.boolean().default(false).describe('Incluir contas inativas'),
 	});

@@ -168,7 +168,7 @@ aiChat.post('/chat', authMiddleware, zValidator('json', chatRequestSchema), asyn
 		const financialContext = await getAIFinancialContext(
 			userId,
 			auth.db,
-			auth.user.firstName ?? 'Usuário',
+			auth.user.fullName?.split(' ')[0] ?? 'Usuário',
 		);
 		const formattedContext = formatContextForPrompt(financialContext);
 

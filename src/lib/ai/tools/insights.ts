@@ -9,7 +9,7 @@ import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { filterSensitiveData } from '../security/filter';
-import type { HttpClient } from '@/db/client';
+import type { DbClient } from '@/server/hono-types';
 import {
 	aiInsights,
 	bankAccounts,
@@ -20,7 +20,7 @@ import {
 	transactions,
 } from '@/db/schema';
 
-export function createInsightTools(userId: string, db: HttpClient) {
+export function createInsightTools(userId: string, db: DbClient) {
 	// ========================================
 	// FINANCIAL SUMMARY
 	// ========================================

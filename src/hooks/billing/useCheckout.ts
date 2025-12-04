@@ -18,7 +18,10 @@ export function useCheckout() {
 
 	return useMutation({
 		mutationFn: async (params: CheckoutParams) => {
-			const response = await apiClient.post<CheckoutSessionResponse>('/v1/billing/checkout', params);
+			const response = await apiClient.post<CheckoutSessionResponse>(
+				'/v1/billing/checkout',
+				params,
+			);
 			return response;
 		},
 		onMutate: () => {

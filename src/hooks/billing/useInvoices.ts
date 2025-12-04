@@ -35,10 +35,7 @@ export function useDownloadInvoice() {
 	return useMutation({
 		mutationFn: async (invoiceId: string) => {
 			// Use the apiClient.download method which handles blob downloads properly
-			await apiClient.download(
-				`/v1/billing/invoices/${invoiceId}/pdf`,
-				`fatura-${invoiceId}.pdf`,
-			);
+			await apiClient.download(`/v1/billing/invoices/${invoiceId}/pdf`, `fatura-${invoiceId}.pdf`);
 		},
 	});
 }

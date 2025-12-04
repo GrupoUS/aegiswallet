@@ -31,7 +31,10 @@ export function useAddPaymentMethod() {
 
 	return useMutation({
 		mutationFn: async (data: AddPaymentMethodRequest) => {
-			const response = await apiClient.post<{ paymentMethod: PaymentMethod }>('/v1/billing/payment-methods', data);
+			const response = await apiClient.post<{ paymentMethod: PaymentMethod }>(
+				'/v1/billing/payment-methods',
+				data,
+			);
 			return response;
 		},
 		onSuccess: () => {
@@ -55,7 +58,10 @@ export function useUpdatePaymentMethod() {
 			paymentMethodId: string;
 			data: UpdatePaymentMethodRequest;
 		}) => {
-			const response = await apiClient.put<{ paymentMethod: PaymentMethod }>(`/v1/billing/payment-methods/${paymentMethodId}`, data);
+			const response = await apiClient.put<{ paymentMethod: PaymentMethod }>(
+				`/v1/billing/payment-methods/${paymentMethodId}`,
+				data,
+			);
 			return response;
 		},
 		onSuccess: () => {
@@ -73,7 +79,9 @@ export function useRemovePaymentMethod() {
 
 	return useMutation({
 		mutationFn: async (paymentMethodId: string) => {
-			const response = await apiClient.delete<{ success: boolean }>(`/v1/billing/payment-methods/${paymentMethodId}`);
+			const response = await apiClient.delete<{ success: boolean }>(
+				`/v1/billing/payment-methods/${paymentMethodId}`,
+			);
 			return response;
 		},
 		onSuccess: () => {

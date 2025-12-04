@@ -10,9 +10,23 @@
         "--context",
         "ide-assistant",
         "--project",
-        "D:\\\\Coders\\\\aegiswallet"
+        "D:\\Coders\\aegiswallet"
       ],
       "type": "stdio",
+    },
+    "MCP_DOCKER": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway",
+        "run"
+      ],
+      "env": {
+        "LOCALAPPDATA": "C:\\Users\\Mauri\\AppData\\Local",
+        "ProgramData": "C:\\ProgramData",
+        "ProgramFiles": "C:\\Program Files"
+      }
     }
   }
 }

@@ -12,7 +12,7 @@ import {
 	Sparkles,
 	Wallet,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';
 import { ConsentBanner } from '@/components/privacy';
@@ -58,7 +58,6 @@ const PUBLIC_PAGES = [
 function RootComponent() {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const [open, setOpen] = useState(false);
 	const { isLoading, signOut } = useAuth();
 
 	const isPublicPage = useMemo(
@@ -155,7 +154,7 @@ function RootComponent() {
 								'h-screen',
 							)}
 						>
-							<Sidebar open={open} setOpen={setOpen}>
+							<Sidebar>
 								<SidebarBody className="justify-between gap-10">
 									<div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
 										<div className="flex flex-col gap-4">

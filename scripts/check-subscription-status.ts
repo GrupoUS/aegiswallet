@@ -5,9 +5,9 @@
 
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+const sql = neon(process.env.DATABASE_URL ?? '');
 
-async function checkSubscriptionStatus(email?: string) {
+async function checkSubscriptionStatus(userEmail?: string) {
 	console.log('🔍 Checking subscription status...\n');
 
 	// Check user_subscriptions table
@@ -36,11 +36,11 @@ async function checkSubscriptionStatus(email?: string) {
 	}
 
 	// If email provided, search specifically
-	if (email) {
-		console.log(`\n=== SEARCHING FOR EMAIL: ${email} ===`);
-		const profile = await sql`SELECT * FROM profiles WHERE email = ${email}`;
+	if (userEmail) {
+		console.log(`\n=== SEARCHING FOR EMAIL: ${userEmail} ===`);
+		const profile = await sql`SELECT * FROM profiles WHERE email = ${userEmail}`;
 		if (profile.length === 0) {
-			console.log(`❌ No profile found for email: ${email}`);
+			console.log(`❌ No profile found for email: ${userEmail}`);
 		} else {
 			console.log('✅ Profile found:');
 			console.log(JSON.stringify(profile[0], null, 2));

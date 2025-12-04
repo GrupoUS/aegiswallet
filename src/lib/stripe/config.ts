@@ -18,12 +18,15 @@ let env: z.infer<typeof envSchema> | undefined;
 try {
 	env = envSchema.parse(process.env);
 } catch (_error) {
-	// Only throw if we are in a runtime environment where these are expected
+	// Only log warning if we are in a runtime environment where these are expected
+	// In test/production modes or browser, we silently fall back to process.env
 	if (
 		process.env.NODE_ENV !== 'test' &&
 		process.env.NODE_ENV !== 'production' &&
 		typeof window === 'undefined'
 	) {
+		// biome-ignore lint/suspicious/noConsole: Development environment warning
+		console.warn('Stripe environment variables are not properly configured');
 	}
 	// Fallback for types/build
 	env = process.env as z.infer<typeof envSchema>;

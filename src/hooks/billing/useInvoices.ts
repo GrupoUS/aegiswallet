@@ -21,7 +21,7 @@ export function useInvoices({ limit = 10, offset = 0, status }: UseInvoicesParam
 			if (offset) params.append('offset', offset.toString());
 			if (status) params.append('status', status);
 
-			return apiClient.get<InvoicesResponse>(`/v1/billing/invoices?${params.toString()}`);
+			return await apiClient.get<InvoicesResponse>(`/v1/billing/invoices?${params.toString()}`);
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		retry: 1,

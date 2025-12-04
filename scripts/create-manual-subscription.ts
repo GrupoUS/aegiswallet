@@ -14,14 +14,18 @@ import * as schema from '../src/db/schema';
 const sql = neon(process.env.DATABASE_URL ?? '');
 const db = drizzle(sql, { schema });
 
-async function createManualSubscription(email: string, planId: string) {
-	console.log(`\n🔧 Creating subscription for ${email} with plan: ${planId}\n`);
+async function createManualSubscription(userEmail: string, userPlanId: string) {
+	console.log(`\n🔧 Creating subscription for ${userEmail} with plan: ${userPlanId}\n`);
 
 	// Find user by email
-	const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+	const [user] = await db
+		.select()
+		.from(schema.users)
+		.where(eq(schema.users.email, userEmail))
+		.limit(1);
 
 	if (!user) {
-		console.error(`❌ User not found: ${email}`);
+		console.error(`❌ User not found: ${userEmail}`);
 		process.exit(1);
 	}
 
@@ -37,18 +41,18 @@ async function createManualSubscription(email: string, planId: string) {
 	if (existingSub) {
 		console.log(`⚠️ Subscription already exists with plan: ${existingSub.planId}`);
 		console.log(`  Status: ${existingSub.status}`);
-		console.log(`  Updating to plan: ${planId}...`);
+		console.log(`  Updating to plan: ${userPlanId}...`);
 
 		await db
 			.update(schema.subscriptions)
 			.set({
-				planId,
+				planId: userPlanId,
 				status: 'active',
 				updatedAt: new Date(),
 			})
 			.where(eq(schema.subscriptions.userId, user.id));
 
-		console.log(`✅ Subscription updated to ${planId}`);
+		console.log(`✅ Subscription updated to ${userPlanId}`);
 	} else {
 		// Create new subscription
 		const now = new Date();
@@ -57,7 +61,7 @@ async function createManualSubscription(email: string, planId: string) {
 
 		await db.insert(schema.subscriptions).values({
 			userId: user.id,
-			planId,
+			planId: userPlanId,
 			status: 'active',
 			currentPeriodStart: now,
 			currentPeriodEnd: nextMonth,
@@ -66,7 +70,7 @@ async function createManualSubscription(email: string, planId: string) {
 			updatedAt: now,
 		});
 
-		console.log(`✅ New subscription created with plan: ${planId}`);
+		console.log(`✅ New subscription created with plan: ${userPlanId}`);
 	}
 
 	// Verify
@@ -80,7 +84,7 @@ async function createManualSubscription(email: string, planId: string) {
 	console.log(JSON.stringify(verifiedSub, null, 2));
 }
 
-const email = process.argv[2] || 'msm.jur@gmail.com';
-const planId = process.argv[3] || 'basic';
+const inputEmail = process.argv[2] || 'msm.jur@gmail.com';
+const inputPlanId = process.argv[3] || 'basic';
 
-createManualSubscription(email, planId).catch(console.error);
+createManualSubscription(inputEmail, inputPlanId).catch(console.error);

@@ -10,7 +10,9 @@ const tables = await sql`
 `;
 
 console.log('Tables in database:');
-tables.forEach((t: { table_name: string }) => console.log('  -', t.table_name));
+for (const t of tables as { table_name: string }[]) {
+	console.log('  -', t.table_name);
+}
 
 // Check profiles
 console.log('\n=== PROFILES ===');

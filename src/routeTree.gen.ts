@@ -57,7 +57,7 @@ const SaldoRoute = SaldoRouteImport.update({
   id: '/saldo',
   path: '/saldo',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/saldo.lazy').then((d) => d.Route))
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
@@ -82,7 +82,7 @@ const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/dashboard.lazy').then((d) => d.Route))
 const ContasBancariasRoute = ContasBancariasRouteImport.update({
   id: '/contas-bancarias',
   path: '/contas-bancarias',
@@ -99,7 +99,7 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/configuracoes.lazy').then((d) => d.Route))
 const CalendarioRoute = CalendarioRouteImport.update({
   id: '/calendario',
   path: '/calendario',

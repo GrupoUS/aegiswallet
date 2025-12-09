@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, createLazyFileRoute } from '@tanstack/react-router';
 import { CreditCard, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
 import { lazy, Suspense, useMemo } from 'react';
 
@@ -38,7 +38,7 @@ const CalendarLoader = () => (
 	</Card>
 );
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createLazyFileRoute('/dashboard')({
   component: lazy(() =>
     import('./dashboard.lazy').then((m) => ({ default: m.Dashboard })),
   ),
@@ -64,7 +64,7 @@ export function Dashboard() {
 	const { summary, isLoading: summaryLoading } = useFinancialSummary(
 		startOfCurrentMonth,
 		endOfCurrentMonth,
-	);
+	)
 
 	const recentTransactionsQuery = useTransactions({ limit: 5 });
 	const recentTransactions = recentTransactionsQuery.data ?? [];
@@ -77,7 +77,7 @@ export function Dashboard() {
 	}, [accounts]);
 
 	// PIX Sent Calculation (approximation or use a specific query if available)
-	// Since we don't have a direct hook for "PIX Sent Today", we'll assume we might fetch it via transactions if needed.
+	// Since we don't have a direct hook for 'PIX Sent Today', we'll assume we might fetch it via transactions if needed.
 	// For now, let's use useTransactions with filters for today.
 	const today = new Date().toISOString().split('T')[0];
 	const pixTransactionsQuery = useTransactions({
@@ -95,7 +95,7 @@ export function Dashboard() {
 			.reduce(
 				(sum: number, transaction: Transaction) => sum + Math.abs(Number(transaction.amount)),
 				0,
-			);
+			)
 	}, [pixTransactions]);
 
 	// Magic Cards com dados reais
@@ -132,7 +132,7 @@ export function Dashboard() {
 			title: 'PIX Enviados',
 			value: pixSentToday,
 		},
-	];
+	]
 
 	return (
 		<div className="container mx-auto space-y-6 p-4">
@@ -160,10 +160,10 @@ export function Dashboard() {
 											{card.isCurrency ? (
 												<FinancialAmount
 													amount={card.value}
-													currency="BRL"
-													size="xl"
+													currency='BRL'
+													size='xl'
 													showSign={false}
-													className="text-foreground"
+													className='text-foreground'
 												/>
 											) : (
 												card.value
@@ -174,7 +174,7 @@ export function Dashboard() {
 									<Icon className="h-8 w-8 text-muted-foreground/50" />
 								</div>
 							</MagicCard>
-						);
+						)
 					})}
 				</div>
 			</div>
@@ -261,7 +261,7 @@ export function Dashboard() {
 				</Card>
 			</div>
 		</div>
-	);
+	)
 }
 
 function MonthlySummaryContent() {
@@ -286,7 +286,7 @@ function MonthlySummaryContent() {
 				<Skeleton className="h-4 w-full" />
 				<Skeleton className="h-4 w-full" />
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -299,7 +299,7 @@ function MonthlySummaryContent() {
 				<span className="text-sm">Despesas</span>
 				<FinancialAmount
 					amount={-(statistics.totalExpenses + statistics.pendingExpenses)}
-					size="sm"
+					size='sm'
 				/>
 			</div>
 			<div className="border-t pt-2">
@@ -309,5 +309,5 @@ function MonthlySummaryContent() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

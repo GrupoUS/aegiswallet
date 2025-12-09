@@ -53,4 +53,4 @@ async function checkDatabase() {
 	}
 }
 
-checkDatabase();
+void checkDatabase();

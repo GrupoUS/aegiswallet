@@ -124,9 +124,9 @@ export class StripeCustomerService {
 			// Check if customer exists first
 			try {
 				await stripe.customers.retrieve(stripeCustomerId);
-			} catch (retrieveError: any) {
+			} catch (retrieveError: unknown) {
 				// If customer doesn't exist (404), that's fine - already deleted
-				if (retrieveError?.statusCode === 404) {
+				if ((retrieveError as { statusCode?: number })?.statusCode === 404) {
 					secureLogger.info('Stripe customer already deleted', { stripeCustomerId });
 					return;
 				}
@@ -158,9 +158,10 @@ export class StripeCustomerService {
 			await stripe.customers.del(stripeCustomerId);
 
 			secureLogger.info('Stripe customer deleted', { stripeCustomerId });
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// If customer is already deleted (404), that's acceptable
-			if (error?.statusCode === 404) {
+			const stripeError = error as { statusCode?: number };
+			if (stripeError?.statusCode === 404) {
 				secureLogger.info('Stripe customer already deleted', { stripeCustomerId });
 				return;
 			}
@@ -168,7 +169,7 @@ export class StripeCustomerService {
 			secureLogger.error('Failed to delete Stripe customer', {
 				stripeCustomerId,
 				error: error instanceof Error ? error.message : 'Unknown error',
-				statusCode: error?.statusCode,
+				statusCode: stripeError?.statusCode,
 			});
 			throw error;
 		}

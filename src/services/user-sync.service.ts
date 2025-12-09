@@ -55,12 +55,13 @@ export class UserSyncService {
 	 */
 	static async ensureUserExists(clerkUserId: string): Promise<typeof users.$inferSelect> {
 		// Validate Clerk user ID format
-		if (!(clerkUserId && clerkUserId.startsWith('user_'))) {
+		if (!clerkUserId?.startsWith('user_')) {
 			throw new Error(`Invalid Clerk user ID format: ${clerkUserId}`);
 		}
 
 		// Check if user already exists and create if not (bypasses RLS with service account)
-		return runAsServiceAccount(async (tx) => {
+		// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: User sync requires complex orchestration with multiple fallback paths
+		return await runAsServiceAccount(async (tx) => {
 			// First check if user exists
 			const [existingUser] = await tx
 				.select()

@@ -85,6 +85,7 @@ transactionsRouter.get(
 		message: 'Too many requests, please try again later',
 	}),
 	zValidator('query', listTransactionsSchema),
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Transaction filtering requires multiple conditional branches
 	async (c) => {
 		const { user, db } = c.get('auth');
 		const filters = c.req.valid('query');

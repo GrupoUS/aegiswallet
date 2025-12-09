@@ -15,7 +15,7 @@ export function safeParseDate(dateString: string | null | undefined): Date | nul
 	const date = new Date(dateString);
 
 	// Check if date is valid
-	if (isNaN(date.getTime())) {
+	if (Number.isNaN(date.getTime())) {
 		return null;
 	}
 
@@ -53,10 +53,10 @@ export function isValidDateString(dateString: string): boolean {
  */
 export function safeFormatDate(
 	date: Date | null | undefined,
-	format: string,
+	_format: string,
 	fallback = 'Data inválida',
 ): string {
-	if (!date || isNaN(date.getTime())) {
+	if (!date || Number.isNaN(date.getTime())) {
 		return fallback;
 	}
 

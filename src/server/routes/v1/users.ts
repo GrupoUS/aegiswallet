@@ -408,7 +408,7 @@ usersRouter.get(
 			const startDate = new Date(period_start);
 			const endDate = new Date(period_end);
 
-			if (isNaN(startDate.getTime())) {
+			if (Number.isNaN(startDate.getTime())) {
 				return c.json(
 					{
 						code: 'INVALID_DATE',
@@ -418,7 +418,7 @@ usersRouter.get(
 				);
 			}
 
-			if (isNaN(endDate.getTime())) {
+			if (Number.isNaN(endDate.getTime())) {
 				return c.json(
 					{
 						code: 'INVALID_DATE',

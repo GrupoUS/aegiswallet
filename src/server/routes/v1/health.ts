@@ -230,7 +230,7 @@ healthRouter.get('/connections', async (c) => {
 healthRouter.get(
 	'/auth',
 	// We'll add auth middleware when we set up the main router
-	async (c) => {
+	(c) => {
 		const auth = c.get('auth');
 
 		return c.json({

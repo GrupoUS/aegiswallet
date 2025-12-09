@@ -6,12 +6,9 @@
  * Verifies database connection, schema integrity, RLS policies, and identifies orphaned data
  */
 
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 import { getPoolClient } from '../src/db/client';
-import { subscriptions } from '../src/db/schema/billing';
-import { organizationMembers, organizations } from '../src/db/schema/organizations';
-import { users } from '../src/db/schema/users';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -114,7 +111,9 @@ async function validateSchema() {
 
 		if (issues.length > 0) {
 			console.log('\n⚠️  Schema issues found:');
-			issues.forEach((issue) => console.log(`   - ${issue}`));
+			for (const issue of issues) {
+				console.log(`   - ${issue}`);
+			}
 			return false;
 		}
 
@@ -280,7 +279,9 @@ async function identifyOrphanedData() {
 
 		if (issues.length > 0) {
 			console.log('\n⚠️  Orphaned data found:');
-			issues.forEach((issue) => console.log(`   - ${issue}`));
+			for (const issue of issues) {
+				console.log(`   - ${issue}`);
+			}
 			return false;
 		}
 
@@ -344,7 +345,7 @@ async function verifyDatabase() {
 
 	await getDatabaseStats();
 
-	console.log('\n' + '='.repeat(60));
+	console.log(`\n${'='.repeat(60)}`);
 	console.log('📋 Verification Summary:');
 	console.log('='.repeat(60));
 

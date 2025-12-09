@@ -127,8 +127,8 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			const data = await apiClient.post<BankAccount>('/v1/bank-accounts', input);
 			return data;
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Erro ao criar conta bancária');
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao criar conta bancária');
 		},
 		onSuccess: (data) => {
 			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
@@ -157,8 +157,8 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			const data = await apiClient.put<BankAccount>(`/v1/bank-accounts/${id}`, updateData);
 			return data;
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Erro ao atualizar conta bancária');
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao atualizar conta bancária');
 		},
 		onSuccess: (data) => {
 			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {
@@ -176,8 +176,8 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			await apiClient.delete(`/v1/bank-accounts/${input.id}`);
 			return input.id;
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Erro ao remover conta bancária');
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao remover conta bancária');
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
@@ -193,8 +193,8 @@ export function useBankAccounts(): UseBankAccountsReturn {
 			});
 			return data;
 		},
-		onError: (error: Error) => {
-			toast.error(error.message || 'Erro ao atualizar saldo');
+		onError: (err: Error) => {
+			toast.error(err.message || 'Erro ao atualizar saldo');
 		},
 		onSuccess: (data) => {
 			queryClient.setQueryData(['bank-accounts'], (old: BankAccount[] | undefined) => {

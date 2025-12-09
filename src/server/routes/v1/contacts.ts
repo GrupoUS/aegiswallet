@@ -725,16 +725,16 @@ contactsRouter.get(
 				.where(eq(contacts.userId, user.id));
 
 			const totalContacts = data.length;
-			const favoriteContacts = data.filter((c) => c.isFavorite).length;
-			const contactsWithEmail = data.filter((c) => c.email).length;
-			const contactsWithPhone = data.filter((c) => c.phone).length;
+			const statsFavorites = data.filter((contact) => contact.isFavorite).length;
+			const statsWithEmail = data.filter((contact) => contact.email).length;
+			const statsWithPhone = data.filter((contact) => contact.phone).length;
 
 			return c.json({
 				data: {
-					contactsWithEmail,
-					contactsWithPhone,
-					favoriteContacts,
-					favoritePercentage: totalContacts > 0 ? (favoriteContacts / totalContacts) * 100 : 0,
+					contactsWithEmail: statsWithEmail,
+					contactsWithPhone: statsWithPhone,
+					favoriteContacts: statsFavorites,
+					favoritePercentage: totalContacts > 0 ? (statsFavorites / totalContacts) * 100 : 0,
 					totalContacts,
 				},
 				meta: {

@@ -109,7 +109,7 @@ clerkWebhookHandler.post('/', async (c) => {
 				}
 
 				// Validate clerkUserId format
-				if (!(id && id.startsWith('user_'))) {
+				if (!id?.startsWith('user_')) {
 					secureLogger.warn('Invalid Clerk user ID format', { userId: id, requestId });
 					return c.json({ error: 'Invalid user ID format' }, 400);
 				}

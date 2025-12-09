@@ -20,6 +20,17 @@ import { RouteGuard } from '@/lib/auth/route-guard';
 
 type TabId = 'overview' | 'transactions' | 'bills';
 
+export const Route = createFileRoute('/saldo')({
+  component: Saldo,
+  pendingComponent: () => (
+    <div className="container mx-auto space-y-6 p-4">
+      <Skeleton className="h-12 w-64" />
+      <Skeleton className="h-96 w-full" />
+    </div>
+  ),
+  errorComponent: () => <div>Erro ao carregar saldo</div>,
+});
+
 export function Saldo() {
 	// Get tab and drawer from URL search params (for redirects from deprecated routes)
 	const search = useSearch({ from: '/saldo' });

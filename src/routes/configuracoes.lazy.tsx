@@ -1,3 +1,5 @@
 import { ConfiguracoesPage } from '@/components/routes/configuracoes/ConfiguracoesPage';
 
-export { ConfiguracoesPage };
+export const Route = createFileRoute('/configuracoes')({
+  component: ConfiguracoesPage,
+});

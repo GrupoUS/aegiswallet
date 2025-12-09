@@ -38,6 +38,14 @@ const CalendarLoader = () => (
 	</Card>
 );
 
+export const Route = createFileRoute('/dashboard')({
+  component: lazy(() =>
+    import('./dashboard.lazy').then((m) => ({ default: m.Dashboard })),
+  ),
+  pendingComponent: CalendarLoader,
+  errorComponent: () => <div>Erro ao carregar dashboard</div>,
+});
+
 export function Dashboard() {
 	// useEffect for OAuth callback removed as it is handled by the auth callback route and Clerk
 

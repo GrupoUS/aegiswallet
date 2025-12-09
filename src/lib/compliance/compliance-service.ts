@@ -5,7 +5,6 @@
 
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 
-import type { DbClient } from '@/server/hono-types';
 import {
 	complianceAuditLogs,
 	consentTemplates,
@@ -15,6 +14,7 @@ import {
 	transactionLimits,
 } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import type { DbClient } from '@/server/hono-types';
 import type {
 	CheckLimitResponse,
 	CollectionMethod,

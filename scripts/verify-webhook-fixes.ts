@@ -17,47 +17,55 @@ interface VerificationResult {
 
 async function verifyFixes(): Promise<VerificationResult[]> {
 	console.log('🔍 Verifying webhook fixes...\n');
-	
+
 	const webhookFilePath = join(process.cwd(), 'src/server/webhooks/clerk.ts');
 	const webhookContent = readFileSync(webhookFilePath, 'utf-8');
 
 	const results: VerificationResult[] = [
 		{
 			issue: 'Database client inconsistency',
-			fixed: webhookContent.includes("import { db } from '@/db/client'") && 
-			      !webhookContent.includes('getPoolClient()'),
+			fixed:
+				webhookContent.includes("import { db } from '@/db/client'") &&
+				!webhookContent.includes('getPoolClient()'),
 			description: 'Should use default db client instead of getPoolClient() for simple operations',
 		},
 		{
 			issue: 'Schema import mismatch',
-			fixed: webhookContent.includes("import { subscriptions } from '@/db/schema/billing'") &&
-			      webhookContent.includes("import { users } from '@/db/schema/users'"),
+			fixed:
+				webhookContent.includes("import { subscriptions } from '@/db/schema/billing'") &&
+				webhookContent.includes("import { users } from '@/db/schema/users'"),
 			description: 'Should import from correct schema modules',
 		},
 		{
 			issue: 'Environment variable validation',
-			fixed: webhookContent.includes('CLERK_WEBHOOK_SECRET environment variable is not set') &&
-			      webhookContent.includes('CLERK_SECRET_KEY environment variable is not set'),
+			fixed:
+				webhookContent.includes('CLERK_WEBHOOK_SECRET environment variable is not set') &&
+				webhookContent.includes('CLERK_SECRET_KEY environment variable is not set'),
 			description: 'Should validate required environment variables at startup',
 		},
 		{
 			issue: 'Webhook header validation',
-			fixed: webhookContent.includes('Missing required webhook headers') &&
-			      webhookContent.includes('svix-id') && webhookContent.includes('svix-timestamp') && webhookContent.includes('svix-signature'),
+			fixed:
+				webhookContent.includes('Missing required webhook headers') &&
+				webhookContent.includes('svix-id') &&
+				webhookContent.includes('svix-timestamp') &&
+				webhookContent.includes('svix-signature'),
 			description: 'Should validate all required webhook headers',
 		},
 		{
 			issue: 'Enhanced error handling',
-			fixed: webhookContent.includes('Failed to create Stripe customer') &&
-			      webhookContent.includes('Database operation failed during user creation') &&
-			      webhookContent.includes('Failed to delete user data') &&
-			      webhookContent.includes('Failed to update user'),
+			fixed:
+				webhookContent.includes('Failed to create Stripe customer') &&
+				webhookContent.includes('Database operation failed during user creation') &&
+				webhookContent.includes('Failed to delete user data') &&
+				webhookContent.includes('Failed to update user'),
 			description: 'Should provide specific error messages for different failure scenarios',
 		},
 		{
 			issue: 'Stripe rollback mechanism',
-			fixed: webhookContent.includes('Attempt to rollback Stripe customer creation') &&
-			      webhookContent.includes('Failed to rollback Stripe customer'),
+			fixed:
+				webhookContent.includes('Attempt to rollback Stripe customer creation') &&
+				webhookContent.includes('Failed to rollback Stripe customer'),
 			description: 'Should rollback Stripe customer creation if database operations fail',
 		},
 		{
@@ -67,8 +75,9 @@ async function verifyFixes(): Promise<VerificationResult[]> {
 		},
 		{
 			issue: 'Proper Clerk client initialization',
-			fixed: webhookContent.includes("createClerkClient({ secretKey: clerkSecretKey })") &&
-			      !webhookContent.includes("secretKey: clerkSecretKey || ''"),
+			fixed:
+				webhookContent.includes('createClerkClient({ secretKey: clerkSecretKey })') &&
+				!webhookContent.includes("secretKey: clerkSecretKey || ''"),
 			description: 'Should properly initialize Clerk client with validated secret key',
 		},
 	];
@@ -78,7 +87,7 @@ async function verifyFixes(): Promise<VerificationResult[]> {
 
 async function verifyDatabaseSchema(): Promise<VerificationResult[]> {
 	console.log('🗄️ Verifying database schema...\n');
-	
+
 	// This would normally connect to the database, but for now we'll check the schema files
 	const schemaDir = join(process.cwd(), 'src/db/schema');
 	const results: VerificationResult[] = [];
@@ -87,11 +96,12 @@ async function verifyDatabaseSchema(): Promise<VerificationResult[]> {
 		// Check users schema
 		const usersSchemaPath = join(schemaDir, 'users.ts');
 		const usersSchema = readFileSync(usersSchemaPath, 'utf-8');
-		
-		const hasRequiredUserFields = usersSchema.includes('id: text(\'id\').primaryKey()') &&
-		                               usersSchema.includes('email: text(\'email\').unique().notNull()') &&
-		                               usersSchema.includes('fullName: text(\'full_name\')');
-		
+
+		const hasRequiredUserFields =
+			usersSchema.includes("id: text('id').primaryKey()") &&
+			usersSchema.includes("email: text('email').unique().notNull()") &&
+			usersSchema.includes("fullName: text('full_name')");
+
 		results.push({
 			issue: 'Users table schema',
 			fixed: hasRequiredUserFields,
@@ -109,13 +119,14 @@ async function verifyDatabaseSchema(): Promise<VerificationResult[]> {
 		// Check billing schema
 		const billingSchemaPath = join(schemaDir, 'billing.ts');
 		const billingSchema = readFileSync(billingSchemaPath, 'utf-8');
-		
-		const hasRequiredSubscriptionFields = billingSchema.includes('subscriptions = pgTable(\'subscriptions\'') &&
-		                                        billingSchema.includes('userId: text(\'user_id\')') &&
-		                                        billingSchema.includes('stripeCustomerId: text(\'stripe_customer_id\')') &&
-		                                        billingSchema.includes('planId: text(\'plan_id\')') &&
-		                                        billingSchema.includes('status: subscriptionStatusEnum');
-		
+
+		const hasRequiredSubscriptionFields =
+			billingSchema.includes("subscriptions = pgTable('subscriptions'") &&
+			billingSchema.includes("userId: text('user_id')") &&
+			billingSchema.includes("stripeCustomerId: text('stripe_customer_id')") &&
+			billingSchema.includes("planId: text('plan_id')") &&
+			billingSchema.includes('status: subscriptionStatusEnum');
+
 		results.push({
 			issue: 'Subscriptions table schema',
 			fixed: hasRequiredSubscriptionFields,
@@ -134,7 +145,7 @@ async function verifyDatabaseSchema(): Promise<VerificationResult[]> {
 
 async function verifyScripts(): Promise<VerificationResult[]> {
 	console.log('📜 Verifying support scripts...\n');
-	
+
 	const scriptsDir = join(process.cwd(), 'scripts');
 	const results: VerificationResult[] = [];
 
@@ -143,10 +154,11 @@ async function verifyScripts(): Promise<VerificationResult[]> {
 
 	try {
 		const testScriptContent = readFileSync(testScriptPath, 'utf-8');
-		const hasTestEvents = testScriptContent.includes('user.created') &&
-		                     testScriptContent.includes('user.updated') &&
-		                     testScriptContent.includes('user.deleted') &&
-		                     testScriptContent.includes('testErrorScenarios');
+		const hasTestEvents =
+			testScriptContent.includes('user.created') &&
+			testScriptContent.includes('user.updated') &&
+			testScriptContent.includes('user.deleted') &&
+			testScriptContent.includes('testErrorScenarios');
 
 		results.push({
 			issue: 'Webhook testing script',
@@ -163,10 +175,11 @@ async function verifyScripts(): Promise<VerificationResult[]> {
 
 	try {
 		const validationScriptContent = readFileSync(validationScriptPath, 'utf-8');
-		const hasValidations = validationScriptContent.includes('validateEnvironment') &&
-		                       validationScriptContent.includes('validateDatabase') &&
-		                       validationScriptContent.includes('validateClerk') &&
-		                       validationScriptContent.includes('generateRemediation');
+		const hasValidations =
+			validationScriptContent.includes('validateEnvironment') &&
+			validationScriptContent.includes('validateDatabase') &&
+			validationScriptContent.includes('validateClerk') &&
+			validationScriptContent.includes('generateRemediation');
 
 		results.push({
 			issue: 'Webhook validation script',
@@ -190,11 +203,11 @@ async function runVerification() {
 	const scripts = await verifyScripts();
 
 	const allResults = [...webhookFixes, ...databaseSchema, ...scripts];
-	
+
 	console.log('\n📊 Verification Results:\n');
-	
+
 	let totalFixed = 0;
-	let totalIssues = allResults.length;
+	const totalIssues = allResults.length;
 
 	for (const result of allResults) {
 		const icon = result.fixed ? '✅' : '❌';
@@ -224,7 +237,7 @@ async function runVerification() {
 
 // Check if running directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-	runVerification().catch(error => {
+	runVerification().catch((error) => {
 		console.error('💥 Verification failed:', error);
 		process.exit(1);
 	});

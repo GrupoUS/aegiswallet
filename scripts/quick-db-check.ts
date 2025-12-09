@@ -3,8 +3,9 @@
  * Checks current state of users and bank accounts
  */
 
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 async function checkDatabase() {
 	console.log('🔍 Checking Database State...\n');
@@ -26,7 +27,9 @@ async function checkDatabase() {
 		`);
 		console.log(`\n🏦 Bank Accounts (${accounts.rows.length}):`);
 		for (const acc of accounts.rows) {
-			console.log(`   - ${acc.id} | user: ${acc.user_id} | ${acc.institution_name} | ${acc.account_type} | R$ ${acc.balance}`);
+			console.log(
+				`   - ${acc.id} | user: ${acc.user_id} | ${acc.institution_name} | ${acc.account_type} | R$ ${acc.balance}`,
+			);
 		}
 
 		// Check transactions
@@ -37,7 +40,9 @@ async function checkDatabase() {
 		`);
 		console.log(`\n💸 Transactions (showing up to 5):`);
 		for (const tx of transactions.rows) {
-			console.log(`   - ${tx.id} | user: ${tx.user_id} | ${tx.description} | R$ ${tx.amount} | ${tx.transaction_type}`);
+			console.log(
+				`   - ${tx.id} | user: ${tx.user_id} | ${tx.description} | R$ ${tx.amount} | ${tx.transaction_type}`,
+			);
 		}
 
 		console.log('\n✅ Database check complete!');

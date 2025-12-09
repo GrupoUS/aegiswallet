@@ -1,6 +1,6 @@
 'use client';
 
-import { useNavigate, useSearch, createLazyFileRoute } from '@tanstack/react-router';
+import { createLazyFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { Mic, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -21,14 +21,14 @@ import { RouteGuard } from '@/lib/auth/route-guard';
 type TabId = 'overview' | 'transactions' | 'bills';
 
 export const Route = createLazyFileRoute('/saldo')({
-  component: Saldo,
-  pendingComponent: () => (
-    <div className="container mx-auto space-y-6 p-4">
-      <Skeleton className="h-12 w-64" />
-      <Skeleton className="h-96 w-full" />
-    </div>
-  ),
-  errorComponent: () => <div>Erro ao carregar saldo</div>,
+	component: Saldo,
+	pendingComponent: () => (
+		<div className="container mx-auto space-y-6 p-4">
+			<Skeleton className="h-12 w-64" />
+			<Skeleton className="h-96 w-full" />
+		</div>
+	),
+	errorComponent: () => <div>Erro ao carregar saldo</div>,
 });
 
 export function Saldo() {
@@ -58,12 +58,12 @@ export function Saldo() {
 	// Comment 2: Handle tab change by updating URL search params
 	const handleTabChange = (tab: TabId) => {
 		void navigate({ search: (prev) => ({ ...prev, tab }), replace: true });
-	}
+	};
 
 	const handleVoiceCommand = () => {
 		setIsListening(!isListening);
 		// Voice command logic to be implemented
-	}
+	};
 
 	const { statistics, loading: statsLoading } = useFinancialEvents();
 	const { totalBRL, isLoading: balanceLoading } = useTotalBalance();
@@ -73,7 +73,7 @@ export function Saldo() {
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 			<Button
 				variant="outline"
-				size='lg'
+				size="lg"
 				className="h-auto py-4"
 				onClick={() => setQuickActionType('transfer')}
 			>
@@ -85,7 +85,7 @@ export function Saldo() {
 			</Button>
 			<Button
 				variant="outline"
-				size='lg'
+				size="lg"
 				className="h-auto py-4"
 				onClick={() => setQuickActionType('deposit')}
 			>
@@ -97,7 +97,7 @@ export function Saldo() {
 			</Button>
 			<Button
 				variant="outline"
-				size='lg'
+				size="lg"
 				className="h-auto py-4"
 				onClick={() => setQuickActionType('withdraw')}
 			>
@@ -108,7 +108,7 @@ export function Saldo() {
 				</div>
 			</Button>
 		</div>
-	)
+	);
 
 	return (
 		<RouteGuard>
@@ -133,20 +133,20 @@ export function Saldo() {
 									void navigate({
 										search: (prev) => ({ ...prev, tab: 'transactions' }),
 										replace: true,
-									})
+									});
 								}
 								setShowTransactionForm(!showTransactionForm);
 							}}
-							variant='outline'
-							size='sm'
+							variant="outline"
+							size="sm"
 						>
 							{showTransactionForm ? 'Cancelar' : 'Nova Transação'}
 						</Button>
 						<Button
 							onClick={handleVoiceCommand}
 							variant={isListening ? 'default' : 'outline'}
-							size='lg'
-							className='gap-2'
+							size="lg"
+							className="gap-2"
 							withGradient
 						>
 							<Mic className={isListening ? 'animate-pulse' : ''} />
@@ -230,5 +230,5 @@ export function Saldo() {
 				)}
 			</div>
 		</RouteGuard>
-	)
+	);
 }

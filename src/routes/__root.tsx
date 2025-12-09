@@ -1,8 +1,8 @@
 import { RedirectToSignIn, SignedIn, SignedOut } from '@clerk/clerk-react';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import { Calendar, CreditCard, Home, LogOut, Settings, Sparkles, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Calendar, CreditCard, Home, LogOut, Settings, Sparkles, Wallet } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
 import { CalendarProvider } from '@/components/calendar/calendar-context';

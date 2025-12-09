@@ -1,6 +1,7 @@
+import { randomUUID } from 'node:crypto';
+
 import { getPoolClient } from '../src/db/client';
 import { bankAccounts, users } from '../src/db/schema';
-import { randomUUID } from 'node:crypto';
 
 /**
  * Test bank account creation with proper foreign key handling
@@ -51,20 +52,23 @@ async function testBankAccountCreation() {
 
 		// Step 3: Now create bank account
 		console.log('\n📌 Step 3: Create bank account WITH user record...');
-		const [newAccount] = await db.insert(bankAccounts).values({
-			id: randomUUID(),
-			userId: testUserId,
-			institutionName: 'Test Bank',
-			institutionId: 'test_bank_001',
-			accountType: 'CHECKING',
-			accountMask: '**** 5678',
-			belvoAccountId: `belvo_test_${randomUUID()}`,
-			syncStatus: 'manual',
-			balance: '2500',
-			currency: 'BRL',
-			isPrimary: true,
-			isActive: true,
-		}).returning();
+		const [newAccount] = await db
+			.insert(bankAccounts)
+			.values({
+				id: randomUUID(),
+				userId: testUserId,
+				institutionName: 'Test Bank',
+				institutionId: 'test_bank_001',
+				accountType: 'CHECKING',
+				accountMask: '**** 5678',
+				belvoAccountId: `belvo_test_${randomUUID()}`,
+				syncStatus: 'manual',
+				balance: '2500',
+				currency: 'BRL',
+				isPrimary: true,
+				isActive: true,
+			})
+			.returning();
 		console.log('   ✅ Bank account created successfully!');
 		console.log(`   Account ID: ${newAccount.id}`);
 		console.log(`   Institution: ${newAccount.institutionName}`);
@@ -84,9 +88,10 @@ async function testBankAccountCreation() {
 		console.log('\nWhen you login with Clerk:');
 		console.log('1. The Clerk webhook should create the user record in the users table');
 		console.log('2. Then you can create bank accounts for that user');
-		console.log('\nIf you\'re getting an error, your Clerk user ID might not be in the users table.');
+		console.log(
+			"\nIf you're getting an error, your Clerk user ID might not be in the users table.",
+		);
 		console.log('Check the webhook logs or manually insert your user.');
-
 	} catch (error) {
 		console.error('❌ Test failed:', error);
 	}

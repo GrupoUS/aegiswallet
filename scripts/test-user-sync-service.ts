@@ -5,12 +5,12 @@
  * to verify the service account bypass and organization creation works
  */
 
-import { runAsServiceAccount, getPoolClient, closePool } from '../src/db/client';
-import { UserSyncService } from '../src/services/user-sync.service';
-import { users, bankAccounts } from '../src/db/schema';
+import { eq, sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient, runAsServiceAccount } from '../src/db/client';
+import { bankAccounts, users } from '../src/db/schema';
 import { organizations } from '../src/db/schema/organizations';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { UserSyncService } from '../src/services/user-sync.service';
 
 // Test configuration
 const TEST_CLERK_ID = 'user_test123456789';
@@ -77,12 +77,17 @@ async function testUserSyncService() {
 		try {
 			await UserSyncService.ensureUserExists('user_nonexistent');
 		} catch (clerkError) {
-			console.log(`   ⚠️  Expected Clerk error: ${clerkError instanceof Error ? clerkError.message : clerkError}`);
+			console.log(
+				`   ⚠️  Expected Clerk error: ${clerkError instanceof Error ? clerkError.message : clerkError}`,
+			);
 		}
 
 		return true;
 	} catch (error) {
-		console.error('   ❌ UserSyncService test failed:', error instanceof Error ? error.message : error);
+		console.error(
+			'   ❌ UserSyncService test failed:',
+			error instanceof Error ? error.message : error,
+		);
 		throw error;
 	}
 }
@@ -129,13 +134,17 @@ async function testServiceAccountBypass() {
 		// Try to access without user context (should fail due to RLS)
 		try {
 			const accounts = await regularClient.select().from(bankAccounts);
-			console.log(`   ⚠️  Regular client accessed ${accounts.length} accounts (RLS might be disabled)`);
+			console.log(
+				`   ⚠️  Regular client accessed ${accounts.length} accounts (RLS might be disabled)`,
+			);
 		} catch (rlsError) {
 			console.log('   ✅ RLS blocked regular client access (expected)');
 		}
 
 		// Try with user context (should work)
-		await regularClient.execute(sql`SELECT set_config('app.current_user_id', ${TEST_CLERK_ID}, false)`);
+		await regularClient.execute(
+			sql`SELECT set_config('app.current_user_id', ${TEST_CLERK_ID}, false)`,
+		);
 		const userAccounts = await regularClient.select().from(bankAccounts);
 
 		if (userAccounts.length > 0) {
@@ -156,7 +165,10 @@ async function testServiceAccountBypass() {
 
 		return true;
 	} catch (error) {
-		console.error('   ❌ Service account bypass test failed:', error instanceof Error ? error.message : error);
+		console.error(
+			'   ❌ Service account bypass test failed:',
+			error instanceof Error ? error.message : error,
+		);
 		throw error;
 	}
 }
@@ -210,7 +222,10 @@ async function testOrganizationCreation() {
 
 		return true;
 	} catch (error) {
-		console.error('   ❌ Organization creation test failed:', error instanceof Error ? error.message : error);
+		console.error(
+			'   ❌ Organization creation test failed:',
+			error instanceof Error ? error.message : error,
+		);
 		throw error;
 	}
 }
@@ -236,7 +251,6 @@ async function main() {
 		console.log('\n═════════════════════════════════════════════════════════════');
 		console.log('   ✅ ALL TESTS PASSED - UserSyncService working!');
 		console.log('═══════════════════════════════════════════════════════════════');
-
 	} catch (error) {
 		console.error('\n═══════════════════════════════════════════════════════════════');
 		console.error('   ❌ TEST FAILED - UserSyncService has issues');

@@ -11,10 +11,10 @@ import { z } from 'zod';
 
 import { transactions } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
-import { UserSyncService } from '@/services/user-sync.service';
-import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
+import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
+import { UserSyncService } from '@/services/user-sync.service';
 
 /**
  * Safely parse a date string, returning null for invalid dates

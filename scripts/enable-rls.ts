@@ -8,7 +8,9 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
+
 import { Pool } from '@neondatabase/serverless';
+
 import { secureLogger } from '../src/lib/logging/secure-logger';
 
 const DATABASE_URL = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -38,7 +40,7 @@ function readRLSPoliciesSQL(): string {
  */
 async function executeSQL(pool: Pool, sql: string): Promise<void> {
 	// Remove comments and normalize
-	let cleanedSQL = sql
+	const cleanedSQL = sql
 		.split('\n')
 		.map((line) => {
 			// Remove single-line comments
@@ -140,19 +142,26 @@ async function executeSQL(pool: Pool, sql: string): Promise<void> {
 				errorMessage.includes('already exists') ||
 				errorMessage.includes('duplicate') ||
 				errorMessage.includes('already enabled') ||
-				errorMessage.includes('does not exist') && errorMessage.includes('DROP')
+				(errorMessage.includes('does not exist') && errorMessage.includes('DROP'))
 			) {
-				console.log(`⚠️  Statement ${i + 1}/${statements.length} skipped (${errorMessage.substring(0, 50)}...)`);
+				console.log(
+					`⚠️  Statement ${i + 1}/${statements.length} skipped (${errorMessage.substring(0, 50)}...)`,
+				);
 				skippedCount++;
 			} else {
-				console.error(`❌ Statement ${i + 1}/${statements.length} failed:`, errorMessage.substring(0, 100));
+				console.error(
+					`❌ Statement ${i + 1}/${statements.length} failed:`,
+					errorMessage.substring(0, 100),
+				);
 				errorCount++;
 				// Don't throw - continue with other statements
 			}
 		}
 	}
 
-	console.log(`\n📊 Execution summary: ${successCount} succeeded, ${skippedCount} skipped, ${errorCount} errors`);
+	console.log(
+		`\n📊 Execution summary: ${successCount} succeeded, ${skippedCount} skipped, ${errorCount} errors`,
+	);
 }
 
 /**
@@ -179,11 +188,14 @@ async function verifyRLS(pool: Pool): Promise<void> {
 
 	for (const table of tables) {
 		try {
-			const result = await pool.query(`
+			const result = await pool.query(
+				`
 				SELECT rowsecurity
 				FROM pg_tables
 				WHERE schemaname = 'public' AND tablename = $1
-			`, [table]);
+			`,
+				[table],
+			);
 
 			const row = result.rows[0] as { rowsecurity: boolean } | undefined;
 
@@ -195,11 +207,16 @@ async function verifyRLS(pool: Pool): Promise<void> {
 				disabledCount++;
 			}
 		} catch (error) {
-			console.log(`❌ Failed to check ${table}:`, error instanceof Error ? error.message : 'Unknown error');
+			console.log(
+				`❌ Failed to check ${table}:`,
+				error instanceof Error ? error.message : 'Unknown error',
+			);
 		}
 	}
 
-	console.log(`\n📊 Summary: ${enabledCount} tables with RLS enabled, ${disabledCount} tables with RLS disabled`);
+	console.log(
+		`\n📊 Summary: ${enabledCount} tables with RLS enabled, ${disabledCount} tables with RLS disabled`,
+	);
 
 	// Check helper functions
 	try {
@@ -212,7 +229,10 @@ async function verifyRLS(pool: Pool): Promise<void> {
 		const functions = funcResult.rows.map((r: { proname: string }) => r.proname);
 		console.log(`\n🔧 Helper functions: ${functions.join(', ') || 'none found'}`);
 	} catch (error) {
-		console.log(`\n⚠️  Failed to check helper functions:`, error instanceof Error ? error.message : 'Unknown error');
+		console.log(
+			`\n⚠️  Failed to check helper functions:`,
+			error instanceof Error ? error.message : 'Unknown error',
+		);
 	}
 }
 
@@ -268,4 +288,3 @@ if (import.meta.main) {
 		process.exit(1);
 	});
 }
-

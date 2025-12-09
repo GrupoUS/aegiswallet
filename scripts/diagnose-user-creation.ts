@@ -7,7 +7,9 @@ async function diagnoseUserCreation() {
 	console.log('🔍 Diagnosing user creation issue...\n');
 
 	// 1. List all users
-	const allUsers = await db.execute(`SELECT id, email, full_name, created_at FROM users ORDER BY created_at DESC`);
+	const allUsers = await db.execute(
+		`SELECT id, email, full_name, created_at FROM users ORDER BY created_at DESC`,
+	);
 	console.log('📊 All users in database:');
 	console.table(allUsers.rows);
 
@@ -22,7 +24,9 @@ async function diagnoseUserCreation() {
 	console.table(orphanAccounts.rows);
 
 	// 3. Check subscriptions table for users
-	const subscriptions = await db.execute(`SELECT user_id, stripe_customer_id, plan_id, status FROM subscriptions`);
+	const subscriptions = await db.execute(
+		`SELECT user_id, stripe_customer_id, plan_id, status FROM subscriptions`,
+	);
 	console.log('\n💳 Subscriptions:');
 	console.table(subscriptions.rows);
 
@@ -46,7 +50,9 @@ async function diagnoseUserCreation() {
 	if ((orphanSubscriptions.rows as unknown[]).length > 0) {
 		console.log('\n🔴 PROBLEM DETECTED:');
 		console.log('There are subscriptions for users that do not exist in the users table.');
-		console.log('This means the Clerk webhook is creating subscriptions but NOT creating user records.');
+		console.log(
+			'This means the Clerk webhook is creating subscriptions but NOT creating user records.',
+		);
 		console.log('\nThe fix we applied to clerk.ts should resolve this for NEW users.');
 		console.log('For EXISTING users, we need to manually insert them into the users table.');
 	}

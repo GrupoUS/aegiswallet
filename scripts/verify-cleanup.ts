@@ -4,8 +4,9 @@
  */
 
 import { createClerkClient } from '@clerk/backend';
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 const clerkClient = createClerkClient({
 	secretKey: process.env.CLERK_SECRET_KEY,
@@ -44,7 +45,9 @@ async function verifyCleanState() {
 			allClean = false;
 		}
 	} catch (error) {
-		console.log(`   ❌ Error connecting to Clerk: ${error instanceof Error ? error.message : error}`);
+		console.log(
+			`   ❌ Error connecting to Clerk: ${error instanceof Error ? error.message : error}`,
+		);
 		allClean = false;
 	}
 
@@ -116,8 +119,9 @@ async function verifyCleanState() {
 
 		const fnNames = functions.rows.map((r: any) => r.routine_name);
 		console.log(`   ${fnNames.includes('is_service_account') ? '✅' : '❌'} is_service_account()`);
-		console.log(`   ${fnNames.includes('get_current_user_id') ? '✅' : '❌'} get_current_user_id()`);
-
+		console.log(
+			`   ${fnNames.includes('get_current_user_id') ? '✅' : '❌'} get_current_user_id()`,
+		);
 	} catch (error) {
 		console.log(`   ❌ Error querying Neon: ${error instanceof Error ? error.message : error}`);
 		allClean = false;

@@ -3,16 +3,18 @@
  */
 
 import crypto from 'crypto';
+
 import fetch from 'node-fetch';
 
 const testRealWebhook = async () => {
 	// Use the actual webhook URL
 	const webhookUrl = 'https://aegiswallet.vercel.app/api/webhooks/clerk';
-	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || 'whsec_VNHnDaMyTeNOTY4Tq6d3hsI7Pknr+3iU';
+	const webhookSecret =
+		process.env.CLERK_WEBHOOK_SECRET || 'whsec_VNHnDaMyTeNOTY4Tq6d3hsI7Pknr+3iU';
 
 	console.log('\n🧪 Testing Real Clerk Webhook');
 	console.log('===============================\n');
-	
+
 	// Create a realistic user.created event payload
 	// This mimics what Clerk actually sends
 	const eventId = 'evt_' + Math.random().toString(36).substr(2, 9);
@@ -69,12 +71,9 @@ const testRealWebhook = async () => {
 	const payloadString = JSON.stringify(testPayload);
 	const timestamp = Math.floor(Date.now() / 1000);
 	const signedPayload = `${timestamp}.${payloadString}`;
-	
+
 	// Generate signature
-	const signature = crypto
-		.createHmac('sha256', webhookSecret)
-		.update(signedPayload)
-		.digest('hex');
+	const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload).digest('hex');
 
 	const headers = {
 		'svix-id': testPayload.id,
@@ -99,7 +98,7 @@ const testRealWebhook = async () => {
 		});
 
 		console.log(`📊 Response Status: ${response.status} ${response.statusText}`);
-		
+
 		const responseText = await response.text();
 		console.log('\n📄 Response Body:');
 		console.log(responseText);
@@ -107,24 +106,22 @@ const testRealWebhook = async () => {
 		if (response.ok) {
 			console.log('\n✅ SUCCESS! Webhook accepted');
 			console.log('   The user should now be created in the database');
-			
+
 			// Wait a moment and check
-			await new Promise(resolve => setTimeout(resolve, 2000));
-			
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
 			console.log('\n🔍 Checking if user was created...');
 			// You would need to run check-recent-users.ts here
+		} else if (response.status === 400 && responseText.includes('signature')) {
+			console.log('\n❌ Signature verification failed');
+			console.log('   This means the webhook secret in production is different');
+			console.log('   Please check your Clerk Dashboard webhook configuration');
 		} else {
-			if (response.status === 400 && responseText.includes('signature')) {
-				console.log('\n❌ Signature verification failed');
-				console.log('   This means the webhook secret in production is different');
-				console.log('   Please check your Clerk Dashboard webhook configuration');
-			} else {
-				console.log('\n⚠️  Webhook failed with unexpected error');
-			}
+			console.log('\n⚠️  Webhook failed with unexpected error');
 		}
 	} catch (error) {
 		console.error('\n❌ Error:', error);
-		
+
 		if (error instanceof Error) {
 			if (error.message.includes('timeout')) {
 				console.log('\n⏱️  Webhook timed out - this might indicate a processing issue');

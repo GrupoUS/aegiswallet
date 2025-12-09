@@ -21,10 +21,10 @@ import {
 	validateBankAccountForInsert,
 	validateBankAccountForUpdate,
 } from '@/lib/validation/bank-accounts-validator';
-import { UserSyncService } from '@/services/user-sync.service';
-import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import type { AppEnv } from '@/server/hono-types';
+import { categorizeDatabaseError } from '@/server/lib/db-error-handler';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
+import { UserSyncService } from '@/services/user-sync.service';
 
 // =====================================================
 // Validation Schemas

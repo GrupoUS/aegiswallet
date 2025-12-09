@@ -3,8 +3,9 @@
  * This script will help identify and resolve problems preventing new user registration
  */
 
-import { neon } from '@neondatabase/serverless';
 import crypto from 'crypto';
+
+import { neon } from '@neondatabase/serverless';
 
 const fixUserCreation = async () => {
 	const databaseUrl = process.env.DATABASE_URL;
@@ -22,14 +23,14 @@ const fixUserCreation = async () => {
 		// 1. Check database schema for user table
 		console.log('1️⃣ Checking User Table Schema');
 		console.log('==================================');
-		
+
 		const userTableInfo = await sql`
 			SELECT column_name, data_type, is_nullable, column_default
 			FROM information_schema.columns
 			WHERE table_name = 'users'
 			ORDER BY ordinal_position
 		`;
-		
+
 		console.log('User table columns:');
 		userTableInfo.forEach((col) => {
 			const nullable = col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL';
@@ -39,11 +40,11 @@ const fixUserCreation = async () => {
 		// 2. Check for any missing required columns
 		console.log('\n2️⃣ Validating Required Columns');
 		console.log('==================================');
-		
+
 		const requiredColumns = ['id', 'email', 'created_at', 'updated_at'];
 		const existingColumns = userTableInfo.map((col) => col.column_name);
 		const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));
-		
+
 		if (missingColumns.length > 0) {
 			console.log(`⚠️  Missing columns: ${missingColumns.join(', ')}`);
 		} else {
@@ -53,7 +54,7 @@ const fixUserCreation = async () => {
 		// 3. Check if there are any recent failed user creation attempts
 		console.log('\n3️⃣ Checking Recent User Creation');
 		console.log('===================================');
-		
+
 		const recentUsers = await sql`
 			SELECT 
 				id,
@@ -64,7 +65,7 @@ const fixUserCreation = async () => {
 			ORDER BY created_at DESC
 			LIMIT 5
 		`;
-		
+
 		if (recentUsers.length === 0) {
 			console.log('ℹ️  No users found in database');
 		} else {
@@ -78,7 +79,7 @@ const fixUserCreation = async () => {
 		// 4. Check webhook endpoint health
 		console.log('\n4️⃣ Checking Webhook Configuration');
 		console.log('====================================');
-		
+
 		const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 		if (!webhookSecret) {
 			console.log('❌ CLERK_WEBHOOK_SECRET not configured');
@@ -88,7 +89,7 @@ const fixUserCreation = async () => {
 			console.log('   3. Add to .env: CLERK_WEBHOOK_SECRET=whsec_...');
 		} else {
 			console.log('✅ Webhook secret configured');
-			
+
 			if (webhookSecret.startsWith('whsec_')) {
 				console.log('✅ Valid webhook secret format');
 			} else {
@@ -99,10 +100,10 @@ const fixUserCreation = async () => {
 		// 5. Test database insert operation
 		console.log('\n5️⃣ Testing Database Operations');
 		console.log('================================');
-		
+
 		const testUserId = `test_${crypto.randomUUID()}`;
 		const now = new Date().toISOString();
-		
+
 		try {
 			// Start a transaction to test insert
 			await sql.begin(async (tx) => {
@@ -112,15 +113,15 @@ const fixUserCreation = async () => {
 					VALUES (${testUserId}, 'test@example.com', ${now}, ${now})
 					ON CONFLICT (id) DO NOTHING
 				`;
-				
+
 				// Verify the insert
 				const result = await tx`
 					SELECT id FROM users WHERE id = ${testUserId}
 				`;
-				
+
 				if (result.length > 0) {
 					console.log('✅ Database insert operation successful');
-					
+
 					// Clean up test record
 					await tx`
 						DELETE FROM users WHERE id = ${testUserId}
@@ -131,13 +132,16 @@ const fixUserCreation = async () => {
 				}
 			});
 		} catch (error) {
-			console.log('❌ Database insert test failed:', error instanceof Error ? error.message : error);
+			console.log(
+				'❌ Database insert test failed:',
+				error instanceof Error ? error.message : error,
+			);
 		}
 
 		// 6. Check for constraints that might block user creation
 		console.log('\n6️⃣ Checking Database Constraints');
 		console.log('==================================');
-		
+
 		const constraints = await sql`
 			SELECT 
 				constraint_name,
@@ -147,7 +151,7 @@ const fixUserCreation = async () => {
 			WHERE table_name = 'users'
 			AND constraint_type != 'CHECK'
 		`;
-		
+
 		if (constraints.length > 0) {
 			console.log('User table constraints:');
 			constraints.forEach((con) => {
@@ -160,10 +164,10 @@ const fixUserCreation = async () => {
 		// 7. Generate a diagnostic report
 		console.log('\n7️⃣ Diagnostic Report');
 		console.log('=====================');
-		
+
 		const totalUsers = await sql`SELECT COUNT(*) as count FROM users`;
 		console.log(`Total users in database: ${totalUsers[0].count}`);
-		
+
 		// Check if users table exists and is accessible
 		const tableExists = await sql`
 			SELECT EXISTS (
@@ -171,7 +175,7 @@ const fixUserCreation = async () => {
 				WHERE table_name = 'users'
 			)
 		`;
-		
+
 		if (tableExists[0].exists) {
 			console.log('✅ Users table exists and is accessible');
 		} else {
@@ -181,12 +185,12 @@ const fixUserCreation = async () => {
 		// 8. Provide actionable next steps
 		console.log('\n8️⃣ Recommended Actions');
 		console.log('=======================');
-		
+
 		if (!webhookSecret) {
 			console.log('🔧 HIGH PRIORITY: Configure Clerk webhook secret');
 			console.log('   Run: bun scripts/setup-clerk-webhook.ts\n');
 		}
-		
+
 		if (totalUsers[0].count === 0) {
 			console.log('📝 Try creating a test user manually:');
 			console.log('   1. Go to your Clerk dashboard');
@@ -194,14 +198,13 @@ const fixUserCreation = async () => {
 			console.log('   3. Check if webhook event is received');
 			console.log('   4. Run: bun scripts/validate-user-integrity.ts\n');
 		}
-		
+
 		console.log('🔍 Monitor webhook activity:');
 		console.log('   - Check server logs for webhook events');
 		console.log('   - Use Clerk Dashboard webhook event logs');
 		console.log('   - Run: bun scripts/test-clerk-webhook.ts\n');
 
 		console.log('\n✅ User creation diagnostic completed');
-
 	} catch (error) {
 		console.error('\n❌ Error during diagnostic:', error);
 		process.exit(1);

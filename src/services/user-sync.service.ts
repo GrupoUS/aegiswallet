@@ -10,12 +10,13 @@
 
 import { createClerkClient } from '@clerk/backend';
 import { eq } from 'drizzle-orm';
-import { runAsServiceAccount, createUserScopedClient } from '@/db/client';
-import { users } from '@/db/schema/users';
-import { secureLogger } from '@/lib/logging/secure-logger';
+
 import { OrganizationService } from './organization.service';
 import { StripeCustomerService } from './stripe/customer.service';
+import { createUserScopedClient, runAsServiceAccount } from '@/db/client';
 import { subscriptions } from '@/db/schema/billing';
+import { users } from '@/db/schema/users';
+import { secureLogger } from '@/lib/logging/secure-logger';
 
 // ========================================
 // CLERK CLIENT (lazy initialization)
@@ -54,14 +55,18 @@ export class UserSyncService {
 	 */
 	static async ensureUserExists(clerkUserId: string): Promise<typeof users.$inferSelect> {
 		// Validate Clerk user ID format
-		if (!clerkUserId || !clerkUserId.startsWith('user_')) {
+		if (!(clerkUserId && clerkUserId.startsWith('user_'))) {
 			throw new Error(`Invalid Clerk user ID format: ${clerkUserId}`);
 		}
 
 		// Check if user already exists and create if not (bypasses RLS with service account)
 		return runAsServiceAccount(async (tx) => {
 			// First check if user exists
-			const [existingUser] = await tx.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+			const [existingUser] = await tx
+				.select()
+				.from(users)
+				.where(eq(users.id, clerkUserId))
+				.limit(1);
 
 			if (existingUser) {
 				secureLogger.debug('User already exists in database', {
@@ -93,7 +98,8 @@ export class UserSyncService {
 				throw new Error(`Invalid email format: ${email}`);
 			}
 
-			const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+			const fullName =
+				[clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
 
 			// ========================================
 			// PHASE 1: Create user with default organization (CRITICAL)
@@ -126,7 +132,11 @@ export class UserSyncService {
 			} catch (dbError) {
 				// Check if it's a duplicate key error (user was created by another request)
 				if (dbError instanceof Error && dbError.message.includes('duplicate key')) {
-					const [concurrentUser] = await tx.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
+					const [concurrentUser] = await tx
+						.select()
+						.from(users)
+						.where(eq(users.id, clerkUserId))
+						.limit(1);
 					if (concurrentUser) {
 						secureLogger.info('User was created by concurrent request', {
 							userId: clerkUserId,
@@ -152,10 +162,7 @@ export class UserSyncService {
 
 				// Update user with real organization ID
 				if (organizationId && organizationId !== 'default') {
-					await tx
-						.update(users)
-						.set({ organizationId })
-						.where(eq(users.id, clerkUserId));
+					await tx.update(users).set({ organizationId }).where(eq(users.id, clerkUserId));
 
 					createdUser = { ...createdUser, organizationId };
 
@@ -175,7 +182,11 @@ export class UserSyncService {
 			// 2b. Try to create Stripe customer (non-blocking)
 			let stripeCustomerId: string | null = null;
 			try {
-				stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(clerkUserId, email, fullName);
+				stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(
+					clerkUserId,
+					email,
+					fullName,
+				);
 
 				secureLogger.info('Stripe customer created', {
 					userId: clerkUserId,
@@ -271,10 +282,7 @@ export class UserSyncService {
 				);
 
 				if (organizationId && organizationId !== 'default') {
-					await db
-						.update(users)
-						.set({ organizationId })
-						.where(eq(users.id, clerkUserId));
+					await db.update(users).set({ organizationId }).where(eq(users.id, clerkUserId));
 
 					secureLogger.info('User organization setup completed', {
 						userId: clerkUserId,
@@ -290,7 +298,11 @@ export class UserSyncService {
 		}
 
 		// Check if subscription exists
-		const [existingSub] = await db.select().from(subscriptions).where(eq(subscriptions.userId, clerkUserId)).limit(1);
+		const [existingSub] = await db
+			.select()
+			.from(subscriptions)
+			.where(eq(subscriptions.userId, clerkUserId))
+			.limit(1);
 		if (!existingSub) {
 			try {
 				const stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(
@@ -319,4 +331,3 @@ export class UserSyncService {
 		}
 	}
 }
-

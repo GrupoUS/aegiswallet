@@ -48,7 +48,7 @@ const validateUserIntegrity = async () => {
 					WHERE table_name = ${table.name} 
 					AND column_name = 'user_id'
 				`;
-				
+
 				if (nullCheck[0].count > 0) {
 					const result = await sql`
 						SELECT COUNT(*) as count 
@@ -56,7 +56,7 @@ const validateUserIntegrity = async () => {
 						WHERE user_id IS NULL
 					`;
 					const nullCount = result[0].count;
-					
+
 					if (nullCount > 0) {
 						console.log(`⚠️  ${table.description}: ${nullCount} records with NULL user_id`);
 					} else {
@@ -76,10 +76,12 @@ const validateUserIntegrity = async () => {
 				LEFT JOIN users u ON s.user_id = u.id
 				WHERE u.id IS NULL
 			`;
-			
+
 			if (orphanedSubscriptions[0].count > 0) {
-				console.log(`⚠️  Orphaned Subscriptions: ${orphanedSubscriptions[0].count} records without valid users`);
-				
+				console.log(
+					`⚠️  Orphaned Subscriptions: ${orphanedSubscriptions[0].count} records without valid users`,
+				);
+
 				// Show details of orphaned subscriptions
 				const details = await sql`
 					SELECT s.id, s.user_id, s.status, s.created_at
@@ -88,7 +90,7 @@ const validateUserIntegrity = async () => {
 					WHERE u.id IS NULL
 					LIMIT 5
 				`;
-				
+
 				if (details.length > 0) {
 					console.log('\n   Sample orphaned subscriptions:');
 					details.forEach((sub) => {
@@ -116,7 +118,6 @@ const validateUserIntegrity = async () => {
 		console.log(`   Server Time: ${now[0].server_time}`);
 
 		console.log('\n✅ User integrity validation completed');
-
 	} catch (error) {
 		console.error('❌ Error validating user integrity:', error);
 		process.exit(1);

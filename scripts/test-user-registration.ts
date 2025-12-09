@@ -10,12 +10,12 @@
  */
 
 import { createClerkClient } from '@clerk/backend';
-import { runAsServiceAccount, getPoolClient, closePool } from '../src/db/client';
-import { UserSyncService } from '../src/services/user-sync.service';
-import { users, bankAccounts } from '../src/db/schema';
+import { eq, sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient, runAsServiceAccount } from '../src/db/client';
+import { bankAccounts, users } from '../src/db/schema';
 import { organizations } from '../src/db/schema/organizations';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { UserSyncService } from '../src/services/user-sync.service';
 
 // Test configuration
 const TEST_USER = {
@@ -43,7 +43,9 @@ async function cleanupTestData() {
 	try {
 		// Delete test bank account
 		await runAsServiceAccount(async (tx) => {
-			await tx.delete(bankAccounts).where(eq(bankAccounts.belvoAccountId, TEST_BANK_ACCOUNT.belvoAccountId));
+			await tx
+				.delete(bankAccounts)
+				.where(eq(bankAccounts.belvoAccountId, TEST_BANK_ACCOUNT.belvoAccountId));
 		});
 
 		// Delete test organization
@@ -94,7 +96,9 @@ async function testUserCreation() {
 
 			console.log(`   ✅ Created Clerk user: ${clerkUser.id}`);
 		} catch (createError) {
-			console.log(`   ⚠️  Failed to create Clerk user: ${createError instanceof Error ? createError.message : createError}`);
+			console.log(
+				`   ⚠️  Failed to create Clerk user: ${createError instanceof Error ? createError.message : createError}`,
+			);
 			console.log('   🔄 Trying to use existing test user...');
 
 			// Try to find existing test user
@@ -121,7 +125,11 @@ async function testUserCreation() {
 
 		// Verify user in database
 		const client = await getPoolClient();
-		const [verifyUser] = await client.select().from(users).where(eq(users.id, clerkUser.id)).limit(1);
+		const [verifyUser] = await client
+			.select()
+			.from(users)
+			.where(eq(users.id, clerkUser.id))
+			.limit(1);
 
 		if (!verifyUser) {
 			throw new Error('User not found in database after creation');
@@ -191,7 +199,9 @@ async function testBankAccountCreation(userId: string) {
 		}
 
 		// Test another user cannot access this account
-		await userClient.execute(sql`SELECT set_config('app.current_user_id', 'user_other_user', false)`);
+		await userClient.execute(
+			sql`SELECT set_config('app.current_user_id', 'user_other_user', false)`,
+		);
 
 		const [otherUserAccess] = await userClient
 			.select()
@@ -207,7 +217,10 @@ async function testBankAccountCreation(userId: string) {
 
 		return bankAccount.id;
 	} catch (error) {
-		console.error('   ❌ Bank account creation failed:', error instanceof Error ? error.message : error);
+		console.error(
+			'   ❌ Bank account creation failed:',
+			error instanceof Error ? error.message : error,
+		);
 		throw error;
 	}
 }
@@ -245,7 +258,10 @@ async function testServiceAccountBypass() {
 
 		console.log('   ✅ Service account bypass working correctly');
 	} catch (error) {
-		console.error('   ❌ Service account bypass failed:', error instanceof Error ? error.message : error);
+		console.error(
+			'   ❌ Service account bypass failed:',
+			error instanceof Error ? error.message : error,
+		);
 		throw error;
 	}
 }
@@ -276,7 +292,6 @@ async function main() {
 		console.log('\n═══════════════════════════════════════════════════════════════');
 		console.log('   ✅ ALL TESTS PASSED - Registration flow working!');
 		console.log('═══════════════════════════════════════════════════════════════');
-
 	} catch (error) {
 		console.error('\n═══════════════════════════════════════════════════════════════');
 		console.error('   ❌ TEST FAILED - Registration flow has issues');

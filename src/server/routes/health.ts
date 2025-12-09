@@ -6,8 +6,8 @@
 
 import type { Hono } from 'hono';
 
-import { environment } from '@/server/config/environment';
 import { secureLogger } from '@/lib/logging/secure-logger';
+import { environment } from '@/server/config/environment';
 
 // Cache health status to avoid overwhelming database
 let cachedHealth: {
@@ -49,10 +49,7 @@ async function checkDatabaseHealth(): Promise<{
 		});
 
 		// Race between query and timeout
-		await Promise.race([
-			db.execute(sql`SELECT 1 as health_check`),
-			timeoutPromise,
-		]);
+		await Promise.race([db.execute(sql`SELECT 1 as health_check`), timeoutPromise]);
 
 		const latency = Date.now() - startTime;
 		const result = { status: 'connected' as const, latency };
@@ -92,10 +89,13 @@ export function setupHealthRoute(app: Hono<any>) {
 	 * that only need to know if the server process is running
 	 */
 	app.get('/api/ping', (c) => {
-		return c.json({
-			status: 'ok',
-			timestamp: new Date().toISOString(),
-		}, 200);
+		return c.json(
+			{
+				status: 'ok',
+				timestamp: new Date().toISOString(),
+			},
+			200,
+		);
 	});
 
 	/**
@@ -140,20 +140,23 @@ export function setupHealthRoute(app: Hono<any>) {
 
 			secureLogger.error('Health check error', { error: errorMessage });
 
-			return c.json({
-				status: 'error',
-				timestamp: new Date().toISOString(),
-				service: 'aegiswallet-server',
-				environment: environment.NODE_ENV,
-				uptime: process.uptime?.() || 0,
-				memory: process.memoryUsage?.() || {},
-				database: {
-					status: 'disconnected',
-					latency: 0,
-					error: 'Health check failed',
+			return c.json(
+				{
+					status: 'error',
+					timestamp: new Date().toISOString(),
+					service: 'aegiswallet-server',
+					environment: environment.NODE_ENV,
+					uptime: process.uptime?.() || 0,
+					memory: process.memoryUsage?.() || {},
+					database: {
+						status: 'disconnected',
+						latency: 0,
+						error: 'Health check failed',
+					},
+					responseTime: Date.now() - startTime,
 				},
-				responseTime: Date.now() - startTime,
-			}, 500);
+				500,
+			);
 		}
 	});
 }

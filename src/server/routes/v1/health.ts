@@ -64,10 +64,7 @@ async function checkDatabaseConnectivity(): Promise<{
 		});
 
 		// Execute a simple query with timeout - THIS is the primary connectivity test
-		await Promise.race([
-			db.execute(sql`SELECT 1 as health_check`),
-			timeoutPromise,
-		]);
+		await Promise.race([db.execute(sql`SELECT 1 as health_check`), timeoutPromise]);
 
 		const latency = Date.now() - dbStartTime;
 
@@ -82,7 +79,7 @@ async function checkDatabaseConnectivity(): Promise<{
 			schemaAccessible = false;
 			secureLogger.warn('Database schema access check failed (non-critical)', {
 				error: schemaError instanceof Error ? schemaError.message : 'Unknown error',
-				note: 'Basic connectivity succeeded, schema may not be migrated yet'
+				note: 'Basic connectivity succeeded, schema may not be migrated yet',
 			});
 		}
 
@@ -94,7 +91,7 @@ async function checkDatabaseConnectivity(): Promise<{
 		const latency = Date.now() - dbStartTime;
 		secureLogger.error('Database health check failed', {
 			error: error instanceof Error ? error.message : 'Unknown error',
-			latency
+			latency,
 		});
 
 		// Cache failure briefly
@@ -136,13 +133,13 @@ async function healthCheckHandler(c: Context<any, any, any>) {
 				server: { status: 'ok', uptime: process.uptime() },
 				database: {
 					status: databaseStatus,
-					latency: databaseLatency
+					latency: databaseLatency,
 				},
 				memory: {
 					used: process.memoryUsage().heapUsed,
-					total: process.memoryUsage().heapTotal
-				}
-			}
+					total: process.memoryUsage().heapTotal,
+				},
+			},
 		};
 
 		// Log health check

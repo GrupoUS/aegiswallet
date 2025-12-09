@@ -9,7 +9,7 @@ export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Validate publishable key format if present
 if (clerkPublishableKey) {
-	if (!clerkPublishableKey.startsWith('pk_test_') && !clerkPublishableKey.startsWith('pk_live_')) {
+	if (!(clerkPublishableKey.startsWith('pk_test_') || clerkPublishableKey.startsWith('pk_live_'))) {
 		// biome-ignore lint/suspicious/noConsole: Critical error for invalid format
 		console.error(
 			'[Clerk] Invalid VITE_CLERK_PUBLISHABLE_KEY format! Must start with pk_test_ or pk_live_',

@@ -22,11 +22,11 @@ const setupClerkWebhook = async () => {
 	console.log('3. Navigate to "Webhooks" in the sidebar');
 	console.log('4. Click "Add endpoint" or select existing webhook\n');
 
-	const webhookUrl = process.env.VERCEL_URL 
+	const webhookUrl = process.env.VERCEL_URL
 		? `https://${process.env.VERCEL_URL}/api/webhooks/clerk`
 		: process.env.NODE_ENV === 'production'
-		? 'https://your-domain.com/api/webhooks/clerk'
-		: 'http://localhost:3000/api/webhooks/clerk';
+			? 'https://your-domain.com/api/webhooks/clerk'
+			: 'http://localhost:3000/api/webhooks/clerk';
 
 	console.log(`5. Webhook URL: ${webhookUrl}`);
 	console.log('6. Select these events:');
@@ -59,7 +59,7 @@ const setupClerkWebhook = async () => {
 		console.log('Please add CLERK_WEBHOOK_SECRET to your .env file');
 	} else {
 		console.log('✅ Current Status: Webhook secret is configured\n');
-		
+
 		if (webhookSecret.startsWith('whsec_')) {
 			console.log('✅ Format: Valid Clerk webhook secret');
 		} else {

@@ -4,8 +4,9 @@
  */
 
 import type { Context } from 'hono';
-import { secureLogger } from '@/lib/logging/secure-logger';
+
 import { categorizeDatabaseError } from './db-error-handler';
+import { secureLogger } from '@/lib/logging/secure-logger';
 
 export interface ErrorLogContext {
 	error: unknown;
@@ -27,7 +28,8 @@ export function logErrorWithContext(params: ErrorLogContext): void {
 	const requestId = context.get('requestId') || 'unknown';
 	const method = context.req.method;
 	const path = context.req.path || endpoint || 'unknown';
-	const clientIP = context.req.header('X-Forwarded-For') || context.req.header('X-Real-IP') || 'unknown';
+	const clientIP =
+		context.req.header('X-Forwarded-For') || context.req.header('X-Real-IP') || 'unknown';
 	const userAgent = context.req.header('User-Agent') || 'unknown';
 
 	// Categorize database errors if applicable
@@ -101,11 +103,13 @@ export function createErrorResponse(
 		{
 			code: dbError.code || defaultCode,
 			error: dbError.message || defaultMessage,
-			details: process.env.NODE_ENV === 'development' || import.meta.env?.DEV
-				? (error instanceof Error ? error.message : String(error))
-				: undefined,
+			details:
+				process.env.NODE_ENV === 'development' || import.meta.env?.DEV
+					? error instanceof Error
+						? error.message
+						: String(error)
+					: undefined,
 		},
 		dbError.statusCode || 500,
 	);
 }
-

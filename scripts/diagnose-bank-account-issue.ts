@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Bank Account Creation Issue Diagnostic Script
  *
@@ -11,6 +12,7 @@
 
 import { createClerkClient } from '@clerk/backend';
 import { eq, sql } from 'drizzle-orm';
+
 import { getPoolClient } from '../src/db/client';
 import { bankAccounts } from '../src/db/schema/bank-accounts';
 import { users } from '../src/db/schema/users';
@@ -47,9 +49,13 @@ async function inspectClerkUsers() {
 			console.log(`   Email: ${email}`);
 			console.log(`   Name: ${name}`);
 			console.log(`   Created: ${new Date(user.createdAt).toISOString()}`);
-			console.log(`   Last Sign In: ${user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : 'Never'}`);
+			console.log(
+				`   Last Sign In: ${user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : 'Never'}`,
+			);
 			console.log(`   Organization ID: ${user.publicMetadata?.organizationId || '(not set)'}`);
-			console.log(`   Stripe Customer ID: ${user.privateMetadata?.stripeCustomerId || '(not set)'}`);
+			console.log(
+				`   Stripe Customer ID: ${user.privateMetadata?.stripeCustomerId || '(not set)'}`,
+			);
 			console.log('');
 		}
 
@@ -238,7 +244,9 @@ async function testRLSContext() {
 		if (currentUserId === testUserId) {
 			console.log('✅ RLS context can be set successfully');
 		} else {
-			console.log(`⚠️  RLS context not set correctly. Expected: ${testUserId}, Got: ${currentUserId}`);
+			console.log(
+				`⚠️  RLS context not set correctly. Expected: ${testUserId}, Got: ${currentUserId}`,
+			);
 		}
 
 		// Test query with context
@@ -247,7 +255,9 @@ async function testRLSContext() {
 			const testQuery = await db.execute(
 				sql`SELECT COUNT(*) as count FROM bank_accounts WHERE user_id = current_setting('app.current_user_id', true)`,
 			);
-			console.log(`✅ Query executed successfully. Count: ${(testQuery.rows[0] as { count: string })?.count}`);
+			console.log(
+				`✅ Query executed successfully. Count: ${(testQuery.rows[0] as { count: string })?.count}`,
+			);
 		} catch (queryError) {
 			console.error('❌ Query failed:', queryError);
 		}
@@ -329,4 +339,3 @@ if (import.meta.main) {
 		process.exit(1);
 	});
 }
-

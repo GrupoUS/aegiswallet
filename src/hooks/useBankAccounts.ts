@@ -188,10 +188,9 @@ export function useBankAccounts(): UseBankAccountsReturn {
 	const { mutate: updateBalance, isPending: isUpdatingBalance } = useMutation({
 		mutationFn: async (input: { id: string; balance: number }) => {
 			// apiClient already unwraps the response data, so we get BankAccount directly
-			const data = await apiClient.patch<BankAccount>(
-				`/v1/bank-accounts/${input.id}/balance`,
-				{ balance: input.balance },
-			);
+			const data = await apiClient.patch<BankAccount>(`/v1/bank-accounts/${input.id}/balance`, {
+				balance: input.balance,
+			});
 			return data;
 		},
 		onError: (error: Error) => {

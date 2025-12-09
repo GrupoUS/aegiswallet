@@ -21,8 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBalanceHistory, useBankAccounts } from '@/hooks/useBankAccounts';
-import { isValidChartItem } from '@/lib/utils/type-guards';
 import { safeParseDate } from '@/lib/utils/date-validation';
+import { isValidChartItem } from '@/lib/utils/type-guards';
 import type { ChartData } from '@/types/financial/chart.types';
 
 export function BalanceChart() {

@@ -47,9 +47,8 @@ function formatTransactionDate(transaction: Transaction): string {
 				logger.warn('Failed to format valid date', {
 					dateValue,
 					parsedDate,
-					error: String(error)
+					error: String(error),
 				});
-				continue;
 			}
 		}
 	}
@@ -57,7 +56,7 @@ function formatTransactionDate(transaction: Transaction): string {
 	// If all date fields are invalid, return fallback
 	logger.warn('All date fields invalid for transaction', {
 		transactionId: transaction.id,
-		dateFields
+		dateFields,
 	});
 	return '-';
 }

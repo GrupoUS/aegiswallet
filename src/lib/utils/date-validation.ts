@@ -45,13 +45,17 @@ export function isValidDateString(dateString: string): boolean {
 		/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/, // ISO 8601
 	];
 
-	return patterns.some(pattern => pattern.test(dateString));
+	return patterns.some((pattern) => pattern.test(dateString));
 }
 
 /**
  * Format a date safely, returning a fallback string for invalid dates
  */
-export function safeFormatDate(date: Date | null | undefined, format: string, fallback: string = 'Data inválida'): string {
+export function safeFormatDate(
+	date: Date | null | undefined,
+	format: string,
+	fallback = 'Data inválida',
+): string {
 	if (!date || isNaN(date.getTime())) {
 		return fallback;
 	}

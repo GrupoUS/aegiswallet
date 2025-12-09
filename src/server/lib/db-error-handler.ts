@@ -145,4 +145,3 @@ export function categorizeDatabaseError(error: unknown): DatabaseErrorInfo {
 		statusCode: 500,
 	};
 }
-

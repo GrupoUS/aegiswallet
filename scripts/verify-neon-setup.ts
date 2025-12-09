@@ -12,11 +12,12 @@
  * Usage: bun scripts/verify-neon-setup.ts
  */
 
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { neonConfig, Pool } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
 import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { closePool, getHttpClient, schema } from '../src/db/client';
 
@@ -39,7 +40,12 @@ function log(emoji: string, message: string, details?: string) {
 	}
 }
 
-function addResult(step: string, status: 'pass' | 'fail' | 'warn', message: string, details?: Record<string, unknown>) {
+function addResult(
+	step: string,
+	status: 'pass' | 'fail' | 'warn',
+	message: string,
+	details?: Record<string, unknown>,
+) {
 	results.push({ step, status, message, details });
 	const emoji = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';
 	log(emoji, `${step}: ${message}`);
@@ -73,17 +79,26 @@ async function validateEnvironment(): Promise<boolean> {
 				addResult('DATABASE_URL', 'pass', 'Valid pooled connection string detected', {
 					host: url.hostname,
 					database: url.pathname.slice(1),
-					ssl: hasSSL ? 'enabled' : 'missing'
+					ssl: hasSSL ? 'enabled' : 'missing',
 				});
 			} else {
-				addResult('DATABASE_URL', 'warn', 'Not using pooled connection (consider using -pooler hostname)', {
-					host: url.hostname,
-					database: url.pathname.slice(1)
-				});
+				addResult(
+					'DATABASE_URL',
+					'warn',
+					'Not using pooled connection (consider using -pooler hostname)',
+					{
+						host: url.hostname,
+						database: url.pathname.slice(1),
+					},
+				);
 			}
 
 			if (!hasSSL) {
-				addResult('SSL Mode', 'warn', 'sslmode not specified in DATABASE_URL - recommended: sslmode=require');
+				addResult(
+					'SSL Mode',
+					'warn',
+					'sslmode not specified in DATABASE_URL - recommended: sslmode=require',
+				);
 			}
 		} catch {
 			addResult('DATABASE_URL', 'fail', 'Invalid URL format');
@@ -94,7 +109,11 @@ async function validateEnvironment(): Promise<boolean> {
 	// Check DATABASE_URL_UNPOOLED
 	const unpooledUrl = process.env.DATABASE_URL_UNPOOLED;
 	if (!unpooledUrl) {
-		addResult('DATABASE_URL_UNPOOLED', 'warn', 'Not set - will use DATABASE_URL as fallback for migrations');
+		addResult(
+			'DATABASE_URL_UNPOOLED',
+			'warn',
+			'Not set - will use DATABASE_URL as fallback for migrations',
+		);
 	} else {
 		try {
 			const url = new URL(unpooledUrl);
@@ -102,7 +121,7 @@ async function validateEnvironment(): Promise<boolean> {
 
 			if (!isPooled) {
 				addResult('DATABASE_URL_UNPOOLED', 'pass', 'Valid direct connection string', {
-					host: url.hostname
+					host: url.hostname,
 				});
 			} else {
 				addResult('DATABASE_URL_UNPOOLED', 'warn', 'Should be a direct (non-pooler) connection');
@@ -130,7 +149,11 @@ async function validateEnvironment(): Promise<boolean> {
 
 	// Check PORT
 	const port = process.env.PORT;
-	addResult('PORT', port ? 'pass' : 'warn', port ? `Set to ${port}` : 'Not set - will default to 3000');
+	addResult(
+		'PORT',
+		port ? 'pass' : 'warn',
+		port ? `Set to ${port}` : 'Not set - will default to 3000',
+	);
 
 	return allValid;
 }
@@ -153,14 +176,22 @@ async function testConnections(): Promise<boolean> {
 
 		addResult('HTTP Client (Pooled)', 'pass', `Connected in ${latency}ms`, {
 			'PostgreSQL Version': pgVersion,
-			'Latency': `${latency}ms`
+			Latency: `${latency}ms`,
 		});
 
 		if (latency > 500) {
-			addResult('Connection Latency', 'warn', `High latency detected (${latency}ms) - consider closer region`);
+			addResult(
+				'Connection Latency',
+				'warn',
+				`High latency detected (${latency}ms) - consider closer region`,
+			);
 		}
 	} catch (error) {
-		addResult('HTTP Client (Pooled)', 'fail', `Connection failed: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'HTTP Client (Pooled)',
+			'fail',
+			`Connection failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		allConnected = false;
 	}
 
@@ -176,10 +207,14 @@ async function testConnections(): Promise<boolean> {
 			const latency = Date.now() - startTime;
 
 			addResult('Pool Client (Direct)', 'pass', `Connected in ${latency}ms`, {
-				'Latency': `${latency}ms`
+				Latency: `${latency}ms`,
 			});
 		} catch (error) {
-			addResult('Pool Client (Direct)', 'fail', `Connection failed: ${error instanceof Error ? error.message : String(error)}`);
+			addResult(
+				'Pool Client (Direct)',
+				'fail',
+				`Connection failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			allConnected = false;
 		} finally {
 			if (pool) {
@@ -202,33 +237,38 @@ async function validateSchema(): Promise<boolean> {
 		const db = getHttpClient();
 
 		// Count database tables
-		const tablesResult = await db.execute(sql`
+		const tablesResult = (await db.execute(sql`
 			SELECT table_name
 			FROM information_schema.tables
 			WHERE table_schema = 'public'
 			AND table_type = 'BASE TABLE'
 			ORDER BY table_name
-		`) as unknown as Array<{ table_name: string }>;
+		`)) as unknown as Array<{ table_name: string }>;
 
 		const dbTableCount = tablesResult.length;
-		const dbTableNames = tablesResult.map(r => r.table_name);
+		const dbTableNames = tablesResult.map((r) => r.table_name);
 
 		// Count Drizzle schema definitions (excluding relations)
-		const schemaKeys = Object.keys(schema).filter(key => !key.includes('Relations'));
+		const schemaKeys = Object.keys(schema).filter((key) => !key.includes('Relations'));
 		const drizzleTableCount = schemaKeys.length;
 
 		addResult('Database Tables', 'pass', `Found ${dbTableCount} tables in public schema`, {
-			'Tables': dbTableNames.slice(0, 10).join(', ') + (dbTableNames.length > 10 ? '...' : '')
+			Tables: dbTableNames.slice(0, 10).join(', ') + (dbTableNames.length > 10 ? '...' : ''),
 		});
 
 		addResult('Drizzle Schemas', 'pass', `Found ${drizzleTableCount} schema definitions`, {
-			'Schemas': schemaKeys.slice(0, 10).join(', ') + (schemaKeys.length > 10 ? '...' : '')
+			Schemas: schemaKeys.slice(0, 10).join(', ') + (schemaKeys.length > 10 ? '...' : ''),
 		});
 
 		if (dbTableCount !== drizzleTableCount) {
-			addResult('Schema Sync', 'warn', `Mismatch: ${dbTableCount} DB tables vs ${drizzleTableCount} Drizzle schemas`, {
-				'Recommendation': 'Run "bun db:generate" to sync schemas'
-			});
+			addResult(
+				'Schema Sync',
+				'warn',
+				`Mismatch: ${dbTableCount} DB tables vs ${drizzleTableCount} Drizzle schemas`,
+				{
+					Recommendation: 'Run "bun db:generate" to sync schemas',
+				},
+			);
 		} else {
 			addResult('Schema Sync', 'pass', 'Database tables match Drizzle schema count');
 		}
@@ -246,9 +286,12 @@ async function validateSchema(): Promise<boolean> {
 				}
 			}
 		}
-
 	} catch (error) {
-		addResult('Schema Validation', 'fail', `Failed: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Schema Validation',
+			'fail',
+			`Failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		schemaValid = false;
 	}
 
@@ -275,19 +318,23 @@ async function checkMigrations(): Promise<boolean> {
 		`);
 
 		if (!migrationTableExists[0]?.exists) {
-			addResult('Migration Table', 'warn', 'drizzle.__drizzle_migrations not found - migrations may not have been applied');
+			addResult(
+				'Migration Table',
+				'warn',
+				'drizzle.__drizzle_migrations not found - migrations may not have been applied',
+			);
 
 			// Check for migration files
 			try {
 				const migrationsDir = join(process.cwd(), 'drizzle', 'migrations');
-				const migrationFiles = readdirSync(migrationsDir).filter(f => f.endsWith('.sql'));
+				const migrationFiles = readdirSync(migrationsDir).filter((f) => f.endsWith('.sql'));
 				addResult('Migration Files', 'pass', `Found ${migrationFiles.length} migration file(s)`, {
-					'Files': migrationFiles.slice(0, 5).join(', ') + (migrationFiles.length > 5 ? '...' : '')
+					Files: migrationFiles.slice(0, 5).join(', ') + (migrationFiles.length > 5 ? '...' : ''),
 				});
 
 				if (migrationFiles.length > 0) {
 					addResult('Migration Status', 'warn', 'Migration files exist but may not be applied', {
-						'Recommendation': 'Run "bun db:migrate" to apply migrations'
+						Recommendation: 'Run "bun db:migrate" to apply migrations',
 					});
 				}
 			} catch {
@@ -295,26 +342,31 @@ async function checkMigrations(): Promise<boolean> {
 			}
 		} else {
 			// Get applied migrations
-			const appliedMigrations = await db.execute(sql`
+			const appliedMigrations = (await db.execute(sql`
 				SELECT hash, created_at
 				FROM drizzle.__drizzle_migrations
 				ORDER BY created_at DESC
 				LIMIT 5
-			`) as unknown as Array<{ hash: string; created_at: number }>;
+			`)) as unknown as Array<{ hash: string; created_at: number }>;
 
 			addResult('Applied Migrations', 'pass', `${appliedMigrations.length} migration(s) found`, {
-				'Latest': appliedMigrations[0]?.hash?.substring(0, 8) + '...' || 'None'
+				Latest: appliedMigrations[0]?.hash?.substring(0, 8) + '...' || 'None',
 			});
 
 			// Compare with migration files
 			try {
 				const migrationsDir = join(process.cwd(), 'drizzle', 'migrations');
-				const migrationFiles = readdirSync(migrationsDir).filter(f => f.endsWith('.sql'));
+				const migrationFiles = readdirSync(migrationsDir).filter((f) => f.endsWith('.sql'));
 
 				if (migrationFiles.length > appliedMigrations.length) {
-					addResult('Pending Migrations', 'warn', `${migrationFiles.length - appliedMigrations.length} migration(s) may be pending`, {
-						'Recommendation': 'Run "bun db:migrate" to apply pending migrations'
-					});
+					addResult(
+						'Pending Migrations',
+						'warn',
+						`${migrationFiles.length - appliedMigrations.length} migration(s) may be pending`,
+						{
+							Recommendation: 'Run "bun db:migrate" to apply pending migrations',
+						},
+					);
 				} else {
 					addResult('Migration Status', 'pass', 'All migrations appear to be applied');
 				}
@@ -323,7 +375,11 @@ async function checkMigrations(): Promise<boolean> {
 			}
 		}
 	} catch (error) {
-		addResult('Migration Check', 'fail', `Failed: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Migration Check',
+			'fail',
+			`Failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		migrationsOk = false;
 	}
 
@@ -352,7 +408,11 @@ async function verifySecurity(): Promise<boolean> {
 			if (policyCount > 0) {
 				addResult('RLS Policies', 'pass', `${policyCount} Row-Level Security policies found`);
 			} else {
-				addResult('RLS Policies', 'warn', 'No RLS policies found - consider implementing for user data isolation');
+				addResult(
+					'RLS Policies',
+					'warn',
+					'No RLS policies found - consider implementing for user data isolation',
+				);
 			}
 		} catch {
 			addResult('RLS Policies', 'warn', 'Could not check RLS policies (may not have permission)');
@@ -360,7 +420,8 @@ async function verifySecurity(): Promise<boolean> {
 
 		// Check SSL connection
 		const databaseUrl = process.env.DATABASE_URL || '';
-		const hasSSL = databaseUrl.includes('sslmode=require') || databaseUrl.includes('sslmode=verify-full');
+		const hasSSL =
+			databaseUrl.includes('sslmode=require') || databaseUrl.includes('sslmode=verify-full');
 
 		if (hasSSL) {
 			addResult('SSL/TLS', 'pass', 'SSL mode enabled in connection string');
@@ -370,19 +431,27 @@ async function verifySecurity(): Promise<boolean> {
 
 		// Check for tables without RLS
 		try {
-			const tablesWithoutRls = await db.execute(sql`
+			const tablesWithoutRls = (await db.execute(sql`
 				SELECT t.table_name
 				FROM information_schema.tables t
 				LEFT JOIN pg_policies p ON t.table_name = p.tablename AND t.table_schema = p.schemaname
 				WHERE t.table_schema = 'public'
 				AND t.table_type = 'BASE TABLE'
 				AND p.tablename IS NULL
-			`) as unknown as Array<{ table_name: string }>;
+			`)) as unknown as Array<{ table_name: string }>;
 
 			if (tablesWithoutRls.length > 0) {
-				addResult('Tables Without RLS', 'warn', `${tablesWithoutRls.length} tables have no RLS policies`, {
-					'Tables': tablesWithoutRls.slice(0, 5).map(t => t.table_name).join(', ')
-				});
+				addResult(
+					'Tables Without RLS',
+					'warn',
+					`${tablesWithoutRls.length} tables have no RLS policies`,
+					{
+						Tables: tablesWithoutRls
+							.slice(0, 5)
+							.map((t) => t.table_name)
+							.join(', '),
+					},
+				);
 			}
 		} catch {
 			// May not have permission to check this
@@ -390,9 +459,12 @@ async function verifySecurity(): Promise<boolean> {
 
 		// Check encryption (Neon handles this)
 		addResult('Encryption at Rest', 'pass', 'Neon provides AES-256 encryption by default');
-
 	} catch (error) {
-		addResult('Security Check', 'fail', `Failed: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Security Check',
+			'fail',
+			`Failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		securityOk = false;
 	}
 
@@ -424,9 +496,9 @@ async function main() {
 		console.log('📊 VERIFICATION SUMMARY');
 		console.log('═'.repeat(60));
 
-		const passCount = results.filter(r => r.status === 'pass').length;
-		const warnCount = results.filter(r => r.status === 'warn').length;
-		const failCount = results.filter(r => r.status === 'fail').length;
+		const passCount = results.filter((r) => r.status === 'pass').length;
+		const warnCount = results.filter((r) => r.status === 'warn').length;
+		const failCount = results.filter((r) => r.status === 'fail').length;
 
 		console.log(`\n   ✅ Passed: ${passCount}`);
 		console.log(`   ⚠️  Warnings: ${warnCount}`);
@@ -435,16 +507,16 @@ async function main() {
 		if (failCount > 0) {
 			console.log('\n❌ CRITICAL ISSUES FOUND:');
 			results
-				.filter(r => r.status === 'fail')
-				.forEach(r => console.log(`   • ${r.step}: ${r.message}`));
+				.filter((r) => r.status === 'fail')
+				.forEach((r) => console.log(`   • ${r.step}: ${r.message}`));
 			exitCode = 1;
 		}
 
 		if (warnCount > 0) {
 			console.log('\n⚠️  WARNINGS:');
 			results
-				.filter(r => r.status === 'warn')
-				.forEach(r => console.log(`   • ${r.step}: ${r.message}`));
+				.filter((r) => r.status === 'warn')
+				.forEach((r) => console.log(`   • ${r.step}: ${r.message}`));
 		}
 
 		// Recommendations
@@ -464,7 +536,6 @@ async function main() {
 		}
 
 		console.log('\n' + '═'.repeat(60));
-
 	} catch (error) {
 		console.error('\n❌ Verification failed with error:', error);
 		exitCode = 1;

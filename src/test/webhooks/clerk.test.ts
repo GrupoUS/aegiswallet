@@ -4,13 +4,13 @@
  * Tests for user creation, organization creation, and idempotency
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { getPoolClient } from '@/db/client';
-import { users } from '@/db/schema/users';
-import { organizations } from '@/db/schema/organizations';
 import { subscriptions } from '@/db/schema/billing';
-import { organizationMembers } from '@/db/schema/organizations';
+import { organizationMembers, organizations } from '@/db/schema/organizations';
+import { users } from '@/db/schema/users';
 import { OrganizationService } from '@/services/organization.service';
 import { StripeCustomerService } from '@/services/stripe/customer.service';
 
@@ -57,11 +57,7 @@ describe('Clerk Webhook - User Creation', () => {
 		const email = 'test-org@example.com';
 		const name = 'Test User';
 
-		const organizationId = await OrganizationService.createUserOrganization(
-			userId,
-			email,
-			name,
-		);
+		const organizationId = await OrganizationService.createUserOrganization(userId, email, name);
 
 		expect(organizationId).toBeDefined();
 		expect(organizationId).not.toBe('default');
@@ -86,11 +82,7 @@ describe('Clerk Webhook - User Creation', () => {
 		const email = 'test-member@example.com';
 		const name = 'Test User';
 
-		const organizationId = await OrganizationService.createUserOrganization(
-			userId,
-			email,
-			name,
-		);
+		const organizationId = await OrganizationService.createUserOrganization(userId, email, name);
 
 		// Verify organization member was created
 		const db = getPoolClient();
@@ -121,10 +113,7 @@ describe('Clerk Webhook - User Creation', () => {
 
 		// Verify only one organization exists
 		const db = getPoolClient();
-		const orgs = await db
-			.select()
-			.from(organizations)
-			.where(eq(organizations.email, email));
+		const orgs = await db.select().from(organizations).where(eq(organizations.email, email));
 
 		expect(orgs.length).toBe(1);
 	});
@@ -190,11 +179,7 @@ describe('Clerk Webhook - Idempotency', () => {
 			data: [{ id: 'cus_existing', email, metadata: { clerkUserId: userId } }],
 		});
 
-		const customerId = await StripeCustomerService.getOrCreateCustomer(
-			userId,
-			email,
-			name,
-		);
+		const customerId = await StripeCustomerService.getOrCreateCustomer(userId, email, name);
 
 		expect(customerId).toBe('cus_existing');
 		expect(mockStripe.customers.create).not.toHaveBeenCalled();
@@ -216,11 +201,7 @@ describe('Clerk Webhook - Idempotency', () => {
 		});
 		mockStripe.customers.update.mockResolvedValue({});
 
-		const customerId = await StripeCustomerService.getOrCreateCustomer(
-			userId,
-			email,
-			name,
-		);
+		const customerId = await StripeCustomerService.getOrCreateCustomer(userId, email, name);
 
 		expect(customerId).toBe('cus_fallback');
 		expect(mockStripe.customers.update).toHaveBeenCalledWith('cus_fallback', {
@@ -236,10 +217,7 @@ describe('OrganizationService', () => {
 		const email = 'test-get-org@example.com';
 
 		// Create user and organization
-		const organizationId = await OrganizationService.createUserOrganization(
-			userId,
-			email,
-		);
+		const organizationId = await OrganizationService.createUserOrganization(userId, email);
 
 		const db = getPoolClient();
 		await db.insert(users).values({
@@ -264,10 +242,7 @@ describe('OrganizationService', () => {
 		const userId = 'user_test_member_check';
 		const email = 'test-member-check@example.com';
 
-		const organizationId = await OrganizationService.createUserOrganization(
-			userId,
-			email,
-		);
+		const organizationId = await OrganizationService.createUserOrganization(userId, email);
 
 		const isMember = await OrganizationService.isUserMember(userId, organizationId);
 
@@ -284,4 +259,3 @@ describe('OrganizationService', () => {
 		expect(isMember).toBe(false);
 	});
 });
-

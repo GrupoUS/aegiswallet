@@ -12,9 +12,9 @@ import { z } from 'zod';
 import { contacts } from '@/db/schema';
 import { secureLogger } from '@/lib/logging/secure-logger';
 import { validateCPF } from '@/lib/security/financial-validator';
-import { UserSyncService } from '@/services/user-sync.service';
 import type { AppEnv } from '@/server/hono-types';
 import { authMiddleware, userRateLimitMiddleware } from '@/server/middleware/auth';
+import { UserSyncService } from '@/services/user-sync.service';
 
 const brazilPhoneRegex = /^\d{10,11}$/;
 

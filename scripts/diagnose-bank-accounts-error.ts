@@ -7,6 +7,7 @@
 
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
+
 import * as schema from '../src/db/schema';
 
 async function diagnose() {
@@ -32,7 +33,10 @@ async function diagnose() {
 			WHERE table_schema = 'public'
 			ORDER BY table_name
 		`;
-		console.log('   ✅ Tabelas encontradas:', tablesResult.map((r: any) => r.table_name).join(', '));
+		console.log(
+			'   ✅ Tabelas encontradas:',
+			tablesResult.map((r: any) => r.table_name).join(', '),
+		);
 	} catch (e: any) {
 		console.log('   ❌ Erro ao listar tabelas:', e.message);
 	}
@@ -93,7 +97,9 @@ async function diagnose() {
 		`;
 		console.log('   ✅ Foreign keys encontradas:');
 		fks.forEach((fk: any) => {
-			console.log(`      - ${fk.table_name}.${fk.column_name} -> ${fk.foreign_table_name}.${fk.foreign_column_name}`);
+			console.log(
+				`      - ${fk.table_name}.${fk.column_name} -> ${fk.foreign_table_name}.${fk.foreign_column_name}`,
+			);
 		});
 	} catch (e: any) {
 		console.log('   ❌ Erro ao verificar foreign keys:', e.message);
@@ -129,7 +135,9 @@ async function diagnose() {
 		`;
 		console.log('   ✅ Usuários encontrados:');
 		users.forEach((u: any) => {
-			console.log(`      - ${u.email} (ID: ${u.id.slice(0, 20)}..., Org: ${u.organization_id || 'NULL'})`);
+			console.log(
+				`      - ${u.email} (ID: ${u.id.slice(0, 20)}..., Org: ${u.organization_id || 'NULL'})`,
+			);
 		});
 	} catch (e: any) {
 		console.log('   ❌ Erro ao listar usuários:', e.message);
@@ -166,7 +174,9 @@ async function diagnose() {
 			console.log('      (nenhuma conta bancária encontrada)');
 		} else {
 			accounts.forEach((a: any) => {
-				console.log(`      - ${a.institution_name} (User: ${a.user_id?.slice(0, 15)}..., Balance: ${a.balance})`);
+				console.log(
+					`      - ${a.institution_name} (User: ${a.user_id?.slice(0, 15)}..., Balance: ${a.balance})`,
+				);
 			});
 		}
 	} catch (e: any) {
@@ -210,7 +220,9 @@ async function diagnose() {
 			console.log('      (nenhuma assinatura encontrada)');
 		} else {
 			subs.forEach((s: any) => {
-				console.log(`      - User: ${s.user_id?.slice(0, 15)}... Plan: ${s.plan_id}, Status: ${s.status}`);
+				console.log(
+					`      - User: ${s.user_id?.slice(0, 15)}... Plan: ${s.plan_id}, Status: ${s.status}`,
+				);
 			});
 		}
 	} catch (e: any) {

@@ -4,8 +4,9 @@
  */
 
 import { createClerkClient } from '@clerk/backend';
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 async function checkClerkIntegration() {
 	console.log('🔍 Checking Clerk Integration...\n');
@@ -47,7 +48,9 @@ async function checkClerkIntegration() {
 		console.log('\n📋 Database User Sync Status:');
 		const db = getPoolClient();
 
-		const dbUsers = await db.execute(sql`SELECT id, email FROM users ORDER BY created_at DESC LIMIT 10`);
+		const dbUsers = await db.execute(
+			sql`SELECT id, email FROM users ORDER BY created_at DESC LIMIT 10`,
+		);
 		console.log(`   Database has ${dbUsers.rows.length} users`);
 
 		// Check if Clerk users are synced to database
@@ -71,7 +74,9 @@ async function checkClerkIntegration() {
 
 		await closePool();
 	} catch (error) {
-		console.error(`   ❌ Error connecting to Clerk: ${error instanceof Error ? error.message : error}`);
+		console.error(
+			`   ❌ Error connecting to Clerk: ${error instanceof Error ? error.message : error}`,
+		);
 	}
 
 	console.log('\n✅ Clerk Integration Check Complete!');

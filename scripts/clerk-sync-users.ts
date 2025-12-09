@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Clerk User Sync Script
  *
@@ -8,11 +9,12 @@
 
 import { createClerkClient } from '@clerk/backend';
 import { eq } from 'drizzle-orm';
+
 import { getPoolClient } from '../src/db/client';
+import { subscriptions } from '../src/db/schema/billing';
 import { users } from '../src/db/schema/users';
 import { OrganizationService } from '../src/services/organization.service';
 import { StripeCustomerService } from '../src/services/stripe/customer.service';
-import { subscriptions } from '../src/db/schema/billing';
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
 
@@ -39,11 +41,7 @@ async function syncUser(clerkUser: any) {
 
 	try {
 		// Check if user already exists in database
-		const [existingUser] = await db
-			.select()
-			.from(users)
-			.where(eq(users.id, userId))
-			.limit(1);
+		const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
 		if (existingUser) {
 			// Check if user has organization
@@ -58,17 +56,13 @@ async function syncUser(clerkUser: any) {
 				);
 
 				// Update user with organizationId
-				await db
-					.update(users)
-					.set({ organizationId })
-					.where(eq(users.id, userId));
+				await db.update(users).set({ organizationId }).where(eq(users.id, userId));
 
 				console.log(`   ✅ Organization created: ${organizationId}`);
 				return { synced: true, organizationCreated: true, organizationId };
-			} else {
-				console.log(`   ✅ Already synced (org: ${existingUser.organizationId})`);
-				return { synced: false, alreadyExists: true };
 			}
+			console.log(`   ✅ Already synced (org: ${existingUser.organizationId})`);
+			return { synced: false, alreadyExists: true };
 		}
 
 		// User doesn't exist, create full setup
@@ -79,7 +73,9 @@ async function syncUser(clerkUser: any) {
 		try {
 			stripeCustomerId = await StripeCustomerService.getOrCreateCustomer(userId, email, name);
 		} catch (stripeError) {
-			console.log(`   ⚠️  Failed to create Stripe customer: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`);
+			console.log(
+				`   ⚠️  Failed to create Stripe customer: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`,
+			);
 			// Continue without Stripe for now
 			stripeCustomerId = '';
 		}
@@ -105,7 +101,9 @@ async function syncUser(clerkUser: any) {
 					status: 'free',
 				});
 			} catch (subError) {
-				console.log(`   ⚠️  Failed to create subscription: ${subError instanceof Error ? subError.message : 'Unknown error'}`);
+				console.log(
+					`   ⚠️  Failed to create subscription: ${subError instanceof Error ? subError.message : 'Unknown error'}`,
+				);
 			}
 		}
 
@@ -118,14 +116,18 @@ async function syncUser(clerkUser: any) {
 					},
 				});
 			} catch (metadataError) {
-				console.log(`   ⚠️  Failed to update Clerk metadata: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+				console.log(
+					`   ⚠️  Failed to update Clerk metadata: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`,
+				);
 			}
 		}
 
 		console.log(`   ✅ User synced successfully`);
 		return { synced: true, organizationId, stripeCustomerId };
 	} catch (error) {
-		console.log(`   ❌ Failed to sync user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`   ❌ Failed to sync user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return { synced: false, error: error instanceof Error ? error.message : 'Unknown error' };
 	}
 }
@@ -166,7 +168,7 @@ async function syncClerkUsers() {
 
 		// Get users from database
 		const dbUsers = await db.select().from(users);
-		const dbUserIds = new Set(dbUsers.map(u => u.id));
+		const dbUserIds = new Set(dbUsers.map((u) => u.id));
 
 		console.log(`📊 Database has ${dbUsers.length} users\n`);
 
@@ -180,7 +182,9 @@ async function syncClerkUsers() {
 		for (const clerkUser of allUsers) {
 			console.log(`\n👤 Processing: ${clerkUser.id}`);
 			console.log(`   Email: ${clerkUser.emailAddresses[0]?.emailAddress || '(none)'}`);
-			console.log(`   Name: ${[clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || '(none)'}`);
+			console.log(
+				`   Name: ${[clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || '(none)'}`,
+			);
 
 			const result = await syncUser(clerkUser);
 
@@ -208,10 +212,10 @@ async function syncClerkUsers() {
 		console.log(`📊 Total users in database: ${(await db.select().from(users)).length}`);
 
 		// Check for orphaned users (in DB but not in Clerk)
-		const orphanedUsers = dbUsers.filter(u => !allUsers.some(cu => cu.id === u.id));
+		const orphanedUsers = dbUsers.filter((u) => !allUsers.some((cu) => cu.id === u.id));
 		if (orphanedUsers.length > 0) {
 			console.log(`\n⚠️  Found ${orphanedUsers.length} orphaned users in database:`);
-			orphanedUsers.forEach(u => {
+			orphanedUsers.forEach((u) => {
 				console.log(`   - ${u.id} (${u.email})`);
 			});
 		}
@@ -227,11 +231,10 @@ async function syncClerkUsers() {
 if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
 	syncClerkUsers()
 		.then(() => process.exit(0))
-		.catch(error => {
+		.catch((error) => {
 			console.error('💥 Sync failed:', error);
 			process.exit(1);
 		});
 }
 
 export { syncClerkUsers, syncUser };
-

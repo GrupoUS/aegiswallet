@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Neon DB Migration Script
  *
@@ -6,13 +7,15 @@
  * Checks migration status and validates schema integrity
  */
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { migrate } from 'drizzle-orm/neon-http/migrator';
 import { readdir } from 'fs/promises';
 import { join } from 'path';
-import { getPoolClient } from '../src/db/client';
+
+import { neon } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { migrate } from 'drizzle-orm/neon-http/migrator';
+
+import { getPoolClient } from '../src/db/client';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const MIGRATIONS_FOLDER = './drizzle/migrations';
@@ -23,11 +26,11 @@ const MIGRATIONS_FOLDER = './drizzle/migrations';
 async function getMigrationFiles(): Promise<string[]> {
 	try {
 		const files = await readdir(MIGRATIONS_FOLDER);
-		return files
-			.filter(file => file.endsWith('.sql'))
-			.sort();
+		return files.filter((file) => file.endsWith('.sql')).sort();
 	} catch (error) {
-		console.error(`❌ Failed to read migrations folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.error(
+			`❌ Failed to read migrations folder: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return [];
 	}
 }
@@ -94,7 +97,7 @@ async function applyMigrations() {
 	console.log(`✅ ${appliedMigrations.length} migrations already applied`);
 
 	// Show pending migrations
-	const pendingMigrations = migrationFiles.filter(file => {
+	const pendingMigrations = migrationFiles.filter((file) => {
 		// Extract hash from filename (format: 0001_name.sql)
 		// We'll compare by filename since we don't have hash in filename
 		return true; // Apply all migrations, Drizzle will handle duplicates
@@ -209,4 +212,3 @@ async function main() {
 main();
 
 export { applyMigrations, validateSchema, getMigrationFiles, getAppliedMigrations };
-

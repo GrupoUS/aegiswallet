@@ -5,8 +5,9 @@
  * for bank_accounts and other tables
  */
 
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 async function applyMigration() {
 	console.log('🔧 Applying service account bypass policies...');
@@ -16,14 +17,17 @@ async function applyMigration() {
 	// Read the migration SQL
 	const fs = await import('fs/promises');
 	const path = await import('path');
-	const migrationPath = path.join(process.cwd(), 'drizzle/migrations/0006_add_missing_service_account_policies.sql');
+	const migrationPath = path.join(
+		process.cwd(),
+		'drizzle/migrations/0006_add_missing_service_account_policies.sql',
+	);
 	const migrationSQL = await fs.readFile(migrationPath, 'utf-8');
 
 	// Split by semicolons to get individual statements
 	const statements = migrationSQL
 		.split(';')
-		.map(stmt => stmt.trim())
-		.filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+		.map((stmt) => stmt.trim())
+		.filter((stmt) => stmt.length > 0 && !stmt.startsWith('--'));
 
 	console.log(`   Found ${statements.length} SQL statements to execute`);
 
@@ -33,7 +37,9 @@ async function applyMigration() {
 			await client.execute(sql.raw(statement));
 			console.log(`   ✅ Statement ${i + 1}: ${statement.substring(0, 50)}...`);
 		} catch (error) {
-			console.log(`   ❌ Statement ${i + 1} failed: ${error instanceof Error ? error.message : error}`);
+			console.log(
+				`   ❌ Statement ${i + 1} failed: ${error instanceof Error ? error.message : error}`,
+			);
 			console.log(`      SQL: ${statement.substring(0, 100)}...`);
 		}
 	}
@@ -100,7 +106,6 @@ async function main() {
 		console.log('\n═══════════════════════════════════════════════════════');
 		console.log('   ✅ SERVICE ACCOUNT POLICIES APPLIED');
 		console.log('═══════════════════════════════════════════════════════');
-
 	} catch (error) {
 		console.error('\n═════════════════════════════════════════════════════');
 		console.error('   ❌ MIGRATION FAILED');

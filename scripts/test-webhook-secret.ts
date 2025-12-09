@@ -4,6 +4,7 @@
  */
 
 import crypto from 'crypto';
+
 import fetch from 'node-fetch';
 
 const testWebhookSecret = async () => {
@@ -39,10 +40,7 @@ const testWebhookSecret = async () => {
 	const timestamp = Math.floor(Date.now() / 1000);
 	const payloadString = JSON.stringify(testPayload);
 	const signedPayload = `${timestamp}.${payloadString}`;
-	const signature = crypto
-		.createHmac('sha256', webhookSecret)
-		.update(signedPayload)
-		.digest('hex');
+	const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload).digest('hex');
 
 	const headers = {
 		'svix-id': crypto.randomUUID(),
@@ -64,14 +62,14 @@ const testWebhookSecret = async () => {
 		});
 
 		console.log(`\n✅ Response Status: ${response.status} ${response.statusText}`);
-		
+
 		const responseText = await response.text();
-		
+
 		if (response.ok) {
 			console.log('\n✅ SUCCESS: Webhook processed successfully!');
 			console.log('\n📄 Response:');
 			console.log(responseText);
-			
+
 			// Check if user was created
 			if (responseText.includes('success') || responseText.includes('ok')) {
 				console.log('\n✅ Webhook secret is working correctly');
@@ -80,7 +78,7 @@ const testWebhookSecret = async () => {
 		} else {
 			console.log('\n⚠️  Webhook returned an error:');
 			console.log(responseText);
-			
+
 			// Parse common errors
 			if (responseText.includes('signature')) {
 				console.log('\n❌ ERROR: Webhook signature validation failed');
@@ -92,7 +90,7 @@ const testWebhookSecret = async () => {
 		}
 	} catch (error) {
 		console.error('\n❌ Error testing webhook:');
-		
+
 		if (error instanceof Error) {
 			if (error.message.includes('ECONNREFUSED')) {
 				console.log('\n💡 CONNECTION ERROR: Server is not running');

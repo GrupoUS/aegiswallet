@@ -5,13 +5,18 @@
  * Each Clerk user gets their own organization for data isolation
  */
 
-import { eq } from 'drizzle-orm';
 import type { ExtractTablesWithRelations } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+
 import { getPoolClient } from '@/db/client';
-import * as schema from '@/db/schema';
-import { organizations, organizationMembers, organizationSettings } from '@/db/schema/organizations';
+import type * as schema from '@/db/schema';
+import {
+	organizationMembers,
+	organizationSettings,
+	organizations,
+} from '@/db/schema/organizations';
 import { users } from '@/db/schema/users';
 import { secureLogger } from '@/lib/logging/secure-logger';
 
@@ -45,11 +50,7 @@ export class OrganizationService {
 
 		try {
 			// Check if user already has an organization
-			const [existingUser] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, userId))
-				.limit(1);
+			const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
 			if (existingUser?.organizationId && existingUser.organizationId !== 'default') {
 				secureLogger.info('User already has organization', {
@@ -212,4 +213,3 @@ export class OrganizationService {
 		}
 	}
 }
-

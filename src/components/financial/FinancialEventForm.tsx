@@ -430,7 +430,8 @@ function FinancialEventFormComponent({
 									<SelectContent>
 										{accounts?.map((account) => (
 											<SelectItem key={account.id} value={account.id}>
-												{account.institutionName || account.institution_name} - {account.accountType || account.account_type}
+												{account.institutionName || account.institution_name} -{' '}
+												{account.accountType || account.account_type}
 											</SelectItem>
 										))}
 									</SelectContent>

@@ -37,9 +37,7 @@ export function validateEnvironmentVariables(): EnvValidationResult {
 		}
 
 		if (!process.env.CLERK_WEBHOOK_SECRET) {
-			secureLogger.warn(
-				'CLERK_WEBHOOK_SECRET is not set. Clerk webhooks will not work properly.',
-			);
+			secureLogger.warn('CLERK_WEBHOOK_SECRET is not set. Clerk webhooks will not work properly.');
 		}
 	}
 
@@ -67,4 +65,3 @@ export function validateEnvironmentVariablesOrThrow(): void {
 
 	secureLogger.info('Environment variables validated successfully');
 }
-

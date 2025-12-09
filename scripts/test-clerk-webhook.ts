@@ -42,10 +42,7 @@ const testWebhook = async () => {
 	const timestamp = Math.floor(Date.now() / 1000);
 	const payloadString = JSON.stringify(testPayload);
 	const signedPayload = `${timestamp}.${payloadString}`;
-	const signature = crypto
-		.createHmac('sha256', clerkSecret)
-		.update(signedPayload)
-		.digest('hex');
+	const signature = crypto.createHmac('sha256', clerkSecret).update(signedPayload).digest('hex');
 
 	const headers = {
 		'svix-id': crypto.randomUUID(),
@@ -80,7 +77,7 @@ const testWebhook = async () => {
 		}
 	} catch (error) {
 		console.error('\n❌ Error testing webhook:', error);
-		
+
 		if (error instanceof Error) {
 			if (error.message.includes('ECONNREFUSED')) {
 				console.log('\n💡 Tip: Make sure the server is running on port 3000');

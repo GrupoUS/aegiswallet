@@ -45,7 +45,7 @@ const checkRecentUsers = async () => {
 				const date = new Date(user.created_at);
 				const now = new Date();
 				const hoursAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-				
+
 				console.log(`${index + 1}. ${user.email}`);
 				console.log(`   Name: ${user.full_name || 'Not set'}`);
 				console.log(`   Phone: ${user.phone || 'Not set'}`);
@@ -68,10 +68,10 @@ const checkRecentUsers = async () => {
 		// Check server logs for webhook errors (if we could)
 		console.log('\n📊 Webhook Health Check:');
 		console.log('========================');
-		
+
 		console.log('✅ Database connection successful');
 		console.log('✅ User table accessible');
-		
+
 		// Test if we can insert a user manually
 		const testId = `test_${Date.now()}`;
 		try {
@@ -81,14 +81,13 @@ const checkRecentUsers = async () => {
 				ON CONFLICT (id) DO NOTHING
 			`;
 			console.log('✅ Manual user insert successful');
-			
+
 			// Clean up
 			await sql`DELETE FROM users WHERE id = ${testId}`;
 			console.log('✅ Test record cleaned up');
 		} catch (error) {
 			console.error('❌ Manual user insert failed:', error);
 		}
-
 	} catch (error) {
 		console.error('❌ Error checking users:', error);
 	}

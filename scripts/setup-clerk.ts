@@ -5,9 +5,10 @@
  */
 
 import { createClerkClient } from '@clerk/backend';
+import { eq } from 'drizzle-orm';
+
 import { getPoolClient } from '../src/db/client';
 import { users } from '../src/db/schema';
-import { eq } from 'drizzle-orm';
 
 const CLERK_SECRET_KEY = 'sk_test_guHAi8sijzZnqnVSIU621Hp5xYXLss4nkwDAIUJDiM';
 
@@ -58,7 +59,9 @@ async function syncClerkUsers() {
 				});
 				console.log(`   ✅ Created in database`);
 			} catch (error) {
-				console.log(`   ❌ Failed to create: ${error instanceof Error ? error.message : 'Unknown error'}`);
+				console.log(
+					`   ❌ Failed to create: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				);
 			}
 		}
 
@@ -70,10 +73,9 @@ async function syncClerkUsers() {
 		const dbUsers = await db.select().from(users);
 		console.log(`\nTotal users in database: ${dbUsers.length}`);
 		console.log('\nUsers:');
-		dbUsers.forEach(u => {
+		dbUsers.forEach((u) => {
 			console.log(`  - ${u.id}: ${u.email} (${u.fullName || 'no name'})`);
 		});
-
 	} catch (error) {
 		console.error('❌ Error syncing users:', error);
 		throw error;
@@ -95,8 +97,12 @@ async function main() {
 	console.log('   Events: user.created, user.updated, user.deleted');
 	console.log('\n2. Add these to your .env file:');
 	console.log('   CLERK_SECRET_KEY=sk_test_guHAi8sijzZnqnVSIU621Hp5xYXLss4nkwDAIUJDiM');
-	console.log('   VITE_CLERK_PUBLISHABLE_KEY=pk_test_b3B0aW1hbC1seW54LTUyLmNsZXJrLmFjY291bnRzLmRldiQ');
-	console.log('   CLERK_WEBHOOK_SECRET=whsec_xxx (get from Clerk Dashboard after creating webhook)');
+	console.log(
+		'   VITE_CLERK_PUBLISHABLE_KEY=pk_test_b3B0aW1hbC1seW54LTUyLmNsZXJrLmFjY291bnRzLmRldiQ',
+	);
+	console.log(
+		'   CLERK_WEBHOOK_SECRET=whsec_xxx (get from Clerk Dashboard after creating webhook)',
+	);
 	console.log('\n3. Test bank account creation!');
 }
 

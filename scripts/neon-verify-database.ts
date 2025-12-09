@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Neon DB Verification Script
  *
@@ -6,11 +7,11 @@
  */
 
 import { eq, sql } from 'drizzle-orm';
+
 import { getPoolClient } from '../src/db/client';
-import { users } from '../src/db/schema/users';
-import { organizations } from '../src/db/schema/organizations';
 import { subscriptions } from '../src/db/schema/billing';
-import { organizationMembers } from '../src/db/schema/organizations';
+import { organizationMembers, organizations } from '../src/db/schema/organizations';
+import { users } from '../src/db/schema/users';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -31,7 +32,9 @@ async function verifyConnection() {
 		console.log('✅ Database connection successful');
 		return true;
 	} catch (error) {
-		console.log(`❌ Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -63,11 +66,9 @@ async function validateSchema() {
 			`);
 
 			// Handle Neon response format (array or object)
-			const resultArray = Array.isArray(result) ? result : (result.rows || [result] || []);
+			const resultArray = Array.isArray(result) ? result : result.rows || [result] || [];
 			const existingColumns = resultArray.map((r: any) => r.column_name || r.column_name);
-			const missingColumns = table.requiredColumns.filter(
-				col => !existingColumns.includes(col),
-			);
+			const missingColumns = table.requiredColumns.filter((col) => !existingColumns.includes(col));
 
 			if (missingColumns.length > 0) {
 				issues.push(`Table '${table.name}' missing columns: ${missingColumns.join(', ')}`);
@@ -89,7 +90,9 @@ async function validateSchema() {
 			ORDER BY tc.table_name, tc.constraint_type;
 		`);
 
-		const constraintsArray = Array.isArray(constraintsResult) ? constraintsResult : (constraintsResult.rows || [constraintsResult] || []);
+		const constraintsArray = Array.isArray(constraintsResult)
+			? constraintsResult
+			: constraintsResult.rows || [constraintsResult] || [];
 		console.log(`   📊 Found ${constraintsArray.length} constraints`);
 
 		// Check for NOT NULL constraints on critical columns
@@ -104,19 +107,23 @@ async function validateSchema() {
 			AND column_name IN ('id', 'email', 'organization_id', 'user_id');
 		`);
 
-		const notNullArray = Array.isArray(notNullResult) ? notNullResult : (notNullResult.rows || [notNullResult] || []);
+		const notNullArray = Array.isArray(notNullResult)
+			? notNullResult
+			: notNullResult.rows || [notNullResult] || [];
 		console.log(`   ✅ ${notNullArray.length} critical columns have NOT NULL constraints`);
 
 		if (issues.length > 0) {
 			console.log('\n⚠️  Schema issues found:');
-			issues.forEach(issue => console.log(`   - ${issue}`));
+			issues.forEach((issue) => console.log(`   - ${issue}`));
 			return false;
 		}
 
 		console.log('\n✅ Schema validation passed');
 		return true;
 	} catch (error) {
-		console.log(`❌ Schema validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Schema validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -141,7 +148,9 @@ async function verifyRLSPolicies() {
 			AND tablename IN ('users', 'organizations', 'transactions', 'bank_accounts');
 		`);
 
-		const rlsTables = Array.isArray(rlsTablesResult) ? rlsTablesResult : (rlsTablesResult.rows || [rlsTablesResult] || []);
+		const rlsTables = Array.isArray(rlsTablesResult)
+			? rlsTablesResult
+			: rlsTablesResult.rows || [rlsTablesResult] || [];
 		let rlsEnabledCount = 0;
 		for (const table of rlsTables) {
 			if (table.rowsecurity) {
@@ -163,18 +172,21 @@ async function verifyRLSPolicies() {
 			AND tablename IN ('users', 'organizations', 'transactions', 'bank_accounts');
 		`);
 
-		const policies = Array.isArray(policiesResult) ? policiesResult : (policiesResult.rows || [policiesResult] || []);
+		const policies = Array.isArray(policiesResult)
+			? policiesResult
+			: policiesResult.rows || [policiesResult] || [];
 		console.log(`   📊 Found ${policies.length} RLS policies`);
 
 		if (rlsEnabledCount === rlsTables.length && policies.length > 0) {
 			console.log('\n✅ RLS policies verified');
 			return true;
-		} else {
-			console.log('\n⚠️  Some tables may not have RLS enabled or policies configured');
-			return false;
 		}
+		console.log('\n⚠️  Some tables may not have RLS enabled or policies configured');
+		return false;
 	} catch (error) {
-		console.log(`❌ RLS verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ RLS verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -197,7 +209,9 @@ async function identifyOrphanedData() {
 			OR organization_id = 'default';
 		`);
 
-		const usersWithoutOrgArray = Array.isArray(usersWithoutOrgResult) ? usersWithoutOrgResult : (usersWithoutOrgResult.rows || [usersWithoutOrgResult] || []);
+		const usersWithoutOrgArray = Array.isArray(usersWithoutOrgResult)
+			? usersWithoutOrgResult
+			: usersWithoutOrgResult.rows || [usersWithoutOrgResult] || [];
 		const orphanedUsers = Number(usersWithoutOrgArray[0]?.count || 0);
 		if (orphanedUsers > 0) {
 			issues.push(`${orphanedUsers} users without valid organization`);
@@ -214,7 +228,9 @@ async function identifyOrphanedData() {
 			WHERE o.id IS NULL;
 		`);
 
-		const membersWithoutOrgArray = Array.isArray(membersWithoutOrgResult) ? membersWithoutOrgResult : (membersWithoutOrgResult.rows || [membersWithoutOrgResult] || []);
+		const membersWithoutOrgArray = Array.isArray(membersWithoutOrgResult)
+			? membersWithoutOrgResult
+			: membersWithoutOrgResult.rows || [membersWithoutOrgResult] || [];
 		const orphanedMembers = Number(membersWithoutOrgArray[0]?.count || 0);
 		if (orphanedMembers > 0) {
 			issues.push(`${orphanedMembers} organization members without valid organization`);
@@ -231,7 +247,9 @@ async function identifyOrphanedData() {
 			WHERE u.id IS NULL;
 		`);
 
-		const subsWithoutUsersArray = Array.isArray(subsWithoutUsersResult) ? subsWithoutUsersResult : (subsWithoutUsersResult.rows || [subsWithoutUsersResult] || []);
+		const subsWithoutUsersArray = Array.isArray(subsWithoutUsersResult)
+			? subsWithoutUsersResult
+			: subsWithoutUsersResult.rows || [subsWithoutUsersResult] || [];
 		const orphanedSubs = Number(subsWithoutUsersArray[0]?.count || 0);
 		if (orphanedSubs > 0) {
 			issues.push(`${orphanedSubs} subscriptions without valid users`);
@@ -249,7 +267,9 @@ async function identifyOrphanedData() {
 			HAVING COUNT(om.id) = 0;
 		`);
 
-		const orgsWithoutMembersArray = Array.isArray(orgsWithoutMembersResult) ? orgsWithoutMembersResult : (orgsWithoutMembersResult.rows || [orgsWithoutMembersResult] || []);
+		const orgsWithoutMembersArray = Array.isArray(orgsWithoutMembersResult)
+			? orgsWithoutMembersResult
+			: orgsWithoutMembersResult.rows || [orgsWithoutMembersResult] || [];
 		const orphanedOrgs = orgsWithoutMembersArray.length;
 		if (orphanedOrgs > 0) {
 			issues.push(`${orphanedOrgs} organizations without members`);
@@ -260,14 +280,16 @@ async function identifyOrphanedData() {
 
 		if (issues.length > 0) {
 			console.log('\n⚠️  Orphaned data found:');
-			issues.forEach(issue => console.log(`   - ${issue}`));
+			issues.forEach((issue) => console.log(`   - ${issue}`));
 			return false;
 		}
 
 		console.log('\n✅ No orphaned data found');
 		return true;
 	} catch (error) {
-		console.log(`❌ Orphaned data check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Orphaned data check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -289,7 +311,9 @@ async function getDatabaseStats() {
 				(SELECT COUNT(*) FROM organization_members) as member_count;
 		`);
 
-		const statsArray = Array.isArray(statsResult) ? statsResult : (statsResult.rows || [statsResult] || []);
+		const statsArray = Array.isArray(statsResult)
+			? statsResult
+			: statsResult.rows || [statsResult] || [];
 		const statsData = statsArray[0] as any;
 		if (statsData) {
 			console.log(`   👥 Users: ${statsData.user_count || 0}`);
@@ -298,7 +322,9 @@ async function getDatabaseStats() {
 			console.log(`   👤 Organization Members: ${statsData.member_count || 0}`);
 		}
 	} catch (error) {
-		console.log(`   ⚠️  Could not retrieve statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`   ⚠️  Could not retrieve statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 	}
 }
 
@@ -328,7 +354,7 @@ async function verifyDatabase() {
 		console.log(`${icon} ${name}`);
 	}
 
-	const allPassed = Object.values(results).every(result => result);
+	const allPassed = Object.values(results).every((result) => result);
 
 	if (allPassed) {
 		console.log('\n🎉 All verifications passed!');
@@ -340,11 +366,16 @@ async function verifyDatabase() {
 
 // Run if executed directly
 if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
-	verifyDatabase().catch(error => {
+	verifyDatabase().catch((error) => {
 		console.error('💥 Verification failed:', error);
 		process.exit(1);
 	});
 }
 
-export { verifyDatabase, verifyConnection, validateSchema, verifyRLSPolicies, identifyOrphanedData };
-
+export {
+	verifyDatabase,
+	verifyConnection,
+	validateSchema,
+	verifyRLSPolicies,
+	identifyOrphanedData,
+};

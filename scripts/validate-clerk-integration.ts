@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Clerk Integration Validation Script
  *
@@ -6,9 +7,10 @@
  * Validates configuration, components, webhooks, and database setup
  */
 
-import { createClerkClient } from '@clerk/backend';
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+
+import { createClerkClient } from '@clerk/backend';
 
 interface ValidationResult {
 	name: string;
@@ -20,7 +22,12 @@ interface ValidationResult {
 const results: ValidationResult[] = [];
 
 // Helper to add results
-function addResult(name: string, status: 'pass' | 'fail' | 'warning', message: string, details?: string[]) {
+function addResult(
+	name: string,
+	status: 'pass' | 'fail' | 'warning',
+	message: string,
+	details?: string[],
+) {
 	results.push({ name, status, message, details });
 }
 
@@ -45,13 +52,11 @@ function validateEnvironmentVariables() {
 			'Missing VITE_CLERK_PUBLISHABLE_KEY environment variable',
 			['Required for client-side Clerk authentication', 'Add to .env.local or .env file'],
 		);
-	} else if (!publishableKey.startsWith('pk_test_') && !publishableKey.startsWith('pk_live_')) {
-		addResult(
-			'VITE_CLERK_PUBLISHABLE_KEY',
-			'fail',
-			'Invalid VITE_CLERK_PUBLISHABLE_KEY format',
-			['Must start with pk_test_ or pk_live_', `Current value: ${publishableKey.slice(0, 10)}...`],
-		);
+	} else if (!(publishableKey.startsWith('pk_test_') || publishableKey.startsWith('pk_live_'))) {
+		addResult('VITE_CLERK_PUBLISHABLE_KEY', 'fail', 'Invalid VITE_CLERK_PUBLISHABLE_KEY format', [
+			'Must start with pk_test_ or pk_live_',
+			`Current value: ${publishableKey.slice(0, 10)}...`,
+		]);
 	} else {
 		addResult(
 			'VITE_CLERK_PUBLISHABLE_KEY',
@@ -62,19 +67,15 @@ function validateEnvironmentVariables() {
 
 	// Validate CLERK_SECRET_KEY
 	if (!secretKey) {
-		addResult(
-			'CLERK_SECRET_KEY',
-			'fail',
-			'Missing CLERK_SECRET_KEY environment variable',
-			['Required for server-side Clerk operations', 'Add to .env.local or .env file (server-side only)'],
-		);
-	} else if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
-		addResult(
-			'CLERK_SECRET_KEY',
-			'fail',
-			'Invalid CLERK_SECRET_KEY format',
-			['Must start with sk_test_ or sk_live_', `Current value: ${secretKey.slice(0, 10)}...`],
-		);
+		addResult('CLERK_SECRET_KEY', 'fail', 'Missing CLERK_SECRET_KEY environment variable', [
+			'Required for server-side Clerk operations',
+			'Add to .env.local or .env file (server-side only)',
+		]);
+	} else if (!(secretKey.startsWith('sk_test_') || secretKey.startsWith('sk_live_'))) {
+		addResult('CLERK_SECRET_KEY', 'fail', 'Invalid CLERK_SECRET_KEY format', [
+			'Must start with sk_test_ or sk_live_',
+			`Current value: ${secretKey.slice(0, 10)}...`,
+		]);
 	} else {
 		addResult(
 			'CLERK_SECRET_KEY',
@@ -92,12 +93,10 @@ function validateEnvironmentVariables() {
 			['Required for webhook signature verification', 'Get from Clerk Dashboard > Webhooks'],
 		);
 	} else if (!webhookSecret.startsWith('whsec_')) {
-		addResult(
-			'CLERK_WEBHOOK_SECRET',
-			'fail',
-			'Invalid CLERK_WEBHOOK_SECRET format',
-			['Must start with whsec_', `Current value: ${webhookSecret.slice(0, 10)}...`],
-		);
+		addResult('CLERK_WEBHOOK_SECRET', 'fail', 'Invalid CLERK_WEBHOOK_SECRET format', [
+			'Must start with whsec_',
+			`Current value: ${webhookSecret.slice(0, 10)}...`,
+		]);
 	} else {
 		addResult('CLERK_WEBHOOK_SECRET', 'pass', 'Valid webhook secret');
 	}
@@ -105,12 +104,10 @@ function validateEnvironmentVariables() {
 	// Check .env.local exists
 	const envLocalPath = join(process.cwd(), '.env.local');
 	if (!existsSync(envLocalPath)) {
-		addResult(
-			'.env.local file',
-			'warning',
-			'.env.local file not found',
-			['Recommended for local development', 'Copy from env.example and fill in values'],
-		);
+		addResult('.env.local file', 'warning', '.env.local file not found', [
+			'Recommended for local development',
+			'Copy from env.example and fill in values',
+		]);
 	} else {
 		addResult('.env.local file', 'pass', '.env.local file exists');
 	}
@@ -128,11 +125,7 @@ function validateEnvironmentVariables() {
 				['Ensure both keys are from the same environment (test or live)'],
 			);
 		} else {
-			addResult(
-				'Environment consistency',
-				'pass',
-				`Both keys are from ${pubEnv} environment`,
-			);
+			addResult('Environment consistency', 'pass', `Both keys are from ${pubEnv} environment`);
 		}
 	}
 }
@@ -160,7 +153,7 @@ function validateClerkProvider() {
 	}
 
 	// Check ClerkProvider wraps the app
-	if (!mainContent.includes('<ClerkProvider>') && !mainContent.includes('<ClerkProvider ')) {
+	if (!(mainContent.includes('<ClerkProvider>') || mainContent.includes('<ClerkProvider '))) {
 		addResult('main.tsx wrapper', 'fail', 'ClerkProvider does not wrap the app');
 	} else {
 		addResult('main.tsx wrapper', 'pass', 'ClerkProvider wraps the app');
@@ -239,7 +232,7 @@ function validateClerkComponents() {
 	}
 
 	// Check imports from @clerk/clerk-react
-	if (rootContent.includes("@clerk/clerk-react")) {
+	if (rootContent.includes('@clerk/clerk-react')) {
 		addResult('@clerk/clerk-react imports', 'pass', 'Using @clerk/clerk-react package');
 	} else {
 		addResult('@clerk/clerk-react imports', 'fail', 'Not importing from @clerk/clerk-react');
@@ -526,4 +519,3 @@ if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g,
 }
 
 export { main as validateClerkIntegration };
-

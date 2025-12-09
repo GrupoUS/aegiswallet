@@ -25,7 +25,13 @@ function log(emoji: string, message: string) {
 	console.log(`${emoji} ${message}`);
 }
 
-function addResult(name: string, status: 'pass' | 'fail' | 'skip', message: string, duration?: number, details?: Record<string, unknown>) {
+function addResult(
+	name: string,
+	status: 'pass' | 'fail' | 'skip',
+	message: string,
+	duration?: number,
+	details?: Record<string, unknown>,
+) {
 	results.push({ name, status, message, duration, details });
 	const emoji = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⏭️';
 	const durationStr = duration !== undefined ? ` (${duration}ms)` : '';
@@ -49,7 +55,11 @@ const TIMEOUT_MS = 5000;
 // ========================================
 // Helper Functions
 // ========================================
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = TIMEOUT_MS): Promise<Response> {
+async function fetchWithTimeout(
+	url: string,
+	options: RequestInit = {},
+	timeout = TIMEOUT_MS,
+): Promise<Response> {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -89,11 +99,15 @@ async function testBackendServer(): Promise<void> {
 			addResult('Backend Server', 'pass', `Running on port ${BACKEND_PORT}`, duration);
 		} else {
 			addResult('Backend Server', 'fail', `Not responding on port ${BACKEND_PORT}`, duration, {
-				'Recommendation': 'Start the backend server with: bun dev:server'
+				Recommendation: 'Start the backend server with: bun dev:server',
 			});
 		}
 	} catch (error) {
-		addResult('Backend Server', 'fail', `Error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Backend Server',
+			'fail',
+			`Error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -111,7 +125,7 @@ async function testHealthEndpoint(): Promise<void> {
 				'Server Status': data.status,
 				'Database Status': data.database?.status || 'N/A',
 				'Database Latency': data.database?.latency ? `${data.database.latency}ms` : 'N/A',
-				'Uptime': data.uptime ? `${Math.round(data.uptime)}s` : 'N/A'
+				Uptime: data.uptime ? `${Math.round(data.uptime)}s` : 'N/A',
 			});
 
 			// Check database connectivity in health response
@@ -119,14 +133,18 @@ async function testHealthEndpoint(): Promise<void> {
 				addResult('DB via Health', 'pass', 'Database connected through health endpoint');
 			} else if (data.database?.status === 'disconnected' || data.database?.status === 'error') {
 				addResult('DB via Health', 'fail', `Database ${data.database.status}`, undefined, {
-					'Error': data.database.error || 'Unknown error'
+					Error: data.database.error || 'Unknown error',
 				});
 			}
 		} else {
 			addResult('Health Endpoint', 'fail', `Status ${response.status}`, duration);
 		}
 	} catch (error) {
-		addResult('Health Endpoint', 'fail', `Error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Health Endpoint',
+			'fail',
+			`Error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -142,18 +160,22 @@ async function testV1HealthEndpoint(): Promise<void> {
 			const data = await response.json();
 			addResult('V1 Health Endpoint', 'pass', `Status ${response.status}`, duration, {
 				'Overall Status': data.status,
-				'Database': data.services?.database || data.checks?.database?.status || 'N/A',
-				'API': data.services?.api || 'N/A',
-				'Version': data.version || 'N/A'
+				Database: data.services?.database || data.checks?.database?.status || 'N/A',
+				API: data.services?.api || 'N/A',
+				Version: data.version || 'N/A',
 			});
 		} else {
 			const data = await response.json().catch(() => ({}));
 			addResult('V1 Health Endpoint', 'fail', `Status ${response.status}`, duration, {
-				'Response': JSON.stringify(data).substring(0, 200)
+				Response: JSON.stringify(data).substring(0, 200),
 			});
 		}
 	} catch (error) {
-		addResult('V1 Health Endpoint', 'fail', `Error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'V1 Health Endpoint',
+			'fail',
+			`Error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -166,10 +188,10 @@ async function testCORS(): Promise<void> {
 		const preflightResponse = await fetchWithTimeout(`${BACKEND_URL}/api/health`, {
 			method: 'OPTIONS',
 			headers: {
-				'Origin': VITE_URL,
+				Origin: VITE_URL,
 				'Access-Control-Request-Method': 'GET',
-				'Access-Control-Request-Headers': 'Content-Type, Authorization'
-			}
+				'Access-Control-Request-Headers': 'Content-Type, Authorization',
+			},
 		});
 		const duration = Date.now() - startTime;
 
@@ -181,7 +203,7 @@ async function testCORS(): Promise<void> {
 			addResult('CORS Preflight', 'pass', 'Preflight request successful', duration, {
 				'Allow-Origin': allowOrigin,
 				'Allow-Credentials': allowCredentials || 'not set',
-				'Allow-Methods': allowMethods || 'not set'
+				'Allow-Methods': allowMethods || 'not set',
 			});
 		} else {
 			addResult('CORS Preflight', 'fail', 'No Access-Control-Allow-Origin header', duration);
@@ -191,21 +213,24 @@ async function testCORS(): Promise<void> {
 		const corsResponse = await fetchWithTimeout(`${BACKEND_URL}/api/health`, {
 			method: 'GET',
 			headers: {
-				'Origin': VITE_URL
-			}
+				Origin: VITE_URL,
+			},
 		});
 
 		const responseAllowOrigin = corsResponse.headers.get('Access-Control-Allow-Origin');
 		if (responseAllowOrigin) {
 			addResult('CORS Response', 'pass', 'CORS headers present in response', undefined, {
-				'Allow-Origin': responseAllowOrigin
+				'Allow-Origin': responseAllowOrigin,
 			});
 		} else {
 			addResult('CORS Response', 'fail', 'No CORS headers in response');
 		}
-
 	} catch (error) {
-		addResult('CORS Test', 'fail', `Error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'CORS Test',
+			'fail',
+			`Error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -216,9 +241,15 @@ async function testViteProxy(): Promise<void> {
 	const viteRunning = await isServerRunning(VITE_URL);
 
 	if (!viteRunning) {
-		addResult('Vite Server', 'skip', `Not running on port ${VITE_PORT} (optional for this test)`, undefined, {
-			'Note': 'Start Vite with: bun dev:client'
-		});
+		addResult(
+			'Vite Server',
+			'skip',
+			`Not running on port ${VITE_PORT} (optional for this test)`,
+			undefined,
+			{
+				Note: 'Start Vite with: bun dev:client',
+			},
+		);
 		return;
 	}
 
@@ -234,13 +265,17 @@ async function testViteProxy(): Promise<void> {
 			const data = await response.json();
 			addResult('Vite Proxy', 'pass', `Successfully proxied to backend`, duration, {
 				'Proxied Status': data.status,
-				'Via': `${VITE_URL} → ${BACKEND_URL}`
+				Via: `${VITE_URL} → ${BACKEND_URL}`,
 			});
 		} else {
 			addResult('Vite Proxy', 'fail', `Proxy returned status ${response.status}`, duration);
 		}
 	} catch (error) {
-		addResult('Vite Proxy', 'fail', `Proxy error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'Vite Proxy',
+			'fail',
+			`Proxy error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -261,7 +296,7 @@ async function testDatabaseThroughAPI(): Promise<void> {
 			if (dbStatus === 'connected') {
 				addResult('DB Through API', 'pass', 'Database accessible through API layer', duration, {
 					'DB Latency': dbLatency ? `${dbLatency}ms` : 'N/A',
-					'Total API Latency': `${duration}ms`
+					'Total API Latency': `${duration}ms`,
 				});
 			} else {
 				addResult('DB Through API', 'fail', `Database status: ${dbStatus}`, duration);
@@ -270,7 +305,11 @@ async function testDatabaseThroughAPI(): Promise<void> {
 			addResult('DB Through API', 'fail', `API returned status ${response.status}`, duration);
 		}
 	} catch (error) {
-		addResult('DB Through API', 'fail', `Error: ${error instanceof Error ? error.message : String(error)}`);
+		addResult(
+			'DB Through API',
+			'fail',
+			`Error: ${error instanceof Error ? error.message : String(error)}`,
+		);
 	}
 }
 
@@ -289,7 +328,7 @@ async function main() {
 	await testBackendServer();
 
 	// Only continue if backend is running
-	const backendResult = results.find(r => r.name === 'Backend Server');
+	const backendResult = results.find((r) => r.name === 'Backend Server');
 	if (backendResult?.status === 'fail') {
 		console.log('\n⚠️  Backend server not running. Skipping remaining tests.');
 		console.log('   Start the server with: bun dev:server');
@@ -313,9 +352,9 @@ function printSummary() {
 	console.log('📊 INTEGRATION TEST SUMMARY');
 	console.log('═'.repeat(60));
 
-	const passCount = results.filter(r => r.status === 'pass').length;
-	const failCount = results.filter(r => r.status === 'fail').length;
-	const skipCount = results.filter(r => r.status === 'skip').length;
+	const passCount = results.filter((r) => r.status === 'pass').length;
+	const failCount = results.filter((r) => r.status === 'fail').length;
+	const skipCount = results.filter((r) => r.status === 'skip').length;
 
 	console.log(`\n   ✅ Passed: ${passCount}`);
 	console.log(`   ❌ Failed: ${failCount}`);
@@ -324,8 +363,8 @@ function printSummary() {
 	if (failCount > 0) {
 		console.log('\n❌ FAILED TESTS:');
 		results
-			.filter(r => r.status === 'fail')
-			.forEach(r => {
+			.filter((r) => r.status === 'fail')
+			.forEach((r) => {
 				console.log(`   • ${r.name}: ${r.message}`);
 				if (r.details?.Recommendation) {
 					console.log(`     💡 ${r.details.Recommendation}`);
@@ -339,13 +378,13 @@ function printSummary() {
 		console.log('   ✅ All integration tests passed!');
 		console.log('   Your frontend-backend-database stack is properly connected.');
 	} else {
-		if (results.find(r => r.name === 'Backend Server')?.status === 'fail') {
+		if (results.find((r) => r.name === 'Backend Server')?.status === 'fail') {
 			console.log('   1. Start the backend server: bun dev:server');
 		}
-		if (results.find(r => r.name.includes('DB'))?.status === 'fail') {
+		if (results.find((r) => r.name.includes('DB'))?.status === 'fail') {
 			console.log('   2. Verify database connection: bun run neon:verify');
 		}
-		if (results.find(r => r.name === 'Vite Server')?.status === 'skip') {
+		if (results.find((r) => r.name === 'Vite Server')?.status === 'skip') {
 			console.log('   3. Start Vite for full-stack: bun dev:full');
 		}
 	}

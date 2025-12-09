@@ -9,23 +9,15 @@ const validateClerkWebhook = async () => {
 	console.log('\n🔧 Validating Clerk Webhook Configuration...\n');
 
 	// Check required environment variables
-	const requiredVars = [
-		'CLERK_PUBLISHABLE_KEY',
-		'CLERK_SECRET_KEY',
-		'DATABASE_URL',
-	];
+	const requiredVars = ['CLERK_PUBLISHABLE_KEY', 'CLERK_SECRET_KEY', 'DATABASE_URL'];
 
-	const optionalVars = [
-		'CLERK_WEBHOOK_SECRET',
-		'STRIPE_SECRET_KEY',
-		'STRIPE_PUBLISHABLE_KEY',
-	];
+	const optionalVars = ['CLERK_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_PUBLISHABLE_KEY'];
 
 	console.log('📋 Environment Variables:');
 	console.log('=========================');
 
 	let allRequiredPresent = true;
-	
+
 	for (const varName of requiredVars) {
 		const value = process.env[varName];
 		if (!value) {
@@ -45,9 +37,10 @@ const validateClerkWebhook = async () => {
 			console.log(`⚠️  ${varName}: NOT SET (Optional)`);
 		} else {
 			// Mask sensitive values
-			const masked = varName.toLowerCase().includes('secret') || varName.toLowerCase().includes('key')
-				? `${value.substring(0, 8)}...`
-				: value;
+			const masked =
+				varName.toLowerCase().includes('secret') || varName.toLowerCase().includes('key')
+					? `${value.substring(0, 8)}...`
+					: value;
 			console.log(`✅ ${varName}: SET (${masked})`);
 		}
 	}
@@ -57,7 +50,7 @@ const validateClerkWebhook = async () => {
 	if (webhookSecret) {
 		console.log('\n🔐 Webhook Secret Validation:');
 		console.log('==============================');
-		
+
 		if (webhookSecret.startsWith('whsec_')) {
 			console.log(`✅ Format: Valid Clerk webhook secret format`);
 			console.log(`✅ Length: ${webhookSecret.length} characters`);
@@ -71,7 +64,7 @@ const validateClerkWebhook = async () => {
 	// Validate database connection
 	console.log('\n🗄️  Database Connection:');
 	console.log('========================');
-	
+
 	try {
 		const databaseUrl = process.env.DATABASE_URL;
 		if (!databaseUrl) {
@@ -106,7 +99,7 @@ const validateClerkWebhook = async () => {
 	if (clerkSecretKey) {
 		console.log('\n🔑 Clerk Key Validation:');
 		console.log('=========================');
-		
+
 		if (clerkSecretKey.startsWith('sk_test_') || clerkSecretKey.startsWith('sk_live_')) {
 			const env = clerkSecretKey.startsWith('sk_test_') ? 'Test' : 'Production';
 			console.log(`✅ Format: Valid Clerk secret key (${env} mode)`);
@@ -118,18 +111,18 @@ const validateClerkWebhook = async () => {
 	// Final assessment
 	console.log('\n📊 Final Assessment:');
 	console.log('===================');
-	
+
 	if (allRequiredPresent && webhookSecret) {
 		console.log('✅ All required configurations are present');
 		console.log('✅ Ready to receive Clerk webhooks');
-		
+
 		console.log('\n🚀 Next Steps:');
 		console.log('1. Test webhook: bun scripts/test-clerk-webhook.ts');
 		console.log('2. Check user creation: bun scripts/validate-user-integrity.ts');
 		console.log('3. Monitor logs for webhook events');
 	} else {
 		console.log('⚠️  Some configurations are missing');
-		
+
 		if (!webhookSecret) {
 			console.log('\n💡 To get your webhook secret:');
 			console.log('1. Go to Clerk Dashboard → Webhooks');
@@ -138,7 +131,7 @@ const validateClerkWebhook = async () => {
 			console.log('4. Copy the webhook signing secret');
 			console.log('5. Add to your environment: CLERK_WEBHOOK_SECRET=whsec_...');
 		}
-		
+
 		process.exit(1);
 	}
 };

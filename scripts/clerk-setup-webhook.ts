@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Clerk Webhook Setup Script
  *
@@ -6,14 +7,16 @@
  * Provides both automated setup (via API) and manual instructions
  */
 
-import { createClerkClient } from '@clerk/backend';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
+import { createClerkClient } from '@clerk/backend';
+
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
-const WEBHOOK_URL = process.env.WEBHOOK_URL || process.env.VERCEL_URL
-	? `https://${process.env.VERCEL_URL}/api/webhooks/clerk`
-	: 'http://localhost:3000/api/webhooks/clerk';
+const WEBHOOK_URL =
+	process.env.WEBHOOK_URL || process.env.VERCEL_URL
+		? `https://${process.env.VERCEL_URL}/api/webhooks/clerk`
+		: 'http://localhost:3000/api/webhooks/clerk';
 
 const REQUIRED_EVENTS = ['user.created', 'user.updated', 'user.deleted'];
 
@@ -55,7 +58,7 @@ async function listWebhooks(): Promise<ClerkWebhook[]> {
 	try {
 		const response = await fetch(`${apiUrl}/webhooks`, {
 			headers: {
-				'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
+				Authorization: `Bearer ${CLERK_SECRET_KEY}`,
 				'Content-Type': 'application/json',
 			},
 		});
@@ -91,7 +94,7 @@ async function createWebhook(url: string, events: string[]): Promise<ClerkWebhoo
 		const response = await fetch(`${apiUrl}/webhooks`, {
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
+				Authorization: `Bearer ${CLERK_SECRET_KEY}`,
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
@@ -102,7 +105,9 @@ async function createWebhook(url: string, events: string[]): Promise<ClerkWebhoo
 
 		if (!response.ok) {
 			const errorText = await response.text();
-			throw new Error(`Failed to create webhook: ${response.status} ${response.statusText} - ${errorText}`);
+			throw new Error(
+				`Failed to create webhook: ${response.status} ${response.statusText} - ${errorText}`,
+			);
 		}
 
 		const webhook = await response.json();
@@ -118,7 +123,11 @@ async function createWebhook(url: string, events: string[]): Promise<ClerkWebhoo
 /**
  * Update webhook via Clerk API
  */
-async function updateWebhook(webhookId: string, url: string, events: string[]): Promise<ClerkWebhook | null> {
+async function updateWebhook(
+	webhookId: string,
+	url: string,
+	events: string[],
+): Promise<ClerkWebhook | null> {
 	if (!CLERK_SECRET_KEY) {
 		throw new Error('CLERK_SECRET_KEY environment variable is not set');
 	}
@@ -129,7 +138,7 @@ async function updateWebhook(webhookId: string, url: string, events: string[]): 
 		const response = await fetch(`${apiUrl}/webhooks/${webhookId}`, {
 			method: 'PATCH',
 			headers: {
-				'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
+				Authorization: `Bearer ${CLERK_SECRET_KEY}`,
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
@@ -164,7 +173,7 @@ async function getWebhookSecret(webhookId: string): Promise<string | null> {
 	try {
 		const response = await fetch(`${apiUrl}/webhooks/${webhookId}/signing_secret`, {
 			headers: {
-				'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
+				Authorization: `Bearer ${CLERK_SECRET_KEY}`,
 				'Content-Type': 'application/json',
 			},
 		});
@@ -211,7 +220,9 @@ function updateEnvFile(webhookSecret: string) {
 		writeFileSync(envPath, envContent);
 		console.log(`✅ Updated ${envPath} with webhook secret`);
 	} catch (error) {
-		console.log(`⚠️  Could not update .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`⚠️  Could not update .env file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		console.log(`   Please manually add: CLERK_WEBHOOK_SECRET=${webhookSecret}`);
 	}
 }
@@ -228,7 +239,7 @@ function printManualInstructions(webhookUrl: string) {
 	console.log('\n3. Configure webhook:');
 	console.log(`   URL: ${webhookUrl}`);
 	console.log('   Events:');
-	REQUIRED_EVENTS.forEach(event => {
+	REQUIRED_EVENTS.forEach((event) => {
 		console.log(`     - ${event}`);
 	});
 	console.log('\n4. Copy the webhook signing secret');
@@ -261,13 +272,13 @@ async function setupWebhook() {
 	const existingWebhooks = await listWebhooks();
 
 	// Find webhook with matching URL
-	const matchingWebhook = existingWebhooks.find(wh => wh.url === WEBHOOK_URL);
+	const matchingWebhook = existingWebhooks.find((wh) => wh.url === WEBHOOK_URL);
 
 	if (matchingWebhook) {
 		console.log(`\n✅ Found existing webhook: ${matchingWebhook.id}`);
 
 		// Check if events match
-		const missingEvents = REQUIRED_EVENTS.filter(e => !matchingWebhook.events.includes(e));
+		const missingEvents = REQUIRED_EVENTS.filter((e) => !matchingWebhook.events.includes(e));
 		if (missingEvents.length > 0) {
 			console.log(`⚠️  Webhook is missing events: ${missingEvents.join(', ')}`);
 			console.log('   Attempting to update...');
@@ -329,7 +340,9 @@ async function setupWebhook() {
 		const userList = await clerkClient.users.getUserList({ limit: 1 });
 		console.log(`✅ Clerk client validated (${userList.totalCount} users in total)`);
 	} catch (error) {
-		console.log(`❌ Clerk client validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Clerk client validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 	}
 
 	console.log('\n✅ Setup complete!');
@@ -341,11 +354,10 @@ async function setupWebhook() {
 
 // Run if executed directly
 if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
-	setupWebhook().catch(error => {
+	setupWebhook().catch((error) => {
 		console.error('💥 Setup failed:', error);
 		process.exit(1);
 	});
 }
 
 export { setupWebhook, listWebhooks, createWebhook, updateWebhook };
-

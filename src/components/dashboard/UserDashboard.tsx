@@ -179,7 +179,9 @@ function RecentTransactionsList() {
 							<div>
 								<p className="font-medium">{tx.description}</p>
 								<p className="text-sm text-muted-foreground">
-									{safeParseDate(tx.transaction_date || tx.transactionDate)?.toLocaleDateString('pt-BR') || '-'}
+									{safeParseDate(tx.transaction_date || tx.transactionDate)?.toLocaleDateString(
+										'pt-BR',
+									) || '-'}
 								</p>
 							</div>
 						</div>

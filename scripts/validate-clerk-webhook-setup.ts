@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * Clerk Webhook Setup Validation Script
  *
@@ -6,13 +7,15 @@
  * Checks for common issues and provides remediation steps
  */
 
-import { createClerkClient } from '@clerk/backend';
-import { db, adminDb } from '../src/db/client';
-import { users } from '../src/db/schema/users';
-import { subscriptions } from '../src/db/schema/billing';
-import { eq } from 'drizzle-orm';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+
+import { createClerkClient } from '@clerk/backend';
+import { eq } from 'drizzle-orm';
+
+import { adminDb, db } from '../src/db/client';
+import { subscriptions } from '../src/db/schema/billing';
+import { users } from '../src/db/schema/users';
 
 // Configuration checks
 const configChecks = [
@@ -49,7 +52,7 @@ function validateEnvironment() {
 			console.log(`❌ ${check.name}: Not set (Required)`);
 			console.log(`   ${check.description}`);
 			allValid = false;
-		} else if (!value && !check.required) {
+		} else if (!(value || check.required)) {
 			console.log(`⚠️ ${check.name}: Not set (Optional)`);
 			console.log(`   ${check.description}`);
 		} else {
@@ -89,7 +92,9 @@ async function validateDatabase() {
 			ORDER BY ordinal_position
 		`);
 
-		const usersTableInfo = Array.isArray(usersTableInfoResult) ? usersTableInfoResult : (usersTableInfoResult.rows || [usersTableInfoResult] || []);
+		const usersTableInfo = Array.isArray(usersTableInfoResult)
+			? usersTableInfoResult
+			: usersTableInfoResult.rows || [usersTableInfoResult] || [];
 		const requiredUserColumns = ['id', 'email', 'full_name'];
 		const existingUserColumns = usersTableInfo.map((row: any) => row.column_name);
 
@@ -111,8 +116,16 @@ async function validateDatabase() {
 			ORDER BY ordinal_position
 		`);
 
-		const subscriptionsTableInfo = Array.isArray(subscriptionsTableInfoResult) ? subscriptionsTableInfoResult : (subscriptionsTableInfoResult.rows || [subscriptionsTableInfoResult] || []);
-		const requiredSubscriptionColumns = ['id', 'user_id', 'stripe_customer_id', 'plan_id', 'status'];
+		const subscriptionsTableInfo = Array.isArray(subscriptionsTableInfoResult)
+			? subscriptionsTableInfoResult
+			: subscriptionsTableInfoResult.rows || [subscriptionsTableInfoResult] || [];
+		const requiredSubscriptionColumns = [
+			'id',
+			'user_id',
+			'stripe_customer_id',
+			'plan_id',
+			'status',
+		];
 		const existingSubscriptionColumns = subscriptionsTableInfo.map((row: any) => row.column_name);
 
 		for (const column of requiredSubscriptionColumns) {
@@ -126,7 +139,9 @@ async function validateDatabase() {
 
 		return true;
 	} catch (error) {
-		console.log(`❌ Database validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Database validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -158,7 +173,9 @@ async function validateClerk() {
 
 		return true;
 	} catch (error) {
-		console.log(`❌ Clerk validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Clerk validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -211,7 +228,9 @@ function validateWebhookHandler() {
 
 		return true;
 	} catch (error) {
-		console.log(`❌ Webhook handler validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Webhook handler validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -231,7 +250,10 @@ async function validateStripe() {
 		const stripeServicePath = join(process.cwd(), 'src/services/stripe/customer.service.ts');
 		const stripeServiceContent = readFileSync(stripeServicePath, 'utf-8');
 
-		if (stripeServiceContent.includes('createCustomer') && stripeServiceContent.includes('deleteCustomer')) {
+		if (
+			stripeServiceContent.includes('createCustomer') &&
+			stripeServiceContent.includes('deleteCustomer')
+		) {
 			console.log('   ✅ Stripe customer service methods found');
 		} else {
 			console.log('   ❌ Stripe customer service methods missing');
@@ -241,7 +263,9 @@ async function validateStripe() {
 		console.log('✅ Stripe integration validated');
 		return true;
 	} catch (error) {
-		console.log(`❌ Stripe validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		console.log(
+			`❌ Stripe validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
 		return false;
 	}
 }
@@ -265,16 +289,20 @@ async function validateWebhookEndpoint() {
 		if (response.status === 400) {
 			console.log('✅ Webhook endpoint accessible (correctly rejected invalid request)');
 			return true;
-		} else if (response.status >= 500) {
+		}
+		if (response.status >= 500) {
 			console.log(`⚠️ Webhook endpoint returned server error: ${response.status}`);
 			return false;
-		} else {
-			console.log(`ℹ️ Webhook endpoint returned: ${response.status} ${response.statusText}`);
-			return true;
 		}
+		console.log(`ℹ️ Webhook endpoint returned: ${response.status} ${response.statusText}`);
+		return true;
 	} catch (error) {
-		console.log(`❌ Webhook endpoint not accessible: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		console.log('   📋 Please ensure your server is running and webhook endpoint is properly routed');
+		console.log(
+			`❌ Webhook endpoint not accessible: ${error instanceof Error ? error.message : 'Unknown error'}`,
+		);
+		console.log(
+			'   📋 Please ensure your server is running and webhook endpoint is properly routed',
+		);
 		return false;
 	}
 }
@@ -316,7 +344,7 @@ async function runValidation() {
 		webhookEndpoint: await validateWebhookEndpoint(),
 	};
 
-	const allPassed = Object.values(results).every(result => result);
+	const allPassed = Object.values(results).every((result) => result);
 
 	console.log('\n📊 Validation Summary:');
 	for (const [check, passed] of Object.entries(results)) {
@@ -335,13 +363,13 @@ async function runValidation() {
 
 // Check if running directly
 if (import.meta.main || import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
-	runValidation().catch(error => {
+	runValidation().catch((error) => {
 		console.error('💥 Validation failed:', error);
 		process.exit(1);
 	});
 } else {
 	// Also run if called via bun directly
-	runValidation().catch(error => {
+	runValidation().catch((error) => {
 		console.error('💥 Validation failed:', error);
 		process.exit(1);
 	});

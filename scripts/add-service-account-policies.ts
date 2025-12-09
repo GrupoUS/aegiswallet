@@ -3,8 +3,9 @@
  * Ensures service account can access all tables for administrative operations
  */
 
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 async function addServiceAccountPolicies() {
 	console.log('🔧 Adding Service Account RLS Policies...\n');
@@ -55,16 +56,21 @@ async function addServiceAccountPolicies() {
 
 			// Create service account policy
 			try {
-				await client.execute(sql.raw(`
+				await client.execute(
+					sql.raw(`
 					CREATE POLICY ${policyName} ON ${table}
 					FOR ALL
 					TO PUBLIC
 					USING (is_service_account())
 					WITH CHECK (is_service_account())
-				`));
+				`),
+				);
 				console.log(`   ✅ Created ${policyName}`);
 			} catch (error) {
-				console.log(`   ❌ Failed to create ${policyName}:`, error instanceof Error ? error.message : error);
+				console.log(
+					`   ❌ Failed to create ${policyName}:`,
+					error instanceof Error ? error.message : error,
+				);
 			}
 		}
 
@@ -80,7 +86,9 @@ async function addServiceAccountPolicies() {
 		`);
 
 		for (const policy of allPolicies.rows) {
-			console.log(`   ${policy.tablename}: ${policy.policyname} (${policy.cmd}, ${policy.permissive})`);
+			console.log(
+				`   ${policy.tablename}: ${policy.policyname} (${policy.cmd}, ${policy.permissive})`,
+			);
 		}
 	} catch (error) {
 		console.error('❌ Error:', error instanceof Error ? error.message : error);

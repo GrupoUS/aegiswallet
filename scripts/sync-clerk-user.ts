@@ -1,6 +1,7 @@
+import { eq } from 'drizzle-orm';
+
 import { getPoolClient } from '../src/db/client';
 import { users } from '../src/db/schema';
-import { eq } from 'drizzle-orm';
 
 /**
  * Sync existing Clerk user to database
@@ -37,11 +38,7 @@ async function syncClerkUser() {
 
 	try {
 		// Check if user already exists
-		const [existingUser] = await db
-			.select()
-			.from(users)
-			.where(eq(users.id, clerkUserId))
-			.limit(1);
+		const [existingUser] = await db.select().from(users).where(eq(users.id, clerkUserId)).limit(1);
 
 		if (existingUser) {
 			console.log('\n✅ User already exists in database!');
@@ -53,11 +50,14 @@ async function syncClerkUser() {
 		}
 
 		// Insert user
-		const [newUser] = await db.insert(users).values({
-			id: clerkUserId,
-			email: email,
-			fullName: fullName || null,
-		}).returning();
+		const [newUser] = await db
+			.insert(users)
+			.values({
+				id: clerkUserId,
+				email: email,
+				fullName: fullName || null,
+			})
+			.returning();
 
 		console.log('\n✅ User created successfully!');
 		console.log(`ID: ${newUser.id}`);
@@ -66,7 +66,6 @@ async function syncClerkUser() {
 		console.log(`Created At: ${newUser.createdAt}`);
 
 		console.log('\n🎉 You can now create bank accounts for this user!');
-
 	} catch (error) {
 		console.error('\n❌ Failed to sync user:', error);
 		process.exit(1);

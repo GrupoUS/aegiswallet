@@ -54,7 +54,11 @@ export class StripeCustomerService {
 		}
 	}
 
-	static async getOrCreateCustomer(clerkUserId: string, email: string, name?: string): Promise<string> {
+	static async getOrCreateCustomer(
+		clerkUserId: string,
+		email: string,
+		name?: string,
+	): Promise<string> {
 		const stripe = getStripeClient();
 		try {
 			// Search by metadata
@@ -91,11 +95,7 @@ export class StripeCustomerService {
 		}
 	}
 
-	static async updateCustomer(
-		stripeCustomerId: string,
-		data: UpdateData,
-		clerkUserId?: string,
-	) {
+	static async updateCustomer(stripeCustomerId: string, data: UpdateData, clerkUserId?: string) {
 		const stripe = getStripeClient();
 		try {
 			const updateOptions: { idempotencyKey?: string } = {};
@@ -142,7 +142,10 @@ export class StripeCustomerService {
 			for (const sub of subscriptions.data) {
 				try {
 					await stripe.subscriptions.cancel(sub.id);
-					secureLogger.info('Stripe subscription canceled', { subscriptionId: sub.id, customerId: stripeCustomerId });
+					secureLogger.info('Stripe subscription canceled', {
+						subscriptionId: sub.id,
+						customerId: stripeCustomerId,
+					});
 				} catch (subError) {
 					// Log but continue - subscription might already be canceled
 					secureLogger.warn('Failed to cancel subscription, continuing', {

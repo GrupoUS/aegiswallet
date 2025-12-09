@@ -3,8 +3,9 @@
  * Verifies that all required RLS configurations are in place
  */
 
-import { getPoolClient, closePool } from '../src/db/client';
 import { sql } from 'drizzle-orm';
+
+import { closePool, getPoolClient } from '../src/db/client';
 
 async function checkRLSPolicies() {
 	console.log('🔍 Checking RLS Policies and Helper Functions...\n');
@@ -39,7 +40,9 @@ async function checkRLSPolicies() {
 			AND routine_schema = 'public'
 		`);
 
-		const foundFunctions = (functions.rows as Array<{ routine_name: string }>).map((r) => r.routine_name);
+		const foundFunctions = (functions.rows as Array<{ routine_name: string }>).map(
+			(r) => r.routine_name,
+		);
 
 		const requiredFunctions = ['is_service_account', 'get_current_user_id'];
 		for (const fn of requiredFunctions) {
@@ -82,7 +85,9 @@ async function checkRLSPolicies() {
 			// Reset
 			await db.execute(sql`SELECT set_config('app.is_service_account', 'false', false)`);
 		} catch (error) {
-			console.log(`   ❌ Error testing is_service_account(): ${error instanceof Error ? error.message : error}`);
+			console.log(
+				`   ❌ Error testing is_service_account(): ${error instanceof Error ? error.message : error}`,
+			);
 		}
 
 		// Count users in database

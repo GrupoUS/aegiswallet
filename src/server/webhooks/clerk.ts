@@ -53,7 +53,7 @@ clerkWebhookHandler.post('/', async (c) => {
 		});
 
 		// Validate required headers
-		if (!headers['svix-id'] || !headers['svix-timestamp'] || !headers['svix-signature']) {
+		if (!(headers['svix-id'] && headers['svix-timestamp'] && headers['svix-signature'])) {
 			secureLogger.warn('Missing required webhook headers', {
 				requestId,
 				headers: Object.keys(headers),
@@ -109,18 +109,14 @@ clerkWebhookHandler.post('/', async (c) => {
 				}
 
 				// Validate clerkUserId format
-				if (!id || !id.startsWith('user_')) {
+				if (!(id && id.startsWith('user_'))) {
 					secureLogger.warn('Invalid Clerk user ID format', { userId: id, requestId });
 					return c.json({ error: 'Invalid user ID format' }, 400);
 				}
 
 				// Check if user already exists (idempotency check)
 				const poolDb = getPoolClient();
-				const [existingUser] = await poolDb
-					.select()
-					.from(users)
-					.where(eq(users.id, id))
-					.limit(1);
+				const [existingUser] = await poolDb.select().from(users).where(eq(users.id, id)).limit(1);
 
 				if (existingUser) {
 					secureLogger.info('User already exists, skipping creation', {
@@ -230,7 +226,10 @@ clerkWebhookHandler.post('/', async (c) => {
 
 				// Validate clerkUserId format
 				if (!id.startsWith('user_')) {
-					secureLogger.warn('Invalid Clerk user ID format in delete event', { userId: id, requestId });
+					secureLogger.warn('Invalid Clerk user ID format in delete event', {
+						userId: id,
+						requestId,
+					});
 					return c.json({ error: 'Invalid user ID format' }, 400);
 				}
 
@@ -268,7 +267,11 @@ clerkWebhookHandler.post('/', async (c) => {
 					// Use pool client for transaction support if needed
 					if (sub) {
 						await poolDb.delete(subscriptions).where(eq(subscriptions.userId, id));
-						secureLogger.info('Subscription deleted', { userId: id, subscriptionId: sub.id, requestId });
+						secureLogger.info('Subscription deleted', {
+							userId: id,
+							subscriptionId: sub.id,
+							requestId,
+						});
 					} else {
 						secureLogger.info('No subscription found for deleted user', { userId: id, requestId });
 					}

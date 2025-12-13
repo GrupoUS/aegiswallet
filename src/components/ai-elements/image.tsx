@@ -1,7 +1,7 @@
-import type { Experimental_GeneratedImage } from '@/lib/ai/compatibility';
+import type { ExperimentalGeneratedImage } from '@/lib/ai/compatibility';
 import { cn } from '@/lib/utils';
 
-export type ImageProps = Experimental_GeneratedImage & {
+export type ImageProps = ExperimentalGeneratedImage & {
 	className?: string;
 	alt?: string;
 };

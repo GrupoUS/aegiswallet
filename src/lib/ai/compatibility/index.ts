@@ -54,7 +54,7 @@ export interface UIMessage {
 /**
  * Generated Image - represents an AI-generated image
  */
-export interface Experimental_GeneratedImage {
+export interface ExperimentalGeneratedImage {
 	url: string;
 	width: number;
 	height: number;

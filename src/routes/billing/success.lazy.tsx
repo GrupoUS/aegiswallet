@@ -81,7 +81,7 @@ function SuccessPage() {
 								<h3 className="font-semibold">Próximos Passos</h3>
 								<div className="space-y-3">
 									<div className="flex items-start gap-3">
-										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
 											<span className="text-primary font-semibold text-sm">1</span>
 										</div>
 										<div>
@@ -93,7 +93,7 @@ function SuccessPage() {
 									</div>
 
 									<div className="flex items-start gap-3">
-										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
 											<span className="text-primary font-semibold text-sm">2</span>
 										</div>
 										<div>
@@ -105,7 +105,7 @@ function SuccessPage() {
 									</div>
 
 									<div className="flex items-start gap-3">
-										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+										<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
 											<span className="text-primary font-semibold text-sm">3</span>
 										</div>
 										<div>

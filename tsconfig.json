@@ -23,7 +23,7 @@
 			"@/*": ["./src/*"],
 			"@test-utils/*": ["./src/test/*"]
 		},
-		"types": ["vitest/globals", "node"]
+		"types": []
 	},
 	"include": ["src"],
 	"exclude": [

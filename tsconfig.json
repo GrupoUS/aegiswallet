@@ -21,9 +21,11 @@
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@/*": ["./src/*"],
-			"@test-utils/*": ["./src/test/*"]
+			"@test-utils/*": ["./src/test/*"],
+			"bun-types": ["./src/types/shim.d.ts"],
+			"bun-types/*": ["./src/types/shim.d.ts"]
 		},
-		"types": []
+		"types": ["node"]
 	},
 	"include": ["src"],
 	"exclude": [

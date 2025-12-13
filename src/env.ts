@@ -21,10 +21,10 @@ const envSchema = z.object({
 	CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEY is required'),
 	CLERK_WEBHOOK_SECRET: z.string().optional(),
 
-	// Google Calendar OAuth 2.0
-	GOOGLE_CLIENT_ID: z.string().min(1, 'Google Client ID is required'),
-	GOOGLE_CLIENT_SECRET: z.string().min(1, 'Google Client Secret is required'),
-	GOOGLE_REDIRECT_URI: z.string().url('Google Redirect URI must be a valid URL'),
+	// Google Calendar OAuth 2.0 (optional - feature can be disabled)
+	GOOGLE_CLIENT_ID: z.string().optional(),
+	GOOGLE_CLIENT_SECRET: z.string().optional(),
+	GOOGLE_REDIRECT_URI: z.string().url('Google Redirect URI must be a valid URL').optional(),
 
 	// Application URL (for webhooks)
 	APP_URL: z
@@ -62,13 +62,15 @@ function parseEnv() {
 	// In development, provide fallbacks for optional Google Calendar variables
 	const envWithDefaults = {
 		...process.env,
-		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
-		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
+		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || undefined,
+		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
 		GOOGLE_REDIRECT_URI:
 			process.env.GOOGLE_REDIRECT_URI ||
 			(process.env.VERCEL_URL
 				? `https://${process.env.VERCEL_URL}/api/v1/google-calendar/callback`
-				: 'http://localhost:3000/api/v1/google-calendar/callback'),
+				: process.env.GOOGLE_CLIENT_ID
+					? 'http://localhost:3000/api/v1/google-calendar/callback'
+					: undefined),
 		CRON_SECRET: process.env.CRON_SECRET || 'development-cron-secret-at-least-32-characters',
 		APP_URL:
 			process.env.APP_URL ||

@@ -8,7 +8,7 @@
  */
 
 import { and, asc, desc, eq, isNull, lt, or } from 'drizzle-orm';
-import { type calendar_v3, google } from 'googleapis';
+import { type Auth, type calendar_v3, google } from 'googleapis';
 
 import { env } from '@/env';
 
@@ -67,20 +67,39 @@ export interface OAuthTokens {
 }
 
 // ========================================
-// OAUTH 2.0 CLIENT
+// OAUTH 2.0 CLIENT (Lazy Initialization)
 // ========================================
 
-const oauth2Client = new google.auth.OAuth2(
-	env.GOOGLE_CLIENT_ID,
-	env.GOOGLE_CLIENT_SECRET,
-	env.GOOGLE_REDIRECT_URI,
-);
+let oauth2Client: Auth.OAuth2Client | null = null;
+
+/**
+ * Get or create OAuth2 client (lazy initialization)
+ * Throws error if Google Calendar is not configured
+ */
+function getOAuth2Client(): Auth.OAuth2Client {
+	if (!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URI)) {
+		throw new Error(
+			'Google Calendar is not configured. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI environment variables.',
+		);
+	}
+
+	if (!oauth2Client) {
+		oauth2Client = new google.auth.OAuth2(
+			env.GOOGLE_CLIENT_ID,
+			env.GOOGLE_CLIENT_SECRET,
+			env.GOOGLE_REDIRECT_URI,
+		);
+	}
+
+	return oauth2Client;
+}
 
 /**
  * Generate OAuth 2.0 authorization URL
  */
 export function getAuthUrl(state: string): string {
-	return oauth2Client.generateAuthUrl({
+	const client = getOAuth2Client();
+	return client.generateAuthUrl({
 		access_type: 'offline', // Required for refresh_token
 		scope: [
 			'https://www.googleapis.com/auth/calendar.events',
@@ -96,7 +115,8 @@ export function getAuthUrl(state: string): string {
  * Exchange authorization code for tokens
  */
 export async function exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
-	const { tokens } = await oauth2Client.getToken(code);
+	const client = getOAuth2Client();
+	const { tokens } = await client.getToken(code);
 
 	if (!(tokens.access_token && tokens.refresh_token)) {
 		throw new Error('Failed to obtain required tokens');
@@ -182,11 +202,12 @@ export async function getValidAccessToken(userId: string): Promise<string> {
 
 	// Refresh the token
 	try {
-		oauth2Client.setCredentials({
+		const client = getOAuth2Client();
+		client.setCredentials({
 			refresh_token: tokenRecord.refreshToken,
 		});
 
-		const { credentials } = await oauth2Client.refreshAccessToken();
+		const { credentials } = await client.refreshAccessToken();
 
 		if (!credentials.access_token) {
 			throw new Error('Failed to refresh access token');
@@ -231,11 +252,12 @@ export async function getValidAccessToken(userId: string): Promise<string> {
 export async function getCalendarClient(userId: string): Promise<calendar_v3.Calendar> {
 	const accessToken = await getValidAccessToken(userId);
 
-	oauth2Client.setCredentials({
+	const client = getOAuth2Client();
+	client.setCredentials({
 		access_token: accessToken,
 	});
 
-	return google.calendar({ version: 'v3', auth: oauth2Client });
+	return google.calendar({ version: 'v3', auth: client });
 }
 
 // ========================================
@@ -296,7 +318,8 @@ export async function disconnectGoogleCalendar(userId: string): Promise<void> {
 	if (tokenRecord) {
 		try {
 			// Revoke token at Google
-			await oauth2Client.revokeToken(tokenRecord.refreshToken);
+			const client = getOAuth2Client();
+			await client.revokeToken(tokenRecord.refreshToken);
 		} catch (error) {
 			secureLogger.warn('Failed to revoke Google token', {
 				userId,

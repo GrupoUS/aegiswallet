@@ -11,7 +11,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { env } from '@/env';
+import { env, isGoogleCalendarConfigured } from '@/env';
 
 import { secureLogger } from '@/lib/logging/secure-logger';
 import {
@@ -79,6 +79,17 @@ const syncEventSchema = z.object({
 googleCalendarRouter.get('/connect', authMiddleware, rateLimitMiddleware, (c) => {
 	const { user } = c.get('auth');
 	const requestId = c.get('requestId');
+
+	if (!isGoogleCalendarConfigured()) {
+		return c.json(
+			{
+				error: 'Google Calendar not configured',
+				message: 'A integração com Google Calendar não está configurada',
+				meta: { requestId },
+			},
+			503,
+		);
+	}
 
 	try {
 		// Generate state parameter for CSRF protection

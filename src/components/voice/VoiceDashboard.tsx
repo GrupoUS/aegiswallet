@@ -148,7 +148,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 			},
 			{
 				action: () => {
-					navigate({ to: '/dashboard' });
+					navigate({ to: '/dashboard', search: {} as { period: '30d'; view: 'overview' } });
 					announceToScreenReader('Navegando para dashboard com orçamentos');
 				},
 				description: 'Analisar seu orçamento mensal',
@@ -166,7 +166,7 @@ export const VoiceDashboard = React.memo(function VoiceDashboard({
 			},
 			{
 				action: () => {
-					navigate({ to: '/dashboard' });
+					navigate({ to: '/dashboard', search: {} as { period: '30d'; view: 'overview' } });
 					announceToScreenReader('Navegando para página principal');
 				},
 				description: 'Fazer transferências PIX',

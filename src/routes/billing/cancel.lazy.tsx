@@ -51,7 +51,9 @@ function CancelPage() {
 
 						<CardFooter className="flex gap-3">
 							<Button asChild variant="outline" className="flex-1">
-								<Link to="/dashboard">Voltar ao Dashboard</Link>
+								<Link to="/dashboard" search={{} as { period: '30d'; view: 'overview' }}>
+									Voltar ao Dashboard
+								</Link>
 							</Button>
 							<Button asChild className="flex-1">
 								<Link to="/billing">Ver Planos</Link>

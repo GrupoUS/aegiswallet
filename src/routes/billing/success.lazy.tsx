@@ -121,7 +121,7 @@ function SuccessPage() {
 
 						<CardFooter className="flex flex-col sm:flex-row gap-3">
 							<Button asChild className="flex-1">
-								<Link to="/dashboard">
+								<Link to="/dashboard" search={{} as { period: '30d'; view: 'overview' }}>
 									<ArrowRight className="w-4 h-4 mr-2" />
 									Ir para Dashboard
 								</Link>

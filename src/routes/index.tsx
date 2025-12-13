@@ -12,7 +12,7 @@ function Index() {
 				<Navigate to="/login" search={{ redirect: '/' }} />
 			</SignedOut>
 			<SignedIn>
-				<Navigate to="/dashboard" />
+				<Navigate to="/dashboard" search={{} as { period: '30d'; view: 'overview' }} />
 			</SignedIn>
 		</>
 	);

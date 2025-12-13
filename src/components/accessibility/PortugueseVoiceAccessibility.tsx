@@ -1,4 +1,5 @@
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import type React from 'react';
 
 import type { VoiceCommand } from './hooks/usePortugueseVoiceAccessibility';
 import { usePortugueseVoiceAccessibility } from './hooks/usePortugueseVoiceAccessibility';

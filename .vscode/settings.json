@@ -72,35 +72,7 @@
     "*/node_modules/*": true,
     "**/node_modules/**": true
   },
-  "typescript.preferences.includePackageJsonAutoImports": "off",
-  "typescript.suggest.autoImports": false,
-  "typescript.maxNodeModuleJsDepth": 0,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "oxlint.enable": true,
-  "oxlint.configFile": ".oxlintrc.json",
-  "oxlint.healthcareConfig": ".oxlintrc.healthcare.json",
-  "oxlint.run": "onType",
-  "oxlint.nodePath": "./node_modules/.bin/oxlint",
-  "oxlint.rules": {
-    "security": true,
-    "accessibility": true,
-    "performance": true,
-    "typescript": true,
-    "react": true
-  },
-  "oxlint.ignorePatterns": [
-    "node_modules/**",
-    "dist/**",
-    "build/**",
-    "coverage/**",
-    "*.min.js",
-    "*.bundle.js"
-  ],
-  "oxlint.format.enable": false,
-  "oxlint.lintFileNames": [
-    "src/**/*.{ts,tsx,js,jsx}",
-    "scripts/**/*.{ts,tsx,js,jsx}",
-    "vitest.config.ts",
-    "vitest.*.config.ts"
-  ]
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
 }

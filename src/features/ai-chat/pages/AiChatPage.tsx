@@ -22,7 +22,7 @@ export default function AiChatPage() {
 
 	const handleMinimize = () => {
 		closeWidget(); // Close widget if open
-		void navigate({ to: '/dashboard' });
+		void navigate({ to: '/dashboard', search: {} as { period: '30d'; view: 'overview' } });
 	};
 
 	if (subLoading) {

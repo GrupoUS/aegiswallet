@@ -8,9 +8,7 @@
         "serena",
         "start-mcp-server",
         "--context",
-        "ide-assistant",
-        "--project",
-        "D:\\Coders\\aegiswallet"
+        "ide-assistant"
       ],
       "type": "stdio",
     },
@@ -21,12 +19,7 @@
         "mcp",
         "gateway",
         "run"
-      ],
-      "env": {
-        "LOCALAPPDATA": "C:\\Users\\Mauri\\AppData\\Local",
-        "ProgramData": "C:\\ProgramData",
-        "ProgramFiles": "C:\\Program Files"
-      }
+      ]
     }
   }
 }

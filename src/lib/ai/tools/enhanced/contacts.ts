@@ -622,8 +622,7 @@ function formatContactsResponse(contactList: ContactWithPaymentMethods[]) {
 }
 
 function buildContactsResponse(
-	// biome-ignore lint/suspicious/noExplicitAny: Formatted contacts have dynamic structure
-	formattedContacts: any[],
+	formattedContacts: Record<string, unknown>[],
 	statistics: {
 		totalContacts: number;
 		favoriteContacts: number;

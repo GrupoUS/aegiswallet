@@ -22,7 +22,7 @@ export function RouteErrorBoundary({ error, reset }: RouteErrorBoundaryProps) {
 	};
 
 	const handleGoHome = () => {
-		void navigate({ to: '/dashboard' });
+		void navigate({ to: '/dashboard', search: {} as { period: '30d'; view: 'overview' } });
 	};
 
 	return (

@@ -21,7 +21,7 @@ function SignUpComponent() {
 
 	// Redirect authenticated users to dashboard using TanStack Router redirect
 	if (isAuthenticated) {
-		throw redirect({ to: '/dashboard' });
+		throw redirect({ to: '/dashboard', search: {} as { period: '30d'; view: 'overview' } });
 	}
 
 	return (

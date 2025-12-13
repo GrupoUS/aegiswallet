@@ -55,7 +55,17 @@ const DashboardLoader = () => (
 	</div>
 );
 
+import { z } from 'zod';
+
+const dashboardSearchSchema = z.object({
+	period: z.enum(['7d', '30d', '90d', '12m', 'custom']).optional().default('30d'),
+	from: z.string().optional(),
+	to: z.string().optional(),
+	view: z.enum(['overview', 'financial', 'analytics']).optional().default('overview'),
+});
+
 export const Route = createFileRoute('/dashboard')({
+	validateSearch: (search) => dashboardSearchSchema.parse(search),
 	component: lazy(() => import('./dashboard.lazy').then((m) => ({ default: m.Dashboard }))),
 	pendingComponent: () => <DashboardLoader />,
 	errorComponent: RouteErrorBoundary,

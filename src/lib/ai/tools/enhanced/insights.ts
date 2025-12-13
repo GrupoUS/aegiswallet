@@ -382,7 +382,21 @@ function generateSpendingRecommendations(
 interface TransactionRecord {
 	amount: number;
 	transactionDate: string;
-	category?: { id: string; name: string } | { id: string; name: string }[];
+	category?:
+		| {
+				id: string;
+				name: string;
+				color?: string | null;
+				icon?: string | null;
+				isSystem?: boolean | null;
+		  }
+		| {
+				id: string;
+				name: string;
+				color?: string | null;
+				icon?: string | null;
+				isSystem?: boolean | null;
+		  }[];
 	merchantName?: string;
 	description?: string;
 }
@@ -1012,6 +1026,7 @@ async function fetchBudgetTransactions(userId: string, analysisMonths: number) {
 	const data = await db
 		.select({
 			amount: transactions.amount,
+			transactionDate: transactions.transactionDate,
 			categoryId: transactions.categoryId,
 		})
 		.from(transactions)
@@ -1033,6 +1048,7 @@ async function fetchBudgetTransactions(userId: string, analysisMonths: number) {
 
 	const transactionsList = data.map((tx) => ({
 		amount: Number(tx.amount),
+		transactionDate: tx.transactionDate?.toISOString() || new Date().toISOString(),
 		category: tx.categoryId
 			? [
 					{
@@ -1049,11 +1065,7 @@ async function fetchBudgetTransactions(userId: string, analysisMonths: number) {
 	return { txList: transactionsList, startDate, endDate };
 }
 
-function analyzeSpendingPatterns(
-	// biome-ignore lint/suspicious/noExplicitAny: Transaction data has dynamic structure from database
-	txRecords: any[],
-	analysisMonths: number,
-) {
+function analyzeSpendingPatterns(txRecords: TransactionRecord[], analysisMonths: number) {
 	const totalIncome = txRecords
 		.filter((tx) => tx.amount > 0)
 		.reduce((sum, tx) => sum + tx.amount, 0);
@@ -1094,7 +1106,7 @@ function analyzeSpendingPatterns(
 					totalAmount: 0,
 					averageMonthly: 0,
 					percentage: 0,
-					isEssential: cat.isSystem,
+					isEssential: cat.isSystem ?? false,
 					color: cat.color || '#6B7280',
 					icon: cat.icon || 'circle',
 				});
@@ -1252,11 +1264,18 @@ interface BudgetAllocationsResult {
 	budgetRecommendations: BudgetRecommendation[];
 }
 
+interface BudgetProjectionsResult {
+	projectedMonthlyExpenses: number;
+	projectedMonthlySavings: number;
+	projectedSavingsRate: number;
+	canAchieveTarget: boolean;
+}
+
 function calculateBudgetProjections(
 	spendingAnalysis: InternalSpendingAnalysis,
 	budgetAllocations: BudgetAllocationsResult,
 	targetSavingsRate: number,
-) {
+): BudgetProjectionsResult {
 	const { averageMonthlyIncome } = spendingAnalysis;
 	const { budgetRecommendations } = budgetAllocations;
 
@@ -1277,12 +1296,9 @@ function calculateBudgetProjections(
 }
 
 function buildBudgetResponse(
-	// biome-ignore lint/suspicious/noExplicitAny: Analysis data has dynamic structure
-	spendingAnalysis: any,
-	// biome-ignore lint/suspicious/noExplicitAny: Budget allocations have dynamic structure
-	budgetAllocations: any,
-	// biome-ignore lint/suspicious/noExplicitAny: Projections have dynamic structure
-	projections: any,
+	spendingAnalysis: InternalSpendingAnalysis,
+	budgetAllocations: BudgetAllocationsResult,
+	projections: BudgetProjectionsResult,
 	targetSavingsRate: number,
 ) {
 	const { averageMonthlyIncome, averageMonthlyExpenses } = spendingAnalysis;

@@ -105,7 +105,9 @@ export interface CompatibleLanguageModelUsage {
 /**
  * Maps language model usage between different SDK versions
  */
-export function mapLanguageModelUsage(usage: any): CompatibleLanguageModelUsage {
+export function mapLanguageModelUsage(
+	usage: Record<string, number | undefined>,
+): CompatibleLanguageModelUsage {
 	return {
 		promptTokens: usage.promptTokens || usage.inputTokens || 0,
 		inputTokens: usage.inputTokens || usage.promptTokens || 0,

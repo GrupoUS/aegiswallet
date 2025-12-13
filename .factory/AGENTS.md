@@ -1,157 +1,198 @@
-# Factory Orchestration System (Docker MCP Enhanced)
+# Factory Orchestration System v2.0
 
-Dynamic agent routing and parallel execution coordination for AegisWallet droids and skills via Docker MCP Gateway.
+Dynamic agent routing and MCP tool coordination for AegisWallet via Docker MCP Gateway.
 
-**Business Context**: Brazilian financial market with PIX, LGPD, and accessibility requirements demanding extra security scrutiny and Portuguese-first interfaces.
+**Context**: Brazilian fintech (PIX, LGPD, WCAG 2.1 AA+) with Portuguese-first interfaces.
 
-## Available Droids & MCP Stack
+## 🎯 Quick Decision Tree
 
-| Droid | Primary Focus | MCPs (via Docker Gateway) | When to Use |
-|-------|---------------|---------------------------|-------------|
-| **apex-dev** | Advanced implementation (complexity ≥7) | serena, context7, neon, playwright | Performance-critical, database, testing |
-| **database-specialist** | Supabase/PostgreSQL + LGPD | serena, neon | ANY database operation, RLS, migrations |
-| **code-reviewer** | Security + Brazilian compliance | context7, tavily, fetch | Post-implementation, security validation |
-| **apex-ui-ux-designer** | UI/UX + WCAG 2.1 AA+ | context7, serena, playwright | ANY new UI component, accessibility testing |
-| **apex-researcher** | Brazilian regulations (≥95% accuracy) | context7, tavily, serena, fetch, sequential-thinking | Compliance questions, research |
-| **product-architect** | PRD + Diátaxis framework | sequential-thinking, serena | Strategy, documentation |
-
-## Spec Mode Auto-Activation
-
-**Triggers**: "spec - research", "research and plan", "analyze and plan", "spec mode research"
-
-**Protocol**:
-1. Immediate Routing → apex-researcher (bypass all analysis)
-2. Priority Override → HIGHEST (Level 1)
-3. Parallel Execution → All MCPs via Docker Gateway
-4. Auto-Compliance → Brazilian regulations activated
-5. Deliverable → Research Intelligence Report + Implementation Plan
-
-### Execution Flow
-```
-Prompt → apex-dev (análise inicial) → [PARALELO] droids especializados → apex-dev (consolidação) → Implementação → [PARALELO] validação → apex-dev (ajustes finais)
+```mermaid
+graph TD
+    A[📋 New Task] --> B{Keywords?}
+    B -->|"spec/research/plan"| R[🔬 apex-researcher]
+    B -->|"database/schema/RLS"| D[🗄️ database-specialist]
+    B -->|"UI/component/design"| U[🎨 apex-ui-ux-designer]
+    B -->|"security/review/audit"| S[🔒 code-reviewer]
+    B -->|"docs/PRD/rules"| P[📝 product-architect]
+    B -->|"implement/code/fix"| C{Complexity ≥7?}
+    C -->|Yes| M[⚡ apex-dev + parallel specialists]
+    C -->|No| A1[🔧 apex-dev solo]
+    
+    R --> V{Needs impl?}
+    V -->|Yes| A1
+    V -->|No| END[✅ Done]
 ```
 
-## Docker MCP Parallel Dispatch
+## 🔧 Droids & MCP Tools
 
-### Parallel Execution Triggers (via Docker MCP Gateway)
-- **Complexity ≥7**: High technical complexity → Multiple specialists parallel
-- **Security Sensitive**: Financial data, PII → Security-first parallel analysis
-- **Brazilian Compliance**: LGPD/PIX/BCB → Compliance specialists parallel
-- **UI Components**: ANY interface work → apex-ui-ux-designer mandatory
-- **Database Operations**: ANY schema changes → database-specialist mandatory
+| Droid | MCPs | Primary Tools |
+|-------|------|---------------|
+| **apex-dev** | serena, context7, playwright | `find_symbol`, `replace_symbol_body`, `browser_snapshot` |
+| **database-specialist** | serena, neon | `search_for_pattern`, `find_symbol` (schemas) |
+| **code-reviewer** | context7, tavily | `tavily-search`, `get-library-docs` |
+| **apex-ui-ux-designer** | context7, serena, playwright | `browser_take_screenshot`, `get-library-docs` |
+| **apex-researcher** | context7, tavily, serena | `tavily-search`, `tavily-crawl`, `resolve-library-id` |
+| **product-architect** | serena | `list_dir`, `find_file`, `get_symbols_overview` |
 
-### Parallel Execution Matrix (Docker MCP Optimized)
-| Complexity | Pre-Implementation (Parallel) | Post-Implementation (Parallel) |
-|------------|------------------------------|--------------------------------|
-| **1-3** (Simple) | apex-dev alone | code-reviewer |
-| **4-6** (Moderate) | apex-dev + 1-2 specialists | Sequential validation |
-| **7-8** (Complex) | 3-4 specialists parallel | Parallel validation |
-| **9-10** (Mission) | All specialists + apex-researcher | Full parallel validation |
+## ⚡ MCP Tool Chains
 
-### Essential Parallel Combinations
-- **Feature**: [code-reviewer, database-specialist, apex-ui-ux-designer]
-- **Database**: [database-specialist, code-reviewer]
-- **Security**: [code-reviewer, apex-researcher, database-specialist]
-- **UI/UX**: [apex-ui-ux-designer, code-reviewer] (MANDATORY)
-- **Research**: apex-researcher + [domain specialists]
-
-## Docker MCP Communication Contracts
-
-### Essential Input/Output via Docker Gateway
-
-#### apex-dev (Implementation)
+### 📚 Research Chain
 ```yaml
-input: [goal, scope, complexity(1-10), requirements, brazilian_compliance]
-output: [implementation_plan, technical_approach, risk_assessment, resource_requirements]
-mcps: [serena, context7, neon, playwright]
+flow: tavily-search → tavily-extract → resolve-library-id → get-library-docs
+usage: Documentation research, pattern discovery, compliance validation
+example:
+  - mcp_MCP_DOCKER_tavily-search: { query: "LGPD compliance React patterns 2024" }
+  - mcp_MCP_DOCKER_resolve-library-id: { libraryName: "react" }
+  - mcp_MCP_DOCKER_get-library-docs: { context7CompatibleLibraryID: "/facebook/react", topic: "hooks" }
 ```
 
-#### database-specialist (PostgreSQL + LGPD)
+### 🔍 Code Analysis Chain
 ```yaml
-input: [schema_changes, performance_requirements, security_requirements, brazilian_compliance]
-output: [schema_recommendations, performance_optimization, security_enhancements, migration_strategy]
-mcps: [serena, neon]
+flow: serena find_symbol → get_symbols_overview → find_referencing_symbols → search_for_pattern
+usage: Understand codebase before implementation
+example:
+  - mcp_serena_find_symbol: { name_path_pattern: "useAuth", include_body: true }
+  - mcp_serena_find_referencing_symbols: { name_path: "useAuth", relative_path: "src/hooks" }
 ```
 
-#### code-reviewer (Security + Compliance)
+### 🛠️ Implementation Chain
 ```yaml
-input: [files, review_type, security_focus, brazilian_compliance, risk_tolerance]
-output: [security_findings, compliance_status, recommendations, confidence_score]
-mcps: [context7, tavily, fetch]
+flow: serena find_symbol → replace_symbol_body OR insert_after_symbol → validate
+usage: Code modifications with semantic understanding
+example:
+  - mcp_serena_find_symbol: { name_path_pattern: "MyComponent", include_body: true }
+  - mcp_serena_replace_symbol_body: { name_path: "MyComponent", relative_path: "src/components/MyComponent.tsx", body: "..." }
 ```
 
-#### apex-ui-ux-designer (Accessibility + UX)
+### 🧪 Validation Chain
 ```yaml
-input: [goal, component_type, brazilian_requirements, accessibility_requirements]
-output: [design_recommendations, accessibility_audit, component_specification]
-mcps: [context7, serena, playwright]
+flow: browser_navigate → browser_snapshot → browser_take_screenshot
+usage: UI testing, visual validation
+example:
+  - mcp_MCP_DOCKER_browser_navigate: { url: "http://localhost:5173" }
+  - mcp_MCP_DOCKER_browser_snapshot: {}
+  - mcp_MCP_DOCKER_browser_take_screenshot: { filename: "validation.png" }
 ```
 
-#### apex-researcher (Brazilian Regulations)
+## 📋 Task Execution Patterns
+
+### Pattern: New Feature (Complexity ≥7)
 ```yaml
-input: [topic, complexity(L1-L10), brazilian_focus, validation_required]
-output: [research_findings, source_validation, compliance_requirements]
-mcps: [context7, tavily, serena, fetch, sequential-thinking]
+phases:
+  1_research:
+    droid: apex-researcher
+    tools: [tavily-search, context7, serena]
+    output: Research Intelligence Report
+    
+  2_database: # if schema needed
+    droid: database-specialist
+    tools: [serena, neon]
+    output: Schema + Migrations
+    
+  3_ui: # if UI component
+    droid: apex-ui-ux-designer
+    parallel: true
+    tools: [context7, playwright]
+    output: Component specs + Accessibility audit
+    
+  4_implement:
+    droid: apex-dev
+    tools: [serena, playwright]
+    output: Implementation
+    
+  5_validate:
+    droid: code-reviewer
+    parallel: true
+    tools: [tavily, context7]
+    output: Security + Compliance report
 ```
 
-#### product-architect (Strategy + Documentation)
+### Pattern: Bug Fix
 ```yaml
-input: [deliverable_type, audience, success_criteria, diataxis_form]
-output: [documentation_quality, prd_completeness, rules_effectiveness]
-mcps: [sequential-thinking, serena]
+phases:
+  1_investigate:
+    tools: [mcp_serena_find_symbol, mcp_serena_find_referencing_symbols]
+    
+  2_fix:
+    droid: apex-dev
+    tools: [mcp_serena_replace_symbol_body]
+    
+  3_validate:
+    droid: code-reviewer # optional for critical bugs
 ```
 
-## Docker MCP Quick Reference
+### Pattern: Research Only
+```yaml
+trigger: "spec - research", "research and plan", "analyze and plan"
+droid: apex-researcher
+priority: HIGHEST
+tools: [tavily-search, tavily-crawl, context7, serena]
+output: Research Report + Implementation Plan
+```
 
-### Escalation Protocol
-1. **Level 1**: Droid self-resolution (using assigned MCPs)
-2. **Level 2**: Request additional context from apex-dev
-3. **Level 3**: Escalate to apex-researcher (via context7 + tavily)
-4. **Level 4**: Escalate to code-reviewer (via tavily security research)
-5. **Level 5**: Escalate to product-architect (via sequential-thinking)
+## 🌐 Skill Integration
 
-### Brazilian Compliance Priority (MANDATORY)
-- **Security > Compliance > Architecture > Performance > Features**
-- **Mandatory MCPs**: context7 (LGPD/BCB docs) + tavily (current patterns)
-- **Validation**: ≥95% cross-source validation required
-- **Documentation**: Portuguese-first interfaces required
+### Auto-Activated Skills
+| Context | Skill | Location |
+|---------|-------|----------|
+| Brazilian compliance | `brazilian-fintech-compliance` | `.factory/skills/brazilian-fintech-compliance/` |
+| Frontend design | `frontend-design` | `.factory/skills/frontend-design/` |
+| Web testing | `webapp-testing` | `.factory/skills/webapp-testing/` |
 
-### Docker MCP Performance Targets
-- **Latency**: <3ms for MCP calls via Docker Gateway
-- **Context Management**: Automatic deduplication via Docker
-- **Parallel Execution**: Optimized concurrent MCP calls
-- **Resource Isolation**: Built-in Docker container security
+### Skill Activation Triggers
+```yaml
+brazilian_compliance:
+  keywords: [LGPD, PIX, BCB, CPF, CNPJ, boleto, "R$"]
+  skill: brazilian-fintech-compliance
+  droids: [code-reviewer, apex-researcher, database-specialist]
 
-## Docker MCP Execution Flow (6 Phases)
+accessibility:
+  keywords: [WCAG, a11y, acessibilidade, screen reader, contrast]
+  skill: frontend-design
+  droids: [apex-ui-ux-designer]
+```
 
-1. **Phase 1**: apex-dev analysis (complexity, domain, requirements)
-2. **Phase 2**: Parallel consultation (complexity≥7 → specialists)
-3. **Phase 3**: apex-dev synthesis (consolidate insights)
-4. **Phase 4**: apex-dev implementation (following consolidated specs)
-5. **Phase 5**: Parallel validation (security, performance, accessibility)
-6. **Phase 6**: apex-dev finalization (apply corrections, deliver)
+## 🚀 Parallel Execution Matrix
 
-**Mandatory Parallel Triggers**:
-- UI Component → apex-ui-ux-designer (ALWAYS)
-- Database Changes → database-specialist (ALWAYS)
-- Brazilian Compliance → apex-researcher (PRIMARY)
-- Security Sensitive → code-reviewer + apex-researcher
+| Complexity | Pre-Implementation | Post-Implementation |
+|------------|-------------------|---------------------|
+| **1-3** | apex-dev only | — |
+| **4-6** | apex-dev + 1 specialist | code-reviewer |
+| **7-8** | [parallel] 2-3 specialists | [parallel] validation |
+| **9-10** | [parallel] all specialists | [parallel] full validation |
 
-## Docker MCP Integration Summary
+### Mandatory Parallel Triggers
+- **UI Component** → `apex-ui-ux-designer` (ALWAYS)
+- **Database Changes** → `database-specialist` (ALWAYS)
+- **Brazilian Compliance** → `apex-researcher` + skill activation
+- **Security Sensitive** → `code-reviewer` + `apex-researcher`
 
-**✅ Enhanced with Docker MCP Gateway:**
-- **7 MCPs integrated**: serena + context7 + tavily + sequential-thinking + neon + playwright + fetch
-- **<3ms latency target** via Docker Gateway optimization
-- **<200 line documentation** with focused content
-- **Brazilian compliance** maintained via context7 + tavily MCPs
+## 📊 Quality Gates
 
-**🔧 Key Improvements:**
-- Real MCP integration (not theoretical)
-- Performance optimization via Docker Gateway
-- Simplified communication contracts
-- Essential parallel execution triggers
-- Complete Brazilian compliance validation
+```yaml
+confidence_thresholds:
+  research: ≥95%     # Cross-source validation
+  architecture: ≥90% # Design decisions
+  implementation: ≥85% # Code changes
+  
+performance_targets:
+  mcp_latency: <3ms
+  query_response: <100ms
+  pix_transactions: <150ms
+
+compliance_priority:
+  order: [Security, Compliance, Architecture, Performance, Features]
+  mandatory: [LGPD, PIX, WCAG 2.1 AA]
+```
+
+## 🔄 Escalation Protocol
+
+1. **Level 1**: Droid self-resolution (assigned MCPs)
+2. **Level 2**: Request context from apex-dev
+3. **Level 3**: Escalate to apex-researcher (tavily + context7)
+4. **Level 4**: Escalate to code-reviewer (security research)
+5. **Level 5**: Escalate to product-architect (strategic decisions)
 
 ---
 
-> **For complete development standards**: See root `AGENTS.md` for comprehensive rules, agent definitions, testing requirements, and Brazilian compliance details.
+> **Reference**: See `.factory/droids/` for complete droid definitions and `.factory/skills/` for skill implementations.

@@ -199,8 +199,8 @@ export function useFinancialEvents(
 			});
 			queryClient.invalidateQueries({ queryKey: financialEventsKeys.lists() });
 		},
-		onError: (error: Error) => {
-			const err = new FinancialError(error.message, 'NETWORK');
+		onError: (createError: Error) => {
+			const err = new FinancialError(createError.message, 'NETWORK');
 			toast.error('Erro ao criar evento financeiro', {
 				description: err.message,
 			});
@@ -245,8 +245,8 @@ export function useFinancialEvents(
 			toast.success('Evento atualizado com sucesso!');
 			queryClient.invalidateQueries({ queryKey: financialEventsKeys.lists() });
 		},
-		onError: (error: Error) => {
-			const err = new FinancialError(error.message, 'NETWORK');
+		onError: (updateError: Error) => {
+			const err = new FinancialError(updateError.message, 'NETWORK');
 			toast.error('Erro ao atualizar evento financeiro', {
 				description: err.message,
 			});
@@ -267,8 +267,8 @@ export function useFinancialEvents(
 			toast.success('Evento financeiro removido com sucesso!');
 			queryClient.invalidateQueries({ queryKey: financialEventsKeys.lists() });
 		},
-		onError: (error: Error) => {
-			const err = new FinancialError(error.message, 'NETWORK');
+		onError: (deleteError: Error) => {
+			const err = new FinancialError(deleteError.message, 'NETWORK');
 			toast.error('Erro ao remover evento financeiro', {
 				description: err.message,
 			});
@@ -277,9 +277,12 @@ export function useFinancialEvents(
 	});
 
 	// Helper functions that use mutations
-	const createEvent = async (event: Omit<FinancialEvent, 'id'>) => {
-		return createEventMutation.mutateAsync(event);
-	};
+	const createEvent = useCallback(
+		(event: Omit<FinancialEvent, 'id'>) => {
+			return createEventMutation.mutateAsync(event);
+		},
+		[createEventMutation],
+	);
 
 	// Calculate statistics from events
 	const statistics = useMemo(() => {
@@ -319,20 +322,20 @@ export function useFinancialEvents(
 	const error =
 		queryError instanceof Error ? new FinancialError(queryError.message, 'NETWORK') : null;
 
-	const updateEvent = async (id: string, updates: Partial<FinancialEvent>) => {
+	const updateEvent = (id: string, updates: Partial<FinancialEvent>) => {
 		return updateEventMutation.mutateAsync({ id, updates });
 	};
 
-	const deleteEvent = async (id: string) => {
-		await deleteEventMutation.mutateAsync(id);
+	const deleteEvent = (id: string) => {
+		return deleteEventMutation.mutateAsync(id);
 	};
 
-	const markAsPaid = async (id: string) => {
+	const markAsPaid = (id: string) => {
 		return updateEvent(id, { status: 'completed' });
 	};
 
 	const duplicateEvent = useCallback(
-		async (event: FinancialEvent) => {
+		(event: FinancialEvent) => {
 			if (!user) {
 				throw new FinancialError('Usuário não autenticado', 'AUTH');
 			}
@@ -369,6 +372,27 @@ export function useFinancialEvents(
 		duplicateEvent,
 		refresh: refetch,
 	};
+}
+
+// Helper function to map updates to API payload
+function mapUpdatesToPayload(updates: Partial<FinancialEvent>): Partial<TransactionApiPayload> {
+	const payload: Partial<TransactionApiPayload> = {};
+
+	if (updates.amount !== undefined) payload.amount = updates.amount;
+	if (updates.title) payload.description = updates.title;
+	if (updates.type) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
+	if (updates.status) {
+		payload.status =
+			updates.status === 'completed' || updates.status === 'paid' ? 'posted' : 'pending';
+	}
+	if (updates.start) {
+		payload.transactionDate =
+			updates.start instanceof Date ? updates.start.toISOString() : updates.start;
+	}
+	if (updates.category) payload.categoryId = String(updates.category);
+	if (updates.description) payload.notes = updates.description;
+
+	return payload;
 }
 
 /**
@@ -422,23 +446,7 @@ export function useFinancialEventMutations() {
 					throw new FinancialError('Usuário não autenticado', 'AUTH');
 				}
 
-				// Map FinancialEvent fields to TransactionApiPayload fields
-				const payload: Partial<TransactionApiPayload> = {};
-
-				if (updates.amount !== undefined) payload.amount = updates.amount;
-				if (updates.title) payload.description = updates.title;
-				if (updates.type) payload.transactionType = updates.type === 'income' ? 'credit' : 'debit';
-				if (updates.status) {
-					// Map EventStatus to API status
-					payload.status =
-						updates.status === 'completed' || updates.status === 'paid' ? 'posted' : 'pending';
-				}
-				if (updates.start) {
-					payload.transactionDate =
-						updates.start instanceof Date ? updates.start.toISOString() : updates.start;
-				}
-				if (updates.category) payload.categoryId = String(updates.category);
-				if (updates.description) payload.notes = updates.description;
+				const payload = mapUpdatesToPayload(updates);
 
 				const response = await apiClient.put<TransactionApiResponse<BackendTransaction>>(
 					`/v1/transactions/${id}`,
@@ -486,7 +494,7 @@ export function useFinancialEventMutations() {
 	);
 
 	const markAsPaid = useCallback(
-		async (id: string) => {
+		(id: string) => {
 			return updateEvent(id, { status: 'completed' });
 		},
 		[updateEvent],

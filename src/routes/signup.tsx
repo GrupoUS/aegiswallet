@@ -13,7 +13,7 @@ function SignUpComponent() {
 	// Show loading while checking auth
 	if (isLoading) {
 		return (
-			<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+			<div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-background to-accent/5 p-4">
 				<div className="h-12 w-12 animate-spin rounded-full border-primary border-b-2" />
 			</div>
 		);
@@ -25,10 +25,10 @@ function SignUpComponent() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+		<div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-background to-accent/5 p-4">
 			<div className="w-full max-w-md space-y-8">
 				<div className="space-y-2 text-center">
-					<h1 className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text font-bold text-5xl text-transparent tracking-tight">
+					<h1 className="bg-linear-to-r from-primary via-primary to-accent bg-clip-text font-bold text-5xl text-transparent tracking-tight">
 						AegisWallet
 					</h1>
 					<p className="text-lg text-muted-foreground">Crie sua conta gratuita</p>

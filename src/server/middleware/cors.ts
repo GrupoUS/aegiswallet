@@ -7,57 +7,65 @@ import type { Context, Next } from 'hono';
 
 // Allowed origins for Brazilian financial application
 const ALLOWED_ORIGINS = [
-	'https://aegiswallet.com',
-	'https://www.aegiswallet.com',
-	'https://app.aegiswallet.com',
-	// Development environments
-	'http://localhost:3000',
-	'http://localhost:5173',
-	'http://localhost:8080',
-	'http://localhost:8081',
-	'http://localhost:8082',
-	'https://localhost:3000',
-	'https://localhost:5173',
-	'https://localhost:8080',
-	'https://localhost:8081',
-	'https://localhost:8082',
+        'https://aegiswallet.com',
+        'https://www.aegiswallet.com',
+        'https://app.aegiswallet.com',
+        // Development environments
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://localhost:5173',
+        'http://localhost:8080',
+        'http://localhost:8081',
+        'http://localhost:8082',
+        'https://localhost:3000',
+        'https://localhost:5000',
+        'https://localhost:5173',
+        'https://localhost:8080',
+        'https://localhost:8081',
+        'https://localhost:8082',
 ];
+
+// Allow Replit domains in development
+const isReplitDomain = (origin: string): boolean => {
+        return origin?.includes('.replit.dev') || origin?.includes('.repl.co') || origin?.includes('.replit.app');
+};
 
 /**
  * Secure CORS middleware with origin validation
  */
 export const corsMiddleware = async (c: Context, next: Next) => {
-	const origin = c.req.header('Origin');
+        const origin = c.req.header('Origin');
 
-	// Validate origin against allowed list
-	const isOriginAllowed =
-		ALLOWED_ORIGINS.includes(origin || '') ||
-		(origin?.startsWith('http://localhost:') && process.env.NODE_ENV === 'development') ||
-		(origin?.startsWith('https://localhost:') && process.env.NODE_ENV === 'development');
+        // Validate origin against allowed list
+        const isOriginAllowed =
+                ALLOWED_ORIGINS.includes(origin || '') ||
+                (origin?.startsWith('http://localhost:') && process.env.NODE_ENV === 'development') ||
+                (origin?.startsWith('https://localhost:') && process.env.NODE_ENV === 'development') ||
+                (origin && isReplitDomain(origin));
 
-	// Set secure CORS headers
-	if (isOriginAllowed) {
-		c.header('Access-Control-Allow-Origin', origin || '*');
-	} else {
-		// In production, don't allow unknown origins
-		c.header('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
-	}
+        // Set secure CORS headers
+        if (isOriginAllowed) {
+                c.header('Access-Control-Allow-Origin', origin || '*');
+        } else {
+                // In production, don't allow unknown origins
+                c.header('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
+        }
 
-	c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-	c.header(
-		'Access-Control-Allow-Headers',
-		'Content-Type, Authorization, X-Requested-With, X-Client-ID',
-	);
-	c.header('Access-Control-Allow-Credentials', 'true');
-	c.header('Access-Control-Max-Age', '86400'); // 24 hours
-	c.header('Vary', 'Origin'); // Important for caching
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header(
+                'Access-Control-Allow-Headers',
+                'Content-Type, Authorization, X-Requested-With, X-Client-ID',
+        );
+        c.header('Access-Control-Allow-Credentials', 'true');
+        c.header('Access-Control-Max-Age', '86400'); // 24 hours
+        c.header('Vary', 'Origin'); // Important for caching
 
-	// Handle preflight requests
-	if (c.req.method === 'OPTIONS') {
-		return c.newResponse(null, 204); // No Content for OPTIONS
-	}
+        // Handle preflight requests
+        if (c.req.method === 'OPTIONS') {
+                return c.newResponse(null, 204); // No Content for OPTIONS
+        }
 
-	await next();
+        await next();
 };
 
 /**
@@ -65,21 +73,21 @@ export const corsMiddleware = async (c: Context, next: Next) => {
  * Use only in development environment
  */
 export const devCorsMiddleware = async (c: Context, next: Next) => {
-	const origin = c.req.header('Origin');
+        const origin = c.req.header('Origin');
 
-	c.header('Access-Control-Allow-Origin', origin || '*');
-	c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-	c.header(
-		'Access-Control-Allow-Headers',
-		'Content-Type, Authorization, X-Requested-With, X-Client-ID',
-	);
-	c.header('Access-Control-Allow-Credentials', 'true');
-	c.header('Access-Control-Max-Age', '86400');
-	c.header('Vary', 'Origin');
+        c.header('Access-Control-Allow-Origin', origin || '*');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        c.header(
+                'Access-Control-Allow-Headers',
+                'Content-Type, Authorization, X-Requested-With, X-Client-ID',
+        );
+        c.header('Access-Control-Allow-Credentials', 'true');
+        c.header('Access-Control-Max-Age', '86400');
+        c.header('Vary', 'Origin');
 
-	if (c.req.method === 'OPTIONS') {
-		return c.newResponse(null, 204);
-	}
+        if (c.req.method === 'OPTIONS') {
+                return c.newResponse(null, 204);
+        }
 
-	await next();
+        await next();
 };

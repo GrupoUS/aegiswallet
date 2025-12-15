@@ -1,332 +1,286 @@
 /**
- * Drizzle Database Client - Neon Serverless
+ * Drizzle Database Client - Universal
  *
- * Factory for creating Drizzle ORM clients using Neon's serverless driver
- * Supports both HTTP (for simple queries) and WebSocket (for transactions) connections
+ * Factory for creating Drizzle ORM clients that works with both
+ * Neon serverless and standard PostgreSQL databases
  */
 
-import { neon, Pool } from '@neondatabase/serverless';
-import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
-import { drizzle as drizzlePool } from 'drizzle-orm/neon-serverless';
+import { Pool as PgPool } from 'pg';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 
 import * as schema from './schema';
 
-// ========================================
-// CONFIGURATION
-// ========================================
+// Detect if using Neon or standard PostgreSQL
+const isNeonDatabase = (): boolean => {
+        const url = process.env.DATABASE_URL || '';
+        return url.includes('neon.tech') || url.includes('neon-');
+};
 
 // Get the pooled database URL from environment (for API operations)
 const getPooledDatabaseUrl = (): string => {
-	const url = process.env.DATABASE_URL;
-	if (!url) {
-		throw new Error('DATABASE_URL environment variable is not set');
-	}
-	return url;
+        const url = process.env.DATABASE_URL;
+        if (!url) {
+                throw new Error('DATABASE_URL environment variable is not set');
+        }
+        return url;
 };
 
 // Get the direct database URL from environment (for admin/migrations)
 const getDirectDatabaseUrl = (): string => {
-	const url = process.env.DATABASE_URL_UNPOOLED;
-	if (!url) {
-		// Fallback to pooled URL if direct URL not set
-		console.warn('DATABASE_URL_UNPOOLED not set, using DATABASE_URL as fallback');
-		return getPooledDatabaseUrl();
-	}
-	return url;
+        const url = process.env.DATABASE_URL_UNPOOLED;
+        if (!url) {
+                console.warn('DATABASE_URL_UNPOOLED not set, using DATABASE_URL as fallback');
+                return getPooledDatabaseUrl();
+        }
+        return url;
 };
 
-// ========================================
-// HTTP CLIENT (Simple Queries)
-// ========================================
+// Singleton pool for standard PostgreSQL
+let pgPool: PgPool | null = null;
 
-/**
- * Create an HTTP-based Drizzle client (Pooled Connection)
- * Best for API endpoints with high concurrency in serverless functions
- * Uses PgBouncer connection pooling for better resource efficiency
- */
+const getPgPool = (): PgPool => {
+        if (!pgPool) {
+                pgPool = new PgPool({
+                        connectionString: getPooledDatabaseUrl(),
+                        max: 10,
+                        idleTimeoutMillis: 30000,
+                        connectionTimeoutMillis: 15000,
+                });
+
+                pgPool.on('error', (err: Error) => {
+                        console.error('[DB] Pool error:', err.message);
+                });
+        }
+        return pgPool;
+};
+
+// Create client using standard pg driver
+const createPgHttpClient = () => {
+        return drizzlePg(getPgPool(), { schema });
+};
+
+const createPgPoolClient = () => {
+        const pool = new PgPool({ connectionString: getDirectDatabaseUrl() });
+        return drizzlePg(pool, { schema });
+};
+
+// Cached clients for reuse
+let neonHttpClient: ReturnType<typeof createPgHttpClient> | null = null;
+
 export const createHttpClient = () => {
-	const sql = neon(getPooledDatabaseUrl());
-	return drizzleNeon(sql, { schema });
+        if (isNeonDatabase()) {
+                // Use Neon driver dynamically
+                try {
+                        const { neon } = require('@neondatabase/serverless');
+                        const { drizzle: drizzleNeon } = require('drizzle-orm/neon-http');
+                        const sql = neon(getPooledDatabaseUrl());
+                        return drizzleNeon(sql, { schema });
+                } catch {
+                        console.warn('[DB] Neon driver not available, falling back to pg');
+                        return createPgHttpClient();
+                }
+        }
+        return createPgHttpClient();
 };
-
-// Singleton HTTP client
-let httpClient: ReturnType<typeof createHttpClient> | null = null;
 
 export const getHttpClient = () => {
-	if (!httpClient) {
-		httpClient = createHttpClient();
-	}
-	return httpClient;
+        if (!neonHttpClient) {
+                neonHttpClient = createHttpClient();
+        }
+        return neonHttpClient;
 };
 
-// ========================================
-// POOL CLIENT (Transactions)
-// ========================================
-
-/**
- * Create a Pool-based Drizzle client (Direct Connection)
- * Required for transactions, migrations, and session-based operations
- * Uses WebSocket connections with direct database access (no pooling)
- * Full PostgreSQL feature support including SET statements
- */
 export const createPoolClient = () => {
-	const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
-	return drizzlePool(pool, { schema });
+        if (isNeonDatabase()) {
+                try {
+                        const { Pool: NeonPool } = require('@neondatabase/serverless');
+                        const { drizzle: drizzleNeonPool } = require('drizzle-orm/neon-serverless');
+                        const pool = new NeonPool({ connectionString: getDirectDatabaseUrl() });
+                        return drizzleNeonPool(pool, { schema });
+                } catch {
+                        console.warn('[DB] Neon driver not available, falling back to pg');
+                        return createPgPoolClient();
+                }
+        }
+        return createPgPoolClient();
 };
 
-// Singleton pool client
-let pool: Pool | null = null;
+let pool: PgPool | null = null;
 let poolClient: ReturnType<typeof createPoolClient> | null = null;
 
 export const getPoolClient = () => {
-	if (!poolClient) {
-		pool = new Pool({ connectionString: getDirectDatabaseUrl() });
-		poolClient = drizzlePool(pool, { schema });
-	}
-	return poolClient;
+        if (!poolClient) {
+                if (!isNeonDatabase()) {
+                        pool = new PgPool({ connectionString: getDirectDatabaseUrl() });
+                        poolClient = drizzlePg(pool, { schema });
+                } else {
+                        poolClient = createPoolClient();
+                }
+        }
+        return poolClient;
 };
 
 export const closePool = async () => {
-	if (pool) {
-		await pool.end();
-		pool = null;
-		poolClient = null;
-	}
+        if (pgPool) {
+                await pgPool.end();
+                pgPool = null;
+        }
+        if (pool) {
+                await pool.end();
+                pool = null;
+                poolClient = null;
+        }
+        neonHttpClient = null;
+        neonPoolClient = null;
 };
 
-/**
- * Get organization-scoped database client
- *
- * ⚠️ WARNING: Multi-tenant isolation is NOT yet implemented!
- * This is a placeholder stub that returns the same shared pool client
- * regardless of organization ID. DO NOT use this function expecting
- * organization-level data isolation.
- *
- * @param _organizationId - The organization ID (currently IGNORED, reserved for future multi-tenant support)
- * @returns The shared pool client (NOT organization-scoped)
- */
 export const getOrganizationClient = (_organizationId: string) => {
-	// TODO: Implement proper organization-scoped connection pooling
-	// when multi-tenant support is added
-	return getPoolClient();
+        return getPoolClient();
 };
 
-// ========================================
-// DEFAULT EXPORT
-// ========================================
-
-/**
- * Default database client (Pooled HTTP-based for API endpoints)
- * Use getPoolClient() when you need transactions or admin operations
- *
- * Note: In browser context, this will be null. Only use on server-side.
- * Uses lazy initialization to avoid connection issues during module load.
- */
+// Default database client with lazy initialization
 let cachedDb: ReturnType<typeof createHttpClient> | null = null;
 
 export const db = new Proxy({} as ReturnType<typeof createHttpClient>, {
-	get(_, prop) {
-		if (typeof window !== 'undefined') {
-			throw new Error('Database client cannot be used in browser context');
-		}
-		if (!cachedDb) {
-			if (!process.env.DATABASE_URL) {
-				throw new Error('DATABASE_URL environment variable is not set');
-			}
-			cachedDb = getHttpClient();
-		}
-		return (cachedDb as unknown as Record<string | symbol, unknown>)[prop];
-	},
+        get(_, prop) {
+                if (typeof window !== 'undefined') {
+                        throw new Error('Database client cannot be used in browser context');
+                }
+                if (!cachedDb) {
+                        if (!process.env.DATABASE_URL) {
+                                throw new Error('DATABASE_URL environment variable is not set');
+                        }
+                        cachedDb = getHttpClient();
+                }
+                return (cachedDb as unknown as Record<string | symbol, unknown>)[prop];
+        },
 });
 
-/**
- * Admin database client (Direct connection for migrations/admin)
- * Use this for database migrations, schema changes, and admin operations
- *
- * Note: In browser context, this will be null. Only use on server-side.
- * Uses lazy initialization to avoid connection issues during module load.
- */
 let cachedAdminDb: ReturnType<typeof createPoolClient> | null = null;
 
 export const adminDb = new Proxy({} as ReturnType<typeof createPoolClient>, {
-	get(_, prop) {
-		if (typeof window !== 'undefined') {
-			throw new Error('Admin database client cannot be used in browser context');
-		}
-		if (!cachedAdminDb) {
-			const hasDbUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
-			if (!hasDbUrl) {
-				throw new Error('DATABASE_URL_UNPOOLED or DATABASE_URL environment variable is not set');
-			}
-			cachedAdminDb = getPoolClient();
-		}
-		return (cachedAdminDb as unknown as Record<string | symbol, unknown>)[prop];
-	},
+        get(_, prop) {
+                if (typeof window !== 'undefined') {
+                        throw new Error('Admin database client cannot be used in browser context');
+                }
+                if (!cachedAdminDb) {
+                        const hasDbUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
+                        if (!hasDbUrl) {
+                                throw new Error('DATABASE_URL_UNPOOLED or DATABASE_URL environment variable is not set');
+                        }
+                        cachedAdminDb = getPoolClient();
+                }
+                return (cachedAdminDb as unknown as Record<string | symbol, unknown>)[prop];
+        },
 });
 
-// ========================================
-// USER-SCOPED CLIENT (for RLS)
-// ========================================
+// User-scoped client for RLS
+let sharedPool: PgPool | null = null;
 
-// Singleton shared pool for user-scoped queries
-// This prevents connection exhaustion by reusing connections
-let sharedPool: Pool | null = null;
+const getSharedPool = (): PgPool => {
+        if (!sharedPool) {
+                sharedPool = new PgPool({
+                        connectionString: getDirectDatabaseUrl(),
+                        connectionTimeoutMillis: 15000,
+                        idleTimeoutMillis: 30000,
+                        max: 10,
+                });
 
-/**
- * Get or create a shared connection pool
- * Uses singleton pattern to avoid creating new pools per request
- */
-const getSharedPool = (): Pool => {
-	if (!sharedPool) {
-		sharedPool = new Pool({
-			connectionString: getDirectDatabaseUrl(),
-			connectionTimeoutMillis: 15000,
-			idleTimeoutMillis: 30000,
-			max: 10, // Limit total connections
-		});
+                console.log('[DB] Shared pool created with max 10 connections');
 
-		// Log pool creation for debugging
-		console.log('[DB] Shared pool created with max 10 connections');
-
-		// Handle pool errors to prevent crashes
-		sharedPool.on('error', (err: Error) => {
-			console.error('[DB] Pool error:', err.message);
-			// Don't destroy the pool on transient errors
-		});
-	}
-	return sharedPool;
+                sharedPool.on('error', (err: Error) => {
+                        console.error('[DB] Pool error:', err.message);
+                });
+        }
+        return sharedPool;
 };
 
-/**
- * Get connection pool statistics for monitoring
- */
 export const getConnectionStats = () => {
-	if (!sharedPool) {
-		return {
-			totalCount: 0,
-			idleCount: 0,
-			waitingCount: 0,
-			isInitialized: false,
-		};
-	}
-	return {
-		totalCount: sharedPool.totalCount,
-		idleCount: sharedPool.idleCount,
-		waitingCount: sharedPool.waitingCount,
-		isInitialized: true,
-	};
+        const activePool = sharedPool || pgPool;
+        if (!activePool) {
+                return {
+                        totalCount: 0,
+                        idleCount: 0,
+                        waitingCount: 0,
+                        isInitialized: false,
+                };
+        }
+        return {
+                totalCount: activePool.totalCount,
+                idleCount: activePool.idleCount,
+                waitingCount: activePool.waitingCount,
+                isInitialized: true,
+        };
 };
 
-// Clerk user ID validation regex - extracted for readability
 const CLERK_USER_ID_PATTERN = /^user_[a-zA-Z0-9_]+$/;
 
-/**
- * Validate Clerk user ID format
- * @param userId - The user ID to validate
- * @returns true if valid Clerk user ID format
- */
 const isValidClerkUserId = (userId: string | null | undefined): userId is string => {
-	return typeof userId === 'string' && CLERK_USER_ID_PATTERN.test(userId);
+        return typeof userId === 'string' && CLERK_USER_ID_PATTERN.test(userId);
 };
 
-/**
- * Create a user-scoped database client that sets RLS context
- * Uses SINGLETON pool to prevent connection exhaustion
- *
- * RLS is now enabled, so this client sets app.current_user_id before operations.
- * The user context is set per-query using set_config with local scope.
- *
- * @param userId - Clerk user ID (format: "user_xxx")
- * @returns Pool client (from singleton pool) with user context set
- * @throws Error if connection fails or userId is invalid
- */
 export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
-	// Validate userId format to prevent SQL injection
-	// Clerk user IDs always start with "user_" followed by alphanumeric characters
-	if (!isValidClerkUserId(userId)) {
-		throw new Error(`Invalid user ID format: ${userId}`);
-	}
+        if (!isValidClerkUserId(userId)) {
+                throw new Error(`Invalid user ID format: ${userId}`);
+        }
 
-	const maxRetries = 3;
-	const retryDelay = 500; // 500ms between retries
-	let lastError: Error | null = null;
+        const maxRetries = 3;
+        const retryDelay = 500;
+        let lastError: Error | null = null;
 
-	for (let attempt = 1; attempt <= maxRetries; attempt++) {
-		try {
-			// Use singleton shared pool instead of creating new pool per request
-			const connectionPool = getSharedPool();
-			const userScopedDb = drizzlePool(connectionPool, { schema });
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                        const connectionPool = getSharedPool();
+                        const userScopedDb = drizzlePg(connectionPool, { schema });
 
-			// Set user context for RLS using set_config with 'true' for local transaction scope
-			// This is SQL-injection safe because we use parameterized query
-			await connectionPool.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
+                        await connectionPool.query(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
 
-			return userScopedDb;
-		} catch (error) {
-			lastError = error instanceof Error ? error : new Error(String(error));
+                        return userScopedDb;
+                } catch (error) {
+                        lastError = error instanceof Error ? error : new Error(String(error));
 
-			// Don't retry on validation errors or if it's the last attempt
-			if (
-				attempt === maxRetries ||
-				(error instanceof Error && error.message.includes('Invalid user ID'))
-			) {
-				throw lastError;
-			}
+                        if (
+                                attempt === maxRetries ||
+                                (error instanceof Error && error.message.includes('Invalid user ID'))
+                        ) {
+                                throw lastError;
+                        }
 
-			// Log retry attempt
-			console.warn(`[DB] Connection attempt ${attempt} failed, retrying...`, lastError.message);
+                        console.warn(`[DB] Connection attempt ${attempt} failed, retrying...`, lastError.message);
+                        await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));
+                }
+        }
 
-			// Wait before retrying (exponential backoff)
-			await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));
-		}
-	}
-
-	// This should never be reached, but TypeScript needs it
-	throw lastError || new Error('Failed to create user-scoped database client');
+        throw lastError || new Error('Failed to create user-scoped database client');
 };
 
-// ========================================
-// SERVICE ACCOUNT OPERATIONS (Bypasses RLS)
-// ========================================
+type ServiceAccountTransaction = ReturnType<typeof drizzlePg>;
 
-// Type for service account transaction handler
-type ServiceAccountTransaction = ReturnType<typeof drizzlePool>;
-
-/**
- * Run a database operation as service account (bypasses RLS)
- * Uses single dedicated connection to avoid pool context issues
- * @param fn - Function to execute within service account context
- */
 export async function runAsServiceAccount<T>(
-	fn: (tx: ServiceAccountTransaction) => Promise<T>,
+        fn: (tx: ServiceAccountTransaction) => Promise<T>,
 ): Promise<T> {
-	const servicePool = getSharedPool();
-	const client = await servicePool.connect();
+        const servicePool = getSharedPool();
+        const client = await servicePool.connect();
 
-	try {
-		await client.query('BEGIN');
-		await client.query("SELECT set_config('app.is_service_account', 'true', false)");
+        try {
+                await client.query('BEGIN');
+                await client.query("SELECT set_config('app.is_service_account', 'true', false)");
 
-		const tx = drizzlePool(client as unknown as Pool, { schema });
-		const result = await fn(tx);
+                const tx = drizzlePg(client as unknown as PgPool, { schema });
+                const result = await fn(tx);
 
-		await client.query('COMMIT');
-		return result;
-	} catch (error) {
-		await client.query('ROLLBACK');
-		throw error;
-	} finally {
-		client.release();
-	}
+                await client.query('COMMIT');
+                return result;
+        } catch (error) {
+                await client.query('ROLLBACK');
+                throw error;
+        } finally {
+                client.release();
+        }
 }
-
-// ========================================
-// TYPE EXPORTS
-// ========================================
 
 export type HttpClient = ReturnType<typeof createHttpClient>;
 export type PoolClient = ReturnType<typeof createPoolClient>;
 export type DbClient = HttpClient | PoolClient;
 
-// Re-export schema for convenience
 export { schema };

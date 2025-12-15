@@ -1,6 +1,38 @@
-modules = ["nodejs-20", "python-3.12", "bash"]
+modules = ["python-3.12", "bash", "bun", "nodejs-22", "bun-1.2"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start AegisWallet"
+
+[[workflows.workflow]]
+name = "Start AegisWallet"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bun run dev:replit"
+waitForPort = 5000
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 5000
+externalPort = 80

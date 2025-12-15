@@ -7,8 +7,8 @@
 import { secureLogger } from '@/lib/logging/secure-logger';
 
 interface EnvValidationResult {
-	valid: boolean;
-	errors: string[];
+        valid: boolean;
+        errors: string[];
 }
 
 /**
@@ -16,35 +16,36 @@ interface EnvValidationResult {
  * @returns Validation result with errors if any
  */
 export function validateEnvironmentVariables(): EnvValidationResult {
-	const errors: string[] = [];
-	const isProduction = process.env.NODE_ENV === 'production';
+        const errors: string[] = [];
+        const isProduction = process.env.NODE_ENV === 'production';
 
-	// Required in all environments
-	if (!process.env.DATABASE_URL) {
-		errors.push('DATABASE_URL is required but not set');
-	}
+        // Required in all environments
+        if (!process.env.DATABASE_URL) {
+                errors.push('DATABASE_URL is required but not set');
+        }
 
-	if (!process.env.CLERK_SECRET_KEY) {
-		errors.push('CLERK_SECRET_KEY is required but not set');
-	}
+        // CLERK_SECRET_KEY is optional in development for basic testing
+        if (!process.env.CLERK_SECRET_KEY && isProduction) {
+                errors.push('CLERK_SECRET_KEY is required in production but not set');
+        }
 
-	// Optional but recommended in production
-	if (isProduction) {
-		if (!process.env.DATABASE_URL_UNPOOLED) {
-			secureLogger.warn(
-				'DATABASE_URL_UNPOOLED is not set. Using DATABASE_URL as fallback. This may cause connection issues.',
-			);
-		}
+        // Optional but recommended in production
+        if (isProduction) {
+                if (!process.env.DATABASE_URL_UNPOOLED) {
+                        secureLogger.warn(
+                                'DATABASE_URL_UNPOOLED is not set. Using DATABASE_URL as fallback. This may cause connection issues.',
+                        );
+                }
 
-		if (!process.env.CLERK_WEBHOOK_SECRET) {
-			secureLogger.warn('CLERK_WEBHOOK_SECRET is not set. Clerk webhooks will not work properly.');
-		}
-	}
+                if (!process.env.CLERK_WEBHOOK_SECRET) {
+                        secureLogger.warn('CLERK_WEBHOOK_SECRET is not set. Clerk webhooks will not work properly.');
+                }
+        }
 
-	return {
-		errors,
-		valid: errors.length === 0,
-	};
+        return {
+                errors,
+                valid: errors.length === 0,
+        };
 }
 
 /**
@@ -53,15 +54,15 @@ export function validateEnvironmentVariables(): EnvValidationResult {
  * @throws Error if required environment variables are missing
  */
 export function validateEnvironmentVariablesOrThrow(): void {
-	const result = validateEnvironmentVariables();
+        const result = validateEnvironmentVariables();
 
-	if (!result.valid) {
-		const errorMessage = `Missing required environment variables:\n${result.errors.join('\n')}`;
-		secureLogger.error('Environment validation failed', {
-			errors: result.errors,
-		});
-		throw new Error(errorMessage);
-	}
+        if (!result.valid) {
+                const errorMessage = `Missing required environment variables:\n${result.errors.join('\n')}`;
+                secureLogger.error('Environment validation failed', {
+                        errors: result.errors,
+                });
+                throw new Error(errorMessage);
+        }
 
-	secureLogger.info('Environment variables validated successfully');
+        secureLogger.info('Environment variables validated successfully');
 }

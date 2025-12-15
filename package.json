@@ -8,7 +8,7 @@
     "bmad:validate": "bmad-method validate",
     "dev": "bun --bun vite",
     "dev:full": "bun run neon:verify && bun --bun concurrently \"bun --bun vite\" \"bun src/server/server.ts\"",
-    "dev:replit": "bun --bun vite --host 0.0.0.0 --port 5000",
+    "dev:replit": "bun --bun concurrently \"bun --bun vite --host 0.0.0.0 --port 5000\" \"bun src/server/server.ts\"",
     "dev:client": "bunx vite",
     "dev:server": "bun src/server/server.ts",
     "dev:validate": "bun run neon:verify && bun run integration:test",

@@ -32,10 +32,10 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: Zod schemas for request/response validation
 
 ### Database Layer
-- **Database**: Neon PostgreSQL (serverless, São Paulo region `sa-east-1`)
+- **Database**: PostgreSQL (Replit in development, Neon in production)
 - **ORM**: Drizzle ORM with type-safe schema definitions
 - **Security**: Row Level Security (RLS) policies for multi-tenant isolation
-- **Connection**: Dual pattern - pooled for API, direct for migrations
+- **Connection**: Universal client that works with both Neon and standard PostgreSQL
 - **Schema Location**: `src/db/schema/**/*.ts`
 
 ### Authentication Flow

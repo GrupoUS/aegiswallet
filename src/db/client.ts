@@ -5,7 +5,6 @@
  * Neon serverless and standard PostgreSQL databases
  */
 
-import type { PoolClient as PgPoolClient } from 'pg';
 import { Pool as PgPool } from 'pg';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 

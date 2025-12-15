@@ -18,11 +18,9 @@ import * as schema from './schema';
 
 export { schema };
 
-// Type-only exports for database clients (no runtime import)
-export type { HttpClient, PoolClient } from './client';
-
-// NOTE: db client is NOT exported here to prevent bundling server-only code
-// into the client. Import directly from '@/db/client' for server-side usage.
+// NOTE: Database clients (HttpClient, PoolClient) are NOT exported here.
+// Import directly from '@/db/client' for server-side usage.
+// This prevents bundling server-only code (pg driver) into the client.
 
 // Re-export all schema types and definitions
 export * from './schema';

@@ -85,6 +85,9 @@ export default defineConfig(({ mode }) => {
                 resolve: {
                         alias: {
                                 '@': path.resolve(__dirname, './src'),
+                                'pg': path.resolve(__dirname, './src/stubs/pg.ts'),
+                                'pg-pool': path.resolve(__dirname, './src/stubs/pg.ts'),
+                                '@neondatabase/serverless': path.resolve(__dirname, './src/stubs/pg.ts'),
                         },
                         dedupe: ['@clerk/clerk-react', '@clerk/backend', '@clerk/localizations'],
                 },

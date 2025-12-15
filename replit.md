@@ -72,10 +72,20 @@ Preferred communication style: Simple, everyday language.
 
 ### Environment Variables Required
 ```
-DATABASE_URL              # Neon pooled connection
-DATABASE_URL_UNPOOLED     # Neon direct connection (migrations)
+DATABASE_URL              # PostgreSQL connection (auto-configured in Replit)
 VITE_CLERK_PUBLISHABLE_KEY
 CLERK_SECRET_KEY
-CLERK_WEBHOOK_SECRET
-VITE_API_URL
 ```
+
+## Replit Development Setup
+
+### Running the App
+- **Workflow**: "Start AegisWallet" runs both frontend and backend
+- **Frontend**: Vite dev server on port 5000
+- **Backend**: Hono API server on port 3000
+- **Database**: Replit PostgreSQL (auto-configured)
+
+### Important Configuration Notes
+- `src/stubs/pg.ts`: Browser stub to prevent pg from being bundled in frontend
+- Vite aliases pg/neon modules to stubs for browser compatibility
+- Schema types from `@/db/schema` are safe to import in frontend code

@@ -5,6 +5,7 @@
  * Neon serverless and standard PostgreSQL databases
  */
 
+import type { PoolClient as PgPoolClient } from 'pg';
 import { Pool as PgPool } from 'pg';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 
@@ -131,7 +132,6 @@ export const closePool = async () => {
                 poolClient = null;
         }
         neonHttpClient = null;
-        neonPoolClient = null;
 };
 
 export const getOrganizationClient = (_organizationId: string) => {
@@ -219,7 +219,7 @@ const isValidClerkUserId = (userId: string | null | undefined): userId is string
         return typeof userId === 'string' && CLERK_USER_ID_PATTERN.test(userId);
 };
 
-export const createUserScopedClient = async (userId: string): Promise<PoolClient> => {
+export const createUserScopedClient = async (userId: string): Promise<ReturnType<typeof createPoolClient>> => {
         if (!isValidClerkUserId(userId)) {
                 throw new Error(`Invalid user ID format: ${userId}`);
         }

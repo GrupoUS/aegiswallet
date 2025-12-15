@@ -14,6 +14,15 @@ export default defineConfig(({ mode }) => {
                         minify: isProduction ? 'terser' : false,
                         outDir: 'dist',
                         rollupOptions: {
+                                external: [
+                                        'pg',
+                                        'pg-pool',
+                                        'pg-native',
+                                        '@neondatabase/serverless',
+                                        'drizzle-orm/node-postgres',
+                                        'drizzle-orm/neon-http',
+                                        'drizzle-orm/neon-serverless',
+                                ],
                                 output: {
                                         manualChunks: {
                                                 // Core React libraries - keep together to avoid initialization issues
@@ -44,6 +53,15 @@ export default defineConfig(({ mode }) => {
                         }),
                 },
                 optimizeDeps: {
+                        exclude: [
+                                'pg',
+                                'pg-pool',
+                                'pg-native',
+                                '@neondatabase/serverless',
+                                'drizzle-orm/node-postgres',
+                                'drizzle-orm/neon-http',
+                                'drizzle-orm/neon-serverless',
+                        ],
                         include: [
                                 'react',
                                 'react-dom',
